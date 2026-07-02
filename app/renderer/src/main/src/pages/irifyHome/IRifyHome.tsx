@@ -42,6 +42,7 @@ import { yakitProject } from '@/services/electronBridge'
 import { yakitFailed } from '@/utils/notification'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
 
 const RISK_STAT_CONFIG = [
   {
@@ -83,6 +84,12 @@ const findRiskLevelItem = (items: SSAWorkbenchRiskLevelItem[], severities: reado
 
 const onOpenPage = (route: YakitRoute, params?: any) => {
   emiter.emit('openPage', JSON.stringify({ route, params: params ?? {} }))
+}
+
+/** 跳转到 Irify AI 代码审计页，并带上入口风格（code / skill）作为引导蒙版预选。
+ *  params 形状与 AuditCodePageInfoProps 对齐，最终写入 auditCodePageInfo。 */
+const onOpenIrifyAiCodeAudit = (auditStyle: IrifyAiCodeAuditStyle) => {
+  onOpenPage(YakitRoute.Irify_AI_Code_Audit, { auditStyle })
 }
 
 const IRifyHome: React.FC<IRifyHomeProps> = () => {
@@ -247,8 +254,49 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                   <span className={styles['audit-mode-tag']}>{t('AuditMode.tagRiskExplanation')}</span>
                   <span className={styles['audit-mode-tag']}>{t('AuditMode.tagFixSuggestion')}</span>
                 </div>
-                <div className={styles['audit-mode-button']} onClick={() => onOpenPage(YakitRoute.Irify_AI_Code_Audit)}>
+                <div className={styles['audit-mode-button']} onClick={() => onOpenIrifyAiCodeAudit('code')}>
                   {t('AuditMode.startAiAudit')}
+                  <OutlineArrowsmrightIcon />
+                </div>
+              </div>
+              <div className={classNames(styles['audit-mode-card'], styles[`audit-mode-card-primary`])}>
+                <div className={styles['audit-mode-card-ghost']}>
+                  <IRifyHomeGhostIcon />
+                </div>
+                <div className={styles['audit-mode-card-divergency']} />
+                <div className={styles['audit-mode-card-header']}>
+                  <div className={styles['audit-mode-card-title-row']}>
+                    <div className={classNames(styles['audit-mode-card-icon'], styles['audit-mode-card-icon-primary'])}>
+                      <OutlineAIIcon />
+                    </div>
+                    <span className={styles['audit-mode-card-title']}>{t('AuditMode.aiSkillAudit')}</span>
+
+                    <span className={classNames(styles['audit-mode-badge'], styles['audit-mode-badge-online'])}>
+                      {t('AuditMode.online')}
+                    </span>
+                  </div>
+                  <div className={styles['audit-mode-card-subtitle']}>{t('AuditMode.aiSkillSubtitle')}</div>
+                </div>
+
+                <div className={styles['audit-mode-features']}>
+                  <div className={styles['audit-mode-feature-item']}>
+                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <span>{t('AuditMode.aiSkillFeature1')}</span>
+                  </div>
+                  <div className={styles['audit-mode-feature-item']}>
+                    <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
+                    <span>{t('AuditMode.aiSkillFeature2')}</span>
+                  </div>
+                </div>
+
+                <div className={styles['audit-mode-tags']}>
+                  <span className={styles['audit-mode-tag']}>{t('AuditMode.tagSkillSpecialized')}</span>
+                  <span className={styles['audit-mode-tag']}>{t('AuditMode.tagSkillFlow')}</span>
+                  <span className={styles['audit-mode-tag']}>{t('AuditMode.tagSkillRule')}</span>
+                  <span className={styles['audit-mode-tag']}>{t('AuditMode.tagRiskExplanation')}</span>
+                </div>
+                <div className={styles['audit-mode-button']} onClick={() => onOpenIrifyAiCodeAudit('skill')}>
+                  {t('AuditMode.startAiSkillAudit')}
                   <OutlineArrowsmrightIcon />
                 </div>
               </div>

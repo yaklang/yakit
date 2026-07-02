@@ -4,5 +4,38 @@
   "quickStart": "Get started",
   "openLocalFolder": "Open local folder",
   "recentlyOpened": "Recently opened",
-  "newChat": "New chat"
+  "newChat": "New chat",
+  "styleToggle": {
+    "unset": "Undetermined",
+    "code": "Code Audit",
+    "skill": "Skill Audit"
+  },
+  "onboarding": {
+    "title": "AI Code Audit Guide",
+    "subtitle": "Pick a directory and an audit style, then start the audit.",
+    "stepSelectDirectory": "Select Directory",
+    "stepSelectStyle": "Select Style",
+    "stepStart": "Start",
+    "selectDirectory": "Select the directory to audit",
+    "selectDirectoryFirst": "Please select a directory to audit first",
+    "currentSelected": "Selected: ",
+    "historyEmpty": "No recent directories",
+    "selectStyle": "Select audit style",
+    "selectStyleFirst": "Please select an audit style first",
+    "styleCodeTitle": "Code Audit",
+    "styleCodeDesc": "For complex business logic, cross-file correlation, and natural-language risk explanation.",
+    "styleSkillTitle": "Skill Security Analysis",
+    "styleSkillDesc": "Specialized analysis for Skill and rule-based audit scenarios.",
+    "summaryDirectory": "Directory",
+    "summaryStyle": "Style",
+    "summaryMessage": "Preset Message",
+    "messageRequired": "Please enter a message to send",
+    "notSelected": "Not selected",
+    "startHint": "Edit the preset message if needed. Start sends it and locks the style. Open Only opens the directory and fills the input without running AI.",
+    "cancel": "Cancel",
+    "prev": "Previous",
+    "next": "Next",
+    "openOnly": "Open Only",
+    "start": "Start"
+  }
 }

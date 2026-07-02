@@ -1,5 +1,6 @@
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { YakRunnerHistoryProps } from '../yakRunner/YakRunnerType'
+import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
 import emiter from '@/utils/eventBus/eventBus'
 import { failed } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
@@ -11,6 +12,16 @@ const tOriginal = i18n.getFixedT(null, 'yakRunner')
 const IrifyAiCodeAuditOpenHistory = 'IrifyAiCodeAuditOpenHistory'
 const IrifyAiCodeAuditLastFolderExpanded = 'IrifyAiCodeAuditLastFolderExpanded'
 const IrifyAiCodeAuditLastAreaFile = 'IrifyAiCodeAuditLastAreaFile'
+
+export interface IrifyAiCodeAuditOnboardingRequest {
+  path?: string
+  auditStyle?: IrifyAiCodeAuditStyle
+}
+
+/** 打开 AI 代码审计引导蒙版 */
+export const requestIrifyAiCodeAuditOnboarding = (request?: IrifyAiCodeAuditOnboardingRequest) => {
+  emiter.emit('onIrifyAiCodeAuditShowOnboarding', JSON.stringify(request ?? {}))
+}
 
 /**
  * @name 更改IrifyAiCodeAudit历史记录
@@ -24,9 +35,14 @@ export const setIrifyAiCodeAuditHistory = (newHistory: YakRunnerHistoryProps) =>
         return
       }
       const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
+      const isSameHistoryEntry = (item: YakRunnerHistoryProps) => {
+        if (item.path !== newHistory.path) return false
+        if (newHistory.isFile || item.isFile) return true
+        return (item.auditStyle ?? 'unset') === (newHistory.auditStyle ?? 'unset')
+      }
       const newHistoryData: YakRunnerHistoryProps[] = [
         newHistory,
-        ...historyData.filter((item) => item.path !== newHistory.path),
+        ...historyData.filter((item) => !isSameHistoryEntry(item)),
       ].slice(0, 10)
       setRemoteValue(IrifyAiCodeAuditOpenHistory, JSON.stringify(newHistoryData))
       emiter.emit('onAiCodeAuditRefreshRunnerHistory', JSON.stringify(newHistoryData))

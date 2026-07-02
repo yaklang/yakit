@@ -52,6 +52,8 @@ export type YakRunnerAiCodeAuditEventProps = {
 
   // 等待删除
   onIrifyAiCodeAuditOpenFileTree: string
+  /** 请求展示 AI 代码审计引导蒙版（payload: IrifyAiCodeAuditOnboardingRequest JSON） */
+  onIrifyAiCodeAuditShowOnboarding: string
   /** 编辑器选中代码发送到自由对话 */
   onAiCodeAuditSendCodeBlock: string
 }

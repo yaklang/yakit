@@ -1,2 +1,11 @@
-/** 代码审计 AI 输入框默认草稿（不自动发送） */
-export const IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED = '开始审计'
+import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+
+const CHAT_SEED_BY_STYLE: Record<IrifyAiCodeAuditStyle, string> = {
+  code: '开始审计',
+  skill: '请审计这个 Skill 是否存在恶意行为',
+  unset: '开始审计',
+}
+
+export function resolveIrifyAuditDefaultChatSeed(style?: IrifyAiCodeAuditStyle): string {
+  return CHAT_SEED_BY_STYLE[style ?? 'unset']
+}

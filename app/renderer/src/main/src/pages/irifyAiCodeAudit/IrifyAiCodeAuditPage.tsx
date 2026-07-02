@@ -1,80 +1,157 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 import { AuditCodePageInfoProps } from '@/store/pageInfo'
 import { irifyAiCodeAuditPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/focusMode'
+import { IrifyAiCodeAuditStyle, resolveIrifyFocusModeLoop, isIrifyAuditStyleConfirmed } from './irifyAiCodeAuditStyle'
 import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
 import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { IrifyAiCodeAuditSidePanelLayout } from './IrifyAiCodeAuditSidePanelLayout'
-import { appendCodeAuditTargetAttachmentToEvent } from './codeAuditAttachment'
 import {
+  appendIrifyWorkbenchAttachments,
   IrifyWorkbenchAiAttachProvider,
   IrifyWorkbenchAiAttachRef,
   useIrifyWorkbenchAiAttachRef,
 } from './IrifyWorkbenchAiAttachContext'
 import styles from './IrifyAiCodeAuditPage.module.scss'
 import { YakRunnerIrifyAiCodeAudit } from './YakRunnerIrifyAiCodeAudit'
+import { IrifyAiCodeAuditOnboardingMask } from './IrifyAiCodeAuditOnboardingMask'
+import { IrifyAiCodeAuditOnboardingRequest } from './utils'
 
-/** 从路由参数 / onAuditCodePageInfo 打开工程目录 */
-const IrifyAiCodeAuditEntryBootstrap: React.FC<{ auditCodePageInfo?: AuditCodePageInfoProps }> = ({
-  auditCodePageInfo,
-}) => {
-  const applyEntry = useMemoizedFn((info?: AuditCodePageInfoProps) => {
-    const root = info?.Location?.trim()
-    if (!root) return
-    emiter.emit('onAiCodeAuditOpenFileTree', root)
-  })
-
-  useEffect(() => {
-    applyEntry(auditCodePageInfo)
-  }, [auditCodePageInfo?.Location, applyEntry])
-
-  useEffect(() => {
-    const handler = (raw: string) => {
-      try {
-        const parsed: AuditCodePageInfoProps = JSON.parse(raw)
-        applyEntry(parsed)
-      } catch {
-        // ignore
-      }
-    }
-    emiter.on('onAuditCodePageInfo', handler)
-    return () => {
-      emiter.off('onAuditCodePageInfo', handler)
-    }
-  }, [applyEntry])
-
-  return null
+const resolveAuditStyle = (info?: AuditCodePageInfoProps): IrifyAiCodeAuditStyle => {
+  if (info?.auditStyle === 'skill') return 'skill'
+  if (info?.auditStyle === 'code') return 'code'
+  return 'unset'
 }
 
 export interface IrifyAiCodeAuditPageProps {
   auditCodePageInfo?: AuditCodePageInfoProps
 }
 
-/**
- * Irify 形态下的内层渲染：依赖 `IrifyWorkbenchAiAttachContext` 已就绪。
- * 这里读取 `attachRef.current.projectRootAbsPath`，通过 `transformInputEvent` 把工程根路径附件
- * 追加到发往引擎的 `AIInputEvent.AttachedResourceInfo`。
- */
 const IrifyAiCodeAuditPageInner: React.FC<IrifyAiCodeAuditPageProps> = ({ auditCodePageInfo }) => {
   const attachRef = useIrifyWorkbenchAiAttachRef()
 
-  const transformInputEvent = useMemoizedFn((event: AIInputEvent) => {
-    return appendCodeAuditTargetAttachmentToEvent(event, attachRef?.current?.projectRootAbsPath)
+  const [entryAuditStyle, setEntryAuditStyle] = useState<IrifyAiCodeAuditStyle>(() =>
+    resolveAuditStyle(auditCodePageInfo),
+  )
+  const [auditStyle, setAuditStyle] = useState<IrifyAiCodeAuditStyle>(() => resolveAuditStyle(auditCodePageInfo))
+  const [onboardingVisible, setOnboardingVisible] = useState(() => !!auditCodePageInfo?.auditStyle)
+  const [onboardingSelectedPath, setOnboardingSelectedPath] = useState(() => auditCodePageInfo?.Location?.trim() ?? '')
+  const [onboardingSkipStyleStep, setOnboardingSkipStyleStep] = useState(
+    () => auditCodePageInfo?.auditStyle !== undefined,
+  )
+  const [started, setStarted] = useState(false)
+
+  const openOnboarding = useMemoizedFn(
+    (opts: { style?: IrifyAiCodeAuditStyle; path?: string; skipStyle?: boolean } = {}) => {
+      if (opts.style && opts.style !== 'unset') {
+        setEntryAuditStyle(opts.style)
+        setAuditStyle(opts.style)
+      } else {
+        setEntryAuditStyle('unset')
+        setAuditStyle('unset')
+      }
+      setOnboardingSkipStyleStep(opts.skipStyle ?? (!!opts.style && opts.style !== 'unset'))
+      setOnboardingSelectedPath(opts.path?.trim() ?? '')
+      setStarted(false)
+      setOnboardingVisible(true)
+    },
+  )
+
+  const applyPageEntry = useMemoizedFn((info?: AuditCodePageInfoProps) => {
+    const root = info?.Location?.trim()
+    if (root) emiter.emit('onAiCodeAuditOpenFileTree', root)
+    if (info?.auditStyle !== undefined) {
+      openOnboarding({ style: resolveAuditStyle(info), path: root, skipStyle: true })
+    }
   })
+
+  useEffect(() => {
+    applyPageEntry(auditCodePageInfo)
+  }, [auditCodePageInfo?.Location, auditCodePageInfo?.auditStyle, applyPageEntry])
+
+  useEffect(() => {
+    const handler = (raw: string) => {
+      try {
+        applyPageEntry(JSON.parse(raw) as AuditCodePageInfoProps)
+      } catch {
+        // ignore
+      }
+    }
+    emiter.on('onAuditCodePageInfo', handler)
+    return () => emiter.off('onAuditCodePageInfo', handler)
+  }, [applyPageEntry])
+
+  useEffect(() => {
+    const handler = (raw: string) => {
+      try {
+        const req: IrifyAiCodeAuditOnboardingRequest = JSON.parse(raw)
+        openOnboarding({ style: req.auditStyle, path: req.path, skipStyle: !!req.auditStyle })
+      } catch {
+        // ignore
+      }
+    }
+    emiter.on('onIrifyAiCodeAuditShowOnboarding', handler)
+    return () => emiter.off('onIrifyAiCodeAuditShowOnboarding', handler)
+  }, [openOnboarding])
+
+  const handleAuditStyleChange = useMemoizedFn((style: IrifyAiCodeAuditStyle) => {
+    if (started) return
+    setAuditStyle(style)
+  })
+
+  const handleOnboardingStart = useMemoizedFn((style: IrifyAiCodeAuditStyle) => {
+    if (!isIrifyAuditStyleConfirmed(style)) return
+    setAuditStyle(style)
+    setStarted(true)
+  })
+
+  const handleOnboardingOpenOnly = useMemoizedFn((style: IrifyAiCodeAuditStyle) => {
+    if (!isIrifyAuditStyleConfirmed(style)) return
+    setAuditStyle(style)
+  })
+
+  const handleOnboardingClose = useMemoizedFn(() => {
+    setOnboardingVisible(false)
+    setOnboardingSelectedPath('')
+    setOnboardingSkipStyleStep(false)
+  })
+
+  const handleEnsureProjectRoot = useMemoizedFn((absPath: string) => {
+    if (attachRef?.current) attachRef.current.projectRootAbsPath = absPath
+  })
+
+  const transformInputEvent = useMemoizedFn((event: AIInputEvent) =>
+    appendIrifyWorkbenchAttachments(event, attachRef?.current ?? undefined),
+  )
 
   return (
     <HistoryAIReActChatProvider
       cacheDataStore={irifyAiCodeAuditPageAiStore}
-      focusModeLoop={IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT}
+      focusModeLoop={resolveIrifyFocusModeLoop(auditStyle)}
       transformInputEvent={transformInputEvent}
     >
-      <IrifyAiCodeAuditEntryBootstrap auditCodePageInfo={auditCodePageInfo} />
-      <IrifyAiCodeAuditSidePanelLayout placement="right" rootClassName={styles.pageRoot}>
-        {/* 此处替换为独立的类似yakrunner工作区 */}
+      <IrifyAiCodeAuditSidePanelLayout
+        placement="right"
+        rootClassName={styles.pageRoot}
+        auditStyle={auditStyle}
+        auditStyleLocked={started}
+        onAuditStyleChange={handleAuditStyleChange}
+      >
         <YakRunnerIrifyAiCodeAudit />
       </IrifyAiCodeAuditSidePanelLayout>
+      <IrifyAiCodeAuditOnboardingMask
+        visible={onboardingVisible}
+        defaultAuditStyle={entryAuditStyle}
+        defaultSelectedPath={onboardingSelectedPath}
+        skipStyleStep={onboardingSkipStyleStep}
+        auditStyle={auditStyle}
+        onAuditStyleChange={handleAuditStyleChange}
+        onClose={handleOnboardingClose}
+        onStart={handleOnboardingStart}
+        onOpenOnly={handleOnboardingOpenOnly}
+        onEnsureProjectRoot={handleEnsureProjectRoot}
+      />
     </HistoryAIReActChatProvider>
   )
 }
@@ -88,7 +165,6 @@ const IrifyAiCodeAuditPageShell: React.FC<IrifyAiCodeAuditPageProps> = ({ auditC
   )
 }
 
-/** Irify「AI 代码审计」：主区为工作区；右侧为通用 `HistoryAIReActChatProvider` 渲染的 ReAct 侧栏。 */
-export const IrifyAiCodeAuditPage: React.FC<IrifyAiCodeAuditPageProps> = ({ auditCodePageInfo }) => {
-  return <IrifyAiCodeAuditPageShell auditCodePageInfo={auditCodePageInfo} />
-}
+export const IrifyAiCodeAuditPage: React.FC<IrifyAiCodeAuditPageProps> = ({ auditCodePageInfo }) => (
+  <IrifyAiCodeAuditPageShell auditCodePageInfo={auditCodePageInfo} />
+)

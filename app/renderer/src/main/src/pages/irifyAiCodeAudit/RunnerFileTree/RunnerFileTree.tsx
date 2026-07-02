@@ -22,7 +22,6 @@ import {
   getOpenFileInfo,
   getPathJoin,
   getPathParent,
-  getYakRunnerHistory,
   grpcFetchDeleteFile,
   judgeAreaExistFilePath,
   judgeAreaExistFilesPath,
@@ -63,6 +62,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
 import { IrifyAIWatchFolderID } from '../YakRunnerIrifyAiCodeAudit'
+import { getIrifyAiCodeAuditHistory, requestIrifyAiCodeAuditOnboarding } from '../utils'
 
 const tOriginal = i18n.getFixedT(null, 'yakRunner')
 
@@ -88,40 +88,12 @@ export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
   )
 }
 
-// 打开文件夹
+// 打开文件夹：统一进入 AI 代码审计引导
 export const openFolder = () => {
-  if (SystemInfo.mode === 'remote') {
-    let absolutePath = ''
-    const m = showYakitModal({
-      title: (modalT) => modalT('RunnerFileTree.enterFolderPath'),
-      width: 400,
-      type: 'white',
-      closable: false,
-      centered: true,
-      content: <OpenFolderDragger setAbsolutePath={(v) => (absolutePath = v)} />,
-      onCancel: () => {
-        m.destroy()
-      },
-      onOk: async () => {
-        if (absolutePath.length === 0) {
-          warn(tOriginal('RunnerFileTree.enterFolderPath'))
-          return
-        }
-        emiter.emit('onAiCodeAuditOpenFileTree', absolutePath)
-        m.destroy()
-      },
-    })
-  } else {
-    handleOpenFileSystemDialog({ title: tOriginal('RunnerFileTree.selectFolder'), properties: ['openDirectory'] }).then(
-      (data) => {
-        if (data.filePaths.length) {
-          let absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
-          emiter.emit('onAiCodeAuditOpenFileTree', absolutePath)
-        }
-      },
-    )
-  }
+  requestIrifyAiCodeAuditOnboarding()
 }
+
+const getHistoryMenuKey = (item: YakRunnerHistoryProps) => `${item.path}::${item.auditStyle ?? 'unset'}`
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const { addFileTab } = props
@@ -201,7 +173,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
         setHistoryList(historyData)
       } else {
-        const list = await getYakRunnerHistory()
+        const list = await getIrifyAiCodeAuditHistory()
         setHistoryList(list)
       }
     } catch (error) {}
@@ -258,7 +230,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         label: '最近打开',
         children: [
           ...historyList.map((item) => {
-            return { key: item.path, label: item.name }
+            return { key: getHistoryMenuKey(item), label: item.name }
           }),
         ],
       })
@@ -623,7 +595,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
   // 打开历史
   const openHistory = useMemoizedFn((key: string) => {
-    const filterArr = historyList.filter((item) => item.path === key)
+    const filterArr = historyList.filter((item) => getHistoryMenuKey(item) === key || item.path === key)
 
     if (filterArr.length > 0) {
       const item = filterArr[0]
@@ -638,9 +610,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
         emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify(OpenFileByPathParams))
       }
-      // 打开文件夹
+      // 打开文件夹：进入引导蒙版
       else {
-        emiter.emit('onAiCodeAuditOpenFileTree', item.path)
+        requestIrifyAiCodeAuditOnboarding({ path: item.path, auditStyle: item.auditStyle })
       }
     }
   })

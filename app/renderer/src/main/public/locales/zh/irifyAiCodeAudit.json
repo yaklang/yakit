@@ -4,5 +4,38 @@
   "quickStart": "快速开始",
   "openLocalFolder": "打开本地文件夹",
   "recentlyOpened": "最近打开",
-  "newChat": "新建会话"
+  "newChat": "新建会话",
+  "styleToggle": {
+    "unset": "未确定",
+    "code": "代码审计",
+    "skill": "技能审计"
+  },
+  "onboarding": {
+    "title": "AI 代码审计引导",
+    "subtitle": "按步骤选择目录与审计风格，即可开始审计。",
+    "stepSelectDirectory": "选择目录",
+    "stepSelectStyle": "选择审计风格",
+    "stepStart": "开始",
+    "selectDirectory": "选择需要审计的目录",
+    "selectDirectoryFirst": "请先选择需要审计的目录",
+    "currentSelected": "当前选择：",
+    "historyEmpty": "暂无历史目录",
+    "selectStyle": "选择审计风格",
+    "selectStyleFirst": "请先选择审计风格",
+    "styleCodeTitle": "代码审计",
+    "styleCodeDesc": "面向复杂业务逻辑、跨文件关联与自然语言风险解释。",
+    "styleSkillTitle": "Skill 安全分析",
+    "styleSkillDesc": "针对 Skill 与规则化审计场景做特化分析。",
+    "summaryDirectory": "审计目录",
+    "summaryStyle": "审计风格",
+    "summaryMessage": "预设消息",
+    "messageRequired": "请输入要发送的消息",
+    "notSelected": "未选择",
+    "startHint": "可编辑预设消息。「开始」将自动发送并锁定风格；「仅打开文件」只打开目录并把消息填入输入框，不自动运行 AI。",
+    "cancel": "取消",
+    "prev": "上一步",
+    "next": "下一步",
+    "openOnly": "仅打开文件",
+    "start": "开始"
+  }
 }

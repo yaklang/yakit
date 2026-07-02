@@ -1,0 +1,243 @@
+.onboarding-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.onboarding-card {
+  width: 560px;
+  max-width: calc(100% - 48px);
+  max-height: calc(100% - 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 16px 24px;
+  border-radius: 8px;
+  background: var(--Colors-Use-Basic-Background);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  overflow: auto;
+}
+
+.onboarding-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.onboarding-title {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+}
+
+.onboarding-subtitle {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.onboarding-steps {
+  padding: 4px 0 8px 0;
+}
+
+.onboarding-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step-section-title {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.step-directory {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.open-folder-btn {
+  align-self: flex-start;
+}
+
+.selected-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--Colors-Use-Main-Bg-Hover);
+}
+
+.selected-path-label {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.selected-path-value {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 13px;
+  min-width: 0;
+}
+
+.history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-title {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.history-empty {
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 12px;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.step-style {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.style-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.style-option {
+  cursor: pointer;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  background: var(--Colors-Use-Basic-Background);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: var(--Colors-Use-Main-Border);
+    background: var(--Colors-Use-Main-Bg-Hover);
+  }
+}
+
+.style-option-active {
+  border-color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Bg-Hover);
+  box-shadow: 0 0 0 1px var(--Colors-Use-Main-Primary) inset;
+}
+
+.style-option-title {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.style-option-desc {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.step-start {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.start-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: var(--Colors-Use-Neutral-Bg);
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+}
+
+.start-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.start-summary-message {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.start-message-input {
+  width: 100%;
+}
+
+.start-summary-label {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+  min-width: 72px;
+}
+
+.start-summary-value {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 13px;
+  min-width: 0;
+}
+
+.start-hint {
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.onboarding-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.onboarding-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cancel-btn {
+  min-width: 72px;
+}
