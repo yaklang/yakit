@@ -5,7 +5,9 @@ import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
 import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType, TodoListCardData } from './aiRender'
 import type { AIChatLogToInfo, AIChatLogData, TaskChatTaskInfo, AIMessageHandlerParams } from './type'
-import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType } from './grpcApi'
+import { AITaskStatus } from './grpcApi'
+import { AIChatQSDataTypeEnum } from './aiRender'
 import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
@@ -24,7 +26,31 @@ export const generateTaskId = (params: {
     const taskKey = res.TaskIndex ? `${getCurrentTaskPlanID()?.taskID}-${res.TaskIndex}` : ''
     return `${getCurrentTaskPlanID()?.taskID}-${!!getContentMap(taskKey) ? res.TaskIndex : 'unknown'}`
   }
+  if (chatType === 'reAct' && res.TaskId) {
+    const taskGroup = getContentMap(res.TaskId)
+    if (taskGroup?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+      return res.TaskId
+    }
+  }
   return undefined
+}
+
+/** 将自由对话后端任务状态映射为 UI 状态 */
+export const mapReactTaskStatus = (status?: string): AITaskStatusType => {
+  switch (status) {
+    case 'completed':
+      return AITaskStatus.success
+    case 'aborted':
+      return AITaskStatus.error
+    case 'skipped':
+      return AITaskStatus.skipped
+    case 'processing':
+    case 'queueing':
+      return AITaskStatus.inProgress
+    case 'created':
+    default:
+      return AITaskStatus.created
+  }
 }
 /** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
 export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/
