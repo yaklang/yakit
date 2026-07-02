@@ -48,7 +48,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     className,
   } = props
   const { type, data: review } = info
-  console.log('info:', info)
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { chatIPCData } = useChatIPCStore()
   const { chatIPCEvents } = useChatIPCDispatcher()

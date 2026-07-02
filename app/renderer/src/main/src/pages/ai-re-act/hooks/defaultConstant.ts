@@ -5,7 +5,7 @@ import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from '.
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
-  type: '',
+  type: 'create',
   callToolId: '',
   toolName: '-',
   toolDescription: '',

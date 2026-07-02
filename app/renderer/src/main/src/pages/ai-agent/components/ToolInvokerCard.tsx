@@ -28,7 +28,7 @@ import {
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Divider, Skeleton, Tooltip } from 'antd'
+import { Divider, Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { OperationCardFooter, OperationCardFooterProps } from './OperationCardFooter/OperationCardFooter'
@@ -92,8 +92,10 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
         return <ToolStdoutCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
       case 'result':
         return <ToolResultCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
+      case 'create':
+        return <ToolLoadingCard {...props} />
       default:
-        return data.isProcessingParams ? <ToolLoadingCard {...props} /> : null
+        return null
     }
   })
 
@@ -136,10 +138,9 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
         }
       >
         <div className={styles['tool-loading-content']}>
-          <Skeleton active title={false} paragraph={{ rows: 1, width: '60%' }} />
-          <div className={styles['tool-loading-block']}>
-            <Skeleton active title={false} paragraph={{ rows: 3, width: ['100%', '72%', '42%'] }} />
-          </div>
+          <YakitSpin spinning>
+            <div className={styles['tool-loading-block']} />
+          </YakitSpin>
         </div>
       </ToolStatusCard>
     </ChatCard>

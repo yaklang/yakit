@@ -23,7 +23,7 @@ export interface AIStreamOutput {
 
 /** 工具结果的信息内容 */
 export interface AIToolResult {
-  type: '' | 'stream' | 'result'
+  type: 'create' | 'stream' | 'result'
   callToolId: string
   /**工具名称 */
   toolName: string
