@@ -28,7 +28,7 @@
     "total_rules_count": "Total {{count}}",
     "no_replace_all": "No Replacement for All",
     "built_in_rules": "Disable built-in rules",
-    "built_in_rules_tip": "Turning this on will disable built-in rules during packet capture.",
+    "built_in_rules_tip": "Turning this on will disable built-in rules during packet capture. After modification, restart for the hijacking to take effect.",
     "white_list": "Whitelist",
     "white_list_modal_title": "Rule Whitelist Configuration",
     "white_list_label": "File Suffix",

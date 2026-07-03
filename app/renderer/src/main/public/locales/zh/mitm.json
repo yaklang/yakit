@@ -28,7 +28,7 @@
     "total_rules_count": "共 {{count}} 条规则",
     "no_replace_all": "全部不替换",
     "built_in_rules": "禁用内置规则",
-    "built_in_rules_tip": "打开则会在抓包过程中禁用内置规则",
+    "built_in_rules_tip": "打开则会在抓包过程中禁用内置规则，修改后重启劫持生效",
     "white_list": "白名单",
     "white_list_modal_title": "规则白名单配置",
     "white_list_label": "文件后缀",

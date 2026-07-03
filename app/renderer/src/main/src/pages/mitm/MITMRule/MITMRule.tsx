@@ -1012,7 +1012,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             <div className={styles['heard-right-operation-disableTrafficGuard']} key={visible + ''}>
               <label>
                 {t('MITMRule.built_in_rules')}
-                <Tooltip title={t('MITMRule.built_in_rules_tip')} placement="top" align={{ targetOffset: [-5, -15] }}>
+                <Tooltip destroyTooltipOnHide title={t('MITMRule.built_in_rules_tip')} placement="top">
                   <OutlineQuestionmarkcircleIcon />
                 </Tooltip>
                 <YakitSwitch
