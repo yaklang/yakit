@@ -1,4 +1,4 @@
-name: Verify Yakit Sign and Notarize Build
+name: Verify Sign Build
 
 on:
     workflow_dispatch:
@@ -168,12 +168,18 @@ jobs:
                   done
               shell: bash
 
-            - name: Upload mac installers
+            - name: Upload Mac x64 artifact
               uses: actions/upload-artifact@v4
               with:
-                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-sign-verify
-                  path: |
-                      ./release/${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin-x64.dmg
-                      ./release/${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin-arm64.dmg
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin-x64.dmg
+                  path: ./release/${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin-x64.dmg
+                  if-no-files-found: error
+                  retention-days: 3
+
+            - name: Upload Mac arm64 artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin-arm64.dmg
+                  path: ./release/${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin-arm64.dmg
                   if-no-files-found: error
                   retention-days: 3
