@@ -6,12 +6,12 @@ import type {
   UseCasualChatState,
 } from './type'
 import type { AIChatQSData, AIReviewType, ReActChatRenderItem } from './aiRender'
-import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType } from './grpcApi'
 import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
-import { genBaseAIChatData, handleGrpcDataPushLog, mapReactTaskStatus } from './utils'
+import { genBaseAIChatData, handleGrpcDataPushLog } from './utils'
 import { AIChatQSDataTypeEnum } from './aiRender'
 import { yakitNotify } from '@/utils/notification'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
@@ -49,7 +49,7 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   /** 子 agent 任务创建时生成聚合卡片 */
-  const handleReactTaskCreated = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeCasual) => {
+  const handleReactTaskCreated = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.CasualCreated) => {
     if (!info.react_task_is_sub_agent) return
 
     const taskKey = info.react_task_id
@@ -61,50 +61,45 @@ function useCasualChat(params: UseCasualChatParams) {
       return
     }
 
-    const chatData: AIChatQSData =
-      existing ??
-      ({
-        ...genBaseAIChatData(res),
-        id: taskKey,
-        chatType: 'reAct',
-        type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
-        data: {
-          taskId: info.react_task_id,
-          taskIndex: info.react_task_id,
-          taskName: info.react_task_name || info.react_user_input || info.react_task_id,
-          goal: info.react_user_input || '',
-          status: mapReactTaskStatus(info.react_task_status),
-        },
-      } as AIChatQSData)
-
-    if (existing && chatData.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      if (info.react_task_name) chatData.data.taskName = info.react_task_name
-      if (info.react_user_input) chatData.data.goal = info.react_user_input
-      chatData.data.status = mapReactTaskStatus(info.react_task_status)
-    }
-
-    setContentMap(chatData.id, chatData)
-
-    if (!existing) {
-      setElements((old) => {
-        const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
-        if (exists) return old
-        return [
-          ...old,
-          { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct', kind: 'task', children: [] },
-        ]
-      })
+    if (existing) {
+      if (info.react_task_name) existing.data.taskName = info.react_task_name
+      if (info.react_user_input) existing.data.goal = info.react_user_input
+      existing.data.status = info.react_task_status
+      setContentMap(existing.id, existing)
+      setElements((old) =>
+        old.map((item) => {
+          if (item.token === existing.id && item.type === existing.type) {
+            return { ...item, renderNum: item.renderNum + 1 }
+          }
+          return item
+        }),
+      )
       return
     }
 
-    setElements((old) =>
-      old.map((item) => {
-        if (item.token === chatData.id && item.type === chatData.type) {
-          return { ...item, renderNum: item.renderNum + 1 }
-        }
-        return item
-      }),
-    )
+    const chatData: AIChatQSData = {
+      ...genBaseAIChatData(res),
+      id: taskKey,
+      chatType: 'reAct',
+      type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
+      data: {
+        taskId: info.react_task_id,
+        taskIndex: info.react_task_id,
+        taskName: info.react_task_name || info.react_user_input || info.react_task_id,
+        goal: info.react_user_input || '',
+        status: info.react_task_status,
+      },
+    } as AIChatQSData
+
+    setContentMap(chatData.id, chatData)
+    setElements((old) => {
+      const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
+      if (exists) return old
+      return [
+        ...old,
+        { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct', kind: 'task', children: [] },
+      ]
+    })
   })
 
   /** 子 agent 任务状态变更时更新聚合卡片 */
@@ -115,7 +110,7 @@ function useCasualChat(params: UseCasualChatParams) {
     const existing = getContentMap(taskKey)
     if (!existing || existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
 
-    existing.data.status = mapReactTaskStatus(info.react_task_now_status)
+    existing.data.status = info.react_task_now_status as AITaskStatusType
     setContentMap(taskKey, existing)
     setElements((old) =>
       old.map((item) => {
@@ -143,7 +138,7 @@ function useCasualChat(params: UseCasualChatParams) {
       const ipcContent = Uint8ArrayToString(res.Content) || ''
 
       if (res.Type === 'structured' && res.NodeId === 'react_task_created') {
-        const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeCasual
+        const data = JSON.parse(ipcContent) as AIAgentGrpcApi.CasualCreated
         handleReactTaskCreated(res, data)
         return
       }

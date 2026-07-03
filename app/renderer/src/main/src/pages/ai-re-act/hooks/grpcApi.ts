@@ -846,8 +846,8 @@ export declare namespace AIAgentGrpcApi {
   }
 
   /** 自由对话子 agent 任务创建消息 */
-  export interface ChangeCasual {
-    react_task_status: string
+  export interface CasualCreated {
+    react_task_status: AITaskStatusType
     react_user_input: string
     react_task_id: string
     react_task_uuid: string
