@@ -23,6 +23,7 @@ export interface StatusCardListProps {
   tag: string
   /** 单个项 */
   itemProps?: ItemProps
+  className?: string
 }
 /**插件返回的 CacheStatusCardProps */
 export interface StatusCardProps {

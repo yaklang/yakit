@@ -3427,7 +3427,7 @@ const OutlineTime = () => (
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth="1"
+      strokeWidth="1.5"
     />
   </svg>
 )
@@ -5363,21 +5363,21 @@ const OutlineStethoscope = () => (
     <path
       d="M5.56667 3.29222C5.56993 3.35015 5.59123 3.40557 5.62755 3.45065C5.66386 3.49573 5.71336 3.52819 5.76902 3.54342C5.82469 3.55865 5.88371 3.55589 5.93773 3.53553C5.99175 3.51517 6.03804 3.47824 6.07004 3.42997C6.10204 3.3817 6.11813 3.32452 6.11604 3.26654C6.11396 3.20856 6.09379 3.15271 6.0584 3.1069C6.023 3.06108 5.97418 3.02761 5.91883 3.01124C5.86349 2.99487 5.80442 2.99641 5.75 3.01566H4.83333C4.3471 3.01566 3.88079 3.20991 3.53697 3.55568C3.19315 3.90145 3 4.37041 3 4.8594V9.46877C3 10.9357 3.57946 12.3426 4.61091 13.3799C5.64236 14.4172 7.04131 15 8.5 15C9.95869 15 11.3576 14.4172 12.3891 13.3799C13.4205 12.3426 14 10.9357 14 9.46877V4.8594C14 4.37041 13.8068 3.90145 13.463 3.55568C13.1192 3.20991 12.6529 3.01566 12.1667 3.01566H11.25C11.2319 3.03382 11.2176 3.05538 11.2078 3.0791C11.1981 3.10283 11.193 3.12826 11.193 3.15394C11.193 3.17962 11.1981 3.20505 11.2078 3.22878C11.2176 3.2525 11.2319 3.27406 11.25 3.29222C11.2681 3.31038 11.2895 3.32479 11.3131 3.33461C11.3367 3.34444 11.362 3.3495 11.3875 3.3495C11.413 3.3495 11.4383 3.34444 11.4619 3.33461C11.4855 3.32479 11.5069 3.31038 11.525 3.29222"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
     <path
       d="M8 15.7V15.6C8 17.0322 8.57946 18.4057 9.61091 19.4184C10.6424 20.4311 12.0413 21 13.5 21C14.9587 21 16.3576 20.4311 17.3891 19.4184C18.4205 18.4057 19 17.0322 19 15.6V12"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
     <path
       d="M19 12C20.1046 12 21 11.1046 21 10C21 8.89543 20.1046 8 19 8C17.8954 8 17 8.89543 17 10C17 11.1046 17.8954 12 19 12Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -5395,7 +5395,7 @@ const OutlineDeprecated = () => (
     <path
       d="M23 12H1M20.1818 12C20.1818 16.4183 16.5187 20 12 20C7.48131 20 3.81818 16.4183 3.81818 12C3.81818 7.58172 7.48131 4 12 4C16.5187 4 20.1818 7.58172 20.1818 12Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -5431,7 +5431,7 @@ const OutlileHistory = () => (
     <path
       d="M1 12H5L7.5 16.5L10.5 3.5L14 20.5L17 8L18.5 12H23"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -5484,7 +5484,7 @@ const OutlinCompileThree = () => (
     <path
       d="M11 16L13 8M15 10L17 12L15 14M9 14L7 12L9 10M5 20H19C20.1046 20 21 19.1046 21 18V6C21 4.89543 20.1046 4 19 4H5C3.89543 4 3 4.89543 3 6V18C3 19.1046 3.89543 20 5 20Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -5536,7 +5536,7 @@ const PositionIcon = () => (
     <path
       d="M2 12H6M12 2V6M18 12H22M12 18V22M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12ZM14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -5742,13 +5742,13 @@ const FileUpIcon = () => (
     <path
       d="M14.5 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7.5L14.5 2Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M12 12V18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M15 15L12 12L9 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M14 2V8H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12 12V18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M15 15L12 12L9 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
 
@@ -5764,21 +5764,21 @@ const AtomIcon = () => (
     <path
       d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
     <path
       d="M20.1999 20.1999C22.2399 18.1699 20.2199 12.8399 15.6999 8.29989C11.1599 3.77989 5.82989 1.75989 3.79989 3.79989C1.75989 5.82989 3.77989 11.1599 8.29989 15.6999C12.8399 20.2199 18.1699 22.2399 20.1999 20.1999Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
     <path
       d="M15.6999 15.6999C20.2199 11.1599 22.2399 5.82989 20.1999 3.79989C18.1699 1.75989 12.8399 3.77989 8.29989 8.29989C3.77989 12.8399 1.75989 18.1699 3.79989 20.1999C5.82989 22.2399 11.1599 20.2199 15.6999 15.6999Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -5844,7 +5844,7 @@ const Home = () => (
     <path
       d="M1.30005 5.99805L10 10.998M10 10.998L18.7001 5.99805M10 10.998L10 20.998M19 6.99795C18.9996 6.64722 18.9071 6.30276 18.7315 5.99911C18.556 5.69546 18.3037 5.44331 18 5.26795L11 1.26795C10.696 1.09241 10.3511 1 10 1C9.64893 1 9.30404 1.09241 9 1.26795L2 5.26795C1.69626 5.44331 1.44398 5.69546 1.26846 5.99911C1.09294 6.30276 1.00036 6.64722 1 6.99795V14.9979C1.00036 15.3487 1.09294 15.6931 1.26846 15.9968C1.44398 16.3004 1.69626 16.5526 2 16.7279L9 20.7279C9.30404 20.9035 9.64893 20.9959 10 20.9959C10.3511 20.9959 10.696 20.9035 11 20.7279L18 16.7279C18.3037 16.5526 18.556 16.3004 18.7315 15.9968C18.9071 15.6931 18.9996 15.3487 19 14.9979V6.99795Z"
       stroke="currentColor"
-      strokeWidth="1"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -5862,7 +5862,7 @@ const Wand = () => (
     <path
       d="M15 4V2M15 16V14M8 9H10M20 9H22M17.7998 11.8L18.9998 13M15 9H15.01M17.7998 6.2L18.9998 5M3 21L12 12M12.2 6.2L11 5"
       stroke="currentColor"
-      strokeWidth="1"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -6076,7 +6076,7 @@ const RedoDot = () => (
     <path
       d="M21 7V13M21 13H15M21 13L18 10.3C16.3511 8.82116 14.2149 8.00226 12 8C9.61305 8 7.32387 8.94821 5.63604 10.636C3.94821 12.3239 3 14.6131 3 17M13 17C13 17.5523 12.5523 18 12 18C11.4477 18 11 17.5523 11 17C11 16.4477 11.4477 16 12 16C12.5523 16 13 16.4477 13 17Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -6180,7 +6180,7 @@ const OutlineMessageCirclePlus = () => (
     <path
       d="M8 12H16M12 8V16M7.9 20C9.80858 20.9791 12.0041 21.2443 14.0909 20.7478C16.1777 20.2514 18.0186 19.0259 19.2818 17.2922C20.545 15.5586 21.1474 13.4308 20.9806 11.2922C20.8137 9.15366 19.8886 7.14502 18.3718 5.62824C16.855 4.11146 14.8464 3.1863 12.7078 3.01946C10.5693 2.85263 8.44147 3.45509 6.70782 4.71829C4.97417 5.98149 3.74869 7.82236 3.25222 9.90916C2.75575 11.996 3.02094 14.1915 4 16.1L2 22L7.9 20Z"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -6307,4 +6307,23 @@ const OutlineBrainCircuit = () => (
  */
 export const OutlineBrainCircuitIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineBrainCircuit} {...props} />
+}
+
+const OutlineUserRoundCog = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M2 21C2.00012 19.741 2.29739 18.4997 2.86766 17.3772C3.43792 16.2548 4.26506 15.2827 5.28182 14.5402C6.29858 13.7976 7.47624 13.3056 8.71904 13.104C9.96183 12.9024 11.2347 12.9969 12.434 13.38M19.5001 14.3L19.1001 15.2M16.9 20.8L16.5 21.7001M21.7001 19.5001L20.8 19.1001M15.2 16.9L14.3 16.5M21.7001 16.5L20.8 16.9M15.2 19.1001L14.3 19.5001M19.5001 21.7001L19.1001 20.8M16.9 15.2L16.5 14.3M15 8C15 10.7614 12.7614 13 10 13C7.23858 13 5 10.7614 5 8C5 5.23858 7.23858 3 10 3C12.7614 3 15 5.23858 15 8ZM21 18C21 19.6569 19.6569 21 18 21C16.3431 21 15 19.6569 15 18C15 16.3431 16.3431 15 18 15C19.6569 15 21 16.3431 21 18Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/**
+ *  @description Outline/UserRoundCog
+ */
+export const OutlineUserRoundCogIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineUserRoundCog} {...props} />
 }

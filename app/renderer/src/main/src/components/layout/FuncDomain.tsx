@@ -9,7 +9,7 @@ import {
   YakitWhiteSvgIcon,
 } from './icons'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
-import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, success, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import { ConfigPrivateDomain } from '../ConfigPrivateDomain/ConfigPrivateDomain'
@@ -71,7 +71,18 @@ import emiter from '@/utils/eventBus/eventBus'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
-import { OutlinePencilaltIcon, OutlineRefreshIcon, OutlineSearchIcon, OutlineWrenchIcon } from '@/assets/icon/outline'
+import {
+  OutlineExitIcon,
+  OutlineOfficebuildingIcon,
+  OutlinePencilaltIcon,
+  OutlinePresentationchartlineIcon,
+  OutlinePuzzleIcon,
+  OutlineRefreshIcon,
+  OutlineSearchIcon,
+  OutlineShieldexclamationIcon,
+  OutlineUserRoundCogIcon,
+  OutlineWrenchIcon,
+} from '@/assets/icon/outline'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
@@ -154,6 +165,8 @@ import {
   yakitStream,
   yakitUILayout,
 } from '@/services/electronBridge'
+import { CeUserInfo, CeUserItemProps, UserMenuItemType, CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
+import { CeUsageStatisticsModal } from '../CeUserMenu/CeUsageStatisticsModal'
 
 const removePrefixV = (version: string) => {
   return version.startsWith('v') ? version.substring(1) : version
@@ -214,17 +227,19 @@ export const randomAvatarColor = () => {
   return color
 }
 
-/** 用户菜单 */
-const UserMenusMap: Record<string, YakitMenuItemType> = {
+const UserMenusMap: Record<string, UserMenuItemType> = {
   divider: { type: 'divider' },
-  singOut: { key: 'sign-out', label: 'FuncDomain.signOut', type: 'danger' },
-  pluginAudit: { key: 'plugin-audit', label: 'FuncDomain.pluginAudit' },
-  misstatement: { key: 'misstatement', label: 'FuncDomain.misstatement' },
-  // CE
-  trustList: { key: 'trust-list', label: 'FuncDomain.trustList' },
-  licenseAdmin: { key: 'license-admin', label: 'FuncDomain.licenseAdmin' },
-  dataStatistics: { key: 'data-statistics', label: 'FuncDomain.dataStatistics' },
-  // EE|SE
+  /** CE用户菜单 */
+  singOut: { key: 'sign-out', label: 'FuncDomain.signOut', type: 'danger', icon: <OutlineExitIcon /> },
+  pluginAudit: { key: 'plugin-audit', label: 'FuncDomain.pluginAudit', icon: <OutlinePuzzleIcon /> },
+  misstatement: { key: 'misstatement', label: 'FuncDomain.misstatement', icon: <OutlineShieldexclamationIcon /> },
+  trustList: { key: 'trust-list', label: 'FuncDomain.trustList', icon: <OutlineUserRoundCogIcon /> },
+  licenseAdmin: { key: 'license-admin', label: 'FuncDomain.licenseAdmin', icon: <OutlineOfficebuildingIcon /> },
+  dataStatistics: {
+    key: 'data-statistics',
+    label: 'FuncDomain.dataStatistics',
+    icon: <OutlinePresentationchartlineIcon />,
+  },
   roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
   accountAdmin: { key: 'account-admin', label: 'FuncDomain.accountAdmin' },
   setPassword: { key: 'set-password', label: 'Main.setPassword' },
@@ -280,7 +295,11 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   const [loginShow, setLoginShow] = useState<boolean>(false)
   /** 用户功能菜单 */
   const [userMenu, setUserMenu] = useState<YakitMenuItemType[]>([UserMenusMap['singOut']])
-
+  const [ceUserMenuShow, setCeUserMenuShow] = useState<boolean>(false)
+  const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
+  const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiKeyDetail>()
+  const [apiKeysInfoLoading, setApiKeysInfoLoading] = useState<boolean>(false)
+  const cacheApiKeyRef = useRef<string>()
   /** 修改密码弹框 */
   const [passwordShow, setPasswordShow] = useState<boolean>(false)
   /** 是否允许密码框关闭 */
@@ -299,78 +318,19 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   let avatarColor = useRef<string>(randomAvatarColor())
 
   useEffect(() => {
-    const SetUserInfoModule = () => (
-      <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
-    )
+    // EE|SE 版本
+    if (userInfo.platform === 'company') {
+      // 退出菜单
+      const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
+      const SetUserInfoModule = () => (
+        <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
+      )
 
-    // 退出菜单
-    const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
-    // 用户头像
-    const userAvatar: YakitMenuItemType[] = [
-      { key: 'user-info', label: SetUserInfoModule(), noStyle: true },
-      UserMenusMap['divider'],
-    ]
-
-    // CE 版本
-    if (userInfo.platform !== 'company') {
-      let isNew: boolean = false
-      // CE-超管
-      if (userInfo.role === 'superAdmin') {
-        isNew = true
-        let cacheMenus: YakitMenuItemType[] = [
-          UserMenusMap['trustList'],
-          UserMenusMap['licenseAdmin'],
-          UserMenusMap['pluginAudit'],
-          UserMenusMap['dataStatistics'],
-          UserMenusMap['misstatement'],
-        ].concat(signOutMenu)
-        if (isIRify()) {
-          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
-        }
-        setUserMenu(cacheMenus)
-      }
-      // CE-管理员
-      if (userInfo.role === 'admin') {
-        isNew = true
-        let cacheMenus: YakitMenuItemType[] = [
-          UserMenusMap['pluginAudit'],
-          UserMenusMap['dataStatistics'],
-          UserMenusMap['misstatement'],
-        ].concat(signOutMenu)
-        // IRify 版本时管理员不显示插件管理
-        if (isIRify()) {
-          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
-        }
-        setUserMenu(cacheMenus)
-      }
-      // CE-操作员
-      if (userInfo.role === 'operate') {
-        isNew = true
-        setUserMenu([UserMenusMap['dataStatistics']].concat(signOutMenu))
-      }
-      // CE-license管理员
-      if (userInfo.role === 'licenseAdmin') {
-        isNew = true
-        setUserMenu([UserMenusMap['licenseAdmin']].concat(signOutMenu))
-      }
-      // CE-审核员
-      if (userInfo.role === 'auditor') {
-        isNew = true
-        let cacheMenus: YakitMenuItemType[] = [UserMenusMap['pluginAudit'], UserMenusMap['misstatement']].concat(
-          signOutMenu,
-        )
-        // IRify 版本时管理员不显示插件管理
-        if (isIRify()) {
-          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
-        }
-        setUserMenu(cacheMenus)
-      }
-      // CE-非权限人员
-      if (!isNew) {
-        setUserMenu([UserMenusMap['singOut']])
-      }
-    } else {
-      // EE|SE 版本
+      // 用户头像
+      const userAvatar: YakitMenuItemType[] = [
+        { key: 'user-info', label: SetUserInfoModule(), noStyle: true },
+        UserMenusMap['divider'],
+      ]
       if (userInfo.role === 'admin') {
         // 管理员
         if (isEnpriTraceAgent()) {
@@ -464,7 +424,142 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
       }
     }
-  }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect])
+    // ce版本
+    else {
+      // 退出菜单
+      const signOutMenu: UserMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
+      const SetUserInfoModule = () => (
+        <CeUserInfo
+          userInfo={userInfo}
+          apiKeysInfo={apiKeysInfo}
+          onOpenStatistics={() => {
+            setCeUserMenuShow(false)
+            setUsageStatisticsShow(true)
+          }}
+        />
+      )
+
+      // 用户头像
+      const userAvatar: UserMenuItemType[] = [{ key: 'user-info', label: SetUserInfoModule() }, UserMenusMap['divider']]
+      let isNew: boolean = false
+      // CE-超管
+      if (userInfo.role === 'superAdmin') {
+        isNew = true
+        let cacheMenus: UserMenuItemType[] = [
+          ...userAvatar,
+          UserMenusMap['trustList'],
+          UserMenusMap['licenseAdmin'],
+          UserMenusMap['pluginAudit'],
+          UserMenusMap['dataStatistics'],
+          UserMenusMap['misstatement'],
+        ].concat(signOutMenu)
+        if (isIRify()) {
+          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
+        }
+        setUserMenu(cacheMenus)
+      }
+      // CE-管理员
+      if (userInfo.role === 'admin') {
+        isNew = true
+        let cacheMenus: UserMenuItemType[] = [
+          ...userAvatar,
+          UserMenusMap['pluginAudit'],
+          UserMenusMap['dataStatistics'],
+          UserMenusMap['misstatement'],
+        ].concat(signOutMenu)
+        // IRify 版本时管理员不显示插件管理
+        if (isIRify()) {
+          cacheMenus = cacheMenus.filter((item) => (item as CeUserItemProps).key !== 'plugin-audit')
+        }
+        setUserMenu(cacheMenus)
+      }
+      // CE-操作员
+      if (userInfo.role === 'operate') {
+        isNew = true
+        setUserMenu([...userAvatar, UserMenusMap['dataStatistics']].concat(signOutMenu))
+      }
+      // CE-license管理员
+      if (userInfo.role === 'licenseAdmin') {
+        isNew = true
+        setUserMenu([...userAvatar, UserMenusMap['licenseAdmin']].concat(signOutMenu))
+      }
+      // CE-审核员
+      if (userInfo.role === 'auditor') {
+        isNew = true
+        let cacheMenus: UserMenuItemType[] = [
+          ...userAvatar,
+          UserMenusMap['pluginAudit'],
+          UserMenusMap['misstatement'],
+        ].concat(signOutMenu)
+        // IRify 版本时管理员不显示插件管理
+        if (isIRify()) {
+          cacheMenus = cacheMenus.filter((item) => (item as CeUserItemProps).key !== 'plugin-audit')
+        }
+        setUserMenu(cacheMenus)
+      }
+      // CE-非权限人员
+      if (!isNew) {
+        setUserMenu([...userAvatar, UserMenusMap['singOut']])
+      }
+    }
+  }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo])
+
+  const apiFetchApiKeys = useMemoizedFn((apikey: string, isLoading: boolean = false) => {
+    isLoading && setApiKeysInfoLoading(true)
+    NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
+      method: 'post',
+      url: 'apikeys',
+      data: {
+        keyword: apikey,
+      },
+    })
+      .then((res) => {
+        if (res.data.length > 0) {
+          setApiKeysInfo(res.data[0])
+        } else {
+          setApiKeysInfo(undefined)
+        }
+      })
+      .catch((err) => {
+        yakitFailed(t('FuncDomain.getApiKeyDetailFailed', { error: err }))
+      })
+      .finally(() => {
+        isLoading && setApiKeysInfoLoading(false)
+      })
+  })
+
+  const getGrpcApiKey = useDebounceFn(
+    () => {
+      if (userInfo.isLogin && userInfo.token && userInfo.platform !== 'company') {
+        yakitEngine
+          .getApiKeyByOnline({ Token: userInfo.token })
+          .then((res) => {
+            cacheApiKeyRef.current = res.ApiKey
+            apiFetchApiKeys(res.ApiKey)
+          })
+          .catch((err) => {
+            yakitFailed(t('FuncDomain.getApiKeyTokenFailed', { error: err }))
+          })
+      }
+      if (!userInfo.isLogin) {
+        setApiKeysInfo(undefined)
+        cacheApiKeyRef.current = undefined
+      }
+    },
+    { wait: 500 },
+  ).run
+
+  const onUpdateApiKey = useMemoizedFn((isLoading: boolean = false) => {
+    if (cacheApiKeyRef.current) {
+      apiFetchApiKeys(cacheApiKeyRef.current, isLoading)
+    } else {
+      getGrpcApiKey()
+    }
+  })
+
+  useEffect(() => {
+    getGrpcApiKey()
+  }, [userInfo.isLogin])
 
   /** 渲染端通信-打开一个指定页面 */
   const onOpenPage = useMemoizedFn((info: RouteToPageProps) => {
@@ -565,6 +660,87 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     }
   }, [])
 
+  const onUserMenuClick = useMemoizedFn((key: string) => {
+    if (key === 'sign-out') {
+      if (dynamicStatus.isDynamicStatus || dynamicStatus.isDynamicSelfStatus) {
+        Modal.confirm({
+          title: t('YakitModal.friendlyReminder'),
+          icon: <ExclamationCircleOutlined />,
+          content: t('FuncDomain.signOutRemoteConfirm'),
+          cancelText: t('YakitButton.cancel'),
+          okText: t('YakitButton.exit'),
+          onOk() {
+            if (dynamicStatus.isDynamicStatus) {
+              yakitNetwork.logoutDynamicControl({
+                loginOut: true,
+              })
+            }
+            if (dynamicStatus.isDynamicSelfStatus) {
+              yakitNetwork.killDynamicControl().finally(() => {
+                setStoreUserInfo(defaultUserInfo)
+                loginOut(userInfo)
+                setTimeout(() => success(t('FuncDomain.signOutSuccess')), 500)
+              })
+              // 立即退出界面
+              yakitNetwork.exitDynamicControlPage()
+            }
+          },
+          onCancel() {},
+          cancelButtonProps: {
+            size: 'small',
+            className: 'modal-cancel-button',
+          },
+          okButtonProps: { size: 'small', className: 'modal-ok-button' },
+        })
+      } else {
+        setStoreUserInfo(defaultUserInfo)
+        loginOut(userInfo)
+        setTimeout(() => success(t('FuncDomain.signOutSuccess')), 500)
+      }
+    }
+    if (key === 'trust-list') {
+      onOpenPage({ route: YakitRoute.TrustListPage })
+    }
+    if (key === 'set-password') {
+      setPasswordClose(true)
+      setPasswordShow(true)
+    }
+    if (key === 'upload-data') setUploadModalShow(true)
+    if (key === 'role-admin') {
+      onOpenPage({ route: YakitRoute.RoleAdminPage })
+    }
+    if (key === 'account-admin') {
+      onOpenPage({ route: YakitRoute.AccountAdminPage })
+    }
+    if (key === 'license-admin') {
+      onOpenPage({ route: YakitRoute.LicenseAdminPage })
+    }
+    if (key === 'plugin-audit') {
+      onOpenPage({ route: YakitRoute.Plugin_Audit })
+    }
+    if (key === 'hole-collect') {
+      onOpenPage({ route: YakitRoute.HoleCollectPage })
+    }
+    if (key === 'control-admin') {
+      onOpenPage({ route: YakitRoute.ControlAdminPage })
+    }
+    if (key === 'data-statistics') {
+      onOpenPage({ route: YakitRoute.Data_Statistics })
+    }
+    if (key === 'system-config') {
+      onOpenPage({ route: YakitRoute.System_Config })
+    }
+    if (key === 'dynamic-control') {
+      setDynamicControlModal(true)
+    }
+    if (key === 'close-dynamic-control') {
+      yakitNetwork.logoutDynamicControl({ loginOut: false })
+    }
+    if (key === 'misstatement') {
+      onOpenPage({ route: YakitRoute.Misstatement })
+    }
+  })
+
   return (
     <div className={styles['func-domain-wrapper']} onDoubleClick={(e) => e.stopPropagation()}>
       <div className={classNames(styles['func-domain-body'], { [styles['func-domain-reverse-body']]: isReverse })}>
@@ -613,125 +789,74 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
               })}
             >
               {userInfo.isLogin ? (
-                <div
-                  className={classNames({
-                    [styles['user-info']]: !dynamicConnect,
-                    [styles['user-info-dynamic']]: dynamicConnect,
-                  })}
-                >
-                  <YakitDropdownMenu
-                    key={i18n.language}
-                    menu={{
-                      data: userMenu.map((item) => {
-                        const obj = cloneDeep(item)
-                        // @ts-ignore
-                        if (obj?.label && typeof obj.label === 'string') {
-                          // @ts-ignore
-                          obj.label = t(obj.label)
+                <>
+                  {userInfo.platform === 'company' ? (
+                    <div
+                      className={classNames({
+                        [styles['user-info']]: !dynamicConnect,
+                        [styles['user-info-dynamic']]: dynamicConnect,
+                      })}
+                    >
+                      <YakitDropdownMenu
+                        key={i18n.language}
+                        menu={{
+                          data: userMenu.map((item) => {
+                            const obj = cloneDeep(item)
+                            // @ts-ignore
+                            if (obj?.label && typeof obj.label === 'string') {
+                              // @ts-ignore
+                              obj.label = t(obj.label)
+                            }
+                            return obj
+                          }),
+                          onClick: (e) => {
+                            const { key } = e
+                            setDynamicMenuOpen(false)
+                            onUserMenuClick(key)
+                          },
+                        }}
+                        dropdown={{
+                          placement: 'bottom',
+                          trigger: ['click'],
+                          onVisibleChange: (value: boolean) => {
+                            setDynamicMenuOpen(value)
+                          },
+                        }}
+                      >
+                        {judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect, t)}
+                      </YakitDropdownMenu>
+                    </div>
+                  ) : (
+                    <div className={styles['user-info']}>
+                      <YakitPopover
+                        overlayClassName={classNames(styles['ui-op-plus-dropdown'])}
+                        placement={'bottomRight'}
+                        trigger={'click'}
+                        content={
+                          <CeUserMenuContent
+                            menu={userMenu}
+                            onItemClick={(key) => {
+                              setCeUserMenuShow(false)
+                              onUserMenuClick(key)
+                            }}
+                          />
                         }
-                        return obj
-                      }),
-                      onClick: (e) => {
-                        const { key } = e
-                        setDynamicMenuOpen(false)
-                        if (key === 'sign-out') {
-                          if (dynamicStatus.isDynamicStatus || dynamicStatus.isDynamicSelfStatus) {
-                            Modal.confirm({
-                              title: t('YakitModal.friendlyReminder'),
-                              icon: <ExclamationCircleOutlined />,
-                              content: t('FuncDomain.signOutRemoteConfirm'),
-                              cancelText: t('YakitButton.cancel'),
-                              okText: t('YakitButton.exit'),
-                              onOk() {
-                                if (dynamicStatus.isDynamicStatus) {
-                                  yakitNetwork.logoutDynamicControl({
-                                    loginOut: true,
-                                  })
-                                }
-                                if (dynamicStatus.isDynamicSelfStatus) {
-                                  yakitNetwork.killDynamicControl().finally(() => {
-                                    setStoreUserInfo(defaultUserInfo)
-                                    loginOut(userInfo)
-                                    setTimeout(() => success(t('FuncDomain.signOutSuccess')), 500)
-                                  })
-                                  // 立即退出界面
-                                  yakitNetwork.exitDynamicControlPage()
-                                }
-                              },
-                              onCancel() {},
-                              cancelButtonProps: {
-                                size: 'small',
-                                className: 'modal-cancel-button',
-                              },
-                              okButtonProps: { size: 'small', className: 'modal-ok-button' },
-                            })
-                          } else {
-                            setStoreUserInfo(defaultUserInfo)
-                            loginOut(userInfo)
-                            setTimeout(() => success(t('FuncDomain.signOutSuccess')), 500)
+                        visible={ceUserMenuShow}
+                        onVisibleChange={(visible) => {
+                          if (visible) {
+                            onUpdateApiKey()
                           }
-                        }
-                        if (key === 'trust-list') {
-                          onOpenPage({ route: YakitRoute.TrustListPage })
-                        }
-                        if (key === 'set-password') {
-                          setPasswordClose(true)
-                          setPasswordShow(true)
-                        }
-                        if (key === 'upload-data') setUploadModalShow(true)
-                        if (key === 'role-admin') {
-                          onOpenPage({ route: YakitRoute.RoleAdminPage })
-                        }
-                        if (key === 'account-admin') {
-                          onOpenPage({ route: YakitRoute.AccountAdminPage })
-                        }
-                        if (key === 'license-admin') {
-                          onOpenPage({ route: YakitRoute.LicenseAdminPage })
-                        }
-                        if (key === 'plugin-audit') {
-                          onOpenPage({ route: YakitRoute.Plugin_Audit })
-                        }
-                        if (key === 'hole-collect') {
-                          onOpenPage({ route: YakitRoute.HoleCollectPage })
-                        }
-                        if (key === 'control-admin') {
-                          onOpenPage({ route: YakitRoute.ControlAdminPage })
-                        }
-                        if (key === 'data-statistics') {
-                          onOpenPage({ route: YakitRoute.Data_Statistics })
-                        }
-                        if (key === 'system-config') {
-                          onOpenPage({ route: YakitRoute.System_Config })
-                        }
-                        if (key === 'dynamic-control') {
-                          setDynamicControlModal(true)
-                        }
-                        if (key === 'close-dynamic-control') {
-                          yakitNetwork.logoutDynamicControl({ loginOut: false })
-                        }
-                        if (key === 'misstatement') {
-                          onOpenPage({ route: YakitRoute.Misstatement })
-                        }
-                      },
-                    }}
-                    dropdown={{
-                      placement: 'bottom',
-                      trigger: ['click'],
-                      onVisibleChange: (value: boolean) => {
-                        setDynamicMenuOpen(value)
-                      },
-                    }}
-                  >
-                    {userInfo.platform === 'company' ? (
-                      judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect, t)
-                    ) : (
-                      <img
-                        src={userInfo[UserPlatformType[userInfo.platform || ''].img] || yakitImg}
-                        style={{ width: 24, height: 24, borderRadius: '50%' }}
-                      />
-                    )}
-                  </YakitDropdownMenu>
-                </div>
+                          setCeUserMenuShow(visible)
+                        }}
+                      >
+                        <img
+                          src={userInfo[UserPlatformType[userInfo.platform || ''].img] || yakitImg}
+                          style={{ width: 24, height: 24, borderRadius: '50%' }}
+                        />
+                      </YakitPopover>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className={styles['user-show']} onClick={() => setLoginShow(true)}>
                   <UnLoginSvgIcon />
@@ -743,6 +868,17 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       </div>
 
       {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)} />}
+
+      {apiKeysInfo && (
+        <CeUsageStatisticsModal
+          visible={usageStatisticsShow}
+          apiKeysInfo={apiKeysInfo}
+          onClose={() => setUsageStatisticsShow(false)}
+          update={() => onUpdateApiKey(true)}
+          loading={apiKeysInfoLoading}
+        />
+      )}
+
       <YakitModal
         visible={passwordShow}
         closable={passwordClose}

@@ -1,6 +1,7 @@
 {
   "ProjectManage": {
     "server": "Server",
+    "builtin": "Built-in",
     "projectCode": "Project Code",
     "moduleCode": "Module Code",
     "description": "Description",
