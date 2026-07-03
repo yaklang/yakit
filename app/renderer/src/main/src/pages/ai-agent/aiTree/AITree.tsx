@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useMemo, useState } from 'react'
 import { AITreeNodeProps, AITreeProps } from './type'
 import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from './icon'
 import { OutlineInformationcircleIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
@@ -8,14 +8,10 @@ import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import styles from './AITree.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { AITaskInfoProps, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
+import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
 import { AIHistorySkipTask } from '../chatTemplate/historyTaskTree/HistoryTaskTree'
-import useAIAgentStore from '../useContext/useStore'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { DefaultTodoListCardData } from '@/pages/ai-re-act/hooks/defaultConstant'
-import { cloneDeep } from 'lodash'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import { Tooltip } from 'antd'
 import { yakitNotify } from '@/utils/notification'
 
@@ -116,10 +112,6 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
     aiTreeTitleExtraNode,
     taskType,
   }) => {
-    const [todoListVisible, setTodoListVisible] = useState<boolean>(false)
-
-    const { activeChat } = useAIAgentStore()
-    const { chatIPCEvents } = useChatIPCDispatcher()
     const lineNum = useMemo(() => {
       return data.level - START_LEVEL
     }, [data.level])
@@ -133,26 +125,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
         return info
       }
     })
-    const getTodoData: () => TodoListCardData = useMemoizedFn(() => {
-      if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
-      try {
-        return (
-          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.taskChat.planDetailsMap.get(data.index)
-            ?.todoList || cloneDeep(DefaultTodoListCardData)
-        )
-      } catch (error) {
-        return cloneDeep(DefaultTodoListCardData)
-      }
-    })
-    const todoListRef = useRef<TodoListCardData>(getTodoData())
-    const onVisibleChange = useMemoizedFn((visible: boolean) => {
-      if (visible) {
-        todoListRef.current = getTodoData()
-      } else {
-        todoListRef.current = cloneDeep(DefaultTodoListCardData)
-      }
-      setTodoListVisible(visible)
-    })
+
     const onDetails = useMemoizedFn(() => {
       if (!data.task_id) {
         yakitNotify('error', 'task_id为空')
@@ -193,15 +166,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
             {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskIndex={data.index} />}
             {taskType === 'current' && data.isLeaf && (
               <Tooltip title="任务详情" placement="top">
-                <YakitButton
-                  size="small"
-                  icon={<OutlineListTodoIcon />}
-                  type="text2"
-                  className={classNames({
-                    [styles['list-to-do-icon']]: !todoListVisible,
-                  })}
-                  onClick={onDetails}
-                />
+                <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
               </Tooltip>
             )}
             {aiTreeTitleExtraNode && <div className={styles['ai-tree-extra-node']}>{aiTreeTitleExtraNode?.(data)}</div>}
@@ -259,7 +224,6 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
 
     const onMouseLeave = useMemoizedFn((e) => {
       e.stopPropagation()
-      if (todoListVisible) onVisibleChange(false)
       onNodeHoverEnd?.()
     })
 
