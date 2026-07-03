@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react'
+import React, { memo } from 'react'
 import { useCreation } from 'ahooks'
 import { cloneDeep } from 'lodash'
 import { ResponseSpeedEcharts } from '../../chatTemplate/AIEcharts'
@@ -10,13 +10,12 @@ import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { CONTEXT_PERF_POLL_INTERVAL, ContextPerfPanelProps, useContextPerfStore } from './useContextPerfStore'
 import styles from '../AIChatContent.module.scss'
 
-const ContextCostPanel: React.FC<ContextPerfPanelProps> = ({ session, execute }) => {
+const ContextCostPanel: React.FC<ContextPerfPanelProps> = ({ execute }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const getPerfData = useContextPerfStore(session)
-  const getData = useCallback(() => getPerfData()?.firstCost ?? null, [getPerfData])
+  const aiPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: firstCost } = useRafPolling({
-    getData,
+    getData: () => aiPerfData.firstCost ?? null,
     interval: CONTEXT_PERF_POLL_INTERVAL,
     shouldStop: () => !execute,
     resetDeps: [execute],

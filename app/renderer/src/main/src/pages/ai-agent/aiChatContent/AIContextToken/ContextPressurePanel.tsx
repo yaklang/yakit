@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react'
+import React, { memo } from 'react'
 import { useCreation } from 'ahooks'
 import { cloneDeep } from 'lodash'
 import { ContextPressureEcharts } from '../../chatTemplate/AIEcharts'
@@ -13,11 +13,11 @@ import styles from '../AIChatContent.module.scss'
 
 const ContextPressurePanel: React.FC<ContextPerfPanelProps> = ({ session, execute }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const getPerfData = useContextPerfStore(session)
-  const getData = useCallback(() => getPerfData()?.pressure ?? null, [getPerfData])
+
+  const getPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: pressure } = useRafPolling({
-    getData,
+    getData: () => getPerfData.pressure ?? null,
     interval: CONTEXT_PERF_POLL_INTERVAL,
     shouldStop: () => !execute,
     resetDeps: [execute],
