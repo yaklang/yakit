@@ -65,7 +65,7 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
       {showCancelTask && taskIndex != null && framePayload.chatType === 'task' && (
         <AIHistorySkipTask taskIndex={taskIndex} />
       )}
-      {showDetails && (
+      {showDetails && framePayload.chatType === 'task' && (
         <Tooltip title="任务详情" placement="top">
           <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
         </Tooltip>
