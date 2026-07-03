@@ -12,9 +12,9 @@ import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '@/pages/ai-agent/store/constants'
 import type { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AISource, AIStartParams, AITaskStatusType } from './grpcApi'
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import type { AIAgentChatData, AIAgentChatMetaData, AIChatData } from '@/pages/ai-agent/type/aiChat'
+import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { createChatStore } from './chatStore'
+import { ChatMultiSessionController } from './ChatMultiSessionController'
 
 // #region 公共 hooks 事件
 export interface UseHookBaseParams {
@@ -328,14 +328,11 @@ export interface UseAIChatLogEvents {
 // #endregion
 
 // #region AI-Agent相关grpc流数据处理逻辑
-export interface AIMessageHandlerParams {
+export interface AIMessageHandlerParams extends ReturnType<ChatMultiSessionController['ensureSession']> {
+  sessionId: string
   /** grpc流原始数据 */
   res: AIOutputEvent
   chatType: ChatListRenderType
-  store: ReturnType<typeof createChatStore>
-  rawData: AIAgentChatData
-  request: AIStartParams
-  meta: AIAgentChatMetaData
   sendRequest: (request: AIInputEvent) => void
   pushLog: (log: AIAgentGrpcApi.Log) => void
 }

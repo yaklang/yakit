@@ -229,9 +229,8 @@ const handleStream: AIMessageHandler = (requestInfo) => {
         token: streamData.id,
         kind: 'item',
         type: streamData.type,
-        dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+        isHistory: res.IsSync,
       },
-      groupTokenGenerator: () => '',
     })
   }
 }
@@ -331,7 +330,7 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
 }
 
 const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, request, meta } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'reference_material') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -350,9 +349,8 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
           token: chatData.id,
           kind: 'item',
           type: chatData.type,
-          dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+          isHistory: res.IsSync,
         },
-        groupTokenGenerator: () => '',
       })
     } else if (chatData.type === AIChatQSDataTypeEnum.STREAM) {
       if (toolResult && isToolStdoutStream(chatData.data.NodeId)) {
@@ -366,9 +364,8 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
             token: chatData.id,
             kind: 'item',
             type: chatData.type,
-            dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+            isHistory: res.IsSync,
           },
-          groupTokenGenerator: () => '',
         })
       }
       return
@@ -380,9 +377,8 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
           token: chatData.id,
           kind: 'item',
           type: chatData.type,
-          dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+          isHistory: res.IsSync,
         },
-        groupTokenGenerator: () => '',
       })
     }
   } else if (
@@ -418,9 +414,8 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
         token: chatData.id,
         kind: 'item',
         type: chatData.type,
-        dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+        isHistory: res.IsSync,
       },
-      groupTokenGenerator: () => '',
     })
   }
 }
@@ -433,11 +428,3 @@ export const aiStreamDataHandlers = {
   'stream-finished': handleStreamFinished,
   reference_material: handleReferenceMaterial,
 } as const
-
-const exampleHandle = (res: AIOutputEvent) => {
-  let funcKey = res.Type
-  if (res.Type === 'structured' && ['stream-finished'].includes(res.NodeId)) {
-    // stream数据结束标识
-    funcKey = res.NodeId
-  }
-}

@@ -31,9 +31,8 @@ const handleThought: AIMessageHandler = (requestInfo) => {
       token: chatData.id,
       kind: 'item',
       type: chatData.type,
-      dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+      isHistory: res.IsSync,
     },
-    groupTokenGenerator: () => '',
   })
 }
 
@@ -65,9 +64,8 @@ const handleResult: AIMessageHandler = (requestInfo) => {
       token: chatData.id,
       kind: 'item',
       type: chatData.type,
-      dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+      isHistory: res.IsSync,
     },
-    groupTokenGenerator: () => '',
   })
 }
 
@@ -100,9 +98,8 @@ const handleFailReactTask: AIMessageHandler = (requestInfo) => {
       token: chatData.id,
       kind: 'item',
       type: chatData.type,
-      dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+      isHistory: res.IsSync,
     },
-    groupTokenGenerator: () => '',
   })
 }
 
@@ -139,9 +136,8 @@ const handleToolCallDecision: AIMessageHandler = (requestInfo) => {
       token: chatData.id,
       kind: 'item',
       type: chatData.type,
-      dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+      isHistory: res.IsSync,
     },
-    groupTokenGenerator: () => '',
   })
 }
 
@@ -174,9 +170,8 @@ const handleFailPlanAndExecution: AIMessageHandler = (requestInfo) => {
       token: chatData.id,
       kind: 'item',
       type: chatData.type,
-      dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+      isHistory: res.IsSync,
     },
-    groupTokenGenerator: () => '',
   })
 }
 
@@ -208,9 +203,8 @@ const handleApiRequestFailed: AIMessageHandler = (requestInfo) => {
       token: chatData.id,
       kind: 'item',
       type: chatData.type,
-      dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+      isHistory: res.IsSync,
     },
-    groupTokenGenerator: () => '',
   })
 }
 
@@ -267,9 +261,8 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
         token: chatData.id,
         kind: 'item',
         type: chatData.type,
-        dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+        isHistory: res.IsSync,
       },
-      groupTokenGenerator: () => '',
     })
   }
 }
@@ -313,9 +306,8 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
       token: chatData.id,
       kind: 'item',
       type: chatData.type,
-      dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+      isHistory: res.IsSync,
     },
-    groupTokenGenerator: () => '',
   })
 }
 
@@ -387,9 +379,8 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
         token: chatData.id,
         kind: 'task',
         type: chatData.type,
-        dataOrigin: res.IsSync ? 'grpc_history_data' : 'grpc_realtime_data',
+        isHistory: res.IsSync,
       },
-      groupTokenGenerator: () => '',
     })
   }
 }
@@ -440,34 +431,3 @@ export const aiSingleItemDataHandlers = {
   push_task: handlePushTask,
   pop_task: handlePopTask,
 } as const
-
-const exampleHandle = (res: AIOutputEvent) => {
-  let funcKey = res.Type
-  if (
-    res.Type === 'structured' &&
-    [
-      'session_title',
-      'timeline_item',
-      'react_task_enqueue',
-      'react_task_dequeue',
-      'queue_info',
-      'react_task_status_changed',
-      'status',
-    ].includes(res.NodeId)
-  ) {
-    // stream数据结束标识
-    funcKey = res.NodeId
-  } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
-    funcKey = res.NodeId
-  } else if (res.Type === 'report_finish' || res.NodeId === 'report-finish') {
-    funcKey = res.NodeId
-  } else if (res.Type === 'structured' && res.NodeId === 'system') {
-    const ipcContent = Uint8ArrayToString(res.Content) || ''
-    const data = JSON.parse(ipcContent) || ''
-    if (data && typeof data === 'object' && data?.type === 'push_task') {
-      funcKey = 'push_task'
-    } else if (data && typeof data === 'object' && data?.type === 'pop_task') {
-      funcKey = 'pop_task'
-    }
-  }
-}
