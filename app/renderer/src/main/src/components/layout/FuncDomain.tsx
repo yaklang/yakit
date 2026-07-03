@@ -18,7 +18,7 @@ import { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yaki
 import { showConfigSystemProxyForm } from '@/utils/ConfigSystemProxy'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
 import Login from '@/pages/Login'
-import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
+import { useConfigManagementTab, useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { defaultUserInfo, SetUserInfo } from '@/pages/MainOperator'
 import { loginOut } from '@/utils/login'
 import { UserPlatformType } from '@/pages/globalVariable'
@@ -1138,6 +1138,14 @@ const GetUIOpSettingMenu = () => {
       label: '配置插件源',
     },
     {
+      key: 'proxy-management',
+      label: '网络代理管理',
+    },
+    {
+      key: 'hotPatch-management',
+      label: '全局热加载管理',
+    },
+    {
       key: 'cve-database',
       label: 'CVE 数据库',
       children: [
@@ -1196,6 +1204,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   const [available, setAvailable] = useState(false) // cve数据库是否可用
   const [isDiffUpdate, setIsDiffUpdate] = useState(false)
   const { dynamicStatus } = yakitDynamicStatus()
+  const { setConfigManagementActiveTab } = useConfigManagementTab()
   const { delTemporaryProject } = useTemporaryProjectStore()
   const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
   /** 当前主题 */
@@ -1244,6 +1253,14 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           content: <ConfigPrivateDomain onClose={() => m.destroy()} />,
         })
         return m
+      case 'proxy-management':
+        setConfigManagementActiveTab('proxy')
+        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
+        return
+      case 'hotPatch-management':
+        setConfigManagementActiveTab('hotPatch')
+        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
+        return
       case 'reverse':
         showYakitModal({
           type: 'white',
