@@ -1,10 +1,9 @@
 import useClickFocus from '@/pages/ai-re-act/hooks/useClickFocus'
 import classNames from 'classnames'
-import { memo, useState } from 'react'
+import React, { memo, useState } from 'react'
 import type { AITaskExecutionListProps, AITaskActionItemProps } from './type'
 import styles from './AITaskExecutionList.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import React from 'react'
 
 function AITaskExecutionListInner<T>(props: AITaskExecutionListProps<T>) {
   const { list, header, renderItem, classNameList } = props
