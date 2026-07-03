@@ -439,7 +439,6 @@ export const StartupPage: React.FC = () => {
   useEffect(() => {
     // 出现更多版本按钮的情况、非连接状态，获取更多引擎列表，并启动定时器
     const statusArr: YakitStatusType[] = [
-      'softwareBasics',
       'install',
       'installNetWork',
       'link_countdown',
