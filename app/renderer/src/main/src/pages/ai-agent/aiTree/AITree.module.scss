@@ -98,8 +98,7 @@
         border-right: 4px solid var(--bg-hover-color);
       }
       .node-title .node-extra {
-        .info-icon,
-        .list-to-do-icon {
+        .info-icon {
           display: block;
         }
       }
@@ -131,9 +130,6 @@
         align-items: center;
         gap: 4px;
         .info-icon {
-          display: none;
-        }
-        .list-to-do-icon {
           display: none;
         }
       }
