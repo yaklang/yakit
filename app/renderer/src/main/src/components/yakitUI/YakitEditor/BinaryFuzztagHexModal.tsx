@@ -41,7 +41,7 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
 
   const previewHex = useMemo(() => bytesToHex(dataRef.current.slice(0, 8)), [hostVersion])
   const byteLen = useMemo(() => dataRef.current.length, [hostVersion])
-  const handleCopyMenuClick = async ({ key }: { key: string }) => {
+  const handleCopyMenuClick = useCallback(async ({ key }: { key: string }) => {
     try {
       switch (key) {
         case 'copy-raw': {
@@ -73,7 +73,7 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
     } catch (error) {
       yakitNotify('error', `${error}`)
     }
-  }
+  }, [])
   const copyMenu = useMemo(
     () => ({
       data: [
@@ -83,7 +83,7 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
       ],
       onClick: handleCopyMenuClick,
     }),
-    [],
+    [handleCopyMenuClick],
   )
   const handleExportMenuClick = useCallback(
     async ({ key }: { key: string }) => {

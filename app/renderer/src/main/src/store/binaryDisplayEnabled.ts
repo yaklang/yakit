@@ -20,7 +20,9 @@ const hydrateFromRemote = () => {
   if (hydrating) return hydrating
   hydrating = getRemoteValue(RemoteHistoryGV.BinaryDisplayEnabled)
     .then((value) => {
-      store.setSnapshot(() => parseRemoteBinaryDisplayEnabled(value))
+      if (!hydrated) {
+        store.setSnapshot(() => parseRemoteBinaryDisplayEnabled(value))
+      }
       hydrated = true
     })
     .catch(() => {
