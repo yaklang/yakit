@@ -138,7 +138,10 @@
     "advancedConfigToolTips": "高階配置優先順序高於單個標籤頁配置項",
     "dragSelectConfig": "框選配置",
     "dragSelectMultiData": "選取多條數據",
-    "dragSelectMultiDataTip": "勾選後,框選時支援選取多個資料包"
+    "dragSelectMultiDataTip": "勾選後,框選時支援選取多個資料包",
+    "binaryDisplayConfig": "二進位展示配置",
+    "binaryDisplayModal": "使用二進位彈框展示",
+    "binaryDisplayModalTip": "不開啟則會使用舊展示，直接將二進位流用 fuzztag 包裹展示"
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "請問是否要儲存高階配置並關閉彈框？",

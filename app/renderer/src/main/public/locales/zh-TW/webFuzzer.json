@@ -130,7 +130,9 @@
     "fuzzerTagDebugTool": "Fuzzer Tag 調試工具",
     "fuzzerTagDebugToolSubTitle": "偵錯模式適合生成或修改 Payload，巢狀預設巢狀在最外層，可以選取位置進行巢狀，插入則單純在游標位置插入 fuzztag",
     "payloadNotify": "Payload 為空 / Fuzz 模板為空",
-    "editorBug": "BUG: 編輯器失效"
+    "editorBug": "BUG: 編輯器失效",
+    "binaryDisplay": "二進位",
+    "binaryDisplayTip": "不開啟則會使用舊展示方式，直接將二進位流用 fuzztag 包裹展示"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丟棄[{{droppedCount}}]個響應",

@@ -130,7 +130,9 @@
     "fuzzerTagDebugTool": "Fuzzer Tag 调试工具",
     "fuzzerTagDebugToolSubTitle": "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
     "payloadNotify": "Payload 为空 / Fuzz 模版为空",
-    "editorBug": "BUG: 编辑器失效"
+    "editorBug": "BUG: 编辑器失效",
+    "binaryDisplay": "二进制",
+    "binaryDisplayTip": "不开启则会使用旧展示方式，直接将二进制流用 fuzztag 包裹展示"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{{droppedCount}}]个响应",

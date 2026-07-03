@@ -5,6 +5,8 @@ export enum RemoteHistoryGV {
   BackgroundRefresh = 'background-refresh',
   /** @name 是否开启框选多选 */
   DragSelectEnabled = 'drag-select-enabled',
+  /** @name 是否开启二进制显示 */
+  BinaryDisplayEnabled = 'binary-display-enabled',
   /** @name 排除展示列key值 */
   HistroyExcludeColumnsKey = 'history-exclude-columns-newkey',
   HistroyColumnsOrder = 'history-columns-neworder',

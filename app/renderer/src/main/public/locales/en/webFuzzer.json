@@ -130,7 +130,9 @@
     "fuzzerTagDebugTool": "Fuzzer Tag Debug Tool",
     "fuzzerTagDebugToolSubTitle": "Debug mode is suitable for generating or modifying payloads. Nesting defaults to the outermost level, but you can select a position to nest. \"Insert\" simply inserts the fuzztag at the cursor position.",
     "payloadNotify": "Payload is empty / Fuzz template is empty",
-    "editorBug": "BUG: Editor not working"
+    "editorBug": "BUG: Editor not working",
+    "binaryDisplay": "Binary",
+    "binaryDisplayTip": "When disabled, the legacy display is used: binary streams are shown wrapped in fuzztags"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{{droppedCount}}] responses",

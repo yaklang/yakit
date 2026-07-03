@@ -138,7 +138,10 @@
     "advancedConfigToolTips": "高级配置优先级高于单个标签页配置项",
     "dragSelectConfig": "框选配置",
     "dragSelectMultiData": "选中多条数据",
-    "dragSelectMultiDataTip": "勾选后,框选时支持选中多条数据包"
+    "dragSelectMultiDataTip": "勾选后,框选时支持选中多条数据包",
+    "binaryDisplayConfig": "二进制展示配置",
+    "binaryDisplayModal": "使用二进制弹框展示",
+    "binaryDisplayModalTip": "不开启则会使用旧展示，直接将二进制流用 fuzztag 包裹展示"
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "请问是否要保存高级配置并关闭弹框？",
