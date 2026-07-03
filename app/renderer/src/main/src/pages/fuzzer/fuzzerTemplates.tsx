@@ -1,7 +1,9 @@
+import i18n from '@/i18n/i18n'
 import { IMonacoCodeEditor, IMonacoEditor } from '../../utils/editors'
 import { EncodeTag } from './templates/SingleTag'
 import { IRange } from 'monaco-editor'
 import './style.css'
+const tOriginal = i18n.getFixedT(null, 'webFuzzer')
 
 export interface FuzzOperatorItem {
   name: string
@@ -54,142 +56,216 @@ export const monacoEditorRemoveAllHighlight = (editor?: IMonacoEditor) => {
   }
 }
 
-export const encodeOperators: FuzzOperatorItem[] = [
-  {
-    name: '全部转大写',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'upper'} help={'编码标签内容转大写'} />
-    ),
-    tag: 'upper',
-  },
-  {
-    name: '全部转小写',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'lower'} help={'编码标签内容转小写'} />
-    ),
-    tag: 'lower',
-  },
-  {
-    name: `解析成字符串（例如{{str(\\xA0\\x45)}}）`,
-    optionsRender: (s, callback) => (
-      <EncodeTag
-        {...{ origin: s, setOrigin: callback }}
-        tag={'str'}
-        help={'解析成字符串（例如{{str("\xA0\x45")}}），用于转换不可见字符'}
-      />
-    ),
-    tag: 'str',
-  },
-  {
-    name: 'base64编码',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'base64enc'} help={'Base64 编码标签内内容'} />
-    ),
-    tag: 'base64enc',
-  },
-  {
-    name: 'base64解码',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'base64dec'} help={'Base64 解码标签内内容'} />
-    ),
-    tag: 'base64dec',
-  },
-  {
-    name: '16进制编码',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'hex'} help={'把标签内容变成16进制编码'} />
-    ),
-    tag: 'hex',
-  },
-  {
-    name: '16进制解码',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'hexdec'} help={'把标签内容按16进制解码'} />
-    ),
-    tag: 'hexdec',
-  },
-  {
-    name: '计算SHA1',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha1'} help={'计算标签内容的 Sha1'} />
-    ),
-    tag: 'sha1',
-  },
-  {
-    name: '计算SHA256',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha256'} help={'计算标签内容的 Sha256'} />
-    ),
-    tag: 'sha256',
-  },
-  {
-    name: '计算SHA512',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha512'} help={'计算标签内容的 Sha512'} />
-    ),
-    tag: 'sha512',
-  },
-  {
-    name: 'URL 编码',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'urlenc'} help={'把标签内容变成URL 编码'} />
-    ),
-    tag: 'urlenc',
-  },
-  {
-    name: 'URL 解码',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'urldec'} help={'把标签内容按URL 解码'} />
-    ),
-    tag: 'urldec',
-  },
-  {
-    name: "'双重URL'编码",
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'doubleurlenc'} help={"把标签内容变成'双重URL'编码"} />
-    ),
-    tag: 'doubleurlenc',
-  },
-  {
-    name: "'双重URL'解码",
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'doubleurldec'} help={"把标签内容按'双重URL'解码"} />
-    ),
-    tag: 'doubleurldec',
-  },
-  {
-    name: 'HTML(&#xxxx;)编码',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'html'} help={'把标签内容变成HTML(&#xxxx;)编码'} />
-    ),
-    tag: 'html',
-  },
-  {
-    name: 'HTML(&#xAAAA;)编码 - 16进制',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'htmlhex'} help={'把标签内容变成HTML(&#xAAAA;)编码'} />
-    ),
-    tag: 'htmlhex',
-  },
-  {
-    name: 'HTML(&#xxxx;)解码',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'htmldec'} help={'把标签内容按HTML(&#xxxx;)解码'} />
-    ),
-    tag: 'htmldec',
-  },
-  {
-    name: "'ASCII'编码",
-    tag: 'ascii',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'ascii'} help={"把标签内容变成'ASCII'编码"} />
-    ),
-  },
-  {
-    name: "'ASCII'解码",
-    tag: 'asciidec',
-    optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'asciidec'} help={"把标签内容按'ASCII'解码"} />
-    ),
-  },
-]
+export const encodeOperators: () => FuzzOperatorItem[] = () => {
+  return [
+    {
+      name: tOriginal('FuzzerTemplates.uppercase_all'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'upper'}
+          help={tOriginal('FuzzerTemplates.convert_tag_content_to_uppercase')}
+        />
+      ),
+      tag: 'upper',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.lowercase_all'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'lower'}
+          help={tOriginal('FuzzerTemplates.convert_tag_content_to_lowercase')}
+        />
+      ),
+      tag: 'lower',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.parse_as_string_eg_str_xa0_x45'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'str'}
+          help={tOriginal('FuzzerTemplates.parse_as_string_e_g_str_xa0_x45_for_co')}
+        />
+      ),
+      tag: 'str',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.base64_encode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'base64enc'}
+          help={tOriginal('FuzzerTemplates.base64_encode_tag_content')}
+        />
+      ),
+      tag: 'base64enc',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.base64_decode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'base64dec'}
+          help={tOriginal('FuzzerTemplates.base64_decode_tag_content')}
+        />
+      ),
+      tag: 'base64dec',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.hex_encode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'hex'}
+          help={tOriginal('FuzzerTemplates.convert_tag_content_to_hex_encoding')}
+        />
+      ),
+      tag: 'hex',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.hex_decode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'hexdec'}
+          help={tOriginal('FuzzerTemplates.decode_tag_content_from_hex')}
+        />
+      ),
+      tag: 'hexdec',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.calculate_sha1'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'sha1'}
+          help={tOriginal('FuzzerTemplates.calculate_sha1_of_tag_content')}
+        />
+      ),
+      tag: 'sha1',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.calculate_sha256'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'sha256'}
+          help={tOriginal('FuzzerTemplates.calculate_sha256_of_tag_content')}
+        />
+      ),
+      tag: 'sha256',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.calculate_sha512'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'sha512'}
+          help={tOriginal('FuzzerTemplates.calculate_sha512_of_tag_content')}
+        />
+      ),
+      tag: 'sha512',
+    },
+    {
+      name: tOriginal('EncodeComponent.urlEncode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'urlenc'}
+          help={tOriginal('FuzzerTemplates.url_encode_tag_content')}
+        />
+      ),
+      tag: 'urlenc',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.url_decode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'urldec'}
+          help={tOriginal('FuzzerTemplates.url_decode_tag_content')}
+        />
+      ),
+      tag: 'urldec',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.double_url_encode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'doubleurlenc'}
+          help={tOriginal('FuzzerTemplates.double_url_encode_tag_content')}
+        />
+      ),
+      tag: 'doubleurlenc',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.double_url_decode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'doubleurldec'}
+          help={tOriginal('FuzzerTemplates.double_url_decode_tag_content')}
+        />
+      ),
+      tag: 'doubleurldec',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.html_xxxx_encode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'html'}
+          help={tOriginal('FuzzerTemplates.html_xxxx_encode_tag_content')}
+        />
+      ),
+      tag: 'html',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.html_xaaaa_hex_encode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'htmlhex'}
+          help={tOriginal('FuzzerTemplates.html_xaaaa_encode_tag_content')}
+        />
+      ),
+      tag: 'htmlhex',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.html_xxxx_decode'),
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'htmldec'}
+          help={tOriginal('FuzzerTemplates.html_xxxx_decode_tag_content')}
+        />
+      ),
+      tag: 'htmldec',
+    },
+    {
+      name: tOriginal('FuzzerTemplates.ascii_encode'),
+      tag: 'ascii',
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'ascii'}
+          help={tOriginal('FuzzerTemplates.ascii_encode_tag_content')}
+        />
+      ),
+    },
+    {
+      name: tOriginal('FuzzerTemplates.ascii_decode'),
+      tag: 'asciidec',
+      optionsRender: (s, callback) => (
+        <EncodeTag
+          {...{ origin: s, setOrigin: callback }}
+          tag={'asciidec'}
+          help={tOriginal('FuzzerTemplates.ascii_decode_tag_content')}
+        />
+      ),
+    },
+  ]
+}

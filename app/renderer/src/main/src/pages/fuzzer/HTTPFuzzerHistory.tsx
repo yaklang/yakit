@@ -162,7 +162,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                 <InputItem
                     label={
                         <div style={{display: "flex", alignItems: "center"}}>
-                            
+
                             <Tooltip title={"快速搜索 Host 与 Request 中的内容"}>
                                 <YakitButton type='text' size={"small"} icon={<QuestionOutlined />} />
                             </Tooltip>

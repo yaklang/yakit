@@ -62,7 +62,6 @@ import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useProxy } from '@/hook/useProxy'
-import i18n from '@/i18n/i18n'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -415,7 +414,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
   const onApply = useMemoizedFn(() => {
     if (!cachedTotal) {
-      yakitNotify('warning', `请发送多个请求包后再应用`)
+      yakitNotify('warning', t('FuzzerSequence.pleaseSendMultipleRequestsBeforeApply'))
       return
     }
     matchSubmitFun()
@@ -1110,7 +1109,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               </YakitPanel>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.dns_config')}
-                key={'DNS配置'}
+                key="DNS配置"
                 extra={
                   <YakitButton
                     type="text"

@@ -2,6 +2,7 @@
   "YakitButton": {
     "ok": "確定",
     "confirm": "確認",
+    "well": "好的",
     "cancel": "取消",
     "save": "儲存",
     "save_as": "另存為",
@@ -302,7 +303,8 @@
     "remainingTime": "剩餘時間：{{time}}s",
     "elapsedTime": "耗時：{{time}}s",
     "downloadSpeed": "下載速度：{{speed}}M/s",
-    "completedPercent": "已完成 {{percent}}%"
+    "completedPercent": "已完成 {{percent}}%",
+    "updated_percent": "已更新 {{percent}}%"
   },
   "YakitSelect": {
     "pleaseSelect": "請選擇...",

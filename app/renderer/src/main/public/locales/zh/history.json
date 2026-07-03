@@ -4,7 +4,8 @@
     "process": "进程",
     "builtinTag": "系统Tag",
     "pleaseEnterDomainToSearch": "请输入域名进行搜索，例baidu.com",
-    "AI": "AI"
+    "AI": "AI",
+    "new_session": "新建会话"
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "找不到该请求详情",

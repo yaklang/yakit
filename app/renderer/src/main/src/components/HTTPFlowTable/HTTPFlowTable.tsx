@@ -2634,7 +2634,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     showSetting,
     showSourceType,
     size?.width,
-    t,
+    i18n.language,
     total,
     updateData,
   ])

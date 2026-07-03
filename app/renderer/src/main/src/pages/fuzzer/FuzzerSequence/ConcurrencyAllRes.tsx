@@ -231,7 +231,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
 
   const onApply = useMemoizedFn(() => {
     if (!cachedTotal) {
-      yakitNotify('warning', `请发送多个请求包后再应用`)
+      yakitNotify('warning', t('FuzzerSequence.pleaseSendMultipleRequestsBeforeApply'))
       return
     }
     handleMatchSubmit()

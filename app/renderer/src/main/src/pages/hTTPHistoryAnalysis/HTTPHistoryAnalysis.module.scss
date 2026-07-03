@@ -147,6 +147,7 @@
 
     &-default {
       height: 100%;
+      min-height: 500px;
       padding-top: 16px;
 
       &-header {
@@ -325,6 +326,7 @@
     .matchers-heard-left {
       display: flex;
       align-items: center;
+      min-width: 300px;
     }
 
     .matchers-heard-right {
