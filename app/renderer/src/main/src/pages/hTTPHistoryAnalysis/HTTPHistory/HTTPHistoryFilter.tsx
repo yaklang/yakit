@@ -28,6 +28,7 @@ import {
 } from '@/assets/icon/outline'
 import classNames from 'classnames'
 import { RemoteHistoryGV } from '@/enums/history'
+import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import {
   AdvancedSet,
@@ -1418,6 +1419,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
   // #region 表格列 设置
   const [advancedSetVisible, setAdvancedSetVisible] = useState<boolean>(false)
+  const binaryDisplayEnabled = useBinaryDisplayEnabled()
   const isAdvancedSet = useCreation(() => {
     const realDefalutColumnsOrder = defalutColumnsOrderRef.current.filter((key) => !specialCustoms(key))
     const orderFlag1 =
@@ -2823,13 +2825,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       {advancedSetVisible && (
         <AdvancedSet
           showBackgroundRefresh={false}
+          binaryDisplayEnabled={binaryDisplayEnabled}
           columnsAllStr={JSON.stringify(configColumnRef.current.filter((item) => !specialCustoms(item.dataKey)))}
           onCancel={() => {
             setAdvancedSetVisible(false)
           }}
           onSave={(setting) => {
             setAdvancedSetVisible(false)
-            const { configColumnsAll } = setting
+            const { binaryDisplayEnabled: newBinaryDisplayEnabled, configColumnsAll } = setting
+            if (newBinaryDisplayEnabled !== binaryDisplayEnabled) {
+              binaryDisplayEnabledStore.setEnabled(newBinaryDisplayEnabled)
+            }
             // 自定义列
             const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
             const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]

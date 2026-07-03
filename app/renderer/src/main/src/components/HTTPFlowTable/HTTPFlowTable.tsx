@@ -52,6 +52,7 @@ import { PluginSwitchToTag } from '@/pages/pluginEditor/defaultconstants'
 import cloneDeep from 'lodash/cloneDeep'
 import { setClipboardText } from '@/utils/clipboard'
 import { RemoteHistoryGV } from '@/enums/history'
+import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
 import { v4 as uuidv4 } from 'uuid'
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
@@ -250,6 +251,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   /** ---------- 后台刷新 Start ---------- */
   const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
   const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(true)
+  const binaryDisplayEnabled = useBinaryDisplayEnabled()
   const isBackgroundRefresh = useMemo(() => {
     return backgroundRefresh && pageType !== 'MITM'
   }, [backgroundRefresh, pageType])
@@ -2735,6 +2737,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       {advancedSetVisible && (
         <AdvancedSet
           dragSelectEnabled={dragSelectEnabled}
+          binaryDisplayEnabled={binaryDisplayEnabled}
           columnsAllStr={JSON.stringify(configColumnRef.current.filter((item) => !specialCustoms(item.dataKey)))}
           onCancel={() => {
             setAdvancedSetVisible(false)
@@ -2744,6 +2747,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const {
               backgroundRefresh: newBackgroundRefresh,
               dragSelectEnabled: newDragSelectEnabled,
+              binaryDisplayEnabled: newBinaryDisplayEnabled,
               configColumnsAll,
             } = setting
             // 后台刷新
@@ -2752,6 +2756,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (newDragSelectEnabled !== dragSelectEnabled) {
               setDragSelectEnabled(newDragSelectEnabled)
               setRemoteValue(RemoteHistoryGV.DragSelectEnabled, newDragSelectEnabled ? 'true' : 'false')
+            }
+            // 二进制展示配置
+            if (newBinaryDisplayEnabled !== binaryDisplayEnabled) {
+              binaryDisplayEnabledStore.setEnabled(newBinaryDisplayEnabled)
             }
             // 自定义列
             const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)

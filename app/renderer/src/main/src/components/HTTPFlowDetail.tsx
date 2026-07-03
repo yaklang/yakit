@@ -25,6 +25,7 @@ import { ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon } from '@/assets/newIcon'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
 import classNames from 'classnames'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
 import { YakitResizeBox } from './yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 import { YakitCheckableTag } from './yakitUI/YakitTag/YakitCheckableTag'
@@ -1308,6 +1309,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     execAutoDecodeCallback,
   } = props
   const { t, i18n } = useI18nNamespaces(['history'])
+  const binaryDisplayEnabled = useBinaryDisplayEnabled()
 
   // 编辑器发送到对比器
   const { compareState, setCompareLeft, setCompareRight } = useHttpFlowStore()
@@ -1818,7 +1820,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             })()}
             originValue={originResValue}
             readOnly={true}
-            foldBinaryFuzztag={true}
+            foldBinaryFuzztag={binaryDisplayEnabled}
             webFuzzerValue={originResValue}
             noLineNumber={true}
             sendToWebFuzzer={sendToWebFuzzer}

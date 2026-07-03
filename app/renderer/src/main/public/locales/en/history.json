@@ -138,7 +138,10 @@
     "advancedConfigToolTips": "Advanced configuration takes precedence over individual tab configuration items",
     "dragSelectConfig": "Frame selection configuration",
     "dragSelectMultiData": "Select multiple data entries",
-    "dragSelectMultiDataTip": "When checked, multiple data packets can be selected when using a selection box"
+    "dragSelectMultiDataTip": "When checked, multiple data packets can be selected when using a selection box",
+    "binaryDisplayConfig": "Binary Display Configuration",
+    "binaryDisplayModal": "Use binary modal display",
+    "binaryDisplayModalTip": "When disabled, the legacy display is used: binary streams are shown wrapped in fuzztags"
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",

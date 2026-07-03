@@ -2241,6 +2241,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         <ShortcutKeyFocusHook style={{ height: '100%', width: '100%', overflow: 'hidden' }} focusId={focusIds}>
           <MonacoEditor
             // height={100}
+            key={foldBinaryEnabled ? 'binary-fold-on' : 'binary-fold-off'}
             theme={theme || 'kurior'}
             value={displayValue}
             onChange={handleBinaryChange}

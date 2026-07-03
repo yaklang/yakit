@@ -893,6 +893,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const [hex, setHex] = useState<boolean>(false)
   const [privacy, setPrivacy] = useState(false)
+  const [foldBinaryFuzztag, setFoldBinaryFuzztag] = useState(false)
 
   const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
   const hotPatchCodeWithParamGetterRef = useRef<string>('')
@@ -2034,6 +2035,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                   {t('YakitButton.privacy_mode')}&nbsp;
                   <YakitSwitch checked={privacy} onChange={setPrivacy} />
                 </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Tooltip title={t('HTTPFuzzerPage.binaryDisplayTip')}>
+                    <span>{t('HTTPFuzzerPage.binaryDisplay')}</span>
+                  </Tooltip>
+                  <YakitSwitch checked={foldBinaryFuzztag} onChange={setFoldBinaryFuzztag} />
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   HEX
                   <YakitSwitch checked={hex} onChange={setHex} />
@@ -2048,6 +2055,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             <YakitCheckableTag checked={privacy} onChange={setPrivacy} style={{ marginRight: 0 }}>
               {t('YakitButton.privacy_mode')}
             </YakitCheckableTag>
+            <Tooltip title={t('HTTPFuzzerPage.binaryDisplayTip')}>
+              <YakitCheckableTag checked={foldBinaryFuzztag} onChange={setFoldBinaryFuzztag} style={{ marginRight: 0 }}>
+                {t('HTTPFuzzerPage.binaryDisplay')}
+              </YakitCheckableTag>
+            </Tooltip>
             <YakitCheckableTag checked={hex} onChange={setHex} style={{ marginRight: 0 }}>
               HEX
             </YakitCheckableTag>
@@ -3006,6 +3018,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           : undefined
                       }
                       privacy={privacy}
+                      foldBinaryFuzztag={foldBinaryFuzztag}
                     />
                     {casualReviewQueue[0] ? (
                       <WebFuzzerCasualReplaceReviewOverlay
@@ -3070,6 +3083,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 secondNodeExtra={secondNodeExtra}
                                 onSetOnlyOneResEditor={setOnlyOneResEditor}
                                 loading={loading}
+                                foldBinaryFuzztag={foldBinaryFuzztag}
                               />
                             </div>
                           ) : (
@@ -4346,6 +4360,7 @@ interface ResponseViewerProps {
 
   keepSearchName?: string
   pageId?: string
+  foldBinaryFuzztag?: boolean
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
@@ -4372,6 +4387,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       onSetOnlyOneResEditor,
       loading,
       pageId,
+      foldBinaryFuzztag = false,
     } = props
     const { t, i18n } = useI18nNamespaces(['webFuzzer'])
 
@@ -4676,6 +4692,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
               extraEditorProps={{
                 isShowSelectRangeMenu: true,
                 pageId,
+                foldBinaryFuzztag,
               }}
               typeOptionVal={resTypeOptionVal}
               onTypeOptionVal={(typeOptionVal) => {
