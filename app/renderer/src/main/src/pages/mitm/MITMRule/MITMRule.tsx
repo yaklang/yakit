@@ -239,7 +239,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     })
     const hijackSendDisableTrafficGuard = useMemoizedFn(() => {
       const value: MITMDisableTrafficGuardRequest = {
-        DisableTrafficGuard: !disableTrafficGuardRef.current,
+        DisableTrafficGuard: disableTrafficGuardRef.current,
         version: mitmVersion,
       }
       grpcDisableTrafficGuard(value)

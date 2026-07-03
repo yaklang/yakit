@@ -5,5 +5,5 @@ export enum RemoteMitmGV {
   MitmTraceResizeBox = 'MitmTrace_ResizeBox',
   MitmSNI = 'MitmSNI',
   MitmAdvancedConfig = 'MitmAdvancedConfig',
-  MitmDisableTrafficGuard = 'MitmDisableTrafficGuard',
+  MitmDisableTrafficGuard = 'Mitm_DisableTrafficGuard',
 }
