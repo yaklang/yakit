@@ -893,7 +893,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const [hex, setHex] = useState<boolean>(false)
   const [privacy, setPrivacy] = useState(false)
-  const [foldBinaryFuzztag, setFoldBinaryFuzztag] = useState(false)
+  const [foldBinaryFuzztag, setFoldBinaryFuzztag] = useState(true)
 
   const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
   const hotPatchCodeWithParamGetterRef = useRef<string>('')

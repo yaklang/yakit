@@ -21,7 +21,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   const {
     showBackgroundRefresh = true,
     dragSelectEnabled: propDragSelectEnabled = true,
-    binaryDisplayEnabled: propBinaryDisplayEnabled = false,
+    binaryDisplayEnabled: propBinaryDisplayEnabled = true,
     columnsAllStr,
     onCancel,
     onSave,

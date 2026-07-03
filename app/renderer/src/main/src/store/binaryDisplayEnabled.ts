@@ -3,7 +3,14 @@ import { RemoteHistoryGV } from '@/enums/history'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { createExternalStore } from '@/utils/createExternalStore'
 
-const store = createExternalStore(false)
+const DEFAULT_BINARY_DISPLAY_ENABLED = true
+
+const store = createExternalStore(DEFAULT_BINARY_DISPLAY_ENABLED)
+
+const parseRemoteBinaryDisplayEnabled = (value?: string | null) => {
+  if (value === 'false') return false
+  return DEFAULT_BINARY_DISPLAY_ENABLED
+}
 
 let hydrated = false
 let hydrating: Promise<void> | null = null
@@ -13,7 +20,7 @@ const hydrateFromRemote = () => {
   if (hydrating) return hydrating
   hydrating = getRemoteValue(RemoteHistoryGV.BinaryDisplayEnabled)
     .then((value) => {
-      store.setSnapshot(() => value === 'true')
+      store.setSnapshot(() => parseRemoteBinaryDisplayEnabled(value))
       hydrated = true
     })
     .catch(() => {
