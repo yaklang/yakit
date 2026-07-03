@@ -776,7 +776,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                           setMoreVersionPopShow(visible)
                         }}
                       >
-                        <span className={classNames(styles['primary-btn'])}>更多版本</span>
+                        <span className={classNames(styles['primary-btn'])}>更多引擎版本</span>
                       </YakitPopover>
                     </div>
                   )}
