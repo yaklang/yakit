@@ -129,10 +129,6 @@ jobs:
                   ./packageScript/script/installRender.sh ${{ inputs.version }}
               shell: bash
 
-            - name: Prepare Mac app signing
-              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh build
-              shell: bash
-
             - name: Enable code signing env
               run: |
                   echo "APPLE_ID=${APPLE_ID}" >> $GITHUB_ENV
