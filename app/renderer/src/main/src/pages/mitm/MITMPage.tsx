@@ -302,7 +302,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         certificates: certs,
         extra,
         version: mitmVersion,
-        DisableTrafficGuard: disableTrafficGuard,
+        DisableTrafficGuard: !disableTrafficGuard,
       }
       return grpcMITMStartCall(params, true).catch((e: any) => {
         notification['error']({ message: t('MITMPage.startMitmFailed') + e })
