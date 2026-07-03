@@ -6,11 +6,13 @@ import type {
   UseCasualChatState,
 } from './type'
 import type { AIChatQSData, AIReviewType, ReActChatRenderItem } from './aiRender'
-import type { AIOutputEvent } from './grpcApi'
+import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType } from './grpcApi'
 import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
+import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
-import { handleGrpcDataPushLog } from './utils'
+import { genBaseAIChatData, handleGrpcDataPushLog } from './utils'
+import { AIChatQSDataTypeEnum } from './aiRender'
 import { yakitNotify } from '@/utils/notification'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
@@ -46,44 +48,79 @@ function useCasualChat(params: UseCasualChatParams) {
     contentMap && contentMap.set(mapKey, value)
   })
 
-  /**
-   * 任务节点开始执行, 生成UI展示的信息
-   * 历史数据里 先给pop_task，后给push_task，所以pop_task是生成数据的主要依据
-   * 自由对话里该类型只有历史数据
-   */
-  // const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
-  //   try {
-  //     let ipcContent = Uint8ArrayToString(res.Content) || ''
-  //     const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-  //     if (!info.task.task_uuid || info.task.index === '1') return
-  //     if (!res.IsSync) return
+  /** 子 agent 任务创建时生成聚合卡片 */
+  const handleReactTaskCreated = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.CasualCreated) => {
+    if (!info.react_task_is_sub_agent) return
 
-  //     let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
-  //     if (!taskNodeInfo) {
-  //       taskNodeInfo = {
-  //         ...genBaseAIChatData(res),
-  //         id: info.task.task_uuid,
-  //         chatType: 'reAct',
-  //         type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
-  //         data: {
-  //           taskIndex: info.task.index,
-  //           taskName: info.task.name,
-  //           goal: info.task.goal,
-  //           status: info.task.task_status || AITaskStatus.error,
-  //         },
-  //       }
-  //       setContentMap(taskNodeInfo.id, taskNodeInfo)
-  //     }
+    const taskKey = info.react_task_id
+    if (!taskKey) return
 
-  //     if (info.type === 'push_task') {
-  //       if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
-  //       setElements((old) => [
-  //         { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'reAct' },
-  //         ...old,
-  //       ])
-  //     }
-  //   } catch {}
-  // })
+    const existing = getContentMap(taskKey)
+    if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+      handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })
+      return
+    }
+
+    if (existing) {
+      if (info.react_task_name) existing.data.taskName = info.react_task_name
+      if (info.react_user_input) existing.data.goal = info.react_user_input
+      existing.data.status = info.react_task_status
+      setContentMap(existing.id, existing)
+      setElements((old) =>
+        old.map((item) => {
+          if (item.token === existing.id && item.type === existing.type) {
+            return { ...item, renderNum: item.renderNum + 1 }
+          }
+          return item
+        }),
+      )
+      return
+    }
+
+    const chatData: AIChatQSData = {
+      ...genBaseAIChatData(res),
+      id: taskKey,
+      chatType: 'reAct',
+      type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
+      data: {
+        taskId: info.react_task_id,
+        taskIndex: info.react_task_id,
+        taskName: info.react_task_name || info.react_user_input || info.react_task_id,
+        goal: info.react_user_input || '',
+        status: info.react_task_status,
+      },
+    } as AIChatQSData
+
+    setContentMap(chatData.id, chatData)
+    setElements((old) => {
+      const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
+      if (exists) return old
+      return [
+        ...old,
+        { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct', kind: 'task', children: [] },
+      ]
+    })
+  })
+
+  /** 子 agent 任务状态变更时更新聚合卡片 */
+  const handleReactTaskStatusChanged = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ReactTaskChanged) => {
+    const taskKey = res.TaskId || info.react_task_id
+    if (!taskKey) return
+
+    const existing = getContentMap(taskKey)
+    if (!existing || existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
+
+    existing.data.status = info.react_task_now_status as AITaskStatusType
+    setContentMap(taskKey, existing)
+    setElements((old) =>
+      old.map((item) => {
+        if (item.token === taskKey && item.type === existing.type) {
+          return { ...item, renderNum: item.renderNum + 1 }
+        }
+        return item
+      }),
+    )
+  })
 
   // #region review数据-hook缓存数据
   const review = useRef<AIChatQSData>()
@@ -98,6 +135,20 @@ function useCasualChat(params: UseCasualChatParams) {
   // 处理数据方法
   const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
     try {
+      const ipcContent = Uint8ArrayToString(res.Content) || ''
+
+      if (res.Type === 'structured' && res.NodeId === 'react_task_created') {
+        const data = JSON.parse(ipcContent) as AIAgentGrpcApi.CasualCreated
+        handleReactTaskCreated(res, data)
+        return
+      }
+
+      if (res.Type === 'structured' && res.NodeId === 'react_task_status_changed') {
+        const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
+        handleReactTaskStatusChanged(res, data)
+        return
+      }
+
       let funcKey = res.Type
       if (res.Type === 'report_finish' && res.NodeId === 'report-finish') {
         funcKey = res.NodeId
@@ -145,14 +196,6 @@ function useCasualChat(params: UseCasualChatParams) {
         })
         return
       }
-
-      // if (res.Type === 'structured' && res.NodeId === 'system') {
-      //   const data = JSON.parse(ipcContent) || ''
-      //   if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
-      //     handleTaskNode(res)
-      //   }
-      //   return
-      // } else
 
       // 未识别类型全部归档到日志处理
       handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })

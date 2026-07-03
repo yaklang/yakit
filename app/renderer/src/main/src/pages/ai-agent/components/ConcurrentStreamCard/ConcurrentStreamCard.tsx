@@ -31,7 +31,7 @@ const ConcurrentStreamCard: FC<{
   isChildWindow?: boolean
   onRefresh?: () => void
 }> = ({ session, elements, chatType, token, isChildWindow, onRefresh }) => {
-  const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
+  const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(isChildWindow || chatType !== 'reAct')
   const { fetchChatDataStore, fetchCurrentTaskPlanID } = useChatIPCDispatcher().chatIPCEvents
 
   const { t } = useI18nNamespaces(['aiAgent'])

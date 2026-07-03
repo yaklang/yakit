@@ -6,6 +6,7 @@ import type { DialogueRecord } from '@/pages/ai-agent/store/type'
 import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType, TodoListCardData } from './aiRender'
 import type { AIChatLogToInfo, AIChatLogData, TaskChatTaskInfo, AIMessageHandlerParams } from './type'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import { AIChatQSDataTypeEnum } from './aiRender'
 import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
@@ -20,12 +21,21 @@ export const generateTaskId = (params: {
   getContentMap: AIMessageHandlerParams['getContentMap']
 }) => {
   const { chatType, res, getCurrentTaskPlanID, getContentMap } = params
+  if (res.TaskId) {
+    const taskGroup = getContentMap(res.TaskId)
+    if (taskGroup?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+      return res.TaskId
+    }
+  }
   if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
-    const taskKey = res.TaskIndex ? `${getCurrentTaskPlanID()?.taskID}-${res.TaskIndex}` : ''
-    return `${getCurrentTaskPlanID()?.taskID}-${!!getContentMap(taskKey) ? res.TaskIndex : 'unknown'}`
+    const defaultKey = `${getCurrentTaskPlanID()?.taskID}-unknown`
+    if (getContentMap(defaultKey)?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
+      return defaultKey
+    }
   }
   return undefined
 }
+
 /** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
 export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/
 /** 校验 TaskIndex 是否符合任务子索引格式 */

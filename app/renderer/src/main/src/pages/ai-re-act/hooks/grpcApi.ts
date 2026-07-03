@@ -845,6 +845,16 @@ export declare namespace AIAgentGrpcApi {
     react_task_old_status: string
   }
 
+  /** 自由对话子 agent 任务创建消息 */
+  export interface CasualCreated {
+    react_task_status: AITaskStatusType
+    react_user_input: string
+    react_task_id: string
+    react_task_uuid: string
+    react_task_name: string
+    react_task_is_sub_agent: boolean
+  }
+
   /** 准备执行任务规划的问题id(react_task_id) */
   export interface ReactTaskToAsync {
     task_id: string

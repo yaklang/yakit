@@ -964,6 +964,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 setCancelTaskLoading(false)
               }
             }
+            casualChatEvent.handleSetData(res)
             return
           } else if (res.NodeId === 'status') {
             if (res.IsSync) return
