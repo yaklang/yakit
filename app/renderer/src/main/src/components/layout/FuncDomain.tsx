@@ -165,7 +165,7 @@ import {
   yakitStream,
   yakitUILayout,
 } from '@/services/electronBridge'
-import { CeUserInfo, CeUserItemProps, CeUserItemType, CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
+import { CeUserInfo, CeUserItemProps, UserMenuItemType, CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import { CeUsageStatisticsModal } from '../CeUserMenu/CeUsageStatisticsModal'
 
 const removePrefixV = (version: string) => {
@@ -227,10 +227,9 @@ export const randomAvatarColor = () => {
   return color
 }
 
-/** PS: 因业务需求现将用户菜单拆分为不同的两套，CE版为新版，EE|SE版为旧版 */
-/** CE用户菜单 */
-const CeUserMenusMap: Record<string, CeUserItemType> = {
+const UserMenusMap: Record<string, UserMenuItemType> = {
   divider: { type: 'divider' },
+  /** CE用户菜单 */
   singOut: { key: 'sign-out', label: 'FuncDomain.signOut', type: 'danger', icon: <OutlineExitIcon /> },
   pluginAudit: { key: 'plugin-audit', label: 'FuncDomain.pluginAudit', icon: <OutlinePuzzleIcon /> },
   misstatement: { key: 'misstatement', label: 'FuncDomain.misstatement', icon: <OutlineShieldexclamationIcon /> },
@@ -241,14 +240,6 @@ const CeUserMenusMap: Record<string, CeUserItemType> = {
     label: 'FuncDomain.dataStatistics',
     icon: <OutlinePresentationchartlineIcon />,
   },
-}
-
-/** EE|SE用户菜单 */
-const CompanyUserMenusMap: Record<string, YakitMenuItemType> = {
-  divider: { type: 'divider' },
-  singOut: { key: 'sign-out', label: 'FuncDomain.signOut', type: 'danger' },
-  pluginAudit: { key: 'plugin-audit', label: 'FuncDomain.pluginAudit' },
-  misstatement: { key: 'misstatement', label: 'FuncDomain.misstatement' },
   roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
   accountAdmin: { key: 'account-admin', label: 'FuncDomain.accountAdmin' },
   setPassword: { key: 'set-password', label: 'Main.setPassword' },
@@ -302,10 +293,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   const { userInfo, setStoreUserInfo } = useStore()
 
   const [loginShow, setLoginShow] = useState<boolean>(false)
-  /** EE|SE用户功能菜单 */
-  const [companyUserMenu, setCompanyUserMenu] = useState<YakitMenuItemType[]>([CompanyUserMenusMap['singOut']])
-  /** CE用户功能菜单 */
-  const [ceUserMenu, setCeUserMenu] = useState<CeUserItemType[]>([CeUserMenusMap['singOut']])
+  /** 用户功能菜单 */
+  const [userMenu, setUserMenu] = useState<YakitMenuItemType[]>([UserMenusMap['singOut']])
   const [ceUserMenuShow, setCeUserMenuShow] = useState<boolean>(false)
   const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
   const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiKeyDetail>()
@@ -332,7 +321,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     // EE|SE 版本
     if (userInfo.platform === 'company') {
       // 退出菜单
-      const signOutMenu: YakitMenuItemType[] = [CompanyUserMenusMap['divider'], CompanyUserMenusMap['singOut']]
+      const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
       const SetUserInfoModule = () => (
         <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
       )
@@ -340,33 +329,33 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       // 用户头像
       const userAvatar: YakitMenuItemType[] = [
         { key: 'user-info', label: SetUserInfoModule(), noStyle: true },
-        CompanyUserMenusMap['divider'],
+        UserMenusMap['divider'],
       ]
       if (userInfo.role === 'admin') {
         // 管理员
         if (isEnpriTraceAgent()) {
-          setCompanyUserMenu([
+          setUserMenu([
             ...userAvatar,
-            CompanyUserMenusMap['holeCollect'],
-            CompanyUserMenusMap['roleAdmin'],
-            CompanyUserMenusMap['accountAdmin'],
-            CompanyUserMenusMap['setPassword'],
-            CompanyUserMenusMap['pluginAudit'],
+            UserMenusMap['holeCollect'],
+            UserMenusMap['roleAdmin'],
+            UserMenusMap['accountAdmin'],
+            UserMenusMap['setPassword'],
+            UserMenusMap['pluginAudit'],
             ...signOutMenu,
           ])
         } else {
           let cacheMenus: YakitMenuItemType[] = [
             ...userAvatar,
-            CompanyUserMenusMap['uploadData'],
-            CompanyUserMenusMap['dynamicControl'],
-            CompanyUserMenusMap['controlAdmin'],
-            CompanyUserMenusMap['closeDynamicControl'],
-            CompanyUserMenusMap['roleAdmin'],
-            CompanyUserMenusMap['accountAdmin'],
-            CompanyUserMenusMap['setPassword'],
-            CompanyUserMenusMap['pluginAudit'],
-            CompanyUserMenusMap['misstatement'],
-            CompanyUserMenusMap['systemConfig'],
+            UserMenusMap['uploadData'],
+            UserMenusMap['dynamicControl'],
+            UserMenusMap['controlAdmin'],
+            UserMenusMap['closeDynamicControl'],
+            UserMenusMap['roleAdmin'],
+            UserMenusMap['accountAdmin'],
+            UserMenusMap['setPassword'],
+            UserMenusMap['pluginAudit'],
+            UserMenusMap['misstatement'],
+            UserMenusMap['systemConfig'],
             ...signOutMenu,
           ]
           // 仅在 IRify 企业版本时显示系统配置
@@ -384,18 +373,18 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           if (isIRify()) {
             cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
           }
-          setCompanyUserMenu([...cacheMenus])
+          setUserMenu([...cacheMenus])
         }
       } else {
         let isNew: boolean = false
         let cacheMenus: YakitMenuItemType[] = [
           ...userAvatar,
-          CompanyUserMenusMap['uploadData'],
-          CompanyUserMenusMap['dynamicControl'],
-          CompanyUserMenusMap['closeDynamicControl'],
-          CompanyUserMenusMap['setPassword'],
-          CompanyUserMenusMap['pluginAudit'],
-          CompanyUserMenusMap['misstatement'],
+          UserMenusMap['uploadData'],
+          UserMenusMap['dynamicControl'],
+          UserMenusMap['closeDynamicControl'],
+          UserMenusMap['setPassword'],
+          UserMenusMap['pluginAudit'],
+          UserMenusMap['misstatement'],
           ...signOutMenu,
         ]
         if (userInfo.role !== 'auditor') {
@@ -428,17 +417,17 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
 
         if (isNew) {
-          setCompanyUserMenu([...cacheMenus])
+          setUserMenu([...cacheMenus])
         } else {
           // 非权限人员
-          setCompanyUserMenu([CompanyUserMenusMap['singOut']])
+          setUserMenu([UserMenusMap['singOut']])
         }
       }
     }
     // ce版本
     else {
       // 退出菜单
-      const signOutMenu: CeUserItemType[] = [CeUserMenusMap['divider'], CeUserMenusMap['singOut']]
+      const signOutMenu: UserMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
       const SetUserInfoModule = () => (
         <CeUserInfo
           userInfo={userInfo}
@@ -451,66 +440,66 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       )
 
       // 用户头像
-      const userAvatar: CeUserItemType[] = [{ key: 'user-info', label: SetUserInfoModule() }, CeUserMenusMap['divider']]
+      const userAvatar: UserMenuItemType[] = [{ key: 'user-info', label: SetUserInfoModule() }, UserMenusMap['divider']]
       let isNew: boolean = false
       // CE-超管
       if (userInfo.role === 'superAdmin') {
         isNew = true
-        let cacheMenus: CeUserItemType[] = [
+        let cacheMenus: UserMenuItemType[] = [
           ...userAvatar,
-          CeUserMenusMap['trustList'],
-          CeUserMenusMap['licenseAdmin'],
-          CeUserMenusMap['pluginAudit'],
-          CeUserMenusMap['dataStatistics'],
-          CeUserMenusMap['misstatement'],
+          UserMenusMap['trustList'],
+          UserMenusMap['licenseAdmin'],
+          UserMenusMap['pluginAudit'],
+          UserMenusMap['dataStatistics'],
+          UserMenusMap['misstatement'],
         ].concat(signOutMenu)
         if (isIRify()) {
           cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
         }
-        setCeUserMenu(cacheMenus)
+        setUserMenu(cacheMenus)
       }
       // CE-管理员
       if (userInfo.role === 'admin') {
         isNew = true
-        let cacheMenus: CeUserItemType[] = [
+        let cacheMenus: UserMenuItemType[] = [
           ...userAvatar,
-          CeUserMenusMap['pluginAudit'],
-          CeUserMenusMap['dataStatistics'],
-          CeUserMenusMap['misstatement'],
+          UserMenusMap['pluginAudit'],
+          UserMenusMap['dataStatistics'],
+          UserMenusMap['misstatement'],
         ].concat(signOutMenu)
         // IRify 版本时管理员不显示插件管理
         if (isIRify()) {
           cacheMenus = cacheMenus.filter((item) => (item as CeUserItemProps).key !== 'plugin-audit')
         }
-        setCeUserMenu(cacheMenus)
+        setUserMenu(cacheMenus)
       }
       // CE-操作员
       if (userInfo.role === 'operate') {
         isNew = true
-        setCeUserMenu([...userAvatar, CeUserMenusMap['dataStatistics']].concat(signOutMenu))
+        setUserMenu([...userAvatar, UserMenusMap['dataStatistics']].concat(signOutMenu))
       }
       // CE-license管理员
       if (userInfo.role === 'licenseAdmin') {
         isNew = true
-        setCeUserMenu([...userAvatar, CeUserMenusMap['licenseAdmin']].concat(signOutMenu))
+        setUserMenu([...userAvatar, UserMenusMap['licenseAdmin']].concat(signOutMenu))
       }
       // CE-审核员
       if (userInfo.role === 'auditor') {
         isNew = true
-        let cacheMenus: CeUserItemType[] = [
+        let cacheMenus: UserMenuItemType[] = [
           ...userAvatar,
-          CeUserMenusMap['pluginAudit'],
-          CeUserMenusMap['misstatement'],
+          UserMenusMap['pluginAudit'],
+          UserMenusMap['misstatement'],
         ].concat(signOutMenu)
         // IRify 版本时管理员不显示插件管理
         if (isIRify()) {
           cacheMenus = cacheMenus.filter((item) => (item as CeUserItemProps).key !== 'plugin-audit')
         }
-        setCeUserMenu(cacheMenus)
+        setUserMenu(cacheMenus)
       }
       // CE-非权限人员
       if (!isNew) {
-        setCeUserMenu([...userAvatar, CeUserMenusMap['singOut']])
+        setUserMenu([...userAvatar, UserMenusMap['singOut']])
       }
     }
   }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo])
@@ -811,7 +800,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                       <YakitDropdownMenu
                         key={i18n.language}
                         menu={{
-                          data: companyUserMenu.map((item) => {
+                          data: userMenu.map((item) => {
                             const obj = cloneDeep(item)
                             // @ts-ignore
                             if (obj?.label && typeof obj.label === 'string') {
@@ -845,7 +834,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         trigger={'click'}
                         content={
                           <CeUserMenuContent
-                            menu={ceUserMenu}
+                            menu={userMenu}
                             onItemClick={(key) => {
                               setCeUserMenuShow(false)
                               onUserMenuClick(key)

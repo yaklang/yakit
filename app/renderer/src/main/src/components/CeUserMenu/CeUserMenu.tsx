@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import classNames from 'classnames'
 import { Avatar } from 'antd'
 import styles from './CeUserMenu.module.scss'
-import { YakitMenuItemDividerProps } from '../yakitUI/YakitMenu/YakitMenu'
+import { YakitMenuItemDividerProps, YakitMenuItemProps, YakitMenuItemType } from '../yakitUI/YakitMenu/YakitMenu'
 import { UserInfoProps } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -11,22 +11,18 @@ import { useMemoizedFn } from 'ahooks'
 import { API } from '@/services/swagger/resposeType'
 import { getTokenLimit, getTokenPercent, getTokenUsed } from './CeUsageStatisticsModal'
 
-export interface CeUserItemProps {
-  key: string
-  label: string | React.ReactNode
+export interface CeUserItemProps extends YakitMenuItemProps {
   icon?: React.ReactNode
-  /** 单项菜单类型(只在叶子节点时有效) */
-  type?: 'success' | 'danger' | 'info' | 'text'
 }
 
-export type CeUserItemType = CeUserItemProps | YakitMenuItemDividerProps
+export type UserMenuItemType = YakitMenuItemType & { icon?: React.ReactNode }
 
-const isDivider = (item: CeUserItemType): item is YakitMenuItemDividerProps => {
+const isDivider = (item: UserMenuItemType): item is YakitMenuItemDividerProps => {
   return 'type' in item && item.type === 'divider'
 }
 
 export interface CeUserMenuContentProps {
-  menu: CeUserItemType[]
+  menu: UserMenuItemType[]
   onItemClick?: (key: string) => void
 }
 
