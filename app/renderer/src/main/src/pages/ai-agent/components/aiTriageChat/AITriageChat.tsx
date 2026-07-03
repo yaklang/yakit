@@ -20,8 +20,8 @@ import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIChatTextareaSubmit } from '../../template/type'
 import { getAIReActRequestParams } from '../../utils'
 import { extractDataWithMilkdown } from '../aiMilkdownInput/utils'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
 
 export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
   const { isAnswer, content, contentClassName, chatClassName, extraValue } = props
@@ -79,9 +79,8 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
 const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.memo((props) => {
   const { extraValue, content, onCancel } = props
   const { activeChat } = useAIAgentStore()
-  const { chatIPCEvents } = useChatIPCDispatcher()
   const { chatDataStoreKey } = useGetChatDataStoreKey()
-
+  const { onSend } = useAIAgentDispatcher()
   const defaultValue = useCreation(() => {
     if (!!extraValue?.showQS) {
       return `${extraValue?.showQS}`
@@ -117,7 +116,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
     e.stopPropagation()
     onCancel()
   })
-  const onSend = useMemoizedFn(() => {
+  const onSendEdit = useMemoizedFn(() => {
     // 发送消息逻辑
     if (!editorMilkdown.current || !activeChat) return
     const qs = getMarkdownValue()
@@ -131,7 +130,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
       showQS: qs,
       focusMode: '',
     }
-    const { extra, attachedResourceInfo } = getAIReActRequestParams(value)
+    const { attachedResourceInfo } = getAIReActRequestParams(value)
 
     const chatMessage: AIInputEvent = {
       IsFreeInput: true,
@@ -139,14 +138,13 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
       AttachedResourceInfo: attachedResourceInfo,
       FocusModeLoop: value.focusMode,
     }
-    chatIPCEvents.onSend({
+    onSend({
       token: activeChat.SessionID,
       type: 'casual',
       params: {
         IsFreeInput: true,
         ...chatMessage,
       },
-      extraValue: extra,
     })
     onCancel()
   })
@@ -159,7 +157,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
     if (!e.nativeEvent?.isComposing && keys?.join() === YakitKeyBoard.Enter) {
       e.stopPropagation()
       e.preventDefault()
-      onSend()
+      onSendEdit()
     }
   })
 
@@ -187,7 +185,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
           disabled={disabled}
           onClick={(e) => {
             e.stopPropagation()
-            onSend()
+            onSendEdit()
           }}
         >
           发送

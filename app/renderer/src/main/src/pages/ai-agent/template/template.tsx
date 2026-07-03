@@ -55,7 +55,6 @@ import OpenFileDropdown, { OpenFileDropdownItem } from '../aiChatWelcome/OpenFil
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
 import { insertAtCurrentPosition } from '../components/aiMilkdownInput/customPlugin'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
@@ -68,6 +67,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -107,8 +108,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       onHttpFlowRemove,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-    const { chatIPCData } = useChatIPCStore()
-    const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
+
+    const store = useCurrentStore()
+    const execute = useStore(store, (state) => state.execute)
 
     const [manualAdditionVisible, setManualAdditionVisible] = useState<boolean>(false)
 

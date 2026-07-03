@@ -6,14 +6,15 @@ import {
 import { type FC, useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './AITaskDefaultGroupCard.module.scss'
 import ConcurrentStreamCardActions from '../ConcurrentStreamCard/ConcurrentStreamCardActions/ConcurrentStreamCardActions'
-import { useBoolean } from 'ahooks'
+import { useBoolean, useCreation } from 'ahooks'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { useConcurrentStreamRefreshListener } from '../ConcurrentStreamCard/concurrentStream/useConcurrentStreamRefreshListener'
 import AITaskDefaultGroupContent from './AITaskDefaultGroupContent'
+import { useCurrentStore, useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const AITaskDefaultGroupCard: FC<{
   elements: ReActChatTaskElementSub[]
@@ -25,15 +26,19 @@ const AITaskDefaultGroupCard: FC<{
   onRefresh?: () => void
 }> = ({ elements, session, token, chatType, hasNext, isChildWindow, onRefresh }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
   const [contentFocused, setContentFocused] = useState(false)
 
-  const raw = fetchChatDataStore()?.getContentMap({
-    session,
-    chatType,
-    mapKey: token,
-  }) as ChatTaskDefaultGroup | undefined
+  const store = useCurrentStore()
+  const renderNum = useStore(store, (state) => state.items[token].renderNum)
+  const rawData = useCurrentRawData()
+
+  const raw = useCreation(() => {
+    if (!rawData) return null
+    const itemData = rawData.contents.get(token)
+    if (!itemData) return null
+    return { ...itemData } as ChatTaskDefaultGroup
+  }, [renderNum])
 
   const framePayload = useMemo(
     () => ({

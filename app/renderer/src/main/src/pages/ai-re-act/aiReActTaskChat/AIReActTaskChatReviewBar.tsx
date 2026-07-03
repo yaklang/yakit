@@ -1,4 +1,4 @@
-import React, { type FC, type ReactNode } from 'react'
+import { type FC, type ReactNode } from 'react'
 import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { AIRenderTaskFooterExtra } from './AIReActTaskChat'

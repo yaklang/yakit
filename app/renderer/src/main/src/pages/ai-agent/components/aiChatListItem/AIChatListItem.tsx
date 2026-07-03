@@ -183,7 +183,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
           streamClassName={aiStreamNodeProps}
         />
       )
-    return <StaticChatContent {...item} session={session} render={(contentItem) => ChatItemRenderer(contentItem)} />
+    return <StaticChatContent token={item.token} render={(contentItem) => ChatItemRenderer(contentItem)} />
   })
   return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
 })

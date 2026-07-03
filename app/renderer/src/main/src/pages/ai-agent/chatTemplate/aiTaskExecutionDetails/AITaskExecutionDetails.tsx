@@ -394,15 +394,19 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props) => {
   const { list } = props
 
-  const { handleSendSyncMessage } = useChatIPCDispatcher() // TODO -
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
 
   const onRemove = useMemoizedFn((processes: AIBrowserProcessesProps['list'][number]) => {
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_CLOSE_BROWSER,
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_CLOSE_BROWSER,
+      SyncID: randomString(8),
       SyncJsonInput: JSON.stringify({
         process_id: processes.process_id,
       }),
-    })
+    }
+    onSend({ token: sessionId, type: '', params: info })
   })
   return (
     <div className={classNames(styles['browser-processes'])}>
