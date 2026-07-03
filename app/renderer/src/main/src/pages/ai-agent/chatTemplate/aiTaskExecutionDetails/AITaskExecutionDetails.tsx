@@ -221,23 +221,23 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   const showForge = useCreation(() => {
     if (!planItemDetailsData) return false
     return forgeFixedList.length > 0 || forgeDynamicList.length > 0
-  }, [forgeFixedList, forgeDynamicList, planItemDetailsData])
+  }, [forgeFixedList.length, forgeDynamicList.length])
   const showTool = useCreation(() => {
     if (!planItemDetailsData) return false
     return (planItemDetailsData?.tool.fixed.length || planItemDetailsData?.tool.dynamic.length) > 0
-  }, [planItemDetailsData?.tool.fixed, planItemDetailsData?.tool.dynamic, planItemDetailsData])
+  }, [planItemDetailsData?.tool.fixed.length, planItemDetailsData?.tool.dynamic.length])
   const showPlugin = useCreation(() => {
     if (!planItemDetailsData) return false
     return (planItemDetailsData?.plugins.fixed.length || planItemDetailsData?.plugins.dynamic.length) > 0
-  }, [planItemDetailsData?.plugins.fixed, planItemDetailsData?.plugins.dynamic, planItemDetailsData])
+  }, [planItemDetailsData?.plugins.fixed.length, planItemDetailsData?.plugins.dynamic.length])
   const showMCP = useCreation(() => {
     if (!planItemDetailsData) return false
     return (planItemDetailsData?.mcp.fixed.length || planItemDetailsData?.mcp.dynamic.length) > 0
-  }, [planItemDetailsData?.mcp.fixed, planItemDetailsData?.mcp.dynamic, planItemDetailsData])
+  }, [planItemDetailsData?.mcp.fixed.length, planItemDetailsData?.mcp.dynamic.length])
   const showBackgroundProcesses = useCreation(() => {
     if (!planItemDetailsData) return false
     return (planItemDetailsData?.backgroundProcesses?.length || 0) > 0
-  }, [planItemDetailsData?.backgroundProcesses])
+  }, [planItemDetailsData?.backgroundProcesses?.length])
 
   return (
     <div
@@ -426,7 +426,7 @@ const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props)
       <AITaskExecutionList<AIBrowserProcessesProps['list'][number]>
         classNameList={styles['browser-processes-list']}
         list={list}
-        renderItem={(processes, index) => (
+        renderItem={(processes) => (
           <AITaskActionItem
             key={processes.process_id}
             title={processes.process_name}

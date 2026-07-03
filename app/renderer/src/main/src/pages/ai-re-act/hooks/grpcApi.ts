@@ -669,10 +669,10 @@ export declare namespace AIAgentGrpcApi {
       modified_file_count: number
     }
     background_processes: {
-      type: 'browser' // 枚举，目前值只有browser
+      type: 'browser' // 枚举，目前值只有 browser
       process_id: string // 进程ID，关闭的唯一标识，关闭进程时会用到
-      process_name: string // 枚举，目前只有running
-      status: 'running'
+      process_name: string
+      status: 'running' // 枚举，目前只有 running
       started_at: number
     }[]
     /** 下面两个字段暂时没有用，故不添加 */
