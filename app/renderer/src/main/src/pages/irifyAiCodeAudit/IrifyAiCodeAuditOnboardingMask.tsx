@@ -8,11 +8,9 @@ import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { IrifyAiCodeAuditStyle, isIrifyAuditStyleConfirmed, resolveIrifyFocusModeLoop } from './irifyAiCodeAuditStyle'
 import { SystemInfo } from '@/constants/hardware'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { warn } from '@/utils/notification'
-import emiter from '@/utils/eventBus/eventBus'
 import i18n from '@/i18n/i18n'
-import { getIrifyAiCodeAuditHistory, setIrifyAiCodeAuditHistory } from './utils'
+import { emitIrifyAiCodeAuditOpenFileTree, getIrifyAiCodeAuditHistory, setIrifyAiCodeAuditHistory } from './utils'
 import { OpenFolderDragger } from './RunnerFileTree/RunnerFileTree'
 import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
 import { IrifyAiCodeAuditHistoryItem } from './IrifyAiCodeAuditHistoryItem'
@@ -149,39 +147,18 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultAuditStyle, visible])
 
-  const openFolder = useMemoizedFn(() => {
-    if (SystemInfo.mode === 'remote') {
-      let absolutePath = ''
-      const m = showYakitModal({
-        title: tYak('RunnerFileTree.enterFolderPath'),
-        width: 400,
-        type: 'white',
-        closable: false,
-        centered: true,
-        content: <OpenFolderDragger setAbsolutePath={(v) => (absolutePath = v)} />,
-        onCancel: () => {
-          m.destroy()
-        },
-        onOk: async () => {
-          if (absolutePath.length === 0) {
-            warn(tYak('RunnerFileTree.enterFolderPath'))
-            return
-          }
+  const openLocalFolder = useMemoizedFn(() => {
+    handleOpenFileSystemDialog({ title: tYak('RunnerFileTree.selectFolder'), properties: ['openDirectory'] }).then(
+      (data) => {
+        if (data.filePaths.length) {
+          const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
           setSelectedPath(absolutePath)
-          m.destroy()
-        },
-      })
-    } else {
-      handleOpenFileSystemDialog({ title: tYak('RunnerFileTree.selectFolder'), properties: ['openDirectory'] }).then(
-        (data) => {
-          if (data.filePaths.length) {
-            const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
-            setSelectedPath(absolutePath)
-          }
-        },
-      )
-    }
+        }
+      },
+    )
   })
+
+  const isRemoteMode = SystemInfo.mode === 'remote'
 
   const pickHistory = useMemoizedFn((item: YakRunnerHistoryProps) => {
     setSelectedPath(item.path)
@@ -228,7 +205,7 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
   })
 
   const persistDirectoryOpen = useMemoizedFn((absPath: string) => {
-    emiter.emit('onAiCodeAuditOpenFileTree', absPath)
+    emitIrifyAiCodeAuditOpenFileTree(absPath)
     onEnsureProjectRoot(absPath)
     setIrifyAiCodeAuditHistory({
       isFile: false,
@@ -294,16 +271,26 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
           {current === 0 && (
             <div className={styles['step-directory']}>
               <div className={styles['step-section-title']}>{t('onboarding.selectDirectory')}</div>
-              <YakitButton type="primary" onClick={openFolder} className={styles['open-folder-btn']}>
-                {t('openLocalFolder')}
-              </YakitButton>
-              {selectedPath && (
-                <div className={styles['selected-path']}>
-                  <span className={styles['selected-path-label']}>{t('onboarding.currentSelected')}</span>
-                  <span className={classNames(styles['selected-path-value'], 'yakit-single-line-ellipsis')}>
-                    {selectedPath}
-                  </span>
-                </div>
+              {isRemoteMode ? (
+                <OpenFolderDragger
+                  className={styles['folder-dragger']}
+                  value={selectedPath}
+                  setAbsolutePath={setSelectedPath}
+                />
+              ) : (
+                <>
+                  <YakitButton type="primary" onClick={openLocalFolder} className={styles['open-folder-btn']}>
+                    {t('openLocalFolder')}
+                  </YakitButton>
+                  {selectedPath && (
+                    <div className={styles['selected-path']}>
+                      <span className={styles['selected-path-label']}>{t('onboarding.currentSelected')}</span>
+                      <span className={classNames(styles['selected-path-value'], 'yakit-single-line-ellipsis')}>
+                        {selectedPath}
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
               <div className={styles['history-section']}>
                 <div className={styles['history-title']}>{t('recentlyOpened')}</div>

@@ -16,7 +16,7 @@ import {
 import styles from './IrifyAiCodeAuditPage.module.scss'
 import { YakRunnerIrifyAiCodeAudit } from './YakRunnerIrifyAiCodeAudit'
 import { IrifyAiCodeAuditOnboardingMask } from './IrifyAiCodeAuditOnboardingMask'
-import { IrifyAiCodeAuditOnboardingRequest } from './utils'
+import { emitIrifyAiCodeAuditOpenFileTree, IrifyAiCodeAuditOnboardingRequest } from './utils'
 
 const resolveAuditStyle = (info?: AuditCodePageInfoProps): IrifyAiCodeAuditStyle => {
   if (info?.auditStyle === 'skill') return 'skill'
@@ -58,9 +58,15 @@ const IrifyAiCodeAuditPageInner: React.FC<IrifyAiCodeAuditPageProps> = ({ auditC
     },
   )
 
+  useEffect(() => {
+    const onProjectChanged = () => setStarted(false)
+    emiter.on('onIrifyAiCodeAuditProjectChanged', onProjectChanged)
+    return () => emiter.off('onIrifyAiCodeAuditProjectChanged', onProjectChanged)
+  }, [])
+
   const applyPageEntry = useMemoizedFn((info?: AuditCodePageInfoProps) => {
     const root = info?.Location?.trim()
-    if (root) emiter.emit('onAiCodeAuditOpenFileTree', root)
+    if (root) emitIrifyAiCodeAuditOpenFileTree(root)
     if (info?.auditStyle !== undefined) {
       openOnboarding({ style: resolveAuditStyle(info), path: root, skipStyle: true })
     }

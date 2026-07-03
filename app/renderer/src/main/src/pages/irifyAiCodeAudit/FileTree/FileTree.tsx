@@ -14,6 +14,7 @@ import { openABSFileLocated } from '@/utils/openWebsite'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { getMapAllFileKey, getMapFileDetail, removeMapFileDetail, setMapFileDetail } from '../FileTreeMap/FileMap'
 import emiter from '@/utils/eventBus/eventBus'
+import { emitIrifyAiCodeAuditOpenFileTree } from '../utils'
 import {
   getCodeByPath,
   getPathJoin,
@@ -479,7 +480,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
             }
             setAreaInfo && setAreaInfo(newAreaInfo)
           } else {
-            emiter.emit('onAiCodeAuditOpenFileTree', path)
+            emitIrifyAiCodeAuditOpenFileTree(path)
             // 此处更改布局信息
             const updatePath = (await judgeAreaExistFilesPath(areaInfo, getMapAllFileKey())).map((item) => item.path)
             const newAreaInfo = updateAreaFilesPathInfo(areaInfo, updatePath, info.path, path)

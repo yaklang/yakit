@@ -23,6 +23,7 @@ import {
 import {
   getIrifyAiCodeAuditLastAreaFile,
   getIrifyAiCodeAuditLastFolderExpanded,
+  parseIrifyAiCodeAuditOpenFileTreePayload,
   setIrifyAiCodeAuditHistory,
   setIrifyAiCodeAuditLastAreaFile,
   setIrifyAiCodeAuditLastFolderExpanded,
@@ -294,11 +295,82 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     } catch (error) {}
   })
 
+  /** 切换工程目录时，待关闭编辑器后再打开的目标路径 */
+  const pendingOpenFileTreePathRef = useRef<string | null>(null)
+
+  const resetWorkspaceForNewProject = useMemoizedFn(() => {
+    emiter.emit('onIrifyAiCodeAuditProjectChanged', '')
+    setRunnerTabsId(undefined)
+    setIrifyAiCodeAuditLastAreaFile([], undefined)
+    if (irifyWorkbenchAttachRef?.current) {
+      irifyWorkbenchAttachRef.current.projectRootAbsPath = undefined
+      irifyWorkbenchAttachRef.current.activeFilePath = undefined
+    }
+  })
+
+  const clearAllEditors = useMemoizedFn(() => {
+    setAreaInfo([])
+    setActiveFile(undefined)
+    setRunnerTabsId(undefined)
+    setIrifyAiCodeAuditLastAreaFile([], undefined)
+  })
+
+  const shouldResetWorkspace = useMemoizedFn((currentPath: string, absolutePath: string, resetWorkspace?: boolean) => {
+    if (resetWorkspace) return true
+    return currentPath.length > 0 && currentPath !== absolutePath
+  })
+
+  /** 工程根路径变化时：先重置 AI / 工作区，再逐个关闭未保存文件（弹保存框），最后打开新目录 */
+  const tryContinuePendingOpenFileTree = useMemoizedFn(async () => {
+    const pending = pendingOpenFileTreePathRef.current
+    if (!pending) return
+
+    if (areaInfo.length === 0) {
+      pendingOpenFileTreePathRef.current = null
+      onInitTreeFun(pending)
+      return
+    }
+
+    const unSaveArr = await judgeAreaExistFileUnSave(areaInfo)
+    if (unSaveArr.length > 0) {
+      emiter.emit('onAiCodeAuditCloseFile', unSaveArr[0])
+      return
+    }
+
+    clearAllEditors()
+    pendingOpenFileTreePathRef.current = null
+    onInitTreeFun(pending)
+  })
+
   // 加载文件树(初次加载)
-  const onOpenFileTreeFun = useMemoizedFn(async (absolutePath: string) => {
-    // console.log("文件树---", absolutePath)
+  const onOpenFileTreeFun = useMemoizedFn(async (absolutePath: string, options?: { resetWorkspace?: boolean }) => {
+    const currentPath = fileTree.length > 0 ? fileTree[0].path : ''
+    const isProjectPathChanging = currentPath !== absolutePath
+    const resetWorkspace = shouldResetWorkspace(currentPath, absolutePath, options?.resetWorkspace)
+
+    if (resetWorkspace) {
+      resetWorkspaceForNewProject()
+    }
+
+    if (isProjectPathChanging && areaInfo.length > 0) {
+      pendingOpenFileTreePathRef.current = absolutePath
+      await tryContinuePendingOpenFileTree()
+      return
+    }
+
     onInitTreeFun(absolutePath)
   })
+
+  const onOpenFileTreeEventFun = useMemoizedFn((data: string) => {
+    const { path, resetWorkspace } = parseIrifyAiCodeAuditOpenFileTreePayload(data)
+    onOpenFileTreeFun(path, { resetWorkspace })
+  })
+
+  useUpdateEffect(() => {
+    if (pendingOpenFileTreePathRef.current) {
+      tryContinuePendingOpenFileTree()
+    }
+  }, [areaInfo])
 
   // 刷新文件/审计树
   const onRefreshTreeFun = useMemoizedFn(() => {
@@ -462,7 +534,7 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
 
   useEffect(() => {
     // 监听文件树打开
-    emiter.on('onAiCodeAuditOpenFileTree', onOpenFileTreeFun)
+    emiter.on('onAiCodeAuditOpenFileTree', onOpenFileTreeEventFun)
     // 刷新树
     emiter.on('onAiCodeAuditRefreshTree', onRefreshTreeFun)
     // 通过路径打开文件
@@ -474,7 +546,7 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     // 打开临时文件
     emiter.on('onAiCodeAuditOpenTemporaryFile', onAiCodeAuditOpenTemporaryFileFun)
     return () => {
-      emiter.off('onAiCodeAuditOpenFileTree', onOpenFileTreeFun)
+      emiter.off('onAiCodeAuditOpenFileTree', onOpenFileTreeEventFun)
       emiter.off('onAiCodeAuditRefreshTree', onRefreshTreeFun)
       emiter.off('onAiCodeAuditOpenFileByPath', onOpenFileByPathFun)
       emiter.off('onAiCodeAuditGetCodeByPathCache', onGetCodeByPathCacheFun)

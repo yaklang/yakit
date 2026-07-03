@@ -30,14 +30,14 @@ function appendIfMissing(existing: AttachedResourceInfo[], item: AttachedResourc
   return duplicated ? existing : [...existing, item]
 }
 
-/** 追加 directory_path / file_path；selected+content 由输入框 codeBlock 附带 */
+/** 追加 directory_path；file_path 暂不传给后端；selected+content 由输入框 codeBlock 附带 */
 export function appendIrifyWorkbenchAttachments(
   event: AIInputEvent,
   ctx: IrifyWorkbenchAiAttachRef | null | undefined,
 ): AIInputEvent {
   const projectRoot = ctx?.projectRootAbsPath?.trim()
-  const activeFilePath = ctx?.activeFilePath?.trim()
-  if (!projectRoot && !activeFilePath) return event
+  // const activeFilePath = ctx?.activeFilePath?.trim()
+  if (!projectRoot) return event
 
   let attached = event.AttachedResourceInfo || []
 
@@ -49,13 +49,14 @@ export function appendIrifyWorkbenchAttachments(
     })
   }
 
-  if (activeFilePath) {
-    attached = appendIfMissing(attached, {
-      Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
-      Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
-      Value: activeFilePath,
-    })
-  }
+  // 暂时不传递当前打开文件给后端
+  // if (activeFilePath) {
+  //   attached = appendIfMissing(attached, {
+  //     Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
+  //     Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
+  //     Value: activeFilePath,
+  //   })
+  // }
 
   if (attached.length === (event.AttachedResourceInfo || []).length) return event
   return { ...event, AttachedResourceInfo: attached }

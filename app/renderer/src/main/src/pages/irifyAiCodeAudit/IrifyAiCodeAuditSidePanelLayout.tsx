@@ -95,6 +95,15 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
     }
   }, [onSendCodeBlockFun])
 
+  const onProjectChangedFun = useMemoizedFn(() => {
+    historyAIReActChatBridge.onNewChat()
+  })
+
+  useEffect(() => {
+    emiter.on('onIrifyAiCodeAuditProjectChanged', onProjectChangedFun)
+    return () => emiter.off('onIrifyAiCodeAuditProjectChanged', onProjectChangedFun)
+  }, [onProjectChangedFun])
+
   const resizeBoxProps = useCreation(() => {
     if (placement === 'left') {
       return openTabsFlag

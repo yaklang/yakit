@@ -18,6 +18,32 @@ export interface IrifyAiCodeAuditOnboardingRequest {
   auditStyle?: IrifyAiCodeAuditStyle
 }
 
+export interface IrifyAiCodeAuditOpenFileTreeRequest {
+  path: string
+  /** 用户主动打开目录时重置工作区（AI 新会话等）；页面恢复历史目录时应为 false */
+  resetWorkspace?: boolean
+}
+
+export const parseIrifyAiCodeAuditOpenFileTreePayload = (data: string): { path: string; resetWorkspace: boolean } => {
+  try {
+    const parsed = JSON.parse(data) as Partial<IrifyAiCodeAuditOpenFileTreeRequest>
+    if (typeof parsed?.path === 'string' && parsed.path.length > 0) {
+      return { path: parsed.path, resetWorkspace: parsed.resetWorkspace !== false }
+    }
+  } catch {
+    // 兼容纯路径字符串（如页面恢复历史目录）
+  }
+  return { path: data, resetWorkspace: false }
+}
+
+/** 打开工程目录；默认重置工作区（Monaco / AI 等） */
+export const emitIrifyAiCodeAuditOpenFileTree = (path: string, resetWorkspace = true) => {
+  emiter.emit(
+    'onAiCodeAuditOpenFileTree',
+    JSON.stringify({ path, resetWorkspace } satisfies IrifyAiCodeAuditOpenFileTreeRequest),
+  )
+}
+
 /** 打开 AI 代码审计引导蒙版 */
 export const requestIrifyAiCodeAuditOnboarding = (request?: IrifyAiCodeAuditOnboardingRequest) => {
   emiter.emit('onIrifyAiCodeAuditShowOnboarding', JSON.stringify(request ?? {}))

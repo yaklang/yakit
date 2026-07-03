@@ -67,11 +67,16 @@ import { getIrifyAiCodeAuditHistory, requestIrifyAiCodeAuditOnboarding } from '.
 const tOriginal = i18n.getFixedT(null, 'yakRunner')
 
 export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
-  const { setAbsolutePath } = props
+  const { setAbsolutePath, value: valueProp, className } = props
   const { t } = useI18nNamespaces(['yakRunner'])
-  const [value, setValue] = useState<string>('')
+  const [value, setValue] = useState<string>(valueProp ?? '')
+
+  useEffect(() => {
+    if (valueProp !== undefined) setValue(valueProp)
+  }, [valueProp])
+
   return (
-    <div style={{ padding: '20px 24px' }}>
+    <div className={className} style={className ? undefined : { padding: '20px 24px' }}>
       <YakitDragger
         value={value}
         isShowPathNumber={false}
@@ -79,9 +84,9 @@ export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
         multiple={false}
         help=""
         uploadFolderText={t('RunnerFileTree.selectLocalFolder')}
-        onChange={(value) => {
-          setValue(value)
-          setAbsolutePath(value)
+        onChange={(nextValue) => {
+          setValue(nextValue)
+          setAbsolutePath(nextValue)
         }}
       />
     </div>
