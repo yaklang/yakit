@@ -513,6 +513,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
   } else if (info.chatType === 'reAct') {
     const chatDetail = chatStore.casualChat?.planDetails
     if (!chatDetail) return
+    chatDetail.uuid = uuidv4()
     chatDetail.taskId = chatDetail.taskId || res.TaskId
     chatDetail.todoList = newData
     callback?.(res)
@@ -674,6 +675,7 @@ const handleSessionSnapshot: AIMessageHandler = (request) => {
     oldData.taskId = oldData?.taskId || res.TaskId
     oldData.uuid = uuidv4()
     oldData.execution = snapshot.execution
+    oldData.backgroundProcesses = snapshot.background_processes
 
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
@@ -682,6 +684,7 @@ const handleSessionSnapshot: AIMessageHandler = (request) => {
     chatDetail.uuid = uuidv4()
     chatDetail.taskId = chatDetail.taskId || res.TaskId
     chatDetail.execution = snapshot.execution
+    chatDetail.backgroundProcesses = snapshot.background_processes
 
     chatStore.casualChat.planDetails = chatDetail
   }

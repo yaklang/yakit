@@ -41,7 +41,7 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
       default:
         // case AIStreamContentType.CODE_YAKLANG:
         // case AIStreamContentType.CODE_PYTHON:
-        return <YakitEditor type={type} value={content} readOnly={true} />
+        return <YakitEditor type={type} value={content} readOnly={true} noMiniMap={true} noLineNumber={true} />
     }
   })
   const { chatIPCEvents } = useChatIPCDispatcher()
