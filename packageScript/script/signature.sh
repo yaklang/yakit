@@ -24,7 +24,7 @@ if [ -z "${APPLE_TEAM_ID:-}" ]; then
   exit 1
 fi
 
-CERT_ID=$(security find-identity -v -p codesigning | grep -F "$APPLE_TEAM_ID" | head -n1 | awk -F\" '{print $2}')
+CERT_ID=$(security find-identity -v -p codesigning build.keychain | grep -F "$APPLE_TEAM_ID" | head -n1 | awk -F\" '{print $2}')
 if [ -z "${CERT_ID:-}" ]; then
   echo "Error: no codesigning identity found matching APPLE_TEAM_ID: $APPLE_TEAM_ID" >&2
   exit 1
