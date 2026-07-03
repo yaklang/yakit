@@ -487,7 +487,7 @@ export interface ChatStoreState {
    * aiChat.d.ts AIAgentChatData yaklangCodeChange
    */
   yaklangCodeChangeUpdate: number
-  /** aiChat.d.ts AIAgentChatMetaData syncID */
+  /** aiChat.d.ts AIAgentChatMetaData syncIDMap */
   syncIDUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
@@ -523,9 +523,15 @@ export interface ChatStoreState {
   /** 任务规划的loading状态信息 */
   taskStatus: PlanLoadingStatus
 
-  /** 自由对话的当前review(未操作) */
+  /**
+   * 自由对话的当前review(未操作)
+   * 通过token去rawData中contents里取数据，token是唯一的
+   */
   currentCasualReview: string[]
-  /** 任务规划当前显示的review数据 */
+  /**
+   * 任务规划当前显示的review数据
+   * 通过token去rawData中contents里取数据，token是唯一的
+   */
   currentPlanReviewToken: string
   /**
    * 当前review是plan时，异步数据的更新版本
