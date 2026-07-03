@@ -229,8 +229,8 @@ if (isLegacy) {
 const autoDiscoveryIdentity = process.env.CSC_IDENTITY_AUTO_DISCOVERY
 if (autoDiscoveryIdentity == 'true') {
   /** 提取公证关键信息，判断是否有执行公证的环境 */
-  const { TEAM_ID, CERT_BASE64, CERT_PASSWORD } = process.env
-  if (TEAM_ID && CERT_BASE64 && CERT_PASSWORD) {
+  const { APPLE_ID, APPLE_TEAM_ID, APPLE_APP_SPECIFIC_PASSWORD, CERT_BASE64, CERT_PASSWORD } = process.env
+  if (APPLE_ID && APPLE_TEAM_ID && APPLE_APP_SPECIFIC_PASSWORD && CERT_BASE64 && CERT_PASSWORD) {
     configOption.afterSign = 'packageScript/buildHook/after-sign.js'
   }
 }
