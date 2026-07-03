@@ -135,6 +135,7 @@ export interface MITMStartCallRequestV1 {
   enableHttp2: boolean
   ForceDisableKeepAlive: boolean
   certificates: ClientCertificate[]
+  DisableTrafficGuard: boolean
   extra?: ExtraMITMServerProps
 }
 export interface MITMStartCallRequest extends MITMStartCallRequestV1, MITMBaseData {}
@@ -147,6 +148,7 @@ export interface MITMStartCallRequestV2 {
   ForceDisableKeepAlive: boolean
   Certificates: ClientCertificate[]
   extra?: ExtraMITMServerV2
+  DisableTrafficGuard: boolean
 }
 type ExtraMITMServerV2 = NonNullable<ReturnType<typeof buildMitmExtraV2>>
 /**转 mitm v1版本grpc参数 */
@@ -165,6 +167,7 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
     ForceDisableKeepAlive: value.ForceDisableKeepAlive,
     Certificates: value.certificates,
     extra: buildMitmExtraV2(value.extra),
+    DisableTrafficGuard: value.DisableTrafficGuard,
   }
   return data
 }
@@ -761,4 +764,23 @@ export const grpcClientMITMHooks = (version: string) => {
       ipcRenderer.removeAllListeners(url)
     },
   }
+}
+
+export interface MITMDisableTrafficGuardRequest extends MITMBaseData {
+  DisableTrafficGuard: boolean
+}
+/** 内置规则开关 */
+export const grpcDisableTrafficGuard: APIFunc<MITMDisableTrafficGuardRequest, null> = (params, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    const { version } = params
+    const url = `mitm${version}-disableTrafficGuard`
+    const value = omit(params, 'version')
+    ipcRenderer
+      .invoke(url, value)
+      .then(resolve)
+      .catch((e) => {
+        if (!hiddenError) yakitNotify('error', 'grpcDisableTrafficGuard 失败:' + e)
+        reject(e)
+      })
+  })
 }

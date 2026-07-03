@@ -54,6 +54,8 @@ export interface MITMRuleProp {
   onSetRules?: (r: MITMContentReplacerRule[]) => void
   onRefreshCom?: () => void
   inMouseEnterTable?: boolean
+  disableTrafficGuard?: boolean
+  setDisableTrafficGuard?: (b: boolean) => void
 }
 
 export interface ButtonTextProps {

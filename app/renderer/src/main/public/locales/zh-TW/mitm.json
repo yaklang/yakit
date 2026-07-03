@@ -27,6 +27,8 @@
     "existing_mitm_content_rules": "現有 MITM 內容規則",
     "total_rules_count": "共 {{count}} 條規則",
     "no_replace_all": "全部不替換",
+    "built_in_rules": "禁用內建規則",
+    "built_in_rules_tip": "開啟則會在抓包過程中停用內建規則，修改後需重啟劫持才會生效",
     "white_list": "白名單",
     "white_list_modal_title": "規則白名單配置",
     "white_list_label": "檔案字尾",
