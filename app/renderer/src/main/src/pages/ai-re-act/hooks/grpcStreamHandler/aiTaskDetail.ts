@@ -6,6 +6,8 @@ import cloneDeep from 'lodash/cloneDeep'
 import isArray from 'lodash/isArray'
 import isEmpty from 'lodash/isEmpty'
 import { v4 as uuidv4 } from 'uuid'
+import type { PlanItemDetailsData } from '../aiRender'
+import { DefaultPlanItemDetailsData } from '../defaultConstant'
 
 const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
   const { res, chatType, rawData } = requestInfo
@@ -118,7 +120,7 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
 }
 
 const handlePerception: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta } = requestInfo
+  const { res, chatType, rawData } = requestInfo
   if (res.Type !== 'perception' || res.NodeId !== 'perception') return
   if (!res.TaskId) return
 
@@ -143,7 +145,7 @@ const handlePerception: AIMessageHandler = (requestInfo) => {
 }
 
 const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta } = requestInfo
+  const { res, chatType, store, rawData } = requestInfo
   if (res.Type !== 'current_task_todo_list_update' || res.NodeId !== 'current_task_todo_list') return
   if (!res.TaskId) return
 
@@ -169,7 +171,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
 }
 
 const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta } = requestInfo
+  const { res, chatType, rawData } = requestInfo
   if (res.NodeId !== 'session_snapshot') return
   if (!res.TaskId) return
 
@@ -198,16 +200,3 @@ export const aiTaskDetailDataHandlers = {
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,
   session_snapshot: handleSessionSnapshot,
 } as const
-
-const exampleHandle = (res: AIOutputEvent) => {
-  let funcKey = res.Type
-  if (res.Type === 'structured' && res.NodeId === 'capability_inventory') {
-    funcKey = res.NodeId
-  } else if (res.Type === 'perception' && res.NodeId === 'perception') {
-    funcKey = res.Type
-  } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
-    funcKey = res.Type
-  } else if (res.NodeId === 'session_snapshot') {
-    funcKey = res.NodeId
-  }
-}

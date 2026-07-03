@@ -4,7 +4,6 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { checkStreamValidity, convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 
-// TODO: ?
 const handleStatus: AIMessageHandler = (request) => {
   const { res, chatType, store, meta } = request
   if (res.Type !== 'structured' || res.NodeId !== 'status') return
@@ -106,11 +105,3 @@ export const aiYakExecResultDataHandlers = {
   status: handleStatus,
   yak_exec_result: handleYakExecResult,
 } as const
-
-const exampleHandle = (res: AIOutputEvent) => {
-  let funcKey = res.Type
-  if (res.Type === 'structured' && ['status'].includes(res.NodeId)) {
-    // stream数据结束标识
-    funcKey = res.NodeId
-  }
-}

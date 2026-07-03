@@ -31,7 +31,7 @@ const handlePressure: AIMessageHandler = (request) => {
   }
 }
 
-const handleaAIFirstByteCostMS: AIMessageHandler = (request) => {
+const handleAIFirstByteCostMS: AIMessageHandler = (request) => {
   const { res, rawData } = request
   if (res.Type !== 'ai_first_byte_cost_ms') return
   if (res.IsSync) return
@@ -214,7 +214,7 @@ const handlePromptProfile: AIMessageHandler = (request) => {
 export const aiPerfDataHandlers = {
   consumption: handleConsumption,
   pressure: handlePressure,
-  ai_first_byte_cost_ms: handleaAIFirstByteCostMS,
+  ai_first_byte_cost_ms: handleAIFirstByteCostMS,
   ai_total_cost_ms: handleAITotalCostMS,
   prompt_profile: handlePromptProfile,
 } as const
