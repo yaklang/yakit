@@ -46,6 +46,7 @@ const ModeOptionList: {
   },
 ]
 
+/** TODO - 待修改为新版 */
 const AIRunModeSelect: React.FC = memo(() => {
   const { setting, activeChat } = useAIAgentStore()
   const { setSetting } = useAIAgentDispatcher()

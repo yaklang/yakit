@@ -1,4 +1,3 @@
-// import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 
 export const CONTEXT_PERF_POLL_INTERVAL = 2000

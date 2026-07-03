@@ -1,24 +1,26 @@
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import type { AIChatQSData, ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
-import { FC, memo, ReactNode, useRef, useMemo } from 'react'
+import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { useCurrentStore, useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { FC, memo, ReactNode, useMemo } from 'react'
+import { useStore } from 'zustand'
 
-type StaticChatContentProps = ReActChatRenderItem & {
+type StaticChatContentProps = {
+  token: string
   render?: (contentItem: AIChatQSData) => ReactNode
-  session: string
 }
 
-const StaticChatContent: FC<StaticChatContentProps> = ({ chatType, token, render, session, renderNum }) => {
-  const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
-
+const StaticChatContent: FC<StaticChatContentProps> = ({ token, render }) => {
+  const store = useCurrentStore()
+  const renderNum = useStore(store, (state) => state.items[token].renderNum)
+  const rawData = useCurrentRawData()
   const chatItem = useMemo(() => {
-    const raw = fetchChatDataStore()?.getContentMap({ session, chatType, mapKey: token })
-    if (!raw) return null
-    if (raw.data != null && typeof raw.data === 'object') {
-      return { ...raw, data: Object.assign({}, raw.data) } as AIChatQSData
+    if (!rawData) return null
+    const itemData = rawData.contents.get(token)
+    if (!itemData) return null
+    if (itemData.data != null && typeof itemData.data === 'object') {
+      return { ...itemData, data: Object.assign({}, itemData.data) } as AIChatQSData
     }
-    return { ...raw } as AIChatQSData
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renderNum, session, chatType, token])
+    return { ...itemData } as AIChatQSData
+  }, [renderNum])
 
   if (!chatItem) return null
   return <>{render?.(chatItem)}</>

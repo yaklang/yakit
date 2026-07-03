@@ -4,7 +4,7 @@ import styles from './AIReviewRuleSelect.module.scss'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import classNames from 'classnames'
-import { useClickAway, useControllableValue, useCreation, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useClickAway, useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import {
   AIAgentSettingDefault,
@@ -16,24 +16,23 @@ import { OutlineSirenIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { FormItemSlider } from '@/pages/ai-agent/AIChatSetting/AIChatSetting'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { AIInputEvent, AIInputEventHotPatchTypeEnum, AIStartParams } from '../hooks/grpcApi'
 import isEqual from 'lodash/isEqual'
-import emiter from '@/utils/eventBus/eventBus'
-import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isNil } from 'lodash'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   /** 当前对话唯一ID */
   const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+
   const { setting } = useAIAgentStore()
   const { setSetting, onSend } = useAIAgentDispatcher()
-
-  const { chatIPCData } = useChatIPCStore()
 
   const [visible, setVisible] = useState<boolean>(false)
   const [open, setOpen] = useState<boolean>(false)
@@ -42,7 +41,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 
   const modelValue = useCreation(() => {
     return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
-  }, [setting?.ReviewPolicy, chatIPCData.execute])
+  }, [setting?.ReviewPolicy, execute])
   const [selectReviewPolicy, setSelectReviewPolicy] = useState<AIStartParams['ReviewPolicy']>()
 
   const displayReviewPolicy = useCreation(() => {
@@ -114,7 +113,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     setVisible(v)
     if (
       !v &&
-      chatIPCData.execute &&
+      execute &&
       !isNil(selectAIReviewRiskControlScore) &&
       !isEqual(selectAIReviewRiskControlScore, aiReviewRiskControlScore)
     ) {
@@ -134,7 +133,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
   })
   const onSetOpen = useMemoizedFn((v: boolean) => {
     setOpen(v)
-    if (!v && chatIPCData.execute && !isEqual(selectReviewPolicy, modelValue)) {
+    if (!v && execute && !isEqual(selectReviewPolicy, modelValue)) {
       handHotpatchReviewPolicy(selectReviewPolicy)
     }
     if (v) {

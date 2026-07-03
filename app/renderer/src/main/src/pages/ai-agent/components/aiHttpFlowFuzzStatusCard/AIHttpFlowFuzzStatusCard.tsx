@@ -9,7 +9,6 @@ import { Tooltip } from 'antd'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import ChatCard from '../ChatCard'
 import ModalInfo, { type ModalInfoProps } from '../ModelInfo'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
   hasWebFuzzerPageOnAIFuzzStatus,
@@ -43,8 +42,6 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
   const ok = p?.successful_responses ?? 0
   const fail = p?.failed_requests ?? 0
   const avgMs = p?.average_response_ms
-
-  const { chatIPCEvents } = useChatIPCDispatcher()
 
   // 「查看详情」点击：
   // - 若卡片所在的会话绑定了某个 Web Fuzzer 页签（`WebFuzzerAiStore`），
