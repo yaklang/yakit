@@ -586,7 +586,7 @@
     "system_proxy": "系统代理",
     "rule_configuration": "规则配置",
     "log": "日志",
-    "target_url": "目标：{{urlInfo}}",
+    "target_url": "目标：{{url}}",
     "stop_mitm_hijack_failed": "停止中间人劫持失败：{{e}}"
   },
   "MITMPluginHijackContent": {

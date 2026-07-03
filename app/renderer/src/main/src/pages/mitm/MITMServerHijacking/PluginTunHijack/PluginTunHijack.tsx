@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useImperativeHandle, useMemo, useRef } from 'react'
-import i18n from '@/i18n/i18n'
 import { Form, Progress, Tooltip } from 'antd'
 import { useControllableValue, useCreation, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import styles from './PluginTunHijack.module.scss'

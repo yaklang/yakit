@@ -67,7 +67,6 @@ import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import i18n from '@/i18n/i18n'
 const PluginTrace = React.lazy(() => import('./PluginTrace/PluginTrace'))
 
 const { ipcRenderer } = window.require('electron')
