@@ -628,9 +628,7 @@ export const newYaklangCompletionHandlerProvider = (
 
     // 获取自定义代码片段(带短 TTL 缓存，避免每次击键都查询数据库)
     const customCodeList = await queryCustomSnippetsCached()
-    const targetCustomCode = getAllRows(customCodeList ?? ({} as TCustomCodeGeneral<string[]>)).filter(
-      (it) => it.State === 'yak',
-    )
+    const targetCustomCode = customCodeList ? getAllRows(customCodeList).filter((it) => it.State === 'yak') : []
 
     const transformCustomCode = targetCustomCode.map((it) => ({
       Label: it.Name,
