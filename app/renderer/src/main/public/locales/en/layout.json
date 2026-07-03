@@ -276,7 +276,8 @@
     "output": "Output",
     "tokenUsed": "Used",
     "tokenLimit": "Total Limit",
-    "networkSearchCount": "Web Search Count"
+    "networkSearchCount": "Web Search Count",
+    "unlimited": "Unlimited"
   },
   "FuncDomain": {
     "remoteInProgress": "Remote in progress",

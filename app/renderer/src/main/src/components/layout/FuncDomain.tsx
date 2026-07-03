@@ -515,7 +515,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     }
   }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo])
 
-  const apiFetchApiKeys = useMemoizedFn((apikey, isLoading: boolean = false) => {
+  const apiFetchApiKeys = useMemoizedFn((apikey: string, isLoading: boolean = false) => {
     isLoading && setApiKeysInfoLoading(true)
     NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
       method: 'post',

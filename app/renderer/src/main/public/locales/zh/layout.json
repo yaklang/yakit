@@ -276,7 +276,8 @@
     "output": "输出",
     "tokenUsed": "已使用",
     "tokenLimit": "总限额",
-    "networkSearchCount": "联网搜索次数"
+    "networkSearchCount": "联网搜索次数",
+    "unlimited": "无限制"
   },
   "FuncDomain": {
     "remoteInProgress": "远程中",

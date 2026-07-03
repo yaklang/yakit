@@ -276,7 +276,8 @@
     "output": "輸出",
     "tokenUsed": "已使用",
     "tokenLimit": "總限額",
-    "networkSearchCount": "聯網搜索次數"
+    "networkSearchCount": "聯網搜索次數",
+    "unlimited": "無限制"
   },
   "FuncDomain": {
     "remoteInProgress": "遠端中",

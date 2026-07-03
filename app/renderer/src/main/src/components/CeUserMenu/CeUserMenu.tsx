@@ -131,7 +131,9 @@ export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
               <span className={styles['ce-user-info-token-percent']}>({getTokenPercent(apiKeysInfo)}%)</span>
             </span>
             <span className={styles['ce-user-info-token-value']}>
-              {apiKeysInfo?.tokenLimitEnable ? `${getTokenUsed(apiKeysInfo)}/${getTokenLimit(apiKeysInfo)}M` : '无限制'}
+              {apiKeysInfo?.tokenLimitEnable
+                ? `${getTokenUsed(apiKeysInfo)}/${getTokenLimit(apiKeysInfo)}M`
+                : t('CeUserMenu.unlimited')}
             </span>
           </div>
         </div>

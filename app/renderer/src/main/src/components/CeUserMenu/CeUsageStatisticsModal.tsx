@@ -16,7 +16,7 @@ import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 export const getTokenPercent = (apiKeysInfo: API.ApiKeyDetail) => {
   const { tokenUsed = 0, tokenLimit = 0 } = apiKeysInfo || {}
   if (tokenUsed > 0 && tokenLimit > 0) {
-    return Math.floor((tokenUsed / tokenLimit) * 100)
+    return Math.min(100, Math.floor((tokenUsed / tokenLimit) * 100))
   }
   return 0
 }
