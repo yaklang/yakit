@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react'
+import React, { memo } from 'react'
 import { useCreation } from 'ahooks'
 import { cloneDeep, isEmpty } from 'lodash'
 import { formatNumberUnits } from '../../utils'
@@ -11,11 +11,10 @@ import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import styles from '../AIChatContent.module.scss'
 
 const ContextTokenSummary: React.FC<ContextPerfPanelProps> = ({ session, execute }) => {
-  const getPerfData = useContextPerfStore(session)
-  const getData = useCallback(() => getPerfData()?.consumption ?? null, [getPerfData])
+  const getPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: consumption } = useRafPolling<AIAgentGrpcApi.Consumption | null>({
-    getData,
+    getData: () => getPerfData.consumption ?? null,
     interval: CONTEXT_PERF_POLL_INTERVAL,
     shouldStop: () => !execute,
     resetDeps: [execute],

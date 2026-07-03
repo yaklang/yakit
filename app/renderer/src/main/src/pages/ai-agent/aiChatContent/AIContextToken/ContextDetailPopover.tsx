@@ -21,10 +21,10 @@ interface ContextDetailPopoverProps extends ContextPerfPanelProps {
 const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ session, execute, buttonProps }) => {
   const { t } = useI18nNamespaces(['yakitUi'])
   const [visible, setVisible] = useState(false)
-  const getPerfData = useContextPerfStore(session)
+  const aiPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: perfData } = useRafPolling<AIChatData['aiPerfData'] | null>({
-    getData: getPerfData,
+    getData: () => aiPerfData ?? null,
     interval: CONTEXT_PERF_POLL_INTERVAL,
     shouldStop: () => !execute,
     resetDeps: [execute],
