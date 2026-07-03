@@ -1,10 +1,9 @@
 import { useEffect, useMemo, type FC } from 'react'
 import ChatCard from '../ChatCard'
 import ModalInfo from '../ModelInfo'
-import { useBoolean, useMemoizedFn } from 'ahooks'
+import { useBoolean, useCreation, useMemoizedFn } from 'ahooks'
 import styles from './ConcurrentStreamCard.module.scss'
 import ConcurrentStreamContent from './ConcurrentStreamContent/ConcurrentStreamContent'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import {
   AIChatQSDataTypeEnum,
   ChatTaskDefaultGroup,
@@ -22,6 +21,8 @@ import { useConcurrentStreamRefreshListener } from './concurrentStream/useConcur
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
 import { yakitNotify } from '@/utils/notification'
+import { useCurrentStore, useCurrentRawData, useCurrentMeta } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const ConcurrentStreamCard: FC<{
   elements: ReActChatTaskElementSub[]
@@ -32,15 +33,20 @@ const ConcurrentStreamCard: FC<{
   onRefresh?: () => void
 }> = ({ session, elements, chatType, token, isChildWindow, onRefresh }) => {
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(isChildWindow || chatType !== 'reAct')
-  const { fetchChatDataStore, fetchCurrentTaskPlanID } = useChatIPCDispatcher().chatIPCEvents
 
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  const raw = fetchChatDataStore()?.getContentMap({
-    session,
-    chatType,
-    mapKey: token,
-  }) as ChatTaskNodeGroup | ChatTaskDefaultGroup | undefined
+  const store = useCurrentStore()
+  const renderNum = useStore(store, (state) => state.items[token].renderNum)
+  const rawData = useCurrentRawData()
+  const metaData = useCurrentMeta()
+
+  const raw = useCreation(() => {
+    if (!rawData) return null
+    const itemData = rawData.contents.get(token)
+    if (!itemData) return null
+    return { ...itemData } as ChatTaskNodeGroup | ChatTaskDefaultGroup | undefined
+  }, [renderNum])
 
   // 是否是默认任务分组
   const isTaskDefaultGroup = raw?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
@@ -80,7 +86,7 @@ const ConcurrentStreamCard: FC<{
     return { time: isTaskDefaultGroup ? 0 : raw.Timestamp, title: raw.AIModelName, icon: raw.AIService }
   }, [isTaskDefaultGroup, raw])
 
-  const coordinatorId = fetchCurrentTaskPlanID()?.coordinatorId
+  const coordinatorId = metaData.currentTaskPlanID?.coordinatorId
   const taskIndex = raw?.data?.taskIndex
   const showContinueTask = !!raw && !!coordinatorId && taskIndex != null && !isChildWindow
   const showCancelTask = raw?.data?.status === 'processing' && taskIndex != null && !isChildWindow

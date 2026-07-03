@@ -9,19 +9,19 @@ import { PreWrapper } from '../ToolInvokerCard'
 import { Tooltip } from 'antd'
 import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { setClipboardText } from '@/utils/clipboard'
 import { success } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isEmpty } from 'lodash'
 import classNames from 'classnames'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const { info, timestamp } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { type, data } = info
-  const { chatIPCData } = useChatIPCStore()
 
   const getChatType = useMemoizedFn(() => {
     return info.chatType
@@ -29,12 +29,9 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
 
   const [expand, setExpand] = useState<boolean>(false)
 
-  const taskLength = useCreation(() => {
-    return chatIPCData?.taskChat?.elements?.length
-  }, [chatIPCData?.taskChat?.elements?.length])
-  const casualLength = useCreation(() => {
-    return chatIPCData?.casualChat?.elements?.length
-  }, [chatIPCData?.casualChat?.elements?.length])
+  const store = useCurrentStore()
+  const taskLength = useStore(store, (state) => state.taskChat.elements.length)
+  const casualLength = useStore(store, (state) => state.casualChat.elements.length)
 
   const isInit = useRef<boolean>(true)
 

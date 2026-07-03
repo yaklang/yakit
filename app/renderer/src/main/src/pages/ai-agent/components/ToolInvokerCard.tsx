@@ -13,11 +13,11 @@ import {
   ChatListRenderType,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
-import ModalInfo, { ModalInfoProps } from './ModelInfo'
+import { ModalInfoProps } from './ModelInfo'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
-import { AIAgentGrpcApi, AIEventQueryRequest } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIEventQueryRequest, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { isToolStdoutStream } from '@/pages/ai-re-act/hooks/utils'
 import {
   OutlineArrownarrowrightIcon,
@@ -31,16 +31,17 @@ import { Divider, Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { OperationCardFooter, OperationCardFooterProps } from './OperationCardFooter/OperationCardFooter'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import useAIAgentStore from '../useContext/useStore'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { AIChatIPCSendParams } from '../useContext/ChatIPCContent/ChatIPCContent'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
 import { useStreamingChatContent } from './aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { AIReviewParams } from './aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import useAIAgentDispatcher from '../useContext/useDispatcher'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -151,7 +152,8 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   const { operationInfo, fileList, chatType, data } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  const { handleSend } = useChatIPCDispatcher()
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
 
   // 获取流数据
   const { stream } = useStreamingChatContent({
@@ -180,11 +182,12 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
     const jsonInput = {
       suggestion: item.value,
     }
-    const params: AIChatIPCSendParams = {
-      value: JSON.stringify(jsonInput),
-      id: selectors.InteractiveId,
+    const info: AIInputEvent = {
+      IsInteractiveMessage: true,
+      InteractiveId: selectors.InteractiveId,
+      InteractiveJSONInput: JSON.stringify(jsonInput),
     }
-    handleSend(params)
+    onSend({ token: sessionId, type: '', params: info })
   })
   const referenceNode = useCreation(() => {
     return !!stream?.reference ? <AIReferenceNode referenceList={stream?.reference} /> : <></>
@@ -242,7 +245,6 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const { modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
-  const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
 
   const [loading, setLoading] = useState<boolean>(false)
   const [type, setType] = useState<'outInput' | 'params'>('outInput')
@@ -292,10 +294,9 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const duration = useCreation(() => {
     return Math.round(data.durationSeconds * 10) / 10
   }, [data.durationSeconds])
-  const startTime = useCreation(() => {
-    return formatTimestamp(data.startTime)
-  }, [data.startTime])
 
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
   const getListToolList = useMemoizedFn(() => {
     if (!data?.callToolId || !activeChat) return
     setLoading(true)
@@ -304,14 +305,12 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     }
     grpcQueryAIToolDetails(params)
       .then((res) => {
-        const chatItem = fetchChatDataStore()?.getContentMap({
-          session: activeChat?.SessionID,
-          chatType,
-          mapKey: token,
-        })
+        /** TODO - 工具卡片刷新后,需要更新这个item里面的数据以及其刷新逻辑 */
+        const chatItem = rawData.contents.get(token)
         if (!!chatItem && chatItem.type === AIChatQSDataTypeEnum.TOOL_RESULT) {
           chatItem.data.tool.resultDetails = getResultDetails(res)
         }
+        store.getState().incrementNodeVersion(token, 'item')
       })
       .finally(() =>
         setTimeout(() => {

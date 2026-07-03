@@ -57,7 +57,6 @@ import OpenFileDropdown, { OpenFileDropdownItem } from '../aiChatWelcome/OpenFil
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
 import { insertAtCurrentPosition } from '../components/aiMilkdownInput/customPlugin'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
@@ -71,8 +70,10 @@ import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
-import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
+import { AIInputEvent, AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { useStore } from 'zustand'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -112,9 +113,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       onHttpFlowRemove,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-    const { chatIPCData } = useChatIPCStore()
-    const { handleSendConfigHotpatch } = useChatIPCDispatcher()
-    const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
+
+    const sessionId = useCurrentSessionId()
+    const store = useCurrentStore()
+    const execute = useStore(store, (state) => state.execute)
+    const { onSend } = useAIAgentDispatcher()
 
     const [manualAdditionVisible, setManualAdditionVisible] = useState<boolean>(false)
 
@@ -391,12 +394,15 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [setting?.EnablePlan])
     const onSetPlan = useDebounceFn(
       useMemoizedFn((checked) => {
-        handleSendConfigHotpatch({
-          hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
-          params: {
+        const info: AIInputEvent = {
+          IsConfigHotpatch: true,
+          HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
+          Params: {
             EnablePlan: checked,
           },
-        })
+        }
+        onSend({ token: sessionId, type: '', params: info })
+
         setSetting?.((v) => ({
           ...v,
           EnablePlan: checked,
