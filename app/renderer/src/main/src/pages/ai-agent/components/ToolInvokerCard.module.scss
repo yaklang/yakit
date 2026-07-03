@@ -1,3 +1,5 @@
+@use '../../../styles/mixin.scss' as mixin;
+
 .tool-invoker-card-extra {
   display: flex;
   align-items: center;
@@ -52,7 +54,16 @@
     }
   }
 }
-
+.tool-invoker-card-reason {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  @include mixin.text-ellipsis(1);
+}
 .file-system {
   width: 100%;
   margin-top: 8px;
@@ -206,4 +217,16 @@
       height: 16px;
     }
   }
+}
+
+.tool-loading-content {
+  min-height: 88px;
+  padding: 4px 0;
+}
+
+.tool-loading-block {
+  min-height: 72px;
+  border-radius: 4px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background-color: var(--Colors-Use-Neutral-Bg);
 }
