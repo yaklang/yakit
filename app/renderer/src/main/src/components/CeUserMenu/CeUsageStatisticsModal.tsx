@@ -51,9 +51,9 @@ export const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (pr
 
   const requestStatsInfo = useMemo(
     () => [
-      { Id: t('CeUserMenu.success'), Data: `${apiKeysInfo.successCount || '-'}`, Timestamp: 0 },
-      { Id: t('CeUserMenu.failure'), Data: `${apiKeysInfo.failureCount || '-'}`, Timestamp: 0 },
-      { Id: t('CeUserMenu.total'), Data: `${apiKeysInfo.usageCount || '-'}`, Timestamp: 0 },
+      { Id: t('CeUserMenu.success'), Data: `${apiKeysInfo.successCount ?? '-'}`, Timestamp: 0 },
+      { Id: t('CeUserMenu.failure'), Data: `${apiKeysInfo.failureCount ?? '-'}`, Timestamp: 0 },
+      { Id: t('CeUserMenu.total'), Data: `${apiKeysInfo.usageCount ?? '-'}`, Timestamp: 0 },
     ],
     [t, apiKeysInfo.successCount, apiKeysInfo.failureCount, apiKeysInfo.usageCount],
   )
@@ -62,12 +62,12 @@ export const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (pr
     () => [
       {
         Id: t('CeUserMenu.input'),
-        Data: `${apiKeysInfo.inputBytes ? formatNumberUnits(apiKeysInfo.inputBytes) : '-'}`,
+        Data: `${typeof apiKeysInfo.inputBytes === 'number' ? formatNumberUnits(apiKeysInfo.inputBytes) : '-'}`,
         Timestamp: 0,
       },
       {
         Id: t('CeUserMenu.output'),
-        Data: `${apiKeysInfo.outputBytes ? formatNumberUnits(apiKeysInfo.outputBytes) : '-'}`,
+        Data: `${typeof apiKeysInfo.outputBytes === 'number' ? formatNumberUnits(apiKeysInfo.outputBytes) : '-'}`,
         Timestamp: 0,
       },
     ],
