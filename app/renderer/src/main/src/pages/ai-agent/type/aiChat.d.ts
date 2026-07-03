@@ -217,21 +217,20 @@ export interface AIAgentChatData {
   contents: Map<string, AIChatQSData>
 }
 export interface AIAgentChatMetaData {
+  /** 会话通信流建立成功后的UI回调触发事件 */
+  onSessionStartSuccess?: (sessionId: string) => void
   /** 通过用户问题创建会话时的问题 */
   createChatQuestion?: AIInputEvent
   /** 自由对话的实时记忆列表 */
   casualMemoryList: AIAgentGrpcApi.MemoryEntryList
-  /** 会话通信流建立成功后的UI回调触发事件 */
-  onSessionStartSuccess?: (sessionId: string) => void
   /** 任务规划的实时记忆列表 */
   taskMemoryList: AIAgentGrpcApi.MemoryEntryList
   /** 通知消息的消失定时器 */
   notifyMessageTimer: NodeJS.Timeout | null
-  /** 当前自由对话问题的re_act_task_id */
-  currentCasualTaskID: string
+
   /** 当前任务规划问题的re_act_task_id|coordinatorId|status */
   currentTaskPlanID?: TaskChatTaskInfo
-  /** 当前任务规划正在进行中的节点uuid */
+  /** 当前任务规划正在进行中的节点taskID */
   currentTaskPlanActiveNode: Set<string>
 
   /** 历史数据: review_release先出现的历史review数据的id-release */
@@ -252,7 +251,7 @@ export interface AIAgentChatMetaData {
   cardKVPair: Map<string, AIAgentGrpcApi.AICacheCard>
   cardKVPaidTimer: NodeJS.Timeout | null
 
-  /** 用于文件操作记录的计数器 */
+  /** 用于文件操作记录的计数器, 主要给文件操作记录加上order属性 */
   execFileRecordOrder: number
 
   /** 同步ID-是否已处理 */
