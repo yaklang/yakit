@@ -6,4 +6,6 @@ export interface OpenedFileProps {}
 
 export interface OpenFolderDraggerProps {
   setAbsolutePath: (v: string) => void
+  value?: string
+  className?: string
 }

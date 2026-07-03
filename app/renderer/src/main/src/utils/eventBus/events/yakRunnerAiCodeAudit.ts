@@ -50,8 +50,10 @@ export type YakRunnerAiCodeAuditEventProps = {
   // 刷新审计详情（关闭节点信息）
   onAiCodeAuditRefreshAuditDetail?: string
 
-  // 等待删除
-  onIrifyAiCodeAuditOpenFileTree: string
+  /** 工程根路径切换：重置右侧 AI 会话（旧会话保留在历史） */
+  onIrifyAiCodeAuditProjectChanged?: string
+  /** 请求展示 AI 代码审计引导蒙版（payload: IrifyAiCodeAuditOnboardingRequest JSON） */
+  onIrifyAiCodeAuditShowOnboarding: string
   /** 编辑器选中代码发送到自由对话 */
   onAiCodeAuditSendCodeBlock: string
 }

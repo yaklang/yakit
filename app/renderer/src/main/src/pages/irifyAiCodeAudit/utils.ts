@@ -1,5 +1,6 @@
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { YakRunnerHistoryProps } from '../yakRunner/YakRunnerType'
+import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
 import emiter from '@/utils/eventBus/eventBus'
 import { failed } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
@@ -11,6 +12,42 @@ const tOriginal = i18n.getFixedT(null, 'yakRunner')
 const IrifyAiCodeAuditOpenHistory = 'IrifyAiCodeAuditOpenHistory'
 const IrifyAiCodeAuditLastFolderExpanded = 'IrifyAiCodeAuditLastFolderExpanded'
 const IrifyAiCodeAuditLastAreaFile = 'IrifyAiCodeAuditLastAreaFile'
+
+export interface IrifyAiCodeAuditOnboardingRequest {
+  path?: string
+  auditStyle?: IrifyAiCodeAuditStyle
+}
+
+export interface IrifyAiCodeAuditOpenFileTreeRequest {
+  path: string
+  /** 用户主动打开目录时重置工作区（AI 新会话等）；页面恢复历史目录时应为 false */
+  resetWorkspace?: boolean
+}
+
+export const parseIrifyAiCodeAuditOpenFileTreePayload = (data: string): { path: string; resetWorkspace: boolean } => {
+  try {
+    const parsed = JSON.parse(data) as Partial<IrifyAiCodeAuditOpenFileTreeRequest>
+    if (typeof parsed?.path === 'string' && parsed.path.length > 0) {
+      return { path: parsed.path, resetWorkspace: parsed.resetWorkspace !== false }
+    }
+  } catch {
+    // 兼容纯路径字符串（如页面恢复历史目录）
+  }
+  return { path: data, resetWorkspace: false }
+}
+
+/** 打开工程目录；默认重置工作区（Monaco / AI 等） */
+export const emitIrifyAiCodeAuditOpenFileTree = (path: string, resetWorkspace = true) => {
+  emiter.emit(
+    'onAiCodeAuditOpenFileTree',
+    JSON.stringify({ path, resetWorkspace } satisfies IrifyAiCodeAuditOpenFileTreeRequest),
+  )
+}
+
+/** 打开 AI 代码审计引导蒙版 */
+export const requestIrifyAiCodeAuditOnboarding = (request?: IrifyAiCodeAuditOnboardingRequest) => {
+  emiter.emit('onIrifyAiCodeAuditShowOnboarding', JSON.stringify(request ?? {}))
+}
 
 /**
  * @name 更改IrifyAiCodeAudit历史记录
@@ -24,9 +61,14 @@ export const setIrifyAiCodeAuditHistory = (newHistory: YakRunnerHistoryProps) =>
         return
       }
       const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
+      const isSameHistoryEntry = (item: YakRunnerHistoryProps) => {
+        if (item.path !== newHistory.path) return false
+        if (newHistory.isFile || item.isFile) return true
+        return (item.auditStyle ?? 'unset') === (newHistory.auditStyle ?? 'unset')
+      }
       const newHistoryData: YakRunnerHistoryProps[] = [
         newHistory,
-        ...historyData.filter((item) => item.path !== newHistory.path),
+        ...historyData.filter((item) => !isSameHistoryEntry(item)),
       ].slice(0, 10)
       setRemoteValue(IrifyAiCodeAuditOpenHistory, JSON.stringify(newHistoryData))
       emiter.emit('onAiCodeAuditRefreshRunnerHistory', JSON.stringify(newHistoryData))
