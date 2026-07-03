@@ -237,15 +237,9 @@
 }
 
 .more-versions-popover {
-  padding-top: 0px;
-
   :global {
     .ant-popover-arrow {
       display: none;
-    }
-
-    .ant-popover-inner {
-      border-radius: 4px;
     }
   }
 }

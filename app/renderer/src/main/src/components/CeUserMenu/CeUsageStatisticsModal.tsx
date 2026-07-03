@@ -77,12 +77,12 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
   return (
     <YakitModal
       wrapClassName={styles['usage-statistics-modal']}
-      visible={visible}
+      open={visible}
       title={t('CeUserMenu.usageStatistics')}
       type="white"
       width={640}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       onCancel={onClose}
     >
       <YakitSpin spinning={loading}>
