@@ -1032,7 +1032,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         dropdown={{
                           placement: 'bottom',
                           trigger: ['click'],
-                          onVisibleChange: (value: boolean) => {
+                          onOpenChange: (value: boolean) => {
                             setDynamicMenuOpen(value)
                           },
                         }}
@@ -1045,7 +1045,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                   ) : (
                     <div className={styles['user-info']}>
                       <YakitPopover
-                        overlayClassName={classNames(styles['ui-op-plus-dropdown'])}
+                        classNames={{ root: classNames(styles['ui-op-plus-dropdown']) }}
                         placement={'bottomRight'}
                         trigger={'click'}
                         content={
@@ -1057,8 +1057,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             }}
                           />
                         }
-                        visible={ceUserMenuShow}
-                        onVisibleChange={(visible) => {
+                        open={ceUserMenuShow}
+                        onOpenChange={(visible) => {
                           if (visible) {
                             onUpdateApiKey()
                           }
