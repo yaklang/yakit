@@ -798,7 +798,11 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
         />
         {/* key值待优化 */}
         {matcher.matchersList.map((item, number) => (
-          <div className={styles['matching-list-item']} key={number}>
+          <div
+            className={styles['matching-list-item']}
+            key={number}
+            style={{ minWidth: i18n.language === 'en' ? 500 : undefined }}
+          >
             <YakitSpin spinning={executingItemList.includes(number)}>
               <div className={styles['matching-extraction-condition']}>
                 <div className={styles['matching-extraction-condition-left']}>
@@ -1146,6 +1150,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
         onChange={(key) => setActiveKey(key as string)}
         accordion
         className={styles['matcher-extraction-collapse']}
+        style={{ minWidth: i18n.language === 'en' ? 500 : undefined }}
       >
         {extractor.extractorList.map((extractorItem, index) => (
           <YakitPanel
