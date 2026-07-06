@@ -2470,6 +2470,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         onClick={({ key, keyPath }) => {
                           onMultipleClick(key, keyPath)
                         }}
+                        parentTitleClick
                       />
                     }
                     trigger="click"
