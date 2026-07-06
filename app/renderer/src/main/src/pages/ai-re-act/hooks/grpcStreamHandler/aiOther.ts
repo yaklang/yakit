@@ -1,7 +1,7 @@
 import type { AIMessageHandler } from '../type'
-import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi } from '../grpcApi'
+import { AIInputEventSyncTypeEnum, AITaskStatus, AITaskStatusType, type AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import { genBaseAIChatData, generateTaskNodeID, genExecTasks, handleTaskPlanEnd } from '../utils'
+import { genBaseAIChatData, genExecTasks, handleTaskPlanEnd } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData } from '../defaultConstant'
@@ -75,7 +75,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (request) => {
   })
 
   // 生成任务规划里的默认任务聚合组
-  const taskID = generateTaskNodeID(meta.currentTaskPlanID.taskID, 'unknown')
+  const taskID = `${meta.currentTaskPlanID.taskID}-default`
   const chatData: AIChatQSData = {
     ...genBaseAIChatData(res),
     id: taskID,
@@ -205,7 +205,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
 
   // 用户问题的UI回显
   const chatData: AIChatQSData = {
-    id: data.react_task_id,
+    id: res.TaskId || data.react_task_id,
     chatType: 'reAct',
     type: AIChatQSDataTypeEnum.QUESTION,
     Timestamp: res.Timestamp,
@@ -309,8 +309,9 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
   if (res.IsSync || chatType === 'task') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
-  const { react_task_id, react_task_now_status } = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
-  if (['completed', 'aborted'].includes(react_task_now_status)) {
+  const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
+  const react_task_id = res.TaskId || info.react_task_id
+  if (['completed', 'aborted'].includes(info.react_task_now_status)) {
     if (store.getState().currentCasualTaskID && store.getState().currentCasualTaskID === react_task_id) {
       store.getState().updateState({ cancelCasualLoading: false })
       // 取消专注模式
@@ -321,10 +322,15 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
     store.getState().updateCasualTodoList()
     if (meta.currentTaskPlanID?.taskID === react_task_id) {
       // 该问题触发了任务规划, 所以需要将任务规划状态也调整
-      meta.currentTaskPlanID.status = react_task_now_status as AITaskStatus
+      meta.currentTaskPlanID.status = info.react_task_now_status as AITaskStatus
       store.getState().updateState({ cancelTaskLoading: false })
     }
   }
+  // 更新自由对话-执行任务组的状态
+  const taskDetail = rawData.contents.get(react_task_id)
+  if (!taskDetail || taskDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
+  taskDetail.data.status = info.react_task_now_status as AITaskStatusType
+  store.getState().incrementNodeVersion(taskDetail.id, 'task')
 }
 
 const handleTrafficCount: AIMessageHandler = (request) => {
@@ -403,6 +409,43 @@ const handleYaklangCodeChange: AIMessageHandler = (requestInfo) => {
   store.getState().updateStateCount('yaklangCodeChangeUpdate')
 }
 
+const handleReactTaskCreated: AIMessageHandler = (request) => {
+  const { res, chatType, store, rawData } = request
+  if (res.Type !== 'structured' || res.NodeId !== 'react_task_created') return
+  if (res.IsSync || chatType === 'task') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const info = JSON.parse(ipcContent) as AIAgentGrpcApi.CasualCreated
+
+  // 非聚合任务不处理
+  if (!info.react_task_is_sub_agent) return
+  if (!info.react_task_id) return
+
+  const chatData: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    id: info.react_task_id,
+    chatType: 'reAct',
+    type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
+    data: {
+      taskId: info.react_task_id,
+      taskIndex: info.react_task_id,
+      taskName: info.react_task_name || info.react_user_input || info.react_task_id,
+      goal: info.react_user_input || '',
+      status: info.react_task_status,
+    },
+  } as AIChatQSData
+
+  rawData.contents.set(chatData.id, chatData)
+  store.getState().dispatchStreamingNode({
+    chatType: 'reAct',
+    node: {
+      token: chatData.id,
+      kind: 'task',
+      type: chatData.type,
+    },
+  })
+}
+
 export const aiOtherDataHandlers = {
   http_fuzz_request_change: handleHttpFuzzRequestChange,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
@@ -423,4 +466,5 @@ export const aiOtherDataHandlers = {
   yak_risk_count: handleTrafficCount,
   plan: handlePlan,
   yaklang_code_change: handleYaklangCodeChange,
+  react_task_created: handleReactTaskCreated,
 } as const

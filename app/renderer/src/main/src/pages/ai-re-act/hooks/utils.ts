@@ -20,10 +20,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import { DefaultPlanLoadingStatus } from './defaultConstant'
 import { ChatMultiSessionController } from './ChatMultiSessionController'
 
-/** 生成任务节点的唯一ID */
-export const generateTaskNodeID = (planID: string, taskID: string) => {
-  return `${planID}-${taskID || 'unknown'}`
-}
 /**
  * 任务节点内的数据生成任务节点ID
  * @param isExist 生成的任务节点是否已经存在，不存在则不是任务节点数据，归为默认节点内的数据
@@ -31,15 +27,19 @@ export const generateTaskNodeID = (planID: string, taskID: string) => {
 export const generateTaskNodeDataID = (params: {
   chatType: ChatListRenderType
   planID?: string
-  taskID: AIOutputEvent['TaskIndex']
+  taskID: AIOutputEvent['TaskId']
   isExist: (key: string) => boolean
 }) => {
   const { chatType, planID, taskID, isExist } = params
-  // 自由对话或者没有任务规划ID，则不生成任务节点ID
-  if (chatType === 'reAct' || !planID) return undefined
-  const keyLabel = `${planID}-${taskID || 'unknown'}`
-  if (isExist(keyLabel)) return keyLabel
-  return `${planID}-unknown`
+
+  // 不管自由对话还是任务规划, 只要是明确的执行任务组，都会有唯一的taskID值
+  if (taskID && isExist(taskID)) return taskID
+  // 任务规划的默认任务组
+  if (chatType === 'task' && planID) {
+    const defaultKey = `${planID}-default`
+    if (isExist(defaultKey)) return defaultKey
+  }
+  return undefined
 }
 
 /** 生成AI-UI展示的必须基础数据 */
