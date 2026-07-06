@@ -120,15 +120,13 @@ export const LocalPluginLog: React.FC<LocalPluginLogProps> = React.memo((props) 
             </div>
           }
           style={{ margin: '10px 10px 0 8px' }}
-        >
-          {list.map((e, index) => {
-            return (
-              <Timeline.Item key={e.id} color="" dot={<>{logLevelToDot(e)}</>}>
-                <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
-              </Timeline.Item>
-            )
-          })}
-        </Timeline>
+          items={list.map((e) => ({
+            key: e.id,
+            color: '',
+            dot: <>{logLevelToDot(e)}</>,
+            children: <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />,
+          }))}
+        ></Timeline>
       )}
     </div>
   )
