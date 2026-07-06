@@ -10,7 +10,6 @@ import { OutlinePlussmIcon, OutlineNewspaperIcon, OutlineClouddownloadIcon } fro
 import { SolidChatalt2Icon } from '@/assets/icon/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ExpandAndRetract } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
-import { useMemoizedFn } from 'ahooks'
 import { Divider } from 'antd'
 import { onNewChat } from '../../historyChat/HistoryChat'
 import AIContextToken from '../AIContextToken/AIContextToken'
@@ -19,6 +18,7 @@ import useAiChatLog from '@/hook/useAiChatLog/useAiChatLog.ts'
 import { ExportAILogsModal } from '../../components/ExportAILogsModal/ExportAILogsModal'
 import { failed, yakitNotify } from '@/utils/notification'
 import { grpcExportAILogs } from '../../grpc'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 
 export const AIHorizontalScrollCard: React.FC<AIHorizontalScrollCardProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -33,7 +33,6 @@ export const AIHorizontalScrollCard: React.FC<AIHorizontalScrollCardProps> = Rea
 
   const store = useCurrentStore()
   const yakExecResultCard = useStore(store, (state) => state.card)
-  const execute = useStore(store, (state) => state.execute)
 
   const onExpand = useMemoizedFn((e) => {
     e.stopPropagation()
@@ -102,7 +101,7 @@ export const AIHorizontalScrollCard: React.FC<AIHorizontalScrollCardProps> = Rea
               </YakitButton>
             </div>
             <div className={styles['extra']}>
-              <AIContextToken execute={execute} session={activeChat?.SessionID} />
+              <AIContextToken />
               <YakitButton type="secondary2" icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
                 {t('AIChatContent.log')}
               </YakitButton>

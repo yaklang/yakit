@@ -138,7 +138,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      const source = getSetting().Source
+      const source = getSetting().Source || 'ai'
       const filter = isGlobalAIAgentHistory ? { DeleteAll: true } : { Filter: { Source: historyQuerySources } }
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
@@ -186,7 +186,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
               Source: historyQuerySources,
             }
       const sessionIds = sessions.map((item) => item.SessionID)
-      const source = getSetting().Source
+      const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },

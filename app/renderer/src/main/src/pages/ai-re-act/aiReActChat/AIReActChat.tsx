@@ -2,33 +2,24 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react
 
 import styles from './AIReActChat.module.scss'
 import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
-import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import type { AIReActChatContentsRef } from '../aiReActChatContents/AIReActChatContentsType'
 import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
-import { ColorsChatIcon } from '@/assets/icon/colors'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
-import { ChevrondownButton, ChevronleftButton, RoundedStopButton } from './AIReActComponent'
-import { Tooltip } from 'antd'
-import { ClockIcon } from '@/assets/newIcon'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
+import { ChevrondownButton } from './AIReActComponent'
 import { AIInputEvent, AIInputEventSyncTypeEnum, AISourceEnum, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
-import useGetChatDataStoreKey from '../hooks/useGetChatDataStoreKey'
 import emiter from '@/utils/eventBus/eventBus'
-import { omit } from 'lodash'
 import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
 import { AIToDoList } from './aiToDoList/AIToDoList'
 import { cloneDeep } from 'lodash'
@@ -38,9 +29,10 @@ import { OutlineLandPlotIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { SolidChatIcon } from '@/assets/icon/solid'
-import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -62,7 +54,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
-    const rawData = useCurrentRawData()
     const meta = useCurrentMeta()
     const execute = useStore(store, (state) => state.execute)
     const focusMode = useStore(store, (state) => state.focusMode)
@@ -83,14 +74,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const { activeChat, setting } = useAIAgentStore()
     const { getSession } = useSessionId()
-
-    const source = useCreation(() => {
-      return setting.Source
-    }, [setting.Source])
-
-    const contextTokenSession = useCreation(() => {
-      return activeChat?.SessionID || setting.TimelineSessionID
-    }, [activeChat?.SessionID, setting.TimelineSessionID])
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -131,7 +114,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         yakitNotify('error', '请先配置 AI ReAct 参数')
         return
       }
-      if (execute) {
+      if (store.getState().execute) {
         handleSend(value)
       } else {
         handleStart(value)
@@ -287,7 +270,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const handleStopCasualTask = useMemoizedFn(() => {
       const currentCasualTaskID = meta.currentCasualTaskID
-      if (!execute || !currentCasualTaskID) return
+      if (!store.getState().execute || !currentCasualTaskID) return
 
       store.getState().updateState({
         cancelCasualLoading: true,
@@ -522,31 +505,27 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 </div>
               )}
               <AIReActChatContents ref={aiReActChatContentsRef} />
+              {/* <AIReActChatHeader
+                title={title}
+                chatContainerHeaderClassName={chatContainerHeaderClassName}
+                isShowRetract={isShowRetract}
+                externalParameters={externalParameters}
+                handleSwitchShowFreeChat={handleSwitchShowFreeChat}
+              />
+              <AIToDoListWrapper />
+              <AIReActChatContents /> */}
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>
                 <div className={styles['footer-inputs']}>
-                  {execute && questionQueue?.total > 0 && <AITaskQuery />}
-                  {execute && notifyMessage?.content && <AINotifyMessage notifyMessage={notifyMessage} />}
-
+                  <AITaskQuery />
+                  <AINotifyMessage />
                   <div className={classNames(styles['footer-inputs-file-list'])}>
-                    <AIChatTextarea
+                    <AIReactChatTextarea
                       ref={aiChatTextareaRef}
-                      loading={false}
-                      onSubmit={handleSubmit}
-                      inputFooterRight={
-                        <div className={styles['extra-footer-right']}>
-                          {casualLoading && (
-                            <RoundedStopButton
-                              loading={cancelCasualLoading}
-                              onClick={handleStopCasualTask}
-                              style={{ width: 24, height: 24 }}
-                            />
-                          )}
-                        </div>
-                      }
-                      chatDataStoreKey={chatDataStoreKey}
-                      {...omit(externalParameters, 'rightIcon')}
+                      handleSubmit={handleSubmit}
+                      externalParameters={externalParameters}
+                      handleStopCasualTask={handleStopCasualTask}
                     />
                   </div>
                 </div>
@@ -563,10 +542,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   }),
 )
 
-const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo((props) => {
-  const { notifyMessage } = props
+const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+  const notifyMessage = useStore(store, (state) => state.notifyMessage)
+
   const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
-  return (
+
+  return execute && notifyMessage?.content ? (
     <div className={styles['notify-message']}>
       <div>{nodeLabel}</div>
       <div className={styles['content-wrapper']}>
@@ -578,5 +561,7 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo((props) => {
         </div>
       </div>
     </div>
+  ) : (
+    <></>
   )
 })

@@ -11,7 +11,6 @@ import {
 } from '@/assets/icon/outline'
 import styles from './AITaskQuery.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { Tooltip } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -20,8 +19,9 @@ import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 
-export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
+export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const [loading, setLoading] = useState<boolean>(false)
@@ -62,7 +62,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
       setShowList(false)
     }, 500)
   })
-  return (
+  return execute && questionQueue?.total > 0 ? (
     <div className={styles['ai-task-query']}>
       {showList ? (
         <div className={styles['ai-task-query-list-wrapper']}>
@@ -100,6 +100,8 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
         </YakitButton>
       )}
     </div>
+  ) : (
+    <></>
   )
 })
 

@@ -1,6 +1,4 @@
 import React, { memo } from 'react'
-import { useCreation } from 'ahooks'
-import { cloneDeep } from 'lodash'
 import { ContextPressureEcharts } from '../../chatTemplate/AIEcharts'
 import { formatNumberUnits } from '../../utils'
 import { Tooltip } from 'antd'
@@ -10,9 +8,16 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { CONTEXT_PERF_POLL_INTERVAL, ContextPerfPanelProps, useContextPerfStore } from './useContextPerfStore'
 import styles from '../AIChatContent.module.scss'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import cloneDeep from 'lodash/cloneDeep'
+import useCreation from 'ahooks/lib/useCreation'
 
-const ContextPressurePanel: React.FC<ContextPerfPanelProps> = ({ session, execute }) => {
+const ContextPressurePanel: React.FC<ContextPerfPanelProps> = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
+
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
 
   const getPerfData = useContextPerfStore()
 

@@ -9,9 +9,15 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { CONTEXT_PERF_POLL_INTERVAL, ContextPerfPanelProps, useContextPerfStore } from './useContextPerfStore'
 import styles from '../AIChatContent.module.scss'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
-const ContextCostPanel: React.FC<ContextPerfPanelProps> = ({ execute }) => {
+const ContextCostPanel: React.FC<ContextPerfPanelProps> = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
+
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+
   const aiPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: firstCost } = useRafPolling({
