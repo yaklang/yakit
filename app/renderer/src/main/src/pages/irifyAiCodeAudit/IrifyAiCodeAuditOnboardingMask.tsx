@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Steps } from 'antd'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -16,6 +15,7 @@ import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
 import { IrifyAiCodeAuditHistoryItem } from './IrifyAiCodeAuditHistoryItem'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { resolveIrifyAuditDefaultChatSeed } from './irifyAiCodeAuditConstants'
+import YakitSteps from '../plugins/local/YakitSteps/YakitSteps'
 import styles from './IrifyAiCodeAuditOnboardingMask.module.scss'
 
 const tYak = i18n.getFixedT(null, 'yakRunner')
@@ -261,12 +261,11 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
           <div className={styles['onboarding-title']}>{t('onboarding.title')}</div>
           <div className={styles['onboarding-subtitle']}>{t('onboarding.subtitle')}</div>
         </div>
-        <Steps current={current} className={styles['onboarding-steps']}>
+        <YakitSteps current={current} className={styles['onboarding-steps']}>
           {stepsItems.map((item, index) => (
-            <Steps.Step key={index} title={item.title} />
+            <YakitSteps.YakitStep key={index} title={item.title} />
           ))}
-        </Steps>
-
+        </YakitSteps>
         <div className={styles['onboarding-body']}>
           {current === 0 && (
             <div className={styles['step-directory']}>

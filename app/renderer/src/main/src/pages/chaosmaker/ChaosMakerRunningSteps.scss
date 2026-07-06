@@ -1,37 +1,3 @@
-.chaos-maker-rule-step {
-  .ant-steps-item-icon {
-    background: #ffffff;
-    border-color: var(--Colors-Use-Main-Primary);
-
-    .anticon {
-      color: var(--Colors-Use-Main-Primary) !important;
-    }
-  }
-}
-
-.chaos-maker-rule-step-active {
-  .ant-steps-item-icon {
-    background: var(--Colors-Use-Main-Primary) !important;
-    border-color: var(--Colors-Use-Main-Primary) !important;
-  }
-}
-
-.chaos-maker-rule-step-unactive {
-  .ant-steps-item-icon {
-    border-color: #eeeeee !important;
-  }
-}
-
-.chaos-maker-rule-steps {
-  .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title::after {
-    background-color: var(--Colors-Use-Main-Primary) !important;
-  }
-}
-
-.chaos-maker-step-title {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-}
-
 .chaos-maker-step-desc {
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
