@@ -410,6 +410,7 @@ export class ChatMultiSessionController {
           'status',
           'stream-finished',
           'capability_inventory',
+          'react_task_created',
         ].includes(res.NodeId)
       ) {
         funcKey = res.NodeId
@@ -431,6 +432,8 @@ export class ChatMultiSessionController {
         funcKey = 'current_task_todo_list_update'
       } else if (res.NodeId === 'session_snapshot') {
         funcKey = res.NodeId
+      } else if (res.Type === 'detached_plan_require' && res.NodeId === 'detached-plan') {
+        funcKey = res.Type
       }
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
       if (handleFunc) {

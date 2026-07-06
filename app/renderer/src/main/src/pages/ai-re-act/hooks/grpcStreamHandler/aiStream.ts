@@ -1,5 +1,5 @@
 import type { AIMessageHandler } from '../type'
-import type { AIAgentGrpcApi, AIOutputEvent } from '../grpcApi'
+import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeDataID, isToolStderrStream, isToolStdoutStream } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
@@ -70,7 +70,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
       taskIndex: generateTaskNodeDataID({
         chatType,
         planID: meta.currentTaskPlanID?.taskID,
-        taskID: res.TaskIndex,
+        taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),
     })
@@ -108,7 +108,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   })
@@ -402,7 +402,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
       taskIndex: generateTaskNodeDataID({
         chatType,
         planID: meta.currentTaskPlanID?.taskID,
-        taskID: res.TaskIndex,
+        taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),
     }

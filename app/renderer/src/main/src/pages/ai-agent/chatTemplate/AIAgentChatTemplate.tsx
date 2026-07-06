@@ -315,15 +315,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     const index = streams.findIndex((item) => item.token === id)
     if (index !== -1) locateToIndex(index, 'auto')
   })
-  // const onScrollToIndex = useMemoizedFn((id) => {
-  //   if (!meta?.currentTaskPlanID?.taskID) return false
-  //   const taskID = generateTaskNodeID(meta?.currentTaskPlanID?.taskID, id)
-  //   const index = streams.findIndex((item) => taskID === item.token)
-  //   if (index !== -1) {
-  //     scrollToIndex(index, 'auto')
-  //     waitAndHighlight(index)
-  //   }
-  // })
   useMount(() => {
     // 仅监听 Ready：由 AITaskContent 保证深度规划已可见后再发
     emiter.on('onAITreeLocatePlanningListReady', onTreeLocate)

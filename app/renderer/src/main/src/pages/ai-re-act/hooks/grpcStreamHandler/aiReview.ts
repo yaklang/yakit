@@ -133,7 +133,7 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -171,7 +171,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -209,7 +209,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -276,7 +276,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -443,6 +443,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
       break
     case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
     case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+    case AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE:
       reviewDetail.data.selected = JSON.stringify(data.params)
       reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
       store.getState().dispatchStreamingNode({
@@ -455,7 +456,11 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
         },
       })
       if (chatType === 'reAct') {
-        store.getState().updateCasualReview(reviewDetail.id, 'remove')
+        if (reviewDetail.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
+          store.getState().updateState({ currentPlanReviewToken: '' })
+        } else {
+          store.getState().updateCasualReview(reviewDetail.id, 'remove')
+        }
       } else {
         store.getState().updateState({ currentPlanReviewToken: '' })
       }
@@ -469,6 +474,38 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
   }
 }
 
+const handleDetachedPlanReview: AIMessageHandler = (requestInfo) => {
+  const { res, chatType, store, rawData, meta } = requestInfo
+  if (res.Type !== 'detached_plan_require' || res.NodeId !== 'detached-plan') return
+
+  // 历史数据-grpc流数据在任务规划下无效，不处理
+  if (res.IsSync) return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const data = JSON.parse(ipcContent) as AIAgentGrpcApi.DetachedPlanRequire
+  if (!data?.id || !data?.plans?.root_task || !data?.selectors?.length) {
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
+    return
+  }
+
+  const chatData: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    chatType: chatType,
+    id: data.id,
+    type: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE,
+    data: { ...cloneDeep(data) },
+    taskIndex: generateTaskNodeDataID({
+      chatType: chatType,
+      planID: meta.currentTaskPlanID?.coordinatorId,
+      taskID: res.TaskId,
+      isExist: (key) => rawData.contents.has(key),
+    }),
+  }
+  rawData.contents.set(chatData.id, cloneDeep(chatData))
+
+  if (chatType === 'reAct') store.getState().updateState({ currentPlanReviewToken: chatData.id })
+}
+
 export const aiReviewDataHandlers = {
   plan_review_require: handlePlanReviewRequire,
   plan_task_analysis: handlePlanTaskAnalysis,
@@ -480,4 +517,5 @@ export const aiReviewDataHandlers = {
   ai_review_countdown: handleAIReviewJudgement,
   ai_review_end: handleAIReviewJudgement,
   review_release: handleReviewRelease,
+  detached_plan_require: handleDetachedPlanReview,
 } as const

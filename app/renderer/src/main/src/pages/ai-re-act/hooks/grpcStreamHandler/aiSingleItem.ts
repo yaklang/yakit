@@ -1,7 +1,7 @@
 import type { AIMessageHandler } from '../type'
-import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from '../grpcApi'
+import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import { genBaseAIChatData, generateTaskNodeDataID, generateTaskNodeID, isValidTaskIndex } from '../utils'
+import { genBaseAIChatData, generateTaskNodeDataID } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum, type ReportFinishCardData } from '../aiRender'
 import { convertNodeIdToVerbose } from '../defaultConstant'
 
@@ -19,7 +19,7 @@ const handleThought: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -52,7 +52,7 @@ const handleResult: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -86,7 +86,7 @@ const handleFailReactTask: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -124,7 +124,7 @@ const handleToolCallDecision: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -158,7 +158,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -191,7 +191,7 @@ const handleApiRequestFailed: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -249,7 +249,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
       taskIndex: generateTaskNodeDataID({
         chatType,
         planID: meta.currentTaskPlanID?.taskID,
-        taskID: res.TaskIndex,
+        taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),
     }
@@ -294,7 +294,7 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   }
@@ -324,65 +324,63 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   const info = data as AIAgentGrpcApi.ChangeTask
   const newPlanTree = store.getState().taskChat.plan
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
-    if (item.index === info.task.index) item.progress = AITaskStatus.inProgress
+    if (item.task_id === info.task.task_id) item.progress = AITaskStatus.inProgress
     return item
   })
   store.getState().updatePlanTree(newPlanTree)
 
-  if (isValidTaskIndex(info.task.index) && meta.currentTaskPlanID?.taskID) {
-    const taskID = generateTaskNodeID(meta.currentTaskPlanID.taskID, info.task.index)
-    const chatDetail = rawData.contents.get(taskID)
-    if (chatDetail && chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      requestInfo.pushLog({ level: 'error', message: `${info.task.index}-push_task数据已存在` })
-      return
-    }
-    const chatData: AIChatQSData = {
-      ...genBaseAIChatData(res),
-      id: taskID,
-      chatType: 'task',
-      type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
-      data: {
-        taskIndex: info.task.index,
-        taskId: info.task.task_id,
-        taskName: info.task.name,
-        goal: info.task.goal,
-        status: info.task.task_status || AITaskStatus.inProgress,
-      },
-    }
-    rawData.contents.set(chatData.id, chatData)
-    meta.currentTaskPlanActiveNode.add(chatData.id)
-    // 这里要判断是否是最后一个默认任务组，直接添加不行
-    // setElements((old) => {
-    //   const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
-    //   if (exists) return old
-    //   const last = old[old.length - 1]
-    //   if (last.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
-    //     // 实时数据下，将默认任务聚合组置底
-    //     old.splice(old.length - 1, 0, {
-    //       token: chatData.id,
-    //       type: chatData.type,
-    //       renderNum: 1,
-    //       chatType: 'task',
-    //       kind: 'task',
-    //       children: [],
-    //     })
-    //     return [...old]
-    //   }
-    //   return [
-    //     ...old,
-    //     { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
-    //   ]
-    // })
-    store.getState().dispatchStreamingNode({
-      chatType: chatType,
-      node: {
-        token: chatData.id,
-        kind: 'task',
-        type: chatData.type,
-        isHistory: res.IsSync,
-      },
-    })
+  const taskID = info.task.task_id
+  const chatDetail = rawData.contents.get(taskID)
+  if (chatDetail && chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+    requestInfo.pushLog({ level: 'error', message: `${info.task.index}-push_task数据已存在` })
+    return
   }
+  const chatData: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    id: taskID,
+    chatType: 'task',
+    type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
+    data: {
+      taskIndex: info.task.index,
+      taskId: info.task.task_id,
+      taskName: info.task.name,
+      goal: info.task.goal,
+      status: info.task.task_status || AITaskStatus.inProgress,
+    },
+  }
+  rawData.contents.set(chatData.id, chatData)
+  meta.currentTaskPlanActiveNode.add(chatData.id)
+  // TODO - 这里要判断是否是最后一个默认任务组，直接添加不行
+  // setElements((old) => {
+  //   const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
+  //   if (exists) return old
+  //   const last = old[old.length - 1]
+  //   if (last.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
+  //     // 实时数据下，将默认任务聚合组置底
+  //     old.splice(old.length - 1, 0, {
+  //       token: chatData.id,
+  //       type: chatData.type,
+  //       renderNum: 1,
+  //       chatType: 'task',
+  //       kind: 'task',
+  //       children: [],
+  //     })
+  //     return [...old]
+  //   }
+  //   return [
+  //     ...old,
+  //     { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
+  //   ]
+  // })
+  store.getState().dispatchStreamingNode({
+    chatType: chatType,
+    node: {
+      token: chatData.id,
+      kind: 'task',
+      type: chatData.type,
+      isHistory: res.IsSync,
+    },
+  })
 }
 
 const handlePopTask: AIMessageHandler = (requestInfo) => {
@@ -398,24 +396,22 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
   const info = data as AIAgentGrpcApi.ChangeTask
   const newPlanTree = store.getState().taskChat.plan
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
-    if (item.index === info.task.index) item.progress = info.task.task_status
+    if (item.task_id === info.task.task_id) item.progress = info.task.task_status
     return item
   })
   store.getState().updatePlanTree(newPlanTree)
 
-  if (isValidTaskIndex(info.task.index) && meta.currentTaskPlanID?.taskID) {
-    const taskID = generateTaskNodeID(meta.currentTaskPlanID.taskID, info.task.index)
-    const chatDetail = rawData.contents.get(taskID)
-    if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      requestInfo.pushLog({ level: 'error', message: `${info.task.index}-pop_task数据不存在` })
-      return
-    }
-    meta.currentTaskPlanActiveNode.delete(info.task.index)
-    chatDetail.data.status = info.task.task_status
-    store.getState().incrementNodeVersion(chatDetail.id, 'task')
-
-    sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
+  const taskID = info.task.task_id
+  const chatDetail = rawData.contents.get(taskID)
+  if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+    requestInfo.pushLog({ level: 'error', message: `${info.task.index}-pop_task数据不存在` })
+    return
   }
+  meta.currentTaskPlanActiveNode.delete(chatDetail.id)
+  chatDetail.data.status = info.task.task_status
+  store.getState().incrementNodeVersion(chatDetail.id, 'task')
+
+  sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
 }
 
 /** 单条grpc流数据对应一个独立的UI数据 */

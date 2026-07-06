@@ -35,7 +35,7 @@ const handleToolCallStart: AIMessageHandler = (requestInfo) => {
     taskIndex: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskIndex,
+      taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
   })
@@ -176,6 +176,8 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
   toolResult.data.durationMS = rest.duration_ms || 0
   toolResult.data.durationSeconds = rest.duration_seconds || 0
   toolResult.data.tool.status = status as 'user_cancelled' | 'success' | 'failed' | 'default'
+  /** 触发这个函数说明状态一定不是 processing_params */
+  toolResult.data.isProcessingParams = false
 
   // 设置总结内容，没有就设置成获取中，有就使用获取到的内容
   toolResult.data.tool.summary = toolResult.data.tool.summary || DefaultToolResultSummary[status]?.wait || ''
@@ -231,6 +233,58 @@ const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
   }
 }
 
+const handleToolCallStatus: AIMessageHandler = (requestInfo) => {
+  const { res, store, rawData } = requestInfo
+  if (res.Type !== 'tool_call_status') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const { call_tool_id, status } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
+  if (!call_tool_id) {
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
+    return
+  }
+
+  const toolResult = rawData.contents.get(call_tool_id)
+  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+    requestInfo.pushLog({
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+    })
+    return
+  }
+
+  const isProcessingParams = status === 'processing_params'
+  if (toolResult.data.isProcessingParams === isProcessingParams) return
+
+  toolResult.data.isProcessingParams = status === 'processing_params'
+  store.getState().incrementNodeVersion(toolResult.id, 'item')
+}
+
+const handleToolCallReason: AIMessageHandler = (requestInfo) => {
+  const { res, store, rawData } = requestInfo
+  if (res.Type !== 'tool_call_reason') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const { call_tool_id, reason } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
+
+  if (!call_tool_id) {
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
+    return
+  }
+
+  const toolResult = rawData.contents.get(call_tool_id)
+  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+    requestInfo.pushLog({
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+    })
+    return
+  }
+
+  toolResult.data.tool.reason = reason || ''
+  if (toolResult.data.type !== 'create') store.getState().incrementNodeVersion(toolResult.id, 'item')
+}
+
 export const aiToolResultDataHandlers = {
   tool_call_start: handleToolCallStart,
   tool_call_param: handleToolCallParam,
@@ -240,4 +294,6 @@ export const aiToolResultDataHandlers = {
   tool_call_done: handleToolCallResult,
   tool_call_error: handleToolCallResult,
   tool_call_summary: handleToolCallSummary,
+  tool_call_status: handleToolCallStatus,
+  tool_call_reason: handleToolCallReason,
 } as const
