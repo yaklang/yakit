@@ -86,10 +86,6 @@
   gap: 8px;
   background: var(--Colors-Use-Basic-Background);
   .chat-container {
-    .chat-header {
-      padding: 12px 8px 12px 0px;
-      margin-left: 8px;
-    }
   }
 }
 .ai-re-act-chat-hidden {
@@ -101,111 +97,6 @@
   overflow: hidden;
   height: 100%;
   @extend %display-column-center;
-  .chat-header {
-    @extend %display-flex-center;
-    // position: relative;
-    // min-width: 0;
-    gap: 12px;
-    padding: 12px 8px;
-    height: 48px;
-    .chat-header-title {
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 20px;
-      letter-spacing: 0.1px;
-      @extend %display-flex-center;
-      gap: 4px;
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      .chat-header-title-text {
-        flex-shrink: 0;
-      }
-      .chat-header-focus-mode {
-        overflow: hidden;
-        .text {
-          min-width: 0;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          flex-shrink: 1;
-        }
-      }
-    }
-    .chat-header-extra {
-      @extend %display-flex-center;
-      justify-content: flex-end;
-      gap: 8px;
-      flex-shrink: 0;
-      // position: absolute;
-      // right: 8px;
-      // top: 0;
-      // bottom: 0;
-      // z-index: 2;
-      // padding-left: 12px;
-      background: linear-gradient(
-        to right,
-        transparent,
-        var(--Colors-Use-Basic-Background) 12px,
-        var(--Colors-Use-Basic-Background)
-      );
-      .info-token {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 12px;
-        font-weight: 400;
-      }
-      .token-tag {
-        height: 16px;
-        padding: 2px 6px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        border-radius: 2px;
-        svg {
-          width: 12px;
-          height: 12px;
-        }
-      }
-      .upload-token {
-        background: var(--Colors-Use-Error-Bg-Hover);
-        color: var(--Colors-Use-Error-Primary);
-        svg {
-          color: var(--Colors-Use-Error-Primary);
-        }
-      }
-      .download-token {
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        svg {
-          color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-      }
-
-      .divider-style {
-        width: 1px;
-        height: 12px;
-        border-left: 1px solid var(--Colors-Use-Neutral-Border);
-      }
-      .info-time {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 16px;
-      }
-    }
-  }
-  .todoList-wrapper {
-    height: 33px;
-    .to-do-list {
-      margin-left: 4px;
-      margin-right: 12px;
-    }
-  }
 }
 
 .chat-footer {
@@ -346,60 +237,4 @@
   100% {
     transform: translateX(-50%);
   }
-}
-
-.history-chat-tooltip {
-  max-width: none;
-
-  &:global(.ant-tooltip-placement-top),
-  &:global(.ant-tooltip-placement-topLeft),
-  &:global(.ant-tooltip-placement-topRight) {
-    padding-bottom: 4px;
-
-    :global(.ant-tooltip-arrow) {
-      bottom: 1px;
-    }
-  }
-
-  &:global(.ant-tooltip-placement-bottom),
-  &:global(.ant-tooltip-placement-bottomLeft),
-  &:global(.ant-tooltip-placement-bottomRight) {
-    padding-top: 4px;
-
-    :global(.ant-tooltip-arrow) {
-      top: 1px;
-    }
-  }
-
-  :global {
-    .ant-tooltip-inner {
-      padding: 0;
-      display: block;
-      min-height: unset;
-      background: var(--Colors-Use-Basic-Background);
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      color: inherit;
-      box-shadow: 0 4px 16px var(--Colors-Use-Basic-Shadow);
-      overflow: hidden;
-    }
-
-    .ant-tooltip-arrow-content {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      background-color: var(--Colors-Use-Basic-Background);
-      box-shadow: 0 4px 16px var(--Colors-Use-Basic-Shadow);
-    }
-
-    .ant-tooltip-arrow-content::before {
-      opacity: 0;
-    }
-  }
-}
-
-.history-chat-tooltip-content {
-  width: 280px;
-  height: 300px;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
 }

@@ -2,42 +2,29 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react
 
 import styles from './AIReActChat.module.scss'
 import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
-import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
-import { ColorsChatIcon } from '@/assets/icon/colors'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
-import { ChevrondownButton, ChevronleftButton, RoundedStopButton } from './AIReActComponent'
-import { Tooltip } from 'antd'
-import { ClockIcon } from '@/assets/newIcon'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
+import { ChevrondownButton } from './AIReActComponent'
 import { AIInputEvent, AIInputEventSyncTypeEnum, AISourceEnum, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
-import useGetChatDataStoreKey from '../hooks/useGetChatDataStoreKey'
 import emiter from '@/utils/eventBus/eventBus'
-import { omit } from 'lodash'
-import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
-import { AIToDoList } from './aiToDoList/AIToDoList'
-import { cloneDeep } from 'lodash'
-import { DefaultTodoListCardData } from '../hooks/defaultConstant'
-import { TodoListCardData } from '../hooks/aiRender'
-import { OutlineListTodoIcon } from '@/assets/icon/outline'
-import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
-import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
+import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
+import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -50,19 +37,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       externalParameters,
     } = props
     const { setActiveChat, getSetting, onStart, onSend } = useAIAgentDispatcher()
-    const { chatDataStoreKey } = useGetChatDataStoreKey()
 
     const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
-    const rawData = useCurrentRawData()
     const meta = useCurrentMeta()
-    const execute = useStore(store, (state) => state.execute)
-    const focusMode = useStore(store, (state) => state.focusMode)
-    const notifyMessage = useStore(store, (state) => state.notifyMessage)
-    const questionQueue = useStore(store, (state) => state.questionQueue)
-    const cancelCasualLoading = useStore(store, (state) => state.cancelCasualLoading)
-    const casualLoading = useStore(store, (state) => state.casualLoading)
-    const todoListUpdate = useStore(store, (state) => state.casualChat?.todoListUpdate)
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -74,14 +52,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const { activeChat, setting } = useAIAgentStore()
     const { getSession } = useSessionId()
-
-    const source = useCreation(() => {
-      return setting.Source
-    }, [setting.Source])
-
-    const contextTokenSession = useCreation(() => {
-      return activeChat?.SessionID || setting.TimelineSessionID
-    }, [activeChat?.SessionID, setting.TimelineSessionID])
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -107,7 +77,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         yakitNotify('error', '请先配置 AI ReAct 参数')
         return
       }
-      if (execute) {
+      if (store.getState().execute) {
         handleSend(value)
       } else {
         handleStart(value)
@@ -263,7 +233,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const handleStopCasualTask = useMemoizedFn(() => {
       const currentCasualTaskID = meta.currentCasualTaskID
-      if (!execute || !currentCasualTaskID) return
+      if (!store.getState().execute || !currentCasualTaskID) return
 
       store.getState().updateState({
         cancelCasualLoading: true,
@@ -277,44 +247,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       onSend({ token: sessionId, type: 'casual', params: info })
     })
 
-    const todoData: TodoListCardData = useCreation(() => {
-      if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
-      try {
-        return rawData.casualChat.planDetails?.todoList || cloneDeep(DefaultTodoListCardData)
-      } catch (error) {
-        return cloneDeep(DefaultTodoListCardData)
-      }
-    }, [todoListUpdate, activeChat?.SessionID])
-    const taskId = useCreation(() => {
-      if (!activeChat?.SessionID) return ''
-      try {
-        return rawData.casualChat.planDetails?.taskId || ''
-      } catch (error) {
-        return ''
-      }
-    }, [todoListUpdate, activeChat?.SessionID, casualLoading])
-    const onDetails = useMemoizedFn((e) => {
-      e.stopPropagation()
-      if (!taskId) {
-        yakitNotify('error', 'taskId不存在')
-        return
-      }
-      if (chatDataStoreKey === 'aiChatDataStore') {
-        emiter.emit(
-          'actionAITaskContentTab',
-          JSON.stringify({
-            type: 'add',
-            params: {
-              key: taskId,
-              label: '自由对话',
-              goal: '',
-            },
-          }),
-        )
-      } else {
-        yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
-      }
-    })
     return (
       <>
         <div
@@ -330,97 +262,27 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             })}
           >
             <div className={classNames(styles['chat-container'], chatContainerClassName)}>
-              <div className={classNames(styles['chat-header'], chatContainerHeaderClassName)}>
-                <div className={styles['chat-header-title']}>
-                  <ColorsChatIcon />
-                  <span className={styles['chat-header-title-text']}>{title}</span>
-                  {focusMode && (
-                    <YakitTag fullRadius={true} className={styles['chat-header-focus-mode']}>
-                      场景:<span className={styles['text']}>{focusMode}</span>
-                    </YakitTag>
-                  )}
-                </div>
-                <div className={styles['chat-header-extra']}>
-                  {isShowRetract &&
-                    (externalParameters?.rightIcon ? (
-                      <>
-                        {/*
-                        自由对话的taskid(在常量中)存在的时候，casualLoading（state）一定为true
-                        TODO - taskid需要改为 store
-                         */}
-                        {casualLoading && externalParameters.rightIcon.taskDetails && <TaskDetailsPopover />}
-                        {externalParameters.rightIcon.dataDetails && (
-                          <AIContextToken
-                            iconOnly
-                            execute={execute}
-                            session={contextTokenSession}
-                            buttonProps={
-                              externalParameters.rightIcon.dataDetails === true
-                                ? undefined
-                                : externalParameters.rightIcon.dataDetails
-                            }
-                          />
-                        )}
-                        {externalParameters.rightIcon.history && (
-                          <Tooltip
-                            trigger={['click']}
-                            destroyTooltipOnHide
-                            overlayClassName={styles['history-chat-tooltip']}
-                            title={
-                              <div className={styles['history-chat-tooltip-content']}>
-                                <HistoryChat embedded aiSource={[source || 'ai']} />
-                              </div>
-                            }
-                          >
-                            <YakitButton type="text2" icon={<ClockIcon />} title="" />
-                          </Tooltip>
-                        )}
-                        {externalParameters.rightIcon.add}
-                        {externalParameters.rightIcon.close}
-                      </>
-                    ) : (
-                      <>
-                        {casualLoading && (
-                          <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
-                            任务详情
-                          </YakitButton>
-                        )}
-                        <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
-                      </>
-                    ))}
-                </div>
-              </div>
-              {todoData?.items?.length > 0 && (
-                <div className={styles['todoList-wrapper']}>
-                  <AIToDoList className={styles['to-do-list']} todoData={todoData} />
-                </div>
-              )}
+              <AIReActChatHeader
+                title={title}
+                chatContainerHeaderClassName={chatContainerHeaderClassName}
+                isShowRetract={isShowRetract}
+                externalParameters={externalParameters}
+                handleSwitchShowFreeChat={handleSwitchShowFreeChat}
+              />
+              <AIToDoListWrapper />
               <AIReActChatContents />
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>
                 <div className={styles['footer-inputs']}>
-                  {execute && questionQueue?.total > 0 && <AITaskQuery />}
-                  {execute && notifyMessage?.content && <AINotifyMessage notifyMessage={notifyMessage} />}
-
+                  <AITaskQuery />
+                  <AINotifyMessage />
                   <div className={classNames(styles['footer-inputs-file-list'])}>
-                    <AIChatTextarea
+                    <AIReactChatTextarea
                       ref={aiChatTextareaRef}
-                      loading={false}
-                      onSubmit={handleSubmit}
-                      inputFooterRight={
-                        <div className={styles['extra-footer-right']}>
-                          {casualLoading && (
-                            <RoundedStopButton
-                              loading={cancelCasualLoading}
-                              onClick={handleStopCasualTask}
-                              style={{ width: 24, height: 24 }}
-                            />
-                          )}
-                        </div>
-                      }
-                      chatDataStoreKey={chatDataStoreKey}
-                      {...omit(externalParameters, 'rightIcon')}
+                      handleSubmit={handleSubmit}
+                      externalParameters={externalParameters}
+                      handleStopCasualTask={handleStopCasualTask}
                     />
                   </div>
                 </div>
@@ -437,10 +299,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   }),
 )
 
-const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo((props) => {
-  const { notifyMessage } = props
+const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+  const notifyMessage = useStore(store, (state) => state.notifyMessage)
+
   const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
-  return (
+
+  return execute && notifyMessage?.content ? (
     <div className={styles['notify-message']}>
       <div>{nodeLabel}</div>
       <div className={styles['content-wrapper']}>
@@ -452,5 +318,7 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo((props) => {
         </div>
       </div>
     </div>
+  ) : (
+    <></>
   )
 })

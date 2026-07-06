@@ -1,6 +1,5 @@
 import React, { memo, useCallback, useMemo, useState } from 'react'
 import { useCreation } from 'ahooks'
-import { cloneDeep, isEmpty } from 'lodash'
 import { OutlinePresentationchartlineIcon } from '@/assets/icon/outline'
 import { Tooltip } from 'antd'
 import { YakitButton, YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -13,14 +12,22 @@ import { isPerfDataChanged } from './utils'
 import { CONTEXT_PERF_POLL_INTERVAL, ContextPerfPanelProps, useContextPerfStore } from './useContextPerfStore'
 import AIEchartsDetails from './AIEchartsDetails'
 import styles from '../AIChatContent.module.scss'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import cloneDeep from 'lodash/cloneDeep'
+import isEmpty from 'lodash/isEmpty'
 
 interface ContextDetailPopoverProps extends ContextPerfPanelProps {
   buttonProps?: Omit<YakitButtonProp, 'icon' | 'children'>
 }
 
-const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ session, execute, buttonProps }) => {
+const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps }) => {
   const { t } = useI18nNamespaces(['yakitUi'])
   const [visible, setVisible] = useState(false)
+
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+
   const aiPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: perfData } = useRafPolling<AIChatData['aiPerfData'] | null>({

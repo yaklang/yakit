@@ -1,7 +1,6 @@
 import { memo, useEffect, useState } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { useDebounce, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { ReActChatEventEnum } from '../defaultConstant'
 import { OutlineMessageCirclePlusIcon, OutlineSearchIcon } from '@/assets/icon/outline'
@@ -26,6 +25,8 @@ import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { handAIHistoryChatRemove } from './utils'
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import useDebounce from 'ahooks/lib/useDebounce'
 
 const renderClearConfirm = (
   label: string,
@@ -110,7 +111,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      const source = getSetting().Source
+      const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { Source: aiSource } },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: [] }, //删除全部只需要传chatDataStoreKey
@@ -147,7 +148,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     setClearLoading(true)
     try {
       const sessionIds = sessions.map((item) => item.SessionID)
-      const source = getSetting().Source
+      const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { BeforeTimestamp: beforeTimestamp, Source: aiSource } },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
