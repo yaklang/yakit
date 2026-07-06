@@ -360,16 +360,17 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                   <div className="passive-log-container">
                     <Divider style={{ marginTop: 8 }} />
                     <div className="log-timeline">
-                      <Timeline pending={loading}>
-                        {(timelineItemProps || [])
+                      <Timeline
+                        pending={loading}
+                        items={(timelineItemProps || [])
                           .reverse()
                           .filter((item) => item.level !== 'json-risk')
-                          .map((e, index) => (
-                            <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
-                              <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
-                            </Timeline.Item>
-                          ))}
-                      </Timeline>
+                          .map((e, index) => ({
+                            key: index,
+                            color: LogLevelToCode(e.level),
+                            children: <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />,
+                          }))}
+                      ></Timeline>
                     </div>
                   </div>
                 </AutoCard>
