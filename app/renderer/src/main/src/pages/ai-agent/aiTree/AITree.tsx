@@ -54,7 +54,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
         dependsOnTasks: (item.depends_on ?? [])
           .map((depIndex) => tasks.find((t) => t.index === depIndex))
           .filter((t): t is AITaskInfoProps => !!t),
-        onClick: () => emiter.emit('onAITreeLocatePlanningList', item.index),
+        onClick: () => emiter.emit('onAITreeLocatePlanningList', item.task_id),
       })
     })
     return map

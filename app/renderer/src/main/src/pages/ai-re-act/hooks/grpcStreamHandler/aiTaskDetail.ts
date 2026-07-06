@@ -1,5 +1,5 @@
 import type { AIMessageHandler } from '../type'
-import type { AIAgentGrpcApi, AIOutputEvent } from '../grpcApi'
+import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { handleTodoListData } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
@@ -164,6 +164,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
   } else if (chatType === 'reAct') {
     const chatDetail = rawData.casualChat?.planDetails
     if (!chatDetail) return
+    chatDetail.uuid = uuidv4()
     chatDetail.taskId = chatDetail.taskId || res.TaskId
     chatDetail.todoList = newData
     store.getState().updateCasualTodoList()
@@ -183,12 +184,14 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
     oldData.taskId = oldData?.taskId || res.TaskId
     oldData.uuid = uuidv4()
     oldData.execution = snapshot.execution
+    oldData.backgroundProcesses = snapshot.background_processes
     rawData.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (chatType === 'reAct') {
     const chatDetail = rawData.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
     chatDetail.uuid = uuidv4()
     chatDetail.taskId = chatDetail.taskId || res.TaskId
     chatDetail.execution = snapshot.execution
+    chatDetail.backgroundProcesses = snapshot.background_processes
     rawData.casualChat.planDetails = chatDetail
   }
 }

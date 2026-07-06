@@ -37,7 +37,6 @@ import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
-import { generateTaskNodeID } from '@/pages/ai-re-act/hooks/utils'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
@@ -337,14 +336,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   )
 
   const onScrollToIndex = useMemoizedFn((id) => {
-    /**
-     * TODO -
-     * 目前版本在恢复任务的过程中无法定位
-     * 6.29号这周，将task_index全部改为tasID，后续可以通过taskID来定位
-     */
-    if (!meta?.currentTaskPlanID?.taskID) return false
-    const taskID = generateTaskNodeID(meta?.currentTaskPlanID?.taskID, id)
-    const index = streams.findIndex((item) => taskID === item.token)
+    const index = streams.findIndex((item) => id === item.token)
     if (index !== -1) {
       scrollToIndex(index, 'auto')
       waitAndHighlight(index)
