@@ -236,7 +236,7 @@ jobs:
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    echo "ENV_Software_Name=MemfitAI" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=chengfeng" >> $GITHUB_ENV
                   else
                     echo "No software version obtained" >&2
                     exit 1
@@ -454,7 +454,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe
+                  path: ./release/橙锋-${{env.SOFTWARE_VERSION}}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe
                   if-no-files-found: error
                   retention-days: 7
 
@@ -463,7 +463,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
+                  path: ./release/橙锋-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
                   if-no-files-found: error
                   retention-days: 7
 
@@ -472,7 +472,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
+                  path: ./release/橙锋-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
                   if-no-files-found: error
                   retention-days: 7
 
@@ -481,7 +481,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
+                  path: ./release/橙锋-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
                   if-no-files-found: error
                   retention-days: 7
 
@@ -490,7 +490,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
+                  path: ./release/橙锋-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
                   if-no-files-found: error
                   retention-days: 7
 
@@ -499,7 +499,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.run
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.run
+                  path: ./release/橙锋-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.run
                   if-no-files-found: error
                   retention-days: 7
 
@@ -508,7 +508,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
+                  path: ./release/橙锋-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
                   if-no-files-found: error
                   retention-days: 7
 

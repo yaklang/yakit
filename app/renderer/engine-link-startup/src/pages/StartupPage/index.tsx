@@ -62,9 +62,11 @@ import yakitEELogo from '@/assets/yakitEELogo.png'
 import yakitEEDarkLogo from '@/assets/yakitEEDarkLogo.png'
 import yakitSELogo from '@/assets/yakitSELogo.png'
 import yakitSEDarkLogo from '@/assets/yakitSEDarkLogo.png'
+import memfitHasNameLogo from '@/assets/memfitHasName.jpg'
 import irifyRight from '@/assets/irify-right.png'
 import yakitRight from '@/assets/yakit-right.png'
-import memfitRight from '@/assets/memfit-right.webm'
+// import memfitRight from '@/assets/memfit-right.webm'
+import memfitRight from '@/assets/memfit-right.jpg'
 import memfitRightDark from '@/assets/memfit-right-dark.webm'
 import { SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon } from '@/assets/colors'
 import { Theme, useTheme } from '@/hooks/useTheme'
@@ -1147,7 +1149,8 @@ export const StartupPage: React.FC = () => {
       if (isCommunityIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isCommunityMemfit()) {
-        return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
+        // return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
+        return { type: 'img', src: memfitHasNameLogo, width: 132, height: 41 }
       } else {
         return { type: 'svg', component: SolidYakitFontLogoIcon, width: 112, height: 41 }
       }
@@ -1177,9 +1180,10 @@ export const StartupPage: React.FC = () => {
       return <img src={irifyRight} alt="暂无图片" />
     }
     if (isCommunityMemfit() || isMemfit())
-      return (
-        <video src={theme === 'light' ? memfitRight : memfitRightDark} autoPlay loop muted playsInline preload="auto" />
-      )
+      // return (
+      //   <video src={theme === 'light' ? memfitRight : memfitRightDark} autoPlay loop muted playsInline preload="auto" />
+      // )
+      return <img src={memfitRight} alt="暂无图片" />
     return <img src={yakitRight} alt="暂无图片" />
   }, [theme])
 

@@ -146,7 +146,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           handleCheckEngineVersion()
         } else {
           setLog(['检查软件是否有更新...'])
-          handleCheckYakitLatestVersion()
+          handleCheckEngineVersion()
         }
       } else {
         startYakEngine()
