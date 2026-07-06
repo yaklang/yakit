@@ -11,6 +11,7 @@ import { PluginResultUI, StatusCardProps } from '@/pages/yakitStore/viewers/base
 import { StatusCardViewer } from '@/pages/mitm/MITMYakScriptLoader'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
+import YakitSteps from '../plugins/local/YakitSteps/YakitSteps'
 
 export interface ChaosMakerRunningStepsProp {
   params?: ExecuteChaosMakerRuleRequest
@@ -48,12 +49,10 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
   return (
     <Space direction={'vertical'} style={{ width: '100%' }}>
       {params && (
-        <Steps className={'chaos-maker-rule-steps'} current={step}>
-          <Steps.Step
-            className={step === 0 ? 'chaos-maker-rule-step-active' : 'chaos-maker-rule-step'}
-            stepIndex={0}
+        <YakitSteps current={step}>
+          <YakitSteps.YakitStep
             key={0}
-            title={<span className={'chaos-maker-step-title'}>参数</span>}
+            title="参数"
             description={
               <div className={'chaos-maker-step-desc'}>
                 设置额外参数 <br />
@@ -61,17 +60,9 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
               </div>
             }
           />
-          <Steps.Step
-            className={
-              step === 1
-                ? 'chaos-maker-rule-step-active'
-                : step > 1
-                  ? 'chaos-maker-rule-step'
-                  : 'chaos-maker-rule-step-unactive'
-            }
-            stepIndex={1}
+          <YakitSteps.YakitStep
             key={1}
-            title={<span className={'chaos-maker-step-title'}>进行模拟攻击</span>}
+            title="进行模拟攻击"
             description={
               <div className={'chaos-maker-step-desc'}>
                 {step === 1 && (
@@ -89,20 +80,12 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
               </div>
             }
           />
-          <Steps.Step
-            className={
-              step === 2
-                ? 'chaos-maker-rule-step-active'
-                : step > 2
-                  ? 'chaos-maker-rule-step'
-                  : 'chaos-maker-rule-step-unactive'
-            }
-            stepIndex={2}
+          <YakitSteps.YakitStep
             key={2}
-            title={<span className={'chaos-maker-step-title'}>模拟攻击报告</span>}
+            title="模拟攻击报告"
             description={<div className={'chaos-maker-step-desc'}>查看本次模拟攻击结果</div>}
           />
-        </Steps>
+        </YakitSteps>
       )}
       {!params && <YakitEmpty description={'请您选中你想要执行的剧本规则'} />}
       {step === 0 && (
