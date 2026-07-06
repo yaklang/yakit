@@ -404,7 +404,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         label: t('HTTPFlowTable.RowContextMenu.block'),
         webSocket: true,
         default: true,
-        onClickSingle: () => {},
+        onClickSingle: (v) => onShieldRecord(v),
         children: [
           {
             key: 'blockRecord',
@@ -428,8 +428,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         label: t('HTTPFlowTable.RowContextMenu.delete'),
         webSocket: true,
         default: true,
-        onClickSingle: () => {},
-        onClickBatch: () => {},
+        onClickSingle: (v) => onRemoveHttpHistory({ Id: [v.Id] }),
+        onClickBatch: (list) => {
+          onRemoveHttpHistory({ Id: list.map((ele) => ele.Id) })
+        },
         all: true,
         children: [
           {

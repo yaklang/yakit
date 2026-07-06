@@ -2736,6 +2736,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                       onClick={({ key, keyPath }) => {
                         onMultipleClick(key, keyPath)
                       }}
+                      parentTitleClick
                     />
                   }
                   trigger="click"

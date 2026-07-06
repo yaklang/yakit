@@ -645,7 +645,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       }
       // 只有一层时 屏蔽 customcontextmenu 点击
       if (keyPath.length === 1) {
-        if (keyPath.includes('customcontextmenu') || keyPath.includes('aiplugin')) return
+        const limitPath = [
+          'font-size',
+          'code',
+          'decode',
+          'http',
+          'code-compare',
+          'customcontextmenu',
+          'aiplugin',
+          'insert-label-tag',
+          'sendToComparer',
+        ]
+        if (limitPath.includes(keyPath[0])) return
         const menuName = keyPath[0]
         for (let name in keyToOnRunRef.current) {
           if (keyToOnRunRef.current[name].includes(menuName)) {
