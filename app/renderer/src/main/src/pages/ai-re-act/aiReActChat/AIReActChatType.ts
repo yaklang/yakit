@@ -3,7 +3,6 @@ import { AIChatQSData } from '../hooks/aiRender'
 import { AIInputEvent } from '../hooks/grpcApi'
 import React from 'react'
 import { AIChatTextareaProps, AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
-import { UseChatIPCState } from '../hooks/type'
 import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export type DataDetailsButtonProps = Omit<YakitButtonProp, 'icon' | 'children'>
@@ -67,9 +66,7 @@ export interface AIReActChatProps {
   }
 }
 
-export interface AINotifyMessageProps {
-  notifyMessage: UseChatIPCState['notifyMessage']
-}
+export interface AINotifyMessageProps {}
 export interface AIReActLogProps {
   logs: AIChatQSData[]
   setLogVisible: (visible: boolean) => void

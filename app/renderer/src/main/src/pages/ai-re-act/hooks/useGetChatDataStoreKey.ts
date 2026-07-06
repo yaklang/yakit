@@ -1,5 +1,3 @@
-import { useCreation } from 'ahooks'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import {
   ChatDataStore,
   ChatDataStoreKey,
@@ -65,17 +63,6 @@ export const getChatDataStoreKey = (store?: ChatDataStore): ChatDataStoreKey => 
 /**
  * TODO - 待验证是否还需要此方法
  */
-function useGetChatDataStoreKey() {
-  const { chatIPCEvents } = useChatIPCDispatcher()
-  const chatDataStoreKey = useCreation((): ChatDataStoreKey => {
-    return getChatDataStoreKey(chatIPCEvents.fetchChatDataStore())
-  }, [chatIPCEvents])
-  return { chatDataStoreKey } as const
-}
-
-/**
- * TODO - 待验证是否还需要此方法
- */
 export const getAISourceFromChatDataStoreKey = (key: ChatDataStoreKey): AISource | undefined => {
   switch (key) {
     case 'histroyAiStore':
@@ -118,5 +105,3 @@ export const getAISourceListFromChatDataStoreKey = (key: ChatDataStoreKey): AISo
   const source = getAISourceFromChatDataStoreKey(key)
   return source ? [source] : []
 }
-
-export default useGetChatDataStoreKey

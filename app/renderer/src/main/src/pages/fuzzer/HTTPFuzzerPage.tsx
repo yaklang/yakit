@@ -2658,9 +2658,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     historyAIReActChatBridge.handleStart({
       qs: template.prompt,
       focusMode: focusModeLoop,
-      extraValue: {
-        showQS: template.label,
-      },
     })
   })
 
