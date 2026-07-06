@@ -384,37 +384,37 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
       // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
-          <div className={styles['tool-invoker-card-extra-time']}>
-            {/* {!!startTime && (
+          {/* <div className={styles['tool-invoker-card-extra-time']}> */}
+          {/* {!!startTime && (
               <div>
                 {t('ToolInvokerCard.startTime')}:<span>{startTime}</span>
               </div>
             )} */}
-          </div>
+          {/* </div> */}
 
-          <div style={{ marginRight: 12 }}>
-            {!!riskFlowDataCount && (
-              <>
-                <label
-                  onClick={() => {
-                    switchAIActTab(AITabsEnum.Risk)
-                  }}
-                >
-                  {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
-                </label>
-                <Divider type="vertical" />
-              </>
-            )}
-            {!!httpFlowDataCount && (
+          {/* <div style={{ marginRight: 12 }}> */}
+          {!!riskFlowDataCount && (
+            <>
               <label
                 onClick={() => {
-                  switchAIActTab(AITabsEnum.HTTP)
+                  switchAIActTab(AITabsEnum.Risk)
                 }}
               >
-                {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
+                {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
               </label>
-            )}
-          </div>
+              <Divider type="vertical" />
+            </>
+          )}
+          {!!httpFlowDataCount && (
+            <label
+              onClick={() => {
+                switchAIActTab(AITabsEnum.HTTP)
+              }}
+            >
+              {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
+            </label>
+          )}
+          {/* </div> */}
           {isChildWindow || (
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
               <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
