@@ -25,6 +25,7 @@ import {
   OutlineChevronsUpDownIcon,
   OutlineClockIcon,
   OutlineRefreshIcon,
+  OutlineWrenchIcon1,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Divider, Tooltip } from 'antd'
@@ -114,7 +115,8 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
 
   return (
     <ChatCard
-      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
+      titleIcon={<OutlineWrenchIcon1 />}
+      titleText={data.toolName}
       titleExtra={
         !!reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
@@ -182,8 +184,8 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
-      // titleIcon={<SolidToolIcon />}
+      titleText={data.toolName}
+      titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           {selectors?.selectors && (
@@ -367,8 +369,8 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   })
   return (
     <ChatCard
-      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
-      // titleIcon={<SolidToolIcon />}
+      titleText={data.toolName}
+      titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           {/* <div className={styles['tool-invoker-card-extra-time']}> */}

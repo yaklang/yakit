@@ -338,7 +338,6 @@
     "relatedRisks": "漏洞",
     "httpTraffic": "流量",
     "refreshCodeBlockData": "刷新代码块数据",
-    "tool": "工具",
     "paramsGenerating": "参数生成中..."
   },
   "FileTreeSystemItem": {
