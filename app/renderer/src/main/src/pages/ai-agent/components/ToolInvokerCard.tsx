@@ -1,4 +1,3 @@
-import { SolidToolIcon } from '@/assets/icon/solid'
 import { FC, memo, ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import ChatCard from './ChatCard'
 import styles from './ToolInvokerCard.module.scss'
@@ -14,7 +13,7 @@ import {
   ReActChatBaseInfo,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
-import ModalInfo, { ModalInfoProps } from './ModelInfo'
+import type { ModalInfoProps } from './ModelInfo'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
@@ -123,27 +122,15 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
           </span>
         ) : null
       }
-    >
-      <ToolStatusCard
-        status={'purple'}
-        title={
-          <div className={styles['tool-title']}>
-            <div className={styles['tool-title-left']}>
-              <div className={styles['tool-name']}>{data.toolName}</div>
-              <YakitTag size="small" fullRadius color={'purple' as YakitTagColor}>
-                生成参数中
-              </YakitTag>
-            </div>
-          </div>
-        }
-      >
-        <div className={styles['tool-loading-content']}>
-          <YakitSpin spinning>
-            <div className={styles['tool-loading-block']} />
-          </YakitSpin>
+      titleMore={
+        <div className={styles['tool-loading-status']}>
+          <span className={styles['tool-loading-status-icon']}>
+            <OutlineRefreshIcon />
+          </span>
+          <span>{t('ToolInvokerCard.paramsGenerating')}</span>
         </div>
-      </ToolStatusCard>
-    </ChatCard>
+      }
+    />
   )
 })
 

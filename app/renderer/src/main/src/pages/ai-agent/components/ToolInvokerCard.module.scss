@@ -64,6 +64,47 @@
   color: var(--Colors-Use-Neutral-Text-2-Primary);
   @include mixin.text-ellipsis(1);
 }
+
+.tool-loading-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Bg);
+  user-select: none;
+
+  &-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    line-height: 0;
+
+    svg {
+      display: block;
+      width: 14px;
+      height: 14px;
+      transform-origin: center center;
+      animation: tool-loading-spin 0.9s linear infinite;
+    }
+  }
+}
+
+@keyframes tool-loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 .file-system {
   width: 100%;
   margin-top: 8px;
@@ -217,16 +258,4 @@
       height: 16px;
     }
   }
-}
-
-.tool-loading-content {
-  min-height: 88px;
-  padding: 4px 0;
-}
-
-.tool-loading-block {
-  min-height: 72px;
-  border-radius: 4px;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
-  background-color: var(--Colors-Use-Neutral-Bg);
 }
