@@ -273,6 +273,7 @@ export const defaultChatIPCData: UseChatIPCState = {
   casualChat: {
     elements: [],
     toolListRenderNumber: 0,
+    casualQuestionList: [],
   },
   yakExecResult: {
     card: [],

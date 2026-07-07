@@ -4,6 +4,7 @@ import styles from './AIReActChat.module.scss'
 import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
 import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
+import type { AIReActChatContentsRef } from '../aiReActChatContents/AIReActChatContentsType'
 import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
@@ -39,8 +40,10 @@ import { AIToDoList } from './aiToDoList/AIToDoList'
 import { cloneDeep } from 'lodash'
 import { DefaultTodoListCardData } from '../hooks/defaultConstant'
 import { TodoListCardData } from '../hooks/aiRender'
-import { OutlineListTodoIcon } from '@/assets/icon/outline'
+import { OutlineLandPlotIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { SolidChatIcon } from '@/assets/icon/solid'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -290,6 +293,23 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         return cloneDeep(DefaultTodoListCardData)
       }
     }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+
+    const aiReActChatContentsRef = useRef<AIReActChatContentsRef>(null)
+    const casualQuestionList = chatIPCData.casualChat.casualQuestionList
+
+    const getCasualQuestionQs = useMemoizedFn((token: string) => {
+      const contentMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat?.contents
+      const chatData = contentMap?.get(token)
+      return (chatData?.data as { qs?: string })?.qs || (chatData?.extraValue as { showQS?: string })?.showQS || token
+    })
+
+    const onScrollToQuestion = useMemoizedFn((token: string) => {
+      const index = chatIPCData.casualChat.elements.findIndex((item) => item.token === token)
+      if (index !== -1) {
+        aiReActChatContentsRef.current?.scrollToItemIndex(index, 'smooth')
+      }
+    })
+
     const getTaskId = useMemoizedFn(() => {
       return chatIPCEvents.fetchCurrentCasualTaskID()
     })
@@ -386,49 +406,82 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                   )}
                 </div>
                 <div className={styles['chat-header-extra']}>
-                  {isShowRetract &&
-                    (externalParameters?.rightIcon ? (
-                      <>
-                        {getTaskId() && externalParameters.rightIcon.taskDetails && <TaskDetailsPopover />}
-                        {externalParameters.rightIcon.dataDetails && (
-                          <AIContextToken
-                            iconOnly
-                            execute={execute}
-                            session={contextTokenSession}
-                            buttonProps={
-                              externalParameters.rightIcon.dataDetails === true
-                                ? undefined
-                                : externalParameters.rightIcon.dataDetails
-                            }
-                          />
-                        )}
-                        {externalParameters.rightIcon.history && (
-                          <Tooltip
-                            trigger={['click']}
-                            destroyTooltipOnHide
-                            overlayClassName={styles['history-chat-tooltip']}
-                            title={
-                              <div className={styles['history-chat-tooltip-content']}>
-                                <HistoryChat embedded aiSource={historyChatAISource} />
-                              </div>
-                            }
-                          >
-                            <YakitButton type="text2" icon={<ClockIcon />} title="" />
-                          </Tooltip>
-                        )}
-                        {externalParameters.rightIcon.add}
-                        {externalParameters.rightIcon.close}
-                      </>
-                    ) : (
-                      <>
-                        {getTaskId() && (
-                          <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
-                            任务详情
-                          </YakitButton>
-                        )}
-                        <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
-                      </>
-                    ))}
+                  {isShowRetract && (
+                    <>
+                      <YakitPopover
+                        overlayClassName={styles['chat-locate-popover']}
+                        content={
+                          <div className={styles['chat-locate-list']}>
+                            {casualQuestionList.length ? (
+                              casualQuestionList.map((token) => (
+                                <div
+                                  key={token}
+                                  className={styles['chat-locate-item']}
+                                  onClick={() => onScrollToQuestion(token)}
+                                >
+                                  <SolidChatIcon /> {getCasualQuestionQs(token)}
+                                </div>
+                              ))
+                            ) : (
+                              <div className={styles['chat-locate-item-empty']}>暂无问题</div>
+                            )}
+                          </div>
+                        }
+                        placement="bottom"
+                      >
+                        <YakitButton type="outline2" radius="28px" icon={<OutlineLandPlotIcon />}>
+                          子Agent任务
+                        </YakitButton>
+                      </YakitPopover>
+                      {externalParameters?.rightIcon ? (
+                        <>
+                          {getTaskId() && externalParameters.rightIcon.taskDetails && <TaskDetailsPopover />}
+                          {externalParameters.rightIcon.dataDetails && (
+                            <AIContextToken
+                              iconOnly
+                              execute={execute}
+                              session={contextTokenSession}
+                              buttonProps={
+                                externalParameters.rightIcon.dataDetails === true
+                                  ? undefined
+                                  : externalParameters.rightIcon.dataDetails
+                              }
+                            />
+                          )}
+                          {externalParameters.rightIcon.history && (
+                            <Tooltip
+                              trigger={['click']}
+                              destroyTooltipOnHide
+                              overlayClassName={styles['history-chat-tooltip']}
+                              title={
+                                <div className={styles['history-chat-tooltip-content']}>
+                                  <HistoryChat embedded aiSource={historyChatAISource} />
+                                </div>
+                              }
+                            >
+                              <YakitButton type="text2" icon={<ClockIcon />} title="" />
+                            </Tooltip>
+                          )}
+                          {externalParameters.rightIcon.add}
+                          {externalParameters.rightIcon.close}
+                        </>
+                      ) : (
+                        <>
+                          {getTaskId() && (
+                            <YakitButton
+                              type="outline2"
+                              radius="28px"
+                              icon={<OutlineListTodoIcon />}
+                              onClick={onDetails}
+                            >
+                              任务详情
+                            </YakitButton>
+                          )}
+                          <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
               {todoData?.items?.length > 0 && (
@@ -436,7 +489,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                   <AIToDoList className={styles['to-do-list']} todoData={todoData} />
                 </div>
               )}
-              <AIReActChatContents chats={chatIPCData.casualChat} />
+              <AIReActChatContents ref={aiReActChatContentsRef} chats={chatIPCData.casualChat} />
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>

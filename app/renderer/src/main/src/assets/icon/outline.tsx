@@ -6345,3 +6345,22 @@ const OutlineUserRoundCog = () => (
 export const OutlineUserRoundCogIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineUserRoundCog} {...props} />
 }
+
+const OutlineLandPlot = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M12 8L18 5L12 2V12M8.00011 11.99L2.50011 15.13C2.34621 15.2172 2.21821 15.3437 2.12915 15.4965C2.04009 15.6494 1.99316 15.8231 1.99316 16C1.99316 16.1769 2.04009 16.3506 2.12915 16.5035C2.21821 16.6563 2.34621 16.7828 2.50011 16.87L11.0001 21.73C11.3042 21.9055 11.649 21.9979 12.0001 21.9979C12.3512 21.9979 12.6961 21.9055 13.0001 21.73L21.5001 16.87C21.654 16.7828 21.782 16.6563 21.8711 16.5035C21.9601 16.3506 22.0071 16.1769 22.0071 16C22.0071 15.8231 21.9601 15.6494 21.8711 15.4965C21.782 15.3437 21.654 15.2172 21.5001 15.13L16.0001 12M6.48999 12.8501L17.51 19.1501M17.51 12.8501L6.5 19.1501"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/**
+ * @description Outline/LandPlot Icon/LandPlot
+ */
+export const OutlineLandPlotIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineLandPlot} {...props} />
+}

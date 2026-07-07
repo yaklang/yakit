@@ -89,6 +89,7 @@ export class ChatDataStore {
       },
       casualChat: {
         elements: [],
+        casualQuestionList: [],
         contents: new Map(),
         planDetails: cloneDeep(DefaultPlanItemDetailsData),
       },

@@ -5,6 +5,10 @@ export interface AIReActChatContentsPProps {
   chats: UseCasualChatState
 }
 
+export interface AIReActChatContentsRef {
+  scrollToItemIndex: (arrayIndex: number, behavior?: 'auto' | 'smooth') => void
+}
+
 export interface AIStreamNodeProps {
   stream: ChatStream
   aiMarkdownProps?: { className: string }

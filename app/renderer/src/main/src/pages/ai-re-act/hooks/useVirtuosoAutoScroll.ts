@@ -145,11 +145,23 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
     { wait: 150 },
   )
 
+  const scrollToItemIndex = useMemoizedFn((arrayIndex: number, behavior: 'auto' | 'smooth' = 'auto') => {
+    isAtBottomRef.current = false
+    requestAnimationFrame(() => {
+      virtuosoRef.current?.scrollToIndex({
+        index: arrayIndex,
+        align: 'center',
+        behavior,
+      })
+    })
+  })
+
   return {
     virtuosoRef,
     setScrollerRef,
     setIsAtBottomRef,
     scrollToIndex,
+    scrollToItemIndex,
     handleTotalListHeightChanged,
     isAtBottomRef,
   }

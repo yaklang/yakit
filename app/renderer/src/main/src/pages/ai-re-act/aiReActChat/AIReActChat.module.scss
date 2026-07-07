@@ -1,3 +1,5 @@
+@use '../../../styles/mixin.scss' as mixin;
+
 @mixin content-side($type) {
   .content-#{$type}-side {
     width: 257px;
@@ -392,6 +394,52 @@
     .ant-tooltip-arrow-content::before {
       opacity: 0;
     }
+  }
+}
+.chat-locate-popover {
+  :global {
+    .ant-popover-inner-content {
+      padding: 12px;
+    }
+  }
+  .chat-locate-list {
+    display: flex;
+    flex-direction: column;
+    max-height: 240px;
+    overflow-y: auto;
+    width: 200px;
+    // gap: 4px;
+  }
+
+  .chat-locate-item {
+    padding: 4px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    cursor: pointer;
+    max-width: 280px;
+    align-items: center;
+    border-radius: 4px;
+    @include mixin.text-ellipsis;
+    svg {
+      width: 16px;
+      height: 16px;
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+    &:hover {
+      background-color: var(--Colors-Use-Neutral-Bg-Hover);
+      color: var(--Colors-Use-Main-Primary);
+      svg {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
+
+  .chat-locate-item-empty {
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
 }
 
