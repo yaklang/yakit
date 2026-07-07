@@ -72,6 +72,7 @@ import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import {
+  OutlineBotIcon,
   OutlineExitIcon,
   OutlineOfficebuildingIcon,
   OutlinePencilaltIcon,
@@ -83,6 +84,8 @@ import {
   OutlineUserRoundCogIcon,
   OutlineWrenchIcon,
 } from '@/assets/icon/outline'
+import { RobotControl } from '@/pages/robotControl/RobotControl'
+import robotControlStyles from '@/pages/robotControl/RobotControl.module.scss'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
@@ -240,6 +243,11 @@ const UserMenusMap: Record<string, UserMenuItemType> = {
     label: 'FuncDomain.dataStatistics',
     icon: <OutlinePresentationchartlineIcon />,
   },
+  robotControl: {
+    key: 'robot-control',
+    label: 'FuncDomain.robotControl',
+    icon: <OutlineBotIcon />,
+  },
   roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
   accountAdmin: { key: 'account-admin', label: 'FuncDomain.accountAdmin' },
   setPassword: { key: 'set-password', label: 'Main.setPassword' },
@@ -312,16 +320,18 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   const [controlMyselfModal, setControlMyselfModal] = useState<boolean>(false)
   const [controlOtherModal, setControlOtherModal] = useState<boolean>(false)
   const [dynamicMenuOpen, setDynamicMenuOpen] = useState<boolean>(false)
+  /** 机器人控制弹框 */
+  const [robotControlModal, setRobotControlModal] = useState<boolean>(false)
   /** 当前远程连接状态 */
   const { dynamicStatus } = yakitDynamicStatus()
   const [dynamicConnect] = useState<boolean>(dynamicStatus.isDynamicStatus)
   let avatarColor = useRef<string>(randomAvatarColor())
 
   useEffect(() => {
+    // 退出菜单
+    const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
     // EE|SE 版本
     if (userInfo.platform === 'company') {
-      // 退出菜单
-      const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
       const SetUserInfoModule = () => (
         <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
       )
@@ -341,6 +351,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             UserMenusMap['accountAdmin'],
             UserMenusMap['setPassword'],
             UserMenusMap['pluginAudit'],
+            UserMenusMap['robotControl'],
             ...signOutMenu,
           ])
         } else {
@@ -356,6 +367,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             UserMenusMap['pluginAudit'],
             UserMenusMap['misstatement'],
             UserMenusMap['systemConfig'],
+            UserMenusMap['robotControl'],
             ...signOutMenu,
           ]
           // 仅在 IRify 企业版本时显示系统配置
@@ -385,6 +397,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           UserMenusMap['setPassword'],
           UserMenusMap['pluginAudit'],
           UserMenusMap['misstatement'],
+          UserMenusMap['robotControl'],
           ...signOutMenu,
         ]
         if (userInfo.role !== 'auditor') {
@@ -420,14 +433,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           setUserMenu([...cacheMenus])
         } else {
           // 非权限人员
-          setUserMenu([UserMenusMap['singOut']])
+          setUserMenu([UserMenusMap['robotControl'], ...signOutMenu])
         }
       }
     }
     // ce版本
     else {
-      // 退出菜单
-      const signOutMenu: UserMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
       const SetUserInfoModule = () => (
         <CeUserInfo
           userInfo={userInfo}
@@ -447,12 +458,15 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         isNew = true
         let cacheMenus: UserMenuItemType[] = [
           ...userAvatar,
-          UserMenusMap['trustList'],
-          UserMenusMap['licenseAdmin'],
           UserMenusMap['pluginAudit'],
           UserMenusMap['dataStatistics'],
           UserMenusMap['misstatement'],
-        ].concat(signOutMenu)
+          UserMenusMap['robotControl'],
+          UserMenusMap['divider'],
+          UserMenusMap['trustList'],
+          UserMenusMap['licenseAdmin'],
+          UserMenusMap['singOut'],
+        ]
         if (isIRify()) {
           cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
         }
@@ -466,6 +480,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           UserMenusMap['pluginAudit'],
           UserMenusMap['dataStatistics'],
           UserMenusMap['misstatement'],
+          UserMenusMap['robotControl'],
         ].concat(signOutMenu)
         // IRify 版本时管理员不显示插件管理
         if (isIRify()) {
@@ -476,12 +491,18 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       // CE-操作员
       if (userInfo.role === 'operate') {
         isNew = true
-        setUserMenu([...userAvatar, UserMenusMap['dataStatistics']].concat(signOutMenu))
+        setUserMenu([...userAvatar, UserMenusMap['dataStatistics'], UserMenusMap['robotControl']].concat(signOutMenu))
       }
       // CE-license管理员
       if (userInfo.role === 'licenseAdmin') {
         isNew = true
-        setUserMenu([...userAvatar, UserMenusMap['licenseAdmin']].concat(signOutMenu))
+        setUserMenu([
+          ...userAvatar,
+          UserMenusMap['robotControl'],
+          UserMenusMap['divider'],
+          UserMenusMap['licenseAdmin'],
+          UserMenusMap['singOut'],
+        ])
       }
       // CE-审核员
       if (userInfo.role === 'auditor') {
@@ -490,6 +511,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           ...userAvatar,
           UserMenusMap['pluginAudit'],
           UserMenusMap['misstatement'],
+          UserMenusMap['robotControl'],
         ].concat(signOutMenu)
         // IRify 版本时管理员不显示插件管理
         if (isIRify()) {
@@ -499,7 +521,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       }
       // CE-非权限人员
       if (!isNew) {
-        setUserMenu([...userAvatar, UserMenusMap['singOut']])
+        setUserMenu([...userAvatar, UserMenusMap['robotControl'], ...signOutMenu])
       }
     }
   }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo])
@@ -739,6 +761,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     if (key === 'misstatement') {
       onOpenPage({ route: YakitRoute.Misstatement })
     }
+    if (key === 'robot-control') {
+      setRobotControlModal(true)
+    }
   })
 
   return (
@@ -906,6 +931,26 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         <SelectUpload onCancel={() => setUploadModalShow(false)} />
       </YakitModal>
 
+      <YakitModal
+        visible={robotControlModal}
+        title={
+          <div className={robotControlStyles['robot-modal-title']}>
+            <OutlineBotIcon />
+            {t('FuncDomain.robotControl')}
+          </div>
+        }
+        subTitle={t('RobotControl.subTitle')}
+        type="white"
+        size="large"
+        destroyOnClose={true}
+        maskClosable={false}
+        bodyStyle={{ padding: '8px 16px 16px' }}
+        width={900}
+        onCancel={() => setRobotControlModal(false)}
+        footer={null}
+      >
+        <RobotControl onCancel={() => setRobotControlModal(false)} />
+      </YakitModal>
       <DynamicControl
         mainTitle={t('FuncDomain.remoteControl')}
         secondTitle={t('FuncDomain.selectRole')}
