@@ -24,6 +24,7 @@ export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
   config: false,
   rule: true,
   'hot-patch': true,
+  'api-doc': true,
   ai: true,
 }
 
