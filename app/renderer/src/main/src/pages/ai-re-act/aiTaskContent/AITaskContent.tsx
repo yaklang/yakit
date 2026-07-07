@@ -70,13 +70,21 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
           setTabs((v) => {
             const index = v.findIndex((item) => item.value === params.key)
             if (index !== -1) {
-              return v
+              if (!label) return v
+              return v.map((item, i) => (i === index ? { ...item, label } : item))
             }
-            return [...v, { label: label, value: key }]
+            return [...v, { label: label ?? key, value: key }]
           })
           setActiveKey(params.key)
           break
-
+        case 'update':
+          if (!label) return
+          setTabs((v) => {
+            const index = v.findIndex((item) => item.value === key)
+            if (index === -1) return v
+            return v.map((item) => (item.value === key ? { ...item, label } : item))
+          })
+          break
         default:
           break
       }

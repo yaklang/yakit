@@ -293,11 +293,23 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       return chatIPCEvents.fetchCurrentCasualTaskID()
     })
 
-    useEffect(() => {
-      if (casualLoading) {
-        onDetails()
-      }
-    }, [casualLoading])
+    const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
+      const taskId = getTaskId()
+      if (!taskId) return false
+      if (chatDataStoreKey !== 'aiChatDataStore') return false
+      emiter.emit(
+        'actionAITaskContentTab',
+        JSON.stringify({
+          type,
+          params: {
+            key: taskId,
+            label: label || activeChat?.Title || title,
+            goal: '',
+          },
+        }),
+      )
+      return true
+    })
 
     const onDetails = useMemoizedFn(() => {
       const taskId = getTaskId()
@@ -305,22 +317,20 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         yakitNotify('error', 'taskId不存在')
         return
       }
-      if (chatDataStoreKey === 'aiChatDataStore') {
-        emiter.emit(
-          'actionAITaskContentTab',
-          JSON.stringify({
-            type: 'add',
-            params: {
-              key: taskId,
-              label: '自由对话',
-              goal: '',
-            },
-          }),
-        )
-      } else {
+      if (!emitTaskContentTab('add')) {
         yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
       }
     })
+
+    useEffect(() => {
+      if (!casualLoading) return
+      onDetails()
+    }, [casualLoading, onDetails])
+
+    useEffect(() => {
+      if (!activeChat?.Title) return
+      emitTaskContentTab('update', activeChat.Title)
+    }, [activeChat?.Title, emitTaskContentTab])
 
     return (
       <>
