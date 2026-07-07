@@ -4,7 +4,7 @@ import useCurrentSessionId from './useCurrentSessionId'
 /**
  * @description 获取当前会话的数据
  */
-export function useCurrentDataBySession() {
+function useCurrentDataBySession() {
   const sessionId = useCurrentSessionId()
   return globalSessionEngine.ensureSession(sessionId)
 }

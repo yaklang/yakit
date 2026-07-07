@@ -1,5 +1,5 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n, AIInputEvent } from './grpcApi'
+import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
 import type {
   AIFileSystemPin,
   AIQuestionQueues,
@@ -369,6 +369,7 @@ export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
 export interface AIChatQSDataBase<T extends string, U> {
   type: T
   data: U
+  /** id就是token */
   id: string
   chatType: ReActChatBaseInfo['chatType']
   AIService: AIOutputEvent['AIService']
@@ -384,7 +385,7 @@ export interface AIChatQSDataBase<T extends string, U> {
   parentGroupKey?: string
 }
 
-type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, { qs: string; setting: AIInputEvent }>
+export type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
 type ChatToolCallParams = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_PARAM, AIAgentGrpcApi.AIToolCallParams>
@@ -392,14 +393,14 @@ export type ChatApiRequestFailed = AIChatQSDataBase<
   AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
   AIAgentGrpcApi.AIApiRequestFailedPayload
 >
-type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
-type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
-type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
-type ChatPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE, UIPlanReview>
+export type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
+export type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
+export type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
+export type ChatPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE, UIPlanReview>
 type ChatDetachedPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE, UIDetachedPlanReview>
-type ChatTaskReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE, UITaskReview>
-type ChatToolUseReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE, UIToolUseReview>
-type ChatRequireUserInteractive = AIChatQSDataBase<
+export type ChatTaskReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE, UITaskReview>
+export type ChatToolUseReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE, UIToolUseReview>
+export type ChatRequireUserInteractive = AIChatQSDataBase<
   AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
   UIRequireUserInteractive
 >
@@ -407,8 +408,8 @@ type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_
 export type ChatTaskNodeGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_NODE_GROUP, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
-type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
-type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
+export type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
+export type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
 type ChatReferenceMaterial = AIChatQSDataBase<
   AIChatQSDataTypeEnum.Reference_Material,
   { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose'] }

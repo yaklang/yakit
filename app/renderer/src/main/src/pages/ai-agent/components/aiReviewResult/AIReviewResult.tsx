@@ -17,11 +17,11 @@ import { isEmpty } from 'lodash'
 import classNames from 'classnames'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
+import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
-  const { info, timestamp } = props
+  const { info, renderNum } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { type, data } = info
 
   const getChatType = useMemoizedFn(() => {
     return info.chatType
@@ -48,42 +48,45 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     }
   }, [casualLength])
   const title = useCreation(() => {
-    switch (type) {
-      case 'plan_review_require':
+    switch (info.type) {
+      case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
         return t('AIReviewResult.planReview')
-      case 'task_review_require':
+      case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
         return t('AIReviewResult.taskReview')
-      case 'tool_use_review_require':
+      case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
         return t('AIReviewResult.toolReview')
-      case 'exec_aiforge_review_require':
+      case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
         return t('AIReviewResult.appReview')
-      case 'require_user_interactive':
+      case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
         return t('AIReviewResult.userPrompt')
       default:
         return t('AIReviewResult.reviewDecision')
     }
-  }, [type, i18n.language])
+  }, [i18n.language])
+
   const userAction = useCreation(() => {
     let btnText: string = ''
     let userInput: string = ''
     try {
-      switch (type) {
-        case 'plan_review_require':
-        case 'task_review_require':
-        case 'tool_use_review_require':
-        case 'exec_aiforge_review_require':
-          const userSelected = JSON.parse(data.selected || '')
-          if (data.optionValue === 'continue') {
+      switch (info.type) {
+        case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
+        case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
+        case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
+        case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
+          const userSelected = JSON.parse(info.data?.selected || '')
+          if (info.data.optionValue === 'continue') {
             btnText = t('YakitButton.runNow')
           } else {
-            const selectBtn = data.selectors.find((item) => item.value === data.optionValue)
+            const selectBtn = info.data.selectors.find((item) => item.value === info.data.optionValue)
             btnText = selectBtn ? selectBtn.prompt : t('AIReviewResult.unknownAction')
           }
           userInput = userSelected.extra_prompt || ''
           break
-        case 'require_user_interactive':
-          const aiSelected = JSON.parse(data.selected || '')
-          const aiSelectType = data.options.find((item) => (item.prompt || item.prompt_title) === data.optionValue)
+        case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+          const aiSelected = JSON.parse(info.data.selected || '')
+          const aiSelectType = info.data.options.find(
+            (item) => (item.prompt || item.prompt_title) === info.data.optionValue,
+          )
           btnText = aiSelectType?.prompt || aiSelectType?.prompt_title || t('AIReviewResult.unknownAction')
           userInput = aiSelected.suggestion || ''
           break
@@ -96,12 +99,12 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
       btnText,
       userInput,
     }
-  }, [type, data, i18n.language])
+  }, [i18n.language])
   const renderContent = useMemoizedFn(() => {
     let paramsValue = !!userAction.userInput ? <PreWrapper code={userAction.userInput} /> : null
-    switch (type) {
+    switch (info.type) {
       case 'tool_use_review_require':
-        const { params } = data
+        const { params } = info.data
         try {
           paramsValue = !!paramsValue ? paramsValue : <AIReviewParams params={params} isPreStyle={true} />
         } catch (error) {}
@@ -112,24 +115,26 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     return paramsValue
   })
   const isShowExpandBtn = useCreation(() => {
-    switch (type) {
+    switch (info.type) {
       case 'tool_use_review_require':
         return true
       default:
         return !!userAction.userInput
     }
-  }, [type, userAction.userInput])
+  }, [userAction.userInput])
+  const modalInfo = useCreation(() => {
+    return {
+      title: info.AIModelName,
+      time: info.Timestamp,
+      icon: info.AIService,
+    }
+  }, [renderNum])
   return (
     <AISingHaveColorText
-      // titleIcon={<SolidHandIcon />}
       title={title}
       subTitle={userAction.btnText}
       tip=""
-      modalInfo={{
-        title: info.AIModelName,
-        time: timestamp,
-        icon: info.AIService,
-      }}
+      modalInfo={modalInfo}
       titleMore={
         isShowExpandBtn ? (
           <div className={styles['header-extra']}>

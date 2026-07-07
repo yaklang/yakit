@@ -24,7 +24,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { handAIHistoryChatRemove } from './utils'
-import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import useDebounce from 'ahooks/lib/useDebounce'
 
@@ -102,6 +102,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   const searchDebounce = useDebounce(search, { wait: 500 })
 
   const [clearLoading, setClearLoading] = useState(false)
+
+  const chatDataStoreKey = useGetChatDataStoreKey()
+
   const handleClearAllChat = useMemoizedFn(async () => {
     if (clearLoading) return
     if (sessions.length === 0) {
@@ -114,7 +117,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { Source: aiSource } },
-        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: [] }, //删除全部只需要传chatDataStoreKey
+        handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
         forceCloseSessionParams: {
           aiSource: source,
           sessionIds: [],
@@ -151,7 +154,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { BeforeTimestamp: beforeTimestamp, Source: aiSource } },
-        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
+        handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
         forceCloseSessionParams: {
           aiSource: source,
           sessionIds: sessionIds,

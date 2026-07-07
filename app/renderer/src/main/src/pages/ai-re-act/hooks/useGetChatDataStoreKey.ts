@@ -11,7 +11,18 @@ import {
 } from '@/pages/ai-agent/store/ChatDataStore'
 import type { Domain } from '@/pages/ai-agent/store/constants'
 import { AISourceEnum, type AISource } from './grpcApi'
+import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
+import { useCreation } from 'ahooks'
 
+function useGetChatDataStoreKey() {
+  const { setting } = useAIAgentStore()
+  const chatDataStoreKey: ChatDataStoreKey = useCreation(() => {
+    return getImageStoreKeyByAISource(setting.Source || 'ai')
+  }, [setting.Source])
+  return chatDataStoreKey
+}
+
+export default useGetChatDataStoreKey
 /**
  * 根据后端返回的会话数据来源转换为前端对应的数据存储路径key
  */

@@ -21,10 +21,9 @@ const AITaskDefaultGroupCard: FC<{
   session: string
   token: string
   chatType: ReActChatElement['chatType']
-  hasNext?: boolean
   isChildWindow?: boolean
   onRefresh?: () => void
-}> = ({ elements, session, token, chatType, hasNext, isChildWindow, onRefresh }) => {
+}> = ({ elements, session, token, chatType, isChildWindow, onRefresh }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
   const [contentFocused, setContentFocused] = useState(false)
@@ -52,9 +51,9 @@ const AITaskDefaultGroupCard: FC<{
   )
 
   useEffect(() => {
-    if (isChildWindow || !hasNext) return
+    if (isChildWindow) return
     collapseExpand()
-  }, [collapseExpand, hasNext, isChildWindow])
+  }, [collapseExpand, isChildWindow])
 
   useConcurrentStreamRefreshListener(framePayload, session, token, chatType, !isChildWindow)
 

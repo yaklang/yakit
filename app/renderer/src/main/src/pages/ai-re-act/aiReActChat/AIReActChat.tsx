@@ -19,7 +19,7 @@ import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
 import emiter from '@/utils/eventBus/eventBus'
-import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
@@ -40,7 +40,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
-    const meta = useCurrentMeta()
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -232,7 +231,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const handleStopCasualTask = useMemoizedFn(() => {
-      const currentCasualTaskID = meta.currentCasualTaskID
+      const currentCasualTaskID = store.getState().currentCasualTaskID
       if (!store.getState().execute || !currentCasualTaskID) return
 
       store.getState().updateState({

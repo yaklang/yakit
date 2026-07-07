@@ -1,18 +1,24 @@
-import type { FailTaskChatError } from '@/pages/ai-re-act/hooks/aiRender'
-import { type FC } from 'react'
+import type { ChatFailPlanAndExecution, ChatFailReact } from '@/pages/ai-re-act/hooks/aiRender'
+import { memo, type FC } from 'react'
 import ChatCard from '../ChatCard'
 import styles from './AiFailPlanCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
-// import { TaskErrorIcon } from '../../aiTree/icon'
 import { PreWrapper } from '../ToolInvokerCard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useCreation } from 'ahooks'
 
-const AiFailPlanCard: FC<{ item: FailTaskChatError }> = ({ item }) => {
+const AiFailPlanCard: FC<{ itemData: ChatFailReact | ChatFailPlanAndExecution; renderNum: number }> = ({
+  itemData,
+  renderNum,
+}) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { content } = item
-  const { nodeLabel } = useAINodeLabel(item.NodeIdVerbose)
+
+  const { nodeLabel } = useAINodeLabel(itemData.data.NodeIdVerbose)
+
+  const content = useCreation(() => {
+    return itemData.data.content
+  }, [renderNum])
   return (
-    //  titleIcon={<TaskErrorIcon />}
     <ChatCard className={styles['ai-fail-plan-wrapper']} titleText={nodeLabel}>
       <div className={styles['ai-fail-plan-card']}>
         <div className={styles['ai-fail-plan-card-title']}>{t('AiFailPlanCard.failureReason')}</div>
@@ -23,4 +29,4 @@ const AiFailPlanCard: FC<{ item: FailTaskChatError }> = ({ item }) => {
     </ChatCard>
   )
 }
-export default AiFailPlanCard
+export default memo(AiFailPlanCard)

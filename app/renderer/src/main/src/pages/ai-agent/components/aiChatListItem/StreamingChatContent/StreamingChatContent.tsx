@@ -1,10 +1,12 @@
 import { AIStreamNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
-import { AIChatQSDataTypeEnum, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum, ChatStream, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { memo, type FC } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
 import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
 import AITaskDefaultGroupCard from '../../AITaskDefaultGroupCard/AITaskDefaultGroupCard'
 import ConcurrentStreamCard from '../../ConcurrentStreamCard/ConcurrentStreamCard'
+import { useCreation } from 'ahooks'
+import styles from './StreamingChatContent.module.scss'
 
 type StreamCls = { className: string } | { aiMarkdownProps?: { className: string } }
 
@@ -16,43 +18,43 @@ type StreamingChatContentProps = ReActChatRenderItem & {
 }
 
 type SingleStreamProps = {
-  token: string
-  streamClassName?: StreamCls
-  session: string
-  listItemIndex?: number
+  itemData: ChatStream
+  renderNum: number
 }
 
-const AIStreamCard: FC<SingleStreamProps> = ({ token, streamClassName, session, listItemIndex }) => {
-  const { stream } = useTypedStream({ token })
-  if (!stream) return null
+export const AIStreamCard: FC<SingleStreamProps> = ({ itemData }) => {
+  const { stream } = useTypedStream({ token: itemData.id })
 
-  return (
-    <AIStreamNode {...streamClassName} stream={stream} listItemIndex={listItemIndex} streamChatSessionId={session} />
-  )
+  const aiStreamNodeProps = useCreation(() => {
+    switch (itemData.chatType) {
+      case 'reAct':
+        return {
+          className: styles['ai-mark-down-wrapper'],
+        }
+
+      default:
+        return {
+          className: '',
+        }
+    }
+  }, [itemData.chatType])
+  if (!stream) return null
+  return <AIStreamNode aiMarkdownProps={aiStreamNodeProps} stream={stream} />
 }
 
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
-  const { streamClassName, chatType, token, hasNext, session, itemIndex: listItemIndex } = props
+  const { streamClassName, chatType, token, session } = props
   if (props.kind === 'task') {
     if (props.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
-      return (
-        <AITaskDefaultGroupCard
-          token={token}
-          session={session}
-          chatType={chatType}
-          elements={props.children}
-          hasNext={hasNext}
-        />
-      )
+      return <AITaskDefaultGroupCard token={token} session={session} chatType={chatType} elements={props.children} />
     } else {
       return <ConcurrentStreamCard token={token} session={session} elements={props.children} chatType={chatType} />
     }
   }
   if (props.kind === 'group') {
-    return <AIGroupStreamCard session={session} elements={props.children} hasNext={hasNext} />
+    return <AIGroupStreamCard elements={props.children} token={token} />
   }
-  return (
-    <AIStreamCard session={session} token={token} listItemIndex={listItemIndex} streamClassName={streamClassName} />
-  )
+  return null
+  // return <AIStreamCard session={session} token={token} streamClassName={streamClassName} />
 }
 export default memo(StreamingChatContent)

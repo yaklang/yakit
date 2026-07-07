@@ -12,6 +12,7 @@ export interface AIReActChatReviewProps {
   expand: boolean
   className?: string
   onSendSyncMessage?: ChatIPCContextDispatcher['handleSendSyncMessage']
+  renderNum: number
 }
 
 export interface ForgeReviewFormRefProps {
