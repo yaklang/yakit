@@ -229,7 +229,7 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
           children: [...httpSubmenu(t)] as any as EditorMenuItemType[],
         },
       ],
-      onRun: (editor: YakitIMonacoEditor, key: string, pageId, isCustom) => {
+      onRun: (editor: YakitIMonacoEditor, key: string, isCustom) => {
         // 自定义HTTP数据包变形标记
         if (isCustom) {
           customMutateRequest(key, editor.getModel()?.getValue(), editor)
@@ -258,16 +258,11 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
       onRun: (
         editor: YakitIMonacoEditor,
         key: string,
-        pageId?: string,
         isAiPlugin?: string | boolean,
         params?: YakParamProps[],
+        isExec?: boolean,
       ) => {
         try {
-          let scriptName = key
-          if (scriptName.startsWith('plugin-')) {
-            scriptName = scriptName.slice('plugin-'.length)
-          }
-
           const model = editor.getModel()
           const selection = editor.getSelection()
           let text = model?.getValue()
@@ -277,49 +272,7 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
               text = selectText
             }
           }
-          emiter.emit('onOpenFuzzerModal', JSON.stringify({ text, scriptName, isAiPlugin, params }))
-        } catch (e) {
-          failed(`custom context menu execute failed: ${e}`)
-        }
-      },
-    },
-    aiplugin: {
-      menu: [
-        {
-          key: 'aiplugin',
-          label: (
-            <>
-              <IconSolidAIIcon className={'ai-plugin-menu-icon-default'} />
-              <IconSolidAIWhiteIcon className={'ai-plugin-menu-icon-hover'} />
-              {t('YakitEditor.aiPlugin')}
-            </>
-          ),
-          children: [],
-        },
-      ],
-      onRun: (
-        editor: YakitIMonacoEditor,
-        key: string,
-        pageId?: string,
-        isAiPlugin?: string | boolean,
-        params?: YakParamProps[] | undefined,
-      ) => {
-        try {
-          let scriptName = key
-          if (scriptName.startsWith('aiplugin-')) {
-            scriptName = scriptName.slice('aiplugin-'.length)
-          }
-
-          const model = editor.getModel()
-          const selection = editor.getSelection()
-          let text = model?.getValue()
-          if (selection) {
-            let selectText = model?.getValueInRange(selection) || ''
-            if (selectText.length > 0) {
-              text = selectText
-            }
-          }
-          emiter.emit('onOpenFuzzerModal', JSON.stringify({ text, scriptName, isAiPlugin, params }))
+          emiter.emit('onOpenFuzzerModal', JSON.stringify({ text, scriptName: key, isAiPlugin, params, isExec }))
         } catch (e) {
           failed(`custom context menu execute failed: ${e}`)
         }

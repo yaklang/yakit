@@ -107,8 +107,8 @@ import {
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
-import { RemotePluginGV } from '@/enums/plugin'
-const PluginHasParamsDrawer = React.lazy(() => import('../pluginHasParamsDrawer/PluginHasParamsDrawer'))
+import { PluginHasParamsModal } from '../pluginHasParamsDrawer/PluginHasParamsDrawer'
+import { log } from 'console'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -1248,17 +1248,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }, [])
   /** ---------- 切换引擎时的逻辑 End ---------- */
 
-  // #region ChatCS
+  // #region 插件扩展/ai插件
   const openFuzzerModalVarRef = useRef<OpenFuzzerModal>()
-  const [drawerWidth, setDrawerWidth] = useState<number>(45) // 默认45vw
-  const [hasParamsDrawer, setHasParamsDrawer] = useState<boolean>(false)
+  const [hasParamsOpen, setHasParamsOpen] = useState<boolean>(false)
   const paramsValueRef = useRef<{
     initFormValue: CustomPluginExecuteFormValue
     requiredParams: YakParamProps[]
     groupParams: YakExtraParamProps[]
   }>({ initFormValue: {}, requiredParams: [], groupParams: [] })
   const execParamsRef = useRef<YakExecutorParam[]>([])
-  const openHasParamsPlugin = useMemoizedFn((fuzzerModalVar) => {
+  const openHasParamsPlugin = useMemoizedFn((fuzzerModalVar, cache?: YakExecutorParam[]) => {
     const requiredParams = fuzzerModalVar.params!.filter((item) => item.Required)
     const norequiredParams = fuzzerModalVar.params!.filter((item) => !item.Required)
     const groupParams: YakExtraParamProps[] = ParamsToGroupByGroupName(norequiredParams)
@@ -1270,37 +1269,39 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         [ele.Field]: value,
       }
     })
+
+    if (cache?.length) {
+      cache.forEach((item) => {
+        if (initFormValue.hasOwnProperty(item.Key)) {
+          initFormValue[item.Key] = item.Value
+        }
+      })
+    }
+
     paramsValueRef.current = {
       initFormValue: initFormValue,
       requiredParams: requiredParams,
       groupParams: groupParams,
     }
-    getRemoteValue(RemotePluginGV.CodecHasParamsDrawerWidth)
-      .then((width) => {
-        if (width) {
-          setDrawerWidth(Number(width))
-        } else {
-          setDrawerWidth(45)
-        }
-      })
-      .catch(() => {
-        setDrawerWidth(45)
-      })
-      .finally(() => {
-        setHasParamsDrawer(true)
-      })
+    setHasParamsOpen(true)
   })
-  const onOkParamsDrawer = useMemoizedFn((execParams: YakExecutorParam[]) => {
-    execParamsRef.current = execParams
-    setRemoteValue(RemotePluginGV.CodecHasParamsDrawerWidth, drawerWidth + '')
-    handleExecuteChatCS()
+  const onOkParamsDrawer = useMemoizedFn((save: boolean, exec: boolean, execParams: YakExecutorParam[]) => {
+    if (save) {
+      setRemoteValue('codec_has_params_' + openFuzzerModalVarRef.current?.scriptName!, JSON.stringify(execParams))
+    }
+    if (exec) {
+      execParamsRef.current = execParams
+      handleExecuteBefore()
+    }
+    setHasParamsOpen(false)
   })
 
-  const openAIByChatCS = useMemoizedFn((obj: CodecParamsProps) => {
+  const addNewPluginTab = useMemoizedFn((obj: CodecParamsProps) => {
+    // console.log('addNewPluginTab', obj)
     emiter.emit('onRunChatcsAIByFuzzer', JSON.stringify(obj))
   })
 
-  const handleExecuteChatCS = useMemoizedFn(async () => {
+  const handleExecuteBefore = useMemoizedFn(async () => {
     const fuzzerModalVar = openFuzzerModalVarRef.current
     if (!fuzzerModalVar) return
     const codecParams: CodecParamsProps = {
@@ -1316,7 +1317,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
           // 如若已配置 则打开执行框
           if (res.Ok) {
-            openAIByChatCS(codecParams)
+            addNewPluginTab(codecParams)
           } else {
             let m = showYakitModal({
               title: (modalT) => modalT('UILayout.addThirdPartyApp'),
@@ -1344,7 +1345,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       }
                       const params: GlobalNetworkConfig = { ...obj, ...newParams }
                       apiSetGlobalNetworkConfig(params).then(() => {
-                        openAIByChatCS(codecParams)
+                        addNewPluginTab(codecParams)
                         m.destroy()
                       })
                     }}
@@ -1359,11 +1360,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         yakitNotify('error', error + '')
       }
     } else {
-      openAIByChatCS(codecParams)
+      addNewPluginTab(codecParams)
     }
   })
 
-  // 判断打开 ChatCS-AI插件执行/全局网络配置第三方应用框/带参抽屉
+  // 判断打开 新开一级tab插件执行/全局网络配置第三方应用框/带参弹窗
   const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
   const percentContainerRef = useRef<string>(currentPageTabRouteKey)
   const onFuzzerModal = useMemoizedFn(async (value) => {
@@ -1379,14 +1380,28 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setCoedcPluginShow(true)
         return
       }
-
       if (val.params?.length) {
-        openHasParamsPlugin(val)
+        try {
+          const res = await getRemoteValue('codec_has_params_' + openFuzzerModalVarRef.current?.scriptName!)
+          if (res) {
+            const arr: YakExecutorParam[] = JSONParseLog(res, { page: 'UILayout', fun: 'codec_has_params' }) || []
+            if (val.isExec) {
+              execParamsRef.current = arr
+              handleExecuteBefore()
+            } else {
+              openHasParamsPlugin(val, arr)
+            }
+          } else {
+            openHasParamsPlugin(val)
+          }
+        } catch (error) {
+          openHasParamsPlugin(val)
+        }
         return
       }
 
       execParamsRef.current = val.execParams ? val.execParams : []
-      handleExecuteChatCS()
+      handleExecuteBefore()
     } catch (error) {}
   })
   useEffect(() => {
@@ -2012,15 +2027,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       />
 
       {/* 带参插件参数 */}
-      <PluginHasParamsDrawer
-        visible={hasParamsDrawer}
-        placementDrawer="right"
+      <PluginHasParamsModal
+        visible={hasParamsOpen}
         pluginType={'codec'}
         scriptName={openFuzzerModalVarRef.current?.scriptName || ''}
-        drawerWidth={drawerWidth}
-        onSetDrawerWidth={setDrawerWidth}
-        onCloseParamsDrawer={setHasParamsDrawer}
-        onOkParamsDrawer={onOkParamsDrawer}
+        onCloseParamsModal={setHasParamsOpen}
+        onOkParamsModal={onOkParamsDrawer}
         {...paramsValueRef.current}
       />
     </div>

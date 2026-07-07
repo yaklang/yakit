@@ -24,6 +24,4 @@ export enum RemotePluginGV {
   LocalExecuteExtraPath = 'local-execute-extra-path',
   /**@name 插件批量执行模块,额外参数中,[proxy]的缓存字段 */
   LocalBatchExecuteExtraProxy = 'local-batch-execute-extra-proxy',
-  /**@name codec带参插件抽屉宽度 */
-  CodecHasParamsDrawerWidth = 'CodecHasParamsDrawerWidth',
 }

@@ -17,6 +17,7 @@ import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecu
 import { useMemoizedFn } from 'ahooks'
 import { YakitDrawerProps } from '../yakitUI/YakitDrawer/YakitDrawerType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import styles from './PluginHasParamsDrawer.module.scss'
 
 interface PluginHasParamsDrawerProps {
@@ -185,6 +186,97 @@ const PluginHasParamsDrawer = React.memo((props: PluginHasParamsDrawerProps) => 
   )
 })
 export default PluginHasParamsDrawer
+
+interface PluginHasParamsModalProps {
+  visible: boolean
+  pluginType: string
+  scriptName: string
+  initFormValue: CustomPluginExecuteFormValue
+  requiredParams: YakParamProps[]
+  groupParams: YakExtraParamProps[]
+  onCloseParamsModal: (visible: boolean) => void
+  onOkParamsModal: (save: boolean, exec: boolean, execParams: YakExecutorParam[]) => void
+}
+export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps) => {
+  const {
+    visible,
+    pluginType,
+    scriptName,
+    initFormValue,
+    requiredParams,
+    groupParams,
+    onCloseParamsModal,
+    onOkParamsModal,
+  } = props
+  const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi'])
+
+  const pluginHasParamsFormRef = useRef<PluginHasParamsFormRefProps>()
+
+  const execOrSave = useMemoizedFn((save: boolean, exec: boolean) => {
+    if (pluginHasParamsFormRef.current) {
+      pluginHasParamsFormRef.current.onSubmit().then((values) => {
+        if (values) {
+          const saveParams: CustomPluginExecuteFormValue = { ...values }
+          const execParams: YakExecutorParam[] = []
+          Object.keys(saveParams).forEach((key) => {
+            if (saveParams[key] !== false) {
+              execParams.push({ Key: key, Value: saveParams[key] })
+            }
+          })
+          onOkParamsModal(save, exec, execParams)
+        }
+      })
+    }
+  })
+
+  return (
+    <YakitModal
+      visible={visible}
+      width={'max(700px, 50%)'}
+      destroyOnClose={true}
+      onCancel={() => onCloseParamsModal(false)}
+      title={scriptName}
+      footer={
+        <div className={styles['pluginHasParamsModal-footer']}>
+          <YakitButton
+            type="outline2"
+            onClick={() => {
+              execOrSave(true, false)
+            }}
+          >
+            保存
+          </YakitButton>
+          <YakitButton
+            onClick={() => {
+              execOrSave(true, true)
+            }}
+            type="primary"
+          >
+            执行并保存
+          </YakitButton>
+          <YakitButton
+            type="secondary2"
+            onClick={() => {
+              execOrSave(false, true)
+            }}
+          >
+            执行不保存
+          </YakitButton>
+        </div>
+      }
+    >
+      <div className={styles['pluginHasParamsModal-cont']}>
+        <PluginHasParamsForm
+          ref={pluginHasParamsFormRef}
+          pluginType={pluginType}
+          initFormValue={initFormValue}
+          requiredParams={requiredParams}
+          groupParams={groupParams}
+        />
+      </div>
+    </YakitModal>
+  )
+})
 
 interface PluginHasParamsFormRefProps {
   onSubmit: () => Promise<CustomPluginExecuteFormValue | undefined>

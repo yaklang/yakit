@@ -191,7 +191,7 @@ function openFind(editor: YakitIMonacoEditor, keyword: string) {
     state?.change({ searchString: keyword }, false)
   }
 }
-
+export const PLUGIN_PREFIX = 'pluginExtension_'
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const {
     forceRenderMenu = false,
@@ -511,8 +511,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
       // 插件扩展（为保持key值唯一性，添加 plugin- ）
       const newCustomContextMenu = contextMenuPlugin.map((item) => {
-        return {
-          key: `plugin-${item.value}`,
+        const baseItem = {
+          key: `${PLUGIN_PREFIX}${item.value}`,
           label: (
             <>
               {item.isAiPlugin && (
@@ -527,6 +527,24 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           isAiPlugin: item.isAiPlugin,
           params: item.params,
         } as EditorMenuItemProps
+
+        // 如果有参数，添加子菜单
+        if (item?.params && item.params.length > 0) {
+          return {
+            ...baseItem,
+            children: [
+              {
+                key: `execCodecPlugin_${PLUGIN_PREFIX}${item.value}`,
+                label: '执行插件',
+              },
+              {
+                key: `updateCodecParams_${PLUGIN_PREFIX}${item.value}`,
+                label: '修改参数',
+              },
+            ],
+          }
+        }
+        return baseItem
       })
       ;(extraMenuListsObj['customcontextmenu'].menu[0] as EditorMenuItemProps).children =
         newCustomContextMenu.length > 0
@@ -534,32 +552,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           : [
               {
                 key: 'Get*plug-in',
-                label: (
-                  <>
-                    <CloudDownloadIcon style={{ marginRight: 4 }} />
-                    {t('YakitEditor.getPlugin')}
-                  </>
-                ),
-                isGetPlugin: true,
-              } as EditorMenuItemProps,
-            ]
-      // AI插件（为保持key值唯一性，添加 aiplugin- ）
-      const newAiPlugin = contextMenuPlugin
-        .filter((item) => item.isAiPlugin)
-        .map((item) => {
-          return {
-            key: `aiplugin-${item.value}`,
-            label: item.key,
-            isAiPlugin: item.isAiPlugin,
-            params: item.params,
-          } as EditorMenuItemProps
-        })
-      ;(extraMenuListsObj['aiplugin'].menu[0] as EditorMenuItemProps).children =
-        newAiPlugin.length > 0
-          ? newAiPlugin
-          : [
-              {
-                key: 'aiplugin-Get*plug-in',
                 label: (
                   <>
                     <CloudDownloadIcon style={{ marginRight: 4 }} />
@@ -586,81 +578,101 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     keyToOnRunRef.current = { ...keyToRun }
   }, [contextMenu, customHTTPMutatePlugin, contextMenuPlugin, extraMenuListsObj, baseMenuListsObj])
 
-  const { getCurrentSelectPageId } = usePageInfo((s) => ({ getCurrentSelectPageId: s.getCurrentSelectPageId }), shallow)
-
   /** 菜单功能点击处理事件 */
   const { run: menuItemHandle } = useDebounceFn(
     useMemoizedFn((key: string, keyPath: string[]) => {
       if (!editor) return
       /** 是否执行过方法(onRightContextMenu) */
       let executeFunc = false
-
-      if (keyPath.length === 2) {
-        const menuName = keyPath[1]
-        const menuItemName = keyPath[0]
-        for (let name in keyToOnRunRef.current) {
-          if (keyToOnRunRef.current[name].includes(menuName)) {
-            const allMenu = { ...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu }
-            let pageId: string | undefined
-            let data: any = undefined
-            let params: YakParamProps[] | undefined
-            // 自定义右键执行携带额外参数
-            if (keyPath.includes('customcontextmenu') || keyPath.includes('aiplugin')) {
-              // 获取页面唯一标识符
-              pageId = getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
-              // 获取是否为ai插件
-              try {
-                // @ts-ignore
-                allMenu[name].menu[0]?.children.map((item) => {
-                  if (item.key === menuItemName) {
-                    if (item.isAiPlugin) {
-                      data = true
-                    }
-                    params = item.params
-                  }
-                  if (item.key === menuItemName && item.isGetPlugin) {
-                    data = 'isGetPlugin'
-                  }
-                })
-              } catch (error) {}
-            }
-            if (keyPath.includes('http')) {
-              // 获取是否为自定义HTTP数据包变形标记
-              try {
-                // @ts-ignore
-                allMenu[name].menu[0]?.children.map((item) => {
-                  if (item.key === menuItemName && item.isCustom) {
+      const menuName = keyPath[keyPath.length - 1]
+      const menuItemName = keyPath[0]
+      for (let name in keyToOnRunRef.current) {
+        const allMenu = { ...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu }
+        if (
+          keyToOnRunRef.current[name].includes('customcontextmenu') &&
+          (menuName === 'customcontextmenu' || menuName.startsWith(PLUGIN_PREFIX))
+        ) {
+          // 插件拓展
+          let key: string = ''
+          let data: boolean | string | undefined = undefined
+          let params: YakParamProps[] | undefined
+          let isExec: boolean | undefined = undefined
+          try {
+            // @ts-ignore
+            allMenu[name].menu[0]?.children.map((item, index) => {
+              // 点击一级菜单（本身）—— 执行第一个子项 —— 有三级则执行第二个子项
+              if (menuItemName === 'customcontextmenu' && index === 0) {
+                if (item.isGetPlugin) {
+                  // 当子项为获取插件
+                  data = 'isGetPlugin'
+                } else {
+                  // 当子为插件时
+                  key = item.key.slice(PLUGIN_PREFIX.length)
+                  if (item.isAiPlugin) {
                     data = true
                   }
-                })
-              } catch (error) {}
-            }
+                  params = item.params
+                  isExec = true
+                }
+                return
+              }
 
-            allMenu[name].onRun(editor, menuItemName, pageId, data, params)
+              // 点击二级菜单
+              if (item.key === menuItemName) {
+                if (item.isGetPlugin) {
+                  // 当子项为获取插件
+                  data = 'isGetPlugin'
+                } else {
+                  // 当子为插件时
+                  key = item.key.slice(PLUGIN_PREFIX.length)
+                  if (item.isAiPlugin) {
+                    data = true
+                  }
+                  params = item.params
+                  isExec = true
+                }
+                return
+              }
+
+              // 点击带参数的三级菜单
+              if (menuItemName.endsWith('_' + item.key)) {
+                key = item.key.slice(PLUGIN_PREFIX.length)
+                const prefix = menuItemName.split('_')[0]
+                isExec = prefix !== 'updateCodecParams'
+                params = item.params
+                return
+              }
+            })
+          } catch (error) {}
+          allMenu[name].onRun(editor, key, data, params, isExec)
+          executeFunc = true
+          onRightContextMenu(menuItemName)
+          break
+        } else if (keyToOnRunRef.current[name].includes('http') && menuName === 'http') {
+          // 获取是否为自定义HTTP数据包变形标记
+          let key: string = menuItemName
+          let data: boolean | undefined = undefined
+          try {
+            // @ts-ignore
+            allMenu[name].menu[0]?.children.map((item) => {
+              if (item.key === menuItemName && item.isCustom) {
+                data = true
+              }
+            })
+          } catch (error) {}
+
+          allMenu[name].onRun(editor, key, data)
+          executeFunc = true
+          onRightContextMenu(menuItemName)
+          break
+        } else if (keyToOnRunRef.current[name].includes(menuName)) {
+          if (keyPath.length === 2) {
+            allMenu[name].onRun(editor, menuItemName)
             executeFunc = true
             onRightContextMenu(menuItemName)
-            break
-          }
-        }
-      }
-      // 只有一层时 屏蔽 customcontextmenu 点击
-      if (keyPath.length === 1) {
-        const limitPath = [
-          'font-size',
-          'code',
-          'decode',
-          'http',
-          'code-compare',
-          'customcontextmenu',
-          'aiplugin',
-          'insert-label-tag',
-          'sendToComparer',
-        ]
-        if (limitPath.includes(keyPath[0])) return
-        const menuName = keyPath[0]
-        for (let name in keyToOnRunRef.current) {
-          if (keyToOnRunRef.current[name].includes(menuName)) {
-            const allMenu = { ...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu }
+          } else if (keyPath.length === 1) {
+            const limitPath = ['font-size', 'code', 'decode', 'code-compare', 'insert-label-tag', 'sendToComparer']
+            if (limitPath.includes(keyPath[0])) return
             let runKey = menuName
             const parentMenu = allMenu[name].menu.find((item) => (item as EditorMenuItemProps).key === menuName) as
               | EditorMenuItemProps
@@ -671,8 +683,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             allMenu[name].onRun(editor, runKey)
             executeFunc = true
             onRightContextMenu(runKey)
-            break
           }
+          break
         }
       }
 
@@ -1692,15 +1704,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   }, [showActionBar])
 
-  const showContextMenu = useMemoizedFn(() => {
-    showByRightContext(
-      <EditorMenu
-        size="rightMenu"
-        parentTitleClick={true}
-        data={[...rightContextMenu.current]}
-        onClick={({ key, keyPath }) => menuItemHandle(key, keyPath)}
-      />,
-    )
+  const showContextMenu = useMemoizedFn((e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    showByRightContext({
+      width: 180,
+      parentTitleClick: true,
+      // @ts-ignore
+      data: [...rightContextMenu.current],
+      onClick: ({ key, keyPath }) => {
+        menuItemHandle(key, keyPath)
+      },
+    })
   })
 
   /** 计算编辑器的高度 有点问题，为什么用state记录而不是ref记录，测试过后删除该问题 */
@@ -1831,7 +1844,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
       if (editor) {
         const selectedText = editor.getModel()?.getValueInRange(editor.getSelection() as any) || value
-        emiter.emit('onOpenFuzzerModal', JSON.stringify({ text: selectedText, scriptName, isAiPlugin: true, params }))
+        emiter.emit(
+          'onOpenFuzzerModal',
+          JSON.stringify({ text: selectedText, scriptName, isAiPlugin: true, params, isExec: false }),
+        )
         closeFizzRangeWidget()
       }
     }
@@ -2246,7 +2262,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         onContextMenu={(e) => {
           e.stopPropagation()
           e.preventDefault()
-          showContextMenu()
+          showContextMenu(e)
         }}
       >
         <ShortcutKeyFocusHook style={{ height: '100%', width: '100%', overflow: 'hidden' }} focusId={focusIds}>

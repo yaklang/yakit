@@ -61,3 +61,16 @@
     }
   }
 }
+
+.pluginHasParamsModal-footer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pluginHasParamsModal-cont {
+  max-height: 700px;
+  overflow-y: auto;
+}
