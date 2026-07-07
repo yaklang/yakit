@@ -15,6 +15,11 @@ import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatRevi
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 
+interface TabsItemProps extends YakitTabsProps {
+  taskId: string
+  goal?: string
+}
+
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
   const { tabBarExtraContent, emptyNode } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
@@ -22,12 +27,12 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const {
     chatIPCData: { taskChat },
   } = useChatIPCStore()
-  const [tabs, setTabs, getTabs] = useGetSetState<YakitSideTabProps['yakitTabs']>([])
+  const [tabs, setTabs, getTabs] = useGetSetState<TabsItemProps[]>([])
   const [activeKey, setActiveKey] = useState<string>('taskContent')
   const [scrollToBottom, setScrollToBottom] = useState(false)
 
   const isSetTaskTabRef = useRef<boolean>(false)
-  const taskGoalRef = useRef<Map<string, string>>(new Map())
+
   const divRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(divRef)
 
@@ -49,6 +54,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
         {
           label: '深度规划',
           value: 'taskContent',
+          taskId: 'taskContent',
         },
         ...prv,
       ])
@@ -63,27 +69,44 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       const info: AIAgentTriggerEventInfo = JSON.parse(data)
       const { type, params } = info
       if (!params) return
-      const { key, label, goal } = params
+      const { key, label, goal, taskId } = params
       switch (type) {
         case 'add':
-          taskGoalRef.current.set(key, goal)
           setTabs((v) => {
             const index = v.findIndex((item) => item.value === params.key)
             if (index !== -1) {
-              if (!label) return v
-              return v.map((item, i) => (i === index ? { ...item, label } : item))
+              return v.map((item, i) =>
+                i === index
+                  ? {
+                      ...item,
+                      label: label ?? item.label,
+                      goal: goal ?? item.goal,
+                      taskId: taskId ?? item.taskId,
+                    }
+                  : item,
+              )
             }
-            return [...v, { label: label ?? key, value: key }]
+            return [...v, { label: label ?? key, value: key, taskId: taskId ?? '', goal }]
           })
           setActiveKey(params.key)
           break
         case 'update':
-          if (!label) return
+          if (!label && !taskId) return
           setTabs((v) => {
             const index = v.findIndex((item) => item.value === key)
             if (index === -1) return v
-            return v.map((item) => (item.value === key ? { ...item, label } : item))
+            return v.map((item) =>
+              item.value === key
+                ? {
+                    ...item,
+                    label: label ?? item.label,
+                    goal: goal ?? item.goal,
+                    taskId: taskId ?? item.taskId,
+                  }
+                : item,
+            )
           })
+          setActiveKey(key)
           break
         default:
           break
@@ -131,8 +154,14 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
 
       default:
         const taskItem = tabs.find((item) => item.value === activeKey)
-        const goal = taskGoalRef.current.get(activeKey)
-        return <AITaskExecutionDetails taskId={activeKey} taskGoal={goal} taskName={taskItem?.label as string} />
+        return (
+          <AITaskExecutionDetails
+            key={taskItem?.taskId}
+            taskId={taskItem?.taskId ?? ''}
+            taskGoal={taskItem?.goal}
+            taskName={taskItem?.label as string}
+          />
+        )
     }
   }, [activeKey, onScrollToBottom, scrollToBottom, tabs])
 

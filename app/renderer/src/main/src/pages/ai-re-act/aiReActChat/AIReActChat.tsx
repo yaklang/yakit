@@ -60,6 +60,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       () => getAISourceListFromChatDataStoreKey(chatDataStoreKey),
       [chatDataStoreKey],
     )
+    const sessionRef = useRef<string | undefined>(undefined)
     const { chatIPCData } = useChatIPCStore()
     const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
@@ -293,17 +294,23 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       return chatIPCEvents.fetchCurrentCasualTaskID()
     })
 
+    const defaultTaskTabLabel = useCreation(() => {
+      return typeof title === 'string' ? title : '自由对话'
+    }, [title])
+
     const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
       const taskId = getTaskId()
-      if (!taskId) return false
+      const sessionId = activeChat?.SessionID
+      if (!taskId || !sessionId) return false
       if (chatDataStoreKey !== 'aiChatDataStore') return false
       emiter.emit(
         'actionAITaskContentTab',
         JSON.stringify({
           type,
           params: {
-            key: taskId,
-            label: label || activeChat?.Title || title,
+            key: sessionId,
+            taskId,
+            label: label || activeChat?.Title || defaultTaskTabLabel,
             goal: '',
           },
         }),
@@ -311,26 +318,47 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       return true
     })
 
-    const onDetails = useMemoizedFn(() => {
-      const taskId = getTaskId()
-      if (!taskId) {
+    const syncCasualTaskTab = useMemoizedFn(() => {
+      const sessionId = activeChat?.SessionID
+      if (!getTaskId()) {
         yakitNotify('error', 'taskId不存在')
         return
       }
-      if (!emitTaskContentTab('add')) {
+      if (!sessionId) return
+      if (chatDataStoreKey !== 'aiChatDataStore') {
         yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
+        return
+      }
+
+      const isNewSession = !sessionRef.current || sessionRef.current !== sessionId
+      if (isNewSession) {
+        emitTaskContentTab('add')
+        sessionRef.current = sessionId
+      } else {
+        emitTaskContentTab('update')
       }
     })
 
-    useEffect(() => {
-      if (!casualLoading) return
-      onDetails()
-    }, [casualLoading, onDetails])
+    const onDetails = useMemoizedFn(() => {
+      syncCasualTaskTab()
+    })
 
     useEffect(() => {
-      if (!activeChat?.Title) return
+      if (sessionRef.current && sessionRef.current !== activeChat?.SessionID) {
+        sessionRef.current = undefined
+      }
+    }, [activeChat?.SessionID])
+
+    useEffect(() => {
+      if (!casualLoading) return
+      syncCasualTaskTab()
+    }, [casualLoading, syncCasualTaskTab])
+
+    useEffect(() => {
+      if (!activeChat?.Title || !activeChat?.SessionID) return
+      if (sessionRef.current !== activeChat.SessionID) return
       emitTaskContentTab('update', activeChat.Title)
-    }, [activeChat?.Title, emitTaskContentTab])
+    }, [activeChat?.Title, activeChat?.SessionID, emitTaskContentTab])
 
     return (
       <>
