@@ -1687,11 +1687,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           children: [
             {
               key: `execCodecPlugin_${item.key}`,
-              label: '执行插件',
+              label: t('YakitEditor.executePlugin'),
             },
             {
               key: `updateCodecParams_${item.key}`,
-              label: '修改参数',
+              label: t('YakitEditor.modifyParameters'),
             },
           ],
         }

@@ -535,11 +535,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             children: [
               {
                 key: `execCodecPlugin_${PLUGIN_PREFIX}${item.value}`,
-                label: '执行插件',
+                label: t('YakitEditor.executePlugin'),
               },
               {
                 key: `updateCodecParams_${PLUGIN_PREFIX}${item.value}`,
-                label: '修改参数',
+                label: t('YakitEditor.modifyParameters'),
               },
             ],
           }
@@ -654,7 +654,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           let data: boolean | undefined = undefined
           try {
             // @ts-ignore
-            allMenu[name].menu[0]?.children.map((item) => {
+            allMenu[name].menu[0]?.children.map((item, index) => {
+              // 点击一级菜单（本身）—— 执行第一个子项
+              if (menuItemName === 'http' && index === 0) {
+                if (item.isCustom) {
+                  data = true
+                }
+                key = item.key
+                return
+              }
+
               if (item.key === menuItemName && item.isCustom) {
                 data = true
               }
@@ -671,6 +680,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             executeFunc = true
             onRightContextMenu(menuItemName)
           } else if (keyPath.length === 1) {
+            // TODO 不确认需求
             const limitPath = ['font-size', 'code', 'decode', 'code-compare', 'insert-label-tag', 'sendToComparer']
             if (limitPath.includes(keyPath[0])) return
             let runKey = menuName

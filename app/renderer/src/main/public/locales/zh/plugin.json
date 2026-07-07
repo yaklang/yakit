@@ -78,6 +78,10 @@
     "parameter_Settings": "参数设置: ",
     "jsonSchemaValidateFailed": "jsonSchema校验失败"
   },
+  "PluginHasParamsModal": {
+    "execute_and_save": "执行并保存",
+    "executeWithoutSaving": "执行不保存"
+  },
   "PluginEditor": {
     "newPlugin": "新建插件",
     "helpDoc": "帮助文档",

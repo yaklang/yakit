@@ -244,7 +244,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
               execOrSave(true, false)
             }}
           >
-            保存
+            {t('YakitButton.save')}
           </YakitButton>
           <YakitButton
             onClick={() => {
@@ -252,7 +252,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
             }}
             type="primary"
           >
-            执行并保存
+            {t('PluginHasParamsModal.execute_and_save')}
           </YakitButton>
           <YakitButton
             type="secondary2"
@@ -260,7 +260,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
               execOrSave(false, true)
             }}
           >
-            执行不保存
+            {t('PluginHasParamsModal.executeWithoutSaving')}
           </YakitButton>
         </div>
       }

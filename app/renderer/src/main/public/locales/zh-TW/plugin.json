@@ -78,6 +78,10 @@
     "parameter_Settings": "引數設定: ",
     "jsonSchemaValidateFailed": "jsonSchema校驗失敗"
   },
+  "PluginHasParamsModal": {
+    "execute_and_save": "執行並保存",
+    "executeWithoutSaving": "執行不保存"
+  },
   "PluginEditor": {
     "newPlugin": "新建外掛",
     "helpDoc": "幫助文件",
