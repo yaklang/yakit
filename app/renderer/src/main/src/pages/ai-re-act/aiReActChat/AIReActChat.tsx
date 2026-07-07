@@ -269,7 +269,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const handleStopCasualTask = useMemoizedFn(() => {
-      const currentCasualTaskID = meta.currentCasualTaskID
+      const currentCasualTaskID = store.getState().currentCasualTaskID
       if (!store.getState().execute || !currentCasualTaskID) return
 
       store.getState().updateState({

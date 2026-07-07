@@ -33,7 +33,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const focusMode = useStore(store, (state) => state.focusMode)
-  const casualLoading = useStore(store, (state) => state.casualLoading)
+  const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
   const todoListUpdate = useStore(store, (state) => state.casualChat?.todoListUpdate)
 
   const taskId = useCreation(() => {
@@ -43,7 +43,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
     } catch (error) {
       return ''
     }
-  }, [todoListUpdate, activeChat?.SessionID, casualLoading])
+  }, [todoListUpdate, activeChat?.SessionID, currentCasualTaskID])
 
   const onDetails = useMemoizedFn((e) => {
     e.stopPropagation()
@@ -84,7 +84,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
           <AIReActChatHeaderExternalRightIcon rightIcon={externalParameters?.rightIcon} />
         ) : (
           <>
-            {casualLoading && (
+            {currentCasualTaskID && (
               <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
                 任务详情
               </YakitButton>
@@ -101,7 +101,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
   const { rightIcon } = props
 
   const store = useCurrentStore()
-  const casualLoading = useStore(store, (state) => state.casualLoading)
+  const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
 
   const { setting } = useAIAgentStore()
 
@@ -124,7 +124,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
 
   return !!rightIcon ? (
     <>
-      {casualLoading && rightIcon.taskDetails && <TaskDetailsPopover />}
+      {currentCasualTaskID && rightIcon.taskDetails && <TaskDetailsPopover />}
       {rightIcon.dataDetails && (
         <AIContextToken iconOnly buttonProps={rightIcon.dataDetails === true ? undefined : rightIcon.dataDetails} />
       )}

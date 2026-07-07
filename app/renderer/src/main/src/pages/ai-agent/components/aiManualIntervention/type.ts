@@ -1,6 +1,6 @@
-import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatUserManualIntervention } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface AIManualInterventionProps {
-  info: AIChatQSData
-  timestamp: number
+  info: ChatUserManualIntervention
+  renderNum: number
 }

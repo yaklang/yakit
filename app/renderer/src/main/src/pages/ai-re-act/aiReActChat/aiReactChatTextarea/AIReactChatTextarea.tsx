@@ -4,25 +4,19 @@ import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import styles from '../AIReActChat.module.scss'
 import { RoundedStopButton } from '../AIReActComponent'
 import omit from 'lodash/omit'
-import useCreation from 'ahooks/lib/useCreation'
-import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '../../hooks/useCurrentDataBySession'
-import { getImageStoreKeyByAISource } from '../../hooks/useGetChatDataStoreKey'
+import useGetChatDataStoreKey from '../../hooks/useGetChatDataStoreKey'
 
 export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.memo(
   forwardRef((props, ref) => {
     const { handleSubmit, externalParameters, handleStopCasualTask } = props
 
-    const { setting } = useAIAgentStore()
-
     const store = useCurrentStore()
     const cancelCasualLoading = useStore(store, (state) => state.cancelCasualLoading)
     const casualLoading = useStore(store, (state) => state.casualLoading)
 
-    const chatDataStoreKey = useCreation(() => {
-      return getImageStoreKeyByAISource(setting.Source || 'ai')
-    }, [setting.Source])
+    const chatDataStoreKey = useGetChatDataStoreKey()
     return (
       <AIChatTextarea
         ref={ref}

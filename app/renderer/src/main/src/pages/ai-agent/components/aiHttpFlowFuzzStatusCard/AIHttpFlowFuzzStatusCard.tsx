@@ -1,6 +1,6 @@
 import React, { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
-import { useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { AIHttpFlowFuzzStatusCardProps } from './type'
@@ -24,7 +24,7 @@ const STATS_GAP_PX = 4
 const STATS_ROW_4_MIN_INNER_PX = 4 * STATS_TILE_PX + 3 * STATS_GAP_PX
 
 export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> = memo((props) => {
-  const { item } = props
+  const { item, renderNum } = props
   const { data, Timestamp, AIService, AIModelName } = item
   const { t } = useI18nNamespaces(['aiAgent'])
 
@@ -34,14 +34,24 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
       title: AIModelName,
       icon: AIService,
     }),
-    [Timestamp, AIModelName, AIService],
+    [],
   )
 
-  const p = data.progress
-  const total = p?.total_requests ?? 0
-  const ok = p?.successful_responses ?? 0
-  const fail = p?.failed_requests ?? 0
-  const avgMs = p?.average_response_ms
+  const total = useCreation(() => {
+    return data.progress?.total_requests ?? 0
+  }, [renderNum])
+
+  const ok = useCreation(() => {
+    return data.progress?.successful_responses ?? 0
+  }, [renderNum])
+
+  const fail = useCreation(() => {
+    return data.progress?.failed_requests ?? 0
+  }, [renderNum])
+
+  const avgMs = useCreation(() => {
+    return data.progress?.average_response_ms ?? 0
+  }, [renderNum])
 
   // 「查看详情」点击：
   // - 若卡片所在的会话绑定了某个 Web Fuzzer 页签（`WebFuzzerAiStore`），

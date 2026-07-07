@@ -11,6 +11,9 @@ import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
 import { Tooltip } from 'antd'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useCreation from 'ahooks/lib/useCreation'
+import { useStore } from 'zustand'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -90,9 +93,8 @@ const STREAM_MASK_THRESHOLD = 170
 
 const AIGroupStreamCard: FC<{
   elements: ReActChatElement[]
-  hasNext?: boolean
-  session: string
-}> = ({ elements, hasNext, session }) => {
+  token: string
+}> = ({ elements, token }) => {
   const lastElement = elements[elements.length - 1]
   const { stream } = useTypedStream({ token: lastElement?.token ?? '' })
   const { nodeLabel } = useAINodeLabel(stream?.data.NodeIdVerbose)
@@ -100,10 +102,29 @@ const AIGroupStreamCard: FC<{
   const content = stream?.data.content || ''
   const shouldShowMask = useMemo(() => content.length > STREAM_MASK_THRESHOLD, [content])
   const contentRef = useRef<HTMLDivElement>(null)
+  const perHasNext = useRef<boolean>(true)
   const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
 
   const [isScroll, setIsScroll] = useState(false)
   const allowAutoScrollRef = useRef<boolean>(true)
+
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+
+  const chatLength = useStore(store, (state) => state.casualChat.elements.length)
+  const taskChatLength = useStore(store, (state) => state.taskChat.elements.length)
+  const hasNext = useCreation(() => {
+    if (perHasNext.current === false) return false
+
+    const item = rawData.contents.get(token)
+    const chatType = item?.chatType
+    if (chatType === 'reAct') {
+      perHasNext.current = store.getState().casualChat.elements[chatLength - 1].token === token
+      return perHasNext.current
+    }
+    perHasNext.current = store.getState().taskChat.elements[taskChatLength - 1].token === token
+    return perHasNext.current
+  }, [chatLength, taskChatLength])
 
   // 点击其他地方取消滚动
   useEffect(() => {
