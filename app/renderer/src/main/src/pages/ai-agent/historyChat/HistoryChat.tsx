@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { useDebounce, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useUpdateEffect } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { ReActChatEventEnum } from '../defaultConstant'
 import { OutlineDesktopcomputerIcon, OutlineMessageCirclePlusIcon, OutlineSearchIcon } from '@/assets/icon/outline'
@@ -29,6 +29,9 @@ import { handAIHistoryChatRemove } from './utils'
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import classNames from 'classnames'
 import { filterHistorySessionsBySource, getHistorySourceQuerySources, type HistorySourceFilter } from './source'
+import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import useDebounce from 'ahooks/lib/useDebounce'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -129,6 +132,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   }, [enableHistorySourceFilter, historySourceFilter, sessions])
 
   const [clearLoading, setClearLoading] = useState(false)
+
+  const chatDataStoreKey = useGetChatDataStoreKey()
+
   const handleClearAllChat = useMemoizedFn(async () => {
     if (clearLoading) return
     if (!isGlobalAIAgentHistory && visibleSessions.length === 0) {
@@ -142,7 +148,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       const filter = isGlobalAIAgentHistory ? { DeleteAll: true } : { Filter: { Source: historyQuerySources } }
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
-        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: [] }, //删除全部只需要传chatDataStoreKey
+        handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
         forceCloseSessionParams: {
           aiSource: source,
           sessionIds: [],

@@ -1,5 +1,5 @@
-import type { FailTaskChatError } from '@/pages/ai-re-act/hooks/aiRender'
-import type { FC } from 'react'
+import type { ChatFailPlanAndExecution, ChatFailReact } from '@/pages/ai-re-act/hooks/aiRender'
+import { memo, type FC } from 'react'
 import ChatCard from '../ChatCard'
 import styles from './AiFailPlanCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
@@ -8,14 +8,20 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
-import { useToggle } from 'ahooks'
+import useCreation from 'ahooks/lib/useCreation'
+import useToggle from 'ahooks/lib/useToggle'
 
-const AiFailPlanCard: FC<{ item: FailTaskChatError }> = ({ item }) => {
+const AiFailPlanCard: FC<{ itemData: ChatFailReact | ChatFailPlanAndExecution; renderNum: number }> = ({
+  itemData,
+  renderNum,
+}) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { content } = item
-  const { nodeLabel } = useAINodeLabel(item.NodeIdVerbose)
   const [expand, { toggle }] = useToggle(false)
+  const { nodeLabel } = useAINodeLabel(itemData.data.NodeIdVerbose)
 
+  const content = useCreation(() => {
+    return itemData.data.content
+  }, [renderNum])
   return (
     <ChatCard
       className={styles['ai-fail-plan-wrapper']}
@@ -36,4 +42,4 @@ const AiFailPlanCard: FC<{ item: FailTaskChatError }> = ({ item }) => {
     </ChatCard>
   )
 }
-export default AiFailPlanCard
+export default memo(AiFailPlanCard)

@@ -20,7 +20,7 @@ import type { SessionListDispatcher } from './hook/useSessionList'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 import { handAIHistoryChatRemove } from '../utils'
-import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -132,6 +132,8 @@ const HistoryChatList: FC<{
   const [delLoading, setDelLoading] = useState<string[]>([])
   const [editShow, setEditShow] = useState(false)
 
+  const chatDataStoreKey = useGetChatDataStoreKey()
+
   const activeSessionId = useMemo(() => {
     return activeChat?.SessionID || ''
   }, [activeChat])
@@ -223,10 +225,10 @@ const HistoryChatList: FC<{
 
     try {
       const sessionIds = [SessionID]
-      const source = getSetting().Source
+      const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
-        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
+        handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
         forceCloseSessionParams: {
           aiSource: source,
           sessionIds: sessionIds,

@@ -9,10 +9,9 @@ import {
   AIChatQSDataTypeEnum,
   AIToolResult,
   AIYakExecFileRecord,
-  ChatListRenderType,
+  ChatToolResult,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
-import type { ModalInfoProps } from './ModelInfo'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
@@ -31,7 +30,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Divider, Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { OperationCardFooter, OperationCardFooterProps } from './OperationCardFooter/OperationCardFooter'
+import { OperationCardFooter } from './OperationCardFooter/OperationCardFooter'
 import useAIAgentStore from '../useContext/useStore'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
@@ -45,6 +44,7 @@ import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -52,13 +52,8 @@ const AIToolToIconMap: Record<string, ReactNode> = {
 }
 
 interface ToolInvokerCardProps {
-  titleText?: string
-  fileList?: AIYakExecFileRecord[]
-  modalInfo?: ModalInfoProps
-  operationInfo: OperationCardFooterProps
-  data: AIToolResult
-  chatType: ChatListRenderType
-  token: string
+  itemData: ChatToolResult
+  renderNum: number
 }
 interface PreWrapperProps {
   code: string
@@ -71,69 +66,53 @@ interface ToolStatusCardProps {
   children?: ReactNode
 }
 interface ToolStdoutCardProps extends ToolInvokerCardProps {
-  isChildWindow: boolean
+  fileList: AIYakExecFileRecord[]
 }
 interface ToolResultCardProps extends ToolInvokerCardProps {
-  isChildWindow: boolean
+  fileList: AIYakExecFileRecord[]
 }
 
 const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
-  const { data } = props
+  const { itemData, renderNum } = props
+  const store = useCurrentStore()
+  const execFileRecord = useStore(store, (state) => state.execFileRecord)
+  const fileList = useCreation(() => {
+    if (!itemData?.data?.callToolId) return []
+    return execFileRecord.get(itemData?.data?.callToolId) || []
+  }, [renderNum, itemData?.data?.callToolId])
 
-  // 判断路由，子窗口有些功能不展示
-  const isChildWindow = useRef(isAuxOrChildWindow())
-  const { nodeLabel } = useAINodeLabel(data.verboseName)
-  const titleText = nodeLabel || data.toolName
-  const renderContent = useMemoizedFn(() => {
-    // 过滤掉打开文件
-    const operationInfo = {
-      ...props.operationInfo,
-      aiFilePath: isChildWindow.current ? undefined : props.operationInfo.aiFilePath,
-    }
-    switch (data.type) {
-      case 'stream':
-        return (
-          <ToolStdoutCard
-            isChildWindow={isChildWindow.current}
-            {...props}
-            operationInfo={operationInfo}
-            titleText={titleText}
-          />
-        )
-      case 'result':
-        return (
-          <ToolResultCard
-            isChildWindow={isChildWindow.current}
-            {...props}
-            operationInfo={operationInfo}
-            titleText={titleText}
-          />
-        )
-      case 'create':
-        return <ToolLoadingCard {...props} titleText={titleText} />
-      default:
-        return null
-    }
-  })
-
-  return renderContent()
+  switch (itemData?.data?.type) {
+    case 'stream':
+      return <ToolStdoutCard {...props} fileList={fileList} />
+    case 'result':
+      return <ToolResultCard {...props} fileList={fileList} />
+    case 'create':
+      return <ToolLoadingCard {...props} />
+    default:
+      return null
+  }
 }
 
 export default memo(ToolInvokerCard)
 
 /** tool loading - processing params */
-const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
-  const { data, titleText } = props
+const ToolLoadingCard: React.FC<Omit<ToolInvokerCardProps, 'fileList'>> = memo((props) => {
+  const { itemData, renderNum } = props
   const { t } = useI18nNamespaces(['aiAgent'])
+  const data = useCreation(() => {
+    return itemData.data
+  }, [renderNum])
+
+  const { nodeLabel } = useAINodeLabel(data.verboseName)
 
   const reason = useCreation(() => {
     return data?.tool?.reason || ''
-  }, [data?.tool?.reason])
+  }, [renderNum])
 
   return (
     <ChatCard
       titleIcon={<OutlineWrenchIcon1 />}
-      titleText={titleText}
+      titleText={nodeLabel || data.toolName}
       titleExtra={
         !!reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
@@ -155,11 +134,25 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
 
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
-  const { operationInfo, fileList, chatType, data, titleText } = props
+  const { fileList, itemData, renderNum } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-
+  // 判断路由，子窗口有些功能不展示
+  const isChildWindow = useRef(isAuxOrChildWindow())
   const sessionId = useCurrentSessionId()
   const { onSend } = useAIAgentDispatcher()
+
+  const data = useCreation(() => {
+    return itemData.data
+  }, [renderNum])
+
+  const { nodeLabel } = useAINodeLabel(data.verboseName)
+
+  const operationInfo = useCreation(() => {
+    return {
+      callToolId: data.callToolId,
+      aiFilePath: isChildWindow.current ? '' : data.tool.dirPath,
+    }
+  }, [renderNum])
 
   // 获取流数据
   const { stream } = useStreamingChatContent({
@@ -172,7 +165,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
   const reason = useCreation(() => {
     return data?.tool?.reason || ''
-  }, [data?.tool?.reason])
+  }, [renderNum])
 
   const onToolExtra = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
     switch (item.value) {
@@ -200,7 +193,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={titleText}
+      titleText={nodeLabel || data.toolName}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -245,13 +238,38 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
-  const { modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow, titleText } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { renderNum, fileList, itemData } = props
+  const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
 
   const [loading, setLoading] = useState<boolean>(false)
 
   const [expand, setExpand] = useState<boolean>(false)
+
+  // 判断路由，子窗口有些功能不展示
+  const isChildWindow = useRef(isAuxOrChildWindow())
+
+  const data = useCreation(() => {
+    return itemData.data
+  }, [renderNum])
+
+  const { nodeLabel } = useAINodeLabel(data.verboseName)
+
+  const modalInfo = useCreation(() => {
+    return {
+      time: itemData.Timestamp,
+      title: itemData.AIModelName,
+      icon: itemData.AIService,
+    }
+  }, [])
+
+  const operationInfo = useCreation(() => {
+    return {
+      callToolId: data.callToolId,
+      aiFilePath: isChildWindow.current ? '' : data.tool.dirPath,
+    }
+  }, [renderNum])
+
   const expandToggle = useMemoizedFn(() => {
     setExpand((v) => !v)
   })
@@ -302,11 +320,11 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     grpcQueryAIToolDetails(params)
       .then((res) => {
         /** TODO - 工具卡片刷新后,需要更新这个item里面的数据以及其刷新逻辑 */
-        const chatItem = rawData.contents.get(token)
+        const chatItem = rawData.contents.get(itemData.id)
         if (!!chatItem && chatItem.type === AIChatQSDataTypeEnum.TOOL_RESULT) {
           chatItem.data.tool.resultDetails = getResultDetails(res)
         }
-        store.getState().incrementNodeVersion(token, 'item')
+        store.getState().incrementNodeVersion(itemData.id, 'item')
       })
       .finally(() =>
         setTimeout(() => {
@@ -354,7 +372,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
 
   return (
     <ChatCard
-      titleText={titleText}
+      titleText={nodeLabel || data.toolName}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -379,7 +397,8 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
               {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
             </label>
           )}
-          {isChildWindow || (
+          {/* </div> */}
+          {isChildWindow.current || (
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
               <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
             </Tooltip>

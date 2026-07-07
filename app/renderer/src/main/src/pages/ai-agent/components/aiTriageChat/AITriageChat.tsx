@@ -20,14 +20,26 @@ import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIChatTextareaSubmit } from '../../template/type'
 import { getAIReActRequestParams } from '../../utils'
 import { extractDataWithMilkdown } from '../aiMilkdownInput/utils'
-import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 
 export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
-  const { isAnswer, content, contentClassName, chatClassName, extraValue } = props
-  const { chatDataStoreKey } = useGetChatDataStoreKey()
+  const { isAnswer, contentClassName, chatClassName, itemData, chatDataStoreKey, renderNum } = props
+
   const [edit, setEdit] = useState<boolean>(false)
 
+  const content = useCreation(() => {
+    if (itemData?.data) {
+      return itemData.data
+    }
+    return ''
+  }, [renderNum])
+
+  const extraValue = useCreation(() => {
+    if (itemData?.extraValue) {
+      return itemData.extraValue
+    }
+    return undefined
+  }, [renderNum])
   const renderContent = useMemoizedFn(() => {
     if (!!extraValue?.showQS) {
       return (
@@ -42,7 +54,12 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
   return (
     <div className={styles['triage-chat-content-wrapper']}>
       {edit ? (
-        <AITriageChatContentEdit content={content} extraValue={extraValue} onCancel={() => setEdit(false)} />
+        <AITriageChatContentEdit
+          content={content}
+          extraValue={extraValue}
+          onCancel={() => setEdit(false)}
+          chatDataStoreKey={chatDataStoreKey}
+        />
       ) : (
         <>
           <div
@@ -77,9 +94,8 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
   )
 })
 const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.memo((props) => {
-  const { extraValue, content, onCancel } = props
+  const { extraValue, content, onCancel, chatDataStoreKey } = props
   const { activeChat } = useAIAgentStore()
-  const { chatDataStoreKey } = useGetChatDataStoreKey()
   const { onSend } = useAIAgentDispatcher()
   const defaultValue = useCreation(() => {
     if (!!extraValue?.showQS) {

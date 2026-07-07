@@ -1,15 +1,22 @@
+import { ChatQuestion, ChatResult, ChatThought } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
+import { AINodeItemProps } from '../aiChatListItem/aiNodeItem/type'
+import { ChatDataStoreKey } from '../../store/ChatDataStore'
 
 export interface AITriageChatContentProps {
   isAnswer?: boolean
-  content: string
   contentClassName?: string
   chatClassName?: string
-  extraValue?: AIChatIPCStartParams['extraValue']
+  itemData: ChatQuestion | ChatResult | ChatThought
+
+  renderNum: AINodeItemProps['renderNum']
+
+  chatDataStoreKey: ChatDataStoreKey
 }
 
 export interface AITriageChatContentEditProps {
   onCancel: () => void
-  content: AITriageChatContentProps['content']
-  extraValue?: AITriageChatContentProps['extraValue']
+  content: string
+  extraValue?: AIChatIPCStartParams['extraValue']
+  chatDataStoreKey: AITriageChatContentProps['chatDataStoreKey']
 }

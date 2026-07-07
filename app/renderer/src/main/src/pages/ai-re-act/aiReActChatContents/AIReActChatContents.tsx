@@ -154,15 +154,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 
     useImperativeHandle(ref, () => ({ scrollToItemIndex: locateToIndex }), [locateToIndex])
 
-    const renderItem = useCallback(
-      (index: number, item?: ReActChatRenderItem) => {
-        if (!item?.token) return null
-        const arrayIndex = index - firstItemIndex
-        const hasNext = chatLength - arrayIndex > 1
-        return <AIChatListItem key={item.token} hasNext={hasNext} itemIndex={arrayIndex} item={item} type="re-act" />
-      },
-      [chatLength, firstItemIndex],
-    )
+    const renderItem = useCallback((_, item?: ReActChatRenderElement) => {
+      if (!item?.token) return null
+      return <AIChatListItem key={item.token} item={item} />
+    }, [])
     const Item = useCallback(
       ({ children, style, 'data-index': dataIndex }) => (
         <div style={style} data-index={dataIndex} className={styles['item-wrapper']}>

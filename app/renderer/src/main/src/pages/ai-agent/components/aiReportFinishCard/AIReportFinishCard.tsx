@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineDocumentIcon, OutlineDownloadIcon } from '@/assets/icon/outline'
@@ -19,15 +19,23 @@ import ChatCard from '../ChatCard'
 const { ipcRenderer } = window.require('electron')
 
 export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props) => {
-  const { item } = props
+  const { item, renderNum } = props
   const { data } = item
   const { t } = useI18nNamespaces(['aiAgent'])
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   const [downloadLoading, setDownloadLoading] = useState(false)
 
-  const reportPath = data.reportPath
-  const title = data.title
-  const content = data.content
+  const reportPath = useCreation(() => {
+    return data.reportPath
+  }, [renderNum])
+
+  const title = useCreation(() => {
+    return data.title
+  }, [renderNum])
+
+  const content = useCreation(() => {
+    return data.content
+  }, [renderNum])
 
   const handleOpenReport = useMemoizedFn(() => {
     if (!reportPath) return

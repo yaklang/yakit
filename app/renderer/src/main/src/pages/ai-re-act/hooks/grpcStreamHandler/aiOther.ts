@@ -209,7 +209,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
     chatType: 'reAct',
     type: AIChatQSDataTypeEnum.QUESTION,
     Timestamp: res.Timestamp,
-    data: { qs: data.react_task_input || '', setting: {} },
+    data: data.react_task_input || '',
     AIService: '',
     AIModelName: '',
     // showQS为了UI渲染方便，重新构建的字段
