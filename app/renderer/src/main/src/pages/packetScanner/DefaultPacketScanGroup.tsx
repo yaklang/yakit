@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { ByCursorMenuItemProps } from '@/utils/showByCursor'
-import { Space } from 'antd'
+import { Space, Tooltip } from 'antd'
 import { execPacketScan, execPacketScanFromRaw } from '@/pages/packetScanner/PacketScanner'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import styles from './packetScanner.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { OutlineScanIcon } from '@/assets/icon/outline'
 
 /**
  * @description 数据包扫描的默认菜单数据
@@ -70,7 +71,6 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
   return (
     <YakitPopover
       key={'数据包扫描'}
-      title={t('PacketScanButton.packetScan')}
       trigger={['click']}
       visible={visible}
       content={
@@ -97,9 +97,11 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
         </Space>
       }
     >
-      <YakitButton size={'small'} type="outline2">
-        {t('PacketScanButton.packetScan')}
-      </YakitButton>
+      <Tooltip title={t('PacketScanButton.packetScan')}>
+        <div className={styles['scan-button']}>
+          <OutlineScanIcon />
+        </div>
+      </Tooltip>
     </YakitPopover>
   )
 }

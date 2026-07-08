@@ -1,7 +1,7 @@
 import styles from './WebFuzzerAiTestMenu.module.scss'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { Dropdown } from 'antd'
+import { Dropdown, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 
@@ -17,6 +17,7 @@ import {
 import { yakitNotify } from '@/utils/notification'
 
 import { WebFuzzerAiTestTemplateModal } from './WebFuzzerAiTestTemplateModal'
+import { ColorsAIIcon } from '@/assets/icon/colors'
 
 export interface WebFuzzerAiTestMenuProps {
   inViewport?: boolean
@@ -174,7 +175,10 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
         placement="bottomLeft"
         visible={dropdownVisible}
         onVisibleChange={(visible) => {
-          if (loading) return
+          if (loading) {
+            yakitNotify('info', t('HTTPFuzzerPage.loadData'))
+            return
+          }
           setDropdownVisible(visible)
           if (visible) {
             refreshTemplates()
@@ -182,9 +186,11 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
         }}
         overlayClassName={styles['web-fuzzer-ai-test-menu-overlay']}
       >
-        <YakitButton type="primary" size="large" loading={loading && templates.length === 0}>
-          {t('HTTPFuzzerPage.aiTest')}
-        </YakitButton>
+        <Tooltip title={t('HTTPFuzzerPage.aiTest')}>
+          <div className={styles['ai-button']}>
+            <ColorsAIIcon />
+          </div>
+        </Tooltip>
       </Dropdown>
       <WebFuzzerAiTestTemplateModal
         visible={modalVisible}
