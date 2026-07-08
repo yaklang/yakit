@@ -1,3 +1,5 @@
+@use '../../../theme/colorMixCompat.scss' as colorMix;
+
 .milkdown milkdown-image-block.selected > .image-wrapper:before {
   content: '';
   position: absolute;
@@ -5,7 +7,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: color-mix(in srgb, #e1e2e8, transparent 60%);
+  @include colorMix.property-color-mix-with-transparent-weight(background, #e1e2e8, 60%);
 }
 
 milkdown-image-block > .image-wrapper .operation {

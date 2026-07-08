@@ -200,6 +200,7 @@
   }
   30% {
     outline-color: var(--Colors-Use-Main-Primary);
+    box-shadow: 0 0 0 4px var(--Colors-Use-Main-Primary);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--Colors-Use-Main-Primary) 18%, transparent);
   }
   100% {

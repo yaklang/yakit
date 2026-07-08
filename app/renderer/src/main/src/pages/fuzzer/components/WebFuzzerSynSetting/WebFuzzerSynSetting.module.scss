@@ -1,11 +1,11 @@
-@use '../../../../theme/themeify.scss' as tools;
+@use '../../../../theme/colorMixCompat.scss' as colorMix;
 
 .wf-syn-setting {
   display: flex;
   flex-direction: column;
   .tip {
     padding: 8px 24px;
-    background: tools.fetch-color-transparen(var(--Colors-Use-Green-Primary), 10%);
+    @include colorMix.property-color-mix-transparent(background, var(--Colors-Use-Green-Primary), 10%);
     min-height: 32px;
     font-weight: 400;
     font-size: 12px;

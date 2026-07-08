@@ -1,0 +1,19 @@
+// color-mix 向下兼容工具（Chrome 111+ / Win7 Chromium 109 不支持 color-mix）
+//
+// 策略：同一属性写两行
+//   1. 兜底：未混合的初始色（老浏览器生效）
+//   2. color-mix：带透明混合（新浏览器覆盖上一行，Win10+ 视觉效果不变）
+
+/// 生成 color-mix(in srgb, $color $percent, transparent) 表达式
+@function color-mix-with-transparent($color, $percent) {
+  @return unquote('color-mix(in srgb, #{$color} #{$percent}, transparent)');
+}
+
+/// 任意 CSS 属性：先写初始色，再写 color-mix
+/// @param $property  如 background-color、border-color
+/// @param $color     参与混合的初始色（var(--token) 或 #hex）
+/// @param $percent   初始色占比，如 10%、18%
+@mixin property-color-mix-transparent($property, $color, $percent) {
+  #{$property}: $color;
+  #{$property}: color-mix-with-transparent($color, $percent);
+}

@@ -1,3 +1,5 @@
+@use './colorMixCompat.scss' as colorMix;
+
 $color-list: (
   primary: (
     color-1: var(--Colors-Use-Main-Bg),
@@ -42,5 +44,5 @@ $color-list: (
 
 // 手动控制颜色变量,生成带透明度的颜色
 @function fetch-color-transparen($color, $alph) {
-  @return color-mix(in srgb, $color $alph, transparent);
+  @return colorMix.color-mix-with-transparent($color, $alph);
 }

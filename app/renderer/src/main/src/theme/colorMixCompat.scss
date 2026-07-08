@@ -1,0 +1,29 @@
+/// color-mix(in srgb, $color $percent, transparent)
+@function color-mix-with-transparent($color, $percent) {
+  @return unquote('color-mix(in srgb, #{$color} #{$percent}, transparent)');
+}
+
+/// color-mix(in srgb, $color, transparent $transparent-percent)
+@function color-mix-with-transparent-weight($color, $transparent-percent) {
+  @return unquote('color-mix(in srgb, #{$color}, transparent #{$transparent-percent})');
+}
+
+/// 单属性：兜底为未混合的初始色
+@mixin property-color-mix-transparent($property, $color, $percent) {
+  #{$property}: $color;
+  #{$property}: color-mix-with-transparent($color, $percent);
+}
+
+@mixin property-color-mix-with-transparent-weight($property, $color, $transparent-percent) {
+  #{$property}: $color;
+  #{$property}: color-mix-with-transparent-weight($color, $transparent-percent);
+}
+
+@mixin assign-background-gradient-transparen($colors, $percent) {
+  background: linear-gradient(to right, join($colors, (), comma));
+  $mixed-colors: ();
+  @each $color in $colors {
+    $mixed-colors: append($mixed-colors, color-mix-with-transparent($color, $percent), comma);
+  }
+  background: linear-gradient(to right, $mixed-colors);
+}

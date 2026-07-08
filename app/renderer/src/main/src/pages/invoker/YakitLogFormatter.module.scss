@@ -105,8 +105,15 @@
     background:
       linear-gradient(
         0deg,
-        tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 0%,
-        tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 100%
+        var(--Colors-Use-Error-Primary) 0%,
+        var(--Colors-Use-Error-Primary) 100%
+      ),
+      var(--Colors-Use-Basic-Background);
+    background:
+      linear-gradient(
+        0deg,
+        #{tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%)} 0%,
+        #{tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%)} 100%
       ),
       var(--Colors-Use-Basic-Background);
   }
@@ -126,7 +133,8 @@
   .file-status {
     padding: 0px 6px;
     border-radius: 8px;
-    border: 1px solid tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 30%);
+    border: 1px solid var(--Colors-Use-Error-Primary);
+    border: 1px solid #{tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 30%)};
     background: var(--Colors-Use-Main-Bg);
     color: var(--Colors-Use-Error-Primary);
   }
