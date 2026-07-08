@@ -666,11 +666,9 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     const needsSaveAs = extras?.needsSaveAs ?? false
     let isUnSave = needsSaveAs || isYakRunnerScratchFilePath(targetPath)
 
-    const filePatch = { code: content, isUnSave, needsSaveAs: isUnSave ? needsSaveAs : false }
-
     // 先同步内存中的 code，避免 AI 审阅基线读取到采纳前的旧内容
     if (activeFileRef.current && isSameYakRunnerFilePath(activeFileRef.current.path, targetPath)) {
-      const next: FileDetailInfo = { ...activeFileRef.current, ...filePatch }
+      const next: FileDetailInfo = { ...activeFileRef.current, code: content }
       activeFileRef.current = next
       setActiveFile(next)
     }
@@ -683,6 +681,8 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
         isUnSave = true
       }
     }
+
+    const filePatch = { code: content, isUnSave, needsSaveAs: isUnSave ? needsSaveAs : false }
 
     const existingInArea = await judgeAreaExistFilePath(areaInfoRef.current, targetPath)
     if (existingInArea) {
