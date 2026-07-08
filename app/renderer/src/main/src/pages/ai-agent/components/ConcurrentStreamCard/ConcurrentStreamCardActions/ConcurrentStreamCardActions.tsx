@@ -59,13 +59,13 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   }
   return (
     <>
-      {showContinueTask && coordinatorId != null && taskIndex != null && framePayload.chatType === 'task' && (
+      {showContinueTask && coordinatorId != null && taskIndex != null && (
         <AIHistoryContinueTask coordinatorId={coordinatorId} taskIndex={taskIndex} />
       )}
-      {showCancelTask && taskIndex != null && framePayload.chatType === 'task' && (
-        <AIHistorySkipTask taskIndex={taskIndex} />
+      {showCancelTask && taskIndex != null && (
+        <AIHistorySkipTask taskIndex={taskIndex} isTask={framePayload.chatType === 'task'} />
       )}
-      {showDetails && framePayload.chatType === 'task' && (
+      {showDetails && (
         <Tooltip title="任务详情" placement="top">
           <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
         </Tooltip>
