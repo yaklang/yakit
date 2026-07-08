@@ -2,6 +2,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AIGlobalConfig,
+  AIModelConfig,
   ServerAIGlobalConfig,
   grpcGetAIGlobalConfig,
   grpcSetAIGlobalConfig,
@@ -138,13 +139,26 @@ function useAIGlobalConfig(params) {
       Object.values(AIModelTypeEnum).forEach((type) => {
         const key = getFileNameByModelType(type)
         if (!key) return
-        const localModels = (currentConfig[key] || []).filter((model) => !model.IsOnline)
         const serverModels = (serverConfig[key] || []).map((model) => ({
           ...model,
           IsOnline: true,
         }))
+        const mergedModels = (currentConfig[key] || []).reduce((list, item) => {
+          if (!item.IsOnline) {
+            list.push(item)
+            return list
+          }
+          const hit = serverModels.find(({ ModelName }) => ModelName === item.ModelName)
+          if (hit) {
+            list.push(hit)
+          }
+          return list
+        }, [] as AIModelConfig[])
 
-        nextConfig[key] = [...localModels, ...serverModels]
+        const appendServerModels = serverModels.filter(
+          (model) => !mergedModels.some(({ ModelName, IsOnline }) => ModelName === model.ModelName && IsOnline),
+        )
+        nextConfig[key] = [...mergedModels, ...appendServerModels]
       })
 
       setAIGlobalConfig(nextConfig)
