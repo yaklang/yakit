@@ -157,7 +157,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
         return (
           <AITaskExecutionDetails
             key={taskItem?.taskId}
-            taskId={taskItem?.taskId ?? ''}
+            taskId={taskItem?.taskId || taskItem?.value || ''}
             taskGoal={taskItem?.goal}
             taskName={taskItem?.label as string}
           />

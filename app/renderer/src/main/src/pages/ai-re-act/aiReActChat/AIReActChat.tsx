@@ -285,6 +285,12 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       if (!activeChat?.SessionID) return
       return chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat?.planDetails
     })
+
+    const reActTaskId: string = useCreation(() => {
+      if (!activeChat?.SessionID) return ''
+      return getPlanDetails()?.taskId ?? ''
+    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+
     const todoData: TodoListCardData = useCreation(() => {
       if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
       try {
@@ -482,7 +488,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                   )}
                 </div>
               </div>
-              {todoData?.items?.length > 0 && (
+              {reActTaskId === chatIPCEvents.fetchCurrentCasualTaskID() && todoData?.items?.length > 0 && (
                 <div className={styles['todoList-wrapper']}>
                   <AIToDoList className={styles['to-do-list']} todoData={todoData} />
                 </div>

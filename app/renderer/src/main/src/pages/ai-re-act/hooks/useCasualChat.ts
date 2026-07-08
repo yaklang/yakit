@@ -16,7 +16,7 @@ import { AIChatQSDataTypeEnum } from './aiRender'
 import { yakitNotify } from '@/utils/notification'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
-import { DefaultTodoListCardData } from './defaultConstant'
+import { DefaultTodoListCardData, DefaultPlanItemDetailsData } from './defaultConstant'
 
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -77,6 +77,10 @@ function useCasualChat(params: UseCasualChatParams) {
       if (info.react_user_input) existing.data.goal = info.react_user_input
       existing.data.status = info.react_task_status
       setContentMap(existing.id, existing)
+      const chatStore = getChatDataStore?.()
+      if (chatStore && !chatStore.casualChat.planDetailsMap.has(taskKey)) {
+        chatStore.casualChat.planDetailsMap.set(taskKey, cloneDeep(DefaultPlanItemDetailsData))
+      }
       setElements((old) =>
         old.map((item) => {
           if (item.token === existing.id && item.type === existing.type) {
@@ -103,6 +107,10 @@ function useCasualChat(params: UseCasualChatParams) {
     } as AIChatQSData
 
     setContentMap(chatData.id, chatData)
+    const chatStore = getChatDataStore?.()
+    if (chatStore && !chatStore.casualChat.planDetailsMap.has(taskKey)) {
+      chatStore.casualChat.planDetailsMap.set(taskKey, cloneDeep(DefaultPlanItemDetailsData))
+    }
     setElements((old) => {
       const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
       if (exists) return old
@@ -254,6 +262,7 @@ function useCasualChat(params: UseCasualChatParams) {
 
   const handleResetData = useMemoizedFn(() => {
     review.current = undefined
+    getChatDataStore?.()?.casualChat.planDetailsMap.clear()
     setElements([])
     setCasualQuestionList([])
     setToolListRenderNumber(0)

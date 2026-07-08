@@ -92,6 +92,7 @@ export class ChatDataStore {
         casualQuestionList: [],
         contents: new Map(),
         planDetails: cloneDeep(DefaultPlanItemDetailsData),
+        planDetailsMap: new Map(),
       },
       taskChat: {
         plan: cloneDeep(DefaultCurrentExecTaskTree),
