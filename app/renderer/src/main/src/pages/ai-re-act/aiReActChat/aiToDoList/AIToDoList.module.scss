@@ -39,7 +39,7 @@ $radius: 8px;
     z-index: 9;
 
     border-radius: inherit;
-    background: var(--Colors-Use-Neutral-Bg);
+    background: var(--Colors-Use-Main-Bg);
 
     box-shadow: 0 2px 4px 0 var(--Colors-Use-Basic-Shadow);
     .no-data {
@@ -53,14 +53,14 @@ $radius: 8px;
       gap: 4px;
       padding: 8px;
       border-radius: $radius $radius 0 0;
-      background: var(--Colors-Use-Neutral-Bg);
+      // background: var(--Colors-Use-Neutral-Bg);
       width: 100%;
       cursor: pointer;
       height: 32px;
       overflow: hidden;
-      &:hover {
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-      }
+      // &:hover {
+      //   background: var(--Colors-Use-Neutral-Bg-Hover);
+      // }
       .card-heard-title {
         display: flex;
         align-items: center;
@@ -71,7 +71,7 @@ $radius: 8px;
         font-weight: 500;
         line-height: 16px;
         letter-spacing: 0.5px;
-        flex: 3;
+        flex: 1;
         .chevron-icon {
           color: var(--Colors-Use-Neutral-Text-3-Secondary);
           svg {
@@ -98,27 +98,55 @@ $radius: 8px;
       .card-heard-extra {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 8px;
         font-size: 12px;
         font-style: normal;
         font-weight: 400;
-        line-height: 16px; /* 133.333% */
+        line-height: 16px;
         letter-spacing: 0.5px;
-        flex: 1;
+        // flex: 1;
         min-width: 120px;
-        .progress-bar {
-          :global {
-            .ant-progress-inner {
-              border: 1px solid var(--Colors-Use-Neutral-Border);
-            }
-          }
-        }
         .tip {
           color: var(--Colors-Use-Neutral-Text-4-Help-text);
           flex-shrink: 0;
         }
-        .progress {
-          color: var(--Colors-Use-Neutral-Text-1-Title);
+        .progress-stats {
+          display: flex;
+          align-items: center;
+          flex-shrink: 0;
+          gap: 4px;
+        }
+        .progress-stat-value {
+          cursor: default;
+          font-weight: 500;
+        }
+        .progress-stat-divider {
+          color: var(--Colors-Use-Neutral-Border);
+          user-select: none;
+        }
+        .progress-segments-bar {
+          flex: 1;
+          display: flex;
+          align-items: stretch;
+          height: 8px;
+          min-width: 48px;
+          border-radius: 4px;
+          overflow: hidden;
+          background: var(--Colors-Use-Neutral-Bg-Hover);
+          border: 1px solid var(--Colors-Use-Neutral-Border);
+        }
+        .progress-segment {
+          height: 100%;
+          flex-shrink: 0;
+          &:first-child {
+            border-radius: 3px 0 0 3px;
+          }
+          &:last-child {
+            border-radius: 0 3px 3px 0;
+          }
+          &:only-child {
+            border-radius: 3px;
+          }
         }
       }
     }
@@ -129,7 +157,7 @@ $radius: 8px;
       border-radius: 0 0 $radius $radius;
       padding: 8px;
       width: 100%;
-      background: var(--Colors-Use-Basic-Background);
+      // background: var(--Colors-Use-Basic-Background);
       overflow-y: hidden;
       .card-list-inner {
         display: flex;
@@ -196,4 +224,44 @@ $radius: 8px;
   to {
     --angle: 360deg;
   }
+}
+
+.popover-content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 16px;
+  padding: 4px 0;
+  min-width: 200px;
+}
+
+.popover-content-item {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.popover-content-item-bar {
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.popover-content-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.popover-content-item-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.popover-content-item-value {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
 }
