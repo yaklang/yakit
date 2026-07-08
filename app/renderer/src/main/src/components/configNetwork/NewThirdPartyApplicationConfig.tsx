@@ -461,7 +461,7 @@ const defaultAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate[
       Required: true,
       Type: 'list',
       DefaultValue: DEFAULT_AI_API_TYPE,
-      Desc: '可选值: chat_completions / responses',
+      Desc: '',
       Extra: `${JSON.stringify({
         options: aiAPITypeOptions,
       })}`,
@@ -525,7 +525,12 @@ const buildDefaultAIFormItemsForType = (typeVal: string, t: TFunction) => {
   const items = cloneDeep(defaultAIFormItemsOfAI(t))
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (isRequired) {
-    items.push(data)
+    const modelIndex = items.findIndex((item) => item.Name === 'model')
+    if (modelIndex !== -1) {
+      items.splice(modelIndex, 0, data)
+    } else {
+      items.push(data)
+    }
   }
   return items
 }
@@ -545,7 +550,7 @@ const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolea
 const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
   {
     DefaultValue: '',
-    Desc: '对于非标准openai风格的第三方api，可以自定义endpoint',
+    Desc: '开启后使用完整 Endpoint 地址发送请求，替代 BaseURL 自动拼接路径的方式',
     Extra: '',
     Name: 'enable_endpoint',
     Required: false,
@@ -554,27 +559,27 @@ const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
   },
   {
     DefaultValue: '',
-    Desc: '可填写域名和URL，例如api.openai.com、https://api.openai.com/、https://api.openai.com/v1、https://api.openai.com//v1/chat/completions',
+    Desc: 'API 地址前缀，系统会自动拼接接口路径（如 /v1/chat/completions）',
     Extra: '',
     Name: 'base_url',
     Required: false,
     Type: 'string',
     Verbose: 'BaseURL',
-    Placeholder: '例如 api.openai.com、https://api.openai.com/',
+    Placeholder: '如 api.openai.com 或 https://api.openai.com/v1',
   },
   {
     DefaultValue: '',
-    Desc: 'Endpoint',
+    Desc: '完整的请求地址，启用后将跳过路径拼接，直接使用该地址发送请求',
     Extra: '',
     Name: 'endpoint',
     Required: false,
     Type: 'string',
     Verbose: 'Endpoint',
-    Placeholder: '例如 https://api.openai.com/v1/chat/completions',
+    Placeholder: '如 https://api.openai.com/v1/chat/completions',
   },
   {
     DefaultValue: '',
-    Desc: '代理地址',
+    Desc: 'HTTP/SOCKS5 代理地址',
     Extra: '',
     Name: 'proxy',
     Required: false,
@@ -655,7 +660,16 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
         bordered={false}
         className={styles['ai-third-party-application-config-collapse']}
       >
-        <Collapse.Panel header="高级配置" key="1" forceRender={true}>
+        <Collapse.Panel
+          header={
+            <div className={styles['panel-heard']}>
+              <span className={styles['title']}>高级配置</span>
+              <span className={styles['tip']}>可配置自定义 Endpoint / BaseURL 等</span>
+            </div>
+          }
+          key="1"
+          forceRender={true}
+        >
           {optionalItems.map((item) => renderFieldByTemplate(item))}
           {renderCopyRow('Headers', 'Header', headersPack.display, headersPack.copy)}
         </Collapse.Panel>
@@ -806,7 +820,12 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       let newAIFormItemsOfAI = cloneDeep(defaultAIFormItemsOfAI(t))
       const { isRequired, data } = isShowRequiredApiKey(typeVal)
       if (isRequired) {
-        newAIFormItemsOfAI.push(data)
+        const modelIndex = newAIFormItemsOfAI.findIndex((item) => item.Name === 'model')
+        if (modelIndex !== -1) {
+          newAIFormItemsOfAI.splice(modelIndex, 0, data)
+        } else {
+          newAIFormItemsOfAI.push(data)
+        }
       }
       return newAIFormItemsOfAI
     }, [typeVal, i18n.language])
@@ -947,6 +966,26 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               )
             }
             return <AIConfigAPIKeyFormItem aiType={typeVal} formProps={formProps} />
+          }
+          if (item.Name === 'api_type') {
+            let selectProps: YakitSelectProps = {}
+            try {
+              selectProps.options = item.Extra ? JSONParseLog(item.Extra)?.options : []
+            } catch (error) {}
+            return (
+              <Form.Item
+                {...formProps}
+                tooltip={null}
+                help={
+                  <div style={{ fontSize: 12, color: '#b4bbca', lineHeight: '20px' }}>
+                    决定请求的接口路径：chat/completions 是主流兼容格式（/v1/chat/completions）， responses 是 OpenAI
+                    新一代格式（/v1/responses）
+                  </div>
+                }
+              >
+                <YakitSelect {...selectProps} disabled={IsOnline} />
+              </Form.Item>
+            )
           } else {
             let selectProps: YakitSelectProps = {}
             try {
@@ -1072,7 +1111,16 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             bordered={false}
             className={styles['ai-third-party-application-config-collapse']}
           >
-            <YakitCollapse.YakitPanel header="高级配置" key="1" forceRender={true}>
+            <YakitCollapse.YakitPanel
+              header={
+                <div className={styles['panel-heard']}>
+                  <span className={styles['title']}>高级配置</span>
+                  <span className={styles['tip']}>可配置自定义 Endpoint / BaseURL 等</span>
+                </div>
+              }
+              key="1"
+              forceRender={true}
+            >
               {/* 可选的表单项 */}
               {renderOptionalFormItems()}
               <Form.Item label={'Header'} name="Headers">

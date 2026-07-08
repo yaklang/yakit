@@ -2,11 +2,11 @@
 
 export const AI_API_TYPE_OPTIONS = [
   {
-    label: 'OpenAI(兼容性好 chat/completions )',
+    label: 'chat/completions（标准，兼容性好）',
     value: 'chat_completions',
   },
   {
-    label: 'OpenAI Responses(新格式)',
+    label: 'responses（OpenAI 新格式）',
     value: 'responses',
   },
 ] as const
