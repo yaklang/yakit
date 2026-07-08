@@ -414,8 +414,6 @@ type ChatReferenceMaterial = AIChatQSDataBase<
   AIChatQSDataTypeEnum.Reference_Material,
   { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose'] }
 >
-/** 用于渲染State定义使用, 无实际逻辑意义 */
-type ChatStreamGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM_GROUP, undefined>
 export type ChatUserManualIntervention = AIChatQSDataBase<
   AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
   UserManualInterventionContext
@@ -443,7 +441,6 @@ export type AIChatQSData =
   | ChatFailReact
   | ChatToolCallResult
   | ChatReferenceMaterial
-  | ChatStreamGroup
   | ChatUserManualIntervention
   | ChatToolCallParams
   | ChatApiRequestFailed
@@ -636,7 +633,7 @@ export interface ChatStoreState {
     /** 是否属于任务组的子节点 */
     parentTaskId?: string
     node: {
-      kind: 'item' | 'group' | 'task'
+      kind: ReActChatRenderElement['kind']
       token: string
       type: AIChatQSDataType
       isHistory?: boolean
@@ -657,5 +654,13 @@ export interface ChatStoreState {
       groupExtra?: (groupToken: string, tokens: string[]) => void
     }
   }) => void
-  incrementNodeVersion: (token: string, kind: 'item' | 'group' | 'task') => void
+  incrementNodeVersion: (token: string, kind: ReActChatRenderElement['kind']) => void
+
+  deleteElementNode(
+    params: {
+      taskID?: string
+      groupID?: string
+      onDelContent: (mapKey: string) => void
+    } & Omit<ReActChatRenderElement, 'isHistory'>,
+  )
 }

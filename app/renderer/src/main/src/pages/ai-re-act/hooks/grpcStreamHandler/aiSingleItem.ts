@@ -350,28 +350,6 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   }
   rawData.contents.set(chatData.id, chatData)
   meta.currentTaskPlanActiveNode.add(chatData.id)
-  // TODO - 这里要判断是否是最后一个默认任务组，直接添加不行
-  // setElements((old) => {
-  //   const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
-  //   if (exists) return old
-  //   const last = old[old.length - 1]
-  //   if (last.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
-  //     // 实时数据下，将默认任务聚合组置底
-  //     old.splice(old.length - 1, 0, {
-  //       token: chatData.id,
-  //       type: chatData.type,
-  //       renderNum: 1,
-  //       chatType: 'task',
-  //       kind: 'task',
-  //       children: [],
-  //     })
-  //     return [...old]
-  //   }
-  //   return [
-  //     ...old,
-  //     { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
-  //   ]
-  // })
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     node: {

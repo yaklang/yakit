@@ -115,12 +115,10 @@ export const createChatStore = () => {
 
       updateCasualReview: (id: string, status: 'add' | 'remove') =>
         set((state) => {
-          if (status === 'add') {
-            if (!state.currentCasualReview.includes(id)) state.currentCasualReview.push(id)
-          } else if (status === 'remove') {
-            if (state.currentCasualReview.includes(id)) {
-              state.currentCasualReview = state.currentCasualReview.filter((item) => item !== id)
-            }
+          if (status === 'add' && !state.currentCasualReview.includes(id)) {
+            state.currentCasualReview.push(id)
+          } else if (status === 'remove' && state.currentCasualReview.includes(id)) {
+            state.currentCasualReview = state.currentCasualReview.filter((item) => item !== id)
           }
         }),
 
@@ -145,13 +143,10 @@ export const createChatStore = () => {
       dispatchStreamingNode: ({ chatType, parentTaskId, node }) =>
         set((state) => {
           const isHistory = node.isHistory ?? false
+          const elementRef = { kind: node.kind, token: node.token, chatType, isHistory }
+          const targetElements = chatType === 'reAct' ? state.casualChat.elements : state.taskChat.elements
 
-          /**
-           * 添加节点数据到实体字典中
-           *
-           * 这里为什么没有group类型，因为group是通过两个item碰撞自动合成的group
-           * 暂不支持代码手动新增group类型数据
-           */
+          // 注册实体（group 由连续 stream item 碰撞自动生成，不支持手动注册）
           if (node.kind === 'item' && !state.items[node.token]) {
             state.items[node.token] = {
               kind: 'item',
@@ -170,93 +165,82 @@ export const createChatStore = () => {
             }
           }
 
-          // 2. 路由分发决策（以普通看板为例，去掉了大任务内部分支以精简示范）
-          const targetElements = chatType === 'reAct' ? state.casualChat.elements : state.taskChat.elements
-
           if (isHistory) {
             // 历史数据处理逻辑
           } else {
-            // 实时数据处理逻辑
+            // 空列表直接追加
             if (targetElements.length === 0) {
-              targetElements.push({ kind: node.kind, token: node.token, chatType, isHistory })
+              targetElements.push(elementRef)
               return
             }
 
-            let lastToken = ''
-            if (parentTaskId) {
-              // 属于某个子任务组内的数据
-              const targetList = state.tasks[parentTaskId]?.childrenTokens
-              // 异常数据，暂不警告处理，直接无视
-              if (!targetList) return
-              lastToken = targetList[targetList.length - 1]
-            } else {
-              // 属于顶层或者group内的数据
-              const lastElement = targetElements[targetElements.length - 1]
-              lastToken = lastElement.token
-            }
+            // 定位同级上一个节点（parentChildren 为空数组时表示无兄弟节点，不做合并）
+            const parentChildren = parentTaskId ? state.tasks[parentTaskId]?.childrenTokens : undefined
+            if (parentTaskId && !parentChildren) return
 
-            const lastItem = state.items[lastToken]
-            const lastGroup = state.groups[lastToken]
+            const lastToken = parentChildren?.length
+              ? parentChildren.at(-1)
+              : parentTaskId
+                ? undefined
+                : targetElements.at(-1)?.token
 
-            // 已经存在组，并且和组标识一致，直接添加到组中
-            if (
-              lastGroup &&
-              lastGroup.kind === 'group' &&
-              lastGroup.nodeId &&
-              node.kind === 'item' &&
-              node.type === AIChatQSDataTypeEnum.STREAM &&
-              node.nodeId &&
-              lastGroup.nodeId === node.nodeId
-            ) {
-              lastGroup.childrenTokens.push(node.token)
-              // lastGroup.renderNum += 1
-              node?.groupExtra?.(lastGroup.token, [node.token])
-              return
-            }
+            if (lastToken) {
+              const lastItem = state.items[lastToken]
+              const lastGroup = state.groups[lastToken]
+              const isStreamItem = node.kind === 'item' && node.type === AIChatQSDataTypeEnum.STREAM && !!node.nodeId
 
-            //  两个stream-item数据合并成组的逻辑
-            if (
-              lastItem &&
-              lastItem.type === AIChatQSDataTypeEnum.STREAM &&
-              lastItem.nodeId &&
-              node.type === AIChatQSDataTypeEnum.STREAM &&
-              node.kind === 'item' &&
-              node.nodeId &&
-              lastItem.nodeId === node.nodeId
-            ) {
-              const newGroupToken = `${node.nodeId}-${uuidv4()}`
-              state.groups[newGroupToken] = {
-                kind: 'group',
-                token: newGroupToken,
-                type: AIChatQSDataTypeEnum.STREAM_GROUP,
-                renderNum: 0,
-                nodeId: node.nodeId,
-                childrenTokens: [lastToken, node.token],
+              // stream 合并：追加到已有组
+              if (isStreamItem && lastGroup?.kind === 'group' && lastGroup.nodeId === node.nodeId) {
+                lastGroup.childrenTokens.push(node.token)
+                node.groupExtra?.(lastGroup.token, [node.token])
+                return
               }
-              if (parentTaskId && state.tasks[parentTaskId]?.childrenTokens) {
-                // 更新子任务组最后一个token为新组token
-                state.tasks[parentTaskId].childrenTokens[state.tasks[parentTaskId].childrenTokens.length - 1] =
-                  newGroupToken
-              } else {
-                // 添加到顶层或者group内的数据
-                targetElements[targetElements.length - 1] = {
+
+              // stream 合并：两个连续 item 合成新组
+              if (isStreamItem && lastItem?.type === AIChatQSDataTypeEnum.STREAM && lastItem.nodeId === node.nodeId) {
+                const newGroupToken = `${node.nodeId}-${uuidv4()}`
+                state.groups[newGroupToken] = {
                   kind: 'group',
                   token: newGroupToken,
-                  chatType,
-                  isHistory,
+                  type: AIChatQSDataTypeEnum.STREAM_GROUP,
+                  renderNum: 0,
+                  nodeId: node.nodeId,
+                  childrenTokens: [lastToken, node.token],
                 }
+                if (parentChildren?.length) {
+                  parentChildren[parentChildren.length - 1] = newGroupToken
+                } else {
+                  targetElements[targetElements.length - 1] = {
+                    kind: 'group',
+                    token: newGroupToken,
+                    chatType,
+                    isHistory,
+                  }
+                }
+                node.groupExtra?.(newGroupToken, [lastToken, node.token])
+                return
               }
-              node?.groupExtra?.(newGroupToken, [lastToken, node.token])
-              return
             }
           }
 
-          if (parentTaskId && state.tasks[parentTaskId]?.childrenTokens) {
-            // 剩余情况，直接添加到子任务组中
-            state.tasks[parentTaskId].childrenTokens.push(node.token)
+          // 默认追加（实时数据合并失败也走这里）
+          const parentChildren = parentTaskId ? state.tasks[parentTaskId]?.childrenTokens : undefined
+          if (parentChildren) {
+            parentChildren.push(node.token)
+            return
+          }
+
+          const lastEl = state.taskChat.elements.at(-1)
+          if (
+            chatType === 'task' &&
+            node.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP &&
+            lastEl?.kind === 'task' &&
+            state.tasks[lastEl.token]?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
+          ) {
+            // 非组数据放入默认任务组，且默认任务组保持在最下面
+            state.taskChat.elements.splice(state.taskChat.elements.length - 1, 0, elementRef)
           } else {
-            // 添加到顶层数据中
-            targetElements.push({ kind: node.kind, token: node.token, chatType, isHistory })
+            targetElements.push(elementRef)
           }
         }),
 
@@ -266,6 +250,73 @@ export const createChatStore = () => {
           if (kind === 'item' && state.items[token]) state.items[token].renderNum += 1
           if (kind === 'group' && state.groups[token]) state.groups[token].renderNum += 1
           if (kind === 'task' && state.tasks[token]) state.tasks[token].renderNum += 1
+        }),
+
+      /** 删除指定token的节点，并将关联节点一并更新 */
+      deleteElementNode: (params) =>
+        set((state) => {
+          const { token, kind, chatType, taskID, groupID, onDelContent } = params
+
+          const removeChatElement = (targetToken: string) => {
+            const target = chatType === 'reAct' ? state.casualChat : state.taskChat
+            target.elements = target.elements.filter((item) => item.token !== targetToken)
+          }
+
+          const removeFromChildrenTokens = (
+            container: { childrenTokens: string[] } | undefined,
+            targetToken: string,
+          ) => {
+            if (container) {
+              container.childrenTokens = container.childrenTokens.filter((t) => t !== targetToken)
+            }
+          }
+
+          /** 如果是group类型, 则清除整个group里的所有item数据 */
+          const purgeGroup = (groupToken: string) => {
+            const group = state.groups[groupToken]
+            if (!group) return
+            group.childrenTokens.forEach(onDelContent)
+            delete state.groups[groupToken]
+          }
+
+          const detachFromParentOrTopLevel = () => {
+            if (taskID) {
+              removeFromChildrenTokens(state.tasks[taskID], token)
+            } else {
+              removeChatElement(token)
+            }
+          }
+
+          switch (kind) {
+            case 'item':
+              onDelContent(token)
+              if (groupID) {
+                removeFromChildrenTokens(state.groups[groupID], token)
+              } else if (taskID) {
+                removeFromChildrenTokens(state.tasks[taskID], token)
+              } else {
+                removeChatElement(token)
+              }
+              break
+            case 'group':
+              onDelContent(token)
+              purgeGroup(token)
+              detachFromParentOrTopLevel()
+              break
+            case 'task': {
+              onDelContent(token)
+              const task = state.tasks[token]
+              if (task) {
+                for (const childToken of task.childrenTokens) {
+                  purgeGroup(childToken)
+                  onDelContent(childToken)
+                }
+              }
+              delete state.tasks[token]
+              removeChatElement(token)
+              break
+            }
+          }
         }),
     })),
   )
