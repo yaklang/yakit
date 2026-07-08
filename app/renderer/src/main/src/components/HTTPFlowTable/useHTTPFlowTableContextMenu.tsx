@@ -16,6 +16,7 @@ import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { yakitNotify } from '@/utils/notification'
 import { openExternalWebsite, saveABSFileToOpen } from '@/utils/openWebsite'
+import { recordPluginUsage } from '@/utils/pluginUsageCache'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { i18n as I18nInstance } from 'i18next'
 import { generateCSRFPocByRequest } from '@/pages/invoker/fromPacketToYakCode'
@@ -654,6 +655,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
                             isAiPlugin: itemIn?.isAiPlugin,
                           }),
                         )
+                        recordPluginUsage(menuItemName)
                       }
                     })
                   }

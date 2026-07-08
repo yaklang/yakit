@@ -16,6 +16,7 @@ import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from '@/utils/globalSho
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
 import { TFunction } from '@/i18n/useI18nNamespaces'
+import { recordPluginUsage } from '@/utils/pluginUsageCache'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -278,6 +279,7 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
             }
           }
           emiter.emit('onOpenFuzzerModal', JSON.stringify({ text, scriptName, isAiPlugin, params }))
+          recordPluginUsage(scriptName)
         } catch (e) {
           failed(`custom context menu execute failed: ${e}`)
         }

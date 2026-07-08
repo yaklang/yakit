@@ -26,7 +26,8 @@
       "pluginStore": "插件商店",
       "systemFunctions": "系统功能",
       "plugin": "插件",
-      "addFunctionTip": "可通过拖拽或点击添加按钮，将功能添加至左侧菜单内"
+      "addFunctionTip": "可通过拖拽或点击添加按钮，将功能添加至左侧菜单内",
+      "pluginStoreSortByUsage": "按照使用次数排列"
     },
     "PluginLocalInfoIcon": {
       "officialPlugin": "官方插件",

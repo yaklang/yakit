@@ -79,7 +79,9 @@
       "restoreMenu": "复原菜单",
       "restoreMenuTip": "复原菜单提醒",
       "confirmRestoreMenu": "确认复原后，将重置常用插件菜单栏。是否确认复原？",
-      "commonPlugins": "常用插件"
+      "commonPlugins": "常用插件",
+      "recentUsed": "最近使用",
+      "allPlugin": "在线插件"
     },
     "MenuMode": {
       "bruteForce": "爆破",

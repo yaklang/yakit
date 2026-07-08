@@ -26,7 +26,8 @@
       "pluginStore": "外掛商店",
       "systemFunctions": "系統功能",
       "plugin": "外掛",
-      "addFunctionTip": "可透過拖拽或點選新增按鈕，將功能新增至左側選單內"
+      "addFunctionTip": "可透過拖拽或點選新增按鈕，將功能新增至左側選單內",
+      "pluginStoreSortByUsage": "按照使用次數排列"
     },
     "PluginLocalInfoIcon": {
       "officialPlugin": "官方外掛",

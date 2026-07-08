@@ -160,6 +160,11 @@
         font-weight: 500;
         font-size: 16;
         color: var(--Colors-Use-Neutral-Text-1-Title);
+
+        &-extra {
+          font-size: 12px;
+          margin-left: 4px;
+        }
       }
     }
 
