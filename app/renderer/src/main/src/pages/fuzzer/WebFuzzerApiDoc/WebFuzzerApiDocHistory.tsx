@@ -162,7 +162,7 @@ export const WebFuzzerApiDocHistory: React.FC<{
                       </div>
                       <div className={listStyles['item-extra']}>
                         <YakitPopconfirm
-                          title={t('HistoryChatList.deleteConfirm')}
+                          title={t('ApiDoc.deleteConfirm')}
                           placement="right"
                           overlayClassName="api-doc-history-embedded-popconfirm"
                           onConfirm={(e) => {

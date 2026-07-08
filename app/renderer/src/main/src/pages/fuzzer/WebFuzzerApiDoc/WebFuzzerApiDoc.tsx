@@ -271,7 +271,6 @@ export const WebFuzzerApiDoc: React.FC<{
             <div className={styles['search']}>
               <YakitInput.Search
                 allowClear
-                size="small"
                 placeholder={t('YakitInput.searchKeyWordPlaceholder')}
                 value={searchInput}
                 onChange={(e) => {

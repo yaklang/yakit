@@ -158,7 +158,10 @@
     "parameters": "参数",
     "expectedResponses": "预期响应",
     "version": "版本号",
-    "historyDocuments": "历史文档"
+    "historyDocuments": "历史文档",
+    "deleteConfirm": "是否确认删除该历史文档 删除后将无法恢复",
+    "requiredFieldMissing": "请填写必填项：{{names}}",
+    "closeConstructConfirm": "是否按照填写参数构造请求？"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{{droppedCount}}]个响应",

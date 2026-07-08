@@ -20,9 +20,10 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useMemoizedFn } from 'ahooks'
 import { onSetRemoteValuesBase } from '@/components/yakitUI/utils'
 import { CacheDropDownGV } from '@/yakitGV'
-import { yakitFailed } from '@/utils/notification'
+import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { Tooltip } from 'antd'
+import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 
 const PARAM_TYPE_DEFAULTS: Record<string, string> = {
   integer: '1',
@@ -51,6 +52,9 @@ const getParamDefault = (param: ApiDocOperationParameter) => {
   if (name.includes('ip')) return '127.0.0.1'
   return `mock_${param.name}`
 }
+
+const getMissingRequiredParams = (parameters: ApiDocOperationParameter[] | undefined, values: Record<string, string>) =>
+  (parameters || []).filter((param) => param.required && !values[param.name]?.trim())
 
 const resolveParams = (parameters: ApiDocOperationParameter[] | undefined, values: Record<string, string>) => {
   const result: Record<string, string> = {}
@@ -109,9 +113,9 @@ export const WebFuzzerApiDocModal: React.FC<{
         onClose()
       })
       .finally(() => setLoading(false))
-  }, [visible, docId, operation, docInfo?.domain, onClose, t])
+  }, [visible, docId, operation])
 
-  const onOk = useMemoizedFn(async () => {
+  const doConstructRequest = useMemoizedFn(async () => {
     if (!docId || !operation) return
     setSubmitting(true)
     try {
@@ -121,8 +125,8 @@ export const WebFuzzerApiDocModal: React.FC<{
         { Key: 'op', Value: 'build' },
         { Key: 'method', Value: operation.method.toUpperCase() },
         { Key: 'path', Value: operation.path },
+        { Key: 'overrideDomain', Value: overrideDomain || docInfo?.domain || '' },
       ]
-      if (overrideDomain) query.push({ Key: 'overrideDomain', Value: overrideDomain })
       if (overrideIsHttps) query.push({ Key: 'overrideIsHttps', Value: 'true' })
       if (requestBodyContentType) query.push({ Key: 'requestBodyContentType', Value: requestBodyContentType })
 
@@ -131,7 +135,7 @@ export const WebFuzzerApiDocModal: React.FC<{
         docId,
         query,
         JSON.stringify({
-          overrideDomain: overrideDomain || undefined,
+          overrideDomain: overrideDomain || docInfo?.domain,
           overrideIsHttps,
           requestBodyContentType,
           parameterValues: resolveParams(operationDetail?.parameters, parameterValues),
@@ -155,6 +159,40 @@ export const WebFuzzerApiDocModal: React.FC<{
     } finally {
       setSubmitting(false)
     }
+  })
+
+  const validateRequiredParams = useMemoizedFn(() => {
+    const missing = (operationDetail?.parameters || []).filter(
+      (param) => param.required && !parameterValues[param.name]?.trim(),
+    )
+    if (!missing.length) return true
+    yakitNotify('warning', t('ApiDoc.requiredFieldMissing', { names: missing.map((item) => item.name).join(', ') }))
+    return false
+  })
+
+  const onOk = useMemoizedFn(async () => {
+    if (!validateRequiredParams()) return
+    await doConstructRequest()
+  })
+
+  const onCloseWithConfirm = useMemoizedFn(() => {
+    if (loading || submitting) return
+    const m = YakitModalConfirm({
+      onOkText: (modalT) => modalT('YakitButton.confirm'),
+      content: (modalT) => modalT('ApiDoc.closeConstructConfirm'),
+      onCancel: () => {
+        m.destroy()
+        onClose()
+      },
+      onOk: async () => {
+        if (!validateRequiredParams()) {
+          m.destroy()
+          return
+        }
+        m.destroy()
+        await doConstructRequest()
+      },
+    })
   })
 
   const parameterGroupEntries = useMemo(() => {
@@ -183,8 +221,8 @@ export const WebFuzzerApiDocModal: React.FC<{
       destroyOnClose
       maskClosable={false}
       confirmLoading={submitting}
-      onCancel={onClose}
-      onCloseX={onClose}
+      onCancel={onCloseWithConfirm}
+      onCloseX={onCloseWithConfirm}
       onOk={onOk}
       okText={t('ApiDoc.constructRequest')}
       cancelButtonProps={{ style: { display: 'none' } }}

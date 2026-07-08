@@ -158,7 +158,10 @@
     "parameters": "參數",
     "expectedResponses": "預期響應",
     "version": "版本號",
-    "historyDocuments": "歷史文檔"
+    "historyDocuments": "歷史文檔",
+    "deleteConfirm": "是否確認刪除該歷史文檔 刪除後將無法恢復",
+    "requiredFieldMissing": "請填寫必填項：{{names}}",
+    "closeConstructConfirm": "是否按照填寫參數構造請求？"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丟棄[{{droppedCount}}]個響應",

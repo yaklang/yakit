@@ -158,7 +158,10 @@
     "parameters": "Parameters",
     "expectedResponses": "Expected Responses",
     "version": "Version",
-    "historyDocuments": "History Documents"
+    "historyDocuments": "History Documents",
+    "deleteConfirm": "Are you sure to delete this history document? This action cannot be undone",
+    "requiredFieldMissing": "Please fill in required fields: {{names}}",
+    "closeConstructConfirm": "Construct request with the filled parameters?"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{{droppedCount}}] responses",
