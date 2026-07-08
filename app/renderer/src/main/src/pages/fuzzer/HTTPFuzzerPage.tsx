@@ -2681,6 +2681,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   }, [inViewport])
 
+  const advancedConfigShowVisible = useCreation(
+    () => advancedConfigVisible && !['api-doc', 'hot-patch'].includes(advancedConfigShowType),
+    [advancedConfigVisible, advancedConfigShowType],
+  )
   return (
     <>
       <div className={styles['http-fuzzer-body']} ref={fuzzerRef}>
@@ -2698,11 +2702,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             <React.Suspense fallback={<>{t('YakitSpin.loading')}...</>}>
               <HttpQueryAdvancedConfig
                 advancedConfigValue={advancedConfigValue}
-                visible={
-                  advancedConfigVisible &&
-                  advancedConfigShowType !== 'hot-patch' &&
-                  advancedConfigShowType !== 'api-doc'
-                }
+                visible={advancedConfigShowVisible}
                 onInsertYakFuzzer={onInsertYakFuzzerFun}
                 onValuesChange={onGetFormValue}
                 defaultHttpResponse={

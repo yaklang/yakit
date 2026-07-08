@@ -53,9 +53,6 @@ const getParamDefault = (param: ApiDocOperationParameter) => {
   return `mock_${param.name}`
 }
 
-const getMissingRequiredParams = (parameters: ApiDocOperationParameter[] | undefined, values: Record<string, string>) =>
-  (parameters || []).filter((param) => param.required && !values[param.name]?.trim())
-
 const resolveParams = (parameters: ApiDocOperationParameter[] | undefined, values: Record<string, string>) => {
   const result: Record<string, string> = {}
   parameters?.forEach((param) => {
@@ -90,30 +87,35 @@ export const WebFuzzerApiDocModal: React.FC<{
   const [parameterValues, setParameterValues] = useState<Record<string, string>>({})
   const [overrideDomain, setOverrideDomain] = useState('')
 
-  useEffect(() => {
-    if (!visible || !docId || !operation) return
+  const loadOperationDetail = useMemoizedFn(async () => {
+    if (!docId || !operation) return
     setLoading(true)
     setOperationDetail(undefined)
     setParameterValues({})
-    openApiRequest('GET', docId, [
-      { Key: 'op', Value: 'detail' },
-      { Key: 'method', Value: operation.method.toUpperCase() },
-      { Key: 'path', Value: operation.path },
-    ])
-      .then((resources) => {
-        const detailJson = getExtra(resources[0]?.Extra, 'detail_json')
-        if (!detailJson) throw new Error('operation detail is empty')
-        const detail = JSON.parse(detailJson) as ApiDocOperationDetail
-        setOperationDetail(detail)
-        setParameterValues(Object.fromEntries((detail.parameters || []).map((p) => [p.name, getParamDefault(p)])))
-        setOverrideDomain((prev) => prev || docInfo?.domain || '')
-      })
-      .catch((error) => {
-        yakitFailed(`${t('ApiDoc.historyLoadFailed')}: ${error instanceof Error ? error.message : error}`)
-        onClose()
-      })
-      .finally(() => setLoading(false))
-  }, [visible, docId, operation])
+    try {
+      const resources = await openApiRequest('GET', docId, [
+        { Key: 'op', Value: 'detail' },
+        { Key: 'method', Value: operation.method.toUpperCase() },
+        { Key: 'path', Value: operation.path },
+      ])
+      const detailJson = getExtra(resources[0]?.Extra, 'detail_json')
+      if (!detailJson) throw new Error('operation detail is empty')
+      const detail = JSON.parse(detailJson) as ApiDocOperationDetail
+      setOperationDetail(detail)
+      setParameterValues(Object.fromEntries((detail.parameters || []).map((p) => [p.name, getParamDefault(p)])))
+      setOverrideDomain(docInfo?.domain || '')
+    } catch (error) {
+      yakitFailed(`${t('ApiDoc.historyLoadFailed')}: ${error instanceof Error ? error.message : error}`)
+      onClose()
+    } finally {
+      setLoading(false)
+    }
+  })
+
+  useEffect(() => {
+    if (!visible) return
+    loadOperationDetail()
+  }, [visible])
 
   const doConstructRequest = useMemoizedFn(async () => {
     if (!docId || !operation) return
