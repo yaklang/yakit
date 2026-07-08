@@ -1,6 +1,7 @@
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import {
   AIInputEventSyncTypeEnum,
+  AISource,
   type AIAgentGrpcApi,
   type AIInputEvent,
   type AIOutputEvent,
@@ -120,6 +121,9 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     cardKVPaidTimer: null,
     execFileRecordOrder: 1,
     syncIDMap: new Map(),
+    queuePollingEmptyCount: 0,
+    queuePollingTimer: null,
+    memoryPollingTimer: null,
   }
 }
 
@@ -132,7 +136,9 @@ export class ChatMultiSessionController {
   private rawDataPool = new Map<string, AIAgentChatData>()
   private metaPool = new Map<string, AIAgentChatMetaData>()
 
+  /** 存放所有已建立连接的会话session */
   private readyChannels = new Set<string>()
+  /** 存放当前正在展示的会话session */
   private activeShowSession: string | null = null
 
   /** 获取对应会话的所有数据集 */
@@ -151,10 +157,18 @@ export class ChatMultiSessionController {
     }
   }
 
-  /** UI 层建立连接时，登记并绑定当前渲染周期的 UI 状态操纵函数 */
-  public registerActiveChannel(sessionId: string) {
+  /** session会话建立时，注册进队列中，标识当前会话已建立连接 */
+  public registerSessionChannel(sessionId: string, source: AIStartParams['Source']) {
     this.readyChannels.add(sessionId)
+
+    if (this.pageSessionMap.has(source ?? 'ai')) {
+      this.pageSessionMap.get(source ?? 'ai')?.add(sessionId)
+    } else {
+      const sessionSet = new Set([sessionId])
+      this.pageSessionMap.set(source ?? 'ai', sessionSet)
+    }
   }
+
   /** 设置当前展示的会话 Session */
   public setActiveShowSession(sessionId: string) {
     this.activeShowSession = sessionId
@@ -187,7 +201,8 @@ export class ChatMultiSessionController {
     const { request, store, meta } = this.ensureSession(sessionId)
 
     store.getState().updateState({ execute: true, casualTitle: '发送问题，开启会话...' })
-    this.pageSessionMap.get(params.Params?.Source ?? 'ai')?.add(sessionId)
+    this.registerSessionChannel(sessionId, params.Params?.Source)
+    this.setActiveShowSession(sessionId)
 
     Object.assign(request, params.Params)
     if (params.Params?.UserQuery) {
@@ -207,9 +222,8 @@ export class ChatMultiSessionController {
   public handleSendMessage(payload: AIChatSendParams) {
     try {
       const { token, type, params, optionValue } = payload
-      // TODO - 这里的判断存活写的有些问题
-      const isExist = this.readyChannels.has(token)
-      if (!isExist) {
+      if (!this.readyChannels.has(token)) {
+        if (!this.isActiveShowSession(token)) return
         yakitNotify('warning', '会话不存在，无法发送消息')
         return
       }
@@ -218,6 +232,19 @@ export class ChatMultiSessionController {
       // 自由对话没有问题进行中时，才改变loading的title
       if (params.IsFreeInput && !store.getState().casualLoading) {
         store.getState().updateState({ casualTitle: '等待回复中...' })
+      }
+
+      if (params.IsFreeInput) {
+        // 因为有用户问题发送，所以注册 获取问题队列轮询器
+        if (!meta.queuePollingTimer) {
+          meta.queuePollingEmptyCount = 0
+          meta.queuePollingTimer = setInterval(() => {
+            this.requestMessage(token, {
+              IsSyncMessage: true,
+              SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+            })
+          }, 5000)
+        }
       }
 
       // 记录发送请求里的syncId-标识开始处理中
@@ -238,9 +265,19 @@ export class ChatMultiSessionController {
 
             switch (review.type) {
               case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
-                // tool_review 数据自动执行continue操作，并且不在UI上展示
-                // 如果能进入该逻辑，说明有问题
-                // TODO - 这里需要处理问题
+                // 非执行任务组的tool_review，并且review模式不是yolo，才能展示到UI上供用户主动操作
+                // 用户操作后，review结果不会展示到UI上，所以需要删除该review的所有数据
+                rawData.contents.delete(review.id)
+                store.getState().updateCasualReview(review.id, 'remove')
+                store.getState().deleteElementNode({
+                  chatType: 'reAct',
+                  token: review.id,
+                  kind: 'item',
+                  taskID: review.taskIndex || undefined,
+                  onDelContent: (mapKey) => {
+                    rawData.contents.delete(mapKey)
+                  },
+                })
                 break
               case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
               case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
@@ -268,9 +305,9 @@ export class ChatMultiSessionController {
             switch (review.type) {
               case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
               case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
-                // task_review 和 tool_review 数据自动执行continue操作，并且不在UI上展示
+                // 任务规划的task_review和tool_review会在自动执行continue操作，不会在UI上展示
                 // 如果能进入该逻辑，说明有问题
-                // TODO - 这里需要处理问题
+                console.error(`未知错误[handleSendMessage]: ${JSON.stringify(payload)}`)
                 break
               case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
                 // review操作后正常展示在UI上
@@ -324,19 +361,23 @@ export class ChatMultiSessionController {
 
   /** 会话建立成功后, 需要做的额外操作 */
   private handleSessionStartSuccess(sessionId: string) {
+    const { meta } = this.ensureSession(sessionId)
+
     // 获取任务规划历史任务树
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
     })
-    /**
-     * TODO - 轮询最新的问题队列，考虑触发的时机之类的
-     * TODO - 获取最新的记忆列表数据，这个好像没法考虑触发时机
-     */
-    // 获取最新问题队列数据
-    // sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
-    // 获取最新记忆列表数据
-    // sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT })
+
+    // 获取最新记忆列表数据, 并注册轮询定时器
+    this.requestMessage(sessionId, { IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT })
+    if (meta.memoryPollingTimer) clearTimeout(meta.memoryPollingTimer)
+    meta.memoryPollingTimer = setInterval(() => {
+      this.requestMessage(sessionId, {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
+      })
+    }, 5000)
   }
 
   /** 💥 核心替换：接管原 useChatIPC 里的巨型数据分发逻辑！ */
@@ -364,8 +405,18 @@ export class ChatMultiSessionController {
           this.requestMessage(sessionId, meta.createChatQuestion)
           meta.createChatQuestion = undefined
           store.getState().updateState({ casualTitle: '等待回复中...' })
+
+          // 因为有用户问题发送，所以注册 获取问题队列轮询器
+          if (meta.queuePollingTimer) clearTimeout(meta.queuePollingTimer)
+          meta.queuePollingEmptyCount = 0
+          meta.queuePollingTimer = setInterval(() => {
+            this.requestMessage(sessionId, {
+              IsSyncMessage: true,
+              SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+            })
+          }, 5000)
         } else {
-          // 调用历史数据恢复方法
+          // TODO - 调用历史数据恢复方法
         }
         this.handleSessionStartSuccess(sessionId)
         meta?.onSessionStartSuccess?.(sessionId)
@@ -493,18 +544,27 @@ export class ChatMultiSessionController {
     const { store } = this.ensureSession(sessionId)
     handleTaskPlanEnd(this.ensureSession(sessionId))
     store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话已停止' })
+    this.readyChannels.delete(sessionId)
     this.closeIPCListeners(sessionId)
   }
 
   /** 关闭指定session的连接
    * TODO - 期望传一个对象，{ sessionIds: string[]; aiSource: AISource }
+   * TODO - 需要区分删除和关闭会话两种操作，不然数据的关闭和删除会混乱
    */
-  public forceCloseSession(params: { sessionIds: string[]; source: string }) {
-    const { sessionIds, source } = params
-    ipcRenderer.invoke('cancel-ai-re-act', sessionId).catch(() => {})
-
-    this.readyChannels.delete(sessionId)
+  public forceCloseSession(params: { sessionIds: string[] }) {
+    const { sessionIds } = params
+    for (let session of sessionIds) {
+      ipcRenderer.invoke('cancel-ai-re-act', session).catch(() => {})
+    }
   }
+
+  /**
+   * 删除指定的session会话
+   * sessionIds 需要删除的session集合，如果需要全删，这该值传空数组
+   * source 需要删除的session来源页面
+   */
+  public deleteSessions(sessionIds: string[], source: AISource) {}
 }
 
 export const globalSessionEngine = new ChatMultiSessionController()

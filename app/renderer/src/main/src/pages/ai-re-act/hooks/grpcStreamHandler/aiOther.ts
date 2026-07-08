@@ -289,12 +289,19 @@ const handlePlanExecTasks: AIMessageHandler = (request) => {
 }
 
 const handleQueueInfo: AIMessageHandler = (request) => {
-  const { res, chatType, store } = request
+  const { res, chatType, store, meta } = request
   if (res.Type !== 'structured' || res.NodeId !== 'queue_info') return
   if (chatType === 'task') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { tasks, total_tasks } = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
+  // 记录最新问题队列的数量，4次为空，则关闭轮询器
+  if (tasks.length === 0) meta.queuePollingEmptyCount += 1
+  if (meta.queuePollingEmptyCount > 3 && meta.queuePollingTimer) {
+    clearTimeout(meta.queuePollingTimer)
+    meta.queuePollingTimer = null
+  }
+
   store.getState().updateState({
     questionQueue: {
       total: total_tasks,
