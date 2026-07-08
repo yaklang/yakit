@@ -147,6 +147,7 @@ import {
   RuleManagementPageInfoProps,
   AuditHoleInfoProps,
   AIRepositoryProps,
+  PluginOpPageInfoProps,
 } from '@/store/pageInfo'
 import { SpaceEnginePage } from '@/pages/spaceEngine/SpaceEnginePage'
 import { SinglePluginExecution } from '@/pages/plugins/singlePluginExecution/SinglePluginExecution'
@@ -693,6 +694,9 @@ export interface ComponentParams {
 
   // TODO  后续补充
   AIRepository?: AIRepositoryProps
+
+  /** 插件执行页（Plugin_OP）初始参数 */
+  pluginOpPageInfo?: PluginOpPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
   return function WithPage(props) {
@@ -821,7 +825,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <YakPoC pageId={params?.id || ''} />
     case YakitRoute.Plugin_OP:
       if (!yakScriptId || !+yakScriptId) return <div />
-      return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
+      return <SinglePluginExecution yakScriptId={yakScriptId || 0} pageId={params?.id || ''} />
     case YakitRoute.Mod_Brute:
       return <NewBrute id={params?.id || ''} />
     case YakitRoute.Plugin_Hub:

@@ -947,6 +947,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.AI_Agent:
         addAIREPOSITORY(params)
         break
+      case YakitRoute.Plugin_OP:
+        addPluginOp(params)
+        break
       default:
         break
     }
@@ -1274,6 +1277,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       {
         pageParams: {
           simpleDetectPageInfo: { ...data },
+        },
+      },
+    )
+  })
+  const addPluginOp = useMemoizedFn((data) => {
+    openMenuPage(
+      { route: YakitRoute.Plugin_OP, pluginId: data.pluginId, pluginName: data.pluginName },
+      {
+        pageParams: {
+          pluginOpPageInfo: { ...data },
         },
       },
     )
@@ -1977,6 +1990,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const nextIndex = getPluginOpNextTabIndex(pageCache, menuName)
         const verbose = `${pluginName}-${nextIndex}`
         const { tabId } = generateTabIdentity(baseKey)
+        const node: MultipleNodeInfo = {
+          id: tabId,
+          verbose,
+          time: new Date().getTime().toString(),
+          pageParams: {
+            ...nodeParams?.pageParams,
+            id: tabId,
+            groupId: '0',
+          },
+          groupId: '0',
+          sortFieId: 1,
+        }
+        onSetPageInfoDataOfSingle(route, node)
         setPageCache([
           ...pageCache,
           {
@@ -1988,7 +2014,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pluginName: pluginName || '',
             singleNode: true,
             multipleNode: [],
-            pageParams: nodeParams?.pageParams,
+            pageParams: node?.pageParams,
           },
         ])
         openFlag && setCurrentTabKey(tabId)
@@ -2150,6 +2176,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         break
       case YakitRoute.AI_Agent:
         onSetYakAIAgent(singleUpdateNode, 1)
+        break
+      case YakitRoute.Plugin_OP:
+        onSetPluginOp(singleUpdateNode, 1)
         break
       default:
         break
@@ -2329,6 +2358,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setPagesData(YakitRoute.YakRunner_ScanHistory, pageNodeInfo)
   })
 
+  const onSetPluginOp = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+    const newPageNode: PageNodeItemProps = {
+      id: `${randomString(8)}-${order}`,
+      routeKey: YakitRoute.Plugin_OP,
+      pageGroupId: node.groupId,
+      pageId: node.id,
+      pageName: node.verbose,
+      pageParamsInfo: {
+        pluginOpPageInfo: node.pageParams?.pluginOpPageInfo ? { ...node.pageParams.pluginOpPageInfo } : undefined,
+      },
+      sortFieId: order,
+    }
+    addPagesDataCache(YakitRoute.Plugin_OP, newPageNode)
+  })
+
   const onSetYakAIAgent = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
     const newPageNode: PageNodeItemProps = {
       id: `${randomString(8)}-${order}`,
@@ -2438,9 +2482,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   })
   const { getSubscribeClose, removeSubscribeClose } = useSubscribeClose()
-  const { clearDataByRoute, cachePages } = usePageInfo(
+  const { clearDataByRoute, removePagesDataCacheById, cachePages } = usePageInfo(
     (s) => ({
       clearDataByRoute: s.clearDataByRoute,
+      removePagesDataCacheById: s.removePagesDataCacheById,
       cachePages: s.pages,
     }),
     shallow,
@@ -2555,7 +2600,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
     removeSubscribeClose(data.route)
     // 关闭一级页面时,清除缓存
-    clearDataByRoute(data.route)
+    if (data.route === YakitRoute.Plugin_OP) {
+      if (data.routeKey) {
+        removePagesDataCacheById(YakitRoute.Plugin_OP, data.routeKey)
+      }
+    } else {
+      clearDataByRoute(data.route)
+    }
     if (data.route === YakitRoute.HTTPFuzzer) {
       clearFuzzerSequence()
     }
@@ -3217,7 +3268,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
   // 新增数据对比页面
   useEffect(() => {
-    console.log(pageCache)
     ipcRenderer.on('main-container-add-compare', (e, params) => {
       openMenuPage({ route: YakitRoute.DataCompare }, { openFlag: params.openFlag ?? true })
       switchComparePage()

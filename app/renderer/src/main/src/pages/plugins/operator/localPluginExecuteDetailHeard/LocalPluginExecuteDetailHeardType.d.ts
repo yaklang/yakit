@@ -32,6 +32,11 @@ export interface PluginExecuteDetailHeardProps {
   infoExtra?: ReactNode
   /** 隐藏更新按钮 */
   hiddenUpdateBtn?: boolean
+  initExecParamsValue?: CustomPluginExecuteFormValue
+  code?: string
+  input?: string
+  noHTTPRequestTemplate?: boolean
+  autoExecute?: boolean
 }
 
 export interface YakExtraParamProps {

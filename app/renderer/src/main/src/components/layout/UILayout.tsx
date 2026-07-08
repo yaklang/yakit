@@ -108,7 +108,8 @@ import {
 import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { PluginHasParamsModal } from '../pluginHasParamsDrawer/PluginHasParamsDrawer'
-import { log } from 'console'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -1296,9 +1297,35 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     setHasParamsOpen(false)
   })
 
-  const addNewPluginTab = useMemoizedFn((obj: CodecParamsProps) => {
-    // console.log('addNewPluginTab', obj)
-    emiter.emit('onRunChatcsAIByFuzzer', JSON.stringify(obj))
+  const addNewPluginTab = useMemoizedFn(async (obj: CodecParamsProps) => {
+    const { text, scriptName, code, execParams } = obj
+    if (!scriptName) return
+    try {
+      const plugin = await grpcFetchLocalPluginDetail({ Name: scriptName }, true)
+      const pluginId = +plugin.Id || 0
+      if (!pluginId) {
+        yakitNotify('error', '本地未找到该插件')
+        return
+      }
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.Plugin_OP,
+          params: {
+            pluginId,
+            pluginName: scriptName,
+            Input: text || '',
+            ExecParams: execParams || [],
+            Code: code,
+            PluginType: 'codec',
+            autoExecute: true,
+            noHTTPRequestTemplate: true,
+          },
+        }),
+      )
+    } catch (error) {
+      yakitNotify('error', `打开插件页面失败: ${error}`)
+    }
   })
 
   const handleExecuteBefore = useMemoizedFn(async () => {

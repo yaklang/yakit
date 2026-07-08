@@ -12,6 +12,11 @@ export interface LocalPluginExecuteProps {
   infoExtra?: ReactNode
   /** 隐藏更新按钮 */
   hiddenUpdateBtn?: boolean
+  initExecParamsValue?: CustomPluginExecuteFormValue
+  code?: string
+  input?: string
+  noHTTPRequestTemplate?: boolean
+  autoExecute?: boolean
 }
 
 export interface ExportYakScriptStreamRequest {
@@ -39,6 +44,11 @@ export interface PluginDetailsTabProps {
   wrapperClassName?: string
   /**插件UI联动相关参数*/
   linkPluginConfig?: HybridScanPluginConfig
+  initExecParamsValue?: CustomPluginExecuteFormValue
+  code?: string
+  input?: string
+  noHTTPRequestTemplate?: boolean
+  autoExecute?: boolean
 }
 export interface PluginGroupList extends API.PluginsSearch {
   groupExtraOptBtn?: React.ReactElement

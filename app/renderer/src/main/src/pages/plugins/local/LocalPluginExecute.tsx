@@ -14,7 +14,19 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
-  const { plugin, headExtraNode, linkPluginConfig, isHiddenUUID, infoExtra, hiddenUpdateBtn } = props
+  const {
+    plugin,
+    headExtraNode,
+    linkPluginConfig,
+    isHiddenUUID,
+    infoExtra,
+    hiddenUpdateBtn,
+    initExecParamsValue,
+    code,
+    input,
+    noHTTPRequestTemplate,
+    autoExecute,
+  } = props
   const { t } = useI18nNamespaces(['plugin'])
   /**执行状态 */
   const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>('default')
@@ -83,6 +95,11 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
         isHiddenUUID={isHiddenUUID}
         infoExtra={infoExtra}
         hiddenUpdateBtn={hiddenUpdateBtn}
+        initExecParamsValue={initExecParamsValue}
+        code={code}
+        input={input}
+        noHTTPRequestTemplate={noHTTPRequestTemplate}
+        autoExecute={autoExecute}
       />
       {isShowResult && (
         <PluginExecuteResult
