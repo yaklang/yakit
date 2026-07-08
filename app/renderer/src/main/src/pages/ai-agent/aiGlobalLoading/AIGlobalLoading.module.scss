@@ -7,11 +7,7 @@
 .mask {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    var(--Colors-Use-Basic-Background),
-    var(--Colors-Use-Basic-Background)
-  );
+  background: linear-gradient(180deg, var(--Colors-Use-Basic-Background), var(--Colors-Use-Basic-Background));
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--Colors-Use-Basic-Background) 95%, transparent),

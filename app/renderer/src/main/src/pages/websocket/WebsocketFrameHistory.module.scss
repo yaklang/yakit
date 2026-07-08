@@ -95,10 +95,18 @@
           } @else {
             // 单色-其他颜色处理
             .table-tr.table-row-#{$type} {
-              @include tools.property-color-mix-transparent(background, #{tools.fetch-color($type, 'backgroundColor')}, 20%);
+              @include tools.property-color-mix-transparent(
+                background,
+                #{tools.fetch-color($type, 'backgroundColor')},
+                20%
+              );
               color: var(--Colors-Use-Neutral-Text-1-Title);
               &:hover {
-                @include tools.property-color-mix-transparent(background, #{tools.fetch-color($type, 'backgroundColor')}, 30%);
+                @include tools.property-color-mix-transparent(
+                  background,
+                  #{tools.fetch-color($type, 'backgroundColor')},
+                  30%
+                );
               }
             }
           }

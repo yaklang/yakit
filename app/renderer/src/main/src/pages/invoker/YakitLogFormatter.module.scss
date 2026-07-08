@@ -103,11 +103,7 @@
     padding: 4px 8px;
     border-radius: 4px 4px 0 0;
     background:
-      linear-gradient(
-        0deg,
-        var(--Colors-Use-Error-Primary) 0%,
-        var(--Colors-Use-Error-Primary) 100%
-      ),
+      linear-gradient(0deg, var(--Colors-Use-Error-Primary) 0%, var(--Colors-Use-Error-Primary) 100%),
       var(--Colors-Use-Basic-Background);
     background:
       linear-gradient(
