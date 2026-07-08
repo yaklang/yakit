@@ -8,6 +8,7 @@ import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/Ya
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import styles from './WebFuzzerApiDoc.module.scss'
 import {
   DAY_MS,
   HOUR_MS,
@@ -129,7 +130,7 @@ export const WebFuzzerApiDocHistory: React.FC<{
       </div>
       <div className={historyChatStyles['content']}>
         {loading ? (
-          <div className="api-doc-history-panel-loading">{t('YakitSpin.loading')}</div>
+          <div className={styles['api-doc-history-panel-loading']}>{t('YakitSpin.loading')}</div>
         ) : (
           <div className={listStyles['history-chat-list']}>
             {groups.map((group) => (

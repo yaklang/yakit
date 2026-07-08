@@ -186,6 +186,13 @@
   }
 }
 
+.api-doc-history-panel-loading {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
 .api-detail {
   display: flex;
   flex-direction: column;
