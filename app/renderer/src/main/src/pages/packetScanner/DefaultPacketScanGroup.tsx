@@ -98,9 +98,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
       }
     >
       <Tooltip title={t('PacketScanButton.packetScan')}>
-        <div className={styles['scan-button']}>
-          <OutlineScanIcon />
-        </div>
+        <YakitButton icon={<OutlineScanIcon />} type="outline2" size="large" />
       </Tooltip>
     </YakitPopover>
   )
