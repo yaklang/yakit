@@ -1,6 +1,6 @@
 const { ipcMain, BrowserWindow } = require('electron')
 const isDev = require('electron-is-dev')
-const { htmlTemplateDir } = require('../filePath')
+const { getHtmlTemplateDir } = require('../filePath')
 const compressing = require('compressing')
 const fs = require('fs')
 const os = require('os')
@@ -501,7 +501,7 @@ td {
   const asyncDownloadHtmlReport = (params) => {
     return new Promise(async (resolve, reject) => {
       const { outputDir, JsonRaw, reportName } = params
-      const inputFile = path.join(htmlTemplateDir, 'template.zip')
+      const inputFile = path.join(getHtmlTemplateDir(), 'template.zip')
       const outputFile = path.join(outputDir, 'template.zip')
       const reportNameFile = reportName.replaceAll(/\\|\/|\:|\*|\?|\"|\<|\>|\|/g, '') || 'html报告'
       // 判断报告名是否存在？
@@ -771,7 +771,7 @@ td {
     if (JsonRaw === undefined || JsonRaw === null) {
       throw new Error('PrintReportPdfFromTemplate: JsonRaw required')
     }
-    const inputFile = path.join(htmlTemplateDir, 'template.zip')
+    const inputFile = path.join(getHtmlTemplateDir(), 'template.zip')
     if (!fs.existsSync(inputFile)) {
       throw new Error(`HTML report template not found: ${inputFile}`)
     }

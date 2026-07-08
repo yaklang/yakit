@@ -1,6 +1,6 @@
 const { ipcMain, shell } = require('electron')
 const handlerHelper = require('./handleStreamWithContext')
-const { yakProjects, yakTemp, aiImageTemp } = require('../filePath')
+const { getYakProjects, getYakTemp, getAiImageTemp } = require('../filePath')
 const fs = require('fs')
 const path = require('path')
 
@@ -242,9 +242,9 @@ module.exports = (win, getClient) => {
   const exportAIForgeMap = new Map()
   ipcMain.handle('cancel-ExportAIForge', handlerHelper.cancelHandler(exportAIForgeMap))
   ipcMain.handle('ExportAIForge', (_, params, token) => {
-    if (!fs.existsSync(yakProjects)) {
+    if (!fs.existsSync(getYakProjects())) {
       try {
-        fs.mkdirSync(yakProjects, { recursive: true })
+        fs.mkdirSync(getYakProjects(), { recursive: true })
       } catch (error) {}
     }
     let stream = getClient().ExportAIForge(params)
@@ -253,7 +253,7 @@ module.exports = (win, getClient) => {
 
   // 生成 yakit-projects 文件夹下 temp 里面的文件路径
   ipcMain.handle('GenerateTempFilePath', async (e, fileName) => {
-    return path.join(yakTemp, fileName)
+    return path.join(getYakTemp(), fileName)
   })
   // #endregion
 
@@ -593,7 +593,7 @@ module.exports = (win, getClient) => {
   ipcMain.handle('save-ai-image', (event, params, token) => {
     return new Promise((resolve, reject) => {
       const { buffer, filename, sessionID = '', chatDataStoreKey = '' } = params
-      const url = path.join(aiImageTemp, chatDataStoreKey, sessionID)
+      const url = path.join(getAiImageTemp(), chatDataStoreKey, sessionID)
       // 确保目录存在
       if (!fs.existsSync(url)) {
         fs.mkdirSync(url, { recursive: true })
@@ -670,7 +670,7 @@ module.exports = (win, getClient) => {
 
       if (totalSize === 0) {
         if (chatDataStoreKey) {
-          const targetPath = path.join(aiImageTemp, chatDataStoreKey)
+          const targetPath = path.join(getAiImageTemp(), chatDataStoreKey)
           if (fs.existsSync(targetPath)) {
             // 先读取目录下的内容，以此计算进度
             const files = await fs.promises.readdir(targetPath)
@@ -712,7 +712,7 @@ module.exports = (win, getClient) => {
         const id = sessionIDs[i]
         if (id) {
           // 强制转为 String 防止外部意外传入数字导致 path.join 崩溃
-          const targetPath = path.join(aiImageTemp, chatDataStoreKey, String(id))
+          const targetPath = path.join(getAiImageTemp(), chatDataStoreKey, String(id))
 
           if (fs.existsSync(targetPath)) {
             try {

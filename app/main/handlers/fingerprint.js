@@ -2,7 +2,7 @@ const { ipcMain } = require('electron')
 const fs = require('fs')
 const path = require('path')
 const https = require('https')
-const { yakProjects } = require('../filePath')
+const { getYakProjects } = require('../filePath')
 
 module.exports = (win, getClient) => {
   const asyncGetAllFingerprintGroup = (params) => {
@@ -139,12 +139,12 @@ module.exports = (win, getClient) => {
   ipcMain.handle('cancel-ExportFingerprint', handlerHelper.cancelHandler(exportFingerprintMap))
   ipcMain.handle('ExportFingerprint', (_, params, token) => {
     const { TargetPath } = params
-    if (!fs.existsSync(yakProjects)) {
+    if (!fs.existsSync(getYakProjects())) {
       try {
-        fs.mkdirSync(yakProjects, { recursive: true })
+        fs.mkdirSync(getYakProjects(), { recursive: true })
       } catch (error) {}
     }
-    params.TargetPath = path.join(yakProjects, TargetPath)
+    params.TargetPath = path.join(getYakProjects(), TargetPath)
     let stream = getClient().ExportFingerprint(params)
     handlerHelper.registerHandler(win, stream, exportFingerprintMap, token)
   })
@@ -191,9 +191,9 @@ module.exports = (win, getClient) => {
 
   const asyncDownloadFingerprint = (savePath) => {
     return new Promise((resolve, reject) => {
-      if (!fs.existsSync(yakProjects)) {
+      if (!fs.existsSync(getYakProjects())) {
         try {
-          fs.mkdirSync(yakProjects, { recursive: true })
+          fs.mkdirSync(getYakProjects(), { recursive: true })
         } catch (error) {}
       }
 

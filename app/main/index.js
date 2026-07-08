@@ -13,7 +13,7 @@ const {
   setLocalCache,
 } = require('./localCache')
 const { asyncKillDynamicControl } = require('./handlers/dynamicControlFun')
-const { windowStatePatch } = require('./filePath')
+const { getWindowStatePath } = require('./filePath')
 const Screenshots = require('./screenshots')
 const windowStateKeeper = require('electron-window-state')
 const { MenuTemplate } = require('./menu')
@@ -114,7 +114,7 @@ function createEngineLinkWindow() {
   const state = windowStateKeeper({
     defaultWidth: 900,
     defaultHeight: 600,
-    path: windowStatePatch,
+    path: getWindowStatePath(),
     file: 'link-window-state.json',
   })
   const hasPos = Number.isFinite(state.x) && Number.isFinite(state.y)
@@ -220,7 +220,7 @@ function createWindow() {
   const state = windowStateKeeper({
     defaultWidth: minWidth,
     defaultHeight: minHeight,
-    path: windowStatePatch,
+    path: getWindowStatePath(),
     file: 'yakit-window-state.json',
   })
   const width = Math.max(state.width ?? minWidth, minWidth)

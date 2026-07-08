@@ -1,5 +1,5 @@
 const { ipcMain } = require('electron')
-const { getLocalYaklangEngine, loadExtraFilePath, YakitProjectPath } = require('../filePath.js')
+const { getLocalYaklangEngine, loadExtraFilePath, getYakitHome } = require('../filePath.js')
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
@@ -42,7 +42,7 @@ module.exports = {
       const hashs = []
 
       if (process.platform === 'darwin') {
-        const yakKeyFile = path.join(YakitProjectPath, 'engine-sha256.txt')
+        const yakKeyFile = path.join(getYakitHome(), 'engine-sha256.txt')
         if (fs.existsSync(yakKeyFile)) {
           let hashData = fs.readFileSync(yakKeyFile).toString('utf8')
           // 去除换行符

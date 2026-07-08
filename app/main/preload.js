@@ -72,6 +72,9 @@ process.on('loaded', function () {
       onMinimizeWindow: (callback) => subscribe('minimize-windows-renderer', callback),
       sync: (message) => invoke('aux-window:app-sync', message),
       onSync: (callback) => subscribe('aux-window:app-sync', callback),
+      getYakitHomeConfig: () => invoke('get-yakit-home-config'),
+      setYakitHomeConfig: (key, value) => invoke('set-yakit-home-config', key, value),
+      relaunchApp: () => invoke('relaunch-app'),
     },
     theme: {
       setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),

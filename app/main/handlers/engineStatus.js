@@ -3,7 +3,7 @@ const childProcess = require('child_process')
 const _sudoPrompt = require('sudo-prompt')
 const { GLOBAL_YAK_SETTING } = require('../state')
 const { testRemoteClient } = require('../ipc')
-const { getLocalYaklangEngine, YakitProjectPath } = require('../filePath')
+const { getLocalYaklangEngine, getYakitHome } = require('../filePath')
 const net = require('net')
 const { engineLogOutputFileAndUI, engineLogOutputUI } = require('../logFile')
 const { assertTrustedAppSender, normalizePid } = require('../security')
@@ -66,7 +66,7 @@ const runWindowsTaskKill = (pid) => {
 //             callback(err)
 //         })
 //     } else {
-//         _sudoPrompt.exec(cmd, {...opt, env: {YAKIT_HOME: YakitProjectPath}}, callback)
+//         _sudoPrompt.exec(cmd, {...opt, env: {YAKIT_HOME: getYakitHome()}}, callback)
 //     }
 // }
 
@@ -166,7 +166,7 @@ module.exports = (win, callback, getClient, newClient) => {
           stdio: ['ignore', 'pipe', 'pipe'],
           env: {
             ...process.env,
-            YAKIT_HOME: YakitProjectPath,
+            YAKIT_HOME: getYakitHome(),
           },
         })
 

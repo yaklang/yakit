@@ -38,6 +38,9 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     onCloseWindow: (callback) => subscribe('close-engineLinkWin-renderer', () => callback()),
     onFromMainWindow: (callback) => subscribe('from-win', callback),
     onCredentialUpdate: (callback) => subscribe('from-win-updateCredential', callback),
+    getYakitHomeConfig: () => invokePrefixed('get-yakit-home-config'),
+    setYakitHomeConfig: (key, value) => invokePrefixed('set-yakit-home-config', key, value),
+    relaunchApp: () => invokePrefixed('relaunch-app'),
   },
   theme: {
     setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),

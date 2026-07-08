@@ -1,7 +1,7 @@
 const { ipcMain } = require('electron')
 const childProcess = require('child_process')
 const { GLOBAL_YAK_SETTING } = require('../state')
-const { getLocalYaklangEngine, YakitProjectPath } = require('../filePath')
+const { getLocalYaklangEngine, getYakitHome } = require('../filePath')
 const { engineLogOutputFileAndUI, engineLogOutputUI } = require('../logFile')
 
 // 引擎连接过程中涉及到能中断的执行任务
@@ -42,7 +42,7 @@ module.exports = {
           engineLogOutputFileAndUI(win, `----- 检查本地随机密码模式支持 -----`)
           engineLogOutputFileAndUI(win, `执行命令: ${command} ${args.join(' ')}`)
 
-          const defaltEnv = { ...process.env, YAKIT_HOME: YakitProjectPath }
+          const defaltEnv = { ...process.env, YAKIT_HOME: getYakitHome() }
           const subprocess = childProcess.spawn(command, args, {
             stdio: ['ignore', 'pipe', 'pipe'],
             env: { ...defaltEnv, ...(DefaultDBFileEnv[softwareVersion] || {}) },
@@ -251,7 +251,7 @@ module.exports = {
           engineLogOutputFileAndUI(win, `----- 启动修复数据库 -----`)
           engineLogOutputFileAndUI(win, `执行命令: ${command} ${args.join(' ')}`)
 
-          const defaltEnv = { ...process.env, YAKIT_HOME: YakitProjectPath }
+          const defaltEnv = { ...process.env, YAKIT_HOME: getYakitHome() }
           const subprocess = childProcess.spawn(command, args, {
             stdio: ['ignore', 'pipe', 'pipe'],
             env: { ...defaltEnv, ...(DefaultDBFileEnv[softwareVersion] || {}) },
@@ -599,7 +599,7 @@ module.exports = {
           const command = getLocalYaklangEngine()
           engineLogOutputFileAndUI(win, `启动命令: ${command} ${resultParams.join(' ')}`)
 
-          const defaltEnv = { ...process.env, YAKIT_HOME: YakitProjectPath }
+          const defaltEnv = { ...process.env, YAKIT_HOME: getYakitHome() }
           const subprocess = childProcess.spawn(command, resultParams, {
             detached: false,
             windowsHide: true,

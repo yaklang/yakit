@@ -7,7 +7,7 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const { setLocalCache } = require('../localCache')
-const { YakitProjectPath } = require('../filePath')
+const { getYakitHome } = require('../filePath')
 const { assertTrustedAppSender, normalizePid } = require('../security')
 const isWindows = process.platform === 'win32'
 
@@ -34,11 +34,7 @@ function sudoExec(cmd, opt, callback) {
       callback(err)
     })
   } else {
-    _sudoPrompt.exec(
-      cmd,
-      { ...opt, env: { YAKIT_HOME: YakitProjectPath, YAK_DEFAULT_DATABASE_NAME: dbFile } },
-      callback,
-    )
+    _sudoPrompt.exec(cmd, { ...opt, env: { YAKIT_HOME: getYakitHome(), YAK_DEFAULT_DATABASE_NAME: dbFile } }, callback)
   }
 }
 
@@ -301,7 +297,7 @@ module.exports = {
           return
         }
         try {
-          const info = fs.statSync(path.join(YakitProjectPath, dbFile))
+          const info = fs.statSync(path.join(getYakitHome(), dbFile))
           if ((info.mode & 0o200) > 0) {
             resolve('')
           } else {
@@ -324,7 +320,7 @@ module.exports = {
           resolve(true)
           return
         }
-        const databaseFile = path.join(YakitProjectPath, dbFile)
+        const databaseFile = path.join(getYakitHome(), dbFile)
 
         try {
           fs.chmodSync(databaseFile, 0o644)

@@ -199,6 +199,23 @@ module.exports = {
     require('./handlers/yakLocal').clearing()
   },
   registerIPC: (win) => {
+    // YAKIT_HOME 配置管理
+    const { getConfig, setConfig, getYakitHome, getAppConfigDir } = require('./filePath')
+
+    ipcMain.handle('get-yakit-home-config', async () => {
+      return { ...getConfig(), currentHome: getYakitHome(), configDir: getAppConfigDir() }
+    })
+
+    ipcMain.handle('set-yakit-home-config', async (e, key, value) => {
+      const ok = setConfig(key, value)
+      return { success: ok }
+    })
+
+    ipcMain.handle('relaunch-app', async () => {
+      app.relaunch()
+      app.exit(0)
+    })
+
     ipcMain.handle('yakit-connect-status', () => {
       return {
         addr: global.defaultYakGRPCAddr,
@@ -411,6 +428,23 @@ module.exports = {
   },
   // 后续新开窗口可以传 ipcEventPre 用于区分注册的handle
   registerNewIPC: (win, ipcEventPre) => {
+    // YAKIT_HOME 配置管理
+    const { getConfig, setConfig, getYakitHome, getAppConfigDir } = require('./filePath')
+
+    ipcMain.handle(ipcEventPre + 'get-yakit-home-config', async () => {
+      return { ...getConfig(), currentHome: getYakitHome(), configDir: getAppConfigDir() }
+    })
+
+    ipcMain.handle(ipcEventPre + 'set-yakit-home-config', async (e, key, value) => {
+      const ok = setConfig(key, value)
+      return { success: ok }
+    })
+
+    ipcMain.handle(ipcEventPre + 'relaunch-app', async () => {
+      app.relaunch()
+      app.exit(0)
+    })
+
     // 软件启动后判断是 CE 版本还是 EE 版本
     ipcMain.handle(ipcEventPre + 'is-enpritrace-to-domain', (event, flag) => {
       assertTrustedAppSender(event, ipcEventPre + 'is-enpritrace-to-domain')

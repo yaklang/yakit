@@ -1,7 +1,7 @@
 const { ipcMain, shell } = require('electron')
 const OS = require('os')
 const process = require('process')
-const { yaklangEngineDir, remoteLinkDir, yakitInstallDir } = require('../filePath')
+const { getYaklangEngineDir, getRemoteLinkDir, getYakitInstallDir } = require('../filePath')
 
 // CPU瞬时使用均值
 const cpuData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -108,22 +108,22 @@ module.exports = {
 
     /** 打开 yaklang 或 yakit 文件所在文件夹 (ps:随着yakit下载移动至下载文件夹中，此方法仅打开yaklang)*/
     ipcMain.handle(ipcEventPre + 'open-yaklang-path', (e) => {
-      return shell.openPath(yaklangEngineDir)
+      return shell.openPath(getYaklangEngineDir())
     })
 
     /** 打开远程连接配置信息文件夹 */
     ipcMain.handle(ipcEventPre + 'open-remote-link', (e) => {
-      return shell.openPath(remoteLinkDir)
+      return shell.openPath(getRemoteLinkDir())
     })
 
     /** 获取远程连接配置信息文件路径 */
     ipcMain.handle(ipcEventPre + 'fetch-remote-file-path', (e) => {
-      return remoteLinkDir
+      return getRemoteLinkDir()
     })
 
     /** 打开 yakit 文件所在文件夹 */
     ipcMain.handle(ipcEventPre + 'open-yakit-path', (e) => {
-      return shell.openPath(yakitInstallDir)
+      return shell.openPath(getYakitInstallDir())
     })
   },
 }
