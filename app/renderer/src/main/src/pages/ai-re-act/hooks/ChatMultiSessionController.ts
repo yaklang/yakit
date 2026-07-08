@@ -273,7 +273,7 @@ export class ChatMultiSessionController {
                   chatType: 'reAct',
                   token: review.id,
                   kind: 'item',
-                  taskID: review.taskIndex || undefined,
+                  taskID: review.TaskId || undefined,
                   onDelContent: (mapKey) => {
                     rawData.contents.delete(mapKey)
                   },
@@ -315,7 +315,7 @@ export class ChatMultiSessionController {
                 review.data.optionValue = optionValue
                 store.getState().dispatchStreamingNode({
                   chatType: 'task',
-                  parentTaskId: review.taskIndex,
+                  parentTaskId: review.TaskId,
                   node: {
                     token: review.id,
                     kind: 'item',
@@ -334,7 +334,7 @@ export class ChatMultiSessionController {
                 })
                 store.getState().dispatchStreamingNode({
                   chatType: 'task',
-                  parentTaskId: review.taskIndex,
+                  parentTaskId: review.TaskId,
                   node: {
                     token: review.id,
                     kind: 'item',
@@ -520,7 +520,7 @@ export class ChatMultiSessionController {
     rawData.contents.set(data.id, data)
     store.getState().dispatchStreamingNode({
       chatType: data.chatType,
-      parentTaskId: data.taskIndex,
+      parentTaskId: data.TaskId,
       node: {
         token: data.id,
         kind: 'item',

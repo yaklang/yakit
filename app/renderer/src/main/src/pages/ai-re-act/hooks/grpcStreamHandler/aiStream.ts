@@ -67,7 +67,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
         content: '',
         ContentType: res.ContentType,
       },
-      taskIndex: generateTaskNodeDataID({
+      TaskId: generateTaskNodeDataID({
         chatType,
         planID: meta.currentTaskPlanID?.taskID,
         taskID: res.TaskId,
@@ -105,7 +105,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
       content: '',
       ContentType: res.ContentType,
     },
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -222,7 +222,7 @@ const handleStream: AIMessageHandler = (requestInfo) => {
     // 判断是否成为组UI数据展示
     store.getState().dispatchStreamingNode({
       chatType: chatType,
-      parentTaskId: streamData.taskIndex,
+      parentTaskId: streamData.TaskId,
       node: {
         token: streamData.id,
         kind: 'item',
@@ -342,7 +342,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
     if (chatData.parentGroupKey) {
       store.getState().dispatchStreamingNode({
         chatType: chatType,
-        parentTaskId: chatData.taskIndex,
+        parentTaskId: chatData.TaskId,
         node: {
           token: chatData.id,
           kind: 'item',
@@ -357,7 +357,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
       } else {
         store.getState().dispatchStreamingNode({
           chatType: chatType,
-          parentTaskId: chatData.taskIndex,
+          parentTaskId: chatData.TaskId,
           node: {
             token: chatData.id,
             kind: 'item',
@@ -370,7 +370,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
     } else {
       store.getState().dispatchStreamingNode({
         chatType: chatType,
-        parentTaskId: chatData.taskIndex,
+        parentTaskId: chatData.TaskId,
         node: {
           token: chatData.id,
           kind: 'item',
@@ -397,7 +397,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
         NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
       },
       reference: [data],
-      taskIndex: generateTaskNodeDataID({
+      TaskId: generateTaskNodeDataID({
         chatType,
         planID: meta.currentTaskPlanID?.taskID,
         taskID: res.TaskId,
@@ -407,7 +407,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
     rawData.contents.set(chatData.id, chatData)
     store.getState().dispatchStreamingNode({
       chatType: chatType,
-      parentTaskId: chatData.taskIndex,
+      parentTaskId: chatData.TaskId,
       node: {
         token: chatData.id,
         kind: 'item',

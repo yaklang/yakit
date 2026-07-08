@@ -375,8 +375,8 @@ export interface AIChatQSDataBase<T extends string, U> {
   AIService: AIOutputEvent['AIService']
   AIModelName: AIOutputEvent['AIModelName']
   Timestamp: AIOutputEvent['Timestamp']
-  /** 节点信息所属的任务聚合组 key（parentTaskId-taskId） */
-  taskId?: string
+  /** 节点信息所属的任务节点索引 */
+  TaskId?: AIOutputEvent['TaskId']
   /** 前端专属数据，供前端逻辑和UI处理使用 */
   extraValue?: CustomPluginExecuteFormValue | Record<string, CustomPluginExecuteFormValue[]>
   /** 参考资料 */
