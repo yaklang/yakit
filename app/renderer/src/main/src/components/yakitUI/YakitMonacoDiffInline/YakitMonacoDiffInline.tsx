@@ -1,7 +1,14 @@
 import React, { memo, useEffect, useRef } from 'react'
 import { useUpdateEffect } from 'ahooks'
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
+import { monaco } from 'react-monaco-editor'
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 
+import '@/utils/monacoSpec/fuzzHTTPMonacoSpec'
+import '@/utils/monacoSpec/html'
+import '@/utils/monacoSpec/syntaxflowEditor'
+import '@/utils/monacoSpec/yakEditor'
+import { applyYakitMonacoTheme } from '@/utils/monacoSpec/theme'
+import { useTheme } from '@/hook/useTheme'
 import { useEditorFontSize } from '@/store/editorFontSize'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
@@ -59,6 +66,10 @@ function modEndLineForHunk(hunks: YakitMonacoDiffInlineHunk[], i: number, modMax
   return Math.min(Math.max(1, modEnd1), modMax)
 }
 
+type DiffWidgetHost = {
+  remountWidgets: (after?: () => void) => void
+}
+
 /**
  * 内联 diff 审阅器：以行级 hunk 为单位在 modified 末行下方挂浮条，
  * 提供「撤销 / 保留」逐块决策。文案可由调用方注入。
@@ -70,19 +81,29 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
   const lng = i18n.language
 
   const { initFontSize, fontSize } = useEditorFontSize()
+  const { theme } = useTheme()
   const editorHostRef = useRef<HTMLDivElement>(null)
-  const monaco = monacoEditor.editor
   const diffEditorRef = useRef<monacoEditor.editor.IStandaloneDiffEditor | null>(null)
+  const widgetHostRef = useRef<DiffWidgetHost | null>(null)
+  const onDecisionRef = useRef(onDecision)
+  const hunksRef = useRef(hunks)
+
+  onDecisionRef.current = onDecision
+  hunksRef.current = hunks
 
   useEffect(() => {
     initFontSize()
   }, [initFontSize])
 
   useEffect(() => {
+    applyYakitMonacoTheme(theme)
+  }, [theme])
+
+  useEffect(() => {
     if (!editorHostRef.current) return
 
     let disposed = false
-    const disposables: monacoEditor.IDisposable[] = []
+    let widgetDisposables: monacoEditor.IDisposable[] = []
     let overlayEl: HTMLDivElement | null = null
     const overlayBars: Array<{
       lineNumber: number
@@ -90,7 +111,7 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
       dom: HTMLDivElement
     }> = []
 
-    const diffEditor = monaco.createDiffEditor(editorHostRef.current, {
+    const diffEditor = monaco.editor.createDiffEditor(editorHostRef.current, {
       enableSplitViewResizing: false,
       renderSideBySide: false,
       originalEditable: false,
@@ -102,23 +123,38 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
     })
     diffEditorRef.current = diffEditor
 
-    const originalModel = monaco.createModel(original, language)
-    const modifiedModel = monaco.createModel(incoming, language)
+    const originalModel = monaco.editor.createModel(original, language)
+    const modifiedModel = monaco.editor.createModel(incoming, language)
     diffEditor.setModel({ original: originalModel, modified: modifiedModel })
 
-    const modEditor = diffEditor.getModifiedEditor()
+    let mountGen = 0
+
+    const getModifiedModel = () => diffEditor.getModel()?.modified ?? null
 
     const clearWidgets = () => {
+      widgetDisposables.forEach((d) => d.dispose())
+      widgetDisposables = []
       overlayBars.splice(0, overlayBars.length).forEach(({ dom }) => dom.remove())
       if (overlayEl) overlayEl.remove()
       overlayEl = null
     }
 
-    const mountHunkWidgets = (items: YakitMonacoDiffInlineHunk[]) => {
+    const mountHunkWidgets = (after?: () => void) => {
       if (disposed) return
       clearWidgets()
 
-      if (items.length === 0) return
+      const items = hunksRef.current
+      if (items.length === 0) {
+        after?.()
+        return
+      }
+
+      const modifiedModel = getModifiedModel()
+      const modEditor = diffEditor.getModifiedEditor()
+      if (!modifiedModel || modifiedModel.isDisposed()) {
+        after?.()
+        return
+      }
 
       overlayEl = document.createElement('div')
       overlayEl.style.position = 'absolute'
@@ -170,7 +206,6 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
               lineNumber: ln,
               column: lastCol,
             }) || visCol1
-          /** Monaco typings 未声明 width，但运行时该字段存在；仅用类型断言读取以避免 TS 报错 */
           const visTailWidth = (visTail as unknown as { width: number }).width
           const rowTop = scrollTopOffset + visTail.top
           const rowBottom = scrollTopOffset + visTail.top + visTail.height
@@ -216,8 +251,8 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
         })
       }
 
-      disposables.push(modEditor.onDidLayoutChange(() => updatePositions()))
-      disposables.push(modEditor.onDidScrollChange(() => updatePositions()))
+      widgetDisposables.push(modEditor.onDidLayoutChange(() => updatePositions()))
+      widgetDisposables.push(modEditor.onDidScrollChange(() => updatePositions()))
       requestAnimationFrame(() => updatePositions())
 
       const stackByLine = new Map<number, number>()
@@ -289,63 +324,99 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
         undoBtn.addEventListener('click', (e) => {
           e.preventDefault()
           e.stopPropagation()
-          onDecision(i, 'reject')
+          onDecisionRef.current(i, 'reject')
         })
         keepBtn.addEventListener('click', (e) => {
           e.preventDefault()
           e.stopPropagation()
-          onDecision(i, 'accept')
+          onDecisionRef.current(i, 'accept')
         })
 
         overlayEl?.appendChild(bar)
         overlayBars.push({ lineNumber, stackIndex, dom: bar })
       })
+
+      after?.()
     }
 
-    let diffMounted = false
-    const tryMountFromDiff = () => {
-      if (disposed || diffMounted) return true
-      const ch = diffEditor.getLineChanges()
-      if (ch !== null) {
-        diffMounted = true
-        mountHunkWidgets(hunks)
-        return true
+    const remountWidgets = (after?: () => void) => {
+      if (disposed) return
+      const gen = ++mountGen
+
+      const tryMount = () => {
+        if (disposed || gen !== mountGen) return false
+        const modifiedModel = getModifiedModel()
+        if (!modifiedModel || modifiedModel.isDisposed()) return false
+        if (diffEditor.getLineChanges() !== null) {
+          mountHunkWidgets(after)
+          return true
+        }
+        return false
       }
-      return false
-    }
 
-    if (!tryMountFromDiff()) {
+      if (tryMount()) return
+
       const diffEditorAny = diffEditor as monacoEditor.editor.IStandaloneDiffEditor & {
         onDidUpdateDiff?: (listener: () => void) => monacoEditor.IDisposable
       }
       const sub = diffEditorAny.onDidUpdateDiff?.(() => {
-        if (tryMountFromDiff()) {
-          sub?.dispose()
-        }
+        sub?.dispose()
+        tryMount()
       })
-      if (sub) disposables.push(sub)
+      if (sub) widgetDisposables.push(sub)
+
       let frames = 0
       const poll = () => {
-        if (disposed) return
-        if (tryMountFromDiff()) return
+        if (disposed || gen !== mountGen) return
+        if (tryMount()) return
         frames++
-        if (frames > 240) return
+        if (frames > 240) {
+          mountHunkWidgets(after)
+          return
+        }
         requestAnimationFrame(poll)
       }
       requestAnimationFrame(poll)
     }
 
+    widgetHostRef.current = { remountWidgets }
+    remountWidgets()
+
     return () => {
       disposed = true
+      widgetHostRef.current = null
       clearWidgets()
-      disposables.forEach((d) => d.dispose())
       diffEditor.dispose()
       originalModel.dispose()
       modifiedModel.dispose()
       diffEditorRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reuseKey, original, incoming, hunks, language, onDecision, lng])
+  }, [reuseKey, language])
+
+  useUpdateEffect(() => {
+    const diffEditor = diffEditorRef.current
+    if (!diffEditor) return
+    const prevModels = diffEditor.getModel()
+    const modEditor = diffEditor.getModifiedEditor()
+    const scrollTop = modEditor.getScrollTop()
+    const scrollLeft = modEditor.getScrollLeft()
+
+    const originalModel = monaco.editor.createModel(original, language)
+    const modifiedModel = monaco.editor.createModel(incoming, language)
+    diffEditor.setModel({ original: originalModel, modified: modifiedModel })
+    prevModels?.original.dispose()
+    prevModels?.modified.dispose()
+
+    widgetHostRef.current?.remountWidgets(() => {
+      modEditor.setScrollTop(scrollTop)
+      modEditor.setScrollLeft(scrollLeft)
+    })
+  }, [original, incoming, hunks, language])
+
+  useUpdateEffect(() => {
+    widgetHostRef.current?.remountWidgets()
+  }, [lng])
 
   useUpdateEffect(() => {
     diffEditorRef.current?.updateOptions({ fontSize })

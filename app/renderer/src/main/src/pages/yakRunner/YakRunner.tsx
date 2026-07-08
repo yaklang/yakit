@@ -91,6 +91,7 @@ import {
   registerYakRunnerPageCasualCodeReplaceReview,
   registerYakRunnerPageGetActiveCodeString,
   registerYakRunnerPageGetWorkspaceContext,
+  getYakRunnerPageActiveCodeString,
   type YakRunnerApplyCodeExtras,
   type YakRunnerCasualCodeReplaceReviewPayload,
 } from './yakRunnerAiCodeApplyBridge'
@@ -647,6 +648,8 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const areaInfoRef = useRef(areaInfo)
   const casualReviewQueueIdRef = useRef(0)
   const casualReviewSessionIdRef = useRef<string | null>(null)
+  /** 审阅会话内已采纳合并后的代码，作为下一轮 diff 基线 */
+  const casualReviewBaselineRef = useRef<string | null>(null)
   const [casualReviewQueue, setCasualReviewQueue] = useState<
     { id: string; payload: YakRunnerCasualCodeReplaceReviewPayload }[]
   >([])
@@ -663,6 +666,15 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     const needsSaveAs = extras?.needsSaveAs ?? false
     let isUnSave = needsSaveAs || isYakRunnerScratchFilePath(targetPath)
 
+    const filePatch = { code: content, isUnSave, needsSaveAs: isUnSave ? needsSaveAs : false }
+
+    // 先同步内存中的 code，避免 AI 审阅基线读取到采纳前的旧内容
+    if (activeFileRef.current && isSameYakRunnerFilePath(activeFileRef.current.path, targetPath)) {
+      const next: FileDetailInfo = { ...activeFileRef.current, ...filePatch }
+      activeFileRef.current = next
+      setActiveFile(next)
+    }
+
     if (!isUnSave) {
       try {
         await grpcFetchSaveFile(targetPath, content)
@@ -671,8 +683,6 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
         isUnSave = true
       }
     }
-
-    const filePatch = { code: content, isUnSave, needsSaveAs: isUnSave ? needsSaveAs : false }
 
     const existingInArea = await judgeAreaExistFilePath(areaInfoRef.current, targetPath)
     if (existingInArea) {
@@ -743,6 +753,12 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const onCasualCodeReplaceReviewEnqueued = useMemoizedFn(async (payload: YakRunnerCasualCodeReplaceReviewPayload) => {
     const incoming = payload.change.code?.content ?? ''
     let baseline = payload.original ?? ''
+    if (casualReviewSessionIdRef.current != null && casualReviewBaselineRef.current != null) {
+      baseline = casualReviewBaselineRef.current
+    } else {
+      const live = getYakRunnerPageActiveCodeString(YAK_RUNNER_AI_PAGE_ID)
+      if (live != null) baseline = live
+    }
     let payloadForReview = payload
 
     if (payload.isCreate || payload.change.op === 'create') {
@@ -779,6 +795,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
       if (casualReviewSessionIdRef.current != null) {
         setCasualReviewQueue([])
         casualReviewSessionIdRef.current = null
+        casualReviewBaselineRef.current = null
       }
       return
     }
@@ -794,6 +811,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
       casualReviewQueueIdRef.current += 1
       casualReviewSessionIdRef.current = `yr-${casualReviewQueueIdRef.current}`
     }
+    casualReviewBaselineRef.current = baseline
     const id = casualReviewSessionIdRef.current
     setCasualReviewQueue([{ id, payload: enrichedPayload }])
   })
@@ -801,6 +819,12 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const onCasualRoundApplyMerged = useMemoizedFn((mergedCode: string, done?: boolean) => {
     const head = casualReviewQueue[0]
     if (!head) return
+    casualReviewBaselineRef.current = mergedCode
+    setCasualReviewQueue((prev) => {
+      const cur = prev[0]
+      if (!cur) return prev
+      return [{ ...cur, payload: { ...cur.payload, original: mergedCode } }]
+    })
     applyYaklangCodeChangeToYakRunnerPage(
       YAK_RUNNER_AI_PAGE_ID,
       {
@@ -812,6 +836,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     if (done) {
       setCasualReviewQueue([])
       casualReviewSessionIdRef.current = null
+      casualReviewBaselineRef.current = null
     }
   })
 

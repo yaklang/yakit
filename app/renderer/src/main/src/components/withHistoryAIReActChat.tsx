@@ -327,9 +327,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
     const original = isCreate
       ? ''
-      : casualLoadingRef.current && initialCodeInCasualRef.current != null
-        ? initialCodeInCasualRef.current
-        : (getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? '')
+      : (getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? initialCodeInCasualRef.current ?? '')
 
     enqueueYakRunnerCasualCodeReplaceReview(yakRunnerPageId, {
       original,

@@ -50,8 +50,6 @@ const YakRunnerCasualCodeReplaceReviewOverlay = memo(function YakRunnerCasualCod
   const [reviewBaseline, setReviewBaseline] = useState(sessionSnapshot)
   const [draftIncoming, setDraftIncoming] = useState(incoming)
   const hunks = useMemo(() => computeCasualLineHunks(reviewBaseline, draftIncoming), [reviewBaseline, draftIncoming])
-  const [diffNonce, setDiffNonce] = useState(0)
-  const diffNonceRef = useRef(0)
   const [showAcceptMeta, setShowAcceptMeta] = useState(false)
   const acceptMetaHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoDoneRef = useRef(false)
@@ -59,11 +57,6 @@ const YakRunnerCasualCodeReplaceReviewOverlay = memo(function YakRunnerCasualCod
   const reviewBaselineRef = useRef(reviewBaseline)
   const draftIncomingRef = useRef(draftIncoming)
   const prevIncomingRef = useRef<string | null>(null)
-
-  const bumpDiffNonce = useMemoizedFn(() => {
-    diffNonceRef.current += 1
-    setDiffNonce(diffNonceRef.current)
-  })
 
   const handleAcceptMetaEnter = useMemoizedFn(() => {
     if (acceptMetaHideTimerRef.current) {
@@ -108,10 +101,9 @@ const YakRunnerCasualCodeReplaceReviewOverlay = memo(function YakRunnerCasualCod
     draftIncomingRef.current = incoming
     setReviewBaseline(sessionSnapshot)
     setDraftIncoming(incoming)
-    bumpDiffNonce()
     prevIncomingRef.current = null
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundKey, sessionSnapshot, bumpDiffNonce])
+  }, [roundKey, sessionSnapshot])
 
   useEffect(() => {
     if (prevIncomingRef.current === null) {
@@ -120,10 +112,12 @@ const YakRunnerCasualCodeReplaceReviewOverlay = memo(function YakRunnerCasualCod
     }
     if (prevIncomingRef.current === incoming) return
     prevIncomingRef.current = incoming
+    // 同一会话内新的 AI 提案：以最新 payload.original（含已保留 hunks）为 diff 基线
+    reviewBaselineRef.current = sessionSnapshot
+    setReviewBaseline(sessionSnapshot)
     draftIncomingRef.current = incoming
-    bumpDiffNonce()
     setDraftIncoming(incoming)
-  }, [incoming, bumpDiffNonce])
+  }, [incoming, sessionSnapshot])
 
   useEffect(() => {
     if (hunks.length !== 0) {
@@ -149,21 +143,18 @@ const YakRunnerCasualCodeReplaceReviewOverlay = memo(function YakRunnerCasualCod
       const merged = mergeCasualLineHunks(rb, hs, decMap)
       reviewBaselineRef.current = merged
       setReviewBaseline(merged)
-      bumpDiffNonce()
       onApplyRound(merged, false)
       return
     }
     const nextDraft = mergeCasualLineHunks(rb, hs, decMap)
     draftIncomingRef.current = nextDraft
     setDraftIncoming(nextDraft)
-    bumpDiffNonce()
   })
 
   const handleRejectAll = useMemoizedFn(() => {
     const rb = reviewBaselineRef.current
     draftIncomingRef.current = rb
     setDraftIncoming(rb)
-    bumpDiffNonce()
     onApplyRound(rb, true)
   })
 
@@ -179,7 +170,6 @@ const YakRunnerCasualCodeReplaceReviewOverlay = memo(function YakRunnerCasualCod
     draftIncomingRef.current = merged
     setReviewBaseline(merged)
     setDraftIncoming(merged)
-    bumpDiffNonce()
     onApplyRound(merged, true)
   })
 
@@ -244,7 +234,6 @@ const YakRunnerCasualCodeReplaceReviewOverlay = memo(function YakRunnerCasualCod
         </div>
         <div className={styles.diffWrap}>
           <YakitMonacoDiffInline
-            key={`${roundKey}:${diffNonce}:${draftIncoming}`}
             reuseKey={roundKey}
             original={reviewBaseline}
             incoming={draftIncoming}

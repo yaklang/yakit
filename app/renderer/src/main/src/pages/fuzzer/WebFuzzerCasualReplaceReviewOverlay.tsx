@@ -32,16 +32,13 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
   const sessionSnapshot = payload.original
   const incoming = payload.change.request?.raw ?? ''
 
-  /** Diff 左侧：已「保留」片段与未处理部分合成；流式更新右侧时不清空，避免丢进度 */
+  /** Diff 左侧：已保留片段与未处理部分合成；流式更新右侧时不清空，避免丢进度 */
   const [reviewBaseline, setReviewBaseline] = useState(sessionSnapshot)
-  /** 右侧提案：流式/新 raw 同步；「撤销」某块时裁切 */
+  /** 右侧提案：流式/新 raw 同步；撤销某块时裁切 */
   const [draftIncoming, setDraftIncoming] = useState(incoming)
-  /** 与 `diff` 行级块一致，避免 Monaco getLineChanges 拆块导致「保留 1/3」只合了一小段 */
+  /** 与 `diff` 行级块一致，避免 Monaco getLineChanges 拆块导致只合了一小段 */
   const hunks = useMemo(() => computeCasualLineHunks(reviewBaseline, draftIncoming), [reviewBaseline, draftIncoming])
-  /** 左侧或右侧任一变化后递增，强制 Monaco 重挂 */
-  const [diffNonce, setDiffNonce] = useState(0)
-  const diffNonceRef = useRef(0)
-  /** 控制「全部接受」元数据预览卡片显示：仅当悬浮在按钮或卡片时显示 */
+  /** 控制全部接受元数据预览卡片显示：仅当悬浮在按钮或卡片时显示 */
   const [showAcceptMeta, setShowAcceptMeta] = useState(false)
   const acceptMetaHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   /** 无差异时避免重复触发 onApplyRound(done) */
@@ -50,11 +47,6 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
   const reviewBaselineRef = useRef(reviewBaseline)
   const draftIncomingRef = useRef(draftIncoming)
   const prevIncomingRef = useRef<string | null>(null)
-
-  const bumpDiffNonce = useMemoizedFn(() => {
-    diffNonceRef.current += 1
-    setDiffNonce(diffNonceRef.current)
-  })
 
   const handleAcceptMetaEnter = useMemoizedFn(() => {
     if (acceptMetaHideTimerRef.current) {
@@ -100,10 +92,9 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
     draftIncomingRef.current = incoming
     setReviewBaseline(sessionSnapshot)
     setDraftIncoming(incoming)
-    bumpDiffNonce()
     prevIncomingRef.current = null
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roundKey, sessionSnapshot, bumpDiffNonce])
+  }, [roundKey, sessionSnapshot])
 
   useEffect(() => {
     if (prevIncomingRef.current === null) {
@@ -113,9 +104,8 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
     if (prevIncomingRef.current === incoming) return
     prevIncomingRef.current = incoming
     draftIncomingRef.current = incoming
-    bumpDiffNonce()
     setDraftIncoming(incoming)
-  }, [incoming, bumpDiffNonce])
+  }, [incoming])
 
   useEffect(() => {
     if (hunks.length !== 0) {
@@ -141,21 +131,18 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
       const merged = mergeCasualLineHunks(rb, hs, decMap)
       reviewBaselineRef.current = merged
       setReviewBaseline(merged)
-      bumpDiffNonce()
       onApplyRound(merged, false)
       return
     }
     const nextDraft = mergeCasualLineHunks(rb, hs, decMap)
     draftIncomingRef.current = nextDraft
     setDraftIncoming(nextDraft)
-    bumpDiffNonce()
   })
 
   const handleRejectAll = useMemoizedFn(() => {
     const rb = reviewBaselineRef.current
     draftIncomingRef.current = rb
     setDraftIncoming(rb)
-    bumpDiffNonce()
     onApplyRound(rb, true)
   })
 
@@ -171,7 +158,6 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
     draftIncomingRef.current = merged
     setReviewBaseline(merged)
     setDraftIncoming(merged)
-    bumpDiffNonce()
     onApplyRound(merged, true)
   })
 
@@ -235,7 +221,6 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
         <NewHTTPCard bordered={true} title={<span style={{ fontSize: 12 }}>Request</span>} extra={bulkExtra}>
           <div className={styles['diffWrap']}>
             <YakitMonacoDiffInline
-              key={`${roundKey}:${diffNonce}:${draftIncoming}`}
               reuseKey={roundKey}
               original={reviewBaseline}
               incoming={draftIncoming}
