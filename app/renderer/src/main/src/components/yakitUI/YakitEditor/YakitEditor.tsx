@@ -600,20 +600,21 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           try {
             // @ts-ignore
             allMenu[name].menu[0]?.children.map((item, index) => {
-              // 点击一级菜单（本身）—— 执行第一个子项 —— 有三级则执行第二个子项
+              // 点击一级菜单
               if (menuItemName === 'customcontextmenu' && index === 0) {
-                if (item.isGetPlugin) {
-                  // 当子项为获取插件
-                  data = 'isGetPlugin'
-                } else {
-                  // 当子为插件时
-                  key = item.key.slice(PLUGIN_PREFIX.length)
-                  if (item.isAiPlugin) {
-                    data = true
-                  }
-                  params = item.params
-                  isExec = true
-                }
+                // 执行第一个子项 —— 有三级则执行第二个子项
+                // if (item.isGetPlugin) {
+                //   // 当子项为获取插件
+                //   data = 'isGetPlugin'
+                // } else {
+                //   // 当子为插件时
+                //   key = item.key.slice(PLUGIN_PREFIX.length)
+                //   if (item.isAiPlugin) {
+                //     data = true
+                //   }
+                //   params = item.params
+                //   isExec = true
+                // }
                 return
               }
 
@@ -655,12 +656,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           try {
             // @ts-ignore
             allMenu[name].menu[0]?.children.map((item, index) => {
-              // 点击一级菜单（本身）—— 执行第一个子项
+              // 点击一级菜单
               if (menuItemName === 'http' && index === 0) {
-                if (item.isCustom) {
-                  data = true
-                }
-                key = item.key
+                // 执行第一个子项
+                // if (item.isCustom) {
+                //   data = true
+                // }
+                // key = item.key
                 return
               }
 
@@ -680,7 +682,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             executeFunc = true
             onRightContextMenu(menuItemName)
           } else if (keyPath.length === 1) {
-            // TODO 不确认需求
             const limitPath = ['font-size', 'code', 'decode', 'code-compare', 'insert-label-tag', 'sendToComparer']
             if (limitPath.includes(keyPath[0])) return
             let runKey = menuName

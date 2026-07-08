@@ -599,20 +599,21 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     // ----- 匹配并执行子菜单项 -----
     try {
       for (const child of targetMenu.children) {
-        // 点击一级菜单（本身）—— 执行第一个子项 —— 有三级则执行第二个子项
+        // 点击一级菜单
         if (menuItemName === 'pluginExtension') {
-          if (child.key === 'Get*plug-in') {
-            // 当子项为获取插件
-            emitGetPluginEvent()
-          } else {
-            // 全选状态检查
-            if (isAllSelect) {
-              yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
-              return
-            }
-            // 当子为插件时
-            emitPluginEvent(child, true, getScriptName(child.key))
-          }
+          // 执行第一个子项 —— 有三级则执行第二个子项
+          // if (child.key === 'Get*plug-in') {
+          //   // 当子项为获取插件
+          //   emitGetPluginEvent()
+          // } else {
+          //   // 全选状态检查
+          //   if (isAllSelect) {
+          //     yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
+          //     return
+          //   }
+          //   // 当子为插件时
+          //   emitPluginEvent(child, true, getScriptName(child.key))
+          // }
           return
         }
 

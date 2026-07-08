@@ -75,6 +75,8 @@ export interface OnlyPageCache {
   route: YakitRoute
   pluginId?: number
   pluginName?: string
+  /** Plugin_OP 多 Tab 时用于精确关闭单个一级页面 */
+  routeKey?: string
 }
 
 /**
