@@ -12,7 +12,7 @@ import { Form, FormInstance } from 'antd'
 import {
   AIThirdPartyApplicationConfig,
   NewAIThirdPartyApplicationConfigBase,
-} from '@/components/configNetwork/NewThirdPartyApplicationConfig'
+} from '@/components/configNetwork/NewAIThirdPartyApplicationConfig'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   AIGlobalConfig,
