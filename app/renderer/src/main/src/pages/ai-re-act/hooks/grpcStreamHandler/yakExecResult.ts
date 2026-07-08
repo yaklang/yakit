@@ -1,5 +1,5 @@
 import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
-import type { AIAgentGrpcApi, AIOutputEvent } from '../grpcApi'
+import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { checkStreamValidity, convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'

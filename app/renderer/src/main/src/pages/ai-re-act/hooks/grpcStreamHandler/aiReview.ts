@@ -114,7 +114,7 @@ const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
 }
 
 const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, rawData, meta, sendRequest } = requestInfo
+  const { res, chatType, store, rawData, meta, request, sendRequest } = requestInfo
   if (res.Type !== 'task_review_require') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -141,18 +141,40 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
   if (res.IsSync) return
 
   // 实时数据处理逻辑
-  // task_review 和 tool_review 在任何review模式下，都是自动执行continue操作
-  // 操作的review，在UI上不显示操作历史
-  const info: AIInputEvent = {
-    IsInteractiveMessage: true,
-    InteractiveId: chatData.id,
-    InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
+  const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: () => request })
+  // 实时数据-(自由对话|任务规划)的 review 自动执行，并且不展示在UI上
+  if (isAuto) return
+
+  if (chatType === 'task') {
+    // 任务规划下，task_review在非yolo模式时，自动执行continue操作，并且不在UI上展示操作结果
+    const info: AIInputEvent = {
+      IsInteractiveMessage: true,
+      InteractiveId: chatData.id,
+      InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
+    }
+    sendRequest(info)
+  } else {
+    const taskGroupDetail = rawData.contents.get(chatData.taskIndex || '')
+    // 自由对话下，如果属于执行任务组里的task_review，在任何review模式下，后端都会自动执行continue操作，并且不在UI上展示操作结果
+    // 非执行任务组的review，正常显示到UI上，根据review模式和用户主动操作，决定结果，并且操作后，也不在UI上展示结果
+    if (!taskGroupDetail || taskGroupDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+      rawData.contents.set(chatData.id, cloneDeep(chatData))
+      store.getState().updateCasualReview(chatData.id, 'add')
+      store.getState().dispatchStreamingNode({
+        chatType: chatType,
+        parentTaskId: chatData.taskIndex,
+        node: {
+          token: chatData.id,
+          kind: 'item',
+          type: chatData.type,
+        },
+      })
+    }
   }
-  sendRequest(info)
 }
 
 const handleToolReview: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, rawData, meta, sendRequest } = requestInfo
+  const { res, chatType, store, rawData, meta, request, sendRequest } = requestInfo
   if (res.Type !== 'tool_use_review_require') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -179,14 +201,36 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
   if (res.IsSync) return
 
   // 实时数据处理逻辑
-  // task_review 和 tool_review 在任何review模式下，都是自动执行continue操作
-  // 操作的review，在UI上不显示操作历史
-  const info: AIInputEvent = {
-    IsInteractiveMessage: true,
-    InteractiveId: chatData.id,
-    InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
+  const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: () => request })
+  // 实时数据-(自由对话|任务规划)的 review 自动执行，并且不展示在UI上
+  if (isAuto) return
+
+  if (chatType === 'task') {
+    // 任务规划下，tool_review在非yolo模式时，自动执行continue操作，并且不在UI上展示操作结果
+    const info: AIInputEvent = {
+      IsInteractiveMessage: true,
+      InteractiveId: chatData.id,
+      InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
+    }
+    sendRequest(info)
+  } else {
+    const taskGroupDetail = rawData.contents.get(chatData.taskIndex || '')
+    // 自由对话下，如果属于执行任务组里的task_review，在任何review模式下，后端都会自动执行continue操作，并且不在UI上展示操作结果
+    // 非执行任务组的review，正常显示到UI上，根据review模式和用户主动操作，决定结果，并且操作后，也不在UI上展示结果
+    if (!taskGroupDetail || taskGroupDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+      rawData.contents.set(chatData.id, cloneDeep(chatData))
+      store.getState().updateCasualReview(chatData.id, 'add')
+      store.getState().dispatchStreamingNode({
+        chatType: chatType,
+        parentTaskId: chatData.taskIndex,
+        node: {
+          token: chatData.id,
+          kind: 'item',
+          type: chatData.type,
+        },
+      })
+    }
   }
-  sendRequest(info)
 }
 
 const handleUserInteractive: AIMessageHandler = (requestInfo) => {
@@ -446,28 +490,42 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
     case AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE:
       reviewDetail.data.selected = JSON.stringify(data.params)
       reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
-      store.getState().dispatchStreamingNode({
-        chatType: chatType,
-        parentTaskId: reviewDetail.taskIndex,
-        node: {
-          token: reviewDetail.id,
-          kind: 'item',
-          type: reviewDetail.type,
-        },
-      })
+
       if (chatType === 'reAct') {
+        store.getState().incrementNodeVersion(reviewDetail.id, 'item')
         if (reviewDetail.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
           store.getState().updateState({ currentPlanReviewToken: '' })
         } else {
           store.getState().updateCasualReview(reviewDetail.id, 'remove')
         }
       } else {
+        store.getState().dispatchStreamingNode({
+          chatType: chatType,
+          parentTaskId: reviewDetail.taskIndex,
+          node: {
+            token: reviewDetail.id,
+            kind: 'item',
+            type: reviewDetail.type,
+          },
+        })
         store.getState().updateState({ currentPlanReviewToken: '' })
       }
       break
     case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
     case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
-      // 实时数据-直接自动执行了continue，并且不需要展示在UI上，所以该处逻辑直接跳过
+      // 实时数据-任务规划-所有的task_review和tool_review都会自动执行，不展示到UI上
+      // 但是自由对话里，没有在执行任务组的tool_review会展示到UI上，需要处理数据并在UI上删除掉
+      rawData.contents.delete(reviewDetail.id)
+      store.getState().updateCasualReview(reviewDetail.id, 'remove')
+      store.getState().deleteElementNode({
+        chatType: chatType,
+        token: reviewDetail.id,
+        kind: 'item',
+        taskID: reviewDetail.taskIndex || undefined,
+        onDelContent: (mapKey) => {
+          rawData.contents.delete(mapKey)
+        },
+      })
       break
     default:
       break

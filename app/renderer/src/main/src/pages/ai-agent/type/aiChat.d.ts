@@ -256,4 +256,15 @@ export interface AIAgentChatMetaData {
 
   /** 同步ID-是否已处理 */
   syncIDMap: Map<string, boolean>
+
+  /**
+   * 轮询获取最新问题队列的空队列次数
+   * 如果超过3次，直接关闭轮询器，等待用户问问题后重启
+   */
+  queuePollingEmptyCount: number
+  /** 轮询获取最新问题队列的定时器 */
+  queuePollingTimer: NodeJS.Timeout | null
+
+  /** 轮询获取最新记忆列表的定时器 */
+  memoryPollingTimer: NodeJS.Timeout | null
 }

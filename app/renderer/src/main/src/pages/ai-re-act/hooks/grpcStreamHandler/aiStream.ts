@@ -134,18 +134,16 @@ const handleStream: AIMessageHandler = (requestInfo) => {
       if (lastUUID === EventUUID) {
         // 由UI进行定时获取渲染(打字机效果)
         rawData.systemStream += content
-        store.getState().updateStateCount('updateSystemStream')
       } else {
         if (meta.systemEventUUID.includes(EventUUID)) return
         meta.systemEventUUID.push(EventUUID)
         rawData.systemStream = content
-        store.getState().updateStateCount('updateSystemStream')
       }
     } else {
       meta.systemEventUUID.push(EventUUID)
       rawData.systemStream = content
-      store.getState().updateStateCount('updateSystemStream')
     }
+    store.getState().updateStateCount('updateSystemStream')
     return
   }
   if (res.IsReason) {
