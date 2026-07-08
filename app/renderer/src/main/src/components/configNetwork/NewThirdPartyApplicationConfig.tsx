@@ -36,7 +36,7 @@ import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
-import { EnableThinkingOptions, ModelNameOptionLabel } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
+import { EnableThinkingOptions } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -803,43 +803,12 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       { wait: 500 },
     )
 
-    /**
-     * @description 展示模型名称选项，memfit开头的展示aibalance图标，free结尾的展示免费标签
-     * TODO - 先保留，等后续反馈，看是否需要更换为下面展示UI
-     */
-    const showModelNameAllOptions = useCreation(() => {
-      return modelNameAllOptions.map((item) => {
-        return {
-          label: <ModelNameOptionLabel name={item.value} />,
-          value: item.value,
-        }
-      })
-    }, [modelNameAllOptions])
-
     const newDefaultAIFormItemsOfAI = useCreation(() => {
-      let newAIFormItemsOfAI = cloneDeep(defaultAIFormItemsOfAI(t))
-      const { isRequired, data } = isShowRequiredApiKey(typeVal)
-      if (isRequired) {
-        const modelIndex = newAIFormItemsOfAI.findIndex((item) => item.Name === 'model')
-        if (modelIndex !== -1) {
-          newAIFormItemsOfAI.splice(modelIndex, 0, data)
-        } else {
-          newAIFormItemsOfAI.push(data)
-        }
-      }
-      return newAIFormItemsOfAI
+      return buildDefaultAIFormItemsForType(typeVal, t)
     }, [typeVal, i18n.language])
 
     const newOptionalAIFormItemsOfAI = useCreation(() => {
-      let newData = cloneDeep(optionalAIFormItemsOfAI)
-      const { isRequired, data } = isShowRequiredApiKey(typeVal)
-      if (!isRequired) {
-        newData.unshift(data)
-      }
-      if (enableEndpointWatch) {
-        return newData.filter((item) => item.Name !== 'base_url')
-      }
-      return newData.filter((item) => item.Name !== 'endpoint')
+      return buildOptionalAIFormItemsForType(typeVal, enableEndpointWatch)
     }, [enableEndpointWatch, typeVal])
 
     const allAIFormItemsOfAI = useCreation(() => {
@@ -899,6 +868,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               title: item.Desc,
             }
           : null,
+        help:
+          item.Name === 'api_type' &&
+          '决定请求的接口路径：chat/completions 是主流兼容格式（/v1/chat/completions）， responses 是 OpenAI新一代格式（/v1/responses）',
       }
       switch (item.Type) {
         case 'string':
@@ -967,36 +939,15 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             }
             return <AIConfigAPIKeyFormItem aiType={typeVal} formProps={formProps} />
           }
-          if (item.Name === 'api_type') {
-            let selectProps: YakitSelectProps = {}
-            try {
-              selectProps.options = item.Extra ? JSONParseLog(item.Extra)?.options : []
-            } catch (error) {}
-            return (
-              <Form.Item
-                {...formProps}
-                tooltip={null}
-                help={
-                  <div style={{ fontSize: 12, color: '#b4bbca', lineHeight: '20px' }}>
-                    决定请求的接口路径：chat/completions 是主流兼容格式（/v1/chat/completions）， responses 是 OpenAI
-                    新一代格式（/v1/responses）
-                  </div>
-                }
-              >
-                <YakitSelect {...selectProps} disabled={IsOnline} />
-              </Form.Item>
-            )
-          } else {
-            let selectProps: YakitSelectProps = {}
-            try {
-              selectProps.options = item.Extra ? JSONParseLog(item.Extra)?.options : []
-            } catch (error) {}
-            return (
-              <Form.Item {...formProps}>
-                <YakitSelect {...selectProps} disabled={IsOnline} />
-              </Form.Item>
-            )
-          }
+          let selectProps: YakitSelectProps = {}
+          try {
+            selectProps.options = item.Extra ? JSONParseLog(item.Extra)?.options : []
+          } catch (error) {}
+          return (
+            <Form.Item {...formProps}>
+              <YakitSelect {...selectProps} disabled={IsOnline} />
+            </Form.Item>
+          )
         default:
           return <></>
       }
