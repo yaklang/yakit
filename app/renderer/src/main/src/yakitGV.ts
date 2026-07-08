@@ -153,6 +153,8 @@ export enum CacheDropDownGV {
   WebFuzzerProxyList = 'web_fuzzer_proxy_list',
   /** @name WebFuzzer 插入文件 */
   WebFuzzerInsertFileFuzzTag = 'web_fuzzer_insert_file_fuzz_tag',
+  /** @name WebFuzzer API 文档 Base Host */
+  WebFuzzerApiDocBaseHostList = 'web_fuzzer_api_doc_base_host_list',
 }
 
 export enum KnowledgeBaseGV {

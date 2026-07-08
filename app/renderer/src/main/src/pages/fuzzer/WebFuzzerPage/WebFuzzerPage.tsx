@@ -8,6 +8,7 @@ import {
   OutlineCollectionIcon,
   OutlineLightningboltIcon,
   OutlineViewboardsIcon,
+  OutlineBookopenIcon,
 } from '@/assets/icon/outline'
 import classNames from 'classnames'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
@@ -44,6 +45,11 @@ export const webFuzzerTabs = (t: TFunction) => {
       key: 'hot-patch',
       label: t('HTTPFuzzerPage.hotReload'),
       icon: <OutlineLightningboltIcon />,
+    },
+    {
+      key: 'api-doc',
+      label: t('HTTPFuzzerPage.apiDoc'),
+      icon: <OutlineBookopenIcon />,
     },
     {
       key: 'ai',
@@ -91,10 +97,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
   const [type, setType] = useState<WebFuzzerType>(props.defaultType || 'config')
   // 高级配置的隐藏/显示
   const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
-    config: false,
-    rule: true,
-    'hot-patch': true,
-    ai: true,
+    ...defaultAdvancedConfigShow,
   })
 
   const { fuzzerSequenceList, addFuzzerSequenceList } = useFuzzerSequence(
@@ -209,6 +212,8 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         return !advancedConfigShow.rule
       case 'hot-patch':
         return !advancedConfigShow['hot-patch']
+      case 'api-doc':
+        return !advancedConfigShow['api-doc']
       case 'ai':
         return !advancedConfigShow.ai
       default:

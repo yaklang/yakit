@@ -26,6 +26,7 @@ import {
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
 import { HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
 import { HTTPFuzzerHotPatchSidebar, HotCodeTemplate, HotPatchTempItem } from './HTTPFuzzerHotPatch'
+import { WebFuzzerApiDoc } from './WebFuzzerApiDoc/WebFuzzerApiDoc'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
 import { StringToUint8Array, Uint8ArrayToString } from '../../utils/str'
 import { PacketScanButton } from '@/pages/packetScanner/DefaultPacketScanGroup'
@@ -1896,6 +1897,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     sendFuzzerSettingInfo()
   })
 
+  const onApplyApiDocRequest = useMemoizedFn((request: string, isHttps: boolean) => {
+    requestRef.current = request
+    isHttpsRef.current = isHttps
+    setAdvancedConfigValue((prev) => ({ ...prev, isHttps }))
+    refreshRequest()
+    sendFuzzerSettingInfo()
+  })
+
   const onCasualReplaceReviewEnqueued = useMemoizedFn((payload: WebFuzzerCasualReplaceReviewPayload) => {
     /** 提案与基线完全一致时不入队，避免 mount→自动 done 闪一帧 overlay */
     const incoming = payload.change.request?.raw ?? ''
@@ -2351,6 +2360,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         return advancedConfigShow.rule
       case 'hot-patch':
         return advancedConfigShow['hot-patch']
+      case 'api-doc':
+        return advancedConfigShow['api-doc']
       case 'ai':
         return advancedConfigShow.ai
       default:
@@ -2366,6 +2377,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const hotPatchVisible = useCreation(
     () => advancedConfigShowType === 'hot-patch' && advancedConfigVisible,
+    [advancedConfigShowType, advancedConfigVisible],
+  )
+  const apiDocVisible = useCreation(
+    () => advancedConfigShowType === 'api-doc' && advancedConfigVisible,
     [advancedConfigShowType, advancedConfigVisible],
   )
   /** AI 侧栏展示时，与热加载一样允许拖动顶部分栏宽度 */
@@ -2666,6 +2681,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   }, [inViewport])
 
+  const advancedConfigShowVisible = useCreation(
+    () => advancedConfigVisible && !['api-doc', 'hot-patch'].includes(advancedConfigShowType),
+    [advancedConfigVisible, advancedConfigShowType],
+  )
   return (
     <>
       <div className={styles['http-fuzzer-body']} ref={fuzzerRef}>
@@ -2683,7 +2702,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             <React.Suspense fallback={<>{t('YakitSpin.loading')}...</>}>
               <HttpQueryAdvancedConfig
                 advancedConfigValue={advancedConfigValue}
-                visible={hotPatchVisible ? false : advancedConfigVisible}
+                visible={advancedConfigShowVisible}
                 onInsertYakFuzzer={onInsertYakFuzzerFun}
                 onValuesChange={onGetFormValue}
                 defaultHttpResponse={
@@ -2763,6 +2782,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
                 }}
               />
+              <WebFuzzerApiDoc visible={apiDocVisible} onApplyRequest={onApplyApiDocRequest} />
             </React.Suspense>
           }
           secondNode={
