@@ -408,12 +408,12 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 <div className={styles['chat-header-extra']}>
                   {isShowRetract && (
                     <>
-                      <YakitPopover
-                        overlayClassName={styles['chat-locate-popover']}
-                        content={
-                          <div className={styles['chat-locate-list']}>
-                            {casualQuestionList.length ? (
-                              casualQuestionList.map((token) => (
+                      {!!casualQuestionList.length && (
+                        <YakitPopover
+                          overlayClassName={styles['chat-locate-popover']}
+                          content={
+                            <div className={styles['chat-locate-list']}>
+                              {casualQuestionList.map((token) => (
                                 <div
                                   key={token}
                                   className={styles['chat-locate-item']}
@@ -421,18 +421,16 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                                 >
                                   <SolidChatIcon /> {getCasualQuestionQs(token)}
                                 </div>
-                              ))
-                            ) : (
-                              <div className={styles['chat-locate-item-empty']}>暂无问题</div>
-                            )}
-                          </div>
-                        }
-                        placement="bottom"
-                      >
-                        <YakitButton type="outline2" radius="28px" icon={<OutlineLandPlotIcon />}>
-                          子Agent任务
-                        </YakitButton>
-                      </YakitPopover>
+                              ))}
+                            </div>
+                          }
+                          placement="bottom"
+                        >
+                          <YakitButton type="outline2" radius="28px" icon={<OutlineLandPlotIcon />}>
+                            子Agent任务
+                          </YakitButton>
+                        </YakitPopover>
+                      )}
                       {externalParameters?.rightIcon ? (
                         <>
                           {getTaskId() && externalParameters.rightIcon.taskDetails && <TaskDetailsPopover />}
