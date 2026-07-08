@@ -571,7 +571,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             type="primary"
             onClick={() => btnClickCallback('link_countdown', { enterNow: true })}
           >
-            立即进入 ({countdown}s)
+            立即进入
           </YakitButton>
           <YakitButton
             className={styles['btn-style']}
@@ -661,7 +661,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
           >
             <div className={styles['log-body']}>
               {yakitStatus === 'link_countdown' ? (
-                <div className={styles['log-item']}>引擎连接成功！{countdown} 秒后自动进入...</div>
+                <div className={styles['log-item']}>准备连接引擎{'.'.repeat(Math.max(0, 4 - countdown))}</div>
               ) : yakitStatus === 'break' ? (
                 <div className={styles['log-item']}>已主动断开, 请点击手动连接引擎</div>
               ) : (

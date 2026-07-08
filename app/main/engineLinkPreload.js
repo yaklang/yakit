@@ -41,6 +41,8 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     getYakitHomeConfig: () => invokePrefixed('get-yakit-home-config'),
     setYakitHomeConfig: (key, value) => invokePrefixed('set-yakit-home-config', key, value),
     relaunchApp: () => invokePrefixed('relaunch-app'),
+    getDirSize: (dirPath) => invokePrefixed('get-dir-size', dirPath),
+    selectDirectory: () => invokePrefixed('select-directory'),
   },
   theme: {
     setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),

@@ -445,6 +445,35 @@ module.exports = {
       app.exit(0)
     })
 
+    ipcMain.handle(ipcEventPre + 'get-dir-size', async (e, dirPath) => {
+      const calcSize = (dir) => {
+        let size = 0
+        try {
+          const entries = fs.readdirSync(dir, { withFileTypes: true })
+          for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name)
+            if (entry.isFile()) {
+              try {
+                size += fs.statSync(fullPath).size
+              } catch (_) {}
+            } else if (entry.isDirectory()) {
+              size += calcSize(fullPath)
+            }
+          }
+        } catch (_) {}
+        return size
+      }
+      if (!dirPath || !fs.existsSync(dirPath)) return 0
+      return calcSize(dirPath)
+    })
+
+    ipcMain.handle(ipcEventPre + 'select-directory', async () => {
+      const { dialog } = require('electron')
+      const result = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] })
+      if (result.canceled || !result.filePaths.length) return ''
+      return result.filePaths[0]
+    })
+
     // 软件启动后判断是 CE 版本还是 EE 版本
     ipcMain.handle(ipcEventPre + 'is-enpritrace-to-domain', (event, flag) => {
       assertTrustedAppSender(event, ipcEventPre + 'is-enpritrace-to-domain')

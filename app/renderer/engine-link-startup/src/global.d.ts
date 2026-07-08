@@ -77,6 +77,15 @@ interface EchoResult {
   result: string
 }
 
+interface YakitHomeConfig {
+  YAKIT_HOME: string
+  language: string
+  workspaceHistory: string[]
+  autoStart: boolean
+  currentHome: string
+  configDir: string
+}
+
 interface YakitBridge {
   app: {
     markRendererReady: () => void
@@ -89,6 +98,11 @@ interface YakitBridge {
     onCloseWindow: (callback: () => void) => BridgeCleanup
     onFromMainWindow: (callback: (data: FromMainWindowPayload) => void) => BridgeCleanup
     onCredentialUpdate: (callback: (data: CredentialUpdatePayload) => void) => BridgeCleanup
+    getYakitHomeConfig: () => Promise<YakitHomeConfig>
+    setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
+    relaunchApp: () => Promise<unknown>
+    getDirSize: (dirPath: string) => Promise<number>
+    selectDirectory: () => Promise<string>
   }
   theme: {
     setTheme: (theme: 'light' | 'dark') => Promise<unknown>

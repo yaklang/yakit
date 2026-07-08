@@ -56,6 +56,7 @@ import { StringToUint8Array } from '@/utils/str'
 import { LocalEngine } from './components/LocalEngine'
 import { LocalEngineLinkFuncProps, LocalLinkParams } from './components/LocalEngine/LocalEngineType'
 import { EngineLog } from './components/EngineLog'
+import { WorkspaceSelector } from './components/WorkspaceSelector'
 import emiter from '@/utils/eventBus/eventBus'
 import { YaklangEngineWatchDog } from './components/YaklangEngineWatchDog'
 import yakitEELogo from '@/assets/yakitEELogo.png'
@@ -83,6 +84,9 @@ const DefaultCredential: YaklangEngineWatchDogCredential = {
 }
 
 export const StartupPage: React.FC = () => {
+  /** 工作空间是否已确认（所有平台均需用户确认） */
+  const [workspaceConfirmed, setWorkspaceConfirmed] = useState<boolean>(false)
+
   /** 是否置顶 */
   const [isTop, setIsTop] = useState<ModalIsTop>(0)
   /** 操作系统 */
@@ -107,8 +111,8 @@ export const StartupPage: React.FC = () => {
   const { yakitStatus, getYakitStatus, safeSetYakitStatus } = useYakitStatus(breakHandleRef)
   /** 手动点击倒计时连接取消 */
   const cancelCountdownLinkRef = useRef<boolean>(false)
-  /** 倒计时秒数 */
-  const [countdown, setCountdown] = useState<number>(3)
+  /** 倒计时步数（2秒共4步，每0.5秒递减1） */
+  const [countdown, setCountdown] = useState<number>(4)
   /** 倒计时定时器引用 */
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null)
   /** 当前引擎连接状态 */
@@ -139,13 +143,33 @@ export const StartupPage: React.FC = () => {
   /** 软件基础设置-语言 目前未支持 */
   const [softLang, setSoftLang, getSoftLang] = useGetSetState<Lange>('zh')
 
-  // #region 软件开始进行逻辑启动
+  // #region 工作空间确认回调
+  const handleWorkspaceConfirmed = useMemoizedFn(() => {
+    setWorkspaceConfirmed(true)
+  })
+  // #endregion
+
+  // #region 软件启动主流程（单一入口）
+  // 步骤 1: 获取系统类型，决定是否需要工作空间前置选择
+  // 步骤 2: workspaceConfirmed 为 true 后，执行引擎自检 + 基础信息获取 + 连接引擎
   useEffect(() => {
+    // 步骤 1: 获取操作系统类型
+    handleFetchSystem((sys) => {
+      setSystem(sys || 'Windows_NT')
+      // 所有平台均需要用户确认工作空间（通过 workspaceConfirmed 控制）
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!workspaceConfirmed) return
+    // 步骤 2: 插件漏洞信息库自检（不阻塞主流程）
     handleBuiltInCheck()
+    // 步骤 3: 获取系统基础信息，完成后进入连接引擎模式
     handleFetchBaseInfo(() => {
       handleLinkEngineMode()
     })
-  }, [])
+  }, [workspaceConfirmed])
+  // #endregion
 
   /** 插件漏洞信息库自检 */
   const handleBuiltInCheck = useMemoizedFn(() => {
@@ -936,24 +960,23 @@ export const StartupPage: React.FC = () => {
       if (getEngineMode() === 'local') {
         // 先设置倒计时状态
         safeSetYakitStatus('link_countdown')
-        setCountdown(3)
+        setCountdown(4)
         // 清除之前的定时器
         clearCountDownTime()
-        // 开始倒计时
-        let currentCount = 3
+        // 2 秒倒计时，每 0.5 秒递减一次（共 4 步）
+        let currentCount = 4
         countdownTimerRef.current = setInterval(() => {
           currentCount -= 1
           setCountdown(currentCount)
 
           if (currentCount <= 0) {
             clearCountDownTime()
-            // 倒计时结束，正式进入
             if (getYakitStatus() === 'link_countdown') {
               safeSetYakitStatus('link')
               setEngineLink(true)
             }
           }
-        }, 1000)
+        }, 500)
       } else {
         safeSetYakitStatus('link')
         setEngineLink(true)
@@ -1208,74 +1231,84 @@ export const StartupPage: React.FC = () => {
           setYakitStatus={safeSetYakitStatus}
           setCheckLog={setCheckLog}
         />
-        <div
-          className={styles['startup-engine-log']}
-          style={{ display: isRemoteEngine || yakitStatus === 'softwareBasics' ? 'none' : 'block' }}
-        >
-          <EngineLog />
-        </div>
-        {!isRemoteEngine ? (
+
+        {/* 工作空间选择前置步骤 */}
+        {!workspaceConfirmed ? (
           <div className={styles['startup-content-wrapper']}>
-            <LocalEngine
-              ref={localEngineRef}
-              setLog={setCheckLog}
-              onLinkEngine={handleLinkLocalEngine}
-              yakitStatus={yakitStatus}
-              setYakitStatus={safeSetYakitStatus}
-              buildInEngineVersion={buildInEngineVersion}
-              setRestartLoading={setRestartLoading}
-              yakitUpdate={yakitUpdate}
-              setYakitUpdate={setYakitUpdate}
-            />
-            {!engineLink && (
-              <>
-                <YakitLoading
-                  yakitLoadingTip={yakitLoadingTip}
-                  disableYakitLoading={disableYakitLoading}
-                  isTop={isTop}
-                  setIsTop={setIsTop}
-                  system={system}
-                  buildInEngineVersion={buildInEngineVersion}
-                  checkLog={checkLog}
-                  yakitStatus={yakitStatus}
-                  engineMode={engineMode || 'local'}
-                  restartLoading={restartLoading}
-                  dbPath={dbPath}
-                  btnClickCallback={loadingClickCallback}
-                  port={customPort}
-                  countdown={countdown}
-                  softTheme={softTheme}
-                  setSoftTheme={setSoftTheme}
-                  softMode={softMode}
-                  setSoftMode={setSoftMode}
-                  softLang={softLang}
-                  setSoftLang={setSoftLang}
-                  moreYaklangVersionList={moreYaklangVersionList}
-                  setYaklangSpecifyVersion={setYaklangSpecifyVersion}
-                />
-                {/* 更新引擎 */}
-                {yaklangDownload && (
-                  <DownloadYaklang
-                    isTop={isTop}
-                    setIsTop={setIsTop}
-                    yaklangSpecifyVersion={yaklangSpecifyVersion}
-                    system={system}
-                    visible={yaklangDownload}
-                    onCancel={onDownloadedYaklang}
-                  />
-                )}
-              </>
-            )}
+            <WorkspaceSelector onConfirm={handleWorkspaceConfirmed} />
           </div>
         ) : (
           <>
-            {!engineLink && (
-              <RemoteEngine
-                loading={remoteLinkLoading}
-                setLoading={setRemoteLinkLoading}
-                onSubmit={handleLinkRemoteEngine}
-                onSwitchLocalEngine={handleRemoteToLocal}
-              />
+            <div
+              className={styles['startup-engine-log']}
+              style={{ display: isRemoteEngine || yakitStatus === 'softwareBasics' ? 'none' : 'block' }}
+            >
+              <EngineLog />
+            </div>
+            {!isRemoteEngine ? (
+              <div className={styles['startup-content-wrapper']}>
+                <LocalEngine
+                  ref={localEngineRef}
+                  setLog={setCheckLog}
+                  onLinkEngine={handleLinkLocalEngine}
+                  yakitStatus={yakitStatus}
+                  setYakitStatus={safeSetYakitStatus}
+                  buildInEngineVersion={buildInEngineVersion}
+                  setRestartLoading={setRestartLoading}
+                  yakitUpdate={yakitUpdate}
+                  setYakitUpdate={setYakitUpdate}
+                />
+                {!engineLink && (
+                  <>
+                    <YakitLoading
+                      yakitLoadingTip={yakitLoadingTip}
+                      disableYakitLoading={disableYakitLoading}
+                      isTop={isTop}
+                      setIsTop={setIsTop}
+                      system={system}
+                      buildInEngineVersion={buildInEngineVersion}
+                      checkLog={checkLog}
+                      yakitStatus={yakitStatus}
+                      engineMode={engineMode || 'local'}
+                      restartLoading={restartLoading}
+                      dbPath={dbPath}
+                      btnClickCallback={loadingClickCallback}
+                      port={customPort}
+                      countdown={countdown}
+                      softTheme={softTheme}
+                      setSoftTheme={setSoftTheme}
+                      softMode={softMode}
+                      setSoftMode={setSoftMode}
+                      softLang={softLang}
+                      setSoftLang={setSoftLang}
+                      moreYaklangVersionList={moreYaklangVersionList}
+                      setYaklangSpecifyVersion={setYaklangSpecifyVersion}
+                    />
+                    {/* 更新引擎 */}
+                    {yaklangDownload && (
+                      <DownloadYaklang
+                        isTop={isTop}
+                        setIsTop={setIsTop}
+                        yaklangSpecifyVersion={yaklangSpecifyVersion}
+                        system={system}
+                        visible={yaklangDownload}
+                        onCancel={onDownloadedYaklang}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                {!engineLink && (
+                  <RemoteEngine
+                    loading={remoteLinkLoading}
+                    setLoading={setRemoteLinkLoading}
+                    onSubmit={handleLinkRemoteEngine}
+                    onSwitchLocalEngine={handleRemoteToLocal}
+                  />
+                )}
+              </>
             )}
           </>
         )}
