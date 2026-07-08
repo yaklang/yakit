@@ -42,7 +42,7 @@
     "rightTitle": "AI 内容"
   },
   "PacketScanButton": {
-    "packetScan": "扫描"
+    "packetScan": "数据包扫描"
   },
   "WebFuzzerResponseExtractor": {
     "cannotGenerateExtractionRule": "无法生成数据提取规则：",
@@ -97,6 +97,7 @@
     "bruteForceExample": "爆破示例",
     "AI_new_conversation": "新建会话",
     "aiTest": "AI测试",
+    "loadData": "加载数据，请稍候...",
     "followRedirects": "跟随重定向",
     "generatePathTemplate": "生成为 Path 模板",
     "generateRawTemplate": "生成为 Raw 模板",
@@ -443,7 +444,7 @@
     "notIncludes": "不包含"
   },
   "HttpQueryAdvancedConfig": {
-    "force_https": "强制 HTTPS",
+    "force_https": "HTTPS",
     "tls_config": "TLS配置",
     "guomi_tls": "国密TLS",
     "random_tls": "随机TLS",

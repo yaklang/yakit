@@ -1,3 +1,19 @@
 .yakit-button-theme {
   width: 100%;
 }
+.scan-button {
+  font-weight: 500;
+  font-size: 12px;
+  display: flex;
+  padding: 6px 8px;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  svg {
+    height: 16px;
+    width: 16px;
+  }
+}

@@ -2065,14 +2065,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             </YakitCheckableTag>
           </>
         )}
-        <PacketScanButton
-          packetGetter={() => {
-            return {
-              httpRequest: StringToUint8Array(requestRef.current),
-              https: advancedConfigValue.isHttps,
-            }
-          }}
-        />
         <YakitButton
           size="small"
           type="outline2"
@@ -2809,6 +2801,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       </YakitButton>
                     </>
                   )}
+                  <PacketScanButton
+                    packetGetter={() => {
+                      return {
+                        httpRequest: StringToUint8Array(requestRef.current),
+                        https: advancedConfigValue.isHttps,
+                      }
+                    }}
+                  />
                   <div className={styles['fuzzer-heard-force']}>
                     <span className={styles['fuzzer-heard-https']}>{t('HttpQueryAdvancedConfig.force_https')}</span>
                     <YakitCheckbox
