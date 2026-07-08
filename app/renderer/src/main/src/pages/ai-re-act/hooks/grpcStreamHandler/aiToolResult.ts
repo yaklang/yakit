@@ -32,7 +32,7 @@ const handleToolCallStart: AIMessageHandler = (requestInfo) => {
     chatType: chatType,
     type: AIChatQSDataTypeEnum.TOOL_RESULT,
     data: toolResult,
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,

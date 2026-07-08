@@ -130,7 +130,7 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -154,7 +154,7 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
     }
     sendRequest(info)
   } else {
-    const taskGroupDetail = rawData.contents.get(chatData.taskIndex || '')
+    const taskGroupDetail = rawData.contents.get(chatData.TaskId || '')
     // 自由对话下，如果属于执行任务组里的task_review，在任何review模式下，后端都会自动执行continue操作，并且不在UI上展示操作结果
     // 非执行任务组的review，正常显示到UI上，根据review模式和用户主动操作，决定结果，并且操作后，也不在UI上展示结果
     if (!taskGroupDetail || taskGroupDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
@@ -162,7 +162,7 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
       store.getState().updateCasualReview(chatData.id, 'add')
       store.getState().dispatchStreamingNode({
         chatType: chatType,
-        parentTaskId: chatData.taskIndex,
+        parentTaskId: chatData.TaskId,
         node: {
           token: chatData.id,
           kind: 'item',
@@ -190,7 +190,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -214,7 +214,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
     }
     sendRequest(info)
   } else {
-    const taskGroupDetail = rawData.contents.get(chatData.taskIndex || '')
+    const taskGroupDetail = rawData.contents.get(chatData.TaskId || '')
     // 自由对话下，如果属于执行任务组里的task_review，在任何review模式下，后端都会自动执行continue操作，并且不在UI上展示操作结果
     // 非执行任务组的review，正常显示到UI上，根据review模式和用户主动操作，决定结果，并且操作后，也不在UI上展示结果
     if (!taskGroupDetail || taskGroupDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
@@ -222,7 +222,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
       store.getState().updateCasualReview(chatData.id, 'add')
       store.getState().dispatchStreamingNode({
         chatType: chatType,
-        parentTaskId: chatData.taskIndex,
+        parentTaskId: chatData.TaskId,
         node: {
           token: chatData.id,
           kind: 'item',
@@ -250,7 +250,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
     data: cloneDeep(data),
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -268,7 +268,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
     if (target) {
       store.getState().dispatchStreamingNode({
         chatType: chatType,
-        parentTaskId: chatData.taskIndex,
+        parentTaskId: chatData.TaskId,
         node: {
           token: chatData.id,
           kind: 'item',
@@ -288,7 +288,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
     store.getState().updateCasualReview(chatData.id, 'add')
     store.getState().dispatchStreamingNode({
       chatType: chatType,
-      parentTaskId: chatData.taskIndex,
+      parentTaskId: chatData.TaskId,
       node: {
         token: chatData.id,
         kind: 'item',
@@ -317,7 +317,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -335,7 +335,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
     if (target) {
       store.getState().dispatchStreamingNode({
         chatType: chatType,
-        parentTaskId: chatData.taskIndex,
+        parentTaskId: chatData.TaskId,
         node: {
           token: chatData.id,
           kind: 'item',
@@ -359,7 +359,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, cloneDeep(chatData))
   store.getState().dispatchStreamingNode({
     chatType: chatType,
-    parentTaskId: chatData.taskIndex,
+    parentTaskId: chatData.TaskId,
     node: {
       token: chatData.id,
       kind: 'item',
@@ -435,7 +435,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
         reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
         store.getState().dispatchStreamingNode({
           chatType: chatType,
-          parentTaskId: reviewDetail.taskIndex,
+          parentTaskId: reviewDetail.TaskId,
           node: {
             token: reviewDetail.id,
             kind: 'item',
@@ -501,7 +501,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
       } else {
         store.getState().dispatchStreamingNode({
           chatType: chatType,
-          parentTaskId: reviewDetail.taskIndex,
+          parentTaskId: reviewDetail.TaskId,
           node: {
             token: reviewDetail.id,
             kind: 'item',
@@ -521,7 +521,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
         chatType: chatType,
         token: reviewDetail.id,
         kind: 'item',
-        taskID: reviewDetail.taskIndex || undefined,
+        taskID: reviewDetail.TaskId || undefined,
         onDelContent: (mapKey) => {
           rawData.contents.delete(mapKey)
         },
@@ -552,7 +552,7 @@ const handleDetachedPlanReview: AIMessageHandler = (requestInfo) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType: chatType,
       planID: meta.currentTaskPlanID?.coordinatorId,
       taskID: res.TaskId,

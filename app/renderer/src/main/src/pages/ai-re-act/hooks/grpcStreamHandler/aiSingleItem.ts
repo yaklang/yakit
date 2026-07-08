@@ -16,7 +16,7 @@ const handleThought: AIMessageHandler = (requestInfo) => {
     chatType: chatType,
     type: AIChatQSDataTypeEnum.THOUGHT,
     data: thought || '',
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -26,7 +26,7 @@ const handleThought: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
-    parentTaskId: chatData.taskIndex,
+    parentTaskId: chatData.TaskId,
     node: {
       token: chatData.id,
       kind: 'item',
@@ -49,7 +49,7 @@ const handleResult: AIMessageHandler = (requestInfo) => {
     chatType: chatType,
     type: AIChatQSDataTypeEnum.RESULT,
     data: result || '',
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -59,7 +59,7 @@ const handleResult: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
-    parentTaskId: chatData.taskIndex,
+    parentTaskId: chatData.TaskId,
     node: {
       token: chatData.id,
       kind: 'item',
@@ -83,7 +83,7 @@ const handleFailReactTask: AIMessageHandler = (requestInfo) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -93,7 +93,7 @@ const handleFailReactTask: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
-    parentTaskId: chatData.taskIndex,
+    parentTaskId: chatData.TaskId,
     node: {
       token: chatData.id,
       kind: 'item',
@@ -121,7 +121,7 @@ const handleToolCallDecision: AIMessageHandler = (requestInfo) => {
         En: i18n.en,
       },
     },
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -131,7 +131,7 @@ const handleToolCallDecision: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
-    parentTaskId: chatData.taskIndex,
+    parentTaskId: chatData.TaskId,
     node: {
       token: chatData.id,
       kind: 'item',
@@ -155,7 +155,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (requestInfo) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -165,7 +165,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
-    parentTaskId: chatData.taskIndex,
+    parentTaskId: chatData.TaskId,
     node: {
       token: chatData.id,
       kind: 'item',
@@ -188,7 +188,7 @@ const handleApiRequestFailed: AIMessageHandler = (requestInfo) => {
     chatType: chatType,
     type: AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
     data,
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -198,7 +198,7 @@ const handleApiRequestFailed: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
-    parentTaskId: chatData.taskIndex,
+    parentTaskId: chatData.TaskId,
     node: {
       token: chatData.id,
       kind: 'item',
@@ -246,7 +246,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
         // 仅 `working` 覆盖 progress；其它状态保留上一次（新建时默认 undefined）
         progress: status === 'working' ? payload.progress : undefined,
       },
-      taskIndex: generateTaskNodeDataID({
+      TaskId: generateTaskNodeDataID({
         chatType,
         planID: meta.currentTaskPlanID?.taskID,
         taskID: res.TaskId,
@@ -256,7 +256,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
     rawData.contents.set(chatData.id, chatData)
     store.getState().dispatchStreamingNode({
       chatType: chatType,
-      parentTaskId: chatData.taskIndex,
+      parentTaskId: chatData.TaskId,
       node: {
         token: chatData.id,
         kind: 'item',
@@ -291,7 +291,7 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
     chatType: chatType,
     type: cardType,
     data: nextData,
-    taskIndex: generateTaskNodeDataID({
+    TaskId: generateTaskNodeDataID({
       chatType,
       planID: meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
@@ -301,7 +301,7 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
-    parentTaskId: chatData.taskIndex,
+    parentTaskId: chatData.TaskId,
     node: {
       token: chatData.id,
       kind: 'item',
