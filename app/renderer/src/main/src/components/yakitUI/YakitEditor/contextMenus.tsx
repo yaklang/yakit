@@ -230,7 +230,6 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
         },
       ],
       onRun: (editor: YakitIMonacoEditor, key: string, isCustom) => {
-        console.log(123, key)
         // 自定义HTTP数据包变形标记
         if (isCustom) {
           customMutateRequest(key, editor.getModel()?.getValue(), editor)
