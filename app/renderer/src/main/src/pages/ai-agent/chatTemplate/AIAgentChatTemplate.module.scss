@@ -200,11 +200,28 @@
   }
   30% {
     outline-color: var(--Colors-Use-Main-Primary);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--Colors-Use-Main-Primary) 18%, transparent);
+    box-shadow: 0 0 0 4px var(--Colors-Use-Main-Primary);
   }
   100% {
     outline-color: transparent;
     box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@supports (background: color-mix(in srgb, #000 50%, #fff)) {
+  @keyframes ai-chat-item-highlight {
+    0% {
+      outline-color: transparent;
+      box-shadow: 0 0 0 0 transparent;
+    }
+    30% {
+      outline-color: var(--Colors-Use-Main-Primary);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--Colors-Use-Main-Primary) 18%, transparent);
+    }
+    100% {
+      outline-color: transparent;
+      box-shadow: 0 0 0 0 transparent;
+    }
   }
 }
 

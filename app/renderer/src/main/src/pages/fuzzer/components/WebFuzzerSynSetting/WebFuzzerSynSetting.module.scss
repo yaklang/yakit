@@ -5,7 +5,7 @@
   flex-direction: column;
   .tip {
     padding: 8px 24px;
-    background: tools.fetch-color-transparen(var(--Colors-Use-Green-Primary), 10%);
+    @include tools.color-mix-alpha(background, var(--Colors-Use-Green-Primary), 10%);
     min-height: 32px;
     font-weight: 400;
     font-size: 12px;

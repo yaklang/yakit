@@ -197,7 +197,7 @@
   }
   .heard-subTitle-text {
     padding: 8px 24px;
-    background-color: tools.fetch-color-transparen(var(--Colors-Use-Success-Primary), 10%);
+    @include tools.color-mix-alpha(background-color, var(--Colors-Use-Success-Primary), 10%);
     height: 48px;
     font-weight: 400;
     font-size: 12px;
