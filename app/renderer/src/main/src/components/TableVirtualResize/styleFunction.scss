@@ -55,7 +55,9 @@ $color-mix-supports: '(background: color-mix(in srgb, #000 50%, #fff))';
 
 // 多色渐变混色：不支持 color-mix 时回退为原色渐变
 @mixin background-gradient-mix($colors, $alpha) {
-  background: linear-gradient(join($colors, (), $separator: comma));
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+    linear-gradient(join($colors, (), $separator: comma));
   @supports #{$color-mix-supports} {
     $colorMixs: ();
     @each $color in $colors {

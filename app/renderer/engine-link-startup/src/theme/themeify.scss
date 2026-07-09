@@ -62,7 +62,9 @@ $color-mix-supports: '(background: color-mix(in srgb, #000 50%, #fff))';
 
 // 线性渐变 + 底层背景：不支持 color-mix 时渐变停点使用原色
 @mixin color-mix-linear-gradient-layered($direction, $color, $alpha, $base) {
-  background: linear-gradient($direction, $color 0%, $color 100%), $base;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+    linear-gradient($direction, $color 0%, $color 100%), $base;
   @supports #{$color-mix-supports} {
     background:
       linear-gradient(
@@ -76,7 +78,8 @@ $color-mix-supports: '(background: color-mix(in srgb, #000 50%, #fff))';
 
 // 同色双停点渐变：不支持 color-mix 时回退为原色
 @mixin color-mix-uniform-gradient($direction, $color, $alpha) {
-  background: linear-gradient($direction, $color, $color);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), linear-gradient($direction, $color, $color);
   @supports #{$color-mix-supports} {
     background: linear-gradient(
       $direction,
