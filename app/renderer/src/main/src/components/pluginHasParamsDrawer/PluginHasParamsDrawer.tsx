@@ -18,6 +18,10 @@ import { useMemoizedFn } from 'ahooks'
 import { YakitDrawerProps } from '../yakitUI/YakitDrawer/YakitDrawerType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
+import { OutlineChevronupIcon } from '@/assets/icon/outline'
+import classNames from 'classnames'
+import { SolidCheckIcon } from '@/assets/icon/solid'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import styles from './PluginHasParamsDrawer.module.scss'
 
 interface PluginHasParamsDrawerProps {
@@ -197,6 +201,7 @@ interface PluginHasParamsModalProps {
   onCloseParamsModal: (visible: boolean) => void
   onOkParamsModal: (save: boolean, exec: boolean, execParams: YakExecutorParam[]) => void
 }
+const PluginHasParamsModalExecCheck = 'PluginHasParamsModalExecCheck'
 export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps) => {
   const {
     visible,
@@ -211,6 +216,41 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
   const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi'])
 
   const pluginHasParamsFormRef = useRef<PluginHasParamsFormRefProps>()
+
+  const [execCheck, setExecCheck] = useState<string>('execute_and_save')
+  const [showExecDropdown, setShowExecDropdown] = useState<boolean>(false)
+  const execdropdownRef = useRef<HTMLDivElement>(null)
+
+  const handleStartExecBefore = useMemoizedFn(() => {
+    setRemoteValue(PluginHasParamsModalExecCheck, execCheck)
+    if (execCheck === 'execute_and_save') {
+      execOrSave(true, true)
+    } else if (execCheck === 'defaultSet') {
+      execOrSave(false, true)
+    }
+  })
+
+  useEffect(() => {
+    if (visible) {
+      getRemoteValue(PluginHasParamsModalExecCheck).then((e) => {
+        if (!!e) {
+          setExecCheck(e)
+        } else {
+          setExecCheck('execute_and_save')
+        }
+      })
+      // dropdown 点击外部关闭
+      const handleClickOutside = (event) => {
+        if (execdropdownRef.current && !execdropdownRef.current.contains(event.target)) {
+          setShowExecDropdown(false)
+        }
+      }
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [visible])
 
   const execOrSave = useMemoizedFn((save: boolean, exec: boolean) => {
     if (pluginHasParamsFormRef.current) {
@@ -246,22 +286,41 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
           >
             {t('YakitButton.save')}
           </YakitButton>
-          <YakitButton
-            onClick={() => {
-              execOrSave(true, true)
-            }}
-            type="primary"
-          >
-            {t('PluginHasParamsModal.execute_and_save')}
-          </YakitButton>
-          <YakitButton
-            type="secondary2"
-            onClick={() => {
-              execOrSave(false, true)
-            }}
-          >
-            {t('PluginHasParamsModal.executeWithoutSaving')}
-          </YakitButton>
+          <div className={styles['exec-operation-btn-wrapper']} ref={execdropdownRef}>
+            <div className={styles['operation-btn-left']} onClick={handleStartExecBefore}>
+              {t('YakitButton.execute')}
+            </div>
+            <div className={styles['operation-btn-right']} onClick={() => setShowExecDropdown(!showExecDropdown)}>
+              <OutlineChevronupIcon
+                className={classNames(styles['title-icon'], {
+                  [styles['rotate-180']]: showExecDropdown,
+                })}
+              />
+            </div>
+            <div
+              className={styles['operation-dropdown-wrapper']}
+              style={{ display: showExecDropdown ? 'block' : 'none' }}
+            >
+              {[
+                { label: t('PluginHasParamsModal.execute_and_save'), key: 'execute_and_save' },
+                { label: t('PluginHasParamsModal.executeWithoutSaving'), key: 'executeWithoutSaving' },
+              ].map((item) => (
+                <div
+                  className={classNames(styles['operation-dropdown-list-item'], {
+                    [styles['active']]: execCheck === item.key,
+                  })}
+                  onClick={() => {
+                    setExecCheck(item.key)
+                    setShowExecDropdown(!showExecDropdown)
+                  }}
+                  key={item.key}
+                >
+                  <span>{item.label}</span>
+                  {execCheck === item.key && <SolidCheckIcon className={styles['check-icon']} />}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       }
     >
