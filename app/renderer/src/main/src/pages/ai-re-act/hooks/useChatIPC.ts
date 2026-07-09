@@ -681,7 +681,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
-        console.log('ipcContent', res, `------${res.TaskId}`, ipcContent)
+        // console.log('ipcContent', res, `------${res.TaskId}`, ipcContent)
         if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
           const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
           const chatStore = getChatDataStore()
