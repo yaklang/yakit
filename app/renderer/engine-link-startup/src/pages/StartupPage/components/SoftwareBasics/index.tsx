@@ -63,10 +63,15 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       const newHistory = [currentPath, ...workspaceHistory.filter((p) => p !== currentPath)].slice(0, 10)
       await yakitApp.setYakitHomeConfig('workspaceHistory', newHistory)
       await yakitApp.setYakitHomeConfig('autoStart', autoStart)
+
       setSoftTheme(softTheme, true)
+
       if (isCommunityYakit()) {
+        await yakitApp.setYakitHomeConfig('mode', JSON.stringify({ key: LocalGVS.YakitCEMode, value: softMode }))
         setLocalValue(LocalGVS.YakitCEMode, softMode)
       }
+
+      await yakitApp.setYakitHomeConfig('lange', JSON.stringify({ key: getLocalI18nGV(), value: softLang }))
       setLocalValue(getLocalI18nGV(), softLang)
 
       if (currentPath !== originalHome) {
