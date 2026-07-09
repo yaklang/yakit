@@ -92,9 +92,6 @@ const UICloseFlag = 'windows-close-flag'
 let win = null
 let engineLinkWin = null
 
-/** 是否展示关闭二次确认弹窗的标志位 */
-let closeFlag = true
-
 process.on('uncaughtException', (error) => {
   try {
     printLogOutputFile(`[Main] index / uncaughtException => ${error?.message || JSON.stringify(error)}`)
@@ -580,7 +577,7 @@ function registerGlobalIPC() {
       closeAllLogHandles()
       app.exit()
     }
-    if (closeFlag && showCloseMessageBox && parentWindow) {
+    if (getExtraLocalCacheValue(UICloseFlag) !== false && showCloseMessageBox && parentWindow) {
       const showIcon = isIRify
         ? '../assets/irify-close.png'
         : isMemfit
@@ -659,10 +656,7 @@ if (!shouldAbortStartupForDebugFlags) {
     getAllLogHandles()
 
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */
-    initExtraLocalCache(() => {
-      const cacheFlag = getExtraLocalCacheValue(UICloseFlag)
-      closeFlag = cacheFlag === undefined ? true : cacheFlag
-    })
+    initExtraLocalCache()
 
     // 截图功能注册
     if (['darwin', 'win32'].includes(process.platform)) {
