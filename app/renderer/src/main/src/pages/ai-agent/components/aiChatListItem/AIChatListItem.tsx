@@ -164,7 +164,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
       case 'item':
         return <StaticChatContent token={item.token} />
       case 'group':
-        return <AIGroupItem item={item} />
+        return <AIGroupItem token={item.token} />
 
       case 'task':
         return <AITaskItem item={item} />

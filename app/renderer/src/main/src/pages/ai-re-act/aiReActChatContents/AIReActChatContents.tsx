@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 'react'
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import classNames from 'classnames'
 import { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
@@ -15,7 +15,7 @@ import { AIStreamContentType } from '../hooks/defaultConstant'
 import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
-import { ChatReferenceMaterialPayload, ReActChatRenderItem } from '../hooks/aiRender'
+import { ChatReferenceMaterialPayload, ReActChatRenderElement } from '../hooks/aiRender'
 import Loading from '@/components/Loading/Loading'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -121,6 +121,7 @@ const TYPE = 'reAct'
 
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
   forwardRef((props, ref) => {
+    const listRootRef = useRef<HTMLDivElement>(null)
     const { activeChat } = useAIAgentStore()
 
     const store = useCurrentStore()
@@ -152,10 +153,13 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       listRootRef,
     })
 
-    useImperativeHandle(ref, () => ({ scrollToItemIndex: locateToIndex }), [locateToIndex])
+    useImperativeHandle(ref, () => ({ scrollToItemIndex: locateToIndex }), [])
 
     const renderItem = useCallback((_, item?: ReActChatRenderElement) => {
       if (!item?.token) return null
+      // TODO -
+      // 如果token变化，可能存在以下情况
+      // 例如group中list监听数组长度变化确认更新,会出现长度没变token变化，list层不会渲染，token变化的组件拿不到最新的token一直是旧的
       return <AIChatListItem key={item.token} item={item} />
     }, [])
     const Item = useCallback(
@@ -214,7 +218,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           scrollerRef={setScrollerRef}
           firstItemIndex={firstItemIndex}
           atBottomStateChange={setIsAtBottomRef}
-          data={casualChat}
+          data={casualChat.elements}
           totalListHeightChanged={handleTotalListHeightChanged}
           itemContent={renderItem}
           initialTopMostItemIndex={chatLength > 1 ? chatLength - 1 : 0}

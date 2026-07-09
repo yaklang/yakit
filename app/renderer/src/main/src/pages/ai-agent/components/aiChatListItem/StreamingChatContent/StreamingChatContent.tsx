@@ -2,7 +2,6 @@ import { AIStreamNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatC
 import { AIChatQSDataTypeEnum, ChatStream, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { memo, type FC } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
-import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
 import AITaskDefaultGroupCard from '../../AITaskDefaultGroupCard/AITaskDefaultGroupCard'
 import ConcurrentStreamCard from '../../ConcurrentStreamCard/ConcurrentStreamCard'
 import { useCreation } from 'ahooks'
@@ -51,9 +50,9 @@ const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
       return <ConcurrentStreamCard token={token} session={session} elements={props.children} chatType={chatType} />
     }
   }
-  if (props.kind === 'group') {
-    return <AIGroupStreamCard elements={props.children} token={token} />
-  }
+  // if (props.kind === 'group') {
+  //   return <AIGroupStreamCard elements={props.children} token={token} />
+  // }
   return null
   // return <AIStreamCard session={session} token={token} streamClassName={streamClassName} />
 }
