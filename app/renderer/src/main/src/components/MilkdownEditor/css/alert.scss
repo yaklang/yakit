@@ -8,18 +8,18 @@
 
 .alter-custom-warning,
 .alter-custom-caution {
-  background-color: tools.fetch-color-transparen(var(--Colors-Use-Warning-Primary), 10%);
+  @include tools.color-mix-alpha(background-color, var(--Colors-Use-Warning-Primary), 10%);
   border-left: 3px solid var(--Colors-Use-Warning-Primary);
 }
 
 .alter-custom-danger {
-  background-color: tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 10%);
+  @include tools.color-mix-alpha(background-color, var(--Colors-Use-Error-Primary), 10%);
   border-left: 3px solid var(--Colors-Use-Error-Primary);
 }
 
 .alter-custom-success,
 .alter-custom-tip {
-  background-color: tools.fetch-color-transparen(var(--Colors-Use-Success-Primary), 10%);
+  @include tools.color-mix-alpha(background-color, var(--Colors-Use-Success-Primary), 10%);
   border-left: 3px solid var(--Colors-Use-Success-Primary);
 }
 

@@ -27,11 +27,9 @@ $color-type: (
 @mixin generateColors() {
   @each $type, $value in $color-type {
     $color: map-get($value, 'color');
-    $bgColor: tools.fetch-color-transparen($color, map-get($value, 'alph'));
-
     .yakit-round-corner-tag-#{$type} {
       color: $color;
-      background-color: $bgColor;
+      @include tools.color-mix-alpha(background-color, $color, map-get($value, 'alph'));
       svg {
         color: $color;
       }
@@ -50,7 +48,7 @@ $color-type: (
 
 .yakit-round-corner-tag-info {
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
-  background-color: tools.fetch-color-transparen(var(--Colors-Use-Neutral-Text-3-Secondary), 10%);
+  @include tools.color-mix-alpha(background-color, var(--Colors-Use-Neutral-Text-3-Secondary), 10%);
   svg {
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }

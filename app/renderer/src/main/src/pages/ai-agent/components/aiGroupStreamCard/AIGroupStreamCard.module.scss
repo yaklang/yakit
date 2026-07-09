@@ -24,17 +24,33 @@
         background: linear-gradient(
           180deg,
           var(--Colors-Use-Neutral-Bg) 0%,
-          color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 60%, transparent) 30.21%,
+          var(--Colors-Use-Neutral-Bg) 30.21%,
           transparent 80%
         );
+        @supports (background: color-mix(in srgb, #000 50%, #fff)) {
+          background: linear-gradient(
+            180deg,
+            var(--Colors-Use-Neutral-Bg) 0%,
+            color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 60%, transparent) 30.21%,
+            transparent 80%
+          );
+        }
       }
       &:not(.noMask)::after {
         background: linear-gradient(
           180deg,
           transparent 20%,
-          color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 60%, transparent) 69.79%,
+          var(--Colors-Use-Neutral-Bg) 69.79%,
           var(--Colors-Use-Neutral-Bg) 100%
         );
+        @supports (background: color-mix(in srgb, #000 50%, #fff)) {
+          background: linear-gradient(
+            180deg,
+            transparent 20%,
+            color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 60%, transparent) 69.79%,
+            var(--Colors-Use-Neutral-Bg) 100%
+          );
+        }
       }
     }
   }

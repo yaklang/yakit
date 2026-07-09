@@ -1,3 +1,5 @@
+@use '../../../theme/themeify.scss' as tools;
+
 .overlay {
   position: absolute;
   inset: 0;
@@ -7,11 +9,7 @@
 .mask {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--Colors-Use-Basic-Background) 95%, transparent),
-    color-mix(in srgb, var(--Colors-Use-Basic-Background) 95%, transparent)
-  );
+  @include tools.color-mix-uniform-gradient(180deg, var(--Colors-Use-Basic-Background), 95%);
 }
 
 .loading {

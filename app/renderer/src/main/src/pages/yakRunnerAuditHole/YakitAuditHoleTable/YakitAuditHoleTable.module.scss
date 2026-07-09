@@ -83,7 +83,7 @@ $keyColor: map-keys($tagColor);
   }
   .yakit-ssa-risk-table-cell-unread {
     // background-color: #f6544a14;
-    background-color: tools.fetch-color-transparen(var(--Colors-Use-Blue-Primary), 5%);
+    @include tools.color-mix-alpha(background-color, var(--Colors-Use-Blue-Primary), 5%);
   }
 }
 

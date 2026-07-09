@@ -5,7 +5,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: color-mix(in srgb, #e1e2e8, transparent 60%);
+  background: rgba(225, 226, 232, 0.4);
+  @supports (background: color-mix(in srgb, #000 50%, #fff)) {
+    background: color-mix(in srgb, #e1e2e8, transparent 60%);
+  }
 }
 
 milkdown-image-block > .image-wrapper .operation {

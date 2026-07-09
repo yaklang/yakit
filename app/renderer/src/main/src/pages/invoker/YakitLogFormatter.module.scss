@@ -102,13 +102,12 @@
   .file-card-heard-error {
     padding: 4px 8px;
     border-radius: 4px 4px 0 0;
-    background:
-      linear-gradient(
-        0deg,
-        tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 0%,
-        tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 20%) 100%
-      ),
-      var(--Colors-Use-Basic-Background);
+    @include tools.color-mix-linear-gradient-layered(
+      0deg,
+      var(--Colors-Use-Error-Primary),
+      20%,
+      var(--Colors-Use-Basic-Background)
+    );
   }
   .file-card-title {
     @extend %display-flex-center;
@@ -126,7 +125,7 @@
   .file-status {
     padding: 0px 6px;
     border-radius: 8px;
-    border: 1px solid tools.fetch-color-transparen(var(--Colors-Use-Error-Primary), 30%);
+    @include tools.color-mix-border(1px, solid, var(--Colors-Use-Error-Primary), 30%);
     background: var(--Colors-Use-Main-Bg);
     color: var(--Colors-Use-Error-Primary);
   }
