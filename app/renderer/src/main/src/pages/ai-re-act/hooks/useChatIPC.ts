@@ -496,7 +496,9 @@ function useChatIPC(params?: UseChatIPCParams) {
       }
       if (params.IsFreeInput) {
         setCasualTitle('等待回复中...')
-        if (!casualLoading) {
+        // 如果自由对话引起了任务规划，那么自由对话其实是空闲状态
+        const isCasualIdle = casualLoading && currentCasualTaskID.current === currentTaskPlanID.current?.taskID
+        if (!casualLoading || isCasualIdle) {
           const chatID = uuidv4()
           const AttachedResourceInfos = params.AttachedResourceInfo || []
           AttachedResourceInfos.push({
