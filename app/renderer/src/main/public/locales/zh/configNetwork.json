@@ -68,7 +68,7 @@
     "pluginLogCount": "插件日志条数",
     "performance": "关闭性能提示",
     "performanceTip": "关闭后将不会提示写入数据慢",
-    "closeConfirm": "启动关闭yakit二次确认",
+    "closeConfirm": "启动关闭二次确认",
     "synScanNicConfig": "SYN 扫描网卡配置",
     "nic": "网卡",
     "nicTip": "为SYN扫描选择网卡",

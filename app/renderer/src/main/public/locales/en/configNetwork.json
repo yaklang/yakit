@@ -68,7 +68,7 @@
     "pluginLogCount": "Plugin log count",
     "performance": "Close performance tips",
     "performanceTip": "After closing, there will be no prompt indicating slow data writing.",
-    "closeConfirm": "Close Yakit confirmation on startup",
+    "closeConfirm": "Show confirmation when closing",
     "synScanNicConfig": "SYN scan network interface configuration",
     "nic": "Network interface",
     "nicTip": "Select a network interface for SYN scanning",

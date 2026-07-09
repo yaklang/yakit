@@ -365,16 +365,21 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
   const [closeConfirmEnabled, setCloseConfirmEnabled] = useState(true)
 
-  const onConfirmCloseConfirmEnabled = useMemoizedFn((value: boolean) => {
-    ipcRenderer.invoke('set-extra-cache', 'windows-close-flag', value)
-    ipcRenderer.invoke('manual-write-file', 'extraCache')
+  const onConfirmCloseConfirmEnabled = useMemoizedFn(async (value: boolean) => {
+    try {
+      await ipcRenderer.invoke('set-extra-cache', 'windows-close-flag', value)
+      await ipcRenderer.invoke('manual-write-file', 'extraCache')
+    } catch {}
   })
 
   useEffect(() => {
     if (!inViewport) return
-    ipcRenderer.invoke('fetch-extra-cache', 'windows-close-flag').then((flag) => {
-      setCloseConfirmEnabled(flag !== false)
-    })
+    ipcRenderer
+      .invoke('fetch-extra-cache', 'windows-close-flag')
+      .then((flag) => {
+        setCloseConfirmEnabled(flag !== false)
+      })
+      .catch(() => setCloseConfirmEnabled(true))
   }, [inViewport])
 
   const submit = useMemoizedFn((isNtml?: boolean) => {
@@ -1342,8 +1347,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         onResetSecondaryTabsNum()
                         onResetLimitLogNum()
                         onResetPerformanceTips()
-                        setCloseConfirmEnabled(false)
-                        onConfirmCloseConfirmEnabled(false)
+                        setCloseConfirmEnabled(true)
+                        onConfirmCloseConfirmEnabled(true)
                         ipcRenderer.invoke('ResetGlobalNetworkConfig', {}).then(() => {
                           cerFormRef.current?.resetFields()
                           update()
