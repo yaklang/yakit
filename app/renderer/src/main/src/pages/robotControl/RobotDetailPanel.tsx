@@ -127,6 +127,7 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
       <div className={styles['robot-detail-cards']}>
         <RobotLinkRobotCard
           channel={robot.channel}
+          bot={robot.bot}
           linkInfo={robot.linkInfo}
           onLinkInfoChange={onLinkInfoChange}
           onUnbound={onUnbound}

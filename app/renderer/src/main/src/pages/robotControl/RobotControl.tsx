@@ -160,10 +160,10 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
 
   const buildLinkInfo = (bot: IMBotConfigLike): RobotLinkInfo => {
     return {
-      openId: bot.OwnerId || bot.AppId || bot.Platform,
+      openId: bot.OwnerId || '',
       appId: bot.AppId,
       channel: bot.Platform as RobotChannelType,
-      boundAt: bot.OwnerId ? '已绑定所有者' : '已保存凭据',
+      boundAt: '已绑定所有者',
     }
   }
 
@@ -176,8 +176,8 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
       channel,
       region: getChannelRegion(bot.Platform),
       enabled: bot.Enabled !== false,
-      bound: !!(bot.AppId || bot.OwnerId),
-      linkInfo: buildLinkInfo(bot),
+      bound: !!bot.OwnerId,
+      linkInfo: bot.OwnerId ? buildLinkInfo(bot) : undefined,
       bot,
     }
   })

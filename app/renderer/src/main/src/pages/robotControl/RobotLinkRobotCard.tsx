@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useInterval, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import { OutlineLinkoutIcon, OutlineQrcodeIcon } from '@/assets/icon/outline'
+import { OutlineLinkoutIcon, OutlineQrcodeIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
@@ -10,7 +10,6 @@ import { RobotChannelType } from './RobotControl'
 import { RobotQrCodePlaceholder } from './RobotQrCodePlaceholder'
 import {
   cancelIMOnboarding,
-  deleteIMBot,
   IMBotConfigLike,
   IMPlatform,
   onIMOnboardingData,
@@ -25,6 +24,7 @@ const QR_REFRESH_SECONDS = 600
 
 export interface RobotLinkRobotCardProps {
   channel?: RobotChannelType
+  bot?: IMBotConfigLike
   /** @name 绑定信息，有值时展示已绑定 UI */
   linkInfo?: RobotLinkInfo
   /** @name 绑定状态变更回调 */
@@ -34,7 +34,7 @@ export interface RobotLinkRobotCardProps {
 }
 
 export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => {
-  const { channel, linkInfo, onLinkInfoChange, onUnbound } = props
+  const { channel, bot, linkInfo, onLinkInfoChange, onUnbound } = props
   const { t } = useI18nNamespaces(['layout'])
   const [scanVisible, setScanVisible] = useState(false)
   const [countdown, setCountdown] = useState(QR_REFRESH_SECONDS)
@@ -158,7 +158,13 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
   const onUnbind = useMemoizedFn(async () => {
     if (!isSupportedIMPlatform(channel)) return
     try {
-      await deleteIMBot(channel)
+      if (bot) {
+        await saveIMBot({
+          ...bot,
+          OwnerId: '',
+          Enabled: false,
+        })
+      }
       onLinkInfoChange?.(undefined)
       onUnbound?.(channel)
       setScanVisible(false)
@@ -229,6 +235,11 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
                   <span className={styles['robot-scan-countdown']}>{countdown}s</span>
                 </>
               )}
+            </div>
+            <div className={styles['robot-scan-actions']}>
+              <YakitButton type="outline2" size="small" icon={<OutlineRefreshIcon />} onClick={refreshQrCode}>
+                刷新二维码
+              </YakitButton>
             </div>
           </div>
         </div>

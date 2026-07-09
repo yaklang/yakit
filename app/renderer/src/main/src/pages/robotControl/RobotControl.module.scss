@@ -450,6 +450,13 @@
   color: var(--Colors-Use-Main-Primary);
 }
 
+.robot-scan-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .robot-link-card-header-main {
   display: flex;
   width: 100%;
