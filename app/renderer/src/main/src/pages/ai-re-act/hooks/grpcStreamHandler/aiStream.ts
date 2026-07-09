@@ -339,7 +339,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
   if (chatData) {
     // 下面的设置: 是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
     chatData.reference = (chatData.reference || []).concat([data])
-    if (chatData.parentGroupKey) {
+    if (chatData.parentGroupToken) {
       store.getState().dispatchStreamingNode({
         chatType: chatType,
         parentTaskId: chatData.TaskId,

@@ -145,6 +145,9 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   })
   const renderItem = useCallback((_, item?: ReActChatRenderElement) => {
     if (!item?.token) return null
+    // TODO -
+    // 如果token变化，可能存在以下情况
+    // 例如group中list监听数组长度变化确认更新,会出现长度没变token变化，list层不会渲染，token变化的组件拿不到最新的token一直是旧的
     return <AIChatListItem key={item.token} item={item} />
   }, [])
   const Item = useCallback(
