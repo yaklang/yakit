@@ -681,7 +681,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
-        // console.log('ipcContent', res, `------${res.TaskId}`, ipcContent)
+        console.log('ipcContent', res, `------${res.TaskId}`, ipcContent)
         if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
           const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
           const chatStore = getChatDataStore()
@@ -978,6 +978,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                   return old
                 })
               } else {
+                if (res.TaskId !== currentCasualTaskID.current) return
                 // 自由对话-loading展示标题
                 setCasualTitle(data.value)
               }
