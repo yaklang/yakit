@@ -116,7 +116,7 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
   return (
     <ChatCard
       titleIcon={<OutlineWrenchIcon1 />}
-      titleText={data.toolName}
+      titleText={data.verboseName ?? data.toolName}
       titleExtra={
         !!reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
@@ -184,7 +184,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={data.toolName}
+      titleText={data.verboseName ?? data.toolName}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -369,7 +369,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   })
   return (
     <ChatCard
-      titleText={data.toolName}
+      titleText={data.verboseName ?? data.toolName}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
