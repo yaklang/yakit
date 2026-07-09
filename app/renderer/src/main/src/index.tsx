@@ -14,9 +14,7 @@ import './theme/scrollbar.scss'
 import { Suspense, useEffect, useState } from 'react'
 import ChildNewApp from './ChildNewApp'
 import MarkdownPdfPrintPage from './pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage'
-import { getLocalValue } from './utils/kv'
-import { GetMainColor, getRemoteI18nGV } from './utils/envfile'
-import i18n from '@/i18n/i18n'
+import { GetMainColor } from './utils/envfile'
 import { useTheme } from './hook/useTheme'
 import { applyYakitThemeColors } from './utils/applyYakitThemeColors'
 import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
@@ -57,14 +55,6 @@ const App = () => {
   const [windowType, setWindowType] = useState(getQueryParam('window'))
 
   useEffect(() => {
-    getLocalValue(getRemoteI18nGV())
-      .then((savedLang) => {
-        if (savedLang) {
-          i18n.changeLanguage(savedLang)
-        }
-      })
-      .catch((err) => console.error(err))
-
     const onPopState = () => {
       setWindowType(getQueryParam('window'))
     }

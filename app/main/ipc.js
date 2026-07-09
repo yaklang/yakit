@@ -564,5 +564,7 @@ module.exports = {
     utils.forEach((item) => {
       require(path.join(__dirname, `./utils/${item}`)).registerNewIPC(win, getClient, ipcEventPre)
     })
+
+    require('./handlers/portScan2')(win, getClient, ipcEventPre)
   },
 }

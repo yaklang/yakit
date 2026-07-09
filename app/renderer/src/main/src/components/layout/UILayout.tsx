@@ -23,6 +23,7 @@ import { StringToUint8Array } from '@/utils/str'
 import {
   GetConnectPort,
   getReleaseEditionName,
+  getRemoteI18nGV,
   isCommunityYakit,
   isEnpriTraceAgent,
   isEnterpriseEdition,
@@ -377,6 +378,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
       })
     }
+
+    // 获取语言
+    getLocalValue(getRemoteI18nGV())
+      .then((savedLang) => {
+        if (savedLang) {
+          i18n.changeLanguage(savedLang)
+        }
+      })
+      .catch((err) => console.error(err))
   })
 
   // 切换远程模式

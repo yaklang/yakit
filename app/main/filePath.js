@@ -9,7 +9,6 @@ const DEFAULT_PROJECT_NAME = 'yakit-projects'
 
 const DEFAULT_CONFIG = {
   YAKIT_HOME: '',
-  language: 'zh-CN',
   workspaceHistory: [],
   autoStart: false,
 }

@@ -15,3 +15,5 @@ export const yakitSystem = getBridge().system
 export const yakitLogs = getBridge().logs
 export const yakitPerf = getBridge().perf
 export const yakitEngine = getBridge().engine
+export const yakitDialog = getBridge().dialog
+export const yakitFileSystem = getBridge().fileSystem

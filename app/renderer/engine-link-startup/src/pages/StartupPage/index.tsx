@@ -43,7 +43,6 @@ import {
   isCommunityEdition,
   isCommunityIRify,
   isCommunityMemfit,
-  isCommunityYakit,
   isEnpriTrace,
   isEnpriTraceAgent,
   isEnpriTraceIRify,
@@ -56,7 +55,6 @@ import { StringToUint8Array } from '@/utils/str'
 import { LocalEngine } from './components/LocalEngine'
 import { LocalEngineLinkFuncProps, LocalLinkParams } from './components/LocalEngine/LocalEngineType'
 import { EngineLog } from './components/EngineLog'
-import { WorkspaceSelector } from './components/WorkspaceSelector'
 import emiter from '@/utils/eventBus/eventBus'
 import { YaklangEngineWatchDog } from './components/YaklangEngineWatchDog'
 import yakitEELogo from '@/assets/yakitEELogo.png'
@@ -68,8 +66,8 @@ import yakitRight from '@/assets/yakit-right.png'
 import memfitRight from '@/assets/memfit-right.webm'
 import memfitRightDark from '@/assets/memfit-right-dark.webm'
 import { SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon } from '@/assets/colors'
-import { Theme, useTheme } from '@/hooks/useTheme'
-import { Lange, YakitSoftMode } from './components/SoftwareBasics'
+import { useTheme } from '@/hooks/useTheme'
+import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
 import styles from './index.module.scss'
@@ -85,7 +83,7 @@ const DefaultCredential: YaklangEngineWatchDogCredential = {
 
 export const StartupPage: React.FC = () => {
   /** 工作空间是否已确认（所有平台均需用户确认） */
-  const [workspaceConfirmed, setWorkspaceConfirmed] = useState<boolean>(false)
+  const [workspaceConfirmed, setWorkspaceConfirmed] = useState<boolean>()
 
   /** 是否置顶 */
   const [isTop, setIsTop] = useState<ModalIsTop>(0)
@@ -135,13 +133,8 @@ export const StartupPage: React.FC = () => {
   const [keepalive, setKeepalive, getKeepalive] = useGetSetState<boolean>(false)
   /** 本地连接自定义端口号 */
   const [customPort, setCustomPort, getCustomPort] = useGetSetState<number>(GetConnectPort())
+  /** 主题 */
   const { theme, setTheme } = useTheme()
-  /** 软件基础设置-主题 目前只有yakit社区版有 */
-  const [softTheme, setSoftTheme, getSoftTheme] = useGetSetState<Theme>(theme)
-  /** 软件基础设置-模式 目前只有yakit社区版有 */
-  const [softMode, setSoftMode, getSoftMode] = useGetSetState<YakitSoftMode>('classic')
-  /** 软件基础设置-语言 目前未支持 */
-  const [softLang, setSoftLang, getSoftLang] = useGetSetState<Lange>('zh')
 
   // #region 工作空间确认回调
   const handleWorkspaceConfirmed = useMemoizedFn(() => {
@@ -149,22 +142,37 @@ export const StartupPage: React.FC = () => {
   })
   // #endregion
 
-  // #region 软件启动主流程（单一入口）
-  // 步骤 1: 获取系统类型，决定是否需要工作空间前置选择
-  // 步骤 2: workspaceConfirmed 为 true 后，执行引擎自检 + 基础信息获取 + 连接引擎
+  // #region 软件启动主流程（单一入口）所有平台均需要用户确认工作空间
+  /**
+   * 获取基本信息
+   * 1、操作系统类型（决定是否需要工作空间前置选择）
+   * 2、是否开发环境
+   * 3、架构
+   */
   useEffect(() => {
-    // 步骤 1: 获取操作系统类型
-    handleFetchSystem((sys) => {
-      setSystem(sys || 'Windows_NT')
-      // 所有平台均需要用户确认工作空间（通过 workspaceConfirmed 控制）
-    })
+    const fun = async () => {
+      const tasks: Array<() => Promise<any>> = []
+      tasks.push(() =>
+        handleFetchSystem((sys) => {
+          setSystem(sys || 'Windows_NT')
+        }),
+      )
+      tasks.push(() => handleFetchIsDev())
+      tasks.push(() => handleFetchArchitecture())
+      try {
+        await Promise.allSettled(tasks.map((run) => run()))
+      } catch (error) {}
+    }
+    fun()
+    setWorkspaceConfirmed(false)
   }, [])
 
+  // workspaceConfirmed 为 true 后，执行插件漏洞信息库自检 + 其他信息获取 + 连接引擎
   useEffect(() => {
     if (!workspaceConfirmed) return
-    // 步骤 2: 插件漏洞信息库自检（不阻塞主流程）
+    // 插件漏洞信息库自检（不阻塞主流程）
     handleBuiltInCheck()
-    // 步骤 3: 获取系统基础信息，完成后进入连接引擎模式
+    // 获取其他信息，完成后进入连接引擎模式
     handleFetchBaseInfo(() => {
       handleLinkEngineMode()
     })
@@ -181,32 +189,15 @@ export const StartupPage: React.FC = () => {
   })
 
   /**
-   * 获取信息
-   * 1、开发环境
-   * 2、操作系统
-   * 3、cpu架构
-   * 4、引擎是否存在
-   * 5、内置引擎版本
-   * 6、本地软件版本号、更新yak版本检测状态
-   * 7、获取本地缓存连接端口号
+   * 获取其他信息
+   * 1、引擎是否存在
+   * 2、内置引擎版本
+   * 3、本地软件版本号、更新yak版本检测状态
+   * 4、获取本地缓存连接端口号
    */
   const handleFetchBaseInfo = useMemoizedFn(async (nextFunc: () => void) => {
     debugToPrintLog(`------ 获取系统基础信息 ------`)
     const tasks: Array<() => Promise<any>> = []
-    // 是否开发环境
-    if (SystemInfo.isDev === undefined) {
-      tasks.push(() => handleFetchIsDev())
-    }
-    // 系统类型
-    tasks.push(() =>
-      handleFetchSystem((value) => {
-        setSystem(value || 'Windows_NT')
-      }),
-    )
-    // 架构
-    if (SystemInfo.architecture === undefined) {
-      tasks.push(() => handleFetchArchitecture())
-    }
     // 引擎 是否安装
     tasks.push(() =>
       grpcFetchYakInstallResult(true).then((isInstalled) => {
@@ -656,17 +647,6 @@ export const StartupPage: React.FC = () => {
         setRestartLoading(true)
         setLinkLocalEngine()
         return
-      case 'softwareBasics':
-        setRestartLoading(true)
-        setTheme(getSoftTheme())
-        if (isCommunityYakit()) {
-          setLocalValue(LocalGVS.YakitCESoftwareBasics, true)
-          setLocalValue(LocalGVS.YakitCEMode, getSoftMode())
-        }
-        if (localEngineRef.current) {
-          localEngineRef.current.startYakEngine()
-        }
-        break
       case 'error':
         // 引擎连接超时或意外断掉连接
         setTimeoutLoading(setRestartLoading)
@@ -1233,16 +1213,14 @@ export const StartupPage: React.FC = () => {
         />
 
         {/* 工作空间选择前置步骤 */}
-        {!workspaceConfirmed ? (
+        {workspaceConfirmed === false && (
           <div className={styles['startup-content-wrapper']}>
-            <WorkspaceSelector onConfirm={handleWorkspaceConfirmed} />
+            <SoftwareBasics softTheme={theme} setSoftTheme={setTheme} onConfirm={handleWorkspaceConfirmed} />
           </div>
-        ) : (
+        )}
+        {workspaceConfirmed === true && (
           <>
-            <div
-              className={styles['startup-engine-log']}
-              style={{ display: isRemoteEngine || yakitStatus === 'softwareBasics' ? 'none' : 'block' }}
-            >
+            <div className={styles['startup-engine-log']} style={{ display: isRemoteEngine ? 'none' : 'block' }}>
               <EngineLog />
             </div>
             {!isRemoteEngine ? (
@@ -1275,12 +1253,6 @@ export const StartupPage: React.FC = () => {
                       btnClickCallback={loadingClickCallback}
                       port={customPort}
                       countdown={countdown}
-                      softTheme={softTheme}
-                      setSoftTheme={setSoftTheme}
-                      softMode={softMode}
-                      setSoftMode={setSoftMode}
-                      softLang={softLang}
-                      setSoftLang={setSoftLang}
                       moreYaklangVersionList={moreYaklangVersionList}
                       setYaklangSpecifyVersion={setYaklangSpecifyVersion}
                     />

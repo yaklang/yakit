@@ -50,7 +50,6 @@ export type YakitStatusType =
   | 'update_yakit' // 检测到新版yakit
   | 'update_yak' // 检测到新版yak
   | 'check_yak_version_error' // 检测新版yak出错
-  | 'softwareBasics' // 软件基础设置
   | 'ready' // 开始尝试连接引擎
   | 'start_timeout' // 引擎启动超时
   | 'error' // 引擎连接超时

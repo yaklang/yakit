@@ -13,14 +13,13 @@ import { openABSFileLocated } from '@/utils/openWebsite'
 import { EngineModeVerbose } from '../../utils'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { SoftwareBasics, SoftwareBasicsProps } from '../SoftwareBasics'
 import { yakitApp } from '@/utils/electronBridge'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { MoreYaklangVersion } from '../MoreYaklangVersion'
 
 import classNames from 'classnames'
 import styles from './YakitLoading.module.scss'
-export interface YakitLoadingProp extends SoftwareBasicsProps {
+export interface YakitLoadingProp {
   /** loading 文案 */
   yakitLoadingTip: string
   /** 界面暂时无法操作 */
@@ -78,12 +77,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     dbPath,
     port,
     countdown = 0,
-    softTheme,
-    setSoftTheme,
-    softMode,
-    setSoftMode,
-    softLang,
-    setSoftLang,
     moreYaklangVersionList,
     setYaklangSpecifyVersion,
   } = props
@@ -487,21 +480,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
       )
     }
 
-    if (yakitStatus === 'softwareBasics') {
-      return (
-        <>
-          <YakitButton
-            className={styles['btn-style']}
-            size="large"
-            loading={restartLoading}
-            onClick={() => btnClickCallback('softwareBasics')}
-          >
-            手动连接引擎
-          </YakitButton>
-        </>
-      )
-    }
-
     if (yakitStatus === 'break') {
       return (
         <>
@@ -642,40 +620,29 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
   return (
     <YakitSpin spinning={disableYakitLoading} tip={yakitLoadingTip}>
       <div className={styles['startup-loading-wrapper']}>
-        {yakitStatus === 'softwareBasics' ? (
-          <SoftwareBasics
-            softTheme={softTheme}
-            setSoftTheme={setSoftTheme}
-            softMode={softMode}
-            setSoftMode={setSoftMode}
-            softLang={softLang}
-            setSoftLang={setSoftLang}
-          />
-        ) : (
-          <div
-            className={classNames(styles['log-wrapper'], {
-              [styles['log-default-color']]: !logError,
-              [styles['log-error-color']]: logError,
-              [styles['log-success-color']]: logSuccess,
-            })}
-          >
-            <div className={styles['log-body']}>
-              {yakitStatus === 'link_countdown' ? (
-                <div className={styles['log-item']}>准备连接引擎{'.'.repeat(Math.max(0, 4 - countdown))}</div>
-              ) : yakitStatus === 'break' ? (
-                <div className={styles['log-item']}>已主动断开, 请点击手动连接引擎</div>
-              ) : (
-                checkLog.map((item, index, arr) => {
-                  return (
-                    <div key={item} className={styles['log-item']}>
-                      {item}
-                    </div>
-                  )
-                })
-              )}
-            </div>
+        <div
+          className={classNames(styles['log-wrapper'], {
+            [styles['log-default-color']]: !logError,
+            [styles['log-error-color']]: logError,
+            [styles['log-success-color']]: logSuccess,
+          })}
+        >
+          <div className={styles['log-body']}>
+            {yakitStatus === 'link_countdown' ? (
+              <div className={styles['log-item']}>准备连接引擎{'.'.repeat(Math.max(0, 4 - countdown))}</div>
+            ) : yakitStatus === 'break' ? (
+              <div className={styles['log-item']}>已主动断开, 请点击手动连接引擎</div>
+            ) : (
+              checkLog.map((item, index, arr) => {
+                return (
+                  <div key={item} className={styles['log-item']}>
+                    {item}
+                  </div>
+                )
+              })
+            )}
           </div>
-        )}
+        </div>
         <div className={styles['engine-log-btn']}>
           <Form
             form={form}

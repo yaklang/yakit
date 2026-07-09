@@ -5,14 +5,25 @@
   width: 100%;
   margin-top: -25px;
 
-  gap: 16px;
+  gap: 12px;
 
   &-item {
     &-title {
-      margin-bottom: 8px;
+      margin-bottom: 5px;
       color: var(--Colors-Use-Neutral-Text-1-Title);
       font-size: 14px;
       line-height: 20px;
+
+      .originalHome {
+        cursor: pointer;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        font-size: 12px;
+        line-height: 16px;
+
+        &:hover {
+          color: var(--Colors-Use-Main-Primary);
+        }
+      }
     }
 
     &-cont {
@@ -78,6 +89,12 @@
     gap: 8px;
   }
 
+  .footer-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .footer-wrapper {
     display: flex;
     align-items: center;
@@ -108,41 +125,21 @@
         }
       }
     }
+  }
+}
 
-    .footer-btn {
-      display: flex;
-      align-items: center;
-      font-size: 12px;
+.history-label-wrapper {
+  display: flex;
+  justify-content: space-between;
 
-      .open-engine-path {
-        cursor: pointer;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  .history-label {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
 
-        &:hover {
-          color: var(--Colors-Use-Main-Primary);
-        }
-      }
-
-      .go-remote {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        color: var(--Colors-Use-Main-Primary);
-
-        gap: 4px;
-
-        .arrow-circle-right-icon {
-          svg {
-            width: 16px;
-            height: 16px;
-          }
-        }
-      }
-
-      .go-remote-disable {
-        cursor: not-allowed;
-        color: var(--Colors-Use-Neutral-Disable);
-      }
-    }
+  .history-size {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
   }
 }

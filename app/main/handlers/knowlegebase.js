@@ -1,7 +1,7 @@
 const { ipcMain } = require('electron')
 // const fs = require("fs")
 // const path = require("path")
-// const {YakitProjectPath} = require("../filePath")
+// const {getYakitHome} = require("../filePath")
 // const os = require("os")
 // const {getAvailableOSSDomain} = require("./utils/network")
 // const {requestWithProgress} = require("./utils/requestWithProgress")

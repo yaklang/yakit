@@ -128,6 +128,12 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     onDownloadYakitProgress: (callback) => subscribe('download-yakit-engine-progress', callback),
     onStartUpEngineMessage: (callback) => subscribe('startUp-engine-msg', callback),
   },
+  dialog: {
+    openFileSystemDialog: (options) => invokePrefixed('open-file-system-dialog', options),
+  },
+  fileSystem: {
+    fetchFileContent: (targetPath) => invokePrefixed('fetch-file-content', targetPath),
+  },
 })
 
 const unhandledrejectionError = (err) => {

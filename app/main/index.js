@@ -657,18 +657,6 @@ if (!shouldAbortStartupForDebugFlags) {
     /** 获取缓存数据并储存于软件内 */
     initLocalCache()
 
-    // 从 config.json 同步语言设置到 localCache，确保首次启动也能正确读取
-    try {
-      const cfg = getConfig()
-      if (cfg && cfg.language) {
-        const langMap = { 'zh-CN': 'zh', 'en-US': 'en' }
-        const i18nLang = langMap[cfg.language] || 'zh'
-        setLocalCache('I18n_Yakit', i18nLang)
-      }
-    } catch (e) {
-      console.info('sync language from config.json to localCache failed:', e)
-    }
-
     getAllLogHandles()
 
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */

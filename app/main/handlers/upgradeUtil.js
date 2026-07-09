@@ -34,7 +34,7 @@ const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = requ
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
 
-const userChromeDataDir = path.join(getYakitHome(), 'chrome-profile')
+const getUserChromeDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 const authMeta = []
 
 const initMkbaseDir = async () => {
@@ -42,7 +42,7 @@ const initMkbaseDir = async () => {
     try {
       fs.mkdirSync(getRemoteLinkDir(), { recursive: true })
       fs.mkdirSync(getBasicDir(), { recursive: true })
-      fs.mkdirSync(userChromeDataDir, { recursive: true })
+      fs.mkdirSync(getUserChromeDataDir(), { recursive: true })
       fs.mkdirSync(getYaklangEngineDir(), { recursive: true })
       fs.mkdirSync(getCodeDir(), { recursive: true })
 
