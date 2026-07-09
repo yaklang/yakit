@@ -1,15 +1,13 @@
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { AIReviewType } from '../hooks/aiRender'
 import { AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
 
+/** 只适用于任务规划的content footer下，不适用于子任务的上的继续 */
 export const useTaskChatExtraAction = () => {
   const { reviewInfo, chatIPCData } = useChatIPCStore()
   const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
-
-  const taskStatus = useCreation(() => chatIPCData.taskStatus, [chatIPCData.taskStatus])
-
   const getTaskInfo = useMemoizedFn(() => chatIPCEvents.fetchCurrentTaskPlanID())
   const getTaskId = useMemoizedFn(() => getTaskInfo()?.taskID)
 
@@ -44,25 +42,17 @@ export const useTaskChatExtraAction = () => {
     }, 500)
   })
 
+  /** @description 在任务规划的content footer下,继续按钮的出现在UI上意味着该任务肯定已经停止 */
   const onRecover = useMemoizedFn(() => {
     const info = getTaskInfo()
     const coordinatorId = info?.coordinatorId
-    const taskId = info?.taskID
     if (!coordinatorId) return
-    if (taskStatus.loading && taskId) {
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: taskId }),
-      })
-    }
 
-    setTimeout(() => {
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
-        SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
-      })
-      chatIPCEvents.resetCurrentTaskPlanID()
-    }, 200)
+    handleSendSyncMessage({
+      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
+      SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
+    })
+    chatIPCEvents.resetCurrentTaskPlanID()
     if (!!reviewInfo) {
       chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
     }
