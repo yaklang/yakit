@@ -389,8 +389,8 @@ export interface AIChatQSDataBase<T extends string, U> {
   extraValue?: CustomPluginExecuteFormValue | Record<string, CustomPluginExecuteFormValue[]>
   /** 参考资料 */
   reference?: ChatReferenceMaterialPayload
-  /** 父集合组的key(如果被收集到集合组中, 则存在该字段) */
-  parentGroupKey?: string
+  /** 父集合组的key/token(如果被收集到集合组中, 则存在该字段) */
+  parentGroupToken?: string
 }
 
 export type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
@@ -426,6 +426,8 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
   AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
   UserManualInterventionContext
 >
+export type ChatStreamGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM_GROUP, undefined>
+
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
 export type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
@@ -455,6 +457,7 @@ export type AIChatQSData =
   | ChatHttpFlowFuzzStatus
   | ChatReportFinish
   | ChatTaskDefaultGroup
+  | ChatStreamGroup
 // #endregion
 
 /** @name 数据状态机定义 */

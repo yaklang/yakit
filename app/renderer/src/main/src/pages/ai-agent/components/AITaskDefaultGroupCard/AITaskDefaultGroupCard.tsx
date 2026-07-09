@@ -3,7 +3,7 @@ import {
   type ReActChatElement,
   type ReActChatTaskElementSub,
 } from '@/pages/ai-re-act/hooks/aiRender'
-import { type FC, useEffect, useMemo, useState } from 'react'
+import { type FC, memo, useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -23,7 +23,7 @@ const AITaskDefaultGroupCard: FC<{
   chatType: ReActChatElement['chatType']
   isChildWindow?: boolean
   onRefresh?: () => void
-}> = ({ elements, session, token, chatType, isChildWindow, onRefresh }) => {
+}> = memo(({ elements, session, token, chatType, isChildWindow, onRefresh }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
   const [contentFocused, setContentFocused] = useState(false)
@@ -97,6 +97,6 @@ const AITaskDefaultGroupCard: FC<{
       ) : null}
     </div>
   )
-}
+})
 
 export default AITaskDefaultGroupCard

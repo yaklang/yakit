@@ -16,6 +16,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import AiFailPlanCard from '../../aiFailPlanCard/AiFailPlanCard'
 import { AIModelErrorPrompt } from '../aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIStreamCard } from '../StreamingChatContent/StreamingChatContent'
+import { AIGroupStreamNode } from '../../aiGroupStreamCard/AIGroupStreamCard'
 
 const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
   const { itemData, renderNum } = props
@@ -86,7 +87,11 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
       return <AIModelErrorPrompt item={itemData} renderNum={renderNum} />
 
     case AIChatQSDataTypeEnum.STREAM:
-      return <AIStreamCard itemData={itemData} renderNum={renderNum} />
+      if (!!itemData.parentGroupToken) {
+        return <AIGroupStreamNode itemData={itemData} renderNum={renderNum} />
+      } else {
+        return <AIStreamCard itemData={itemData} renderNum={renderNum} />
+      }
     default:
       return null
   }
