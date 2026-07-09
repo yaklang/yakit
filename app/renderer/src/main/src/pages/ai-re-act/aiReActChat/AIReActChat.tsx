@@ -39,7 +39,7 @@ import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AICont
 import { AIToDoList } from './aiToDoList/AIToDoList'
 import { cloneDeep } from 'lodash'
 import { DefaultTodoListCardData } from '../hooks/defaultConstant'
-import { TodoListCardData } from '../hooks/aiRender'
+import { TodoListCardData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { OutlineLandPlotIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -301,16 +301,24 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
 
     const aiReActChatContentsRef = useRef<AIReActChatContentsRef>(null)
-    const casualQuestionList = chatIPCData.casualChat.casualQuestionList
+    const casualConcurrentTaskList = useCreation(() => {
+      return chatIPCData.casualChat.elements
+        .filter((item) => item.kind === 'task' && item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP)
+        .map((item) => item.token)
+    }, [chatIPCData.casualChat.elements])
 
-    const getCasualQuestionQs = useMemoizedFn((token: string) => {
+    const getCasualConcurrentTaskName = useMemoizedFn((token: string) => {
       const contentMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat?.contents
       const chatData = contentMap?.get(token)
-      return (chatData?.data as { qs?: string })?.qs || (chatData?.extraValue as { showQS?: string })?.showQS || token
+      return (
+        (chatData?.data as { taskName?: string; goal?: string })?.taskName ||
+        (chatData?.data as { goal?: string })?.goal ||
+        token
+      )
     })
 
-    const onScrollToQuestion = useMemoizedFn((token: string) => {
-      const index = chatIPCData.casualChat.elements.findIndex((item) => item.token === token)
+    const onScrollToConcurrentTask = useMemoizedFn((token: string) => {
+      const index = chatIPCData.casualChat.elements.findIndex((item) => item.kind === 'task' && item.token === token)
       if (index !== -1) {
         aiReActChatContentsRef.current?.scrollToItemIndex(index, 'smooth')
       }
@@ -414,18 +422,18 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 <div className={styles['chat-header-extra']}>
                   {isShowRetract && (
                     <>
-                      {!!casualQuestionList.length && (
+                      {!!casualConcurrentTaskList.length && (
                         <YakitPopover
                           overlayClassName={styles['chat-locate-popover']}
                           content={
                             <div className={styles['chat-locate-list']}>
-                              {casualQuestionList.map((token) => (
+                              {casualConcurrentTaskList.map((token) => (
                                 <div
                                   key={token}
                                   className={styles['chat-locate-item']}
-                                  onClick={() => onScrollToQuestion(token)}
+                                  onClick={() => onScrollToConcurrentTask(token)}
                                 >
-                                  <SolidChatIcon /> {getCasualQuestionQs(token)}
+                                  <SolidChatIcon /> {getCasualConcurrentTaskName(token)}
                                 </div>
                               ))}
                             </div>

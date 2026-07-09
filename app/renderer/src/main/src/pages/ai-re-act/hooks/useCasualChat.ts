@@ -28,7 +28,6 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
-  const [casualQuestionList, setCasualQuestionList] = useState<string[]>([])
 
   const getCasualChat = useMemoizedFn(() => {
     return getChatDataStore?.()?.casualChat
@@ -48,15 +47,6 @@ function useCasualChat(params: UseCasualChatParams) {
   const setContentMap = useMemoizedFn((mapKey: string, value: AIChatQSData) => {
     const contentMap = getChatDataStore?.()?.casualChat?.contents
     contentMap && contentMap.set(mapKey, value)
-  })
-
-  const appendCasualQuestion = useMemoizedFn((token: string) => {
-    const chatData = getContentMap(token)
-    if (!chatData || chatData.type !== AIChatQSDataTypeEnum.QUESTION) return
-    setCasualQuestionList((old) => {
-      if (old.includes(token)) return old
-      return [...old, token]
-    })
   })
 
   /** 子 agent 任务创建时生成聚合卡片 */
@@ -190,7 +180,6 @@ function useCasualChat(params: UseCasualChatParams) {
         funcKey = res.NodeId
       }
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
-      const isReactTaskDequeue = res.Type === 'structured' && res.NodeId === 'react_task_dequeue'
       if (handleFunc) {
         handleFunc({
           res,
@@ -214,10 +203,6 @@ function useCasualChat(params: UseCasualChatParams) {
             }
           },
         })
-        if (isReactTaskDequeue) {
-          const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
-          appendCasualQuestion(res.TaskId || data.react_task_id)
-        }
         return
       }
 
@@ -264,7 +249,6 @@ function useCasualChat(params: UseCasualChatParams) {
     review.current = undefined
     getChatDataStore?.()?.casualChat.planDetailsMap.clear()
     setElements([])
-    setCasualQuestionList([])
     setToolListRenderNumber(0)
   })
 
@@ -282,8 +266,8 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const state: UseCasualChatState = useCreation(() => {
-    return { elements, toolListRenderNumber, casualQuestionList }
-  }, [elements, toolListRenderNumber, casualQuestionList])
+    return { elements, toolListRenderNumber }
+  }, [elements, toolListRenderNumber])
 
   const events: UseCasualChatEvents = useCreation(() => {
     return {

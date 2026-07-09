@@ -91,8 +91,6 @@ export interface UseCasualChatParams extends UseHookBaseParams {
 export interface UseCasualChatState {
   elements: ReActChatRenderItem[]
   toolListRenderNumber: number
-  /** 问题定位 token 列表（react_task_dequeue 时追加） */
-  casualQuestionList: string[]
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleSend: handleSendFunc
