@@ -55,6 +55,9 @@ import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
 import { handleResetForNewSession } from './grpcAIMessageHandlers'
 import useAIMessageData from './useAIMessageData'
 import { getDomainFromAISource } from './useGetChatDataStoreKey'
+import { v4 as uuidv4 } from 'uuid'
+import moment from 'moment'
+import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 
 const { ipcRenderer } = window.require('electron')
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
@@ -130,6 +133,30 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   /** 建立grpc连接的初次问题数据 */
   const firstQS = useRef<AIInputEvent>()
+
+  /** ping请求的计时器 */
+  const pingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  /** ping请求的syncID
+   * 初次ping请求没有id，因为初次在主进程进行的
+   * 后续两次ping都有对应的syncID，在该文件进行的
+   */
+  const pingSyncID = useRef<string>('')
+  const handlePingTimer = useMemoizedFn(() => {
+    if (pingTimerRef.current) clearInterval(pingTimerRef.current)
+    pingTimerRef.current = setInterval(() => {
+      pingSyncID.current = uuidv4()
+      sendRequest({
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
+        SyncID: pingSyncID.current,
+      })
+    }, 5000)
+  })
+  const resetPingTimer = useMemoizedFn(() => {
+    if (pingTimerRef.current) clearInterval(pingTimerRef.current)
+    pingTimerRef.current = null
+    pingSyncID.current = ''
+  })
 
   /** 获取全部聊天数据 */
   const getChatDataStore: UseHookBaseParams['getChatDataStore'] = useMemoizedFn(() => {
@@ -469,6 +496,34 @@ function useChatIPC(params?: UseChatIPCParams) {
       }
       if (params.IsFreeInput) {
         setCasualTitle('等待回复中...')
+        if (!casualLoading) {
+          const chatID = uuidv4()
+          const AttachedResourceInfos = params.AttachedResourceInfo || []
+          AttachedResourceInfos.push({
+            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
+            Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+            Value: chatID,
+          })
+          params.AttachedResourceInfo = AttachedResourceInfos
+          const chatData: AIChatQSData = {
+            id: chatID,
+            chatType: 'reAct',
+            type: AIChatQSDataTypeEnum.QUESTION,
+            Timestamp: moment().unix(),
+            data: { qs: params.FreeInput || '', setting: {} },
+            AIService: '',
+            AIModelName: '',
+            // showQS为了UI渲染方便，重新构建的字段
+            extraValue: { showQS: params.FreeInput || '' },
+          }
+          casualChatEvent.setContentMap(chatData.id, chatData)
+          casualChatEvent.setElements((old) => {
+            return [
+              ...old,
+              { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct', kind: 'task', children: [] },
+            ]
+          })
+        }
       }
 
       switch (type) {
@@ -518,6 +573,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   /** grpc接口流断开瞬间, 需要将状态相关变量进行重置 */
   const handleResetGrpcStatus = useMemoizedFn(() => {
+    resetPingTimer()
     taskChatEvent.handleCloseGrpc()
     setExecute(false)
     setCasualLoading(false)
@@ -659,6 +715,12 @@ function useChatIPC(params?: UseChatIPCParams) {
     ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
       try {
         if (res.Type === 'pong') {
+          // 如果返回的pong没有值，但是pingSyncID有值，说明该条消息已经过期
+          if (!res.SyncID && pingSyncID.current) return
+          // 如果返回的pong有值，但是和pingSyncID不一样，说明该条消息已经过期
+          if (res.SyncID && res.SyncID !== pingSyncID.current) return
+          // 该条消息有效，不需要在轮询ping请求了
+          resetPingTimer()
           // pong类型消息是用来检测grpc连接是否成功的，不需要展示在界面上
           // 以及把需要在grpc连接后的操作进行触发的地方
           if (firstQS.current) {
@@ -1088,14 +1150,48 @@ function useChatIPC(params?: UseChatIPCParams) {
     if (params.Params?.UserQuery) {
       // 判断建立grpc连接时是否附带问题
       // 如有，需要剥离出来，在grpc建立成功后再执行
+
+      const chatID = uuidv4()
+
+      const AttachedResourceInfos = params.AttachedResourceInfo || []
+      AttachedResourceInfos.push({
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
+        Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+        Value: chatID,
+      })
       firstQS.current = {
         IsFreeInput: true,
         FreeInput: params.Params.UserQuery,
-        AttachedResourceInfo: params.AttachedResourceInfo,
+        AttachedResourceInfo: AttachedResourceInfos,
         FocusModeLoop: params.FocusModeLoop,
       }
+      // 用户问了问题后，立即显示到UI上
+      // 问题对应的re_act_task_id先由前端生成，并发送给后端
+      // 后续生成re_act_task_id时，会把前端生成的uuid替换为后端生成的re_act_task_id
+      const chatData: AIChatQSData = {
+        id: chatID,
+        chatType: 'reAct',
+        type: AIChatQSDataTypeEnum.QUESTION,
+        Timestamp: moment().unix(),
+        data: { qs: firstQS.current.FreeInput || '', setting: {} },
+        AIService: '',
+        AIModelName: '',
+        // showQS为了UI渲染方便，重新构建的字段
+        extraValue: { showQS: firstQS.current.FreeInput || '' },
+      }
+      casualChatEvent.setContentMap(chatData.id, chatData)
+      casualChatEvent.setElements((old) => {
+        return [
+          ...old,
+          { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct', kind: 'task', children: [] },
+        ]
+      })
     }
     ipcRenderer.invoke('start-ai-re-act', token, params)
+
+    // 建立会话连接时，在主进程进行了一次ping请求
+    // 如果五秒没有返回pong消息，则再次进行ping请求
+    handlePingTimer()
   })
 
   /**

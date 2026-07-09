@@ -836,6 +836,10 @@ export declare namespace AIAgentGrpcApi {
     react_task_input: string
     /** 移除队列的原因 */
     reason?: string
+    /** 前端发送用户问题时，自定义的UUID */
+    react_task_user_input_uuid: string
+    /** 出队前的问题队列长度 */
+    queue_len: number
   }
   export interface QuestionQueueItem {
     created_at: string

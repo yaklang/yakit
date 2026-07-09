@@ -338,7 +338,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (request) => {
 
 /** Type='structured'&NodeId='react_task_dequeue' 生成用户问题到自由对话的UI上展示 */
 const handleReactTaskDequeue: AIMessageHandler = (request) => {
-  const { res, info, setContentMap } = request
+  const { res, info, setContentMap, getContentMap, setElements, getChatDataStore } = request
   if (res.Type !== 'structured' || res.NodeId !== 'react_task_dequeue') return
   // 任务规划-该类型数据为无效数据
   if (info.chatType === 'task') return
@@ -363,6 +363,23 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
     }),
   }
   setContentMap(chatData.id, chatData)
+
+  if (data.react_task_user_input_uuid) {
+    const qsDetail = getContentMap(data.react_task_user_input_uuid)
+    if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
+      getChatDataStore()?.casualChat.contents.delete(data.react_task_user_input_uuid)
+      setElements((old) =>
+        old.map((item) => {
+          if (item.token === data.react_task_user_input_uuid) {
+            return { ...item, token: data.react_task_id }
+          }
+          return item
+        }),
+      )
+      return
+    }
+  }
+
   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
