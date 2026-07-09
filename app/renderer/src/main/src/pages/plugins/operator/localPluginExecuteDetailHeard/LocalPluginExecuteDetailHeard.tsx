@@ -67,6 +67,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     isHiddenUUID,
     infoExtra,
     hiddenUpdateBtn,
+    initialExecuteConfig,
+    onCacheExecuteConfig,
   } = props
 
   const [form] = Form.useForm()
@@ -83,6 +85,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   })
 
   const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>({})
+  const [jsonSchemaRefreshValue, setJsonSchemaRefreshValue] = useState<number>(0)
 
   const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
   const localPluginExecuteDetailHeardRef = useRef<HTMLDivElement>(null)
@@ -140,7 +143,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   })
   const initRequiredFormValue = useMemoizedFn(() => {
     // 必填参数
-    let initRequiredFormValue: CustomPluginExecuteFormValue = { ...defPluginExecuteFormValue, requestType: 'input' }
+    let initRequiredFormValue: Record<string, any> = { ...defPluginExecuteFormValue, requestType: 'input' }
     requiredParams.forEach((ele) => {
       const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
       initRequiredFormValue = {
@@ -148,7 +151,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         [ele.Field]: value,
       }
     })
-    form.setFieldsValue({ ...initRequiredFormValue })
+    form.setFieldsValue({ ...initRequiredFormValue, ...(initialExecuteConfig?.formValue || {}) })
   })
   const initExtraFormValue = useMemoizedFn(() => {
     // 额外参数
@@ -164,15 +167,35 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     switch (plugin.Type) {
       case 'yak':
       case 'lua':
-      case 'mitm':
       case 'codec':
-        setCustomExtraParamsValue({ ...initExtraFormValue })
+      case 'mitm':
+        setCustomExtraParamsValue({ ...initExtraFormValue, ...(initialExecuteConfig?.customExtraParamsValue || {}) })
+        break
+      case 'port-scan':
+      case 'nuclei':
+        break
+      default:
+        break
+    }
+
+    switch (plugin.Type) {
+      case 'codec':
+      case 'mitm':
+      case 'port-scan':
+      case 'nuclei':
+        setExtraParamsValue({ ...defPluginExecuteFormValue, ...(initialExecuteConfig?.extraParamsValue || {}) })
         break
 
       default:
         break
     }
+    if (initialExecuteConfig?.jsonSchemaInitial) {
+      setJsonSchemaRefreshValue((prev) => prev + 1)
+    }
   })
+  useEffect(() => {
+    if (initialExecuteConfig) initFormValue()
+  }, [initialExecuteConfig])
   /**yak/lua 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
   const pluginParamsNodeByPluginType = useMemoizedFn((type: string) => {
     switch (type) {
@@ -184,6 +207,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             pluginType={plugin.Type}
             isExecuting={isExecuting}
             jsonSchemaListRef={jsonSchemaListRef}
+            jsonSchemaInitial={initialExecuteConfig?.jsonSchemaInitial}
+            refreshValue={jsonSchemaRefreshValue}
             isInline
           />
         )
@@ -204,6 +229,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 pluginType={plugin.Type}
                 isExecuting={isExecuting}
                 jsonSchemaListRef={jsonSchemaListRef}
+                jsonSchemaInitial={initialExecuteConfig?.jsonSchemaInitial}
+                refreshValue={jsonSchemaRefreshValue}
               />
             ) : null}
             <OutputFormComponentsByType
@@ -223,6 +250,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 pluginType={plugin.Type}
                 isExecuting={isExecuting}
                 jsonSchemaListRef={jsonSchemaListRef}
+                jsonSchemaInitial={initialExecuteConfig?.jsonSchemaInitial}
+                refreshValue={jsonSchemaRefreshValue}
               />
             ) : null}
             <PluginFixFormParams form={form} disabled={isExecuting} />
@@ -252,6 +281,14 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         Key: item.key,
         Value: JSON.stringify(item.value),
       })
+    })
+    onCacheExecuteConfig?.({
+      formValue: { ...value },
+      customExtraParamsValue: { ...customExtraParamsValue },
+      extraParamsValue: { ...extraParamsValue },
+      jsonSchemaInitial: Object.fromEntries(
+        result.jsonSchemaSuccess.map((item) => [item.key, JSON.stringify(item.value)]),
+      ),
     })
 
     let executeParams: DebugPluginRequest = {
@@ -485,6 +522,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
           setVisible={setExtraParamsVisible}
           onSave={onSaveExtraParams}
           jsonSchemaListRef={jsonSchemaListRef}
+          jsonSchemaInitial={initialExecuteConfig?.jsonSchemaInitial}
+          refreshValue={jsonSchemaRefreshValue}
         />
       </React.Suspense>
     </>

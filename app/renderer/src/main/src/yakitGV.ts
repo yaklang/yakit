@@ -128,6 +128,8 @@ export enum RemoteGV {
   MITMManualIsOnlyLookResponse = 'mitm_manual_is_only_look_response',
   /** @name 插件使用记录（次数 + 最近使用时间） */
   PluginUsageRecords = 'plugin-usage-records',
+  /** @name 插件最近执行快照（配置 + 结果） */
+  PluginLastExecuteRecords = 'plugin-last-execute-records',
 }
 
 /** 项目逻辑全局变量 */

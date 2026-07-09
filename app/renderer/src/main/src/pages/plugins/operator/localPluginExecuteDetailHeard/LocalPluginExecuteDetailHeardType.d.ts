@@ -7,6 +7,7 @@ import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { FormInstance } from 'antd'
 import { ExpandAndRetractExcessiveState } from '../expandAndRetract/ExpandAndRetract'
 import { JsonFormSchemaListWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
+import type { PluginExecuteCacheConfig } from '@/utils/pluginUsageCache'
 export interface PluginExecuteDetailHeardProps {
   token: string
   /**插件 */
@@ -32,6 +33,10 @@ export interface PluginExecuteDetailHeardProps {
   infoExtra?: ReactNode
   /** 隐藏更新按钮 */
   hiddenUpdateBtn?: boolean
+  /** 最近一次执行配置 */
+  initialExecuteConfig?: PluginExecuteCacheConfig
+  /** 缓存本次执行配置 */
+  onCacheExecuteConfig?: (config: PluginExecuteCacheConfig) => void
 }
 
 export interface YakExtraParamProps {

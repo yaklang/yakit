@@ -2386,10 +2386,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   })
   /** @name 判断页面是否打开，打开则定位该页面，未打开则打开页面 */
   const extraOpenMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {
-    if (SingletonPageRoute.includes(routeInfo.route)) {
+    //插件不再需要二级页面
+    if (SingletonPageRoute.includes(routeInfo.route) || YakitRoute.Plugin_OP === routeInfo.route) {
       const flag =
         pageCache.filter(
-          (item) => item.route === routeInfo.route && (item.pluginName || '') === (routeInfo.pluginName || ''),
+          (item) =>
+            item.route === routeInfo.route &&
+            (YakitRoute.Plugin_OP === routeInfo.route
+              ? item.menuName === (routeInfo.pluginName || '')
+              : (item.pluginName || '') === (routeInfo.pluginName || '')),
         ).length === 0
       if (flag) openMenuPage(routeInfo)
       else {
@@ -3960,22 +3965,24 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
       }}
       tabIndex={0}
     >
-      <SubTabs
-        softMode={softMode}
-        currentTabKey={currentTabKey}
-        ref={subTabsRef}
-        onFocusPage={onFocusPage}
-        pageItem={pageItem}
-        subPage={subPage}
-        setSubPage={setSubPage}
-        selectSubMenu={selectSubMenu}
-        setSelectSubMenu={setSelectSubMenu}
-        setType={setType}
-        openMultipleMenuPage={openMultipleMenuPage}
-        onSetPageCache={(list) => onSetPageCache(list, index)}
-        onRestoreHistory={onRestoreHistory}
-        onSaveHistory={onSaveHistory}
-      />
+      {YakitRoute.Plugin_OP !== pageItem.route && (
+        <SubTabs
+          softMode={softMode}
+          currentTabKey={currentTabKey}
+          ref={subTabsRef}
+          onFocusPage={onFocusPage}
+          pageItem={pageItem}
+          subPage={subPage}
+          setSubPage={setSubPage}
+          selectSubMenu={selectSubMenu}
+          setSelectSubMenu={setSelectSubMenu}
+          setType={setType}
+          openMultipleMenuPage={openMultipleMenuPage}
+          onSetPageCache={(list) => onSetPageCache(list, index)}
+          onRestoreHistory={onRestoreHistory}
+          onSaveHistory={onSaveHistory}
+        />
+      )}
       <div className={styles['render-sub-page']}>
         <RenderSubPage
           renderSubPage={flatSubPage}

@@ -3,6 +3,8 @@ export type PluginsEventProps = {
   onSwitchPrivateDomain: string
   /**刷新单个执行页面中的插件数据 */
   onRefSinglePluginExecution?: string
+  /** 从最近使用打开插件时恢复上次执行快照 */
+  onRestorePluginLastExecute?: string
   /** 刷新Codec相关菜单 */
   onRefPluginCodecMenu?: string
 
