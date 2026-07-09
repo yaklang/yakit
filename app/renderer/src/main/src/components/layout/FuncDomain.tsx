@@ -1073,7 +1073,11 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         onCancel={() => setRobotControlModal(false)}
         footer={null}
       >
-        <RobotControl onCancel={() => setRobotControlModal(false)} onRuntimeStatusChange={refreshIMControlStatus} />
+        <RobotControl
+          onCancel={() => setRobotControlModal(false)}
+          onRuntimeStatusChange={refreshIMControlStatus}
+          runtimeStatus={imControlStatus}
+        />
       </YakitModal>
       <DynamicControl
         mainTitle={t('FuncDomain.remoteControl')}

@@ -112,6 +112,14 @@
   &.active {
     background-color: var(--Colors-Use-Status-Safe);
   }
+
+  &.warning {
+    background-color: var(--Colors-Use-Warning-Primary);
+  }
+
+  &.error {
+    background-color: var(--Colors-Use-Error-Primary);
+  }
 }
 
 .robot-main-content {
@@ -326,6 +334,14 @@
 
   &.active {
     background-color: var(--Colors-Use-Success-Primary);
+  }
+
+  &.warning {
+    background-color: var(--Colors-Use-Warning-Primary);
+  }
+
+  &.error {
+    background-color: var(--Colors-Use-Error-Primary);
   }
 }
 

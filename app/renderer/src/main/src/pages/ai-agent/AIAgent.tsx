@@ -74,10 +74,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         // 删除数据库历史记录
         await grpcDeleteAISession(
           {
-            // DeleteAll: true,
-            Filter: {
-              Source: ['ai', ''],
-            },
+            DeleteAll: true,
           },
           true,
         )

@@ -26,6 +26,7 @@ export interface IMBotConfigLike {
   OwnerId?: string
   AllowedUsers?: string[]
   AllowedChats?: string[]
+  GroupAccessControl?: boolean
 }
 
 export interface IMOnboardingEvent {

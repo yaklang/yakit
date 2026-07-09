@@ -11,6 +11,7 @@ import { RobotSlashCommandCard } from './RobotSlashCommandCard'
 import { RobotRuntimeSettingCard } from './RobotRuntimeSettingCard'
 import { RobotChannelType, RobotListItem } from './RobotControl'
 import type { IMBotConfigLike, IMControlConfig, IMPlatform } from './api'
+import type { IMControlBadgePlatform } from './status'
 import styles from './RobotControl.module.scss'
 
 const getChannelIcon = (channel?: RobotChannelType) => {
@@ -35,14 +36,29 @@ const getRunningStatusText = (channel?: RobotChannelType) => {
   }
 }
 
+const getChannelName = (channel?: RobotChannelType) => {
+  switch (channel) {
+    case 'feishu':
+      return '飞书'
+    case 'dingtalk':
+      return '钉钉'
+    default:
+      return '机器人'
+  }
+}
+
 export interface RobotDetailPanelProps {
   robot: RobotListItem
   onDelete?: () => void
   onToggleEnabled?: (enabled: boolean) => void
   onLinkInfoChange?: (info?: RobotLinkInfo, bot?: IMBotConfigLike) => void
   onUnbound?: (platform?: IMPlatform) => void
+  onBotConfigChange?: (patch: Partial<IMBotConfigLike>) => void
   runtimeConfig: IMControlConfig
   runtimeConfigLoading?: boolean
+  runtimeRunning?: boolean
+  runtimePlatform?: IMControlBadgePlatform
+  runtimePlatformMissing?: boolean
   onRuntimeConfigChange: (config: IMControlConfig) => void
 }
 
@@ -53,14 +69,38 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
     onToggleEnabled,
     onLinkInfoChange,
     onUnbound,
+    onBotConfigChange,
     runtimeConfig,
     runtimeConfigLoading,
+    runtimeRunning,
+    runtimePlatform,
+    runtimePlatformMissing,
     onRuntimeConfigChange,
   } = props
   const { t } = useI18nNamespaces(['layout'])
   const enabled = robot.enabled !== false
-  const statusText = !enabled ? '机器人已停用' : robot.bound ? getRunningStatusText(robot.channel) : '机器人未绑定'
-  const statusActive = enabled && robot.bound
+  const channelName = getChannelName(robot.channel)
+  const runtimeDisconnected = enabled && robot.bound && runtimePlatform?.Connected === false
+  let statusText = getRunningStatusText(robot.channel)
+  if (!enabled) {
+    statusText = '机器人已停用'
+  } else if (!robot.bound) {
+    statusText = '机器人未绑定'
+  } else if (runtimeDisconnected) {
+    statusText = `${channelName}连接异常`
+  } else if (runtimePlatformMissing) {
+    statusText = `${channelName}状态同步中`
+  } else if (runtimeRunning === false) {
+    statusText = `${channelName}未启动`
+  }
+  const statusActive =
+    enabled && robot.bound && !runtimeDisconnected && !runtimePlatformMissing && runtimeRunning !== false
+  const statusTitle =
+    runtimeDisconnected && runtimePlatform?.Message
+      ? runtimePlatform.Message
+      : runtimePlatformMissing
+        ? `${channelName}连接状态暂未上报`
+        : statusText
 
   return (
     <div className={styles['robot-detail-panel']}>
@@ -69,10 +109,12 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
           <div className={styles['detail-header-icon']}>{getChannelIcon(robot.channel)}</div>
           <div className={styles['robot-detail-header-info']}>
             <div className={styles['robot-detail-name']}>{robot.name}</div>
-            <div className={styles['robot-detail-status']}>
+            <div className={styles['robot-detail-status']} title={statusTitle}>
               <span
                 className={classNames(styles['robot-detail-status-dot'], {
                   [styles['active']]: statusActive,
+                  [styles['warning']]: runtimePlatformMissing,
+                  [styles['error']]: runtimeDisconnected,
                 })}
               />
               <span>{statusText}</span>
@@ -95,6 +137,32 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
           loading={runtimeConfigLoading}
           onChange={onRuntimeConfigChange}
         />
+
+        <div className={styles['robot-detail-card']}>
+          <div className={styles['robot-link-card-header-main']}>
+            <div className={styles['robot-detail-card-content']}>
+              <div className={styles['robot-detail-card-title']}>群聊访问控制</div>
+              <div className={styles['robot-detail-card-desc']}>
+                开启后，只有所有者和白名单用户可以在群聊中与机器人互动；关闭时群成员都可以使用。
+              </div>
+            </div>
+          </div>
+          <div className={styles['robot-setting-list']}>
+            <div className={styles['robot-setting-item']}>
+              <div className={styles['robot-setting-copy']}>
+                <div className={styles['robot-setting-title']}>仅允许白名单用户</div>
+                <div className={styles['robot-setting-desc']}>
+                  默认关闭。白名单在后续权限配置中维护，所有者始终可用。
+                </div>
+              </div>
+              <YakitSwitch
+                checked={!!robot.bot?.GroupAccessControl}
+                disabled={!robot.bot}
+                onChange={(checked) => onBotConfigChange?.({ GroupAccessControl: checked })}
+              />
+            </div>
+          </div>
+        </div>
 
         <RobotSlashCommandCard />
 

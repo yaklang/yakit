@@ -94,6 +94,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
   const enableHistorySourceFilter = useMemo(() => aiSource.includes('im'), [aiSource])
+  const isGlobalAIAgentHistory = useMemo(() => {
+    return aiSource.includes('ai') && aiSource.includes('im') && aiSource.includes('')
+  }, [aiSource])
   const historyQuerySources = useMemo(() => {
     if (!enableHistorySourceFilter) return aiSource
     return getHistorySourceQuerySources(aiSource, historySourceFilter)
@@ -126,23 +129,18 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   const [clearLoading, setClearLoading] = useState(false)
   const handleClearAllChat = useMemoizedFn(async () => {
     if (clearLoading) return
-    if (visibleSessions.length === 0) {
+    if (!isGlobalAIAgentHistory && visibleSessions.length === 0) {
       yakitNotify('info', t('HistoryChat.noChatsToClear'))
       return
     }
 
     setClearLoading(true)
     try {
-      const filter =
-        enableHistorySourceFilter && historySourceFilter !== 'local'
-          ? {
-              SessionID: visibleSessions.map((item) => item.SessionID),
-              Source: historyQuerySources,
-            }
-          : {
-              Source: historyQuerySources,
-            }
-      await grpcDeleteAISession({ Filter: filter }, true)
+      if (isGlobalAIAgentHistory) {
+        await grpcDeleteAISession({ DeleteAll: true }, true)
+      } else {
+        await grpcDeleteAISession({ Filter: { Source: historyQuerySources } }, true)
+      }
       clearLocalChats(visibleSessions)
       onNewChat()
       setActiveChat?.(undefined)
@@ -254,14 +252,18 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
           await dispatcher.loadHistoryData?.()
           break
         case 'clear':
-          await grpcDeleteAISession(
-            {
-              Filter: {
-                Source: historyQuerySources,
+          if (isGlobalAIAgentHistory) {
+            await grpcDeleteAISession({ DeleteAll: true }, true)
+          } else {
+            await grpcDeleteAISession(
+              {
+                Filter: {
+                  Source: historyQuerySources,
+                },
               },
-            },
-            true,
-          )
+              true,
+            )
+          }
           handleResetSessions()
           break
         case 'prependSession':
@@ -284,7 +286,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     return () => {
       emiter.off('sessionData', handleSessionData)
     }
-  }, [dispatcher, handleResetSessions, historyQuerySources, isSessionVisibleInCurrentSource])
+  }, [dispatcher, handleResetSessions, historyQuerySources, isGlobalAIAgentHistory, isSessionVisibleInCurrentSource])
 
   return (
     <div className={styles['history-chat']}>
@@ -369,7 +371,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
               dropdown={{
                 trigger: ['click'],
                 placement: 'bottomRight',
-                disabled: clearLoading || visibleSessions.length === 0,
+                disabled: clearLoading || (!isGlobalAIAgentHistory && visibleSessions.length === 0),
                 getPopupContainer: popupContainer,
                 overlayClassName: embedded ? embeddedOverlayClass : undefined,
               }}
@@ -381,7 +383,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
                 overlayClassName={embedded ? embeddedOverlayClass : undefined}
               >
                 <YakitButton
-                  disabled={clearLoading || visibleSessions.length === 0}
+                  disabled={clearLoading || (!isGlobalAIAgentHistory && visibleSessions.length === 0)}
                   colors="danger"
                   type="outline1"
                   loading={clearLoading}

@@ -24,6 +24,7 @@ import {
   type IMBotConfigLike,
   type IMControlConfig,
 } from './api'
+import type { IMControlBadgePlatform, IMControlBadgeStatus } from './status'
 import styles from './RobotControl.module.scss'
 
 export type RobotChannelType = 'wechat' | 'feishu' | 'lark' | 'telegram' | 'dingtalk' | 'discord' | 'wecom'
@@ -86,13 +87,32 @@ const getChannelRuntimeText = (channel?: RobotChannelType, channelLabel = '机�
   }
 }
 
+const normalizeRuntimePlatform = (platform?: string) => {
+  const value = `${platform || ''}`.trim().toLowerCase()
+  if (!value) return ''
+  if (
+    value === 'feishu' ||
+    value === 'lark' ||
+    value.includes('feishu') ||
+    value.includes('lark') ||
+    value.includes('飞书')
+  ) {
+    return 'feishu'
+  }
+  if (value === 'dingtalk' || value.includes('dingtalk') || value.includes('ding') || value.includes('钉钉')) {
+    return 'dingtalk'
+  }
+  return value
+}
+
 export interface RobotControlProps {
   onCancel?: () => void
   onRuntimeStatusChange?: () => void
+  runtimeStatus?: IMControlBadgeStatus
 }
 
 export const RobotControl: React.FC<RobotControlProps> = (props) => {
-  const { onRuntimeStatusChange } = props
+  const { onRuntimeStatusChange, runtimeStatus } = props
   const { t } = useI18nNamespaces(['layout'])
   const [robots, setRobots] = useState<RobotListItem[]>([])
   const [draftRobots, setDraftRobots] = useState<RobotListItem[]>([])
@@ -162,6 +182,25 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
     }
   })
 
+  const getRuntimePlatform = (platform?: string): IMControlBadgePlatform | undefined => {
+    const targetPlatform = normalizeRuntimePlatform(platform)
+    if (!targetPlatform) return undefined
+    return runtimeStatus?.Platforms?.find((item) => {
+      return normalizeRuntimePlatform(item.Platform) === targetPlatform
+    })
+  }
+
+  const isRuntimePlatformMissing = (item?: RobotListItem, runtimePlatform?: IMControlBadgePlatform) => {
+    return !!(
+      item?.enabled &&
+      item.bound &&
+      item.bot?.Platform &&
+      runtimeStatus?.Running &&
+      runtimeStatus.Platforms?.length &&
+      !runtimePlatform
+    )
+  }
+
   const syncControlRuntime = useMemoizedFn(async (enabledPlatforms: string[], config = runtimeConfig) => {
     try {
       if (enabledPlatforms.length > 0) {
@@ -200,6 +239,19 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
       yakitNotify('error', `移动端控制配置保存失败：${e}`)
     } finally {
       setRuntimeConfigLoading(false)
+    }
+  })
+
+  const onBotConfigChange = useMemoizedFn(async (id: string, patch: Partial<IMBotConfigLike>) => {
+    const target = robots.find((item) => item.id === id)
+    if (!target?.bot) return
+    const nextBot = { ...target.bot, ...patch }
+    try {
+      await saveIMBot(nextBot)
+      await loadBots(false)
+      yakitNotify('success', '机器人配置已保存')
+    } catch (e) {
+      yakitNotify('error', `机器人配置保存失败：${e}`)
     }
   })
 
@@ -460,6 +512,9 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
     )
   }
 
+  const activeRobotRuntimePlatform = getRuntimePlatform(activeRobot?.bot?.Platform)
+  const activeRobotRuntimeMissing = isRuntimePlatformMissing(activeRobot, activeRobotRuntimePlatform)
+
   return (
     <div className={styles['robot-control-wrapper']}>
       <div className={styles['robot-sidebar']}>
@@ -474,31 +529,45 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
         </YakitButton>
         <div ref={listRef} className={styles['robot-list-container']}>
           <div ref={wrapperRef}>
-            {virtualList.map(({ data: item }) => (
-              <div
-                key={item.id}
-                className={classNames(styles['robot-list-item'], {
-                  [styles['active']]: activeRobotId === item.id,
-                })}
-                onClick={() => onSelectRobot(item.id)}
-              >
-                <div className={styles['robot-list-icon']}>{getChannelIcon(item.channel)}</div>
-                <div className={styles['robot-list-info']}>
-                  {renderListItemName(item)}
-                  {item.channel && (
-                    <div className={styles['robot-list-platform']}>
-                      <span>{getChannelLabel(item.channel)}</span>
-                      {renderRegionTag(item.region)}
-                    </div>
-                  )}
-                </div>
+            {virtualList.map(({ data: item }) => {
+              const runtimePlatform = getRuntimePlatform(item.bot?.Platform)
+              const runtimeDisconnected = item.enabled && item.bound && runtimePlatform?.Connected === false
+              const runtimeMissing = isRuntimePlatformMissing(item, runtimePlatform)
+              return (
                 <div
-                  className={classNames(styles['robot-status-dot'], {
-                    [styles['active']]: item.enabled,
+                  key={item.id}
+                  className={classNames(styles['robot-list-item'], {
+                    [styles['active']]: activeRobotId === item.id,
                   })}
-                />
-              </div>
-            ))}
+                  onClick={() => onSelectRobot(item.id)}
+                >
+                  <div className={styles['robot-list-icon']}>{getChannelIcon(item.channel)}</div>
+                  <div className={styles['robot-list-info']}>
+                    {renderListItemName(item)}
+                    {item.channel && (
+                      <div className={styles['robot-list-platform']}>
+                        <span>{getChannelLabel(item.channel)}</span>
+                        {renderRegionTag(item.region)}
+                      </div>
+                    )}
+                  </div>
+                  <div
+                    className={classNames(styles['robot-status-dot'], {
+                      [styles['active']]: item.enabled && !runtimeDisconnected && !runtimeMissing,
+                      [styles['warning']]: runtimeMissing,
+                      [styles['error']]: runtimeDisconnected,
+                    })}
+                    title={
+                      runtimeDisconnected
+                        ? runtimePlatform?.Message
+                        : runtimeMissing
+                          ? `${getChannelLabel(item.channel)}连接状态同步中`
+                          : undefined
+                    }
+                  />
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -540,8 +609,12 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
             onToggleEnabled={(enabled) => onToggleEnabled(activeRobot.id, enabled)}
             onLinkInfoChange={(info, bot) => onLinkInfoChange(activeRobot.id, info, bot)}
             onUnbound={onUnbound}
+            onBotConfigChange={(patch) => onBotConfigChange(activeRobot.id, patch)}
             runtimeConfig={runtimeConfig}
             runtimeConfigLoading={runtimeConfigLoading}
+            runtimeRunning={runtimeStatus?.Running}
+            runtimePlatform={activeRobotRuntimePlatform}
+            runtimePlatformMissing={activeRobotRuntimeMissing}
             onRuntimeConfigChange={onRuntimeConfigChange}
           />
         ) : (
