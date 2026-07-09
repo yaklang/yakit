@@ -5,6 +5,62 @@
   inherits: false;
 }
 $radius: 8px;
+
+.card-heard-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  // flex: 1;
+  min-width: 120px;
+  .tip {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    flex-shrink: 0;
+  }
+  .progress-stats {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 4px;
+  }
+  .progress-stat-value {
+    cursor: default;
+    font-weight: 500;
+  }
+  .progress-stat-divider {
+    color: var(--Colors-Use-Neutral-Border);
+    user-select: none;
+  }
+  .progress-segments-bar {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    height: 8px;
+    min-width: 48px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+  }
+  .progress-segment {
+    height: 100%;
+    flex-shrink: 0;
+    &:first-child {
+      border-radius: 3px 0 0 3px;
+    }
+    &:last-child {
+      border-radius: 0 3px 3px 0;
+    }
+    &:only-child {
+      border-radius: 3px;
+    }
+  }
+}
+
 .ai-to-do-list-wrapper {
   position: relative;
   border-radius: $radius;
@@ -93,60 +149,6 @@ $radius: 8px;
           overflow: hidden;
           display: inline-flex;
           gap: 4px;
-        }
-      }
-      .card-heard-extra {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 16px;
-        letter-spacing: 0.5px;
-        // flex: 1;
-        min-width: 120px;
-        .tip {
-          color: var(--Colors-Use-Neutral-Text-4-Help-text);
-          flex-shrink: 0;
-        }
-        .progress-stats {
-          display: flex;
-          align-items: center;
-          flex-shrink: 0;
-          gap: 4px;
-        }
-        .progress-stat-value {
-          cursor: default;
-          font-weight: 500;
-        }
-        .progress-stat-divider {
-          color: var(--Colors-Use-Neutral-Border);
-          user-select: none;
-        }
-        .progress-segments-bar {
-          flex: 1;
-          display: flex;
-          align-items: stretch;
-          height: 8px;
-          min-width: 48px;
-          border-radius: 4px;
-          overflow: hidden;
-          background: var(--Colors-Use-Neutral-Bg-Hover);
-          border: 1px solid var(--Colors-Use-Neutral-Border);
-        }
-        .progress-segment {
-          height: 100%;
-          flex-shrink: 0;
-          &:first-child {
-            border-radius: 3px 0 0 3px;
-          }
-          &:last-child {
-            border-radius: 0 3px 3px 0;
-          }
-          &:only-child {
-            border-radius: 3px;
-          }
         }
       }
     }

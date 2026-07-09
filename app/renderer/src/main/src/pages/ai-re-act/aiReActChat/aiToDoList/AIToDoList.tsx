@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react'
+import React, { useRef } from 'react'
 import classNames from 'classnames'
 import styles from './AIToDoList.module.scss'
 import type { AIToDoListItemProps, AIToDoListProps } from './type'
@@ -8,40 +8,7 @@ import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolid
 import { useCreation, useHover, useMemoizedFn } from 'ahooks'
 import { AIToDoListDeletedIcon, AIToDoListPendingIcon, AIToDoListDoneIcon, AIToDoListSkippedIcon } from './icon'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-
-const stats = [
-  {
-    key: 'deleted',
-    label: '已删除',
-    color: 'var(--Colors-Use-Status-High)',
-    backgroundColor: 'var(--Colors-Use-Status-High)',
-  },
-  {
-    key: 'done',
-    label: '已完成',
-    color: 'var(--Colors-Use-Status-Safe)',
-    backgroundColor: 'var(--Colors-Use-Status-Safe)',
-  },
-  {
-    key: 'doing',
-    label: '进行中',
-    color: 'var(--Colors-Use-Main-Primary)',
-    backgroundColor: 'var(--Colors-Use-Main-Primary)',
-  },
-  {
-    key: 'skipped',
-    label: '已跳过',
-    color: 'var(--Colors-Use-Neutral-Text-4-Help-text)',
-    backgroundColor: 'var(--Colors-Use-Neutral-Disable)',
-  },
-  {
-    key: 'pending',
-    label: '待处理',
-    color: 'var(--Colors-Use-Neutral-Text-1-Title)',
-    backgroundColor: 'var(--Colors-Use-Basic-Background)',
-  },
-]
+import { AIToDoListDetail } from './AIToDoListDetail'
 
 export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
   const { className, todoData, bannedExpand } = props
@@ -52,21 +19,6 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
   const doingItem = useCreation(() => {
     return todoData.items.find((item) => item.status === AIToDoListStatusEnum.Doing)
   }, [todoData.items])
-
-  // 过滤数据为0的
-  const visibleStats = useMemo(() => stats.filter((item) => todoData.stats[item.key]), [todoData.stats])
-
-  const statSum = useCreation(
-    () => stats.reduce((sum, item) => sum + (todoData.stats[item.key] || 0), 0),
-    [todoData.stats],
-  )
-  const barDenominator = useCreation(() => Math.max(total, statSum, 1), [total, statSum])
-
-  // const handleHiddenChange = useMemoizedFn((e) => {
-  //   e.stopPropagation()
-  //   if (bannedExpand) return
-  //   setHidden((v) => !v)
-  // })
 
   return (
     <div className={classNames(styles['ai-to-do-list-wrapper'], className)}>
@@ -93,48 +45,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                   </YakitTag>
                 )}
               </div>
-              <YakitPopover
-                placement="bottomLeft"
-                content={
-                  <div className={styles['popover-content']}>
-                    {stats.map((item) => (
-                      <div key={item.key} className={styles['popover-content-item']}>
-                        <span className={styles['popover-content-item-bar']} style={{ backgroundColor: item.color }} />
-                        <div className={styles['popover-content-item-text']}>
-                          <span className={styles['popover-content-item-label']}>{item.label}</span>
-                          <span className={styles['popover-content-item-value']}>{todoData.stats[item.key] ?? 0}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                }
-              >
-                <div className={styles['card-heard-extra']}>
-                  <span className={styles['tip']}>进度</span>
-                  <div className={styles['progress-stats']}>
-                    {visibleStats.map((item, index) => (
-                      <React.Fragment key={item.key}>
-                        <span className={styles['progress-stat-value']} style={{ color: item.color }}>
-                          {todoData.stats[item.key]}
-                        </span>
-                        {index < visibleStats.length - 1 && <span className={styles['progress-stat-divider']}>|</span>}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  <div className={styles['progress-segments-bar']}>
-                    {visibleStats.map((item) => (
-                      <span
-                        key={item.key}
-                        className={styles['progress-segment']}
-                        style={{
-                          width: `${(todoData.stats[item.key] / barDenominator) * 100}%`,
-                          backgroundColor: item.backgroundColor,
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </YakitPopover>
+              <AIToDoListDetail todoData={todoData} />
             </div>
             <div
               className={classNames(styles['card-list'], {

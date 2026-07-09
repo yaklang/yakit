@@ -174,27 +174,10 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        width: 100%;
 
-        .progress-text {
-          font-size: 12px;
-          color: var(--Colors-Use-Neutral-Text-3-Secondary);
-          .progress-number {
-            color: var(--Colors-Use-Neutral-Text-1-Title,);
-
-            font-size: 12px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: 16px; /* 133.333% */
-            letter-spacing: 0.5px;
-          }
-        }
-        .progress-bar {
-          width: 60px;
-          :global {
-            .ant-progress-inner {
-              border: 1px solid var(--Colors-Use-Neutral-Border);
-            }
-          }
+        .title {
+          flex-shrink: 0;
         }
       }
       .empty-body {
