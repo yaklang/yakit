@@ -107,6 +107,11 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.SyncPerceptionTrigger = setting.SyncPerceptionTrigger ?? AIAgentSettingDefault.SyncPerceptionTrigger
     data.EnablePlan = setting.EnablePlan ?? AIAgentSettingDefault.EnablePlan
     data.PlanExecTaskConcurrency = setting.PlanExecTaskConcurrency ?? AIAgentSettingDefault.PlanExecTaskConcurrency
+    data.Strategy = {
+      EnableMultiAgent: setting.Strategy?.EnableMultiAgent ?? AIAgentSettingDefault.Strategy?.EnableMultiAgent,
+      EnableGoalMode: setting.Strategy?.EnableGoalMode ?? AIAgentSettingDefault.Strategy?.EnableGoalMode,
+      GoalMinIterations: setting.Strategy?.GoalMinIterations ?? AIAgentSettingDefault.Strategy?.GoalMinIterations,
+    }
 
     if (setting?.AllowPlanUserInteract) {
       if (!isNil(setting?.PlanUserInteractMaxCount)) {

@@ -128,6 +128,27 @@ textarea.qs-input-textarea {
           height: 14px;
         }
       }
+      .mode-btn {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex-shrink: 0;
+        .mode-btn-label {
+          font-size: 12px;
+        }
+        .mode-btn-arrow {
+          width: 12px;
+          height: 12px;
+          svg {
+            width: 12px;
+            height: 12px;
+          }
+        }
+      }
+      .mode-btn-active {
+        color: var(--Colors-Use-Main-Primary);
+        border-color: var(--Colors-Use-Main-Primary);
+      }
     }
     .footer-right {
       display: flex;
@@ -169,3 +190,41 @@ textarea.qs-input-textarea {
   flex-wrap: wrap;
 }
 // #endregion
+
+// 运行模式下拉
+.mode-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--Colors-Use-Basic-Background);
+  border-radius: 6px;
+  box-shadow: var(--yakit-box-shadow);
+  .mode-item-icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+    vertical-align: -2px;
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+  .mode-goal-iter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 22px;
+    .mode-goal-iter-label {
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-2-Subtle);
+      white-space: nowrap;
+    }
+    .mode-goal-iter-input {
+      width: 96px;
+    }
+  }
+}
+.mode-dropdown {
+  z-index: 1050;
+}
