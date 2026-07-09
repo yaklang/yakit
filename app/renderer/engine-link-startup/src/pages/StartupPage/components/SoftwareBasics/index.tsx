@@ -9,14 +9,16 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { Tooltip } from 'antd'
 import { yakitApp, yakitShell } from '@/utils/electronBridge'
-import { useCountDown, useMemoizedFn } from 'ahooks'
+import { useCountDown, useInViewport, useMemoizedFn } from 'ahooks'
 import { OutlineExitIcon } from '@/assets/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { getLocalI18nGV, isCommunityYakit } from '@/utils/envfile'
 import { LocalGVS } from '@/enums/yakitGV'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
+import { getModeConfig, getSoftwareBasicsTexts, Lange, normalizeLang, YakitSoftMode, yakitSoftMode } from './i18n'
 import classNames from 'classnames'
 import styles from './SoftwareBasics.module.scss'
+export { yakitSoftMode } from './i18n'
 
 const formatSize = (bytes: number): string => {
   if (bytes === 0) return '0 B'
@@ -26,31 +28,6 @@ const formatSize = (bytes: number): string => {
 }
 
 const AUTO_START_COUNTDOWN_SECONDS = 3
-
-const yakitSoftMode = ['classic', 'securityExpert', 'scan'] as const
-export type YakitSoftMode = (typeof yakitSoftMode)[number]
-const YAKIT_MODE_CONFIG: Record<
-  YakitSoftMode,
-  {
-    label: string
-    desc: string
-  }
-> = {
-  classic: {
-    label: '经典模式',
-    desc: '该模式就是之前的菜单首页布局',
-  },
-  securityExpert: {
-    label: '安全专家模式',
-    desc: '将菜单栏和固定页面调整为渗透常用功能，整体更简洁明了',
-  },
-  scan: {
-    label: '扫描模式',
-    desc: '将菜单栏和首页重点放在扫描性功能上，方便快捷',
-  },
-}
-
-export type Lange = 'zh' | 'zn' | 'zh-TW'
 
 export interface SoftwareBasicsProps {
   softTheme: Theme
@@ -72,6 +49,13 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   const [autoStart, setAutoStart] = useState<boolean>(false)
   const [autoStartTargetDate, setAutoStartTargetDate] = useState<number>()
   const autoStartTriggeredRef = useRef<boolean>(false)
+  const pendingAutoStartRef = useRef<boolean>(false)
+  const pendingFetchPathsRef = useRef<string[]>([])
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(containerRef)
+
+  const t = useMemo(() => getSoftwareBasicsTexts(softLang), [softLang])
+  const modeConfig = useMemo(() => getModeConfig(softLang), [softLang])
 
   const doConfirm = useMemoizedFn(async () => {
     if (!currentPath) return
@@ -117,27 +101,41 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   const loadConfig = useMemoizedFn(async () => {
     try {
       const config = await yakitApp.getYakitHomeConfig()
-
       const home = config.currentHome || ''
       setCurrentPath(home)
       setOriginalHome(home)
       setAutoStart(config.autoStart || false)
       setWorkspaceHistory(config.workspaceHistory || [])
-      setLoading(false)
 
       const allPaths = [...new Set([home, ...(config.workspaceHistory || [])].filter(Boolean))]
-      if (allPaths.length > 0) {
-        fetchSizes(allPaths)
-      }
-
-      // 如果开启了自动启动且路径存在，启动倒计时
-      if (config.autoStart && home) {
-        startCountdown()
-      }
+      pendingFetchPathsRef.current = allPaths
+      pendingAutoStartRef.current = !!(config.autoStart && home)
+      setLoading(false)
     } catch (e) {
+      pendingAutoStartRef.current = false
+      pendingFetchPathsRef.current = []
       setLoading(false)
     }
   })
+
+  // 配置就绪且组件进入视口后再启动倒计时
+  useEffect(() => {
+    if (loading) return
+    if (!inViewport) return
+    if (!pendingAutoStartRef.current || !currentPath) return
+
+    pendingAutoStartRef.current = false
+    startCountdown()
+  }, [loading, inViewport, currentPath])
+
+  // 目录大小计算放到界面展示之后，避免阻塞首帧渲染
+  useEffect(() => {
+    if (loading) return
+    const paths = pendingFetchPathsRef.current
+    if (paths.length === 0) return
+    pendingFetchPathsRef.current = []
+    fetchSizes(paths)
+  }, [loading])
 
   useEffect(() => {
     loadConfig()
@@ -150,8 +148,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
     }
 
     getLocalValue(getLocalI18nGV()).then((res) => {
-      const lang = res || 'zh'
-      setSoftLang(lang as Lange)
+      setSoftLang(normalizeLang(res))
     })
 
     return () => {
@@ -184,7 +181,6 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   })
 
   const handleOpenDir = useMemoizedFn((dirPath: string) => {
-    handleUserInteraction()
     yakitShell.openSpecifiedFile(dirPath)
   })
 
@@ -194,28 +190,23 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   })
 
   const handleThemeChange = useMemoizedFn((theme: Theme) => {
-    handleUserInteraction()
     setSoftTheme(theme, false)
   })
 
   const handleModeChange = useMemoizedFn((mode: YakitSoftMode) => {
-    handleUserInteraction()
     setSoftMode(mode)
   })
 
   const handleLangChange = useMemoizedFn((lang: Lange) => {
-    handleUserInteraction()
     setSoftLang(lang)
   })
 
   const handleAutoStartChange = useMemoizedFn((checked: boolean) => {
-    handleUserInteraction()
     setAutoStart(checked)
   })
 
   const handleConfirm = useMemoizedFn(async () => {
     if (!currentPath) return
-    handleUserInteraction()
 
     if (currentPath === originalHome) {
       doConfirm()
@@ -223,16 +214,14 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
     }
 
     const isNewDir = sizeMap[currentPath] === undefined
-    const message = isNewDir
-      ? '目标目录不存在，将自动创建新目录。确定要切换到新工作空间吗？'
-      : '确定要切换到该工作空间吗？切换后将重新启动应用。'
+    const message = isNewDir ? t.switchNewDir : t.switchExistDir
 
     showYakitModal({
       type: 'white',
-      title: '切换工作空间',
+      title: t.switchTitle,
       content: <div style={{ padding: 15 }}>{message}</div>,
-      onOkText: '确定',
-      onCancelText: '取消',
+      onOkText: t.ok,
+      onCancelText: t.cancel,
       onOk: () => {
         doConfirm()
       },
@@ -240,7 +229,6 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   })
 
   const handleExit = useMemoizedFn(() => {
-    handleUserInteraction()
     yakitApp.closeWindow()
   })
 
@@ -258,13 +246,16 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
     }))
   }, [workspaceHistory, sizeMap])
 
-  if (loading) return null
-
   return (
-    <div className={styles['softwareBasics']} onClick={handleUserInteraction}>
+    <div
+      ref={containerRef}
+      className={styles['softwareBasics']}
+      onClick={handleUserInteraction}
+      style={{ gap: softLang === 'en' ? 8 : 14 }}
+    >
       <div className={styles['softwareBasics-item']}>
         <div className={styles['softwareBasics-item-title']}>
-          工作空间&nbsp;&nbsp;
+          {t.workspace}&nbsp;&nbsp;
           {originalHome && (
             <span className={styles['originalHome']} onClick={() => handleOpenDir(originalHome)}>
               <Tooltip title={originalHome}>{originalHome}</Tooltip>
@@ -278,23 +269,23 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
             selectType="folder"
             renderType="autoComplete"
             multiple={false}
-            help="可将文件夹拖入框内或点击"
-            uploadFolderText="选择工作空间"
-            autoCompleteProps={{ placeholder: '输入或选择工作空间路径', options: history, allowClear: true }}
+            help={t.draggerHelp}
+            uploadFolderText={t.selectWorkspace}
+            autoCompleteProps={{ placeholder: t.workspacePlaceholder, options: history, allowClear: true }}
             onChange={handlePathChange}
           />
           {currentPath && sizeMap[currentPath] !== undefined && (
             <div className={styles['softwareBasics-mode-desc']}>
-              占用空间：{calculating ? '计算中...' : formatSize(sizeMap[currentPath])}{' '}
+              {t.sizeLabel}：{calculating ? t.calculating : formatSize(sizeMap[currentPath])}{' '}
               <YakitButton type="text" onClick={() => handleOpenDir(currentPath)}>
-                打开目录
+                {t.openDir}
               </YakitButton>
             </div>
           )}
         </div>
       </div>
       <div className={styles['softwareBasics-item']}>
-        <div className={styles['softwareBasics-item-title']}>请选择您的主题</div>
+        <div className={styles['softwareBasics-item-title']}>{t.themeTitle}</div>
         <div className={styles['softwareBasics-item-cont']}>
           <div className={styles['softwareBasics-flex']}>
             <div
@@ -303,9 +294,9 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
               })}
               onClick={() => handleThemeChange('light')}
             >
-              <img src={lightTheme} height={60} />
+              <img src={lightTheme} height={50} />
               <div className={styles['softwareBasics-flex']}>
-                <div className={styles['softwareBasics-theme-text']}>亮色</div>
+                <div className={styles['softwareBasics-theme-text']}>{t.themeLight}</div>
                 {softTheme === 'light' && <SolidCheckCircleIcon className={styles['CheckCircleIcon']} />}
               </div>
             </div>
@@ -315,9 +306,9 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
               })}
               onClick={() => handleThemeChange('dark')}
             >
-              <img src={darkTheme} height={60} />
+              <img src={darkTheme} height={50} />
               <div className={styles['softwareBasics-flex']}>
-                <div className={styles['softwareBasics-theme-text']}>暗色</div>
+                <div className={styles['softwareBasics-theme-text']}>{t.themeDark}</div>
                 {softTheme === 'dark' && <SolidCheckCircleIcon className={styles['CheckCircleIcon']} />}
               </div>
             </div>
@@ -326,7 +317,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       </div>
       {isCommunityYakit() && (
         <div className={styles['softwareBasics-item']}>
-          <div className={styles['softwareBasics-item-title']}>模式设置</div>
+          <div className={styles['softwareBasics-item-title']}>{t.modeTitle}</div>
           <div className={styles['softwareBasics-item-cont']}>
             <div className={styles['softwareBasics-flex']}>
               {yakitSoftMode.map((mode) => (
@@ -338,30 +329,30 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
                   )}
                   onClick={() => handleModeChange(mode)}
                 >
-                  {YAKIT_MODE_CONFIG[mode].label}
+                  {modeConfig[mode].label}
                 </div>
               ))}
             </div>
-            <div className={styles['softwareBasics-mode-desc']}>{YAKIT_MODE_CONFIG[softMode].desc}</div>
+            <div className={styles['softwareBasics-mode-desc']}>{modeConfig[softMode].desc}</div>
           </div>
         </div>
       )}
       <div className={styles['softwareBasics-item']}>
-        <div className={styles['softwareBasics-item-title']}>语言设置</div>
+        <div className={styles['softwareBasics-item-title']}>{t.langTitle}</div>
         <div className={styles['softwareBasics-item-cont']}>
           <YakitSelect
             value={softLang}
             options={[
               {
-                label: 'Chinese（Simplified）简体中文',
+                label: t.langZh,
                 value: 'zh',
               },
               {
-                label: 'Chinese（Traditional）繁体中文',
+                label: t.langZhTW,
                 value: 'zh-TW',
               },
               {
-                label: 'English',
+                label: t.langEn,
                 value: 'en',
               },
             ]}
@@ -371,7 +362,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       </div>
       <div className={styles['footer-btn']}>
         <YakitButton disabled={!currentPath} onClick={handleConfirm}>
-          确定并启动 {countdown > 0 ? <>（{countdown}）</> : ''}
+          {t.confirm} {countdown > 0 ? <>（{countdown}）</> : ''}
         </YakitButton>
         <YakitCheckbox
           checked={autoStart}
@@ -379,13 +370,13 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
             handleAutoStartChange(e.target.checked)
           }}
         >
-          下次自动启动
+          {t.autoStart}
         </YakitCheckbox>
       </div>
       <div className={styles['footer-wrapper']}>
         <span className={styles['exit-btn']} onClick={handleExit}>
           <OutlineExitIcon className={styles['exit-icon']} />
-          退出
+          {t.exit}
         </span>
       </div>
     </div>

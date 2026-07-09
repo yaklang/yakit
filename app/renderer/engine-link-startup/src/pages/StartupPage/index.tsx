@@ -83,7 +83,7 @@ const DefaultCredential: YaklangEngineWatchDogCredential = {
 
 export const StartupPage: React.FC = () => {
   /** 工作空间是否已确认（所有平台均需用户确认） */
-  const [workspaceConfirmed, setWorkspaceConfirmed] = useState<boolean>()
+  const [workspaceConfirmed, setWorkspaceConfirmed] = useState<boolean>(false)
 
   /** 是否置顶 */
   const [isTop, setIsTop] = useState<ModalIsTop>(0)
@@ -150,21 +150,11 @@ export const StartupPage: React.FC = () => {
    * 3、架构
    */
   useEffect(() => {
-    const fun = async () => {
-      const tasks: Array<() => Promise<any>> = []
-      tasks.push(() =>
-        handleFetchSystem((sys) => {
-          setSystem(sys || 'Windows_NT')
-        }),
-      )
-      tasks.push(() => handleFetchIsDev())
-      tasks.push(() => handleFetchArchitecture())
-      try {
-        await Promise.allSettled(tasks.map((run) => run()))
-      } catch (error) {}
-    }
-    fun()
-    setWorkspaceConfirmed(false)
+    handleFetchSystem((sys) => {
+      setSystem(sys || 'Windows_NT')
+    })
+    handleFetchIsDev()
+    handleFetchArchitecture()
   }, [])
 
   // workspaceConfirmed 为 true 后，执行插件漏洞信息库自检 + 其他信息获取 + 连接引擎
@@ -1213,12 +1203,11 @@ export const StartupPage: React.FC = () => {
         />
 
         {/* 工作空间选择前置步骤 */}
-        {workspaceConfirmed === false && (
+        {!workspaceConfirmed ? (
           <div className={styles['startup-content-wrapper']}>
             <SoftwareBasics softTheme={theme} setSoftTheme={setTheme} onConfirm={handleWorkspaceConfirmed} />
           </div>
-        )}
-        {workspaceConfirmed === true && (
+        ) : (
           <>
             <div className={styles['startup-engine-log']} style={{ display: isRemoteEngine ? 'none' : 'block' }}>
               <EngineLog />
