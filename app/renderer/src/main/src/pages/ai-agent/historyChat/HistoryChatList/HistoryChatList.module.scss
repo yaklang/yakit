@@ -40,10 +40,46 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-shrink: 0;
+        border-radius: 4px;
         svg {
           width: 16px;
           height: 16px;
           color: var(--Colors-Use-Neutral-Disable);
+        }
+      }
+      .item-icon-local {
+        background: transparent;
+      }
+      .item-icon-feishu {
+        background: var(--Colors-Use-Purple-Bg);
+        svg {
+          color: var(--Colors-Use-Purple-Primary);
+        }
+      }
+      .item-icon-dingtalk {
+        background: var(--Colors-Use-Blue-Bg);
+        svg {
+          color: var(--Colors-Use-Blue-Primary);
+        }
+      }
+      .item-icon-im {
+        background: var(--Colors-Use-Main-Bg);
+        svg {
+          color: var(--Colors-Use-Main-Primary);
+        }
+      }
+      .item-icon-private {
+        svg {
+          width: 15px;
+          height: 15px;
+        }
+      }
+      .item-icon-group,
+      .item-icon-topic {
+        svg {
+          width: 17px;
+          height: 17px;
         }
       }
       .info-title {
@@ -81,7 +117,7 @@
     border-color: var(--Colors-Use-Main-Border);
     background: var(--Colors-Use-Main-Bg);
     .item-info {
-      .item-icon {
+      .item-icon-local {
         svg {
           color: var(--Colors-Use-Main-Primary);
         }
@@ -95,7 +131,7 @@
     background: var(--Colors-Use-Main-Bg);
     border-color: var(--Colors-Use-Main-Border);
     .item-info {
-      .item-icon {
+      .item-icon-local {
         svg {
           color: var(--Colors-Use-Main-Primary);
         }

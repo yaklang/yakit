@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import classNames from 'classnames'
 import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './RobotControl.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 
@@ -50,15 +49,14 @@ export interface RobotSlashCommandCardProps {
 
 export const RobotSlashCommandCard: React.FC<RobotSlashCommandCardProps> = (props) => {
   const { commandGroups = MOCK_SLASH_COMMANDS } = props
-  const { t } = useI18nNamespaces(['layout'])
   const [expanded, setExpanded] = useState(false)
 
   return (
     <div className={classNames(styles['robot-detail-card'], styles['robot-slash-command-card'])}>
       <div className={styles['robot-link-card-header-main']}>
         <div className={styles['robot-detail-card-content']}>
-          <div className={styles['robot-detail-card-title']}>{t('RobotControl.slashCommand')}</div>
-          <div className={styles['robot-detail-card-desc']}>{t('RobotControl.slashCommandDesc')}</div>
+          <div className={styles['robot-detail-card-title']}>帮助</div>
+          <div className={styles['robot-detail-card-desc']}>查看 IM 端常用命令和使用说明。</div>
         </div>
         <YakitButton
           type="text2"

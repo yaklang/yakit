@@ -72,7 +72,7 @@ import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import {
-  OutlineBotIcon,
+  OutlineDevicemobileIcon,
   OutlineExitIcon,
   OutlineOfficebuildingIcon,
   OutlinePencilaltIcon,
@@ -86,6 +86,7 @@ import {
 } from '@/assets/icon/outline'
 import { RobotControl } from '@/pages/robotControl/RobotControl'
 import robotControlStyles from '@/pages/robotControl/RobotControl.module.scss'
+import { deriveIMControlBadge, type IMControlBadgeStatus, type IMControlBadgeView } from '@/pages/robotControl/status'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
@@ -96,7 +97,7 @@ import {
   YakitCodeScanRiskDetails,
   YakitRiskDetails,
 } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
-import { SolidPlayIcon } from '@/assets/icon/solid'
+import { SolidMobileIcon, SolidPlayIcon } from '@/assets/icon/solid'
 import {
   ExecuteEnterNodeByPluginParams,
   PluginExecuteProgress,
@@ -168,6 +169,7 @@ import {
   yakitStream,
   yakitUILayout,
 } from '@/services/electronBridge'
+import { getIMControlStatus } from '@/utils/imControl'
 import { CeUserInfo, CeUserItemProps, UserMenuItemType, CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import { CeUsageStatisticsModal } from '../CeUserMenu/CeUsageStatisticsModal'
 
@@ -210,6 +212,62 @@ const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicCon
   )
 }
 
+type UserAvatarIMBadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
+  badge: IMControlBadgeView
+  onBadgeClick: () => void
+  children: React.ReactNode
+}
+
+const UserAvatarIMBadge = React.forwardRef<HTMLSpanElement, UserAvatarIMBadgeProps>((props, ref) => {
+  const { badge, onBadgeClick, children, className, ...restProps } = props
+  const tooltip = badge.detail ? `${badge.label}\n${badge.detail}` : badge.label
+  return (
+    <span {...restProps} ref={ref} className={classNames(styles['user-avatar-im-wrapper'], className)}>
+      {children}
+      {badge.visible && (
+        <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>{tooltip}</span>}>
+          <span
+            className={classNames(styles['im-control-badge'], styles[`im-control-badge-${badge.color}`])}
+            role="button"
+            tabIndex={0}
+            aria-label={badge.label}
+            onMouseDown={(e) => {
+              e.stopPropagation()
+            }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onBadgeClick()
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter' && e.key !== ' ') return
+              e.preventDefault()
+              e.stopPropagation()
+              onBadgeClick()
+            }}
+          >
+            <SolidMobileIcon />
+          </span>
+        </Tooltip>
+      )}
+    </span>
+  )
+})
+UserAvatarIMBadge.displayName = 'UserAvatarIMBadge'
+
+const getMobileControlIconColor = (color: IMControlBadgeView['color']) => {
+  switch (color) {
+    case 'green':
+      return 'var(--Colors-Use-Success-Primary)'
+    case 'yellow':
+      return 'var(--Colors-Use-Yellow-Primary)'
+    case 'red':
+      return 'var(--Colors-Use-Error-Primary)'
+    case 'gray':
+    default:
+      return 'var(--Colors-Use-Neutral-Disable)'
+  }
+}
+
 /** 随机头像颜色 */
 export const randomAvatarColor = () => {
   // const colorArr: string[] = ["#8863F7", "#DA5FDD", "#4A94F8", "#35D8EE", "#56C991", "#F4736B", "#FFB660", "#B4BBCA"]
@@ -245,8 +303,8 @@ const UserMenusMap: Record<string, UserMenuItemType> = {
   },
   robotControl: {
     key: 'robot-control',
-    label: 'FuncDomain.robotControl',
-    icon: <OutlineBotIcon />,
+    label: '移动端控制',
+    icon: <OutlineDevicemobileIcon />,
   },
   roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
   accountAdmin: { key: 'account-admin', label: 'FuncDomain.accountAdmin' },
@@ -322,10 +380,69 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   const [dynamicMenuOpen, setDynamicMenuOpen] = useState<boolean>(false)
   /** 机器人控制弹框 */
   const [robotControlModal, setRobotControlModal] = useState<boolean>(false)
+  const [imControlStatus, setIMControlStatus] = useState<IMControlBadgeStatus>()
+  const [imControlStatusLoading, setIMControlStatusLoading] = useState<boolean>(false)
   /** 当前远程连接状态 */
   const { dynamicStatus } = yakitDynamicStatus()
   const [dynamicConnect] = useState<boolean>(dynamicStatus.isDynamicStatus)
   let avatarColor = useRef<string>(randomAvatarColor())
+
+  const refreshIMControlStatus = useMemoizedFn(async () => {
+    if (!userInfo.isLogin) {
+      setIMControlStatus(undefined)
+      setIMControlStatusLoading(false)
+      return
+    }
+
+    if (!isEngineLink) {
+      setIMControlStatus({ Running: false })
+      setIMControlStatusLoading(false)
+      return
+    }
+
+    setIMControlStatusLoading(true)
+    try {
+      const status = await getIMControlStatus()
+      setIMControlStatus(status)
+    } catch (e) {
+      setIMControlStatus({
+        Running: true,
+        Platforms: [
+          {
+            Platform: 'im',
+            Connected: false,
+            Message: `${e}`,
+          },
+        ],
+      })
+    } finally {
+      setIMControlStatusLoading(false)
+    }
+  })
+
+  const imControlBadge = useMemo(
+    () =>
+      deriveIMControlBadge({
+        isLogin: userInfo.isLogin,
+        loading: imControlStatusLoading,
+        status: imControlStatus,
+      }),
+    [imControlStatus, imControlStatusLoading, userInfo.isLogin],
+  )
+
+  useEffect(() => {
+    if (!userInfo.isLogin) {
+      setIMControlStatus(undefined)
+      setIMControlStatusLoading(false)
+      return
+    }
+
+    refreshIMControlStatus()
+    const timer = window.setInterval(refreshIMControlStatus, 15000)
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [isEngineLink, refreshIMControlStatus, userInfo.isLogin])
 
   useEffect(() => {
     // 退出菜单
@@ -848,7 +965,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                           },
                         }}
                       >
-                        {judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect, t)}
+                        <UserAvatarIMBadge badge={imControlBadge} onBadgeClick={() => setRobotControlModal(true)}>
+                          {judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect, t)}
+                        </UserAvatarIMBadge>
                       </YakitDropdownMenu>
                     </div>
                   ) : (
@@ -874,10 +993,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                           setCeUserMenuShow(visible)
                         }}
                       >
-                        <img
-                          src={userInfo[UserPlatformType[userInfo.platform || ''].img] || yakitImg}
-                          style={{ width: 24, height: 24, borderRadius: '50%' }}
-                        />
+                        <UserAvatarIMBadge badge={imControlBadge} onBadgeClick={() => setRobotControlModal(true)}>
+                          <img
+                            src={userInfo[UserPlatformType[userInfo.platform || ''].img] || yakitImg}
+                            style={{ width: 24, height: 24, borderRadius: '50%' }}
+                          />
+                        </UserAvatarIMBadge>
                       </YakitPopover>
                     </div>
                   )}
@@ -935,11 +1056,14 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         visible={robotControlModal}
         title={
           <div className={robotControlStyles['robot-modal-title']}>
-            <OutlineBotIcon />
-            {t('FuncDomain.robotControl')}
+            <OutlineDevicemobileIcon
+              className={robotControlStyles['mobile-control-title-icon']}
+              style={{ color: getMobileControlIconColor(imControlBadge.color) }}
+            />
+            移动端控制
           </div>
         }
-        subTitle={t('RobotControl.subTitle')}
+        subTitle="把外部聊天工具接入 AI Agent 机器人"
         type="white"
         size="large"
         destroyOnClose={true}
@@ -949,7 +1073,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         onCancel={() => setRobotControlModal(false)}
         footer={null}
       >
-        <RobotControl onCancel={() => setRobotControlModal(false)} />
+        <RobotControl onCancel={() => setRobotControlModal(false)} onRuntimeStatusChange={refreshIMControlStatus} />
       </YakitModal>
       <DynamicControl
         mainTitle={t('FuncDomain.remoteControl')}

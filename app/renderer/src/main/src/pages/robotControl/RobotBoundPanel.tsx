@@ -5,21 +5,16 @@ import { RobotChannelType } from './RobotControl'
 import styles from './RobotControl.module.scss'
 
 export interface RobotLinkInfo {
-  /** @name IM 端 open id */
+  /** @name 机器人配置标识，优先展示 owner open_id，回退到 app id */
   openId: string
+  /** @name 应用 AppID */
+  appId?: string
   /** @name 头像地址，接口返回 */
   avatarUrl?: string
   /** @name 绑定渠道 */
   channel: RobotChannelType
-  /** @name 绑定时间 */
-  boundAt: string
-}
-
-/** @name 已绑定机器人 MOCK 数据，后续由接口替换 */
-export const MOCK_LINK_INFO: RobotLinkInfo = {
-  openId: 'oc_938483f20447bcad4f8e2a91c3d5e6f7',
-  channel: 'feishu',
-  boundAt: '2026-06-30 16:59:26',
+  /** @name 绑定状态文案 */
+  boundAt?: string
 }
 
 const getChannelIcon = (channel?: RobotChannelType) => {
@@ -52,7 +47,7 @@ export const RobotBoundPanel: React.FC<RobotBoundPanelProps> = (props) => {
               <span className={styles['robot-bound-avatar-placeholder']}>😊</span>
             )}
           </div>
-          <YakitEllipsis text={linkInfo.openId} />
+          <YakitEllipsis text={linkInfo.openId || linkInfo.appId || ''} />
         </div>
 
         <div className={styles['robot-bound-meta']}>
@@ -60,7 +55,7 @@ export const RobotBoundPanel: React.FC<RobotBoundPanelProps> = (props) => {
             <span className={styles['robot-bound-channel-icon']}>{getChannelIcon(linkInfo.channel)}</span>
             <span>{channelLabel}</span>
           </span>
-          <span className={styles['robot-bound-time']}>{linkInfo.boundAt}</span>
+          <span className={styles['robot-bound-time']}>{linkInfo.boundAt || '已保存凭据'}</span>
         </div>
       </div>
     </div>

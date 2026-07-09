@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type FC } from 'react'
 import styles from './HistoryChatList.module.scss'
 import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
-import { SolidChatalt2Icon } from '@/assets/icon/solid'
+import { SolidChatalt2Icon, SolidUserIcon, SolidUsersIcon } from '@/assets/icon/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { Tooltip } from 'antd'
@@ -19,6 +19,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -70,6 +71,34 @@ const updateChatTitle = (list: AISession[], info: AISession) => {
     }
     return item
   })
+}
+
+const HistorySessionIcon: FC<{
+  item: AISession
+  getPopupContainer?: () => HTMLElement
+  overlayClassName?: string
+}> = ({ item, getPopupContainer, overlayClassName }) => {
+  const iconMeta = getHistorySessionIconMeta(item)
+  const Icon = iconMeta.isIM ? (iconMeta.isGroupLike ? SolidUsersIcon : SolidUserIcon) : SolidChatalt2Icon
+
+  return (
+    <Tooltip
+      title={iconMeta.label}
+      placement="top"
+      overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+      getPopupContainer={getPopupContainer}
+    >
+      <div
+        className={classNames(
+          styles['item-icon'],
+          styles[`item-icon-${iconMeta.source}`],
+          styles[`item-icon-${iconMeta.chatKind}`],
+        )}
+      >
+        <Icon />
+      </div>
+    </Tooltip>
+  )
 }
 
 const HistoryChatList: FC<{
@@ -128,7 +157,8 @@ const HistoryChatList: FC<{
 
   const showHistory = useMemo(() => {
     if (!search) return sessionList
-    return sessionList.filter((item) => item.Title.toLowerCase().includes(search.toLowerCase()))
+    const lower = search.toLowerCase()
+    return sessionList.filter((item) => getSessionDisplayTitle(item).toLowerCase().includes(lower))
   }, [sessionList, search])
 
   const groupedHistory = useMemo(() => {
@@ -224,7 +254,8 @@ const HistoryChatList: FC<{
           <div key={group.key} className={styles['history-group']}>
             <div className={styles['history-group-title']}>{t(group.label)}</div>
             {group.list.map((item) => {
-              const { SessionID, Title } = item
+              const { SessionID } = item
+              const displayTitle = getSessionDisplayTitle(item)
               const delStatus = delLoading.includes(SessionID)
               return (
                 <div
@@ -235,11 +266,16 @@ const HistoryChatList: FC<{
                   onClick={() => handleSetActiveChat(item)}
                 >
                   <div className={styles['item-info']}>
-                    <div className={styles['item-icon']}>
-                      <SolidChatalt2Icon />
-                    </div>
-                    <div className={classNames(styles['info-title'], 'yakit-content-single-ellipsis')} title={Title}>
-                      {Title}
+                    <HistorySessionIcon
+                      item={item}
+                      getPopupContainer={getPopupContainer}
+                      overlayClassName={overlayClassName}
+                    />
+                    <div
+                      className={classNames(styles['info-title'], 'yakit-content-single-ellipsis')}
+                      title={displayTitle}
+                    >
+                      {displayTitle}
                     </div>
                   </div>
 

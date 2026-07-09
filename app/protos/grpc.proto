@@ -921,6 +921,7 @@ service Yak {
   rpc DeleteAIEvent(AIEventDeleteRequest) returns (DbOperateMessage);
   rpc QueryAISession(QueryAISessionRequest) returns (QueryAISessionResponse);
   rpc UpdateAISessionTitle(UpdateAISessionTitleRequest) returns (DbOperateMessage);
+  rpc UpdateAISessionIMMeta(UpdateAISessionIMMetaRequest) returns (DbOperateMessage);
   rpc DeleteAISession(DeleteAISessionRequest) returns (DbOperateMessage);
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
   rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
@@ -1050,6 +1051,173 @@ service Yak {
 
   // Download rags
   rpc DownloadRAGs(DownloadRAGsRequest) returns (stream ExecResult);
+
+  // IM Bot 远程通知：保存 / 列出 / 删除 / 测试连接（飞书、钉钉等 IM 平台 bot 凭证）
+  rpc SaveIMBot(SaveIMBotRequest) returns (SaveIMBotResponse);
+  rpc ListIMBots(ListIMBotRequest) returns (ListIMBotResponse);
+  rpc DeleteIMBot(DeleteIMBotRequest) returns (DeleteIMBotResponse);
+  rpc TestIMBot(TestIMBotRequest) returns (TestIMBotResponse);
+  // IM 扫码注册（device-code onboarding）：平台无关的单入口。
+  // 按 Request.Platform 路由到对应平台的 onboarding 流程（飞书/钉钉/未来的 wecom 等），
+  // 流式推送「二维码/等待/成功/失败」状态。
+  rpc StartIMOnboarding(StartIMOnboardingRequest) returns (stream IMOnboardingEvent);
+
+  // IM 远程控制：启动/停止/查询 IM Engine。
+  // 启动后，已配置且启用的 IM bot（飞书/钉钉）开始监听入站消息，
+  // 用户在 IM 端通过斜杠命令控制会话，或发送普通消息交给 AI agent 执行。
+  rpc StartIMControl(StartIMControlRequest) returns (StartIMControlResponse);
+  rpc StopIMControl(StopIMControlRequest) returns (StopIMControlResponse);
+  rpc GetIMControlStatus(GetIMControlStatusRequest) returns (GetIMControlStatusResponse);
+  // 热更新 IM 回复配置（转发回复开关 / 回复颗粒度），无需重启 IM Engine。
+  rpc UpdateIMControlConfig(UpdateIMControlConfigRequest) returns (UpdateIMControlConfigResponse);
+}
+
+// IMBotConfig 描述一个 IM 平台 bot 的配置凭证。
+message IMBotConfig {
+  // 平台标识：feishu / dingtalk / wecom / telegram
+  string Platform = 1;
+  // 应用 AppID（飞书 app_id / 钉钉 appKey）
+  string AppId = 2;
+  // 应用 AppSecret（飞书 app_secret / 钉钉 appSecret）
+  string AppSecret = 3;
+  // 钉钉群机器人加签 secret（可选）
+  string RobotSecret = 4;
+  // 覆盖默认 API 域名，如 Lark 海外版 https://open.larksuite.com（可选）
+  string BaseUrl = 5;
+  // 是否启用
+  bool Enabled = 6;
+  // bot 所属用户标识（飞书 open_id 等）；空=不限制
+  string OwnerId = 7;
+  // 允许使用 bot 的用户列表（飞书 open_id 等）；空=不限制
+  repeated string AllowedUsers = 8;
+  // 允许使用 bot 的会话列表（飞书 chat_id 等）；空=不限制
+  repeated string AllowedChats = 9;
+}
+
+message SaveIMBotRequest {
+  IMBotConfig Bot = 1;
+}
+message SaveIMBotResponse {
+  IMBotConfig Bot = 1;
+}
+
+message ListIMBotRequest {}
+message ListIMBotResponse {
+  repeated IMBotConfig Bots = 1;
+}
+
+message DeleteIMBotRequest {
+  string Platform = 1;
+}
+message DeleteIMBotResponse {}
+
+// TestIMBotRequest 用传入凭证做一次连接自检（向自身发送一条测试消息）。
+message TestIMBotRequest {
+  IMBotConfig Bot = 1;
+  // 可选：指定接收方（飞书 open_id / 钉钉 staffId）。留空则用 AppID 相关字段自检。
+  string TargetId = 2;
+}
+message TestIMBotResponse {
+  bool Ok = 1;
+  string Message = 2;
+}
+
+// IM 扫码注册：请求参数（平台无关，靠 Platform 字段路由）。
+message StartIMOnboardingRequest {
+  // 平台标识：feishu / dingtalk / 未来的 wecom / slack ...
+  string Platform = 1;
+  // 整体超时秒数（默认 600s）。
+  int32 TimeoutSeconds = 2;
+  // 平台特有选项（如飞书的 is_lark=true 走 Lark 海外版域名）。
+  map<string,string> Options = 3;
+}
+
+// IM 扫码注册：流式事件（所有平台共用，对齐 notifytype.OnboardingStep）。
+message IMOnboardingEvent {
+  // 状态：qr(出二维码) / pending(等待扫码确认) / success(成功) / expired(过期) / error(失败)
+  string State = 1;
+  // 二维码内容（State==qr 时）
+  string QrUrl = 2;
+  // 人类可读状态/错误信息
+  string Message = 3;
+  // 成功时返回的凭证（State==success 时）。前端可据此自动保存。
+  IMBotConfig Bot = 4;
+  // 二维码 PNG 的 base64（State==qr 时），前端直接 <img src="data:image/png;base64,..."> 渲染。
+  string QrImageBase64 = 5;
+}
+
+// ===================== IM 远程控制 =====================
+
+// StartIMControlRequest 启动 IM 远程控制。
+message StartIMControlRequest {
+  // 指定要监听的平台列表；留空 = 自动用所有已配置且 Enabled 的 bot。
+  repeated string Platforms = 1;
+  // 会话空闲超时秒数，超时后自动关闭该 IM 会话的 gRPC 流释放资源（默认 1800）。
+  int32 SessionIdleTimeoutSeconds = 2;
+  // yaklang 引擎 gRPC 地址（留空用默认 127.0.0.1:8087）。
+  string EngineAddr = 3;
+  // bot 回复时是否引用用户消息（转发回复），默认 true。
+  bool ReplyQuote = 4;
+  // 回复颗粒度：standard(只最终答案) / summary(精简) / detailed(含思考过程)，默认 standard。
+  string ReplyGranularity = 5;
+  // 群聊触发策略：must_at(需 @bot 或 / 命令) / allow_slash(仅 / 命令) / allow_all(所有消息)。
+  string GroupTrigger = 6;
+}
+message StartIMControlResponse {
+  bool Started = 1;
+  string Message = 2;
+}
+
+message StopIMControlRequest {}
+message StopIMControlResponse {
+  bool Stopped = 1;
+  string Message = 2;
+}
+
+message GetIMControlStatusRequest {}
+message GetIMControlStatusResponse {
+  bool Running = 1;
+  repeated IMControlPlatformInfo Platforms = 2;
+  repeated IMControlSessionInfo Sessions = 3;
+}
+
+// IMControlPlatformInfo 描述一个正在监听的 IM 平台状态。
+message IMControlPlatformInfo {
+  string Platform = 1;
+  bool Connected = 2;
+  string Message = 3;
+}
+
+// IMControlSessionInfo 描述一个活跃的 IM 控制会话。
+message IMControlSessionInfo {
+  string SessionKey = 1;
+  string Platform = 2;
+  string ChatID = 3;
+  string SenderID = 4;
+  int64 LastActiveAt = 5;
+  string CurrentModel = 6;
+  // 会话类型：private / group / topic（跨平台归一化）。
+  string ChatType = 7;
+  // 人类可读标题，如「飞书私聊 - 张三」（兜底形式，后续可升级为真实群/用户名）。
+  string ChatTitle = 8;
+  // 发送者展示名（可能为空）。
+  string SenderName = 9;
+  // 话题/线程 ID（飞书话题消息才有）。
+  string ThreadID = 10;
+}
+
+// UpdateIMControlConfigRequest 热更新 IM 回复配置。
+message UpdateIMControlConfigRequest {
+  // bot 回复时是否引用用户消息（转发回复）。
+  bool ReplyQuote = 1;
+  // 回复颗粒度：standard / summary / detailed。
+  string ReplyGranularity = 2;
+  // 群聊触发策略：must_at / allow_slash / allow_all。
+  string GroupTrigger = 3;
+}
+message UpdateIMControlConfigResponse {
+  bool Updated = 1;
+  string Message = 2;
 }
 
 message DownloadRAGsRequest {
@@ -2156,6 +2324,8 @@ message AISession {
   int64 LastUsedAt = 9;
   // 会话来源（与 AIStartParams.Source 对应），用于统计/筛选
   string Source = 10;
+  // source=im 时的结构化 IM 元数据（平台 / 会话类型 / 可读标题等）。
+  IMSourceMeta IMSourceMeta = 11;
 }
 
 message QueryAISessionRequest {
@@ -2172,6 +2342,27 @@ message QueryAISessionResponse {
 message UpdateAISessionTitleRequest {
   string SessionID = 1;
   string Title = 2;
+}
+
+// UpdateAISessionIMMetaRequest 由 IM 引擎在建立 agent 会话成功后回写结构化 IM 元数据
+// （平台 / 会话类型 / 可读标题 / 发送者 / 话题），用于 Yakit 历史列表展示与按平台筛选。
+message UpdateAISessionIMMetaRequest {
+  string SessionID = 1;
+  IMSourceMeta Meta = 2;
+}
+
+// IMSourceMeta 描述 source=im 的 AI 会话在 IM 平台上的归属信息。
+message IMSourceMeta {
+  // IM 平台：feishu / dingtalk ...
+  string Platform = 1;
+  // 会话类型：private / group / topic（跨平台归一化）。
+  string ChatType = 2;
+  // 人类可读标题，如「飞书私聊 - 张三」（兜底形式，可能用 ID 短形式）。
+  string ChatTitle = 3;
+  // 发送者展示名（可能为空）。
+  string SenderName = 4;
+  // 话题/线程 ID（飞书话题消息才有）。
+  string ThreadID = 5;
 }
 
 message DeleteAISessionFilter {

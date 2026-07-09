@@ -40,6 +40,48 @@
         padding: 3px;
         display: flex;
       }
+      .user-avatar-im-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 0;
+      }
+      .im-control-badge {
+        position: absolute;
+        right: -5px;
+        bottom: -5px;
+        z-index: 2;
+        width: 15px;
+        height: 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        border: 2px solid var(--Colors-Use-Basic-Background);
+        border-radius: 50%;
+        color: var(--Colors-Use-Main-On-Primary);
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
+
+        svg {
+          width: 9px;
+          height: 9px;
+        }
+      }
+      .im-control-badge-gray {
+        background: var(--Colors-Use-Neutral-Disable);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      }
+      .im-control-badge-green {
+        background: var(--Colors-Use-Success-Primary);
+      }
+      .im-control-badge-yellow {
+        background: var(--Colors-Use-Yellow-Primary);
+      }
+      .im-control-badge-red {
+        background: var(--Colors-Use-Error-Primary);
+      }
     }
     .user-wrapper:hover {
       background-color: var(--Colors-Use-Neutral-Bg);

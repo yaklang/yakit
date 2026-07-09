@@ -7,9 +7,23 @@ import { OutlinePlusIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { randomString } from '@/utils/randomUtil'
+import { yakitNotify } from '@/utils/notification'
+import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { RobotDetailPanel } from './RobotDetailPanel'
-import { MOCK_LINK_INFO, RobotLinkInfo } from './RobotBoundPanel'
+import { RobotLinkInfo } from './RobotBoundPanel'
+import {
+  DEFAULT_IM_CONTROL_CONFIG,
+  deleteIMBot,
+  getIMControlStatus,
+  listIMBots,
+  normalizeIMControlConfig,
+  saveIMBot,
+  startIMControl,
+  stopIMControl,
+  updateIMControlConfig,
+  type IMBotConfigLike,
+  type IMControlConfig,
+} from './api'
 import styles from './RobotControl.module.scss'
 
 export type RobotChannelType = 'wechat' | 'feishu' | 'lark' | 'telegram' | 'dingtalk' | 'discord' | 'wecom'
@@ -33,6 +47,8 @@ export interface RobotListItem {
   bound?: boolean
   /** @name IM 端绑定详情 */
   linkInfo?: RobotLinkInfo
+  /** @name 后端 IM bot 配置 */
+  bot?: IMBotConfigLike
 }
 
 interface RobotChannelOption {
@@ -46,17 +62,7 @@ const CHANNEL_OPTIONS: RobotChannelOption[] = [
   { key: 'dingtalk', enabled: true },
 ]
 
-const DEFAULT_ROBOTS: RobotListItem[] = [
-  {
-    id: 'robot-zcode',
-    name: 'zcode',
-    channel: 'feishu',
-    region: 'china',
-    bound: true,
-    enabled: true,
-    linkInfo: MOCK_LINK_INFO,
-  },
-]
+const IM_CONTROL_CONFIG_CACHE_KEY = 'robot-control-im-runtime-config'
 
 const getChannelIcon = (channel?: RobotChannelType) => {
   switch (channel) {
@@ -69,17 +75,34 @@ const getChannelIcon = (channel?: RobotChannelType) => {
   }
 }
 
-export interface RobotControlProps {
-  onCancel?: () => void
+const getChannelRuntimeText = (channel?: RobotChannelType, channelLabel = '机器人') => {
+  switch (channel) {
+    case 'feishu':
+      return `${channelLabel} WebSocket 运行中`
+    case 'dingtalk':
+      return `${channelLabel} Stream 运行中`
+    default:
+      return `${channelLabel}运行中`
+  }
 }
 
-export const RobotControl: React.FC<RobotControlProps> = () => {
+export interface RobotControlProps {
+  onCancel?: () => void
+  onRuntimeStatusChange?: () => void
+}
+
+export const RobotControl: React.FC<RobotControlProps> = (props) => {
+  const { onRuntimeStatusChange } = props
   const { t } = useI18nNamespaces(['layout'])
-  const [robots] = useState<RobotListItem[]>(DEFAULT_ROBOTS)
+  const [robots, setRobots] = useState<RobotListItem[]>([])
   const [draftRobots, setDraftRobots] = useState<RobotListItem[]>([])
   const [activeRobotId, setActiveRobotId] = useState<string>()
   const [isNewRobotView, setIsNewRobotView] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [runtimeConfig, setRuntimeConfig] = useState<IMControlConfig>(DEFAULT_IM_CONTROL_CONFIG)
+  const [runtimeConfigLoading, setRuntimeConfigLoading] = useState(false)
   const nameInputRef = useRef<Record<string, InputRef | null>>({})
+  const startedOnceRef = useRef(false)
 
   const robotList = useMemo(() => [...draftRobots, ...robots], [draftRobots, robots])
 
@@ -100,6 +123,136 @@ export const RobotControl: React.FC<RobotControlProps> = () => {
     return robotList.find((item) => item.isNameEditing)
   }, [robotList])
 
+  const isSupportedIMPlatform = (value?: RobotChannelType): value is 'feishu' | 'dingtalk' => {
+    return value === 'feishu' || value === 'dingtalk'
+  }
+
+  const getRobotId = (platform: string) => `robot-${platform}`
+
+  const getChannelRegion = (platform?: string): 'china' | 'global' | undefined => {
+    return platform === 'feishu' ? 'china' : undefined
+  }
+
+  const getChannelLabel = useMemoizedFn((channel?: RobotChannelType) => {
+    if (!channel) return ''
+    return t(`RobotControl.channel.${channel}`)
+  })
+
+  const buildLinkInfo = (bot: IMBotConfigLike): RobotLinkInfo => {
+    return {
+      openId: bot.OwnerId || bot.AppId || bot.Platform,
+      appId: bot.AppId,
+      channel: bot.Platform as RobotChannelType,
+      boundAt: bot.OwnerId ? '已绑定所有者' : '已保存凭据',
+    }
+  }
+
+  const buildRobotFromBot = useMemoizedFn((bot: IMBotConfigLike): RobotListItem => {
+    const channel = bot.Platform as RobotChannelType
+    const channelLabel = isSupportedIMPlatform(channel) ? getChannelLabel(channel) : bot.Platform
+    return {
+      id: getRobotId(bot.Platform),
+      name: `${channelLabel || bot.Platform}机器人`,
+      channel,
+      region: getChannelRegion(bot.Platform),
+      enabled: bot.Enabled !== false,
+      bound: !!(bot.AppId || bot.OwnerId),
+      linkInfo: buildLinkInfo(bot),
+      bot,
+    }
+  })
+
+  const syncControlRuntime = useMemoizedFn(async (enabledPlatforms: string[], config = runtimeConfig) => {
+    try {
+      if (enabledPlatforms.length > 0) {
+        await startIMControl(enabledPlatforms, config)
+      } else {
+        await stopIMControl()
+      }
+    } finally {
+      onRuntimeStatusChange?.()
+    }
+  })
+
+  const loadRuntimeConfig = useMemoizedFn(async (): Promise<IMControlConfig> => {
+    try {
+      const value = await getLocalValue(IM_CONTROL_CONFIG_CACHE_KEY)
+      if (!value) return DEFAULT_IM_CONTROL_CONFIG
+      const parsed = typeof value === 'string' ? JSON.parse(value) : value
+      const nextConfig = normalizeIMControlConfig(parsed)
+      setRuntimeConfig(nextConfig)
+      return nextConfig
+    } catch (e) {
+      setRuntimeConfig(DEFAULT_IM_CONTROL_CONFIG)
+      return DEFAULT_IM_CONTROL_CONFIG
+    }
+  })
+
+  const onRuntimeConfigChange = useMemoizedFn(async (config: IMControlConfig) => {
+    const nextConfig = normalizeIMControlConfig(config)
+    setRuntimeConfig(nextConfig)
+    setLocalValue(IM_CONTROL_CONFIG_CACHE_KEY, JSON.stringify(nextConfig))
+    setRuntimeConfigLoading(true)
+    try {
+      await updateIMControlConfig(nextConfig)
+      onRuntimeStatusChange?.()
+    } catch (e) {
+      yakitNotify('error', `移动端控制配置保存失败：${e}`)
+    } finally {
+      setRuntimeConfigLoading(false)
+    }
+  })
+
+  const loadBots = useMemoizedFn(async (autoStart = false, config = runtimeConfig) => {
+    setLoading(true)
+    try {
+      const res = await listIMBots()
+      const nextRobots = (res.Bots || [])
+        .filter((bot) => isSupportedIMPlatform(bot.Platform as RobotChannelType))
+        .map((bot) => buildRobotFromBot(bot))
+
+      setRobots(nextRobots)
+      setDraftRobots((prev) => prev.filter((item) => !nextRobots.some((robot) => robot.channel === item.channel)))
+
+      const nextIds = new Set([...nextRobots.map((item) => item.id), ...draftRobots.map((item) => item.id)])
+      if (activeRobotId && nextIds.has(activeRobotId)) {
+        setIsNewRobotView(false)
+      } else if (nextRobots.length > 0) {
+        setActiveRobotId(nextRobots[0].id)
+        setIsNewRobotView(false)
+      } else {
+        setActiveRobotId(undefined)
+        setIsNewRobotView(true)
+      }
+
+      if (autoStart) {
+        const enabledPlatforms = nextRobots.filter((item) => item.enabled && item.bot).map((item) => item.bot!.Platform)
+        if (enabledPlatforms.length > 0) {
+          const status = await getIMControlStatus().catch(() => undefined)
+          if (!status?.Running) {
+            await syncControlRuntime(enabledPlatforms, config)
+          } else {
+            onRuntimeStatusChange?.()
+          }
+        } else {
+          onRuntimeStatusChange?.()
+        }
+      }
+    } catch (e) {
+      yakitNotify('error', `加载机器人配置失败：${e}`)
+    } finally {
+      setLoading(false)
+    }
+  })
+
+  useEffect(() => {
+    if (startedOnceRef.current) return
+    startedOnceRef.current = true
+    loadRuntimeConfig().then((config) => {
+      loadBots(true, config)
+    })
+  }, [])
+
   useEffect(() => {
     if (editingRobot?.isNameEditing) {
       setTimeout(() => {
@@ -109,11 +262,6 @@ export const RobotControl: React.FC<RobotControlProps> = () => {
       }, 50)
     }
   }, [editingRobot?.id, editingRobot?.isNameEditing])
-
-  const getChannelLabel = useMemoizedFn((channel?: RobotChannelType) => {
-    if (!channel) return ''
-    return t(`RobotControl.channel.${channel}`)
-  })
 
   const onCreateRobot = useMemoizedFn(() => {
     setIsNewRobotView(true)
@@ -129,7 +277,13 @@ export const RobotControl: React.FC<RobotControlProps> = () => {
     const option = CHANNEL_OPTIONS.find((item) => item.key === channel)
     if (!option?.enabled) return
 
-    const id = `draft-${randomString(8)}`
+    const existing = robotList.find((item) => item.channel === channel)
+    if (existing) {
+      onSelectRobot(existing.id)
+      return
+    }
+
+    const id = `draft-${channel}`
     const newDraft: RobotListItem = {
       id,
       name: t('RobotControl.newRobotName'),
@@ -168,40 +322,115 @@ export const RobotControl: React.FC<RobotControlProps> = () => {
     updateDraftRobot(id, { isNameEditing: true })
   })
 
-  const onDeleteRobot = useMemoizedFn((id: string) => {
-    setDraftRobots((prev) => {
-      const next = prev.filter((item) => item.id !== id)
-      if (activeRobotId === id) {
-        if (next.length > 0) {
-          setActiveRobotId(next[0].id)
-          setIsNewRobotView(false)
-        } else if (robots.length > 0) {
-          setActiveRobotId(robots[0].id)
-          setIsNewRobotView(false)
-        } else {
-          setActiveRobotId(undefined)
-          setIsNewRobotView(true)
-        }
-      }
-      return next
-    })
-  })
-
-  const onToggleEnabled = useMemoizedFn((id: string, enabled: boolean) => {
+  const onDeleteRobot = useMemoizedFn(async (id: string) => {
     if (id.startsWith('draft-')) {
-      updateDraftRobot(id, { enabled })
+      setDraftRobots((prev) => {
+        const next = prev.filter((item) => item.id !== id)
+        if (activeRobotId === id) {
+          if (next.length > 0) {
+            setActiveRobotId(next[0].id)
+            setIsNewRobotView(false)
+          } else if (robots.length > 0) {
+            setActiveRobotId(robots[0].id)
+            setIsNewRobotView(false)
+          } else {
+            setActiveRobotId(undefined)
+            setIsNewRobotView(true)
+          }
+        }
+        return next
+      })
+      return
+    }
+
+    const target = robots.find((item) => item.id === id)
+    if (!target?.bot) return
+
+    try {
+      await deleteIMBot(target.bot.Platform)
+      const enabledPlatforms = robots
+        .filter((item) => item.enabled && item.bot && item.bot.Platform !== target.bot!.Platform)
+        .map((item) => item.bot!.Platform)
+      await syncControlRuntime(enabledPlatforms)
+      await loadBots(false)
+      yakitNotify('success', '机器人已删除')
+    } catch (e) {
+      yakitNotify('error', `删除机器人失败：${e}`)
     }
   })
 
-  const onLinkInfoChange = useMemoizedFn((id: string, info?: RobotLinkInfo) => {
+  const onToggleEnabled = useMemoizedFn(async (id: string, enabled: boolean) => {
+    if (id.startsWith('draft-')) {
+      updateDraftRobot(id, { enabled })
+      return
+    }
+
+    const target = robots.find((item) => item.id === id)
+    if (!target?.bot) return
+
+    const nextBot = { ...target.bot, Enabled: enabled }
+    try {
+      await saveIMBot(nextBot)
+      const enabledPlatforms = robots
+        .map((item) => (item.id === id ? { ...item, bot: nextBot, enabled } : item))
+        .filter((item) => item.enabled && item.bot)
+        .map((item) => item.bot!.Platform)
+      await syncControlRuntime(enabledPlatforms)
+      await loadBots(false)
+      const channelLabel = target.channel ? getChannelLabel(target.channel) : target.bot.Platform
+      yakitNotify(
+        'success',
+        enabled ? getChannelRuntimeText(target.channel, channelLabel) : `${channelLabel}机器人已停用`,
+      )
+    } catch (e) {
+      yakitNotify('error', `更新机器人启用状态失败：${e}`)
+    }
+  })
+
+  const onLinkInfoChange = useMemoizedFn(async (id: string, info?: RobotLinkInfo, bot?: IMBotConfigLike) => {
+    if (bot) {
+      const nextBot = { ...bot, Enabled: bot.Enabled !== false }
+      setDraftRobots((prev) => prev.filter((item) => item.id !== id && item.channel !== nextBot.Platform))
+      setActiveRobotId(getRobotId(nextBot.Platform))
+      setIsNewRobotView(false)
+      const enabledPlatforms = Array.from(
+        new Set([
+          ...robots.filter((item) => item.enabled && item.bot).map((item) => item.bot!.Platform),
+          nextBot.Platform,
+        ]),
+      )
+      await syncControlRuntime(enabledPlatforms).catch((e) => {
+        yakitNotify('error', `启动移动端控制失败：${e}`)
+      })
+      await loadBots(false)
+      return
+    }
+
     if (id.startsWith('draft-')) {
       updateDraftRobot(id, { linkInfo: info, bound: !!info })
     }
   })
 
+  const onUnbound = useMemoizedFn(async (platform?: string) => {
+    const enabledPlatforms = robots
+      .filter((item) => item.enabled && item.bot && item.bot.Platform !== platform)
+      .map((item) => item.bot!.Platform)
+    await syncControlRuntime(enabledPlatforms).catch((e) => {
+      yakitNotify('error', `同步移动端控制状态失败：${e}`)
+    })
+    await loadBots(false)
+  })
+
   const renderRegionTag = (region?: 'china' | 'global') => {
     if (!region) return null
     return <span className={styles['region-tag']}>{t(`RobotControl.region.${region}`)}</span>
+  }
+
+  const getChannelDesc = (option: RobotChannelOption) => {
+    const occupied = robotList.some((item) => item.channel === option.key)
+    if (occupied) return '已创建，可在左侧管理'
+    if (!option.enabled) return t('RobotControl.comingSoon')
+    return t(`RobotControl.channelDesc.${option.key}`)
   }
 
   const renderListItemName = (item: RobotListItem) => {
@@ -238,6 +467,7 @@ export const RobotControl: React.FC<RobotControlProps> = () => {
           type="outline2"
           className={styles['create-robot-btn']}
           icon={<OutlinePlusIcon />}
+          loading={loading}
           onClick={onCreateRobot}
         >
           {t('RobotControl.createRobot')}
@@ -280,7 +510,7 @@ export const RobotControl: React.FC<RobotControlProps> = () => {
             <div className={styles['new-robot-desc']}>{t('RobotControl.createRobotDesc')}</div>
             <div className={styles['channel-grid']}>
               {CHANNEL_OPTIONS.map((option) => {
-                const descKey = option.enabled ? `RobotControl.channelDesc.${option.key}` : 'RobotControl.comingSoon'
+                const occupied = robotList.some((item) => item.channel === option.key)
                 return (
                   <div
                     key={option.key}
@@ -294,8 +524,9 @@ export const RobotControl: React.FC<RobotControlProps> = () => {
                       <div className={styles['channel-title-row']}>
                         <span className={styles['channel-title']}>{t(`RobotControl.channel.${option.key}`)}</span>
                         {renderRegionTag(option.region)}
+                        {occupied && <span className={styles['region-tag']}>已创建</span>}
                       </div>
-                      <div className={styles['channel-desc']}>{t(descKey)}</div>
+                      <div className={styles['channel-desc']}>{getChannelDesc(option)}</div>
                     </div>
                   </div>
                 )
@@ -307,7 +538,11 @@ export const RobotControl: React.FC<RobotControlProps> = () => {
             robot={activeRobot}
             onDelete={activeRobot.isDraft ? () => onDeleteRobot(activeRobot.id) : undefined}
             onToggleEnabled={(enabled) => onToggleEnabled(activeRobot.id, enabled)}
-            onLinkInfoChange={(info) => onLinkInfoChange(activeRobot.id, info)}
+            onLinkInfoChange={(info, bot) => onLinkInfoChange(activeRobot.id, info, bot)}
+            onUnbound={onUnbound}
+            runtimeConfig={runtimeConfig}
+            runtimeConfigLoading={runtimeConfigLoading}
+            onRuntimeConfigChange={onRuntimeConfigChange}
           />
         ) : (
           <div className={styles['robot-detail-placeholder']}>{t('RobotControl.robotDetailPlaceholder')}</div>
