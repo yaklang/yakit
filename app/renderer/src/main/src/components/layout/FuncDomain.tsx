@@ -1125,7 +1125,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       </YakitModal>
 
       <YakitModal
-        visible={robotControlModal}
+        open={robotControlModal}
         title={
           <div className={robotControlStyles['robot-modal-title']}>
             <OutlineDevicemobileIcon
@@ -1138,7 +1138,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         subTitle={t('RobotControl.subTitle')}
         type="white"
         size="large"
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         bodyStyle={{ padding: '8px 16px 16px' }}
         width={900}

@@ -2,7 +2,7 @@
  * AI 专用第三方应用配置表单组件。
  */
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Collapse, Form } from 'antd'
+import { Collapse, Form, Space } from 'antd'
 import { KVPair } from '@/models/kv'
 import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
@@ -240,19 +240,15 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
     <div className={styles['readonly-ai-field-row']} key={key}>
       <div className={styles['readonly-ai-label']}>{label}:</div>
       <div className={styles['readonly-ai-control']}>
-        <YakitInput
-          readOnly
-          className={styles['ai-readonly-copy-input']}
-          value={display}
-          addonAfter={
-            <YakitButton
-              type="text2"
-              size="small"
-              icon={<OutlineClipboardcopyIcon />}
-              onClick={() => setClipboardText(clip)}
-            />
-          }
-        />
+        <Space.Compact>
+          <YakitInput readOnly className={styles['ai-readonly-copy-input']} value={display} />
+          <YakitButton
+            type="text2"
+            size="small"
+            icon={<OutlineClipboardcopyIcon />}
+            onClick={() => setClipboardText(clip)}
+          />
+        </Space.Compact>
       </div>
     </div>
   ))
@@ -550,7 +546,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                     execModelNameOption.current = true
                     getModelNameOption()
                   }}
-                  dropdownRender={(menu) => {
+                  popupRender={(menu) => {
                     return (
                       <>
                         <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>
