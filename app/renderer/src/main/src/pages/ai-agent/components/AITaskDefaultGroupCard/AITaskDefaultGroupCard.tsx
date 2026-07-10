@@ -1,61 +1,24 @@
-import {
-  type ChatTaskDefaultGroup,
-  type ReActChatElement,
-  type ReActChatTaskElementSub,
-} from '@/pages/ai-re-act/hooks/aiRender'
-import { type FC, memo, useEffect, useMemo, useState } from 'react'
+import { type FC, memo, useEffect, useState } from 'react'
 import classNames from 'classnames'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './AITaskDefaultGroupCard.module.scss'
-import ConcurrentStreamCardActions from '../ConcurrentStreamCard/ConcurrentStreamCardActions/ConcurrentStreamCardActions'
 import { useBoolean, useCreation } from 'ahooks'
-import { formatTimestamp } from '@/utils/timeUtil'
-import { useConcurrentStreamRefreshListener } from '../ConcurrentStreamCard/concurrentStream/useConcurrentStreamRefreshListener'
 import AITaskDefaultGroupContent from './AITaskDefaultGroupContent'
 import { useCurrentStore, useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
+import AITaskDefaultGroupCardHeard from './aiTaskDefaultGroupCardHeard/AITaskDefaultGroupCardHeard'
+import { AITaskDefaultGroupCardHeardWrapperProps, AITaskDefaultGroupCardListWrapperProps } from './type'
 
 const AITaskDefaultGroupCard: FC<{
-  elements: ReActChatTaskElementSub[]
-  session: string
   token: string
-  chatType: ReActChatElement['chatType']
-  isChildWindow?: boolean
-  onRefresh?: () => void
-}> = memo(({ elements, session, token, chatType, isChildWindow, onRefresh }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
+  isChildWindow: boolean
+}> = memo(({ token, isChildWindow }) => {
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
   const [contentFocused, setContentFocused] = useState(false)
-
-  const store = useCurrentStore()
-  const renderNum = useStore(store, (state) => state.items[token].renderNum)
-  const rawData = useCurrentRawData()
-
-  const raw = useCreation(() => {
-    if (!rawData) return null
-    const itemData = rawData.contents.get(token)
-    if (!itemData) return null
-    return { ...itemData } as ChatTaskDefaultGroup
-  }, [renderNum])
-
-  const framePayload = useMemo(
-    () => ({
-      session,
-      token,
-      chatType,
-      elements,
-      taskName: t('ConcurrentStreamCard.systemInfo'),
-    }),
-    [chatType, elements, session, t, token],
-  )
 
   useEffect(() => {
     if (isChildWindow) return
     collapseExpand()
   }, [collapseExpand, isChildWindow])
-
-  useConcurrentStreamRefreshListener(framePayload, session, token, chatType, !isChildWindow)
 
   return (
     <div
@@ -64,39 +27,48 @@ const AITaskDefaultGroupCard: FC<{
         [styles['child-window-card']]: isChildWindow,
       })}
     >
-      <div className={styles['ai-task-default-group-card-title']} onClick={isChildWindow ? undefined : expandToggle}>
-        <div className={styles['ai-task-default-group-card-title-left']}>
-          <span className={styles['icon']}>
-            <OutlineInformationcircleIcon />
-          </span>
-          <span className={styles['text']}>{t('ConcurrentStreamCard.systemInfo')}</span>
-          {raw?.Timestamp ? <span className={styles['time']}>{formatTimestamp(raw.Timestamp)}</span> : null}
-        </div>
-        <div className={styles['ai-task-default-group-card-title-right']} onClick={(e) => e.stopPropagation()}>
-          <ConcurrentStreamCardActions
-            isChildWindow={isChildWindow}
-            expand={expand}
-            onExpandToggle={expandToggle}
-            onRefresh={onRefresh}
-            framePayload={framePayload}
-            showContinueTask={false}
-            showCancelTask={false}
-            showDetails={false}
-          />
-        </div>
-      </div>
-      {expand ? (
-        <AITaskDefaultGroupContent
-          elements={elements}
-          session={session}
-          // chatType={chatType}
-          // hasNext={hasNext}
-          isChildWindow={isChildWindow}
-          onContentFocusChange={setContentFocused}
-        />
-      ) : null}
+      <AITaskDefaultGroupCardHeardWrapper
+        isChildWindow={isChildWindow}
+        expand={expand}
+        token={token}
+        expandToggle={expandToggle}
+      />
+
+      {expand ? <AITaskDefaultGroupCardListWrapper token={token} setContentFocused={setContentFocused} /> : null}
     </div>
   )
 })
 
 export default AITaskDefaultGroupCard
+
+const AITaskDefaultGroupCardListWrapper: FC<AITaskDefaultGroupCardListWrapperProps> = memo((props) => {
+  const { token, setContentFocused } = props
+  const store = useCurrentStore()
+  const elements = useStore(store, (state) => state.tasks[token].childrenTokens || [])
+
+  return (
+    <AITaskDefaultGroupContent elements={elements} isChildWindow={false} onContentFocusChange={setContentFocused} />
+  )
+})
+
+const AITaskDefaultGroupCardHeardWrapper: FC<AITaskDefaultGroupCardHeardWrapperProps> = memo((props) => {
+  const { token, expandToggle, expand, isChildWindow } = props
+  const store = useCurrentStore()
+  const renderNum = useStore(store, (state) => state.tasks[token].renderNum)
+  const rawData = useCurrentRawData()
+  const timeStamp = useCreation(() => {
+    if (!rawData) return 0
+    const itemData = rawData.contents.get(token)
+    if (!itemData) return 0
+    return itemData.Timestamp || 0
+  }, [renderNum])
+  return (
+    <AITaskDefaultGroupCardHeard
+      isChildWindow={isChildWindow}
+      expandToggle={expandToggle}
+      timeStamp={timeStamp}
+      expand={expand}
+      token={token}
+    />
+  )
+})

@@ -1,4 +1,3 @@
-import { type ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
 import useClickFocus from '@/pages/ai-re-act/hooks/useClickFocus'
 import { type FC, useEffect, useLayoutEffect } from 'react'
 import classNames from 'classnames'
@@ -6,8 +5,7 @@ import styles from './AITaskDefaultGroupCard.module.scss'
 import ConcurrentStreamContent from '../ConcurrentStreamCard/ConcurrentStreamContent/ConcurrentStreamContent'
 
 const AITaskDefaultGroupContent: FC<{
-  elements: ReActChatTaskElementSub[]
-  session: string
+  elements: string[]
   isChildWindow?: boolean
   onContentFocusChange?: (focused: boolean) => void
 }> = ({ elements, session, isChildWindow, onContentFocusChange }) => {

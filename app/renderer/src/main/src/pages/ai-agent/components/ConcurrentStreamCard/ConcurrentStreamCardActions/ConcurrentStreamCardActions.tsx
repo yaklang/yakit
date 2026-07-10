@@ -9,10 +9,14 @@ import {
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
-import type { OpenAIConcurrentStreamPayload } from '@/utils/openWebsite'
-import { openAIConcurrentStream } from '@/utils/openWebsite'
+import { openAIConcurrentStream, OpenAIConcurrentStreamPayload } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from '../ConcurrentStreamCard.module.scss'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCreation, useMemoizedFn } from 'ahooks'
+import { useStore } from 'zustand'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
 
 /** 卡片标题栏右侧操作区 */
 interface ConcurrentStreamCardActionsProps {
@@ -21,7 +25,9 @@ interface ConcurrentStreamCardActionsProps {
   onExpandToggle: () => void
   onRefresh?: () => void
   onDetails?: () => void
-  framePayload: OpenAIConcurrentStreamPayload
+
+  token: string
+
   showContinueTask: boolean
   showCancelTask: boolean
   showDetails: boolean
@@ -35,14 +41,65 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   onExpandToggle,
   onRefresh,
   onDetails,
-  framePayload,
   showContinueTask,
   showCancelTask,
   showDetails,
   coordinatorId,
   taskIndex,
+  token,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
+
+  const store = useCurrentStore()
+  const session = useCurrentSessionId()
+  const renderNum = useStore(store, (state) => state.tasks[token].renderNum)
+  const rawData = useCurrentRawData()
+  const chatType = useCreation(() => {
+    if (!rawData) return
+    const itemData = rawData.contents.get(token)
+    if (!itemData) return
+    return itemData.chatType
+  }, [])
+
+  const itemData = useCreation(() => {
+    if (!rawData) return 0
+    const data = rawData.contents.get(token)
+    if (!data) return 0
+    return data
+  }, [renderNum])
+
+  const getKind = useMemoizedFn((childToken) => {
+    const state = store.getState()
+    if (state.items[childToken]) return 'item'
+    if (state.groups[childToken]) return 'group'
+    return null
+  })
+
+  const openChildWindow = useMemoizedFn((e) => {
+    e?.stopPropagation()
+    if (!chatType) return
+    const elements: ReActChatTaskElementSub[] = []
+    const childrenTokens = store.getState().tasks[token]?.childrenTokens || []
+
+    const length = childrenTokens.length
+    for (let index = 0; index < length; index++) {
+      const childToken = childrenTokens[index]
+      const kind = getKind(childToken)
+      if (!kind) continue
+      const childData = rawData.contents.get(childToken)
+      // const subItem: ReActChatTaskElementSub = {
+      //   ...childData,
+      //   kind,
+      // }
+    }
+    const framePayload: OpenAIConcurrentStreamPayload = {
+      session,
+      token,
+      chatType,
+      elements,
+    }
+    openAIConcurrentStream(framePayload)
+  })
 
   if (isChildWindow) {
     return (
@@ -59,13 +116,11 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   }
   return (
     <>
-      {showContinueTask && coordinatorId != null && taskIndex != null && framePayload.chatType === 'task' && (
+      {showContinueTask && coordinatorId != null && taskIndex != null && chatType === 'task' && (
         <AIHistoryContinueTask coordinatorId={coordinatorId} taskIndex={taskIndex} />
       )}
-      {showCancelTask && taskIndex != null && framePayload.chatType === 'task' && (
-        <AIHistorySkipTask taskIndex={taskIndex} />
-      )}
-      {showDetails && framePayload.chatType === 'task' && (
+      {showCancelTask && taskIndex != null && chatType === 'task' && <AIHistorySkipTask taskIndex={taskIndex} />}
+      {showDetails && chatType === 'task' && (
         <Tooltip title="任务详情" placement="top">
           <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
         </Tooltip>
@@ -75,10 +130,7 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
           size="small"
           type="text"
           icon={<OutlineListOneIcon />}
-          onClick={(e) => {
-            e.stopPropagation()
-            openAIConcurrentStream(framePayload)
-          }}
+          onClick={openChildWindow}
           className={styles['expand-btn']}
         />
       </Tooltip>
