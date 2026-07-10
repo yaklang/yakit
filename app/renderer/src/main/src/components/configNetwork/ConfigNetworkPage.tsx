@@ -363,6 +363,25 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     submit(true)
   })
 
+  const [closeConfirmEnabled, setCloseConfirmEnabled] = useState(true)
+
+  const onConfirmCloseConfirmEnabled = useMemoizedFn(async (value: boolean) => {
+    try {
+      await ipcRenderer.invoke('set-extra-cache', 'windows-close-flag', value)
+      await ipcRenderer.invoke('manual-write-file', 'extraCache')
+    } catch {}
+  })
+
+  useEffect(() => {
+    if (!inViewport) return
+    ipcRenderer
+      .invoke('fetch-extra-cache', 'windows-close-flag')
+      .then((flag) => {
+        setCloseConfirmEnabled(flag !== false)
+      })
+      .catch(() => setCloseConfirmEnabled(true))
+  }, [inViewport])
+
   const submit = useMemoizedFn((isNtml?: boolean) => {
     // 更新 隐私配置 数据
     onSetDelPrivatePlugin()
@@ -381,6 +400,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     // 更新性能提示
     onSetPerformanceTips()
+    // 更新二次确认开关
+    onConfirmCloseConfirmEnabled(closeConfirmEnabled)
 
     const newParams: GlobalNetworkConfig = {
       ...params,
@@ -1284,6 +1305,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 <Form.Item label={t('ConfigNetworkPage.performance')} tooltip={t('ConfigNetworkPage.performanceTip')}>
                   <YakitSwitch checked={performanceTips} onChange={setPerformanceTips} />
                 </Form.Item>
+                <Form.Item label={t('ConfigNetworkPage.closeConfirm')}>
+                  <YakitSwitch checked={closeConfirmEnabled} onChange={setCloseConfirmEnabled} />
+                </Form.Item>
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
                   {t('ConfigNetworkPage.synScanNicConfig')}
                 </Divider>
@@ -1323,6 +1347,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         onResetSecondaryTabsNum()
                         onResetLimitLogNum()
                         onResetPerformanceTips()
+                        setCloseConfirmEnabled(true)
+                        onConfirmCloseConfirmEnabled(true)
                         ipcRenderer.invoke('ResetGlobalNetworkConfig', {}).then(() => {
                           cerFormRef.current?.resetFields()
                           update()

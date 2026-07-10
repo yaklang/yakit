@@ -68,6 +68,7 @@
     "pluginLogCount": "外掛日誌條數",
     "performance": "關閉效能提示",
     "performanceTip": "關閉後將不會提示寫入資料慢",
+    "closeConfirm": "啟動關閉二次確認",
     "synScanNicConfig": "SYN 掃描網絡卡配置",
     "nic": "網絡卡",
     "nicTip": "為SYN掃描選擇網絡卡",
