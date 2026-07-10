@@ -21,7 +21,7 @@ import { DefaultTodoListCardData } from './defaultConstant'
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params: UseCasualChatParams) {
-  const { pushLog, getChatDataStore, getRequest, onReview, onReviewRelease } = params || {}
+  const { pushLog, getChatDataStore, getRequest, onReview, onReviewRelease, onSubTaskID } = params || {}
 
   const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
     pushLog && pushLog(logInfo)
@@ -54,6 +54,7 @@ function useCasualChat(params: UseCasualChatParams) {
 
     const taskKey = info.react_task_id
     if (!taskKey) return
+    onSubTaskID(taskKey)
 
     const existing = getContentMap(taskKey)
     if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
