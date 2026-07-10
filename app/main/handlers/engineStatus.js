@@ -266,7 +266,10 @@ module.exports = (win, callback, getClient, newClient) => {
       params['Password'] || '',
     )
     return await new Promise((resolve, reject) => {
-      newClient().Echo({ text: ECHO_TEST_MSG }, (err, data) => {
+      const deadline = new Date()
+      // 设置超时时间为60秒
+      deadline.setSeconds(deadline.getSeconds() + 60)
+      newClient().Echo({ text: ECHO_TEST_MSG }, { deadline }, (err, data) => {
         if (err) {
           reject(err + '')
           return

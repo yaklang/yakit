@@ -42,7 +42,7 @@
     "rightTitle": "AI content"
   },
   "PacketScanButton": {
-    "packetScan": "Scan"
+    "packetScan": "Packet Scan"
   },
   "WebFuzzerResponseExtractor": {
     "cannotGenerateExtractionRule": "Cannot generate data extraction rule:",
@@ -97,6 +97,7 @@
     "bruteForceExample": "Brute-Force Example",
     "AI_new_conversation": "New conversation",
     "aiTest": "AI Test",
+    "loadData": "Loading data, please wait...",
     "followRedirects": "Follow Redirects",
     "generatePathTemplate": "Generate as Path Template",
     "generateRawTemplate": "Generate as Raw Template",
@@ -472,7 +473,7 @@
     "notIncludes": "Not Includes"
   },
   "HttpQueryAdvancedConfig": {
-    "force_https": "Force HTTPS",
+    "force_https": "HTTPS",
     "tls_config": "TLS Configuration",
     "guomi_tls": "GM TLS",
     "random_tls": "Random TLS",

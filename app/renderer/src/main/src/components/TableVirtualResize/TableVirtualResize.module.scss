@@ -1,4 +1,5 @@
 @use './styleFunction.scss' as tools;
+@use '../../theme/themeify.scss' as theme;
 .virtual-table {
   height: 100%;
 
@@ -477,7 +478,7 @@
       left: 0;
       z-index: 8;
       border: 1px solid var(--Colors-Use-Main-Primary);
-      background-color: color-mix(in srgb, var(--Colors-Use-Main-Primary) 12%, transparent);
+      @include theme.color-mix-alpha(background-color, var(--Colors-Use-Main-Primary), 12%);
       box-sizing: border-box;
       opacity: 0;
       pointer-events: none;

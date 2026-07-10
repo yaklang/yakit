@@ -122,3 +122,27 @@
     background: var(--Colors-Use-Neutral-Bg-Hover);
   }
 }
+.ai-button {
+  font-weight: 500;
+  font-size: 12px;
+  display: flex;
+  padding: 6px 8px;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(
+    --2,
+    linear-gradient(
+      135deg,
+      var(--Colors-Use-Success-Border) 0%,
+      var(--Colors-Use-Success-Focus) 40.44%,
+      var(--Colors-Use-Main-Focus) 80%
+    )
+  );
+  svg {
+    height: 16px;
+    width: 16px;
+  }
+}
