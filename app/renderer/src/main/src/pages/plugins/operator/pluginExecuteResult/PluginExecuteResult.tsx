@@ -181,7 +181,19 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     return tab.tabName
   })
   const cardState = useCreation(() => {
-    return streamInfo.cardState.filter((item) => item.tag !== 'no display')
+    return streamInfo.cardState.filter((item) => {
+      if (item.tag === 'no display') return false
+
+      // “漏洞/风险/指纹”是汇总卡片；没有发现任何结果时不展示它。
+      const card = item.info[0]
+      const isEmptyRiskSummary =
+        item.info.length === 1 &&
+        (item.tag === '漏洞/风险/指纹' || card?.Id === '漏洞/风险/指纹') &&
+        String(card?.Data ?? '').trim() !== '' &&
+        Number(card?.Data) === 0
+
+      return !isEmptyRiskSummary
+    })
   }, [streamInfo.cardState])
   const showRiskTotal = useCreation(() => {
     if (allTotal > 0) return allTotal
