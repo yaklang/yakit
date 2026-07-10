@@ -256,7 +256,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       ref={containerRef}
       className={styles['softwareBasics']}
       onClick={handleUserInteraction}
-      style={{ gap: softLang === 'en' ? 8 : 14 }}
+      style={{ gap: softLang === 'en' ? 6 : 10 }}
     >
       <div className={styles['softwareBasics-item']}>
         <div className={styles['softwareBasics-item-title']}>
@@ -276,6 +276,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
             multiple={false}
             help={t.draggerHelp}
             uploadFolderText={t.selectWorkspace}
+            helpClassName={styles['workPathHelp']}
             autoCompleteProps={{ placeholder: t.workspacePlaceholder, options: history, allowClear: true }}
             onChange={handlePathChange}
           />
@@ -342,7 +343,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
           </div>
         </div>
       )}
-      <div className={styles['softwareBasics-item']}>
+      <div className={styles['softwareBasics-item']} style={{ marginBottom: 10 }}>
         <div className={styles['softwareBasics-item-title']}>{t.langTitle}</div>
         <div className={styles['softwareBasics-item-cont']}>
           <YakitSelect
@@ -366,7 +367,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
         </div>
       </div>
       <div className={styles['footer-btn']}>
-        <YakitButton disabled={!currentPath} onClick={handleConfirm}>
+        <YakitButton disabled={!currentPath} onClick={handleConfirm} style={{ fontSize: 14 }}>
           {t.confirm} {countdown > 0 ? <>（{countdown}）</> : ''}
         </YakitButton>
         <YakitCheckbox

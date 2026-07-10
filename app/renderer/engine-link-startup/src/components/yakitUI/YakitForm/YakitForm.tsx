@@ -505,7 +505,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
       {selectType === 'folder' && (
         <FileDragger onDrop={afterFolderDrop}>
           {renderContent(
-            <div className={styles['form-item-help']}>
+            <div className={classNames(styles['form-item-help'], helpClassName)}>
               <span>
                 {help || '可将文件拖入框内或点击此处'}
                 {showUploadBtn && (
