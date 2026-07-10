@@ -287,7 +287,7 @@
     "trustList": "使用者管理",
     "licenseAdmin": "License管理",
     "dataStatistics": "資料統計",
-    "robotControl": "機器人",
+    "mobileControl": "移動端控制",
     "roleAdmin": "角色管理",
     "accountAdmin": "使用者管理",
     "uploadData": "上傳資料",
@@ -314,7 +314,7 @@
     "updateContentSuccess": "修改更新內容成功"
   },
   "RobotControl": {
-    "subTitle": "把外部聊天工具接入 yaklang 機器人",
+    "subTitle": "把外部聊天工具接入 AI Agent 機器人",
     "createRobot": "新建機器人",
     "createRobotDesc": "選擇這個機器人接收訊息的渠道。選擇渠道後，再配置憑據、綁定、允許的 workspace 和預設上下文。",
     "comingSoon": "即將支持",

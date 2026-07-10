@@ -309,7 +309,7 @@ const UserMenusMap: Record<string, UserMenuItemType> = {
   },
   robotControl: {
     key: 'robot-control',
-    label: '移动端控制',
+    label: 'FuncDomain.mobileControl',
     icon: <OutlineDevicemobileIcon />,
   },
   roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
@@ -1133,10 +1133,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
               className={robotControlStyles['mobile-control-title-icon']}
               style={{ color: getMobileControlIconColor(imControlBadge.color) }}
             />
-            移动端控制
+            {t('FuncDomain.mobileControl')}
           </div>
         }
-        subTitle="把外部聊天工具接入 AI Agent 机器人"
+        subTitle={t('RobotControl.subTitle')}
         type="white"
         size="large"
         destroyOnClose={true}

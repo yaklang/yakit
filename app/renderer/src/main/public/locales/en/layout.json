@@ -287,7 +287,7 @@
     "trustList": "User Management",
     "licenseAdmin": "License Management",
     "dataStatistics": "Data Statistics",
-    "robotControl": "Robot",
+    "mobileControl": "Mobile Control",
     "roleAdmin": "Role Management",
     "accountAdmin": "User Management",
     "uploadData": "Upload Data",
@@ -314,7 +314,7 @@
     "updateContentSuccess": "Update content modified successfully"
   },
   "RobotControl": {
-    "subTitle": "Bring external chat tools and webhooks into Yaklang robots.",
+    "subTitle": "Bring external chat tools and webhooks into AI Agent robots.",
     "createRobot": "New Robot",
     "createRobotDesc": "Choose the channel for this robot to receive messages. After choosing a channel, configure credentials, binding, allowed workspaces, and default context.",
     "comingSoon": "Coming soon",

@@ -281,9 +281,10 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
         .map((bot) => buildRobotFromBot(bot))
 
       setRobots(nextRobots)
-      setDraftRobots((prev) => prev.filter((item) => !nextRobots.some((robot) => robot.channel === item.channel)))
+      const nextDraftRobots = draftRobots.filter((item) => !nextRobots.some((robot) => robot.channel === item.channel))
+      setDraftRobots(nextDraftRobots)
 
-      const nextIds = new Set([...nextRobots.map((item) => item.id), ...draftRobots.map((item) => item.id)])
+      const nextIds = new Set([...nextRobots.map((item) => item.id), ...nextDraftRobots.map((item) => item.id)])
       if (activeRobotId && nextIds.has(activeRobotId)) {
         setIsNewRobotView(false)
       } else if (nextRobots.length > 0) {
