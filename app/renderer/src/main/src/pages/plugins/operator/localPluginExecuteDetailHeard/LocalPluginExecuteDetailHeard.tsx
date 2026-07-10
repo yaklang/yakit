@@ -169,7 +169,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   )
   const initRequiredFormValue = useMemoizedFn(() => {
     // 必填参数
-    // @ts-ignore
     let initRequiredFormValue: CustomPluginExecuteFormValue = {
       ...defPluginExecuteFormValue,
       requestType: 'input',

@@ -84,7 +84,7 @@ export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
 }
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
-  [key: string]: number | string | boolean | string[] | Uint8Array | KVPair[] | number[]
+  [key: string]: number | string | boolean | string[] | Uint8Array | Buffer | KVPair[] | number[]
 }
 
 export interface FormContentItemByTypeProps extends JsonFormSchemaListWrapper {
