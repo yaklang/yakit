@@ -225,7 +225,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
     setRemoteValue(PluginHasParamsModalExecCheck, execCheck)
     if (execCheck === 'execute_and_save') {
       execOrSave(true, true)
-    } else if (execCheck === 'defaultSet') {
+    } else if (execCheck === 'executeWithoutSaving') {
       execOrSave(false, true)
     }
   })
@@ -276,6 +276,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
       destroyOnClose={true}
       onCancel={() => onCloseParamsModal(false)}
       title={scriptName}
+      footerStyle={{ overflow: 'visible' }}
       footer={
         <div className={styles['pluginHasParamsModal-footer']}>
           <YakitButton
@@ -288,7 +289,9 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
           </YakitButton>
           <div className={styles['exec-operation-btn-wrapper']} ref={execdropdownRef}>
             <div className={styles['operation-btn-left']} onClick={handleStartExecBefore}>
-              {t('YakitButton.execute')}
+              {execCheck === 'execute_and_save'
+                ? t('PluginHasParamsModal.execute_and_save')
+                : t('PluginHasParamsModal.executeWithoutSaving')}
             </div>
             <div className={styles['operation-btn-right']} onClick={() => setShowExecDropdown(!showExecDropdown)}>
               <OutlineChevronupIcon
