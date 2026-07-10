@@ -96,8 +96,24 @@ export interface AISession {
   Source: AISource
   /** AI 启动参数 */
   StartParams?: AIStartParams
+  /** source=im 时的结构化 IM 元数据（平台/会话类型/可读标题等）；其它来源为空 */
+  IMSourceMeta?: IMSourceMeta
   /** 前端逻辑使用-欢迎页对话不触发切换会话的流建立逻辑 */
   isCreate?: boolean
+}
+
+/** IM 会话结构化元数据（source=im 时由 IM 引擎回写） */
+export interface IMSourceMeta {
+  /** IM 平台：feishu / dingtalk ... */
+  Platform?: string
+  /** 会话类型：private / group / topic（跨平台归一化） */
+  ChatType?: string
+  /** 人类可读标题，如「飞书私聊 - 张三」（兜底形式） */
+  ChatTitle?: string
+  /** 发送者展示名（可能为空） */
+  SenderName?: string
+  /** 话题/线程 ID（飞书话题消息才有） */
+  ThreadID?: string
 }
 
 export interface GrpcPageResponse<T = unknown> {

@@ -287,6 +287,7 @@
     "trustList": "User Management",
     "licenseAdmin": "License Management",
     "dataStatistics": "Data Statistics",
+    "mobileControl": "Mobile Control",
     "roleAdmin": "Role Management",
     "accountAdmin": "User Management",
     "uploadData": "Upload Data",
@@ -311,6 +312,40 @@
     "noYakitLatestVersion": "Failed to fetch the latest {{edition}} version",
     "noYaklangLatestVersion": "Failed to fetch the latest engine version",
     "updateContentSuccess": "Update content modified successfully"
+  },
+  "RobotControl": {
+    "subTitle": "Bring external chat tools and webhooks into AI Agent robots.",
+    "createRobot": "New Robot",
+    "createRobotDesc": "Choose the channel for this robot to receive messages. After choosing a channel, configure credentials, binding, allowed workspaces, and default context.",
+    "comingSoon": "Coming soon",
+    "robotDetailPlaceholder": "Robot configuration details coming soon",
+    "region": {
+      "china": "China",
+      "global": "Global"
+    },
+    "channel": {
+      "feishu": "Feishu",
+      "dingtalk": "DingTalk"
+    },
+    "channelDesc": {
+      "feishu": "Scan to create an app, then bind via message.",
+      "dingtalk": "Scan to create an app, then bind via message."
+    },
+    "newRobotName": "New Robot",
+    "unbound": "Unbound",
+    "bound": "Bound",
+    "linkRobot": "Link Robot",
+    "linkRobotDesc": "Credentials are saved automatically after scanning.",
+    "scanCode": "Scan",
+    "slashCommand": "IM Slash Commands",
+    "slashCommandDesc": "Use slash commands in IM chat to control Alagent; regular messages go directly to the agent.",
+    "deleteRobot": "Delete Robot",
+    "deleteRobotDesc": "Remove this robot",
+    "scanFeishuTip": "Use the Feishu mobile app to scan the QR code and confirm login.",
+    "scanDingtalkTip": "Use the DingTalk mobile app to scan the QR code and confirm login.",
+    "waitingScanPrefix": "Waiting for scan, ",
+    "waitingScanSuffix": " until auto-refresh",
+    "unbind": "Unbind"
   },
   "HelpDoc": {
     "officialWebsite": "Official Website",

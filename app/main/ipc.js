@@ -277,6 +277,12 @@ module.exports = {
     require('./handlers/third_party_binary')(win, getClient)
     require('./handlers/knowlegebase')(win, getClient)
 
+    // IM Bot 远程通知：飞书/钉钉 bot 凭证管理
+    require('./handlers/notifyBot')(win, getClient)
+
+    // IM 远程控制：启动/停止/查询 IM Engine（聊天即控制）
+    require('./handlers/imControl')(win, getClient)
+
     // start chrome manager
     try {
       require('./handlers/chromelauncher')(win, getClient)

@@ -8,9 +8,25 @@ import emiter from './eventBus/eventBus'
 import { LocalGVS } from '@/enums/localGlobal'
 import { JSONParseLog } from './tool'
 import { yakitApp, yakitNetwork, yakitPlugin } from '@/services/electronBridge'
+import { stopIMControl } from './imControl'
+
+let stopIMControlForLogoutPromise: Promise<unknown> | undefined
+
+const stopIMControlForLogout = () => {
+  if (stopIMControlForLogoutPromise) return stopIMControlForLogoutPromise
+
+  stopIMControlForLogoutPromise = stopIMControl()
+    .catch(() => undefined)
+    .finally(() => {
+      stopIMControlForLogoutPromise = undefined
+    })
+
+  return stopIMControlForLogoutPromise
+}
 
 export const loginOut = async (userInfo: UserInfoProps) => {
   if (!userInfo.isLogin) return
+  void stopIMControlForLogout()
   // 此处会导致退出接口异常时间调用
   // await aboutLoginUpload(userInfo.token)
   NetWorkApi<null, API.ActionSucceeded>({
@@ -29,6 +45,7 @@ export const loginOut = async (userInfo: UserInfoProps) => {
 
 export const loginOutLocal = (userInfo: UserInfoProps) => {
   if (!userInfo.isLogin) return
+  void stopIMControlForLogout()
   getRemoteValue(getRemoteHttpSettingGV()).then(async (setting) => {
     if (!setting) return
     const values = JSONParseLog(setting, { page: 'login', fun: 'loginOutLocal' })

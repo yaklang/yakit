@@ -287,6 +287,7 @@
     "trustList": "用户管理",
     "licenseAdmin": "License管理",
     "dataStatistics": "数据统计",
+    "mobileControl": "移动端控制",
     "roleAdmin": "角色管理",
     "accountAdmin": "用户管理",
     "uploadData": "上传数据",
@@ -311,6 +312,40 @@
     "noYakitLatestVersion": "未获取{{edition}}最新版本",
     "noYaklangLatestVersion": "未获取引擎最新版本",
     "updateContentSuccess": "修改更新内容成功"
+  },
+  "RobotControl": {
+    "subTitle": "把外部聊天工具接入 AI Agent 机器人",
+    "createRobot": "新建机器人",
+    "createRobotDesc": "选择这个机器人接收消息的渠道。选择渠道后，再配置凭据、绑定、允许的 workspace 和默认上下文。",
+    "comingSoon": "即将支持",
+    "robotDetailPlaceholder": "机器人配置详情即将上线",
+    "region": {
+      "china": "中国",
+      "global": "全球"
+    },
+    "channel": {
+      "feishu": "飞书",
+      "dingtalk": "钉钉"
+    },
+    "channelDesc": {
+      "feishu": "扫码创建应用，再消息绑定。",
+      "dingtalk": "扫码创建应用，再消息绑定。"
+    },
+    "newRobotName": "新机器人",
+    "unbound": "未绑定",
+    "bound": "已绑定",
+    "linkRobot": "关联机器人",
+    "linkRobotDesc": "扫码后自动保存凭据",
+    "scanCode": "扫码",
+    "slashCommand": "IM 端斜杠命令",
+    "slashCommandDesc": "在 IM 聊天中输入斜杠命令控制 Alagent：普通消息直接发给 agent。",
+    "deleteRobot": "删除机器人",
+    "deleteRobotDesc": "移除这个机器人",
+    "scanFeishuTip": "请使用飞书移动端扫描二维码并确认登录。",
+    "scanDingtalkTip": "请使用钉钉移动端扫描二维码并确认登录。",
+    "waitingScanPrefix": "等待扫码，",
+    "waitingScanSuffix": " 后自动刷新",
+    "unbind": "解绑"
   },
   "HelpDoc": {
     "officialWebsite": "官方网站",

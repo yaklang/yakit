@@ -22,10 +22,66 @@
         display: flex;
         align-items: center;
         gap: 4px;
+        min-width: 0;
 
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
         font-weight: 500;
+
+        .history-count-tag {
+          min-width: 24px;
+          justify-content: center;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .source-filter {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          margin-left: 2px;
+          padding-left: 4px;
+          border-left: 1px solid var(--Colors-Use-Neutral-Border);
+          flex: 0 0 auto;
+        }
+
+        .source-filter-item {
+          width: 24px;
+          height: 24px;
+          padding: 0;
+          border: 1px solid transparent;
+          border-radius: 4px;
+          background: transparent;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
+          cursor: pointer;
+
+          svg {
+            width: 16px;
+            height: 16px;
+          }
+
+          &:hover {
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+          }
+        }
+
+        .source-filter-item-local.source-filter-item-active {
+          color: var(--Colors-Use-Main-Primary);
+          background: var(--Colors-Use-Main-Bg);
+          border-color: var(--Colors-Use-Main-Border);
+        }
+
+        .source-filter-item-feishu.source-filter-item-active {
+          background: var(--Colors-Use-Purple-Bg);
+          border-color: var(--Colors-Use-Purple-Border);
+        }
+
+        .source-filter-item-dingtalk.source-filter-item-active {
+          background: var(--Colors-Use-Blue-Bg);
+          border-color: var(--Colors-Use-Blue-Border);
+        }
       }
 
       .header-actions {

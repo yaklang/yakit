@@ -63,14 +63,15 @@ export const getAISourceFromChatDataStoreKey = (key: ChatDataStoreKey): AISource
   }
 }
 
-/** AISource 映射到 IndexedDB 消息存储域（空 source 兼容老数据，归入 ai 域） */
+/** AISource 映射到 IndexedDB 消息存储域（空 source 兼容老数据，归入 ai 域；im 归入 ai 域复用） */
 export const getDomainFromAISource = (source?: AISource): Domain => {
   if (!source) return 'ai'
-  return source
+  if (source === 'im') return 'ai'
+  return source as Domain
 }
 
-/** AI Agent 侧栏历史会话：包含 ai 与兼容老数据的空 source */
-export const AI_AGENT_HISTORY_AI_SOURCES: AISource[] = ['ai', '']
+/** AI Agent 侧栏历史会话：包含 ai、im 来源与兼容老数据的空 source */
+export const AI_AGENT_HISTORY_AI_SOURCES: AISource[] = ['ai', 'im', '']
 
 /** 各业务页嵌入历史会话：仅查询对应单一 source */
 export const getAISourceListFromChatDataStoreKey = (key: ChatDataStoreKey): AISource[] => {

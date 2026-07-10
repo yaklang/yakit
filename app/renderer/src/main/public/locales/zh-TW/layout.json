@@ -287,6 +287,7 @@
     "trustList": "使用者管理",
     "licenseAdmin": "License管理",
     "dataStatistics": "資料統計",
+    "mobileControl": "移動端控制",
     "roleAdmin": "角色管理",
     "accountAdmin": "使用者管理",
     "uploadData": "上傳資料",
@@ -311,6 +312,40 @@
     "noYakitLatestVersion": "未獲取{{edition}}最新版本",
     "noYaklangLatestVersion": "未獲取引擎最新版本",
     "updateContentSuccess": "修改更新內容成功"
+  },
+  "RobotControl": {
+    "subTitle": "把外部聊天工具接入 AI Agent 機器人",
+    "createRobot": "新建機器人",
+    "createRobotDesc": "選擇這個機器人接收訊息的渠道。選擇渠道後，再配置憑據、綁定、允許的 workspace 和預設上下文。",
+    "comingSoon": "即將支持",
+    "robotDetailPlaceholder": "機器人配置詳情即將上線",
+    "region": {
+      "china": "中國",
+      "global": "全球"
+    },
+    "channel": {
+      "feishu": "飛書",
+      "dingtalk": "釘釘"
+    },
+    "channelDesc": {
+      "feishu": "掃碼創建應用，再訊息綁定。",
+      "dingtalk": "掃碼創建應用，再訊息綁定。"
+    },
+    "newRobotName": "新機器人",
+    "unbound": "未綁定",
+    "bound": "已綁定",
+    "linkRobot": "關聯機器人",
+    "linkRobotDesc": "掃碼後自動保存憑據",
+    "scanCode": "掃碼",
+    "slashCommand": "IM 端斜杠命令",
+    "slashCommandDesc": "在 IM 聊天中輸入斜杠命令控制 Alagent：普通訊息直接發給 agent。",
+    "deleteRobot": "刪除機器人",
+    "deleteRobotDesc": "移除這個機器人",
+    "scanFeishuTip": "請使用飛書移動端掃描二維碼並確認登入。",
+    "scanDingtalkTip": "請使用釘釘移動端掃描二維碼並確認登入。",
+    "waitingScanPrefix": "等待掃碼，",
+    "waitingScanSuffix": " 後自動刷新",
+    "unbind": "解綁"
   },
   "HelpDoc": {
     "officialWebsite": "官方網站",
