@@ -1056,8 +1056,6 @@ export const StartupPage: React.FC = () => {
     if (getYakitStatus() === 'link') {
       if (getEngineMode() === 'remote') {
         yakitNotify('error', '远程连接已断开')
-        onDisconnect()
-        safeSetYakitStatus('')
         handleLinkRemoteMode()
       } else if (getEngineMode() === 'local') {
         setCheckLog(['引擎连接未成功, 正在尝试重连'])
@@ -1127,6 +1125,11 @@ export const StartupPage: React.FC = () => {
         isCheckVersion.current = false
         setTimeout(() => {
           handleLinkLocalMode()
+        }, 500)
+        break
+      case 'remote':
+        setTimeout(() => {
+          handleLinkRemoteMode()
         }, 500)
         break
       default:

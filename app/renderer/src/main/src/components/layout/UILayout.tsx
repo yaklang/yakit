@@ -622,10 +622,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       case 'remote':
         info(t('UILayout.engineModeSwitched', { mode: EngineModeVerbose('remote') }))
         delTemporaryProject()
+        onDisconnect()
         onSetEngineMode(undefined)
-        setTimeout(() => {
-          handleLinkRemoteMode()
-        }, 500)
+        openEngineLinkWin('remote')
         return
 
       case 'changeProject':
@@ -1895,7 +1894,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 ) : showProjectManage ? (
                   <SoftwareSettings
                     engineMode={engineMode || 'local'}
-                    onEngineModeChange={handleLinkRemoteMode}
+                    onEngineModeChange={handleOperations}
                     onFinish={softwareSettingFinish}
                     projectListRefreshTrigger={projectListRefreshTrigger}
                   />
