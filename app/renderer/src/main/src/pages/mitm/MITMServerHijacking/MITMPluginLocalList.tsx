@@ -133,7 +133,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     setShowPluginStream,
     setAutoForward,
   } = props
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['yakitUi'])
 
   const [vlistHeigth, setVListHeight] = useState(0)
   const [initialTotal, setInitialTotal] = useState<number>(0) //初始插件总数
@@ -347,7 +347,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     isRereshLocalPluginList = true,
     getContainer,
   } = props
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['yakitUi'])
   const taskToken = useMemo(() => randomString(40), [])
   const [percent, setPercent] = useState<number>(0)
   useEffect(() => {
@@ -443,7 +443,7 @@ export interface IRifyApplySyntaxFlowRuleUpdateProps {
  */
 export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUpdateProps> = React.memo((props) => {
   const { visible, setVisible, getContainer, wrapClassName } = props
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['yakitUi'])
   const taskToken = useMemo(() => randomString(40), [])
   const [percent, setPercent] = useState<number>(0)
   useEffect(() => {
