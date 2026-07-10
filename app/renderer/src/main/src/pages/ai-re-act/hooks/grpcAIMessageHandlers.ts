@@ -202,6 +202,7 @@ const handleThought: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -231,6 +232,7 @@ const handleResult: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -261,6 +263,7 @@ const handleFailReactTask: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -295,6 +298,7 @@ const handleToolCallDecision: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -325,6 +329,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -359,6 +364,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -405,6 +411,7 @@ const handleApiRequestFailed: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -460,6 +467,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
         chatType: info.chatType,
         res,
         getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+        getTaskId: request.getTaskId,
         getContentMap: request.getContentMap,
       }),
     }
@@ -827,6 +835,7 @@ const handleStreamStart: AIMessageHandler = (request) => {
         chatType: info.chatType,
         res,
         getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+        getTaskId: request.getTaskId,
         getContentMap: request.getContentMap,
       }),
     })
@@ -886,6 +895,7 @@ const handleStreamStart: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   })
@@ -1348,6 +1358,7 @@ const handleToolCallStart: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   })
@@ -1801,6 +1812,7 @@ const handlePlanReview: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -1880,6 +1892,7 @@ const handleDetachedPlanReview: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -1967,6 +1980,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -2047,6 +2061,7 @@ const handleToolReview: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -2124,6 +2139,7 @@ const handleUserInteractive: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -2190,6 +2206,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }

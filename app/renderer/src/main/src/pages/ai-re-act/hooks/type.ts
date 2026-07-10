@@ -82,6 +82,8 @@ export interface UseYakExecResultEvents extends UseHookBaseEvents {
 export interface UseCasualChatParams extends UseHookBaseParams {
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
+  /** 获取当前自由对话父任务 ID */
+  getCurrentCasualTaskID: () => string
   /** review 触发回调事件 */
   onReview?: (data: AIChatQSData) => void
   /** 触发 review-release 后的回调事件 */
@@ -390,6 +392,8 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
   getChatDataStore: UseHookBaseParams['getChatDataStore']
   /** 回调方法 */
   callback?: (data: AIOutputEvent) => void
+  /** 当前自由对话父任务 ID（任务规划请用 getCurrentTaskPlanID） */
+  getTaskId?: () => string
 }
 export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #endregion

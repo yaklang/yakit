@@ -18,13 +18,17 @@ export const generateTaskId = (params: {
   res: AIOutputEvent
   /** 获取当前任务规划的问题ID信息 */
   getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
+  /** 获取当前自由对话父任务 ID */
+  getTaskId?: () => string
   getContentMap: AIMessageHandlerParams['getContentMap']
 }) => {
-  const { chatType, res, getCurrentTaskPlanID, getContentMap } = params
+  const { chatType, res, getCurrentTaskPlanID, getTaskId, getContentMap } = params
+  /** 任务规划走 getCurrentTaskPlanID；自由对话走 getTaskId */
+  const parentTaskId = (chatType === 'task' ? getCurrentTaskPlanID?.()?.taskID : getTaskId?.()) || ''
   if (res.TaskId) {
-    const taskGroup = getContentMap(res.TaskId)
+    const taskGroup = parentTaskId ? getContentMap(`${parentTaskId}-${res.TaskId}`) : getContentMap(res.TaskId)
     if (taskGroup?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      return res.TaskId
+      return taskGroup.id
     }
   }
   if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
