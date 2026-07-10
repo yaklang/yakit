@@ -686,6 +686,9 @@ export const StartupPage: React.FC = () => {
           setTimeout(() => {
             setYakitLoadingTip('')
             setDisableYakitLoading(false)
+            if (extra.isRemote) {
+              handleLinkRemoteMode()
+            }
           }, 3000)
         }
         return

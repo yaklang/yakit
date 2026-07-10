@@ -112,6 +112,7 @@ export interface LoadingClickExtra {
   linkAgain?: boolean
   /** 是否立即进入（跳过倒计时） */
   enterNow?: boolean
+  isRemote?: boolean
 }
 
 export interface StartLocalEngine {

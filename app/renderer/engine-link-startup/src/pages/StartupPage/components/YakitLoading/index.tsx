@@ -607,7 +607,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     return statusArr.includes(yakitStatus)
   }, [yakitStatus])
 
-  const showBreakBtn = useMemo(() => {
+  const linkIngStatus = useMemo(() => {
     const statusArr: YakitStatusType[] = ['link', 'ready']
     return !yakitStatus || statusArr.includes(yakitStatus)
   }, [yakitStatus])
@@ -688,9 +688,25 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                   <span className={styles['secondary-btn']} onClick={() => grpcOpenYaklangPath()}>
                     打开引擎文件
                   </span>
-                  {/* 中断连接按钮：在空状态或连接状态成功 时显示 */}
-                  {showBreakBtn && (
+                  {/* 在空状态或连接状态成功 时显示 */}
+                  {linkIngStatus && (
                     <>
+                      {/* 远程连接按钮 */}
+                      <Divider type="vertical"></Divider>
+                      <span
+                        className={classNames(styles['primary-btn'], {
+                          [styles['primary-btn-disable']]: restartLoading,
+                        })}
+                        onClick={() => {
+                          if (restartLoading) {
+                            return
+                          }
+                          btnClickCallback('break', { isRemote: true })
+                        }}
+                      >
+                        {EngineModeVerbose('remote')}{' '}
+                      </span>
+                      {/* 中断连接按钮 */}
                       <Divider type="vertical"></Divider>
                       <span
                         className={classNames(styles['primary-btn'])}
