@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useUpdateEffect } from 'ahooks'
 import { monaco } from 'react-monaco-editor'
 import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
