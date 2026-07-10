@@ -593,6 +593,8 @@ interface YakitBridge {
     onMinimizeWindow: (callback: () => void) => BridgeCleanup
     sync: (message: AppSyncMessage) => Promise<unknown>
     onSync: (callback: (message: AppSyncMessage) => void) => BridgeCleanup
+    getYakitHomeConfig: () => Promise<YakitHomeConfig>
+    setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
   }
   theme: {
     setTheme: (theme: 'light' | 'dark') => Promise<unknown>
