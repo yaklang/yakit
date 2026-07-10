@@ -180,7 +180,7 @@ function useCasualChat(params: UseCasualChatParams) {
             onReview,
             onReviewRelease,
           },
-          getTaskId: () => getCurrentCasualTaskID?.() || '',
+          getTaskId: getCurrentCasualTaskID,
           getChatDataStore,
           callback: (data) => {
             if (data.Type === 'current_task_todo_list_update' && data.NodeId === 'current_task_todo_list') {

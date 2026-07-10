@@ -26,7 +26,8 @@ export const generateTaskId = (params: {
   /** 任务规划走 getCurrentTaskPlanID；自由对话走 getTaskId */
   const parentTaskId = (chatType === 'task' ? getCurrentTaskPlanID?.()?.taskID : getTaskId?.()) || ''
   if (res.TaskId) {
-    const taskGroup = parentTaskId ? getContentMap(`${parentTaskId}-${res.TaskId}`) : getContentMap(res.TaskId)
+    if (!parentTaskId) return undefined
+    const taskGroup = getContentMap(`${parentTaskId}-${res.TaskId}`)
     if (taskGroup?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
       return taskGroup.id
     }
