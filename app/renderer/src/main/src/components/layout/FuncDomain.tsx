@@ -319,7 +319,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
 
   useEffect(() => {
     // EE|SE 版本
-    if (userInfo.platform === 'company') {
+    if (userInfo.platform === 'company' || userInfo.platform === 'ccb') {
       // 退出菜单
       const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
       const SetUserInfoModule = () => (
@@ -802,7 +802,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             >
               {userInfo.isLogin ? (
                 <>
-                  {userInfo.platform === 'company' ? (
+                  {['company', 'ccb'].includes(userInfo.platform || '') ? (
                     <div
                       className={classNames({
                         [styles['user-info']]: !dynamicConnect,
