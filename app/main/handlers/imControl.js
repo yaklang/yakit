@@ -8,13 +8,17 @@ const handlerHelper = require('./handleStreamWithContext')
  * 启动后，已配置且启用的 IM bot（飞书/钉钉）开始监听入站消息，
  * 用户在 IM 端通过斜杠命令控制会话，或发送普通消息交给 AI agent 执行。
  */
-module.exports = (win, getClient) => {
+module.exports = (win, getClient, getEngineAddr) => {
   const stateStreams = new Map()
 
   // 启动 IM 远程控制
   ipcMain.handle('StartIMControl', async (e, params) => {
     return await new Promise((resolve, reject) => {
-      getClient().StartIMControl(params || {}, (err, data) => {
+      const request = {
+        ...(params || {}),
+        EngineAddr: params?.EngineAddr || getEngineAddr?.() || '',
+      }
+      getClient().StartIMControl(request, (err, data) => {
         if (err) {
           reject(err)
           return
