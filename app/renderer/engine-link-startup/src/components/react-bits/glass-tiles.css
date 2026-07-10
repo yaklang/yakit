@@ -1,0 +1,14 @@
+.glass-tiles-root {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-tiles-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.glass-tiles-content {
+  position: relative;
+  z-index: 10;
+}

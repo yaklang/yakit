@@ -23,6 +23,7 @@
     "release-render": "node scripts/release-render.cjs"
   },
   "dependencies": {
+    "@react-three/fiber": "^8.17.0",
     "@xterm/addon-fit": "^0.10.0",
     "@yakit-libs/color": "^1.2.0",
     "ahooks": "3.7.9",
@@ -39,6 +40,7 @@
     "react-monaco-editor": "^0.56.2",
     "react-resize-detector": "^6.7.6",
     "react-sparklines": "^1.7.0",
+    "three": "^0.165.0",
     "uuid": "9.0.0",
     "xterm-addon-search": "^0.11.0",
     "xterm-addon-search-bar": "^0.2.0",
@@ -53,6 +55,7 @@
     "@types/node": "^24.6.0",
     "@types/react": "^18.2.9",
     "@types/react-dom": "^18.2.4",
+    "@types/three": "^0.165.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-react": "^4.0.0",
