@@ -298,7 +298,7 @@ module.exports = {
     require('./handlers/notifyBot')(win, getClient)
 
     // IM 远程控制：启动/停止/查询 IM Engine（聊天即控制）
-    require('./handlers/imControl')(win, getClient)
+    require('./handlers/imControl')(win, getClient, () => global.defaultYakGRPCAddr)
 
     // start chrome manager
     try {
