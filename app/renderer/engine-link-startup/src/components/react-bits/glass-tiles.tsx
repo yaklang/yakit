@@ -1,6 +1,4 @@
-import React, { useMemo, useRef } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import * as THREE from 'three'
+import React, { useRef, useEffect } from 'react'
 import './glass-tiles.css'
 
 export interface GlassTilesProps {
@@ -18,18 +16,18 @@ export interface GlassTilesProps {
   colorB?: string
   backgroundColor?: string
   opacity?: number
-  dpr?: number
 }
 
-const tilesVertex = /* glsl */ `
+const VS = `
+attribute vec2 a_position;
 varying vec2 vUv;
 void main() {
-  vUv = uv;
-  gl_Position = vec4(position.xy, 0.0, 1.0);
+  vUv = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
 }
 `
 
-const tilesFragment = /* glsl */ `
+const FS = `
 precision highp float;
 
 varying vec2 vUv;
@@ -47,8 +45,8 @@ uniform vec3  uColorB;
 uniform vec3  uBg;
 uniform float uAlpha;
 
-const int   MAX_LAYERS    = 8;
-const float GOLDEN_ANGLE  = 2.39996323;
+const int   MAX_LAYERS   = 8;
+const float GOLDEN_ANGLE = 2.39996323;
 
 float sampleField(vec2 p, float t) {
   vec2 c = p;
@@ -72,7 +70,6 @@ float sampleField(vec2 p, float t) {
 void main() {
   vec2 fragPx = vUv * uRes;
   vec2 base = fragPx / max(uRes.y, 1.0) * uDensity + uRes / max(uRes.y, 1.0);
-
   float t = uTime * uSpeed;
 
   float spread = uChromatic * 0.35;
@@ -93,66 +90,16 @@ void main() {
 }
 `
 
-function hexToRgb(hex: string): [number, number, number] {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  if (!m) return [0, 0, 0]
-  return [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255]
+function hexToVec3(hex: string): [number, number, number] {
+  const h = hex.replace('#', '')
+  return [parseInt(h.slice(0, 2), 16) / 255, parseInt(h.slice(2, 4), 16) / 255, parseInt(h.slice(4, 6), 16) / 255]
 }
 
-type SceneProps = Required<Omit<GlassTilesProps, 'width' | 'height' | 'className' | 'children' | 'dpr'>>
-
-const TilesScene: React.FC<SceneProps> = (props) => {
-  const meshRef = useRef<THREE.Mesh>(null)
-  const { size } = useThree()
-
-  useFrame((state) => {
-    if (!meshRef.current) return
-    const mat = meshRef.current.material as THREE.ShaderMaterial
-    const u = mat.uniforms
-
-    u.uTime.value = state.clock.elapsedTime
-    u.uRes.value.set(size.width, size.height)
-
-    u.uSpeed.value = props.speed
-    u.uDensity.value = props.tileDensity
-    u.uLayers.value = Math.max(1, Math.min(8, Math.round(props.rippleLayers)))
-    u.uWarp.value = props.warpStrength
-    u.uBand.value = props.bandSharpness
-    u.uChromatic.value = props.chromaticSpread
-    u.uAlpha.value = props.opacity
-
-    const a = hexToRgb(props.colorA)
-    u.uColorA.value.set(a[0], a[1], a[2])
-    const b = hexToRgb(props.colorB)
-    u.uColorB.value.set(b[0], b[1], b[2])
-    const bg = hexToRgb(props.backgroundColor)
-    u.uBg.value.set(bg[0], bg[1], bg[2])
-  })
-
-  const uniforms = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uRes: { value: new THREE.Vector2(1, 1) },
-      uSpeed: { value: 1 },
-      uDensity: { value: 4 },
-      uLayers: { value: 5 },
-      uWarp: { value: 0.1 },
-      uBand: { value: 3 },
-      uChromatic: { value: 0.25 },
-      uColorA: { value: new THREE.Vector3(0.05, 0.02, 0.1) },
-      uColorB: { value: new THREE.Vector3(0.4, 0.5, 0.9) },
-      uBg: { value: new THREE.Vector3(0, 0, 0) },
-      uAlpha: { value: 1 },
-    }),
-    [],
-  )
-
-  return (
-    <mesh ref={meshRef}>
-      <planeGeometry args={[2, 2]} />
-      <shaderMaterial vertexShader={tilesVertex} fragmentShader={tilesFragment} uniforms={uniforms} transparent />
-    </mesh>
-  )
+function compileShader(gl: WebGLRenderingContext, type: number, src: string): WebGLShader {
+  const s = gl.createShader(type)!
+  gl.shaderSource(s, src)
+  gl.compileShader(s)
+  return s
 }
 
 const GlassTiles: React.FC<GlassTilesProps> = ({
@@ -168,48 +115,117 @@ const GlassTiles: React.FC<GlassTilesProps> = ({
   chromaticSpread = 0,
   colorA = '#1E00FF',
   colorB = '#D765E6',
-  backgroundColor = '#FFFFFF',
+  backgroundColor = '#000000',
   opacity = 1,
-  dpr = 1.5,
 }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const rafRef = useRef<number>(0)
+  // Keep latest props accessible in the animation loop without restarting
+  const propsRef = useRef({
+    speed,
+    tileDensity,
+    rippleLayers,
+    warpStrength,
+    bandSharpness,
+    chromaticSpread,
+    colorA,
+    colorB,
+    backgroundColor,
+    opacity,
+  })
+
+  useEffect(() => {
+    propsRef.current = {
+      speed,
+      tileDensity,
+      rippleLayers,
+      warpStrength,
+      bandSharpness,
+      chromaticSpread,
+      colorA,
+      colorB,
+      backgroundColor,
+      opacity,
+    }
+  })
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: false })
+    if (!gl) return
+
+    const vs = compileShader(gl, gl.VERTEX_SHADER, VS)
+    const fs = compileShader(gl, gl.FRAGMENT_SHADER, FS)
+    const prog = gl.createProgram()!
+    gl.attachShader(prog, vs)
+    gl.attachShader(prog, fs)
+    gl.linkProgram(prog)
+    gl.useProgram(prog)
+
+    // Full-screen quad
+    const buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+    const posLoc = gl.getAttribLocation(prog, 'a_position')
+    gl.enableVertexAttribArray(posLoc)
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0)
+
+    const u = (name: string) => gl.getUniformLocation(prog, name)
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+      const rect = canvas.getBoundingClientRect()
+      canvas.width = Math.round(rect.width * dpr)
+      canvas.height = Math.round(rect.height * dpr)
+      gl.viewport(0, 0, canvas.width, canvas.height)
+    }
+    resize()
+    const ro = new ResizeObserver(resize)
+    ro.observe(canvas)
+
+    const start = performance.now()
+    const frame = () => {
+      const t = (performance.now() - start) / 1000
+      const p = propsRef.current
+      const rect = canvas.getBoundingClientRect()
+
+      gl.uniform1f(u('uTime'), t)
+      gl.uniform2f(u('uRes'), rect.width, rect.height)
+      gl.uniform1f(u('uSpeed'), p.speed)
+      gl.uniform1f(u('uDensity'), p.tileDensity)
+      gl.uniform1f(u('uLayers'), Math.max(1, Math.min(8, Math.round(p.rippleLayers))))
+      gl.uniform1f(u('uWarp'), p.warpStrength)
+      gl.uniform1f(u('uBand'), p.bandSharpness)
+      gl.uniform1f(u('uChromatic'), p.chromaticSpread)
+      gl.uniform1f(u('uAlpha'), p.opacity)
+
+      const a = hexToVec3(p.colorA)
+      gl.uniform3f(u('uColorA'), a[0], a[1], a[2])
+      const b = hexToVec3(p.colorB)
+      gl.uniform3f(u('uColorB'), b[0], b[1], b[2])
+      const bg = hexToVec3(p.backgroundColor)
+      gl.uniform3f(u('uBg'), bg[0], bg[1], bg[2])
+
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+      rafRef.current = requestAnimationFrame(frame)
+    }
+    frame()
+
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      ro.disconnect()
+      gl.deleteProgram(prog)
+    }
+  }, [])
+
   return (
     <div className={['glass-tiles-root', className].filter(Boolean).join(' ')} style={{ width, height }}>
-      <Canvas
-        className="glass-tiles-canvas"
-        dpr={[1, dpr]}
-        gl={{
-          antialias: false,
-          alpha: true,
-          powerPreference: 'high-performance',
-        }}
-        orthographic
-        camera={{
-          position: [0, 0, 1],
-          zoom: 1,
-          left: -1,
-          right: 1,
-          top: 1,
-          bottom: -1,
-        }}
-      >
-        <TilesScene
-          speed={speed}
-          tileDensity={tileDensity}
-          rippleLayers={rippleLayers}
-          warpStrength={warpStrength}
-          bandSharpness={bandSharpness}
-          chromaticSpread={chromaticSpread}
-          colorA={colorA}
-          colorB={colorB}
-          backgroundColor={backgroundColor}
-          opacity={opacity}
-        />
-      </Canvas>
+      <canvas ref={canvasRef} className="glass-tiles-canvas" />
       {children && <div className="glass-tiles-content">{children}</div>}
     </div>
   )
 }
 
 GlassTiles.displayName = 'GlassTiles'
-
 export default GlassTiles

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "",
+    "baseColor": "slate",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {
+    "@reactbits-starter": {
+      "url": "https://pro.reactbits.dev/api/r/starter/{name}.json",
+      "headers": {
+        "Authorization": "Bearer ${REACTBITS_LICENSE_KEY}"
+      }
+    }
+  }
+}

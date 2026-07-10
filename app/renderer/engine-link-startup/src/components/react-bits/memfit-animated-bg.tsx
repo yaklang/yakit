@@ -167,7 +167,6 @@ export const MemfitAnimatedBg: React.FC<MemfitAnimatedBgProps> = ({ theme, borde
             colorB={tilesColorB}
             backgroundColor={tilesBg}
             opacity={1}
-            dpr={1.5}
           />
         )
       default:
