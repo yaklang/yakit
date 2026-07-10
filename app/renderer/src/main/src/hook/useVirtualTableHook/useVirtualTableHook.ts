@@ -616,6 +616,11 @@ export default function useVirtualTableHook<
     setData(cloneData)
   })
 
+  /** @name 浅更新表格数据（避免 cloneDeep 大量二进制字段） */
+  const patchTData = useMemoizedFn((value: DataT[] | ((prev: DataT[]) => DataT[])) => {
+    setData(value)
+  })
+
   /** @name 设置params */
   const setP = useMemoizedFn((newParams: ParamsTProps) => {
     const data: ParamsTProps = {
@@ -648,6 +653,6 @@ export default function useVirtualTableHook<
     pagination,
     loading,
     offsetData,
-    { startT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, setP },
+    { startT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, patchTData, setP },
   ] as const
 }

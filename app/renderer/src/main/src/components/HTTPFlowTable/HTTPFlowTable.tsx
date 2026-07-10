@@ -381,7 +381,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     pagination,
     loading,
     offsetData,
-    { startT, setTLoad: setLoading, setTData, noResetRefreshT: updateData, setP, refreshT },
+    { startT, setTLoad: setLoading, patchTData, noResetRefreshT: updateData, setP, refreshT },
   ] = useVirtualTableHook<ParamsTProps & { Filter: YakQueryHTTPFlowRequest }, HTTPFlow, 'Data', 'Id'>({
     tableBoxRef: useRef(null), // props.inViewport 判断可见性，不必再挂一个 ref
     tableRef,
@@ -468,13 +468,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }))
   }, [runTimeId])
 
-  // 兼容原来 setData 写法（收藏、改标签等会原地改表格行）
+  // 兼容原来 setData 写法（收藏、改标签等会原地改表格行） 拷贝避免大量二进制字段
   const setData = useMemoizedFn((value: React.SetStateAction<HTTPFlow[]>) => {
-    if (typeof value === 'function') {
-      setTData(value(data))
-      return
-    }
-    setTData(value)
+    patchTData((prev) => (typeof value === 'function' ? value(prev) : value))
   })
   updateDataRef.current = updateData
 
