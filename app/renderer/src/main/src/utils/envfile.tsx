@@ -260,6 +260,8 @@ export const getRemoteI18nGV = () => {
       return RemoteI18nGV.basI18n
     case PRODUCT_RELEASE_EDITION.MEMFIT:
       return RemoteI18nGV.ceAII18n
+    default:
+      return RemoteI18nGV.ceI18n
   }
 }
 

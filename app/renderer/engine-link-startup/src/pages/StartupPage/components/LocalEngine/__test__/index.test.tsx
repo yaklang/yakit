@@ -423,48 +423,4 @@ describe('LocalEngine Component', () => {
       await startLinkEngine()
     })
   })
-
-  describe('软件基础设置（社区版）', () => {
-    it('当为社区版且未设置过基础设置时应展示 softwareBasics 状态', async () => {
-      ;(getLocalValue as any).mockImplementation((key: string) => {
-        if (key === 'YakitCE-SoftwareBasics') return Promise.resolve(false)
-        return Promise.resolve(false)
-      })
-      isCommunityYakitSpy.mockReturnValue(true)
-      renderComponent()
-      await initEngine()
-
-      await waitFor(() => {
-        expect(props.setYakitStatus).toHaveBeenCalledWith('softwareBasics')
-      })
-
-      // 不应该连接引擎
-      expect(props.onLinkEngine).not.toHaveBeenCalled()
-    })
-
-    it('当为社区版且已经设置过基础设置时应直接连接引擎', async () => {
-      isCommunityYakitSpy.mockReturnValue(true)
-      // 覆盖为已设置
-      ;(getLocalValue as any).mockImplementation((key: string) => {
-        if (key === 'YakitCE-SoftwareBasics') return Promise.resolve(true)
-        return Promise.resolve(false)
-      })
-      renderComponent()
-      await initEngine()
-
-      await startLinkEngine()
-
-      expect(props.setYakitStatus).not.toHaveBeenCalledWith('softwareBasics')
-    })
-
-    it('当不是社区版时应跳过软件基础设置', async () => {
-      isCommunityYakitSpy.mockReturnValue(false)
-      renderComponent()
-      await initEngine()
-
-      await startLinkEngine()
-
-      expect(props.setYakitStatus).not.toHaveBeenCalledWith('softwareBasics')
-    })
-  })
 })

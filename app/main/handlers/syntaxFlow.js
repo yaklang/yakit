@@ -1,7 +1,7 @@
 const { ipcMain } = require('electron')
 const fs = require('fs')
 const path = require('path')
-const { yakProjects } = require('../filePath')
+const { getYakProjects } = require('../filePath')
 
 module.exports = (win, getClient) => {
   // query local rule group list
@@ -274,12 +274,12 @@ module.exports = (win, getClient) => {
   ipcMain.handle('cancel-ExportSyntaxFlows', handlerHelper.cancelHandler(exportSyntaxFlowsMap))
   ipcMain.handle('ExportSyntaxFlows', (_, params, token) => {
     const { TargetPath } = params
-    if (!fs.existsSync(yakProjects)) {
+    if (!fs.existsSync(getYakProjects())) {
       try {
-        fs.mkdirSync(yakProjects, { recursive: true })
+        fs.mkdirSync(getYakProjects(), { recursive: true })
       } catch (error) {}
     }
-    params.TargetPath = path.join(yakProjects, TargetPath)
+    params.TargetPath = path.join(getYakProjects(), TargetPath)
     let stream = getClient().ExportSyntaxFlows(params)
     handlerHelper.registerHandler(win, stream, exportSyntaxFlowsMap, token)
   })
@@ -416,12 +416,12 @@ module.exports = (win, getClient) => {
 
   // 生成 yakit-projects 文件夹下 projects 里面的文件路径
   ipcMain.handle('GenerateProjectsFilePath', async (e, fileName) => {
-    return path.join(yakProjects, fileName)
+    return path.join(getYakProjects(), fileName)
   })
 
   // 获取 yakit-projects 文件夹下 projects 里面的文件路径
   ipcMain.handle('GetProjectsFilePath', async () => {
-    return yakProjects
+    return getYakProjects()
   })
 
   const asyncCheckSyntaxFlowRuleUpdate = (params) => {

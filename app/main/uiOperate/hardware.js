@@ -3,7 +3,7 @@ const OS = require('os')
 const fs = require('fs')
 const path = require('path')
 const process = require('process')
-const { yaklangEngineDir, remoteLinkDir, yakitInstallDir } = require('../filePath')
+const { getYaklangEngineDir, getRemoteLinkDir, getYakitInstallDir } = require('../filePath')
 const zip = require('node-stream-zip')
 const { exec } = require('child_process')
 const { printLogOutputFile } = require('../logFile')
@@ -133,12 +133,12 @@ module.exports = (win, getClient) => {
 
   /** 打开 yaklang 或 yakit 文件所在文件夹 (ps:随着yakit下载移动至下载文件夹中，此方法仅打开yaklang)*/
   ipcMain.handle('open-yaklang-path', (e) => {
-    return shell.openPath(yaklangEngineDir)
+    return shell.openPath(getYaklangEngineDir())
   })
 
   /** 打开 yakit 文件所在文件夹 */
   ipcMain.handle('open-yakit-path', (e) => {
-    return shell.openPath(yakitInstallDir)
+    return shell.openPath(getYakitInstallDir())
   })
 
   /** 检查 yakit 安装文件是否存在 */
@@ -146,7 +146,7 @@ module.exports = (win, getClient) => {
     try {
       if (!filename) return false
       // 读取目录下的所有文件
-      const files = fs.readdirSync(yakitInstallDir)
+      const files = fs.readdirSync(getYakitInstallDir())
 
       // 判断是否有包含文件名的文件
       return files.some((file) => file.includes(filename))
@@ -281,7 +281,7 @@ module.exports = (win, getClient) => {
   const asyncInstallIntranetYakit = (filePath) => {
     return new Promise((resolve, reject) => {
       try {
-        const dest = path.join(yakitInstallDir, path.basename(filePath))
+        const dest = path.join(getYakitInstallDir(), path.basename(filePath))
         fs.access(dest, fs.constants.F_OK, async (err) => {
           if (!err) {
             // 输出的名称（只获取文件名，不带扩展名）
@@ -327,12 +327,12 @@ module.exports = (win, getClient) => {
 
   /** 获取远程连接配置信息文件路径 */
   ipcMain.handle('fetch-remote-file-path', (e) => {
-    return remoteLinkDir
+    return getRemoteLinkDir()
   })
 
   /** 打开远程连接配置信息文件夹 */
   ipcMain.handle('open-remote-link', (e) => {
-    return shell.openPath(remoteLinkDir)
+    return shell.openPath(getRemoteLinkDir())
   })
 
   /** 获取计算机名 */

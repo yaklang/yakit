@@ -13,7 +13,7 @@ const {
   setLocalCache,
 } = require('./localCache')
 const { asyncKillDynamicControl } = require('./handlers/dynamicControlFun')
-const { windowStatePatch } = require('./filePath')
+const { getWindowStatePath, getConfig } = require('./filePath')
 const Screenshots = require('./screenshots')
 const windowStateKeeper = require('electron-window-state')
 const { MenuTemplate } = require('./menu')
@@ -111,7 +111,7 @@ function createEngineLinkWindow() {
   const state = windowStateKeeper({
     defaultWidth: 900,
     defaultHeight: 600,
-    path: windowStatePatch,
+    path: getWindowStatePath(),
     file: 'link-window-state.json',
   })
   const hasPos = Number.isFinite(state.x) && Number.isFinite(state.y)
@@ -217,7 +217,7 @@ function createWindow() {
   const state = windowStateKeeper({
     defaultWidth: minWidth,
     defaultHeight: minHeight,
-    path: windowStatePatch,
+    path: getWindowStatePath(),
     file: 'yakit-window-state.json',
   })
   const width = Math.max(state.width ?? minWidth, minWidth)
@@ -653,6 +653,24 @@ if (!shouldAbortStartupForDebugFlags) {
 
     /** 获取缓存数据并储存于软件内 */
     initLocalCache()
+
+    // 从 config.json 同步语言设置到 localCache，确保首次启动也能正确读取
+    try {
+      const cfg = getConfig()
+      if (cfg) {
+        if (cfg.mode) {
+          const { key, value } = JSON.parse(cfg.mode)
+          setLocalCache(key, value)
+        }
+        if (cfg.lange) {
+          const { key, value } = JSON.parse(cfg.lange)
+          setLocalCache(key, value)
+        }
+      }
+    } catch (e) {
+      console.info('sync language from config.json to localCache failed:', e)
+    }
+
     getAllLogHandles()
 
     /** 获取扩展缓存数据并储存于软件内(是否弹出关闭二次确认弹窗) */

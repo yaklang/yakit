@@ -1,6 +1,6 @@
 const { ipcMain } = require('electron')
 const fs = require('fs')
-const { localCachePath, extraLocalCachePath } = require('./filePath')
+const { getLocalCachePath, getExtraLocalCachePath } = require('./filePath')
 
 /** 缓存数据存放变量 */
 const kvCache = new Map()
@@ -13,7 +13,7 @@ const extraKVCache = new Map()
  * @param {string} value 缓存数据
  */
 const syncLocalCacheFile = (type, value) => {
-  const filePath = type === 'cache' ? localCachePath : extraLocalCachePath
+  const filePath = type === 'cache' ? getLocalCachePath() : getExtraLocalCachePath()
 
   try {
     fs.unlinkSync(filePath)
@@ -106,8 +106,8 @@ const initLocalCache = (callback) => {
 
   try {
     /** 处理文件不存在的情况 */
-    if (fs.existsSync(localCachePath)) {
-      const data = fs.readFileSync(localCachePath)
+    if (fs.existsSync(getLocalCachePath())) {
+      const data = fs.readFileSync(getLocalCachePath())
 
       /** 预防用户直接删除文件内的数据，从而导致的JSON处理异常 */
       const cache = data.toString() ? data.toString() : `[]`
@@ -135,8 +135,8 @@ const initExtraLocalCache = (callback) => {
   kvCache.set('*description*', '该文件内缓存数据如需手动修改，请在关闭 Yakit 之后进行操作')
 
   try {
-    if (fs.existsSync(extraLocalCachePath)) {
-      const data = fs.readFileSync(extraLocalCachePath)
+    if (fs.existsSync(getExtraLocalCachePath())) {
+      const data = fs.readFileSync(getExtraLocalCachePath())
       if (!data) {
         console.info('Extra Local Cache Empty!')
       }

@@ -11,7 +11,7 @@ function applyTheme(theme: Theme) {
 
 export const useTheme = create<{
   theme: Theme
-  setTheme: (theme: Theme) => void
+  setTheme: (theme: Theme, save: boolean) => void
 }>((set) => {
   const initialTheme: Theme = (localStorage.getItem('theme') as Theme) || 'light'
   applyTheme(initialTheme)
@@ -25,8 +25,8 @@ export const useTheme = create<{
 
   return {
     theme: initialTheme,
-    setTheme: (theme: Theme) => {
-      applyTheme(theme)
+    setTheme: (theme: Theme, save: boolean) => {
+      save && applyTheme(theme)
       set({ theme })
       yakitTheme.setTheme(theme)
     },

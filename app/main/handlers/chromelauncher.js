@@ -2,8 +2,8 @@ const { ipcMain } = require('electron')
 const { launch, killAll, getChromePath } = require('chrome-launcher')
 const fs = require('fs')
 const path = require('path')
-const { YakitProjectPath } = require('../filePath')
-const myUserDataDir = path.join(YakitProjectPath, 'chrome-profile')
+const { getYakitHome } = require('../filePath')
+const getMyUserDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 
 const disableExtensionsExceptStr = (host, port, username, password) => `
 var config = {
@@ -62,10 +62,10 @@ const tempFile = 'yakit-proxy'
 const exceptFileName = 'background.js'
 const manifestFileName = 'manifest.json'
 // 创建临时文件的完整路径
-const exceptFilePath = path.join(YakitProjectPath, tempFile, exceptFileName)
-const manifestFilePath = path.join(YakitProjectPath, tempFile, manifestFileName)
+const getExceptFilePath = () => path.join(getYakitHome(), tempFile, exceptFileName)
+const getManifestFilePath = () => path.join(getYakitHome(), tempFile, manifestFileName)
 // 获取文件夹路径
-const commonFilePath = path.dirname(exceptFilePath)
+const getCommonFilePath = () => path.dirname(getExceptFilePath())
 // 是否创建用户名/密码文件
 let isCreateFile = false
 
@@ -88,11 +88,12 @@ function deleteFolderRecursive(folderPath) {
 // 删除临时文件夹及文件夹中所有文件
 const deleteCreateFile = () => {
   if (isCreateFile) {
+    const dirPath = getCommonFilePath()
     // 判断文件夹是否存在
-    if (fs.existsSync(commonFilePath)) {
+    if (fs.existsSync(dirPath)) {
       // 读取文件夹中的文件和子文件夹
-      fs.readdirSync(commonFilePath).forEach((file) => {
-        const filePath = path.join(commonFilePath, file)
+      fs.readdirSync(dirPath).forEach((file) => {
+        const filePath = path.join(dirPath, file)
 
         // 检查文件类型
         const stat = fs.statSync(filePath)
@@ -107,9 +108,9 @@ const deleteCreateFile = () => {
       })
 
       // 删除空文件夹
-      fs.rmdirSync(commonFilePath)
+      fs.rmdirSync(dirPath)
     } else {
-      console.log(`not found ${commonFilePath} .`)
+      console.log(`not found ${dirPath} .`)
     }
     isCreateFile = false
   }
@@ -125,7 +126,7 @@ module.exports = (win, getClient) => {
   })
 
   ipcMain.handle('getDefaultUserDataDir', async () => {
-    return myUserDataDir
+    return getMyUserDataDir()
   })
 
   ipcMain.handle('LaunchChromeWithParams', async (e, params) => {
@@ -174,21 +175,19 @@ module.exports = (win, getClient) => {
         const exceptContent = disableExtensionsExceptStr(host, port, username, password)
         const manifestContent = manifestStr
 
+        const dirPath = getCommonFilePath()
         // 创建文件夹 { recursive: true } 选项确保如果文件夹的上级目录也不存在时，一同创建。
-        if (!fs.existsSync(commonFilePath)) {
-          fs.mkdirSync(commonFilePath, { recursive: true })
+        if (!fs.existsSync(dirPath)) {
+          fs.mkdirSync(dirPath, { recursive: true })
         }
 
         // 使用 fs.writeFileSync创建文件 写入内容到临时文件
-        fs.writeFileSync(exceptFilePath, exceptContent)
-        fs.writeFileSync(manifestFilePath, manifestContent)
+        fs.writeFileSync(getExceptFilePath(), exceptContent)
+        fs.writeFileSync(getManifestFilePath(), manifestContent)
 
         isCreateFile = true
 
-        launchOpt['chromeFlags'].unshift(
-          `--disable-extensions-except=${commonFilePath}`,
-          `--load-extension=${commonFilePath}`,
-        )
+        launchOpt['chromeFlags'].unshift(`--disable-extensions-except=${dirPath}`, `--load-extension=${dirPath}`)
       } catch (error) {
         console.log(`操作失败：${error}`)
       }

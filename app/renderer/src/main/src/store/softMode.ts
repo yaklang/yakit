@@ -1,4 +1,5 @@
 import { LocalGVS } from '@/enums/localGlobal'
+import { yakitApp } from '@/services/electronBridge'
 import { isCommunityYakit } from '@/utils/envfile'
 import { setLocalValue } from '@/utils/kv'
 import { create } from 'zustand'
@@ -28,6 +29,9 @@ export const useSoftMode = create<MenuModeState>((set) => ({
   setSoftMode: (softMode) => {
     if (isCommunityYakit()) {
       setLocalValue(LocalGVS.YakitCEMode, softMode + '')
+      yakitApp
+        .setYakitHomeConfig('mode', JSON.stringify({ key: LocalGVS.YakitCEMode, value: softMode + '' }))
+        .catch((err) => {})
     }
     set({ softMode })
   },

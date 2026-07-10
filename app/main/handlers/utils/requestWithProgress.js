@@ -2,7 +2,7 @@ const axios = require('axios')
 const fs = require('fs')
 const { throttle } = require('throttle-debounce')
 const path = require('path')
-const { yaklangEngineDir } = require('../../filePath')
+const { getYaklangEngineDir } = require('../../filePath')
 
 // 函数用于编码URL中的中文字符
 function encodeChineseCharacters(url) {
@@ -136,7 +136,7 @@ function engineCancelRequestWithProgress(version) {
       writer.on('close', () => {
         // 主动点取消销毁流会触发 删掉不完整的引擎版本
         const dest = path.join(
-          yaklangEngineDir,
+          getYaklangEngineDir(),
           version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
         )
         try {

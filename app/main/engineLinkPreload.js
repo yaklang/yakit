@@ -38,6 +38,10 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     onCloseWindow: (callback) => subscribe('close-engineLinkWin-renderer', () => callback()),
     onFromMainWindow: (callback) => subscribe('from-win', callback),
     onCredentialUpdate: (callback) => subscribe('from-win-updateCredential', callback),
+    getYakitHomeConfig: () => invokePrefixed('get-yakit-home-config'),
+    setYakitHomeConfig: (key, value) => invokePrefixed('set-yakit-home-config', key, value),
+    relaunchApp: () => invokePrefixed('relaunch-app'),
+    getDirSize: (dirPath) => invokePrefixed('get-dir-size', dirPath),
   },
   theme: {
     setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),
@@ -122,6 +126,12 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     onDownloadYakEngineProgress: (callback) => subscribe('download-yak-engine-progress', callback),
     onDownloadYakitProgress: (callback) => subscribe('download-yakit-engine-progress', callback),
     onStartUpEngineMessage: (callback) => subscribe('startUp-engine-msg', callback),
+  },
+  dialog: {
+    openFileSystemDialog: (options) => invokePrefixed('open-file-system-dialog', options),
+  },
+  fileSystem: {
+    fetchFileContent: (targetPath) => invokePrefixed('fetch-file-content', targetPath),
   },
 })
 

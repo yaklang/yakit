@@ -77,6 +77,41 @@ interface EchoResult {
   result: string
 }
 
+interface YakitHomeConfig {
+  YAKIT_HOME: string
+  language: string
+  workspaceHistory: string[]
+  autoStart: boolean
+  currentHome: string
+  configDir: string
+}
+
+interface OpenFileDialogOptions {
+  title?: string
+  defaultPath?: string
+  buttonLabel?: string
+  filters?: { extensions: string[]; name: string }[]
+  properties?: Array<
+    | 'openFile'
+    | 'openDirectory'
+    | 'multiSelections'
+    | 'showHiddenFiles'
+    | 'createDirectory'
+    | 'promptToCreate'
+    | 'noResolveAliases'
+    | 'treatPackageAsDirectory'
+    | 'dontAddToRecent'
+  >
+  message?: string
+  securityScopedBookmarks?: boolean
+}
+
+interface OpenFileDialogReturnValue {
+  canceled: boolean
+  filePaths: string[]
+  bookmarks?: string[]
+}
+
 interface YakitBridge {
   app: {
     markRendererReady: () => void
@@ -89,6 +124,10 @@ interface YakitBridge {
     onCloseWindow: (callback: () => void) => BridgeCleanup
     onFromMainWindow: (callback: (data: FromMainWindowPayload) => void) => BridgeCleanup
     onCredentialUpdate: (callback: (data: CredentialUpdatePayload) => void) => BridgeCleanup
+    getYakitHomeConfig: () => Promise<YakitHomeConfig>
+    setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
+    relaunchApp: () => Promise<unknown>
+    getDirSize: (dirPath: string) => Promise<number>
   }
   theme: {
     setTheme: (theme: 'light' | 'dark') => Promise<unknown>
@@ -170,6 +209,12 @@ interface YakitBridge {
     onDownloadYakEngineProgress: (callback: (state: DownloadingState) => void) => BridgeCleanup
     onDownloadYakitProgress: (callback: (state: DownloadingState) => void) => BridgeCleanup
     onStartUpEngineMessage: (callback: (message: string) => void) => BridgeCleanup
+  }
+  dialog: {
+    openFileSystemDialog: (options: OpenFileDialogOptions) => Promise<OpenFileDialogReturnValue>
+  }
+  fileSystem: {
+    fetchFileContent: (targetPath: string) => Promise<string>
   }
 }
 

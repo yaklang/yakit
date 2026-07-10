@@ -2,7 +2,7 @@ const { ipcMain } = require('electron')
 // const axios = require("axios")
 const fs = require('fs')
 const path = require('path')
-const { yakitInstallDir } = require('../filePath')
+const { getYakitInstallDir } = require('../filePath')
 const { requestWithProgress, cancelRequestProgress } = require('../handlers/utils/requestWithProgress')
 /**
  * @name 下载文件队列
@@ -24,8 +24,8 @@ module.exports = {
 
       let dest = destPath ? destPath : ''
       if (!dest) {
-        dest = path.join(yakitInstallDir, fileName)
-        if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, { recursive: true })
+        dest = path.join(getYakitInstallDir(), fileName)
+        if (!fs.existsSync(getYakitInstallDir())) fs.mkdirSync(getYakitInstallDir(), { recursive: true })
       }
       try {
         fs.unlinkSync(dest)

@@ -1,6 +1,6 @@
 const path = require('path')
 const fs = require('fs')
-const { engineLog, renderLog, printLog } = require('./filePath')
+const { getEngineLogDir, getRenderLogDir, getPrintLogDir } = require('./filePath')
 const { shell } = require('electron')
 
 /** 生成时间字符 (YYYYMMDDHHMMSS) */
@@ -106,7 +106,7 @@ let engineLogHandle = null
 const getEngineLogHandle = async () => {
   try {
     const { fileName, info } = TypeToLogBasicInfo.engine || {}
-    engineLogHandle = await getLogFileHandle(engineLog, fileName, info)
+    engineLogHandle = await getLogFileHandle(getEngineLogDir(), fileName, info)
   } catch (error) {}
 }
 
@@ -166,7 +166,7 @@ const engineLogOutputFileAndUI = (win, message, isTitle) => {
 
 /** 打开引擎日志文件所在文件夹 */
 const openEngineLogFolder = () => {
-  shell.openPath(engineLog)
+  shell.openPath(getEngineLogDir())
   return
 }
 // #endregion
@@ -179,7 +179,7 @@ let renderLogHandle = null
 const getRenderLogHandle = async () => {
   try {
     const { fileName, info } = TypeToLogBasicInfo.render || {}
-    renderLogHandle = await getLogFileHandle(renderLog, fileName, info)
+    renderLogHandle = await getLogFileHandle(getRenderLogDir(), fileName, info)
   } catch (error) {}
 }
 
@@ -215,7 +215,7 @@ const renderLogOutputFile = (message) => {
 
 /** 打开渲染端日志文件所在文件夹 */
 const openRenderLogFolder = () => {
-  shell.openPath(renderLog)
+  shell.openPath(getRenderLogDir())
   return
 }
 // #endregion
@@ -228,7 +228,7 @@ let printLogHandle = null
 const getPrintLogHandle = async () => {
   try {
     const { fileName, info } = TypeToLogBasicInfo.print || {}
-    printLogHandle = await getLogFileHandle(printLog, fileName, info)
+    printLogHandle = await getLogFileHandle(getPrintLogDir(), fileName, info)
   } catch (error) {}
 }
 
@@ -264,7 +264,7 @@ const printLogOutputFile = (message) => {
 
 /** 打开输出信息日志文件所在文件夹 */
 const openPrintLogFolder = () => {
-  shell.openPath(printLog)
+  shell.openPath(getPrintLogDir())
   return
 }
 // #endregion
@@ -284,20 +284,20 @@ const closeAllLogHandles = () => {
 
 /** 初始化所有日志文件夹 */
 const initAllLogFolders = () => {
-  if (fs.existsSync(engineLog)) {
-    clearFolder(engineLog, 9)
+  if (fs.existsSync(getEngineLogDir())) {
+    clearFolder(getEngineLogDir(), 9)
   } else {
-    fs.mkdirSync(engineLog, { recursive: true })
+    fs.mkdirSync(getEngineLogDir(), { recursive: true })
   }
-  if (fs.existsSync(renderLog)) {
-    clearFolder(renderLog, 9)
+  if (fs.existsSync(getRenderLogDir())) {
+    clearFolder(getRenderLogDir(), 9)
   } else {
-    fs.mkdirSync(renderLog, { recursive: true })
+    fs.mkdirSync(getRenderLogDir(), { recursive: true })
   }
-  if (fs.existsSync(printLog)) {
-    clearFolder(printLog, 9)
+  if (fs.existsSync(getPrintLogDir())) {
+    clearFolder(getPrintLogDir(), 9)
   } else {
-    fs.mkdirSync(printLog, { recursive: true })
+    fs.mkdirSync(getPrintLogDir(), { recursive: true })
   }
 }
 

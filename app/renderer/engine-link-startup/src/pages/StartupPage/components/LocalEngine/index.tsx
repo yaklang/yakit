@@ -252,7 +252,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           )
 
           if (!currentYak.current) {
-            softwareBasics()
+            startYakEngine()
             return
           }
 
@@ -269,7 +269,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           }
         } else {
           setLog((old) => old.concat([`错误: ${res1.reason}`]))
-          softwareBasics()
+          startYakEngine()
         }
       } catch (error) {
         setLog((old) => old.concat([`错误: ${error}`]))
@@ -319,32 +319,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       } catch (error) {
         setLog((old) => old.concat(['异常情况，无法检测来源']))
       } finally {
-        softwareBasics()
-      }
-    })
-
-    /**
-     * @name 软件基础设置
-     * - 更新校验完毕之后（目前只有社区版yakit支持设置）
-     */
-    const softwareBasics = useMemoizedFn(async () => {
-      // 中断连接 后续不执行
-      if (yakitStatusRef.current === 'break') {
-        debugToPrintLog(`------ 开始软件基础设置 被阻止 ------`)
-        setLog([])
-        return
-      }
-      let flag = false
-      if (isCommunityYakit()) {
-        try {
-          const res = await getLocalValue(LocalGVS.YakitCESoftwareBasics)
-          flag = !res
-        } catch (error) {}
-      }
-      if (flag) {
-        debugToPrintLog(`------ 开始软件基础设置逻辑 ------`)
-        setYakitStatus('softwareBasics')
-      } else {
         startYakEngine()
       }
     })

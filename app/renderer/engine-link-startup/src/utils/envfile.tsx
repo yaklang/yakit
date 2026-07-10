@@ -1,3 +1,4 @@
+import { LocalGVS } from '@/enums/yakitGV'
 import { Theme } from '@/hooks/useTheme'
 
 export const __PLATFORM__ = import.meta.env.VITE_PLATFORM
@@ -113,6 +114,25 @@ export const GetReleaseEdition = () => {
       return PRODUCT_RELEASE_EDITION.MEMFIT
     default:
       return PRODUCT_RELEASE_EDITION.Yakit
+  }
+}
+
+export const getLocalI18nGV = () => {
+  switch (GetReleaseEdition()) {
+    case PRODUCT_RELEASE_EDITION.Yakit:
+      return LocalGVS.ceI18n
+    case PRODUCT_RELEASE_EDITION.EnpriTrace:
+      return LocalGVS.eeI18n
+    case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
+      return LocalGVS.seI18n
+    case PRODUCT_RELEASE_EDITION.IRify:
+      return LocalGVS.ceIRifyI18n
+    case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
+      return LocalGVS.eeIRifyI18n
+    case PRODUCT_RELEASE_EDITION.MEMFIT:
+      return LocalGVS.ceAII18n
+    default:
+      return LocalGVS.ceI18n
   }
 }
 
