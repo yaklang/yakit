@@ -57,30 +57,7 @@ function useCasualChat(params: UseCasualChatParams) {
     if (!taskKey) return
 
     const existing = getContentMap(taskKey)
-    if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })
-      return
-    }
-
-    if (existing) {
-      if (info.react_task_name) existing.data.taskName = info.react_task_name
-      if (info.react_user_input) existing.data.goal = info.react_user_input
-      existing.data.status = info.react_task_status
-      setContentMap(existing.id, existing)
-      const chatStore = getChatDataStore?.()
-      if (chatStore && !chatStore.casualChat.planDetailsMap.has(taskKey)) {
-        chatStore.casualChat.planDetailsMap.set(taskKey, cloneDeep(DefaultPlanItemDetailsData))
-      }
-      setElements((old) =>
-        old.map((item) => {
-          if (item.token === existing.id && item.type === existing.type) {
-            return { ...item, renderNum: item.renderNum + 1 }
-          }
-          return item
-        }),
-      )
-      return
-    }
+    if (existing) return
 
     const chatData: AIChatQSData = {
       ...genBaseAIChatData(res),
