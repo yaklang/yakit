@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { Form, Tooltip } from 'antd'
 import './ConfigPrivateDomain.scss'
 import { NetWorkApi } from '@/services/fetch'
@@ -7,7 +7,7 @@ import { loginOut } from '@/utils/login'
 import { useMemoizedFn, useGetState } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { useStore } from '@/store'
-import yakitImg from '@/assets/yakit.jpg'
+import yakitImg from '@/assets/yakitEE.png'
 import { API } from '@/services/swagger/resposeType'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '../yakitUI/YakitAutoComplete/YakitAutoComplete'
@@ -19,9 +19,13 @@ import { YakitAutoCompleteRefProps } from '../yakitUI/YakitAutoComplete/YakitAut
 import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace } from '@/utils/envfile'
 import { apiSystemConfig, useUploadInfoByEnpriTrace } from '../layout/utils'
 import { JSONParseLog } from '@/utils/tool'
-import { yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
+import { yakitApp, yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { RightOutlined } from '@ant-design/icons'
+import { LoginParamsProp } from '@/pages/Login'
+import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
+import { FIXED_PRIVATE_DOMAIN_BASE_URL } from '@/enums/privateDomain'
 
 interface OnlineProfileProps {
   BaseUrl: string
@@ -63,6 +67,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     pwd: '',
   })
   const [isShowSkip, setShowSkip] = useState<boolean>(false)
+  const [isShowCCB, setShowCCB] = useState<boolean>(true)
   useEffect(() => {
     getHttpSetting()
   }, [])
@@ -99,8 +104,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         wechatHeadImg: res.from_platform === 'wechat' ? res.head_img : null,
         qqName: res.from_platform === 'qq' ? res.name : null,
         qqHeadImg: res.from_platform === 'qq' ? res.head_img : null,
-        companyName: res.from_platform === 'company' ? res.name : null,
-        companyHeadImg: res.from_platform === 'company' ? res.head_img : null,
+        companyName: ['company', 'ccb'].includes(res.from_platform) ? res.name : null,
+        companyHeadImg: ['company', 'ccb'].includes(res.from_platform) ? res.head_img : null,
         role: res.role,
         user_id: res.user_id,
         token: res.token,
@@ -115,13 +120,17 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           isAutoUploadProject: true,
           isUploadSyncData: true,
           isUpdateGlobalConfig: enterpriseLogin,
+          loginInfo: {
+            isLogin: true,
+            token: user.token,
+          },
         })
       }
       if (systemConfig?.length) {
         await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
       }
-      // 首次登录强制修改密码
-      if (!res.loginTime) {
+      // 首次登录强制修改密码 非原生系统登录时不强制修改
+      if (!res.loginTime && res.from_platform === 'company') {
         yakitAuth.requestPasswordReset()
         return
       }
@@ -270,31 +279,196 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       },
     },
   ]
-  return (
-    <div className="private-domain">
-      {enterpriseLogin && (
-        <div className="login-title-show">
-          <div className="icon-box">
-            <img src={yakitImg} className="type-icon-img" />
+
+  const fetchLogin = (type: string) => {
+    if (type === 'ccb') {
+      const BaseUrl = FIXED_PRIVATE_DOMAIN_BASE_URL
+      yakitProfile
+        .setOnlineProfile({
+          IsCompany: enterpriseLogin,
+          BaseUrl,
+        })
+        .then(() => {
+          yakitApp.syncEditBaseUrl(BaseUrl)
+          addHttpHistoryList(BaseUrl)
+          setLoading(true)
+          // CCB 登录逻辑
+          NetWorkApi<LoginParamsProp, string>({
+            method: 'get',
+            url: 'auth/from',
+            params: {
+              source: type,
+            },
+          })
+            .then((res) => {
+              if (res) yakitAuth.startUserSignIn({ url: res, type })
+            })
+            .catch((err) => {
+              failed('登录错误:' + err)
+            })
+            .finally(() => {
+              setTimeout(() => setLoading(false), 200)
+            })
+        })
+    }
+  }
+
+  // 登录成功
+  const onLoginSuccess = useMemoizedFn((user) => {
+    success('企业登录成功')
+    onClose && onClose()
+    onSuccee && onSuccee()
+    uploadProjectEvent
+      .startUpload({
+        isAutoUploadProject: true,
+        isUploadSyncData: true,
+        isUpdateGlobalConfig: enterpriseLogin,
+        loginInfo: {
+          isLogin: true,
+          token: user.token,
+        },
+      })
+      .then(async (systemConfig) => {
+        if (systemConfig?.length) {
+          await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
+        }
+      })
+  })
+
+  // 全局监听登录状态
+  useEffect(() => {
+    const cleanup = yakitAuth.onSignCCBInData((res: any) => {
+      const { ok, info, user } = res
+      if (ok) {
+        onLoginSuccess(user)
+      } else {
+        failed(info)
+      }
+    })
+    return () => {
+      cleanup()
+    }
+  }, [])
+
+  const loginContentDom = useMemo(() => {
+    // 企业版登录
+    if (enterpriseLogin) {
+      return isShowCCB ? (
+        <>
+          <YakitSpin spinning={loading}>
+            <div className="login-title-show">
+              <div className="icon-box">
+                <img src={yakitImg} className="type-icon-img" />
+              </div>
+              <div className="title-box">{t('ConfigPrivateDomain.enterpriseLogin')}</div>
+            </div>
+            <div className="login-switch-box">
+              <div className="login-icon" onClick={() => fetchLogin('ccb')}>
+                <div className="login-icon-text">{t('ConfigPrivateDomain.useCCBAccountLogin')}</div>
+                <RightOutlined className="icon-right" />
+              </div>
+              <YakitButton
+                size="max"
+                type="outline2"
+                onClick={() => {
+                  setShowCCB(!isShowCCB)
+                }}
+              >
+                {t('ConfigPrivateDomain.switchLoginMethod')}
+              </YakitButton>
+            </div>
+          </YakitSpin>
+        </>
+      ) : (
+        <>
+          <div className="login-title-show">
+            <div className="icon-box">
+              <img src={yakitImg} className="type-icon-img" />
+            </div>
+            <div className="title-box">{t('ConfigPrivateDomain.enterpriseLogin')}</div>
           </div>
-          <div className="title-box">{t('ConfigPrivateDomain.enterpriseLogin')}</div>
-        </div>
-      )}
-      <Form {...layout} form={form} name="control-hooks" onFinish={(v) => onFinish(v)} size="small">
-        <Form.Item
-          name="BaseUrl"
-          label={t('ConfigPrivateDomain.privateDomainAddress')}
-          rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgeUrl()]}
-        >
-          <YakitAutoComplete
-            ref={httpHistoryRef}
-            cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
-            initValue={defaultHttpUrl}
-            placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
-            defaultOpen={!enterpriseLogin}
-          />
-        </Form.Item>
-        {!enterpriseLogin && (
+          <Form {...layout} form={form} name="control-hooks" onFinish={(v) => onFinish(v)} size="small">
+            <Form.Item
+              name="BaseUrl"
+              label={t('ConfigPrivateDomain.privateDomainAddress')}
+              rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgeUrl()]}
+            >
+              <YakitAutoComplete
+                ref={httpHistoryRef}
+                // 固定私有域地址，不显示历史记录
+                // cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
+                initValue={defaultHttpUrl}
+                placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
+                defaultOpen={!enterpriseLogin}
+              />
+            </Form.Item>
+            <Form.Item
+              name="user_name"
+              label={t('ConfigPrivateDomain.username')}
+              rules={[{ required: true, message: t('YakitForm.requiredField') }]}
+            >
+              <YakitInput placeholder={t('ConfigPrivateDomain.enterUsername')} allowClear />
+            </Form.Item>
+            <Form.Item
+              name="pwd"
+              label={t('ConfigPrivateDomain.password')}
+              rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgePass()]}
+            >
+              <YakitInput.Password placeholder={t('ConfigPrivateDomain.enterPassword')} allowClear />
+            </Form.Item>
+            <Form.Item label={' '} colon={false} className="form-item-submit">
+              {isShowSkip && (
+                <YakitButton
+                  style={{ width: 165, marginRight: 12 }}
+                  onClick={() => {
+                    onSuccee && onSuccee()
+                  }}
+                  size="large"
+                >
+                  {t('YakitButton.skip')}
+                </YakitButton>
+              )}
+              <YakitButton
+                size="large"
+                type="primary"
+                htmlType="submit"
+                style={{ width: 165, marginLeft: isShowSkip ? 0 : 43 }}
+                loading={loading}
+              >
+                {t('YakitButton.login')}
+              </YakitButton>
+            </Form.Item>
+          </Form>
+          <div className="login-switch-box">
+            <YakitButton
+              size="max"
+              type="outline2"
+              onClick={() => {
+                setShowCCB(!isShowCCB)
+              }}
+            >
+              {t('ConfigPrivateDomain.switchLoginMethod')}
+            </YakitButton>
+          </div>
+        </>
+      )
+    } else {
+      return (
+        <Form {...layout} form={form} name="control-hooks" onFinish={(v) => onFinish(v)} size="small">
+          <Form.Item
+            name="BaseUrl"
+            label={t('ConfigPrivateDomain.privateDomainAddress')}
+            rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgeUrl()]}
+          >
+            <YakitAutoComplete
+              ref={httpHistoryRef}
+              // cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
+              disabled={true}
+              initValue={defaultHttpUrl}
+              placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
+              defaultOpen={!enterpriseLogin}
+            />
+          </Form.Item>
           <Form.Item
             name="Proxy"
             label={
@@ -312,49 +486,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
               placeholder={t('ConfigPrivateDomain.setProxy')}
             />
           </Form.Item>
-        )}
-        {enterpriseLogin && (
-          <Form.Item
-            name="user_name"
-            label={t('ConfigPrivateDomain.username')}
-            rules={[{ required: true, message: t('YakitForm.requiredField') }]}
-          >
-            <YakitInput placeholder={t('ConfigPrivateDomain.enterUsername')} allowClear />
-          </Form.Item>
-        )}
-        {enterpriseLogin && (
-          <Form.Item
-            name="pwd"
-            label={t('ConfigPrivateDomain.password')}
-            rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgePass()]}
-          >
-            <YakitInput.Password placeholder={t('ConfigPrivateDomain.enterPassword')} allowClear />
-          </Form.Item>
-        )}
-        {enterpriseLogin ? (
-          <Form.Item label={' '} colon={false} className="form-item-submit">
-            {isShowSkip && (
-              <YakitButton
-                style={{ width: 165, marginRight: 12 }}
-                onClick={() => {
-                  onSuccee && onSuccee()
-                }}
-                size="large"
-              >
-                {t('YakitButton.skip')}
-              </YakitButton>
-            )}
-            <YakitButton
-              size="large"
-              type="primary"
-              htmlType="submit"
-              style={{ width: 165, marginLeft: isShowSkip ? 0 : 43 }}
-              loading={loading}
-            >
-              {t('YakitButton.login')}
-            </YakitButton>
-          </Form.Item>
-        ) : (
           <div className="form-btns">
             <YakitButton type="outline2" onClick={(e) => onClose && onClose()}>
               {t('YakitButton.cancel')}
@@ -363,8 +494,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
               {t('YakitButton.ok')}
             </YakitButton>
           </div>
-        )}
-      </Form>
-    </div>
-  )
+        </Form>
+      )
+    }
+  }, [enterpriseLogin, defaultHttpUrl, form, isShowSkip, loading, isShowCCB, onClose, onFinish, onSuccee])
+
+  return <div className="private-domain">{loginContentDom}</div>
 })

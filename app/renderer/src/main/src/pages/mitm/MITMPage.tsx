@@ -161,7 +161,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     proxyRouteOptions,
     comparePointUrl,
   } = useProxy()
-  const [disableTrafficGuard, setDisableTrafficGuard] = useState<boolean>(false)
+  const [disableTrafficGuard, setDisableTrafficGuard] = useState<boolean>(true)
   const { t, i18n } = useI18nNamespaces(['mitm'])
 
   const mitmContent = useContext(MITMContext)

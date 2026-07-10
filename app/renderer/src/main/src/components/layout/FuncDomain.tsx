@@ -521,7 +521,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     // 退出菜单
     const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
     // EE|SE 版本
-    if (userInfo.platform === 'company') {
+    if (userInfo.platform === 'company' || userInfo.platform === 'ccb') {
       const SetUserInfoModule = () => (
         <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
       )
@@ -534,7 +534,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       if (userInfo.role === 'admin') {
         // 管理员
         if (isEnpriTraceAgent()) {
-          setUserMenu([
+          let cacheMenus: YakitMenuItemType[] = [
             ...userAvatar,
             UserMenusMap['holeCollect'],
             UserMenusMap['roleAdmin'],
@@ -543,7 +543,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             UserMenusMap['pluginAudit'],
             UserMenusMap['robotControl'],
             ...signOutMenu,
-          ])
+          ]
+          // 非原生系统登录时 不显示修改密码
+          if (userInfo.platform !== 'company') {
+            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
+          }
+          setUserMenu(cacheMenus)
         } else {
           let cacheMenus: YakitMenuItemType[] = [
             ...userAvatar,
@@ -574,6 +579,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           // IRify 版本时管理员不显示插件管理
           if (isIRify()) {
             cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
+          }
+          // 非原生系统登录时 不显示修改密码
+          if (userInfo.platform !== 'company') {
+            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
           }
           setUserMenu([...cacheMenus])
         }
@@ -618,7 +627,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           isNew = true
           cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'close-dynamic-control')
         }
-
+        // 非原生系统登录时 不显示修改密码
+        if (userInfo.platform !== 'company') {
+          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
+        }
         if (isNew) {
           setUserMenu([...cacheMenus])
         } else {
@@ -1005,7 +1017,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             >
               {userInfo.isLogin ? (
                 <>
-                  {userInfo.platform === 'company' ? (
+                  {['company', 'ccb'].includes(userInfo.platform || '') ? (
                     <div
                       className={classNames({
                         [styles['user-info']]: !dynamicConnect,
@@ -3018,7 +3030,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         type="white"
         size="large"
         visible={isShowEnpriTraceUpdateVisible}
-        title="检测到 内网版 EnpriTrace 版本升级"
+        title={`检测到 内网版 ${getReleaseEditionName()} 版本升级`}
         children={`检测到有新版本${yakitLastIntranetVersion}，请立即更新`}
         onCancel={() => {
           setShowEnpriTraceUpdateVisible(false)

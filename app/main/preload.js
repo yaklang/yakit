@@ -59,7 +59,7 @@ process.on('loaded', function () {
       syncEditBaseUrl: (baseUrl) => sendSync('sync-edit-baseUrl', { baseUrl }),
       syncUpdateUser: (user) => sendSync('sync-update-user', user),
       killRunNode: (pid) => invoke('kill-run-node', { pid }),
-      userSignOut: () => send('user-sign-out'),
+      userSignOut: (params) => send('user-sign-out', params),
       triggerDevtool: () => invoke('trigger-devtool'),
       setZoomFactor: (factor) => invoke('set-main-window-zoom-factor', factor),
       reload: () => invoke('trigger-reload'),
@@ -223,6 +223,7 @@ process.on('loaded', function () {
       editBaseUrl: (baseUrl) => invoke('edit-baseUrl', { baseUrl }),
       requestPasswordReset: () => invoke('reset-password'),
       onSignInData: (callback) => subscribe('fetch-signin-data', callback),
+      onSignCCBInData: (callback) => subscribe('fetch-signin-ccb-data', callback),
       onBaseUrlStatus: (callback) => subscribe('edit-baseUrl-status', callback),
     },
     release: {

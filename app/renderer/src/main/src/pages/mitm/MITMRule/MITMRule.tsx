@@ -196,7 +196,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       onSetRules,
       onRefreshCom,
       inMouseEnterTable = false,
-      disableTrafficGuard = false,
+      disableTrafficGuard = true,
       setDisableTrafficGuard,
     } = props
     const { t, i18n } = useI18nNamespaces(['yakitUi', 'mitm'])

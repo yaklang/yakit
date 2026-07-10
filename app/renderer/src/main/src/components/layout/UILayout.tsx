@@ -25,6 +25,7 @@ import {
   getReleaseEditionName,
   getRemoteI18nGV,
   isCommunityYakit,
+  isEnpriTrace,
   isEnpriTraceAgent,
   isEnterpriseEdition,
   isIRify,

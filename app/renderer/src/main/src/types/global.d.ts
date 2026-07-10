@@ -580,7 +580,7 @@ interface YakitBridge {
     syncEditBaseUrl: (baseUrl: string) => unknown
     syncUpdateUser: (user: UserInfoProps) => unknown
     killRunNode: (pid: number) => Promise<unknown>
-    userSignOut: () => void
+    userSignOut: (params: { isEnpriTrace?: boolean }) => void
     triggerDevtool: () => Promise<unknown>
     setZoomFactor: (factor: number) => Promise<unknown>
     reload: () => Promise<unknown>
@@ -738,9 +738,10 @@ interface YakitBridge {
     startUserSignIn: (payload: { url: string; type: string }) => void
     companySignIn: (payload: Record<string, any>) => Promise<{ next?: boolean; info?: string }>
     editBaseUrl: (baseUrl: string) => Promise<any>
-    requestPasswordReset: () => Promise<unknown>
-    onSignInData: (callback: (payload: SignInDataPayload) => void) => BridgeCleanup
-    onBaseUrlStatus: (callback: () => void) => BridgeCleanup
+    requestPasswordReset: () => Promise<any>
+    onSignInData: (callback: (payload: any) => void) => BridgeCleanup
+    onSignCCBInData: (callback: (payload: any) => void) => BridgeCleanup
+    onBaseUrlStatus: (callback: (payload: any) => void) => BridgeCleanup
   }
   release: {
     setEditionRaw: (edition: string) => Promise<unknown>
