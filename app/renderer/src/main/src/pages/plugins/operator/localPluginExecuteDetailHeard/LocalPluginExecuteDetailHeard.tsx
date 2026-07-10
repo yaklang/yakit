@@ -155,10 +155,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   })
 
   const pickExecParamsByParams = useMemoizedFn(
-    (
-      execParamsValue?: CustomPluginExecuteFormValue,
-      params: YakParamProps[] = [],
-    ): Partial<CustomPluginExecuteFormValue> => {
+    (execParamsValue?: CustomPluginExecuteFormValue, params: YakParamProps[] = []): CustomPluginExecuteFormValue => {
       if (!execParamsValue) return {}
 
       const result: CustomPluginExecuteFormValue = {}
@@ -182,7 +179,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
     // 只覆盖字段里 key 相等的
     const requiredOverride = pickExecParamsByParams(initExecParamsValue, requiredParams)
-    // @ts-ignore
     initRequiredFormValue = { ...initRequiredFormValue, ...requiredOverride }
     // Input 处理
     if (input !== undefined) {
@@ -200,7 +196,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
     // 只覆盖字段里 key 相等的
     const extraOverride = pickExecParamsByParams(initExecParamsValue, extraParamsList)
-    // @ts-ignore
     initExtraFormValue = { ...initExtraFormValue, ...extraOverride }
     // console.log('额外参数', initExtraFormValue)
     switch (plugin.Type) {

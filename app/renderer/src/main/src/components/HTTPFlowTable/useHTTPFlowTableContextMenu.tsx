@@ -562,85 +562,97 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
   ])
 
   // 插件扩展处理
-  const onPluginExtensionHandle = useMemoizedFn(({ key, keyPath, id, menu }) => {
-    let menuItemName = keyPath[0]
+  const onPluginExtensionHandle = useMemoizedFn(
+    ({
+      key,
+      keyPath,
+      id,
+      menu,
+    }: {
+      key: string
+      keyPath: string[]
+      id: Array<string | number>
+      menu: HistoryMenuData[]
+    }) => {
+      let menuItemName = keyPath[0]
 
-    const emitGetPluginEvent = () => {
-      emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
-    }
-
-    const emitPluginEvent = (child: HistoryMenuData, isExec: boolean, scriptName: string) => {
-      emiter.emit(
-        'onOpenFuzzerModal',
-        JSON.stringify({
-          text: id.join(','),
-          scriptName,
-          params: child.params,
-          isAiPlugin: child.isAiPlugin,
-          isExec,
-        }),
-      )
-    }
-
-    const getScriptName = (childKey: string) => childKey.replace(PLUGIN_PREFIX, '')
-
-    // ----- 点击获取插件 -----
-    if (key === 'Get*plug-in') {
-      emitGetPluginEvent()
-      return
-    }
-
-    // ----- 获取父菜单及其子项 -----
-    const targetMenu = menu.find((item: HistoryMenuData) => item.key === 'pluginExtension')
-    if (!targetMenu?.children?.length) {
-      return
-    }
-
-    // ----- 匹配并执行子菜单项 -----
-    try {
-      for (const child of targetMenu.children) {
-        // 点击一级菜单
-        if (menuItemName === 'pluginExtension') {
-          // 执行第一个子项 —— 有三级则执行第二个子项
-          // if (child.key === 'Get*plug-in') {
-          //   // 当子项为获取插件
-          //   emitGetPluginEvent()
-          // } else {
-          //   // 全选状态检查
-          //   if (isAllSelect) {
-          //     yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
-          //     return
-          //   }
-          //   // 当子为插件时
-          //   emitPluginEvent(child, true, getScriptName(child.key))
-          // }
-          return
-        }
-
-        // 全选状态检查
-        if (isAllSelect) {
-          yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
-          return
-        }
-
-        // 点击二级菜单
-        if (child.key === menuItemName) {
-          emitPluginEvent(child, true, getScriptName(child.key))
-          return
-        }
-
-        // 点击带参数的三级菜单，后缀匹配（如 "execCodecPlugin_测试codec" 匹配 key="测试codec"）
-        if (menuItemName.endsWith('_' + getScriptName(child.key))) {
-          const prefix = menuItemName.split('_')[0]
-          const isExec = prefix !== 'updateCodecParams'
-          emitPluginEvent(child, isExec, getScriptName(child.key))
-          return
-        }
+      const emitGetPluginEvent = () => {
+        emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
       }
-    } catch (error) {
-      yakitNotify('error', `右键插件子菜单匹配失败: ${error}`)
-    }
-  })
+
+      const emitPluginEvent = (child: HistoryMenuData, isExec: boolean, scriptName: string) => {
+        emiter.emit(
+          'onOpenFuzzerModal',
+          JSON.stringify({
+            text: id.join(','),
+            scriptName,
+            params: child.params,
+            isAiPlugin: child.isAiPlugin,
+            isExec,
+          }),
+        )
+      }
+
+      const getScriptName = (childKey: string) => childKey.replace(PLUGIN_PREFIX, '')
+
+      // ----- 点击获取插件 -----
+      if (key === 'Get*plug-in') {
+        emitGetPluginEvent()
+        return
+      }
+
+      // ----- 获取父菜单及其子项 -----
+      const targetMenu = menu.find((item: HistoryMenuData) => item.key === 'pluginExtension')
+      if (!targetMenu?.children?.length) {
+        return
+      }
+
+      // ----- 匹配并执行子菜单项 -----
+      try {
+        for (const child of targetMenu.children) {
+          // 点击一级菜单
+          if (menuItemName === 'pluginExtension') {
+            // 执行第一个子项 —— 有三级则执行第二个子项
+            // if (child.key === 'Get*plug-in') {
+            //   // 当子项为获取插件
+            //   emitGetPluginEvent()
+            // } else {
+            //   // 全选状态检查
+            //   if (isAllSelect) {
+            //     yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
+            //     return
+            //   }
+            //   // 当子为插件时
+            //   emitPluginEvent(child, true, getScriptName(child.key))
+            // }
+            return
+          }
+
+          // 全选状态检查
+          if (isAllSelect) {
+            yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
+            return
+          }
+
+          // 点击二级菜单
+          if (child.key === menuItemName) {
+            emitPluginEvent(child, true, getScriptName(child.key))
+            return
+          }
+
+          // 点击带参数的三级菜单，后缀匹配（如 "execCodecPlugin_测试codec" 匹配 key="测试codec"）
+          if (menuItemName.endsWith('_' + getScriptName(child.key))) {
+            const prefix = menuItemName.split('_')[0]
+            const isExec = prefix !== 'updateCodecParams'
+            emitPluginEvent(child, isExec, getScriptName(child.key))
+            return
+          }
+        }
+      } catch (error) {
+        yakitNotify('error', `右键插件子菜单匹配失败: ${error}`)
+      }
+    },
+  )
 
   /** 菜单自定义快捷键渲染处理事件 */
   const contextMenuKeybindingHandle = useMemoizedFn((data) => {
