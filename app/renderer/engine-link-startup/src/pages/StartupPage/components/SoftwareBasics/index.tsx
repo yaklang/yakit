@@ -277,7 +277,17 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
             help={t.draggerHelp}
             uploadFolderText={t.selectWorkspace}
             helpClassName={styles['workPathHelp']}
-            autoCompleteProps={{ placeholder: t.workspacePlaceholder, options: history, allowClear: true }}
+            autoCompleteProps={{
+              placeholder: t.workspacePlaceholder,
+              options: history,
+              allowClear: true,
+              onFocus: () => {
+                handleUserInteraction()
+              },
+              onClick: () => {
+                handleUserInteraction()
+              },
+            }}
             onChange={handlePathChange}
           />
           {currentPath && sizeMap[currentPath] !== undefined && (
