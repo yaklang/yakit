@@ -339,6 +339,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     return currentCasualTaskID.current
   })
 
+  /** 记录所有自由对话的子任务-taskID */
+  const casualSubTaskIDs = useRef<Set<string>>(new Set())
+
   /** 用户主动关闭当前问题的loading状态(自由对话) */
   const [cancelCasualLoading, setCancelCasualLoading] = useState(false)
 
@@ -347,18 +350,10 @@ function useChatIPC(params?: UseChatIPCParams) {
   const [casualTitle, setCasualTitle] = useState<string>('')
   /** 自由对话是否在进行中 */
   const [casualLoading, setCasualLoading] = useState<boolean>(false)
-  const handleUpdateCasualStatus = useMemoizedFn((type: 'add' | 'remove' | 'reset') => {
-    if (type === 'reset') {
-      setCasualLoading(false)
-      setCasualTitle('')
-      return
-    }
-
-    if (type === 'add') {
-      setCasualLoading(true)
-    } else if (type === 'remove') {
-      setCasualLoading(false)
-    }
+  const handleResetCasualStatus = useMemoizedFn(() => {
+    setCasualLoading(false)
+    setCasualTitle('')
+    return
   })
 
   const [casualChat, casualChatEvent] = useCasualChat({
@@ -367,6 +362,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     getRequest: fetchAIRequest,
     onReview: onTaskReview,
     onReviewRelease: handleCasualReviewRelease,
+    onSubTaskID: (taskID) => {
+      casualSubTaskIDs.current.add(taskID)
+    },
   })
   // #endregion
 
@@ -608,7 +606,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     handleResetNotifyMessage()
     handleResetPlanHistoryList()
     currentCasualTaskID.current = ''
-    handleUpdateCasualStatus('reset')
+    casualSubTaskIDs.current.clear()
+    handleResetCasualStatus()
     resetCurrentTaskPlanID()
     handleResetTaskStatus()
 
@@ -937,7 +936,7 @@ function useChatIPC(params?: UseChatIPCParams) {
               // 非场景状态
               handleResetFocusMode()
             }
-            handleUpdateCasualStatus('add')
+            setCasualLoading(true)
           }
           // 不能return，因为自由对话的hook要进行问题的UI渲染逻辑处理
         }
@@ -990,6 +989,8 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (res.Type === 'structured' && res.NodeId === 'timeline_item') {
           if (res.IsSync) return
+          // 自由对话子任务的time-line-item不展示
+          if (casualSubTaskIDs.current.has(res.TaskId)) return
           /* 实时时间线单条 */
           const timelineItem = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
           setReActTimelines((old) => [...old, timelineItem])
@@ -1019,9 +1020,9 @@ function useChatIPC(params?: UseChatIPCParams) {
             if (['completed', 'aborted'].includes(react_task_now_status)) {
               if (currentCasualTaskID.current && currentCasualTaskID.current === react_task_id) {
                 setCancelCasualLoading(false)
+                setCasualLoading(false)
               }
               if (currentCasualTaskID.current === react_task_id) handleResetFocusMode()
-              handleUpdateCasualStatus('remove')
               if (currentTaskPlanID.current?.taskID === react_task_id) {
                 currentTaskPlanID.current.status = react_task_now_status as AITaskStatus
                 setCancelTaskLoading(false)

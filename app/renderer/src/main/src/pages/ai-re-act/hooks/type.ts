@@ -86,6 +86,8 @@ export interface UseCasualChatParams extends UseHookBaseParams {
   onReview?: (data: AIChatQSData) => void
   /** 触发 review-release 后的回调事件 */
   onReviewRelease: (id: string) => void
+  /** 收集自由对话里的子任务-taskID */
+  onSubTaskID: (taskID: string) => void
 }
 
 export interface UseCasualChatState {
