@@ -1,5 +1,6 @@
 const { ipcMain } = require('electron')
 const FS = require('fs')
+const { parseXlsx } = require('./portScan')
 
 module.exports = {
   registerNewIPC: (win, getClient, ipcEventPre) => {

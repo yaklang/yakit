@@ -108,7 +108,7 @@ function parseXlsx(filePath) {
   return result
 }
 
-module.exports = (win, getClient) => {
+const register = (win, getClient) => {
   const handlerHelper = require('./handleStreamWithContext')
 
   const streamPortScanMap = new Map()
@@ -336,3 +336,6 @@ module.exports = (win, getClient) => {
     handlerHelper.registerHandler(win, stream, streamRecoverSimpleDetectTaskMap, token)
   })
 }
+
+module.exports = register
+module.exports.parseXlsx = parseXlsx

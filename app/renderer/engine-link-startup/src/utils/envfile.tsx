@@ -131,6 +131,8 @@ export const getLocalI18nGV = () => {
       return LocalGVS.eeIRifyI18n
     case PRODUCT_RELEASE_EDITION.MEMFIT:
       return LocalGVS.ceAII18n
+    default:
+      return LocalGVS.ceI18n
   }
 }
 

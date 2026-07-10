@@ -467,13 +467,6 @@ module.exports = {
       return calcSize(dirPath)
     })
 
-    ipcMain.handle(ipcEventPre + 'select-directory', async () => {
-      const { dialog } = require('electron')
-      const result = await dialog.showOpenDialog({ properties: ['openDirectory', 'createDirectory'] })
-      if (result.canceled || !result.filePaths.length) return ''
-      return result.filePaths[0]
-    })
-
     // 软件启动后判断是 CE 版本还是 EE 版本
     ipcMain.handle(ipcEventPre + 'is-enpritrace-to-domain', (event, flag) => {
       assertTrustedAppSender(event, ipcEventPre + 'is-enpritrace-to-domain')

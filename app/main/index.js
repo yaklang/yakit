@@ -660,7 +660,7 @@ if (!shouldAbortStartupForDebugFlags) {
     // 从 config.json 同步语言设置到 localCache，确保首次启动也能正确读取
     try {
       const cfg = getConfig()
-      if (cfg && cfg.mode) {
+      if (cfg) {
         if (cfg.mode) {
           const { key, value } = JSON.parse(cfg.mode)
           setLocalCache(key, value)

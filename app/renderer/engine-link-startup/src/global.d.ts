@@ -128,7 +128,6 @@ interface YakitBridge {
     setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
     relaunchApp: () => Promise<unknown>
     getDirSize: (dirPath: string) => Promise<number>
-    selectDirectory: () => Promise<string>
   }
   theme: {
     setTheme: (theme: 'light' | 'dark') => Promise<unknown>
