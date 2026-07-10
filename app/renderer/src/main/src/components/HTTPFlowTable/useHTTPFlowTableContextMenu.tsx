@@ -36,6 +36,7 @@ import {
 import type { HistoryMenuData, HTTPFlow } from './HTTPFlowTable.constants'
 import { isHTTPFlowFavorite } from './HTTPFlowTable.utils'
 import style from './HTTPFlowTable.module.scss'
+import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -61,7 +62,6 @@ export interface UseHTTPFlowTableContextMenuOptions {
   setCompareRight: (value: { content: string; language: string }) => void
   getUrlWithoutQuery: (url?: string) => string
   getCodecHistoryPlugin: () => HistoryMenuData[]
-  getCodecAIPlugin: () => HistoryMenuData[]
   codecMultipleHistoryPluginCom: unknown
   codecSingleHistoryPluginCom: unknown
   selectedRowKeysCom: unknown
@@ -104,7 +104,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     setCompareRight,
     getUrlWithoutQuery,
     getCodecHistoryPlugin,
-    getCodecAIPlugin,
     codecMultipleHistoryPluginCom,
     codecSingleHistoryPluginCom,
     selectedRowKeysCom,
@@ -562,6 +561,99 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     total,
   ])
 
+  // 插件扩展处理
+  const onPluginExtensionHandle = useMemoizedFn(
+    ({
+      key,
+      keyPath,
+      id,
+      menu,
+    }: {
+      key: string
+      keyPath: string[]
+      id: Array<string | number>
+      menu: HistoryMenuData[]
+    }) => {
+      let menuItemName = keyPath[0]
+
+      const emitGetPluginEvent = () => {
+        emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
+      }
+
+      const emitPluginEvent = (child: HistoryMenuData, isExec: boolean, scriptName: string) => {
+        emiter.emit(
+          'onOpenFuzzerModal',
+          JSON.stringify({
+            text: id.join(','),
+            scriptName,
+            params: child.params,
+            isAiPlugin: child.isAiPlugin,
+            isExec,
+          }),
+        )
+      }
+
+      const getScriptName = (childKey: string) => childKey.replace(PLUGIN_PREFIX, '')
+
+      // ----- 点击获取插件 -----
+      if (key === 'Get*plug-in') {
+        emitGetPluginEvent()
+        return
+      }
+
+      // ----- 获取父菜单及其子项 -----
+      const targetMenu = menu.find((item: HistoryMenuData) => item.key === 'pluginExtension')
+      if (!targetMenu?.children?.length) {
+        return
+      }
+
+      // ----- 匹配并执行子菜单项 -----
+      try {
+        for (const child of targetMenu.children) {
+          // 点击一级菜单
+          if (menuItemName === 'pluginExtension') {
+            // 执行第一个子项 —— 有三级则执行第二个子项
+            // if (child.key === 'Get*plug-in') {
+            //   // 当子项为获取插件
+            //   emitGetPluginEvent()
+            // } else {
+            //   // 全选状态检查
+            //   if (isAllSelect) {
+            //     yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
+            //     return
+            //   }
+            //   // 当子为插件时
+            //   emitPluginEvent(child, true, getScriptName(child.key))
+            // }
+            return
+          }
+
+          // 全选状态检查
+          if (isAllSelect) {
+            yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
+            return
+          }
+
+          // 点击二级菜单
+          if (child.key === menuItemName) {
+            emitPluginEvent(child, true, getScriptName(child.key))
+            return
+          }
+
+          // 点击带参数的三级菜单，后缀匹配（如 "execCodecPlugin_测试codec" 匹配 key="测试codec"）
+          if (menuItemName.endsWith('_' + getScriptName(child.key))) {
+            const prefix = menuItemName.split('_')[0]
+            const isExec = prefix !== 'updateCodecParams'
+            emitPluginEvent(child, isExec, getScriptName(child.key))
+            return
+          }
+        }
+      } catch (error) {
+        yakitNotify('error', `右键插件子菜单匹配失败: ${error}`)
+      }
+    },
+  )
+
   /** 菜单自定义快捷键渲染处理事件 */
   const contextMenuKeybindingHandle = useMemoizedFn((data) => {
     const menus: any = []
@@ -610,7 +702,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     if (rowData) {
       setSelected(rowData)
     }
-    let rowContextmenu: any[] = []
+    let rowContextmenu: HistoryMenuData[] = []
     // 当存在history勾选时，替换为批量菜单
     if (selectedRowKeys.length > 0) {
       rowContextmenu = getBatchContextMenu()
@@ -623,46 +715,16 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         width: 180,
         parentTitleClick: true,
         data: rowContextmenu,
-        // openKeys:['复制为 Yak PoC 模版',],
         onClick: ({ key, keyPath }) => {
           if (selectedRowKeys.length > 0) {
             onMultipleClick(key, keyPath)
             return
           }
-          if (keyPath.length === 2) {
-            const menuName = keyPath[1]
-            let menuItemName = keyPath[0]
-            if (menuName === 'pluginExtension') {
-              // 没有插件 下载codec插件
-              if (key === 'Get*plug-in' || key === 'Get*ai-plug-in') {
-                emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
-                return
-              }
-              if (isAllSelect) {
-                yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
-                return
-              }
-              try {
-                rowContextmenu.forEach((item) => {
-                  if (item.key === menuName && Array.isArray(item.children)) {
-                    item.children.forEach((itemIn: HistoryMenuData) => {
-                      if (itemIn.key === menuItemName) {
-                        emiter.emit(
-                          'onOpenFuzzerModal',
-                          JSON.stringify({
-                            text: `${rowData.Id}`,
-                            scriptName: menuItemName,
-                            params: itemIn.params,
-                            isAiPlugin: itemIn?.isAiPlugin,
-                          }),
-                        )
-                      }
-                    })
-                  }
-                })
-              } catch (error) {}
-              return
-            }
+
+          const menuName = keyPath[keyPath.length - 1]
+          if (menuName.startsWith('pluginExtension')) {
+            onPluginExtensionHandle({ key, keyPath, id: [rowData.Id], menu: rowContextmenu })
+            return
           }
 
           if (keyPath.includes('packetScan')) {
@@ -801,48 +863,13 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
   const onMultipleClick = useMemoizedFn((key: string, keyPath: string[]) => {
     const batchContextMenu = getBatchContextMenu()
-    if (keyPath.length === 2) {
-      const menuName = keyPath[1]
-      let menuItemName = keyPath[0]
-      if (menuName === 'pluginExtension') {
-        // 没有插件 下载codec插件
-        if (key === 'Get*plug-in' || key === 'Get*ai-plug-in') {
-          emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
-          return
-        }
-        if (isAllSelect) {
-          yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
-          return
-        }
-        try {
-          batchContextMenu.forEach((item) => {
-            if (item.key === menuName && Array.isArray(item.children)) {
-              item.children.forEach((itemIn: HistoryMenuData) => {
-                if (itemIn.key === menuItemName) {
-                  emiter.emit(
-                    'onOpenFuzzerModal',
-                    JSON.stringify({
-                      text: selectedRowKeys.join(','),
-                      scriptName: menuItemName,
-                      params: itemIn.params,
-                      isAiPlugin: itemIn?.isAiPlugin,
-                    }),
-                  )
-                }
-              })
-            }
-          })
-          setSelectedRowKeys([])
-          setSelectedRows([])
-        } catch (error) {
-          debugToPrintLogs({
-            page: 'HTTPFlowTable',
-            fun: 'onMultipleClick',
-            content: error,
-          })
-        }
-        return
-      }
+
+    const menuName = keyPath[keyPath.length - 1]
+    if (menuName.startsWith('pluginExtension')) {
+      onPluginExtensionHandle({ key, keyPath, id: selectedRowKeys, menu: batchContextMenu })
+      setSelectedRowKeys([])
+      setSelectedRows([])
+      return
     }
 
     if (keyPath.includes('packetScan')) {

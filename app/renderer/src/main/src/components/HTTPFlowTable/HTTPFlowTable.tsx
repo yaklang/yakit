@@ -131,6 +131,7 @@ import {
   getRunTimeIdObj,
   filterHTTPFlowsByFavoriteAndTags,
 } from './HTTPFlowTable.utils'
+import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
 
 //导出给其他组件用
 export * from './HTTPFlowTable.constants'
@@ -1662,20 +1663,42 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
 
   const addIconLabel = useMemoizedFn((data: codecHistoryPluginProps[]) => {
-    return data.map((item) => ({
-      ...item,
-      label: (
-        <>
-          {item.isAiPlugin && (
-            <>
-              <IconSolidAIIcon className={'ai-plugin-menu-icon-default'} />
-              <IconSolidAIWhiteIcon className={'ai-plugin-menu-icon-hover'} />
-            </>
-          )}
-          {item.key}
-        </>
-      ),
-    }))
+    return data.map((item) => {
+      const baseItem = {
+        ...item,
+        key: `${PLUGIN_PREFIX}${item.key}`,
+        label: (
+          <>
+            {item.isAiPlugin && (
+              <>
+                <IconSolidAIIcon className={'ai-plugin-menu-icon-default'} />
+                <IconSolidAIWhiteIcon className={'ai-plugin-menu-icon-hover'} />
+              </>
+            )}
+            {item.key}
+          </>
+        ),
+      }
+
+      // 如果有参数，添加子菜单
+      if (item?.params && item.params.length > 0) {
+        return {
+          ...baseItem,
+          children: [
+            {
+              key: `execCodecPlugin_${item.key}`,
+              label: t('YakitEditor.executePlugin'),
+            },
+            {
+              key: `updateCodecParams_${item.key}`,
+              label: t('YakitEditor.modifyParameters'),
+            },
+          ],
+        }
+      }
+
+      return baseItem
+    })
   })
   const getCodecHistoryPlugin = useMemoizedFn(() => {
     if (selectedRowKeys.length > 1) {
@@ -1698,56 +1721,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         : [
             {
               key: 'Get*plug-in',
-              label: (
-                <>
-                  <CloudDownloadIcon style={{ marginRight: 4 }} />
-                  {t('HTTPFlowTable.getPlugin')}
-                </>
-              ),
-            },
-          ]
-    }
-  })
-
-  const getCodecAIPlugin = useMemoizedFn(() => {
-    if (selectedRowKeys.length > 1) {
-      const codecMultipleHistoryAIPlugin = codecMultipleHistoryPlugin
-        .filter((item) => item.isAiPlugin)
-        .map((item) => {
-          // 此处为了防止菜单key值重复
-          return {
-            ...item,
-            key: `aiplugin-${item.key}`,
-          }
-        })
-      return codecMultipleHistoryAIPlugin.length > 0
-        ? codecMultipleHistoryAIPlugin
-        : [
-            {
-              key: 'Get*ai-plug-in',
-              label: (
-                <>
-                  <CloudDownloadIcon style={{ marginRight: 4 }} />
-                  {t('HTTPFlowTable.getPlugin')}
-                </>
-              ),
-            },
-          ]
-    } else {
-      const codecSingleHistoryAIPlugin = codecSingleHistoryPlugin
-        .filter((item) => item.isAiPlugin)
-        .map((item) => {
-          // 此处为了防止菜单key值重复
-          return {
-            ...item,
-            key: `aiplugin-${item.key}`,
-          }
-        })
-      return codecSingleHistoryAIPlugin.length > 0
-        ? codecSingleHistoryAIPlugin
-        : [
-            {
-              key: 'Get*ai-plug-in',
               label: (
                 <>
                   <CloudDownloadIcon style={{ marginRight: 4 }} />
@@ -2057,7 +2030,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setCompareRight,
     getUrlWithoutQuery,
     getCodecHistoryPlugin,
-    getCodecAIPlugin,
     codecMultipleHistoryPluginCom,
     codecSingleHistoryPluginCom,
     selectedRowKeysCom,

@@ -17,6 +17,11 @@ import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecu
 import { useMemoizedFn } from 'ahooks'
 import { YakitDrawerProps } from '../yakitUI/YakitDrawer/YakitDrawerType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
+import { OutlineChevronupIcon } from '@/assets/icon/outline'
+import classNames from 'classnames'
+import { SolidCheckIcon } from '@/assets/icon/solid'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import styles from './PluginHasParamsDrawer.module.scss'
 
 interface PluginHasParamsDrawerProps {
@@ -185,6 +190,155 @@ const PluginHasParamsDrawer = React.memo((props: PluginHasParamsDrawerProps) => 
   )
 })
 export default PluginHasParamsDrawer
+
+interface PluginHasParamsModalProps {
+  visible: boolean
+  pluginType: string
+  scriptName: string
+  initFormValue: CustomPluginExecuteFormValue
+  requiredParams: YakParamProps[]
+  groupParams: YakExtraParamProps[]
+  onCloseParamsModal: (visible: boolean) => void
+  onOkParamsModal: (save: boolean, exec: boolean, execParams: YakExecutorParam[]) => void
+}
+const PluginHasParamsModalExecCheck = 'PluginHasParamsModalExecCheck'
+export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps) => {
+  const {
+    visible,
+    pluginType,
+    scriptName,
+    initFormValue,
+    requiredParams,
+    groupParams,
+    onCloseParamsModal,
+    onOkParamsModal,
+  } = props
+  const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi'])
+
+  const pluginHasParamsFormRef = useRef<PluginHasParamsFormRefProps>()
+
+  const [execCheck, setExecCheck] = useState<string>('execute_and_save')
+  const [showExecDropdown, setShowExecDropdown] = useState<boolean>(false)
+  const execdropdownRef = useRef<HTMLDivElement>(null)
+
+  const handleStartExecBefore = useMemoizedFn(() => {
+    setRemoteValue(PluginHasParamsModalExecCheck, execCheck)
+    if (execCheck === 'execute_and_save') {
+      execOrSave(true, true)
+    } else if (execCheck === 'executeWithoutSaving') {
+      execOrSave(false, true)
+    }
+  })
+
+  useEffect(() => {
+    if (visible) {
+      getRemoteValue(PluginHasParamsModalExecCheck).then((e) => {
+        if (!!e) {
+          setExecCheck(e)
+        } else {
+          setExecCheck('execute_and_save')
+        }
+      })
+      // dropdown 点击外部关闭
+      const handleClickOutside = (event) => {
+        if (execdropdownRef.current && !execdropdownRef.current.contains(event.target)) {
+          setShowExecDropdown(false)
+        }
+      }
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [visible])
+
+  const execOrSave = useMemoizedFn((save: boolean, exec: boolean) => {
+    if (pluginHasParamsFormRef.current) {
+      pluginHasParamsFormRef.current.onSubmit().then((values) => {
+        if (values) {
+          const saveParams: CustomPluginExecuteFormValue = { ...values }
+          const execParams: YakExecutorParam[] = []
+          Object.keys(saveParams).forEach((key) => {
+            if (saveParams[key] !== false) {
+              execParams.push({ Key: key, Value: saveParams[key] })
+            }
+          })
+          onOkParamsModal(save, exec, execParams)
+        }
+      })
+    }
+  })
+
+  return (
+    <YakitModal
+      visible={visible}
+      width={'max(700px, 50%)'}
+      destroyOnClose={true}
+      onCancel={() => onCloseParamsModal(false)}
+      title={scriptName}
+      footerStyle={{ overflow: 'visible' }}
+      footer={
+        <div className={styles['pluginHasParamsModal-footer']}>
+          <YakitButton
+            type="outline2"
+            onClick={() => {
+              execOrSave(true, false)
+            }}
+          >
+            {t('YakitButton.save')}
+          </YakitButton>
+          <div className={styles['exec-operation-btn-wrapper']} ref={execdropdownRef}>
+            <div className={styles['operation-btn-left']} onClick={handleStartExecBefore}>
+              {execCheck === 'execute_and_save'
+                ? t('PluginHasParamsModal.execute_and_save')
+                : t('PluginHasParamsModal.executeWithoutSaving')}
+            </div>
+            <div className={styles['operation-btn-right']} onClick={() => setShowExecDropdown(!showExecDropdown)}>
+              <OutlineChevronupIcon
+                className={classNames(styles['title-icon'], {
+                  [styles['rotate-180']]: showExecDropdown,
+                })}
+              />
+            </div>
+            <div
+              className={styles['operation-dropdown-wrapper']}
+              style={{ display: showExecDropdown ? 'block' : 'none' }}
+            >
+              {[
+                { label: t('PluginHasParamsModal.execute_and_save'), key: 'execute_and_save' },
+                { label: t('PluginHasParamsModal.executeWithoutSaving'), key: 'executeWithoutSaving' },
+              ].map((item) => (
+                <div
+                  className={classNames(styles['operation-dropdown-list-item'], {
+                    [styles['active']]: execCheck === item.key,
+                  })}
+                  onClick={() => {
+                    setExecCheck(item.key)
+                    setShowExecDropdown(!showExecDropdown)
+                  }}
+                  key={item.key}
+                >
+                  <span>{item.label}</span>
+                  {execCheck === item.key && <SolidCheckIcon className={styles['check-icon']} />}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <div className={styles['pluginHasParamsModal-cont']}>
+        <PluginHasParamsForm
+          ref={pluginHasParamsFormRef}
+          pluginType={pluginType}
+          initFormValue={initFormValue}
+          requiredParams={requiredParams}
+          groupParams={groupParams}
+        />
+      </div>
+    </YakitModal>
+  )
+})
 
 interface PluginHasParamsFormRefProps {
   onSubmit: () => Promise<CustomPluginExecuteFormValue | undefined>

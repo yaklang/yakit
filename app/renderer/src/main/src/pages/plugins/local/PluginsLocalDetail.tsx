@@ -25,7 +25,19 @@ export const convertGroupParam = (filter: PluginFilterParams, extra: { group: Ya
 }
 
 export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((props) => {
-  const { pageWrapId = '', executorShow, plugin, headExtraNode, wrapperClassName = '', linkPluginConfig } = props
+  const {
+    pageWrapId = '',
+    executorShow,
+    plugin,
+    headExtraNode,
+    wrapperClassName = '',
+    linkPluginConfig,
+    initExecParamsValue,
+    code,
+    input,
+    noHTTPRequestTemplate,
+    autoExecute,
+  } = props
 
   // 激活tab
   const [activeKey, setActiveKey] = useState<string>('execute')
@@ -44,7 +56,16 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
         <TabPane tab="执行" key="execute">
           <div className={styles['plugin-execute-wrapper']}>
             {executorShow ? (
-              <LocalPluginExecute plugin={plugin} headExtraNode={headExtraNode} linkPluginConfig={linkPluginConfig} />
+              <LocalPluginExecute
+                plugin={plugin}
+                headExtraNode={headExtraNode}
+                linkPluginConfig={linkPluginConfig}
+                initExecParamsValue={initExecParamsValue}
+                code={code}
+                input={input}
+                noHTTPRequestTemplate={noHTTPRequestTemplate}
+                autoExecute={autoExecute}
+              />
             ) : (
               <YakitSpin wrapperClassName={styles['plugin-execute-spin']} />
             )}

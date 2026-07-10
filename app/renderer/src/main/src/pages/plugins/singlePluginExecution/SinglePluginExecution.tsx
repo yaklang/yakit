@@ -24,6 +24,10 @@ import classNames from 'classnames'
 import styles from './SinglePluginExecution.module.scss'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
+import { PageNodeItemProps, PluginOpPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { CustomPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
   // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -50,6 +54,20 @@ const SinglePluginExecutionTab: YakitTabsProps[] = [
 ]
 
 export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React.memo((props) => {
+  const { queryPagesDataById } = usePageInfo(
+    (s) => ({
+      queryPagesDataById: s.queryPagesDataById,
+    }),
+    shallow,
+  )
+  const initPageInfo = useMemoizedFn(() => {
+    const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Plugin_OP, props.pageId)
+    if (currentItem) {
+      return currentItem.pageParamsInfo.pluginOpPageInfo
+    }
+    return undefined
+  })
+  const [pageInfo, setPageInfo] = useState<PluginOpPageInfoProps | undefined>(initPageInfo())
   const [yakScriptId, setYakScriptId] = useState<number>(props.yakScriptId)
   const [refreshList, setRefreshList] = useState<boolean>(false)
 
@@ -205,6 +223,16 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
   )
   // #endregion
 
+  const initExecParamsValue = useMemo(() => {
+    if (pageInfo?.ExecParams) {
+      return pageInfo?.ExecParams.reduce<CustomPluginExecuteFormValue>((acc, { Key, Value }) => {
+        if (Key) acc[Key] = Value
+        return acc
+      }, {})
+    }
+    return undefined
+  }, [pageInfo])
+
   if (!plugin) return null
   return (
     <div ref={singlePluginExecutionRef} className={styles['single-plugin-wrapper']}>
@@ -236,6 +264,11 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
           plugin={plugin}
           headExtraNode={headExtraNode}
           linkPluginConfig={linkPluginConfig}
+          initExecParamsValue={initExecParamsValue}
+          code={pageInfo?.Code || ''}
+          input={pageInfo?.Input || ''}
+          noHTTPRequestTemplate={pageInfo?.noHTTPRequestTemplate}
+          autoExecute={pageInfo?.autoExecute}
         />
       </PluginLocalListDetails>
 

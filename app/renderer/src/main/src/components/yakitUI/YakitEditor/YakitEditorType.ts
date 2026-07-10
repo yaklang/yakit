@@ -124,9 +124,9 @@ export interface OtherMenuListProps {
     onRun: (
       editor: YakitIMonacoEditor,
       key: string,
-      pageId?: string,
       data?: string | boolean,
       params?: YakParamProps[],
+      isExec?: boolean,
     ) => any
     /** Order菜单权重排序 0为第一个 1为第二个... 负数统一放最后 */
     order?: number

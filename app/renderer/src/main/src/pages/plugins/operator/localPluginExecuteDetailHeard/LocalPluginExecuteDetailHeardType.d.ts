@@ -32,6 +32,11 @@ export interface PluginExecuteDetailHeardProps {
   infoExtra?: ReactNode
   /** 隐藏更新按钮 */
   hiddenUpdateBtn?: boolean
+  initExecParamsValue?: CustomPluginExecuteFormValue
+  code?: string
+  input?: string
+  noHTTPRequestTemplate?: boolean
+  autoExecute?: boolean
 }
 
 export interface YakExtraParamProps {
@@ -79,7 +84,7 @@ export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
 }
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
-  [key: string]: number | string | boolean | string[] | Uint8Array | KVPair[] | number[]
+  [key: string]: number | string | boolean | string[] | Uint8Array | Buffer | KVPair[] | number[]
 }
 
 export interface FormContentItemByTypeProps extends JsonFormSchemaListWrapper {

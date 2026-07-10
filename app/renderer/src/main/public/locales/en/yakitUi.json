@@ -322,6 +322,8 @@
   },
   "YakitEditor": {
     "getPlugin": "Get Plugin",
+    "executePlugin": "Execute Plugin",
+    "modifyParameters": "Modify Parameters",
     "cut": "Cut",
     "copy": "Copy",
     "paste": "Paste",

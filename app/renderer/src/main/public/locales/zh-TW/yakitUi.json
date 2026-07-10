@@ -322,6 +322,8 @@
   },
   "YakitEditor": {
     "getPlugin": "獲取外掛",
+    "executePlugin": "執行插件",
+    "modifyParameters": "修改參數",
     "cut": "剪下",
     "copy": "複製",
     "paste": "貼上",

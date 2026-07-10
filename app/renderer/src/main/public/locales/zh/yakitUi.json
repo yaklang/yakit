@@ -322,6 +322,8 @@
   },
   "YakitEditor": {
     "getPlugin": "获取插件",
+    "executePlugin": "执行插件",
+    "modifyParameters": "修改参数",
     "cut": "剪切",
     "copy": "复制",
     "paste": "粘贴",

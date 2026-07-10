@@ -66,6 +66,11 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     isHiddenUUID,
     infoExtra,
     hiddenUpdateBtn,
+    initExecParamsValue,
+    code,
+    input,
+    noHTTPRequestTemplate,
+    autoExecute,
   } = props
 
   const [form] = Form.useForm()
@@ -136,30 +141,62 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   const initFormValue = useMemoizedFn(() => {
     initRequiredFormValue()
     initExtraFormValue()
+
+    if (autoExecute) {
+      setTimeout(() => {
+        form
+          .validateFields()
+          .then(onStartExecute)
+          .catch(() => {
+            setIsExpand(true)
+          })
+      }, 500)
+    }
   })
+
+  const pickExecParamsByParams = useMemoizedFn(
+    (execParamsValue?: CustomPluginExecuteFormValue, params: YakParamProps[] = []): CustomPluginExecuteFormValue => {
+      if (!execParamsValue) return {}
+
+      const result: CustomPluginExecuteFormValue = {}
+      params.forEach((param) => {
+        const { Field, TypeVerbose } = param
+        if (!(Field in execParamsValue)) return
+        result[Field] = getValueByType(execParamsValue[Field], TypeVerbose)
+      })
+      return result
+    },
+  )
   const initRequiredFormValue = useMemoizedFn(() => {
     // 必填参数
-    let initRequiredFormValue: CustomPluginExecuteFormValue = { ...defPluginExecuteFormValue, requestType: 'input' }
+    let initRequiredFormValue: CustomPluginExecuteFormValue = {
+      ...defPluginExecuteFormValue,
+      requestType: 'input',
+    }
     requiredParams.forEach((ele) => {
-      const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-      initRequiredFormValue = {
-        ...initRequiredFormValue,
-        [ele.Field]: value,
-      }
+      initRequiredFormValue[ele.Field] = getValueByType(ele.DefaultValue, ele.TypeVerbose)
     })
-    form.setFieldsValue({ ...initRequiredFormValue })
+    // 只覆盖字段里 key 相等的
+    const requiredOverride = pickExecParamsByParams(initExecParamsValue, requiredParams)
+    initRequiredFormValue = { ...initRequiredFormValue, ...requiredOverride }
+    // Input 处理
+    if (input !== undefined) {
+      initRequiredFormValue.Input = input
+    }
+    // console.log('必填参数', initRequiredFormValue)
+    form.setFieldsValue(initRequiredFormValue)
   })
   const initExtraFormValue = useMemoizedFn(() => {
     // 额外参数
     let initExtraFormValue: CustomPluginExecuteFormValue = {}
     const extraParamsList = plugin.Params?.filter((ele) => !ele.Required) || []
     extraParamsList.forEach((ele) => {
-      const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-      initExtraFormValue = {
-        ...initExtraFormValue,
-        [ele.Field]: value,
-      }
+      initExtraFormValue[ele.Field] = getValueByType(ele.DefaultValue, ele.TypeVerbose)
     })
+    // 只覆盖字段里 key 相等的
+    const extraOverride = pickExecParamsByParams(initExecParamsValue, extraParamsList)
+    initExtraFormValue = { ...initExtraFormValue, ...extraOverride }
+    // console.log('额外参数', initExtraFormValue)
     switch (plugin.Type) {
       case 'yak':
       case 'lua':
@@ -238,7 +275,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   const onStartExecute = useMemoizedFn((value) => {
     let yakExecutorParams: YakExecutorParam[] = []
     yakExecutorParams = getYakExecutorParam({ ...value, ...customExtraParamsValue })
-    const input = value['Input']
     const result = getJsonSchemaListResult(jsonSchemaListRef.current)
 
     if (result.jsonSchemaError.length > 0) {
@@ -253,9 +289,9 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     })
 
     let executeParams: DebugPluginRequest = {
-      Code: '',
+      Code: code || '',
       PluginType: plugin.Type,
-      Input: input,
+      Input: value['Input'],
       HTTPRequestTemplate: {
         ...extraParamsValue,
         IsHttps: !!value.IsHttps,
@@ -265,8 +301,13 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         RawHTTPRequest: value.rawHTTPRequest ? Buffer.from(value.rawHTTPRequest, 'utf8') : Buffer.from('', 'utf8'),
       },
       ExecParams: yakExecutorParams,
-      LinkPluginConfig: linkPluginConfig,
       PluginName: plugin.ScriptName,
+    }
+    if (linkPluginConfig) {
+      executeParams.LinkPluginConfig = linkPluginConfig
+    }
+    if (noHTTPRequestTemplate) {
+      delete executeParams.HTTPRequestTemplate
     }
     debugPluginStreamEvent.reset()
     setRuntimeId('')

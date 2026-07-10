@@ -20,6 +20,7 @@ import { configManagementTabType } from '.'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
 import i18n from '@/i18n/i18n'
+import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 const tOriginal = i18n.getFixedT(null, 'store')
 
 /**
@@ -104,6 +105,8 @@ interface PageParamsInfoProps {
   configManagementParams?: {
     tab?: configManagementTabType
   }
+  /** 插件执行页（Plugin_OP） */
+  pluginOpPageInfo?: PluginOpPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -328,6 +331,17 @@ export interface YakRunnerScanHistoryPageInfoProps {
 
 export interface RuleManagementPageInfoProps {
   RuleNames?: string[]
+}
+
+export interface PluginOpPageInfoProps {
+  pluginId: string
+  pluginName: string
+  Input: string
+  ExecParams: YakExecutorParam[]
+  Code: string
+  PluginType: string
+  autoExecute: boolean
+  noHTTPRequestTemplate: boolean
 }
 interface PageInfoStoreProps {
   pages: Map<string, PageProps>

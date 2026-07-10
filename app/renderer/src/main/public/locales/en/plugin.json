@@ -78,6 +78,10 @@
     "parameter_Settings": "Parameter Settings: ",
     "jsonSchemaValidateFailed": "JSON schema validation failed"
   },
+  "PluginHasParamsModal": {
+    "execute_and_save": "Execute and Save",
+    "executeWithoutSaving": "Execute Without Saving"
+  },
   "PluginEditor": {
     "newPlugin": "New Plugin",
     "helpDoc": "Help Documentation",

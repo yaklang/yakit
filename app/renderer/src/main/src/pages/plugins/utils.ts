@@ -1064,7 +1064,7 @@ export interface DebugPluginRequest {
   Code: string
   PluginType: string
   Input: string
-  HTTPRequestTemplate: HTTPRequestBuilderParams
+  HTTPRequestTemplate?: HTTPRequestBuilderParams
   ExecParams: KVPair[]
   /**插件UI联动相关参数*/
   LinkPluginConfig?: HybridScanPluginConfig

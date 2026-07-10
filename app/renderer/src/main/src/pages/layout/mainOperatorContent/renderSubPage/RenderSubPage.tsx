@@ -13,7 +13,7 @@ const FuzzerSequenceWrapper = React.lazy(() => import('@/pages/fuzzer/WebFuzzerP
 
 export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
   (props) => {
-    const { renderSubPage, route, pluginId, selectSubMenuId = '0' } = props
+    const { renderSubPage, route, selectSubMenuId = '0' } = props
     const pageRenderListRef = useRef<Map<string, boolean>>(new Map<string, boolean>())
     const pageRenderList = useMemo(() => {
       if (selectSubMenuId === '0') return pageRenderListRef.current
@@ -36,7 +36,7 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
                   }}
                   className={styles['page-body']}
                 >
-                  <PageItem routeKey={route} yakScriptId={+(pluginId || 0)} params={subItem.pageParams} />
+                  <PageItem routeKey={route} params={subItem.pageParams} />
                 </div>
               </React.Fragment>
             )
@@ -112,10 +112,9 @@ const PageItem: React.FC<PageItemProps> = React.memo(
     return <RouteToPageItem {...props} />
   },
   (preProps, nextProps) => {
-    if (preProps.routeKey === nextProps.routeKey) {
-      return true
-    }
-    return false
+    if (preProps.routeKey !== nextProps.routeKey) return false
+    if (preProps.yakScriptId !== nextProps.yakScriptId) return false
+    return true
   },
 )
 
