@@ -43,6 +43,7 @@ const asyncStartDynamicControl = (win, params) => {
   const { note, secret, server, gen_tls_crt } = params
   return new Promise((resolve, reject) => {
     try {
+      let settled = false
       const subprocess = childProcess.spawn(
         getLocalYaklangEngine(),
         [
@@ -61,33 +62,47 @@ const asyncStartDynamicControl = (win, params) => {
           stdio: ['ignore', 'pipe', 'pipe'],
         },
       )
+
+      const timeoutId = setTimeout(() => {
+        if (settled) return
+        settled = true
+        ppid = null
+        try {
+          subprocess.kill()
+        } catch (e) {}
+        reject(new Error('启动动态控制超时（30s内未收到 yak grpc ok）'))
+      }, 30000)
+
       subprocess.stdout.on('data', (stdout) => {
         const output = stdout.toString('utf-8')
         console.log('start-data', output)
         if (output.includes('yak grpc ok')) {
+          if (settled) return
+          settled = true
+          clearTimeout(timeoutId)
+          // 当前启用服务id
+          ppid = subprocess.pid
           setTimeout(() => {
             resolve({ alive: false })
           }, 1000)
-          // 当前启用服务id
-          ppid = subprocess.pid
-        }
-      })
-      subprocess.stderr.on('data', (stderr) => {
-        if (stderr) {
-          ppid = null
-          reject(stderr.toString('utf-8'))
         }
       })
       subprocess.on('error', (err) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeoutId)
         if (err) {
           ppid = null
           reject(err)
         }
       })
 
-      subprocess.on('close', async (e) => {
-        if (e) reject(e)
+      subprocess.on('close', (e) => {
         ppid = null
+        if (settled) return
+        settled = true
+        clearTimeout(timeoutId)
+        if (e) reject(e)
       })
     } catch (e) {
       reject(e)
