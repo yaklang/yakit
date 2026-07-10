@@ -225,8 +225,8 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       type: 'white',
       title: t.switchTitle,
       content: <div style={{ padding: 15 }}>{message}</div>,
-      okText: t.ok,
-      cancelText: t.cancel,
+      onOkText: t.ok,
+      onCancelText: t.cancel,
       onOk: () => {
         doConfirm()
       },

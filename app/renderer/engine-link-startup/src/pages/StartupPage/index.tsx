@@ -63,9 +63,10 @@ import yakitSELogo from '@/assets/yakitSELogo.png'
 import yakitSEDarkLogo from '@/assets/yakitSEDarkLogo.png'
 import irifyRight from '@/assets/irify-right.png'
 import yakitRight from '@/assets/yakit-right.png'
+import memfitRight from '@/assets/memfit-right.webm'
+import memfitRightDark from '@/assets/memfit-right-dark.webm'
 import { SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon } from '@/assets/colors'
 import { useTheme } from '@/hooks/useTheme'
-import { MemfitAnimatedBg } from '@/components/react-bits/memfit-animated-bg'
 import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
@@ -1174,9 +1175,10 @@ export const StartupPage: React.FC = () => {
     if (isIRify()) {
       return <img src={irifyRight} alt="暂无图片" />
     }
-    if (isCommunityMemfit() || isMemfit()) {
-      return <MemfitAnimatedBg theme={theme} borderRadius={12} />
-    }
+    if (isCommunityMemfit() || isMemfit())
+      return (
+        <video src={theme === 'light' ? memfitRight : memfitRightDark} autoPlay loop muted playsInline preload="auto" />
+      )
     return <img src={yakitRight} alt="暂无图片" />
   }, [theme])
 
