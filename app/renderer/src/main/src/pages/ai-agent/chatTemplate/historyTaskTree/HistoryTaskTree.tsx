@@ -250,45 +250,55 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
   ) : null
 })
 // 跳过任务
-export const AIHistorySkipTask: React.FC<{ taskIndex: string }> = React.memo(({ taskIndex }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
-  const syncIdOfStopSubTask = useRef<string>('')
-  const { syncIdInfoMap } = useChatIPCStore()
-  const { handleSendSyncMessage } = useChatIPCDispatcher()
+export const AIHistorySkipTask: React.FC<{ taskIndex: string; isTask?: boolean }> = React.memo(
+  ({ taskIndex, isTask = true }) => {
+    const { t } = useI18nNamespaces(['aiAgent'])
+    const syncIdOfStopSubTask = useRef<string>('')
+    const { syncIdInfoMap } = useChatIPCStore()
+    const { handleSendSyncMessage } = useChatIPCDispatcher()
 
-  const onCancelTask = useMemoizedFn(() => {
-    syncIdOfStopSubTask.current = randomString(8)
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
-      SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', subtask_index: taskIndex }),
-      syncID: syncIdOfStopSubTask.current,
+    const onCancelTask = useMemoizedFn(() => {
+      if (isTask) {
+        syncIdOfStopSubTask.current = randomString(8)
+        handleSendSyncMessage({
+          syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
+          SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', subtask_index: taskIndex }),
+          syncID: syncIdOfStopSubTask.current,
+        })
+      } else {
+        handleSendSyncMessage({
+          syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+          SyncJsonInput: JSON.stringify({ task_id: taskIndex }),
+        })
+      }
     })
-  })
-  return (
-    <YakitPopconfirm
-      title={t('AITree.cancelSubtaskConfirm')}
-      onConfirm={(e) => {
-        e?.stopPropagation()
-        onCancelTask()
-      }}
-      onCancel={(e) => {
-        e?.stopPropagation()
-      }}
-    >
-      <Tooltip title="跳过当前任务" destroyTooltipOnHide={true}>
-        <YakitButton
-          size="small"
-          icon={<RedoDotIcon />}
-          type="text"
-          loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        />
-      </Tooltip>
-    </YakitPopconfirm>
-  )
-})
+
+    return (
+      <YakitPopconfirm
+        title={t('AITree.cancelSubtaskConfirm')}
+        onConfirm={(e) => {
+          e?.stopPropagation()
+          onCancelTask()
+        }}
+        onCancel={(e) => {
+          e?.stopPropagation()
+        }}
+      >
+        <Tooltip title="跳过当前任务" destroyTooltipOnHide={true}>
+          <YakitButton
+            size="small"
+            icon={<RedoDotIcon />}
+            type="text"
+            loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          />
+        </Tooltip>
+      </YakitPopconfirm>
+    )
+  },
+)
 
 /**任务历史的单个树节点 */
 const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => {

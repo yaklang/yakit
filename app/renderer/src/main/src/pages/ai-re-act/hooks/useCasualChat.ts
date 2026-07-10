@@ -16,7 +16,7 @@ import { AIChatQSDataTypeEnum } from './aiRender'
 import { yakitNotify } from '@/utils/notification'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
-import { DefaultTodoListCardData } from './defaultConstant'
+import { DefaultTodoListCardData, DefaultPlanItemDetailsData } from './defaultConstant'
 
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -28,6 +28,7 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
+
   const getCasualChat = useMemoizedFn(() => {
     return getChatDataStore?.()?.casualChat
   })
@@ -57,26 +58,7 @@ function useCasualChat(params: UseCasualChatParams) {
     onSubTaskID?.(taskKey)
 
     const existing = getContentMap(taskKey)
-    if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })
-      return
-    }
-
-    if (existing) {
-      if (info.react_task_name) existing.data.taskName = info.react_task_name
-      if (info.react_user_input) existing.data.goal = info.react_user_input
-      existing.data.status = info.react_task_status
-      setContentMap(existing.id, existing)
-      setElements((old) =>
-        old.map((item) => {
-          if (item.token === existing.id && item.type === existing.type) {
-            return { ...item, renderNum: item.renderNum + 1 }
-          }
-          return item
-        }),
-      )
-      return
-    }
+    if (existing) return
 
     const chatData: AIChatQSData = {
       ...genBaseAIChatData(res),
@@ -93,6 +75,10 @@ function useCasualChat(params: UseCasualChatParams) {
     } as AIChatQSData
 
     setContentMap(chatData.id, chatData)
+    const chatStore = getChatDataStore?.()
+    if (chatStore && !chatStore.casualChat.planDetailsMap.has(taskKey)) {
+      chatStore.casualChat.planDetailsMap.set(taskKey, cloneDeep(DefaultPlanItemDetailsData))
+    }
     setElements((old) => {
       const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
       if (exists) return old
@@ -239,6 +225,7 @@ function useCasualChat(params: UseCasualChatParams) {
 
   const handleResetData = useMemoizedFn(() => {
     review.current = undefined
+    getChatDataStore?.()?.casualChat.planDetailsMap.clear()
     setElements([])
     setToolListRenderNumber(0)
   })

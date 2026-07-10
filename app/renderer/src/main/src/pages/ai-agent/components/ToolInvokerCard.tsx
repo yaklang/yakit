@@ -1,4 +1,3 @@
-import { SolidToolIcon } from '@/assets/icon/solid'
 import { FC, memo, ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import ChatCard from './ChatCard'
 import styles from './ToolInvokerCard.module.scss'
@@ -14,7 +13,7 @@ import {
   ReActChatBaseInfo,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
-import ModalInfo, { ModalInfoProps } from './ModelInfo'
+import type { ModalInfoProps } from './ModelInfo'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
@@ -26,6 +25,7 @@ import {
   OutlineChevronsUpDownIcon,
   OutlineClockIcon,
   OutlineRefreshIcon,
+  OutlineWrenchIcon1,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Divider, Tooltip } from 'antd'
@@ -115,7 +115,8 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
 
   return (
     <ChatCard
-      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
+      titleIcon={<OutlineWrenchIcon1 />}
+      titleText={data.verboseName ?? data.toolName}
       titleExtra={
         !!reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
@@ -123,27 +124,15 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
           </span>
         ) : null
       }
-    >
-      <ToolStatusCard
-        status={'purple'}
-        title={
-          <div className={styles['tool-title']}>
-            <div className={styles['tool-title-left']}>
-              <div className={styles['tool-name']}>{data.toolName}</div>
-              <YakitTag size="small" fullRadius color={'purple' as YakitTagColor}>
-                生成参数中
-              </YakitTag>
-            </div>
-          </div>
-        }
-      >
-        <div className={styles['tool-loading-content']}>
-          <YakitSpin spinning>
-            <div className={styles['tool-loading-block']} />
-          </YakitSpin>
+      titleMore={
+        <div className={styles['tool-loading-status']}>
+          <span className={styles['tool-loading-status-icon']}>
+            <OutlineRefreshIcon />
+          </span>
+          <span>{t('ToolInvokerCard.paramsGenerating')}</span>
         </div>
-      </ToolStatusCard>
-    </ChatCard>
+      }
+    />
   )
 })
 
@@ -195,8 +184,8 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
-      // titleIcon={<SolidToolIcon />}
+      titleText={data.verboseName ?? data.toolName}
+      titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           {selectors?.selectors && (
@@ -380,41 +369,41 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   })
   return (
     <ChatCard
-      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
-      // titleIcon={<SolidToolIcon />}
+      titleText={data.verboseName ?? data.toolName}
+      titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
-          <div className={styles['tool-invoker-card-extra-time']}>
-            {/* {!!startTime && (
+          {/* <div className={styles['tool-invoker-card-extra-time']}> */}
+          {/* {!!startTime && (
               <div>
                 {t('ToolInvokerCard.startTime')}:<span>{startTime}</span>
               </div>
             )} */}
-          </div>
+          {/* </div> */}
 
-          <div style={{ marginRight: 12 }}>
-            {!!riskFlowDataCount && (
-              <>
-                <label
-                  onClick={() => {
-                    switchAIActTab(AITabsEnum.Risk)
-                  }}
-                >
-                  {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
-                </label>
-                <Divider type="vertical" />
-              </>
-            )}
-            {!!httpFlowDataCount && (
+          {/* <div style={{ marginRight: 12 }}> */}
+          {!!riskFlowDataCount && (
+            <>
               <label
                 onClick={() => {
-                  switchAIActTab(AITabsEnum.HTTP)
+                  switchAIActTab(AITabsEnum.Risk)
                 }}
               >
-                {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
+                {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
               </label>
-            )}
-          </div>
+              <Divider type="vertical" />
+            </>
+          )}
+          {!!httpFlowDataCount && (
+            <label
+              onClick={() => {
+                switchAIActTab(AITabsEnum.HTTP)
+              }}
+            >
+              {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
+            </label>
+          )}
+          {/* </div> */}
           {isChildWindow || (
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
               <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />

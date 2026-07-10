@@ -23,7 +23,6 @@ import useAIAgentStore from '../../useContext/useStore'
 import { ForgesAndSkillsDynamicItem, PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
-import { Progress } from 'antd'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -52,6 +51,7 @@ import {
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
+import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoListDetail'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
@@ -75,7 +75,11 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     if (!taskId) return
     let itemData: PlanItemDetailsData | undefined = undefined
     if (taskId.includes('react')) {
-      itemData = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat.planDetails
+      const casualChat = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat
+      itemData = casualChat?.planDetailsMap.get(taskId)
+      if (!itemData && casualChat?.planDetails.taskId === taskId) {
+        itemData = casualChat.planDetails
+      }
     } else {
       const planDetailsMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')
         ?.taskChat.planDetailsMap
@@ -92,17 +96,11 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     return planItemDetailsData.perception
   }, [planItemDetailsData?.perception])
 
-  const finishedCount = useCreation(() => {
-    return (
-      (planItemDetailsData?.todoList?.stats?.deleted || 0) +
-      (planItemDetailsData?.todoList?.stats?.done || 0) +
-      (planItemDetailsData?.todoList?.stats?.skipped || 0)
-    )
-  }, [planItemDetailsData?.todoList?.stats])
   const total = useCreation(
     () => planItemDetailsData?.todoList?.items?.length || 0,
     [planItemDetailsData?.todoList?.items?.length],
   )
+  const todoListCardData = useCreation(() => planItemDetailsData?.todoList, [planItemDetailsData?.todoList])
 
   const todoData = useCreation(() => {
     const unFinish: TodoListCardData['items'] = []
@@ -287,24 +285,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           <div className={styles['task-statistics']}>
             <div className={styles['stats-header']}>
               <span className={styles['title']}>待办任务</span>
-              {!!total && (
-                <>
-                  <span className={styles['progress-text']}>
-                    进度
-                    <span className={styles['progress-number']}>
-                      {finishedCount}/{total || 1}
-                    </span>
-                  </span>
-                  <Progress
-                    strokeColor="var(--Colors-Use-Neutral-Disable)"
-                    trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
-                    percent={Math.round((finishedCount / (total || 1)) * 100)}
-                    size="small"
-                    showInfo={false}
-                    className={styles['progress-bar']}
-                  />
-                </>
-              )}
+              {!!total && todoListCardData && <AIToDoListDetail todoData={todoListCardData} />}
             </div>
             {!!total ? (
               <>

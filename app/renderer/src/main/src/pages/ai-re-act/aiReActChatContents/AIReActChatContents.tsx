@@ -1,6 +1,11 @@
-import React, { useCallback, useMemo } from 'react'
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 'react'
 import classNames from 'classnames'
-import { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
+import {
+  AIReActChatContentsPProps,
+  AIReferenceNodeProps,
+  AIReActChatContentsRef,
+  AIStreamNodeProps,
+} from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
 import { useCreation } from 'ahooks'
 import { AIMarkdown } from '@/pages/ai-agent/components/aiMarkdown/AIMarkdown'
@@ -117,111 +122,117 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   }
 })
 const TYPE = 'reAct'
-export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
-  const { chats } = props
-  const {
-    casualTitle,
-    requestHistoryState: { casualLoadMoreLoading },
-    execute,
-  } = useChatIPCStore().chatIPCData
+export const AIReActChatContents = React.memo(
+  forwardRef<AIReActChatContentsRef, AIReActChatContentsPProps>((props, ref) => {
+    const { chats } = props
+    const {
+      casualTitle,
+      requestHistoryState: { casualLoadMoreLoading },
+      execute,
+    } = useChatIPCStore().chatIPCData
 
-  const { activeChat } = useAIAgentStore()
+    const { activeChat } = useAIAgentStore()
 
-  const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
+    const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
 
-  const chatLength = useCreation(() => chats.elements.length, [chats.elements.length])
-  // 向上滚动加载
-  const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
-    loading: casualLoadMoreLoading,
-    dataLength: chatLength,
-    SessionID: activeChat?.SessionID || '',
-    fetchHasMore: () => handleHasMoreHistory(TYPE),
-    loadMore: () => handleLoadMoreHistory(TYPE),
-  })
-  const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged } = useVirtuosoAutoScroll({
-    total: chatLength,
-    isPrependingRef,
-  })
-  const renderItem = useCallback(
-    (index: number, item?: ReActChatRenderItem) => {
-      if (!item?.token) return null
-      const arrayIndex = index - firstItemIndex
-      const hasNext = chatLength - arrayIndex > 1
-      return <AIChatListItem key={item.token} hasNext={hasNext} itemIndex={arrayIndex} item={item} type="re-act" />
-    },
-    [chatLength, firstItemIndex],
-  )
-  const Item = useCallback(
-    ({ children, style, 'data-index': dataIndex }) => (
-      <div key={dataIndex} style={style} data-index={dataIndex} className={styles['item-wrapper']}>
-        <div className={styles['item-inner']}>{children}</div>
-      </div>
-    ),
-    [],
-  )
+    const chatLength = useCreation(() => chats.elements.length, [chats.elements.length])
+    // 向上滚动加载
+    const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
+      loading: casualLoadMoreLoading,
+      dataLength: chatLength,
+      SessionID: activeChat?.SessionID || '',
+      fetchHasMore: () => handleHasMoreHistory(TYPE),
+      loadMore: () => handleLoadMoreHistory(TYPE),
+    })
+    const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged, scrollToItemIndex } =
+      useVirtuosoAutoScroll({
+        total: chatLength,
+        isPrependingRef,
+      })
 
-  const Footer = useCallback(() => {
-    return execute ? (
-      <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
-        {!!casualTitle ? (
-          <Loading
-            size={14}
-            style={{
-              marginTop: 8,
-            }}
-          >
-            <div className="text-ellipsis" style={{ fontWeight: 400, display: 'flex', alignItems: 'center' }}>
-              <ScrollText text={casualTitle as string} />
-            </div>
-          </Loading>
-        ) : (
-          <div className={styles['end']}>当前会话已结束</div>
-        )}
-      </div>
-    ) : chatLength ? (
-      <div className={styles['end']}>当前会话已停止</div>
-    ) : null
-  }, [casualTitle, execute, chatLength])
-  const Header = useCallback(
-    () =>
-      casualLoadMoreLoading ? (
-        <div style={{ height: 20, position: 'relative' }}>
-          <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+    useImperativeHandle(ref, () => ({ scrollToItemIndex }), [scrollToItemIndex])
+
+    const renderItem = useCallback(
+      (index: number, item?: ReActChatRenderItem) => {
+        if (!item?.token) return null
+        const arrayIndex = index - firstItemIndex
+        const hasNext = chatLength - arrayIndex > 1
+        return <AIChatListItem key={item.token} hasNext={hasNext} itemIndex={arrayIndex} item={item} type="re-act" />
+      },
+      [chatLength, firstItemIndex],
+    )
+    const Item = useCallback(
+      ({ children, style, 'data-index': dataIndex }) => (
+        <div key={dataIndex} style={style} data-index={dataIndex} className={styles['item-wrapper']}>
+          <div className={styles['item-inner']}>{children}</div>
         </div>
-      ) : null,
-    [casualLoadMoreLoading],
-  )
-  const components = useMemo(
-    () => ({
-      Item,
-      Footer,
-      Header,
-    }),
-    [Footer, Header, Item],
-  )
-  return (
-    <div className={styles['ai-re-act-chat-contents']}>
-      <Virtuoso
-        key={activeChat?.SessionID}
-        ref={virtuosoRef}
-        scrollerRef={setScrollerRef}
-        firstItemIndex={firstItemIndex}
-        atBottomStateChange={setIsAtBottomRef}
-        data={chats.elements}
-        totalListHeightChanged={handleTotalListHeightChanged}
-        itemContent={renderItem}
-        initialTopMostItemIndex={chats.elements.length > 1 ? chats.elements.length - 1 : 0}
-        components={components}
-        atBottomThreshold={50}
-        skipAnimationFrameInResizeObserver
-        // atTopStateChange={handleAtTopStateChange}
-        startReached={handleLoadMore}
-        // increaseViewportBy={{ top: 200, bottom: 0 }}
-        className={styles['re-act-contents-list']}
-      />
-    </div>
-  )
-})
+      ),
+      [],
+    )
+
+    const Footer = useCallback(() => {
+      return execute ? (
+        <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
+          {!!casualTitle ? (
+            <Loading
+              size={14}
+              style={{
+                marginTop: 8,
+              }}
+            >
+              <div className="text-ellipsis" style={{ fontWeight: 400, display: 'flex', alignItems: 'center' }}>
+                <ScrollText text={casualTitle as string} />
+              </div>
+            </Loading>
+          ) : (
+            <div className={styles['end']}>当前会话已结束</div>
+          )}
+        </div>
+      ) : chatLength ? (
+        <div className={styles['end']}>当前会话已停止</div>
+      ) : null
+    }, [casualTitle, execute, chatLength])
+    const Header = useCallback(
+      () =>
+        casualLoadMoreLoading ? (
+          <div style={{ height: 20, position: 'relative' }}>
+            <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+          </div>
+        ) : null,
+      [casualLoadMoreLoading],
+    )
+    const components = useMemo(
+      () => ({
+        Item,
+        Footer,
+        Header,
+      }),
+      [Footer, Header, Item],
+    )
+    return (
+      <div className={styles['ai-re-act-chat-contents']}>
+        <Virtuoso
+          key={activeChat?.SessionID}
+          ref={virtuosoRef}
+          scrollerRef={setScrollerRef}
+          firstItemIndex={firstItemIndex}
+          atBottomStateChange={setIsAtBottomRef}
+          data={chats.elements}
+          totalListHeightChanged={handleTotalListHeightChanged}
+          itemContent={renderItem}
+          initialTopMostItemIndex={chats.elements.length > 1 ? chats.elements.length - 1 : 0}
+          components={components}
+          atBottomThreshold={50}
+          skipAnimationFrameInResizeObserver
+          // atTopStateChange={handleAtTopStateChange}
+          startReached={handleLoadMore}
+          // increaseViewportBy={{ top: 200, bottom: 0 }}
+          className={styles['re-act-contents-list']}
+        />
+      </div>
+    )
+  }),
+)
 
 /** 挂到 body，避免 Virtuoso 滚出视口时卸载列表项导致弹窗消失 */
 export const openAIReferenceModal = (referenceList: ChatReferenceMaterialPayload, title = '参考资料') => {

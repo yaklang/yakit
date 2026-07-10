@@ -1,7 +1,7 @@
 import React, { type FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
 import { OutlineArrowrightIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { useCountDown, useCreation, useMemoizedFn } from 'ahooks'
+import { useCountDown, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { SolidAnnotationIcon, SolidVariableIcon } from '@/assets/icon/solid'
 import { Form, Input, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -58,33 +58,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => {} })
 
   const initReviewTreesRef = useRef<AIAgentGrpcApi.PlanTask[]>([])
-  const pendingPlanReviewRef = useRef<AIChatQSData | null>(null)
-
-  /** detached_plan_require 到来时，自动通过尚未提交的 plan_review_require */
-  useEffect(() => {
-    const selected = (info.data as AIReviewType)?.selected
-
-    if (info.type === AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
-      pendingPlanReviewRef.current = selected ? null : info
-      return
-    }
-
-    if (
-      info.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE &&
-      pendingPlanReviewRef.current &&
-      !(pendingPlanReviewRef.current.data as AIReviewType)?.selected
-    ) {
-      const planReview = pendingPlanReviewRef.current.data as AIReviewType
-      onSendAI({
-        value: JSON.stringify({ suggestion: 'continue' }),
-        id: planReview.id,
-        optionValue: 'continue',
-      })
-      pendingPlanReviewRef.current = null
-    }
-  }, [info, onSendAI])
+  /** 取消当前任务后，等待 taskStatus.loading 置为 false 再提交 detached plan */
+  const pendingDetachedPlanSubmitRef = useRef(false)
 
   useEffect(() => {
+    pendingDetachedPlanSubmitRef.current = false
     switch (type) {
       case 'plan_review_require':
       case 'detached_plan_require':
@@ -271,7 +249,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     setEditShow(false)
   })
 
-  const submitDetachedPlan = useMemoizedFn(() => {
+  const executeDetachedPlan = useMemoizedFn(() => {
     const detachedReview = review as AIAgentGrpcApi.DetachedPlanRequire
     const syncPayload: { coordinator_id: string; plans?: AIAgentGrpcApi.DetachedPlan } = {
       coordinator_id: detachedReview.coordinator_id,
@@ -292,7 +270,28 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       SyncJsonInput: JSON.stringify(syncPayload),
     })
     chatIPCEvents.handleTaskReviewRelease(detachedReview.id)
+    pendingDetachedPlanSubmitRef.current = false
   })
+
+  const submitDetachedPlan = useMemoizedFn(() => {
+    const taskId = chatIPCEvents.fetchCurrentTaskPlanID()?.taskID
+    if (chatIPCData.taskStatus.loading && taskId) {
+      pendingDetachedPlanSubmitRef.current = true
+      chatIPCEvents.handleCancelLoadingChange('task', true)
+      onSendSyncMessage?.({
+        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+        SyncJsonInput: JSON.stringify({ task_id: taskId }),
+      })
+      return
+    }
+    executeDetachedPlan()
+  })
+
+  useUpdateEffect(() => {
+    if (!chatIPCData.taskStatus.loading && pendingDetachedPlanSubmitRef.current) {
+      executeDetachedPlan()
+    }
+  }, [chatIPCData.taskStatus.loading])
 
   /** 继续执行 */
   const handleContinue = useMemoizedFn(() => {

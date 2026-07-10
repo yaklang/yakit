@@ -27,6 +27,8 @@ export interface AIToolResult {
   callToolId: string
   /**工具名称 */
   toolName: string
+  /** 显示名称 */
+  verboseName?: string
   /** 工具介绍 */
   toolDescription: string
   /** 间隔时间(ms) */

@@ -338,7 +338,7 @@
     "relatedRisks": "Risks",
     "httpTraffic": "Traffic",
     "refreshCodeBlockData": "Refresh Code Block Data",
-    "tool": "Tool"
+    "paramsGenerating": "Generating parameters..."
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "Path join failed",

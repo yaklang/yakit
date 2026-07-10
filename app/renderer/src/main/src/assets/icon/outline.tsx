@@ -5150,6 +5150,24 @@ export const OutlineStoreIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineStore} {...props} />
 }
 
+const OutlineWrench1 = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M14.6999 6.29998C14.5166 6.48691 14.414 6.73823 14.414 6.99998C14.414 7.26173 14.5166 7.51305 14.6999 7.69998L16.2999 9.29998C16.4868 9.48321 16.7381 9.58584 16.9999 9.58584C17.2616 9.58584 17.5129 9.48321 17.6999 9.29998L21.4699 5.52998C21.9727 6.64117 22.1249 7.87921 21.9063 9.07913C21.6877 10.279 21.1086 11.3838 20.2461 12.2463C19.3837 13.1087 18.2789 13.6878 17.079 13.9064C15.8791 14.1251 14.641 13.9728 13.5299 13.47L6.61986 20.38C6.22203 20.7778 5.68246 21.0013 5.11986 21.0013C4.55725 21.0013 4.01768 20.7778 3.61986 20.38C3.22203 19.9822 2.99854 19.4426 2.99854 18.88C2.99854 18.3174 3.22203 17.7778 3.61986 17.38L10.5299 10.47C10.027 9.35879 9.87477 8.12075 10.0934 6.92083C10.312 5.72092 10.8911 4.61614 11.7536 3.7537C12.616 2.89127 13.7208 2.31215 14.9207 2.09352C16.1206 1.8749 17.3587 2.02714 18.4699 2.52998L14.7099 6.28998L14.6999 6.29998Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+/**
+ * @description  Icon/Outline/wrench （新版）
+ */
+export const OutlineWrenchIcon1 = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineWrench1} {...props} />
+}
+
 const OutlineWrench = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
     <g clipPath="url(#clip0_31752_46880)">
@@ -6326,4 +6344,23 @@ const OutlineUserRoundCog = () => (
  */
 export const OutlineUserRoundCogIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineUserRoundCog} {...props} />
+}
+
+const OutlineLandPlot = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M12 8L18 5L12 2V12M8.00011 11.99L2.50011 15.13C2.34621 15.2172 2.21821 15.3437 2.12915 15.4965C2.04009 15.6494 1.99316 15.8231 1.99316 16C1.99316 16.1769 2.04009 16.3506 2.12915 16.5035C2.21821 16.6563 2.34621 16.7828 2.50011 16.87L11.0001 21.73C11.3042 21.9055 11.649 21.9979 12.0001 21.9979C12.3512 21.9979 12.6961 21.9055 13.0001 21.73L21.5001 16.87C21.654 16.7828 21.782 16.6563 21.8711 16.5035C21.9601 16.3506 22.0071 16.1769 22.0071 16C22.0071 15.8231 21.9601 15.6494 21.8711 15.4965C21.782 15.3437 21.654 15.2172 21.5001 15.13L16.0001 12M6.48999 12.8501L17.51 19.1501M17.51 12.8501L6.5 19.1501"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/**
+ * @description Outline/LandPlot Icon/LandPlot
+ */
+export const OutlineLandPlotIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineLandPlot} {...props} />
 }

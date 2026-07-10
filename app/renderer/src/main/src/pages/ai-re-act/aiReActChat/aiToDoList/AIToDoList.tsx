@@ -1,43 +1,35 @@
-import React, { useState } from 'react'
+import React, { useRef } from 'react'
 import classNames from 'classnames'
 import styles from './AIToDoList.module.scss'
 import type { AIToDoListItemProps, AIToDoListProps } from './type'
 import { OutlineChevrondownIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
-import { Progress } from 'antd'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useCreation, useHover, useMemoizedFn } from 'ahooks'
 import { AIToDoListDeletedIcon, AIToDoListPendingIcon, AIToDoListDoneIcon, AIToDoListSkippedIcon } from './icon'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
+import { AIToDoListDetail } from './AIToDoListDetail'
 
 export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
   const { className, todoData, bannedExpand } = props
 
-  const [hidden, setHidden] = useState(!bannedExpand)
-  const finishedCount = useCreation(() => {
-    return todoData.stats.deleted + todoData.stats.done + todoData.stats.skipped
-  }, [todoData.stats])
+  const divRef = useRef(null)
+  const isHover = useHover(divRef)
   const total = useCreation(() => todoData.items.length, [todoData.items.length])
   const doingItem = useCreation(() => {
     return todoData.items.find((item) => item.status === AIToDoListStatusEnum.Doing)
   }, [todoData.items])
 
-  const handleHiddenChange = useMemoizedFn((e) => {
-    e.stopPropagation()
-    if (bannedExpand) return
-    setHidden((v) => !v)
-  })
-
   return (
     <div className={classNames(styles['ai-to-do-list-wrapper'], className)}>
-      <div className={styles['card']}>
+      <div className={styles['card']} ref={divRef}>
         {!!total ? (
           <>
-            <div className={styles['card-heard']} onClick={handleHiddenChange}>
+            <div className={styles['card-heard']}>
               <div className={styles['card-heard-title']}>
                 {!bannedExpand && (
                   <>
-                    {hidden ? (
+                    {!isHover ? (
                       <OutlineChevronrightIcon className={styles['chevron-icon']} />
                     ) : (
                       <OutlineChevrondownIcon className={styles['chevron-icon']} />
@@ -53,32 +45,19 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                   </YakitTag>
                 )}
               </div>
-              <div className={styles['card-heard-extra']}>
-                <span className={styles['tip']}>进度</span>
-                <span className={styles['progress ']}>
-                  {finishedCount}/{total || 1}
-                </span>
-                <Progress
-                  strokeColor="var(--Colors-Use-Neutral-Disable)"
-                  trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
-                  percent={Math.round((finishedCount / (total || 1)) * 100)}
-                  size="small"
-                  showInfo={false}
-                  className={styles['progress-bar']}
-                />
-              </div>
+              <AIToDoListDetail todoData={todoData} />
             </div>
             <div
               className={classNames(styles['card-list'], {
-                [styles['card-list-hidden']]: hidden,
+                [styles['card-list-hidden']]: !isHover,
               })}
             >
               <div
                 className={classNames(styles['card-list-inner'], {
-                  [styles['card-list-inner-hidden']]: hidden,
+                  [styles['card-list-inner-hidden']]: !isHover,
                 })}
               >
-                {todoData.items.map((item, index) => (
+                {todoData.items.map((item) => (
                   <AIToDoListItem key={item.id} item={item} />
                 ))}
               </div>

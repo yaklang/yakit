@@ -91,6 +91,7 @@ export class ChatDataStore {
         elements: [],
         contents: new Map(),
         planDetails: cloneDeep(DefaultPlanItemDetailsData),
+        planDetailsMap: new Map(),
       },
       taskChat: {
         plan: cloneDeep(DefaultCurrentExecTaskTree),

@@ -21,7 +21,7 @@
     &-left {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
       // padding: 4px 8px 0 0;
       flex: 1;
       min-width: 0;
@@ -40,7 +40,6 @@
     }
 
     &-text {
-      flex: 1;
       min-width: 0;
       overflow: hidden;
       font-size: 12px;
@@ -48,12 +47,13 @@
       font-weight: 500;
       line-height: 16px;
       letter-spacing: 0.5px;
+      max-width: 10em;
       color: var(--Colors-Use-Neutral-Text-4-Help-text);
       @include mixin.text-ellipsis(1, false, false, true);
     }
 
     &-extra {
-      flex-shrink: 0;
+      flex: 1;
       min-width: 0;
       max-width: 100%;
       @include mixin.text-ellipsis(1, false, false, true);

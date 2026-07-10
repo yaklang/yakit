@@ -60,6 +60,8 @@ export interface AIChatData {
     contents: Map<string, AIChatQSData>
     /** react 任务对应的详情数据 */
     planDetails: PlanItemDetailsData
+    /** 自由会话啊的子任务对应的详情数据 */
+    planDetailsMap: Map<string, PlanItemDetailsData>
   }
   taskChat: UseChatIPCState['taskChat'] & {
     contents: Map<string, AIChatQSData>

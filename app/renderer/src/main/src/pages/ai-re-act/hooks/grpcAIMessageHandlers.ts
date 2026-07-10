@@ -528,11 +528,22 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
     oldData.todoList = newData
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const chatDetail = chatStore.casualChat?.planDetails
-    if (!chatDetail) return
-    chatDetail.uuid = uuidv4()
-    chatDetail.taskId = chatDetail.taskId || res.TaskId
-    chatDetail.todoList = newData
+    const isSubAgentTask =
+      chatStore.casualChat.planDetailsMap.has(res.TaskId) ||
+      chatStore.casualChat.contents.get(res.TaskId)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    if (isSubAgentTask) {
+      const oldData = chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+      oldData.uuid = uuidv4()
+      oldData.taskId = oldData.taskId || res.TaskId
+      oldData.todoList = newData
+      chatStore.casualChat.planDetailsMap.set(res.TaskId, oldData)
+    } else {
+      const chatDetail = chatStore.casualChat?.planDetails
+      if (!chatDetail) return
+      chatDetail.uuid = uuidv4()
+      chatDetail.taskId = chatDetail.taskId || res.TaskId
+      chatDetail.todoList = newData
+    }
     callback?.(res)
   }
 }
@@ -636,16 +647,30 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
     oldData.mcp = itemData.mcp
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-    chatDetail.uuid = itemData.uuid
-    chatDetail.taskId = chatDetail?.taskId || res.TaskId
-    chatDetail.tool = itemData.tool
-    chatDetail.forges = itemData.forges
-    chatDetail.skills = itemData.skills
-    chatDetail.plugins = itemData.plugins
-    chatDetail.mcp = itemData.mcp
-
-    chatStore.casualChat.planDetails = chatDetail
+    const isSubAgentTask =
+      chatStore.casualChat.planDetailsMap.has(res.TaskId) ||
+      chatStore.casualChat.contents.get(res.TaskId)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    if (isSubAgentTask) {
+      const oldData = chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+      oldData.uuid = itemData.uuid
+      oldData.taskId = oldData?.taskId || res.TaskId
+      oldData.tool = itemData.tool
+      oldData.forges = itemData.forges
+      oldData.skills = itemData.skills
+      oldData.plugins = itemData.plugins
+      oldData.mcp = itemData.mcp
+      chatStore.casualChat.planDetailsMap.set(res.TaskId, oldData)
+    } else {
+      const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+      chatDetail.uuid = itemData.uuid
+      chatDetail.taskId = chatDetail?.taskId || res.TaskId
+      chatDetail.tool = itemData.tool
+      chatDetail.forges = itemData.forges
+      chatDetail.skills = itemData.skills
+      chatDetail.plugins = itemData.plugins
+      chatDetail.mcp = itemData.mcp
+      chatStore.casualChat.planDetails = chatDetail
+    }
   }
 }
 /** Type='perception'&NodeId='perception' 意图感知 */
@@ -666,13 +691,22 @@ const handlePerception: AIMessageHandler = (request) => {
     oldData.perception = perception
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-
-    chatDetail.uuid = uuidv4()
-    chatDetail.taskId = chatDetail.taskId || res.TaskId
-    chatDetail.perception = perception
-
-    chatStore.casualChat.planDetails = chatDetail
+    const isSubAgentTask =
+      chatStore.casualChat.planDetailsMap.has(res.TaskId) ||
+      chatStore.casualChat.contents.get(res.TaskId)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    if (isSubAgentTask) {
+      const oldData = chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+      oldData.uuid = uuidv4()
+      oldData.taskId = oldData.taskId || res.TaskId
+      oldData.perception = perception
+      chatStore.casualChat.planDetailsMap.set(res.TaskId, oldData)
+    } else {
+      const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+      chatDetail.uuid = uuidv4()
+      chatDetail.taskId = chatDetail.taskId || res.TaskId
+      chatDetail.perception = perception
+      chatStore.casualChat.planDetails = chatDetail
+    }
   }
 }
 
@@ -696,14 +730,24 @@ const handleSessionSnapshot: AIMessageHandler = (request) => {
 
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-
-    chatDetail.uuid = uuidv4()
-    chatDetail.taskId = chatDetail.taskId || res.TaskId
-    chatDetail.execution = snapshot.execution
-    chatDetail.backgroundProcesses = snapshot.background_processes
-
-    chatStore.casualChat.planDetails = chatDetail
+    const isSubAgentTask =
+      chatStore.casualChat.planDetailsMap.has(res.TaskId) ||
+      chatStore.casualChat.contents.get(res.TaskId)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    if (isSubAgentTask) {
+      const oldData = chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+      oldData.uuid = uuidv4()
+      oldData.taskId = oldData.taskId || res.TaskId
+      oldData.execution = snapshot.execution
+      oldData.backgroundProcesses = snapshot.background_processes
+      chatStore.casualChat.planDetailsMap.set(res.TaskId, oldData)
+    } else {
+      const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+      chatDetail.uuid = uuidv4()
+      chatDetail.taskId = chatDetail.taskId || res.TaskId
+      chatDetail.execution = snapshot.execution
+      chatDetail.backgroundProcesses = snapshot.background_processes
+      chatStore.casualChat.planDetails = chatDetail
+    }
   }
 }
 // #endregion
@@ -1288,6 +1332,7 @@ const handleToolCallStart: AIMessageHandler = (request) => {
     ...cloneDeep(DefaultAIToolResult),
     callToolId: call_tool_id,
     toolName: tool?.name || '-',
+    verboseName: tool?.verbose_name,
     toolDescription: tool?.description || '',
     startTime: start_time || 0,
     startTimeMS: start_time_ms || 0,

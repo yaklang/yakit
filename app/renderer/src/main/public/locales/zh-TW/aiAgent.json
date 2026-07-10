@@ -338,7 +338,7 @@
     "relatedRisks": "漏洞",
     "httpTraffic": "流量",
     "refreshCodeBlockData": "重新整理程式碼塊資料",
-    "tool": "工具"
+    "paramsGenerating": "參數生成中..."
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "路徑拼接失敗",

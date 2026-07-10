@@ -1043,6 +1043,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                   return old
                 })
               } else {
+                if (res.TaskId !== currentCasualTaskID.current) return
                 // 自由对话-loading展示标题
                 setCasualTitle(data.value)
               }
