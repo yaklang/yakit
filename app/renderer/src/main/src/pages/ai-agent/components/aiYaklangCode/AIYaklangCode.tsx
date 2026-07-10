@@ -33,6 +33,21 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
   }, [contentType])
 
   const bindContentHeightEditor = useMemoizedFn((editor: YakitIMonacoEditor) => {
+    const setEditorScrollActive = (active: boolean) => {
+      editor.updateOptions({
+        scrollbar: {
+          vertical: 'auto',
+          horizontal: 'auto',
+          handleMouseWheel: active,
+          alwaysConsumeMouseWheel: active,
+        },
+      })
+    }
+
+    setEditorScrollActive(false)
+    editor.onDidFocusEditorWidget(() => setEditorScrollActive(true))
+    editor.onDidBlurEditorWidget(() => setEditorScrollActive(false))
+
     const updateHeight = () => {
       const container = codeContainerRef.current
       const editorEl = editor.getDomNode()
