@@ -1,17 +1,27 @@
 const { ipcRenderer } = window.require('electron')
 export {
-  getIMControlStatus,
+  cancelIMControlState,
+  onIMControlStateData,
+  onIMControlStateEnd,
+  onIMControlStateError,
+  subscribeIMControlState,
   updateIMControlConfig,
   startIMControl,
   stopIMControl,
   DEFAULT_IM_CONTROL_CONFIG,
+  buildIMControlPlatformConfigs,
   normalizeIMControlConfig,
+  normalizeIMControlConfigMap,
   type IMControlConfig,
+  type IMControlConfigMap,
   type IMGroupTrigger,
   type IMReplyGranularity,
-  type IMControlPlatformInfo,
+  type IMReviewPolicy,
+  type IMControlPlatformLevel,
+  type IMControlPlatformState,
   type IMControlSessionInfo,
-  type IMControlStatusResp,
+  type IMControlState,
+  type IMControlStateEvent,
 } from '@/utils/imControl'
 
 export type IMPlatform = 'feishu' | 'dingtalk'
@@ -39,8 +49,12 @@ export interface IMOnboardingEvent {
 
 export const listIMBots = (): Promise<{ Bots?: IMBotConfigLike[] }> => ipcRenderer.invoke('ListIMBots', {})
 
-export const saveIMBot = (bot: IMBotConfigLike): Promise<{ Bot?: IMBotConfigLike }> =>
-  ipcRenderer.invoke('SaveIMBot', { Bot: bot })
+export const saveIMBot = (
+  bot: IMBotConfigLike,
+  options?: {
+    ClearOwnerId?: boolean
+  },
+): Promise<{ Bot?: IMBotConfigLike }> => ipcRenderer.invoke('SaveIMBot', { Bot: bot, ...(options || {}) })
 
 export const deleteIMBot = (platform: string): Promise<void> =>
   ipcRenderer.invoke('DeleteIMBot', { Platform: platform })

@@ -41,6 +41,8 @@ const HISTORY_SOURCE_FILTER_OPTIONS: {
   { key: 'dingtalk', title: '钉钉会话', icon: <DingtalkIcon /> },
 ]
 
+const IM_HISTORY_REFRESH_INTERVAL_MS = 5000
+
 const renderClearConfirm = (
   label: string,
   title: string,
@@ -235,6 +237,26 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     if (!enableHistorySourceFilter) return
     refreshSessions()
   }, [historySourceFilter])
+
+  useEffect(() => {
+    if (!enableHistorySourceFilter || embedded || historySourceFilter === 'local') return
+
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refreshSessions()
+      }
+    }
+
+    window.addEventListener('focus', refreshIfVisible)
+    document.addEventListener('visibilitychange', refreshIfVisible)
+    const timer = window.setInterval(refreshIfVisible, IM_HISTORY_REFRESH_INTERVAL_MS)
+
+    return () => {
+      window.removeEventListener('focus', refreshIfVisible)
+      document.removeEventListener('visibilitychange', refreshIfVisible)
+      window.clearInterval(timer)
+    }
+  }, [embedded, enableHistorySourceFilter, historySourceFilter, refreshSessions])
 
   useEffect(() => {
     const handleSessionData = async (data: string) => {

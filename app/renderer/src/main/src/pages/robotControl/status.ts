@@ -3,8 +3,12 @@ export type IMControlBadgeColor = 'gray' | 'green' | 'yellow' | 'red'
 
 export interface IMControlBadgePlatform {
   Platform?: string
+  Label?: string
   Connected?: boolean
+  Level?: 'ok' | 'warning' | 'error' | 'disabled' | string
   Message?: string
+  Transport?: string
+  UpdatedAtUnixMs?: number
 }
 
 export interface IMControlBadgeStatus {
@@ -59,8 +63,10 @@ export const deriveIMControlBadge = (params: DeriveIMControlBadgeParams): IMCont
   }
 
   const platforms = status.Platforms || []
-  const connected = platforms.filter((item) => item.Connected)
-  const disconnected = platforms.filter((item) => !item.Connected)
+  const activePlatforms = platforms.filter((item) => getPlatformLevel(item) !== 'disabled')
+  const ok = activePlatforms.filter((item) => getPlatformLevel(item) === 'ok')
+  const warning = activePlatforms.filter((item) => getPlatformLevel(item) === 'warning')
+  const error = activePlatforms.filter((item) => getPlatformLevel(item) === 'error')
 
   if (platforms.length === 0) {
     return {
@@ -72,17 +78,37 @@ export const deriveIMControlBadge = (params: DeriveIMControlBadgeParams): IMCont
     }
   }
 
-  if (connected.length === platforms.length) {
+  if (activePlatforms.length === 0) {
+    return {
+      visible: true,
+      state: 'idle',
+      color: 'gray',
+      label: '移动端控制未启动',
+      detail: formatPlatformDetail(platforms),
+    }
+  }
+
+  if (ok.length === activePlatforms.length) {
     return {
       visible: true,
       state: 'running',
       color: 'green',
       label: '移动端控制运行中',
-      detail: formatPlatformDetail(connected),
+      detail: formatPlatformDetail(ok),
     }
   }
 
-  if (connected.length > 0 && disconnected.length > 0) {
+  if (error.length === 0 && warning.length > 0) {
+    return {
+      visible: true,
+      state: 'degraded',
+      color: 'yellow',
+      label: '移动端控制重连中',
+      detail: formatPlatformDetail(platforms),
+    }
+  }
+
+  if (ok.length > 0 || warning.length > 0) {
     return {
       visible: true,
       state: 'degraded',
@@ -101,12 +127,19 @@ export const deriveIMControlBadge = (params: DeriveIMControlBadgeParams): IMCont
   }
 }
 
+export const getPlatformLevel = (platform: IMControlBadgePlatform): string => {
+  if (platform.Level) return platform.Level
+  return platform.Connected ? 'ok' : 'error'
+}
+
 const formatPlatformDetail = (platforms: IMControlBadgePlatform[]): string => {
   if (platforms.length === 0) return '暂无平台状态'
   return platforms
     .map((item) => {
-      const platform = item.Platform || 'unknown'
-      const status = item.Connected ? '已连接' : '异常'
+      const platform = item.Label || item.Platform || 'unknown'
+      const level = getPlatformLevel(item)
+      const status =
+        level === 'ok' ? '已连接' : level === 'warning' ? '重连中' : level === 'disabled' ? '已停用' : '异常'
       return item.Message ? `${platform}: ${status}，${item.Message}` : `${platform}: ${status}`
     })
     .join('\n')

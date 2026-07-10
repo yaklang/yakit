@@ -9,9 +9,10 @@ import { RobotLinkRobotCard } from './RobotLinkRobotCard'
 import { RobotLinkInfo } from './RobotBoundPanel'
 import { RobotSlashCommandCard } from './RobotSlashCommandCard'
 import { RobotRuntimeSettingCard } from './RobotRuntimeSettingCard'
+import { RobotAgentPermissionCard } from './RobotAgentPermissionCard'
 import { RobotChannelType, RobotListItem } from './RobotControl'
 import type { IMBotConfigLike, IMControlConfig, IMPlatform } from './api'
-import type { IMControlBadgePlatform } from './status'
+import { getPlatformLevel, type IMControlBadgePlatform } from './status'
 import styles from './RobotControl.module.scss'
 
 const getChannelIcon = (channel?: RobotChannelType) => {
@@ -80,12 +81,16 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
   const { t } = useI18nNamespaces(['layout'])
   const enabled = robot.enabled !== false
   const channelName = getChannelName(robot.channel)
-  const runtimeDisconnected = enabled && robot.bound && runtimePlatform?.Connected === false
+  const runtimeLevel = runtimePlatform ? getPlatformLevel(runtimePlatform) : ''
+  const runtimeWarning = enabled && robot.bound && runtimeLevel === 'warning'
+  const runtimeDisconnected = enabled && robot.bound && runtimeLevel === 'error'
   let statusText = getRunningStatusText(robot.channel)
   if (!enabled) {
     statusText = '机器人已停用'
   } else if (!robot.bound) {
     statusText = '机器人未绑定'
+  } else if (runtimeWarning) {
+    statusText = `${channelName}重连中`
   } else if (runtimeDisconnected) {
     statusText = `${channelName}连接异常`
   } else if (runtimePlatformMissing) {
@@ -94,9 +99,14 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
     statusText = `${channelName}未启动`
   }
   const statusActive =
-    enabled && robot.bound && !runtimeDisconnected && !runtimePlatformMissing && runtimeRunning !== false
+    enabled &&
+    robot.bound &&
+    !runtimeWarning &&
+    !runtimeDisconnected &&
+    !runtimePlatformMissing &&
+    runtimeRunning !== false
   const statusTitle =
-    runtimeDisconnected && runtimePlatform?.Message
+    (runtimeDisconnected || runtimeWarning) && runtimePlatform?.Message
       ? runtimePlatform.Message
       : runtimePlatformMissing
         ? `${channelName}连接状态暂未上报`
@@ -113,7 +123,7 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
               <span
                 className={classNames(styles['robot-detail-status-dot'], {
                   [styles['active']]: statusActive,
-                  [styles['warning']]: runtimePlatformMissing,
+                  [styles['warning']]: runtimePlatformMissing || runtimeWarning,
                   [styles['error']]: runtimeDisconnected,
                 })}
               />
@@ -133,7 +143,14 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
           onUnbound={onUnbound}
         />
 
+        <RobotAgentPermissionCard
+          config={runtimeConfig}
+          loading={runtimeConfigLoading}
+          onChange={onRuntimeConfigChange}
+        />
+
         <RobotRuntimeSettingCard
+          platform={robot.channel}
           config={runtimeConfig}
           loading={runtimeConfigLoading}
           onChange={onRuntimeConfigChange}

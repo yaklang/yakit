@@ -169,7 +169,13 @@ import {
   yakitStream,
   yakitUILayout,
 } from '@/services/electronBridge'
-import { getIMControlStatus } from '@/utils/imControl'
+import {
+  cancelIMControlState,
+  onIMControlStateData,
+  onIMControlStateEnd,
+  onIMControlStateError,
+  subscribeIMControlState,
+} from '@/utils/imControl'
 import { CeUserInfo, CeUserItemProps, UserMenuItemType, CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
 import { CeUsageStatisticsModal } from '../CeUserMenu/CeUsageStatisticsModal'
 
@@ -382,12 +388,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   const [robotControlModal, setRobotControlModal] = useState<boolean>(false)
   const [imControlStatus, setIMControlStatus] = useState<IMControlBadgeStatus>()
   const [imControlStatusLoading, setIMControlStatusLoading] = useState<boolean>(false)
+  const imControlStateRetryTimerRef = useRef<number>()
   /** 当前远程连接状态 */
   const { dynamicStatus } = yakitDynamicStatus()
   const [dynamicConnect] = useState<boolean>(dynamicStatus.isDynamicStatus)
   let avatarColor = useRef<string>(randomAvatarColor())
 
-  const refreshIMControlStatus = useMemoizedFn(async () => {
+  const refreshIMControlStatus = useMemoizedFn(() => {
     if (!userInfo.isLogin) {
       setIMControlStatus(undefined)
       setIMControlStatusLoading(false)
@@ -401,23 +408,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     }
 
     setIMControlStatusLoading(true)
-    try {
-      const status = await getIMControlStatus()
-      setIMControlStatus(status)
-    } catch (e) {
-      setIMControlStatus({
-        Running: true,
-        Platforms: [
-          {
-            Platform: 'im',
-            Connected: false,
-            Message: `${e}`,
-          },
-        ],
-      })
-    } finally {
-      setIMControlStatusLoading(false)
-    }
   })
 
   const imControlBadge = useMemo(
@@ -436,13 +426,96 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       setIMControlStatusLoading(false)
       return
     }
-
-    refreshIMControlStatus()
-    const timer = window.setInterval(refreshIMControlStatus, 15000)
-    return () => {
-      window.clearInterval(timer)
+    if (!isEngineLink) {
+      setIMControlStatus({ Running: false })
+      setIMControlStatusLoading(false)
+      return
     }
-  }, [isEngineLink, refreshIMControlStatus, userInfo.isLogin])
+
+    let disposed = false
+    let currentToken = ''
+    let cleanupListeners: Array<() => void> = []
+
+    function cleanupCurrentStream() {
+      cleanupListeners.forEach((cleanup) => cleanup())
+      cleanupListeners = []
+      if (currentToken) {
+        cancelIMControlState(currentToken).catch(() => {})
+        currentToken = ''
+      }
+      if (imControlStateRetryTimerRef.current) {
+        window.clearTimeout(imControlStateRetryTimerRef.current)
+        imControlStateRetryTimerRef.current = undefined
+      }
+    }
+
+    function scheduleReconnect() {
+      if (disposed) return
+      if (imControlStateRetryTimerRef.current) {
+        window.clearTimeout(imControlStateRetryTimerRef.current)
+      }
+      imControlStateRetryTimerRef.current = window.setTimeout(() => {
+        imControlStateRetryTimerRef.current = undefined
+        startSubscribe()
+      }, 1000)
+    }
+
+    function startSubscribe() {
+      cleanupCurrentStream()
+      if (disposed) return
+      const token = `im-control-state-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      currentToken = token
+      setIMControlStatusLoading(true)
+      cleanupListeners = [
+        onIMControlStateData(token, (state) => {
+          setIMControlStatus(state)
+          setIMControlStatusLoading(false)
+        }),
+        onIMControlStateError(token, (e) => {
+          setIMControlStatus({
+            Running: true,
+            Platforms: [
+              {
+                Platform: 'im',
+                Label: '移动端控制',
+                Connected: false,
+                Level: 'error',
+                Message: `${e}`,
+              },
+            ],
+          })
+          setIMControlStatusLoading(false)
+          scheduleReconnect()
+        }),
+        onIMControlStateEnd(token, () => {
+          setIMControlStatusLoading(false)
+          scheduleReconnect()
+        }),
+      ]
+      subscribeIMControlState(token).catch((e) => {
+        setIMControlStatus({
+          Running: true,
+          Platforms: [
+            {
+              Platform: 'im',
+              Label: '移动端控制',
+              Connected: false,
+              Level: 'error',
+              Message: `${e}`,
+            },
+          ],
+        })
+        setIMControlStatusLoading(false)
+        scheduleReconnect()
+      })
+    }
+
+    startSubscribe()
+    return () => {
+      disposed = true
+      cleanupCurrentStream()
+    }
+  }, [isEngineLink, userInfo.isLogin])
 
   useEffect(() => {
     // 退出菜单

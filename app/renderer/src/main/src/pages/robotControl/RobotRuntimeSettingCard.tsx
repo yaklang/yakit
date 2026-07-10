@@ -3,6 +3,7 @@ import classNames from 'classnames'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import type { IMControlConfig, IMReplyGranularity } from './api'
+import type { RobotChannelType } from './RobotControl'
 import styles from './RobotControl.module.scss'
 
 const REPLY_GRANULARITY_OPTIONS: Array<{
@@ -16,13 +17,14 @@ const REPLY_GRANULARITY_OPTIONS: Array<{
 ]
 
 export interface RobotRuntimeSettingCardProps {
+  platform?: RobotChannelType
   config: IMControlConfig
   loading?: boolean
   onChange: (config: IMControlConfig) => void
 }
 
 export const RobotRuntimeSettingCard: React.FC<RobotRuntimeSettingCardProps> = (props) => {
-  const { config, loading, onChange } = props
+  const { platform, config, loading, onChange } = props
 
   const updateConfig = (patch: Partial<IMControlConfig>) => {
     onChange({ ...config, ...patch })
@@ -30,6 +32,7 @@ export const RobotRuntimeSettingCard: React.FC<RobotRuntimeSettingCardProps> = (
 
   const replyGranularity = REPLY_GRANULARITY_OPTIONS.find((item) => item.value === config.ReplyGranularity)
   const requireMention = config.GroupTrigger !== 'allow_all'
+  const showReplyQuote = platform !== 'dingtalk'
 
   return (
     <div className={classNames(styles['robot-detail-card'], styles['robot-runtime-setting-card'])}>
@@ -41,17 +44,19 @@ export const RobotRuntimeSettingCard: React.FC<RobotRuntimeSettingCardProps> = (
       </div>
 
       <div className={styles['robot-setting-list']}>
-        <div className={styles['robot-setting-item']}>
-          <div className={styles['robot-setting-copy']}>
-            <div className={styles['robot-setting-title']}>引用回复</div>
-            <div className={styles['robot-setting-desc']}>开启后，bot 回复会尽量引用用户原消息。</div>
+        {showReplyQuote && (
+          <div className={styles['robot-setting-item']}>
+            <div className={styles['robot-setting-copy']}>
+              <div className={styles['robot-setting-title']}>引用回复</div>
+              <div className={styles['robot-setting-desc']}>开启后，bot 回复会尽量引用用户原消息。</div>
+            </div>
+            <YakitSwitch
+              checked={config.ReplyQuote}
+              disabled={loading}
+              onChange={(checked) => updateConfig({ ReplyQuote: checked })}
+            />
           </div>
-          <YakitSwitch
-            checked={config.ReplyQuote}
-            disabled={loading}
-            onChange={(checked) => updateConfig({ ReplyQuote: checked })}
-          />
-        </div>
+        )}
 
         <div className={styles['robot-setting-item']}>
           <div className={styles['robot-setting-copy']}>

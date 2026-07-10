@@ -14,17 +14,18 @@ import { RobotLinkInfo } from './RobotBoundPanel'
 import {
   DEFAULT_IM_CONTROL_CONFIG,
   deleteIMBot,
-  getIMControlStatus,
   listIMBots,
   normalizeIMControlConfig,
+  normalizeIMControlConfigMap,
   saveIMBot,
   startIMControl,
   stopIMControl,
   updateIMControlConfig,
   type IMBotConfigLike,
   type IMControlConfig,
+  type IMControlConfigMap,
 } from './api'
-import type { IMControlBadgePlatform, IMControlBadgeStatus } from './status'
+import { getPlatformLevel, type IMControlBadgePlatform, type IMControlBadgeStatus } from './status'
 import styles from './RobotControl.module.scss'
 
 export type RobotChannelType = 'wechat' | 'feishu' | 'lark' | 'telegram' | 'dingtalk' | 'discord' | 'wecom'
@@ -119,7 +120,7 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
   const [activeRobotId, setActiveRobotId] = useState<string>()
   const [isNewRobotView, setIsNewRobotView] = useState(true)
   const [loading, setLoading] = useState(false)
-  const [runtimeConfig, setRuntimeConfig] = useState<IMControlConfig>(DEFAULT_IM_CONTROL_CONFIG)
+  const [runtimeConfigs, setRuntimeConfigs] = useState<IMControlConfigMap>(() => normalizeIMControlConfigMap())
   const [runtimeConfigLoading, setRuntimeConfigLoading] = useState(false)
   const nameInputRef = useRef<Record<string, InputRef | null>>({})
   const startedOnceRef = useRef(false)
@@ -160,24 +161,29 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
 
   const buildLinkInfo = (bot: IMBotConfigLike): RobotLinkInfo => {
     return {
-      openId: bot.OwnerId || '',
+      openId: bot.OwnerId || bot.AppId || bot.Platform,
       appId: bot.AppId,
       channel: bot.Platform as RobotChannelType,
-      boundAt: '已绑定所有者',
+      boundAt: bot.OwnerId ? '已绑定所有者' : '已保存凭据',
     }
+  }
+
+  const isBotCredentialBound = (bot?: IMBotConfigLike) => {
+    return !!bot?.Platform && !!bot?.AppId && !!bot?.AppSecret
   }
 
   const buildRobotFromBot = useMemoizedFn((bot: IMBotConfigLike): RobotListItem => {
     const channel = bot.Platform as RobotChannelType
     const channelLabel = isSupportedIMPlatform(channel) ? getChannelLabel(channel) : bot.Platform
+    const bound = isBotCredentialBound(bot)
     return {
       id: getRobotId(bot.Platform),
       name: `${channelLabel || bot.Platform}机器人`,
       channel,
       region: getChannelRegion(bot.Platform),
       enabled: bot.Enabled !== false,
-      bound: !!bot.OwnerId,
-      linkInfo: bot.OwnerId ? buildLinkInfo(bot) : undefined,
+      bound,
+      linkInfo: bound ? buildLinkInfo(bot) : undefined,
       bot,
     }
   })
@@ -201,10 +207,10 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
     )
   }
 
-  const syncControlRuntime = useMemoizedFn(async (enabledPlatforms: string[], config = runtimeConfig) => {
+  const syncControlRuntime = useMemoizedFn(async (enabledPlatforms: string[], configMap = runtimeConfigs) => {
     try {
       if (enabledPlatforms.length > 0) {
-        await startIMControl(enabledPlatforms, config)
+        await startIMControl(enabledPlatforms, configMap)
       } else {
         await stopIMControl()
       }
@@ -213,28 +219,39 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
     }
   })
 
-  const loadRuntimeConfig = useMemoizedFn(async (): Promise<IMControlConfig> => {
+  const loadRuntimeConfig = useMemoizedFn(async (): Promise<IMControlConfigMap> => {
     try {
       const value = await getLocalValue(IM_CONTROL_CONFIG_CACHE_KEY)
-      if (!value) return DEFAULT_IM_CONTROL_CONFIG
+      if (!value) return normalizeIMControlConfigMap()
       const parsed = typeof value === 'string' ? JSON.parse(value) : value
-      const nextConfig = normalizeIMControlConfig(parsed)
-      setRuntimeConfig(nextConfig)
+      const nextConfig = normalizeIMControlConfigMap(parsed)
+      setRuntimeConfigs(nextConfig)
       return nextConfig
     } catch (e) {
-      setRuntimeConfig(DEFAULT_IM_CONTROL_CONFIG)
-      return DEFAULT_IM_CONTROL_CONFIG
+      const nextConfig = normalizeIMControlConfigMap()
+      setRuntimeConfigs(nextConfig)
+      return nextConfig
     }
   })
 
-  const onRuntimeConfigChange = useMemoizedFn(async (config: IMControlConfig) => {
+  const getRuntimeConfigForPlatform = useMemoizedFn((platform?: string): IMControlConfig => {
+    const key = normalizeRuntimePlatform(platform)
+    return normalizeIMControlConfig((key && runtimeConfigs[key]) || DEFAULT_IM_CONTROL_CONFIG)
+  })
+
+  const onRuntimeConfigChange = useMemoizedFn(async (platform: string | undefined, config: IMControlConfig) => {
+    const key = normalizeRuntimePlatform(platform)
+    if (!key) return
     const nextConfig = normalizeIMControlConfig(config)
-    setRuntimeConfig(nextConfig)
-    setLocalValue(IM_CONTROL_CONFIG_CACHE_KEY, JSON.stringify(nextConfig))
+    const nextConfigs = normalizeIMControlConfigMap({
+      ...runtimeConfigs,
+      [key]: nextConfig,
+    })
+    setRuntimeConfigs(nextConfigs)
+    setLocalValue(IM_CONTROL_CONFIG_CACHE_KEY, JSON.stringify(nextConfigs))
     setRuntimeConfigLoading(true)
     try {
-      await updateIMControlConfig(nextConfig)
-      onRuntimeStatusChange?.()
+      await updateIMControlConfig(key, nextConfig)
     } catch (e) {
       yakitNotify('error', `移动端控制配置保存失败：${e}`)
     } finally {
@@ -255,7 +272,7 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
     }
   })
 
-  const loadBots = useMemoizedFn(async (autoStart = false, config = runtimeConfig) => {
+  const loadBots = useMemoizedFn(async (autoStart = false, configMap = runtimeConfigs) => {
     setLoading(true)
     try {
       const res = await listIMBots()
@@ -280,14 +297,9 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
       if (autoStart) {
         const enabledPlatforms = nextRobots.filter((item) => item.enabled && item.bot).map((item) => item.bot!.Platform)
         if (enabledPlatforms.length > 0) {
-          const status = await getIMControlStatus().catch(() => undefined)
-          if (!status?.Running) {
-            await syncControlRuntime(enabledPlatforms, config)
-          } else {
-            onRuntimeStatusChange?.()
+          if (!runtimeStatus?.Running) {
+            await syncControlRuntime(enabledPlatforms, configMap)
           }
-        } else {
-          onRuntimeStatusChange?.()
         }
       }
     } catch (e) {
@@ -458,6 +470,31 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
       return
     }
 
+    if (!info && !id.startsWith('draft-')) {
+      setRobots((prev) =>
+        prev.map((item) => {
+          if (item.id !== id) return item
+          return {
+            ...item,
+            bound: false,
+            linkInfo: undefined,
+            enabled: false,
+            bot: item.bot
+              ? {
+                  ...item.bot,
+                  AppId: '',
+                  AppSecret: '',
+                  RobotSecret: '',
+                  OwnerId: '',
+                  Enabled: false,
+                }
+              : item.bot,
+          }
+        }),
+      )
+      return
+    }
+
     if (id.startsWith('draft-')) {
       updateDraftRobot(id, { linkInfo: info, bound: !!info })
     }
@@ -514,6 +551,7 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
 
   const activeRobotRuntimePlatform = getRuntimePlatform(activeRobot?.bot?.Platform)
   const activeRobotRuntimeMissing = isRuntimePlatformMissing(activeRobot, activeRobotRuntimePlatform)
+  const activeRobotRuntimeConfig = getRuntimeConfigForPlatform(activeRobot?.channel)
 
   return (
     <div className={styles['robot-control-wrapper']}>
@@ -531,7 +569,9 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
           <div ref={wrapperRef}>
             {virtualList.map(({ data: item }) => {
               const runtimePlatform = getRuntimePlatform(item.bot?.Platform)
-              const runtimeDisconnected = item.enabled && item.bound && runtimePlatform?.Connected === false
+              const runtimeLevel = runtimePlatform ? getPlatformLevel(runtimePlatform) : ''
+              const runtimeWarning = item.enabled && item.bound && runtimeLevel === 'warning'
+              const runtimeDisconnected = item.enabled && item.bound && runtimeLevel === 'error'
               const runtimeMissing = isRuntimePlatformMissing(item, runtimePlatform)
               return (
                 <div
@@ -553,12 +593,12 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
                   </div>
                   <div
                     className={classNames(styles['robot-status-dot'], {
-                      [styles['active']]: item.enabled && !runtimeDisconnected && !runtimeMissing,
-                      [styles['warning']]: runtimeMissing,
+                      [styles['active']]: item.enabled && !runtimeWarning && !runtimeDisconnected && !runtimeMissing,
+                      [styles['warning']]: runtimeMissing || runtimeWarning,
                       [styles['error']]: runtimeDisconnected,
                     })}
                     title={
-                      runtimeDisconnected
+                      runtimeDisconnected || runtimeWarning
                         ? runtimePlatform?.Message
                         : runtimeMissing
                           ? `${getChannelLabel(item.channel)}连接状态同步中`
@@ -610,12 +650,12 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
             onLinkInfoChange={(info, bot) => onLinkInfoChange(activeRobot.id, info, bot)}
             onUnbound={onUnbound}
             onBotConfigChange={(patch) => onBotConfigChange(activeRobot.id, patch)}
-            runtimeConfig={runtimeConfig}
+            runtimeConfig={activeRobotRuntimeConfig}
             runtimeConfigLoading={runtimeConfigLoading}
             runtimeRunning={runtimeStatus?.Running}
             runtimePlatform={activeRobotRuntimePlatform}
             runtimePlatformMissing={activeRobotRuntimeMissing}
-            onRuntimeConfigChange={onRuntimeConfigChange}
+            onRuntimeConfigChange={(config) => onRuntimeConfigChange(activeRobot.channel, config)}
           />
         ) : (
           <div className={styles['robot-detail-placeholder']}>{t('RobotControl.robotDetailPlaceholder')}</div>

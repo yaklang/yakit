@@ -44,7 +44,11 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
   const cleanupRef = useRef<(() => void)[]>([])
   const tokenRef = useRef('')
 
-  const isBound = !!linkInfo
+  const hasSavedCredentials = (value?: IMBotConfigLike) => {
+    return !!value?.Platform && !!value?.AppId && !!value?.AppSecret
+  }
+
+  const isBound = hasSavedCredentials(bot) && !!linkInfo
 
   const isSupportedIMPlatform = (value?: RobotChannelType): value is IMPlatform => {
     return value === 'feishu' || value === 'dingtalk'
@@ -159,11 +163,17 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
     if (!isSupportedIMPlatform(channel)) return
     try {
       if (bot) {
-        await saveIMBot({
-          ...bot,
-          OwnerId: '',
-          Enabled: false,
-        })
+        await saveIMBot(
+          {
+            ...bot,
+            AppId: '',
+            AppSecret: '',
+            RobotSecret: '',
+            OwnerId: '',
+            Enabled: false,
+          },
+          { ClearOwnerId: true },
+        )
       }
       onLinkInfoChange?.(undefined)
       onUnbound?.(channel)
@@ -197,7 +207,7 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
         <div className={styles['robot-link-actions']}>
           <span className={styles['robot-link-connected']}>
             <span className={styles['robot-link-connected-dot']} />
-            <span>已连通</span>
+            <span>已绑定</span>
           </span>
           <YakitButton type="outline2" icon={<OutlineLinkoutIcon />} onClick={onUnbind}>
             {t('RobotControl.unbind')}
