@@ -14,7 +14,11 @@ module.exports = (win, getClient) => {
   // 启动 IM 远程控制
   ipcMain.handle('StartIMControl', async (e, params) => {
     return await new Promise((resolve, reject) => {
-      getClient().StartIMControl(params || {}, (err, data) => {
+      const request = {
+        ...(params || {}),
+        EngineAddr: params?.EngineAddr || global.defaultYakGRPCAddr,
+      }
+      getClient().StartIMControl(request, (err, data) => {
         if (err) {
           reject(err)
           return
