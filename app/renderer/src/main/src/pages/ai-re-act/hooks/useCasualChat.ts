@@ -21,7 +21,8 @@ import { DefaultTodoListCardData, DefaultPlanItemDetailsData } from './defaultCo
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params: UseCasualChatParams) {
-  const { pushLog, getChatDataStore, getRequest, onReview, onReviewRelease, onSubTaskID } = params || {}
+  const { pushLog, getChatDataStore, getRequest, getCurrentCasualTaskID, onReview, onReviewRelease, onSubTaskID } =
+    params || {}
 
   const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
     pushLog && pushLog(logInfo)
@@ -53,9 +54,11 @@ function useCasualChat(params: UseCasualChatParams) {
   const handleReactTaskCreated = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.CasualCreated) => {
     if (!info.react_task_is_sub_agent) return
 
-    const taskKey = info.react_task_id
-    if (!taskKey) return
-    onSubTaskID?.(taskKey)
+    const ownTaskId = info.react_task_id
+    const taskId = getCurrentCasualTaskID?.()
+    if (!taskId || !ownTaskId) return
+    const taskKey = `${taskId}-${ownTaskId}`
+    onSubTaskID?.(ownTaskId)
 
     const existing = getContentMap(taskKey)
     if (existing) return
@@ -66,9 +69,9 @@ function useCasualChat(params: UseCasualChatParams) {
       chatType: 'reAct',
       type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
       data: {
-        taskId: info.react_task_id,
-        taskIndex: info.react_task_id,
-        taskName: info.react_task_name || info.react_user_input || info.react_task_id,
+        taskId: ownTaskId,
+        taskIndex: ownTaskId,
+        taskName: info.react_task_name || info.react_user_input || ownTaskId,
         goal: info.react_user_input || '',
         status: info.react_task_status,
       },
@@ -76,8 +79,9 @@ function useCasualChat(params: UseCasualChatParams) {
 
     setContentMap(chatData.id, chatData)
     const chatStore = getChatDataStore?.()
-    if (chatStore && !chatStore.casualChat.planDetailsMap.has(taskKey)) {
-      chatStore.casualChat.planDetailsMap.set(taskKey, cloneDeep(DefaultPlanItemDetailsData))
+    // planDetailsMap / 子任务收集仍按后端子任务 ID（res.TaskId）索引
+    if (chatStore && !chatStore.casualChat.planDetailsMap.has(ownTaskId)) {
+      chatStore.casualChat.planDetailsMap.set(ownTaskId, cloneDeep(DefaultPlanItemDetailsData))
     }
     setElements((old) => {
       const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
@@ -91,7 +95,9 @@ function useCasualChat(params: UseCasualChatParams) {
 
   /** 子 agent 任务状态变更时更新聚合卡片 */
   const handleReactTaskStatusChanged = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ReactTaskChanged) => {
-    const taskKey = res.TaskId || info.react_task_id
+    const taskId = getCurrentCasualTaskID?.()
+    const ownTaskId = res.TaskId || info.react_task_id
+    const taskKey = taskId && ownTaskId ? `${taskId}-${ownTaskId}` : ''
     if (!taskKey) return
 
     const existing = getContentMap(taskKey)
@@ -174,6 +180,7 @@ function useCasualChat(params: UseCasualChatParams) {
             onReview,
             onReviewRelease,
           },
+          getTaskId: getCurrentCasualTaskID,
           getChatDataStore,
           callback: (data) => {
             if (data.Type === 'current_task_todo_list_update' && data.NodeId === 'current_task_todo_list') {

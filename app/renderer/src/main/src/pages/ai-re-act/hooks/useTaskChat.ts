@@ -68,8 +68,10 @@ function useTaskChat(params: UseTaskChatParams) {
 
   const handleTaskNode = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     try {
-      const taskKey = info.task.task_id
-      if (!taskKey) return
+      const taskId = getCurrentTaskPlanID?.()?.taskID
+      const ownTaskId = info.task.task_id
+      if (!taskId || !ownTaskId) return
+      const taskKey = `${taskId}-${ownTaskId}`
       const existing = getContentMap(taskKey)
       if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         handleGrpcDataPushLog({
@@ -87,7 +89,7 @@ function useTaskChat(params: UseTaskChatParams) {
           type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
           data: {
             taskIndex: info.task.index,
-            taskId: info.task.task_id,
+            taskId: ownTaskId,
             taskName: info.task.name,
             goal: info.task.goal,
             status: info.task.task_status || AITaskStatus.inProgress,

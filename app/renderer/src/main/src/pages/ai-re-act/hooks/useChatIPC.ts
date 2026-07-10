@@ -360,6 +360,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     pushLog: logEvents.pushLog,
     getChatDataStore,
     getRequest: fetchAIRequest,
+    getCurrentCasualTaskID: fetchCurrentCasualTaskID,
     onReview: onTaskReview,
     onReviewRelease: handleCasualReviewRelease,
     onSubTaskID: (taskID) => {

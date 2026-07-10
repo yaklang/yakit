@@ -1,5 +1,5 @@
 import type { AIMessageHandler, AIMessageHandlerParams, UpdateRenderDataParams } from './type'
-import type { AIAgentGrpcApi, AIInputEvent } from './grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent, AIOutputEvent } from './grpcApi'
 import type {
   AIChatQSData,
   AIChatQSDataType,
@@ -40,7 +40,21 @@ import cloneDeep from 'lodash/cloneDeep'
 import { v4 as uuidv4 } from 'uuid'
 import isEmpty from 'lodash/isEmpty'
 import isArray from 'lodash/isArray'
+import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 // #region Common Utils
+/** 自由对话：是否为子 agent 任务（planDetailsMap 用子任务 ID；contents 用复合 ID） */
+const isCasualSubAgentTask = (
+  chatStore: AIChatData,
+  res: AIOutputEvent,
+  getTaskId?: AIMessageHandlerParams['getTaskId'],
+) => {
+  if (chatStore.casualChat.planDetailsMap.has(res.TaskId)) return true
+  const parentTaskId = getTaskId?.()
+  if (!parentTaskId || !res.TaskId) return false
+  return (
+    chatStore.casualChat.contents.get(`${parentTaskId}-${res.TaskId}`)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+  )
+}
 /** grpc流数据转换成错误信息输出到日志中 */
 const handleErrorGRPCToLog: (
   /** 该条grpc流数据是历史数据 */
@@ -202,6 +216,7 @@ const handleThought: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -231,6 +246,7 @@ const handleResult: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -261,6 +277,7 @@ const handleFailReactTask: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -295,6 +312,7 @@ const handleToolCallDecision: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -325,6 +343,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -359,6 +378,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -405,6 +425,7 @@ const handleApiRequestFailed: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -460,6 +481,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
         chatType: info.chatType,
         res,
         getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+        getTaskId: request.getTaskId,
         getContentMap: request.getContentMap,
       }),
     }
@@ -508,7 +530,7 @@ const handleReportFinish: AIMessageHandler = (request) => {
 }
 /** Type='current_task_todo_list_update'&NodeId='current_task_todo_list' todolist */
 const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
-  const { res, info, getChatDataStore, callback } = request
+  const { res, info, getChatDataStore, getTaskId, callback } = request
   if (!res.TaskId) return
   if (res.Type !== 'current_task_todo_list_update' || res.NodeId !== 'current_task_todo_list') return
 
@@ -528,9 +550,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
     oldData.todoList = newData
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const isSubAgentTask =
-      chatStore.casualChat.planDetailsMap.has(res.TaskId) ||
-      chatStore.casualChat.contents.get(res.TaskId)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
     if (isSubAgentTask) {
       const oldData = chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
       oldData.uuid = uuidv4()
@@ -549,7 +569,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
 }
 /** Type='structured'&NodeId='capability_inventory' 能力清单(tool/skills/forge/yak_plugin/mac) */
 const handleCapabilityInventory: AIMessageHandler = (request) => {
-  const { res, info, getChatDataStore } = request
+  const { res, info, getChatDataStore, getTaskId } = request
   if (!res.TaskId) return
   if (res.Type !== 'structured' && res.NodeId !== 'capability_inventory') return
 
@@ -647,9 +667,7 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
     oldData.mcp = itemData.mcp
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const isSubAgentTask =
-      chatStore.casualChat.planDetailsMap.has(res.TaskId) ||
-      chatStore.casualChat.contents.get(res.TaskId)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
     if (isSubAgentTask) {
       const oldData = chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
       oldData.uuid = itemData.uuid
@@ -675,7 +693,7 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
 }
 /** Type='perception'&NodeId='perception' 意图感知 */
 const handlePerception: AIMessageHandler = (request) => {
-  const { res, info, getChatDataStore } = request
+  const { res, info, getChatDataStore, getTaskId } = request
   if (!res.TaskId) return
   if (res.Type !== 'perception' && res.NodeId !== 'perception') return
   const chatStore = getChatDataStore?.()
@@ -691,9 +709,7 @@ const handlePerception: AIMessageHandler = (request) => {
     oldData.perception = perception
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const isSubAgentTask =
-      chatStore.casualChat.planDetailsMap.has(res.TaskId) ||
-      chatStore.casualChat.contents.get(res.TaskId)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
     if (isSubAgentTask) {
       const oldData = chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
       oldData.uuid = uuidv4()
@@ -711,7 +727,7 @@ const handlePerception: AIMessageHandler = (request) => {
 }
 
 const handleSessionSnapshot: AIMessageHandler = (request) => {
-  const { res, info, getChatDataStore } = request
+  const { res, info, getChatDataStore, getTaskId } = request
   if (!res.TaskId) return
   if (res.NodeId !== 'session_snapshot') return
 
@@ -730,9 +746,7 @@ const handleSessionSnapshot: AIMessageHandler = (request) => {
 
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const isSubAgentTask =
-      chatStore.casualChat.planDetailsMap.has(res.TaskId) ||
-      chatStore.casualChat.contents.get(res.TaskId)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
     if (isSubAgentTask) {
       const oldData = chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
       oldData.uuid = uuidv4()
@@ -827,6 +841,7 @@ const handleStreamStart: AIMessageHandler = (request) => {
         chatType: info.chatType,
         res,
         getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+        getTaskId: request.getTaskId,
         getContentMap: request.getContentMap,
       }),
     })
@@ -886,6 +901,7 @@ const handleStreamStart: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   })
@@ -1348,6 +1364,7 @@ const handleToolCallStart: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   })
@@ -1801,6 +1818,7 @@ const handlePlanReview: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -1880,6 +1898,7 @@ const handleDetachedPlanReview: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -1967,6 +1986,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -2047,6 +2067,7 @@ const handleToolReview: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -2124,6 +2145,7 @@ const handleUserInteractive: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
@@ -2190,6 +2212,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getTaskId: request.getTaskId,
       getContentMap: request.getContentMap,
     }),
   }
