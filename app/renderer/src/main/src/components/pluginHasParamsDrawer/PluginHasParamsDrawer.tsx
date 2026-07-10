@@ -271,9 +271,9 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       width={'max(700px, 50%)'}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       onCancel={() => onCloseParamsModal(false)}
       title={scriptName}
       footerStyle={{ overflow: 'visible' }}

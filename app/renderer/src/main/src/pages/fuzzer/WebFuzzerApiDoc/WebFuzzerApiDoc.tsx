@@ -337,8 +337,8 @@ export const WebFuzzerApiDoc: React.FC<{
           <div className={styles['header-actions']}>
             <Tooltip
               trigger={['click']}
-              destroyTooltipOnHide
-              overlayClassName={styles['history-tooltip']}
+              destroyOnHidden
+              classNames={{ root: styles['history-tooltip'] }}
               getPopupContainer={getPopupContainer}
               title={
                 <div className={styles['history-tooltip-content']}>
