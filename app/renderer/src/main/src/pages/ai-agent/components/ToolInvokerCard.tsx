@@ -476,7 +476,7 @@ const ToolParamsLine: FC<{ params?: Record<string, any> }> = memo(({ params }) =
           <div className={styles['params-modal-json']}>
             {jsonPretty}
             <div className={styles['params-modal-copy']} onClick={onCopyAll}>
-              <OutlineDocumentduplicateIcon style={{ width: 14, height: 14 }} />
+              <OutlineDocumentduplicateIcon />
             </div>
           </div>
           {Object.entries(params).map(([key, value]) => (

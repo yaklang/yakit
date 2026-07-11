@@ -235,7 +235,7 @@
   .params-modal-json {
     background: var(--Colors-Use-Neutral-Bg);
     border-radius: 8px;
-    padding: 12px;
+    padding: 12px 28px 12px 12px;
     font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
     font-size: 12px;
     line-height: 18px;
@@ -253,16 +253,24 @@
     display: none;
     position: absolute;
     top: 8px;
-    right: 8px;
+    right: 24px;
+    width: 22px;
+    height: 22px;
     align-items: center;
+    justify-content: center;
     border-radius: 4px;
     background: var(--Colors-Use-Neutral-Bg-Hover);
     border: 1px solid var(--Colors-Use-Neutral-Border);
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     cursor: pointer;
-    padding: 2px 4px;
+    padding: 0;
     &:hover {
       color: var(--Colors-Use-Neutral-Text-1-Title);
+      background: var(--Colors-Use-Neutral-Bg);
+    }
+    svg {
+      width: 13px;
+      height: 13px;
     }
   }
   .params-field-item {
