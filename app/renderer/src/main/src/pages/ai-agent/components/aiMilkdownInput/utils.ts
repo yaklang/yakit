@@ -106,6 +106,9 @@ export const parseMentions = (markdown: string): Mention[] => {
 export const setEditorValue = (editor: EditorMilkdownProps, value: string) => {
   editor?.action((ctx) => {
     const view = ctx.get(editorViewCtx)
+    // 关键词: prosemirror view isDestroyed guard, 防止对已销毁 view dispatch
+    // 编辑器卸载后 view 仍可能被外部引用(例如 ref 持有), 此时 dispatch 会抛错或污染内部状态.
+    if (view?.isDestroyed) return
     const parser = ctx.get(parserCtx)
 
     const doc = parser(value)
