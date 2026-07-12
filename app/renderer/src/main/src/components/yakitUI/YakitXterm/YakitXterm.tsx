@@ -214,7 +214,16 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
     if (terminalRef.current && terminalDivRef.current) {
       // Creates the terminal within the container element.
       terminalRef.current.open(terminalDivRef.current)
-      fitAddonRef.current.fit()
+      // 关键词: xterm open 后 fit 延后一帧, 避免 RenderService.dimensions 未就绪崩溃
+      // Terminal.open 内部 Viewport 构造会异步(100ms 内)首次 syncScrollArea,
+      // 同步立刻 fit() 在某些时序下会触发 _renderService.dimensions 抛错。
+      requestAnimationFrame(() => {
+        try {
+          fitAddonRef.current.fit()
+        } catch (e) {
+          // renderer 尚未就绪时 fit 失败可忽略, 后续 resize 监听会补偿
+        }
+      })
     }
     return () => {
       terminalRef.current.dispose()

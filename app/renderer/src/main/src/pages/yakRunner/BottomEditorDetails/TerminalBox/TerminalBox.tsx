@@ -246,7 +246,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
       setTerminalRunnerId('')
       setReloadTerminal(true)
       setRefreshList(!refreshList)
-      terminalRef.current.terminal.reset()
+      xtermClear(terminalRef)
       const main = document.getElementById('yakit-runnner-main-box-id')
       if (main) {
         main.focus()
@@ -429,7 +429,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
     try {
       if (terminalCache && terminalRef.current) {
         const cache: TerminalDetailsProps = JSON.parse(terminalCache)
-        terminalRef.current.terminal.reset()
+        xtermClear(terminalRef)
         writeXTerm(terminalRef, cache.content)
         terminalRef.current.terminal.scrollToBottom()
       }
