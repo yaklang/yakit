@@ -47,6 +47,7 @@ import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPlugi
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
 import useGetAIMaterialsData, { getAIRecommendIconByType } from '@/pages/ai-re-act/hooks/useGetAIMaterialsData'
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import memfitLogo from '@/assets/memfit.jpg'
 
 // const sideberRadioOptions = [
 //     {
@@ -299,6 +300,9 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         <div className={styles['content']}>
           <div className={styles['content-absolute']}>
             <div className={styles['input-wrapper']}>
+              <div className={styles['content-logo']}>
+                <img src={memfitLogo} alt="" width={120} />
+              </div>
               <div className={styles['input-heard']}>
                 <div className={styles['title']}>信湃 SenPike</div>
                 <div className={styles['subtitle']}>AI自主渗透与攻防验证系统</div>
@@ -367,7 +371,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               </div>
             )}
           </div>
-          <div className={styles['content-copy']}>© 2026 云端信立方 - Al安全能力平台</div>
+          <div className={styles['content-copy']}>@2026亚信安全信湃SenPike-AI自主渗透和攻防验证系统</div>
         </div>
       </div>
     )
