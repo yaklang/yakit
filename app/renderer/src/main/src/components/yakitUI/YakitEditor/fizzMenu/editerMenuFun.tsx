@@ -200,22 +200,20 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                   if (editor) {
                     const selectedText = editor.getModel()?.getValueInRange(editor.getSelection() as any) || ''
                     if (selectedText.length > 0) {
-                      ipcRenderer
-                        .invoke('QueryFuzzerLabel')
-                        .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
-                          const { Data } = data
-                          let newSelectedText: string = selectedText
-                          if (Array.isArray(Data) && Data.length > 0) {
-                            // 选中项是否存在于标签中
-                            let isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
-                            if (isHave) {
-                              newSelectedText = selectedText.replace(/{{|}}/g, '')
-                            }
+                      ipcRenderer.invoke('QueryFuzzerLabel').then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
+                        const { Data } = data
+                        let newSelectedText: string = selectedText
+                        if (Array.isArray(Data) && Data.length > 0) {
+                          // 选中项是否存在于标签中
+                          let isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
+                          if (isHave) {
+                            newSelectedText = selectedText.replace(/{{|}}/g, '')
                           }
-                          const text: string = fun(newSelectedText)
-                          //   editor.trigger("keyboard", "type", {text})// 选择范围大会卡死
-                          monacoEditorWrite(editor, text)
-                        })
+                        }
+                        const text: string = fun(newSelectedText)
+                        //   editor.trigger("keyboard", "type", {text})// 选择范围大会卡死
+                        monacoEditorWrite(editor, text)
+                      })
                     }
                   }
                 }}
