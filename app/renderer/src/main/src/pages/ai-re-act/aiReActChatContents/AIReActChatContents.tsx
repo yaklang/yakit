@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 'react'
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
 import classNames from 'classnames'
 import {
   AIReActChatContentsPProps,
@@ -19,6 +19,7 @@ import { ModalInfoProps } from '@/pages/ai-agent/components/ModelInfo'
 import { AIStreamContentType } from '../hooks/defaultConstant'
 import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
+import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
 import { ChatReferenceMaterialPayload, ReActChatRenderItem } from '../hooks/aiRender'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import Loading from '@/components/Loading/Loading'
@@ -125,6 +126,7 @@ const TYPE = 'reAct'
 export const AIReActChatContents = React.memo(
   forwardRef<AIReActChatContentsRef, AIReActChatContentsPProps>((props, ref) => {
     const { chats } = props
+    const listRootRef = useRef<HTMLDivElement>(null)
     const {
       casualTitle,
       requestHistoryState: { casualLoadMoreLoading },
@@ -150,7 +152,12 @@ export const AIReActChatContents = React.memo(
         isPrependingRef,
       })
 
-    useImperativeHandle(ref, () => ({ scrollToItemIndex }), [scrollToItemIndex])
+    const { locateToIndex } = useChatStreamLocateHighlight({
+      scrollToIndex: scrollToItemIndex,
+      listRootRef,
+    })
+
+    useImperativeHandle(ref, () => ({ scrollToItemIndex: locateToIndex }), [locateToIndex])
 
     const renderItem = useCallback(
       (index: number, item?: ReActChatRenderItem) => {
@@ -163,7 +170,7 @@ export const AIReActChatContents = React.memo(
     )
     const Item = useCallback(
       ({ children, style, 'data-index': dataIndex }) => (
-        <div key={dataIndex} style={style} data-index={dataIndex} className={styles['item-wrapper']}>
+        <div style={style} data-index={dataIndex} className={styles['item-wrapper']}>
           <div className={styles['item-inner']}>{children}</div>
         </div>
       ),
@@ -210,7 +217,7 @@ export const AIReActChatContents = React.memo(
       [Footer, Header, Item],
     )
     return (
-      <div className={styles['ai-re-act-chat-contents']}>
+      <div ref={listRootRef} className={styles['ai-re-act-chat-contents']}>
         <Virtuoso
           key={activeChat?.SessionID}
           ref={virtuosoRef}

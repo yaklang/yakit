@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEffect, useWhyDidYouUpdate } from 'ahooks'
+import { useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEffect } from 'ahooks'
 import { AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps } from '../aiAgentType'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -18,6 +18,7 @@ import StreamCard from '../components/StreamCard'
 import i18n from '@/i18n/i18n'
 import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '@/pages/ai-re-act/hooks/useVirtuosoAutoScroll'
+import useChatStreamLocateHighlight from '@/pages/ai-re-act/hooks/useChatStreamLocateHighlight'
 
 import classNames from 'classnames'
 import styles from './AIAgentChatTemplate.module.scss'
@@ -198,30 +199,13 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 const TYPE = 'task'
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
   const { streams, scrollToBottom, taskStatus, session } = props
+  const listRootRef = useRef<HTMLDivElement>(null)
 
-  const [highlightedItem, setHighlightedItem] = useState<{ index: number; token: number } | null>(null)
-  const highlightRafRef = useRef<number>(0)
-  const highlightObserverRef = useRef<IntersectionObserver | null>(null)
-  const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
-  useUpdateEffect(() => {
-    scrollToIndex('LAST')
-  }, [scrollToBottom])
+  const { handleLoadMoreHistory, handleHasMoreHistory, fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
 
   const {
     requestHistoryState: { taskLoadMoreLoading },
   } = useChatIPCStore().chatIPCData
-  const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
-  useEffect(() => {
-    if (!highlightedItem) return
-
-    const clearTimer = window.setTimeout(() => {
-      setHighlightedItem(null)
-    }, 1600)
-
-    return () => {
-      window.clearTimeout(clearTimer)
-    }
-  }, [highlightedItem])
 
   // 向上滚动加载
   const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
@@ -232,53 +216,23 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     loadMore: () => handleLoadMoreHistory(TYPE),
   })
 
-  const { virtuosoRef, setIsAtBottomRef, setScrollerRef, scrollToIndex, handleTotalListHeightChanged } =
-    useVirtuosoAutoScroll({ total: streams.length, isPrependingRef })
+  const {
+    virtuosoRef,
+    setIsAtBottomRef,
+    setScrollerRef,
+    scrollToIndex,
+    scrollToItemIndex: scrollToListItem,
+    handleTotalListHeightChanged,
+  } = useVirtuosoAutoScroll({ total: streams.length, isPrependingRef })
 
-  const cleanupHighlightWatcher = useMemoizedFn(() => {
-    if (highlightRafRef.current) {
-      cancelAnimationFrame(highlightRafRef.current)
-      highlightRafRef.current = 0
-    }
-    highlightObserverRef.current?.disconnect()
-    highlightObserverRef.current = null
+  const { locateToIndex } = useChatStreamLocateHighlight({
+    scrollToIndex: scrollToListItem,
+    listRootRef,
   })
 
-  /** 等元素进入可视区域后再设置高亮，避免动画在不可见时播放完毕 */
-  const waitAndHighlight = useMemoizedFn((targetIndex: number) => {
-    cleanupHighlightWatcher()
-    setHighlightedItem(null)
-
-    let attempts = 0
-    const tryObserve = () => {
-      if (++attempts > 120) return
-      const el = document.querySelector(`[data-index="${targetIndex}"]`)
-      if (!el) {
-        highlightRafRef.current = requestAnimationFrame(tryObserve)
-        return
-      }
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((e) => e.isIntersecting)) {
-            setHighlightedItem({ index: targetIndex, token: Date.now() })
-            observer.disconnect()
-            highlightObserverRef.current = null
-          }
-        },
-        { threshold: 0.1 },
-      )
-      observer.observe(el)
-      highlightObserverRef.current = observer
-    }
-    highlightRafRef.current = requestAnimationFrame(tryObserve)
-  })
-
-  useEffect(() => {
-    return () => {
-      cleanupHighlightWatcher()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  useUpdateEffect(() => {
+    scrollToIndex('LAST')
+  }, [scrollToBottom])
 
   const renderItem = useCallback(
     (index: number, stream: ReActChatRenderItem) => {
@@ -291,18 +245,11 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   )
   const Item = useCallback(
     ({ children, style, 'data-index': dataIndex }) => (
-      <div
-        key={dataIndex}
-        style={style}
-        data-index={dataIndex}
-        className={classNames(styles['item-wrapper'], {
-          [styles['item-wrapper-highlighted']]: highlightedItem?.index === Number(dataIndex),
-        })}
-      >
+      <div style={style} data-index={dataIndex} className={styles['item-wrapper']}>
         <div className={styles['item-inner']}>{children}</div>
       </div>
     ),
-    [highlightedItem],
+    [],
   )
 
   const Footer = useCallback(
@@ -326,35 +273,28 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     }),
     [Footer, Header, Item],
   )
-
-  const onScrollToIndex = useMemoizedFn((id) => {
+  const onTreeLocate = useMemoizedFn((id?: string) => {
+    if (!id) return
     const index = streams.findIndex((item) => {
-      if (item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-        const chatItem = fetchChatDataStore()?.getContentMap({
-          session,
-          chatType: item.chatType,
-          mapKey: item.token,
-        })
-        if (!chatItem) return false
-        const taskIndex = (chatItem.data as AITaskStartInfo).taskIndex
-        return taskIndex === id
-      }
-      return false
+      if (item.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return false
+      const chatItem = fetchChatDataStore()?.getContentMap({
+        session,
+        chatType: item.chatType,
+        mapKey: item.token,
+      })
+      if (!chatItem) return false
+      return (chatItem.data as AITaskStartInfo).taskIndex === id
     })
-    if (index !== -1) {
-      scrollToIndex(index, 'auto')
-      waitAndHighlight(index)
-    }
+    locateToIndex(index, 'auto')
   })
   useMount(() => {
-    emiter.on('onAITreeLocatePlanningList', onScrollToIndex)
+    emiter.on('onAITreeLocatePlanningList', onTreeLocate)
     return () => {
-      emiter.off('onAITreeLocatePlanningList', onScrollToIndex)
+      emiter.off('onAITreeLocatePlanningList', onTreeLocate)
     }
   })
-
   return (
-    <div className={styles['ai-agent-chat-stream']}>
+    <div ref={listRootRef} className={styles['ai-agent-chat-stream']}>
       <Virtuoso<ReActChatRenderItem>
         ref={virtuosoRef}
         key={session}

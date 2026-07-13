@@ -171,15 +171,6 @@
       padding-top: 12px;
     }
   }
-  .item-wrapper-highlighted {
-    .item-inner {
-      border-radius: 12px;
-      // 虚线
-      outline: 2px dashed transparent;
-      outline-offset: 2px;
-      animation: ai-chat-item-highlight 0.75s ease-in-out 2;
-    }
-  }
   // 后代类名ai-stream-chat-content-wrapper且下一个也是 的不要 padding-top（concurrent-stream-card 本身是流卡片容器，排除在外保留间距）
   // .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
   //   & + .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
@@ -190,38 +181,6 @@
   // }
   .task-loading-footer {
     padding: 0 12px;
-  }
-}
-
-@keyframes ai-chat-item-highlight {
-  0% {
-    outline-color: transparent;
-    box-shadow: 0 0 0 0 transparent;
-  }
-  30% {
-    outline-color: var(--Colors-Use-Main-Primary);
-    box-shadow: 0 0 0 4px var(--Colors-Use-Main-Primary);
-  }
-  100% {
-    outline-color: transparent;
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-
-@supports (background: color-mix(in srgb, #000 50%, #fff)) {
-  @keyframes ai-chat-item-highlight {
-    0% {
-      outline-color: transparent;
-      box-shadow: 0 0 0 0 transparent;
-    }
-    30% {
-      outline-color: var(--Colors-Use-Main-Primary);
-      box-shadow: 0 0 0 4px color-mix(in srgb, var(--Colors-Use-Main-Primary) 18%, transparent);
-    }
-    100% {
-      outline-color: transparent;
-      box-shadow: 0 0 0 0 transparent;
-    }
   }
 }
 
