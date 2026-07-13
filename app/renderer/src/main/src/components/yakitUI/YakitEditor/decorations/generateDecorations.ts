@@ -1,6 +1,7 @@
 import { monaco } from 'react-monaco-editor'
 import { editor as newEditor } from 'monaco-editor'
 import IModelDecoration = newEditor.IModelDecoration
+<<<<<<< HEAD
 import {
   type BinaryFuzztagEntry,
   buildChipLabel,
@@ -9,6 +10,13 @@ import {
 import type { YakitIModelDecoration, YakitIMonacoEditor, HighLightText } from '../YakitEditorType'
 import type { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
+=======
+import { BinaryFuzztagEntry, buildChipLabel, findPlaceholderOffsets } from '../binaryFuzztag'
+import { YakitIModelDecoration, YakitIMonacoEditor } from '../YakitEditorType'
+import { HighLightText } from '../YakitEditorType'
+import { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
+import { TFunction } from '@/i18n/useI18nNamespaces'
+>>>>>>> acba717adc (style: apply prettier formatting [skip ci])
 
 export interface GenerateDecorationsParams {
   model: monaco.editor.ITextModel
@@ -275,10 +283,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
             hoverMessage: { value: fixContentTypeHoverMessage },
             afterContentClassName: 'unicode-decode',
             after: {
-              content:
-                originalContentType === ''
-                  ? t('YakitEditor.emptyContentTypeAutoDetected')
-                  : originalContentType,
+              content: originalContentType === '' ? t('YakitEditor.emptyContentTypeAutoDetected') : originalContentType,
               inlineClassName: 'unicode-decode-after',
             },
           },
