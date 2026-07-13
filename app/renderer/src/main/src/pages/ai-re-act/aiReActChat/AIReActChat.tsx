@@ -111,7 +111,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         let cancelled = false
         queueMicrotask(() => {
           if (!cancelled) {
-            aiChatTextareaRef.current.setValue('')
+            aiChatTextareaRef.current?.setValue('')
           }
         })
         return () => {
