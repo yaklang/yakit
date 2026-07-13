@@ -485,7 +485,7 @@ const ToolParamsLine: FC<{ params?: Record<string, any> }> = memo(({ params }) =
               <span className={styles['field-value']}>
                 {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
               </span>
-              <Tooltip title="Copy">
+              <Tooltip title={t('copy')}>
                 <span className={styles['field-copy']} onClick={() => onCopyField(value)}>
                   <OutlineDocumentduplicateIcon style={{ width: 12, height: 12 }} />
                 </span>
