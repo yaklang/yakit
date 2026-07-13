@@ -214,14 +214,16 @@ let readyWinShow = false
 function createWindow() {
   const minWidth = 900
   const minHeight = 650
+  const defaultWidth = 1400
+  const defaultHeight = 880
   const state = windowStateKeeper({
-    defaultWidth: minWidth,
-    defaultHeight: minHeight,
+    defaultWidth: defaultWidth,
+    defaultHeight: defaultHeight,
     path: getWindowStatePath(),
     file: 'yakit-window-state.json',
   })
-  const width = Math.max(state.width ?? minWidth, minWidth)
-  const height = Math.max(state.height ?? minHeight, minHeight)
+  const width = Math.max(state.width ?? defaultWidth, minWidth)
+  const height = Math.max(state.height ?? defaultHeight, minHeight)
 
   win = new BrowserWindow({
     x: state.x,

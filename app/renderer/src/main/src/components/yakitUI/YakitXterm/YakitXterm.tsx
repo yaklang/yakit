@@ -18,8 +18,8 @@ import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
 import { getClipboardText, setClipboardText } from '@/utils/clipboard'
 import { useXTermOptions } from '@/hook/useXTermOptions/useXTermOptions'
-import { useCampare } from '@/hook/useCompare/useCompare'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isTerminalReady } from '@/utils/xtermUtils'
 
 export interface YakitXtermRefProps {
   terminal: Terminal
@@ -182,6 +182,15 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
     getTerminal: () => terminalRef.current,
   })
 
+  const safeFit = useMemoizedFn(() => {
+    if (!fitAddonRef.current || !isTerminalReady(terminalRef.current)) return
+    try {
+      fitAddonRef.current.fit()
+    } catch (e) {
+      // 关键词: xterm fit error swallowed, 防止 _renderService.dimensions 崩溃冒泡到 UI
+    }
+  })
+
   useEffect(() => {
     if (!systemRef.current) {
       handleFetchSystem(() => (systemRef.current = SystemInfo.system))
@@ -214,7 +223,17 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
     if (terminalRef.current && terminalDivRef.current) {
       // Creates the terminal within the container element.
       terminalRef.current.open(terminalDivRef.current)
-      fitAddonRef.current.fit()
+      // 关键词: xterm open 后 fit 延后一帧, 避免 RenderService.dimensions 未就绪崩溃
+      // Terminal.open 内部 Viewport 构造会异步(100ms 内)首次 syncScrollArea,
+      // 同步立刻 fit() 在某些时序下会触发 _renderService.dimensions 抛错。
+      const rafId = requestAnimationFrame(() => {
+        safeFit()
+      })
+      return () => {
+        cancelAnimationFrame(rafId)
+        terminalRef.current.dispose()
+        fitAddonRef.current.dispose()
+      }
     }
     return () => {
       terminalRef.current.dispose()
@@ -222,8 +241,11 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
     }
   }, [])
   useEffect(() => {
-    fitAddonRef.current.fit()
-  }, [terminalDivHeight, terminalDivWidth])
+    const rafId = requestAnimationFrame(() => {
+      safeFit()
+    })
+    return () => cancelAnimationFrame(rafId)
+  }, [terminalDivHeight, terminalDivWidth, safeFit])
   const customKeyEventHandler = (e: KeyboardEvent) => {
     if (props.customKeyEventHandler) {
       return props.customKeyEventHandler(e)

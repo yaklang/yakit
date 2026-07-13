@@ -55,7 +55,7 @@ module.exports = (win, getClient) => {
     // 如果有问题，重置
     stream.on('error', (e) => {
       removeStreamRunner(id)
-      if (win) {
+      if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
         win.webContents.send('client-listening-terminal-error-yakRunner', { id, path })
       }
     })
@@ -63,7 +63,7 @@ module.exports = (win, getClient) => {
     // 发送回数据
     stream.on('data', (data) => {
       if (data.control) {
-        if (win && data.waiting) {
+        if (win && !win.isDestroyed() && !win.webContents.isDestroyed() && data.waiting) {
           win.webContents.send(`client-listening-terminal-success-yakRunner`, { id, path, result: data })
         }
         if (win && data.closed) {
@@ -72,13 +72,13 @@ module.exports = (win, getClient) => {
         return
       }
 
-      if (win) {
+      if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
         win.webContents.send(`client-listening-terminal-data-yakRunner`, { id, path, result: data })
       }
     })
     stream.on('end', () => {
       removeStreamRunner(id)
-      if (win) {
+      if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
         win.webContents.send('client-listening-terminal-end-yakRunner', { id, path })
       }
     })
@@ -95,7 +95,7 @@ module.exports = (win, getClient) => {
     // 如果有问题，重置
     stream.on('error', (e) => {
       removeStreamRunner(id)
-      if (win) {
+      if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
         win.webContents.send('client-listening-terminal-error-aiAgent', { id, path })
       }
     })
@@ -103,7 +103,7 @@ module.exports = (win, getClient) => {
     // 发送回数据
     stream.on('data', (data) => {
       if (data.control) {
-        if (win && data.waiting) {
+        if (win && !win.isDestroyed() && !win.webContents.isDestroyed() && data.waiting) {
           win.webContents.send(`client-listening-terminal-success-aiAgent`, { id, path, result: data })
         }
         if (win && data.closed) {
@@ -112,13 +112,13 @@ module.exports = (win, getClient) => {
         return
       }
 
-      if (win) {
+      if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
         win.webContents.send(`client-listening-terminal-data-aiAgent`, { id, path, result: data })
       }
     })
     stream.on('end', () => {
       removeStreamRunner(id)
-      if (win) {
+      if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) {
         win.webContents.send('client-listening-terminal-end-aiAgent', { id, path })
       }
     })

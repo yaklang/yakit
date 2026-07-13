@@ -174,81 +174,85 @@ const AIGroupStreamCard: FC<{
     }
   }, [hasNext])
   if (!stream) return null
+  const collapseTooltip = !expand && elements.length > 1 ? `折叠${elements.length}条信息` : ''
+
   return (
-    <div
-      className={classNames(styles.container, {
-        [styles['container-focus']]: isFocus,
-      })}
-      ref={containerRef}
-    >
+    <Tooltip title={collapseTooltip} mouseEnterDelay={0.3}>
       <div
-        className={styles.title}
-        onClick={() => {
-          setExpand(!expand)
-        }}
-      >
-        <div className={styles['title-node-label']}>
-          {/* <OutlineBrainIcon className={styles['brain-icon']} /> */}
-          {nodeLabel}
-        </div>
-        <div className={styles['stream-text']}>
-          {shouldShowMask && <div className={styles['ai-mask']} />}
-          <p
-            className={classNames({
-              [styles['stream-text-hidden']]: expand,
-            })}
-          >
-            <span>{content}</span>
-          </p>
-        </div>
-        <Tooltip title="展开">
-          <YakitButton
-            size="small"
-            type="text"
-            icon={<OutlineChevronsUpDownIcon />}
-            className={classNames(styles['expand-btn'], {
-              [styles['hidden-expand-btn']]: expand,
-            })}
-          />
-        </Tooltip>
-        <Tooltip title="收起">
-          <YakitButton
-            size="small"
-            type="text"
-            icon={<OutlineChevronsDownUpIcon />}
-            className={classNames(styles['expand-btn'], {
-              [styles['hidden-expand-btn']]: !expand,
-            })}
-          />
-        </Tooltip>
-      </div>
-      <div
-        className={classNames(styles.content, {
-          [styles.expand]: expand,
-          [styles.noMask]: isScroll,
+        className={classNames(styles.container, {
+          [styles['container-focus']]: isFocus,
         })}
+        ref={containerRef}
       >
         <div
-          ref={contentRef}
-          onClick={() => setIsScroll(true)}
-          className={styles['content-inner']}
-          style={{
-            overflow: isScroll ? 'overlay' : 'hidden',
+          className={styles.title}
+          onClick={() => {
+            setExpand(!expand)
           }}
         >
-          {elements.map((el, index) => (
-            <AIStreamNode
-              session={session}
-              nodeLabel={nodeLabel}
-              key={el.token}
-              chatType={el.chatType}
-              token={el.token}
-              index={index + 1}
+          <div className={styles['title-node-label']}>
+            {/* <OutlineBrainIcon className={styles['brain-icon']} /> */}
+            {nodeLabel}
+          </div>
+          <div className={styles['stream-text']}>
+            {shouldShowMask && <div className={styles['ai-mask']} />}
+            <p
+              className={classNames({
+                [styles['stream-text-hidden']]: expand,
+              })}
+            >
+              <span>{content}</span>
+            </p>
+          </div>
+          <Tooltip title="展开">
+            <YakitButton
+              size="small"
+              type="text"
+              icon={<OutlineChevronsUpDownIcon />}
+              className={classNames(styles['expand-btn'], {
+                [styles['hidden-expand-btn']]: expand,
+              })}
             />
-          ))}
+          </Tooltip>
+          <Tooltip title="收起">
+            <YakitButton
+              size="small"
+              type="text"
+              icon={<OutlineChevronsDownUpIcon />}
+              className={classNames(styles['expand-btn'], {
+                [styles['hidden-expand-btn']]: !expand,
+              })}
+            />
+          </Tooltip>
+        </div>
+        <div
+          className={classNames(styles.content, {
+            [styles.expand]: expand,
+            [styles.noMask]: isScroll,
+          })}
+        >
+          <div
+            ref={contentRef}
+            onClick={() => setIsScroll(true)}
+            className={styles['content-inner']}
+            style={{
+              overflow: isScroll ? 'overlay' : 'hidden',
+            }}
+          >
+            {elements.map((el, index) => (
+              <AIStreamNode
+                session={session}
+                nodeLabel={nodeLabel}
+                key={el.token}
+                chatType={el.chatType}
+                token={el.token}
+                index={index + 1}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </Tooltip>
   )
 }
 export default AIGroupStreamCard

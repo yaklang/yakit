@@ -15,20 +15,20 @@ module.exports = {
 
     streamMap.set(token, stream)
     stream.on('data', (data) => {
-      if (!windows) {
+      if (!windows || windows.isDestroyed() || windows.webContents.isDestroyed()) {
         return
       }
       windows.webContents.send(`${token}-data`, data)
     })
     stream.on('error', (error) => {
-      if (!windows) {
+      if (!windows || windows.isDestroyed() || windows.webContents.isDestroyed()) {
         return
       }
       windows.webContents.send(`${token}-error`, error && error.details)
     })
     stream.on('end', () => {
       streamMap.delete(token)
-      if (!windows) {
+      if (!windows || windows.isDestroyed() || windows.webContents.isDestroyed()) {
         return
       }
       windows.webContents.send(`${token}-end`)

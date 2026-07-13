@@ -2,8 +2,7 @@ import { FC, memo, ReactNode, useEffect, useMemo, useRef, useState } from 'react
 import ChatCard from './ChatCard'
 import styles from './ToolInvokerCard.module.scss'
 import classNames from 'classnames'
-import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { grpcQueryAIToolDetails } from '../grpc'
 import {
   AIChatQSData,
@@ -24,6 +23,7 @@ import {
   OutlineChevronsDownUpIcon,
   OutlineChevronsUpDownIcon,
   OutlineClockIcon,
+  OutlineDocumentduplicateIcon,
   OutlineRefreshIcon,
   OutlineWrenchIcon1,
 } from '@/assets/icon/outline'
@@ -38,10 +38,11 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { AIChatIPCSendParams } from '../useContext/ChatIPCContent/ChatIPCContent'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
 import { useStreamingChatContent } from './aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent'
-import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { AIReviewParams } from './aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import { setClipboardText } from '@/utils/clipboard'
+import { success } from '@/utils/notification'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -64,8 +65,7 @@ interface PreWrapperProps {
   style?: React.CSSProperties
 }
 interface ToolStatusCardProps {
-  status: AIToolResult['tool']['status'] | 'purple'
-  title: ReactNode
+  status: AIToolResult['tool']['status'] | 'purple' | 'neutral'
   children?: ReactNode
 }
 interface ToolStdoutCardProps extends ToolInvokerCardProps {
@@ -217,12 +217,9 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
       }
       footer={<OperationCardFooter {...operationInfo} />}
     >
-      <ToolStatusCard status={'purple'} title={<div className={styles['tool-name']}>{data.toolName}</div>}>
-        <div className={styles['file-system-content']}>
-          {stream?.data?.content && (
-            <PreWrapper code={stream?.data?.content || ''} autoScrollBottom className={styles['pre-max-height']} />
-          )}
-        </div>
+      <ToolStatusCard status={'purple'}>
+        <ToolParamsLine params={data?.tool?.reviewParams} />
+        <ToolTerminalOutput content={stream?.data?.content || ''} autoScrollBottom />
         {referenceNode}
       </ToolStatusCard>
       {!!fileList?.length && <FileList fileList={fileList} />}
@@ -238,7 +235,6 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
 
   const [loading, setLoading] = useState<boolean>(false)
-  const [type, setType] = useState<'outInput' | 'params'>('outInput')
 
   const [expand, setExpand] = useState<boolean>(false)
   const expandToggle = useMemoizedFn(() => {
@@ -272,12 +268,6 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const status = useCreation(() => {
     return data?.tool?.status
   }, [data?.tool?.status])
-
-  const [statusColor, statusText] = useMemo(() => {
-    if (status === 'success') return ['success', t('ToolInvokerCard.success')]
-    if (status === 'failed') return ['danger', t('ToolInvokerCard.failed')]
-    return ['white', t('ToolInvokerCard.cancelled')]
-  }, [status, i18n.language])
 
   const params = useCreation(() => {
     return data?.callToolId
@@ -346,42 +336,16 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     return desc.join('\n')
   })
 
-  const renderContent = useMemoizedFn(() => {
-    switch (type) {
-      case 'params':
-        return <AIReviewParams params={data?.tool?.reviewParams} isPreStyle={true} />
-      default:
-        return (
-          <>
-            <div className={styles['summary']} title={summary}>
-              {summary}
-            </div>
-            {!!resultDetails ? (
-              <>
-                <PreWrapper code={resultDetails} autoScrollBottom className={styles['pre-max-height']} />
-              </>
-            ) : (
-              <>{content && <PreWrapper code={content} autoScrollBottom className={styles['pre-max-height']} />}</>
-            )}
-          </>
-        )
-    }
-  })
+  const outputText = useCreation(() => {
+    return resultDetails || content || ''
+  }, [resultDetails, content])
+
   return (
     <ChatCard
       titleText={data.verboseName ?? data.toolName}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
-          {/* <div className={styles['tool-invoker-card-extra-time']}> */}
-          {/* {!!startTime && (
-              <div>
-                {t('ToolInvokerCard.startTime')}:<span>{startTime}</span>
-              </div>
-            )} */}
-          {/* </div> */}
-
-          {/* <div style={{ marginRight: 12 }}> */}
           {!!riskFlowDataCount && (
             <>
               <label
@@ -403,7 +367,6 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
               {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
             </label>
           )}
-          {/* </div> */}
           {isChildWindow || (
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
               <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
@@ -448,39 +411,10 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
       }
     >
       {expand && (
-        <ToolStatusCard
-          status={status}
-          title={
-            <div className={styles['tool-title']}>
-              <div className={styles['tool-title-left']}>
-                <div className={styles['tool-name']}>{data.toolName}</div>
-                <YakitTag size="small" fullRadius color={statusColor as YakitTagColor}>
-                  {statusText}
-                </YakitTag>
-              </div>
-              <YakitRadioButtons
-                size="small"
-                buttonStyle="solid"
-                options={[
-                  {
-                    label: '输出',
-                    value: 'outInput',
-                  },
-                  {
-                    label: '参数',
-                    value: 'params',
-                  },
-                ]}
-                value={type}
-                onChange={(e) => {
-                  setType(e.target.value)
-                }}
-              />
-            </div>
-          }
-        >
+        <ToolStatusCard status={'neutral'}>
           <YakitSpin spinning={loading}>
-            <div className={styles['file-system-content']}>{renderContent()}</div>
+            <ToolParamsLine params={data?.tool?.reviewParams} />
+            <ToolTerminalOutput content={summary ? `${summary}\n${outputText}` : outputText} autoScrollBottom />
           </YakitSpin>
         </ToolStatusCard>
       )}
@@ -490,11 +424,137 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
 })
 
 const ToolStatusCard: React.FC<ToolStatusCardProps> = memo((props) => {
-  const { status, title, children } = props
+  const { status, children } = props
   return (
     <div className={classNames(styles['file-system'], styles[`file-system-${status}`])}>
-      <div className={styles['file-system-title']}>{title}</div>
-      {children}
+      <div className={styles['file-system-content']}>{children}</div>
+    </div>
+  )
+})
+
+/** @name 伪终端参数行：单行 JSON 预览，点击弹框展示完整 JSON */
+const ToolParamsLine: FC<{ params?: Record<string, any> }> = memo(({ params }) => {
+  const [open, setOpen] = useState(false)
+  const { t } = useI18nNamespaces(['yakitUi'])
+
+  if (!params || Object.keys(params).length === 0) return null
+
+  const jsonStr = JSON.stringify(params)
+  const jsonPretty = JSON.stringify(params, null, 2)
+
+  const onCopyAll = () => {
+    setClipboardText(jsonPretty, {
+      hiddenHint: true,
+      finalCallback: () => setTimeout(() => success(t('YakitNotification.copySuccess')), 200),
+    })
+  }
+  const onCopyField = (value: any) => {
+    const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2)
+    setClipboardText(text, {
+      hiddenHint: true,
+      finalCallback: () => setTimeout(() => success(t('YakitNotification.copySuccess')), 200),
+    })
+  }
+
+  return (
+    <>
+      <div className={styles['terminal-params-line']}>
+        <span className={styles['params-label']}>Params:</span>
+        <span className={styles['params-json']} onClick={() => setOpen(true)} title={jsonStr}>
+          {jsonStr}
+        </span>
+      </div>
+      <YakitModal
+        visible={open}
+        title="Params"
+        onCancel={() => setOpen(false)}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        onOk={() => setOpen(false)}
+        width={560}
+      >
+        <div className={styles['params-modal-body']}>
+          <div className={styles['params-modal-json']}>
+            {jsonPretty}
+            <div className={styles['params-modal-copy']} onClick={onCopyAll}>
+              <OutlineDocumentduplicateIcon />
+            </div>
+          </div>
+          {Object.entries(params).map(([key, value]) => (
+            <div className={styles['params-field-item']} key={key}>
+              <span className={styles['field-key']}>{key}:</span>
+              <span className={styles['field-value']}>
+                {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+              </span>
+              <Tooltip title={t('copy')}>
+                <span className={styles['field-copy']} onClick={() => onCopyField(value)}>
+                  <OutlineDocumentduplicateIcon style={{ width: 12, height: 12 }} />
+                </span>
+              </Tooltip>
+            </div>
+          ))}
+        </div>
+      </YakitModal>
+    </>
+  )
+})
+
+/** @name 伪终端输出区域 */
+const ToolTerminalOutput: FC<{
+  content: string
+  autoScrollBottom?: boolean
+}> = memo(({ content, autoScrollBottom = false }) => {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [isAtBottom, setIsAtBottom] = useState(true)
+  const [isAtTop, setIsAtTop] = useState(true)
+  const [isScroll, setIsScroll] = useState(false)
+
+  useClickAway(() => {
+    setIsScroll(false)
+  }, containerRef)
+
+  useEffect(() => {
+    if (!autoScrollBottom) return
+    const el = containerRef.current
+    if (!el) return
+    const handleScroll = () => {
+      const threshold = 20
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold
+      const atTop = el.scrollTop < threshold
+      setIsAtBottom(atBottom)
+      setIsAtTop(atTop)
+    }
+    handleScroll()
+    el.addEventListener('scroll', handleScroll)
+    return () => el.removeEventListener('scroll', handleScroll)
+  }, [autoScrollBottom])
+
+  useEffect(() => {
+    if (!autoScrollBottom) return
+    const el = containerRef.current
+    if (!el) return
+    if (isAtBottom) {
+      el.scrollTop = el.scrollHeight
+    }
+  }, [content, isAtBottom, autoScrollBottom])
+
+  if (!content) return null
+
+  return (
+    <div className={styles['terminal-output-section']}>
+      <div
+        ref={containerRef}
+        className={classNames(styles['output-content'], {
+          [styles['output-scrollable']]: isScroll,
+          [styles['output-fade-top']]: !isAtTop,
+          [styles['output-fade-bottom']]: !isAtBottom,
+        })}
+        onClick={() => setIsScroll(true)}
+      >
+        {content}
+        <div className={styles['terminal-copy-btn']}>
+          <CopyComponents copyText={content} className={styles['terminal-copy-icon']} />
+        </div>
+      </div>
     </div>
   )
 })

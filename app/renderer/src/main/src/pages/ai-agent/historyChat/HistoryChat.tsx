@@ -315,7 +315,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       <div className={styles['header-wrapper']}>
         <div className={styles['haeder-first']}>
           <div className={styles['first-title']}>
-            {t('HistoryChat.title')}
+            <span className={styles['title-text']}>{t('HistoryChat.title')}</span>
             <YakitRoundCornerTag wrapperClassName={styles['history-count-tag']}>
               {visibleSessions.length}
             </YakitRoundCornerTag>

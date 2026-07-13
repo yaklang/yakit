@@ -234,7 +234,7 @@
     "getGlobalKnowledgeBaseFailed": "获取全局知识库失败: {{error}}"
   },
   "AIAgentTabs": {
-    "historyChat": "历史会话",
+    "historyChat": "历史",
     "config": "配置",
     "skill": "技能",
     "tool": "工具"
@@ -432,7 +432,7 @@
     "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围"
   },
   "HistoryChat": {
-    "title": "历史会话",
+    "title": "历史",
     "noChatsToClear": "暂无可清除的会话",
     "allChatsCleared": "已清空全部会话",
     "clearFailed": "清除会话失败：{{error}}",

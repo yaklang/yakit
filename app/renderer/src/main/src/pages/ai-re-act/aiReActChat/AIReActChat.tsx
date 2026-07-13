@@ -101,7 +101,22 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     }, [])
     useEffect(() => {
       if (!!activeChat?.SessionID) {
-        aiChatTextareaRef.current.setValue('')
+        // 关键词: flushSync warning, Milkdown ReactRenderer, prosemirror-adapter flushSync
+        // setEditorValue 内部会 view.dispatch(tr), 经 ProseMirror updateState -> updatePluginViews
+        // 触发 @prosemirror-adapter/react 的 ReactRenderer.update, 内部会 flushSync 重新渲染 portal.
+        // 而本段处于 useEffect(passive mount) 阶段, React 已经在渲染中, 同步 dispatch 会让第三方库的
+        // flushSync 撞上 "React cannot flush when React is already rendering" 警告.
+        // 用 queueMicrotask 把 dispatch 推迟到当前渲染周期之后, 时序最接近原行为.
+        // cancelled 守卫: 防止微任务执行前组件已卸载, 避免对已销毁的 editor 做无意义写入.
+        let cancelled = false
+        queueMicrotask(() => {
+          if (!cancelled) {
+            aiChatTextareaRef.current?.setValue('')
+          }
+        })
+        return () => {
+          cancelled = true
+        }
       }
     }, [activeChat?.SessionID])
     // #region 问题相关逻辑
