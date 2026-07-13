@@ -20,6 +20,7 @@ import { YaklangInstallHintSvgIcon } from '@/assets/newIcon'
 import { OutlineQuestionmarkcircleIcon } from '@/assets/outline'
 import { QuestionModal } from '../QuestionModal'
 import { yakitEngine } from '@/utils/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import classNames from 'classnames'
 import styles from './DownloadYaklang.module.scss'
@@ -36,6 +37,7 @@ interface DownloadYaklangProps {
 /** @name Yaklang引擎更新下载弹窗 */
 export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props) => {
   const { isTop, setIsTop, yaklangSpecifyVersion, system, visible, onCancel } = props
+  const { t } = useI18nNamespaces(['link'])
 
   /** 常见问题弹窗是否展示 */
   const [qsShow, setQSShow] = useState<boolean>(false)
@@ -81,7 +83,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
       .then(() => {
         if (isBreakRef.current) return
 
-        yakitNotify('success', '下载完毕')
+        yakitNotify('success', t('DownloadYaklang.download_complete'))
         if (!getDownloadProgress()?.size) return
 
         setDownloadProgress({
@@ -104,7 +106,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
       })
       .catch((e: any) => {
         if (isBreakRef.current) return
-        yakitNotify('error', yakLangVersion.current + ' 下载失败：' + e)
+        yakitNotify('error', t('DownloadYaklang.download_failed', { version: yakLangVersion.current, error: e }))
         setDownloadProgress(undefined)
         setIsFailed(true)
       })
@@ -143,13 +145,15 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
     if (isBreakRef.current) return
     grpcInstallYak(yakLangVersion.current, true)
       .then(() => {
-        yakitNotify('success', `安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
+        yakitNotify('success', t('DownloadYaklang.install_success_restart_hint', { name: getReleaseEditionName() }))
         onClose(true)
       })
       .catch((err: any) => {
         yakitNotify(
           'error',
-          `安装失败: ${err.message.indexOf('operation not permitted') > -1 ? '请关闭引擎后重试' : err}`,
+          err.message.indexOf('operation not permitted') > -1
+            ? t('DownloadYaklang.install_failed_close_engine_retry')
+            : t('DownloadYaklang.install_failed', { message: err }),
         )
         onClose(false)
       })
@@ -218,22 +222,29 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
               <div className={styles['hint-right-wrapper']}>
                 <div className={classNames(styles['hint-right-download'], 'yakit-progress-wrapper')}>
-                  <div className={styles['hint-right-title']}>Yaklang 引擎下载中...</div>
+                  <div className={styles['hint-right-title']}>{t('DownloadYaklang.downloading_title')}</div>
                   <Progress
                     strokeColor="var(--Colors-Use-Main-Primary)"
                     trailColor="var(--Colors-Use-Neutral-Bg)"
                     percent={Math.floor((downloadProgress?.percent || 0) * 100)}
                   />
                   <div className={styles['download-info-wrapper']}>
-                    <div>剩余时间 : {(downloadProgress?.time.remaining || 0).toFixed(2)}s</div>
+                    <div>
+                      {t('DownloadYaklang.remaining_time')} : {(downloadProgress?.time.remaining || 0).toFixed(2)}s
+                    </div>
                     <div className={styles['divider-wrapper']}>
                       <div className={styles['divider-style']}></div>
                     </div>
-                    <div>耗时 : {(downloadProgress?.time.elapsed || 0).toFixed(2)}s</div>
+                    <div>
+                      {t('DownloadYaklang.elapsed_time')} : {(downloadProgress?.time.elapsed || 0).toFixed(2)}s
+                    </div>
                     <div className={styles['divider-wrapper']}>
                       <div className={styles['divider-style']}></div>
                     </div>
-                    <div>下载速度 : {((downloadProgress?.speed || 0) / 1000000).toFixed(2)}M/s</div>
+                    <div>
+                      {t('DownloadYaklang.download_speed')} : {((downloadProgress?.speed || 0) / 1000000).toFixed(2)}{' '}
+                      M/s
+                    </div>
                   </div>
                   <div className={styles['download-btn']}>
                     {isFailed && (
@@ -242,11 +253,11 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
                         type="outline2"
                         onClick={() => (yaklangSpecifyVersion ? downloadYak() : fetchVersion())}
                       >
-                        重试
+                        {t('DownloadYaklang.retry')}
                       </YakitButton>
                     )}
                     <YakitButton size="max" type="outline2" onClick={() => onClose(false)}>
-                      取消
+                      {t('DownloadYaklang.cancel')}
                     </YakitButton>
                   </div>
                 </div>

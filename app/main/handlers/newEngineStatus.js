@@ -624,7 +624,8 @@ module.exports = {
           /** 轮询检测引擎连接状态 */
           const startConnectionPolling = () => {
             engineLogOutputFileAndUI(win, `开始轮询检测引擎连接状态 (每 2 秒一次)...`)
-            win.webContents.send('startUp-engine-msg', '正在等待引擎完全启动')
+            // 传 i18n key，由渲染端 LocalEngine 翻译后展示
+            win.webContents.send('startUp-engine-msg', 'LocalEngine.waiting_engine_fully_started')
 
             pollIntervalId = setInterval(() => {
               if (successDetected || killed || checkId !== currentStartId) {
@@ -724,7 +725,8 @@ module.exports = {
             if (match) {
               // 数据库正在初始化中...
               engineLogOutputFileAndUI(win, `----- 数据库正在初始化中... -----`)
-              win.webContents.send('startUp-engine-msg', '数据库正在初始化中...')
+              // 传 i18n key，由渲染端 LocalEngine 翻译后展示
+              win.webContents.send('startUp-engine-msg', 'LocalEngine.database_initializing')
             }
 
             // 保留原有的 yak grpc ok 检测方式

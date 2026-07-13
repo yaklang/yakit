@@ -9,6 +9,7 @@ import { ShieldExclamationSvgIcon } from '@/assets/newIcon'
 import classNames from 'classnames'
 import styles from './YakitHint.module.scss'
 import { Resizable } from 're-resizable'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
   const {
@@ -34,6 +35,8 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
     children,
     getContainer,
   } = props
+
+  const { t } = useI18nNamespaces(['yakitUi'])
 
   return (
     <>
@@ -76,7 +79,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
                         if (onCancel) onCancel()
                       }}
                     >
-                      {cancelButtonText || '取消'}
+                      {cancelButtonText || t('YakitButton.cancel')}
                     </YakitButton>
                     <YakitButton
                       size="max"
@@ -85,7 +88,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
                         if (onOk) onOk()
                       }}
                     >
-                      {okButtonText || '确定'}
+                      {okButtonText || t('YakitButton.ok')}
                     </YakitButton>
                   </div>
                 </div>

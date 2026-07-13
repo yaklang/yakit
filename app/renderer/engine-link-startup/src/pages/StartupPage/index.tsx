@@ -70,6 +70,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './index.module.scss'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
@@ -82,6 +83,7 @@ const DefaultCredential: YaklangEngineWatchDogCredential = {
 }
 
 export const StartupPage: React.FC = () => {
+  const { t, i18n } = useI18nNamespaces(['link'])
   /** 工作空间是否已确认（所有平台均需用户确认） */
   const [workspaceConfirmed, setWorkspaceConfirmed] = useState<boolean>(false)
 
@@ -90,7 +92,7 @@ export const StartupPage: React.FC = () => {
   /** 操作系统 */
   const [system, setSystem] = useState<System>('Darwin')
   /** 本地引擎自检输出日志 */
-  const [checkLog, setCheckLog] = useState<string[]>(['正在进行环境检查...'])
+  const [checkLog, setCheckLog] = useState<string[]>([])
   /** 引擎是否安装 */
   const isEngineInstalled = useRef<boolean>(false)
   /** 内置引擎版本号 */
@@ -160,6 +162,7 @@ export const StartupPage: React.FC = () => {
   // workspaceConfirmed 为 true 后，执行插件漏洞信息库自检 + 其他信息获取 + 连接引擎
   useEffect(() => {
     if (!workspaceConfirmed) return
+    setCheckLog([t('StartupPage.checking_environment')])
     // 插件漏洞信息库自检（不阻塞主流程）
     handleBuiltInCheck()
     // 获取其他信息，完成后进入连接引擎模式
@@ -173,7 +176,7 @@ export const StartupPage: React.FC = () => {
   const handleBuiltInCheck = useMemoizedFn(() => {
     grpcInitCVEDatabase()
       .then(() => {
-        yakitNotify('info', '漏洞信息库自检完成')
+        yakitNotify('info', t('StartupPage.cve_db_check_complete'))
       })
       .catch((e: any) => {})
   })
@@ -281,21 +284,21 @@ export const StartupPage: React.FC = () => {
   /** 获取上次连接引擎的模式 */
   const handleLinkEngineMode = useMemoizedFn(() => {
     debugToPrintLog(`------ 获取上次连接引擎的模式 ------`)
-    setCheckLog(['获取上次连接引擎的模式...'])
+    setCheckLog([t('StartupPage.fetching_last_engine_mode')])
     getLocalValue(LocalGVS.YaklangEngineMode).then((val: YaklangEngineMode) => {
       switch (val) {
         case 'remote':
-          setCheckLog((arr) => arr.concat(['获取连接模式成功——远程模式']))
+          setCheckLog((arr) => arr.concat([t('StartupPage.fetch_mode_success_remote')]))
           debugToPrintLog(`------ 连接引擎的模式: remote ------`)
           handleChangeLinkMode(true)
           return
         case 'local':
-          setCheckLog((arr) => arr.concat(['获取连接模式成功——本地模式']))
+          setCheckLog((arr) => arr.concat([t('StartupPage.fetch_mode_success_local')]))
           debugToPrintLog(`------ 连接引擎的模式: local ------`)
           handleChangeLinkMode()
           return
         default:
-          setCheckLog((arr) => arr.concat(['未获取到连接模式-默认(本地)模式']))
+          setCheckLog((arr) => arr.concat([t('StartupPage.fetch_mode_default_local')]))
           debugToPrintLog(`------ 连接引擎的模式: local ------`)
           handleChangeLinkMode()
           return
@@ -353,15 +356,15 @@ export const StartupPage: React.FC = () => {
         setLinkLocalEngine()
         return
       }
-      setCheckLog(['检查本地是否已安装引擎...'])
-      setCheckLog(['本地已安装引擎，准备环境检查中...'])
+      setCheckLog([t('StartupPage.checking_local_engine_installed')])
+      setCheckLog([t('StartupPage.local_engine_installed_preparing')])
       setTimeout(() => {
         setLinkLocalEngine()
       }, 500)
     } else {
       debugToPrintLog(`------ 启动无本地引擎逻辑 ------`)
-      setCheckLog(['检查本地是否已安装引擎...'])
-      setCheckLog(['本地没有引擎文件...'])
+      setCheckLog([t('StartupPage.checking_local_engine_installed')])
+      setCheckLog([t('StartupPage.local_engine_not_found')])
       setTimeout(() => {
         safeSetYakitStatus(getBuildInEngineVersion() ? 'install' : 'installNetWork')
         onSetEngineMode(undefined)
@@ -488,14 +491,16 @@ export const StartupPage: React.FC = () => {
         yakitEngine
           .installYakEngine(version)
           .then(() => {
-            yakitNotify('info', '已检测到本地存在对应版本引擎，直接进行安装')
-            yakitNotify('success', `安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
+            yakitNotify('info', t('StartupPage.local_engine_version_found_install'))
+            yakitNotify('success', t('StartupPage.install_success_restart_hint', { name: getReleaseEditionName() }))
             installSuccessCallback()
           })
           .catch((err: any) => {
             yakitNotify(
               'error',
-              `安装失败：${err.message.indexOf('operation not permitted') > -1 ? '请关闭引擎后重试' : String(err)}`,
+              err.message.indexOf('operation not permitted') > -1
+                ? t('StartupPage.install_failed_close_engine_retry')
+                : t('StartupPage.install_failed', { message: String(err) }),
             )
             installErrCallback(err)
           })
@@ -562,7 +567,7 @@ export const StartupPage: React.FC = () => {
       case 'install':
         // 解压内置引擎
         initializeEngine(() => {
-          setCheckLog([`引擎：${getBuildInEngineVersion()}，解压成功，即将重启`])
+          setCheckLog([t('StartupPage.engine_unpack_success_relaunch', { version: getBuildInEngineVersion() })])
           grpcRelaunch()
         })
         return
@@ -623,7 +628,7 @@ export const StartupPage: React.FC = () => {
         // 检测到当前版本低于内置版本
         if (extra?.downYak) {
           initializeEngine(() => {
-            setCheckLog([`引擎：${getBuildInEngineVersion()}，解压成功`])
+            setCheckLog([t('StartupPage.engine_unpack_success', { version: getBuildInEngineVersion() })])
             if (localEngineRef.current) {
               localEngineRef.current.checkEngineSource(getBuildInEngineVersion())
             }
@@ -673,13 +678,13 @@ export const StartupPage: React.FC = () => {
           }
         } else {
           // 否则执行断开
-          outputToWelcomeConsole('手动触发中断连接')
+          outputToWelcomeConsole(t('StartupPage.manual_disconnect_triggered'))
           debugToPrintLog(`------ 手动触发中断连接 ------`)
           safeSetYakitStatus('break')
           onDisconnect()
-          setCheckLog(['已主动断开, 请点击手动连接引擎'])
+          setCheckLog([t('StartupPage.disconnected_click_manual_connect')])
           breakHandleRef.current = true
-          setYakitLoadingTip('中断中...')
+          setYakitLoadingTip(t('StartupPage.interrupting'))
           setRestartLoading(false)
           setDisableYakitLoading(true)
           cancelAllTasks()
@@ -729,7 +734,7 @@ export const StartupPage: React.FC = () => {
 
   // 解压内置引擎
   const initializeEngine = useMemoizedFn((callback = () => {}) => {
-    setCheckLog([`准备解压内置引擎：${getBuildInEngineVersion()}...`])
+    setCheckLog([t('StartupPage.preparing_unpack_builtin_engine', { version: getBuildInEngineVersion() })])
     setRestartLoading(true)
     setTimeout(async () => {
       try {
@@ -741,8 +746,8 @@ export const StartupPage: React.FC = () => {
       } catch (error) {
         setCheckLog([
           isInitLocalLink.current
-            ? '初始化失败，请点击下载引擎继续使用...'
-            : `解压失败：${error}，请点击下载引擎继续使用...`,
+            ? t('StartupPage.init_failed_download_engine')
+            : t('StartupPage.unpack_failed_download_engine', { error }),
         ])
         safeSetYakitStatus(isInitLocalLink.current ? 'installNetWork' : 'skipAgreement_InstallNetWork')
       } finally {
@@ -754,12 +759,12 @@ export const StartupPage: React.FC = () => {
   // 数据库修复
   const [dbPath, setDbPath] = useState<string[]>([])
   const handleFixupDatabase = useMemoizedFn(async () => {
-    setCheckLog(['开始修复数据库中...'])
+    setCheckLog([t('StartupPage.fixing_database')])
     try {
       const res = await grpcFixupDatabase({ softwareVersion: FetchSoftwareVersion() })
       setRestartLoading(false)
       if (res.ok && res.status === 'success') {
-        setCheckLog((arr) => arr.concat(['修复数据库成功']))
+        setCheckLog((arr) => arr.concat([t('StartupPage.fix_database_success')]))
         safeSetYakitStatus('')
         setDbPath([])
         handleStartLocalLink(true)
@@ -767,18 +772,18 @@ export const StartupPage: React.FC = () => {
       }
       switch (res.status) {
         case 'timeout':
-          setCheckLog((arr) => arr.concat(['命令执行超时，可查看日志详细信息...']))
+          setCheckLog((arr) => arr.concat([t('StartupPage.command_timeout_check_log')]))
           safeSetYakitStatus('fix_database_timeout')
           break
         default:
           setDbPath(res.json.path)
-          setCheckLog(['修复失败，可将日志信息发送给工作人员处理...'])
+          setCheckLog([t('StartupPage.fix_database_failed_contact_staff')])
           safeSetYakitStatus('fix_database_error')
       }
     } catch (error) {
       // 如果意外情况则按照修复失败处理
-      outputToWelcomeConsole(`修复数据库出现意外情况：${error}`)
-      setCheckLog(['修复数据库出现意外情况，可查看日志详细信息...'])
+      outputToWelcomeConsole(t('StartupPage.fix_database_unexpected_console', { error }))
+      setCheckLog([t('StartupPage.fix_database_unexpected_check_log')])
       safeSetYakitStatus('fix_database_error')
     }
   })
@@ -788,23 +793,23 @@ export const StartupPage: React.FC = () => {
   const handleReclaimDatabaseSpace = useMemoizedFn(async () => {
     const allDb = reclaimDbSpacePath.current.length === 0
     setCheckLog([
-      `回收${allDb ? '所有' : ''}数据库空间中，请勿关闭软件${allDb ? '，预计耗时较长' : ''}`,
-      '退出或关闭可能会造成数据库损坏',
+      allDb ? t('StartupPage.reclaiming_all_database') : t('StartupPage.reclaiming_database'),
+      t('StartupPage.reclaiming_database_warning'),
     ])
     try {
       const res = await grpcReclaimDatabaseSpace({ dbPath: reclaimDbSpacePath.current })
       setRestartLoading(false)
       if (res.ok && res.status === 'success') {
-        setCheckLog(['回收完成，请点击手动连接引擎'])
+        setCheckLog([t('StartupPage.reclaim_database_success')])
         safeSetYakitStatus('reclaimDatabaseSpace_success')
         return
       }
-      setCheckLog(['回收失败，可将日志信息发送给工作人员处理...'])
+      setCheckLog([t('StartupPage.reclaim_database_failed_contact_staff')])
       safeSetYakitStatus('reclaimDatabaseSpace_error')
     } catch (error) {
       // 如果意外情况，重新连接引擎
-      outputToWelcomeConsole(`回收出现意外情况：${error}`)
-      setCheckLog(['回收出现意外情况，可查看日志详细信息...'])
+      outputToWelcomeConsole(t('StartupPage.reclaim_database_unexpected_console', { error }))
+      setCheckLog([t('StartupPage.reclaim_database_unexpected_check_log')])
       safeSetYakitStatus('reclaimDatabaseSpace_error')
     }
   })
@@ -873,7 +878,7 @@ export const StartupPage: React.FC = () => {
   // 开始本地连接引擎
   const handleLinkLocalEngine = useMemoizedFn((params: LocalLinkParams) => {
     debugToPrintLog(`------ 开始启动引擎, 指定端口: ${params.port} ------`)
-    setCheckLog([`本地普通权限引擎模式，开始启动本地引擎-端口: ${params.port}`])
+    setCheckLog([t('StartupPage.local_engine_starting_with_port', { port: params.port })])
     setCredential({
       Host: '127.0.0.1',
       IsTLS: false,
@@ -1051,17 +1056,17 @@ export const StartupPage: React.FC = () => {
 
     if (getYakitStatus() === 'error' && count === 10) {
       // 连接断开后的10次尝试过后，不在进行尝试
-      setCheckLog(['请点击手动连接引擎，再次尝试'])
+      setCheckLog([t('StartupPage.click_manual_connect_retry')])
       return
     }
 
     // 连接中触发
     if (getYakitStatus() === 'link') {
       if (getEngineMode() === 'remote') {
-        yakitNotify('error', '远程连接已断开')
+        yakitNotify('error', t('StartupPage.remote_connection_disconnected'))
         handleLinkRemoteMode()
       } else if (getEngineMode() === 'local') {
-        setCheckLog(['引擎连接未成功, 正在尝试重连'])
+        setCheckLog([t('StartupPage.engine_reconnecting')])
         if (count > 4) {
           safeSetYakitStatus('error')
         }
@@ -1084,7 +1089,11 @@ export const StartupPage: React.FC = () => {
   const handleOperations = useMemoizedFn((type: YakitStatusType | YaklangEngineMode, extra?: TypeCallbackExtra) => {
     switch (type) {
       case 'skipAgreement_InstallNetWork': // 小风车重置引擎失败
-        setCheckLog([`解压失败：${extra?.message || '未知原因'}，请点击下载引擎继续使用...`])
+        setCheckLog([
+          t('StartupPage.unpack_failed_download_engine', {
+            error: extra?.message || t('StartupPage.unknown_reason'),
+          }),
+        ])
         onDisconnect()
         onSetEngineMode(undefined)
         if (isInitLocalLink.current) {
@@ -1096,7 +1105,7 @@ export const StartupPage: React.FC = () => {
       case 'break': // 主动中断连接 或 小风车断开引擎
         safeSetYakitStatus('break')
         onDisconnect()
-        setCheckLog(['已主动断开, 请点击手动连接引擎'])
+        setCheckLog([t('StartupPage.disconnected_click_manual_connect')])
         break
       case 'reclaimDatabaseSpace_start':
         stopErrorStatusRef.current = true
@@ -1173,14 +1182,14 @@ export const StartupPage: React.FC = () => {
 
   const startupRightImg = useMemo(() => {
     if (isIRify()) {
-      return <img src={irifyRight} alt="暂无图片" />
+      return <img src={irifyRight} alt={t('StartupPage.no_image')} />
     }
     if (isCommunityMemfit() || isMemfit())
       return (
         <video src={theme === 'light' ? memfitRight : memfitRightDark} autoPlay loop muted playsInline preload="auto" />
       )
-    return <img src={yakitRight} alt="暂无图片" />
-  }, [theme])
+    return <img src={yakitRight} alt={t('StartupPage.no_image')} />
+  }, [theme, i18n.language])
 
   return (
     <div className={styles['startup-wrapper']}>
@@ -1189,12 +1198,17 @@ export const StartupPage: React.FC = () => {
         <div className={styles['startup-title']}>
           <div className={styles['startup-logo']}>
             {startupLogo.type === 'img' ? (
-              <img src={startupLogo.src} alt="暂无图片" width={startupLogo.width} height={startupLogo.height} />
+              <img
+                src={startupLogo.src}
+                alt={t('StartupPage.no_image')}
+                width={startupLogo.width}
+                height={startupLogo.height}
+              />
             ) : (
               <startupLogo.component style={{ height: startupLogo.height, width: startupLogo.width }} />
             )}
           </div>
-          <div className={styles['startup-desc']}>为网络安全而生</div>
+          <div className={styles['startup-desc']}>{t('StartupPage.born_for_cybersecurity')}</div>
         </div>
         <YaklangEngineWatchDog
           credential={credential}

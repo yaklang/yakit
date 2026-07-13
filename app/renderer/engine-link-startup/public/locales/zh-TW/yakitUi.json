@@ -1,0 +1,48 @@
+{
+  "YakitSwitch": {
+    "on": "開",
+    "off": "關"
+  },
+  "YakitSelect": {
+    "YakitSelectCustom": {
+      "cache_field_save_error": "快取欄位儲存失敗：",
+      "cache_field_convert_error": "快取欄位轉換失敗："
+    }
+  },
+  "YakitEmpty": {
+    "noData": "暫無資料"
+  },
+  "YakitButton": {
+    "cancel": "取消",
+    "ok": "確定"
+  },
+  "YakitNotification": {
+    "unknown_error": "未知錯誤",
+    "modalCrashRetry": "彈框內邏輯性崩潰，請關閉重試！",
+    "copySuccess": "複製成功",
+    "dataFetchFailed": "資料獲取失敗: {{error}}"
+  },
+  "YakitModalConfirm": {
+    "debugInfo": "調試資訊"
+  },
+  "YakitFormDragger": {
+    "dragOrClickHere": "可將檔案拖入框內或點選此處",
+    "uploadFile": "上傳檔案",
+    "uploadFolder": "上傳資料夾",
+    "detected": "識別到",
+    "filesPath": "個檔案路徑",
+    "enterPath": "請輸入路徑",
+    "enterValidPath": "請輸入正確的路徑",
+    "onlySupportFormat": "僅支援{{accept}}格式的檔案",
+    "pathManualInput": "路徑支援手動輸入,輸入多個請用逗號分隔",
+    "pathManualEntry": "路徑支援手動輸入",
+    "multiSelectNotSupported": "不支援多選",
+    "selectFolder": "請選擇資料夾",
+    "selectFile": "請選擇檔案",
+    "autoFilteredData": "已自動過濾不符合條件的資料",
+    "filePathCountError": "檔案路徑數識別錯誤,請以逗號進行分割"
+  },
+  "YakitDraggerContent": {
+    "multi_select_not_allowed": "不允許多選"
+  }
+}

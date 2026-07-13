@@ -20,7 +20,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "release-render": "node scripts/release-render.cjs"
+    "release-render": "node scripts/release-render.cjs",
+    "i18n:check": "node scripts/locale-parity.cjs"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.10.0",
@@ -29,6 +30,8 @@
     "antd": "4.21.7",
     "buffer": "^6.0.3",
     "classnames": "^2.5.1",
+    "i18next": "^25.3.6",
+    "i18next-http-backend": "^3.0.2",
     "mitt": "^3.0.1",
     "monaco-editor": "^0.52.0",
     "re-resizable": "^6.9.9",
@@ -36,6 +39,7 @@
     "react-dom": "18.2.0",
     "react-draggable": "^4.0.3",
     "react-error-boundary": "^3.1.4",
+    "react-i18next": "^15.6.1",
     "react-monaco-editor": "^0.56.2",
     "react-resize-detector": "^6.7.6",
     "react-sparklines": "^1.7.0",

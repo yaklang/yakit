@@ -15,10 +15,9 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { getLocalI18nGV, isCommunityYakit } from '@/utils/envfile'
 import { LocalGVS } from '@/enums/yakitGV'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
-import { getModeConfig, getSoftwareBasicsTexts, Lange, normalizeLang, YakitSoftMode, yakitSoftMode } from './i18n'
+import { Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './SoftwareBasics.module.scss'
-export { yakitSoftMode } from './i18n'
 
 const formatSize = (bytes: number): string => {
   if (bytes === 0) return '0 B'
@@ -29,6 +28,9 @@ const formatSize = (bytes: number): string => {
 
 const AUTO_START_COUNTDOWN_SECONDS = 3
 
+const yakitSoftMode = ['classic', 'securityExpert', 'scan'] as const
+type YakitSoftMode = (typeof yakitSoftMode)[number]
+
 export interface SoftwareBasicsProps {
   softTheme: Theme
   setSoftTheme: (theme: Theme, save: boolean) => void
@@ -37,6 +39,7 @@ export interface SoftwareBasicsProps {
 
 export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) => {
   const { softTheme, setSoftTheme, onConfirm } = props
+  const { t, i18n } = useI18nNamespaces(['link'])
 
   const [loading, setLoading] = useState<boolean>(true)
   const [currentPath, setCurrentPath] = useState<string>('')
@@ -53,9 +56,6 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   const pendingFetchPathsRef = useRef<string[]>([])
   const containerRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(containerRef)
-
-  const t = useMemo(() => getSoftwareBasicsTexts(softLang), [softLang])
-  const modeConfig = useMemo(() => getModeConfig(softLang), [softLang])
 
   const doConfirm = useMemoizedFn(async () => {
     if (!currentPath) return
@@ -153,6 +153,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
     }
 
     getLocalValue(getLocalI18nGV()).then((res) => {
+      i18n.changeLanguage(normalizeLang(res))
       setSoftLang(normalizeLang(res))
     })
 
@@ -203,6 +204,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   })
 
   const handleLangChange = useMemoizedFn((lang: Lange) => {
+    i18n.changeLanguage(lang)
     setSoftLang(lang)
   })
 
@@ -219,14 +221,14 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
     }
 
     const isNewDir = sizeMap[currentPath] === undefined
-    const message = isNewDir ? t.switchNewDir : t.switchExistDir
+    const message = isNewDir ? t('SoftwareBasics.switchNewDir') : t('SoftwareBasics.switchExistDir')
 
     showYakitModal({
       type: 'white',
-      title: t.switchTitle,
+      title: t('SoftwareBasics.switchTitle'),
       content: <div style={{ padding: 15 }}>{message}</div>,
-      onOkText: t.ok,
-      onCancelText: t.cancel,
+      onOkText: t('SoftwareBasics.ok'),
+      onCancelText: t('SoftwareBasics.cancel'),
       onOk: () => {
         doConfirm()
       },
@@ -260,7 +262,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
     >
       <div className={styles['softwareBasics-item']}>
         <div className={styles['softwareBasics-item-title']}>
-          {t.workspace}&nbsp;&nbsp;
+          {t('SoftwareBasics.workspace')}&nbsp;&nbsp;
           {originalHome && (
             <span className={styles['originalHome']} onClick={() => handleOpenDir(originalHome)}>
               <Tooltip title={originalHome}>{originalHome}</Tooltip>
@@ -274,11 +276,11 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
             selectType="folder"
             renderType="autoComplete"
             multiple={false}
-            help={t.draggerHelp}
-            uploadFolderText={t.selectWorkspace}
+            help={t('SoftwareBasics.draggerHelp')}
+            uploadFolderText={t('SoftwareBasics.selectWorkspace')}
             helpClassName={styles['workPathHelp']}
             autoCompleteProps={{
-              placeholder: t.workspacePlaceholder,
+              placeholder: t('SoftwareBasics.workspacePlaceholder'),
               options: history,
               allowClear: true,
               onFocus: () => {
@@ -292,16 +294,17 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
           />
           {currentPath && sizeMap[currentPath] !== undefined && (
             <div className={styles['softwareBasics-mode-desc']}>
-              {t.sizeLabel}：{calculating ? t.calculating : formatSize(sizeMap[currentPath])}{' '}
+              {t('SoftwareBasics.sizeLabel')}：
+              {calculating ? t('SoftwareBasics.calculating') : formatSize(sizeMap[currentPath])}{' '}
               <YakitButton type="text" onClick={() => handleOpenDir(currentPath)}>
-                {t.openDir}
+                {t('SoftwareBasics.openDir')}
               </YakitButton>
             </div>
           )}
         </div>
       </div>
       <div className={styles['softwareBasics-item']}>
-        <div className={styles['softwareBasics-item-title']}>{t.themeTitle}</div>
+        <div className={styles['softwareBasics-item-title']}>{t('SoftwareBasics.themeTitle')}</div>
         <div className={styles['softwareBasics-item-cont']}>
           <div className={styles['softwareBasics-flex']}>
             <div
@@ -312,7 +315,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
             >
               <img src={lightTheme} height={50} />
               <div className={styles['softwareBasics-flex']}>
-                <div className={styles['softwareBasics-theme-text']}>{t.themeLight}</div>
+                <div className={styles['softwareBasics-theme-text']}>{t('SoftwareBasics.themeLight')}</div>
                 {softTheme === 'light' && <SolidCheckCircleIcon className={styles['CheckCircleIcon']} />}
               </div>
             </div>
@@ -324,7 +327,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
             >
               <img src={darkTheme} height={50} />
               <div className={styles['softwareBasics-flex']}>
-                <div className={styles['softwareBasics-theme-text']}>{t.themeDark}</div>
+                <div className={styles['softwareBasics-theme-text']}>{t('SoftwareBasics.themeDark')}</div>
                 {softTheme === 'dark' && <SolidCheckCircleIcon className={styles['CheckCircleIcon']} />}
               </div>
             </div>
@@ -333,7 +336,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       </div>
       {isCommunityYakit() && (
         <div className={styles['softwareBasics-item']}>
-          <div className={styles['softwareBasics-item-title']}>{t.modeTitle}</div>
+          <div className={styles['softwareBasics-item-title']}>{t('SoftwareBasics.modeTitle')}</div>
           <div className={styles['softwareBasics-item-cont']}>
             <div className={styles['softwareBasics-flex']}>
               {yakitSoftMode.map((mode) => (
@@ -345,30 +348,30 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
                   )}
                   onClick={() => handleModeChange(mode)}
                 >
-                  {modeConfig[mode].label}
+                  {t(`SoftwareBasics.mode.${mode}.label`)}
                 </div>
               ))}
             </div>
-            <div className={styles['softwareBasics-mode-desc']}>{modeConfig[softMode].desc}</div>
+            <div className={styles['softwareBasics-mode-desc']}>{t(`SoftwareBasics.mode.${softMode}.desc`)}</div>
           </div>
         </div>
       )}
       <div className={styles['softwareBasics-item']} style={{ marginBottom: 10 }}>
-        <div className={styles['softwareBasics-item-title']}>{t.langTitle}</div>
+        <div className={styles['softwareBasics-item-title']}>{t('SoftwareBasics.langTitle')}</div>
         <div className={styles['softwareBasics-item-cont']}>
           <YakitSelect
             value={softLang}
             options={[
               {
-                label: t.langZh,
+                label: t('SoftwareBasics.langZh'),
                 value: 'zh',
               },
               {
-                label: t.langZhTW,
+                label: t('SoftwareBasics.langZhTW'),
                 value: 'zh-TW',
               },
               {
-                label: t.langEn,
+                label: t('SoftwareBasics.langEn'),
                 value: 'en',
               },
             ]}
@@ -378,7 +381,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       </div>
       <div className={styles['footer-btn']}>
         <YakitButton disabled={!currentPath} onClick={handleConfirm} style={{ fontSize: 14 }}>
-          {t.confirm} {countdown > 0 ? <>（{countdown}）</> : ''}
+          {t('SoftwareBasics.confirm')} {countdown > 0 ? <>（{countdown}）</> : ''}
         </YakitButton>
         <YakitCheckbox
           checked={autoStart}
@@ -386,13 +389,17 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
             handleAutoStartChange(e.target.checked)
           }}
         >
-          {t.autoStart}
+          {t('SoftwareBasics.autoStart')}
         </YakitCheckbox>
       </div>
       <div className={styles['footer-wrapper']}>
-        <span className={styles['exit-btn']} onClick={handleExit}>
+        <span
+          className={styles['exit-btn']}
+          style={{ fontSize: i18n.language === 'en' ? 11 : 12 }}
+          onClick={handleExit}
+        >
           <OutlineExitIcon className={styles['exit-icon']} />
-          {t.exit}
+          {t('SoftwareBasics.exit')}
         </span>
       </div>
     </div>

@@ -1,5 +1,7 @@
 import { Architecture, DownloadingState, System, SystemInfoProps, YaklangEngineMode } from './types'
 import { yakitEngine, yakitSystem } from '@/utils/electronBridge'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, ['link'])
 
 /**
  * 根据引擎运行模式（YaklangEngineMode）返回对应的中文描述。
@@ -13,11 +15,11 @@ import { yakitEngine, yakitSystem } from '@/utils/electronBridge'
 export const EngineModeVerbose = (m: YaklangEngineMode): string => {
   switch (m) {
     case 'local':
-      return '本地模式'
+      return tOriginal('StartupPage.engine_mode_local')
     case 'remote':
-      return '远程模式'
+      return tOriginal('StartupPage.engine_mode_remote')
     default:
-      return '未知模式'
+      return tOriginal('StartupPage.engine_mode_unknown')
   }
 }
 

@@ -10,6 +10,7 @@ import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { Progress } from 'antd'
 import { grpcCancelDownloadYakit, grpcDownloadYakit } from '../../grpc'
 import { yakitApp, yakitEngine, yakitShell } from '@/utils/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import styles from './UpdateYakitHint.module.scss'
 
@@ -21,6 +22,7 @@ interface UpdateYakitHintProps {
 /** yakit 更新弹框 */
 export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props) => {
   const { latest, visible, onCallback } = props
+  const { t, i18n } = useI18nNamespaces(['link'])
 
   useEffect(() => {
     if (visible) {
@@ -61,7 +63,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     grpcDownloadYakit(version, true)
       .then(() => {
         if (isBreak.current) return
-        yakitNotify('success', '下载完毕')
+        yakitNotify('success', t('UpdateYakitHint.download_complete'))
         setYakitProgress((old) => {
           if (!old) return undefined
           return {
@@ -77,7 +79,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
         setStatus('installed')
       })
       .catch((e: any) => {
-        !isBreak.current && yakitNotify('error', `下载失败: ${e}`)
+        !isBreak.current && yakitNotify('error', t('UpdateYakitHint.download_failed', { error: e }))
         setYakitProgress(undefined)
         setStatus('install')
       })
@@ -105,16 +107,16 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
   })
 
   const title = useMemo(() => {
-    if (status === 'install') return `${getReleaseEditionName()} 下载中...`
-    if (status === 'installed') return `${getReleaseEditionName()} 下载成功`
-    return '异常错误，请关闭!'
-  }, [status])
+    if (status === 'install') return t('UpdateYakitHint.downloading', { name: getReleaseEditionName() })
+    if (status === 'installed') return t('UpdateYakitHint.download_success', { name: getReleaseEditionName() })
+    return t('UpdateYakitHint.unexpected_error')
+  }, [status, i18n.language])
 
   const footerBtn = useMemo(() => {
     if (status === 'install') {
       return (
         <YakitButton loading={breakLoading} size="max" type="outline2" onClick={yakitBreak}>
-          取消
+          {t('UpdateYakitHint.cancel')}
         </YakitButton>
       )
     }
@@ -123,23 +125,23 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
       return (
         <>
           <YakitButton size="max" type="outline2" onClick={handleCancel}>
-            取消
+            {t('UpdateYakitHint.cancel')}
           </YakitButton>
           <YakitButton size="max" onClick={yakitUpdate}>
-            确定
+            {t('UpdateYakitHint.confirm')}
           </YakitButton>
         </>
       )
     }
     return null
-  }, [status, breakLoading])
+  }, [status, breakLoading, i18n.language])
 
   return (
     <YakitHint footer={null} visible={visible} title={title}>
       <div className={styles['update-yakit-hint']}>
         {status === 'installed' && (
           <div className={styles['content']}>
-            <div className={styles['hint-right-content']}>安装需关闭软件，双击安装包即可安装完成，是否立即安装？</div>
+            <div className={styles['hint-right-content']}>{t('UpdateYakitHint.install_hint')}</div>
           </div>
         )}
 
@@ -151,12 +153,16 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
               percent={Math.floor((yakitProgress?.percent || 0) * 100)}
             />
             <div className={styles['download-info-wrapper']}>
-              <div>剩余时间 : {(yakitProgress?.time.remaining || 0).toFixed(2)}s</div>
-              <div className={styles['divider-wrapper']}></div>
-              <div>耗时 : {(yakitProgress?.time.elapsed || 0).toFixed(2)}s</div>
+              <div>
+                {t('UpdateYakitHint.remaining_time')} : {(yakitProgress?.time.remaining || 0).toFixed(2)}s
+              </div>
               <div className={styles['divider-wrapper']}></div>
               <div>
-                下载速度 : {((yakitProgress?.speed || 0) / 1000000).toFixed(2)}
+                {t('UpdateYakitHint.elapsed_time')} : {(yakitProgress?.time.elapsed || 0).toFixed(2)}s
+              </div>
+              <div className={styles['divider-wrapper']}></div>
+              <div>
+                {t('UpdateYakitHint.download_speed')} : {((yakitProgress?.speed || 0) / 1000000).toFixed(2)}
                 M/s
               </div>
             </div>

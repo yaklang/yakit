@@ -9,6 +9,7 @@ import { setClipboardText } from '@/utils/clipboard'
 import { OutlineXIcon } from '@/assets/outline'
 import { yakitNotify } from '@/utils/notification'
 import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /**
  * 更新说明
@@ -78,6 +79,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
 
 export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
   const { className, iconColor } = props
+  const { t } = useI18nNamespaces(['yakitUi'])
   const [loading, setLoading] = useState<boolean>(false)
   const [isShowSure, setIsShowSure] = useState<boolean>(false)
   const onCopy = useMemoizedFn((e) => {
@@ -93,7 +95,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
           setTimeout(() => {
             setIsShowSure(false)
           }, 2000)
-          yakitNotify('success', '复制成功')
+          yakitNotify('success', t('YakitNotification.copySuccess'))
         }, 1000)
       },
     })

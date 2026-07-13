@@ -22,6 +22,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { EngineModeVerbose } from '../../utils'
 import { Editor } from '@/components/Editor'
 import { yakitApp, yakitEngine, yakitShell } from '@/utils/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './RemoteEngine.module.scss'
 
 const DefaultRemoteLink: RemoteLinkInfo = {
@@ -33,6 +34,7 @@ const DefaultRemoteLink: RemoteLinkInfo = {
 
 export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
   const { loading, setLoading, onSubmit, onSwitchLocalEngine } = props
+  const { t, i18n } = useI18nNamespaces(['link'])
 
   /** 远程主机参数 */
   const [remote, setRemote] = useState<RemoteLinkInfo>({ ...DefaultRemoteLink })
@@ -132,12 +134,14 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
     <div className={styles['remote-engine-wrapper']}>
       <YakitSpin spinning={loading}>
         <div className={styles['remote-yaklang-engine-body']}>
-          <div className={styles['remote-title']}>远程模式</div>
+          <div className={styles['remote-title']}>{t('RemoteEngine.remote_mode')}</div>
           <div className={styles['remote-history']}>
-            <div className={styles['select-title']}>连接历史</div>
+            <div className={styles['select-title']} style={{ width: i18n.language === 'en' ? 180 : 80 }}>
+              {t('RemoteEngine.connection_history')}
+            </div>
             <YakitSelect
               wrapperClassName={styles['select-style']}
-              placeholder="请选择..."
+              placeholder={t('RemoteEngine.select_placeholder')}
               onSelect={onSelectHistory}
               size="middle"
               optionLabelProp="value"
@@ -168,7 +172,8 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                 <Form.Item
                   label={
                     <div className={styles.requiredLabel}>
-                      Yak gRPC 主机地址<span className={styles.redStar}>*</span>
+                      Yak gRPC {t('RemoteEngine.grpc_host_label')}
+                      <span className={styles.redStar}>*</span>
                     </div>
                   }
                   required={true}
@@ -186,7 +191,8 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                 <Form.Item
                   label={
                     <div className={styles.requiredLabel}>
-                      Yak gRPC 端口<span className={styles.redStar}>*</span>
+                      Yak gRPC {t('RemoteEngine.grpc_port_label')}
+                      <span className={styles.redStar}>*</span>
                     </div>
                   }
                   required={true}
@@ -202,7 +208,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                 </Form.Item>
               </div>
 
-              <Form.Item label="启用通信加密认证 TLS:">
+              <Form.Item label={t('RemoteEngine.enable_tls')}>
                 <YakitSwitch size="middle" checked={remote.tls} onChange={(tls) => setRemote({ ...remote, tls })} />
               </Form.Item>
               {remote.tls && (
@@ -210,7 +216,8 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                   <Form.Item
                     label={
                       <div className={styles['pem-title']}>
-                        gRPC Root-CA 证书(PEM)<span className={styles.redStar}>*</span>{' '}
+                        {t('RemoteEngine.grpc_root_ca_pem')}
+                        <span className={styles.redStar}>*</span>{' '}
                         <PEMExample setShow={setShowSTL}>
                           <OutlineQuestionmarkcircleIcon
                             className={showSTL ? styles['icon-show-style'] : styles['icon-style']}
@@ -233,7 +240,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                       />
                     </div>
                   </Form.Item>
-                  <Form.Item label="密码">
+                  <Form.Item label={t('RemoteEngine.password')}>
                     <YakitInput
                       className={styles['input-style']}
                       value={remote.password}
@@ -245,7 +252,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
               <Form.Item
                 label={
                   <div className={styles['pem-title']}>
-                    保存为历史连接{' '}
+                    {t('RemoteEngine.save_as_history')}{' '}
                     <PEMHint setShow={setShowAllow}>
                       <OutlineQuestionmarkcircleIcon
                         className={classNames(styles['icon-style'], {
@@ -267,11 +274,12 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                 <Form.Item
                   label={
                     <div className={styles.requiredLabel}>
-                      连接名<span className={styles.redStar}>*</span>
+                      {t('RemoteEngine.link_name')}
+                      <span className={styles.redStar}>*</span>
                     </div>
                   }
                   required={true}
-                  help="填写后，本次记录会保存到连接历史中，之后可以快捷调用"
+                  help={t('RemoteEngine.link_name_help')}
                 >
                   <YakitInput
                     className={classNames(styles['input-style'], {
@@ -284,7 +292,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
               )}
               <Form.Item label="">
                 <YakitButton size="large" onClick={submit} className={styles['btn-style']}>
-                  启动连接
+                  {t('RemoteEngine.start_connect')}
                 </YakitButton>
               </Form.Item>
             </Form>
@@ -292,7 +300,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
           <div className={styles['footer-btn']}>
             <span className={styles['exit-btn']} onClick={() => yakitApp.closeWindow()}>
               <OutlineExitIcon className={styles['exit-icon']} />
-              退出
+              {t('RemoteEngine.exit')}
             </span>
             <Divider type="vertical"></Divider>
             <span
@@ -338,14 +346,15 @@ WOG+9PGLcr4IRJx5LUEZ5FB1
 /** @name PEM示例弹窗 */
 const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
   const { children, setShow } = props
+  const { t } = useI18nNamespaces(['link'])
 
   const content = (
     <div className={classNames(styles['pem-example'], styles['pem-wrapper'])}>
-      <div className={styles['title-style']}>需要 PEM 格式的证书</div>
-      在通过 <div className={styles['content-code']}>yak grpc --tls</div> 启动核心服务器的时候，会把 RootCA
-      打印到屏幕上，复制到该输入框即可：
+      <div className={styles['title-style']}>{t('RemoteEngine.pem_format_required')}</div>
+      {t('RemoteEngine.pem_tls_hint_prefix')} <div className={styles['content-code']}>yak grpc --tls</div>
+      {t('RemoteEngine.pem_tls_hint_suffix')}
       <br />
-      例如如下内容：
+      {t('RemoteEngine.pem_example_intro')}
       <br />
       <div className={styles['code-pem']}>
         <Editor language="plaintext" readOnly={true} value={PemPlaceHolder} />
@@ -368,6 +377,7 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
 /** @name PEM说明弹窗 */
 const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
   const { children, setShow } = props
+  const { t } = useI18nNamespaces(['link'])
 
   const [remotePath, setRemotePath] = useState<string>('')
   useEffect(() => {
@@ -385,9 +395,9 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
 
   const content = (
     <div className={classNames(styles['pem-hint'], styles['pem-wrapper'])}>
-      注意：{getReleaseEditionName()} 并不会把历史记录上传到互联网
+      {t('RemoteEngine.history_not_uploaded', { name: getReleaseEditionName() })}
       <br />
-      你可以在你的本地目录（客户端目录）下找到远程登录信息
+      {t('RemoteEngine.find_remote_login_locally')}
       <br />
       <div className={styles['path-wrapper']}>
         <div className={styles['link-wrapper']}>
@@ -397,7 +407,7 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
           <CopyComponents className={styles['copy-icon']} copyText={remotePath} />
         </div>
         <div className={styles['link-open']} onClick={openFile}>
-          打开远程信息储存位置
+          {t('RemoteEngine.open_remote_info_storage')}
         </div>
       </div>
     </div>

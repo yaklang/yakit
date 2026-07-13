@@ -8,6 +8,7 @@ import { MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon, YakitCopySvgIcon } from '@/as
 import classNames from 'classnames'
 import { setClipboardText } from '@/utils/clipboard'
 import { DragHeaderHeight } from '../../utils'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './QuestionModal.module.scss'
 
 export interface AgrAndQSModalProps {
@@ -20,6 +21,7 @@ export interface AgrAndQSModalProps {
 /** @name Yaklang-常见问题弹窗 */
 export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
   const { isTop, setIsTop, system, visible, setVisible } = props
+  const { t } = useI18nNamespaces(['link'])
 
   const [show, setShow] = useState<boolean>(false)
   const [latestVersion, setLatestVersion] = useState('')
@@ -107,7 +109,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                     </div>
                   )}
                 </div>
-                <span>Yak 核心引擎下载链接</span>
+                <span>{t('QuestionModal.modal_title')}</span>
               </div>
             ) : (
               <div
@@ -118,7 +120,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                 onMouseOut={() => setDisabled(true)}
                 onMouseDown={() => setIsTop(2)}
               >
-                <span className={styles['header-title']}>Yak 核心引擎下载链接</span>
+                <span className={styles['header-title']}>{t('QuestionModal.modal_title')}</span>
                 <div className={styles['close-wrapper']} onClick={() => setVisible(false)}>
                   <WinUIOpCloseSvgIcon className={styles['icon-style']} />
                 </div>
@@ -126,16 +128,15 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
             )}
             <div className={styles['modal-body']}>
               <div className={styles['body-hint']}>
-                <span className={styles['hint-sign']}>如遇网络问题无法下载，可手动下载安装：</span>
+                <span className={styles['hint-sign']}>{t('QuestionModal.manual_download_hint')}</span>
                 <br />
-                Windows 用户可以把引擎放在 安装目录(一般为%HOME%)/yakit-projects/yak-engine/yak.exe 即可识别 MacOS /
-                Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
+                {t('QuestionModal.install_path_hint')}
               </div>
 
               <div className={styles['body-link']}>
                 <div className={styles['link-opt']}>
                   <div style={{ width: 107 }} className={styles['link-title']}>
-                    Windows(x64)下载
+                    {t('QuestionModal.windows_download')}
                   </div>
                   <div className={styles['link-style']}>
                     https://{ossDomain}/yak/{latestVersion || 'latest'}
@@ -147,7 +148,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                 </div>
                 <div className={styles['link-opt']}>
                   <div style={{ width: 122 }} className={styles['link-title']}>
-                    MacOS(intel/m1)下载
+                    {t('QuestionModal.macos_download')}
                   </div>
                   <div className={styles['link-style']}>
                     https://{ossDomain}/yak/{latestVersion || 'latest'}
@@ -159,7 +160,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                 </div>
                 <div className={styles['link-opt']}>
                   <div style={{ width: 87 }} className={styles['link-title']}>
-                    Linux(x64)下载
+                    {t('QuestionModal.linux_download')}
                   </div>
                   <div className={styles['link-style']}>
                     https://{ossDomain}/yak/{latestVersion || 'latest'}
