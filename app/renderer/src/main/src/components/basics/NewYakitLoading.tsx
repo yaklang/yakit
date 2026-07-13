@@ -18,6 +18,7 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import yakitSE from '@/assets/yakitSE.png'
 import yakitEE from '@/assets/yakitEE.png'
 import yakitCE from '@/assets/yakit.jpg'
+import memfitCE from '@/assets/memfit.jpg'
 import styles from './newYakitLoading.module.scss'
 import classNames from 'classnames'
 import { SolidIrifyMiniLogoIcon } from '@yakit-libs/yakit-ui-icons/oldicon/SolidIrifyMiniLogoIcon'
@@ -141,7 +142,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
         return (
           <div className={styles['yakit-loading-icon-wrapper']}>
             <div className={styles['white-icon']}>
-              <SolidMemfitMiniLogoIcon />
+              <img src={memfitCE} alt={t('YakitEmpty.noImage')} />
             </div>
           </div>
         )
@@ -222,7 +223,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
 
           <div className={styles['yakit-loading-title']}>
             <div className={styles['title-style']}>{Title}</div>
-            {isCommunityEdition() && <div className={styles['subtitle-stlye']}>{loadingTitle}</div>}
+            {/* {isCommunityEdition() && <div className={styles['subtitle-stlye']}>{loadingTitle}</div>} */}
           </div>
 
           <div className={styles['yakit-loading-content']}>

@@ -54,6 +54,9 @@
     }
 
     .input-heard {
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
       @extend %display-column-center;
       gap: 8px;
       flex: 1;

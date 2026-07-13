@@ -33,6 +33,7 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
+import memfitLogo from '@/assets/memfit.jpg'
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
@@ -96,9 +97,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           })}
         >
           <div className={styles['input-heard']}>
-            <MemfitLogoColorful className={styles['memfit-icon']} />
-            <div className={styles['title']}>Memfit AI Agent</div>
-            <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
+            {/* <MemfitLogoColorful className={styles['memfit-icon']} /> */}
+            <img src={memfitLogo} width={100} />
+            <div className={styles['title']}>信湃 SenPike</div>
+            <div className={styles['subtitle']}>AI自主渗透与攻防验证系统</div>
           </div>
           <div className={styles['input-body-wrapper']}>
             <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} compact={isCompact} />
@@ -112,6 +114,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               />
             </div>
           </div>
+          <div className={styles['content-copy']}>@2026亚信安全信湃SenPike-AI自主渗透和攻防验证系统</div>
         </div>
       </div>
     )
