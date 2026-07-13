@@ -423,17 +423,25 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   const displayReportItems = wordExportItems ?? reportItems
   const divRef = useRef<HTMLDivElement>(null)
   const wordExportRenderReadyRef = useRef<(() => void) | null>(null)
+  const wordExportInFlightRef = useRef(false)
   const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
 
   useLayoutEffect(() => {
     if (!wordExportItems?.length) return
-    const frame = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
+    let cancelled = false
+    let innerFrame = 0
+    const outerFrame = requestAnimationFrame(() => {
+      innerFrame = requestAnimationFrame(() => {
+        if (cancelled) return
         wordExportRenderReadyRef.current?.()
         wordExportRenderReadyRef.current = null
       })
     })
-    return () => cancelAnimationFrame(frame)
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(outerFrame)
+      cancelAnimationFrame(innerFrame)
+    }
   }, [wordExportItems])
 
   useEffect(() => {
@@ -531,9 +539,24 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     )
   }
 
-  const waitForWordExportDom = () =>
-    new Promise<void>((resolve) => {
-      wordExportRenderReadyRef.current = resolve
+  const waitForWordExportDom = (timeoutMs = 30000) =>
+    new Promise<void>((resolve, reject) => {
+      let settled = false
+      const onReady = () => {
+        if (settled) return
+        settled = true
+        window.clearTimeout(timer)
+        resolve()
+      }
+      const timer = window.setTimeout(() => {
+        if (settled) return
+        settled = true
+        if (wordExportRenderReadyRef.current === onReady) {
+          wordExportRenderReadyRef.current = null
+        }
+        reject(new Error('Word export DOM render timeout'))
+      }, timeoutMs)
+      wordExportRenderReadyRef.current = onReady
     })
 
   const captureWordHtml = async () => {
@@ -573,6 +596,9 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   const downloadWord = useMemoizedFn(async () => {
     const fullItems = allReportItems.flat()
     if (!fullItems.length) return
+    // 同步拦截重复点击，避免 downloadLoading 尚未渲染时覆盖 resolve 导致先前导出永久挂起
+    if (wordExportInFlightRef.current) return
+    wordExportInFlightRef.current = true
 
     setDownloadLoading(true)
     try {
@@ -584,7 +610,11 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       // 多页报告含图表时需额外等待 ECharts 初始化
       await new Promise((resolve) => setTimeout(resolve, 500))
       await captureWordHtml()
+    } catch (e) {
+      yakitNotify('error', `Export Word failed: ${e}`)
     } finally {
+      wordExportRenderReadyRef.current = null
+      wordExportInFlightRef.current = false
       setWordExportItems(null)
       setDownloadLoading(false)
     }
