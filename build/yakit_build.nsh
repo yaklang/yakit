@@ -172,6 +172,10 @@ FunctionEnd
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
                         StrCpy $ENV_VAR_NAME "MEMFITAI_HOME"  ; MemfitAI版本专用环境变量
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "AI SenPike_InstallPath"
+                        StrCpy $EXE_NAME "AI SenPike"
+                        StrCpy $ENV_VAR_NAME "AISenPike_HOME"  ; AI SenPike版本专用环境变量
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -213,7 +217,13 @@ FunctionEnd
                     ${If} ${FileExists} `$INSTDIR\Memfit AI.exe` ; memfit
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
+<<<<<<< HEAD
                         StrCpy $ENV_VAR_NAME "MEMFITAI_HOME"
+=======
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "AI SenPike_InstallPath"
+                        StrCpy $EXE_NAME "AI SenPike"
+>>>>>>> 2d34bab0c (feat: AISenPike 名字&logo替换)
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
