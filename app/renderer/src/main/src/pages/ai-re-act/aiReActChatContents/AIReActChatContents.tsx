@@ -153,7 +153,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       listRootRef,
     })
 
-    useImperativeHandle(ref, () => ({ scrollToItemIndex: locateToIndex }), [])
+    useImperativeHandle(ref, () => ({ scrollToItemIndex: (index, behavior) => locateToIndex(index, behavior) }), [])
 
     const renderItem = useCallback((_, item?: ReActChatRenderElement) => {
       if (!item?.token) return null

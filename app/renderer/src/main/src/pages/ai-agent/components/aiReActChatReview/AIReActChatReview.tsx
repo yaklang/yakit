@@ -26,7 +26,7 @@ import { OutlineHandleColorsIcon, ColorsOutlineWarpIcon } from '@/assets/icon/co
 import { AIChatQSDataTypeEnum, AIReviewType } from '../../../ai-re-act/hooks/aiRender'
 import { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentMeta, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
@@ -40,8 +40,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const { onSend } = useAIAgentDispatcher()
 
   const sessionId = useCurrentSessionId()
+  const metaData = useCurrentMeta()
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
+  const taskStatusLoading = useStore(store, (state) => state.taskStatus.loading)
 
   const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
   const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
@@ -55,10 +57,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
   useEffect(() => {
     pendingDetachedPlanSubmitRef.current = false
-    switch (type) {
+    switch (info.type) {
       case 'plan_review_require':
       case 'detached_plan_require':
-        const data = review as AIAgentGrpcApi.PlanReviewRequire
+        const data = info.data as AIAgentGrpcApi.PlanReviewRequire
         const list: AIAgentGrpcApi.PlanTask[] = []
         handleFlatAITree(list, data.plans.root_task)
         initReviewTreesRef.current = [...list]
@@ -270,29 +272,34 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       SyncJsonInput: JSON.stringify(syncPayload),
     }
     // chatIPCEvents.handleTaskReviewRelease(detachedReview.id)
-    onSend({ token: sessionId, type: '', params: info })
+    onSend({ token: sessionId, type: '', params })
     pendingDetachedPlanSubmitRef.current = false
   })
 
   const submitDetachedPlan = useMemoizedFn(() => {
-    const taskId = chatIPCEvents.fetchCurrentTaskPlanID()?.taskID
-    if (chatIPCData.taskStatus.loading && taskId) {
+    const taskId = metaData.currentTaskPlanID
+    if (taskStatusLoading && taskId) {
       pendingDetachedPlanSubmitRef.current = true
-      chatIPCEvents.handleCancelLoadingChange('task', true)
-      onSendSyncMessage?.({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: taskId }),
+      store.getState().updateState({
+        cancelTaskLoading: true,
       })
+      const params: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_EXECUTE_DETACHED_PLAN,
+        SyncID: randomString(8),
+        SyncJsonInput: JSON.stringify({ task_id: taskId }),
+      }
+      onSend({ token: sessionId, type: '', params })
       return
     }
     executeDetachedPlan()
   })
 
   useUpdateEffect(() => {
-    if (!chatIPCData.taskStatus.loading && pendingDetachedPlanSubmitRef.current) {
+    if (!taskStatusLoading && pendingDetachedPlanSubmitRef.current) {
       executeDetachedPlan()
     }
-  }, [chatIPCData.taskStatus.loading])
+  }, [taskStatusLoading])
 
   /** 继续执行 */
   const handleContinue = useMemoizedFn(() => {

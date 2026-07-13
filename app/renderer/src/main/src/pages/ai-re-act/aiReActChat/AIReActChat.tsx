@@ -20,19 +20,12 @@ import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
 import emiter from '@/utils/eventBus/eventBus'
-import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
-import { AIToDoList } from './aiToDoList/AIToDoList'
-import { cloneDeep } from 'lodash'
-import { DefaultTodoListCardData } from '../hooks/defaultConstant'
-import { TodoListCardData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
-import { OutlineLandPlotIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
-import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { SolidChatIcon } from '@/assets/icon/solid'
-import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
+import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
+import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -45,24 +38,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       externalParameters,
     } = props
     const { setActiveChat, getSetting, onStart, onSend } = useAIAgentDispatcher()
-    const { chatDataStoreKey } = useGetChatDataStoreKey()
-    const historyChatAISource = useCreation(
-      () => getAISourceListFromChatDataStoreKey(chatDataStoreKey),
-      [chatDataStoreKey],
-    )
-    const sessionRef = useRef<string | undefined>(undefined)
 
     const sessionId = useCurrentSessionId()
     const store = useCurrentStore()
-    const meta = useCurrentMeta()
-    const execute = useStore(store, (state) => state.execute)
-    const focusMode = useStore(store, (state) => state.focusMode)
-    const notifyMessage = useStore(store, (state) => state.notifyMessage)
-    const questionQueue = useStore(store, (state) => state.questionQueue)
-    const cancelCasualLoading = useStore(store, (state) => state.cancelCasualLoading)
-    const casualLoading = useStore(store, (state) => state.casualLoading)
-    const todoListUpdate = useStore(store, (state) => state.casualChat?.todoListUpdate)
-    const casualChat = useStore(store, (state) => state.casualChat)
 
     const wrapperRef = useRef<HTMLDivElement>(null)
 
@@ -284,114 +262,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       onSend({ token: sessionId, type: 'casual', params: info })
     })
 
-    const getPlanDetails = useMemoizedFn(() => {
-      if (!activeChat?.SessionID) return
-      return rawData.casualChat.planDetails
-    })
-
-    const reActTaskId: string = useCreation(() => {
-      if (!activeChat?.SessionID) return ''
-      return getPlanDetails()?.taskId ?? ''
-    }, [todoListUpdate, activeChat?.SessionID])
-
-    const todoData: TodoListCardData = useCreation(() => {
-      if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
-      try {
-        return rawData.casualChat.planDetails?.todoList || cloneDeep(DefaultTodoListCardData)
-      } catch (error) {
-        return cloneDeep(DefaultTodoListCardData)
-      }
-    }, [todoListUpdate, activeChat?.SessionID])
-
     const aiReActChatContentsRef = useRef<AIReActChatContentsRef>(null)
-
-    const casualConcurrentTaskList = useCreation(() => {
-      return casualChat.elements
-        .filter((item) => item.kind === 'task' && item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP)
-        .map((item) => item.token)
-    }, [casualChat.elements.length])
-
-    const getCasualConcurrentTaskName = useMemoizedFn((token: string) => {
-      const contentMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat?.contents
-      const chatData = contentMap?.get(token)
-      return (
-        (chatData?.data as { taskName?: string; goal?: string })?.taskName ||
-        (chatData?.data as { goal?: string })?.goal ||
-        token
-      )
-    })
-
-    const onScrollToConcurrentTask = useMemoizedFn((token: string) => {
-      const index = chatIPCData.casualChat.elements.findIndex((item) => item.kind === 'task' && item.token === token)
-      if (index !== -1) {
-        aiReActChatContentsRef.current?.scrollToItemIndex(index, 'smooth')
-      }
-    })
-
-    const getTaskId = useMemoizedFn(() => {
-      return chatIPCEvents.fetchCurrentCasualTaskID()
-    })
-
-    const defaultTaskTabLabel = useCreation(() => {
-      return typeof title === 'string' ? title : '自由对话'
-    }, [title])
-
-    const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
-      const taskId = getTaskId()
-      const sessionId = activeChat?.SessionID
-      if (!taskId || !sessionId) return false
-      if (chatDataStoreKey !== 'aiChatDataStore') return false
-      emiter.emit(
-        'actionAITaskContentTab',
-        JSON.stringify({
-          type,
-          params: {
-            key: sessionId,
-            taskId,
-            label: label || activeChat?.Title || defaultTaskTabLabel,
-            goal: '',
-          },
-        }),
-      )
-      return true
-    })
-
-    const syncCasualTaskTab = useMemoizedFn(() => {
-      const sessionId = activeChat?.SessionID
-      if (!getTaskId() || !sessionId) return
-      if (chatDataStoreKey !== 'aiChatDataStore') return
-      emitTaskContentTab('add')
-      sessionRef.current = sessionId
-    })
-
-    const onDetails = useMemoizedFn(() => {
-      if (!getTaskId()) {
-        yakitNotify('error', 'taskId不存在')
-        return
-      }
-      if (chatDataStoreKey !== 'aiChatDataStore') {
-        yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
-        return
-      }
-      syncCasualTaskTab()
-    })
-
-    useEffect(() => {
-      if (sessionRef.current && sessionRef.current !== activeChat?.SessionID) {
-        sessionRef.current = undefined
-      }
-    }, [activeChat?.SessionID])
-
-    useEffect(() => {
-      if (!casualLoading) return
-      syncCasualTaskTab()
-    }, [casualLoading, syncCasualTaskTab])
-
-    useEffect(() => {
-      if (!activeChat?.Title || !activeChat?.SessionID) return
-      if (sessionRef.current !== activeChat.SessionID) return
-      emitTaskContentTab('update', activeChat.Title)
-    }, [activeChat?.Title, activeChat?.SessionID, emitTaskContentTab])
 
     return (
       <>
@@ -408,112 +279,16 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             })}
           >
             <div className={classNames(styles['chat-container'], chatContainerClassName)}>
-              <div className={classNames(styles['chat-header'], chatContainerHeaderClassName)}>
-                <div className={styles['chat-header-title']}>
-                  <ColorsChatIcon />
-                  <span className={styles['chat-header-title-text']}>{title}</span>
-                  {focusMode && (
-                    <YakitTag fullRadius={true} className={styles['chat-header-focus-mode']}>
-                      场景:<span className={styles['text']}>{focusMode}</span>
-                    </YakitTag>
-                  )}
-                </div>
-                <div className={styles['chat-header-extra']}>
-                  {isShowRetract && (
-                    <>
-                      {!!casualConcurrentTaskList.length && (
-                        <YakitPopover
-                          overlayClassName={styles['chat-locate-popover']}
-                          content={
-                            <div className={styles['chat-locate-list']}>
-                              {casualConcurrentTaskList.map((token) => (
-                                <div
-                                  key={token}
-                                  className={styles['chat-locate-item']}
-                                  onClick={() => onScrollToConcurrentTask(token)}
-                                >
-                                  <SolidChatIcon /> {getCasualConcurrentTaskName(token)}
-                                </div>
-                              ))}
-                            </div>
-                          }
-                          placement="bottom"
-                        >
-                          <YakitButton type="outline2" radius="28px" icon={<OutlineLandPlotIcon />}>
-                            子Agent任务
-                          </YakitButton>
-                        </YakitPopover>
-                      )}
-                      {externalParameters?.rightIcon ? (
-                        <>
-                          {/*
-                        自由对话的taskid(在常量中)存在的时候，casualLoading（state）一定为true
-                        TODO - taskid需要改为 store
-                         */}
-                          {casualLoading && externalParameters.rightIcon.taskDetails && <TaskDetailsPopover />}
-                          {externalParameters.rightIcon.dataDetails && (
-                            <AIContextToken
-                              iconOnly
-                              execute={execute}
-                              session={contextTokenSession}
-                              buttonProps={
-                                externalParameters.rightIcon.dataDetails === true
-                                  ? undefined
-                                  : externalParameters.rightIcon.dataDetails
-                              }
-                            />
-                          )}
-                          {externalParameters.rightIcon.history && (
-                            <Tooltip
-                              trigger={['click']}
-                              destroyTooltipOnHide
-                              overlayClassName={styles['history-chat-tooltip']}
-                              title={
-                                <div className={styles['history-chat-tooltip-content']}>
-                                  <HistoryChat embedded aiSource={historyChatAISource} />
-                                </div>
-                              }
-                            >
-                              <YakitButton type="text2" icon={<ClockIcon />} title="" />
-                            </Tooltip>
-                          )}
-                          {externalParameters.rightIcon.add}
-                          {externalParameters.rightIcon.close}
-                        </>
-                      ) : (
-                        <>
-                          {casualLoading && (
-                            <YakitButton
-                              type="outline2"
-                              radius="28px"
-                              icon={<OutlineListTodoIcon />}
-                              onClick={onDetails}
-                            >
-                              任务详情
-                            </YakitButton>
-                          )}
-                          <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-              {reActTaskId === chatIPCEvents.fetchCurrentCasualTaskID() && todoData?.items?.length > 0 && (
-                <div className={styles['todoList-wrapper']}>
-                  <AIToDoList className={styles['to-do-list']} todoData={todoData} />
-                </div>
-              )}
-              <AIReActChatContents ref={aiReActChatContentsRef} />
-              {/* <AIReActChatHeader
+              <AIReActChatHeader
                 title={title}
                 chatContainerHeaderClassName={chatContainerHeaderClassName}
                 isShowRetract={isShowRetract}
                 externalParameters={externalParameters}
                 handleSwitchShowFreeChat={handleSwitchShowFreeChat}
+                scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
               />
               <AIToDoListWrapper />
-              <AIReActChatContents /> */}
+              <AIReActChatContents ref={aiReActChatContentsRef} />
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>

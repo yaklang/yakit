@@ -2,7 +2,7 @@ import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { AITaskContentProps } from './type'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { AIAgentTriggerEventInfo, AITabsEnumType } from '@/pages/ai-agent/aiAgentType'
-import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import styles from './AITaskContent.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
@@ -28,7 +28,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const store = useCurrentStore()
   const taskChat = useStore(store, (state) => state.taskChat)
 
-  const [tabs, setTabs, getTabs] = useGetSetState<YakitSideTabProps['yakitTabs']>([])
+  const [tabs, setTabs, getTabs] = useGetSetState<TabsItemProps[]>([])
   const [activeKey, setActiveKey] = useState<string>('taskContent')
   const [scrollToBottom, setScrollToBottom] = useState(false)
 

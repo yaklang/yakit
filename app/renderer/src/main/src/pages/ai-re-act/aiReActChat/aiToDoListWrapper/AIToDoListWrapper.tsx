@@ -14,7 +14,7 @@ export const AIToDoListWrapper: React.FC<AIToDoListWrapperProps> = React.memo((p
   const { activeChat } = useAIAgentStore()
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
-
+  const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
   const todoListUpdate = useStore(store, (state) => state.casualChat?.todoListUpdate)
 
   const todoData: TodoListCardData = useCreation(() => {
@@ -26,9 +26,14 @@ export const AIToDoListWrapper: React.FC<AIToDoListWrapperProps> = React.memo((p
     }
   }, [todoListUpdate, activeChat?.SessionID])
 
+  const reActTaskId: string = useCreation(() => {
+    if (!activeChat?.SessionID) return ''
+    return rawData.casualChat.planDetails?.taskId ?? ''
+  }, [todoListUpdate, activeChat?.SessionID])
+
   return (
     <>
-      {todoData?.items?.length > 0 && (
+      {reActTaskId === currentCasualTaskID && todoData?.items?.length > 0 && (
         <div className={styles['todoList-wrapper']}>
           <AIToDoList className={styles['to-do-list']} todoData={todoData} />
         </div>

@@ -1,6 +1,9 @@
+import type { ForwardedRef } from 'react'
 import type { ChatReferenceMaterialPayload, ChatStream } from '../hooks/aiRender'
 
-export interface AIReActChatContentsPProps {}
+export interface AIReActChatContentsPProps {
+  ref: ForwardedRef<AIReActChatContentsRef>
+}
 
 export interface AIReActChatContentsRef {
   scrollToItemIndex: (arrayIndex: number, behavior?: 'auto' | 'smooth') => void
