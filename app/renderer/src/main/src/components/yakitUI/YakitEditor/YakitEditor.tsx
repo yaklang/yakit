@@ -2,7 +2,6 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import {
   useDebounceFn,
   useGetState,
-  useKeyPress,
   useMemoizedFn,
   useThrottleFn,
   useUpdateEffect,
@@ -20,7 +19,6 @@ import '@/utils/monacoSpec/html'
 import {
   YakitIMonacoEditor,
   YakitEditorProps,
-  YakitITextModel,
   KeyboardToFuncProps,
   YakitIModelDecoration,
   OperationRecord,
@@ -28,50 +26,26 @@ import {
   OperationRecordRes,
 } from './YakitEditorType'
 import { showByRightContext } from '../YakitMenu/showByRightContext'
-import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
-import { StringToUint8Array } from '@/utils/str'
 import { baseMenuLists, extraMenuLists } from './contextMenus'
-import { EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType } from './EditorMenu'
+import { EditorMenuItemProps, EditorMenuItemType } from './EditorMenu'
 import cloneDeep from 'lodash/cloneDeep'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 
 import classNames from 'classnames'
 import styles from './YakitEditor.module.scss'
 import './StaticYakitEditor.scss'
-import { queryYakScriptList } from '@/pages/yakitStore/network'
-import { YakScript } from '@/pages/invoker/schema'
 import { failed } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { v4 as uuidv4 } from 'uuid'
-import { editor as newEditor } from 'monaco-editor'
-import IModelDecoration = newEditor.IModelDecoration
-import {
-  CountDirectionProps,
-  HTTPFuzzerClickEditorMenu,
-  HTTPFuzzerRangeEditorMenu,
-  HTTPFuzzerRangeReadOnlyEditorMenu,
-} from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
-import { QueryFuzzerLabelResponseProps } from '@/pages/fuzzer/StringFuzzer'
-import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from '@/pages/fuzzer/InsertFileFuzzTag'
-import { monacoEditorWrite } from '@/pages/fuzzer/fuzzerTemplates'
-import { onInsertYakFuzzer, showDictsAndSelect } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { openExternalWebsite } from '@/utils/openWebsite'
 import emiter from '@/utils/eventBus/eventBus'
 import { GetPluginLanguage } from '@/pages/plugins/builtInData'
-import { createRoot } from 'react-dom/client'
-import { setEditorContext, YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
+import { setEditorContext } from '@/utils/monacoSpec/yakEditor'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
-import { YakitRoute } from '@/enums/yakitRoute'
-import { useStore } from '@/store/editorState'
 import { CloudDownloadIcon } from '@/assets/newIcon'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
-import { PluginSwitchToTag } from '@/pages/pluginEditor/defaultconstants'
-import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import {
   getStorageYakEditorShortcutKeyEvents,
-  getYakEditorShortcutKeyEvents,
   isPageOrGlobalShortcut,
   isYakEditorDefaultShortcut,
   isYakEditorShortcut,
@@ -80,26 +54,21 @@ import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook
 import useFocusContextStore from '@/utils/globalShortcutKey/shortcutKeyFocusHook/hooks/useStore'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
 import {
-  convertKeyboardToUIKey,
   convertKeyEventToKeyCombination,
   sortKeysCombination,
 } from '@/utils/globalShortcutKey/utils'
-import { YakitKeyBoard, YakitKeyMod } from '@/utils/globalShortcutKey/keyboard'
 import { applyYakitMonacoTheme } from '@/utils/monacoSpec/theme'
 import { useTheme } from '@/hook/useTheme'
 import { keepSearchNameMapStore, useKeepSearchNameMap } from '@/store/keepSearchName'
-import type { IEvent } from 'monaco-editor'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
 import { JSONParseLog } from '@/utils/tool'
 import {
   BinaryFuzztagEntry,
-  buildChipLabel,
   collapseBinaryFuzztag,
   decodeBinaryTag,
   encodeBytesToTag,
   expandBinaryFuzztag,
-  findPlaceholderOffsets,
   registerBinaryFoldEntries,
   unregisterBinaryFoldEntries,
 } from './binaryFuzztag'
@@ -107,91 +76,27 @@ import { BinaryFuzztagHexModal, BinaryFuzztagSubmitResult } from './BinaryFuzzta
 import { Base64HexFuzztagModal } from './Base64HexFuzztagModal'
 import { showYakitModal } from '../YakitModal/YakitModalConfirm'
 
-// 二进制 Fuzztag 折叠侧表的内存上限：累积保留历史项以支持占位被破坏后再补回的恢复，
-// 用上限淘汰最旧项防止长会话内存膨胀
-const MAX_BINARY_FOLD_ENTRIES = 500
+// ===== 拆分模块导入 =====
+import {
+  CodecTypeProps,
+  contextMenuProps,
+  DefaultMenuTop,
+  DefaultMenuBottom,
+  openFind,
+  PLUGIN_PREFIX,
+  IFindController,
+} from './constants'
+import { useBinaryFold } from './hooks/useBinaryFold'
+import { usePluginSearch } from './hooks/usePluginSearch'
+import { useYakFormat } from './hooks/useYakFormat'
+import { generateDecorations as generateDecorationsFn } from './decorations/generateDecorations'
+import { editerMenuFun } from './fizzMenu/editerMenuFun'
+import { menuReduce, sortMenuFun, contextMenuKeybindingHandle } from './menus/menuHelpers'
 
-export interface CodecTypeProps {
-  key?: string
-  verbose: string
-  subTypes?: CodecTypeProps[]
-  params?: YakParamProps[]
-  help?: React.ReactNode
-  isYakScript?: boolean
-}
+// re-export 保持外部导入路径兼容
+export { PLUGIN_PREFIX }
+export type { CodecTypeProps, contextMenuProps }
 
-export interface contextMenuProps {
-  key: string
-  value: string
-  isAiPlugin: boolean
-  params: YakParamProps[]
-}
-
-interface IFindReplaceState {
-  isRevealed: boolean
-  searchString: string
-  change(update: { searchString: string }, moveCursor: boolean): void
-  onFindReplaceStateChange: IEvent<() => void>
-}
-
-interface IFindController extends monaco.editor.IStandaloneCodeEditor {
-  getState(): IFindReplaceState
-  start(opts?: {
-    forceRevealReplace?: boolean
-    seedSearchStringFromSelection?: boolean
-    shouldFocus?: boolean
-    seedSearchStringFromGlobalClipboard?: boolean
-  }): void
-}
-
-const { ipcRenderer } = window.require('electron')
-
-/** @name 字体key值对应字体大小 */
-const keyToFontSize: Record<string, number> = {
-  'font-size-small': 12,
-  'font-size-middle': 16,
-  'font-size-large': 20,
-}
-
-/** 编辑器右键默认菜单 - 顶部 */
-const DefaultMenuTop: (t: TFunction, nowFontsize: number) => EditorMenuItemType[] = (t, nowFontsize) => {
-  return [
-    {
-      key: 'font-size',
-      label: t('YakitEditor.fontSize'),
-      children: fontSizeOptions.map((val) => ({
-        key: val + '',
-        label: `${val}${nowFontsize === val ? '\u00A0\u00A0\u00A0✓' : ''}`,
-      })),
-    },
-  ]
-}
-
-/** 编辑器右键默认菜单 - 底部 */
-const DefaultMenuBottom: (t: TFunction) => EditorMenuItemType[] = (t) => {
-  return [
-    { key: 'cut', label: t('YakitEditor.cut') },
-    { key: 'copy', label: t('YakitEditor.copy') },
-    { key: 'paste', label: t('YakitEditor.paste') },
-  ]
-}
-
-function openFind(editor: YakitIMonacoEditor, keyword: string) {
-  // editor.focus()
-  const findController = editor.getContribution<IFindController>('editor.contrib.findController')
-  const state = findController?.getState()
-  if (!state?.isRevealed) {
-    findController?.start({
-      seedSearchStringFromSelection: false,
-      shouldFocus: true,
-    })
-  }
-
-  if (state?.searchString !== keyword) {
-    state?.change({ searchString: keyword }, false)
-  }
-}
-export const PLUGIN_PREFIX = 'pluginExtension_'
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const {
     forceRenderMenu = false,
@@ -290,56 +195,19 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
 
   // ===== 二进制 Fuzztag 折叠：翻译边界 =====
-  // 仅在 foldBinaryFuzztag 且 http 类型下启用；模型存短占位，向上抛真实值，下游消费者无感知
-  const foldBinaryEnabled = !!props.foldBinaryFuzztag && type === 'http'
-  // 侧表：占位 id -> 原始标签信息；handleBinaryChange 据此 expand 还原真实文本
-  const binaryFoldEntriesRef = useRef<Map<string, BinaryFuzztagEntry>>(new Map())
-  // 占位范围（仿 privacyMaskRangesRef），用于点击命中打开 HEX 编辑弹窗
-  const binaryFoldRangesRef = useRef<{ id: string; range: monaco.Range; ordinal: number }[]>([])
-  // "被修改"记录：按编辑器中第 N 个二进制标签(文档顺序的序号)记录，只记是否改过(布尔)。
-  // 与内容/占位 id 解耦，保证复制粘贴出去的永远是纯内容、不含任何改动元数据。
-  const binaryModifiedOrdinalsRef = useRef<Set<number>>(new Set())
-  // 计算传给 MonacoEditor 的展示文本（真实值 -> 占位）
-  const displayValue = useMemo(() => {
-    if (!foldBinaryEnabled) {
-      // 原地清空而非替换对象，保持注册表里登记的 map 引用一直有效
-      binaryFoldEntriesRef.current.clear()
-      binaryModifiedOrdinalsRef.current.clear()
-      return value
-    }
-    const { text, entries } = collapseBinaryFuzztag(value ?? '')
-    // 累积合并而非整表替换：保留历史占位映射。
-    // 原因：用户在占位上 backspace 会把占位破坏成非法 fuzztag（如缺一个 }），
-    // 此时 expand 无法匹配 -> 真实二进制会被破坏文本顶替丢失；若再整表替换映射，
-    // 即使补回 }} 也找不到 id 对应的原始标签，Binary 小块与内容永久无法恢复。
-    // 保留映射后，补回完整占位即可由 expand 还原真实内容并重新折叠出小块。
-    const map = binaryFoldEntriesRef.current
-    entries.forEach((v, k) => {
-      // 重新插入以将当前文本中的项标记为最新，避免被下方内存淘汰
-      map.delete(k)
-      map.set(k, v)
-    })
-    // 限制内存上限，淘汰最旧项；当前文本中的项已在上面置为最新，不会被淘汰
-    while (map.size > MAX_BINARY_FOLD_ENTRIES) {
-      const oldest = map.keys().next().value
-      if (oldest === undefined) {
-        break
-      }
-      map.delete(oldest)
-    }
-    return text
-  }, [value, foldBinaryEnabled])
-  // 向上回调：占位 -> 真实值
-  const handleBinaryChange = useMemoizedFn((content: string) => {
-    const emit = setValue || onChange
-    if (!emit) {
-      return
-    }
-    if (!foldBinaryEnabled) {
-      emit(content)
-      return
-    }
-    emit(expandBinaryFuzztag(content, binaryFoldEntriesRef.current))
+  const {
+    foldBinaryEnabled,
+    binaryFoldEntriesRef,
+    binaryFoldRangesRef,
+    binaryModifiedOrdinalsRef,
+    displayValue,
+    handleBinaryChange,
+  } = useBinaryFold({
+    value,
+    setValue,
+    onChange,
+    foldBinaryFuzztag: props.foldBinaryFuzztag,
+    type,
   })
 
   useLayoutEffect(() => {
@@ -389,101 +257,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     onOperationRecord('noWordWrap', noWordWrap)
   }, [noWordWrap])
 
-  // 自定义HTTP数据包变形处理
-  const { customHTTPMutatePlugin, contextMenuPlugin, setCustomHTTPMutatePlugin, setContextMenuPlugin } = useStore()
-  const searchCodecCustomHTTPMutatePlugin = useMemoizedFn(() => {
-    queryYakScriptList(
-      'codec',
-      (i: YakScript[], total) => {
-        if (!total || total === 0) {
-          return
-        }
-        setCustomHTTPMutatePlugin(
-          i.map((script) => {
-            return {
-              key: script.ScriptName,
-              verbose: 'CODEC 社区插件: ' + script.ScriptName,
-              isYakScript: true,
-            } as CodecTypeProps
-          }),
-        )
-      },
-      undefined,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      [PluginSwitchToTag.PluginCodecHttpSwitch],
-    )
-  })
-
-  // 插件扩展
-  const searchCodecCustomContextMenuPlugin = useMemoizedFn(() => {
-    queryYakScriptList(
-      'codec',
-      (i: YakScript[], total) => {
-        if (!total || total === 0) {
-          return
-        }
-        setContextMenuPlugin(
-          i.map((script) => {
-            const isAiPlugin: boolean = script.Tags.includes('AI工具')
-            return {
-              key: script.ScriptName,
-              value: script.ScriptName,
-              isAiPlugin,
-              params: script.Params,
-            } as contextMenuProps
-          }),
-        )
-      },
-      undefined,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      [PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch],
-    )
-  })
-
+  // 自定义HTTP数据包变形处理 + 插件扩展
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(ref)
 
-  useEffect(() => {
-    if (inViewport && menuType.length > 0) {
-      searchCodecCustomHTTPMutatePlugin()
-      searchCodecCustomContextMenuPlugin()
-    }
-  }, [inViewport])
-
-  const onRefreshPluginCodecMenu = useMemoizedFn(() => {
-    if (inViewport && menuType.length > 0) {
-      searchCodecCustomHTTPMutatePlugin()
-      searchCodecCustomContextMenuPlugin()
-    }
-  })
-
-  useEffect(() => {
-    emiter.on('onRefPluginCodecMenu', onRefreshPluginCodecMenu)
-    return () => {
-      emiter.off('onRefPluginCodecMenu', onRefreshPluginCodecMenu)
-    }
-  }, [])
-
-  // 菜单数组去重
-  const menuReduce = useMemoizedFn((array: any[]) => {
-    let newArr: any[] = []
-    let arr: string[] = []
-    array.forEach((item) => {
-      if (!arr.includes(item.key)) {
-        arr.push(item.key)
-        newArr.push(item)
-      }
-    })
-    return newArr
-  })
+  const { customHTTPMutatePlugin, contextMenuPlugin } = usePluginSearch({ menuType, inViewport })
 
   /**
    * 整理右键菜单的对应关系
@@ -792,94 +570,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   })
 
-  /** 菜单自定义快捷键渲染处理事件 */
-  const contextMenuKeybindingHandle = useMemoizedFn((parentKey: string, data: EditorMenuItemType[]) => {
-    const menus: EditorMenuItemType[] = []
-    for (let item of data) {
-      /** 屏蔽菜单分割线选项 */
-      if (typeof (data as any as EditorMenuItemDividerProps)['type'] !== 'undefined') {
-        const info: EditorMenuItemDividerProps = { type: 'divider' }
-        menus.push(info)
-      } else {
-        /** 处理带快捷键的菜单项 */
-        const info = { ...item } as EditorMenuItemProps
-        if (info.children && info.children.length > 0) {
-          info.children = contextMenuKeybindingHandle(info.key, info.children)
-        } else {
-          if (info.key === 'cut' && info.label === t('YakitEditor.cut')) {
-            const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_X])
-
-            info.label = keysContent ? (
-              <div className={styles['editor-context-menu-keybind-wrapper']}>
-                <div className={styles['content-style']}>{t('YakitEditor.cut')}</div>
-                <div className={classNames(styles['keybind-style'], 'keys-style')}>{keysContent}</div>
-              </div>
-            ) : (
-              info.label
-            )
-          }
-          if (info.key === 'copy' && info.label === t('YakitEditor.copy')) {
-            const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_C])
-            info.label = keysContent ? (
-              <div className={styles['editor-context-menu-keybind-wrapper']}>
-                <div className={styles['content-style']}>{t('YakitEditor.copy')}</div>
-                <div className={classNames(styles['keybind-style'], 'keys-style')}>{keysContent}</div>
-              </div>
-            ) : (
-              info.label
-            )
-          }
-          if (info.key === 'paste' && info.label === t('YakitEditor.paste')) {
-            const keysContent = convertKeyboardToUIKey([YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_V])
-            info.label = keysContent ? (
-              <div className={styles['editor-context-menu-keybind-wrapper']}>
-                <div className={styles['content-style']}>{t('YakitEditor.paste')}</div>
-                <div className={classNames(styles['keybind-style'], 'keys-style')}>{keysContent}</div>
-              </div>
-            ) : (
-              info.label
-            )
-          }
-
-          if (info.keybindings && info.keybindings.length > 0) {
-            const keyArr = getYakEditorShortcutKeyEvents()[info.keybindings].keys
-            const keysContent = convertKeyboardToUIKey(keyArr)
-            // 记录自定义快捷键映射按键的回调事件
-            if (keysContent) {
-              let sortKeys = sortKeysCombination(keyArr)
-              keyBindingRef.current[sortKeys.join('-')] = parentKey ? [info.key, parentKey] : [info.key]
-            }
-
-            info.label = keysContent ? (
-              <div className={styles['editor-context-menu-keybind-wrapper']}>
-                <div className={styles['content-style']}>{info.label}</div>
-                <div className={classNames(styles['keybind-style'], 'keys-style')}>{keysContent}</div>
-              </div>
-            ) : (
-              info.label
-            )
-          }
-        }
-        menus.push(info)
-      }
-    }
-    return menus
-  })
-
-  const sortMenuFun = useMemoizedFn((dataSource, sortData) => {
-    const result = sortData.reduce(
-      (acc, item) => {
-        if (item.order >= 0) {
-          acc.splice(item.order, 0, ...item.menu)
-        } else {
-          acc.push(...item.menu)
-        }
-        return acc
-      },
-      [...dataSource],
-    )
-    return result
-  })
   /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
   useEffect(() => {
     /**
@@ -937,7 +627,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     if (sortContextMenu.length > 0) {
       rightContextMenu.current = sortMenuFun(rightContextMenu.current, sortContextMenu)
     }
-    rightContextMenu.current = contextMenuKeybindingHandle('', rightContextMenu.current)
+    rightContextMenu.current = contextMenuKeybindingHandle(t, keyBindingRef, '', rightContextMenu.current)
 
     if (!forceRenderMenu) isInitRef.current = true
   }, [
@@ -1013,361 +703,30 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       // 检查 model 是否已被释放
       if (!model || isModelDisposedRef.current) return []
       try {
-        const endsp = model.getPositionAt(1800)
-        const dec: YakitIModelDecoration[] = []
-        const text =
-          endsp.lineNumber === 1
-            ? model.getValueInRange({
-                startLineNumber: 1,
-                startColumn: 1,
-                endLineNumber: 1,
-                endColumn: endsp.column,
-              })
-            : model.getValueInRange({
-                startLineNumber: 1,
-                startColumn: 1,
-                endLineNumber: endsp.lineNumber,
-                endColumn: endsp.column,
-              })
-
-        if (props.type === 'http') {
-          ;(() => {
-            try {
-              //http
-              ;[{ regexp: /\nContent-Length:\s*?\d+/, classType: 'content-length' }].map((detail) => {
-                // handle content-length
-                const match = detail.regexp.exec(text)
-                if (!match) {
-                  return
-                }
-                const start = model.getPositionAt(match.index)
-                const end = model.getPositionAt(match.index + match[0].indexOf(':'))
-                dec.push({
-                  id: detail.classType + match.index,
-                  ownerId: 0,
-                  range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                  options: {
-                    afterContentClassName: `${detail.classType} lang-${i18n.language}`,
-                  },
-                } as YakitIModelDecoration)
-              })
-            } catch (e) {}
-          })()
-          ;(() => {
-            try {
-              if (!props.showHostHint) return
-              const fullText = model.getValue()
-              const hostRegex = /\nHost:\s*?([^\r\n]+)/
-              const hostMatch = hostRegex.exec(fullText)
-              if (!hostMatch) return
-
-              const fullMatch = hostMatch[0]
-              const hostColonIndex = hostMatch.index + fullMatch.indexOf(':')
-              const hostLabelStart = model.getPositionAt(hostMatch.index)
-              const hostLabelEnd = model.getPositionAt(hostColonIndex + 1)
-
-              // 添加 Host 标签装饰器（? 标记）
-              dec.push({
-                id: `host-label-${hostMatch.index}`,
-                ownerId: 0,
-                range: new monaco.Range(
-                  hostLabelStart.lineNumber,
-                  hostLabelStart.column,
-                  hostLabelEnd.lineNumber,
-                  hostLabelEnd.column,
-                ),
-                options: {
-                  afterContentClassName: `host lang-${i18n.language}`,
-                },
-              } as YakitIModelDecoration)
-
-              if (!privacyFun()) return
-
-              // 提取并处理 Host 值
-              const hostValue = hostMatch[1].trim()
-              if (!hostValue) return
-
-              const colonIndex = hostValue.indexOf(':')
-              const hostname = colonIndex > 0 ? hostValue.substring(0, colonIndex) : hostValue
-              if (!hostname) return
-
-              // 构建搜索模式（hostname、hostname:port、不带www的域名）
-              const patterns = [hostname]
-              if (colonIndex > 0) patterns.push(hostValue)
-              if (hostname.toLowerCase().startsWith('www.')) {
-                const withoutWww = hostname.substring(4)
-                if (withoutWww) patterns.push(withoutWww)
-              }
-
-              // 使用正则一次性查找所有匹配
-              const escapedPatterns = patterns.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-              const searchRegex = new RegExp(escapedPatterns.join('|'), 'g')
-
-              const matches: { index: number; length: number }[] = []
-              let match: RegExpExecArray | null
-              while ((match = searchRegex.exec(fullText)) !== null) {
-                matches.push({ index: match.index, length: match[0].length })
-              }
-
-              // 去重重叠匹配（保留较长的）
-              const filtered = matches
-                .sort((a, b) => (a.index !== b.index ? a.index - b.index : b.length - a.length))
-                .filter((curr, idx, arr) => idx === 0 || curr.index >= arr[idx - 1].index + arr[idx - 1].length)
-
-              // 获取光标位置用于判断是否显示遮罩
-              const cursorPos = editor.getPosition()
-              const newPrivacyRanges: { id: string; range: monaco.Range }[] = []
-
-              filtered.forEach((m, idx) => {
-                const start = model.getPositionAt(m.index)
-                const end = model.getPositionAt(m.index + m.length)
-                const range = new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column)
-                const decorationId = `host-privacy-${idx}`
-
-                newPrivacyRanges.push({ id: decorationId, range })
-
-                // 光标在范围内则不显示遮罩
-                const isCursorIn =
-                  cursorPos?.lineNumber === start.lineNumber &&
-                  cursorPos.column >= start.column &&
-                  cursorPos.column <= end.column
-
-                if (!isCursorIn) {
-                  dec.push({
-                    id: decorationId,
-                    ownerId: 0,
-                    range,
-                    options: {
-                      inlineClassName: `host-privacy-mask-hidden lang-${i18n.language}`,
-                      stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-                    },
-                  } as YakitIModelDecoration)
-                }
-              })
-
-              privacyMaskRangesRef.current = newPrivacyRanges
-            } catch (e) {}
-          })()
-        }
-        const needDecode = props.type && ['html', 'http', 'json'].includes(props.type)
-        if (needDecode && !disableUnicodeDecodeRef.current) {
-          ;(() => {
-            // http html json
-            const text = model.getValue()
-            let match
-            const regex = /(\\u[\dabcdef]{4})+/gi
-
-            while ((match = regex.exec(text)) !== null) {
-              const start = model.getPositionAt(match.index)
-              const end = model.getPositionAt(match.index + match[0].length)
-              const decoded = match[0]
-                .split('\\u')
-                .filter(Boolean)
-                .map((hex) => String.fromCharCode(parseInt(hex, 16)))
-                .join('')
-              dec.push({
-                id: 'decode' + match.index,
-                ownerId: 1,
-                range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                options: {
-                  className: 'unicode-decode',
-                  hoverMessage: { value: decoded },
-                  afterContentClassName: 'unicode-decode',
-                  after: { content: decoded, inlineClassName: 'unicode-decode-after' },
-                },
-              } as IModelDecoration)
-            }
-          })()
-        }
-
-        ;(() => {
-          const targetValue = fixContentTypeFun()
-          if (!targetValue) return
-          const text = model.getValue()
-          let match
-
-          // 匹配 Content-Type: 后面的值
-          const regex = /Content-Type:\s*([^\r\n]*)/gi
-
-          while ((match = regex.exec(text)) !== null) {
-            const contentTypeValue = match[1].trim() // 获取 Content-Type 后的值并去除多余空格
-            if (contentTypeValue === targetValue) {
-              // 计算 Content-Type: 后具体值的起始位置，避免空格问题
-              const textBeforeMatch = text.substring(match.index, regex.lastIndex) // 获取匹配到的完整文本
-              const contentStartIndex = match.index + textBeforeMatch.indexOf(contentTypeValue) // 确保起始位置精确匹配
-
-              const start = model.getPositionAt(contentStartIndex)
-              const end = model.getPositionAt(match.index + match[0].length)
-
-              dec.push({
-                id: 'decode' + match.index,
-                ownerId: 1,
-                range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-                options: {
-                  className: 'unicode-decode',
-                  hoverMessage: { value: fixContentTypeHoverMessageFun() },
-                  afterContentClassName: 'unicode-decode',
-                  after: {
-                    content:
-                      originalContentTypeFun() === ''
-                        ? t('YakitEditor.emptyContentTypeAutoDetected')
-                        : originalContentTypeFun(),
-                    inlineClassName: 'unicode-decode-after',
-                  },
-                },
-              } as IModelDecoration)
-            }
-          }
-        })()
-        ;(() => {
-          // all
-          const keywordRegExp = /\r?\n/g
-          let match
-          let count = 0
-          while ((match = keywordRegExp.exec(text)) !== null) {
-            count++
-            const start = model.getPositionAt(match.index)
-            const className: 'crlf' | 'lf' = match[0] === '\r\n' ? 'crlf' : 'lf'
-            const end = model.getPositionAt(match.index + match[0].length)
-            dec.push({
-              id: 'keyword' + match.index,
-              ownerId: 2,
-              range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
-              options: { beforeContentClassName: className },
-            } as YakitIModelDecoration)
-            if (count > 19) {
-              return
-            }
-          }
-        })()
-
-        function highLightRange(item) {
-          const { startOffset = 0, highlightLength = 0, startLineNumber, startColumn, endLineNumber, endColumn } = item
-          let range = {
-            startLineNumber: 0,
-            startColumn: 0,
-            endLineNumber: 0,
-            endColumn: 0,
-          }
-          if (typeof startLineNumber === 'number') {
-            range.startLineNumber = startLineNumber
-            range.startColumn = startColumn
-            range.endLineNumber = endLineNumber
-            range.endColumn = endColumn
-          } else {
-            if (model) {
-              // 获取偏移量对应的位置
-              const startPosition = model.getPositionAt(Number(startOffset))
-              const endPosition = model.getPositionAt(Number(startOffset) + Number(highlightLength))
-              range.startLineNumber = startPosition.lineNumber
-              range.startColumn = startPosition.column
-              range.endLineNumber = endPosition.lineNumber
-              range.endColumn = endPosition.column
-            }
-          }
-          return range
-        }
-
-        ;(() => {
-          //all
-          highLightTextFun().forEach((item) => {
-            const range = highLightRange(item)
-            // 创建装饰选项
-            dec.push({
-              id:
-                'hight-light-text_' +
-                range.startLineNumber +
-                '_' +
-                range.startColumn +
-                '_' +
-                range.endLineNumber +
-                '_' +
-                range.endColumn,
-              ownerId: 3,
-              range: new monaco.Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn),
-              options: {
-                isWholeLine: false,
-                className: highLightClass ? highLightClass : 'hight-light-default-bg-color',
-                hoverMessage: [{ value: item.hoverVal, isTrusted: true }],
-              },
-            } as IModelDecoration)
-          })
-
-          highLightFindFun().forEach((item) => {
-            const range = highLightRange(item)
-            // 创建装饰选项
-            dec.push({
-              id:
-                'hight-light-find_' +
-                range.startLineNumber +
-                '_' +
-                range.startColumn +
-                '_' +
-                range.endLineNumber +
-                '_' +
-                range.endColumn,
-              ownerId: 3,
-              range: new monaco.Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn),
-              options: {
-                isWholeLine: false,
-                className: highLightFindClass ? highLightFindClass : 'hight-light-find-default-bg-color',
-                hoverMessage: [{ value: '', isTrusted: true }],
-              },
-            } as IModelDecoration)
-          })
-        })()
-
-        // 二进制 Fuzztag 折叠：为占位渲染 Binary[..]/File[..] 小块，并记录范围用于点击
-        ;(() => {
-          if (!foldBinaryEnabled) {
-            binaryFoldRangesRef.current = []
-            return
-          }
-          try {
-            const fullText = model.getValue()
-            const offsets = findPlaceholderOffsets(fullText)
-            const newRanges: { id: string; range: monaco.Range; ordinal: number }[] = []
-            // index 即"编辑器中第 N 个二进制标签"的序号，按文档顺序；据此判断是否被修改过
-            offsets.forEach((off, index) => {
-              const entry = binaryFoldEntriesRef.current.get(off.id)
-              if (!entry) {
-                return
-              }
-              const changed = binaryModifiedOrdinalsRef.current.has(index)
-              const start = model.getPositionAt(off.start)
-              const end = model.getPositionAt(off.end)
-              const range = new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column)
-              newRanges.push({ id: off.id, range, ordinal: index })
-              dec.push({
-                id: 'binary-fold-' + off.id + '-' + off.start,
-                ownerId: 0,
-                range,
-                options: {
-                  inlineClassName: 'binary-fuzz-hidden',
-                  // 关键：声明该 inlineClassName 会改变字符宽度（font-size:0），
-                  // 强制 monaco 放弃等宽快速路径(FastRenderedViewLine)、改用 DOM 实测，
-                  // 否则隐藏占位仍按 charWidth*列数 占据光标/选区宽度，表现为 chip 后的可选中空白
-                  inlineClassNameAffectsLetterSpacing: true,
-                  after: {
-                    content: buildChipLabel(entry, changed),
-                    inlineClassName: changed ? 'binary-fuzz-chip binary-fuzz-chip-changed' : 'binary-fuzz-chip',
-                    // chip 带 padding/不同字号，宽度非等宽，同样需 DOM 实测以保证光标/选区贴合
-                    inlineClassNameAffectsLetterSpacing: true,
-                  },
-                  stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-                  hoverMessage: {
-                    value: entry.editable
-                      ? 'Click to modify: open the helper editor to edit content of any size'
-                      : 'Click to view (read-only reference)',
-                  },
-                },
-              } as YakitIModelDecoration)
-            })
-            binaryFoldRangesRef.current = newRanges
-          } catch (e) {}
-        })()
-
-        return dec
+        return generateDecorationsFn({
+          model,
+          editor,
+          type: props.type,
+          showHostHint: props.showHostHint,
+          privacy: privacyFun(),
+          disableUnicodeDecode: disableUnicodeDecodeRef.current,
+          highLightText: highLightTextFun(),
+          highLightClass,
+          highLightFind: highLightFindFun(),
+          highLightFindClass,
+          fixContentType: fixContentTypeFun(),
+          originalContentType: originalContentTypeFun(),
+          fixContentTypeHoverMessage: fixContentTypeHoverMessageFun(),
+          foldBinaryEnabled,
+          binaryFoldEntriesRef,
+          binaryFoldRangesRef,
+          binaryModifiedOrdinalsRef,
+          language: i18n.language,
+          t,
+          onPrivacyRanges: (ranges) => {
+            privacyMaskRangesRef.current = ranges
+          },
+        })
       } catch (e) {
         // model 可能已被释放
         return []
@@ -1727,90 +1086,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     })
   })
 
-  /** 计算编辑器的高度 有点问题，为什么用state记录而不是ref记录，测试过后删除该问题 */
-  const handleEditorMount = (editor: YakitIMonacoEditor, monaco: any) => {
-    editor.onDidChangeModelDecorations(() => {
-      updateEditorHeight() // typing
-      /**
-       * @description 浏览器自带函数(IE9以上版本特性)，自动获取屏幕刷新率，计算出计时器的执行时间，并触发传入的回调函数
-       */
-      requestAnimationFrame(updateEditorHeight) // folding
-    })
-
-    const updateEditorHeight = () => {
-      const editorElement = editor.getDomNode()
-
-      if (!editorElement) {
-        return
-      }
-
-      const padding = 40
-
-      const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
-      const lineCount = editor.getModel()?.getLineCount() || 1
-      const height = editor.getTopForLineNumber(lineCount + 1) + lineHeight + padding
-
-      if (preHeightRef.current !== height) {
-        preHeightRef.current = height
-        // setPreHeight(height)
-        editorElement.style.height = `${height}px`
-        editor.layout()
-      }
-    }
-  }
-
-  /** Yak 代码格式化功能实现 */
-  const yakCompileAndFormat = useDebounceFn(
-    useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
-      const allContent = model.getValue()
-      ipcRenderer
-        .invoke('YaklangCompileAndFormat', { Code: allContent })
-        .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
-          if (e.Code !== '') {
-            model.setValue(e.Code)
-          }
-
-          /** 编辑器中错误提示的标记 */
-          if (e && e.Errors.length > 0) {
-            const markers = e.Errors.map(ConvertYakStaticAnalyzeErrorToMarker)
-            monaco.editor.setModelMarkers(model, 'owner', markers)
-          } else {
-            monaco.editor.setModelMarkers(model, 'owner', [])
-          }
-        })
-        .catch((e) => {
-          console.info(e)
-        })
-    }),
-    { wait: 500, leading: true, trailing: false },
-  )
-
-  const AnalyzeSessionIDRef = useRef<string>(uuidv4())
-  /** Yak语言 代码错误检查并显示提示标记 */
-  const yakStaticAnalyze = useDebounceFn(
-    useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
-      if (language === YaklangMonacoSpec || language === SyntaxFlowMonacoSpec) {
-        const allContent = model.getValue()
-        ipcRenderer
-          .invoke('StaticAnalyzeError', {
-            Code: StringToUint8Array(allContent),
-            PluginType: type,
-            SessionID: AnalyzeSessionIDRef.current,
-          })
-          .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
-            if (e && e.Result.length > 0) {
-              const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-              monaco.editor.setModelMarkers(model, 'owner', markers)
-            } else {
-              monaco.editor.setModelMarkers(model, 'owner', [])
-            }
-          })
-      } else {
-        monaco.editor.setModelMarkers(model, 'owner', [])
-      }
-    }),
-    { wait: 300 },
-  )
+  // ===== Yak 代码格式化 + 静态分析 =====
+  const { yakCompileAndFormat, yakStaticAnalyze } = useYakFormat({ language, type })
 
   const downPosY = useRef<number>()
   const upPosY = useRef<number>()
@@ -1819,400 +1096,28 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const editorInfo = useRef<any>()
   useEffect(() => {
     if (editor && isShowSelectRangeMenu) {
-      editerMenuFun(editor)
+      editerMenuFun({
+        editor,
+        selectNode,
+        rangeNode,
+        readOnly,
+        value,
+        overLine,
+        getShowActionBar,
+        execAutoDecodeCallback,
+        editorInfoRef: editorInfo,
+        fizzSelectTimeoutIdRef: fizzSelectTimeoutId,
+        fizzRangeTimeoutIdRef: fizzRangeTimeoutId,
+        downPosYRef: downPosY,
+        upPosYRef: upPosY,
+        onScrollTopRef: onScrollTop,
+      })
     }
   }, [editor, isShowSelectRangeMenu])
   // 定时消失的定时器
   const fizzSelectTimeoutId = useRef<NodeJS.Timeout>()
   const fizzRangeTimeoutId = useRef<NodeJS.Timeout>()
   // 编辑器菜单
-  const editerMenuFun = (editor: YakitIMonacoEditor) => {
-    // 编辑器点击弹窗的唯一Id
-    const selectId: string = `monaco.fizz.select.widget-${uuidv4()}`
-    // 编辑器选中弹窗的唯一Id
-    const rangeId: string = `monaco.fizz.range.widget-${uuidv4()}`
-    // 插入标签
-    const insertLabelFun = (v: QueryFuzzerLabelResponseProps) => {
-      if (v.Label) {
-        editor && editor.trigger('keyboard', 'type', { text: v.Label })
-      } else if (v.DefaultDescription === '插入文件-fixed') {
-        editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), 'file:line')
-      } else if (v.DefaultDescription === '插入字典-fixed') {
-        editor &&
-          showDictsAndSelect((i) => {
-            monacoEditorWrite(editor, i, editor.getSelection())
-          })
-      } else if (v.DefaultDescription === '插入临时字典-fixed') {
-        editor && insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
-      }
-    }
-    const toOpenAiChat = (scriptName: string, params?: YakParamProps[]) => {
-      if (scriptName === 'aiplugin-Get*plug-in') {
-        emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName, isAiPlugin: 'isGetPlugin' }))
-        closeFizzRangeWidget()
-        return
-      }
-
-      if (editor) {
-        const selectedText = editor.getModel()?.getValueInRange(editor.getSelection() as any) || value
-        emiter.emit(
-          'onOpenFuzzerModal',
-          JSON.stringify({ text: selectedText, scriptName, isAiPlugin: true, params, isExec: false }),
-        )
-        closeFizzRangeWidget()
-      }
-    }
-    // 编辑器点击显示的菜单
-    const fizzSelectWidget = {
-      isOpen: false,
-      getId: function () {
-        return selectId
-      },
-      getDomNode: function () {
-        // 将TSX转换为DOM节点
-        const domNode = document.createElement('div')
-        // 解决弹窗内鼠标滑轮无法滚动的问题
-        domNode.onwheel = (e) => e.stopPropagation()
-        if (selectNode) {
-          createRoot(domNode).render(selectNode(closeFizzSelectWidget, editorInfo.current))
-        } else {
-          createRoot(domNode).render(
-            <HTTPFuzzerClickEditorMenu
-              editorInfo={editorInfo.current}
-              close={() => closeFizzSelectWidget()}
-              fizzSelectTimeoutId={fizzSelectTimeoutId}
-              toOpenAiChat={toOpenAiChat}
-              insert={(v: QueryFuzzerLabelResponseProps) => {
-                insertLabelFun(v)
-                closeFizzSelectWidget()
-              }}
-              addLabel={() => {
-                closeFizzSelectWidget()
-                onInsertYakFuzzer(editor)
-              }}
-            />,
-          )
-        }
-        return domNode
-      },
-      getPosition: function () {
-        const currentPos = editor.getPosition()
-        return {
-          position: {
-            lineNumber: currentPos?.lineNumber || 0,
-            column: currentPos?.column || 0,
-          },
-          preference: [1, 2],
-        }
-      },
-      update: function () {
-        // 更新小部件的位置
-        this.getPosition()
-        editor.layoutContentWidget(this)
-      },
-    }
-    // 编辑器选中显示的菜单
-    const fizzRangeWidget = {
-      isOpen: false,
-      getId: function () {
-        return rangeId
-      },
-      getDomNode: function () {
-        // 将TSX转换为DOM节点
-        const domNode = document.createElement('div')
-        // 解决弹窗内鼠标滑轮无法滚动的问题
-        domNode.onwheel = (e) => e.stopPropagation()
-        if (rangeNode) {
-          createRoot(domNode).render(rangeNode(closeFizzRangeWidget, editorInfo.current))
-        } else {
-          readOnly
-            ? createRoot(domNode).render(
-                <HTTPFuzzerRangeReadOnlyEditorMenu
-                  editorInfo={editorInfo.current}
-                  rangeValue={(editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ''}
-                  close={() => closeFizzRangeWidget()}
-                  fizzRangeTimeoutId={fizzRangeTimeoutId}
-                  execAutoDecodeCallback={execAutoDecodeCallback}
-                />,
-              )
-            : createRoot(domNode).render(
-                <HTTPFuzzerRangeEditorMenu
-                  editorInfo={editorInfo.current}
-                  close={() => closeFizzRangeWidget()}
-                  insert={(fun: any) => {
-                    if (editor) {
-                      const selectedText = editor.getModel()?.getValueInRange(editor.getSelection() as any) || ''
-                      if (selectedText.length > 0) {
-                        ipcRenderer
-                          .invoke('QueryFuzzerLabel')
-                          .then((data: { Data: QueryFuzzerLabelResponseProps[] }) => {
-                            const { Data } = data
-                            let newSelectedText: string = selectedText
-                            if (Array.isArray(Data) && Data.length > 0) {
-                              // 选中项是否存在于标签中
-                              let isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
-                              if (isHave) {
-                                newSelectedText = selectedText.replace(/{{|}}/g, '')
-                              }
-                            }
-                            const text: string = fun(newSelectedText)
-                            //   editor.trigger("keyboard", "type", {text})// 选择范围大会卡死
-                            monacoEditorWrite(editor, text)
-                          })
-                      }
-                    }
-                  }}
-                  replace={(text: string) => {
-                    if (editor) {
-                      editor.trigger('keyboard', 'paste', { text })
-                      closeFizzRangeWidget()
-                    }
-                  }}
-                  toOpenAiChat={toOpenAiChat}
-                  rangeValue={(editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ''}
-                  fizzRangeTimeoutId={fizzRangeTimeoutId}
-                  hTTPFuzzerClickEditorMenuProps={
-                    readOnly
-                      ? undefined
-                      : {
-                          editorInfo: editorInfo.current,
-                          close: () => closeFizzRangeWidget(),
-                          insert: (v: QueryFuzzerLabelResponseProps) => {
-                            insertLabelFun(v)
-                            closeFizzRangeWidget()
-                          },
-                          addLabel: () => {
-                            closeFizzRangeWidget()
-                            onInsertYakFuzzer(editor)
-                          },
-                        }
-                  }
-                />,
-              )
-        }
-        return domNode
-      },
-      getPosition: function () {
-        const currentPos = editor.getPosition()
-
-        return {
-          position: {
-            lineNumber: currentPos?.lineNumber || 0,
-            column: currentPos?.column || 0,
-          },
-          preference: [2, 1],
-        }
-      },
-      update: function () {
-        // 更新小部件的位置
-        this.getPosition()
-        editor.layoutContentWidget(this)
-      },
-    }
-    // 是否展示菜单
-    // if (false) {
-    //     closeFizzSelectWidget()
-    //     return
-    // }
-
-    // 关闭点击的菜单
-    const closeFizzSelectWidget = () => {
-      fizzSelectWidget.isOpen = false
-      fizzSelectTimeoutId.current && clearTimeout(fizzSelectTimeoutId.current)
-      editor.removeContentWidget(fizzSelectWidget)
-    }
-    // 关闭选中的菜单
-    const closeFizzRangeWidget = () => {
-      fizzRangeWidget.isOpen = false
-      fizzRangeTimeoutId.current && clearTimeout(fizzRangeTimeoutId.current)
-      editor.removeContentWidget(fizzRangeWidget)
-    }
-
-    // 编辑器更新 关闭之前展示
-    closeFizzSelectWidget()
-    closeFizzRangeWidget()
-
-    editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
-    editor.onMouseMove((e) => {
-      try {
-        // const pos = e.target.position
-        // if (pos?.lineNumber) {
-        //     const lineOffset = pos.lineNumber - (editor.getPosition()?.lineNumber || 0)
-        //     // 超出范围移除菜单
-        //     if (lineOffset > 2 || lineOffset < -2) {
-        //         // console.log("移出两行内");
-        //         closeFizzSelectWidget()
-        //         closeFizzRangeWidget()
-        //     }
-        // }
-
-        const { target, event } = e
-        const { posy } = event
-        const detail =
-          target.type === newEditor.MouseTargetType.CONTENT_WIDGET ||
-          target.type === newEditor.MouseTargetType.OVERLAY_WIDGET
-            ? target.detail
-            : undefined
-        const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
-        if (detail !== selectId && detail !== rangeId && downPosY.current && upPosY.current) {
-          const overHeight = overLine * lineHeight
-          if (fizzSelectWidget.isOpen) {
-            if (posy < upPosY.current - overHeight || posy > upPosY.current + overHeight) {
-              closeFizzSelectWidget()
-            }
-          } else if (fizzRangeWidget.isOpen) {
-            // 从上到下的选择范围
-            if (
-              downPosY.current < upPosY.current &&
-              (posy < downPosY.current - overHeight || posy > upPosY.current + overHeight)
-            ) {
-              closeFizzRangeWidget()
-            }
-            // 从下到上的选择范围
-            else if (
-              downPosY.current > upPosY.current &&
-              (posy < upPosY.current - overHeight || posy > downPosY.current + overHeight)
-            ) {
-              closeFizzRangeWidget()
-            }
-          }
-        }
-      } catch (e) {}
-    })
-
-    // 移出编辑器时触发
-    // editor.onMouseLeave(() => {
-    //     closeFizzSelectWidget()
-    //     closeFizzRangeWidget()
-    // })
-
-    editor.onMouseDown((e) => {
-      const { leftButton, posy } = e.event
-      // 当两者都没有打开时
-      if (leftButton && !fizzSelectWidget.isOpen && !fizzRangeWidget.isOpen) {
-        // 记录posy位置
-        downPosY.current = posy
-      }
-    })
-
-    editor.onMouseUp((e) => {
-      // @ts-ignore
-      const { leftButton, rightButton, posx, posy, editorPos } = e.event
-      // 获取编辑器所处x，y轴,并获取其长宽
-      const { x, y } = editorPos
-      const editorHeight = editorPos.height
-      const editorWidth = editorPos.width
-
-      // 计算焦点的坐标位置
-      let a: any = editor.getPosition()
-      const position = editor.getScrolledVisiblePosition(a)
-      if (position) {
-        // 获取焦点在编辑器中所处位置，height为每行所占高度（随字体大小改变）
-        const { top, left, height } = position
-
-        // 解决方法1
-        // 获取焦点位置判断焦点所处于编辑器的位置（上下左右）从而决定弹出层显示方向
-        // 问题  需要焦点位置进行计算 如何获取焦点位置？  目前仅找到行列号 无法定位到其具体坐标位置
-        // console.log("焦点位置：", e, x, left, y, top, x + left, y + top)
-        const focusX = x + left
-        const focusY = y + top
-
-        // 焦点与抬起坐标是否超出限制
-        const isOver: boolean = overLine * height < Math.abs(focusY - posy)
-        if (leftButton && !isOver) {
-          // 获取编辑器容器的相关信息并判断其处于编辑器的具体方位
-          const editorContainer = editor.getDomNode()
-          if (editorContainer) {
-            const editorContainerInfo = editorContainer.getBoundingClientRect()
-            const { top, bottom, left, right } = editorContainerInfo
-            // 通过判断编辑器长宽限制是否显示 (宽度小于250或者长度小于200则不展示)
-            const isShowByLimit = right - left > 250 && bottom - top > 200
-            // 判断焦点位置
-            const isTopHalf = focusY < (top + bottom) / 2
-            const isLeftHalf = focusX < (left + right) / 2
-            // 行高
-            // const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
-
-            let countDirection: CountDirectionProps = {}
-            if (isTopHalf) {
-              // 鼠标位于编辑器上半部分
-              countDirection.y = 'top'
-            } else {
-              // 鼠标位于编辑器下半部分
-              countDirection.y = 'bottom'
-            }
-            if (Math.abs(focusX - (left + right) / 2) < 50) {
-              // 鼠标位于编辑器中间部分
-              countDirection.x = 'middle'
-            } else if (isLeftHalf) {
-              // 鼠标位于编辑器左半部分
-              countDirection.x = 'left'
-            } else {
-              // 鼠标位于编辑器右半部分
-              countDirection.x = 'right'
-            }
-
-            editorInfo.current = {
-              direction: countDirection,
-              top,
-              bottom,
-              left,
-              right,
-              focusX,
-              focusY,
-              lineHeight: height,
-              scrollTop: onScrollTop.current,
-            }
-
-            upPosY.current = posy
-            const selection = editor.getSelection()
-            if (selection && isShowByLimit) {
-              const selectedText = editor.getModel()?.getValueInRange(selection) || ''
-              if (fizzSelectWidget.isOpen && selectedText.length === 0) {
-                // 更新点击菜单小部件的位置
-                fizzSelectWidget.update()
-              } else if (fizzRangeWidget.isOpen && selectedText.length !== 0) {
-                fizzRangeWidget.update()
-              } else if (selectedText.length === 0) {
-                if (!readOnly && getShowActionBar()) {
-                  closeFizzRangeWidget()
-                  // 展示点击的菜单
-                  selectId && editor.addContentWidget(fizzSelectWidget)
-                  fizzSelectWidget.isOpen = true
-                }
-              } else {
-                closeFizzSelectWidget()
-                if (getShowActionBar()) {
-                  // 展示选中的菜单
-                  rangeId && editor.addContentWidget(fizzRangeWidget)
-                  fizzRangeWidget.isOpen = true
-                }
-              }
-            } else {
-              closeFizzRangeWidget()
-              closeFizzSelectWidget()
-            }
-          }
-        }
-        if (rightButton) {
-          closeFizzRangeWidget()
-          closeFizzSelectWidget()
-        }
-      }
-    })
-    editor.onDidScrollChange((e) => {
-      const { scrollTop } = e
-      onScrollTop.current = scrollTop
-    })
-
-    // 监听光标移动
-    editor.onDidChangeCursorPosition((e) => {
-      closeFizzRangeWidget()
-      closeFizzSelectWidget()
-      // const { position } = e;
-      // console.log('当前光标位置：', position);
-    })
-  }
 
   useEffect(() => {
     // 此处一个页面可能存在多个monaco
