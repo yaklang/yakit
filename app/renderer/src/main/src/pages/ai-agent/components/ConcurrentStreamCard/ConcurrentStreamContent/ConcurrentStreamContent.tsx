@@ -1,29 +1,30 @@
-import type { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { type FC, memo, type RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useLatest, useMemoizedFn } from 'ahooks'
+import { useCreation, useLatest, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import useClickFocus from '../../../../ai-re-act/hooks/useClickFocus'
 import styles from './ConcurrentStreamContent.module.scss'
 import { AIChatListItem } from '../../aiChatListItem/AIChatListItem'
+import type { ConcurrentStreamContentItemProps } from './type'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
 
 const PAGE_SIZE = 20
 
 interface ConcurrentStreamContentProps {
-  session: string
-  elements: ReActChatRenderItem[]
+  childrenTokens: string[]
   isChildWindow?: boolean
   /** 由父级承担滚动时传入，避免嵌套双滚动容器 */
   scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
 
 const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = memo(
-  ({ elements, session, isChildWindow, scrollContainerRef }) => {
+  ({ childrenTokens, isChildWindow, scrollContainerRef }) => {
     const { ref: scrollRef, isFocus } = useClickFocus<HTMLDivElement>()
     const contentMeasureRef = useRef<HTMLDivElement>(null)
     const embedInParentScroll = !!scrollContainerRef
 
     /** 当前渲染起始下标，初始从末尾 PAGE_SIZE 处开始，新增元素始终可见 */
-    const [startIndex, setStartIndex] = useState(() => Math.max(0, elements.length - PAGE_SIZE))
+    const [startIndex, setStartIndex] = useState(() => Math.max(0, childrenTokens.length - PAGE_SIZE))
     /** 加载更多时保存旧滚动高度，用于恢复位置 */
     const prevScrollHeightRef = useRef<number>(0)
     const loadingMoreRef = useRef<boolean>(false)
@@ -89,7 +90,7 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = memo(
         cancelAnimationFrame(rafId2)
         cancelAnimationFrame(rafId)
       }
-    }, [elements.length, getScrollEl, scrollContainerRef])
+    }, [childrenTokens.length, getScrollEl, scrollContainerRef])
 
     /** 加载旧数据后保持滚动位置不跳动 */
     useLayoutEffect(() => {
@@ -120,39 +121,62 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = memo(
       return () => scrollEl.removeEventListener('scroll', handleScroll)
     }, [embedInParentScroll, handleScroll, scrollContainerRef])
 
-    const visibleElements = elements.slice(startIndex)
-
     return (
-      <div
-        ref={scrollRef}
-        className={classNames(styles['concurrent-stream-content'], {
-          [styles.focused]: isFocus && !embedInParentScroll,
-          [styles['embed-in-parent']]: embedInParentScroll,
-        })}
-        onScroll={embedInParentScroll ? undefined : handleScroll}
-        style={
-          embedInParentScroll
-            ? undefined
-            : isChildWindow
-              ? { maxHeight: 'inherit', height: '100%', overflowY: 'auto' }
-              : undefined
-        }
-      >
-        <div ref={contentMeasureRef}>
-          {visibleElements.map((item, index) => (
-            <div className={styles['concurrent-stream-content-item']} key={item.token}>
-              <AIChatListItem
-                hasNext={startIndex + index < elements.length - 1}
-                itemIndex={startIndex + index}
-                item={item}
-                session={session}
-                type="re-act"
-              />
+      <div className={isChildWindow ? styles['concurrent-stream-content-wrapper'] : undefined}>
+        <div
+          className={styles['content']}
+          hidden={childrenTokens.length === 0}
+          style={isChildWindow ? { flex: 1, maxHeight: 'inherit', height: 0 } : undefined}
+        >
+          <div
+            ref={scrollRef}
+            className={classNames(styles['concurrent-stream-content'], {
+              [styles.focused]: isFocus && !embedInParentScroll,
+              [styles['embed-in-parent']]: embedInParentScroll,
+            })}
+            onScroll={embedInParentScroll ? undefined : handleScroll}
+            style={
+              embedInParentScroll
+                ? undefined
+                : isChildWindow
+                  ? { maxHeight: 'inherit', height: '100%', overflowY: 'auto' }
+                  : undefined
+            }
+          >
+            <div ref={contentMeasureRef}>
+              {childrenTokens.map((item, index) => (
+                <ConcurrentStreamContentItem key={item} token={item} />
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     )
   },
 )
 export default ConcurrentStreamContent
+
+const ConcurrentStreamContentItem: FC<ConcurrentStreamContentItemProps> = memo(({ token }) => {
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  const getKind = useMemoizedFn((childToken: string): ReActChatRenderElement['kind'] => {
+    const state = store.getState()
+    if (state.items[childToken]) return 'item'
+    if (state.groups[childToken]) return 'group'
+    return 'item'
+  })
+  const item = useCreation(() => {
+    const data = rawData.contents.get(token)
+    return {
+      token,
+      kind: getKind(token),
+      chatType: data?.chatType ?? 'reAct',
+      isHistory: false,
+    }
+  }, [token])
+  return (
+    <div className={styles['concurrent-stream-content-item']}>
+      <AIChatListItem item={item} />
+    </div>
+  )
+})
