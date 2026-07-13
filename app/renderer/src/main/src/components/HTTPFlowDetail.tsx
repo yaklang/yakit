@@ -447,6 +447,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         foldBinaryFuzztag={true}
                         noHeader={true}
                         originValue={flow.RequestString}
+                        originalPackage={flow.Request}
                         defaultHttps={flow?.IsHTTPS}
                         // actions={[...actionFuzzer]}
                         noSendToComparer={true}
@@ -466,6 +467,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                           openPacketNewWindow({
                             request: {
                               originValue: flow.RequestString,
+                              originalPackage: flow.Request,
                             },
                             response: {
                               originValue: flow.ResponseString,
@@ -1819,6 +1821,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
               return titleEle
             })()}
             originValue={originResValue}
+            originalPackage={flow.Request}
             readOnly={true}
             foldBinaryFuzztag={binaryDisplayEnabled}
             webFuzzerValue={originResValue}

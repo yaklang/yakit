@@ -10,6 +10,7 @@ import {
   findPlaceholderOffsets,
   goUnquoteToBytes,
   bytesToHex,
+  packetTextToRawBytes,
 } from '../binaryFuzztag'
 
 const bigUnquoteContent = '"' + '\\xff\\xd8'.repeat(40) + '"' // 远大于阈值
@@ -260,5 +261,19 @@ describe('buildChipLabel', () => {
 describe('bytesToHex', () => {
   it('字节转 hex', () => {
     expect(bytesToHex(new Uint8Array([0, 255, 16]))).toBe('00ff10')
+  })
+})
+
+describe('packetTextToRawBytes', () => {
+  it('解码 unquote 后得到真实二进制字节', () => {
+    const packet = 'POST / HTTP/1.1\r\n\r\n{{unquote("\\x09\\xe2\\x51\\x68")}}'
+    const bytes = packetTextToRawBytes(packet)
+    const prefix = new TextEncoder().encode('POST / HTTP/1.1\r\n\r\n')
+    expect(Array.from(bytes.slice(0, prefix.length))).toEqual(Array.from(prefix))
+    expect(Array.from(bytes.slice(prefix.length))).toEqual([0x09, 0xe2, 0x51, 0x68])
+  })
+
+  it('解码 hexdecode 标签', () => {
+    expect(Array.from(packetTextToRawBytes('{{hexd(09e25168)}}'))).toEqual([0x09, 0xe2, 0x51, 0x68])
   })
 })
