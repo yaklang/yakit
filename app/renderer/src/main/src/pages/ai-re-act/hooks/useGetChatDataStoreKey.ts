@@ -30,6 +30,7 @@ export const getImageStoreKeyByAISource = (source: AISource): ChatDataStoreKey =
   switch (source) {
     case AISourceEnum.aiAgent:
     case AISourceEnum.other:
+    case AISourceEnum.im:
       return 'aiChatDataStore'
     case AISourceEnum.history:
       return 'histroyAiStore'
