@@ -197,7 +197,8 @@
     "viewReference": "[View Reference]"
   },
   "AiFailPlanCard": {
-    "failureReason": "Failure Reason"
+    "collapse": "Collapse",
+    "expand": "Expand"
   },
   "AIToolList": {
     "all": "All",

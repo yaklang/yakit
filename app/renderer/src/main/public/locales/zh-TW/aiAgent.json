@@ -197,7 +197,8 @@
     "viewReference": "[檢視文獻]"
   },
   "AiFailPlanCard": {
-    "failureReason": "失敗原因"
+    "collapse": "收起",
+    "expand": "展開"
   },
   "AIToolList": {
     "all": "全部",
