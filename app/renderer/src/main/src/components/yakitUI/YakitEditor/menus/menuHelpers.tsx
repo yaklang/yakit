@@ -1,19 +1,10 @@
 import classNames from 'classnames'
 import styles from '../YakitEditor.module.scss'
-import {
-  EditorMenuItemDividerProps,
-  EditorMenuItemProps,
-  EditorMenuItemType,
-} from '../EditorMenu'
+import { EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType } from '../EditorMenu'
 import { KeyboardToFuncProps } from '../YakitEditorType'
 import { TFunction } from '@/i18n/useI18nNamespaces'
-import {
-  convertKeyboardToUIKey,
-  sortKeysCombination,
-} from '@/utils/globalShortcutKey/utils'
-import {
-  getYakEditorShortcutKeyEvents,
-} from '@/utils/globalShortcutKey/events/page/yakEditor'
+import { convertKeyboardToUIKey, sortKeysCombination } from '@/utils/globalShortcutKey/utils'
+import { getYakEditorShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { YakitKeyBoard, YakitKeyMod } from '@/utils/globalShortcutKey/keyboard'
 
 /**

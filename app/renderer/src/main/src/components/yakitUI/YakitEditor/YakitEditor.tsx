@@ -53,10 +53,7 @@ import {
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import useFocusContextStore from '@/utils/globalShortcutKey/shortcutKeyFocusHook/hooks/useStore'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
-import {
-  convertKeyEventToKeyCombination,
-  sortKeysCombination,
-} from '@/utils/globalShortcutKey/utils'
+import { convertKeyEventToKeyCombination, sortKeysCombination } from '@/utils/globalShortcutKey/utils'
 import { applyYakitMonacoTheme } from '@/utils/monacoSpec/theme'
 import { useTheme } from '@/hook/useTheme'
 import { keepSearchNameMapStore, useKeepSearchNameMap } from '@/store/keepSearchName'
