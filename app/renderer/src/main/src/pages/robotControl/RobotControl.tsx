@@ -6,6 +6,7 @@ import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
 import { OutlinePlusIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
@@ -387,7 +388,7 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
     updateDraftRobot(id, { isNameEditing: true })
   })
 
-  const onDeleteRobot = useMemoizedFn(async (id: string) => {
+  const onDeleteRobot = useMemoizedFn((id: string) => {
     if (id.startsWith('draft-')) {
       setDraftRobots((prev) => {
         const next = prev.filter((item) => item.id !== id)
@@ -411,17 +412,29 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
     const target = robots.find((item) => item.id === id)
     if (!target?.bot) return
 
-    try {
-      await deleteIMBot(target.bot.Platform)
-      const enabledPlatforms = robots
-        .filter((item) => item.enabled && item.bot && item.bot.Platform !== target.bot!.Platform)
-        .map((item) => item.bot!.Platform)
-      await syncControlRuntime(enabledPlatforms)
-      await loadBots(false)
-      yakitNotify('success', '机器人已删除')
-    } catch (e) {
-      yakitNotify('error', `删除机器人失败：${e}`)
-    }
+    const channelLabel = target.channel ? getChannelLabel(target.channel) : target.bot.Platform
+    const confirm = YakitModalConfirm({
+      width: 420,
+      type: 'white',
+      onCancelText: t('RobotControl.deleteCancel'),
+      onOkText: t('RobotControl.deleteRobot'),
+      onOk: () => {
+        deleteIMBot(target.bot!.Platform)
+          .then(async () => {
+            const enabledPlatforms = robots
+              .filter((item) => item.enabled && item.bot && item.bot.Platform !== target.bot!.Platform)
+              .map((item) => item.bot!.Platform)
+            await syncControlRuntime(enabledPlatforms)
+            await loadBots(false)
+            yakitNotify('success', t('RobotControl.deleteRobotSuccess'))
+          })
+          .catch((e) => {
+            yakitNotify('error', t('RobotControl.deleteRobotFailed', { error: String(e) }))
+          })
+        confirm.destroy()
+      },
+      content: t('RobotControl.deleteRobotConfirm', { channel: channelLabel }),
+    })
   })
 
   const onToggleEnabled = useMemoizedFn(async (id: string, enabled: boolean) => {
@@ -646,7 +659,7 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
         ) : activeRobot ? (
           <RobotDetailPanel
             robot={activeRobot}
-            onDelete={activeRobot.isDraft ? () => onDeleteRobot(activeRobot.id) : undefined}
+            onDelete={() => onDeleteRobot(activeRobot.id)}
             onToggleEnabled={(enabled) => onToggleEnabled(activeRobot.id, enabled)}
             onLinkInfoChange={(info, bot) => onLinkInfoChange(activeRobot.id, info, bot)}
             onUnbound={onUnbound}
