@@ -300,8 +300,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           <div className={styles['content-absolute']}>
             <div className={styles['input-wrapper']}>
               <div className={styles['input-heard']}>
-                <div className={styles['title']}>Memfit AI Agent</div>
-                <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
+                <div className={styles['title']}>信湃 SenPike</div>
+                <div className={styles['subtitle']}>AI自主渗透与攻防验证系统</div>
               </div>
               <div className={classNames(styles['input-body-wrapper'])}>
                 <ReactResizeDetector

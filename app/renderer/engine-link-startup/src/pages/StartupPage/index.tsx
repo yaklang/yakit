@@ -61,6 +61,7 @@ import yakitEELogo from '@/assets/yakitEELogo.png'
 import yakitEEDarkLogo from '@/assets/yakitEEDarkLogo.png'
 import yakitSELogo from '@/assets/yakitSELogo.png'
 import yakitSEDarkLogo from '@/assets/yakitSEDarkLogo.png'
+import memfitHasNameLogo from '@/assets/memfitHasName.png'
 import irifyRight from '@/assets/irify-right.png'
 import yakitRight from '@/assets/yakit-right.png'
 import memfitRight from '@/assets/memfit-right.webm'
@@ -1146,7 +1147,7 @@ export const StartupPage: React.FC = () => {
       if (isCommunityIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isCommunityMemfit()) {
-        return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
+        return { type: 'img', src: memfitHasNameLogo, width: 132 }
       } else {
         return { type: 'svg', component: SolidYakitFontLogoIcon, width: 112, height: 41 }
       }
