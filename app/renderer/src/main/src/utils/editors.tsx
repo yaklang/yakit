@@ -16,6 +16,7 @@ import ReactResizeDetector from 'react-resize-detector'
 import { useControllableValue, useDebounceFn, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { Buffer } from 'buffer'
 import { StringToUint8Array, Uint8ArrayToString } from './str'
+import { packetTextToRawBytes } from '@/components/yakitUI/YakitEditor/binaryFuzztag'
 import { getRemoteValue } from '@/utils/kv'
 import { editor, IPosition, IRange } from 'monaco-editor'
 import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
@@ -719,7 +720,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   )
   useEffect(() => {
     if (!noShowHex) {
-      setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
+      setHexValue(originalPackage && originalPackage.length > 0 ? originalPackage : packetTextToRawBytes(originValue))
     }
   }, [noShowHex, originValue, originalPackage])
 
@@ -946,7 +947,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         renderCode()
       } else if (type === 'hex') {
         setRenderHTML(undefined)
-        setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
+        setHexValue(originalPackage && originalPackage.length > 0 ? originalPackage : packetTextToRawBytes(originValue))
       }
     } else {
       setShowValue('')
