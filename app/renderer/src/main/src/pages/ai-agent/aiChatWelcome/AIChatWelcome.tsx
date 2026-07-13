@@ -41,10 +41,42 @@ import AIToolList, { handleAddAITool } from '../aiToolList/AIToolList'
 import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
 import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
+<<<<<<< HEAD
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
 import { ColorsChatIcon, ColorsMemfitIcon, ColorsPreViewMDIcon } from '@/assets/icon/colors'
 import { grpcGetAIReActRecommendedSkills } from '../grpc'
+=======
+import useGetAIMaterialsData, { getAIRecommendIconByType } from '@/pages/ai-re-act/hooks/useGetAIMaterialsData'
+import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import memfitLogo from '@/assets/memfit.jpg'
+
+// const sideberRadioOptions = [
+//     {
+//         value: "fileTree",
+//         label: "文件树"
+//     },
+//     {
+//         value: "knoledge",
+//         label: "知识库"
+//     }
+// ]
+
+// const getRandomItems = (array, count = 3) => {
+//   const shuffled = [...array].sort(() => 0.5 - Math.random())
+//   return shuffled.slice(0, count)
+// }
+
+const randomAIMaterialsDataIsEmpty = (randObj) => {
+  try {
+    return (
+      randObj.tools.data.length === 0 && randObj.forges.data.length === 0 && randObj.knowledgeBases.data.length === 0
+    )
+  } catch (error) {
+    return true
+  }
+}
+>>>>>>> 651150e19 (feat: 首页加logo&版本信息)
 
 enum AIChatWelcomeTabKeyEnum {
   Knowledge = 'knowledge',
@@ -246,7 +278,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               />
             </div>
           </div>
-          <div className={styles['content-copy']}>© 2026 云端信立方 - Al安全能力平台</div>
+          <div className={styles['content-copy']}>@2026亚信安全信湃SenPike-AI自主渗透和攻防验证系统</div>
         </div>
       </div>
     )
