@@ -1,4 +1,3 @@
-import { type ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
 import useClickFocus from '@/pages/ai-re-act/hooks/useClickFocus'
 import { type FC, useEffect, useLayoutEffect } from 'react'
 import classNames from 'classnames'
@@ -6,11 +5,10 @@ import styles from './AITaskDefaultGroupCard.module.scss'
 import ConcurrentStreamContent from '../ConcurrentStreamCard/ConcurrentStreamContent/ConcurrentStreamContent'
 
 const AITaskDefaultGroupContent: FC<{
-  elements: ReActChatTaskElementSub[]
-  session: string
+  childrenTokens: string[]
   isChildWindow?: boolean
   onContentFocusChange?: (focused: boolean) => void
-}> = ({ elements, session, isChildWindow, onContentFocusChange }) => {
+}> = ({ childrenTokens, isChildWindow, onContentFocusChange }) => {
   const { ref: contentRef, isFocus } = useClickFocus<HTMLDivElement>()
 
   useEffect(() => {
@@ -31,7 +29,7 @@ const AITaskDefaultGroupContent: FC<{
       requestAnimationFrame(scrollToBottom)
     })
     return () => cancelAnimationFrame(rafId)
-  }, [contentRef, elements.length])
+  }, [contentRef, childrenTokens.length])
 
   return (
     <div
@@ -43,8 +41,7 @@ const AITaskDefaultGroupContent: FC<{
     >
       <div className={styles['content-inner']}>
         <ConcurrentStreamContent
-          session={session}
-          elements={elements}
+          childrenTokens={childrenTokens}
           isChildWindow={isChildWindow}
           scrollContainerRef={contentRef}
         />

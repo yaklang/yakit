@@ -1,5 +1,5 @@
 import { useMemoizedFn } from 'ahooks'
-import { AIInputEvent, AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -50,7 +50,7 @@ export const useTaskChatExtraAction = () => {
   /**取消当前指定任务 */
   const onStopTask = useMemoizedFn(() => {
     sendReactCancelTask()
-    /** TODO - */
+    /** TODO - 可以删除该代码，原因：停止任务后会返回结束标识，然后清空review id*/
     // if (!!reviewInfo) {
     //   chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
     // }
@@ -66,7 +66,7 @@ export const useTaskChatExtraAction = () => {
       SyncID: randomString(8),
     }
     onSend({ token: sessionId, type: 'task', params: info })
-    /** TODO - */
+    /** TODO - 目前多任务并发，出现子任务后review自动走的继续执行，不会出现review */
     // if (!!reviewInfo) {
     //   chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
     // }
@@ -90,7 +90,7 @@ export const useTaskChatExtraAction = () => {
     onSend({ token: sessionId, type: 'task', params })
     meta.currentTaskPlanID = undefined
 
-    /** TODO - */
+    /** TODO - 可以删除该代码，原因：停止任务后会返回结束标识，然后清空review id，则在review弹窗中不会出现继续执行的按钮 */
     // if (!!reviewInfo) {
     //   chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
     // }
