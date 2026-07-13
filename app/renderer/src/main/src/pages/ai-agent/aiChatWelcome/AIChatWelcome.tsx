@@ -367,6 +367,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               </div>
             )}
           </div>
+          <div className={styles['content-copy']}>© 2026 云端信立方 - Al安全能力平台</div>
         </div>
       </div>
     )
