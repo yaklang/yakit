@@ -45,7 +45,7 @@ export interface CeUsageStatisticsModalProps {
   loading: boolean
 }
 
-export const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) => {
+const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) => {
   const { visible, onClose, apiKeysInfo, update, loading } = props
   const { t } = useI18nNamespaces(['layout'])
 
@@ -161,3 +161,5 @@ export const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (pr
     </YakitModal>
   )
 }
+
+export default CeUsageStatisticsModal

@@ -1,22 +1,40 @@
 import React from 'react'
 import { YakitModal } from '../../yakitUI/YakitModal/YakitModal'
 import { OutlineDevicemobileIcon } from '@/assets/icon/outline'
-import Login from '@/pages/Login'
-import SetPassword from '@/pages/SetPassword'
-import SelectUpload from '@/pages/SelectUpload'
-import { RobotControl } from '@/pages/robotControl/RobotControl'
 import robotControlStyles from '@/pages/robotControl/RobotControl.module.scss'
-import {
-  DynamicControl,
-  SelectControlType,
-  ControlMyself,
-  ControlOther,
-} from '../../../pages/dynamicControl/DynamicControl'
-import { CeUsageStatisticsModal } from '../../CeUserMenu/CeUsageStatisticsModal'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { API } from '@/services/swagger/resposeType'
 import { IMControlBadgeStatus, IMControlBadgeView } from '@/pages/robotControl/status'
 import { getMobileControlIconColor } from './constants'
+import { YakitSuspense } from '@/components/yakitUI/YakitSuspense/YakitSuspense'
+
+const Login = React.lazy(() => import('@/pages/Login'))
+const SetPassword = React.lazy(() => import('@/pages/SetPassword'))
+const SelectUpload = React.lazy(() => import('@/pages/SelectUpload'))
+const RobotControl = React.lazy(() =>
+  import('@/pages/robotControl/RobotControl').then((m) => ({ default: m.RobotControl })),
+)
+const CeUsageStatisticsModal = React.lazy(() => import('../../CeUserMenu/CeUsageStatisticsModal'))
+const DynamicControl = React.lazy(() =>
+  import('../../../pages/dynamicControl/DynamicControl').then((m) => ({
+    default: m.DynamicControl,
+  })),
+)
+const SelectControlType = React.lazy(() =>
+  import('../../../pages/dynamicControl/DynamicControl').then((m) => ({
+    default: m.SelectControlType,
+  })),
+)
+const ControlMyself = React.lazy(() =>
+  import('../../../pages/dynamicControl/DynamicControl').then((m) => ({
+    default: m.ControlMyself,
+  })),
+)
+const ControlOther = React.lazy(() =>
+  import('../../../pages/dynamicControl/DynamicControl').then((m) => ({
+    default: m.ControlOther,
+  })),
+)
 
 export interface UserMenuModalsProps {
   /** 登录弹窗 */
@@ -97,16 +115,22 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
 
   return (
     <>
-      {loginShow && <Login visible={loginShow} onCancel={onCancelLogin} />}
+      {loginShow && (
+        <YakitSuspense mode="overlay">
+          <Login visible={loginShow} onCancel={onCancelLogin} />
+        </YakitSuspense>
+      )}
 
-      {apiKeysInfo && (
-        <CeUsageStatisticsModal
-          visible={usageStatisticsShow}
-          apiKeysInfo={apiKeysInfo}
-          onClose={onCloseUsageStatistics}
-          update={() => onUpdateApiKey(true)}
-          loading={apiKeysInfoLoading}
-        />
+      {apiKeysInfo && usageStatisticsShow && (
+        <YakitSuspense mode="overlay">
+          <CeUsageStatisticsModal
+            visible={usageStatisticsShow}
+            apiKeysInfo={apiKeysInfo}
+            onClose={onCloseUsageStatistics}
+            update={() => onUpdateApiKey(true)}
+            loading={apiKeysInfoLoading}
+          />
+        </YakitSuspense>
       )}
 
       <YakitModal
@@ -120,7 +144,9 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
         onCancel={onCancelPassword}
         footer={null}
       >
-        <SetPassword onCancel={onCancelPassword} userInfo={userInfo} />
+        <YakitSuspense height={160}>
+          <SetPassword onCancel={onCancelPassword} userInfo={userInfo} />
+        </YakitSuspense>
       </YakitModal>
 
       <YakitModal
@@ -133,7 +159,9 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
         onCancel={onCancelUpload}
         footer={null}
       >
-        <SelectUpload onCancel={onCancelUpload} />
+        <YakitSuspense height={160}>
+          <SelectUpload onCancel={onCancelUpload} />
+        </YakitSuspense>
       </YakitModal>
 
       <YakitModal
@@ -157,62 +185,77 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
         onCancel={onCancelRobotControl}
         footer={null}
       >
-        <RobotControl
-          onCancel={onCancelRobotControl}
-          onRuntimeStatusChange={refreshIMControlStatus}
-          runtimeStatus={imControlStatus}
-        />
+        <YakitSuspense height={320}>
+          <RobotControl
+            onCancel={onCancelRobotControl}
+            onRuntimeStatusChange={refreshIMControlStatus}
+            runtimeStatus={imControlStatus}
+          />
+        </YakitSuspense>
       </YakitModal>
-      <DynamicControl
-        mainTitle={t('FuncDomain.remoteControl')}
-        secondTitle={t('FuncDomain.selectRole')}
-        isShow={dynamicControlModal}
-        onCancel={onCancelDynamicControl}
-        width={345}
-      >
-        <SelectControlType
-          onControlMyself={() => {
-            setControlMyselfModal(true)
-            onCancelDynamicControl()
-          }}
-          onControlOther={() => {
-            setControlOtherModal(true)
-            onCancelDynamicControl()
-          }}
-        />
-      </DynamicControl>
 
-      <DynamicControl
-        mainTitle={t('FuncDomain.controlledSide')}
-        secondTitle={t('FuncDomain.controlledSideDesc')}
-        isShow={controlMyselfModal}
-        onCancel={onCancelControlMyself}
-      >
-        <ControlMyself
-          goBack={() => {
-            setDynamicControlModal(true)
-            onCancelControlMyself()
-          }}
-        />
-      </DynamicControl>
+      {dynamicControlModal && (
+        <YakitSuspense mode="overlay">
+          <DynamicControl
+            mainTitle={t('FuncDomain.remoteControl')}
+            secondTitle={t('FuncDomain.selectRole')}
+            isShow={dynamicControlModal}
+            onCancel={onCancelDynamicControl}
+            width={345}
+          >
+            <SelectControlType
+              onControlMyself={() => {
+                setControlMyselfModal(true)
+                onCancelDynamicControl()
+              }}
+              onControlOther={() => {
+                setControlOtherModal(true)
+                onCancelDynamicControl()
+              }}
+            />
+          </DynamicControl>
+        </YakitSuspense>
+      )}
 
-      <DynamicControl
-        mainTitle={t('FuncDomain.controllerSide')}
-        secondTitle={t('FuncDomain.controllerSideDesc')}
-        isShow={controlOtherModal}
-        onCancel={onCancelControlOther}
-      >
-        <ControlOther
-          goBack={() => {
-            setDynamicControlModal(true)
-            onCancelControlOther()
-          }}
-          runControl={(v: string, url: string) => {
-            onCancelControlOther()
-            runDynamicControlRemote(v, url)
-          }}
-        />
-      </DynamicControl>
+      {controlMyselfModal && (
+        <YakitSuspense mode="overlay">
+          <DynamicControl
+            mainTitle={t('FuncDomain.controlledSide')}
+            secondTitle={t('FuncDomain.controlledSideDesc')}
+            isShow={controlMyselfModal}
+            onCancel={onCancelControlMyself}
+          >
+            <ControlMyself
+              goBack={() => {
+                setDynamicControlModal(true)
+                onCancelControlMyself()
+              }}
+            />
+          </DynamicControl>
+        </YakitSuspense>
+      )}
+
+      {controlOtherModal && (
+        <YakitSuspense mode="overlay">
+          <DynamicControl
+            mainTitle={t('FuncDomain.controllerSide')}
+            secondTitle={t('FuncDomain.controllerSideDesc')}
+            isShow={controlOtherModal}
+            onCancel={onCancelControlOther}
+          >
+            <ControlOther
+              goBack={() => {
+                setDynamicControlModal(true)
+                onCancelControlOther()
+              }}
+              runControl={(v: string, url: string) => {
+                onCancelControlOther()
+                runDynamicControlRemote(v, url)
+              }}
+            />
+          </DynamicControl>
+        </YakitSuspense>
+      )}
     </>
   )
 })
