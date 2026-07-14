@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import { Tooltip } from 'antd'
 import { useStore } from 'zustand'
 
-import styles from '../AIReActChatHeader.module.scss'
+import styles from './AIReActChatHeader.module.scss'
 import { ColorsChatIcon } from '@/assets/icon/colors'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
@@ -160,13 +160,12 @@ const AIReActSubAgentTask: React.FC<AIReActSubAgentTaskProps> = React.memo((prop
   const casualConcurrentTaskList = useCreation(() => {
     const list: string[] = []
     const elements = store.getState().casualChat?.elements || []
-    for (const token in elements) {
-      const item = elements[token]
+    for (const item of elements) {
       const kind = getKind(item.token)
       if (kind !== 'task') continue
-      const itemContent = rawData.contents.get(token)
+      const itemContent = rawData.contents.get(item.token)
       if (itemContent?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-        list.push(token)
+        list.push(item.token)
       }
     }
     return list

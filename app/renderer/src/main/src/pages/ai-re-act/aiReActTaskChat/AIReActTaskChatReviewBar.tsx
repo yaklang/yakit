@@ -1,6 +1,5 @@
 import { type FC, type ReactNode } from 'react'
 import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { AIRenderTaskFooterExtra } from './AIReActTaskChat'
 import { useTaskChatExtraAction } from './useTaskChatExtraAction'
 
@@ -26,17 +25,8 @@ const renderReviewFooterExtra = (onExtraAction: ReturnType<typeof useTaskChatExt
 export const AIReActTaskChatReviewBar: FC<{
   setScrollToBottom: (v: boolean) => void
 }> = ({ setScrollToBottom }) => {
-  const { reviewInfo, planReviewTreeKeywordsMap } = useChatIPCStore()
   const { onExtraAction } = useTaskChatExtraAction()
-
-  if (!reviewInfo) return null
-
   return (
-    <AIReActTaskChatReview
-      reviewInfo={reviewInfo}
-      planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
-      setScrollToBottom={setScrollToBottom}
-      footerExtra={renderReviewFooterExtra(onExtraAction)}
-    />
+    <AIReActTaskChatReview setScrollToBottom={setScrollToBottom} footerExtra={renderReviewFooterExtra(onExtraAction)} />
   )
 }

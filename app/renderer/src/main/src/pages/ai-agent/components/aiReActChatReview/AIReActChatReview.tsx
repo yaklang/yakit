@@ -367,11 +367,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         setForgeOption(item)
         break
       case 'close':
-        if (info.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
-          /** TODO - 新版需要逻辑调整*/
-          chatIPCEvents.handleTaskReviewRelease((info.data as AIReviewType).id)
-          return
-        }
+        // if (info.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
+        //   /** TODO - 新版需要逻辑调整*/
+        //   chatIPCEvents.handleTaskReviewRelease((info.data as AIReviewType).id)
+        //   return
+        // }
         break
       default:
         if (editShow) return
