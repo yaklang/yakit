@@ -21,7 +21,6 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   const {
     showBackgroundRefresh = true,
     dragSelectEnabled: propDragSelectEnabled = true,
-    binaryDisplayEnabled: propBinaryDisplayEnabled = true,
     columnsAllStr,
     onCancel,
     onSave,
@@ -42,10 +41,6 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   /** ---------- 框选配置 Start ---------- */
   const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(propDragSelectEnabled)
   /** ---------- 框选配置 End ---------- */
-
-  /** ---------- 二进制展示配置 Start ---------- */
-  const [binaryDisplayEnabled, setBinaryDisplayEnabled] = useState<boolean>(propBinaryDisplayEnabled)
-  /** ---------- 二进制展示配置 End ---------- */
 
   /** ---------- 自定义列 Start ---------- */
   const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
@@ -81,7 +76,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     if (oldBackgroundRefresh.current !== backgroundRefresh) {
       setRemoteValue(RemoteHistoryGV.BackgroundRefresh, backgroundRefresh ? 'true' : '')
     }
-    onSave({ backgroundRefresh, dragSelectEnabled, binaryDisplayEnabled, configColumnsAll: curColumnsAll })
+    onSave({ backgroundRefresh, dragSelectEnabled, binaryDisplayEnabled: true, configColumnsAll: curColumnsAll })
   })
 
   // 判断是否有修改
@@ -92,7 +87,6 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
       if (
         oldBackgroundRefresh.current !== backgroundRefresh ||
         propDragSelectEnabled !== dragSelectEnabled ||
-        propBinaryDisplayEnabled !== binaryDisplayEnabled ||
         columnsAllStr !== JSON.stringify(curColumnsAll)
       ) {
         isModify = true
@@ -189,24 +183,6 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
               />
               <span className={style['title-style']}>{t('AdvancedSet.dragSelectMultiData')}</span>
               <Tooltip title={t('AdvancedSet.dragSelectMultiDataTip')}>
-                <OutlineInformationcircleIcon className={style['hint-style']} />
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-
-        <div className={style['history-advanced-set-item']}>
-          <div className={style['history-advanced-set-item-title']}>{t('AdvancedSet.binaryDisplayConfig')}</div>
-          <div className={style['history-advanced-set-item-cont']}>
-            <div className={style['backgroundRefresh']}>
-              <YakitCheckbox
-                checked={binaryDisplayEnabled}
-                onChange={(e) => {
-                  setBinaryDisplayEnabled(e.target.checked)
-                }}
-              />
-              <span className={style['title-style']}>{t('AdvancedSet.binaryDisplayModal')}</span>
-              <Tooltip title={t('AdvancedSet.binaryDisplayModalTip')}>
                 <OutlineInformationcircleIcon className={style['hint-style']} />
               </Tooltip>
             </div>

@@ -1,8 +1,6 @@
 import React, { ReactElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import MonacoEditor, { monaco } from 'react-monaco-editor'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
-import HexEditor from 'react-hex-editor'
-import oneDarkPro from 'react-hex-editor/themes/oneDarkPro'
 // yak register
 import './monacoSpec/theme'
 import './monacoSpec/fuzzHTTPMonacoSpec'
@@ -16,7 +14,8 @@ import ReactResizeDetector from 'react-resize-detector'
 import { useControllableValue, useDebounceFn, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { Buffer } from 'buffer'
 import { StringToUint8Array, Uint8ArrayToString } from './str'
-import { packetTextToRawBytes } from '@/components/yakitUI/YakitEditor/binaryFuzztag'
+import { packetTextToRawBytes, rawBytesToPacketText } from '@/components/yakitUI/YakitEditor/binaryFuzztag'
+import { BinaryFuzztagHexEditor } from '@/components/yakitUI/YakitEditor/BinaryFuzztagHexEditor'
 import { getRemoteValue } from '@/utils/kv'
 import { editor, IPosition, IRange } from 'monaco-editor'
 import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
@@ -598,7 +597,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   } = props
   const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
   const [strValue, setStrValue] = useState(originValue)
-  const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array()) // 只有切换到hex时才会用这个值，目前切换得时候会把最新得编辑器中得值赋值到该变量里面
   const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
   const { fontSize, setFontSize, initFontSize } = useEditorFontSize()
   const [showLineBreaks, setShowLineBreaks] = useState<boolean>(true)
@@ -624,7 +622,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
   const [showValue, setShowValue] = useState<string>(originValue)
   const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
-  const { theme } = useTheme()
 
   // 对比loading
   const [compareLoading, setCompareLoading] = useState<boolean>(false)
@@ -652,10 +649,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
       }
     } catch (error) {}
   })
-
-  const targetHexTheme = useMemo(() => {
-    return theme === 'dark' ? { hexEditor: oneDarkPro } : undefined
-  }, [theme])
 
   useEffect(() => {
     if (editorOperationRecord) {
@@ -707,22 +700,51 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   /*如何实现 monaco editor 高亮？*/
   // https://microsoft.github.io/monaco-editor/playground.html#interacting-with-the-editor-line-and-inline-decorations
 
-  // hex editor
-  const [nonce, setNonce] = useState(0)
-  // The callback facilitates updates to the source data.
-  const handleSetValue = React.useCallback(
-    (offset, value) => {
-      hexValue[offset] = value
-      setNonce((v) => v + 1)
-      setHexValue(value)
-    },
-    [hexValue],
-  )
-  useEffect(() => {
-    if (!noShowHex) {
-      setHexValue(originalPackage && originalPackage.length > 0 ? originalPackage : packetTextToRawBytes(originValue))
+  // hex editor：可编辑时复用 BinaryFuzztagHexEditor（顶部插入/替换工具栏，往下顶一行）
+  const hexDataRef = useRef<Uint8Array>(new Uint8Array())
+  const [hexMountKey, setHexMountKey] = useState(0)
+  const showHexView = type === 'hex' || !noShowHex
+
+  const getHexBytesFromOrigin = useMemoizedFn(() => {
+    return originalPackage && originalPackage.length > 0
+      ? new Uint8Array(originalPackage)
+      : packetTextToRawBytes(originValue)
+  })
+
+  const bytesEqual = useMemoizedFn((a: Uint8Array, b: Uint8Array) => {
+    if (a.length !== b.length) {
+      return false
     }
-  }, [noShowHex, originValue, originalPackage])
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        return false
+      }
+    }
+    return true
+  })
+
+  const syncHexFromOrigin = useMemoizedFn(() => {
+    const next = getHexBytesFromOrigin()
+    if (bytesEqual(next, hexDataRef.current)) {
+      return
+    }
+    hexDataRef.current = next
+    setHexMountKey((k) => k + 1)
+  })
+
+  useEffect(() => {
+    if (!showHexView) {
+      return
+    }
+    syncHexFromOrigin()
+  }, [showHexView, originValue, originalPackage, syncHexFromOrigin])
+
+  const handleHexEditorChange = useMemoizedFn(() => {
+    if (props.readOnly) {
+      return
+    }
+    setStrValue(rawBytesToPacketText(hexDataRef.current))
+  })
 
   const openCompareModal = useMemoizedFn((dataCompare: DataCompareProps) => {
     setCompareLoading(true)
@@ -947,7 +969,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         renderCode()
       } else if (type === 'hex') {
         setRenderHTML(undefined)
-        setHexValue(originalPackage && originalPackage.length > 0 ? originalPackage : packetTextToRawBytes(originValue))
+        syncHexFromOrigin()
       }
     } else {
       setShowValue('')
@@ -1198,18 +1220,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     {...props.extraEditorProps}
                   />
                 )}
-                {(type === 'hex' || !noShowHex) && !empty && !renderHtml && !props.renderHtml && (
-                  <HexEditor
-                    style={{ fontSize: (fontSize || 12) === 12 ? 16 : fontSize === 16 ? 18 : 20 }}
-                    readOnly={true}
-                    asciiWidth={18}
-                    data={hexValue}
-                    overscanCount={0x03}
-                    showAscii={true}
-                    showColumnLabels={false}
-                    showRowLabels={true}
-                    highlightColumn={true}
-                    theme={targetHexTheme}
+                {showHexView && !empty && !renderHtml && !props.renderHtml && (
+                  <BinaryFuzztagHexEditor
+                    key={hexMountKey}
+                    dataRef={hexDataRef}
+                    readOnly={!!props.readOnly}
+                    onChange={handleHexEditorChange}
                   />
                 )}
               </div>

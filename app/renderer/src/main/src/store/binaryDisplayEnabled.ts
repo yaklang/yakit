@@ -1,49 +1,22 @@
 import { useSyncExternalStore } from 'react'
 import { RemoteHistoryGV } from '@/enums/history'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { setRemoteValue } from '@/utils/kv'
 import { createExternalStore } from '@/utils/createExternalStore'
 
 const DEFAULT_BINARY_DISPLAY_ENABLED = true
 
 const store = createExternalStore(DEFAULT_BINARY_DISPLAY_ENABLED)
 
-const parseRemoteBinaryDisplayEnabled = (value?: string | null) => {
-  if (value === 'false') return false
-  return DEFAULT_BINARY_DISPLAY_ENABLED
-}
-
-let hydrated = false
-let hydrating: Promise<void> | null = null
-
-const hydrateFromRemote = () => {
-  if (hydrated) return Promise.resolve()
-  if (hydrating) return hydrating
-  hydrating = getRemoteValue(RemoteHistoryGV.BinaryDisplayEnabled)
-    .then((value) => {
-      if (!hydrated) {
-        store.setSnapshot(() => parseRemoteBinaryDisplayEnabled(value))
-      }
-      hydrated = true
-    })
-    .catch(() => {
-      hydrated = true
-    })
-    .finally(() => {
-      hydrating = null
-    })
-  return hydrating
-}
+void setRemoteValue(RemoteHistoryGV.BinaryDisplayEnabled, 'true')
 
 export const binaryDisplayEnabledStore = {
   subscribe(listener: () => void) {
-    void hydrateFromRemote()
     return store.subscribe(listener)
   },
   getSnapshot: store.getSnapshot,
-  setEnabled(enabled: boolean) {
-    store.setSnapshot(() => enabled)
-    hydrated = true
-    void setRemoteValue(RemoteHistoryGV.BinaryDisplayEnabled, enabled ? 'true' : 'false')
+  setEnabled(_enabled: boolean) {
+    store.setSnapshot(() => DEFAULT_BINARY_DISPLAY_ENABLED)
+    void setRemoteValue(RemoteHistoryGV.BinaryDisplayEnabled, 'true')
   },
 }
 
