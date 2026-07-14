@@ -318,6 +318,13 @@ export const createChatStore = () => {
             }
           }
         }),
+
+      /** 将指定item的token换成新token */
+      replaceItemToken: (oldToken, newToken) =>
+        set((state) => {
+          state.items[newToken] = state.items[oldToken]
+          delete state.items[oldToken]
+        }),
     })),
   )
 }
