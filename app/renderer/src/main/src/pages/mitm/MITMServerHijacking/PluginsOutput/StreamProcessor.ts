@@ -5,7 +5,7 @@ import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from '@/hook/us
 import { checkStreamValidity, convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { DefaultTabs } from '@/hook/useHoldGRPCStream/constant'
 import { cloneDeep } from 'lodash'
-import { useEffect, useReducer } from 'react'
+import { useEffect, useMemo, useReducer } from 'react'
 
 export type StreamUpdateState = {
   hasNewPlugin?: boolean
@@ -536,16 +536,20 @@ export class StreamProcessor {
 }
 
 export const useStreamProcessorManager = (manager: StreamProcessorManager) => {
-  const [, forceUpdate] = useReducer((x) => x + 1, 0)
+  const [version, forceUpdate] = useReducer((x) => x + 1, 0)
 
   useEffect(() => {
     const unsubscribe = manager.subscribe(forceUpdate)
     return unsubscribe
   }, [manager])
 
-  return {
-    streamInfos: manager.buildAllStreamInfo([{ tabName: '日志', type: 'log' }]),
-    updates: new Map(manager.getUpdates()),
-    hasUpdate: manager.getAnyUpdate(),
-  }
+  // 仅在流数据 notify 时重建快照，避免 MITMPage 其他 state 变化时反复 buildAllStreamInfo
+  return useMemo(
+    () => ({
+      streamInfos: manager.buildAllStreamInfo([{ tabName: '日志', type: 'log' }]),
+      updates: new Map(manager.getUpdates()),
+      hasUpdate: manager.getAnyUpdate(),
+    }),
+    [manager, version],
+  )
 }

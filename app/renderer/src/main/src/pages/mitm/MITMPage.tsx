@@ -14,7 +14,6 @@ import {
   useMemoizedFn,
   useUpdateEffect,
 } from 'ahooks'
-import { enableMITMPluginMode, MITMServerHijacking } from '@/pages/mitm/MITMServerHijacking/MITMServerHijacking'
 import { Uint8ArrayToString } from '@/utils/str'
 import { MITMContentReplacerRule } from './MITMRule/MITMRuleType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -24,8 +23,7 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { StartExecYakCodeModal, YakScriptParam } from '@/utils/basic'
-import MITMHijackedContent, { MITMStatus } from './MITMServerHijacking/MITMHijackedContent'
-import { MITMPluginHijackContent } from './MITMServerHijacking/MITMPluginHijackContent'
+import type { MITMStatus } from './MITMServerHijacking/MITMHijackedContent'
 import {
   MITMPluginLocalList,
   PluginGroup,
@@ -61,6 +59,7 @@ import {
   grpcClientMITMMessage,
   grpcClientMITMNotification,
   grpcClientMITMStartSuccess,
+  grpcMITMEnablePluginMode,
   grpcMITMExecScriptById,
   grpcMITMHaveCurrentStream,
   grpcMITMRecover,
@@ -86,9 +85,24 @@ import {
   useStreamProcessorManager,
 } from './MITMServerHijacking/PluginsOutput/StreamProcessor'
 import { RemoteMitmGV } from '@/enums/mitm'
+import { YakitSuspense } from '@/components/yakitUI/YakitSuspense/YakitSuspense'
 const MITMRule = React.lazy(() => import('./MITMRule/MITMRule'))
+const MITMServerHijacking = React.lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMServerHijacking').then((m) => ({
+    default: m.MITMServerHijacking,
+  })),
+)
+const MITMHijackedContent = React.lazy(() => import('./MITMServerHijacking/MITMHijackedContent'))
+const MITMPluginHijackContent = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginHijackContent').then((m) => ({
+    default: m.MITMPluginHijackContent,
+  })),
+)
 
 const { ipcRenderer } = window.require('electron')
+
+/** idle 插件列表无 hooks 状态，用稳定空 Map 避免父组件渲染时 memo 失效 */
+const EMPTY_HOOKS_MAP = new Map<string, boolean>()
 
 export interface MITMPageProp {}
 
@@ -444,35 +458,37 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
       default:
         return (
-          <MITMServerHijacking
-            port={port}
-            showPort={showPort}
-            host={host}
-            disableCACertPage={disableCACertPage}
-            status={status}
-            setStatus={setStatus}
-            autoForward={autoForward}
-            setAutoForward={setAutoForward}
-            defaultPlugins={defaultPlugins}
-            enableInitialMITMPlugin={enableInitialMITMPlugin}
-            setVisible={setVisible}
-            tipParts={tipParts}
-            setTipParts={setTipParts}
-            downstreamProxyStr={downstreamProxyStr}
-            setDownstreamProxyStr={setDownstreamProxyStr}
-            isHasParams={isHasParams}
-            onIsHasParams={setIsHasParams}
-            showPluginHistoryList={showPluginHistoryList}
-            setShowPluginHistoryList={setShowPluginHistoryList}
-            tempShowPluginHistory={tempShowPluginHistory}
-            setTempShowPluginHistory={setTempShowPluginHistory}
-            pluginStreamInfo={pluginStreamInfo}
-            showPluginStream={showPluginStream}
-            setShowPluginStream={setShowPluginStream}
-            hasPluginsStreamUpdate={hasPluginsStreamUpdate}
-            updatesPlugins={updatesPlugins}
-            pluginOutputRef={pluginOutputRef}
-          />
+          <YakitSuspense>
+            <MITMServerHijacking
+              port={port}
+              showPort={showPort}
+              host={host}
+              disableCACertPage={disableCACertPage}
+              status={status}
+              setStatus={setStatus}
+              autoForward={autoForward}
+              setAutoForward={setAutoForward}
+              defaultPlugins={defaultPlugins}
+              enableInitialMITMPlugin={enableInitialMITMPlugin}
+              setVisible={setVisible}
+              tipParts={tipParts}
+              setTipParts={setTipParts}
+              downstreamProxyStr={downstreamProxyStr}
+              setDownstreamProxyStr={setDownstreamProxyStr}
+              isHasParams={isHasParams}
+              onIsHasParams={setIsHasParams}
+              showPluginHistoryList={showPluginHistoryList}
+              setShowPluginHistoryList={setShowPluginHistoryList}
+              tempShowPluginHistory={tempShowPluginHistory}
+              setTempShowPluginHistory={setTempShowPluginHistory}
+              pluginStreamInfo={pluginStreamInfo}
+              showPluginStream={showPluginStream}
+              setShowPluginStream={setShowPluginStream}
+              hasPluginsStreamUpdate={hasPluginsStreamUpdate}
+              updatesPlugins={updatesPlugins}
+              pluginOutputRef={pluginOutputRef}
+            />
+          </YakitSuspense>
         )
     }
   })
@@ -521,13 +537,17 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
       >
         {onRenderMITM()}
       </div>
-      <MITMRule
-        status={status}
-        visible={visible && !!inViewport}
-        setVisible={setVisible}
-        disableTrafficGuard={disableTrafficGuard}
-        setDisableTrafficGuard={setDisableTrafficGuard}
-      />
+      {visible && (
+        <YakitSuspense>
+          <MITMRule
+            status={status}
+            visible={visible && !!inViewport}
+            setVisible={setVisible}
+            disableTrafficGuard={disableTrafficGuard}
+            setDisableTrafficGuard={setDisableTrafficGuard}
+          />
+        </YakitSuspense>
+      )}
     </>
   )
 }
@@ -812,7 +832,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
   }, [])
 
   const onEnableMITMPluginMode = useMemoizedFn((checked: boolean) => {
-    enableMITMPluginMode({ initPluginNames: listNames, version: mitmVersion })
+    grpcMITMEnablePluginMode({ initPluginNames: listNames, version: mitmVersion })
       .then(() => {
         setIsSelectAll(checked)
         info(t('MITMServer.startPluginSuccess'))
@@ -992,8 +1012,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                   setTotal(t)
                   getAllSatisfyScript(t)
                 }}
-                hooks={new Map<string, boolean>()}
-                hooksID={new Map<string, boolean>()}
+                hooks={EMPTY_HOOKS_MAP}
+                hooksID={EMPTY_HOOKS_MAP}
                 onSelectAll={onSelectAll}
                 groupNames={groupNames}
                 setGroupNames={setGroupNames}
@@ -1003,42 +1023,44 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         )
       default:
         return (
-          <MITMPluginHijackContent
-            isHasParams={isHasParams}
-            onIsHasParams={onIsHasParams}
-            setTags={setTags}
-            tags={tags}
-            searchKeyword={searchKeyword}
-            setSearchKeyword={setSearchKeyword}
-            fieldKeywords={fieldKeywords}
-            setFieldKeywords={setFieldKeywords}
-            onSubmitYakScriptId={onSubmitYakScriptId}
-            status={status}
-            hasParamsCheckList={hasParamsCheckListMemo}
-            noParamsCheckList={noParamsCheckListMemo}
-            setHasParamsCheckList={setHasParamsCheckList}
-            setNoParamsCheckList={setNoParamsCheckList}
-            isFullScreen={isFullScreenFirstNode}
-            setIsFullScreen={setIsFullScreenFirstNode}
-            isSelectAll={isSelectAll}
-            onSelectAll={onSelectAll}
-            setIsSelectAll={setIsSelectAll}
-            total={total}
-            setTotal={setTotalFun}
-            groupNames={groupNames}
-            setGroupNames={setGroupNames}
-            openTabsFlag={openTabsFlag}
-            onSetOpenTabsFlag={setOpenTabsFlag}
-            onSetLoadedPluginLen={setLoadedPluginLen}
-            showPluginHistoryList={showPluginHistoryList}
-            tempShowPluginHistory={tempShowPluginHistory}
-            setShowPluginHistoryList={setShowPluginHistoryList}
-            setTempShowPluginHistory={setTempShowPluginHistory}
-            pluginStreamInfo={pluginStreamInfo!}
-            showPluginStream={showPluginStream!}
-            setShowPluginStream={setShowPluginStream!}
-            setAutoForward={setAutoForward!}
-          />
+          <YakitSuspense>
+            <MITMPluginHijackContent
+              isHasParams={isHasParams}
+              onIsHasParams={onIsHasParams}
+              setTags={setTags}
+              tags={tags}
+              searchKeyword={searchKeyword}
+              setSearchKeyword={setSearchKeyword}
+              fieldKeywords={fieldKeywords}
+              setFieldKeywords={setFieldKeywords}
+              onSubmitYakScriptId={onSubmitYakScriptId}
+              status={status}
+              hasParamsCheckList={hasParamsCheckListMemo}
+              noParamsCheckList={noParamsCheckListMemo}
+              setHasParamsCheckList={setHasParamsCheckList}
+              setNoParamsCheckList={setNoParamsCheckList}
+              isFullScreen={isFullScreenFirstNode}
+              setIsFullScreen={setIsFullScreenFirstNode}
+              isSelectAll={isSelectAll}
+              onSelectAll={onSelectAll}
+              setIsSelectAll={setIsSelectAll}
+              total={total}
+              setTotal={setTotalFun}
+              groupNames={groupNames}
+              setGroupNames={setGroupNames}
+              openTabsFlag={openTabsFlag}
+              onSetOpenTabsFlag={setOpenTabsFlag}
+              onSetLoadedPluginLen={setLoadedPluginLen}
+              showPluginHistoryList={showPluginHistoryList}
+              tempShowPluginHistory={tempShowPluginHistory}
+              setShowPluginHistoryList={setShowPluginHistoryList}
+              setTempShowPluginHistory={setTempShowPluginHistory}
+              pluginStreamInfo={pluginStreamInfo!}
+              showPluginStream={showPluginStream!}
+              setShowPluginStream={setShowPluginStream!}
+              setAutoForward={setAutoForward!}
+            />
+          </YakitSuspense>
         )
     }
   })
@@ -1063,29 +1085,31 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         )
       default:
         return (
-          <MITMHijackedContent
-            setStatus={setStatus}
-            status={status}
-            autoForward={autoForward!}
-            setAutoForward={setAutoForward!}
-            downstreamProxyStr={downstreamProxyStr}
-            loadedPluginLen={loadedPluginLen}
-            onSelectAll={onSelectAll}
-            setShowPluginHistoryList={setShowPluginHistoryList}
-            setTempShowPluginHistory={setTempShowPluginHistory}
-            onSetRuleVisible={setVisible}
-            onSetFilterVisible={(v) => {
-              if (setFiltersVisible) {
-                setFiltersVisible(v)
-              }
-            }}
-            pluginStreamInfo={pluginStreamInfo!}
-            showPluginStream={showPluginStream!}
-            setShowPluginStream={setShowPluginStream!}
-            hasPluginsStreamUpdate={hasPluginsStreamUpdate!}
-            updatesPlugins={updatesPlugins}
-            pluginOutputRef={pluginOutputRef!}
-          />
+          <YakitSuspense>
+            <MITMHijackedContent
+              setStatus={setStatus}
+              status={status}
+              autoForward={autoForward!}
+              setAutoForward={setAutoForward!}
+              downstreamProxyStr={downstreamProxyStr}
+              loadedPluginLen={loadedPluginLen}
+              onSelectAll={onSelectAll}
+              setShowPluginHistoryList={setShowPluginHistoryList}
+              setTempShowPluginHistory={setTempShowPluginHistory}
+              onSetRuleVisible={setVisible}
+              onSetFilterVisible={(v) => {
+                if (setFiltersVisible) {
+                  setFiltersVisible(v)
+                }
+              }}
+              pluginStreamInfo={pluginStreamInfo!}
+              showPluginStream={showPluginStream!}
+              setShowPluginStream={setShowPluginStream!}
+              hasPluginsStreamUpdate={hasPluginsStreamUpdate!}
+              updatesPlugins={updatesPlugins}
+              pluginOutputRef={pluginOutputRef!}
+            />
+          </YakitSuspense>
         )
     }
   })

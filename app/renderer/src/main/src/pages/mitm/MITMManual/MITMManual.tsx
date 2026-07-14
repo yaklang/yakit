@@ -19,7 +19,6 @@ import {
 } from '../MITMHacker/utils'
 import {
   useControllableValue,
-  useCounter,
   useCreation,
   useGetState,
   useInterval,
@@ -112,7 +111,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       boolean
     >(new Map())
 
-    const [currentOrder, { inc: addOrder, set: setOrder, reset: resetOrder }] = useCounter(1, { min: 1 })
+    // arrivalOrder 仅写入缓冲，用 ref 避免每条 Add 触发整树重渲染
+    const currentOrderRef = useRef<number>(1)
     const [intervalTime, setIntervalTime] = useState<number>()
     const mitmV2HijackInfoRef = useRef<SingleManualHijackInfoMessage[]>([])
     const clearMITMHijackV2 = useInterval(() => {
@@ -153,7 +153,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
     }, [])
     useEffect(() => {
       if (autoForward !== 'manual') {
-        resetOrder()
+        currentOrderRef.current = 1
       }
     }, [autoForward])
 
@@ -170,11 +170,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           if (!!hijackData) {
             const item: SingleManualHijackInfoMessage = {
               ...hijackData,
-              arrivalOrder: currentOrder,
+              arrivalOrder: currentOrderRef.current,
               manualHijackListAction: ManualHijackListAction.Hijack_List_Add,
             }
             mitmV2HijackInfoRef.current.push(item)
-            addOrder()
+            currentOrderRef.current += 1
           }
           break
         case ManualHijackListAction.Hijack_List_Delete:
@@ -225,7 +225,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               arrivalOrder: order,
             }
           })
-          setOrder(order + 1)
+          currentOrderRef.current = order + 1
           setCurrentSelectItem(undefined)
           setEditorShowIndexShowIndex(0)
           setData(newData)
@@ -245,14 +245,23 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       let newData = [...data]
       let newSelectItem = currentSelectItem
       let newEditorShowIndexShowIndex = editorShowIndex
+      // 只对 Add/Update 行计算颜色
+      const withCellClassName = (row: SingleManualHijackInfoMessage) => {
+        const Tags = row.Tags || []
+        return {
+          ...row,
+          Tags,
+          cellClassName: filterColorTag(Tags.join('|')),
+        } as SingleManualHijackInfoMessage
+      }
       for (let index = 0; index < length; index++) {
         const item = mitmV2HijackInfoRef.current[index]
         const taskID = item.TaskID
         const manualHijackListAction = item.manualHijackListAction
         switch (manualHijackListAction) {
           case ManualHijackListAction.Hijack_List_Add:
-            const index = newData.findIndex((ele) => ele.TaskID === taskID)
-            if (index === -1) {
+            const addIndex = newData.findIndex((ele) => ele.TaskID === taskID)
+            if (addIndex === -1) {
               setLoading(taskID, false)
               if (newData.length === 0 && !newSelectItem) {
                 newSelectItem = {
@@ -260,7 +269,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 }
                 newEditorShowIndexShowIndex = 0
               }
-              newData.push(item)
+              newData.push(withCellClassName(item))
               if (item.Status === ManualHijackListStatus.Hijacking_Request && isOnlyLookResponse) {
                 setLoading(taskID, true)
                 // 该状态下默认劫持响应为true时,自动发送劫持响应数据
@@ -296,7 +305,13 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               }
             }
             const updateIndex = newData.findIndex((ele) => ele.TaskID === taskID)
-            newData.splice(updateIndex, 1, { ...item, arrivalOrder: newData[updateIndex].arrivalOrder })
+            if (updateIndex !== -1) {
+              newData.splice(
+                updateIndex,
+                1,
+                withCellClassName({ ...item, arrivalOrder: newData[updateIndex].arrivalOrder }),
+              )
+            }
             break
           default:
             break
@@ -304,12 +319,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       }
       setCurrentSelectItem(newSelectItem)
       setEditorShowIndexShowIndex(newSelectItem ? newEditorShowIndexShowIndex : 0)
-      newData = newData.map(({ Tags = [], ...rest }) => ({
-        ...rest,
-        Tags,
-        cellClassName: filterColorTag(Tags.join('|')),
-      }))
-      setData([...newData])
+      setData(newData)
       mitmV2HijackInfoRef.current = []
       setIntervalTime(undefined)
     })
@@ -1196,16 +1206,14 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     trigger: 'setModifiedPacket',
   })
 
-  const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
-
   const [type, setType] = useControllableValue<string>(props, {
     valuePropName: 'type',
     trigger: 'setType',
   })
 
-  useEffect(() => {
-    setRefreshTrigger(!refreshTrigger)
-  }, [currentPacket])
+  // 仅美化时递增，避免 currentPacket 变化时额外 useEffect 翻转 boolean 造成二次渲染
+  const [beautifyRefreshKey, setBeautifyRefreshKey] = useState(0)
+
   const forResponse = useCreation(() => {
     return info.Status === ManualHijackListStatus.Hijacking_Response
   }, [info])
@@ -1321,7 +1329,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       prettifyPacketCode(modifiedPacket).then((res) => {
         if (!!res) {
           setModifiedPacket(Uint8ArrayToString(res as Uint8Array))
-          setRefreshTrigger((prev) => !prev)
+          setBeautifyRefreshKey((prev) => prev + 1)
         }
       })
     }
@@ -1494,7 +1502,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       url={info.URL}
       originValue={modifiedPacket}
       onChange={setModifiedPacket}
-      refreshTrigger={refreshTrigger}
+      refreshTrigger={`${currentPacket}-${beautifyRefreshKey}`}
       contextMenu={mitmManualRightMenu}
       editorOperationRecord="MITMV2_Manual_EDITOR_RECORF"
       isWebSocket={info.IsWebsocket && info.Status !== ManualHijackListStatus.WaitHijack}

@@ -1,14 +1,13 @@
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { MITMResponse, TraceInfo } from '../MITMPage'
 import styles from './MITMServerHijacking.module.scss'
 import { MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo } from './MITMManual'
 import { MITMLogHeardExtra } from './MITMLog'
 import ReactResizeDetector from 'react-resize-detector'
 import { useStore } from '@/store/mitmState'
-import { HTTPFlowRealTimeTableAndEditor } from '@/components/HTTPHistory'
 import { useBuiltinTagList } from '@/components/HTTPFlowTable/useBuiltinTagList'
 import { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import emiter from '@/utils/eventBus/eventBus'
@@ -59,13 +58,21 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { JSONParseLog } from '@/utils/tool'
-import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { YakitAutoComGroupSearchWithAll } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
 import { StreamUpdateState } from './PluginsOutput/StreamProcessor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitSuspense } from '@/components/yakitUI/YakitSuspense/YakitSuspense'
 
 const MITMManual = React.lazy(() => import('@/pages/mitm/MITMManual/MITMManual'))
+const HTTPFlowRealTimeTableAndEditor = React.lazy(() =>
+  import('@/components/HTTPHistory').then((m) => ({ default: m.HTTPFlowRealTimeTableAndEditor })),
+)
+const PluginExecuteResult = React.lazy(() =>
+  import('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult').then((m) => ({
+    default: m.PluginExecuteResult,
+  })),
+)
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1170,7 +1177,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             />
           </div>
           <div className={styles['pluginOutput-execRes']} ref={pluginOutputRef}>
-            <PluginExecuteResult streamInfo={pluginStreamInfo[showPluginStream]} runtimeId={''} loading={true} />
+            <YakitSuspense>
+              <PluginExecuteResult streamInfo={pluginStreamInfo[showPluginStream]} runtimeId={''} loading={true} />
+            </YakitSuspense>
           </div>
         </div>
       )}

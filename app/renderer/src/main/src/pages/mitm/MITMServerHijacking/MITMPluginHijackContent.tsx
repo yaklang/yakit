@@ -10,7 +10,7 @@ import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
 import { useCreation, useDebounceEffect, useInViewport, useMap, useMemoizedFn } from 'ahooks'
-import React, { ReactElement, useEffect, useRef, useState, useContext, useMemo } from 'react'
+import React, { useEffect, useRef, useState, useContext, useMemo } from 'react'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MitmStatus } from '../MITMPage'
 import { MITMYakScriptLoader } from '../MITMYakScriptLoader'
@@ -21,7 +21,6 @@ import {
   YakFilterRemoteObj,
   YakModuleListHeard,
 } from './MITMPluginLocalList'
-import { enableMITMPluginMode } from './MITMServerHijacking'
 import styles from './MITMServerHijacking.module.scss'
 import classNames from 'classnames'
 import { RemoteGV } from '@/yakitGV'
@@ -44,6 +43,7 @@ import MITMContext, { MITMVersion } from '../Context/MITMContext'
 import {
   grpcClientMITMHooks,
   grpcClientMITMLoading,
+  grpcMITMEnablePluginMode,
   grpcMITMExecScriptContent,
   grpcMITMGetCurrentHook,
   grpcMITMRemoveHook,
@@ -55,7 +55,7 @@ import { openConsoleNewWindow } from '@/utils/openWebsite'
 import usePluginTrace from './PluginTrace/usePluginTrace'
 import { PluginTraceRefProps } from './PluginTrace/type'
 import { pluginTraceRefFunDef } from './PluginTrace/PluginTrace'
-import { PluginTunHijack, PluginTunHijackDef } from './PluginTunHijack/PluginTunHijack'
+import { PluginTunHijackDef } from './PluginTunHijack/PluginTunHijack'
 import { PluginTunHijackRefProps } from './PluginTunHijack/PluginTunHijackType'
 import usePluginTunHijack, { tunSessionStateDefault } from './PluginTunHijack/usePluginTunHijack'
 import { useStore } from '@/store/mitmState'
@@ -67,7 +67,11 @@ import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitSuspense } from '@/components/yakitUI/YakitSuspense/YakitSuspense'
 const PluginTrace = React.lazy(() => import('./PluginTrace/PluginTrace'))
+const PluginTunHijack = React.lazy(() =>
+  import('./PluginTunHijack/PluginTunHijack').then((m) => ({ default: m.PluginTunHijack })),
+)
 
 const { ipcRenderer } = window.require('electron')
 
@@ -258,16 +262,18 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     }
   }, [compareHasParamsCheckList])
 
-  // 初始化加载 hooks，设置定时更新 hooks 状态
+  // 初始化加载 hooks；仅在视口内且展示 hooks 列表的 tab 时轮询
   useEffect(() => {
     updateHooks()
+    const shouldPoll = !!inViewport
+    if (!shouldPoll) return
     const id = setInterval(() => {
       updateHooks()
     }, 1000)
     return () => {
       clearInterval(id)
     }
-  }, [])
+  }, [inViewport])
 
   useEffect(() => {
     // 加载状态(从服务端加载)
@@ -339,7 +345,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
       }
     })
 
-    updateHooks()
     return () => {
       // 组件销毁时进行本地缓存 用于后续页面进入默认选项（只缓存普通插件，不缓存带参插件）
       setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(noParamsCheckArr))
@@ -380,7 +385,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
    * @param checkList
    */
   const multipleMitm = (checkList: string[]) => {
-    enableMITMPluginMode({
+    grpcMITMEnablePluginMode({
       initPluginNames: checkList,
       version: mitmVersion,
     }).then(() => {
@@ -970,19 +975,21 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         )
       case 'trace':
         return (
-          <PluginTrace
-            ref={pluginTraceRef}
-            isInitTrace={puginTraceData.isInitTrace}
-            startLoading={puginTraceData.startLoading}
-            tracing={puginTraceData.tracing}
-            stopLoading={puginTraceData.stopLoading}
-            startPluginTrace={startPluginTrace}
-            resetPluginTrace={pluginTraceActions.resetPluginTrace}
-            stopPluginTrace={pluginTraceActions.stopPluginTrace}
-            cancelPluginTraceById={pluginTraceActions.cancelPluginTraceById}
-            pluginTraceStats={pluginTraceActions.pluginTraceStats}
-            pluginTraceList={pluginTraceActions.pluginTraceList}
-          />
+          <YakitSuspense>
+            <PluginTrace
+              ref={pluginTraceRef}
+              isInitTrace={puginTraceData.isInitTrace}
+              startLoading={puginTraceData.startLoading}
+              tracing={puginTraceData.tracing}
+              stopLoading={puginTraceData.stopLoading}
+              startPluginTrace={startPluginTrace}
+              resetPluginTrace={pluginTraceActions.resetPluginTrace}
+              stopPluginTrace={pluginTraceActions.stopPluginTrace}
+              cancelPluginTraceById={pluginTraceActions.cancelPluginTraceById}
+              pluginTraceStats={pluginTraceActions.pluginTraceStats}
+              pluginTraceList={pluginTraceActions.pluginTraceList}
+            />
+          </YakitSuspense>
         )
       default:
         return <></>
@@ -1010,16 +1017,21 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         >
           <div className={styles['mitm-plugin-hijack-heard']}>{onRenderHeardExtra()}</div>
           {onRenderContent()}
-          <PluginTunHijack
-            ref={PluginTunHijackRef}
-            hidden={curTabKey !== 'tun-hijack'}
-            pluginTunHijackData={pluginTunHijackData}
-            pluginTunHijackActions={pluginTunHijackActions}
-            pluginTunHijackDel={pluginTunHijackDel}
-            onQuitTunHijackFun={onQuitTunHijackFun}
-            handleDeleteRoute={handleDeleteRoute}
-            onCloseTunHijackFun={onCloseTunHijackFun}
-          />
+          {/* Tun 运行中需保持挂载（卸载会清空 tunSessionState）；未启动且非本 tab 时不挂载 */}
+          {(curTabKey === 'tun-hijack' || !!tunSessionState?.deviceName) && (
+            <YakitSuspense>
+              <PluginTunHijack
+                ref={PluginTunHijackRef}
+                hidden={curTabKey !== 'tun-hijack'}
+                pluginTunHijackData={pluginTunHijackData}
+                pluginTunHijackActions={pluginTunHijackActions}
+                pluginTunHijackDel={pluginTunHijackDel}
+                onQuitTunHijackFun={onQuitTunHijackFun}
+                handleDeleteRoute={handleDeleteRoute}
+                onCloseTunHijackFun={onCloseTunHijackFun}
+              />
+            </YakitSuspense>
+          )}
         </div>
       </div>
       <YakitHint

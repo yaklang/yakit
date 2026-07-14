@@ -11,7 +11,7 @@ import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { setRemoteValue } from '@/utils/kv'
 import { MITMConsts } from '../MITMConsts'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { defHost, defPort, maskProxyPassword } from '../MITMServerStartForm/MITMServerStartForm'
@@ -19,10 +19,8 @@ import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
-import { RemoteGV } from '@/yakitGV'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import {
-  MITMEnablePluginModeRequest,
   MITMFilterWebsocketRequest,
   MITMHotPortRequest,
   MITMSetDownstreamProxyRequest,
@@ -164,7 +162,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
   useEffect(() => {
     if (!!props.enableInitialMITMPlugin && (props?.defaultPlugins || []).length > 0) {
-      enableMITMPluginMode({
+      grpcMITMEnablePluginMode({
         initPluginNames: props.defaultPlugins || [],
         version: mitmVersion,
       }).then(() => {
@@ -818,7 +816,3 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     </>
   )
 })
-
-export const enableMITMPluginMode = (params: MITMEnablePluginModeRequest) => {
-  return grpcMITMEnablePluginMode(params)
-}
