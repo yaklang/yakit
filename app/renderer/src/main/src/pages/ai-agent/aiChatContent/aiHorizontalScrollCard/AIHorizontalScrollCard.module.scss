@@ -1,5 +1,14 @@
 @use '../../../../styles/mixin.scss' as mixin;
 
+%display-flex-center {
+  display: flex;
+  align-items: center;
+}
+%display-column-center {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
 .expand-retract-wrapper {
   width: 100%;
   border-bottom: 0;

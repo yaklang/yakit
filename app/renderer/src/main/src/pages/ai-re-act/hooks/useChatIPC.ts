@@ -271,6 +271,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     onSubTaskID: (taskID) => {
       casualSubTaskIDs.current.add(taskID)
     },
+    pushLog: () => {},
   })
   // #endregion
 
@@ -301,6 +302,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     onReviewExtra: onTaskReviewExtra,
     onReviewRelease: handleTaskReviewRelease,
     sendRequest: sendRequest,
+    pushLog: () => {},
   })
   // #endregion
 
@@ -412,7 +414,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             chatType: 'reAct',
             type: AIChatQSDataTypeEnum.QUESTION,
             Timestamp: moment().unix(),
-            data: { qs: params.FreeInput || '', setting: {} },
+            // data: { qs: params.FreeInput || '', setting: {} },
+            data: '',
             AIService: '',
             AIModelName: '',
             // showQS为了UI渲染方便，重新构建的字段
@@ -435,7 +438,7 @@ function useChatIPC(params?: UseChatIPCParams) {
           events.handleSend({
             request: params,
             optionValue,
-            extraValue,
+            // extraValue,
             cb: () => {
               sendRequest(params)
             },
@@ -705,7 +708,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         chatType: 'reAct',
         type: AIChatQSDataTypeEnum.QUESTION,
         Timestamp: moment().unix(),
-        data: { qs: firstQS.current.FreeInput || '', setting: {} },
+        // data: { qs: firstQS.current.FreeInput || '', setting: {} },
+        data: '',
         AIService: '',
         AIModelName: '',
         // showQS为了UI渲染方便，重新构建的字段

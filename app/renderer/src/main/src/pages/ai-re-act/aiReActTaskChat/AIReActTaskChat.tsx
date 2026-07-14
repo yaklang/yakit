@@ -17,7 +17,7 @@ import {
 } from './AIReActTaskChatType'
 import styles from './AIReActTaskChat.module.scss'
 import { AIAgentChatStream, AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplate'
-import { useControllableValue, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
 import {
@@ -57,6 +57,7 @@ import { useTaskChatExtraAction } from './useTaskChatExtraAction'
 import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
@@ -135,8 +136,6 @@ export default AIReActTaskChat
 
 export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
   const { scrollToBottom, onScrollToBottom } = props
-  /** TODO - 数据未对接 */
-  const { reviewInfo } = useChatIPCStore()
   const { t } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
   const { onExtraAction } = useTaskChatExtraAction()
@@ -146,6 +145,7 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
   const streams = useStore(store, (state) => state.taskChat.elements)
   const execute = useStore(store, (state) => state.execute)
   const taskStatus = useStore(store, (state) => state.taskStatus)
+  const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
 
   return (
     <>
@@ -157,7 +157,7 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
           taskStatus={taskStatus}
         />
       </div>
-      {!reviewInfo && streams.length > 0 && (
+      {!currentPlanReviewToken && streams.length > 0 && (
         <div className={styles['footer']}>
           {execute && (
             <AIManualAdditionPopover chatType="task">
@@ -313,9 +313,8 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
   const store = useCurrentStore()
   const taskStatus = useStore(store, (state) => state.taskStatus)
   const execute = useStore(store, (state) => state.execute)
+  const syncIDUpdate = useStore(store, (state) => state.syncIDUpdate)
 
-  /** TODO - syncIdInfoMap新版未补充 */
-  const { syncIdInfoMap } = useChatIPCStore()
   const [prompt, setPrompt] = useState<string>()
 
   const currentCoordinatorIdRef = useRef<string>('')
@@ -330,12 +329,12 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
 
   useEffect(() => {
     if (
-      (syncIdOfAddToContext.current && !syncIdInfoMap?.get(syncIdOfAddToContext.current)) ||
-      (syncIdOfAddAndReExecute.current && !syncIdInfoMap?.get(syncIdOfAddAndReExecute.current))
+      (syncIdOfAddToContext.current && !meta.syncIDMap?.get(syncIdOfAddToContext.current)) ||
+      (syncIdOfAddAndReExecute.current && !meta.syncIDMap?.get(syncIdOfAddAndReExecute.current))
     ) {
       onReset()
     }
-  }, [syncIdInfoMap])
+  }, [syncIDUpdate])
 
   useEffect(() => {
     if (execute) return
@@ -416,9 +415,16 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
       AIService: '',
       AIModelName: '',
     }
-    /** TODO - 数据暂无对接 */
-    // chatIPCEvents.handleUserManualIntervention(chatData)
+    globalSessionEngine.pushDataToSession(sessionId, chatData)
   })
+
+  const addAndReExecuteLoading = useCreation(() => {
+    return !!meta.syncIDMap?.get(syncIdOfAddAndReExecute.current)
+  }, [syncIDUpdate])
+
+  const addAndToContextLoading = useCreation(() => {
+    return !!meta.syncIDMap?.get(syncIdOfAddToContext.current)
+  }, [syncIDUpdate])
   return (
     <div className={styles['ai-manual-addition']} onClick={(e) => e.stopPropagation()}>
       <div className={styles['ai-manual-addition-heard']}>人工介入</div>
@@ -436,9 +442,9 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
           <YakitButton
             type="outline2"
             onClick={(e) => e.stopPropagation()}
-            loading={!!syncIdInfoMap?.get(syncIdOfAddAndReExecute.current)}
+            loading={addAndReExecuteLoading}
             className={styles['add-and-reexecute-btn']}
-            disabled={!!syncIdInfoMap?.get(syncIdOfAddToContext.current)}
+            disabled={!addAndToContextLoading}
           >
             加入并重新执行
           </YakitButton>
@@ -448,8 +454,8 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
             syncIdOfAddToContext.current = randomString(8)
             onAddToContext(syncIdOfAddToContext.current)
           }}
-          loading={!!syncIdInfoMap?.get(syncIdOfAddToContext.current)}
-          disabled={!!syncIdInfoMap?.get(syncIdOfAddAndReExecute.current)}
+          loading={addAndToContextLoading}
+          disabled={!addAndReExecuteLoading}
         >
           加入上下文
         </YakitButton>

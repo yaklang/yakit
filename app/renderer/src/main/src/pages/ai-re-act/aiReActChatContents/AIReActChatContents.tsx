@@ -21,7 +21,6 @@ import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoadin
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
-import useLoadHistory from '../hooks/useLoadHistory'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
@@ -132,20 +131,20 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const casualLoadMoreLoading = useStore(store, (state) => state.requestHistoryState.casualLoadMoreLoading)
 
     /** TODO - 新版中历史逻辑暂未补充 */
-    const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
+    // const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
 
     // 向上滚动加载
-    const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
-      loading: casualLoadMoreLoading,
-      dataLength: chatLength,
-      SessionID: activeChat?.SessionID || '',
-      fetchHasMore: () => handleHasMoreHistory(TYPE),
-      loadMore: () => handleLoadMoreHistory(TYPE),
-    })
+    // const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
+    //   loading: casualLoadMoreLoading,
+    //   dataLength: chatLength,
+    //   SessionID: activeChat?.SessionID || '',
+    //   fetchHasMore: () => handleHasMoreHistory(TYPE),
+    //   loadMore: () => handleLoadMoreHistory(TYPE),
+    // })
     const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged, scrollToItemIndex } =
       useVirtuosoAutoScroll({
         total: chatLength,
-        isPrependingRef,
+        // isPrependingRef,
       })
 
     const { locateToIndex } = useChatStreamLocateHighlight({
@@ -216,7 +215,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           key={activeChat?.SessionID}
           ref={virtuosoRef}
           scrollerRef={setScrollerRef}
-          firstItemIndex={firstItemIndex}
+          // firstItemIndex={firstItemIndex}
           atBottomStateChange={setIsAtBottomRef}
           data={casualChat.elements}
           totalListHeightChanged={handleTotalListHeightChanged}
@@ -225,9 +224,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           components={components}
           atBottomThreshold={50}
           skipAnimationFrameInResizeObserver
-          // atTopStateChange={handleAtTopStateChange}
-          startReached={handleLoadMore}
-          // increaseViewportBy={{ top: 200, bottom: 0 }}
+          // startReached={handleLoadMore}
           className={styles['re-act-contents-list']}
         />
       </div>

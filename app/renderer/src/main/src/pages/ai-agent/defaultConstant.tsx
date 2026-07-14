@@ -278,11 +278,6 @@ export const defaultChatIPCData: UseChatIPCState = {
     elements: [],
     toolListRenderNumber: 0,
   },
-  yakExecResult: {
-    card: [],
-    execFileRecord: new Map(),
-    yakExecResultLogs: [],
-  },
   taskChat: {
     plan: cloneDeep(DefaultCurrentExecTaskTree),
     elements: [],
