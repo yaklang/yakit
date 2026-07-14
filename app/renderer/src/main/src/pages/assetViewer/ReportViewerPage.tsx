@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -417,8 +418,31 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   const [allReportItems, setAllReportItems] = useState<ReportItem[][]>([])
   const [current, setCurrent] = useState<number>(1)
   const [reportItems, setReportItems] = useState<ReportItem[]>([])
+  // Word 导出时临时渲染全量报告项（预览分页仅用于展示，不应限制导出范围）
+  const [wordExportItems, setWordExportItems] = useState<ReportItem[] | null>(null)
+  const displayReportItems = wordExportItems ?? reportItems
   const divRef = useRef<HTMLDivElement>(null)
+  const wordExportRenderReadyRef = useRef<(() => void) | null>(null)
+  const wordExportInFlightRef = useRef(false)
   const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
+
+  useLayoutEffect(() => {
+    if (!wordExportItems?.length) return
+    let cancelled = false
+    let innerFrame = 0
+    const outerFrame = requestAnimationFrame(() => {
+      innerFrame = requestAnimationFrame(() => {
+        if (cancelled) return
+        wordExportRenderReadyRef.current?.()
+        wordExportRenderReadyRef.current = null
+      })
+    })
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(outerFrame)
+      cancelAnimationFrame(innerFrame)
+    }
+  }, [wordExportItems])
 
   useEffect(() => {
     if ((reportId || 0) <= 0) {
@@ -449,6 +473,11 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         const newReportItems = truncateArrayBySize(items, 90) // 每页90KB
         setAllReportItems(newReportItems)
         setReportItems(newReportItems[0])
+        setCurrent(1)
+      } else {
+        setAllReportItems([])
+        setReportItems([])
+        setCurrent(1)
       }
     } catch (e) {
       yakitNotify('error', `Parse Report[${props.reportId}]'s items failed`)
@@ -510,22 +539,31 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     )
   }
 
-  // 下载Word
-  const downloadWord = () => {
-    if (!divRef || !divRef.current) return
-    setDownloadLoading(true)
-    // 此处定时器为了确保已处理其余任务
-    setTimeout(() => {
-      exportToWord()
-    }, 300)
-  }
-  // 下载报告
-  const exportToWord = async () => {
-    if (!divRef || !divRef.current) return
+  const waitForWordExportDom = (timeoutMs = 30000) =>
+    new Promise<void>((resolve, reject) => {
+      let settled = false
+      const onReady = () => {
+        if (settled) return
+        settled = true
+        window.clearTimeout(timer)
+        resolve()
+      }
+      const timer = window.setTimeout(() => {
+        if (settled) return
+        settled = true
+        if (wordExportRenderReadyRef.current === onReady) {
+          wordExportRenderReadyRef.current = null
+        }
+        reject(new Error('Word export DOM render timeout'))
+      }, timeoutMs)
+      wordExportRenderReadyRef.current = onReady
+    })
+
+  const captureWordHtml = async () => {
+    if (!divRef.current) return
     const contentHTML = divRef.current
     if (isEchartsToImg.current) {
       isEchartsToImg.current = false
-      // 使用html2canvas将ECharts图表转换为图像
       const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
       const promises = Array.from(echartsElements).map(async (element) => {
         const echartType = (element as HTMLElement).getAttribute('echart-type')
@@ -535,8 +573,6 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       })
 
       const echartsImages = await Promise.all(promises)
-
-      // 将图像插入到contentHTML中
       echartsImages.forEach((imageDataUrl, index) => {
         const img = document.createElement('img')
         img.src = imageDataUrl
@@ -544,7 +580,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         echartsElements[index].appendChild(img)
       })
     }
-    // word报告不要附录 table添加边框 移除南丁格尔玫瑰图点击详情(图像中已含)
+
     let wordStr: string = contentHTML.outerHTML
     if (wordStr.includes('附录：')) {
       wordStr = wordStr.substring(0, contentHTML.outerHTML.indexOf('附录：'))
@@ -554,13 +590,35 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       .replace(/<th(.*?)>/g, '<th$1 style="width: 10%">')
       .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, '')
 
-    saveAs(
-      //保存文件到本地
-      htmlDocx.asBlob(wordStr), //将html转为docx
-      `${report.Title}.doc`,
-    )
-    setDownloadLoading(false)
+    saveAs(htmlDocx.asBlob(wordStr), `${report.Title}.doc`)
   }
+
+  const downloadWord = useMemoizedFn(async () => {
+    const fullItems = allReportItems.flat()
+    if (!fullItems.length) return
+    // 同步拦截重复点击，避免 downloadLoading 尚未渲染时覆盖 resolve 导致先前导出永久挂起
+    if (wordExportInFlightRef.current) return
+    wordExportInFlightRef.current = true
+
+    setDownloadLoading(true)
+    try {
+      const renderReady = waitForWordExportDom()
+      flushSync(() => {
+        setWordExportItems(fullItems)
+      })
+      await renderReady
+      // 多页报告含图表时需额外等待 ECharts 初始化
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      await captureWordHtml()
+    } catch (e) {
+      yakitNotify('error', `Export Word failed: ${e}`)
+    } finally {
+      wordExportRenderReadyRef.current = null
+      wordExportInFlightRef.current = false
+      setWordExportItems(null)
+      setDownloadLoading(false)
+    }
+  })
 
   const onChangePagination = (page: number) => {
     isEchartsToImg.current = true
@@ -687,7 +745,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
           >
             <div ref={divRef} className={styles['card-body']} style={{ overflow: 'auto' }}>
               <Space direction={'vertical'} style={{ width: '100%' }}>
-                {reportItems.map((i, index) => (
+                {displayReportItems.map((i, index) => (
                   <ReportItemRender item={i} key={index} />
                 ))}
               </Space>
