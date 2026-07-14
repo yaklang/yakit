@@ -28,7 +28,6 @@ import {
 import { showByRightContext } from '../YakitMenu/showByRightContext'
 import { baseMenuLists, extraMenuLists } from './contextMenus'
 import { EditorMenuItemProps, EditorMenuItemType } from './EditorMenu'
-import cloneDeep from 'lodash/cloneDeep'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 
 import classNames from 'classnames'
@@ -94,6 +93,23 @@ import { menuReduce, sortMenuFun, contextMenuKeybindingHandle } from './menus/me
 export { PLUGIN_PREFIX }
 export type { CodecTypeProps, contextMenuProps }
 
+/** 右键菜单浅拷贝：避免 cloneDeep(ReactNode) 的性能开销，同时防止原地改写 props */
+const shallowCloneMenuItems = (items: EditorMenuItemType[]): EditorMenuItemType[] => {
+  return items.map((item) => {
+    if (!item || typeof item !== 'object') {
+      return item
+    }
+    if ((item as { type?: string }).type === 'divider') {
+      return { ...item }
+    }
+    const next = { ...(item as EditorMenuItemProps) }
+    if (Array.isArray(next.children)) {
+      next.children = next.children.map((child) => ({ ...child }))
+    }
+    return next
+  })
+}
+
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const {
     forceRenderMenu = false,
@@ -156,7 +172,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   }, [type])
 
-  useMemo(() => {
+  useEffect(() => {
     if (editor) {
       setEditorContext(editor, 'plugin', props.type || '')
     }
@@ -209,7 +225,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   useLayoutEffect(() => {
     applyYakitMonacoTheme(propsTheme ?? themeGlobal)
-  }, [themeGlobal, editor, propsTheme])
+  }, [themeGlobal, propsTheme])
 
   useEffect(() => {
     // 控制编辑器失焦
@@ -610,10 +626,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     for (let menus in contextMenu) {
       /* 需要排序项 */
       if (typeof contextMenu[menus].order === 'number') {
-        sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[])
+        sortContextMenu = sortContextMenu.concat([
+          {
+            ...contextMenu[menus],
+            menu: shallowCloneMenuItems(contextMenu[menus].menu),
+          } as any,
+        ])
       } else {
-        /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
-        rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
+        /** 浅拷贝即可，避免 cloneDeep 遍历 ReactNode 导致的性能问题 */
+        rightContextMenu.current = rightContextMenu.current.concat(shallowCloneMenuItems(contextMenu[menus].menu))
       }
     }
 
@@ -648,6 +669,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     },
     { wait: 500 },
   )
+
+  // ===== Yak 代码格式化 + 静态分析（需在 decoration effect 之前声明） =====
+  const { yakCompileAndFormat, yakStaticAnalyze } = useYakFormat({ language, type })
 
   const rafIdRef = useRef<number | null>(null) // RAF ID
   const deltaDecorationsRef = useRef<() => any>()
@@ -750,13 +774,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       scheduleDecorations()
     }
 
-    let lastValue = model.getValue()
-    editor.onDidChangeModelContent((e) => {
-      const newValue = model.getValue()
-      if (newValue === lastValue) {
+    // 用 versionId 判断内容是否变化，避免每次 getValue 全量字符串比较
+    let lastVersionId = model.getVersionId()
+    const contentChangeDisposable = editor.onDidChangeModelContent(() => {
+      const versionId = model.getVersionId()
+      if (versionId === lastVersionId) {
         return
       }
-      lastValue = newValue
+      lastVersionId = versionId
       scheduleDecorations()
     })
     scheduleDecorations()
@@ -771,13 +796,19 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     // 监听查找面板变化
     const findController = editor.getContribution<IFindController>('editor.contrib.findController')
     const state = findController?.getState()
-    state?.onFindReplaceStateChange(() => {
+    const findStateDisposable = state?.onFindReplaceStateChange(() => {
       if (!keepSearchName) return
       if (state.isRevealed) {
         keepSearchNameMapStore.setKeepSearchNameMap(keepSearchName, state.searchString || '')
       } else {
         keepSearchNameMapStore.removeKeepSearchNameMap(keepSearchName)
       }
+    })
+
+    // Yak 静态分析：挂在同一 effect 内以便 cleanup dispose
+    yakStaticAnalyze.run(editor, model)
+    const yakAnalyzeDisposable = model.onDidChangeContent(() => {
+      yakStaticAnalyze.run(editor, model)
     })
 
     // 添加点击事件处理，用于临时解除 Host 值的打码
@@ -998,7 +1029,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     return () => {
       try {
         isModelDisposedRef.current = true
+        if (rafIdRef.current !== null) {
+          cancelAnimationFrame(rafIdRef.current)
+          rafIdRef.current = null
+        }
+        contentChangeDisposable.dispose()
         cursorPositionDisposable.dispose()
+        findStateDisposable?.dispose()
+        yakAnalyzeDisposable.dispose()
         mouseDownDisposable.dispose()
         binaryFoldMouseDownDisposable.dispose()
         editorDomNode?.removeEventListener('copy', handleEditorClipboard, true)
@@ -1083,9 +1121,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     })
   })
 
-  // ===== Yak 代码格式化 + 静态分析 =====
-  const { yakCompileAndFormat, yakStaticAnalyze } = useYakFormat({ language, type })
-
   const downPosY = useRef<number>()
   const upPosY = useRef<number>()
   const onScrollTop = useRef<number>()
@@ -1141,9 +1176,44 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
   useEffect(() => {
     if (Array.isArray(shortcutIds)) {
-      setFocusIds(filterItem([...focusIds, ...shortcutIds]))
+      setFocusIds((prev) => filterItem([...prev, ...shortcutIds]))
     }
   }, [shortcutIds])
+
+  const editorOptions = useMemo(
+    () => ({
+      readOnly: readOnly,
+      scrollBeyondLastLine: false,
+      fontWeight: '500',
+      fontSize: nowFontsize || 12,
+      showFoldingControls: 'always' as const,
+      showUnused: true,
+      wordWrap: (noWordWrap ? 'off' : 'on') as 'off' | 'on',
+      renderLineHighlight,
+      lineNumbers: (noLineNumber ? 'off' : 'on') as 'off' | 'on',
+      minimap: noMiniMap ? { enabled: false } : undefined,
+      lineNumbersMinChars: lineNumbersMinChars || 5,
+      contextmenu: false,
+      // 保持 all：与换行符 decoration / binary chip 空格策略一致，避免改变既有视觉行为
+      renderWhitespace: 'all' as const,
+      bracketPairColorization: {
+        enabled: true,
+        independentColorPoolPerBracketType: true,
+      },
+      fixedOverflowWidgets: true,
+      renderValidationDecorations: renderValidationDecorations,
+    }),
+    [
+      readOnly,
+      nowFontsize,
+      noWordWrap,
+      renderLineHighlight,
+      noLineNumber,
+      noMiniMap,
+      lineNumbersMinChars,
+      renderValidationDecorations,
+    ],
+  )
 
   return (
     <div
@@ -1202,17 +1272,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 endLineNumber: 0,
               })
 
-              if (editor) {
-                /** Yak语言 代码错误检查 */
-                const model = editor.getModel()
-                if (model) {
-                  yakStaticAnalyze.run(editor, model)
-                  model.onDidChangeContent(() => {
-                    yakStaticAnalyze.run(editor, model)
-                  })
-                }
-              }
-
               editor.onKeyDown((e) => {
                 // 是否直接使用编辑器快捷键 不走自定义逻辑
                 const isUseDefaultShortcut = isYakEditorDefaultShortcut(e.browserEvent)
@@ -1244,27 +1303,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
               if (editorDidMount) editorDidMount(editor, monaco)
             }}
-            options={{
-              readOnly: readOnly,
-              scrollBeyondLastLine: false,
-              fontWeight: '500',
-              fontSize: nowFontsize || 12,
-              showFoldingControls: 'always',
-              showUnused: true,
-              wordWrap: noWordWrap ? 'off' : 'on',
-              renderLineHighlight,
-              lineNumbers: noLineNumber ? 'off' : 'on',
-              minimap: noMiniMap ? { enabled: false } : undefined,
-              lineNumbersMinChars: lineNumbersMinChars || 5,
-              contextmenu: false,
-              renderWhitespace: 'all',
-              bracketPairColorization: {
-                enabled: true,
-                independentColorPoolPerBracketType: true,
-              },
-              fixedOverflowWidgets: true,
-              renderValidationDecorations: renderValidationDecorations,
-            }}
+            options={editorOptions}
           />
         </ShortcutKeyFocusHook>
       </div>
