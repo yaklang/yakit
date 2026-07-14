@@ -80,8 +80,29 @@
   }
 }
 
+.tab-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .plugin-execute-custom-table {
   padding: 0;
+}
+
+.custom-table-copy-column {
+  display: flex;
+  align-items: center;
+  color: var(--Colors-Use-Neutral-Disable);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--Colors-Use-Main-Primary);
+  }
+
+  &:active {
+    color: var(--Colors-Use-Main-Pressed);
+  }
 }
 
 .plugin-execute-port-table-container {

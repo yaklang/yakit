@@ -228,7 +228,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
           Field: 'Input',
           FieldVerbose: 'Input',
           Required: true,
-          TypeVerbose: 'yak',
+          TypeVerbose: 'text',
           DefaultValue: '',
           Help: 'Input',
         }
@@ -680,12 +680,15 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
     refreshValue,
     isInline,
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['yakitUi', 'plugin'])
   const [validateStatus, setValidateStatus] = useState<'success' | 'error'>('success')
 
   const formProps = {
     rules: [{ required: item.Required }],
-    label: item.FieldVerbose || item.Field,
+    label:
+      pluginType === 'codec' && item.Field === 'Input'
+        ? t('PluginDebugBody.codecInput')
+        : item.FieldVerbose || item.Field,
     name: item.Field,
     className: styles['plugin-execute-form-item'],
     tooltip: item.Help
@@ -748,7 +751,11 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
     case 'text':
       return (
         <Form.Item {...formProps}>
-          <YakitInput.TextArea placeholder={t('YakitInput.please_enter')} disabled={disabled} />
+          <YakitInput.TextArea
+            placeholder={t('YakitInput.please_enter')}
+            disabled={disabled}
+            autoSize={{ minRows: 3, maxRows: 10 }}
+          />
         </Form.Item>
       )
     case 'uint':

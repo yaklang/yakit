@@ -151,7 +151,8 @@
     "sourceCodeDesc": "可在此定义插件输入原理，并编写输出 UI",
     "escFullScreen": "按 Esc 即可退出全屏",
     "anonymous": "匿名",
-    "filterCondition": "筛选条件"
+    "filterCondition": "筛选条件",
+    "codecInput": "输入"
   },
   "PluginExecResultDefaultTabs": {
     "HTTPtraffic": "HTTP 流量",
