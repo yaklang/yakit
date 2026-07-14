@@ -1,13 +1,54 @@
-import type { AIMessageHandler } from '../type'
+import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeDataID, isToolStderrStream, isToolStdoutStream } from '../utils'
-import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
-import { convertNodeIdToVerbose } from '../defaultConstant'
+import { AIChatQSDataTypeEnum } from '../aiRender'
+import { AIStreamContentType, convertNodeIdToVerbose } from '../defaultConstant'
 import { aiAgentLogEmitter } from '../AIAgentLogEmitter'
 
+/** 生成stream_group组数据 */
+const genStreamGroupData = (
+  params: {
+    group: string
+    tokens: string[]
+  } & AIMessageHandlerParams,
+) => {
+  const { group, tokens, res, chatType, rawData, store, meta } = params
+
+  const groupDetail = rawData.contents.get(group)
+  // 设置组数据详情
+  if (groupDetail && groupDetail.type === AIChatQSDataTypeEnum.STREAM_GROUP) {
+    groupDetail.data.lastToken = tokens[tokens.length - 1]
+  } else {
+    rawData.contents.set(group, {
+      id: group,
+      chatType: chatType,
+      type: AIChatQSDataTypeEnum.STREAM_GROUP,
+      data: {
+        NodeId: res.NodeId,
+        NodeIdVerbose: res.NodeIdVerbose,
+        lastToken: tokens[tokens.length - 1],
+      },
+      TaskId: generateTaskNodeDataID({
+        chatType,
+        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
+        taskID: res.TaskId,
+        isExist: (key) => rawData.contents.has(key),
+      }),
+      AIService: '',
+      AIModelName: '',
+      Timestamp: res.Timestamp,
+    })
+  }
+
+  tokens.forEach((mapKey) => {
+    const mapValue = rawData.contents.get(mapKey)
+    if (mapValue) mapValue.parentGroupKey = group
+  })
+}
+
 const handleStreamStart: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, rawData, meta } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'stream_start') return
 
   if (res.IsSystem || res.IsReason) return
@@ -69,7 +110,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
       },
       TaskId: generateTaskNodeDataID({
         chatType,
-        planID: meta.currentTaskPlanID?.taskID,
+        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
         taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),
@@ -107,7 +148,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
     },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -228,6 +269,10 @@ const handleStream: AIMessageHandler = (requestInfo) => {
         kind: 'item',
         type: streamData.type,
         isHistory: res.IsSync,
+        nodeId: res.ContentType === AIStreamContentType.DEFAULT ? res.NodeId : undefined,
+        groupExtra: (group: string, tokens: string[]) => {
+          genStreamGroupData({ group, tokens, ...requestInfo })
+        },
       },
     })
   }
@@ -336,25 +381,25 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
 
   const chatData = rawData.contents.get(data.event_uuid)
   const toolResult = rawData.contents.get(res.CallToolID || '')
+
   if (chatData) {
-    // 下面的设置: 是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
     chatData.reference = (chatData.reference || []).concat([data])
-    if (chatData.parentGroupToken) {
-      store.getState().dispatchStreamingNode({
-        chatType: chatType,
-        parentTaskId: chatData.TaskId,
-        node: {
-          token: chatData.id,
-          kind: 'item',
-          type: chatData.type,
-          isHistory: res.IsSync,
-        },
-      })
+    if (store.getState().items[chatData.id]) {
+      // 属于item元素，已经在UI上渲染了
+      store.getState().incrementNodeVersion(chatData.id, 'item')
+    } else if (store.getState().groups[chatData.id]) {
+      // 属于group元素，已经在UI上渲染了
+      store.getState().incrementNodeVersion(chatData.id, 'group')
+    } else if (store.getState().tasks[chatData.id]) {
+      // 属于task元素，已经在UI上渲染了
+      store.getState().incrementNodeVersion(chatData.id, 'task')
     } else if (chatData.type === AIChatQSDataTypeEnum.STREAM) {
+      // 属于stream类型数据，但未在UI上渲染
       if (toolResult && isToolStdoutStream(chatData.data.NodeId)) {
         // 特殊情况，更新stdout流对应的工具执行结果卡片UI
         store.getState().incrementNodeVersion(toolResult.id, 'item')
       } else {
+        // 触发UI渲染
         store.getState().dispatchStreamingNode({
           chatType: chatType,
           parentTaskId: chatData.TaskId,
@@ -363,11 +408,16 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
             kind: 'item',
             type: chatData.type,
             isHistory: res.IsSync,
+            nodeId: chatData.data.ContentType === AIStreamContentType.DEFAULT ? chatData.data.NodeId : undefined,
+            groupExtra: (group: string, tokens: string[]) => {
+              genStreamGroupData({ group, tokens, ...requestInfo })
+            },
           },
         })
       }
       return
     } else {
+      // 其余类型，触发UI渲染
       store.getState().dispatchStreamingNode({
         chatType: chatType,
         parentTaskId: chatData.TaskId,
@@ -379,42 +429,37 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
         },
       })
     }
-  } else if (
-    toolResult &&
-    toolResult.type === AIChatQSDataTypeEnum.TOOL_RESULT &&
-    toolResult.data.stream.EventUUID === data.event_uuid
-  ) {
-    toolResult.reference = (toolResult.reference || []).concat([data])
-    store.getState().incrementNodeVersion(toolResult.id, 'item')
   } else {
-    const chatData: AIChatQSData = {
-      ...genBaseAIChatData(res),
-      id: data.event_uuid,
-      chatType: chatType,
-      type: AIChatQSDataTypeEnum.Reference_Material,
-      data: {
-        NodeId: res.NodeId,
-        NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
-      },
-      reference: [data],
-      TaskId: generateTaskNodeDataID({
-        chatType,
-        planID: meta.currentTaskPlanID?.taskID,
-        taskID: res.TaskId,
-        isExist: (key) => rawData.contents.has(key),
-      }),
-    }
-    rawData.contents.set(chatData.id, chatData)
-    store.getState().dispatchStreamingNode({
-      chatType: chatType,
-      parentTaskId: chatData.TaskId,
-      node: {
-        token: chatData.id,
-        kind: 'item',
-        type: chatData.type,
-        isHistory: res.IsSync,
-      },
-    })
+    // 数据不存在，直接生成一个参考资料的UI元素
+    // 现阶段直接注释，因为UI还没有写入专门的参考资料元素
+    // const chatData: AIChatQSData = {
+    //   ...genBaseAIChatData(res),
+    //   id: data.event_uuid,
+    //   chatType: chatType,
+    //   type: AIChatQSDataTypeEnum.Reference_Material,
+    //   data: {
+    //     NodeId: res.NodeId,
+    //     NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
+    //   },
+    //   reference: [data],
+    //   TaskId: generateTaskNodeDataID({
+    //     chatType,
+    //     planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
+    //     taskID: res.TaskId,
+    //     isExist: (key) => rawData.contents.has(key),
+    //   }),
+    // }
+    // rawData.contents.set(chatData.id, chatData)
+    // store.getState().dispatchStreamingNode({
+    //   chatType: chatType,
+    //   parentTaskId: chatData.TaskId,
+    //   node: {
+    //     token: chatData.id,
+    //     kind: 'item',
+    //     type: chatData.type,
+    //     isHistory: res.IsSync,
+    //   },
+    // })
   }
 }
 // #endregion

@@ -7,7 +7,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import { DefaultAIToolResult, DefaultToolResultSummary } from '../defaultConstant'
 
 const handleToolCallStart: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, rawData, meta } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'tool_call_start') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -34,7 +34,7 @@ const handleToolCallStart: AIMessageHandler = (requestInfo) => {
     data: toolResult,
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),

@@ -31,15 +31,16 @@ export const generateTaskNodeDataID = (params: {
   isExist: (key: string) => boolean
 }) => {
   const { chatType, planID, taskID, isExist } = params
+  const taskKey = planID ? `${planID}-${taskID}` : undefined
 
-  // 不管自由对话还是任务规划, 只要是明确的执行任务组，都会有唯一的taskID值
-  if (taskID && isExist(taskID)) return taskID
-  // 任务规划的默认任务组
-  if (chatType === 'task' && planID) {
-    const defaultKey = `${planID}-default`
-    if (isExist(defaultKey)) return defaultKey
+  if (chatType === 'reAct') {
+    if (taskKey && isExist(taskKey)) return taskKey
+    return undefined
+  } else {
+    if (taskKey && isExist(taskKey)) return taskKey
+    if (planID) return `${planID}-default`
+    return undefined
   }
-  return undefined
 }
 
 /** 生成AI-UI展示的必须基础数据 */

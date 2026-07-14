@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import type { ReActChatElement } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
 import { openAIConcurrentStream } from '@/utils/openWebsite'
 import type { ConcurrentStreamFramePayload } from '../concurrentStreamFrame'
 
@@ -10,7 +10,7 @@ export function useConcurrentStreamRefreshListener(
   framePayload: ConcurrentStreamFramePayload,
   session: string,
   token: string,
-  chatType: ReActChatElement['chatType'],
+  chatType: ChatListRenderType,
   enabled = true,
 ) {
   useEffect(() => {

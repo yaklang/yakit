@@ -16,7 +16,7 @@ import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHand
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
-import { type AIChatQSData, AIChatQSDataTypeEnum } from './aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ChatListRenderType } from './aiRender'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 
 const { ipcRenderer } = window.require('electron')
@@ -527,6 +527,50 @@ export class ChatMultiSessionController {
         type: data.type,
       },
     })
+  }
+
+  /**
+   * 主动关闭展示给用户操作的review
+   *
+   *  一般来说，触发这个事件的情况，都是当前review数据无效了
+   *  别的处理review数据事件，都由 handleSendMessage 进行处理了
+   */
+  public closeChatReview(sessionId: string, chatType: ChatListRenderType, reviewToken: string) {
+    const { store, rawData } = this.ensureSession(sessionId)
+
+    if (chatType === 'reAct') {
+      const reviewDetail = rawData.contents.get(reviewToken)
+      rawData.contents.delete(reviewToken)
+      store.getState().updateCasualReview(reviewToken, 'remove')
+      if (reviewDetail) {
+        store.getState().deleteElementNode({
+          chatType: 'reAct',
+          token: reviewDetail.id,
+          kind: 'item',
+          taskID: reviewDetail.TaskId || undefined,
+          onDelContent: (mapKey) => {
+            rawData.contents.delete(mapKey)
+          },
+        })
+      }
+    } else if (chatType === 'task') {
+      const currentReview = store.getState().currentPlanReviewToken
+      if (!currentReview || currentReview !== reviewToken) return
+
+      rawData.contents.delete(currentReview)
+      store.getState().updateState({ currentPlanReviewToken: '' })
+    }
+  }
+
+  /** 更新某一个指定的工具卡片内容(AIChatQSDataTypeEnum.TOOL_RESULT) */
+  public updateToolResult(sessionId: string, mapToken: string, toolResult: Partial<AIToolResult['tool']>) {
+    const { store, rawData } = this.ensureSession(sessionId)
+
+    const chatDetail = rawData.contents.get(mapToken)
+    if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TOOL_RESULT) return
+
+    Object.assign(chatDetail.data.tool, toolResult)
+    store.getState().incrementNodeVersion(chatDetail.id, 'item')
   }
 
   private closeIPCListeners(sessionId: string) {
