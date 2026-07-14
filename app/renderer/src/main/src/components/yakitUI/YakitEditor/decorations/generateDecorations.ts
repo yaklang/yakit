@@ -74,6 +74,15 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
 
   const dec: YakitIModelDecoration[] = []
 
+  // 同一次 decoration 生成内复用 getValue，避免多次全量拷贝
+  let fullTextCache: string | undefined
+  const getFullText = () => {
+    if (fullTextCache === undefined) {
+      fullTextCache = model.getValue()
+    }
+    return fullTextCache
+  }
+
   const endsp = model.getPositionAt(1800)
   const text =
     endsp.lineNumber === 1
@@ -116,7 +125,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
     ;(() => {
       try {
         if (!showHostHint) return
-        const fullText = model.getValue()
+        const fullText = getFullText()
         const hostRegex = /\nHost:\s*?([^\r\n]+)/
         const hostMatch = hostRegex.exec(fullText)
         if (!hostMatch) return
@@ -217,7 +226,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
   if (needDecode && !disableUnicodeDecode) {
     ;(() => {
       // http html json
-      const text = model.getValue()
+      const text = getFullText()
       let match
       const regex = /(\\u[\dabcdef]{4})+/gi
 
@@ -247,7 +256,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
   ;(() => {
     const targetValue = fixContentType
     if (!targetValue) return
-    const text = model.getValue()
+    const text = getFullText()
     let match
 
     // 匹配 Content-Type: 后面的值
@@ -387,7 +396,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
       return
     }
     try {
-      const fullText = model.getValue()
+      const fullText = getFullText()
       const offsets = findPlaceholderOffsets(fullText)
       const newRanges: { id: string; range: monaco.Range; ordinal: number }[] = []
       // index 即"编辑器中第 N 个二进制标签"的序号，按文档顺序；据此判断是否被修改过
