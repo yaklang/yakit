@@ -208,6 +208,8 @@ export interface AIAgentChatData {
   casualChat: {
     /** react 任务对应的详情数据 */
     planDetails: PlanItemDetailsData
+    /** 自由会话啊的子任务对应的详情数据 */
+    planDetailsMap: Map<string, PlanItemDetailsData>
   }
   taskChat: {
     /** 任务列表的子任务对应的详情数据 */
@@ -221,6 +223,11 @@ export interface AIAgentChatMetaData {
   onSessionStartSuccess?: (sessionId: string) => void
   /** 通过用户问题创建会话时的问题 */
   createChatQuestion?: AIInputEvent
+
+  /** 建立会话后的ping请求测试连通性-ping的唯一ID和轮询定时器 */
+  pingSyncID: string
+  pingTimer: ReturnType<typeof setInterval> | null
+
   /** 自由对话的实时记忆列表 */
   casualMemoryList: AIAgentGrpcApi.MemoryEntryList
   /** 任务规划的实时记忆列表 */
@@ -267,4 +274,7 @@ export interface AIAgentChatMetaData {
 
   /** 轮询获取最新记忆列表的定时器 */
   memoryPollingTimer: NodeJS.Timeout | null
+
+  /** 记录自由对话下成组agent任务的taskID */
+  casualSubTaskIDs: Set<string>
 }

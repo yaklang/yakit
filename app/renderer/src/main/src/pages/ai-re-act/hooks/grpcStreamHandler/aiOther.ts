@@ -168,9 +168,11 @@ const handleFileSystemPin: AIMessageHandler = (request) => {
 }
 
 const handleTimelineItem: AIMessageHandler = (request) => {
-  const { res, store } = request
+  const { res, store, meta } = request
   if (res.Type !== 'structured' || res.NodeId !== 'timeline_item') return
   if (res.IsSync) return
+  // 自由对话的成组子agent任务的timeline-item不展示
+  if (meta.casualSubTaskIDs.has(res.TaskId)) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const timelineItem = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
@@ -216,6 +218,16 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
     extraValue: { showQS: data.react_task_input || '' },
   }
   rawData.contents.set(chatData.id, chatData)
+
+  if (data.react_task_user_input_uuid) {
+    const qsDetail = rawData.contents.get(data.react_task_user_input_uuid)
+    if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
+      rawData.contents.delete(data.react_task_user_input_uuid)
+      store.getState().replaceItemToken(data.react_task_user_input_uuid, data.react_task_id)
+      return
+    }
+  }
+
   store.getState().dispatchStreamingNode({
     chatType: 'reAct',
     node: {
@@ -320,13 +332,8 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
   const react_task_id = info.react_task_id
   if (['completed', 'aborted'].includes(info.react_task_now_status)) {
     if (store.getState().currentCasualTaskID && store.getState().currentCasualTaskID === react_task_id) {
-      store.getState().updateState({ cancelCasualLoading: false })
-      // 取消专注模式
-      store.getState().updateState({ focusMode: '' })
+      store.getState().updateState({ focusMode: '', cancelCasualLoading: false, casualLoading: false })
     }
-    store.getState().updateState({ casualLoading: false })
-    rawData.casualChat.planDetails = cloneDeep(DefaultPlanItemDetailsData)
-    store.getState().updateCasualTodoList()
     if (meta.currentTaskPlanID?.taskID === react_task_id) {
       // 该问题触发了任务规划, 所以需要将任务规划状态也调整
       meta.currentTaskPlanID.status = info.react_task_now_status as AITaskStatus
@@ -334,11 +341,9 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
     }
   }
   // 更新自由对话-执行任务组的状态
-  const taskKey = store.getState().currentCasualTaskID
-    ? `${store.getState().currentCasualTaskID}-${react_task_id}`
-    : undefined
-  if (!taskKey) return
-  const taskDetail = rawData.contents.get(react_task_id)
+  if (!store.getState().currentCasualTaskID || !react_task_id) return
+  const taskKey = `${store.getState().currentCasualTaskID}-${react_task_id}`
+  const taskDetail = rawData.contents.get(taskKey)
   if (!taskDetail || taskDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
   taskDetail.data.status = info.react_task_now_status as AITaskStatusType
   store.getState().incrementNodeVersion(taskDetail.id, 'task')
@@ -421,7 +426,7 @@ const handleYaklangCodeChange: AIMessageHandler = (requestInfo) => {
 }
 
 const handleReactTaskCreated: AIMessageHandler = (request) => {
-  const { res, chatType, store, rawData } = request
+  const { res, chatType, store, rawData, meta } = request
   if (res.Type !== 'structured' || res.NodeId !== 'react_task_created') return
   if (res.IsSync || chatType === 'task') return
 
@@ -430,12 +435,14 @@ const handleReactTaskCreated: AIMessageHandler = (request) => {
 
   // 非聚合任务不处理
   if (!info.react_task_is_sub_agent) return
-  if (!info.react_task_id) return
 
-  const taskKey = store.getState().currentCasualTaskID
-    ? `${store.getState().currentCasualTaskID}-${info.react_task_id}`
-    : undefined
-  if (!taskKey) return
+  if (!store.getState().currentCasualTaskID || !info.react_task_id) return
+  const taskKey = `${store.getState().currentCasualTaskID}-${info.react_task_id}`
+  meta.casualSubTaskIDs.add(info.react_task_id)
+
+  const existing = rawData.contents.get(taskKey)
+  if (existing) return
+
   const chatData: AIChatQSData = {
     ...genBaseAIChatData(res),
     id: taskKey,
@@ -451,6 +458,10 @@ const handleReactTaskCreated: AIMessageHandler = (request) => {
   } as AIChatQSData
 
   rawData.contents.set(chatData.id, chatData)
+  // planDetailsMap / 子任务收集仍按后端子任务 ID（res.TaskId）索引
+  if (rawData.casualChat.planDetailsMap.has(info.react_task_id)) {
+    rawData.casualChat.planDetailsMap.set(info.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
+  }
   store.getState().dispatchStreamingNode({
     chatType: 'reAct',
     node: {

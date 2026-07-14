@@ -9,7 +9,12 @@ import {
 } from './grpcApi'
 import { createChatStore } from './chatStore'
 import { Uint8ArrayToString } from '@/utils/str'
-import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
+import {
+  AIAgentSettingDefault,
+  AIModelTypeEnum,
+  AttachedResourceKeyEnum,
+  AttachedResourceTypeEnum,
+} from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultMemoryList, DefaultPlanItemDetailsData } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
@@ -18,6 +23,8 @@ import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
 import { type AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ChatListRenderType } from './aiRender'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
+import { v4 as uuidv4 } from 'uuid'
+import moment from 'moment'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -95,6 +102,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
 
     casualChat: {
       planDetails: cloneDeep(DefaultPlanItemDetailsData),
+      planDetailsMap: new Map(),
     },
     taskChat: {
       planDetailsMap: new Map(),
@@ -107,6 +115,8 @@ const genAIAgentChatData = (): AIAgentChatData => {
 const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
   return {
     createChatQuestion: undefined,
+    pingSyncID: '',
+    pingTimer: null,
     casualMemoryList: cloneDeep(DefaultMemoryList),
     taskMemoryList: cloneDeep(DefaultMemoryList),
     notifyMessageTimer: null,
@@ -124,6 +134,7 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     queuePollingEmptyCount: 0,
     queuePollingTimer: null,
     memoryPollingTimer: null,
+    casualSubTaskIDs: new Set(),
   }
 }
 
@@ -198,7 +209,7 @@ export class ChatMultiSessionController {
       return
     }
 
-    const { request, store, meta } = this.ensureSession(sessionId)
+    const { request, store, rawData, meta } = this.ensureSession(sessionId)
 
     store.getState().updateState({ execute: true, casualTitle: '发送问题，开启会话...' })
     this.registerSessionChannel(sessionId, params.Params?.Source)
@@ -206,16 +217,63 @@ export class ChatMultiSessionController {
 
     Object.assign(request, params.Params)
     if (params.Params?.UserQuery) {
+      // 判断建立grpc连接时是否附带问题
+      // 如有，需要剥离出来，在grpc建立成功后再执行
+      const chatID = uuidv4()
+
+      const AttachedResourceInfos = params.AttachedResourceInfo || []
+      AttachedResourceInfos.push({
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
+        Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+        Value: chatID,
+      })
+
       meta.createChatQuestion = {
         IsFreeInput: true,
         FreeInput: params.Params.UserQuery,
-        AttachedResourceInfo: params.AttachedResourceInfo,
+        AttachedResourceInfo: AttachedResourceInfos,
         FocusModeLoop: params.FocusModeLoop,
       }
+
+      // 用户问了问题后，立即显示到UI上
+      // 问题对应的re_act_task_id先由前端生成，并发送给后端
+      // 后续生成re_act_task_id时，会把前端生成的uuid替换为后端生成的re_act_task_id
+      const chatData: AIChatQSData = {
+        id: chatID,
+        chatType: 'reAct',
+        type: AIChatQSDataTypeEnum.QUESTION,
+        Timestamp: moment().unix(),
+        data: params.Params?.UserQuery || '',
+        AIService: '',
+        AIModelName: '',
+        // showQS为了UI渲染方便，重新构建的字段
+        extraValue: { showQS: params.Params?.UserQuery || '' },
+      }
+      rawData.contents.set(chatData.id, chatData)
+      store.getState().dispatchStreamingNode({
+        chatType: 'reAct',
+        node: {
+          token: chatData.id,
+          kind: 'item',
+          type: chatData.type,
+        },
+      })
     }
     meta.onSessionStartSuccess = cb
 
     ipcRenderer.invoke('start-ai-re-act', sessionId, params)
+
+    // 建立会话连接时，在主进程进行了一次ping请求
+    // 如果五秒没有返回pong消息，则再次进行ping请求
+    if (meta.pingTimer) clearInterval(meta.pingTimer)
+    meta.pingTimer = setInterval(() => {
+      meta.pingSyncID = uuidv4()
+      this.requestMessage(sessionId, {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PING,
+        SyncID: meta.pingSyncID,
+      })
+    }, 5000)
   }
 
   /** 主动向grpc发送请求 */
@@ -229,12 +287,46 @@ export class ChatMultiSessionController {
       }
 
       const { store, rawData, meta } = this.ensureSession(token)
-      // 自由对话没有问题进行中时，才改变loading的title
-      if (params.IsFreeInput && !store.getState().casualLoading) {
-        store.getState().updateState({ casualTitle: '等待回复中...' })
-      }
 
       if (params.IsFreeInput) {
+        const { casualLoading, currentCasualTaskID } = store.getState()
+        // 如果自由对话引起了任务规划，那么自由对话其实是空闲状态
+        const isCasualIdle = casualLoading && currentCasualTaskID === meta.currentTaskPlanID?.taskID
+
+        if (!casualLoading || isCasualIdle) {
+          // 自由对话没有问题进行中时，才改变loading的title
+          store.getState().updateState({ casualTitle: '等待回复中...' })
+
+          const chatID = uuidv4()
+          const AttachedResourceInfos = params.AttachedResourceInfo || []
+          AttachedResourceInfos.push({
+            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_DEFAULT,
+            Type: AttachedResourceTypeEnum.USER_FREE_INPUT_UUID,
+            Value: chatID,
+          })
+          params.AttachedResourceInfo = AttachedResourceInfos
+          const chatData: AIChatQSData = {
+            id: chatID,
+            chatType: 'reAct',
+            type: AIChatQSDataTypeEnum.QUESTION,
+            Timestamp: moment().unix(),
+            data: params.FreeInput || '',
+            AIService: '',
+            AIModelName: '',
+            // showQS为了UI渲染方便，重新构建的字段
+            extraValue: { showQS: params.FreeInput || '' },
+          }
+          rawData.contents.set(chatData.id, chatData)
+          store.getState().dispatchStreamingNode({
+            chatType: 'reAct',
+            node: {
+              token: chatData.id,
+              kind: 'item',
+              type: chatData.type,
+            },
+          })
+        }
+
         // 因为有用户问题发送，所以注册 获取问题队列轮询器
         if (!meta.queuePollingTimer) {
           meta.queuePollingEmptyCount = 0
@@ -401,6 +493,15 @@ export class ChatMultiSessionController {
       }
 
       if (res.Type === 'pong') {
+        // 如果返回的pong没有值，但是pingSyncID有值，说明该条消息已经过期
+        if (!res.SyncID && meta.pingSyncID) return
+        // 如果返回的pong有值，但是和pingSyncID不一样，说明该条消息已经过期
+        if (res.SyncID && res.SyncID !== meta.pingSyncID) return
+        // 该条消息有效，不需要在轮询ping请求了
+        if (meta.pingTimer) clearInterval(meta.pingTimer)
+        meta.pingTimer = null
+        meta.pingSyncID = ''
+
         if (meta.createChatQuestion) {
           this.requestMessage(sessionId, meta.createChatQuestion)
           meta.createChatQuestion = undefined
@@ -585,8 +686,15 @@ export class ChatMultiSessionController {
   }
   // 监听 session-end 事件
   public handleSessionEnd(sessionId: string, res: any) {
-    const { store } = this.ensureSession(sessionId)
+    const { store, meta } = this.ensureSession(sessionId)
+
+    // 取消ping请求相关逻辑
+    if (meta.pingTimer) clearInterval(meta.pingTimer)
+    meta.pingTimer = null
+    meta.pingSyncID = ''
+    // 任务规划结束后的相关逻辑
     handleTaskPlanEnd(this.ensureSession(sessionId))
+    // 核心状态改变
     store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话已停止' })
     this.readyChannels.delete(sessionId)
     this.closeIPCListeners(sessionId)

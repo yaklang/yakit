@@ -178,7 +178,7 @@ export interface AIStreamOutput {
 export interface AIToolResult {
   type: 'create' | 'stream' | 'result'
   callToolId: string
-  /**工具名称 */
+  /** 工具名称 */
   toolName: string
   /** 工具显示名称（多语言） */
   verboseName?: AIOutputI18n
@@ -669,4 +669,6 @@ export interface ChatStoreState {
       onDelContent: (mapKey: string) => void
     } & Omit<ReActChatRenderElement, 'isHistory'>,
   )
+
+  replaceItemToken(oldToken: string, newToken: string)
 }

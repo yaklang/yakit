@@ -329,8 +329,8 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   })
   store.getState().updatePlanTree(newPlanTree)
 
-  const taskID = meta.currentTaskPlanID?.taskID ? `${meta.currentTaskPlanID.taskID}-${info.task.task_id}` : undefined
-  if (!taskID) return
+  if (!meta.currentTaskPlanID?.taskID || !info.task.task_id) return
+  const taskID = `${meta.currentTaskPlanID.taskID}-${info.task.task_id}`
   const chatDetail = rawData.contents.get(taskID)
   if (chatDetail && chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
     requestInfo.pushLog({ level: 'error', message: `${info.task.index}-push_task数据已存在` })
@@ -380,8 +380,8 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
   })
   store.getState().updatePlanTree(newPlanTree)
 
-  const taskID = meta.currentTaskPlanID?.taskID ? `${meta.currentTaskPlanID.taskID}-${info.task.task_id}` : undefined
-  if (!taskID) return
+  if (!meta.currentTaskPlanID?.taskID || !info.task.task_id) return
+  const taskID = `${meta.currentTaskPlanID.taskID}-${info.task.task_id}`
   const chatDetail = rawData.contents.get(taskID)
   if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
     requestInfo.pushLog({ level: 'error', message: `${info.task.index}-pop_task数据不存在` })

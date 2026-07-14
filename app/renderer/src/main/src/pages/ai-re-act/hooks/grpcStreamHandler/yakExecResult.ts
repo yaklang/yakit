@@ -16,6 +16,8 @@ const handleStatus: AIMessageHandler = (request) => {
       // 任务规划-loading展示标题
       store.getState().updateTaskLoadingStatus({ task: data.value || '加载中...' })
     } else {
+      // 只展示自由对话问题的相关title
+      if (res.TaskId !== store.getState().currentCasualTaskID) return
       // 自由对话-loading展示标题
       store.getState().updateState({ casualTitle: data.value })
     }
