@@ -21,6 +21,10 @@ import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownIn
 import { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
 import i18n from '@/i18n/i18n'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type {
+  CustomPluginExecuteFormValue,
+  PluginExecuteExtraFormValue,
+} from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 const tOriginal = i18n.getFixedT(null, 'store')
 
 /**
@@ -342,6 +346,12 @@ export interface PluginOpPageInfoProps {
   PluginType: string
   autoExecute: boolean
   noHTTPRequestTemplate: boolean
+  FormValue?: CustomPluginExecuteFormValue
+  ExtraParamsValue?: PluginExecuteExtraFormValue
+  /** 从插件执行历史找回时对应的历史记录 ID */
+  HistoryId?: string
+  /** 历史执行的运行时 ID */
+  RuntimeId?: string
 }
 interface PageInfoStoreProps {
   pages: Map<string, PageProps>

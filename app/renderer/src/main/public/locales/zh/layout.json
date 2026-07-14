@@ -79,7 +79,15 @@
       "restoreMenu": "复原菜单",
       "restoreMenuTip": "复原菜单提醒",
       "confirmRestoreMenu": "确认复原后，将重置常用插件菜单栏。是否确认复原？",
-      "commonPlugins": "常用插件"
+      "commonPlugins": "常用插件",
+      "pluginHistory": "插件历史",
+      "pluginHistoryRecent": "最近 {{count}}/{{limit}}",
+      "pluginHistoryRestore": "找回",
+      "pluginHistoryEmpty": "暂无插件执行历史",
+      "pluginHistorySourceHub": "插件商店",
+      "pluginHistorySourceExecution": "插件执行页",
+      "pluginHistoryStatusFinished": "已完成",
+      "pluginHistoryStatusStopped": "已停止"
     },
     "MenuMode": {
       "bruteForce": "爆破",

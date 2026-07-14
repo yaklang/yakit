@@ -79,7 +79,15 @@
       "restoreMenu": "復原選單",
       "restoreMenuTip": "復原選單提醒",
       "confirmRestoreMenu": "確認復原後，將重置常用外掛選單欄。是否確認復原？",
-      "commonPlugins": "常用外掛"
+      "commonPlugins": "常用外掛",
+      "pluginHistory": "外掛歷史",
+      "pluginHistoryRecent": "最近 {{count}}/{{limit}}",
+      "pluginHistoryRestore": "找回",
+      "pluginHistoryEmpty": "暫無外掛執行歷史",
+      "pluginHistorySourceHub": "外掛商店",
+      "pluginHistorySourceExecution": "外掛執行頁",
+      "pluginHistoryStatusFinished": "已完成",
+      "pluginHistoryStatusStopped": "已停止"
     },
     "MenuMode": {
       "bruteForce": "爆破",

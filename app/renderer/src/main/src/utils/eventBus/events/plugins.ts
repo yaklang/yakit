@@ -5,6 +5,8 @@ export type PluginsEventProps = {
   onRefSinglePluginExecution?: string
   /** 刷新Codec相关菜单 */
   onRefPluginCodecMenu?: string
+  /** 最近使用插件执行记录发生变化 */
+  refreshPluginExecutionHistory?: string
 
   // ---------- 插件列表相关通信 ----------
   /** 刷新插件商店列表(传 true 则同步刷新高级筛选条件) */

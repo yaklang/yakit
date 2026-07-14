@@ -79,7 +79,15 @@
       "restoreMenu": "Restore Menu",
       "restoreMenuTip": "Restore Menu Reminder",
       "confirmRestoreMenu": "After confirming restore, the frequently used plugins menu bar will be reset. Do you want to proceed?",
-      "commonPlugins": "Common Plugins"
+      "commonPlugins": "Common Plugins",
+      "pluginHistory": "Plugin History",
+      "pluginHistoryRecent": "Recent {{count}}/{{limit}}",
+      "pluginHistoryRestore": "Restore",
+      "pluginHistoryEmpty": "No plugin execution history",
+      "pluginHistorySourceHub": "Plugin Store",
+      "pluginHistorySourceExecution": "Plugin Execution Page",
+      "pluginHistoryStatusFinished": "Completed",
+      "pluginHistoryStatusStopped": "Stopped"
     },
     "MenuMode": {
       "bruteForce": "Brute Force",

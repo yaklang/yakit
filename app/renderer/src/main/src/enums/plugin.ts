@@ -1,4 +1,7 @@
 export enum RemotePluginGV {
+  /** @name 最近使用的单插件执行记录 */
+  SinglePluginExecutionHistory = 'single-plugin-execution-history',
+
   /** @name 插件详情-本地功能自动下载插件 */
   AutoDownloadPlugin = 'auto-download-plugin',
 

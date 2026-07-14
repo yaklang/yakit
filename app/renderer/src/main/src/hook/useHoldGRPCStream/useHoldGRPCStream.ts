@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { info, yakitFailed } from '../../utils/notification'
-import { useGetState, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from './useHoldGRPCStreamType'
 import { DefaultTabs } from './constant'
 import { DEFAULT_LOG_LIMIT, LIMIT_LOG_NUM_NAME } from '@/defaultConstants/HoldGRPCStream'
@@ -103,7 +103,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     return () => emiter.off('onUpdateLimitLogNum', setLimitLogNum)
   }, [])
 
-  const [streamInfo, setStreamInfo, getStreamInfo] = useGetState<HoldGRPCStreamInfo>({
+  const [streamInfo, setStreamInfo] = useState<HoldGRPCStreamInfo>({
     progressState: [],
     cardState: [],
     tabsState: [],
@@ -341,9 +341,9 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     // token-end
     const offEnd = yakitStream.onEnd(token, () => {
       isShowEnd && info(`[Mod] ${taskName} finished`)
-      handleResults()
+      const finalStreamInfo = handleResults()
       if (onEnd) {
-        onEnd(getStreamInfo())
+        onEnd(finalStreamInfo)
       }
     })
 
@@ -409,7 +409,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     // rules
     const rules: StreamResult.RuleData[] = [...ruleData.current]
 
-    setStreamInfo({
+    const nextStreamInfo: HoldGRPCStreamInfo = {
       progressState: cacheProgress,
       cardState: cacheCard,
       tabsState: tabs,
@@ -417,7 +417,9 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
       riskState: risks,
       logState: logs,
       rulesState: rules,
-    })
+    }
+    setStreamInfo(nextStreamInfo)
+    return nextStreamInfo
   })
 
   useEffect(() => {
@@ -472,5 +474,10 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     ruleData.current = []
   })
 
-  return [streamInfo, { start, stop, cancel, reset }] as const
+  /** 立即刷新并返回当前已经接收到的流结果，用于停止任务前保留部分执行结果 */
+  const snapshot = useMemoizedFn(() => {
+    return handleResults()
+  })
+
+  return [streamInfo, { start, stop, cancel, reset, snapshot }] as const
 }

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { ChevronDownIcon, ChevronUpIcon, SMViewGridAddIcon } from '@/assets/newIcon'
 import { PublicDefaultPluginIcon } from '@/routes/publicIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -17,6 +17,16 @@ import styles from './MenuPlugin.module.scss'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
+import {
+  getPluginExecutionHistoryPageInfo,
+  PLUGIN_EXECUTION_HISTORY_LIMIT,
+  PluginExecutionHistoryItem,
+  queryPluginExecutionHistory,
+} from '@/pages/plugins/pluginExecutionHistory'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { OutlineArrowleftIcon, OutlileHistoryIcon } from '@/assets/icon/outline'
+import { formatTimestamp } from '@/utils/timeUtil'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -30,7 +40,20 @@ interface MenuPluginProps {
 
 export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
   const { loading, pluginList, onMenuSelect, onRestore: restoreCallback } = props
-  const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout', 'yakitUi'])
+  const { t } = useI18nNamespaces(['yakitRoute', 'layout', 'yakitUi'])
+
+  const [executionHistory, setExecutionHistory] = useState<PluginExecutionHistoryItem[]>([])
+  const [historyVisible, setHistoryVisible] = useState<boolean>(false)
+  const refreshExecutionHistory = useMemoizedFn(() => {
+    queryPluginExecutionHistory()
+      .then(setExecutionHistory)
+      .catch(() => setExecutionHistory([]))
+  })
+  useEffect(() => {
+    refreshExecutionHistory()
+    emiter.on('refreshPluginExecutionHistory', refreshExecutionHistory)
+    return () => emiter.off('refreshPluginExecutionHistory', refreshExecutionHistory)
+  }, [refreshExecutionHistory])
 
   /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
   const onMenu = useMemoizedFn((pluginId: number, pluginName: string) => {
@@ -40,6 +63,16 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
       route: YakitRoute.Plugin_OP,
       pluginId: pluginId || 0,
       pluginName: pluginName || '',
+    })
+    setListShow(false)
+  })
+
+  const onHistoryMenu = useMemoizedFn((item: PluginExecutionHistoryItem) => {
+    onMenuSelect({
+      route: YakitRoute.Plugin_OP,
+      pluginId: item.pluginId,
+      pluginName: item.pluginName,
+      pluginOpPageInfo: getPluginExecutionHistoryPageInfo(item),
     })
     setListShow(false)
   })
@@ -87,7 +120,65 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
   })
 
   const [listShow, setListShow] = useState<boolean>(false)
+  const onOpenHistory = useMemoizedFn(() => {
+    refreshExecutionHistory()
+    setHistoryVisible(true)
+  })
+  const historyDom = useMemo(() => {
+    return (
+      <div className={styles['plugin-list-wrapper']}>
+        <div className={styles['history-body']}>
+          <div className={styles['history-header']}>
+            <YakitButton type="text2" icon={<OutlineArrowleftIcon />} onClick={() => setHistoryVisible(false)} />
+            <div className={styles['history-title']}>{t('Layout.MenuPlugin.pluginHistory')}</div>
+            <div className={styles['history-count']}>
+              {t('Layout.MenuPlugin.pluginHistoryRecent', {
+                count: executionHistory.length,
+                limit: PLUGIN_EXECUTION_HISTORY_LIMIT,
+              })}
+            </div>
+          </div>
+          <div className={styles['history-list']}>
+            {executionHistory.length > 0 ? (
+              executionHistory.map((item) => (
+                <div className={styles['history-item']} key={item.id}>
+                  <Avatar className={styles['history-avatar']} src={item.headImg} icon={<PublicDefaultPluginIcon />} />
+                  <div className={styles['history-info']}>
+                    <div className={classNames(styles['history-name'], 'content-ellipsis')} title={item.pluginName}>
+                      {item.pluginName}
+                    </div>
+                    <div className={styles['history-meta']}>
+                      <span>
+                        {item.source === 'plugin-hub'
+                          ? t('Layout.MenuPlugin.pluginHistorySourceHub')
+                          : t('Layout.MenuPlugin.pluginHistorySourceExecution')}
+                      </span>
+                      <span>
+                        {item.resultStatus === 'stopped'
+                          ? t('Layout.MenuPlugin.pluginHistoryStatusStopped')
+                          : t('Layout.MenuPlugin.pluginHistoryStatusFinished')}
+                      </span>
+                      <span>{formatTimestamp(Math.floor(item.executedAt / 1000))}</span>
+                    </div>
+                  </div>
+                  <YakitButton type="outline1" onClick={() => onHistoryMenu(item)}>
+                    {t('Layout.MenuPlugin.pluginHistoryRestore')}
+                  </YakitButton>
+                </div>
+              ))
+            ) : (
+              <div className={styles['history-empty']}>
+                <OutlileHistoryIcon />
+                <span>{t('Layout.MenuPlugin.pluginHistoryEmpty')}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }, [executionHistory, onHistoryMenu, t])
   const listDom = useMemo(() => {
+    if (historyVisible) return historyDom
     return (
       <div className={styles['plugin-list-wrapper']}>
         <div className={styles['list-body']}>
@@ -146,13 +237,19 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
             <SMViewGridAddIcon />
             {t('YakitButton.custom')}...
           </div>
-          <div className={classNames(styles['btn-style'], styles['restore-style'])} onClick={onClickRestore}>
-            {t('Layout.MenuPlugin.restoreMenu')}
+          <div className={styles['list-actions']}>
+            <div className={classNames(styles['btn-style'], styles['history-entry'])} onClick={onOpenHistory}>
+              <OutlileHistoryIcon />
+              {t('Layout.MenuPlugin.pluginHistory')}
+            </div>
+            <div className={classNames(styles['btn-style'], styles['restore-style'])} onClick={onClickRestore}>
+              {t('Layout.MenuPlugin.restoreMenu')}
+            </div>
           </div>
         </div>
       </div>
     )
-  }, [pluginList, loading, i18n.language])
+  }, [historyVisible, historyDom, pluginList, loading, onMenu, onCustom, onOpenHistory, onClickRestore, t])
 
   if (props.children) {
     return (
@@ -164,7 +261,10 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
           trigger={'click'}
           content={listDom}
           visible={listShow}
-          onVisibleChange={(visible) => setListShow(visible)}
+          onVisibleChange={(visible) => {
+            setListShow(visible)
+            if (!visible) setHistoryVisible(false)
+          }}
         >
           <div className={styles['body-style']}>{props.children}</div>
         </YakitPopover>
@@ -229,7 +329,10 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
               trigger={'click'}
               content={listDom}
               visible={listShow}
-              onVisibleChange={(visible) => setListShow(visible)}
+              onVisibleChange={(visible) => {
+                setListShow(visible)
+                if (!visible) setHistoryVisible(false)
+              }}
             >
               <div className={styles['body-style']}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
             </YakitPopover>

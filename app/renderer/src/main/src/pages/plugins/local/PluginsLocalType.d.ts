@@ -1,6 +1,12 @@
 import { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
 import { API } from '@/services/swagger/resposeType'
 import { ReactNode } from 'react'
+import type { PluginExecutionHistorySource } from '../pluginExecutionHistory'
+import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type {
+  CustomPluginExecuteFormValue,
+  PluginExecuteExtraFormValue,
+} from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 export interface LocalPluginExecuteProps {
   plugin: YakScript
@@ -17,6 +23,11 @@ export interface LocalPluginExecuteProps {
   input?: string
   noHTTPRequestTemplate?: boolean
   autoExecute?: boolean
+  historySource?: PluginExecutionHistorySource
+  initFormValue?: CustomPluginExecuteFormValue
+  initExtraParamsValue?: PluginExecuteExtraFormValue
+  initRuntimeId?: string
+  initStreamInfo?: HoldGRPCStreamInfo
 }
 
 export interface ExportYakScriptStreamRequest {
@@ -49,6 +60,11 @@ export interface PluginDetailsTabProps {
   input?: string
   noHTTPRequestTemplate?: boolean
   autoExecute?: boolean
+  historySource?: PluginExecutionHistorySource
+  initFormValue?: CustomPluginExecuteFormValue
+  initExtraParamsValue?: PluginExecuteExtraFormValue
+  initRuntimeId?: string
+  initStreamInfo?: HoldGRPCStreamInfo
 }
 export interface PluginGroupList extends API.PluginsSearch {
   groupExtraOptBtn?: React.ReactElement

@@ -2469,7 +2469,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const extraOpenMenuPage = useMemoizedFn((routeInfo: RouteToPageProps) => {
     // 插件页面新开一级tab页（特殊处理）
     if (routeInfo.route === YakitRoute.Plugin_OP) {
-      openMenuPage(routeInfo)
+      openMenuPage(routeInfo, {
+        pageParams: routeInfo.pluginOpPageInfo
+          ? {
+              pluginOpPageInfo: routeInfo.pluginOpPageInfo,
+            }
+          : undefined,
+      })
       return
     }
     // 判断页面是否打开，打开则定位该页面，未打开则打开页面

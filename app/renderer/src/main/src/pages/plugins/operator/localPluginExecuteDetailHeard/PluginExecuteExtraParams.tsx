@@ -58,6 +58,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
       setVisible,
       onSave,
       jsonSchemaListRef,
+      jsonSchemaInitial,
     } = props
 
     const [form] = Form.useForm()
@@ -72,7 +73,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
       if (visible) {
         form.setFieldsValue({ ...extraParamsValue })
       }
-    }, [visible, extraParamsValue])
+    }, [form, visible, extraParamsValue])
     const onClose = useMemoizedFn(() => {
       onSaveSetting()
     })
@@ -121,6 +122,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                 extraParamsGroup={extraParamsGroup}
                 pluginType={pluginType}
                 jsonSchemaListRef={jsonSchemaListRef}
+                jsonSchemaInitial={jsonSchemaInitial}
               />
               <div className={styles['to-end']}>已经到底啦～</div>
             </Form>
@@ -135,7 +137,12 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                     <div className={styles['text-style']}>自定义参数 (非必填)</div>
                     <div className={styles['divider-style']}></div>
                   </div>
-                  <ExtraParamsNodeByType extraParamsGroup={extraParamsGroup} pluginType={pluginType} />
+                  <ExtraParamsNodeByType
+                    extraParamsGroup={extraParamsGroup}
+                    pluginType={pluginType}
+                    jsonSchemaListRef={jsonSchemaListRef}
+                    jsonSchemaInitial={jsonSchemaInitial}
+                  />
                 </>
               )}
               {!hiddenFixedParams && (
@@ -190,7 +197,14 @@ interface ExtraParamsNodeByTypeProps extends JsonFormSchemaListWrapper {
   wrapperClassName?: string
 }
 export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
-  const { extraParamsGroup, pluginType, jsonSchemaListRef, isDefaultActiveKey = true, wrapperClassName } = props
+  const {
+    extraParamsGroup,
+    pluginType,
+    jsonSchemaListRef,
+    jsonSchemaInitial,
+    isDefaultActiveKey = true,
+    wrapperClassName,
+  } = props
   const defaultActiveKey = useMemo(() => {
     if (!isDefaultActiveKey) return undefined
     return extraParamsGroup.map((ele) => ele.group)
@@ -204,7 +218,12 @@ export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React
         <YakitPanel key={`${item.group}`} header={`参数组：${item.group}`}>
           {item.data?.map((formItem) => (
             <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
-              <FormContentItemByType item={formItem} pluginType={pluginType} jsonSchemaListRef={jsonSchemaListRef} />
+              <FormContentItemByType
+                item={formItem}
+                pluginType={pluginType}
+                jsonSchemaListRef={jsonSchemaListRef}
+                jsonSchemaInitial={jsonSchemaInitial}
+              />
             </React.Fragment>
           ))}
         </YakitPanel>

@@ -37,6 +37,11 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
     input,
     noHTTPRequestTemplate,
     autoExecute,
+    historySource,
+    initFormValue,
+    initExtraParamsValue,
+    initRuntimeId,
+    initStreamInfo,
   } = props
 
   // 激活tab
@@ -65,6 +70,11 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
                 input={input}
                 noHTTPRequestTemplate={noHTTPRequestTemplate}
                 autoExecute={autoExecute}
+                historySource={historySource}
+                initFormValue={initFormValue}
+                initExtraParamsValue={initExtraParamsValue}
+                initRuntimeId={initRuntimeId}
+                initStreamInfo={initStreamInfo}
               />
             ) : (
               <YakitSpin wrapperClassName={styles['plugin-execute-spin']} />

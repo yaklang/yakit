@@ -3,10 +3,11 @@ import { ReactNode } from 'react'
 import { YakParamProps } from '../../pluginsType'
 import { KVPair } from '@/models/kv'
 import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { FormInstance } from 'antd'
 import { ExpandAndRetractExcessiveState } from '../expandAndRetract/ExpandAndRetract'
 import { JsonFormSchemaListWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
+import type { PluginExecutionHistoryItem, PluginExecutionHistorySource } from '../../pluginExecutionHistory'
 export interface PluginExecuteDetailHeardProps {
   token: string
   /**插件 */
@@ -18,6 +19,7 @@ export interface PluginExecuteDetailHeardProps {
     stop: () => void
     cancel: () => void
     reset: () => void
+    snapshot: () => HoldGRPCStreamInfo
   }
   progressList: StreamResult.Progress[]
   runtimeId: string
@@ -37,6 +39,11 @@ export interface PluginExecuteDetailHeardProps {
   input?: string
   noHTTPRequestTemplate?: boolean
   autoExecute?: boolean
+  historySource?: PluginExecutionHistorySource
+  initFormValue?: CustomPluginExecuteFormValue
+  initExtraParamsValue?: PluginExecuteExtraFormValue
+  onExecutionHistoryStart?: (item: PluginExecutionHistoryItem) => void
+  onExecutionHistoryStop?: (streamInfo: HoldGRPCStreamInfo) => void
 }
 
 export interface YakExtraParamProps {

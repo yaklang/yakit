@@ -12,6 +12,10 @@ import { apiDownloadPluginOther } from '../utils'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import cloneDeep from 'lodash/cloneDeep'
+import { savePluginExecutionHistory } from '../pluginExecutionHistory'
+import type { PluginExecutionHistoryItem, PluginExecutionHistoryStatus } from '../pluginExecutionHistory'
+import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 
 export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo((props) => {
   const {
@@ -26,31 +30,74 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
     input,
     noHTTPRequestTemplate,
     autoExecute,
+    historySource,
+    initFormValue,
+    initExtraParamsValue,
+    initRuntimeId,
+    initStreamInfo,
   } = props
   const { t } = useI18nNamespaces(['plugin'])
   /**执行状态 */
   const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>('default')
-  const [runtimeId, setRuntimeId] = useState<string>('')
+  const [runtimeId, setRuntimeId] = useState<string>(initRuntimeId || '')
+  const [restoredStreamInfo, setRestoredStreamInfo] = useState(initStreamInfo)
   const [downLoading, setDownLoading] = useState<boolean>(false)
 
   const tokenRef = useRef<string>(randomString(40))
+  const runtimeIdRef = useRef<string>(initRuntimeId || '')
+  const historyItemRef = useRef<PluginExecutionHistoryItem>()
+  const historySaveQueueRef = useRef<Promise<void>>(Promise.resolve())
+
+  const queueHistorySave = useMemoizedFn((item: PluginExecutionHistoryItem) => {
+    historySaveQueueRef.current = historySaveQueueRef.current
+      .catch(() => undefined)
+      .then(() => savePluginExecutionHistory(item))
+      .catch(() => undefined)
+  })
+  const persistExecutionHistory = useMemoizedFn(
+    (finalStreamInfo: HoldGRPCStreamInfo, resultStatus: PluginExecutionHistoryStatus) => {
+      if (!historyItemRef.current) return
+      queueHistorySave({
+        ...historyItemRef.current,
+        runtimeId: runtimeIdRef.current,
+        streamInfo: cloneDeep(finalStreamInfo),
+        resultRecorded: true,
+        resultStatus,
+      })
+      historyItemRef.current = undefined
+    },
+  )
+  const onRuntimeIdChange = useMemoizedFn((rId: string) => {
+    runtimeIdRef.current = rId
+    setRuntimeId(rId)
+    if (!rId) setRestoredStreamInfo(undefined)
+  })
+  const onExecutionHistoryStart = useMemoizedFn((item: PluginExecutionHistoryItem) => {
+    historyItemRef.current = item
+  })
+
   useEffect(() => {
     setExecuteStatus('default')
-  }, [plugin.ScriptName])
+    historyItemRef.current = undefined
+    runtimeIdRef.current = initRuntimeId || ''
+    setRuntimeId(initRuntimeId || '')
+    setRestoredStreamInfo(initStreamInfo)
+  }, [plugin.ScriptName, initRuntimeId, initStreamInfo])
 
   const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
     taskName: 'debug-plugin',
     apiKey: 'DebugPlugin',
     token: tokenRef.current,
-    onEnd: () => {
+    onEnd: (finalStreamInfo) => {
       debugPluginStreamEvent.stop()
+      if (finalStreamInfo) persistExecutionHistory(finalStreamInfo, 'finished')
       setTimeout(() => {
         setExecuteStatus('finished')
       }, 300)
     },
     setRuntimeId: (rId) => {
       yakitNotify('info', `调试任务启动成功，运行时 ID: ${rId}`)
-      setRuntimeId(rId)
+      onRuntimeIdChange(rId)
     },
   })
   const isExecuting = useCreation(() => {
@@ -58,8 +105,9 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
     return false
   }, [executeStatus])
   const isShowResult = useMemo(() => {
-    return isExecuting || runtimeId
-  }, [isExecuting, runtimeId])
+    return isExecuting || runtimeId || restoredStreamInfo
+  }, [isExecuting, runtimeId, restoredStreamInfo])
+  const resultStreamInfo = useMemo(() => restoredStreamInfo || streamInfo, [restoredStreamInfo, streamInfo])
   /**更新:下载插件 */
   const onDownPlugin = useMemoizedFn(() => {
     if (!plugin.UUID) return
@@ -87,7 +135,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
         debugPluginStreamEvent={debugPluginStreamEvent}
         progressList={streamInfo.progressState}
         runtimeId={runtimeId}
-        setRuntimeId={setRuntimeId}
+        setRuntimeId={onRuntimeIdChange}
         executeStatus={executeStatus}
         setExecuteStatus={setExecuteStatus}
         linkPluginConfig={linkPluginConfig}
@@ -100,10 +148,15 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
         input={input}
         noHTTPRequestTemplate={noHTTPRequestTemplate}
         autoExecute={autoExecute}
+        historySource={historySource}
+        initFormValue={initFormValue}
+        initExtraParamsValue={initExtraParamsValue}
+        onExecutionHistoryStart={onExecutionHistoryStart}
+        onExecutionHistoryStop={(stoppedStreamInfo) => persistExecutionHistory(stoppedStreamInfo, 'stopped')}
       />
       {isShowResult && (
         <PluginExecuteResult
-          streamInfo={streamInfo}
+          streamInfo={resultStreamInfo}
           runtimeId={runtimeId}
           loading={isExecuting}
           defaultActiveKey={plugin.Type === 'yak' ? t('PluginExecResultDefaultTabs.log') : undefined}

@@ -778,6 +778,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                           isHiddenUUID={true}
                           infoExtra={infoExtraNode}
                           hiddenUpdateBtn={true}
+                          historySource="plugin-hub"
                         />
                       ) : (
                         <div className={styles['tab-pane-empty']}>

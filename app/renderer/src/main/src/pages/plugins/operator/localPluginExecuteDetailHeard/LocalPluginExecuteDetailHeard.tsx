@@ -46,6 +46,7 @@ import { grpcFetchExpressionToResult } from '@/pages/pluginHub/utils/grpc'
 import { getJsonSchemaListResult, JsonFormWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
+import type { PluginExecutionHistoryItem } from '../../pluginExecutionHistory'
 
 const PluginExecuteExtraParams = React.lazy(() => import('./PluginExecuteExtraParams'))
 
@@ -71,6 +72,11 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     input,
     noHTTPRequestTemplate,
     autoExecute,
+    historySource,
+    initFormValue: historyFormValue,
+    initExtraParamsValue: historyExtraParamsValue,
+    onExecutionHistoryStart,
+    onExecutionHistoryStop,
   } = props
 
   const [form] = Form.useForm()
@@ -79,11 +85,13 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   /**是否显示更新按钮 */
   const [isShowUpdate, setIsShowUpdate] = useState<boolean>(false)
 
-  const [isExpand, setIsExpand] = useState<boolean>(true)
+  // 历史找回页已有 runtimeId，默认收起参数区，直接露出上次执行结果
+  const [isExpand, setIsExpand] = useState<boolean>(!runtimeId)
   /**额外参数弹出框 */
   const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
   const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
     ...defPluginExecuteFormValue,
+    ...historyExtraParamsValue,
   })
 
   const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>({})
@@ -184,9 +192,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
       initRequiredFormValue.Input = input
     }
     // console.log('必填参数', initRequiredFormValue)
-    form.setFieldsValue(initRequiredFormValue)
+    form.setFieldsValue({ ...initRequiredFormValue, ...historyFormValue })
   })
   const initExtraFormValue = useMemoizedFn(() => {
+    setExtraParamsValue({ ...defPluginExecuteFormValue, ...historyExtraParamsValue })
     // 额外参数
     let initExtraFormValue: CustomPluginExecuteFormValue = {}
     const extraParamsList = plugin.Params?.filter((ele) => !ele.Required) || []
@@ -220,6 +229,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             pluginType={plugin.Type}
             isExecuting={isExecuting}
             jsonSchemaListRef={jsonSchemaListRef}
+            jsonSchemaInitial={initExecParamsValue}
             isInline
           />
         )
@@ -240,6 +250,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 pluginType={plugin.Type}
                 isExecuting={isExecuting}
                 jsonSchemaListRef={jsonSchemaListRef}
+                jsonSchemaInitial={initExecParamsValue}
               />
             ) : null}
             <OutputFormComponentsByType
@@ -259,6 +270,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                 pluginType={plugin.Type}
                 isExecuting={isExecuting}
                 jsonSchemaListRef={jsonSchemaListRef}
+                jsonSchemaInitial={initExecParamsValue}
               />
             ) : null}
             <PluginFixFormParams form={form} disabled={isExecuting} />
@@ -316,6 +328,27 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
       token: token,
       pluginCustomParams: plugin.Params,
     }).then(() => {
+      if (historySource && onExecutionHistoryStart) {
+        const historyItem: PluginExecutionHistoryItem = {
+          id: `${plugin.UUID || plugin.Id || plugin.ScriptName}-${Date.now()}`,
+          pluginId: Number(plugin.Id) || 0,
+          pluginName: plugin.ScriptName,
+          pluginUUID: plugin.UUID || undefined,
+          pluginType: plugin.Type,
+          headImg: plugin.HeadImg || undefined,
+          source: historySource,
+          executedAt: Date.now(),
+          input: value['Input'],
+          execParams: yakExecutorParams,
+          formValue: { ...value, ...customExtraParamsValue },
+          extraParamsValue: { ...extraParamsValue },
+          httpRequestTemplate: executeParams.HTTPRequestTemplate,
+          linkPluginConfig,
+          code: code || undefined,
+          noHTTPRequestTemplate,
+        }
+        onExecutionHistoryStart(historyItem)
+      }
       setExecuteStatus('process')
       setIsExpand(false)
       debugPluginStreamEvent.start()
@@ -325,6 +358,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   const onStopExecute = useMemoizedFn((e) => {
     e.stopPropagation()
     apiCancelDebugPlugin(token).then(() => {
+      const stoppedStreamInfo = debugPluginStreamEvent.snapshot()
+      onExecutionHistoryStop?.(stoppedStreamInfo)
       debugPluginStreamEvent.stop()
       setExecuteStatus('finished')
     })
@@ -524,6 +559,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
           setVisible={setExtraParamsVisible}
           onSave={onSaveExtraParams}
           jsonSchemaListRef={jsonSchemaListRef}
+          jsonSchemaInitial={initExecParamsValue}
         />
       </React.Suspense>
     </>

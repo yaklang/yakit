@@ -20,7 +20,7 @@ import { MenuDNSLog } from './MenuDNSLog'
 import { MenuMode } from './MenuMode'
 import { useMemoizedFn } from 'ahooks'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { YakitMenu, YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { MenuPlugin } from './MenuPlugin'
 import { yakitNotify } from '@/utils/notification'
 import { useStore } from '@/store'
@@ -56,8 +56,22 @@ import emiter from '@/utils/eventBus/eventBus'
 import { grpcQueryNote } from '@/pages/notepadManage/notepadManage/utils'
 import { defaultNoteFilter } from '@/defaultConstants/ModifyNotepad'
 import { genDefaultPagination } from '@/pages/invoker/schema'
+import type { PluginOpPageInfoProps } from '@/store/pageInfo'
+import { Avatar } from 'antd'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import {
+  getPluginExecutionHistoryPageInfo,
+  PLUGIN_EXECUTION_HISTORY_LIMIT,
+  PluginExecutionHistoryItem,
+  queryPluginExecutionHistory,
+} from '@/pages/plugins/pluginExecutionHistory'
+import { PublicDefaultPluginIcon } from '@/routes/publicIcon'
+import { OutlileHistoryIcon } from '@/assets/icon/outline'
+import { formatTimestamp } from '@/utils/timeUtil'
+import menuPluginStyles from './MenuPlugin.module.scss'
 
 const { ipcRenderer } = window.require('electron')
+const PLUGIN_HISTORY_MENU_KEY = 'plugin-execution-history'
 
 /**
  * @name Route信息(用于打开页面)
@@ -69,6 +83,7 @@ export interface RouteToPageProps {
   route: YakitRoute
   pluginId?: number
   pluginName?: string
+  pluginOpPageInfo?: PluginOpPageInfoProps
 }
 interface PublicMenuProps {
   defaultExpand: boolean
@@ -369,6 +384,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             route: YakitRoute.Plugin_OP,
             pluginName: info.ScriptName || menuItem.pluginName,
             pluginId: +info.Id || 0,
+            pluginOpPageInfo: menuItem.pluginOpPageInfo,
           })
           updateSingleMenu({ pluginName: info.ScriptName, pluginId: +info.Id || 0, headImg: info.HeadImg }, source)
         } else {
@@ -409,6 +425,10 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
 
   // 收起菜单的点击回调
   const onNoExpandClickMenu = useMemoizedFn((key: string, keyPath: string[]) => {
+    if (key === PLUGIN_HISTORY_MENU_KEY) {
+      onOpenPluginHistory()
+      return
+    }
     setNoExpandMenu(-1)
     const data = keyToRouteInfo(key)
 
@@ -431,6 +451,27 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   })
 
   const [noExpandMenu, setNoExpandMenu] = useState<number>(-1)
+  const [pluginHistoryVisible, setPluginHistoryVisible] = useState<boolean>(false)
+  const [pluginHistory, setPluginHistory] = useState<PluginExecutionHistoryItem[]>([])
+  const onOpenPluginHistory = useMemoizedFn(() => {
+    setNoExpandMenu(-1)
+    queryPluginExecutionHistory()
+      .then(setPluginHistory)
+      .catch(() => setPluginHistory([]))
+      .finally(() => setPluginHistoryVisible(true))
+  })
+  const onRestorePluginHistory = useMemoizedFn((item: PluginExecutionHistoryItem) => {
+    setPluginHistoryVisible(false)
+    onCheckPlugin(
+      {
+        route: YakitRoute.Plugin_OP,
+        pluginId: item.pluginId,
+        pluginName: item.pluginName,
+        pluginOpPageInfo: getPluginExecutionHistoryPageInfo(item),
+      },
+      'plugin',
+    )
+  })
   // 收起状态下的菜单组件
   const noExpand = useMemo(() => {
     const plugins: EnhancedPublicRouteMenuProps[] = []
@@ -443,24 +484,29 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     return (
       <>
         {defaultMenu.map((item, index) => {
-          const data =
-            item.label === '插件'
-              ? routeToMenu(
-                  (item.children || []).concat(
-                    plugins.length === 0
-                      ? []
-                      : [
-                          {
-                            page: undefined,
-                            label: t('Layout.MenuPlugin.commonPlugins'),
-                            menuName: '常用插件',
-                            children: plugins,
-                          },
-                        ],
-                  ),
-                  t,
-                )
-              : routeToMenu(item.children || [], t)
+          let data: YakitMenuItemProps[] = []
+          if (item.label === '插件') {
+            data = routeToMenu(
+              (item.children || []).concat([
+                {
+                  page: undefined,
+                  label: t('Layout.MenuPlugin.commonPlugins'),
+                  menuName: '常用插件',
+                  children: plugins,
+                },
+              ]),
+              t,
+            )
+            const commonPluginMenu = data.find((menu) => menu.key.includes('常用插件'))
+            if (commonPluginMenu && !commonPluginMenu.children) commonPluginMenu.children = []
+            commonPluginMenu?.children?.unshift({
+              label: t('Layout.MenuPlugin.pluginHistory'),
+              key: PLUGIN_HISTORY_MENU_KEY,
+              itemIcon: <OutlileHistoryIcon />,
+            })
+          } else {
+            data = routeToMenu(item.children || [], t)
+          }
           const isOnlyFirst = !item.children && item.page
           return (
             <YakitPopover
@@ -719,6 +765,65 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
           </div>
         )}
       </div>
+      <YakitModal
+        visible={pluginHistoryVisible}
+        title={t('Layout.MenuPlugin.pluginHistory')}
+        subTitle={t('Layout.MenuPlugin.pluginHistoryRecent', {
+          count: pluginHistory.length,
+          limit: PLUGIN_EXECUTION_HISTORY_LIMIT,
+        })}
+        width={640}
+        footer={null}
+        bodyStyle={{ padding: 0 }}
+        onCancel={() => setPluginHistoryVisible(false)}
+      >
+        <div className={menuPluginStyles['plugin-list-wrapper']} style={{ width: '100%' }}>
+          <div className={menuPluginStyles['history-body']}>
+            <div className={menuPluginStyles['history-list']}>
+              {pluginHistory.length > 0 ? (
+                pluginHistory.map((item) => (
+                  <div className={menuPluginStyles['history-item']} key={item.id}>
+                    <Avatar
+                      className={menuPluginStyles['history-avatar']}
+                      src={item.headImg}
+                      icon={<PublicDefaultPluginIcon />}
+                    />
+                    <div className={menuPluginStyles['history-info']}>
+                      <div
+                        className={classNames(menuPluginStyles['history-name'], 'content-ellipsis')}
+                        title={item.pluginName}
+                      >
+                        {item.pluginName}
+                      </div>
+                      <div className={menuPluginStyles['history-meta']}>
+                        <span>
+                          {item.source === 'plugin-hub'
+                            ? t('Layout.MenuPlugin.pluginHistorySourceHub')
+                            : t('Layout.MenuPlugin.pluginHistorySourceExecution')}
+                        </span>
+                        <span>
+                          {item.resultStatus === 'stopped'
+                            ? t('Layout.MenuPlugin.pluginHistoryStatusStopped')
+                            : t('Layout.MenuPlugin.pluginHistoryStatusFinished')}
+                        </span>
+                        <span>{formatTimestamp(Math.floor(item.executedAt / 1000))}</span>
+                      </div>
+                    </div>
+                    <YakitButton type="outline1" onClick={() => onRestorePluginHistory(item)}>
+                      {t('Layout.MenuPlugin.pluginHistoryRestore')}
+                    </YakitButton>
+                  </div>
+                ))
+              ) : (
+                <div className={menuPluginStyles['history-empty']}>
+                  <OutlileHistoryIcon />
+                  <span>{t('Layout.MenuPlugin.pluginHistoryEmpty')}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </YakitModal>
     </div>
   )
 })

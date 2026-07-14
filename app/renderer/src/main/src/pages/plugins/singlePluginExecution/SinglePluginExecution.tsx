@@ -28,6 +28,8 @@ import { PageNodeItemProps, PluginOpPageInfoProps, usePageInfo } from '@/store/p
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { CustomPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import { queryPluginExecutionHistory } from '../pluginExecutionHistory'
+import type { PluginExecutionHistoryItem } from '../pluginExecutionHistory'
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
   // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -68,6 +70,8 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     return undefined
   })
   const [pageInfo, setPageInfo] = useState<PluginOpPageInfoProps | undefined>(initPageInfo())
+  const [historyResult, setHistoryResult] = useState<PluginExecutionHistoryItem>()
+  const [historyLoading, setHistoryLoading] = useState<boolean>(!!pageInfo?.HistoryId)
   const [yakScriptId, setYakScriptId] = useState<number>(props.yakScriptId)
   const [refreshList, setRefreshList] = useState<boolean>(false)
 
@@ -86,6 +90,31 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
   useEffect(() => {
     getPluginById()
   }, [yakScriptId])
+  useEffect(() => {
+    const historyId = pageInfo?.HistoryId
+    if (!historyId) {
+      setHistoryResult(undefined)
+      setHistoryLoading(false)
+      return
+    }
+
+    let active = true
+    setHistoryLoading(true)
+    queryPluginExecutionHistory()
+      .then((history) => {
+        if (!active) return
+        setHistoryResult(history.find((item) => item.id === historyId))
+      })
+      .catch(() => {
+        if (active) setHistoryResult(undefined)
+      })
+      .finally(() => {
+        if (active) setHistoryLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [pageInfo?.HistoryId])
   useEffect(() => {
     if (inViewport) emiter.on('onRefSinglePluginExecution', getYakScriptByOnlineID)
     return () => {
@@ -260,7 +289,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         pluginGroupExcludeType={pluginGroupExcludeType}
       >
         <PluginDetailsTab
-          executorShow={!pluginLoading}
+          executorShow={!pluginLoading && !historyLoading}
           plugin={plugin}
           headExtraNode={headExtraNode}
           linkPluginConfig={linkPluginConfig}
@@ -269,6 +298,11 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
           input={pageInfo?.Input || ''}
           noHTTPRequestTemplate={pageInfo?.noHTTPRequestTemplate}
           autoExecute={pageInfo?.autoExecute}
+          historySource="plugin-op"
+          initFormValue={pageInfo?.FormValue}
+          initExtraParamsValue={pageInfo?.ExtraParamsValue}
+          initRuntimeId={historyResult?.runtimeId || pageInfo?.RuntimeId}
+          initStreamInfo={historyResult?.streamInfo}
         />
       </PluginLocalListDetails>
 
