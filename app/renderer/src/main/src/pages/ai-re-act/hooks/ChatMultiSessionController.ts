@@ -386,14 +386,14 @@ export class ChatMultiSessionController {
           break
         case 'task':
           if (params.IsInteractiveMessage && params.InteractiveId) {
-            const isExist = store.getState().currentPlanReviewToken === params.InteractiveId
+            const isExist = store.getState().currentPlanReviewToken.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
               return
             }
 
-            store.getState().updateState({ currentPlanReviewToken: '' })
+            store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
             switch (review.type) {
               case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
               case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
@@ -656,10 +656,10 @@ export class ChatMultiSessionController {
       }
     } else if (chatType === 'task') {
       const currentReview = store.getState().currentPlanReviewToken
-      if (!currentReview || currentReview !== reviewToken) return
+      if (!currentReview.token || currentReview.token !== reviewToken) return
 
-      rawData.contents.delete(currentReview)
-      store.getState().updateState({ currentPlanReviewToken: '' })
+      rawData.contents.delete(currentReview.token)
+      store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
     }
   }
 

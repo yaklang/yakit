@@ -531,7 +531,7 @@ export interface ChatStoreState {
    * 任务规划当前显示的review数据
    * 通过token去rawData中contents里取数据，token是唯一的
    */
-  currentPlanReviewToken: string
+  currentPlanReviewToken: { token: string; renderNum: number }
   /**
    * 当前review是plan时，异步数据的更新版本
    * aiChat.d.ts AIAgentChatMetaData planReviewExtraData

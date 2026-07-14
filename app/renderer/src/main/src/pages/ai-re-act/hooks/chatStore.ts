@@ -44,7 +44,7 @@ export const createChatStore = () => {
       taskStatus: cloneDeep(DefaultPlanLoadingStatus),
 
       currentCasualReview: [],
-      currentPlanReviewToken: '',
+      currentPlanReviewToken: { token: '', renderNum: 0 },
       currentPlanReviewExtraUpdate: 0,
 
       items: {},
