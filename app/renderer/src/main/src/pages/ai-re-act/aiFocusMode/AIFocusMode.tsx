@@ -124,7 +124,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                 <span className={styles['select-option-text']} title={`${item.label}`}>
                   {item.label}
                 </span>
-                {props.disabled ?? <OutlineXIcon className={styles['icon-wrapper']} onClick={onRemove} />}
+                {!props.disabled && <OutlineXIcon className={styles['icon-wrapper']} onClick={onRemove} />}
               </div>
             }
           >
