@@ -220,7 +220,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
 
           <div className={styles['yakit-loading-title']}>
             <div className={styles['title-style']}>{Title}</div>
-            {isCommunityEdition() && <div className={styles['subtitle-stlye']}>{loadingTitle}</div>}
+            {/* {isCommunityEdition() && <div className={styles['subtitle-stlye']}>{loadingTitle}</div>} */}
           </div>
 
           <div className={styles['yakit-loading-content']}>
