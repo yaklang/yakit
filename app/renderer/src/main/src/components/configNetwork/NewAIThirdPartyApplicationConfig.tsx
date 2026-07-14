@@ -355,7 +355,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       readOnly,
     } = props
 
-    const { t, i18n } = useI18nNamespaces(['configNetwork'])
+    const { t, i18nRefresh } = useI18nNamespaces(['configNetwork'])
     const [form] = Form.useForm()
     const typeVal = Form.useWatch('Type', form)
     const [options, setOptions] = useState<SelectOptionsProps[]>([])
@@ -438,7 +438,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
 
     const newDefaultAIFormItemsOfAI = useCreation(() => {
       return buildDefaultAIFormItemsForType(typeVal, t)
-    }, [typeVal, i18n.language])
+    }, [typeVal, i18nRefresh])
 
     const newOptionalAIFormItemsOfAI = useCreation(() => {
       return buildOptionalAIFormItemsForType(typeVal, enableEndpointWatch)

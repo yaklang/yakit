@@ -19,7 +19,7 @@ import classNames from 'classnames'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const { info, timestamp } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { type, data } = info
   const { chatIPCData } = useChatIPCStore()
 
@@ -65,7 +65,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
       default:
         return t('AIReviewResult.reviewDecision')
     }
-  }, [type, i18n.language])
+  }, [type, i18nRefresh])
   const userAction = useCreation(() => {
     let btnText: string = ''
     let userInput: string = ''
@@ -99,7 +99,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
       btnText,
       userInput,
     }
-  }, [type, data, i18n.language])
+  }, [type, data, i18nRefresh])
   const renderContent = useMemoizedFn(() => {
     let paramsValue = !!userAction.userInput ? <PreWrapper code={userAction.userInput} /> : null
     switch (type) {

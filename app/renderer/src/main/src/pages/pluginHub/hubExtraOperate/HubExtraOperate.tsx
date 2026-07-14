@@ -80,7 +80,7 @@ export interface HubExtraOperateProps {
 
 export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
   forwardRef((props, ref) => {
-    const { t, i18n } = useI18nNamespaces(['pluginHub', 'yakitUi'])
+    const { t, i18nRefresh } = useI18nNamespaces(['pluginHub', 'yakitUi'])
     const { getContainer, active, online, local, downloadLoading, onDownload, onEdit, onCallback } = props
     const isRemoteEngine = SystemInfo.mode === 'remote'
 
@@ -196,7 +196,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       if (second.length > 0) menus = [...menus, { type: 'divider' }, ...second]
 
       return menus
-    }, [isCorePlugin, online, local, isInMenu, i18n.language])
+    }, [isCorePlugin, online, local, isInMenu, i18nRefresh])
 
     useEffect(() => {
       getRemoteValue(RemotePluginGV.AutoDownloadPlugin)

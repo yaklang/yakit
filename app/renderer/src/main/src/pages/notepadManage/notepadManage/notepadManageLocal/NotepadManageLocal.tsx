@@ -57,7 +57,7 @@ const yakitTab: YakitTabsProps[] = [
   },
 ]
 const NotepadManageLocal: React.FC<NotepadManageLocalProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['notepad'])
+  const { t, i18nRefresh } = useI18nNamespaces(['notepad'])
   const [activeKey, setActiveKey] = useState<string>('全文搜索')
   const [show, setShow] = useState<boolean>(true)
   return (
@@ -72,7 +72,7 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = React.memo((props)
         firstNode={
           <div className={styles['note-local-left']}>
             <YakitSideTab
-              key={i18n.language}
+              key={i18nRefresh}
               show={show}
               setShow={setShow}
               yakitTabs={yakitTab}
@@ -101,7 +101,7 @@ const timeShow = {
   updated_at: 'UpdateAt',
 }
 const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['notepad', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['notepad', 'yakitUi'])
   const { goAddNotepad } = useGoEditNotepad()
   const emptyImageTarget = useEmptyImage('search')
   const [pageLoading, setPageLoading] = useState<boolean>(false)
@@ -218,7 +218,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
         ),
       },
     ]
-  }, [sorterKey, timeSortVisible, i18n.language])
+  }, [sorterKey, timeSortVisible, i18nRefresh])
 
   const selectNumber = useCreation(() => {
     if (allCheck) {

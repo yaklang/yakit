@@ -48,7 +48,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
   auditStyleLocked?: boolean
   onAuditStyleChange?: (style: IrifyAiCodeAuditStyle) => void
 }> = ({ placement, children, rootClassName, sideTabs, auditStyle, auditStyleLocked, onAuditStyleChange }) => {
-  const { t, i18n } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -163,7 +163,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
   const rail = (
     <div className={placement === 'left' ? styles.railLeft : styles.railRight}>
       <YakitSideTab
-        key={i18n.language}
+        key={i18nRefresh}
         t={t}
         type={placement === 'right' ? 'vertical-right' : undefined}
         yakitTabs={sideTabs}

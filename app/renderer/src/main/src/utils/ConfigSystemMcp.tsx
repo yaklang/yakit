@@ -48,7 +48,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     onClose,
     mcp: { mcpStreamInfo, mcpStreamEvent },
   } = props
-  const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['utils', 'yakitUi'])
 
   // MCP 是否已启用
   const enableMcp = useMemo(() => {
@@ -82,7 +82,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         label: <Tooltip title={t('ConfigSystemMcp.stdio_remote_disabled_tip')}>{item.label}</Tooltip>,
       }
     })
-  }, [isRemoteEngine, i18n.language])
+  }, [isRemoteEngine, i18nRefresh])
 
   useEffect(() => {
     ipcRenderer
@@ -272,7 +272,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         render: (text, record) => <YakitSwitch checked={text} onChange={(v) => handleToggle(v, record)} />,
       },
     ]
-  }, [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, i18n.language])
+  }, [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, i18nRefresh])
 
   const queyChangeUpdateData = useDebounceFn(
     () => {

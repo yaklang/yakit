@@ -1,6 +1,6 @@
 /**
  * i18n 命名空间枚举。
- * 名称与 `public/locales/zh/` 下的 JSON 文件一一对应，
+ * 名称与 `src/locales/zh/` 下的 JSON 文件一一对应，
  * 新增/删除翻译文件时请同步更新此处。
  */
 export enum I18nNamespaces {

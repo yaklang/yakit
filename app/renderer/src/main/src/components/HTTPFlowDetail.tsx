@@ -661,7 +661,7 @@ export interface HistoryHighLightText extends HighLightText {
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
   const { id, selectedFlow, refresh, analyzedIds, showHeaderInfo = false, showFlod = true } = props
-  const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history', 'yakitUi'])
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(ref)
   const [flow, setFlow, getFlow] = useGetSetState<HTTPFlow>()
@@ -967,7 +967,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
       },
       { label: t('HTTPFlowDetail.batchDeletion'), key: 'delete', type: 'danger' },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const onMultipleClick = useMemoizedFn((key: string) => {
     switch (key) {

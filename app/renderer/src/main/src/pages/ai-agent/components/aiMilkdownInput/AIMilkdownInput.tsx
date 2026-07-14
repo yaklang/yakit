@@ -67,7 +67,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
       chatDataStoreKey,
       onHttpFlowRemove,
     } = props
-    const { t, i18n } = useI18nNamespaces(['aiAgent'])
+    const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
 
@@ -241,7 +241,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(customPlugin)
         )
       },
-      [readonly, defaultValue, i18n.language],
+      [readonly, defaultValue, i18nRefresh],
     )
     useEffect(() => {
       if (loading) return

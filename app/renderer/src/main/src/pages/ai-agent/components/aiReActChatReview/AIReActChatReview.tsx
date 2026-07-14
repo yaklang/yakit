@@ -48,7 +48,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     className,
   } = props
   const { type, data: review } = info
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { chatIPCData } = useChatIPCStore()
   const { chatIPCEvents } = useChatIPCDispatcher()
   const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
@@ -129,7 +129,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         break
     }
     return { title: <span>{title}</span>, subTitle }
-  }, [type, countdown, i18n.language])
+  }, [type, countdown, i18nRefresh])
   const toolReview = useCreation(() => {
     if (type !== 'tool_use_review_require') return null
     const { tool, tool_description, reason, params } = review as AIAgentGrpcApi.ToolUseReviewRequire
@@ -163,7 +163,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         </div>
       </div>
     )
-  }, [review, i18n.language])
+  }, [review, i18nRefresh])
   const forgeReview = useCreation(() => {
     if (type !== 'exec_aiforge_review_require') return null
     const data = review as AIAgentGrpcApi.ExecForgeReview
@@ -214,7 +214,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       )
     }
     return null
-  }, [review, i18n.language])
+  }, [review, i18nRefresh])
   const planReview = useCreation(() => {
     if (reviewTrees.length > 0) {
       const list = !!reviewTreeOption ? reviewTrees : initReviewTreesRef.current
@@ -479,7 +479,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         </div>
       </>
     )
-  }, [review, requireQS, aiOptionsSelect, i18n.language])
+  }, [review, requireQS, aiOptionsSelect, i18nRefresh])
   //#endregion
   // 是否显示继续执行按钮
   const isContinue = useCreation(() => {
@@ -568,7 +568,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     isRequireQS,
     requireLoading,
     noAIOptionsList.showButton,
-    i18n.language,
+    i18nRefresh,
   ])
 
   const reviewHeardExtra = useCreation(() => {
@@ -607,7 +607,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         break
     }
     return node
-  }, [type, review, countdown, i18n.language])
+  }, [type, review, countdown, i18nRefresh])
 
   return (
     <>

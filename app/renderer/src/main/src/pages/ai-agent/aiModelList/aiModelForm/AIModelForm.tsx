@@ -501,7 +501,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => {
   const { testResult, onClose, onApplyRecommendConfig, aiModelType, model } = props
 
-  const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const [currentSelectShowType, setCurrentSelectShowType] = useState<
     'request' | 'response' | 'responseContent' | 'recommendConfig'
   >(testResult?.RecommendConfig ? 'recommendConfig' : 'responseContent') //选中的表格项
@@ -514,7 +514,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
       color: (isSuccess ? 'success' : 'danger') as YakitTagColor,
       text: isSuccess ? t('AIModelTestResult.testSuccess') : t('AIModelTestResult.testFailed'),
     }
-  }, [testResult, i18n.language])
+  }, [testResult, i18nRefresh])
   const data: HoldGRPCStreamProps.InfoCards[] = useCreation(() => {
     if (!testResult) return []
     const baseInfo: HoldGRPCStreamProps.InfoCards[] = [
@@ -550,7 +550,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
       },
     ]
     return baseInfo
-  }, [testResult, i18n.language])
+  }, [testResult, i18nRefresh])
   const onTypeOptionValChange = useMemoizedFn((typeOptionVal) => {
     if (typeOptionVal !== undefined) {
       setTypeOptionVal(typeOptionVal)

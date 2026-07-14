@@ -90,7 +90,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     getContainer,
     onHarExport,
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'components'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'components'])
   const [loading, setLoading] = useState<boolean>(false)
   const [selectItem, setSelectItem] = useState<number>()
   const [visible, setVisible] = useState<boolean>(false)
@@ -109,7 +109,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
   const beginNumberRef = useRef<number>(0)
   const fileNameMemo = useMemo(() => {
     return fileName || t('YakitRoute.portAssets')
-  }, [i18n.language, fileName])
+  }, [i18nRefresh, fileName])
 
   const toExcel = useMemoizedFn((query = { Limit: pageSize, Page: 1 }) => {
     setLoading(true)

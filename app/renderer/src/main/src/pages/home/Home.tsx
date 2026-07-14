@@ -131,7 +131,7 @@ interface ToolInfo {
 
 interface HomeProp {}
 const Home: React.FC<HomeProp> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'home'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'home'])
   const { softMode } = useSoftMode()
   const homeRef = useRef(null)
   const [inViewport] = useInViewport(homeRef)
@@ -343,7 +343,7 @@ const Home: React.FC<HomeProp> = (props) => {
         onClick: () => onMenu({ route: YakitRoute.ScreenRecorderPage }),
       },
     ] as ToolInfo[]
-  }, [screenRecorderInfo, i18n.language, pluginToId])
+  }, [screenRecorderInfo, i18nRefresh, pluginToId])
   const [curProjectInfo, setCurProjectInfo] = useState<ProjectDescription>()
   const [historyData, setHistoryData] = useState<number>(0)
   const [riskLevelData, setRiskLevelData] = useState<FieldName[]>([])
@@ -724,7 +724,7 @@ const Home: React.FC<HomeProp> = (props) => {
     } else {
       return curProjectInfo?.ProjectName ? curProjectInfo?.ProjectName : getReleaseEditionName()
     }
-  }, [curProjectInfo, i18n.language])
+  }, [curProjectInfo, i18nRefresh])
 
   // 更新项目数据库大小
   const updateProjectDbSize = async () => {

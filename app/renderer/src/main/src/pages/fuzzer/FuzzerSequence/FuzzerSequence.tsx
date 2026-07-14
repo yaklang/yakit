@@ -2184,7 +2184,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
     onShowSetting,
     isShowSetting,
   } = props
-  const { t, i18n } = useI18nNamespaces(['webFuzzer'])
+  const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer'])
   const [selectVisible, setSelectVisible] = useState<boolean>(false)
   const [visible, setVisible] = useState<boolean>(false)
   const [editNameVisible, setEditNameVisible] = useState<boolean>(false)
@@ -2204,7 +2204,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
     if (item?.inheritVariables) tArr.push(t('SequenceItem.variable'))
     if (item?.inheritCookies) tArr.push('Cookie')
     return tArr.join('  ,  ')
-  }, [item?.inheritVariables, item?.inheritCookies, i18n.language])
+  }, [item?.inheritVariables, item?.inheritCookies, i18nRefresh])
   const onSelectSubMenuById = useMemoizedFn((pageId: string) => {
     emiter.emit('switchSubMenuItem', JSON.stringify({ pageId }))
   })
@@ -2631,7 +2631,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
       onOpenMatcherDrawer,
       hasExtractorRules,
     } = props
-    const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi', 'yakitRoute'])
+    const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer', 'yakitUi', 'yakitRoute'])
     const {
       id: responseInfoId,
       onlyOneResponse: httpResponse,
@@ -2967,7 +2967,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
           {t('HTTPFuzzerPage.view_all_suffix')}
         </div>
       ),
-      [fuzzerTableMaxData, i18n.language],
+      [fuzzerTableMaxData, i18nRefresh],
     )
     const noMoreLimtAlertMsg = useMemo(
       () => (
@@ -2979,7 +2979,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
           {t('HTTPFuzzerPage.performAction')}
         </div>
       ),
-      [i18n.language],
+      [i18nRefresh],
     )
 
     return (

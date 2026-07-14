@@ -1248,7 +1248,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
 
 export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) => {
   const { notEditable, extractorItem, onEdit, httpResponse, isSmallMode } = props
-  const { t, i18n } = useI18nNamespaces(['webFuzzer'])
+  const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer'])
 
   const requestList = ScopeList(t),
     isRequest = requestList.some(({ value }) => value === extractorItem.Scope)
@@ -1279,7 +1279,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
       default:
         return <></>
     }
-  }, [extractorItem.Type, extractorItem.RegexpMatchGroup, extractorItem.XPathAttribute, i18n.language, isSmallMode])
+  }, [extractorItem.Type, extractorItem.RegexpMatchGroup, extractorItem.XPathAttribute, i18nRefresh, isSmallMode])
   return (
     <>
       <div

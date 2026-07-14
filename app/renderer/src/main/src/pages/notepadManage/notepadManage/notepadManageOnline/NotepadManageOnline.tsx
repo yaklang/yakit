@@ -43,7 +43,7 @@ import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['notepad', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['notepad', 'yakitUi'])
   const userInfo = useStore((s) => s.userInfo)
   const emptyImageTarget = useEmptyImage('search')
   const { goAddNotepad } = useGoEditNotepad()
@@ -177,7 +177,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
         },
       },
     ]
-  }, [actionHashMapRef.current, sorterKey, timeSortVisible, i18n.language])
+  }, [actionHashMapRef.current, sorterKey, timeSortVisible, i18nRefresh])
   useEffect(() => {
     if (!userInfo.isLogin) return
     getList()

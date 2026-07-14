@@ -999,7 +999,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const { tabsId } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner'])
   const { areaInfo, activeFile } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
@@ -1375,7 +1375,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         },
       },
     }
-  }, [i18n.language, t])
+  }, [i18nRefresh])
 
   return (
     <div className={styles['runner-tab-pane']}>

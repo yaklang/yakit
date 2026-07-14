@@ -108,7 +108,7 @@ const YakPoCTab: YakitTabsProps[] = [
 
 /**专项漏洞检测 */
 export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['yakPoC'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakPoC'])
   const { pageId } = props
 
   const { queryPagesDataById } = usePageInfo(
@@ -238,7 +238,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     <div className={styles['yak-poc-wrapper']} ref={pluginGroupRef}>
       <div className={styles['yakpoc-tab-wrap']}>
         <YakitSideTab
-          key={i18n.language}
+          key={i18nRefresh}
           yakitTabs={YakPoCTab}
           activeKey={type}
           onActiveKey={onActiveKey}

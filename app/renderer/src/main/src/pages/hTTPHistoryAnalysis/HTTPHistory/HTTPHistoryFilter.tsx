@@ -171,7 +171,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     webFuzzerPageId,
     closable,
   } = props
-  const { t, i18n } = useI18nNamespaces(['history'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history'])
   const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
 
   const clearHttpFlowSelection = useMemoizedFn(() => {
@@ -282,7 +282,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
         firstNode={
           <div className={styles['HTTPHistoryFilter-left']}>
             <YakitSideTab
-              key={i18n.language}
+              key={i18nRefresh}
               t={t}
               yakitTabs={HistoryTab}
               activeKey={activeKey}
@@ -489,7 +489,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     builtinTagList = [],
   } = props
   const comBuiltinTagList = useCampare(builtinTagList)
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'history', 'yakitRoute'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'history', 'yakitRoute'])
   const { currentPageTabRouteKey, queryPagesDataById } = usePageInfo(
     (s) => ({
       currentPageTabRouteKey: s.currentPageTabRouteKey,
@@ -1410,7 +1410,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     beforeBodyLength,
     bodyLengthUnit,
     contentType,
-    i18n.language,
+    i18nRefresh,
     onlyFavorite,
     comSuffixList,
     comBuiltinTagList,
@@ -1678,7 +1678,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         },
       },
     ]
-  }, [data, compareState, i18n.language, onlyFavorite, total])
+  }, [data, compareState, i18nRefresh, onlyFavorite, total])
 
   const contextMenuKeybindingHandle = useMemoizedFn((data) => {
     const menus: any = []
@@ -2525,7 +2525,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           {t('HTTPFlowTable.onlyFavorites')}
         </YakitTag>
       ),
-    [onlyFavorite, i18n.language],
+    [onlyFavorite, i18nRefresh],
   )
 
   return (

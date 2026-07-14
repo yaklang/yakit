@@ -211,7 +211,7 @@ const showIcon = (severity) => {
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
   const { info, foucsedKey, onSelected, onExpanded, expandedKeys, loadTreeMore, customizeContent } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi'])
   const handleSelect = useMemoizedFn(() => {
     onSelected(info, getDetail)
   })
@@ -280,7 +280,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
         </div>
       )
     }
-  }, [info, isFoucsed, isExpanded, i18n.language])
+  }, [info, isFoucsed, isExpanded, i18nRefresh])
 
   return <>{dom}</>
 })
@@ -527,7 +527,7 @@ const defaultQuery: QuerySyntaxFlowResultRequest = {
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
   const { setOnlyFileTree, onOpenEditorDetails } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { projectName, pageInfo, auditRule, auditExecuting } = useStore()
   const { setAuditExecuting } = useDispatcher()
   const [auditType, setAuditType] = useState<'result' | 'history'>('result')
@@ -591,7 +591,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     }
 
     return newInitTree
-  }, [refreshTree, i18n.language])
+  }, [refreshTree, i18nRefresh])
 
   const lastValue = useRef<string>('')
   const handleAuditLoadData = useMemoizedFn((id: string) => {
@@ -2442,7 +2442,7 @@ const COMPILE_PREVIEW_LIMIT = 3
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
   const { pageType, onClose, onExecuteAudit, warrpId } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const auditHistoryTableRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(auditHistoryTableRef)
   const [JSONStringConfig, setJSONStringConfig] = useState<string>()
@@ -2913,7 +2913,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         },
       },
     ]
-  }, [pageType, schema, i18n.language])
+  }, [pageType, schema, i18nRefresh])
 
   const loadMoreData = useMemoizedFn(() => {
     if (data.length > 0) {

@@ -25,7 +25,7 @@ interface FuzzableParamListData extends FuzzableParams {
   key: string
 }
 export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history', 'yakitUi'])
   const [list, setList] = useState<FuzzableParamListData[]>([])
   useEffect(() => {
     const newList = props.data.map((item, index) => ({
@@ -107,7 +107,7 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
         ),
       },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
   return (
     <TableVirtualResize<FuzzableParamListData>
       columns={columns}

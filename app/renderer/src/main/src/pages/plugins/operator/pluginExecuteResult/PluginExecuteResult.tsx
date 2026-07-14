@@ -439,7 +439,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
 /** 基础插件信息 / 日志 */
 export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
   const { loading, messageList, wrapperClassName } = props
-  const { t, i18n } = useI18nNamespaces(['plugin'])
+  const { t, i18nRefresh } = useI18nNamespaces(['plugin'])
   const [activeKey, setActiveKey] = useState<string>('plugin-log')
 
   const list: StreamResult.Log[] = useCreation(() => {
@@ -486,7 +486,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
       })
     }
     return tab
-  }, [echartsLists, textLists, i18n.language])
+  }, [echartsLists, textLists, i18nRefresh])
 
   const renderTabContent = useMemoizedFn((type) => {
     switch (type) {

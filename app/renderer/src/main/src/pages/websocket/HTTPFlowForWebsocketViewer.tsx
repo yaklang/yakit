@@ -165,7 +165,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
     isPositionHighLightCursor,
     onSetEditor,
   } = props
-  const { t, i18n } = useI18nNamespaces(['history'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history'])
   // 发送到WS Fuzzer
   const sendWebSocketMenuItem: OtherMenuListProps = useMemo(() => {
     return {
@@ -206,7 +206,7 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
         },
       },
     }
-  }, [flow.Request, flow.IsHTTPS, i18n.language])
+  }, [flow.Request, flow.IsHTTPS, i18nRefresh])
 
   return (
     <YakitEditor

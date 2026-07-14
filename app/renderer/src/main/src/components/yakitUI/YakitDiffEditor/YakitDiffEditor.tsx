@@ -24,7 +24,7 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
     renderSideBySide = true,
   } = props
 
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi'])
   const { fontSize, initFontSize, setFontSize } = useEditorFontSize()
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
       { type: 'divider' },
       { key: 'command-palette', label: 'Command Palette', keyDesc: 'F1' },
     ],
-    [fontSize, i18n.language],
+    [fontSize, i18nRefresh],
   )
 
   // 右键菜单点击处理

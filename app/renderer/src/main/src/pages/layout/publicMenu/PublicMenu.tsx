@@ -78,7 +78,7 @@ interface PublicMenuProps {
 
 const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   const { onMenuSelect, setRouteToLabel, defaultExpand } = props
-  const { t, i18n } = useI18nNamespaces(['layout', 'yakitRoute', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['layout', 'yakitRoute', 'yakitUi'])
   // 登录用户状态信息
   const { userInfo } = useStore()
   // 菜单模式
@@ -499,7 +499,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         })}
       </>
     )
-  }, [defaultMenu, pluginMenu, noExpandMenu, i18n.language])
+  }, [defaultMenu, pluginMenu, noExpandMenu, i18nRefresh])
 
   /** 打开最近编辑的记事本，若无则新建 */
   const openLatestOrNewNotepad = useMemoizedFn(() => {

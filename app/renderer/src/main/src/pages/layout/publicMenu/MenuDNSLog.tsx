@@ -41,7 +41,7 @@ export interface DnslogMenuToPage {
 }
 
 export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout'])
   const [token, setToken, getToken] = useGetState('')
   const [domain, setDomain, getDomain] = useGetState('')
   const [lastRecords, setLastRecords] = useState<DNSLogEvent[]>([])
@@ -339,7 +339,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         </div>
       </div>
     )
-  }, [onlyARecord, records, i18n.language, total])
+  }, [onlyARecord, records, i18nRefresh, total])
 
   return (
     <div className={classNames(styles['menu-dnslog-wrapper'], { [styles['menu-dnslog-hide-wrapper']]: isHide })}>

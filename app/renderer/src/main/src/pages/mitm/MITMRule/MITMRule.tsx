@@ -199,7 +199,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       disableTrafficGuard = false,
       setDisableTrafficGuard,
     } = props
-    const { t, i18n } = useI18nNamespaces(['yakitUi', 'mitm'])
+    const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'mitm'])
     const mitmContent = useContext(MITMContext)
 
     const mitmVersion = useCreation(() => {
@@ -408,7 +408,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           value: 'EnableForBody',
         },
       ]
-    }, [i18n.language])
+    }, [i18nRefresh])
 
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
       const columnArr: ColumnsTypeProps[] = [
@@ -595,7 +595,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       } catch (error) {
         return columnArr
       }
-    }, [excludeColumnsKey, i18n.language])
+    }, [excludeColumnsKey, i18nRefresh])
 
     const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
       record[item.value] = checked
@@ -1152,7 +1152,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           }}
         />
       )
-    }, [valueSearch, i18n.language])
+    }, [valueSearch, i18nRefresh])
 
     const content = () => {
       return (

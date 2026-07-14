@@ -256,7 +256,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     requestPacket,
     beautifyTriggerRefresh,
   } = props
-  const { t, i18n } = useI18nNamespaces(['mitm'])
+  const { t, i18nRefresh } = useI18nNamespaces(['mitm'])
   // 操作系统类型
   const [system, setSystem] = useState<string>()
 
@@ -354,7 +354,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         },
       }
     }
-  }, [forResponse, autoForward, currentPacketId, i18n.language])
+  }, [forResponse, autoForward, currentPacketId, i18nRefresh])
 
   return (
     <NewHTTPPacketEditor

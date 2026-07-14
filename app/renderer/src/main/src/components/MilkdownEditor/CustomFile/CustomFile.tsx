@@ -116,7 +116,7 @@ export const renderFileTypeIcon = (params: { type: string; iconClassName?: strin
 }
 export const CustomFile: React.FC<CustomFileProps> = (props) => {
   const { type } = props
-  const { t, i18n } = useI18nNamespaces(['components', 'yaktUi'])
+  const { t, i18n } = useI18nNamespaces(['components', 'yakitUi'])
   const { node, contentRef, selected, view, getPos, setAttrs } = useNodeViewContext()
 
   const { attrs } = node

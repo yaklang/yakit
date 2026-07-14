@@ -74,7 +74,7 @@ const scanDeepMapPresetPort = {
 
 export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
   const { pageId } = props
-  const { t, i18n } = useI18nNamespaces(['simpleDetect', 'yakitUi', 'yakitRoute'])
+  const { t, i18nRefresh } = useI18nNamespaces(['simpleDetect', 'yakitUi', 'yakitRoute'])
   // 全局登录状态
   const { userInfo } = useStore()
   const { queryPagesDataById, updatePagesDataCacheById, removePagesDataCacheById } = usePageInfo(
@@ -154,7 +154,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
       { tabName: t('SimpleDetect.logTab'), type: 'log' },
       { tabName: 'Console', type: 'console' },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
   const onEnd = useMemoizedFn(() => {
     // 在此之前需要先保存任务
     setTimeout(() => {

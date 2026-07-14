@@ -1685,13 +1685,13 @@ interface ReasonModalProps {
 /** @name 原因说明 */
 export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
   const { visible, setVisible, type = 'nopass', total, onOK } = props
-  const { t, i18n } = useI18nNamespaces(['pluginHub'])
+  const { t, i18nRefresh } = useI18nNamespaces(['pluginHub'])
 
   const title = useMemo(() => {
     if (type === 'nopass') return t('PluginManage.reasonNopass')
     if (type === 'del') return t('PluginManage.reasonDelete')
     return t('PluginManage.reasonUnknown')
-  }, [type, i18n.language])
+  }, [type, i18nRefresh])
 
   useEffect(() => {
     if (!visible) setValue('')

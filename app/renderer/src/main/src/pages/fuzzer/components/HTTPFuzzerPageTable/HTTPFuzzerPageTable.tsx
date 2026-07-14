@@ -197,7 +197,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       fuzzerTableMaxData = DefFuzzerTableMaxData,
       hasExtractorRules = false,
     } = props
-    const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
+    const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
     const [listTable, setListTable] = useState<FuzzerResponse[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -644,7 +644,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       extractedMap,
       query?.ExtractedResults,
       isShowDebug,
-      i18n.language,
+      i18nRefresh,
       sorterTable?.orderBy,
       sorterTable?.order,
     ])

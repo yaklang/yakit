@@ -177,7 +177,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     defaultExcludeColumnsKey,
     builtinTagList = [],
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'history'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'history'])
   const comBuiltinTagList = useCampare(builtinTagList)
 
   // 导出字段映射配置
@@ -1165,7 +1165,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     columnsOrder,
     excludeColumnsKey,
     idFixed,
-    i18n.language,
+    i18nRefresh,
     comSuffixList,
     comBuiltinTagList,
     columnActionHandlers,
@@ -2006,7 +2006,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const { getBatchContextMenu, onMultipleClick, onRowContextMenu } = useHTTPFlowTableContextMenu({
     t,
-    i18n,
+    i18nRefresh,
     userInfo,
     data,
     setData,
@@ -2219,7 +2219,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {t('HTTPFlowTable.onlyFavorites')}
         </YakitTag>
       ),
-    [onlyFavorite, i18n.language],
+    [onlyFavorite, i18nRefresh],
   )
 
   const viewAttachTag = useMemo(
@@ -2237,7 +2237,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           </YakitTag>
         </Tooltip>
       ),
-    [viewAttachId, i18n.language],
+    [viewAttachId, i18nRefresh],
   )
 
   const renderTitle = useMemo(() => {
@@ -2605,7 +2605,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     showSetting,
     showSourceType,
     size?.width,
-    i18n.language,
+    i18nRefresh,
     total,
     updateData,
   ])

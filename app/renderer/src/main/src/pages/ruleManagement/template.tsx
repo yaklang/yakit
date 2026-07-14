@@ -566,7 +566,7 @@ export const cleanObject = <T extends Record<string, any>>(obj: T): Partial<Filt
 /** @name 新建|编辑规则抽屉 */
 export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
   const { getContainer, info, visible, onCallback } = props
-  const { t, i18n } = useI18nNamespaces(['ruleManagement', 'yakitUi', 'yakitRoute'])
+  const { t, i18nRefresh } = useI18nNamespaces(['ruleManagement', 'yakitUi', 'yakitRoute'])
   const alertMsgRef = useRef<{ [key: string]: AlertMessage }>(info?.AlertMsg || {})
   const getContainerSize = useSize(getContainer)
   // 抽屉展示高度
@@ -950,7 +950,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
       ]
     }
     return tabsState
-  }, [runtimeId, i18n.language])
+  }, [runtimeId, i18nRefresh])
 
   const drawerTitle = useMemo(() => {
     if (auditDetailShow)
@@ -967,7 +967,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         </div>
       )
     return `${isEdit ? t('YakitButton.edit') : t('YakitButton.new')}${t('EditRuleDrawer.rule')}`
-  }, [isEdit, auditDetailShow, i18n.language])
+  }, [isEdit, auditDetailShow, i18nRefresh])
 
   const getOptions = useMemo(() => {
     if (isEdit && Object.keys(info?.AlertMsg || {}).length > 0) {
@@ -981,7 +981,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
       { value: 'code', label: t('EditRuleDrawer.ruleContent') },
       { value: 'debug', label: t('EditRuleDrawer.executionResult') },
     ]
-  }, [isEdit, info, i18n.language])
+  }, [isEdit, info, i18nRefresh])
 
   const goBackForm = useMemoizedFn(() => {
     onStop()

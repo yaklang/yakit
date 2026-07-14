@@ -979,7 +979,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
     setInputType,
     isShowMockHTTPResponse,
   } = props
-  const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['plugin', 'yakitUi'])
 
   const requestType: RequestType = Form.useWatch('requestType', form)
   const isShowResponse: boolean = Form.useWatch('simulationResponse', form)
@@ -993,7 +993,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
       Help: '',
     }
     return codeItem
-  }, [rawHTTPRequest, i18n.language])
+  }, [rawHTTPRequest, i18nRefresh])
 
   const mockItem = useMemo(() => {
     const codeItem: YakParamProps = {
@@ -1005,7 +1005,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
       Help: '',
     }
     return codeItem
-  }, [MockHTTPResponse, i18n.language])
+  }, [MockHTTPResponse, i18nRefresh])
 
   const requestTypeOptions = useCreation(() => {
     if (type === 'single') {
@@ -1034,7 +1034,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
         label: t('PluginFixFormParams.request_id'),
       },
     ]
-  }, [type, i18n.language])
+  }, [type, i18nRefresh])
   return (
     <>
       <Form.Item label="HTTPS" name="IsHttps" valuePropName="checked" initialValue={false}>

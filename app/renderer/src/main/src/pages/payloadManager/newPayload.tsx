@@ -1710,7 +1710,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     userInfo,
     showType = 'local',
   } = props
-  const { t, i18n } = useI18nNamespaces(['payload', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['payload', 'yakitUi'])
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
   const [inputName, setInputName] = useState<string>(folder.name)
@@ -1897,7 +1897,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
       menu = menu.filter((item) => item.key !== 'upload')
     }
     return menu
-  }, [userInfo, i18n.language])
+  }, [userInfo, i18nRefresh])
   return (
     <>
       {isEditInput ? (
@@ -2285,7 +2285,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     userInfo,
     showType,
   } = props
-  const { t, i18n } = useI18nNamespaces(['payload', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['payload', 'yakitUi'])
   const { theme } = useTheme()
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [isEditInput, setEditInput] = useState<boolean>(file.isCreate === true)
@@ -2635,7 +2635,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
       menu = menu.filter((item) => item.key !== 'upload')
     }
     return menu
-  }, [userInfo, file.type, i18n.language])
+  }, [userInfo, file.type, i18nRefresh])
 
   // 右键展开菜单
   const handleRightClick = useMemoizedFn((e) => {

@@ -42,7 +42,7 @@ const { ipcRenderer } = window.require('electron')
 
 export interface UseHTTPFlowTableContextMenuOptions {
   t: TFunction
-  i18n: I18nInstance
+  i18nRefresh: string
   userInfo: { isLogin: boolean }
   data: HTTPFlow[]
   setData: React.Dispatch<React.SetStateAction<HTTPFlow[]>>
@@ -84,7 +84,7 @@ export interface UseHTTPFlowTableContextMenuOptions {
 export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenuOptions) => {
   const {
     t,
-    i18n,
+    i18nRefresh,
     userInfo,
     data,
     setData,
@@ -551,7 +551,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     return menu
   }, [
     userInfo.isLogin,
-    i18n.language,
+    i18nRefresh,
     codecMultipleHistoryPluginCom,
     codecSingleHistoryPluginCom,
     selectedRowKeysCom,

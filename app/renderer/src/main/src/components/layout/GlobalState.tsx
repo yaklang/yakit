@@ -88,7 +88,7 @@ interface ReverseDetail {
 
 export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) => {
   const { isEngineLink, system, mcp } = props
-  const { t, i18n } = useI18nNamespaces(['yakitRoute', 'home', 'yakitUi', 'layout', 'utils'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['yakitRoute', 'home', 'yakitUi', 'layout', 'utils'])
   const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
   const enableMcp = useMemo(() => {
     if (!mcp.mcpStreamInfo.mcpCurrent) return false
@@ -1225,7 +1225,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     enableMcp,
     mcp.mcpStreamInfo.mcpServerUrl,
     Array.from(runNodeList).length,
-    i18n.language,
+    i18nRefresh,
     zoomScale,
   ])
 
@@ -1351,7 +1351,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         </div>
       </div>
     )
-  }, [timeInterval, state, stateNum, showCheckEngine, isChecking, ruleUpdate, i18n.language, zoomScale])
+  }, [timeInterval, state, stateNum, showCheckEngine, isChecking, ruleUpdate, i18nRefresh, zoomScale])
 
   return (
     <>
@@ -1418,12 +1418,14 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
           setPluginShow(v)
         }}
       />
-      <IRifyApplySyntaxFlowRuleUpdate
-        visible={ruleUpdateShow}
-        setVisible={(v) => {
-          setRuleUpdateShow(v)
-        }}
-      />
+      {ruleUpdateShow && (
+        <IRifyApplySyntaxFlowRuleUpdate
+          visible={ruleUpdateShow}
+          setVisible={(v) => {
+            setRuleUpdateShow(v)
+          }}
+        />
+      )}
       {/* 规则更新确认弹框 */}
       <YakitHint
         visible={openFristRuleUpdateModal}

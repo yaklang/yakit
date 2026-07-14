@@ -1065,7 +1065,7 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
 
 const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((props) => {
   const { item, onRefresh, currentPageTabRouteKey } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [isReady, setIsReady] = useState<boolean>(item.IsReady || false)
 
   const [visible, setVisible] = useState<boolean>(false)
@@ -1258,7 +1258,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
       ])
     }
     return menu
-  }, [item.IsLocal, item?.Status?.Status, i18n.language])
+  }, [item.IsLocal, item?.Status?.Status, i18nRefresh])
   const isShowEnable = useCreation(() => {
     return !isReady && !item.IsLocal
   }, [isReady, item.IsLocal])

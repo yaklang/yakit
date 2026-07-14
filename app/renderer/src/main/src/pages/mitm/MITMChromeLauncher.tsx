@@ -575,7 +575,7 @@ interface ChromeLauncherParamsSetProps {
 }
 const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.forwardRef((props, ref) => {
   const { googleChromePluginPath } = props
-  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['mitm', 'yakitUi'])
   const [currentItem, setCurrentItem] = useState<ChromeLauncherParams>()
   const [data, setData] = useState<ChromeLauncherParams[]>([])
   const tempEditItem = useRef<ChromeLauncherParams>()
@@ -884,7 +884,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
         },
       },
     ]
-  }, [tempEditId, i18n.language])
+  }, [tempEditId, i18nRefresh])
 
   const onSetCurrentRow = useDebounceFn(
     (rowDate: ChromeLauncherParams) => {

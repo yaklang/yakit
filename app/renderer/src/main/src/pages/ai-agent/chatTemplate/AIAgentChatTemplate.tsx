@@ -44,7 +44,7 @@ export enum AIChatLeft {
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const { taskTree, taskName } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
 
   const { chatIPCData } = useChatIPCStore()
   const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
@@ -145,7 +145,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         onChange={({ target }) => handleTabChange(target.value)}
       />
     )
-  }, [activeTab, handleTabChange, i18n.language])
+  }, [activeTab, handleTabChange, i18nRefresh])
   const extraProps = useCreation(() => {
     let p: Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'> = {}
     if (!length) {

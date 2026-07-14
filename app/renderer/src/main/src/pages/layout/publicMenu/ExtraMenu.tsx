@@ -31,7 +31,7 @@ interface ExtraMenuProps {
 
 export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
   const { onMenuSelect, isSecurityExpert } = props
-  const { t, i18n } = useI18nNamespaces(['yakitRoute', 'yakitUi', 'layout'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitRoute', 'yakitUi', 'layout'])
   const { softMode } = useSoftMode()
   const [visibleImport, setVisibleImport] = useState<boolean>(false)
   const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>('giturl')
@@ -154,7 +154,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
         onClick={({ key }) => importMenuSelect(key)}
       />
     ),
-    [i18n.language],
+    [i18nRefresh],
   )
 
   const renderContent = useMemoizedFn(() => {

@@ -68,7 +68,7 @@ interface HTTPFlowTableFormConfigurationProps {
 }
 export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigurationProps> = (props) => {
   const { visible, setVisible, filterConfig, saveOk } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'history'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'history'])
   const [form] = Form.useForm()
   const filterModeWatch = Form.useWatch('filterMode', form)
   const originConfigRef = useRef<FilterConfig | null>(null)
@@ -81,7 +81,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
       excludeKeywords: t('HTTPFlowTableFormConfiguration.keyword'),
       statusCode: t('HTTPFlowTableFormConfiguration.statusCode'),
     }
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   useEffect(() => {
     if (!visible) return

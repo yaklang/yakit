@@ -165,7 +165,7 @@ export interface EditTableProps {
 }
 export const EditTable: React.FC<EditTableProps> = (props) => {
   const { columnSchema, uiSchema, onChange, value } = props
-  const { t, i18n } = useI18nNamespaces(['components', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['components', 'yakitUi'])
   const [form] = Form.useForm()
   const [data, setData] = useState<Item[]>([])
   const [cacheData, setCacheData] = useState<Item[]>([])
@@ -478,7 +478,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         },
       },
     ]
-  }, [columns, editingId, i18n.language])
+  }, [columns, editingId, i18nRefresh])
 
   const isFoucus = useRef<boolean>(false)
   const setFoucusFun = useMemoizedFn((is: boolean) => {

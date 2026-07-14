@@ -101,7 +101,7 @@ interface NewCodecRightEditorBoxProps {
 // codec右边编辑器
 export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (props) => {
   const { isExpand, setExpand, outputResponse, inputEditor, setInputEditor, runLoading } = props
-  const { t, i18n } = useI18nNamespaces(['codec', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['codec', 'yakitUi'])
   const [noInputWordwrap, setNoInputWordwrap] = useState<boolean>(false)
   const [noOutputWordwrap, setNoOutputWordwrap] = useState<boolean>(false)
   const [inputMenuOpen, setInputMenuOpen] = useState<boolean>(false)
@@ -268,7 +268,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
         ),
       },
     ]
-  }, [noInputWordwrap, i18n.language])
+  }, [noInputWordwrap, i18nRefresh])
 
   const outputMenuData = useMemo(() => {
     return [
@@ -311,7 +311,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
         ),
       },
     ]
-  }, [noOutputWordwrap, i18n.language])
+  }, [noOutputWordwrap, i18nRefresh])
 
   return (
     <div className={styles['new-codec-editor-box']} ref={editorBoxRef}>
@@ -2052,7 +2052,7 @@ export interface NewCodecProps {
   id: string
 }
 export const NewCodec: React.FC<NewCodecProps> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['codec', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['codec', 'yakitUi'])
   const { id } = props
   // codec分类展开收起
   const [fold, setFold] = useState<boolean>(true)
@@ -2100,7 +2100,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
         onOk: (m) => onCloseTab(m),
       },
     })
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const onCloseSubPageByJudgeFun = useMemoizedFn((res) => {
     try {

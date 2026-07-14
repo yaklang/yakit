@@ -53,7 +53,7 @@ const NotepadOnlineList = React.lazy(() => import('./NotepadOnlineList/NotepadOn
 
 const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((props) => {
   const { pageId } = props
-  const { t, i18n } = useI18nNamespaces(['notepad', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['notepad', 'yakitUi'])
 
   const userInfo = useStore((s) => s.userInfo)
   const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
@@ -400,7 +400,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
       default:
         return collabProps.enableCollab ? <YakitTag color="red">{t('ModifyNotepad.offline')}</YakitTag> : <></>
     }
-  }, [documentLinkStatus, collabProps.enableCollab, i18n.language])
+  }, [documentLinkStatus, collabProps.enableCollab, i18nRefresh])
 
   /**如果当前用户没有编辑权限,没有启动协作，阅读权限的人不能查看最新的编辑过程的文件 */
   const spinning = useCreation(() => {

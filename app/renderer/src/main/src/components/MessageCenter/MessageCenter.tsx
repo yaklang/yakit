@@ -60,7 +60,7 @@ export interface MessageItemProps {
 
 export const MessageItem: React.FC<MessageItemProps> = (props) => {
   const { onClose, data, isEllipsis, onRedTaskItem, removeItem } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'components'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'components'])
   const { goEditNotepad } = useGoEditNotepad()
   const getDescription = useMemo(() => {
     switch (data.upPluginType) {
@@ -288,7 +288,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
       default:
         return <></>
     }
-  }, [data, isEllipsis, i18n.language])
+  }, [data, isEllipsis, i18nRefresh])
 
   const onItemClick = useMemoizedFn(() => {
     const { upPluginType, status } = data

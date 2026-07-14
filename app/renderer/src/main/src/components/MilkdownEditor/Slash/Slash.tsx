@@ -47,7 +47,7 @@ interface SlashViewProps {
 
 export const SlashView: React.FC<SlashViewProps> = (props) => {
   const { type, notepadHash, localProps } = props
-  const { t, i18n } = useI18nNamespaces(['components'])
+  const { t, i18nRefresh } = useI18nNamespaces(['components'])
   const ref = useRef<HTMLDivElement>(null)
   const slashProvider = useRef<SlashProvider>()
   const initializedRef = useRef<boolean>(false)
@@ -166,7 +166,7 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
         [t('MilkdownEditor.slash.common')]: createMilkdownMenuListByKey(t, onlineCommonSlashKey),
       }
     }
-  }, [localProps?.local, i18n.language])
+  }, [localProps?.local, i18nRefresh])
 
   const onSelect = useMemoizedFn((key: MilkdownMenuType) => {
     switch (key) {

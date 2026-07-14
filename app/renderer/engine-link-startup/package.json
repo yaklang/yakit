@@ -31,7 +31,7 @@
     "buffer": "^6.0.3",
     "classnames": "^2.5.1",
     "i18next": "^26.3.6",
-    "i18next-http-backend": "^4.0.0",
+    "i18next-resources-to-backend": "^1.2.1",
     "mitt": "^3.0.1",
     "monaco-editor": "^0.52.0",
     "re-resizable": "^6.9.9",

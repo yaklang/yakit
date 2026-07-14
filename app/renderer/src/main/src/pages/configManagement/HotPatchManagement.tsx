@@ -144,7 +144,7 @@ const toHotPatchTempItems = (list: HotPatchTemplateItem[], isDefault: (name: str
   }))
 
 export const HotPatchManagement: React.FC = () => {
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout', 'webFuzzer'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout', 'webFuzzer'])
   const [activeType, setActiveType] = useState<HotCodeType>('global')
   const [panelType, setPanelType] = useState<PanelHotCodeType>('mitm')
   const [globalTemplateList, setGlobalTemplateList] = useState<HotPatchTempItem[]>([])
@@ -657,7 +657,7 @@ export const HotPatchManagement: React.FC = () => {
         value: 'httpflow-analyze',
       },
     ],
-    [i18n.language],
+    [i18nRefresh],
   )
 
   const onChangePanelType = useMemoizedFn((type: PanelHotCodeType) => {
