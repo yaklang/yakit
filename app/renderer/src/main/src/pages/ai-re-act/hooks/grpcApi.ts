@@ -1051,6 +1051,16 @@ export declare namespace AIAgentGrpcApi {
       path?: string
       summary?: string
       version: number
+      change_id?: string
+      line_base?: number
+      /** op=patch 时描述如何把 content 片段合入文件 */
+      patch?: {
+        kind: 'line_range' | 'snippet' | 'insert' | 'delete' | 'full'
+        start_line?: number
+        end_line?: number
+        insert_line?: number
+        old_snippet?: string
+      }
     }
     reason?: string
     source_action?: string
