@@ -317,7 +317,7 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
-  const react_task_id = res.TaskId || info.react_task_id
+  const react_task_id = info.react_task_id
   if (['completed', 'aborted'].includes(info.react_task_now_status)) {
     if (store.getState().currentCasualTaskID && store.getState().currentCasualTaskID === react_task_id) {
       store.getState().updateState({ cancelCasualLoading: false })
@@ -334,6 +334,10 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
     }
   }
   // 更新自由对话-执行任务组的状态
+  const taskKey = store.getState().currentCasualTaskID
+    ? `${store.getState().currentCasualTaskID}-${react_task_id}`
+    : undefined
+  if (!taskKey) return
   const taskDetail = rawData.contents.get(react_task_id)
   if (!taskDetail || taskDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
   taskDetail.data.status = info.react_task_now_status as AITaskStatusType
@@ -428,9 +432,13 @@ const handleReactTaskCreated: AIMessageHandler = (request) => {
   if (!info.react_task_is_sub_agent) return
   if (!info.react_task_id) return
 
+  const taskKey = store.getState().currentCasualTaskID
+    ? `${store.getState().currentCasualTaskID}-${info.react_task_id}`
+    : undefined
+  if (!taskKey) return
   const chatData: AIChatQSData = {
     ...genBaseAIChatData(res),
-    id: info.react_task_id,
+    id: taskKey,
     chatType: 'reAct',
     type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
     data: {

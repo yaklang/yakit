@@ -18,7 +18,7 @@ const handleThought: AIMessageHandler = (requestInfo) => {
     data: thought || '',
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -51,7 +51,7 @@ const handleResult: AIMessageHandler = (requestInfo) => {
     data: result || '',
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -85,7 +85,7 @@ const handleFailReactTask: AIMessageHandler = (requestInfo) => {
     },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -123,7 +123,7 @@ const handleToolCallDecision: AIMessageHandler = (requestInfo) => {
     },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -157,7 +157,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (requestInfo) => {
     },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -190,7 +190,7 @@ const handleApiRequestFailed: AIMessageHandler = (requestInfo) => {
     data,
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -248,7 +248,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
       },
       TaskId: generateTaskNodeDataID({
         chatType,
-        planID: meta.currentTaskPlanID?.taskID,
+        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
         taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),
@@ -293,7 +293,7 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
     data: nextData,
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -329,7 +329,8 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   })
   store.getState().updatePlanTree(newPlanTree)
 
-  const taskID = info.task.task_id
+  const taskID = meta.currentTaskPlanID?.taskID ? `${meta.currentTaskPlanID.taskID}-${info.task.task_id}` : undefined
+  if (!taskID) return
   const chatDetail = rawData.contents.get(taskID)
   if (chatDetail && chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
     requestInfo.pushLog({ level: 'error', message: `${info.task.index}-push_task数据已存在` })
@@ -379,7 +380,8 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
   })
   store.getState().updatePlanTree(newPlanTree)
 
-  const taskID = info.task.task_id
+  const taskID = meta.currentTaskPlanID?.taskID ? `${meta.currentTaskPlanID.taskID}-${info.task.task_id}` : undefined
+  if (!taskID) return
   const chatDetail = rawData.contents.get(taskID)
   if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
     requestInfo.pushLog({ level: 'error', message: `${info.task.index}-pop_task数据不存在` })

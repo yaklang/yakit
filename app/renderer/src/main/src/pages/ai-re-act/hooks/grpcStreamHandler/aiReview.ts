@@ -132,7 +132,7 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
     data: { ...cloneDeep(data) },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -192,7 +192,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
     data: { ...cloneDeep(data) },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -252,7 +252,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
     data: cloneDeep(data),
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -319,7 +319,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
     data: { ...cloneDeep(data) },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -554,7 +554,7 @@ const handleDetachedPlanReview: AIMessageHandler = (requestInfo) => {
     data: { ...cloneDeep(data) },
     TaskId: generateTaskNodeDataID({
       chatType: chatType,
-      planID: meta.currentTaskPlanID?.coordinatorId,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.coordinatorId,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),

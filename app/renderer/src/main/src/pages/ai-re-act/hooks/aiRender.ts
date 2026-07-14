@@ -371,7 +371,7 @@ export interface AIChatQSDataBase<T extends string, U> {
   data: U
   /** id就是token */
   id: string
-  chatType: ReActChatBaseInfo['chatType']
+  chatType: ChatListRenderType
   AIService: AIOutputEvent['AIService']
   AIModelName: AIOutputEvent['AIModelName']
   Timestamp: AIOutputEvent['Timestamp']
@@ -423,6 +423,10 @@ export type ChatStreamGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM_GROUP
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
 export type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
+type ChatStreamGroup = AIChatQSDataBase<
+  AIChatQSDataTypeEnum.STREAM_GROUP,
+  { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose']; lastToken: string }
+>
 
 export type AIChatQSData =
   | ChatQuestion

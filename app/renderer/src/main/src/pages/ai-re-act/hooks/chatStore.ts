@@ -191,14 +191,15 @@ export const createChatStore = () => {
 
               // stream 合并：追加到已有组
               if (isStreamItem && lastGroup?.kind === 'group' && lastGroup.nodeId === node.nodeId) {
-                lastGroup.childrenTokens.push(node.token)
                 node.groupExtra?.(lastGroup.token, [node.token])
+                lastGroup.childrenTokens.push(node.token)
                 return
               }
 
               // stream 合并：两个连续 item 合成新组
               if (isStreamItem && lastItem?.type === AIChatQSDataTypeEnum.STREAM && lastItem.nodeId === node.nodeId) {
                 const newGroupToken = `${node.nodeId}-${uuidv4()}`
+                node.groupExtra?.(newGroupToken, [lastToken, node.token])
                 state.groups[newGroupToken] = {
                   kind: 'group',
                   token: newGroupToken,
@@ -217,7 +218,6 @@ export const createChatStore = () => {
                     isHistory,
                   }
                 }
-                node.groupExtra?.(newGroupToken, [lastToken, node.token])
                 return
               }
             }
