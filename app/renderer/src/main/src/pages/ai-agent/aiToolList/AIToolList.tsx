@@ -33,6 +33,7 @@ import { yakitNotify } from '@/utils/notification'
 import { AIToolEditorPageInfoProps } from '@/store/pageInfo'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
+import { pickBilingualVerboseName } from '@/pages/ai-agent/utils/verboseNameI18n'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
 
 /**
@@ -273,8 +274,18 @@ export default AIToolList
 
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
   const { item, onSetData, onRefresh, onSelect } = props
-  const { t } = useI18nNamespaces(['yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const [visible, setVisible] = useState<boolean>(false)
+  const displayName = useCreation(
+    () =>
+      pickBilingualVerboseName({
+        lang: i18n.language,
+        name: item.Name,
+        verboseName: item.VerboseName,
+        verboseNameZh: item.VerboseNameZh,
+      }),
+    [i18n.language, item.Name, item.VerboseName, item.VerboseNameZh],
+  )
   const onFavorite = useMemoizedFn((e) => {
     e.stopPropagation()
     const params: ToggleAIToolFavoriteRequest = {
@@ -344,7 +355,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
           <div className={styles['ai-tool-list-item-heard']}>
             <div className={styles['ai-tool-list-item-heard-name']}>
               <SolidToolIcon className={styles['tool-icon']} />
-              <span className={styles['ai-tool-list-item-heard-name-text']}>{item.VerboseName || item.Name}</span>
+              <span className={styles['ai-tool-list-item-heard-name-text']}>{displayName}</span>
             </div>
             <div
               className={styles['ai-tool-list-item-heard-extra']}

@@ -32,6 +32,7 @@ export const DefaultAIToolResult: AIToolResult = {
   riskFlowDataCount: 0,
   isProcessingParams: false,
   verboseName: '',
+  verboseNameZh: '',
 }
 /** 工作执行结果总结-不同阶段的默认展示内容 */
 export const DefaultToolResultSummary: Record<string, { wait: string; result: string }> = {

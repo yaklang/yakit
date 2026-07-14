@@ -44,6 +44,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
 import { aiChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { pickBilingualVerboseName } from '@/pages/ai-agent/utils/verboseNameI18n'
 import classNames from 'classnames'
 import styles from './AIAgentChat.module.scss'
 import { AIChatContentRefProps } from '../aiChatContent/type'
@@ -62,7 +63,7 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
 }
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat } = useAIAgentStore()
   const { setActiveChat, getSetting, setSetting } = useAIAgentDispatcher()
@@ -404,6 +405,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       yakitNotify('error', t('AIAgentChat.templateDataError'))
       return
     }
+    const toolDisplayName = pickBilingualVerboseName({
+      lang: i18n.language,
+      name: toolValue.Name,
+      verboseName: toolValue.VerboseName,
+      verboseNameZh: toolValue.VerboseNameZh,
+    })
     if (!chatIPCData.execute) {
       handleReplaceActiveTool(toolValue.ID)
     } else {
@@ -424,14 +431,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                   }}
                 />
                 <b>
-                  {toolValue.VerboseName}({toolValue.Name})
+                  {toolDisplayName}({toolValue.Name})
                 </b>
                 {modalT('AIAgentChat.forgeTemplate')}
               </>
             ) : (
               <>
                 {modalT('AIAgentChat.confirmExecute')}
-                {toolValue.VerboseName}({toolValue.Name}){modalT('AIAgentChat.toolSuffix')}
+                {toolDisplayName}({toolValue.Name}){modalT('AIAgentChat.toolSuffix')}
               </>
             )}
           </div>
@@ -481,7 +488,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     }
     setMode('re-act')
     const qs = `${t('AIAgentChat.useToolTask', {
-      name: `${activeTool.VerboseName || activeTool.Name}`,
+      name: `${pickBilingualVerboseName({
+        lang: i18n.language,
+        name: activeTool.Name,
+        verboseName: activeTool.VerboseName,
+        verboseNameZh: activeTool.VerboseNameZh,
+      })}`,
     })}${question ? `${t('AIAgentChat.input')}${question}` : ''}`
     handleStart({
       qs,

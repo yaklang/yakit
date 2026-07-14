@@ -11,6 +11,8 @@ import {
   HoverAIKnowledgeBaseIcon,
   HoverAIToolIcon,
 } from '../../ai-agent/aiChatWelcome/icon'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { pickBilingualVerboseName } from '@/pages/ai-agent/utils/verboseNameI18n'
 export interface AIRecommendIconByType {
   icon: ReactNode
   hoverIcon: ReactNode
@@ -50,6 +52,7 @@ interface UseGetAIMaterialsDataEvents {
 function useGetAIMaterialsData(): [UseGetAIMaterialsData, UseGetAIMaterialsDataEvents]
 
 function useGetAIMaterialsData() {
+  const { i18n } = useI18nNamespaces(['aiAgent'])
   const [randomAIMaterials, setRandomAIMaterials] = useState<GetRandomAIMaterialsResponse>()
   const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
 
@@ -76,7 +79,12 @@ function useGetAIMaterialsData() {
       mentionType: 'tool',
       data: (randomAIMaterials?.AITools || []).map((tool) => ({
         type: '工具',
-        name: tool.VerboseName || tool.Name,
+        name: pickBilingualVerboseName({
+          lang: i18n.language,
+          name: tool.Name,
+          verboseName: tool.VerboseName,
+          verboseNameZh: tool.VerboseNameZh,
+        }),
         description: tool.Description || '',
       })),
     }
@@ -103,7 +111,7 @@ function useGetAIMaterialsData() {
       forges,
       knowledgeBases,
     }
-  }, [randomAIMaterials])
+  }, [randomAIMaterials, i18n.language])
   const data: UseGetAIMaterialsData = useCreation(() => {
     return {
       randomAIMaterials,

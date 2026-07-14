@@ -43,6 +43,7 @@ import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { setClipboardText } from '@/utils/clipboard'
 import { success } from '@/utils/notification'
+import { pickBilingualVerboseName } from '@/pages/ai-agent/utils/verboseNameI18n'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -107,16 +108,27 @@ export default memo(ToolInvokerCard)
 /** tool loading - processing params */
 const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
   const { data } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t, i18n } = useI18nNamespaces(['aiAgent'])
 
   const reason = useCreation(() => {
     return data?.tool?.reason || ''
   }, [data?.tool?.reason])
 
+  const titleText = useCreation(
+    () =>
+      pickBilingualVerboseName({
+        lang: i18n.language,
+        name: data.toolName,
+        verboseName: data.verboseName,
+        verboseNameZh: data.verboseNameZh,
+      }),
+    [i18n.language, data.toolName, data.verboseName, data.verboseNameZh],
+  )
+
   return (
     <ChatCard
       titleIcon={<OutlineWrenchIcon1 />}
-      titleText={data.verboseName ?? data.toolName}
+      titleText={titleText}
       titleExtra={
         !!reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
@@ -139,10 +151,21 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   const { operationInfo, fileList, chatType, data } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t, i18n } = useI18nNamespaces(['aiAgent'])
 
   const { activeChat } = useAIAgentStore()
   const { handleSend } = useChatIPCDispatcher()
+
+  const titleText = useCreation(
+    () =>
+      pickBilingualVerboseName({
+        lang: i18n.language,
+        name: data.toolName,
+        verboseName: data.verboseName,
+        verboseNameZh: data.verboseNameZh,
+      }),
+    [i18n.language, data.toolName, data.verboseName, data.verboseNameZh],
+  )
 
   // 获取流数据
   const { stream } = useStreamingChatContent({
@@ -184,7 +207,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={data.verboseName ?? data.toolName}
+      titleText={titleText}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -340,9 +363,20 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     return resultDetails || content || ''
   }, [resultDetails, content])
 
+  const titleText = useCreation(
+    () =>
+      pickBilingualVerboseName({
+        lang: i18n.language,
+        name: data.toolName,
+        verboseName: data.verboseName,
+        verboseNameZh: data.verboseNameZh,
+      }),
+    [i18n.language, data.toolName, data.verboseName, data.verboseNameZh],
+  )
+
   return (
     <ChatCard
-      titleText={data.verboseName ?? data.toolName}
+      titleText={titleText}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>

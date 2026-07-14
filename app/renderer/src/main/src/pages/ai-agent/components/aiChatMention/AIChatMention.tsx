@@ -39,6 +39,7 @@ import { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { KnowledgeBaseItem, useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { InputRef } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { pickBilingualVerboseName } from '@/pages/ai-agent/utils/verboseNameI18n'
 import { mentionWidth } from '../aiMilkdownInput/aiMilkdownMention/AIMilkdownMention'
 
 const defaultRef: AIChatMentionListRefProps = {
@@ -166,7 +167,12 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
   const onSelectTool = useMemoizedFn((toolItem: AITool) => {
     onSelect('tool', {
       id: `${toolItem.ID}`,
-      name: toolItem.VerboseName || toolItem.Name,
+      name: pickBilingualVerboseName({
+        lang: i18n.language,
+        name: toolItem.Name,
+        verboseName: toolItem.VerboseName,
+        verboseNameZh: toolItem.VerboseNameZh,
+      }),
     })
   })
   const onSelectKnowledgeBase = useMemoizedFn((knowledgeBaseItem: KnowledgeBaseItem) => {
@@ -457,6 +463,7 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
 const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
   forwardRef((props, ref) => {
     const { keyWord, onSelect, getContainer } = props
+    const { i18n } = useI18nNamespaces(['aiAgent'])
     const [loading, setLoading] = useState<boolean>(false)
     const [spinning, setSpinning] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
@@ -560,7 +567,12 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
                 <AIMentionSelectItem
                   item={{
                     id: `${rowData.ID}`,
-                    name: rowData.VerboseName || rowData.Name,
+                    name: pickBilingualVerboseName({
+                      lang: i18n.language,
+                      name: rowData.Name,
+                      verboseName: rowData.VerboseName,
+                      verboseNameZh: rowData.VerboseNameZh,
+                    }),
                   }}
                   onSelect={() => onSelect(rowData)}
                   isActive={selected?.ID === rowData.ID}

@@ -54,6 +54,7 @@ import { cloneDeep } from 'lodash'
 import { AIForgeEditorPageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { pickBilingualVerboseName } from '@/pages/ai-agent/utils/verboseNameI18n'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
 const { ipcRenderer } = window.require('electron')
@@ -489,7 +490,7 @@ export default memo(ForwardForgeName)
 
 export const BatchExportAIforge = memo(
   forwardRef<BatchExportAIforgeRef, BatchExportAIforgeProps>((props, ref) => {
-    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+    const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
     const [exportExtra, setExportExtra] = useState<ImportExportModalExtra>({
@@ -641,7 +642,12 @@ export const BatchExportAIforge = memo(
               >
                 {aiTool.map((item) => (
                   <YakitSelect.Option key={item.Name} value={item.Name}>
-                    {item.VerboseName || item.Name}
+                    {pickBilingualVerboseName({
+                      lang: i18n.language,
+                      name: item.Name,
+                      verboseName: item.VerboseName,
+                      verboseNameZh: item.VerboseNameZh,
+                    })}
                   </YakitSelect.Option>
                 ))}
               </YakitSelect>

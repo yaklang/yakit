@@ -1349,6 +1349,7 @@ const handleToolCallStart: AIMessageHandler = (request) => {
     callToolId: call_tool_id,
     toolName: tool?.name || '-',
     verboseName: tool?.verbose_name,
+    verboseNameZh: tool?.verbose_name_zh,
     toolDescription: tool?.description || '',
     startTime: start_time || 0,
     startTimeMS: start_time_ms || 0,

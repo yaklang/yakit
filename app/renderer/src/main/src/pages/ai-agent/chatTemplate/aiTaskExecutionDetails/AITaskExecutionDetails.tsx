@@ -32,6 +32,8 @@ import { AIForge, QueryAIForgeRequest } from '../../type/forge'
 import { grpcQueryAIForge } from '../../grpc'
 import { AITool, GetAIToolListRequest } from '../../type/aiTool'
 import { grpcGetAIToolList } from '../../aiToolList/utils'
+import { pickBilingualVerboseName } from '@/pages/ai-agent/utils/verboseNameI18n'
+import i18n from '@/i18n/i18n'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -559,7 +561,12 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         }
       },
       (item: AITool) => ({
-        label: item.VerboseName || item.Name,
+        label: pickBilingualVerboseName({
+          lang: i18n.language,
+          name: item.Name,
+          verboseName: item.VerboseName,
+          verboseNameZh: item.VerboseNameZh,
+        }),
         type: 'tool',
         value: item.Name,
       }),

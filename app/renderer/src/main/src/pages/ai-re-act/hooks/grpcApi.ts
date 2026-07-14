@@ -755,7 +755,7 @@ export declare namespace AIAgentGrpcApi {
     /** 工具执行总结(不论成功失败) */
     summary?: string
     /** 工具名和工具描述 */
-    tool?: { name?: string; description?: string; verbose_name?: string }
+    tool?: { name?: string; description?: string; verbose_name?: string; verbose_name_zh?: string }
     /** 间隔时间(ms) */
     duration_ms: number
     /** 间隔时间(s) */

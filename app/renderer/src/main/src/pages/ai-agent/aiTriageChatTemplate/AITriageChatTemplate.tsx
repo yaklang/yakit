@@ -20,6 +20,8 @@ import classNames from 'classnames'
 import styles from './AITriageChatTemplate.module.scss'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { pickBilingualVerboseName } from '@/pages/ai-agent/utils/verboseNameI18n'
 
 /** @name 可选择的 forge 模块选项 */
 export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
@@ -304,6 +306,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
  * @name 可选择的 tool 模块选项 */
 export const AIToolForm: React.FC<AIToolFormProps> = memo((props) => {
   const { wrapperRef, info, onBack, onSubmit } = props
+  const { i18n } = useI18nNamespaces(['aiAgent'])
 
   // #region 控制该组件最大高度
   const wrapperSize = useSize(wrapperRef)
@@ -325,14 +328,18 @@ export const AIToolForm: React.FC<AIToolFormProps> = memo((props) => {
     }, 150)
   })
 
+  const displayName = pickBilingualVerboseName({
+    lang: i18n.language,
+    name: info.Name,
+    verboseName: info.VerboseName,
+    verboseNameZh: info.VerboseNameZh,
+  })
+
   return (
     <div style={{ maxHeight: wrapperSize ? (wrapperSize.height || 0) - 40 : 240 }} className={styles['ai-tool-form']}>
       <div className={styles['tool-form-header']}>
-        <div
-          className={classNames(styles['header-title'], 'yakit-content-single-ellipsis')}
-          title={`${info.VerboseName || info.Name}`}
-        >
-          {info.VerboseName || info.Name}
+        <div className={classNames(styles['header-title'], 'yakit-content-single-ellipsis')} title={displayName}>
+          {displayName}
         </div>
 
         <div className={styles['header-extra']}>

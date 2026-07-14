@@ -8,7 +8,10 @@ export interface AITool {
   Keywords: string[]
   IsFavorite: boolean
   ID: number
+  /** English display name */
   VerboseName: string
+  /** Chinese display name */
+  VerboseNameZh?: string
   UpdatedAt: number
   CreatedAt: number
   IsBuiltin: boolean
