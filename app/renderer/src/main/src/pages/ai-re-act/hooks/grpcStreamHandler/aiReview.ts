@@ -74,7 +74,7 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
       root_task_name: tasks.plans.root_task.name,
     })
   } else {
-    store.getState().updateState({ currentPlanReviewToken: chatData.id })
+    store.getState().updateState({ currentPlanReviewToken: { token: chatData.id, renderNum: 0 } })
   }
 }
 const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
@@ -95,7 +95,8 @@ const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const reviewDetail = rawData.contents.get(store.getState().currentPlanReviewToken)
+  if (!store.getState().currentPlanReviewToken.token) return
+  const reviewDetail = rawData.contents.get(store.getState().currentPlanReviewToken.token)
   if (!reviewDetail || reviewDetail.type !== AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: 未找到对应plan_review_require数据` })
     return
@@ -283,7 +284,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
   // 将数据存入hook里的缓存变量中
   rawData.contents.set(chatData.id, cloneDeep(chatData))
   if (chatType === 'task') {
-    store.getState().updateState({ currentPlanReviewToken: chatData.id })
+    store.getState().updateState({ currentPlanReviewToken: { token: chatData.id, renderNum: 0 } })
   } else if (chatType === 'reAct') {
     store.getState().updateCasualReview(chatData.id, 'add')
     store.getState().dispatchStreamingNode({
@@ -369,7 +370,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
 }
 
 const handleAIReviewJudgement: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData } = requestInfo
+  const { res, chatType, store, rawData } = requestInfo
   if (!['ai_review_start', 'ai_review_countdown', 'ai_review_end'].includes(res.Type)) return
   if (res.IsSync) return
 
@@ -397,7 +398,13 @@ const handleAIReviewJudgement: AIMessageHandler = (requestInfo) => {
         // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
         reviewDetail.data.aiReview = cloneDeep(score)
       }
-      store.getState().incrementNodeVersion(reviewDetail.id, 'item')
+      if (chatType === 'reAct') {
+        store.getState().incrementNodeVersion(reviewDetail.id, 'item')
+      } else {
+        const reviewStore = store.getState().currentPlanReviewToken
+        reviewStore.renderNum += 1
+        store.getState().updateState({ currentPlanReviewToken: { ...reviewStore } })
+      }
       break
 
     default:
@@ -483,7 +490,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
         },
       })
       // 关闭review的弹窗
-      if (chatType === 'task') store.getState().updateState({ currentPlanReviewToken: '' })
+      if (chatType === 'task') store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
       break
     case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
     case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
@@ -494,7 +501,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
       if (chatType === 'reAct') {
         store.getState().incrementNodeVersion(reviewDetail.id, 'item')
         if (reviewDetail.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
-          store.getState().updateState({ currentPlanReviewToken: '' })
+          store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
         } else {
           store.getState().updateCasualReview(reviewDetail.id, 'remove')
         }
@@ -508,7 +515,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
             type: reviewDetail.type,
           },
         })
-        store.getState().updateState({ currentPlanReviewToken: '' })
+        store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
       }
       break
     case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
@@ -546,22 +553,32 @@ const handleDetachedPlanReview: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const chatData: AIChatQSData = {
-    ...genBaseAIChatData(res),
-    chatType: chatType,
-    id: data.id,
-    type: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE,
-    data: { ...cloneDeep(data) },
-    TaskId: generateTaskNodeDataID({
+  const reviewDetail = rawData.contents.get(data.id)
+  if (reviewDetail) {
+    if (reviewDetail.type !== AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) return
+    reviewDetail.data = { ...data }
+    const reviewStore = store.getState().currentPlanReviewToken
+    reviewStore.renderNum += 1
+    store.getState().updateState({ currentPlanReviewToken: { ...reviewStore } })
+  } else {
+    const chatData: AIChatQSData = {
+      ...genBaseAIChatData(res),
       chatType: chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.coordinatorId,
-      taskID: res.TaskId,
-      isExist: (key) => rawData.contents.has(key),
-    }),
+      id: data.id,
+      type: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE,
+      data: { ...cloneDeep(data) },
+      TaskId: generateTaskNodeDataID({
+        chatType: chatType,
+        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.coordinatorId,
+        taskID: res.TaskId,
+        isExist: (key) => rawData.contents.has(key),
+      }),
+    }
+    rawData.contents.set(chatData.id, cloneDeep(chatData))
+    if (chatType === 'reAct') {
+      store.getState().updateState({ currentPlanReviewToken: { token: chatData.id, renderNum: 0 } })
+    }
   }
-  rawData.contents.set(chatData.id, cloneDeep(chatData))
-
-  if (chatType === 'reAct') store.getState().updateState({ currentPlanReviewToken: chatData.id })
 }
 
 export const aiReviewDataHandlers = {
