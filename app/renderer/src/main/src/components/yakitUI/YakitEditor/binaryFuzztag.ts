@@ -407,8 +407,8 @@ export const packetTextToRawBytes = (raw: string): Uint8Array => {
     if (kind === 'unquote') {
       pushBytes(goUnquoteToBytes(content))
     } else if (kind === 'hex') {
-      const stripped = content.replace(/\s+/g, '')
-      pushBytes(hexHeadToBytes(stripped, stripped.length))
+      // 去空白由 hexHeadToBytes 内部处理，这里不必再 strip
+      pushBytes(hexHeadToBytes(content, content.length))
     } else if (kind === 'base64') {
       try {
         const stripped = content.replace(/\s+/g, '')
