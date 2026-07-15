@@ -4407,7 +4407,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       onSetOnlyOneResEditor,
       loading,
       pageId,
-      foldBinaryFuzztag = false,
+      foldBinaryFuzztag = true,
     } = props
     const { t, i18n } = useI18nNamespaces(['webFuzzer'])
 

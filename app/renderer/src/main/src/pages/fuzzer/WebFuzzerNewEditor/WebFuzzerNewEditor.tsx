@@ -53,7 +53,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       oneResponseValue,
       hex,
       privacy,
-      foldBinaryFuzztag = false,
+      foldBinaryFuzztag = true,
     } = props
     const { t, i18n } = useI18nNamespaces(['webFuzzer'])
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()

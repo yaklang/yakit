@@ -356,6 +356,168 @@ export const collapseBinaryFuzztag = (raw: string): BinaryCollapseResult => {
   return { text: resultParts.join(''), entries }
 }
 
+/**
+ * 将含二进制 Fuzztag 的请求/响应文本解码为真实字节，供 HEX 视图使用。
+ * unquote / hexdecode / base64decode 会解码；file 与普通文本按 UTF-8 保留。
+ */
+export const packetTextToRawBytes = (raw: string): Uint8Array => {
+  if (!raw) {
+    return new Uint8Array()
+  }
+
+  const chunks: Uint8Array[] = []
+  const pushText = (s: string) => {
+    if (s) {
+      chunks.push(new TextEncoder().encode(s))
+    }
+  }
+  const pushBytes = (bytes: Uint8Array) => {
+    if (bytes.length) {
+      chunks.push(bytes)
+    }
+  }
+
+  let i = 0
+  const len = raw.length
+  while (i < len) {
+    const openIdx = raw.indexOf('{{', i)
+    if (openIdx === -1) {
+      pushText(raw.slice(i))
+      break
+    }
+    pushText(raw.slice(i, openIdx))
+
+    // 是否二进制标签以 parseTag 为准；普通 {{ 或未知标签按原文 UTF-8 保留
+    const parsed = parseTag(raw, openIdx)
+    if (!parsed) {
+      pushText(raw.slice(openIdx, openIdx + 2))
+      i = openIdx + 2
+      continue
+    }
+
+    const { tagName, content, endIndex } = parsed
+    const fullTag = raw.slice(openIdx, endIndex)
+    const kind = TAG_NAME_KIND[tagName.toLowerCase()]
+    if (!kind || kind === 'file') {
+      pushText(fullTag)
+      i = endIndex
+      continue
+    }
+
+    if (kind === 'unquote') {
+      pushBytes(goUnquoteToBytes(content))
+    } else if (kind === 'hex') {
+      // 去空白由 hexHeadToBytes 内部处理，这里不必再 strip
+      pushBytes(hexHeadToBytes(content, content.length))
+    } else if (kind === 'base64') {
+      try {
+        const stripped = content.replace(/\s+/g, '')
+        pushBytes(Uint8Array.from(strToByteArray(atob(stripped))))
+      } catch (e) {
+        pushText(fullTag)
+      }
+    }
+    i = endIndex
+  }
+
+  let total = 0
+  for (const c of chunks) {
+    total += c.length
+  }
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const c of chunks) {
+    out.set(c, offset)
+    offset += c.length
+  }
+  return out
+}
+
+export const bytesToUnquoteString = (bytes: Uint8Array | number[]): string => {
+  let s = '"'
+  for (let i = 0; i < bytes.length; i++) {
+    const b = bytes[i] & 0xff
+    switch (b) {
+      case 0x07:
+        s += '\\a'
+        break
+      case 0x08:
+        s += '\\b'
+        break
+      case 0x09:
+        s += '\\t'
+        break
+      case 0x0a:
+        s += '\\n'
+        break
+      case 0x0b:
+        s += '\\v'
+        break
+      case 0x0c:
+        s += '\\f'
+        break
+      case 0x0d:
+        s += '\\r'
+        break
+      case 0x22:
+        s += '\\"'
+        break
+      case 0x5c:
+        s += '\\\\'
+        break
+      default:
+        s += b >= 0x20 && b <= 0x7e ? String.fromCharCode(b) : `\\x${b.toString(16).padStart(2, '0')}`
+        break
+    }
+  }
+  return `${s}"`
+}
+
+const findHeaderBodySplit = (bytes: Uint8Array): number => {
+  for (let i = 0; i + 3 < bytes.length; i++) {
+    if (bytes[i] === 0x0d && bytes[i + 1] === 0x0a && bytes[i + 2] === 0x0d && bytes[i + 3] === 0x0a) {
+      return i + 4
+    }
+  }
+  for (let i = 0; i + 1 < bytes.length; i++) {
+    if (bytes[i] === 0x0a && bytes[i + 1] === 0x0a) {
+      return i + 2
+    }
+  }
+  return -1
+}
+
+/**
+ * HEX 编辑后的真实字节写回请求文本：
+ * - 整体可安全 UTF-8 展示时直接还原文本
+ * - 否则按 header/body 拆分，body 不可打印时包成 {{unquote(...)}}
+ */
+export const rawBytesToPacketText = (bytes: Uint8Array): string => {
+  if (!bytes || bytes.length === 0) {
+    return ''
+  }
+  const whole = bytesToDisplayText(bytes)
+  if (whole !== undefined && !whole.includes('{{')) {
+    return whole
+  }
+
+  const split = findHeaderBodySplit(bytes)
+  if (split < 0) {
+    return `{{unquote(${bytesToUnquoteString(bytes)})}}`
+  }
+
+  const headerText = new TextDecoder('utf-8', { fatal: false }).decode(bytes.slice(0, split))
+  const bodyBytes = bytes.slice(split)
+  if (bodyBytes.length === 0) {
+    return headerText
+  }
+  const bodyText = bytesToDisplayText(bodyBytes)
+  if (bodyText !== undefined && !bodyText.includes('{{')) {
+    return headerText + bodyText
+  }
+  return `${headerText}{{unquote(${bytesToUnquoteString(bodyBytes)})}}`
+}
+
 const placeholderRegex = () => /\{\{([\w:]+)\(#YBIN_([0-9a-f]+)#\)\}\}/g
 
 // 展开：占位文本 -> 真实文本
@@ -625,17 +787,23 @@ export const decodeBinaryTag = async (entry: BinaryFuzztagEntry): Promise<Uint8A
 }
 
 // 字节 -> 完整标签文本（按原标签类型重新编码）
+/** 测试/对照用：经 Codec HexDecode + StrQuote 生成带引号的 unquote 参数字符串 */
+export const strQuoteBytesViaCodec = async (bytes: Uint8Array): Promise<string> => {
+  const hex = bytesToHex(bytes)
+  const rsp = await runCodec(hex, [
+    { CodecType: 'HexDecode', Params: [] },
+    { CodecType: 'StrQuote', Params: [] },
+  ])
+  return rsp.Result
+}
+
 export const encodeBytesToTag = async (kind: BinaryTagKind, tagName: string, bytes: Uint8Array): Promise<string> => {
   const hex = bytesToHex(bytes)
   if (kind === 'hex') {
     return `{{${tagName}(${hex})}}`
   }
   if (kind === 'unquote') {
-    const rsp = await runCodec(hex, [
-      { CodecType: 'HexDecode', Params: [] },
-      { CodecType: 'StrQuote', Params: [] },
-    ])
-    return `{{${tagName}(${rsp.Result})}}`
+    return `{{${tagName}(${bytesToUnquoteString(bytes)})}}`
   }
   if (kind === 'base64') {
     const rsp = await runCodec(hex, [
