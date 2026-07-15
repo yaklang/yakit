@@ -285,7 +285,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         switch (data.type as ReActChatEventEnum) {
           // 新开聊天对话窗
           case ReActChatEventEnum.NEW_CHAT:
-            setSetting?.((old) => ({ ...old, SyncPerceptionTrigger: false, EnablePlan: false }))
+            setSetting?.((old) => ({
+              ...old,
+              SyncPerceptionTrigger: false,
+              EnablePlan: false,
+              Strategy: { EnableMultiAgent: false, EnableGoalMode: false, GoalMinIterations: 0 },
+            }))
             setActiveChat?.(undefined)
             setTimeout(() => {
               setMode('welcome')

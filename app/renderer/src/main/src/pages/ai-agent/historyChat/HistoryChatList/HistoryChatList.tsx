@@ -243,6 +243,11 @@ const HistoryChatList: FC<{
       ...old,
       SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,
       EnablePlan: info?.StartParams?.EnablePlan ?? false,
+      Strategy: {
+        EnableMultiAgent: info?.StartParams?.Strategy?.EnableMultiAgent ?? false,
+        EnableGoalMode: info?.StartParams?.Strategy?.EnableGoalMode ?? false,
+        GoalMinIterations: info?.StartParams?.Strategy?.GoalMinIterations ?? 0,
+      },
     }))
     setActiveChat && setActiveChat(info)
   })

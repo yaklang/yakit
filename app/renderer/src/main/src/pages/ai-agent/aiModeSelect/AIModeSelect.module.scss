@@ -1,0 +1,122 @@
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  .mode-btn-label {
+    font-size: 12px;
+  }
+  .mode-btn-arrow {
+    width: 12px;
+    height: 12px;
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+  &:hover {
+    color: var(--Colors-Use-Main-Primary);
+    border-color: var(--Colors-Use-Main-Primary);
+  }
+}
+
+// 运行模式下拉
+.mode-menu {
+  width: 215px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 4px;
+  background: var(--Colors-Use-Basic-Background);
+  border-radius: 6px;
+  box-shadow: var(--yakit-box-shadow);
+  .mode-menu-hint {
+    padding: 0 8px 4px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .mode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .mode-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg);
+    }
+  }
+  .mode-option-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .mode-option-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+  .mode-option-label {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .mode-option-check {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    svg {
+      width: 14px;
+      height: 14px;
+      color: var(--Colors-Use-Main-Primary);
+    }
+  }
+  .mode-option-check-placeholder {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .mode-panel-divider {
+    height: 1px;
+    margin: 8px 8px 4px;
+    background: var(--Colors-Use-Neutral-Border);
+  }
+  .mode-goal-iter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 8px 0;
+    .mode-goal-iter-label {
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      line-height: 16px;
+      white-space: nowrap;
+    }
+    .mode-goal-iter-input {
+      width: 96px;
+    }
+  }
+}
+.mode-dropdown {
+  z-index: 1050;
+}

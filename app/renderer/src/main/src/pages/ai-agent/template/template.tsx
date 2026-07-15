@@ -19,8 +19,7 @@ import {
   FooterRightTypesComponentProps,
   QSInputTextareaProps,
 } from './type'
-import { Input, Tooltip } from 'antd'
-import { Dropdown } from 'antd'
+import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineArrowupIcon,
@@ -29,11 +28,8 @@ import {
   OutlineCodeIcon,
   OutlineCogIcon,
   OutlineHandIcon,
-  OutlineChevrondownIcon,
-  OutlineFlagIcon,
-  OutlineUsergroupIcon,
 } from '@/assets/icon/outline'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
 import styles from './template.module.scss'
@@ -54,14 +50,11 @@ import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import { AIFocusMode } from '@/pages/ai-re-act/aiFocusMode/AIFocusMode'
-import useAIAgentStore from '../useContext/useStore'
 import { isString } from 'lodash'
 import OpenFileDropdown, { OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
 import { insertAtCurrentPosition } from '../components/aiMilkdownInput/customPlugin'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -74,9 +67,7 @@ import {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
-import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { AIExecutionStrategy, AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
+import AIModeSelect from '../aiModeSelect/AIModeSelect'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -117,7 +108,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { chatIPCData } = useChatIPCStore()
-    const { handleSendConfigHotpatch } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 
     const [manualAdditionVisible, setManualAdditionVisible] = useState<boolean>(false)
@@ -178,8 +168,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [{ type: AIInputFooterRightEnum.AIFocusMode }]
     }, [props.footerRightTypes, isOpen])
 
-    const { setting, activeChat } = useAIAgentStore()
-    const { setSetting } = useAIAgentDispatcher()
     const [disabled, setDisabled] = useState<boolean>(false)
 
     const { isHovering, dropRef } = useAIChatDrop({
@@ -390,79 +378,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       aiMilkdownInputRef.current?.setImage()
     })
 
-    const enablePlan = useCreation(() => {
-      return !!setting?.EnablePlan
-    }, [setting?.EnablePlan])
-    const onSetPlan = useDebounceFn(
-      useMemoizedFn((checked) => {
-        handleSendConfigHotpatch({
-          hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
-          params: {
-            EnablePlan: checked,
-          },
-        })
-        setSetting?.((v) => ({
-          ...v,
-          EnablePlan: checked,
-        }))
-        if (activeChat?.SessionID) {
-          emiter.emit(
-            'sessionData',
-            JSON.stringify({
-              type: 'updateSession',
-              sessionId: activeChat.SessionID,
-              updates: {
-                StartParams: {
-                  ...(activeChat.StartParams || {}),
-                  EnablePlan: checked,
-                },
-              },
-            }),
-          )
-        }
-      }),
-      { wait: 200, leading: true },
-    ).run
-    const enableMultiAgent = useCreation(
-      () => !!setting?.Strategy?.EnableMultiAgent,
-      [setting?.Strategy?.EnableMultiAgent],
-    )
-    const enableGoalMode = useCreation(() => !!setting?.Strategy?.EnableGoalMode, [setting?.Strategy?.EnableGoalMode])
-    const goalMinIterations = useCreation(
-      () => setting?.Strategy?.GoalMinIterations ?? 0,
-      [setting?.Strategy?.GoalMinIterations],
-    )
-    const [modeVisible, setModeVisible] = useState<boolean>(false)
-    const onSetStrategy = useDebounceFn(
-      useMemoizedFn((next: AIExecutionStrategy) => {
-        setSetting?.((v) => ({
-          ...v,
-          Strategy: { ...v.Strategy, ...next },
-        }))
-        if (activeChat?.SessionID) {
-          emiter.emit(
-            'sessionData',
-            JSON.stringify({
-              type: 'updateSession',
-              sessionId: activeChat.SessionID,
-              updates: {
-                StartParams: {
-                  ...(activeChat.StartParams || {}),
-                  Strategy: { ...(activeChat.StartParams?.Strategy || {}), ...next },
-                },
-              },
-            }),
-          )
-        }
-        // 热加载扩展点：后端支持 Strategy 热更新后取消下方注释启用 hotpatch
-        // handleSendConfigHotpatch({
-        //   hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_Strategy,
-        //   params: { Strategy: { ...setting?.Strategy, ...next } },
-        // })
-      }),
-      { wait: 200, leading: true },
-    ).run
-    const modeActive = enablePlan || enableMultiAgent || enableGoalMode
     return (
       <div
         className={classNames(
@@ -512,66 +427,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           <div className={styles['footer']}>
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
-                <Dropdown
-                  trigger={['click']}
-                  visible={modeVisible}
-                  onVisibleChange={setModeVisible}
-                  overlayClassName={styles['mode-dropdown']}
-                  overlay={
-                    <div className={styles['mode-menu']}>
-                      <Tooltip title="开启后会进入 Plan 模式，进行任务规划和执行">
-                        <YakitCheckbox checked={enablePlan} onChange={(e) => onSetPlan(e.target.checked)}>
-                          <OutlineBrainCircuitIcon className={styles['mode-item-icon']} />
-                          Plan
-                        </YakitCheckbox>
-                      </Tooltip>
-                      <Tooltip title="多 Agent 模式：把复杂任务拆成多个并行子 Agent 执行后再汇总">
-                        <YakitCheckbox
-                          checked={enableMultiAgent}
-                          onChange={(e) => onSetStrategy({ EnableMultiAgent: e.target.checked })}
-                        >
-                          <OutlineUsergroupIcon className={styles['mode-item-icon']} />
-                          Multi-Agent
-                        </YakitCheckbox>
-                      </Tooltip>
-                      <Tooltip title="Goal 模式：达到最小迭代次数前禁止提前结束">
-                        <YakitCheckbox
-                          checked={enableGoalMode}
-                          onChange={(e) => onSetStrategy({ EnableGoalMode: e.target.checked })}
-                        >
-                          <OutlineFlagIcon className={styles['mode-item-icon']} />
-                          Goal
-                        </YakitCheckbox>
-                      </Tooltip>
-                      {enableGoalMode && (
-                        <div className={styles['mode-goal-iter']}>
-                          <span className={styles['mode-goal-iter-label']}>最小迭代次数</span>
-                          <Tooltip title="<=0 时由服务端使用默认值">
-                            <YakitInputNumber
-                              size="small"
-                              min={0}
-                              value={goalMinIterations}
-                              onChange={(v) => onSetStrategy({ GoalMinIterations: (v as number) ?? 0 })}
-                              className={styles['mode-goal-iter-input']}
-                            />
-                          </Tooltip>
-                        </div>
-                      )}
-                    </div>
-                  }
-                >
-                  <YakitButton
-                    type="outline2"
-                    radius="28px"
-                    isHover={modeVisible}
-                    icon={<OutlineBrainCircuitIcon />}
-                    onClick={(e) => e.stopPropagation()}
-                    className={classNames(styles['mode-btn'], { [styles['mode-btn-active']]: modeActive })}
-                  >
-                    <span className={styles['mode-btn-label']}>模式</span>
-                    <OutlineChevrondownIcon className={styles['mode-btn-arrow']} />
-                  </YakitButton>
-                </Dropdown>
+                <AIModeSelect />
                 <YakitButton
                   type="text2"
                   radius="50%"
