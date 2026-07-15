@@ -9,7 +9,6 @@ import { Tooltip } from 'antd'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import ChatCard from '../ChatCard'
 import ModalInfo, { type ModalInfoProps } from '../ModelInfo'
-import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
   hasWebFuzzerPageOnAIFuzzStatus,
   pushAIFuzzStatusRuntimeIdToWebFuzzerPage,
@@ -17,6 +16,8 @@ import {
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { yakitNotify } from '@/utils/notification'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
 
 const STATS_TILE_PX = 91
 const STATS_GAP_PX = 4
@@ -53,6 +54,13 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
     return data.progress?.average_response_ms ?? 0
   }, [renderNum])
 
+  const { getCurrentSelectPageId, currentPageTabRouteKey } = usePageInfo(
+    (s) => ({
+      getCurrentSelectPageId: s.getCurrentSelectPageId,
+      currentPageTabRouteKey: s.currentPageTabRouteKey,
+    }),
+    shallow,
+  )
   // 「查看详情」点击：
   // - 若卡片所在的会话绑定了某个 Web Fuzzer 页签（`WebFuzzerAiStore`），
   //   则把本卡片的 `runtime_id` 显式推送到该页签，并打开 traffic analysis 抽屉。
@@ -63,8 +71,8 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
       yakitNotify('error', '该发包统计缺少 runtime_id，无法查看详情')
       return
     }
-    const store = chatIPCEvents.fetchChatDataStore()
-    const fuzzerPageId = store instanceof WebFuzzerAiStore ? store.fuzzerPageId : ''
+    const fuzzerPageId =
+      currentPageTabRouteKey === YakitRoute.WebsocketFuzzer ? getCurrentSelectPageId(currentPageTabRouteKey) : ''
     if (fuzzerPageId && hasWebFuzzerPageOnAIFuzzStatus(fuzzerPageId)) {
       // Web Fuzzer 页内：直接把本卡片的 runtime_id 推过去；
       // 当右侧无本地发包响应时空状态会切换为 history 表，已可见的 history 表则会按新 key 重新加载。

@@ -10,9 +10,10 @@ import styles from './AIYaklangCode.module.scss'
 import { useCreation, useMemoizedFn, useThrottleEffect } from 'ahooks'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import { monaco as monacoApi } from 'react-monaco-editor'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
-import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useAIAgentStore from '../../useContext/useStore'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
 
 const CODE_BLOCK_MAX_HEIGHT = 200
 
@@ -99,17 +100,24 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
         )
     }
   })
-  const { chatIPCEvents } = useChatIPCDispatcher()
+  // const { chatIPCEvents } = useChatIPCDispatcher()
+  const { setting } = useAIAgentStore()
 
+  const { getCurrentSelectPageId, currentPageTabRouteKey } = usePageInfo(
+    (s) => ({
+      getCurrentSelectPageId: s.getCurrentSelectPageId,
+      currentPageTabRouteKey: s.currentPageTabRouteKey,
+    }),
+    shallow,
+  )
+  /** TODO - 这个pageId获取待修改@whale  */
   const webFuzzerAiStoreFuzzerPageId = useMemo((): string | undefined => {
-    const store = chatIPCEvents.fetchChatDataStore()
-    return store instanceof WebFuzzerAiStore ? store.fuzzerPageId : undefined
-  }, [chatIPCEvents])
-  const { chatDataStoreKey } = useGetChatDataStoreKey()
+    return getCurrentSelectPageId(currentPageTabRouteKey)
+  }, [currentPageTabRouteKey])
 
   const isWebFuzzerAiStore = useMemo(() => {
-    return chatDataStoreKey === 'WebFuzzerAiStore'
-  }, [chatDataStoreKey])
+    return setting.Source === AISourceEnum.webFuzzer
+  }, [setting.Source])
 
   const titleExtra = useMemo(() => {
     if (!modalInfo) return null

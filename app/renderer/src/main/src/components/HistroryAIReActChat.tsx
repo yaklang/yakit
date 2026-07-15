@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { memo, useEffect, useMemo, useRef } from 'react'
 import { FC } from 'react'
 
 import { AIReActChat } from '@/pages/ai-re-act/aiReActChat/AIReActChat'
@@ -14,7 +14,7 @@ import {
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import { getAIModelAvailableInfo, isForcedSetAIModal } from '@/pages/ai-agent/aiModelList/utils'
-import { useDebounceFn, useMemoizedFn, useRequest, useSafeState } from 'ahooks'
+import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useSafeState, useUpdateEffect } from 'ahooks'
 import { apiGetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import { defaultParams, GlobalNetworkConfig } from './configNetwork/ConfigNetworkPage'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
@@ -23,16 +23,17 @@ import { getRemoteValue } from '@/utils/kv'
 import { AIModelForm } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
+import { loadHistoryAIEmbeddedReviewPolicy, setHistoryAIReviewPolicy } from './historyAIReActChatStorage'
+import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
+import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 
 interface HistoryAIReActChatProps {
-  refRef: React.RefObject<HTMLDivElement>
   showFreeChat: boolean
   setShowFreeChat: React.Dispatch<React.SetStateAction<boolean>>
   aiReActChatRef: React.RefObject<AIReActChatRefProps>
   onStartRequest: (data: AIHandleStartParams) => Promise<AIHandleStartResProps>
   onSendRequest: (data: AISendParams) => Promise<AISendResProps>
-  setSetting: React.Dispatch<React.SetStateAction<AIAgentSetting>>
-  inViewport: boolean
   className?: string
   title?: React.ReactNode
   mergeRemoteAIAgentSetting?: (cache: AIAgentSetting, prev: AIAgentSetting) => AIAgentSetting
@@ -42,16 +43,14 @@ interface HistoryAIReActChatProps {
   source: AISource
 }
 
-const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
+/** TODO -  @whale 修改确认 */
+const HistroryAIReActChat: FC<HistoryAIReActChatProps> = memo((props) => {
   const {
-    refRef,
     showFreeChat,
     setShowFreeChat,
     aiReActChatRef,
     onStartRequest,
     onSendRequest,
-    inViewport,
-    setSetting,
     className,
     title = 'AI',
     mergeRemoteAIAgentSetting,
@@ -60,9 +59,20 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     source,
   } = props
 
+  const { setSetting } = useAIAgentDispatcher()
+  const { setting } = useAIAgentStore()
+
   const [_, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
 
+  const refRef = useRef<HTMLDivElement>(null)
+
+  const [inViewport = true] = useInViewport(refRef)
   const chatWidth = useListenWidth(refRef)
+
+  const embeddedSettingCacheReadyRef = useRef(false)
+  const lastPersistedEmbeddedSettingRef = useRef<{
+    ReviewPolicy?: AIAgentSetting['ReviewPolicy']
+  }>({})
 
   const { data, run, loading } = useRequest(
     async () => {
@@ -78,8 +88,39 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
       run()
       onGetGlobalNetworkConfig()
       getAIModelListOption()
+      applyHistoryAIEmbeddedReviewPolicy()
+      getAIAgentChatSetting()
     }
   }, [inViewport])
+
+  const applyHistoryAIEmbeddedReviewPolicy = useMemoizedFn(async () => {
+    const reviewPolicy = await loadHistoryAIEmbeddedReviewPolicy()
+    lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: reviewPolicy }
+    setSetting((prev) => ({
+      ...prev,
+      ReviewPolicy: reviewPolicy,
+    }))
+  })
+
+  useEffect(() => {
+    applyHistoryAIEmbeddedReviewPolicy().finally(() => {
+      embeddedSettingCacheReadyRef.current = true
+    })
+  }, [applyHistoryAIEmbeddedReviewPolicy])
+
+  useUpdateEffect(() => {
+    if (!showFreeChat) return
+    applyHistoryAIEmbeddedReviewPolicy()
+  }, [showFreeChat, applyHistoryAIEmbeddedReviewPolicy])
+
+  useUpdateEffect(() => {
+    if (!embeddedSettingCacheReadyRef.current) return
+    const policy = setting.ReviewPolicy ?? AIAgentSettingDefault.ReviewPolicy ?? 'manual'
+    if (lastPersistedEmbeddedSettingRef.current.ReviewPolicy === policy) return
+    setHistoryAIReviewPolicy(policy).then(() => {
+      lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: policy }
+    })
+  }, [setting.ReviewPolicy])
 
   const getAIModelListOption = useDebounceFn(
     () => {
@@ -96,32 +137,29 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     apiGetGlobalNetworkConfig().then(setGlobalNetworkConfig)
   })
 
-  useEffect(() => {
-    if (inViewport) {
-      // 获取缓存的全局配置数据
-      getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
-        .then((res) => {
-          if (!res) return
-          try {
-            const cache = JSON.parse(res) as AIAgentSetting
-            if (typeof cache !== 'object') return
-            const { ReviewPolicy: _ignoredPolicy, ...cacheWithoutReviewPolicy } = cache
-            setSetting((prev) => {
-              const next = mergeRemoteAIAgentSetting
-                ? mergeRemoteAIAgentSetting(cacheWithoutReviewPolicy as AIAgentSetting, prev)
-                : { ...prev, ...cacheWithoutReviewPolicy }
-              return {
-                ...next,
-                ReviewPolicy: prev.ReviewPolicy,
-                Source: source,
-              }
-            })
-          } catch (error) {}
-        })
-        .catch(() => {})
-    }
-    return () => {}
-  }, [inViewport])
+  /** 获取缓存的全局配置数据 */
+  const getAIAgentChatSetting = useMemoizedFn(async () => {
+    getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+      .then((res) => {
+        if (!res) return
+        try {
+          const cache = JSON.parse(res) as AIAgentSetting
+          if (typeof cache !== 'object') return
+          const { ReviewPolicy: _ignoredPolicy, ...cacheWithoutReviewPolicy } = cache
+          setSetting((prev) => {
+            const next = mergeRemoteAIAgentSetting
+              ? mergeRemoteAIAgentSetting(cacheWithoutReviewPolicy as AIAgentSetting, prev)
+              : { ...prev, ...cacheWithoutReviewPolicy }
+            return {
+              ...next,
+              ReviewPolicy: prev.ReviewPolicy,
+              Source: source,
+            }
+          })
+        } catch (error) {}
+      })
+      .catch(() => {})
+  })
 
   useEffect(() => {
     if (!inViewport || loading || data === undefined || data) return
@@ -167,7 +205,6 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     // 有模型 → 正常聊天
     return (
       <AIReActChat
-        mode={'task'}
         showFreeChat={showFreeChat}
         setShowFreeChat={setShowFreeChat}
         title={title}
@@ -184,7 +221,6 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     data,
     externalParameters,
     loading,
-    mergeRemoteAIAgentSetting,
     onSendRequest,
     onStartRequest,
     run,
@@ -198,6 +234,6 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
       {resultRender}
     </div>
   )
-}
+})
 
 export { HistroryAIReActChat }
