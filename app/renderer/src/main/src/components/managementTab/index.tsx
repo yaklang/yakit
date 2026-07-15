@@ -26,19 +26,6 @@ export const ManagementTab: React.FC<{ hideIcon?: boolean }> = React.memo((props
     setPayloadMenuShow(false)
   })
 
-  const managementTitle = useMemo(() => {
-    switch (configManagementActiveTab) {
-      case 'payload':
-        return t('YakitRoute.Payload')
-      case 'proxy':
-        return t('Layout.ExtraMenu.proxyManagement')
-      case 'hotPatch':
-        return t('Layout.ExtraMenu.hotPatchManagement')
-      default:
-        return t('YakitRoute.Payload')
-    }
-  }, [configManagementActiveTab, i18n.language])
-
   if (!isYakitOrEnpriTrace()) return null
 
   return (
@@ -64,7 +51,7 @@ export const ManagementTab: React.FC<{ hideIcon?: boolean }> = React.memo((props
         className={styles['button-border']}
         icon={!props.hideIcon ? <SolidPayloadIcon /> : undefined}
       >
-        {managementTitle}
+        {t('Layout.ExtraMenu.resourceManager')}
       </YakitButton>
     </YakitPopover>
   )

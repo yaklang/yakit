@@ -52,7 +52,8 @@
       "importSharedData": "匯入分享資料",
       "importHARHistoryData": "匯入HAR流量資料",
       "proxyManagement": "代理管理",
-      "hotPatchManagement": "熱載入管理"
+      "hotPatchManagement": "熱載入管理",
+      "resourceManager": "資源管理"
     },
     "HeardMenu": {
       "editMenu": "編輯選單",

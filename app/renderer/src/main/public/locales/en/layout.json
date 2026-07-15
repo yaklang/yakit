@@ -52,7 +52,8 @@
       "importSharedData": "Import Shared Data",
       "importHARHistoryData": "Import HAR History Data",
       "proxyManagement": "Proxy Management",
-      "hotPatchManagement": "HotPatch Management"
+      "hotPatchManagement": "HotPatch Management",
+      "resourceManager": "Resource Manager"
     },
     "HeardMenu": {
       "editMenu": "Edit Menu",
