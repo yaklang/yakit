@@ -1,3 +1,5 @@
+@use '../../../../styles/mixin.scss' as mixin;
+
 %display-flex-center {
   display: flex;
   align-items: center;

@@ -1,3 +1,14 @@
+@use '../../../../../styles/mixin.scss' as mixin;
+%display-flex-center {
+  display: flex;
+  align-items: center;
+}
+%display-column-center {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
 .chat-card-title {
   width: 100%;
   display: flex;

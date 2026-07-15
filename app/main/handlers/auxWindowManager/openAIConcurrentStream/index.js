@@ -29,9 +29,10 @@ function register(manager, mainWindow) {
     }
   }
 
+  /** @deprecated 获取数据的逻辑改为直接从主窗口推送，如需下面逻辑，需要按新版获取数据逻辑补充 */
   ipcMain.handle(FETCH_CONTENTS, async (_event, frame) => {
     if (!frame?.session || !frame?.token || !mainWindow || mainWindow.isDestroyed()) {
-      return { contentEntries: [] }
+      return { rawData: [] }
     }
 
     const requestId = crypto.randomUUID()
@@ -40,12 +41,12 @@ function register(manager, mainWindow) {
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
         ipcMain.removeAllListeners(responseChannel)
-        resolve({ contentEntries: [] })
+        resolve({ rawData: [] })
       }, 15000)
 
       ipcMain.once(responseChannel, (_responseEvent, data) => {
         clearTimeout(timeout)
-        resolve(data ?? { contentEntries: [] })
+        resolve(data ?? { rawData: [] })
       })
 
       safeSendMain('fetch-concurrent-stream-contents-request', { requestId, ...frame })
@@ -53,7 +54,7 @@ function register(manager, mainWindow) {
   })
 
   ipcMain.handle('open-ai-concurrent-stream-window', async (_event, data) => {
-    if (!data || typeof data !== 'object' || !Array.isArray(data.elements)) return
+    if (!data || typeof data !== 'object' || !Array.isArray(data.childrenTokens)) return
     const singletonKey = buildSingletonKey(data)
     const title = typeof data.taskName === 'string' && data.taskName ? data.taskName : 'Concurrent Stream'
     return manager.create({

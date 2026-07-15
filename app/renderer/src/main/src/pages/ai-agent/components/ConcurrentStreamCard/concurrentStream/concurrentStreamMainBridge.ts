@@ -49,13 +49,14 @@ export function setupConcurrentStreamMainBridge() {
   if (bridgeReady) return
   bridgeReady = true
 
+  /** @deprecated 下面方法不适合新版了，目前数据都是通过 openAIConcurrentStream发送到子窗口，如需沿用下面的逻辑，需要将获取数据的方法改为新版 */
   ipcRenderer.on(FETCH_REQUEST, (_event, payload: ConcurrentStreamFramePayload & { requestId: string }) => {
     const { requestId, ...frame } = payload
     if (!requestId || !frame.session || !frame.token) return
 
     const store = resolveStoreForSession(frame.session)
-    const contentEntries = collectConcurrentStreamContentEntries(store, frame)
+    const rawData = collectConcurrentStreamContentEntries(store, frame)
 
-    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, { contentEntries })
+    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, { rawData })
   })
 }

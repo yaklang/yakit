@@ -122,32 +122,30 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = memo(
     }, [embedInParentScroll, handleScroll, scrollContainerRef])
 
     return (
-      <div className={isChildWindow ? styles['concurrent-stream-content-wrapper'] : undefined}>
+      <div
+        className={styles['content']}
+        hidden={childrenTokens.length === 0}
+        style={isChildWindow ? { flex: 1, maxHeight: 'inherit', height: 0 } : undefined}
+      >
         <div
-          className={styles['content']}
-          hidden={childrenTokens.length === 0}
-          style={isChildWindow ? { flex: 1, maxHeight: 'inherit', height: 0 } : undefined}
+          ref={scrollRef}
+          className={classNames(styles['concurrent-stream-content'], {
+            [styles.focused]: isFocus && !embedInParentScroll,
+            [styles['embed-in-parent']]: embedInParentScroll,
+          })}
+          onScroll={embedInParentScroll ? undefined : handleScroll}
+          style={
+            embedInParentScroll
+              ? undefined
+              : isChildWindow
+                ? { maxHeight: 'inherit', height: '100%', overflowY: 'auto' }
+                : undefined
+          }
         >
-          <div
-            ref={scrollRef}
-            className={classNames(styles['concurrent-stream-content'], {
-              [styles.focused]: isFocus && !embedInParentScroll,
-              [styles['embed-in-parent']]: embedInParentScroll,
-            })}
-            onScroll={embedInParentScroll ? undefined : handleScroll}
-            style={
-              embedInParentScroll
-                ? undefined
-                : isChildWindow
-                  ? { maxHeight: 'inherit', height: '100%', overflowY: 'auto' }
-                  : undefined
-            }
-          >
-            <div ref={contentMeasureRef}>
-              {childrenTokens.map((item, index) => (
-                <ConcurrentStreamContentItem key={item} token={item} />
-              ))}
-            </div>
+          <div ref={contentMeasureRef}>
+            {childrenTokens.map((item, index) => (
+              <ConcurrentStreamContentItem key={item} token={item} />
+            ))}
           </div>
         </div>
       </div>

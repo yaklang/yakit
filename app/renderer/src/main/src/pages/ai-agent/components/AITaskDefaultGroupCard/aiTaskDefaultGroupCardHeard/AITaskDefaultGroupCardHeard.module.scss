@@ -1,3 +1,13 @@
+@use '../../../../../styles/mixin.scss' as mixin;
+%display-flex-center {
+  display: flex;
+  align-items: center;
+}
+%display-column-center {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
 .ai-task-default-group-card-title {
   height: 20px;
   display: flex;

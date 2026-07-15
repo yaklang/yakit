@@ -1,5 +1,5 @@
 import { useMemo, type CSSProperties } from 'react'
-import { CHILD_WINDOW_STYLE } from '../constants'
+// import { CHILD_WINDOW_STYLE } from '../constants'
 
 interface BuildCardStyleOptions {
   bgColor: string
@@ -8,15 +8,16 @@ interface BuildCardStyleOptions {
   isChildWindow?: boolean
 }
 
-/** 收起时叠加斜纹背景，展开或子窗口仅显示状态色 */
+/**
+ * 收起时叠加斜纹背景，展开
+ * 子窗口不需要这个样式
+ */
 export function buildConcurrentStreamCardStyle({
   bgColor,
   vectorBg,
   showStripe,
   isChildWindow,
 }: BuildCardStyleOptions): CSSProperties {
-  if (isChildWindow) return CHILD_WINDOW_STYLE
-
   const isGradientBg = bgColor.includes('gradient(')
 
   if (!showStripe) {

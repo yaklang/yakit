@@ -1,0 +1,7 @@
+@use '../ConcurrentStreamCard.module.scss';
+@use '../ConcurrentStreamContent/ConcurrentStreamContent.module.scss';
+
+.child-chat-card {
+  height: 100%;
+  background-color: var(--Colors-Use-Basic-Background);
+}
