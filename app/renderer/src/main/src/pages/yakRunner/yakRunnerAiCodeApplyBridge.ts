@@ -55,9 +55,14 @@ export function createYakRunnerGeneratedCodeFileName(date = new Date()): string 
 }
 
 function getDirectoryPathFromAttachedResourceInfo(attachedResourceInfo?: AttachedResourceInfo[]): string | undefined {
-  return attachedResourceInfo
-    ?.find((item) => item.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID)
-    ?.Value?.trim()
+  const attachedResourceInfoValue = attachedResourceInfo?.find(
+    (item) => item.Key === AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
+  )?.Value
+  const result =
+    typeof attachedResourceInfoValue === 'string'
+      ? attachedResourceInfoValue?.trim()
+      : attachedResourceInfoValue?.join(',').trim()
+  return result
 }
 
 function joinDirectoryAndFileName(directoryPath: string, fileName: string): string {
