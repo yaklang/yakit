@@ -85,7 +85,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     pluginType,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitRoute'])
-
+  const handleChangeActiveKeyRef = useRef<boolean>(false)
   const [activeKey, setActiveKey] = useState<string | undefined>(undefined)
   const prevLoadingRef = useRef<boolean>(false)
   const [allTotal, setAllTotal] = useState<number>(0)
@@ -250,13 +250,18 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
 
   // 插件执行结束后（loading: true -> false），自动切换到最合适的 Tab
   useEffect(() => {
-    if (prevLoadingRef.current && !loading) {
+    if (prevLoadingRef.current && !loading && !handleChangeActiveKeyRef.current) {
       const tabs = showTabsRef.current
       const builtinTypes = new Set(['http', 'log', 'console', 'risk'])
       const customTabs = tabs.filter((tab) => !builtinTypes.has(tab.type))
 
+      // 统一收口：只有未手动切换过 Tab 时，才执行 setActiveKey
+      const safeSetActiveKey = (key: string | undefined) => {
+        if (!handleChangeActiveKeyRef.current) setActiveKey(key)
+      }
+
       if (customTabs.length > 0) {
-        setActiveKey(customTabs[0].tabName)
+        safeSetActiveKey(customTabs[0].tabName)
       } else {
         const httpTab = tabs.find((tab) => tab.type === 'http')
         if (httpTab && runtimeId) {
@@ -267,19 +272,19 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             })
             .then((rsp: { Total: number }) => {
               if (rsp.Total > 0) {
-                setActiveKey(httpTab.tabName)
+                safeSetActiveKey(httpTab.tabName)
               } else {
                 const logTab = tabs.find((tab) => tab.type === 'log')
-                setActiveKey(logTab?.tabName || tabs[0]?.tabName)
+                safeSetActiveKey(logTab?.tabName || tabs[0]?.tabName)
               }
             })
             .catch(() => {
               const logTab = tabs.find((tab) => tab.type === 'log')
-              setActiveKey(logTab?.tabName || tabs[0]?.tabName)
+              safeSetActiveKey(logTab?.tabName || tabs[0]?.tabName)
             })
         } else {
           const logTab = tabs.find((tab) => tab.type === 'log')
-          setActiveKey(logTab?.tabName || tabs[0]?.tabName)
+          safeSetActiveKey(logTab?.tabName || tabs[0]?.tabName)
         }
       }
     }
@@ -294,7 +299,14 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         </div>
       )}
       {showTabs.length > 0 && (
-        <PluginTabs activeKey={activeKey} onChange={setActiveKey} tabBarExtraContent={{ right: PluginTabsRightNode }}>
+        <PluginTabs
+          activeKey={activeKey}
+          onChange={(key) => {
+            handleChangeActiveKeyRef.current = true
+            setActiveKey(key)
+          }}
+          tabBarExtraContent={{ right: PluginTabsRightNode }}
+        >
           {showTabs.map((ele) => (
             <TabPane
               tab={tabBarRender(ele, showRiskTotal)}
