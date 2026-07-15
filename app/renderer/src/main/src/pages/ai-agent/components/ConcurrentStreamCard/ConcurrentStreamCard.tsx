@@ -15,6 +15,7 @@ import type {
 import classNames from 'classnames'
 import ConcurrentStreamCardHeard from './concurrentStreamCardHeard/ConcurrentStreamCardHeard'
 import ConcurrentStreamContent from './ConcurrentStreamContent/ConcurrentStreamContent'
+import { useConcurrentStreamRefreshListener } from './concurrentStream/useConcurrentStreamRefreshListener'
 
 const ConcurrentStreamCard: FC<{
   token: string
@@ -44,7 +45,7 @@ const ConcurrentStreamCard: FC<{
     }
   }, [isChildWindow, raw?.data?.status])
 
-  // useConcurrentStreamRefreshListener(framePayload, session, token, chatType, !isChildWindow)
+  useConcurrentStreamRefreshListener(token, !isChildWindow)
 
   const presentation = useMemo(() => getAIStatusPresentation(raw?.data?.status), [raw?.data?.status])
 

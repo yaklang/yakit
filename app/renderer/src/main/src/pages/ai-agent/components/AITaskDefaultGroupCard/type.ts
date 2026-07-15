@@ -2,7 +2,6 @@ import { Dispatch, SetStateAction } from 'react'
 
 export interface AITaskDefaultGroupCardHeardWrapperProps {
   expand: boolean
-  isChildWindow: boolean
   token: string
   expandToggle: () => void
 }

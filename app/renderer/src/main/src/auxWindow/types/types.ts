@@ -1,6 +1,8 @@
+import { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
+
 export interface AuxWindowCreateOptions {
   route: string
-  payload?: Record<string, unknown>
+  payload?: ConcurrentStreamFramePayload
   singletonKey?: string
   title?: string
   width?: number
@@ -16,13 +18,13 @@ export interface AuxWindowInitPayload {
   windowId: string
   route: string
   title?: string
-  payload: Record<string, unknown>
+  payload: ConcurrentStreamFramePayload
 }
 
 export interface AuxWindowPushPayload {
   windowId: string
   route: string
-  payload: Record<string, unknown>
+  payload: ConcurrentStreamFramePayload
 }
 
 declare global {

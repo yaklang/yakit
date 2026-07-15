@@ -8,7 +8,7 @@ import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import useCreation from 'ahooks/lib/useCreation'
 
 const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((props) => {
-  const { token, isChildWindow, onClickTitle, rowData, coordinatorId, expand, expandToggle } = props
+  const { token, isChildWindow, onClickTitle, rowData, coordinatorId, expand, expandToggle, onRefresh } = props
 
   const titleText = useMemo(() => {
     return rowData?.data?.taskName || ''
@@ -54,6 +54,7 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
           showDetails={showDetails}
           coordinatorId={coordinatorId}
           taskId={rowData?.data?.taskId}
+          onRefresh={onRefresh}
         />
       </div>
     </div>

@@ -5,8 +5,9 @@ export interface ConcurrentStreamCardHeardProps {
   isChildWindow: boolean
   expand: boolean
   expandToggle: () => void
-  onClickTitle: () => void
+  onClickTitle?: () => void
   rowData?: ChatTaskNodeGroup
   coordinatorId?: string
   taskIndex?: string | null
+  onRefresh?: () => void
 }

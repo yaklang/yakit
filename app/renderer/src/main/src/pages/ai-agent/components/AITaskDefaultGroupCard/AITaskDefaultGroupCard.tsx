@@ -10,29 +10,22 @@ import { AITaskDefaultGroupCardHeardWrapperProps, AITaskDefaultGroupCardListWrap
 
 const AITaskDefaultGroupCard: FC<{
   token: string
-  isChildWindow: boolean
-}> = memo(({ token, isChildWindow }) => {
+}> = memo(({ token }) => {
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
   const [contentFocused, setContentFocused] = useState(false)
 
   useEffect(() => {
-    if (isChildWindow) return
     collapseExpand()
-  }, [collapseExpand, isChildWindow])
+  }, [collapseExpand])
 
   return (
     <div
       className={classNames(styles['ai-task-default-group-card'], {
         [styles['expand']]: contentFocused,
-        [styles['child-window-card']]: isChildWindow,
+        // [styles['child-window-card']]: false,
       })}
     >
-      <AITaskDefaultGroupCardHeardWrapper
-        isChildWindow={isChildWindow}
-        expand={expand}
-        token={token}
-        expandToggle={expandToggle}
-      />
+      <AITaskDefaultGroupCardHeardWrapper expand={expand} token={token} expandToggle={expandToggle} />
 
       {expand ? <AITaskDefaultGroupCardListWrapper token={token} setContentFocused={setContentFocused} /> : null}
     </div>
@@ -56,7 +49,7 @@ const AITaskDefaultGroupCardListWrapper: FC<AITaskDefaultGroupCardListWrapperPro
 })
 
 const AITaskDefaultGroupCardHeardWrapper: FC<AITaskDefaultGroupCardHeardWrapperProps> = memo((props) => {
-  const { token, expandToggle, expand, isChildWindow } = props
+  const { token, expandToggle, expand } = props
   const store = useCurrentStore()
   const renderNum = useStore(store, (state) => state.tasks[token].renderNum)
   const rawData = useCurrentRawData()
@@ -68,7 +61,7 @@ const AITaskDefaultGroupCardHeardWrapper: FC<AITaskDefaultGroupCardHeardWrapperP
   }, [renderNum])
   return (
     <AITaskDefaultGroupCardHeard
-      isChildWindow={isChildWindow}
+      isChildWindow={false}
       expandToggle={expandToggle}
       timeStamp={timeStamp}
       expand={expand}

@@ -1,10 +1,12 @@
-import type { ChatListRenderType, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIChatQSData, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface ConcurrentStreamFramePayload {
   session: string
   token: string
   chatType: ChatListRenderType
-  elements: ReActChatTaskElementSub[]
+  childrenTokens: string[]
+  /** childrenTokens 中各节点 token 对应的原始数据 */
+  rawData: Map<string, AIChatQSData>
   taskName?: string
 }
 
@@ -15,6 +17,6 @@ export function isConcurrentStreamFrame(data: unknown): data is ConcurrentStream
     typeof record.session === 'string' &&
     typeof record.token === 'string' &&
     typeof record.chatType === 'string' &&
-    Array.isArray(record.elements)
+    Array.isArray(record.childrenTokens)
   )
 }
