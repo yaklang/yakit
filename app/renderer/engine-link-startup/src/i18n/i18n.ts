@@ -1,6 +1,12 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import HttpBackend from 'i18next-http-backend'
+import { I18nNamespace } from './namespaces'
+
+function getNS() {
+  let ns: I18nNamespace[] = ['link', 'yakitUi']
+  return ns
+}
 
 i18n
   .use(HttpBackend)
@@ -9,7 +15,7 @@ i18n
     lng: 'zh',
     fallbackLng: 'en',
     supportedLngs: ['zh', 'en', 'zh-TW'],
-    ns: ['link', 'yakitUi'], // 需要预加载
+    ns: getNS(), // 需要预加载
     defaultNS: '',
     interpolation: {
       escapeValue: false,

@@ -83,7 +83,7 @@ const DefaultCredential: YaklangEngineWatchDogCredential = {
 }
 
 export const StartupPage: React.FC = () => {
-  const { t, i18n } = useI18nNamespaces(['link'])
+  const { t, i18nRefresh } = useI18nNamespaces(['link'])
   /** 工作空间是否已确认（所有平台均需用户确认） */
   const [workspaceConfirmed, setWorkspaceConfirmed] = useState<boolean>(false)
 
@@ -1189,7 +1189,7 @@ export const StartupPage: React.FC = () => {
         <video src={theme === 'light' ? memfitRight : memfitRightDark} autoPlay loop muted playsInline preload="auto" />
       )
     return <img src={yakitRight} alt={t('StartupPage.no_image')} />
-  }, [theme, i18n.language])
+  }, [theme, i18nRefresh])
 
   return (
     <div className={styles['startup-wrapper']}>

@@ -81,7 +81,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     moreYaklangVersionList,
     setYaklangSpecifyVersion,
   } = props
-  const { t, i18n } = useI18nNamespaces(['link'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['link'])
 
   const [moreVersionPopShow, setMoreVersionPopShow] = useState<boolean>(false)
   const [form] = Form.useForm()
@@ -574,7 +574,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     buildInEngineVersion,
     JSON.stringify(dbPath),
     countdown,
-    i18n.language,
+    i18nRefresh,
   ])
 
   const logError = useMemo(() => {

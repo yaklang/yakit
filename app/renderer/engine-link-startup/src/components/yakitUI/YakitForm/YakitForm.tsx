@@ -65,7 +65,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     cacheFolderPathKey,
     helpClassName,
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi'])
   const [uploadLoading, setUploadLoading] = useState<boolean>(false)
   const [name, setName] = useState<string>(fileName || '')
   useDebounceEffect(
@@ -469,7 +469,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
       yakitNotify('error', t('YakitFormDragger.filePathCountError'))
     }
     return arr.length
-  }, [fileName, name, i18n.language])
+  }, [fileName, name, i18nRefresh])
   return (
     <>
       {selectType === 'file' && (

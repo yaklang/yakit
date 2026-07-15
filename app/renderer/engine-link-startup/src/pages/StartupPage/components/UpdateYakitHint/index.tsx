@@ -22,7 +22,7 @@ interface UpdateYakitHintProps {
 /** yakit 更新弹框 */
 export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props) => {
   const { latest, visible, onCallback } = props
-  const { t, i18n } = useI18nNamespaces(['link'])
+  const { t, i18nRefresh } = useI18nNamespaces(['link'])
 
   useEffect(() => {
     if (visible) {
@@ -110,7 +110,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     if (status === 'install') return t('UpdateYakitHint.downloading', { name: getReleaseEditionName() })
     if (status === 'installed') return t('UpdateYakitHint.download_success', { name: getReleaseEditionName() })
     return t('UpdateYakitHint.unexpected_error')
-  }, [status, i18n.language])
+  }, [status, i18nRefresh])
 
   const footerBtn = useMemo(() => {
     if (status === 'install') {
@@ -134,7 +134,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
       )
     }
     return null
-  }, [status, breakLoading, i18n.language])
+  }, [status, breakLoading, i18nRefresh])
 
   return (
     <YakitHint footer={null} visible={visible} title={title}>
