@@ -26,7 +26,7 @@ interface ConcurrentStreamCardActionsProps {
   showCancelTask: boolean
   showDetails: boolean
   coordinatorId?: string
-  taskIndex?: string | null
+  taskId?: string | null
 }
 
 const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
@@ -40,7 +40,7 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   showCancelTask,
   showDetails,
   coordinatorId,
-  taskIndex,
+  taskId,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
 
@@ -59,11 +59,11 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   }
   return (
     <>
-      {showContinueTask && coordinatorId != null && taskIndex != null && (
-        <AIHistoryContinueTask coordinatorId={coordinatorId} taskIndex={taskIndex} />
+      {showContinueTask && coordinatorId != null && taskId != null && (
+        <AIHistoryContinueTask coordinatorId={coordinatorId} taskId={taskId} />
       )}
-      {showCancelTask && taskIndex != null && (
-        <AIHistorySkipTask taskIndex={taskIndex} isTask={framePayload.chatType === 'task'} />
+      {showCancelTask && taskId != null && (
+        <AIHistorySkipTask taskId={taskId} isTask={framePayload.chatType === 'task'} />
       )}
       {showDetails && (
         <Tooltip title="任务详情" placement="top">

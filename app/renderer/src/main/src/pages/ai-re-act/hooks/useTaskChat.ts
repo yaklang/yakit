@@ -13,7 +13,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, handleTodoListData, isValidTaskIndex } from './utils'
+import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, handleTodoListData } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -69,7 +69,7 @@ function useTaskChat(params: UseTaskChatParams) {
   const handleTaskNode = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     try {
       const taskId = getCurrentTaskPlanID?.()?.taskID
-      const ownTaskId = info.task.task_id
+      const ownTaskId = info.task.task_id || res.TaskId
       if (!taskId || !ownTaskId) return
       const taskKey = `${taskId}-${ownTaskId}`
       const existing = getContentMap(taskKey)
@@ -88,7 +88,6 @@ function useTaskChat(params: UseTaskChatParams) {
           chatType: 'task',
           type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
           data: {
-            taskIndex: info.task.index,
             taskId: ownTaskId,
             taskName: info.task.name,
             goal: info.task.goal,
@@ -270,13 +269,13 @@ function useTaskChat(params: UseTaskChatParams) {
           // 开始任务的执行
           const info = data as AIAgentGrpcApi.ChangeTask
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
-          if (isValidTaskIndex(info.task.index)) handleTaskNode(res, info)
+          if (info.task.task_id || res.TaskId) handleTaskNode(res, info)
         }
 
         if (data && typeof data === 'object' && data?.type === 'pop_task') {
           // 结束任务 & 请求更新任务树最新状态数据
           const info = data as AIAgentGrpcApi.ChangeTask
-          if (isValidTaskIndex(info.task.index)) handleTaskNode(res, info)
+          if (info.task.task_id || res.TaskId) handleTaskNode(res, info)
           sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
         }
         return
@@ -327,7 +326,7 @@ function useTaskChat(params: UseTaskChatParams) {
       setElements((old) => {
         let isUpdate = false
         const newArr = old.map((item) => {
-          if (chatData.taskIndex && item.token === chatData.taskIndex && item.kind === 'task') {
+          if (chatData.taskId && item.token === chatData.taskId && item.kind === 'task') {
             item.children.push({
               token: chatData.id,
               type: chatData.type,

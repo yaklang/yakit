@@ -81,9 +81,9 @@ const ConcurrentStreamCard: FC<{
   }, [isTaskDefaultGroup, raw])
 
   const coordinatorId = fetchCurrentTaskPlanID()?.coordinatorId
-  const taskIndex = raw?.data?.taskIndex
-  const showContinueTask = !!raw && !!coordinatorId && taskIndex != null && !isChildWindow
-  const showCancelTask = raw?.data?.status === 'processing' && taskIndex != null && !isChildWindow
+  const taskId = raw?.data?.taskId
+  const showContinueTask = !!raw && !!coordinatorId && !!taskId && !isChildWindow
+  const showCancelTask = raw?.data?.status === 'processing' && !!taskId && !isChildWindow
   const showStripeBg = !expand && !isChildWindow && !!vectorBg
 
   const cardStyle = useConcurrentStreamCardStyle({
@@ -103,7 +103,7 @@ const ConcurrentStreamCard: FC<{
     if (!raw) return false
     const status = raw?.data?.status
     return status === AITaskStatus.created || status === AITaskStatus.inProgress
-  }, [raw?.data?.status])
+  }, [isChildWindow, raw])
 
   const onDetails = useMemoizedFn(() => {
     const data = raw?.data
@@ -147,7 +147,7 @@ const ConcurrentStreamCard: FC<{
           showCancelTask={showCancelTask}
           showDetails={showDetails}
           coordinatorId={coordinatorId}
-          taskIndex={taskIndex}
+          taskId={taskId}
         />
       }
     >

@@ -114,11 +114,11 @@ const appendRenderItem = (
   old: ReActChatRenderItem[],
   element: ReActChatRenderItem,
   isHistory: boolean,
-  options?: { taskIndex: AIChatQSData['taskIndex']; getContentMap: AIMessageHandlerParams['getContentMap'] },
+  options?: { taskId: AIChatQSData['taskId']; getContentMap: AIMessageHandlerParams['getContentMap'] },
 ): ReActChatRenderItem[] => {
-  if (options?.taskIndex) {
-    const taskIndexGroupKey = options?.taskIndex
-    const groupIndex = old.findIndex((item) => item.kind === 'task' && item.token === taskIndexGroupKey)
+  if (options?.taskId) {
+    const taskGroupKey = options?.taskId
+    const groupIndex = old.findIndex((item) => item.kind === 'task' && item.token === taskGroupKey)
     if (groupIndex >= 0) {
       const list = [...old]
       const group = list[groupIndex] as ReActChatTaskElement
@@ -155,7 +155,7 @@ const handleUpdateUISingleState = (
       const chatDetail = getContentMap(info.mapKey)
       if (!chatDetail || chatDetail.id !== info.mapKey) return old
       return appendRenderItem(old, element, isHistory, {
-        taskIndex: chatDetail?.taskIndex,
+        taskId: chatDetail?.taskId,
         getContentMap,
       })
     })
@@ -169,7 +169,7 @@ const handleUpdateUIGroupState: (
   /** sub数据 */
   sub: { mapKey: string; type: AIChatQSDataType },
   setElement: AIMessageHandlerParams['setElements'],
-  /** 父 TaskIndex 集合组 token */
+  /** 父 TaskId 集合组 token */
   taskNodeKey?: string,
 ) => void = (group, sub, setElement, taskNodeKey) => {
   try {
@@ -212,7 +212,7 @@ const handleThought: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.THOUGHT,
     data: thought || '',
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -242,7 +242,7 @@ const handleResult: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.THOUGHT,
     data: result || '',
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -273,7 +273,7 @@ const handleFailReactTask: AIMessageHandler = (request) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -308,7 +308,7 @@ const handleToolCallDecision: AIMessageHandler = (request) => {
         En: i18n.en,
       },
     },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -339,7 +339,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (request) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -374,7 +374,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
     AIModelName: '',
     // showQS为了UI渲染方便，重新构建的字段
     extraValue: { showQS: data.react_task_input || '' },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -421,7 +421,7 @@ const handleApiRequestFailed: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
     data,
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -477,7 +477,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
       chatType: info.chatType,
       type: cardType,
       data: nextData,
-      taskIndex: generateTaskId({
+      taskId: generateTaskId({
         chatType: info.chatType,
         res,
         getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -542,7 +542,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
   if (isEmpty(data)) return
 
-  const newData = handleTodoListData(data.items, data.task_id, data.task_index)
+  const newData = handleTodoListData(data.items, data.task_id)
   if (info.chatType === 'task') {
     const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
     oldData.uuid = uuidv4()
@@ -837,7 +837,7 @@ const handleStreamStart: AIMessageHandler = (request) => {
         content: '',
         ContentType: res.ContentType,
       },
-      taskIndex: generateTaskId({
+      taskId: generateTaskId({
         chatType: info.chatType,
         res,
         getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -897,7 +897,7 @@ const handleStreamStart: AIMessageHandler = (request) => {
       content: '',
       ContentType: res.ContentType,
     },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -929,7 +929,7 @@ const handleIsGroupDisplayForStream: (
   /** 获取详情数据映射的函数 */
   getContentMap: AIMessageHandlerParams['getContentMap'],
 ) => ReActChatRenderItem[] = (res, streamDetail, data, getContentMap) => {
-  const taskNodeKey = streamDetail.taskIndex
+  const taskNodeKey = streamDetail.taskId
   const list = [...data]
   /** 任务节点的索引 */
   let taskNodeIndex = -1
@@ -1233,7 +1233,7 @@ const handleStreamFinished: AIMessageHandler = (request) => {
       { mapKey: streamData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP },
       { mapKey: event_writer_id, type: AIChatQSDataTypeEnum.STREAM },
       setElements,
-      streamData.taskIndex,
+      streamData.taskId,
     )
   } else {
     handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
@@ -1262,7 +1262,7 @@ const handleReferenceMaterial: AIMessageHandler = (request) => {
         { mapKey: chatData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP },
         { mapKey: chatData.id, type: chatData.type },
         setElements,
-        chatData.taskIndex,
+        chatData.taskId,
       )
     } else if (chatData.type === AIChatQSDataTypeEnum.STREAM) {
       if (toolResult && isToolStdoutStream(chatData.data.NodeId)) {
@@ -1360,7 +1360,7 @@ const handleToolCallStart: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.TOOL_RESULT,
     data: toolResult,
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -1814,7 +1814,7 @@ const handlePlanReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -1894,7 +1894,7 @@ const handleDetachedPlanReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -1982,7 +1982,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -2063,7 +2063,7 @@ const handleToolReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -2141,7 +2141,7 @@ const handleUserInteractive: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
     data: cloneDeep(data),
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
@@ -2208,7 +2208,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: generateTaskId({
+    taskId: generateTaskId({
       chatType: info.chatType,
       res,
       getCurrentTaskPlanID: request.getCurrentTaskPlanID,

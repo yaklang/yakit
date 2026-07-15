@@ -41,11 +41,6 @@ export const generateTaskId = (params: {
   return undefined
 }
 
-/** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
-export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/
-/** 校验 TaskIndex 是否符合任务子索引格式 */
-export const isValidTaskIndex = (taskIndex?: string): taskIndex is string =>
-  !!taskIndex && TASK_INDEX_PATTERN.test(taskIndex)
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
   return {
@@ -233,17 +228,13 @@ export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: strin
 export const handleTodoListData: (
   item: AIAgentGrpcApi.TodoListUpdateItem[],
   scopeTaskID: string,
-  scopeTaskIndex: string,
-) => TodoListCardData = (item, taskID, taskIndex) => {
+) => TodoListCardData = (item, taskID) => {
   const scopeTaskID = (taskID || '').trim()
-  const scopeTaskIndex = (taskIndex || '').trim()
 
   // 当前任务的todo-list
   const newItems = item.filter((item) => {
-    if (!scopeTaskID && !scopeTaskIndex) return !item.scope_task_id && !item.scope_task_index
-    const itemTaskID = (item.scope_task_id || '').trim()
-    const itemTaskIndex = (item.scope_task_index || '').trim()
-    return itemTaskID === scopeTaskID && itemTaskIndex === scopeTaskIndex
+    if (!scopeTaskID) return !item.scope_task_id
+    return (item.scope_task_id || '').trim() === scopeTaskID
   })
 
   // 当前任务的todo状态统计

@@ -54,7 +54,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
         dependsOnTasks: (item.depends_on ?? [])
           .map((depIndex) => tasks.find((t) => t.index === depIndex))
           .filter((t): t is AITaskInfoProps => !!t),
-        onClick: () => emiter.emit('onAITreeLocatePlanningList', item.index),
+        onClick: () => emiter.emit('onAITreeLocatePlanningList', item.task_id),
       })
     })
     return map
@@ -163,7 +163,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
             >
               <OutlineInformationcircleIcon className={styles['info-icon']} />
             </YakitPopover>
-            {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskIndex={data.index} />}
+            {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskId={data.task_id} />}
             {taskType === 'current' && data.isLeaf && (
               <Tooltip title="任务详情" placement="top">
                 <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
