@@ -26,7 +26,8 @@
       "pluginStore": "Plugin Store",
       "systemFunctions": "System Functions",
       "plugin": "Plugins",
-      "addFunctionTip": "You can drag or click the add button to add functions to the left menu."
+      "addFunctionTip": "You can drag or click the add button to add functions to the left menu.",
+      "pluginStoreSortByUsage": "Sort by usage frequency"
     },
     "PluginLocalInfoIcon": {
       "officialPlugin": "Official Plugin",
