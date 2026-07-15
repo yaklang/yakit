@@ -4,6 +4,7 @@ import {
   OutlineOfficebuildingIcon,
   OutlinePuzzleIcon,
   OutlinePresentationchartlineIcon,
+  OutlineQrcodeIcon,
   OutlineShieldexclamationIcon,
   OutlineUserRoundCogIcon,
 } from '@/assets/icon/outline'
@@ -62,6 +63,12 @@ export const UserMenusMap: Record<string, UserMenuItemType> = {
     key: 'robot-control',
     label: 'FuncDomain.mobileControl',
     icon: <OutlineDevicemobileIcon />,
+  },
+  /** CE 支付测试 */
+  payment: {
+    key: 'payment',
+    label: 'FuncDomain.payment',
+    icon: <OutlineQrcodeIcon />,
   },
   roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
   accountAdmin: { key: 'account-admin', label: 'FuncDomain.accountAdmin' },

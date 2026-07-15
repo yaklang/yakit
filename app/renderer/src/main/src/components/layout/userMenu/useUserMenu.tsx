@@ -65,6 +65,9 @@ export interface UseUserMenuResult {
   /** 机器人控制弹窗 */
   robotControlModal: boolean
   setRobotControlModal: React.Dispatch<React.SetStateAction<boolean>>
+  /** 支付测试弹窗 */
+  paymentShow: boolean
+  setPaymentShow: React.Dispatch<React.SetStateAction<boolean>>
   /** IM 控制状态 */
   imControlBadge: IMControlBadgeView
   imControlStatus: IMControlBadgeStatus | undefined
@@ -110,6 +113,8 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   const [dynamicMenuOpen, setDynamicMenuOpen] = useState<boolean>(false)
   /** 机器人控制弹框 */
   const [robotControlModal, setRobotControlModal] = useState<boolean>(false)
+  /** 支付测试弹框 */
+  const [paymentShow, setPaymentShow] = useState<boolean>(false)
   const [imControlStatus, setIMControlStatus] = useState<IMControlBadgeStatus>()
   const [imControlStatusLoading, setIMControlStatusLoading] = useState<boolean>(false)
   const imControlStateRetryTimerRef = useRef<number>()
@@ -263,6 +268,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
             UserMenusMap['accountAdmin'],
             UserMenusMap['setPassword'],
             UserMenusMap['pluginAudit'],
+            UserMenusMap['payment'],
             UserMenusMap['robotControl'],
             ...signOutMenu,
           ])
@@ -279,6 +285,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
             UserMenusMap['pluginAudit'],
             UserMenusMap['misstatement'],
             UserMenusMap['systemConfig'],
+            UserMenusMap['payment'],
             UserMenusMap['robotControl'],
             ...signOutMenu,
           ]
@@ -373,6 +380,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           UserMenusMap['pluginAudit'],
           UserMenusMap['dataStatistics'],
           UserMenusMap['misstatement'],
+          UserMenusMap['payment'],
           UserMenusMap['robotControl'],
           UserMenusMap['divider'],
           UserMenusMap['trustList'],
@@ -392,6 +400,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
           UserMenusMap['pluginAudit'],
           UserMenusMap['dataStatistics'],
           UserMenusMap['misstatement'],
+          UserMenusMap['payment'],
           UserMenusMap['robotControl'],
         ].concat(signOutMenu)
         // IRify 版本时管理员不显示插件管理
@@ -614,6 +623,9 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     if (key === 'robot-control') {
       setRobotControlModal(true)
     }
+    if (key === 'payment') {
+      setPaymentShow(true)
+    }
   })
 
   return {
@@ -646,5 +658,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     onUserMenuClick,
     loginShow,
     setLoginShow,
+    paymentShow,
+    setPaymentShow,
   }
 }

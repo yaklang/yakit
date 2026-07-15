@@ -604,8 +604,8 @@ export declare namespace API {
     waiting_verified: boolean
     reverse_token: string
     runtime_id: string
-    quoted_request: string
-    quoted_response: string
+    quoted_request?: string
+    quoted_response?: string
     is_potential: boolean
     cve: string
     description: string
@@ -1166,6 +1166,16 @@ export declare namespace API {
      * 不通过时必传
      */
     logDescription?: string
+  }
+  export interface PayRequest {
+    money?: number
+  }
+  export interface PaymentQrcodeResponse {
+    /**
+     * 微信支付路径
+     */
+    codeUrl?: string
+    outTradeNo?: string
   }
   export interface PayloadWhere {
     group?: string
@@ -1914,7 +1924,7 @@ export declare namespace API {
     usageCount?: number
     successCount?: number
     failureCount?: number
-    lastUsedTime?: number
+    lastUsedTime?: string
     active?: boolean
     webSearchCount?: number
     remark?: string
@@ -1963,5 +1973,13 @@ export declare namespace API {
      */
     ok: boolean
     reason: string
+  }
+  export interface PayRequest {
+    money?: number
+  }
+  export interface PaymentQrcodeResponse {
+    /** 支付路径 */
+    codeUrl?: string
+    outTradeNo?: string
   }
 }

@@ -35,6 +35,7 @@ const ControlOther = React.lazy(() =>
     default: m.ControlOther,
   })),
 )
+const PaymentTestModal = React.lazy(() => import('./PaymentTestModal'))
 
 export interface UserMenuModalsProps {
   /** 登录弹窗 */
@@ -73,6 +74,9 @@ export interface UserMenuModalsProps {
   setControlMyselfModal: (v: boolean) => void
   setControlOtherModal: (v: boolean) => void
   runDynamicControlRemote: (v: string, url: string) => void
+  /** 支付测试弹窗 */
+  paymentShow: boolean
+  onCancelPayment: () => void
 }
 
 /**
@@ -110,6 +114,8 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
     setControlMyselfModal,
     setControlOtherModal,
     runDynamicControlRemote,
+    paymentShow,
+    onCancelPayment,
   } = props
   const { t } = useI18nNamespaces(['layout', 'yakitUi'])
 
@@ -256,6 +262,21 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
           </DynamicControl>
         </YakitSuspense>
       )}
+
+      <YakitModal
+        visible={paymentShow}
+        title={t('FuncDomain.payment')}
+        destroyOnClose={true}
+        maskClosable={false}
+        bodyStyle={{ padding: '16px 24px' }}
+        width={420}
+        onCancel={onCancelPayment}
+        footer={null}
+      >
+        <YakitSuspense height={300}>
+          <PaymentTestModal onCancel={onCancelPayment} />
+        </YakitSuspense>
+      </YakitModal>
     </>
   )
 })

@@ -225,6 +225,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     onUserMenuClick,
     loginShow,
     setLoginShow,
+    paymentShow,
+    setPaymentShow,
   } = useUserMenu({
     isEngineLink,
     dynamicConnect,
@@ -452,6 +454,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         setControlMyselfModal={setControlMyselfModal}
         setControlOtherModal={setControlOtherModal}
         runDynamicControlRemote={runDynamicControlRemote}
+        paymentShow={paymentShow}
+        onCancelPayment={() => setPaymentShow(false)}
       />
     </div>
   )
