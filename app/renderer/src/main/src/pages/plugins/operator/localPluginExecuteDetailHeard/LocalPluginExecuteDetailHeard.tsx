@@ -686,9 +686,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
   const formProps = {
     rules: [{ required: item.Required }],
     label:
-      pluginType === 'codec' && item.Field === 'Input'
-        ? t('PluginDebugBody.codecInput')
-        : item.FieldVerbose || item.Field,
+      pluginType === 'codec' && item.Field === 'Input' ? t('FuncTemplate.codecInput') : item.FieldVerbose || item.Field,
     name: item.Field,
     className: styles['plugin-execute-form-item'],
     tooltip: item.Help

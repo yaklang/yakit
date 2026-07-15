@@ -3191,7 +3191,6 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                       runtimeId={runtimeId}
                       loading={loading}
                       pluginType="codec"
-                      defaultActiveKey={'执行结果'}
                       pluginExecuteResultWrapper={styles['plugin-execute-result-wrapper']}
                     />
                   </div>

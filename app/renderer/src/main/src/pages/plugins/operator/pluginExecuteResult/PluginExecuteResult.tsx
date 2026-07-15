@@ -67,6 +67,7 @@ import moment from 'moment'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { setClipboardText } from '@/utils/clipboard'
+import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -184,7 +185,9 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
       return tabs.filter((item) => item.tabName !== t('YakitRoute.vulnerabilityAndrisk'))
     }
     return tabs
-  }, [streamInfo.tabsState, tempTotal, pluginType])
+  }, [streamInfo.tabsState, tempTotal, pluginType, i18n.language])
+  const showTabsRef = useRef(showTabs)
+  showTabsRef.current = showTabs
 
   const tabBarRender = useMemoizedFn((tab: HoldGRPCStreamProps.InfoTab, length: number) => {
     if (tab.type === 'risk') {
@@ -240,7 +243,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     } else if (pluginType === 'codec') {
       setActiveKey('执行结果')
     } else {
-      const logTab = showTabs.find((tab) => tab.type === 'log')
+      const logTab = showTabsRef.current.find((tab) => tab.type === 'log')
       if (logTab) setActiveKey(logTab.tabName)
     }
   }, [defaultActiveKey, pluginType])
@@ -248,13 +251,14 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
   // 插件执行结束后（loading: true -> false），自动切换到最合适的 Tab
   useEffect(() => {
     if (prevLoadingRef.current && !loading) {
-      const builtinTypes = new Set(['http', 'log', 'console'])
-      const customTabs = showTabs.filter((tab) => !builtinTypes.has(tab.type))
+      const tabs = showTabsRef.current
+      const builtinTypes = new Set(['http', 'log', 'console', 'risk'])
+      const customTabs = tabs.filter((tab) => !builtinTypes.has(tab.type))
 
       if (customTabs.length > 0) {
         setActiveKey(customTabs[0].tabName)
       } else {
-        const httpTab = showTabs.find((tab) => tab.type === 'http')
+        const httpTab = tabs.find((tab) => tab.type === 'http')
         if (httpTab && runtimeId) {
           ipcRenderer
             .invoke('QueryHTTPFlows', {
@@ -265,17 +269,17 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
               if (rsp.Total > 0) {
                 setActiveKey(httpTab.tabName)
               } else {
-                const logTab = showTabs.find((tab) => tab.type === 'log')
-                setActiveKey(logTab?.tabName || showTabs[0]?.tabName)
+                const logTab = tabs.find((tab) => tab.type === 'log')
+                setActiveKey(logTab?.tabName || tabs[0]?.tabName)
               }
             })
             .catch(() => {
-              const logTab = showTabs.find((tab) => tab.type === 'log')
-              setActiveKey(logTab?.tabName || showTabs[0]?.tabName)
+              const logTab = tabs.find((tab) => tab.type === 'log')
+              setActiveKey(logTab?.tabName || tabs[0]?.tabName)
             })
         } else {
-          const logTab = showTabs.find((tab) => tab.type === 'log')
-          setActiveKey(logTab?.tabName || showTabs[0]?.tabName)
+          const logTab = tabs.find((tab) => tab.type === 'log')
+          setActiveKey(logTab?.tabName || tabs[0]?.tabName)
         }
       }
     }
@@ -662,7 +666,7 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
     tableInfo: { columns = [], data = [], name = '' },
   } = props
   const { t } = useI18nNamespaces(['plugin', 'yakitUi'])
-  const [tableData, setTableData] = useState(data)
+  const [tableData, setTableData, getTableData] = useGetSetState(data)
   const [columnsData, setColumnsData] = useState(columns)
 
   const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -710,7 +714,9 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
           className={styles['custom-table-copy-column']}
           onClick={(e) => {
             e.stopPropagation()
-            const colData = data.map((row) => row[ele.dataKey]).join('\n')
+            const colData = getTableData()
+              .map((row) => row[ele.dataKey])
+              .join('\n')
             setClipboardText(colData)
           }}
         >
