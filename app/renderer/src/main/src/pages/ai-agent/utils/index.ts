@@ -211,16 +211,14 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
       .filter(Boolean)
     ids.forEach((id) => httpFlowIdSet.add(id))
   }
-  for (let id of httpFlowIdSet) {
-    attachedResourceInfo = [
-      ...attachedResourceInfo,
-      {
-        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_HTTP_FLOW,
-        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_HTTP_FLOW_ID,
-        Value: id,
-      },
-    ]
-  }
+  attachedResourceInfo = [
+    ...attachedResourceInfo,
+    {
+      Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_HTTP_FLOW,
+      Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_HTTP_FLOW_ID,
+      Value: [...httpFlowIdSet],
+    },
+  ]
 
   for (let item of codeBlockList) {
     const content = {

@@ -271,7 +271,7 @@ export interface AIInputEvent {
 export interface AttachedResourceInfo {
   Key: AttachedResourceKeyEnum
   Type: AttachedResourceTypeEnum
-  Value: string
+  Value: string | string[]
 }
 export interface AIOutputI18n {
   Zh: string
