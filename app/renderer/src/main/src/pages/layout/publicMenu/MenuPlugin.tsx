@@ -17,7 +17,7 @@ import styles from './MenuPlugin.module.scss'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
-import { getPluginUsageCache } from '@/utils/pluginUsageCache'
+import { getPluginUsageCache, markPluginRestoreOnOpen } from '@/utils/pluginUsageCache'
 import { FuncSearch } from '@/pages/plugins/funcTemplate'
 import { PluginSearchParams } from '@/pages/plugins/baseTemplateType'
 import {
@@ -28,6 +28,7 @@ import {
 import { defaultFilter } from '@/pages/plugins/builtInData'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { grpcDownloadOnlinePlugin } from '@/pages/pluginHub/utils/grpc'
+import emiter from '@/utils/eventBus/eventBus'
 
 const { ipcRenderer } = window.require('electron')
 const defaultSearch: PluginSearchParams = {
@@ -52,8 +53,13 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
   const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout', 'yakitUi'])
 
   /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
-  const onMenu = useMemoizedFn((pluginId: number, pluginName: string) => {
+  const onMenu = useMemoizedFn((pluginId: number, pluginName: string, fromRecent?: boolean) => {
     if (!pluginName) return
+
+    if (fromRecent) {
+      markPluginRestoreOnOpen(pluginName)
+      emiter.emit('onRestorePluginLastExecute', pluginName)
+    }
 
     onMenuSelect({
       route: YakitRoute.Plugin_OP,
@@ -184,7 +190,14 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
           className={classNames(styles['plugins-opt'], {
             [styles['disable-style']]: !!disabled,
           })}
-          onClick={onClick}
+          onClick={(e) => {
+            if (disabled) {
+              e.preventDefault()
+              e.stopPropagation()
+              return
+            }
+            onClick()
+          }}
         >
           {showLoading && (
             <div className={styles['loading-style']} onClick={(e) => e.stopPropagation()}>
@@ -252,7 +265,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
           <div className={styles['plugins-title']}>{t('Layout.MenuPlugin.recentUsed')}</div>
           <div className={styles['plugins-body']}>
             {recentPlugins.map((item) =>
-              renderPluginOpt(item, () => onMenu(item.id || 0, item.name), !item.id, loading),
+              renderPluginOpt(item, () => onMenu(item.id || 0, item.name, true), !item.id, loading),
             )}
           </div>
         </div>
