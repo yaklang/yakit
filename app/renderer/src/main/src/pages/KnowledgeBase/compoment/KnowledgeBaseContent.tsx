@@ -678,7 +678,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
   const mergeRemoteAIAgentSetting = useMemoizedFn((cache: AIAgentSetting, prev: AIAgentSetting) => ({
     ...cache,
-    TimelineSessionID: prev.TimelineSessionID,
+    TimelineSessionID: prev.TimelineSessionID, //  TODO @whale 这个字段需要跟nonight确认，他说这个字段没用
   }))
 
   return (

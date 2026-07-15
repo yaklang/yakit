@@ -1,19 +1,11 @@
 import React, { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
-import { useCreation, useInViewport, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
+import { useCreation, useMemoizedFn, useSafeState } from 'ahooks'
 import { cloneDeep } from 'lodash'
 
 import AIAgentContext, {
   AIAgentContextDispatcher,
   AIAgentContextStore,
 } from '@/pages/ai-agent/useContext/AIAgentContext'
-import ChatIPCContent, {
-  AIChatIPCSendParams,
-  AISendConfigHotpatchParams,
-  AISendSyncMessageParams,
-  ChatIPCContextDispatcher,
-  ChatIPCContextStore,
-  defaultDispatcherOfChatIPC,
-} from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
@@ -49,20 +41,20 @@ import {
   normalizeYaklangCodeChangeForReview,
   resetYakRunnerPatchWorkingDraft,
 } from '../pages/yakRunner/yakRunnerAiCodePatchApply'
-import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
-import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import useDeleteAIImageByNode from '@/pages/ai-agent/components/aiMilkdownInput/aiCustomFile/hooks/useDeleteAIImageByNode'
 import emiter from '@/utils/eventBus/eventBus'
 
 import { HistroryAIReActChat } from './HistroryAIReActChat'
-import { loadHistoryAIEmbeddedReviewPolicy, setHistoryAIReviewPolicy } from './historyAIReActChatStorage'
+import { useChatIPC } from '@/pages/ai-re-act/hooks/useNewChatIPC'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
 export interface HistoryAIReActChatBridge {
   activeID?: string
-  events: UseChatIPCEvents
+  // events: UseChatIPCEvents
   onStop: () => void
   onNewChat: () => void
   onChatFromHistory: (session: string) => void
@@ -196,6 +188,7 @@ export interface HistoryAIReActChatProviderProps {
   mergeRemoteAIAgentSetting?: (cache: AIAgentSetting, prev: AIAgentSetting) => AIAgentSetting
 }
 
+/** TODO -  @whale 修改确认 */
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
   source,
   focusModeLoop,
@@ -208,9 +201,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 }: HistoryAIReActChatProviderProps) {
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
-  const refRef = useRef<HTMLDivElement>(null)
-
-  const [inViewport = true] = useInViewport(refRef)
 
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
   const [activeChat, setActiveChat] = useSafeState<AISession>()
@@ -222,44 +212,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const pendingMentionRef = useRef<AIMentionCommandParams | null>(null)
   const chatReadyRef = useRef(false)
   const yakRunnerLastAttachedResourceInfoRef = useRef<AIInputEvent['AttachedResourceInfo']>([])
-  const embeddedSettingCacheReadyRef = useRef(false)
-  const lastPersistedEmbeddedSettingRef = useRef<{
-    ReviewPolicy?: AIAgentSetting['ReviewPolicy']
-  }>({})
-
-  const applyHistoryAIEmbeddedReviewPolicy = useMemoizedFn(async () => {
-    const reviewPolicy = await loadHistoryAIEmbeddedReviewPolicy()
-    lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: reviewPolicy }
-    setSetting((prev) => ({
-      ...prev,
-      ReviewPolicy: reviewPolicy,
-    }))
-  })
-
-  useEffect(() => {
-    applyHistoryAIEmbeddedReviewPolicy().finally(() => {
-      embeddedSettingCacheReadyRef.current = true
-    })
-  }, [applyHistoryAIEmbeddedReviewPolicy])
-
-  useUpdateEffect(() => {
-    if (!showFreeChat) return
-    applyHistoryAIEmbeddedReviewPolicy()
-  }, [showFreeChat, applyHistoryAIEmbeddedReviewPolicy])
-
-  useUpdateEffect(() => {
-    if (!inViewport) return
-    applyHistoryAIEmbeddedReviewPolicy()
-  }, [inViewport, applyHistoryAIEmbeddedReviewPolicy])
-
-  useUpdateEffect(() => {
-    if (!embeddedSettingCacheReadyRef.current) return
-    const policy = setting.ReviewPolicy ?? AIAgentSettingDefault.ReviewPolicy ?? 'manual'
-    if (lastPersistedEmbeddedSettingRef.current.ReviewPolicy === policy) return
-    setHistoryAIReviewPolicy(policy).then(() => {
-      lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: policy }
-    })
-  }, [setting.ReviewPolicy])
 
   useEffect(() => {
     if (!showFreeChat) {
@@ -348,19 +300,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(httpFuzzTabPageId, runtimeId, { source: 'auto' })
   })
 
-  const [chatIPCData, events] = useChatIPC({
-    // autoConnect: true,
-    // aiSource,
-    // cacheDataStore,
-    // getSetting,
-    // onHttpFuzzRequestChange,
-    // onGetHttpFlowFuzzStatus,
-    // onYaklangCodeChange,
-  })
+  const { onStart, onSend, onClose } = useChatIPC()
 
-  const [, { onClearImage }] = useDeleteAIImageByNode()
-
-  const { execute, casualLoading } = chatIPCData
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+  const casualLoading = useStore(store, (state) => state.casualLoading)
 
   useEffect(() => {
     if (!httpFuzzTabPageId && !yakRunnerPageId) {
@@ -393,27 +337,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     return activeChat?.SessionID
   }, [activeChat])
 
-  useUpdateEffect(() => {
-    events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
-  }, [activeChat])
-
-  const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
-    const { value, id, optionValue } = params
-    if (!activeID) return
-    if (!id) return
-
-    const info: AIInputEvent = {
-      IsInteractiveMessage: true,
-      InteractiveId: id,
-      InteractiveJSONInput: value,
-    }
-    events.onSend({ token: activeID, type, params: info, optionValue })
-  })
-
-  const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
-    const targetParams = { ...params, FocusModeLoop: focusModeLoop }
-    handleSendInteractiveMessage(targetParams, 'casual')
-  })
+  /** 切换逻辑已改为新版，待确认后即可删除该代码 */
+  // useUpdateEffect(() => {
+  //   events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
+  // }, [activeChat])
 
   const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
     const newChat: AIHandleStartExtraProps = resolveStartExtraParams?.(data) ?? {
@@ -445,16 +372,19 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onChatFromHistory = useMemoizedFn((session: string) => {
-    events.onDelChats([session])
+    // events.onDelChats([session])
+    globalSessionEngine.forceCloseSession({
+      sessionIds: [session],
+    })
   })
 
   /** 新建会话：清空 UI、断开旧连接，并预生成新的 TimelineSessionID */
   const onNewChat = useMemoizedFn(() => {
     const currentID = activeChat?.SessionID
     if (execute && currentID) {
-      events.onClose(currentID)
+      onClose([currentID])
     }
-    events.onReset()
+    // events.onReset()
     setActiveChat(undefined)
     setSetting((prev) => ({
       ...prev,
@@ -467,13 +397,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const onStop = useMemoizedFn(() => {
     if (execute && activeID) {
-      events.onClose(activeID)
+      onClose([activeID])
     }
-  })
-
-  const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
-    const targetParams = { ...params, FocusModeLoop: focusModeLoop }
-    handleSendInteractiveMessage(targetParams, '')
   })
 
   const onSendRequest = useMemoizedFn((data: AISendParams) => {
@@ -502,82 +427,35 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const handleSubmitQuery = useMemoizedFn((value: HandleStartParams) => {
     const sessionID = activeChat?.SessionID
     if (execute && sessionID) {
-      const { extra, attachedResourceInfo } = getAIReActRequestParams(value)
+      const { attachedResourceInfo } = getAIReActRequestParams(value)
       const chatMessage: AIInputEvent = {
         IsFreeInput: true,
         FreeInput: value.qs,
         AttachedResourceInfo: attachedResourceInfo,
         FocusModeLoop: value.focusMode ?? focusModeLoop,
       }
-      const onSend = (res: AISendResProps) => {
+      const onSendChat = (res: AISendResProps) => {
         const { params } = res
-        events.onSend({
+        onSend({
           token: sessionID,
           type: 'casual',
           params: {
             IsFreeInput: true,
             ...params,
           },
-          extraValue: extra,
         })
         emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: sessionID }))
         aiReActChatRef.current?.setValue('')
       }
       onSendRequest({ params: chatMessage })
-        .then(onSend)
+        .then(onSendChat)
         .catch(() => {
-          onSend({ params: chatMessage })
+          onSendChat({ params: chatMessage })
         })
       return
     }
     aiReActChatRef.current?.handleStart(value)
   })
-
-  const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
-    if (!activeID) return
-    const { syncType, SyncJsonInput } = data
-    const params = { ...data.params, FocusModeLoop: focusModeLoop }
-    const info: AIInputEvent = {
-      IsSyncMessage: true,
-      SyncType: syncType,
-      SyncJsonInput,
-      Params: params,
-    }
-    events.onSend({ token: activeID, type: '', params: info })
-  })
-
-  const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
-    if (!activeID) return
-    const { hotpatchType } = data
-
-    const params = { ...data.params, FocusModeLoop: focusModeLoop }
-    const info: AIInputEvent = {
-      IsConfigHotpatch: true,
-      HotpatchType: hotpatchType,
-      Params: params,
-    }
-    events.onSend({ token: activeID, type: '', params: info })
-  })
-
-  const store: ChatIPCContextStore = useCreation(() => {
-    return {
-      chatIPCData,
-      planReviewTreeKeywordsMap: new Map(),
-      reviewExpand: false,
-    }
-  }, [chatIPCData])
-
-  const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
-    return {
-      ...defaultDispatcherOfChatIPC,
-      chatIPCEvents: events,
-      handleSendCasual,
-      handleStop: onStop,
-      handleSend,
-      handleSendSyncMessage,
-      handleSendConfigHotpatch,
-    }
-  }, [events])
 
   const stores: AIAgentContextStore = useMemo(() => {
     return {
@@ -591,13 +469,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       getSetting: getSetting,
       setSetting: setSetting,
       setActiveChat: setActiveChat,
+      onStart,
+      onSend,
+      onClose,
     }
   }, [])
 
   const historyAIReActChatBridge: HistoryAIReActChatBridge = useMemo(
     () => ({
       activeID,
-      events,
+      // events,
       onStop,
       onNewChat,
       onChatFromHistory,
@@ -634,7 +515,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         })
       },
     }),
-    [activeID, events, onStop, onNewChat, onChatFromHistory, setActiveChat, handleSubmitQuery],
+    [activeID, onStop, onNewChat, onChatFromHistory, setActiveChat, handleSubmitQuery],
   )
 
   const renderHistoryAIReActChat = useCallback(
@@ -642,21 +523,18 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       <HistroryAIReActChat
         className={className}
         title={title}
-        refRef={refRef}
         showFreeChat={showFreeChat}
         setShowFreeChat={setShowFreeChat}
         aiReActChatRef={aiReActChatRef}
         onStartRequest={onStartRequest}
         onSendRequest={onSendRequest}
-        inViewport={inViewport}
-        setSetting={setSetting}
         mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}
         onChatReady={flushPendingMention}
         externalParameters={externalParameters}
         source={source}
       />
     ),
-    [inViewport, flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat, source],
+    [flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat, source],
   )
 
   const contextValue = useMemo(
@@ -672,9 +550,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   return (
     <AIAgentContext.Provider value={{ store: stores, dispatcher: dispatchers }}>
-      <ChatIPCContent.Provider value={{ store, dispatcher }}>
-        <HistoryAIReActChatContext.Provider value={contextValue}>{children}</HistoryAIReActChatContext.Provider>
-      </ChatIPCContent.Provider>
+      <HistoryAIReActChatContext.Provider value={contextValue}>{children}</HistoryAIReActChatContext.Provider>
     </AIAgentContext.Provider>
   )
 })
