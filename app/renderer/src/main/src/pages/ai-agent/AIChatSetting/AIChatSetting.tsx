@@ -331,7 +331,6 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 onClick={(e) => {
                   e.stopPropagation()
                   const restValue = {
-                    TimelineItemLimit: AIAgentSettingDefault.TimelineItemLimit,
                     TimelineContentSizeLimit: AIAgentSettingDefault.TimelineContentSizeLimit,
                     AICallTokenLimit: AIAgentSettingDefault.AICallTokenLimit,
                     UserInteractLimit: AIAgentSettingDefault.UserInteractLimit,
@@ -344,9 +343,6 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
               </YakitButton>
             }
           >
-            <Form.Item label={<>时间线上下文限制</>} name="TimelineItemLimit">
-              <YakitInputNumber type="horizontal" size="small" min={0} max={200} />
-            </Form.Item>
             <Form.Item
               label={<>时间线上下文大小</>}
               name="TimelineContentSizeLimit"

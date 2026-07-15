@@ -118,9 +118,6 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     if (!isNil(setting?.ReActMaxIteration)) {
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration
     }
-    if (!isNil(setting?.TimelineItemLimit)) {
-      data.TimelineItemLimit = setting.TimelineItemLimit || AIAgentSettingDefault.TimelineItemLimit
-    }
     // TimelineContentSizeLimit 单位是KB，但传到后端需要转换为字节
     data.TimelineContentSizeLimit =
       ((setting.TimelineContentSizeLimit ?? AIAgentSettingDefault.TimelineContentSizeLimit) as number) * 1024
