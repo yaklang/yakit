@@ -118,6 +118,10 @@ export const startupDuplexConn = () => {
         case 'fuzzer_server_push':
           emiter.emit('onGetDiscardPackageCount', JSON.stringify(obj))
           break
+        // OpenAPI / API 文档解析进度
+        case 'openapi_parse':
+          emiter.emit('onOpenAPIParseProgress', JSON.stringify(obj))
+          break
         // MCP / 后端通知前端新建 Web Fuzzer Tab
         case 'web_fuzzer_tab':
           emiter.emit('onServerPushOpenWebFuzzerTab', JSON.stringify(obj))

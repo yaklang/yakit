@@ -587,20 +587,34 @@ module.exports = (win, getClient) => {
     handlerHelper.registerHandler(win, stream, streamTracerouteMap, token)
   })
 
-  // asyncRequestYakURL wrapper
-  const asyncRequestYakURL = (params) => {
+  // asyncRequestYakURL wrapper with cancel support (token optional)
+  const requestYakURLCallMap = new Map()
+  ipcMain.handle('cancel-RequestYakURL', async (e, token) => {
+    const call = requestYakURLCallMap.get(token)
+    if (call) {
+      call.cancel()
+      requestYakURLCallMap.delete(token)
+    }
+  })
+  const asyncRequestYakURL = (params, token) => {
     return new Promise((resolve, reject) => {
-      getClient().RequestYakURL(params, (err, data) => {
+      const call = getClient().RequestYakURL(params, (err, data) => {
+        if (token) {
+          requestYakURLCallMap.delete(token)
+        }
         if (err) {
           reject(err)
           return
         }
         resolve(data)
       })
+      if (token) {
+        requestYakURLCallMap.set(token, call)
+      }
     })
   }
-  ipcMain.handle('RequestYakURL', async (e, params) => {
-    return await asyncRequestYakURL(params)
+  ipcMain.handle('RequestYakURL', async (e, params, token) => {
+    return await asyncRequestYakURL(params, token)
   })
 
   const streamReadFileMap = new Map()
