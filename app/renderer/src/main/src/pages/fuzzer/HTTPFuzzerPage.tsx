@@ -146,6 +146,7 @@ import { defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/
 import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { availableColors } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { HTTPFlowRealTimeTableAndEditor } from '@/components/HTTPHistory'
+import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import {
   DefFuzzerTableMaxData,
@@ -894,7 +895,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   const [hex, setHex] = useState<boolean>(false)
   const [privacy, setPrivacy] = useState(false)
-  const [foldBinaryFuzztag, setFoldBinaryFuzztag] = useState(true)
+  const foldBinaryFuzztag = useBinaryDisplayEnabled()
+  const setFoldBinaryFuzztag = binaryDisplayEnabledStore.setEnabled
 
   const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
   const hotPatchCodeWithParamGetterRef = useRef<string>('')
