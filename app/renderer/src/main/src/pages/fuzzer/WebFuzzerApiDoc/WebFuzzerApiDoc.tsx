@@ -1,12 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
+import { Progress, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { Tooltip } from 'antd'
 import { shallow } from 'zustand/shallow'
 import styles from './WebFuzzerApiDoc.module.scss'
-import { OutlineBookopenIcon, OutlineClockIcon, OutlineUploadIcon } from '@/assets/icon/outline'
+import { OutlineBookopenIcon, OutlineClockIcon, OutlineStopIcon, OutlineUploadIcon } from '@/assets/icon/outline'
 import { YakURLResource } from '@/pages/yakURLTree/data'
-import { ApiDocInfo, ApiDocOperationSummary, getApiMethodTagStyle, getExtra, openApiRequest, toNumber } from './apiDoc'
+import {
+  ApiDocInfo,
+  ApiDocOperationSummary,
+  cancelOpenApiRequest,
+  getApiMethodTagStyle,
+  getExtra,
+  isOpenApiRequestCanceled,
+  openApiRequest,
+  OpenAPIParseProgress,
+  toNumber,
+} from './apiDoc'
 import { WebFuzzerApiDocHistory } from './WebFuzzerApiDocHistory'
 import { WebFuzzerApiDocModal } from './WebFuzzerApiDocModal'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
@@ -18,11 +28,15 @@ import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { usePageInfo } from '@/store/pageInfo'
+import { randomString } from '@/utils/randomUtil'
+import emiter from '@/utils/eventBus/eventBus'
 
 const { YakitPanel } = YakitCollapse
 const { ipcRenderer } = window.require('electron')
 
 type DocResult = { docId: string; docInfo: ApiDocInfo; operations: ApiDocOperationSummary[] }
+type ParseStatus = 'idle' | 'parsing' | 'canceling'
+type ParseTask = { id: string; token: string; canceled: boolean }
 
 const parseDocInfo = (docId: string, resource: YakURLResource): ApiDocInfo => {
   const extra = resource.Extra || []
@@ -73,14 +87,21 @@ const loadApiDoc = (docId: string) => openApiRequest('GET', docId).then((resourc
 
 const uploadApiDoc = async (
   content: string,
-  options?: { fileName?: string; overrideDomain?: string; overrideIsHttps?: boolean },
+  options?: {
+    fileName?: string
+    overrideDomain?: string
+    overrideIsHttps?: boolean
+    parseTaskId?: string
+    token?: string
+  },
 ) => {
   const query: { Key: string; Value: string }[] = []
   if (options?.fileName) query.push({ Key: 'fileName', Value: options.fileName })
   if (options?.overrideDomain) query.push({ Key: 'overrideDomain', Value: options.overrideDomain })
   if (options?.overrideIsHttps) query.push({ Key: 'overrideIsHttps', Value: 'true' })
+  if (options?.parseTaskId) query.push({ Key: 'parse_task_id', Value: options.parseTaskId })
 
-  const resources = await openApiRequest('POST', 'upload', query, content)
+  const resources = await openApiRequest('POST', 'upload', query, content, options?.token)
   if (!resources.length) throw new Error('upload api doc failed: empty response')
   const docResource = resources.find((item) => item.ResourceType === 'openapi-document') || resources[0]
   return toDocResult(docResource.ResourceName, resources)
@@ -99,10 +120,17 @@ export const WebFuzzerApiDoc: React.FC<{
   const [docInfo, setDocInfo] = useState<ApiDocInfo>()
   const [operations, setOperations] = useState<ApiDocOperationSummary[]>([])
   const [loading, setLoading] = useState(false)
+  const [parseStatus, setParseStatus] = useState<ParseStatus>('idle')
+  const [parseProgress, setParseProgress] = useState({ percent: 0, message: '' })
   const [overrideDomain, setOverrideDomain] = useState('')
   const [overrideIsHttps, setOverrideIsHttps] = useState(false)
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0)
   const currentRouteKey = usePageInfo((s) => s.getCurrentPageTabRouteKey(), shallow)
+  const parseTaskRef = useRef<ParseTask>()
+  const mountedRef = useRef(true)
+  const parsing = parseStatus !== 'idle'
+  const canceling = parseStatus === 'canceling'
+  const { percent: parsePercent, message: parseMessage } = parseProgress
 
   const getPopupContainer = useMemoizedFn(
     () => document.getElementById(`main-operator-page-body-${currentRouteKey}`) || document.body,
@@ -143,6 +171,40 @@ export const WebFuzzerApiDoc: React.FC<{
     setActiveKey(displayGroups.map((group) => group.key))
   }, [displayGroups])
 
+  useEffect(() => {
+    const onProgress = (raw: string) => {
+      try {
+        const data = JSON.parse(raw) as OpenAPIParseProgress
+        const task = parseTaskRef.current
+        if (!task || task.canceled || data.task_id !== task.id) return
+        const { current = 0, total = 0, percent: progressPercent = 0 } = data
+        const rawPercent =
+          total > 0 ? (current / total) * 100 : progressPercent > 1 ? progressPercent : progressPercent * 100
+        setParseProgress({
+          percent: Math.max(0, Math.min(100, Math.round(rawPercent || 0))),
+          message: data.message || data.stage || '',
+        })
+      } catch {
+        // ignore malformed push
+      }
+    }
+    emiter.on('onOpenAPIParseProgress', onProgress)
+    return () => {
+      emiter.off('onOpenAPIParseProgress', onProgress)
+    }
+  }, [])
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      if (parseTaskRef.current) {
+        parseTaskRef.current.canceled = true
+        cancelOpenApiRequest(parseTaskRef.current.token)
+      }
+    }
+  }, [])
+
   const showError = useMemoizedFn((key: string, error: any) => {
     yakitFailed(`${t(key)}: ${error?.message || error}`)
   })
@@ -155,7 +217,13 @@ export const WebFuzzerApiDoc: React.FC<{
     setSearchKeyword('')
   })
 
+  const resetParseState = useMemoizedFn(() => {
+    setParseStatus('idle')
+    setParseProgress({ percent: 0, message: '' })
+  })
+
   const applyDocument = useMemoizedFn((result: DocResult) => {
+    console.log(result, 'result')
     setDocId(result.docId)
     setDocInfo(result.docInfo)
     setOperations(result.operations)
@@ -175,7 +243,19 @@ export const WebFuzzerApiDoc: React.FC<{
     }
   })
 
+  const onStopParse = useMemoizedFn(async () => {
+    const task = parseTaskRef.current
+    if (!task || task.canceled) return
+    task.canceled = true
+    setParseStatus('canceling')
+    setParseProgress((prev) => ({ ...prev, message: t('ApiDoc.canceling') }))
+    await cancelOpenApiRequest(task.token)
+  })
+
   const onUpload = useMemoizedFn(async () => {
+    if (parseTaskRef.current) return
+    const task: ParseTask = { id: '', token: '', canceled: false }
+    parseTaskRef.current = task
     try {
       const data = await handleOpenFileSystemDialog({
         title: t('ApiDoc.uploadTitle'),
@@ -187,15 +267,29 @@ export const WebFuzzerApiDoc: React.FC<{
       })
       if (data.canceled || !data.filePaths?.length) return
 
-      setLoading(true)
+      const token = randomString(16)
+      const parseTaskId = randomString(16)
+      task.id = parseTaskId
+      task.token = token
+      setParseStatus('parsing')
+      setParseProgress({ percent: 1, message: t('ApiDoc.parsing') })
+
       const filePath = data.filePaths[0]
       const content = await ipcRenderer.invoke('read-file-content', filePath)
+      if (task.canceled) {
+        throw new Error('openapi parse canceled')
+      }
       const fileName = filePath.replace(/\\/g, '/').split('/').pop() || ''
       const result = await uploadApiDoc(content, {
         fileName,
         overrideDomain: overrideDomain || undefined,
         overrideIsHttps,
+        parseTaskId,
+        token,
       })
+      if (task.canceled) {
+        throw new Error('openapi parse canceled')
+      }
       applyDocument(result)
       setHistoryRefreshToken((n) => n + 1)
       yakitNotify('success', t('ApiDoc.uploadSuccess'))
@@ -203,9 +297,17 @@ export const WebFuzzerApiDoc: React.FC<{
         yakitNotify('warning', t('ApiDoc.uploadSuccessWithWarnings', { count: result.docInfo.parseWarnings.length }))
       }
     } catch (error) {
-      showError('ApiDoc.uploadFailed', error)
+      if (!mountedRef.current) {
+        return
+      }
+      if (task.canceled || isOpenApiRequestCanceled(error)) {
+        yakitNotify('info', t('ApiDoc.parseCanceled'))
+      } else {
+        showError('ApiDoc.uploadFailed', error)
+      }
     } finally {
-      setLoading(false)
+      parseTaskRef.current = undefined
+      if (mountedRef.current) resetParseState()
     }
   })
 
@@ -242,7 +344,7 @@ export const WebFuzzerApiDoc: React.FC<{
                 </div>
               }
             >
-              <YakitButton type="text2" size="small" icon={<OutlineClockIcon />} />
+              <YakitButton type="text2" size="small" icon={<OutlineClockIcon />} disabled={parsing} />
             </Tooltip>
             <YakitButton
               type="text2"
@@ -251,6 +353,7 @@ export const WebFuzzerApiDoc: React.FC<{
               loading={loading}
               onClick={onUpload}
               title={t('ApiDoc.upload')}
+              disabled={parsing}
             />
           </div>
         </div>
@@ -262,9 +365,24 @@ export const WebFuzzerApiDoc: React.FC<{
       </div>
 
       <div className={styles['body']}>
-        {!hasDoc ? (
+        {!hasDoc || parsing ? (
           <div className={styles['empty']}>
-            <YakitEmpty title={t('ApiDoc.emptyHint')} />
+            {parsing ? (
+              <div className={styles['parse-empty']}>
+                <div className={styles['parse-empty-title']}>{t('ApiDoc.parsing')}</div>
+                <Progress
+                  percent={parsePercent}
+                  format={(percent) => `${percent ?? 0}%`}
+                  strokeColor="var(--Colors-Use-Blue-Primary)"
+                />
+                <div className={classNames(styles['parse-empty-msg'], 'content-ellipsis')}>{parseMessage}</div>
+                <YakitButton type="outline1" danger onClick={onStopParse}>
+                  {t('ApiDoc.stopParse')}
+                </YakitButton>
+              </div>
+            ) : (
+              <YakitEmpty title={t('ApiDoc.emptyHint')} />
+            )}
           </div>
         ) : (
           <>

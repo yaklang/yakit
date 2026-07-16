@@ -68,6 +68,30 @@
     flex-direction: column;
     overflow: hidden;
 
+    .parse-empty {
+      width: 100%;
+      max-width: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+
+      .parse-empty-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+
+      .parse-empty-msg {
+        width: 100%;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        text-align: center;
+        word-break: break-all;
+      }
+    }
+
     .empty {
       flex: 1;
       min-height: 0;
