@@ -176,7 +176,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
   return (
     <YakitDrawer
       className={styles['http-flow-table-form-configuration']}
-      visible={visible}
+      open={visible}
       width="max(700px, 40%)"
       onClose={onClose}
       title={

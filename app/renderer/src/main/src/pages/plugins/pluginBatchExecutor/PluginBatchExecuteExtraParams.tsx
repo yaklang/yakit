@@ -61,7 +61,7 @@ const PluginBatchExecuteExtraParamsDrawer: React.FC<PluginBatchExecuteExtraParam
   return (
     <YakitDrawer
       className={styles['plugin-batch-execute-extra-params-drawer']}
-      visible={visible}
+      open={visible}
       onClose={onClose}
       width="max(700px, 40%)"
       title="额外参数"

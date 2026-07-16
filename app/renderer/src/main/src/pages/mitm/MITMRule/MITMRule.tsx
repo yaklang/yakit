@@ -1279,7 +1279,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             placement="bottom"
             closable={false}
             onClose={() => onClose()}
-            visible={visible}
+            open={visible}
             getContainer={getContainer}
             mask={false}
             style={{ height: visible ? heightDrawer : 0 }}
@@ -1342,7 +1342,7 @@ const MITMRuleWhiteListModal: React.FC<MITMRuleWhiteListModalProps> = React.memo
   return (
     <YakitModal
       title={t('MITMRule.white_list_modal_title')}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       onOk={() => {
         onOk(currentWhiteList)

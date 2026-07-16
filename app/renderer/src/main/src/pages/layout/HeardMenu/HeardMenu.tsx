@@ -902,7 +902,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
       <YakitModal
         title={t('Layout.HeardMenu.importJsonConfig')}
         closable={true}
-        visible={visibleImport}
+        open={visibleImport}
         onCancel={() => setVisibleImport(false)}
         width="60%"
         onOk={() => onImportJSON()}
@@ -957,7 +957,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
         overlayClassName={classNames(style['popover'], {
           [style['popover-content']]: menuItem.children && menuItem.children.length <= 1,
         })}
-        onVisibleChange={setVisible}
+        onOpenChange={setVisible}
       >
         {popoverContent}
       </YakitPopover>
@@ -1027,7 +1027,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
         arrowPointAtCenter={true}
         content={menu}
         trigger="hover"
-        onVisibleChange={(visible) => setShow(visible)}
+        onOpenChange={(visible) => setShow(visible)}
         overlayClassName={classNames(style['popover'])}
       >
         <div

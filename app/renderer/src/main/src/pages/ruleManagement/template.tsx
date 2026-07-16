@@ -502,7 +502,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
 
           {/* 上传 */}
           <YakitHint
-            visible={uploadInfoVisible}
+            open={uploadInfoVisible}
             title={t('LocalRuleGroupList.uploadTitle')}
             content={t('LocalRuleGroupList.uploadContent')}
             okButtonText={t('LocalRuleGroupList.uploadConfirm')}
@@ -1009,7 +1009,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             <YakitButton type="text2" icon={<OutlineXIcon />} onClick={handleCancel} />
           </div>
         }
-        visible={visible}
+        open={visible}
       >
         {/* 审计详情 */}
         <div className={classNames(styles['drawer-body'], { [styles['drawer-hidden']]: !auditDetailShow })}>
@@ -1536,7 +1536,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
 
       <YakitPopover
         overlayClassName={styles['add-and-remove-group-popover']}
-        visible={addGroupVisible}
+        open={addGroupVisible}
         placement="bottomRight"
         trigger="click"
         content={
@@ -1605,7 +1605,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
             </div>
           </div>
         }
-        onVisibleChange={handleAddGroupVisibleChange}
+        onOpenChange={handleAddGroupVisibleChange}
       >
         <YakitButton type="text" disabled={!isActive} icon={<OutlinePluscircleIcon />}>
           {oldGroup.length ? undefined : t('UpdateRuleToGroup.addGroupButton')}
@@ -2193,7 +2193,7 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
     <YakitModal
       className={styles['RuleUploadAndDownloadModal']}
       getContainer={getContainer}
-      visible={true}
+      open={true}
       width={650}
       type="white"
       closable={false}
@@ -2496,7 +2496,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                   </YakitSpin>
                   {/* 下载提示 */}
                   <YakitHint
-                    visible={downloadInfoVisible}
+                    open={downloadInfoVisible}
                     title={t('OnlineRuleGroupList.downloadTitle')}
                     content={t('OnlineRuleGroupList.downloadContent')}
                     okButtonText={t('YakitButton.confirm')}

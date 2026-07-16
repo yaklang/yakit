@@ -411,7 +411,7 @@ export const FormItemSlider: React.FC<FormItemSliderProps> = React.memo((props) 
   return (
     <div className={styles['form-item-slider']}>
       <div className={styles['slider-body']}>
-        <Slider tooltipVisible={false} value={value} {...rest} />
+        <Slider tooltip={{ open: false }} value={value} {...rest} />
       </div>
 
       <div className={styles['slider-value']}>{value}</div>

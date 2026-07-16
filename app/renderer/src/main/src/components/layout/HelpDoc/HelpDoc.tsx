@@ -73,8 +73,8 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
       trigger={'click'}
       placement={system === 'Darwin' ? 'bottomRight' : 'bottom'}
       content={menu}
-      visible={show}
-      onVisibleChange={(visible) => setShow(visible)}
+      open={show}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <div className={styles['ui-op-btn-wrapper']}>
         <div

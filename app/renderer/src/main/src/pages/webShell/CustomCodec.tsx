@@ -190,7 +190,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
       placement="bottom"
       closable={false}
       onClose={() => onClose()}
-      visible={visibleDrawer}
+      open={visibleDrawer}
       mask={false}
       destroyOnClose={true}
       style={{ height: visibleDrawer ? heightDrawer : 0 }}

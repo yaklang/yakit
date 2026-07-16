@@ -1796,7 +1796,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         width="max(700px, 50%)"
         closable={false}
         onClose={() => onClose()}
-        visible={visible}
+        open={visible}
         getContainer={getContainer}
         // mask={false}
         maskClosable={false}
@@ -1937,7 +1937,7 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
     <YakitModal
       maskClosable={false}
       title={isEdit ? t('YakitButton.edit') : t('YakitButton.add_new')}
-      visible={modalStatus}
+      open={modalStatus}
       onCancel={() => onClose()}
       closable
       okType="primary"

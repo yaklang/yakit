@@ -216,7 +216,7 @@ export const WebFuzzerApiDocModal: React.FC<{
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       title={t('ApiDoc.modalTitle')}
       subTitle={t('ApiDoc.modalSubTitle')}
       width={600}

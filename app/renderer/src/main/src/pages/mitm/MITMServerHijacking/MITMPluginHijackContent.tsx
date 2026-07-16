@@ -1023,7 +1023,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         </div>
       </div>
       <YakitHint
-        visible={quitVisible}
+        open={quitVisible}
         title={t('MITMPluginHijackContent.close_tun_proxy_warning')}
         content={t('MITMPluginHijackContent.close_tun_proxy_warning_full')}
         footerExtra={

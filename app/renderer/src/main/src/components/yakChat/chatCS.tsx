@@ -1462,11 +1462,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 </div>
                               </div>
                             }
-                            onVisibleChange={(v) => {
+                            onOpenChange={(v) => {
                               setPopoverVisible(v)
                             }}
                             overlayInnerStyle={{ width: 220 }}
-                            visible={popoverVisible}
+                            open={popoverVisible}
                           >
                             <YakitButton icon={<SettingOutlined />} type={'text'} size={'small'} />
                           </YakitPopover>
@@ -1524,7 +1524,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         <YakitHint
           width={modalWidth}
           getContainer={divRef.current}
-          visible={addShow}
+          open={addShow}
           title="超过对话框个数限制"
           content="新建会默认删除最早的对话框，确认新建吗？"
           okButtonText="仍要新建"
@@ -2662,7 +2662,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
       <YakitDrawer
         // className={styles['drawer-wrapper']}
         className={classNames([styles['chat-cs-prompt-drawer'], styles['drawer-wrapper']])}
-        visible={visible}
+        open={visible}
         placement="bottom"
         height={452}
         onClose={() => onClose()}
@@ -2836,7 +2836,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
       keyboard={false}
       maskClosable={false}
       width={modalWidth}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       bodyStyle={{ padding: 0 }}
     >

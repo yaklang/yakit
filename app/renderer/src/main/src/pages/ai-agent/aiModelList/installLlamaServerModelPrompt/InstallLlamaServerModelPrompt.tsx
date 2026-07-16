@@ -116,7 +116,7 @@ export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo(
   })
   return (
     <YakitHint
-      visible={true}
+      open={true}
       title={title}
       heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={onBack}

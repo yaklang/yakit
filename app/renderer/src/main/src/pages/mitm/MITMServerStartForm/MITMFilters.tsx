@@ -364,8 +364,8 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                         }
                         placement="top"
                         trigger={['click']}
-                        visible={editNameVisible && currentIndex === index}
-                        onVisibleChange={(visible) => {
+                        open={editNameVisible && currentIndex === index}
+                        onOpenChange={(visible) => {
                           setEditNameVisible(visible)
                           if (!visible) {
                             onCloseEditName()

@@ -42,7 +42,7 @@ const AIStreamNode: FC<{
   return (
     <div className={styles['single-stream-text']}>
       <YakitModal
-        visible={open}
+        open={open}
         title={`${index}. ${nodeLabel}`}
         cancelButtonProps={{ style: { display: 'none' } }}
         onOk={onClose}
@@ -53,8 +53,8 @@ const AIStreamNode: FC<{
       {index}. {stream.data.content}
       <YakitPopover
         trigger={'click'}
-        visible={openPopover}
-        onVisibleChange={setOpenPopover}
+        open={openPopover}
+        onOpenChange={setOpenPopover}
         content={
           <div className={styles['popover-reference-wrapper']}>
             <div className={styles['popover-reference-title']}>

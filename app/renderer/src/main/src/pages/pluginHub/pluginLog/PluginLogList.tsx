@@ -400,7 +400,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
       <YakitHint
         getContainer={document.getElementById(getContainer || '') || undefined}
         wrapClassName={styles['plugin-log-del-comment-hit']}
-        visible={delCommentShow}
+        open={delCommentShow}
         title="删除评论"
         content="是否确认要删除该条评论"
         okButtonProps={{ loading: delCommentLoading }}
@@ -414,7 +414,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
           getContainer={document.getElementById(getContainer || '') || undefined}
           title="评论详情"
           type="white"
-          visible={showQuotation}
+          open={showQuotation}
           centered={true}
           footer={null}
           onCancel={handleCancelShowQuotaion}

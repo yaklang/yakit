@@ -157,8 +157,8 @@ const KnowledgeBaseTableHeader: FC<
           {knowledgeBaseItems.historyGenerateKnowledgeList?.length > 0 ? (
             <YakitPopover
               overlayClassName={styles['knowledge-history-popover']}
-              visible={show}
-              onVisibleChange={(visible) => setShow(visible)}
+              open={show}
+              onOpenChange={(visible) => setShow(visible)}
               content={
                 <div className={styles['knowledge-history-content']}>
                   <div className={styles['title']}>

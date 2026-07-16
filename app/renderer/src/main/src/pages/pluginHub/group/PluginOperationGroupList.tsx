@@ -283,7 +283,7 @@ export const DelGroupConfirmPop: React.FC<DelGroupConfirmPopProps> = React.forwa
 
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       title="删除组"
       content={`是否确认删除插件组 “${delGroupName}”`}
       footerExtra={
@@ -328,7 +328,7 @@ export const ListDelGroupConfirmPop: React.FC<ListDelGroupConfirmPopProps> = Rea
 
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       title="插件组移除插件"
       content={content}
       footerExtra={

@@ -526,7 +526,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
       }
       {...(yakitHintProps || {})}
       onCancel={onCancel}
-      visible={visible}
+      open={visible}
     >
       <Progress
         strokeColor="var(--Colors-Use-Main-Primary)"

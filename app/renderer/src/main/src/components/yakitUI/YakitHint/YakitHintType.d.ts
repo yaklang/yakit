@@ -27,7 +27,7 @@ export interface YakitHintModalProps {
   /** 是否可以拖拽 */
   isDrag?: boolean
   /** 是否展示弹窗 */
-  visible: boolean
+  open: boolean
   /** 弹窗宽度，默认为448px */
   width?: number
   /** 是否弹窗置顶 */
@@ -70,7 +70,7 @@ export interface HintModalProps {
   /** 是否可以拖拽 */
   isDrag?: boolean
   /** 是否展示弹窗 */
-  visible: boolean
+  open: boolean
   /** 弹窗宽度，默认为448px */
   width?: number
   /** 设置弹窗置顶 */

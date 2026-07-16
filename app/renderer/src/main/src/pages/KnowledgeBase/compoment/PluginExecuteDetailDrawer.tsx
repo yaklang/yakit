@@ -74,7 +74,7 @@ const PluginExecuteDetailDrawer: FC<PluginExecuteDetailDrawerProps> = (props) =>
 
   return (
     <YakitDrawer
-      visible={buildingDrawer.visible}
+      open={buildingDrawer.visible}
       onClose={props.onCloseViewBuildProcess}
       title={props.title}
       width="80%"

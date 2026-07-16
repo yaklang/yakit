@@ -172,7 +172,7 @@ export const ShellReceiverLeftList: React.FC<ShellReceiverLeftListProps> = (prop
                 destroyTooltipOnHide={true}
                 trigger="click"
                 overlayClassName={styles['popover-shell-receiver']}
-                onVisibleChange={onVisibleChange}
+                onOpenChange={onVisibleChange}
               >
                 <div
                   className={classNames(styles['item-box'], {

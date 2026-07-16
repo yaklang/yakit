@@ -8,12 +8,12 @@ export interface YakitTreeSelectProp extends TreeSelectProps {
   wrapperClassName?: string
 }
 export const YakitTreeSelect: React.FC<YakitTreeSelectProp> = (props) => {
-  const { wrapperClassName, dropdownClassName, ...resetProps } = props
+  const { wrapperClassName, popupClassName, ...resetProps } = props
 
   return (
     <div className={classNames(styles['yakit-tree-select-wrapper'], wrapperClassName)}>
       <TreeSelect
-        dropdownClassName={classNames(styles['yakit-tree-select-dropdown'], dropdownClassName)}
+        popupClassName={classNames(styles['yakit-tree-select-dropdown'], popupClassName)}
         switcherIcon={<OutlineChevrondownIcon className={styles['yakit-tree-select-switcher-icon']} />}
         {...resetProps}
       ></TreeSelect>

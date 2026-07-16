@@ -1362,9 +1362,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         )}
         placement={system === 'Darwin' ? 'bottomRight' : 'bottomLeft'}
         content={isIRify() ? irifyContent : content}
-        visible={show}
+        open={show}
         trigger="click"
-        onVisibleChange={(visible) => setShow(visible)}
+        onOpenChange={(visible) => setShow(visible)}
       >
         <div
           className={classNames(
@@ -1376,7 +1376,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         </div>
       </YakitPopover>
       <YakitHint
-        visible={pcapHintShow}
+        open={pcapHintShow}
         heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
         title={pcapResult ? t('Home.netcardAccessGranted') : t('Home.netcardNoAccess')}
         width={600}
@@ -1426,7 +1426,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
       />
       {/* 规则更新确认弹框 */}
       <YakitHint
-        visible={openFristRuleUpdateModal}
+        open={openFristRuleUpdateModal}
         title={
           ruleUpdate?.State === 'empty' ? t('GlobalState.noLocalRules') : t('GlobalState.localRuleLibraryNeedsUpdate')
         }
@@ -1441,7 +1441,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
       />
       {/* 关闭运行节点确认弹框 */}
       <YakitHint
-        visible={closeRunNodeItemVerifyVisible}
+        open={closeRunNodeItemVerifyVisible}
         title={t('GlobalState.closeRunNodeConfirmTitle')}
         content={t('GlobalState.closeRunNodeConfirmContent')}
         footerExtra={

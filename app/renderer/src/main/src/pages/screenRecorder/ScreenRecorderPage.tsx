@@ -72,7 +72,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
         </div>
       )}
       <YakitHint
-        visible={installVisible}
+        open={installVisible}
         title={t('ScreenRecorderPage.installing')}
         heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
         onCancel={() => {

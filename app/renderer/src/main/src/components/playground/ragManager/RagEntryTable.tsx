@@ -233,7 +233,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({ selectedCollection
       {/* 条目详情弹窗 */}
       <YakitModal
         title={t('playground.RagEntryTable.detailTitle')}
-        visible={detailModalVisible}
+        open={detailModalVisible}
         onCancel={handleCloseDetail}
         footer={[
           <YakitButton key="close" onClick={handleCloseDetail}>

@@ -989,7 +989,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
           {renderTabContent(active)}
         </div>
         <YakitHint
-          visible={clearAllVisible}
+          open={clearAllVisible}
           title={clearAllContent.scriptName}
           content={clearAllContent.help}
           onOk={handleCancelAllOk}

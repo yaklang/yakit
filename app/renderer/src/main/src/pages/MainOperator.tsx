@@ -694,7 +694,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
           {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
           <YakitModal
-            visible={passwordShow}
+            open={passwordShow}
             title={t('Main.setPassword')}
             destroyOnClose={true}
             maskClosable={false}
@@ -717,7 +717,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
           <YakitHint
             getContainer={chartCSDragAreaRef.current || undefined}
-            visible={showRenderCrash}
+            open={showRenderCrash}
             title={t('Main.renderCrashTitle')}
             content={t('Main.renderCrashDesc')}
             okButtonText={t('Main.viewLog')}
@@ -729,7 +729,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
       </WaterMark>
       {controlShow && <ControlOperation controlName={controlName} />}
       <YakitHintModal
-        visible={false}
+        open={false}
         title={t('Main.remoteRequestTitle')}
         content={
           <div>
@@ -750,7 +750,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
       {/* irify-start */}
       <YakitHint
-        visible={isShowIRifyHint}
+        open={isShowIRifyHint}
         title={t('Main.migrateDataTitle')}
         content={t('Main.migrateDataDesc')}
         footer={
@@ -781,7 +781,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             /> */}
 
       <YakitHintModal
-        visible={showProxyModal}
+        open={showProxyModal}
         title={t('ProxyConfig.data_migration')}
         content={t('ProxyConfig.migration_title')}
         cancelButtonText={t('ProxyConfig.not_migration')}

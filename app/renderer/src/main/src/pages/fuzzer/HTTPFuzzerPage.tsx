@@ -2572,7 +2572,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         mask={false}
         keyboard={false}
         height={showHeight}
-        visible={true}
+        open={true}
         onClose={() => setTrafficAnalysisVisible(false)}
         className={styles['http-traffic-analysis-overlay']}
       >
@@ -3775,7 +3775,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           <YakitPopover
             trigger={'click'}
             content={searchNode}
-            onVisibleChange={(b) => {
+            onOpenChange={(b) => {
               if (!b) {
                 setQuery({
                   ...query,
@@ -3840,7 +3840,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
               </div>
             </div>
           }
-          onVisibleChange={(b) => {
+          onOpenChange={(b) => {
             if (!b) {
               const l = bodyLengthRef?.current?.getValue() || {}
               const d = durationMsRef?.current?.getValue() || {}
@@ -4028,8 +4028,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </Space>
               </>
             }
-            visible={exportDataVisible}
-            onVisibleChange={(visible) => {
+            open={exportDataVisible}
+            onOpenChange={(visible) => {
               setExportDataVisible(visible)
             }}
           >
@@ -4080,8 +4080,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </Space>
               </>
             }
-            visible={exportDataVisible}
-            onVisibleChange={(visible) => {
+            open={exportDataVisible}
+            onOpenChange={(visible) => {
               setExportDataVisible(visible)
             }}
           >
@@ -4094,7 +4094,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         <YakitModal
           title={t('SecondNodeExtra.extractFromResponsePacket')}
           onCancel={() => setResponseExtractorVisible(false)}
-          visible={responseExtractorVisible}
+          open={responseExtractorVisible}
           width="80%"
           maskClosable={false}
           footer={null}

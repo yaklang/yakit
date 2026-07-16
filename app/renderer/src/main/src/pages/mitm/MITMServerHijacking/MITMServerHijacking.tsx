@@ -537,8 +537,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
               overlayClassName={classNames(style['more-popover'])}
               placement="bottomRight"
               trigger="click"
-              visible={morePopoverVisible}
-              onVisibleChange={setMorePopoverVisible}
+              open={morePopoverVisible}
+              onOpenChange={setMorePopoverVisible}
               content={
                 <YakitMenu
                   selectedKeys={[]}
@@ -739,7 +739,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
   return (
     <>
       <YakitModal
-        visible={downStreamAgentModalVisible}
+        open={downStreamAgentModalVisible}
         title={t('ProxyConfig.downstream_agent')}
         width={506}
         maskClosable={false}

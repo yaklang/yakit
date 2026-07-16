@@ -1547,7 +1547,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
       />
 
       <YakitHint
-        visible={delShow}
+        open={delShow}
         title={delId.Type === 'file' ? t('ProjectManage.deleteFolder') : t('ProjectManage.deleteProject')}
         content={
           delId.Type === 'file' ? t('ProjectManage.deleteFolderConfirm') : t('ProjectManage.deleteProjectConfirm')
@@ -1571,7 +1571,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
       />
 
       <YakitHint
-        visible={inquireIntoProjectVisible}
+        open={inquireIntoProjectVisible}
         title={t('ProjectManage.hint')}
         content={`${t('ProjectManage.enterNewProject')} ${newProjectInfo?.ProjectName}`}
         onOk={() => {
@@ -1600,7 +1600,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
       />
 
       <YakitHint
-        visible={detectionTemporaryProjectVisible}
+        open={detectionTemporaryProjectVisible}
         title={t('ProjectManage.hint')}
         content={t('ProjectManage.temporaryProjectInUse')}
         onOk={async () => {
@@ -2083,7 +2083,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       footer={null}
       width={448}
       destroyOnClose={true}
-      visible={visible}
+      open={visible}
       onCancel={onClose}
       bodyStyle={{ padding: 0 }}
     >

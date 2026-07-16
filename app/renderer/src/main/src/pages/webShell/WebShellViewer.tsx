@@ -64,7 +64,7 @@ export const WebShellViewer: React.FC<WebShellManagerViewerProp> = (props) => {
         available={available}
       />
       <YakitHint
-        visible={isFirstEnter}
+        open={isFirstEnter}
         title="使用协议"
         content={
           <>

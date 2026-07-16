@@ -1058,8 +1058,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             }}
                           />
                         }
-                        visible={ceUserMenuShow}
-                        onVisibleChange={(visible) => {
+                        open={ceUserMenuShow}
+                        onOpenChange={(visible) => {
                           if (visible) {
                             onUpdateApiKey()
                           }
@@ -1099,7 +1099,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       )}
 
       <YakitModal
-        visible={passwordShow}
+        open={passwordShow}
         closable={passwordClose}
         title={t('Main.setPassword')}
         destroyOnClose={true}
@@ -1113,7 +1113,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       </YakitModal>
 
       <YakitModal
-        visible={uploadModalShow}
+        open={uploadModalShow}
         title={t('FuncDomain.uploadData')}
         destroyOnClose={true}
         maskClosable={false}
@@ -1126,7 +1126,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       </YakitModal>
 
       <YakitModal
-        visible={robotControlModal}
+        open={robotControlModal}
         title={
           <div className={robotControlStyles['robot-modal-title']}>
             <OutlineDevicemobileIcon
@@ -1271,7 +1271,7 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
       width={600}
       maskClosable={false}
       closable={true}
-      visible={visible}
+      open={visible}
       okText={t('YakitButton.confirm')}
       onCancel={onCloseModal}
       onOk={onOKFun}
@@ -1814,8 +1814,8 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         overlayClassName={classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown'])}
         placement={'bottom'}
         content={menu}
-        visible={show}
-        onVisibleChange={(visible) => setShow(visible)}
+        open={show}
+        onOpenChange={(visible) => setShow(visible)}
         trigger="click"
       >
         <div className={styles['ui-op-btn-wrapper']}>
@@ -1833,7 +1833,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       <RunNodeModal runNodeModalVisible={runNodeModalVisible} onClose={() => setRunNodeModalVisible(false)} />
       {configMcpModalVisible && <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />}
       <YakitHint
-        visible={reclaimHint}
+        open={reclaimHint}
         title={t('HomeCom.reclaimDatabaseSpaceTitle')}
         content={t('HomeCom.reclaimDatabaseSpaceCont')}
         onOk={() => {
@@ -1909,7 +1909,7 @@ const UIDevTool: React.FC<UIDevTool> = React.memo((props) => {
       placement={'bottom'}
       trigger={'click'}
       content={menu}
-      onVisibleChange={(visible) => setShow(visible)}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
@@ -2159,7 +2159,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
           ) : (
             <>
               <YakitPopover
-                visible={moreVersionPopShow}
+                open={moreVersionPopShow}
                 overlayClassName={styles['more-versions-popover']}
                 placement="bottomLeft"
                 trigger="click"
@@ -2172,7 +2172,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     }}
                   />
                 }
-                onVisibleChange={(visible) => {
+                onOpenChange={(visible) => {
                   setMoreVersionPopShow(visible)
                 }}
               >
@@ -2195,7 +2195,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 </div>
               )}
               <YakitHint
-                visible={updateHint}
+                open={updateHint}
                 title="更新提示"
                 content={`更新${getReleaseEditionName()}可同步更新引擎，建议先更新${getReleaseEditionName()}`}
                 okButtonText={`更新${getReleaseEditionName()}`}
@@ -2974,8 +2974,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
-      visible={show}
-      onVisibleChange={(visible) => {
+      open={show}
+      onOpenChange={(visible) => {
         if (isShowEnpriTraceUpdateVisible) return
         if (editShow.visible) setShow(false)
         else setShow(visible)
@@ -2998,7 +2998,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         closable={true}
         type="white"
         size="large"
-        visible={editShow.visible}
+        open={editShow.visible}
         cancelButtonProps={{ loading: editLoading }}
         okButtonProps={{ loading: editLoading }}
         onCancel={() => setEditShow({ visible: false, type: 'yakit' })}
@@ -3017,7 +3017,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       <YakitModal
         type="white"
         size="large"
-        visible={isShowEnpriTraceUpdateVisible}
+        open={isShowEnpriTraceUpdateVisible}
         title="检测到 内网版 EnpriTrace 版本升级"
         children={`检测到有新版本${yakitLastIntranetVersion}，请立即更新`}
         onCancel={() => {
@@ -3055,7 +3055,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
       {/* 任务通知 */}
       <YakitHint
-        visible={taskModalInfo.visible}
+        open={taskModalInfo.visible}
         title={taskModalInfo.title}
         content={<TaskNotification taskList={taskModalInfo.data} />}
         okButtonText={taskModalInfo.okButtonText}
@@ -3067,7 +3067,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       />
       {/* 创建任务重名 */}
       <YakitHint
-        visible={taskErrModalInfo.visible}
+        open={taskErrModalInfo.visible}
         title={taskErrModalInfo.title}
         content={<TaskErrNotification reNames={taskErrModalInfo.data} />}
         okButtonText={taskErrModalInfo.okButtonText}
@@ -3342,7 +3342,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
-      onVisibleChange={(visible) => setShow(visible)}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
@@ -3573,8 +3573,8 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
-      visible={show}
-      onVisibleChange={(visible) => setShow(visible)}
+      open={show}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
@@ -3904,8 +3904,8 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         overlayStyle={{ paddingBottom: 0 }}
         placement={'bottom'}
         content={menu}
-        visible={show}
-        onVisibleChange={(visible) => setShow(visible)}
+        open={show}
+        onOpenChange={(visible) => setShow(visible)}
         trigger={'click'}
       >
         <div className={styles['ui-op-btn-wrapper']}>
@@ -3992,7 +3992,7 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
     <YakitModal
       title="崩溃日志采集"
       width={'70%'}
-      visible={!!runtimeId}
+      open={!!runtimeId}
       destroyOnClose
       onCancel={onCancel}
       footer={

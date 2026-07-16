@@ -80,7 +80,7 @@ const AdvancedSet: React.FC<AdvancedSetProps> = memo((props) => {
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       width="25%"
       className={styles['history-advanced-set-wrapper']}
       onClose={onCancel}
@@ -186,11 +186,11 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
   return (
     <YakitPopover
       title={t('AdvancedSet.advancedConfig')}
-      onVisibleChange={(visible) => !visible && onCancel()}
+      onOpenChange={(visible) => !visible && onCancel()}
       trigger="click"
       overlayInnerStyle={{ width: 350 }}
       overlayClassName={styles['history-advanced-set-wrapper']}
-      visible={visible}
+      open={visible}
       placement="right"
       content={
         <>

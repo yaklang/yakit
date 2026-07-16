@@ -866,7 +866,7 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
         return (
           <YakitPopover
             title={'Operations'}
-            visible={p.noOperations ? false : undefined}
+            open={p.noOperations ? false : undefined}
             content={[
               <Button
                 danger={true}

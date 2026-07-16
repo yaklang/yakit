@@ -328,7 +328,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                       </div>
                     }
                     trigger="hover"
-                    onVisibleChange={setTagShow}
+                    onOpenChange={setTagShow}
                     placement="bottomLeft"
                   >
                     <div
@@ -1408,7 +1408,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
     <div className={styles['local-opt-footer-extra']}>
       {isShowUpload && (
         <>
-          <Tooltip title="上传" visible={uploadTipShow} onVisibleChange={(val) => setUploadTipShow(val)}>
+          <Tooltip title="上传" open={uploadTipShow} onOpenChange={(val) => setUploadTipShow(val)}>
             <YakitButton
               type="text2"
               icon={<OutlineClouduploadIcon />}
@@ -1453,7 +1453,7 @@ export const PluginsUploadHint: React.FC<PluginsUploadHintProps> = React.memo((p
   })
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       title="一键上传"
       heardIcon={<SolidClouduploadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       footer={null}

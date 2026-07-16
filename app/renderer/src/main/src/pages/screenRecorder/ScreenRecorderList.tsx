@@ -560,7 +560,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
         </YakitSpin>
       </div>
       <YakitHint
-        visible={delShow}
+        open={delShow}
         title={t('ScreenRecorderList.deleteTitle')}
         content={t('ScreenRecorderList.deleteDesc')}
         onOk={() => onBatchRemove()}
@@ -776,7 +776,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
         </YakitPopconfirm>
       </div>
       <YakitModal
-        visible={visible}
+        open={visible}
         footer={null}
         closeIcon={<></>}
         centered

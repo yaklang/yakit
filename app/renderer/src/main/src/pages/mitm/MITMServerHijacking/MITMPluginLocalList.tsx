@@ -401,7 +401,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
   })
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       title={`${getReleaseEditionName()} 云端插件下载中...`}
       heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={() => {
@@ -489,7 +489,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
   })
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       title={`${getReleaseEditionName()} 规则更新中...`}
       heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={() => {
@@ -869,7 +869,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
       </Dropdown>
       {isShowGroupMagBtn && (
         <YakitPopover
-          visible={addGroupVisible}
+          open={addGroupVisible}
           overlayClassName={style['add-group-popover']}
           placement="bottomRight"
           trigger="click"
@@ -881,7 +881,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
               onCanle={() => setAddGroupVisible(false)}
             ></UpdateGroupList>
           }
-          onVisibleChange={(visible) => {
+          onOpenChange={(visible) => {
             if (visible) {
               getYakScriptGroup()
             }

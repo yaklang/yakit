@@ -163,8 +163,8 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
           placement="bottomRight"
           trigger={'click'}
           content={listDom}
-          visible={listShow}
-          onVisibleChange={(visible) => setListShow(visible)}
+          open={listShow}
+          onOpenChange={(visible) => setListShow(visible)}
         >
           <div className={styles['body-style']}>{props.children}</div>
         </YakitPopover>
@@ -228,8 +228,8 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
               placement="bottomRight"
               trigger={'click'}
               content={listDom}
-              visible={listShow}
-              onVisibleChange={(visible) => setListShow(visible)}
+              open={listShow}
+              onOpenChange={(visible) => setListShow(visible)}
             >
               <div className={styles['body-style']}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
             </YakitPopover>
@@ -238,7 +238,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
       </div>
       {/* 复原菜单提醒 */}
       <YakitHint
-        visible={restoreVisible}
+        open={restoreVisible}
         title={t('Layout.MenuPlugin.restoreMenuTip')}
         content={t('Layout.MenuPlugin.confirmRestoreMenu')}
         onOk={handleRestoreHint}

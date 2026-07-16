@@ -536,7 +536,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
           placement="bottom"
           closable={false}
           onClose={onClose}
-          visible={visible && !!inViewport}
+          open={visible && !!inViewport}
           getContainer={cvePageRef.current}
           mask={false}
           style={{ height: visible ? heightDrawer : 0 }}

@@ -1631,7 +1631,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
 
   return (
     <YakitHint
-      visible={isShowModal}
+      open={isShowModal}
       title={t('RunnerTabs.unsavedTitle')}
       content={t('RunnerTabs.unsavedContent', { name: info.name })}
       footer={

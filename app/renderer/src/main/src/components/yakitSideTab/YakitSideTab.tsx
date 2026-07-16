@@ -190,7 +190,7 @@ const YakitTabsItem: React.FC<YakitTabsItemProps> = React.memo((props) => {
   return (
     <>
       {hint ? (
-        <Tooltip key={`${item.value}`} title={hint} placement="right" destroyTooltipOnHide visible={hover}>
+        <Tooltip key={`${item.value}`} title={hint} placement="right" destroyTooltipOnHide open={hover}>
           {tabDom()}
         </Tooltip>
       ) : (

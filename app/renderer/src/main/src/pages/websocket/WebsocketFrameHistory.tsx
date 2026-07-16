@@ -302,7 +302,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         centered={true}
         width={'60%'}
         footer={null}
-        visible={showDetail}
+        open={showDetail}
         onCancel={handleCancelInfoDetail}
       >
         <div className={styles['websocket-detail-modal']}>

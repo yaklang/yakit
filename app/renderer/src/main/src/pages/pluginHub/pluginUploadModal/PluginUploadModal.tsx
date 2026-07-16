@@ -307,7 +307,7 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
       centered={true}
       footer={null}
       maskClosable={false}
-      visible={visible}
+      open={visible}
       onCancel={handleCancel}
     >
       <div

@@ -1543,8 +1543,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
                 trigger="click"
                 placement="bottom"
-                visible={isShowSamplingInfo}
-                onVisibleChange={(visible) => {
+                open={isShowSamplingInfo}
+                onOpenChange={(visible) => {
                   if (!visible) setIsShowSamplingInfo(false)
                 }}
               >
@@ -1971,7 +1971,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             <YakitHint
               getContainer={document.getElementById('yakit-uilayout-body') || undefined}
               mask={false}
-              visible={engineLink && killOldEngine}
+              open={engineLink && killOldEngine}
               title={t('UILayout.newEngineVersionFound')}
               content={t('UILayout.newEngineVersionFoundContent')}
               okButtonProps={{ loading: killLoading }}
@@ -2002,7 +2002,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
       {/* 由普通项目进入项目管理的二次确认框 */}
       <YakitHint
-        visible={linkDatabaseHint}
+        open={linkDatabaseHint}
         title={t('UILayout.enterProjectManageConfirmTitle')}
         content={t('UILayout.enterProjectManageConfirmContent')}
         onOk={() => {
@@ -2025,7 +2025,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       )}
       {/* MCP / 后端推送：是否进入新建项目 */}
       <YakitHint
-        visible={!!serverPushEnterProject}
+        open={!!serverPushEnterProject}
         title={t('ProjectManage.hint')}
         content={`${t('ProjectManage.enterNewProject')} ${serverPushEnterProject?.projectName || ''}`}
         okButtonProps={{ loading: enterProjectLoading }}

@@ -1273,7 +1273,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             </div>
                           }
                           trigger="hover"
-                          onVisibleChange={setGroupTagShow}
+                          onOpenChange={setGroupTagShow}
                           placement="bottom"
                         >
                           <div
@@ -1292,7 +1292,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                     </div>
                   )}
                   <YakitPopover
-                    visible={addGroupVisible}
+                    open={addGroupVisible}
                     overlayClassName={styles['add-group-popover']}
                     placement="bottomRight"
                     trigger="click"
@@ -1304,7 +1304,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                         onCanle={() => setAddGroupVisible(false)}
                       ></UpdateGroupList>
                     }
-                    onVisibleChange={(visible) => {
+                    onOpenChange={(visible) => {
                       setAddGroupVisible(visible)
                     }}
                   >

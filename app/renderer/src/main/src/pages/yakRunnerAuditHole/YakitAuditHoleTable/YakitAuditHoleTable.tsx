@@ -1207,7 +1207,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       />
       {/* 导出弹窗 */}
       <YakitModal
-        visible={exportModalVisible}
+        open={exportModalVisible}
         title={t('YakitAuditHoleTable.exportAuditRisk')}
         width={520}
         centered={true}
@@ -1257,7 +1257,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       </YakitModal>
       {/* 导入弹窗 */}
       <YakitModal
-        visible={importModalVisible}
+        open={importModalVisible}
         title={t('YakitAuditHoleTable.importAuditRisk')}
         width={720}
         centered={true}

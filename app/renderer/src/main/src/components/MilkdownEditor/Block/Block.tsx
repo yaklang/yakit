@@ -182,8 +182,8 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
             ))}
           </div>
         }
-        visible={visibleAdd}
-        onVisibleChange={setVisibleAdd}
+        open={visibleAdd}
+        onOpenChange={setVisibleAdd}
       >
         <div className={styles['tooltip-popover-btn']} onMouseDown={onAdd}>
           <OutlinePlusIcon />

@@ -8,7 +8,7 @@ import classNames from 'classnames'
 import styles from './YakitHint.module.scss'
 
 export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
-  const { mask = true, maskColor, childModal = [], getContainer, visible, ...rest } = props
+  const { mask = true, maskColor, childModal = [], getContainer, open, ...rest } = props
 
   const container = useMemo(() => {
     if (!getContainer) return document.body
@@ -26,9 +26,9 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
         const position = +index < modalsPrevious.length
         if (position) {
           /** 新数据展示是否为true */
-          const isLatest = childModal[index].content.visible === true
+          const isLatest = childModal[index].content.open === true
           /** 旧数据展示是否为false */
-          const isOld = modalsPrevious[index].content.visible === false
+          const isOld = modalsPrevious[index].content.open === false
           /** 由false变为true时，置顶该弹窗 */
           if (isLatest && isOld) {
             setTimeout(() => {
@@ -47,7 +47,7 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
     <div
       style={{ backgroundColor: mask && maskColor ? maskColor : '' }}
       className={classNames(
-        visible ? styles['yakit-hint-wrapper'] : styles['yakit-hint-hidden-wrapper'],
+        open ? styles['yakit-hint-wrapper'] : styles['yakit-hint-hidden-wrapper'],
         'yakit-hint-progress-wrapper',
         {
           [styles['yakit-hint-mask-wrapper']]: mask,
@@ -59,7 +59,7 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
           {...rest}
           getContainer={getContainer}
           isMask={mask}
-          visible={true}
+          open={true}
           isTop={currentTop === 'main'}
           setTop={() => setCurrnetTop('main')}
         />
@@ -84,7 +84,7 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
 
 // 拖拽白板 支持自定义
 export const YakitHintWhite: React.FC<YakitHintWhiteProps> = memo((props) => {
-  const { getContainer, maskColor, onClose, isMask, visible, ...rest } = props
+  const { getContainer, maskColor, onClose, isMask, open, ...rest } = props
   const container = useMemo(() => {
     if (!getContainer) return document.body
     return getContainer
@@ -93,7 +93,7 @@ export const YakitHintWhite: React.FC<YakitHintWhiteProps> = memo((props) => {
   return ReactDOM.createPortal(
     <div
       style={{ backgroundColor: isMask && maskColor ? maskColor : '' }}
-      className={classNames(visible ? styles['yakit-hint-wrapper'] : styles['yakit-hint-hidden-wrapper'], {
+      className={classNames(open ? styles['yakit-hint-wrapper'] : styles['yakit-hint-hidden-wrapper'], {
         [styles['yakit-hint-mask-wrapper']]: isMask,
       })}
     >
@@ -103,7 +103,7 @@ export const YakitHintWhite: React.FC<YakitHintWhiteProps> = memo((props) => {
           onClose && onClose()
         }}
       >
-        <HintModal {...rest} visible={visible} isMask={isMask} />
+        <HintModal {...rest} open={open} isMask={isMask} />
       </div>
     </div>,
     container,

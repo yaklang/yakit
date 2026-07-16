@@ -298,7 +298,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
         }}
       ></TableVirtualResize>
       <YakitModal
-        visible={roleFormShow}
+        open={roleFormShow}
         title={t('RoleAdminPage.createRole')}
         destroyOnClose={true}
         maskClosable={false}

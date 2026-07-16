@@ -346,8 +346,8 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
   }, [currentRole])
   return (
     <YakitPopover
-      visible={authVisibleMenu}
-      onVisibleChange={setAuthVisibleMenu}
+      open={authVisibleMenu}
+      onOpenChange={setAuthVisibleMenu}
       content={
         <div className={styles['auth-popover-menu-list']}>
           {menuList.map((ele, index) =>

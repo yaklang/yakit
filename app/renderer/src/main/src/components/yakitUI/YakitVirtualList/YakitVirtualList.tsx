@@ -343,7 +343,7 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
     defaultValue: [],
   })
 
-  const [visible, setVisible] = useState<boolean>(false)
+  const [open, setOpen] = useState<boolean>(false)
 
   const [data, setData] = useState<ListSelectFilterPopoverProps['option']>(option)
   const [searchText, setSearchText] = useState<string>('')
@@ -394,18 +394,18 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
   })
   const onSave = useMemoizedFn(() => {
     onSetValue(selectKeys)
-    setVisible(false)
+    setOpen(false)
   })
-  const onVisibleChange = useMemoizedFn((v) => {
+  const onOpenChange = useMemoizedFn((v) => {
     if (!v) {
       onSetValue(selectKeys)
     }
-    setVisible(v)
+    setOpen(v)
   })
   return (
     <YakitPopover
-      visible={visible}
-      onVisibleChange={onVisibleChange}
+      open={open}
+      onOpenChange={onOpenChange}
       placement={placement || 'bottomLeft'}
       content={
         <div className={styles['filter-popover-content']}>

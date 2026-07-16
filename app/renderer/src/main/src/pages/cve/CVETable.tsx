@@ -700,7 +700,7 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
   })
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       title={titleRender()}
       heardIcon={heardIconRender()}
       onCancel={() => {

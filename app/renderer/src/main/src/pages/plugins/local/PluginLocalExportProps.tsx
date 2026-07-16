@@ -121,7 +121,7 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       getContainer={getContainer}
       type="white"
       title="导出本地插件"

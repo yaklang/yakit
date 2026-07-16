@@ -1651,7 +1651,7 @@ const Home: React.FC<HomeProp> = (props) => {
               )}
             </div>
             <YakitHint
-              visible={pcapHintShow}
+              open={pcapHintShow}
               heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
               title={pcapResult ? t('Home.netcardAccessGranted') : t('Home.netcardNoAccess')}
               width={600}

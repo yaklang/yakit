@@ -168,8 +168,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
               placement={'bottom'}
               trigger={'click'}
               content={importMenu}
-              visible={importMenuShow}
-              onVisibleChange={(visible) => setImportMenuShow(visible)}
+              open={importMenuShow}
+              onOpenChange={(visible) => setImportMenuShow(visible)}
             >
               <YakitButton
                 type="text"
@@ -266,8 +266,8 @@ export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
               }}
             />
           }
-          visible={activePopoverKey === itemKey}
-          onVisibleChange={(visible) => {
+          open={activePopoverKey === itemKey}
+          onOpenChange={(visible) => {
             setActivePopoverKey(visible ? itemKey! : null)
           }}
         >

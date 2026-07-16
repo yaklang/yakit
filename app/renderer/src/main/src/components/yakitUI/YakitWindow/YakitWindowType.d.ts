@@ -12,7 +12,7 @@ export interface YakitWindowProps extends Omit<
    */
   getContainer?: HTMLElement
   /** 是否展示弹窗 */
-  visible: boolean
+  open: boolean
   /**
    * @name 浮窗模式下窗口的初始位置(topLeft|topRight|center|bottomLeft|bottomRight)
    */

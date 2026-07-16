@@ -722,7 +722,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       </ChatIPCContent.Provider>
       <YakitHint
         getContainer={wrapperRef.current || undefined}
-        visible={replaceShow}
+        open={replaceShow}
         title={t('AIAgentChat.warning')}
         content={t('AIAgentChat.replaceSkillTemplateConfirm')}
         footerExtra={
@@ -737,7 +737,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       />
       <YakitHint
         getContainer={wrapperRef.current || undefined}
-        visible={replaceToolShow}
+        open={replaceToolShow}
         title={t('AIAgentChat.warning')}
         content={t('AIAgentChat.replaceToolConfirm')}
         footerExtra={
@@ -751,7 +751,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onCancel={handleReplaceToolCancel}
       />
       <YakitHint
-        visible={visible}
+        open={visible}
         // heardIcon={<OutlineLoadingIcon className={styles["icon-rotate-animation"]} />}
         title={t('AIAgentChat.knowledgeNotBuiltTitle')}
         content={t('AIAgentChat.knowledgeNotBuiltDesc')}

@@ -163,7 +163,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
   return (
     <YakitModal
       title="导入知识库"
-      visible={visible}
+      open={visible}
       onCancel={handleCancel}
       width={600}
       destroyOnClose

@@ -278,7 +278,7 @@ const DeleteConfirm: FC<
 
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       title="是否要删除"
       content="确认删除后将会彻底删除"
       footer={
@@ -361,7 +361,7 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
   return (
     <YakitModal
       title={'修改基础信息'}
-      visible={visible}
+      open={visible}
       onCancel={onClose}
       width={600}
       destroyOnClose

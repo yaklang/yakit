@@ -1288,7 +1288,7 @@ const FingerprintFormModal: React.FC<FingerprintFormModalProps> = (props) => {
 
   return (
     <YakitModal
-      visible={true}
+      open={true}
       title={(initialValues ? '编辑' : '创建') + '指纹'}
       width={500}
       onOk={() => {
@@ -1719,7 +1719,7 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
 
       <YakitPopover
         overlayClassName={styles['add-and-remove-group-popover']}
-        visible={addGroupVisible}
+        open={addGroupVisible}
         placement="bottomRight"
         trigger="click"
         content={
@@ -1809,14 +1809,14 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
             </div>
           </div>
         }
-        onVisibleChange={handleAddGroupVisibleChange}
+        onOpenChange={handleAddGroupVisibleChange}
       >
         <YakitButton type="text" disabled={!isActive} icon={<OutlinePluscircleIcon />}>
           {oldGroup.length ? undefined : '添加分组'}
         </YakitButton>
       </YakitPopover>
       <YakitHint
-        visible={confirmVisible}
+        open={confirmVisible}
         title="提示"
         content="确定要添加所有数据到分组吗？"
         onCancel={() => {

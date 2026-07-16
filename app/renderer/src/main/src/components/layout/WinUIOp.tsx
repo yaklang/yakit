@@ -125,7 +125,7 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
         </div>
         {/* 关闭运行节点确认弹框 */}
         <YakitHint
-          visible={closeRunNodeItemVerifyVisible}
+          open={closeRunNodeItemVerifyVisible}
           title={t('UIOp.closeNodesTitle')}
           content={t('UIOp.closeNodesContent', { edition: getReleaseEditionName() })}
           onOk={async () => {
@@ -177,7 +177,7 @@ export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = (props) =>
 
   return (
     <YakitHint
-      visible={true}
+      open={true}
       title={props.title || t('UIOp.exitTempProject')}
       footerExtra={
         <YakitCheckbox

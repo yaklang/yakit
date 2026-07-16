@@ -111,7 +111,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
         closable={false}
         keyboard={false}
         height={showHeight}
-        visible={visible}
+        open={visible}
         className={classNames(styles['plugin-debug-drawer'])}
       >
         {visible && (
@@ -134,7 +134,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
           keyboard={false}
           maskStyle={{ position: 'absolute' }}
           wrapClassName={styles['unsaved-hint']}
-          visible={unSavedHint}
+          open={unSavedHint}
           onOk={() => unsavedHintCallback(true)}
           onCancel={cancelUnsavedHint}
         >

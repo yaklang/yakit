@@ -148,7 +148,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
 
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       heardIcon={loading ? <OutlineLoadingIcon className={styles['icon-rotate-animation']} /> : undefined}
       title={loading ? t('AllKillEngineConfirm.closing') : title}
       content={content}

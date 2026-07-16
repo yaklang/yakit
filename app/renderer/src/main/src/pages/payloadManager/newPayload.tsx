@@ -2214,7 +2214,7 @@ export const DeleteConfirm: React.FC<DeleteConfirmProps> = (props) => {
     <>
       {/* 删除确认弹框 */}
       <YakitHint
-        visible={showConfirm && visible}
+        open={showConfirm && visible}
         title={t('DeleteConfirm.deleteConfirmTitle')}
         content={t('DeleteConfirm.deleteConfirmContent')}
         footerExtra={
@@ -2833,7 +2833,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
       <YakitModal
         centered
         getContainer={document.getElementById('new-payload') || document.body}
-        visible={visible}
+        open={visible}
         title={null}
         footer={null}
         width={520}
@@ -3483,7 +3483,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
       <YakitModal
         centered
         getContainer={document.getElementById('new-payload') || document.body}
-        visible={visible}
+        open={visible}
         title={null}
         footer={null}
         width={520}
@@ -3939,7 +3939,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
     <YakitModal
       centered
       getContainer={document.getElementById('new-payload') || document.body}
-      visible={showModal}
+      open={showModal}
       title={null}
       footer={null}
       width={520}
@@ -4050,7 +4050,7 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
     <YakitModal
       centered
       getContainer={document.getElementById('new-payload') || document.body}
-      visible={showModal}
+      open={showModal}
       title={null}
       footer={null}
       width={520}
@@ -4370,7 +4370,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         </>
       )}
       <YakitHint
-        visible={isFirstEnter}
+        open={isFirstEnter}
         title={t('NewPayload.migrateData')}
         content={t('NewPayload.migrateDataContent')}
         footer={
@@ -4382,7 +4382,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         }
       />
       <YakitHint
-        visible={isClosePayload}
+        open={isClosePayload}
         title={t('NewPayload.engineVersionTooLow')}
         content={t('NewPayload.engineVersionTooLowContent')}
         footer={
@@ -4402,7 +4402,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
       <YakitModal
         centered
         getContainer={document.getElementById('new-payload') || document.body}
-        visible={visible}
+        open={visible}
         title={null}
         footer={null}
         width={520}

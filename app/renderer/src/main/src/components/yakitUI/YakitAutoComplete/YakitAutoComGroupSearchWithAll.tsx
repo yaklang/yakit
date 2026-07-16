@@ -307,12 +307,12 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
             onSearch={mergedOnSearch}
             options={options}
             size="middle"
-            dropdownClassName={classNames(
+            popupClassName={classNames(
               styles['yakit-auto-complete-popup'],
               {
                 [styles['yakit-auto-complete-popup-y']]: show,
               },
-              props.dropdownClassName,
+              props.popupClassName,
             )}
             onDropdownVisibleChange={mergedOnDropdownVisibleChange}
           />

@@ -342,7 +342,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                       ))}
                     </div>
                   }
-                  onVisibleChange={setPrShow}
+                  onOpenChange={setPrShow}
                 >
                   <YakitButton type="text2" isActive={prShow}>
                     {`${contributes.length}位协作者`}
@@ -608,14 +608,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
           </div>
         </Form.Item>
 
-        <YakitModal
-          title="漏洞描述"
-          type="white"
-          closable={true}
-          footer={null}
-          visible={riskShow}
-          onCancel={onCancelRisk}
-        >
+        <YakitModal title="漏洞描述" type="white" closable={true} footer={null} open={riskShow} onCancel={onCancelRisk}>
           <div className={styles['risk-info-modal']}>
             {bugInfo.map((item) => {
               return (

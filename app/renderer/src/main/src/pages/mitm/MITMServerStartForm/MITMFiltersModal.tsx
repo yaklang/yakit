@@ -367,7 +367,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       destroyOnClose
       onCancel={() => {
         setVisible(false)
@@ -459,8 +459,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             }
             trigger="click"
             placement="bottom"
-            onVisibleChange={setPopoverVisible}
-            visible={popoverVisible}
+            onOpenChange={setPopoverVisible}
+            open={popoverVisible}
           >
             <YakitButton style={{ padding: '3px 8px' }} icon={<OutlineClockIcon />} type="text" />
           </YakitPopover>
@@ -708,7 +708,7 @@ const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
         </div>
       }
       destroyOnClose={true}
-      visible={visible}
+      open={visible}
       okText={okText}
       onCancel={onCancel}
       onOk={() => onOk(value)}

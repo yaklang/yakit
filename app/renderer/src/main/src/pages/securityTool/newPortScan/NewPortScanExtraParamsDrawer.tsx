@@ -99,7 +99,7 @@ const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> 
   return (
     <YakitDrawer
       className={styles['port-scan-execute-extra-params-drawer']}
-      visible={visible}
+      open={visible}
       onClose={onClose}
       width="max(700px, 65%)"
       title={t('NewPortScanExecuteContent.extraParams')}

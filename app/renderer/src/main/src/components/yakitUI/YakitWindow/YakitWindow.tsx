@@ -50,7 +50,7 @@ const DefaultCacheSize: YakitWindowCacheSizes = {
 export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
   const {
     getContainer,
-    visible,
+    open,
     layout = 'center',
     defaultDockSide = [/* "shrink", */ 'left', 'right', 'bottom'],
     isDrag = true,
@@ -101,7 +101,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
   const cacheSize = useRef<YakitWindowCacheSizes>(cloneDeep(DefaultCacheSize))
   // 获取缓存尺寸数据
   useLayoutEffect(() => {
-    if (visible) {
+    if (open) {
       if (cacheSizeKey) {
         getRemoteValue(cacheSizeKey)
           .then((value: string) => {
@@ -125,7 +125,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
         cacheSize.current = cloneDeep(DefaultCacheSize)
       }
     }
-  }, [visible, cacheSizeKey])
+  }, [open, cacheSizeKey])
   // 设置缓存尺寸数据
   const setCacheSize = useDebounceFn(
     useMemoizedFn((type: WindowPositionType, size: YakitWindowCacheSizeProps) => {
@@ -313,7 +313,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
         ref={leftRef}
         key="dock-side-left"
         className={classNames({
-          [styles['yakit-window-hidden-wrapper']]: !visible,
+          [styles['yakit-window-hidden-wrapper']]: !open,
         })}
         style={{ position: 'fixed', top: dockSideTop, left: 0, zIndex: 1002 }}
         defaultSize={{ width: cacheSize.current['left']?.width || width, height: winMaxHeight.show }}
@@ -349,7 +349,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
         ref={rightRef}
         key="dock-side-right"
         className={classNames({
-          [styles['yakit-window-hidden-wrapper']]: !visible,
+          [styles['yakit-window-hidden-wrapper']]: !open,
         })}
         style={{ position: 'fixed', top: dockSideTop, right: 0, zIndex: 1002 }}
         defaultSize={{ width: cacheSize.current['right']?.width || width, height: winMaxHeight.show }}
@@ -385,7 +385,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
         ref={bottomRef}
         key="dock-side-bottom"
         className={classNames({
-          [styles['yakit-window-hidden-wrapper']]: !visible,
+          [styles['yakit-window-hidden-wrapper']]: !open,
         })}
         style={{ position: 'fixed', bottom: 0, left: dockSideLeft, zIndex: 1002 }}
         defaultSize={{ width: winMaxWidth.show, height: cacheSize.current['bottom']?.height || height }}
@@ -421,7 +421,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
       defaultClassName={classNames(
         styles['yakit-window-wrapper'],
         {
-          [styles['yakit-window-hidden-wrapper']]: !visible,
+          [styles['yakit-window-hidden-wrapper']]: !open,
           [styles['yakit-window-center']]: layout === 'center',
         },
         layoutClass,
@@ -543,8 +543,8 @@ export const WindowPositionOPMenu: React.FC<WindowPositionOPProps> = memo((props
       placement={'bottomRight'}
       content={content}
       trigger="hover"
-      visible={show}
-      onVisibleChange={(visible) => setShow(visible)}
+      open={show}
+      onOpenChange={(v) => setShow(v)}
     >
       <YakitButton isHover={show} type="text2" icon={<OutlineDotshorizontalIcon />} />
     </YakitPopover>

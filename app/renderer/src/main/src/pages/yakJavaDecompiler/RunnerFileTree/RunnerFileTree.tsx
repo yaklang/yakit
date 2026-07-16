@@ -318,7 +318,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         />
       )}
       <YakitHint
-        visible={isShowHint}
+        open={isShowHint}
         title="编译完成"
         content="当前项目编译完成，点击查看跳转查看编译项目"
         onOk={() => {

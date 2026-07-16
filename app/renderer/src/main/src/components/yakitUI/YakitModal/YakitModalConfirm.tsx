@@ -194,14 +194,14 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
 
 const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
-  const [visible, setVisible] = useState<boolean>(true)
+  const [open, setOpen] = useState<boolean>(true)
   const [loading, setLoading] = useState<boolean>(false)
 
   useEffect(() => {
-    if (visible && props.onVisibleSetter) {
-      props.onVisibleSetter(setVisible)
+    if (open && props.onVisibleSetter) {
+      props.onVisibleSetter(setOpen)
     }
-  }, [visible])
+  }, [open])
 
   return (
     <YakitModal
@@ -212,7 +212,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
             type="outline2"
             onClick={(e) => {
               if (props.onCancel) props.onCancel(e)
-              setVisible(false)
+              setOpen(false)
             }}
             {...props.cancelButtonProps}
           >
@@ -234,7 +234,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           </YakitButton>
         </div>
       }
-      visible={visible}
+      open={open}
       closable={true}
       destroyOnClose={true}
       closeIcon={
@@ -246,7 +246,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
             } else {
               props.onCancel?.(e)
             }
-            setVisible(false)
+            setOpen(false)
           }}
           className="modal-remove-icon"
         >
@@ -256,7 +256,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
       {...props}
       onCancel={(e) => {
         if (props.onCancel) props.onCancel(e)
-        setVisible(false)
+        setOpen(false)
       }}
     />
   )

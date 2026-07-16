@@ -503,7 +503,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
       )}
       {/* 任务通知 */}
       <YakitHint
-        visible={taskModalInfo.visible}
+        open={taskModalInfo.visible}
         title={taskModalInfo.title}
         content={<TaskNotification taskList={taskModalInfo.data} />}
         okButtonText={taskModalInfo.okButtonText}
@@ -515,7 +515,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
       />
       {/* 创建任务重名 */}
       <YakitHint
-        visible={taskErrModalInfo.visible}
+        open={taskErrModalInfo.visible}
         title={taskErrModalInfo.title}
         content={<TaskErrNotification reNames={taskErrModalInfo.data} />}
         okButtonText={taskErrModalInfo.okButtonText}
@@ -684,7 +684,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         />
         {/* 任务通知 */}
         <YakitHint
-          visible={taskModalInfo.visible}
+          open={taskModalInfo.visible}
           title={taskModalInfo.title}
           content={<TaskNotification taskList={taskModalInfo.data} />}
           okButtonText={taskModalInfo.okButtonText}
@@ -696,7 +696,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         />
         {/* 创建任务重名 */}
         <YakitHint
-          visible={taskErrModalInfo.visible}
+          open={taskErrModalInfo.visible}
           title={taskErrModalInfo.title}
           content={<TaskErrNotification reNames={taskErrModalInfo.data} />}
           okButtonText={taskErrModalInfo.okButtonText}

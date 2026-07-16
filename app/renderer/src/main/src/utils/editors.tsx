@@ -1140,11 +1140,11 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                           </Form>
                         </>
                       }
-                      onVisibleChange={(v) => {
+                      onOpenChange={(v) => {
                         setPopoverVisible(v)
                       }}
                       overlayInnerStyle={{ width: 350 }}
-                      visible={popoverVisible}
+                      open={popoverVisible}
                     >
                       <YakitButton icon={<SettingOutlined />} type={'text'} size={'small'} />
                     </YakitPopover>

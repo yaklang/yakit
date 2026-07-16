@@ -100,7 +100,7 @@ const PluginHasParamsDrawer = React.memo((props: PluginHasParamsDrawerProps) => 
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       closable={false}
       width={drawerWidth + 'vw'}
       placement={placementDrawer}
@@ -271,7 +271,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       width={'max(700px, 50%)'}
       destroyOnClose={true}
       onCancel={() => onCloseParamsModal(false)}

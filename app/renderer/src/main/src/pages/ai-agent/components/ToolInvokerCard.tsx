@@ -465,7 +465,7 @@ const ToolParamsLine: FC<{ params?: Record<string, any> }> = memo(({ params }) =
         </span>
       </div>
       <YakitModal
-        visible={open}
+        open={open}
         title="Params"
         onCancel={() => setOpen(false)}
         cancelButtonProps={{ style: { display: 'none' } }}

@@ -114,7 +114,7 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
       <YakitHint
         getContainer={document.getElementById(wrapperId) || undefined}
         wrapClassName={styles['update-local-hint']}
-        visible={updateLocalHint}
+        open={updateLocalHint}
         title="更新提示"
         content="由于MITM插件参数升级，需要将插件重新下载一次方可正常使用"
         okButtonText="立即下载"

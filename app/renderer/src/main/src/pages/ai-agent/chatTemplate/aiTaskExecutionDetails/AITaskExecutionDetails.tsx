@@ -807,8 +807,8 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             trigger="click"
             placement="top"
             destroyTooltipOnHide
-            visible={visible}
-            onVisibleChange={setVisible}
+            open={visible}
+            onOpenChange={setVisible}
             overlayClassName={styles['add-popover']}
           >
             <YakitButton type="text" className={styles['add-btn']}>

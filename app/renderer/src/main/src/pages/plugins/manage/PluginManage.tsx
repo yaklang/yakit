@@ -1294,7 +1294,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                               </div>
                             }
                             trigger="hover"
-                            onVisibleChange={setGroupTagShow}
+                            onOpenChange={setGroupTagShow}
                             placement="bottom"
                           >
                             <div
@@ -1313,7 +1313,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                       </div>
                     )}
                     <YakitPopover
-                      visible={addGroupVisible}
+                      open={addGroupVisible}
                       overlayClassName={styles['add-group-popover']}
                       placement="bottomRight"
                       trigger="click"
@@ -1325,7 +1325,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                           onCanle={() => setAddGroupVisible(false)}
                         ></UpdateGroupList>
                       }
-                      onVisibleChange={(visible) => {
+                      onOpenChange={(visible) => {
                         setAddGroupVisible(visible)
                       }}
                     >
@@ -1470,7 +1470,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         <YakitModal
           title={t('PluginManage.importGroupTitle')}
           closable={true}
-          visible={importGroupVisible}
+          open={importGroupVisible}
           maskClosable={false}
           centered
           onCancel={() => setImportGroupVisible(false)}
@@ -1510,7 +1510,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         <YakitModal
           title={t('PluginManage.uploadPluginLibrary')}
           closable={true}
-          visible={uploadPluginLibraryVisible}
+          open={uploadPluginLibraryVisible}
           maskClosable={false}
           onCancel={() => setUploadPluginLibraryVisible(false)}
           footer={null}
@@ -1522,7 +1522,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         </YakitModal>
       )}
       <YakitHint
-        visible={percentShow}
+        open={percentShow}
         title={t('PluginManage.uploadPluginLibrary')}
         heardIcon={<SolidClouduploadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
         onCancel={onUploadPluginLibraryCancel}
@@ -1632,7 +1632,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
       centered={true}
       closable={true}
       keyboard={false}
-      visible={visible}
+      open={visible}
       cancelButtonProps={{ loading: submitLoading }}
       confirmLoading={submitLoading}
       onCancel={cancel}
@@ -1720,7 +1720,7 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
       closable={true}
       maskClosable={false}
       keyboard={false}
-      visible={visible}
+      open={visible}
       onCancel={setVisible}
       onOk={onSubmit}
       bodyStyle={{ padding: 0 }}

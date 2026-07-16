@@ -43,8 +43,8 @@ export const ManagementTab: React.FC<{ hideIcon?: boolean }> = React.memo((props
           onClick={({ key }) => payloadMenuSelect(key)}
         />
       }
-      visible={payloadMenuShow}
-      onVisibleChange={(visible) => setPayloadMenuShow(visible)}
+      open={payloadMenuShow}
+      onOpenChange={(visible) => setPayloadMenuShow(visible)}
     >
       <YakitButton
         type="secondary2"

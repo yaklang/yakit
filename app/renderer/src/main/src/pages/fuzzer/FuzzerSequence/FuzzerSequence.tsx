@@ -1825,7 +1825,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         mask={false}
         keyboard={false}
         height={showHeight}
-        visible={true}
+        open={true}
         onClose={() => setTrafficAnalysisVisible(false)}
         className={styles['http-traffic-analysis-overlay']}
         destroyOnClose
@@ -2307,8 +2307,8 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                 }
                 placement="top"
                 trigger={['click']}
-                visible={editNameVisible}
-                onVisibleChange={setEditNameVisible}
+                open={editNameVisible}
+                onOpenChange={setEditNameVisible}
               >
                 <YakitButton
                   icon={<OutlinePencilaltIcon />}
@@ -2388,8 +2388,8 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                         </LabelNodeItem>
                       </div>
                     }
-                    visible={visible}
-                    onVisibleChange={(v) => {
+                    open={visible}
+                    onOpenChange={(v) => {
                       if (disabled) return
                       if (!item.pageId) return
                       setVisible(v)

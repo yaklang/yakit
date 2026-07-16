@@ -1595,7 +1595,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
 
   return (
     <YakitHint
-      visible={isShowModal}
+      open={isShowModal}
       title={'文件未保存'}
       content={`是否要保存${info.name}里面的内容吗？`}
       footer={

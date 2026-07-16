@@ -181,7 +181,7 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
 
         {/* 文件过大弹窗 */}
         <YakitHint
-          visible={showFileHint}
+          open={showFileHint}
           title={t('FilePreview.warningTitle')}
           content={t('FilePreview.tooLarge')}
           cancelButtonProps={{ style: { display: 'none' } }}

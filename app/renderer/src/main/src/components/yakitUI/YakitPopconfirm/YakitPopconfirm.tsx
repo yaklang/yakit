@@ -14,7 +14,7 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
     cancelText,
     title,
     onConfirm,
-    onVisibleChange,
+    onOpenChange,
     onCancel,
     placement = 'left',
     overlayClassName,
@@ -23,14 +23,14 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
     ...resePopover
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
-  const [visible, setVisible] = useState<boolean>(false)
+  const [open, setOpen] = useState<boolean>(false)
   const onOk = useMemoizedFn((e) => {
-    setVisible(false)
+    setOpen(false)
     if (onConfirm) onConfirm(e)
   })
 
   const onCancelClick = useMemoizedFn((e) => {
-    setVisible(false)
+    setOpen(false)
     if (onCancel) onCancel(e)
   })
   const direction = useMemo(() => {
@@ -42,7 +42,7 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
   }, [placement])
   return (
     <Popconfirm
-      visible={visible}
+      open={open}
       {...resePopover}
       placement={placement}
       overlayClassName={classNames(
@@ -63,9 +63,9 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
           </div>
         </div>
       }
-      onVisibleChange={(v) => {
-        setVisible(v)
-        if (onVisibleChange) onVisibleChange(v)
+      onOpenChange={(v) => {
+        setOpen(v)
+        if (onOpenChange) onOpenChange(v)
       }}
     >
       {children}

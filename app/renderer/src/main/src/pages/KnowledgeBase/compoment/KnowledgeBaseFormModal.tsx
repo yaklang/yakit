@@ -85,7 +85,7 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
   return (
     <YakitModal
       title={title}
-      visible={visible}
+      open={visible}
       onCancel={handOpenKnowledgeBasesModal}
       onOk={handleCreateKnowledge}
       width={600}

@@ -469,7 +469,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
               overlayStyle={{ paddingTop: 2 }}
               overlayClassName={styles['child-menu-popover']}
               placement={index === 0 ? 'bottomLeft' : 'bottom'}
-              visible={noExpandMenu === index}
+              open={noExpandMenu === index}
               content={
                 <YakitMenu
                   // triggerSubMenuAction="click"
@@ -479,7 +479,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                   onClick={({ key, keyPath }) => onNoExpandClickMenu(key, keyPath)}
                 />
               }
-              onVisibleChange={(visible) => !isOnlyFirst && setNoExpandMenu(visible ? index : -1)}
+              onOpenChange={(visible) => !isOnlyFirst && setNoExpandMenu(visible ? index : -1)}
             >
               <div
                 key={`${item.label}-${index}`}

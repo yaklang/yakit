@@ -86,7 +86,7 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
       closable={false}
       keyboard={false}
       height={heightDrawer}
-      visible={visible}
+      open={visible}
       className={classNames(styles['plugin-debugger-drawer'])}
       title={t('PluginDebugDrawer.pluginDebug')}
       extra={

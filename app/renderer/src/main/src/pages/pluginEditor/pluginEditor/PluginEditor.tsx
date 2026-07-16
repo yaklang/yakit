@@ -1042,7 +1042,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             <YakitHint
               getContainer={wrapperRef.current || undefined}
               wrapClassName={styles['old-data-hint-wrapper']}
-              visible={oldShow}
+              open={oldShow}
               title={t('PluginEditor.oldDataMigrationTitle')}
               content={t('PluginEditor.oldDataMigrationContent')}
               okButtonText={t('PluginEditor.copyCode')}
@@ -1100,7 +1100,7 @@ const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
       centered={true}
       maskClosable={false}
       closable={true}
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       onOk={onSubmit}
       bodyStyle={{ padding: 0 }}

@@ -71,8 +71,8 @@ const HistorySearch = React.memo<HistorySearchProps>((props) => {
           trigger="click"
           placement="bottomRight"
           content={searchNode}
-          visible={isHoverSearch}
-          onVisibleChange={setIsHoverSearch}
+          open={isHoverSearch}
+          onOpenChange={setIsHoverSearch}
         >
           <YakitButton icon={<OutlineSearchIcon />} type="outline2" isHover={isHoverSearch || !!searchVal} />
         </YakitPopover>

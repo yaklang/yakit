@@ -54,7 +54,7 @@ const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((pr
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       getContainer={getContainer}
       type="white"
       title={title}

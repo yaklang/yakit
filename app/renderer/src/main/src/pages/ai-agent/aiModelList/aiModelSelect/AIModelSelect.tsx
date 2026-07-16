@@ -396,7 +396,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         value={policy}
                         onSelect={onSelectPolicy}
                         wrapperClassName={styles['select-policy-wrapper']}
-                        dropdownClassName={styles['select-policy-dropdown']}
+                        popupClassName={styles['select-policy-dropdown']}
                         wrapperStyle={{ width: 80, marginRight: 4 }}
                         dropdownMatchSelectWidth={false}
                         onClick={(e) => {

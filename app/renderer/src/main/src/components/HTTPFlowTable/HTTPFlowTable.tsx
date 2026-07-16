@@ -2404,8 +2404,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                   }
                   trigger="click"
                   placement="bottomLeft"
-                  visible={isShowColor}
-                  onVisibleChange={(visible) => {
+                  open={isShowColor}
+                  onOpenChange={(visible) => {
                     if (!visible) setIsShowColor(false)
                   }}
                 >
@@ -2443,8 +2443,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                     trigger="click"
                     placement="bottomLeft"
-                    onVisibleChange={setBatchVisible}
-                    visible={batchVisible}
+                    onOpenChange={setBatchVisible}
+                    open={batchVisible}
                   >
                     <YakitButton type="outline2" disabled={selectedRowKeys.length === 0}>
                       {t('YakitButton.batchOperation')}
@@ -2750,7 +2750,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         ></AdvancedSet>
       )}
       <YakitHint
-        visible={showShieldTooManyHint}
+        open={showShieldTooManyHint}
         title={t('HTTPFlowTable.shieldTooManyOnlyLatestTitle')}
         content={t('HTTPFlowTable.shieldTooManyOnlyLatest')}
         cancelButtonProps={{ style: { display: 'none' } }}

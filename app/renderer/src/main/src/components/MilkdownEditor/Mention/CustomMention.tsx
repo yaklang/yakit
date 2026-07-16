@@ -47,8 +47,8 @@ export const CustomMention: React.FC<CustomMentionProps> = (props) => {
           </YakitButton>
         </div>
       }
-      visible={visible}
-      onVisibleChange={setVisible}
+      open={visible}
+      onOpenChange={setVisible}
       trigger="click"
       overlayClassName={styles['mention-custom-popover']}
     >

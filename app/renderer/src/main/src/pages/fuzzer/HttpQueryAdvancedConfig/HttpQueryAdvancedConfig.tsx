@@ -1471,7 +1471,7 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
 
   return (
     <YakitModal
-      visible={batchTargetModalVisible}
+      open={batchTargetModalVisible}
       title={t('BatchTargetModal.configure_batch_target')}
       width={600}
       maskClosable={false}
@@ -1776,8 +1776,8 @@ export const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props
           {popoverContent}
         </div>
       }
-      visible={visiblePopover}
-      onVisibleChange={(v) => {
+      open={visiblePopover}
+      onOpenChange={(v) => {
         if (v) {
           setTimeout(() => {
             onSetArrowTop()

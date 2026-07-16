@@ -357,7 +357,7 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
     <YakitPopover
       overlayClassName={styles['pem-example-popover']}
       content={content}
-      onVisibleChange={(visible) => {
+      onOpenChange={(visible) => {
         if (setShow) setShow(visible)
       }}
     >
@@ -407,7 +407,7 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
     <YakitPopover
       overlayClassName={styles['pem-example-popover']}
       content={content}
-      onVisibleChange={(visible) => {
+      onOpenChange={(visible) => {
         if (setShow) setShow(visible)
       }}
     >

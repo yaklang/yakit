@@ -439,8 +439,8 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             placement="bottomRight"
             trigger={'click'}
             content={listDom}
-            visible={listShow}
-            onVisibleChange={(visible) => setListShow(visible)}
+            open={listShow}
+            onOpenChange={(visible) => setListShow(visible)}
           >
             <div className={styles['body-style']}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
           </YakitPopover>

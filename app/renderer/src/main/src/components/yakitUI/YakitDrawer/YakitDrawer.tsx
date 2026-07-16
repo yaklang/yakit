@@ -18,14 +18,14 @@ const tOriginal = i18n.getFixedT(null, 'yakitUi')
  * @augments DrawerProps 继承antd的 DrawerProps 默认属性
  */
 export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
-  const { visible, ...restProps } = props
+  const { open, ...restProps } = props
   useEffect(() => {
-    if (visible) {
+    if (open) {
       emiter.emit('setYakitHeaderDraggable', false)
     } else {
       emiter.emit('setYakitHeaderDraggable', true)
     }
-  }, [visible])
+  }, [open])
 
   useEffect(() => {
     return () => emiter.emit('setYakitHeaderDraggable', true)
@@ -33,7 +33,7 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
 
   return (
     <Drawer
-      visible={visible}
+      open={open}
       {...restProps}
       closeIcon={
         <div className={styles['yakit-drawer-icon']}>

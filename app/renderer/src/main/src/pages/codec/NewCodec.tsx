@@ -1461,8 +1461,8 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
             }
             trigger="click"
             placement="bottomRight"
-            onVisibleChange={setPopoverVisible}
-            visible={popoverVisible}
+            onOpenChange={setPopoverVisible}
+            open={popoverVisible}
           >
             <Tooltip title={t('CodecRunListHistoryStore.historyStore')}>
               <div className={styles['extra-icon']}>
@@ -1544,7 +1544,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
         </YakitButton>
       </div>
       <YakitModal
-        visible={cacheModal}
+        open={cacheModal}
         bodyStyle={{ padding: 0 }}
         title={t('NewCodecMiddleRunList.saveCodecOrder')}
         width={400}
@@ -1630,7 +1630,7 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
 
   const dragListItemDom = useMemoizedFn((item: CodecMethod) => (
     <YakitPopover
-      // visible={true}
+      // open={true}
       placement="right"
       overlayClassName={styles['drag-list-item-popover']}
       content={

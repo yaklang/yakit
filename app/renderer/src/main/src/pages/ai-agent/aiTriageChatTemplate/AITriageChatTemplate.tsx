@@ -102,8 +102,8 @@ export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
                   </div>
                 </div>
               }
-              visible={toolsShow}
-              onVisibleChange={setToolsShow}
+              open={toolsShow}
+              onOpenChange={setToolsShow}
             >
               <YakitTag className={styles['footer-tag']}>
                 <div className={styles['tag-body']}>

@@ -217,7 +217,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     <YakitHint
       getContainer={document.getElementById('yakit-uilayout-body') || undefined}
       footer={null}
-      visible={visible}
+      open={visible}
       title={title}
     >
       <div className={styles['update-yakit-hint']}>
@@ -342,7 +342,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
           </div>
         </div>
       }
-      visible={visible}
+      open={visible}
       okButtonText={t('YakitButton.ok')}
       okButtonProps={{ loading: updateLoading }}
       cancelButtonText={t('YakitButton.ignore')}

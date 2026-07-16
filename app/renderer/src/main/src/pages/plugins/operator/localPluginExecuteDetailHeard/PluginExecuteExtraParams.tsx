@@ -170,7 +170,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
     return (
       <YakitDrawer
         className={styles['plugin-execute-extra-params-drawer']}
-        visible={visible}
+        open={visible}
         onClose={onClose}
         width="max(700px, 40%)"
         title="额外参数"

@@ -257,7 +257,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         <AIBottomSideBar setShowAIBottomDetails={setShowAIBottomDetails} />
         <YakitHint
           getContainer={agentRef.current || undefined}
-          visible={delCacheVisible}
+          open={delCacheVisible}
           title={t('AIAgent.tip')}
           content={
             <>

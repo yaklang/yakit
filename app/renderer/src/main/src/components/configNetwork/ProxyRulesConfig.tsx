@@ -405,7 +405,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
             ? `ProxyConfig.${editId ? 'edit_point' : 'add_point'}`
             : `ProxyConfig.${editId ? 'edit_rule' : 'add_rule'}`,
         )}
-        visible={modalVisible}
+        open={modalVisible}
         onOk={handleOk}
         maskClosable={false}
         onCancel={handleCancel}
@@ -505,7 +505,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       placement="bottom"
       onClose={onClose}
       height="70%"
@@ -661,7 +661,7 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
       )}
       <YakitModal
         title={t('ProxyConfig.proxyDetection')}
-        visible={visible}
+        open={visible}
         onCancel={onCancel}
         footer={null}
         width={600}

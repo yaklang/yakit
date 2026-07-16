@@ -1163,8 +1163,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                 }
                                 trigger="click"
                                 placement="bottomLeft"
-                                onVisibleChange={setPopoverVisible}
-                                visible={popoverVisible}
+                                onOpenChange={setPopoverVisible}
+                                open={popoverVisible}
                               >
                                 <YakitButton type="text" size="small">
                                   {t('HTTPFlowDetailMini.more')}
@@ -2124,8 +2124,8 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
           ))}
         </div>
       }
-      visible={codeShow}
-      onVisibleChange={(visible) => setCodeShow(visible)}
+      open={codeShow}
+      onOpenChange={(visible) => setCodeShow(visible)}
     >
       <YakitButton size="small" type={codeKey !== '' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
         {t('CodingPopover.encoding')}

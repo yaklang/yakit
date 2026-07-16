@@ -314,13 +314,13 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         {...extraProps}
         menuItemSelectedIcon={supportDelCache ? <></> : props.menuItemSelectedIcon}
         size="middle"
-        dropdownClassName={classNames(
+        popupClassName={classNames(
           styles['yakit-select-popup'],
           {
             [styles['yakit-select-wrapper-tags']]: props.mode === 'tags' || props.mode === 'multiple',
             [styles['yakit-select-popup-y']]: show,
           },
-          props.dropdownClassName,
+          props.popupClassName,
         )}
         onDropdownVisibleChange={(open) => {
           setShow(open)

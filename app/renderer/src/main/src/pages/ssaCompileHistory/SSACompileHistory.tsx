@@ -424,7 +424,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
       </div>
 
       <YakitHint
-        visible={!!deleteParams}
+        open={!!deleteParams}
         title={deleteParams?.title}
         content={selectedRowKeys.length === 0 ? '删除后数据将无法恢复' : '删除后数据将无法恢复'}
         onOk={() => deleteParams && onDelete(deleteParams.params)}

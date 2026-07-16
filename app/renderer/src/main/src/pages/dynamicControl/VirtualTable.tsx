@@ -40,7 +40,7 @@ const VirtualTableTitle: React.FC<VirtualTableTitleProps> = (props) => {
                 trigger={'click'}
                 content={item?.filterProps.filterRender}
                 overlayClassName={styles['ui-op-setting-dropdown']}
-                // visible={opensPopover[filterKey]}
+                // open={opensPopover[filterKey]}
               >
                 <div onClick={() => {}} className={classNames(styles['virtual-table-title-filter-icon'])}>
                   <FilterIcon />

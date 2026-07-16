@@ -1219,7 +1219,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
         }}
       ></TableVirtualResize>
       <YakitModal
-        visible={creatCountVisible}
+        open={creatCountVisible}
         title={editInfoRef.current ? '编辑账号' : '创建账号'}
         destroyOnClose={true}
         maskClosable={false}

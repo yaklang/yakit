@@ -195,7 +195,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
         centered={true}
         keyboard={false}
         maskClosable={false}
-        visible={extra.hint}
+        open={extra.hint}
         title={extra.title}
         bodyStyle={{ padding: 0 }}
         {...modelProps}

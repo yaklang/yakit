@@ -611,7 +611,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         hiddenHeader={true}
         closable={false}
         footer={null}
-        visible={visibleSubMenu}
+        open={visibleSubMenu}
         onCancel={() => setVisibleSubMenu(false)}
         bodyStyle={{ padding: 0 }}
       >
@@ -650,7 +650,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
       <YakitModal
         hiddenHeader={true}
         footer={null}
-        visible={emptyMenuLength > 0}
+        open={emptyMenuLength > 0}
         onCancel={() => setEmptyMenuLength(0)}
         width={431}
         bodyStyle={{ padding: 0 }}
@@ -1389,7 +1389,7 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
         placement="topRight"
         overlayClassName={style['terminal-popover']}
         content={YakitEditor}
-        onVisibleChange={(v) => {
+        onOpenChange={(v) => {
           if (v && !plugin.Content) {
             if (getScriptInfo) getScriptInfo(plugin)
           }

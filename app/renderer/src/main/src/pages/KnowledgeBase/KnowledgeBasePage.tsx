@@ -235,7 +235,7 @@ const KnowledgeBase: FC = () => {
     <div className={styles['repository-manage']} id="repository-manage" ref={refRef}>
       <div className={styles['repository-container']}>{knowledgeBaseEntrance}</div>
       <YakitHint
-        visible={visible}
+        open={visible}
         title={'知识库未构建完成'}
         content={'知识未构建完成，是否确定关闭'}
         okButtonText="立即关闭"

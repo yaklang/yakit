@@ -850,7 +850,7 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
               >
                 <YakitSelect
                   wrapperClassName={styles['forge-type-select']}
-                  dropdownClassName={styles['forge-type-select-dropdown']}
+                  popupClassName={styles['forge-type-select-dropdown']}
                   onChange={handleTypeChange}
                 >
                   {DefaultForgeTypeList.map((item, index) => {
@@ -1529,7 +1529,7 @@ const AIForgeEditorSkillFiles: React.FC<AIForgeEditorSkillFilesProps> = memo((pr
                 handleTreeDropdown={handleTreeDropdown}
               />
               <YakitHint
-                visible={showDelete}
+                open={showDelete}
                 title={`是否要删除${operatingNode.current?.name}`}
                 content={`确认删除后将会彻底删除（windows系统将会移入回收站）`}
                 onOk={onDelete}
@@ -1667,7 +1667,7 @@ const AIForgeSkillFileCont: React.FC<{ data?: FileNodeProps }> = ({ data }) => {
 
         {/* 文件过大弹窗 */}
         <YakitHint
-          visible={showFileHint}
+          open={showFileHint}
           title="文件警告"
           content="文件过大，无法预览"
           cancelButtonProps={{ style: { display: 'none' } }}

@@ -1221,7 +1221,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
           </>
         )}
         <YakitHint
-          visible={removeVisible}
+          open={removeVisible}
           title={t('AuditCode.deleteHistoryAndVulns')}
           content={t('AuditCode.deleteHistoryAndVulnsConfirm')}
           onOk={() => {
@@ -2061,7 +2061,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
     <>
       <YakitModal
         getContainer={warrpId || document.getElementById('audit-code') || document.body}
-        visible={isShowCompileModal}
+        open={isShowCompileModal}
         bodyStyle={{ padding: 0 }}
         title={title || t('AuditCode.addProject')}
         footer={null}
@@ -2083,7 +2083,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
       <YakitModal
         centered
         getContainer={warrpId || document.getElementById('audit-code') || document.body}
-        visible={isShowRunAuditModal}
+        open={isShowRunAuditModal}
         title={null}
         footer={null}
         width={520}
@@ -2212,7 +2212,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
       <YakitModal
         centered
         getContainer={warrpId || document.body}
-        visible={!!nameOrConfig}
+        open={!!nameOrConfig}
         title={null}
         footer={null}
         width={520}
@@ -3089,7 +3089,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
       />
 
       <YakitHint
-        visible={!!deleteParams}
+        open={!!deleteParams}
         title={deleteParams?.titile}
         content={t('AuditCode.selectDeleteMode')}
         width={520}

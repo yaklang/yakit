@@ -833,7 +833,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
         </div>
       )}
       <YakitHint
-        visible={removeCheckVisible}
+        open={removeCheckVisible}
         title={t('FileTree.deleteConfirmTitle', { name: info.name })}
         content={t('FileTree.deleteConfirmContent')}
         onOk={onDelete}

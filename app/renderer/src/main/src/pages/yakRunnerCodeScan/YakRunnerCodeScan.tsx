@@ -413,8 +413,8 @@ const CodeScanRuleSetting: React.FC<CodeScanRuleSettingProps> = React.memo((prop
             </YakitCheckbox>
           </div>
         }
-        visible={visible}
-        onVisibleChange={setVisible}
+        open={visible}
+        onOpenChange={setVisible}
         placement="bottomRight"
         trigger={'click'}
       >
@@ -627,8 +627,8 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                 </div>
               }
               trigger="hover"
-              visible={groupTagShow}
-              onVisibleChange={setGroupTagShow}
+              open={groupTagShow}
+              onOpenChange={setGroupTagShow}
               placement="bottom"
             >
               <div
@@ -1335,7 +1335,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         {visibleScanList && <CodeScanTaskListDrawer visible={visibleScanList} setVisible={setVisibleScanList} />}
       </React.Suspense>
       <YakitHint
-        visible={selectProject.length > 0}
+        open={selectProject.length > 0}
         title={'选择项目打开'}
         children={
           <>
@@ -2225,7 +2225,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         <React.Suspense fallback={<>loading...</>}>
           {auditDetailShow && auditInfo.current && (
             <YakitDrawer
-              visible={auditDetailShow}
+              open={auditDetailShow}
               onClose={handleCancelDetail}
               width="90%"
               title="审计详情"

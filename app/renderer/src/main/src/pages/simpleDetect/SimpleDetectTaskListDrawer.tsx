@@ -52,7 +52,7 @@ const SimpleDetectTaskListDrawer: React.FC<SimpleDetectTaskListDrawerProps> = Re
   })
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       onClose={onClose}
       width="45%"
       title="任务列表"

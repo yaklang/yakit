@@ -1270,7 +1270,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
       </div>
       {/* 文件过大提示框 */}
       <YakitHint
-        visible={isShowFileHint}
+        open={isShowFileHint}
         title={t('YakRunner.fileTooLargeWarning')}
         content={t('YakRunner.fileTooLargeContent')}
         cancelButtonProps={{ style: { display: 'none' } }}

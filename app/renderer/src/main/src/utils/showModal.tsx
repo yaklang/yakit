@@ -16,20 +16,20 @@ export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
 }
 
 export const BaseModal: React.FC<BaseModalProp> = (props) => {
-  const [visible, setVisible] = useState(true)
+  const [open, setOpen] = useState(true)
 
   useEffect(() => {
-    if (visible && props.onVisibleSetter) {
-      props.onVisibleSetter(setVisible)
+    if (open && props.onVisibleSetter) {
+      props.onVisibleSetter(setOpen)
     }
-  }, [visible])
+  }, [open])
 
   return (
     <Modal
       {...props}
       footer={false}
-      visible={visible}
-      onCancel={() => setVisible(false)}
+      open={open}
+      onCancel={() => setOpen(false)}
       onOk={(e) => {
         if (props.onOk) props.onOk(e)
       }}
@@ -122,32 +122,32 @@ export interface BaseDrawerProp extends DrawerProps, React.ComponentProps<any> {
 
 export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
   const { afterVisible, afterInvisible, afterClose, ...restProps } = props
-  const [visible, setVisible] = useState(false)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    setVisible(true)
+    setOpen(true)
   }, [])
 
   useEffect(() => {
-    if (visible) {
+    if (open) {
       emiter.emit('setYakitHeaderDraggable', false)
-      if (afterVisible) afterVisible(setVisible)
+      if (afterVisible) afterVisible(setOpen)
     } else {
       emiter.emit('setYakitHeaderDraggable', true)
     }
-  }, [visible])
+  }, [open])
 
   const close = () => {
-    setVisible(false)
-    if (afterInvisible) afterInvisible(setVisible)
+    setOpen(false)
+    if (afterInvisible) afterInvisible(setOpen)
     setTimeout(() => {
-      if (afterClose) afterClose(setVisible)
+      if (afterClose) afterClose(setOpen)
     }, 1000)
   }
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={open}
       destroyOnClose={true}
       onClose={close}
       closable={true}

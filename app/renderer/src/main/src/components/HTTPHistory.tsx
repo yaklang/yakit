@@ -1060,7 +1060,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
               />
             </div>
           }
-          onVisibleChange={(visible) => !visible && onSearch(key)}
+          onOpenChange={(visible) => !visible && onSearch(key)}
         >
           <YakitButton icon={<OutlineSearchIcon />} type={hasActiveSearch ? 'text' : 'text2'} />
         </YakitPopover>

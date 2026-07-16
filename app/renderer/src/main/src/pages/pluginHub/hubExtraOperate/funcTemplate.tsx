@@ -93,7 +93,7 @@ export const HubOperateHint: React.FC<HubOperateHintProps> = memo((props) => {
 
   return (
     <YakitHint
-      visible={visible}
+      open={visible}
       wrapClassName={styles['hub-operate-hint']}
       title={t('FuncTemplate.localOnlyTitle')}
       content={
@@ -459,7 +459,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                       ))}
                     </div>
                   }
-                  onVisibleChange={setPrShow}
+                  onOpenChange={setPrShow}
                 >
                   <YakitButton type="text2" isActive={prShow}>
                     {t('HubExtraOperate.contributors', { count: contributes.length })}

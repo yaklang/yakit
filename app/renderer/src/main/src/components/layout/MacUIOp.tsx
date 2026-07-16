@@ -134,7 +134,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
         </div>
         {/* 关闭运行节点确认弹框 */}
         <YakitHint
-          visible={closeRunNodeItemVerifyVisible}
+          open={closeRunNodeItemVerifyVisible}
           title={t('UIOp.closeNodesTitle')}
           content={t('UIOp.closeNodesContent', { edition: getReleaseEditionName() })}
           onOk={async () => {

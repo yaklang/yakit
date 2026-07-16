@@ -579,7 +579,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                   <TableTotalAndSelectNumber total={tableTotal} />
                   {queryNumber > 2 ? (
                     <YakitPopover
-                      onVisibleChange={setTagShow}
+                      onOpenChange={setTagShow}
                       content={<div className={styles['filter-popover']}>{queryContent()}</div>}
                     >
                       <YakitTag

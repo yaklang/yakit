@@ -14,7 +14,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
   const {
     isMask,
     isDrag = false,
-    visible,
+    open,
     width = 448,
     isTop,
     setTop,
@@ -38,7 +38,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
   return (
     <>
       <HintModal
-        visible={visible}
+        open={open}
         wrapClassName={wrapClassName}
         isTop={isTop}
         width={width}
@@ -101,7 +101,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
 
 export const HintModal: React.FC<HintModalProps> = memo((props) => {
   const {
-    visible,
+    open,
     wrapClassName,
     containerClassName,
     isTop,
@@ -180,9 +180,9 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
       defaultClassName={classNames(
         {
           [styles['yakit-hint-modal-top']]: isTop,
-          [styles['yakit-hint-modal-wrapper']]: visible && !isResize,
-          [styles['yakit-hint-modal-resize-wrapper']]: visible && isResize,
-          [styles['yakit-hint-modal-hidden']]: !visible,
+          [styles['yakit-hint-modal-wrapper']]: open && !isResize,
+          [styles['yakit-hint-modal-resize-wrapper']]: open && isResize,
+          [styles['yakit-hint-modal-hidden']]: !open,
           [styles['yakit-hint-modal-resize']]: isResize,
         },
         wrapClassName,

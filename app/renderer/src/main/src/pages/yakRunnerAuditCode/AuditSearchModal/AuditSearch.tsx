@@ -370,7 +370,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
   return (
     <YakitHintWhite
       isDrag={true}
-      visible={visible}
+      open={visible}
       onClose={() => onClose && onClose()}
       containerClassName={styles['hint-white-container']}
       isResize={true}

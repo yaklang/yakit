@@ -225,8 +225,8 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
         e?.stopPropagation()
         setVisible(false)
       }}
-      visible={visible}
-      onVisibleChange={setVisible}
+      open={visible}
+      onOpenChange={setVisible}
       destroyTooltipOnHide={true}
     >
       <Tooltip title="从该节点开始继续任务" destroyTooltipOnHide={true}>

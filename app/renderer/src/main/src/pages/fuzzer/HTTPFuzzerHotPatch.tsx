@@ -1299,7 +1299,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
         placement="right"
         overlayClassName={styles['hotCode-popover']}
         content={dropdown && <YakitEditor type={'yak'} value={viewCurHotCode} readOnly={true} />}
-        onVisibleChange={(v) => {
+        onOpenChange={(v) => {
           if (v) {
             onClickHotCodeName(item)
           }
@@ -1458,7 +1458,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
         <div style={{ width: 250 }}>{overlayCont}</div>
       )}
       <YakitHint
-        visible={sameNameHint}
+        open={sameNameHint}
         title={sameNameHintInfoRef.current.title}
         content={sameNameHintInfoRef.current.content}
         onOk={() => {
@@ -1532,7 +1532,7 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       title={title || t('AddHotCodeTemplate.save_hot_reload_template')}
       width={400}
       onCancel={onCancel}

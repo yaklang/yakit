@@ -339,7 +339,7 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       type="white"
       width="60%"
       maskClosable={false}

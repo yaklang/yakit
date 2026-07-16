@@ -825,7 +825,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
         {isShowCompileModal && <AuditModalFormModal onCancel={onCloseCompileModal} onSuccee={onSuccee} />}
         <YakitHint
-          visible={isShowModal}
+          open={isShowModal}
           title={'代码审计执行中'}
           content={'请等待执行完成后重试'}
           okButtonProps={{ style: { display: 'none' } }}

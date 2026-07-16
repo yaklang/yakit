@@ -1184,8 +1184,8 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                     }
                     placement="top"
                     trigger={['click']}
-                    visible={editNameVisible && currentIndex === index}
-                    onVisibleChange={setEditNameVisible}
+                    open={editNameVisible && currentIndex === index}
+                    onOpenChange={setEditNameVisible}
                   >
                     <PencilAltIcon
                       className={classNames({
@@ -1455,8 +1455,8 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
         </div>
       }
       placement="bottom"
-      visible={isShowColor}
-      onVisibleChange={setIsShowColor}
+      open={isShowColor}
+      onOpenChange={setIsShowColor}
     >
       <div
         className={classNames(styles['color-select-btn'], {
@@ -1516,7 +1516,7 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
   return (
     <YakitDrawer
       mask={false}
-      visible={visibleDrawer}
+      open={visibleDrawer}
       width="100vh"
       headerStyle={{ display: 'none' }}
       style={{ height: visibleDrawer ? heightDrawer : 0 }}

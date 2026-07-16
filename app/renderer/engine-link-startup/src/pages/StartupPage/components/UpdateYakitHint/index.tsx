@@ -135,7 +135,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
   }, [status, breakLoading])
 
   return (
-    <YakitHint footer={null} visible={visible} title={title}>
+    <YakitHint footer={null} open={visible} title={title}>
       <div className={styles['update-yakit-hint']}>
         {status === 'installed' && (
           <div className={styles['content']}>

@@ -1232,7 +1232,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
         {/* 上传、下载提示 */}
         <YakitHint
-          visible={infoVisible}
+          open={infoVisible}
           title={infoRef.current.title}
           content={infoRef.current.content}
           okButtonText="确认"

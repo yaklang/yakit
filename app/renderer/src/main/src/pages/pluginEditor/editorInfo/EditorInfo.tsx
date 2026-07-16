@@ -710,7 +710,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
           )}
         </div>
         <YakitHint
-          visible={typeSwitchPopShow}
+          open={typeSwitchPopShow}
           title={t('EditorInfo.switchScriptType')}
           content={t('EditorInfo.switchScriptTypeContent')}
           onOk={() => {
@@ -729,13 +729,13 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
 
 /** @name 插件类型下拉框组件 */
 export const PluginTypeSelect: React.FC<YakitSelectProps> = memo((props) => {
-  const { dropdownClassName, wrapperClassName, ...rest } = props
+  const { popupClassName, wrapperClassName, ...rest } = props
 
   return (
     <YakitSelect
       {...rest}
       wrapperClassName={classNames(styles['plugin-type-select'], wrapperClassName)}
-      dropdownClassName={classNames(styles['plugin-type-select-dropdown'], dropdownClassName)}
+      popupClassName={classNames(styles['plugin-type-select-dropdown'], popupClassName)}
     >
       {DefaultTypeList.map((item, index) => {
         return (

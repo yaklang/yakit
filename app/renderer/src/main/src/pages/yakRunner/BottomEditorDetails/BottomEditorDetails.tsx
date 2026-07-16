@@ -334,7 +334,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     />
                   </>
                 }
-                onVisibleChange={(v) => {
+                onOpenChange={(v) => {
                   if (!v) {
                     if (terminalRef.current) {
                       terminalRef.current.terminal.options.fontFamily = terminaFont.fontFamily
@@ -344,7 +344,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                   setPopoverVisible(v)
                 }}
                 overlayInnerStyle={{ width: 340 }}
-                visible={popoverVisible}
+                open={popoverVisible}
               >
                 <YakitButton icon={<OutlineCogIcon />} type={popoverVisible ? 'text' : 'text2'} />
               </YakitPopover>

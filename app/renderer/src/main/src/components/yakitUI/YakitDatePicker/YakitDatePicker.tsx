@@ -34,7 +34,7 @@ const getAntdLocale = (lang: string) => antdLocaleMap[lang] ?? zhCN
 const getMomentLocale = (lang: string) => momentLocaleMap[lang] ?? 'zh-cn'
 
 const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
-  const { size, wrapperClassName, className, dropdownClassName, wrapperStyle, ...restProps } = props
+  const { size, wrapperClassName, className, popupClassName, wrapperStyle, ...restProps } = props
   const lang = i18n.language
 
   // 设置 moment 语言
@@ -60,7 +60,7 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
             <OutlineClockIcon />
           </div>
         }
-        dropdownClassName={classNames(styles['yakit-data-picker-dropdaown'], { dropdownClassName })}
+        popupClassName={classNames(styles['yakit-data-picker-dropdaown'], { popupClassName })}
         className={classNames(styles['yakit-picker'], {
           [styles['yakit-picker-large']]: size === 'large',
           [styles['yakit-picker-small']]: size === 'small',
@@ -72,7 +72,7 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
 }
 
 const InternalRangePicker: React.FC<YakitRangePickerProps> = (props) => {
-  const { size, wrapperClassName, className, dropdownClassName, wrapperStyle, ...restProps } = props
+  const { size, wrapperClassName, className, popupClassName, wrapperStyle, ...restProps } = props
   const lang = i18n.language
 
   moment.locale(getMomentLocale(lang))
@@ -97,7 +97,7 @@ const InternalRangePicker: React.FC<YakitRangePickerProps> = (props) => {
             <OutlineClockIcon />
           </div>
         }
-        dropdownClassName={classNames(styles['yakit-range-picker-dropdaown'], { dropdownClassName })}
+        popupClassName={classNames(styles['yakit-range-picker-dropdaown'], { popupClassName })}
         className={classNames(styles['yakit-range-picker'], {
           [styles['yakit-range-picker-large']]: size === 'large',
           [styles['yakit-range-picker-small']]: size === 'small',

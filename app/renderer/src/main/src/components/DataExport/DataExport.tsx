@@ -229,7 +229,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
       <YakitModal
         title={t('ExportExcel.dataExport')}
         closable={true}
-        visible={visible}
+        open={visible}
         onCancel={() => setVisible(false)}
         footer={null}
         getContainer={getContainer}
@@ -276,7 +276,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
       <YakitModal
         title={t('ExportExcel.dataExport')}
         closable={true}
-        visible={splitVisible}
+        open={splitVisible}
         onCancel={() => setSplitVisible(false)}
         footer={null}
         getContainer={getContainer}

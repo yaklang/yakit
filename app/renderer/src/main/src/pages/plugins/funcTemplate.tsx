@@ -163,8 +163,8 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
             overlayClassName={styles['ellipsis-type-select-popover']}
             trigger={'click'}
             placement="bottomRight"
-            visible={visible}
-            onVisibleChange={(value) => setVisible(value)}
+            open={visible}
+            onOpenChange={(value) => setVisible(value)}
             content={
               <div className={styles['ellipsis-type-select-wrapper']}>
                 <div className={styles['list-wrapper']}>
@@ -370,8 +370,8 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
           />
         }
         trigger="click"
-        visible={showPopver}
-        onVisibleChange={setShowPopver}
+        open={showPopver}
+        onOpenChange={setShowPopver}
         placement="bottomRight"
       >
         <YakitButton
@@ -596,7 +596,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                     </div>
                   }
                   trigger="hover"
-                  onVisibleChange={setTagShow}
+                  onOpenChange={setTagShow}
                   placement="bottomLeft"
                 >
                   <div
@@ -1484,8 +1484,8 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
       overlayClassName={styles['filter-popover-btn']}
       placement="bottomLeft"
       trigger={['click']}
-      visible={visible}
-      onVisibleChange={(value) => {
+      open={visible}
+      onOpenChange={(value) => {
         setVisible(value)
         if (!value) onFinish(form.getFieldsValue())
       }}
@@ -1791,7 +1791,7 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
       centered={true}
       maskClosable={false}
       closable={true}
-      visible={visible}
+      open={visible}
       footer={null}
       destroyOnClose={true}
       onCancel={onFailed}
@@ -1868,7 +1868,7 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
       closable={true}
       closeIcon={<OutlineArrowscollapseIcon className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(content)}
       bodyStyle={{ padding: 0 }}
     >
@@ -1913,7 +1913,7 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
       closable={true}
       closeIcon={<OutlineArrowscollapseIcon className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(content)}
       bodyStyle={{ padding: 0 }}
     >

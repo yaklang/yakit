@@ -138,7 +138,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
 
   return (
     <YakitDrawer
-      visible={true}
+      open={true}
       width="max(700px, 40%)"
       className={style['history-advanced-set-wrapper']}
       onClose={handleClose}

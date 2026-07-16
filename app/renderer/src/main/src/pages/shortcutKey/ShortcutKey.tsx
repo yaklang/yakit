@@ -166,7 +166,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
           footer={null}
           maskClosable={false}
           maskStyle={{ backgroundColor: 'transparent' }}
-          visible={keyShow}
+          open={keyShow}
           onCancel={() => {
             handleCallbackKeyShow(false)
           }}

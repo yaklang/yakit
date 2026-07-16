@@ -54,7 +54,7 @@ const VectorDetailDrawer: FC<VectorDetailDrawerProps> = ({
       placement="right"
       width="80%"
       onClose={() => setOpenVectorDetailDrawerData((preValue) => ({ ...preValue, vectorDetailModalVisible: false }))}
-      visible={openVectorDetailDrawerData.vectorDetailModalVisible}
+      open={openVectorDetailDrawerData.vectorDetailModalVisible}
       title={'向量详情'}
       maskClosable={true}
       destroyOnClose={true}
