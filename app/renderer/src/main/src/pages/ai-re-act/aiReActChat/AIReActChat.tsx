@@ -367,15 +367,20 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       return true
     })
 
-    const syncCasualTaskTab = useMemoizedFn(() => {
+    const syncCasualTaskTab = useMemoizedFn((options?: { notifyOnSkip?: boolean }) => {
       const sessionId = activeChat?.SessionID
       if (!getTaskId()) {
-        yakitNotify('error', 'taskId不存在')
+        if (options?.notifyOnSkip) {
+          yakitNotify('error', 'taskId不存在')
+        }
         return
       }
       if (!sessionId) return
+      // History/WebFuzzer 等非 AIAgent 数据源：自动同步静默跳过，仅手动点「任务详情」时提示
       if (chatDataStoreKey !== 'aiChatDataStore') {
-        yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
+        if (options?.notifyOnSkip) {
+          yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
+        }
         return
       }
 
@@ -389,7 +394,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const onDetails = useMemoizedFn(() => {
-      syncCasualTaskTab()
+      syncCasualTaskTab({ notifyOnSkip: true })
     })
 
     useEffect(() => {
