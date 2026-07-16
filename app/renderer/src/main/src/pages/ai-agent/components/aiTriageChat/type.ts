@@ -1,5 +1,4 @@
-import { ChatQuestion, ChatResult, ChatThought } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
+import { AIChatQSData, ChatQuestion, ChatResult, ChatThought } from '@/pages/ai-re-act/hooks/aiRender'
 import { AINodeItemProps } from '../aiChatListItem/aiNodeItem/type'
 import { ChatDataStoreKey } from '../../store/ChatDataStore'
 
@@ -17,6 +16,6 @@ export interface AITriageChatContentProps {
 export interface AITriageChatContentEditProps {
   onCancel: () => void
   content: string
-  extraValue?: AIChatIPCStartParams['extraValue']
+  extraValue?: AIChatQSData['extraValue']
   chatDataStoreKey: AITriageChatContentProps['chatDataStoreKey']
 }

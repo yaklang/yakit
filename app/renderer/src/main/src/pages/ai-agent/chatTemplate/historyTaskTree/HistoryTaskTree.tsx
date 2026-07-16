@@ -264,7 +264,10 @@ export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: bool
   ({ taskId, isTask = true }) => {
     const { t } = useI18nNamespaces(['aiAgent'])
     const syncIdOfStopSubTask = useRef<string>('')
-    // const { syncIdInfoMap } = useChatIPCStore()
+    const store = useCurrentStore()
+    const syncIDUpdate = useStore(store, (state) => state.syncIDUpdate)
+
+    const meta = useCurrentMeta()
     const sessionId = useCurrentSessionId()
     const { onSend } = useAIAgentDispatcher()
     const onCancelTask = useMemoizedFn(() => {
@@ -289,6 +292,9 @@ export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: bool
       }
     })
 
+    const skipLoading = useCreation(() => {
+      return !!meta.syncIDMap?.get(syncIdOfStopSubTask.current)
+    }, [syncIDUpdate])
     return (
       <YakitPopconfirm
         title={t('AITree.cancelSubtaskConfirm')}
@@ -305,7 +311,7 @@ export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: bool
             size="small"
             icon={<RedoDotIcon />}
             type="text"
-            loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
+            loading={skipLoading}
             onClick={(e) => {
               e.stopPropagation()
             }}

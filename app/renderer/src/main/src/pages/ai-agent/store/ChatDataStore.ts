@@ -32,7 +32,6 @@ export class ChatDataStore {
       },
       httpRunTimeIDs: [],
       riskRunTimeIDs: [],
-      yakExecResult: { card: [], execFileRecord: new Map(), yakExecResultLogs: [] },
       aiPerfData: {
         consumption: {
           cache_hit_token: 0,

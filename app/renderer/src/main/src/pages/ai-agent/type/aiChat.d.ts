@@ -39,7 +39,6 @@ export interface AIChatData {
   httpRunTimeIDs: UseChatIPCState['httpRunTimeIDs']
   /** 记录数据里所有的riskRunTimeIDs */
   riskRunTimeIDs: UseChatIPCState['riskRunTimeIDs']
-  yakExecResult: UseChatIPCState['yakExecResult']
   /** 性能相关数据 */
   aiPerfData: {
     /** 消耗Token */
