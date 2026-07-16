@@ -123,7 +123,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const { activeChat } = useAIAgentStore()
 
     const store = useCurrentStore()
-    const casualChat = useStore(store, (state) => state.casualChat)
+    const casualChatElements = useStore(store, (state) => state.casualChat.elements)
     const chatLength = useStore(store, (state) => state.casualChat.elements.length)
     const casualTitle = useStore(store, (state) => state.casualTitle)
     const execute = useStore(store, (state) => state.execute)
@@ -208,6 +208,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       }),
       [Footer, Header, Item],
     )
+    console.log('casualChat.elements', casualChatElements)
     return (
       <div ref={listRootRef} className={styles['ai-re-act-chat-contents']}>
         <Virtuoso
@@ -216,7 +217,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           scrollerRef={setScrollerRef}
           // firstItemIndex={firstItemIndex}
           atBottomStateChange={setIsAtBottomRef}
-          data={casualChat.elements}
+          data={casualChatElements}
           totalListHeightChanged={handleTotalListHeightChanged}
           itemContent={renderItem}
           initialTopMostItemIndex={chatLength > 1 ? chatLength - 1 : 0}

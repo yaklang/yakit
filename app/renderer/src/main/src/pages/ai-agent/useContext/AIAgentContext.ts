@@ -2,7 +2,6 @@ import { Dispatch, SetStateAction, createContext } from 'react'
 import { AIAgentSetting } from '../aiAgentType'
 import { AISession } from '../type/aiChat'
 import { AIChatIPCStartParams, AIChatSendParams } from '@/pages/ai-re-act/hooks/type'
-import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIAgentSettingDefault } from '../defaultConstant'
 
 export interface AIAgentContextStore {
@@ -12,8 +11,7 @@ export interface AIAgentContextStore {
   activeChat?: AISession
 }
 
-export interface UseChatIPCStartParams {
-  args: AIChatIPCStartParams
+export interface UseChatIPCStartParams extends AIChatIPCStartParams {
   onSuccess?: (sessionId: string) => void
 }
 export interface AIAgentContextDispatcher {
@@ -22,7 +20,7 @@ export interface AIAgentContextDispatcher {
   setActiveChat: Dispatch<SetStateAction<AISession | undefined>>
 
   /** 开始会话 */
-  onStart: (UseChatIPCStartParams) => void
+  onStart: (params: UseChatIPCStartParams) => void
   /** 会话过程中向后端发送消息 */
   onSend: (params: AIChatSendParams) => void
   /** 关闭指定会话 */
