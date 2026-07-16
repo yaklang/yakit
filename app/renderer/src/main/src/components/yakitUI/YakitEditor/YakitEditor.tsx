@@ -291,7 +291,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   // ===== 二进制 Fuzztag 折叠：翻译边界 =====
   // 仅在 foldBinaryFuzztag 且 http 类型下启用；模型存短占位，向上抛真实值，下游消费者无感知
-  const foldBinaryEnabled = !!props.foldBinaryFuzztag && type === 'http'
+  const foldBinaryCapable = props.foldBinaryFuzztag !== undefined
+  const [foldBinaryOpen, setFoldBinaryOpen, getFoldBinaryOpen] = useGetState<boolean>(!!props.foldBinaryFuzztag)
+  useEffect(() => {
+    if (props.foldBinaryFuzztag !== undefined) {
+      setFoldBinaryOpen(!!props.foldBinaryFuzztag)
+    }
+  }, [props.foldBinaryFuzztag])
+  const foldBinaryEnabled = foldBinaryCapable && foldBinaryOpen && type === 'http'
   // 侧表：占位 id -> 原始标签信息；handleBinaryChange 据此 expand 还原真实文本
   const binaryFoldEntriesRef = useRef<Map<string, BinaryFuzztagEntry>>(new Map())
   // 占位范围（仿 privacyMaskRangesRef），用于点击命中打开 HEX 编辑弹窗
@@ -767,6 +774,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       case 'toggle-action-bar':
         setShowActionBar(!getShowActionBar())
         return
+      case 'toggle-fold-binary': {
+        const next = !getFoldBinaryOpen()
+        setFoldBinaryOpen(next)
+        props.onFoldBinaryFuzztagChange?.(next)
+        return
+      }
       case 'http-show-break':
         onOperationRecord('showBreak', getShowBreak())
         if (editorId) {
@@ -905,6 +918,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         },
       ])
     }
+    if (foldBinaryCapable && type === 'http') {
+      rightContextMenu.current = rightContextMenu.current.concat([
+        {
+          key: 'toggle-fold-binary',
+          label: getFoldBinaryOpen() ? t('YakitEditor.hideBinaryComponent') : t('YakitEditor.showBinaryComponent'),
+        },
+      ])
+    }
     if (language === 'yak') {
       rightContextMenu.current = rightContextMenu.current.concat([
         { type: 'divider' },
@@ -949,6 +970,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     extraMenuListsObj,
     DefaultMenuTopArr,
     DefaultMenuBottomArr,
+    foldBinaryCapable,
+    type,
   ])
 
   /**
@@ -1714,6 +1737,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       }
     }
   }, [showActionBar])
+
+  useEffect(() => {
+    if (!foldBinaryCapable || type !== 'http') return
+    for (let item of rightContextMenu.current) {
+      const info = item as EditorMenuItemProps
+      if (info?.key === 'toggle-fold-binary') {
+        info.label = getFoldBinaryOpen() ? t('YakitEditor.hideBinaryComponent') : t('YakitEditor.showBinaryComponent')
+      }
+    }
+  }, [foldBinaryOpen, foldBinaryCapable, type, i18n.language])
 
   const showContextMenu = useMemoizedFn((e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     showByRightContext({

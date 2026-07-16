@@ -109,6 +109,8 @@ export interface YakitEditorProps {
   showHostHint?: boolean
   /** @name 是否启用二进制 Fuzztag 折叠（unquote/hexdecode/base64decode/file 折叠为小块，点击可 HEX 编辑） */
   foldBinaryFuzztag?: boolean
+  /** @name 右键菜单切换二进制组件时回调（受控场景同步外部状态） */
+  onFoldBinaryFuzztagChange?: (enabled: boolean) => void
   /** @name 外部接管解码后的操作，现用于history编解码呼出 */
   execAutoDecodeCallback?: () => void
 }

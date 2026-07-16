@@ -25,7 +25,7 @@ import { ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon } from '@/assets/newIcon'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
 import classNames from 'classnames'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
+import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
 import { YakitResizeBox } from './yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 import { YakitCheckableTag } from './yakitUI/YakitTag/YakitCheckableTag'
@@ -162,6 +162,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
   const { t, i18n } = useI18nNamespaces(['history'])
+  const binaryDisplayEnabled = useBinaryDisplayEnabled()
   const [flow, setFlow] = useState<HTTPFlow>()
   const [loading, setLoading] = useState(false)
 
@@ -444,7 +445,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                       <NewHTTPPacketEditor
                         fromMITM={fromMITM}
                         readOnly={true}
-                        foldBinaryFuzztag={true}
+                        foldBinaryFuzztag={binaryDisplayEnabled}
+                        onFoldBinaryFuzztagChange={binaryDisplayEnabledStore.setEnabled}
                         noHeader={true}
                         originValue={flow.RequestString}
                         originalPackage={flow.Request}
@@ -1824,6 +1826,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             originalPackage={flow.Request}
             readOnly={true}
             foldBinaryFuzztag={binaryDisplayEnabled}
+            onFoldBinaryFuzztagChange={binaryDisplayEnabledStore.setEnabled}
             webFuzzerValue={originResValue}
             noLineNumber={true}
             sendToWebFuzzer={sendToWebFuzzer}

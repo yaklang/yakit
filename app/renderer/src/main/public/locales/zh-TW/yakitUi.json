@@ -331,6 +331,8 @@
     "showLineBreaks": "顯示換行符",
     "hideActionBar": "關閉操作欄",
     "showActionBar": "開啟操作欄",
+    "hideBinaryComponent": "關閉二進位元件",
+    "showBinaryComponent": "開啟二進位元件",
     "yakCodeFormat": "Yak 程式碼格式化",
     "pasteTooFast": "貼上過快，請稍後再試",
     "emptyContentTypeAutoDetected": "原Content-Type為空，該Content-type為自動探測",
