@@ -34,7 +34,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
     httpFuzzRequest: undefined,
     httpFlowFuzzStatus: undefined,
     sessionTitle: '',
-    memoryList: cloneDeep(DefaultMemoryList),
+    memoryList: DefaultMemoryList,
     systemStream: '',
     yaklangCodeChange: undefined,
 
@@ -101,7 +101,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
     },
 
     casualChat: {
-      planDetails: cloneDeep(DefaultPlanItemDetailsData),
+      planDetails: DefaultPlanItemDetailsData,
       planDetailsMap: new Map(),
     },
     taskChat: {
@@ -172,11 +172,11 @@ export class ChatMultiSessionController {
   public registerSessionChannel(sessionId: string, source: AIStartParams['Source']) {
     this.readyChannels.add(sessionId)
 
-    if (this.pageSessionMap.has(source ?? 'ai')) {
-      this.pageSessionMap.get(source ?? 'ai')?.add(sessionId)
+    if (this.pageSessionMap.has(source || 'ai')) {
+      this.pageSessionMap.get(source || 'ai')?.add(sessionId)
     } else {
       const sessionSet = new Set([sessionId])
-      this.pageSessionMap.set(source ?? 'ai', sessionSet)
+      this.pageSessionMap.set(source || 'ai', sessionSet)
     }
   }
 
@@ -388,7 +388,7 @@ export class ChatMultiSessionController {
           if (params.IsInteractiveMessage && params.InteractiveId) {
             const isExist = store.getState().currentPlanReviewToken.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
-            if (isExist || !review) {
+            if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
               return
             }
@@ -476,13 +476,25 @@ export class ChatMultiSessionController {
   public handleGrpcOutputEvent(sessionId: string, res: AIOutputEvent) {
     try {
       let ipcContent = Uint8ArrayToString(res.Content) || ''
-      // 所有数据，均抄送一份到日志中
-      aiAgentLogEmitter.dispatch({
-        session: sessionId,
-        type: 'log',
-        Timestamp: res.Timestamp,
-        log: { level: 'log', message: ipcContent },
-      })
+      if (res.Type === 'structured' && ipcContent.indexOf('level') > -1 && ipcContent.indexOf('message') > -1) {
+        // 日志类型数据
+        const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Log
+        aiAgentLogEmitter.dispatch({
+          session: sessionId,
+          type: 'log',
+          Timestamp: res.Timestamp,
+          log: data,
+        })
+        return
+      } else {
+        // 所有数据，均抄送一份到日志中
+        aiAgentLogEmitter.dispatch({
+          session: sessionId,
+          type: 'log',
+          Timestamp: res.Timestamp,
+          log: { level: 'log', message: ipcContent },
+        })
+      }
 
       const { store, rawData, request, meta } = this.ensureSession(sessionId)
 
@@ -520,25 +532,9 @@ export class ChatMultiSessionController {
           // TODO - 调用历史数据恢复方法
         }
         this.handleSessionStartSuccess(sessionId)
-        meta?.onSessionStartSuccess?.(sessionId)
+        meta.onSessionStartSuccess?.(sessionId)
         meta.onSessionStartSuccess = undefined
         return
-      }
-
-      if (res.Type === 'structured') {
-        const obj = JSON.parse(ipcContent) || ''
-
-        if (obj?.level) {
-          // 日志类型数据
-          const data = obj as AIAgentGrpcApi.Log
-          aiAgentLogEmitter.dispatch({
-            session: sessionId,
-            type: 'log',
-            Timestamp: res.Timestamp,
-            log: data,
-          })
-          return
-        }
       }
 
       // if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
@@ -568,19 +564,18 @@ export class ChatMultiSessionController {
         funcKey = res.NodeId
       } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
         funcKey = res.NodeId
-      } else if (res.Type === 'report_finish' || res.NodeId === 'report-finish') {
+      } else if (res.Type === 'report_finish' && res.NodeId === 'report-finish') {
         funcKey = res.NodeId
       } else if (res.Type === 'structured' && res.NodeId === 'system') {
-        const ipcContent = Uint8ArrayToString(res.Content) || ''
         const data = JSON.parse(ipcContent) || ''
         if (data && typeof data === 'object' && data?.type === 'push_task') {
           funcKey = 'push_task'
         } else if (data && typeof data === 'object' && data?.type === 'pop_task') {
           funcKey = 'pop_task'
         }
-      } else if (res.Type === 'perception' || res.NodeId === 'perception') {
+      } else if (res.Type === 'perception' && res.NodeId === 'perception') {
         funcKey = 'perception'
-      } else if (res.Type === 'current_task_todo_list_update' || res.NodeId === 'current_task_todo_list') {
+      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
         funcKey = 'current_task_todo_list_update'
       } else if (res.NodeId === 'session_snapshot') {
         funcKey = res.NodeId
@@ -658,6 +653,7 @@ export class ChatMultiSessionController {
       const currentReview = store.getState().currentPlanReviewToken
       if (!currentReview.token || currentReview.token !== reviewToken) return
 
+      // 不用调用deleteElementNode，因为能触发这个方法的地方，说明review还没有进入list列表中
       rawData.contents.delete(currentReview.token)
       store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
     }
@@ -674,6 +670,28 @@ export class ChatMultiSessionController {
     store.getState().incrementNodeVersion(chatDetail.id, 'item')
   }
 
+  /** 关闭会话的所有定时器 */
+  private closeSessionTimers(meta: ReturnType<ChatMultiSessionController['ensureSession']>['meta']) {
+    // 取消ping请求相关逻辑
+    if (meta.pingTimer) clearInterval(meta.pingTimer)
+    meta.pingTimer = null
+    meta.pingSyncID = ''
+    // 清除通知消息消失的定时器
+    if (meta.notifyMessageTimer) clearTimeout(meta.notifyMessageTimer)
+    meta.notifyMessageTimer = null
+    // 清除插件执行卡片处理的定时器
+    if (meta.cardKVPaidTimer) clearTimeout(meta.cardKVPaidTimer)
+    meta.cardKVPaidTimer = null
+    // 清除获取最新问题队列的轮询器
+    if (meta.queuePollingTimer) clearInterval(meta.queuePollingTimer)
+    meta.queuePollingTimer = null
+    meta.queuePollingEmptyCount = 0
+    // 清除获取最新记忆库数据的轮询器
+    if (meta.memoryPollingTimer) clearInterval(meta.memoryPollingTimer)
+    meta.memoryPollingTimer = null
+  }
+
+  // 关闭ipc通道连接
   private closeIPCListeners(sessionId: string) {
     ipcRenderer.removeAllListeners(`${sessionId}-data`)
     ipcRenderer.removeAllListeners(`${sessionId}-end`)
@@ -686,14 +704,12 @@ export class ChatMultiSessionController {
   }
   // 监听 session-end 事件
   public handleSessionEnd(sessionId: string, res: any) {
-    const { store, meta } = this.ensureSession(sessionId)
+    const data = this.ensureSession(sessionId)
+    const { store, meta } = data
 
-    // 取消ping请求相关逻辑
-    if (meta.pingTimer) clearInterval(meta.pingTimer)
-    meta.pingTimer = null
-    meta.pingSyncID = ''
+    this.closeSessionTimers(meta)
     // 任务规划结束后的相关逻辑
-    handleTaskPlanEnd(this.ensureSession(sessionId))
+    handleTaskPlanEnd(data)
     // 核心状态改变
     store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话已停止' })
     this.readyChannels.delete(sessionId)
