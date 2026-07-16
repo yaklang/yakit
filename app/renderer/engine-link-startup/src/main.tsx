@@ -5,7 +5,7 @@ import './index.scss'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(
-  <Suspense fallback={null}>
+  <Suspense fallback={'loading'}>
     <App />
   </Suspense>,
 )
