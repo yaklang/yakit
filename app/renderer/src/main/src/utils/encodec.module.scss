@@ -14,6 +14,9 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.auto-decode-container-has-source {
   :global {
     .ant-card-head {
       height: 24px !important;

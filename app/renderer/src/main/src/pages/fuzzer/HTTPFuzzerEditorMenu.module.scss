@@ -302,6 +302,11 @@
   flex-direction: column;
   background-color: var(--Colors-Use-Basic-Background);
   overflow: auto;
+  .menu-drag {
+    display: flex;
+    justify-content: flex-end;
+    cursor: move;
+  }
   .menu-content {
     flex: 1;
     overflow: auto;
