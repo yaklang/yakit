@@ -134,7 +134,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 Strategy: {
                   EnableMultiAgent: false,
                   EnableGoalMode: false,
-                  ...AIAgentSettingDefault.Strategy,
+                  GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
                 },
               })
             } catch (error) {}
