@@ -5,8 +5,8 @@ import { I18nNamespace } from './namespaces'
 
 export type Lange = 'zh' | 'zh-TW' | 'en'
 const SUPPORTED_LANGS: Lange[] = ['zh', 'zh-TW', 'en']
-export const normalizeLang = (lang?: string): Lange => {
-  return SUPPORTED_LANGS.includes(lang as Lange) ? (lang as Lange) : 'zh'
+export const normalizeLang = (lang?: Lange): Lange => {
+  return SUPPORTED_LANGS.includes(lang) ? lang : 'zh'
 }
 
 type KeyOrKeys = string | string[]

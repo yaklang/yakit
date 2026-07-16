@@ -1783,7 +1783,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'en':
       case 'zh-TW':
         i18n.changeLanguage(type)
-        // setLocalValue(getRemoteI18nGV(), type)
+        setLocalValue(getRemoteI18nGV(), type)
         yakitApp.setYakitHomeConfig('lange', JSON.stringify({ key: getRemoteI18nGV(), value: type })).catch((err) => {})
         syncAppSettings({ type: 'i18n', payload: type })
         return
