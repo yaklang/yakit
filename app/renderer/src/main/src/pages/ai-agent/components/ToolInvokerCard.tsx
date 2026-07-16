@@ -45,6 +45,7 @@ import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -309,7 +310,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     return Math.round(data.durationSeconds * 10) / 10
   }, [data.durationSeconds])
 
-  const store = useCurrentStore()
+  const sessionId = useCurrentSessionId()
   const rawData = useCurrentRawData()
   const getListToolList = useMemoizedFn(() => {
     if (!data?.callToolId || !activeChat) return
@@ -319,12 +320,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     }
     grpcQueryAIToolDetails(params)
       .then((res) => {
-        /** TODO - 工具卡片刷新后,需要更新这个item里面的数据以及其刷新逻辑 */
-        const chatItem = rawData.contents.get(itemData.id)
-        if (!!chatItem && chatItem.type === AIChatQSDataTypeEnum.TOOL_RESULT) {
-          chatItem.data.tool.resultDetails = getResultDetails(res)
-        }
-        store.getState().incrementNodeVersion(itemData.id, 'item')
+        globalSessionEngine.updateToolResult(sessionId, itemData.id, { resultDetails: getResultDetails(res) })
       })
       .finally(() =>
         setTimeout(() => {

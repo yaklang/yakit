@@ -337,11 +337,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     return activeChat?.SessionID
   }, [activeChat])
 
-  /** 切换逻辑已改为新版，待确认后即可删除该代码 */
-  // useUpdateEffect(() => {
-  //   events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
-  // }, [activeChat])
-
   const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
     const newChat: AIHandleStartExtraProps = resolveStartExtraParams?.(data) ?? {
       chatId: activeChat?.SessionID,

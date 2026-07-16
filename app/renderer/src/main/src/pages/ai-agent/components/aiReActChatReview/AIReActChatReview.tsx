@@ -31,6 +31,7 @@ import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { randomString } from '@/utils/randomUtil'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
   const { info, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className, chatType, renderNum } =
@@ -367,11 +368,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         setForgeOption(item)
         break
       case 'close':
-        // if (info.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
-        //   /** TODO - 新版需要逻辑调整*/
-        //   chatIPCEvents.handleTaskReviewRelease((info.data as AIReviewType).id)
-        //   return
-        // }
+        globalSessionEngine.closeChatReview(sessionId, info.chatType, info.id)
         break
       default:
         if (editShow) return

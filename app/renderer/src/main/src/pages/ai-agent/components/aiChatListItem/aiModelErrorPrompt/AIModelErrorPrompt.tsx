@@ -30,7 +30,7 @@ export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo(
     e.stopPropagation()
     const fileName = getFileNameByModelType(item.data.model_tier)
     if (!fileName) return
-    // todo 编辑事件,index为0是因为当前使用的ai模型是单选的且选中项一定是在第一个
+    // NOTE - 编辑事件,index为0是因为当前使用的ai模型是单选的且选中项一定是在第一个
     onEditAIModel({
       aiGlobalConfig,
       index: 0,

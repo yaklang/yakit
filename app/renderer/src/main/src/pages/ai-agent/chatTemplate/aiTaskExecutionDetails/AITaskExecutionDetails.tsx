@@ -76,21 +76,17 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   })
   const getData = useMemoizedFn(() => {
     if (!taskId) return
-    const sessionId = activeChat?.SessionID || ''
-    const chatData = chatIPCEvents.fetchChatDataStore()?.get(sessionId)
-    if (!chatData) return
-
     let itemData: PlanItemDetailsData | undefined
-    const subTaskData = chatData.casualChat.planDetailsMap.get(taskId)
+    const subTaskData = rawData.casualChat.planDetailsMap.get(taskId)
     if (subTaskData) {
       itemData = subTaskData
     } else {
-      const mainPlanDetails = chatData.casualChat.planDetails
-      const currentCasualTaskId = chatIPCEvents.fetchCurrentCasualTaskID()
+      const mainPlanDetails = rawData.casualChat.planDetails
+      const currentCasualTaskId = store.getState().currentCasualTaskID
       if (mainPlanDetails.taskId === taskId || currentCasualTaskId === taskId) {
         itemData = mainPlanDetails
       } else {
-        itemData = chatData.taskChat.planDetailsMap.get(taskId)
+        itemData = rawData.taskChat.planDetailsMap.get(taskId)
       }
     }
     if (!itemData) return

@@ -706,10 +706,10 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
   const meta = useCurrentMeta()
   const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
   const currentPlanReviewExtraUpdate = useStore(store, (state) => state.currentPlanReviewExtraUpdate)
-  /** TODO - review:工具的倒计时，目前没有类似renderNum的更新逻辑 */
+
   const reviewInfo = useCreation(() => {
-    return rawData.contents.get(currentPlanReviewToken)
-  }, [currentPlanReviewToken])
+    return rawData.contents.get(currentPlanReviewToken.token)
+  }, [currentPlanReviewToken.renderNum])
 
   const planReviewTreeKeywordsMap = useCreation(() => {
     return meta.planReviewExtraData
@@ -748,7 +748,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
             renderFooterExtra={renderFooter}
             expand={expand}
             className={styles['review-body']}
-            renderNum={0}
+            renderNum={currentPlanReviewToken.renderNum}
           />
         </div>
       </div>

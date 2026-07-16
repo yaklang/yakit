@@ -31,7 +31,7 @@ export interface UseTypedStreamResult {
  * 获取流式聊天内容并应用平滑打字效果
  * - 实时流式（start → end）：启用打字效果
  * - 历史记录（直接 end）：禁用打字效果，直接显示
- * TODO - 看这个hooks是否需要改成只传content(显示在页面的数据)内容出去，其余的值通过useCurrentRawData获取
+ * TODO - 优化: 看这个hooks是否需要改成只传content(显示在页面的数据)内容出去，其余的值通过useCurrentRawData获取
  */
 export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamResult {
   const { token, step = 2, maxStep = 18, interval = 30, catchUpFrames = 9 } = options

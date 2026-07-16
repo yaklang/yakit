@@ -5,7 +5,8 @@ import useClickFocus from '../../../../ai-re-act/hooks/useClickFocus'
 import styles from './ConcurrentStreamContent.module.scss'
 import { AIChatListItem } from '../../aiChatListItem/AIChatListItem'
 import type { ConcurrentStreamContentItemProps } from './type'
-import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useAIItemKind from '@/pages/ai-re-act/hooks/useAIItemKind'
 import { ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
 
 const PAGE_SIZE = 20
@@ -155,19 +156,14 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = memo(
 export default ConcurrentStreamContent
 
 const ConcurrentStreamContentItem: FC<ConcurrentStreamContentItemProps> = memo(({ token }) => {
-  const store = useCurrentStore()
   const rawData = useCurrentRawData()
-  const getKind = useMemoizedFn((childToken: string): ReActChatRenderElement['kind'] => {
-    const state = store.getState()
-    if (state.items[childToken]) return 'item'
-    if (state.groups[childToken]) return 'group'
-    return 'item'
-  })
-  const item = useCreation(() => {
+  const getKind = useAIItemKind()
+
+  const item: ReActChatRenderElement = useCreation(() => {
     const data = rawData.contents.get(token)
     return {
       token,
-      kind: getKind(token),
+      kind: getKind(token) ?? 'item',
       chatType: data?.chatType ?? 'reAct',
       isHistory: false,
     }

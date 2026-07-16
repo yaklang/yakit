@@ -43,7 +43,7 @@ const genStreamGroupData = (
 
   tokens.forEach((mapKey) => {
     const mapValue = rawData.contents.get(mapKey)
-    if (mapValue) mapValue.parentGroupKey = group
+    if (mapValue) mapValue.parentGroupToken = group
   })
 }
 
