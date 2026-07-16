@@ -73,10 +73,10 @@ export const formatNumberUnits = (num: number) => {
 /** @name 将全局配置信息转换为可以请求的数据结构 */
 export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
   /**
-   * AIService/AIModelName 已经废弃
+   * AIService/AIModelName/TimelineItemLimit 已经废弃
    */
   let data: AIAgentSetting = { ...setting }
-  data = omit(data, ['AIService', 'AIModelName'])
+  data = omit(data, ['AIService', 'AIModelName', 'TimelineItemLimit'])
   try {
     data.EnableSystemFileSystemOperator =
       setting.EnableSystemFileSystemOperator ?? AIAgentSettingDefault.EnableSystemFileSystemOperator
@@ -133,7 +133,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.DisableToolIntervalReview =
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
   } catch (error) {}
-
+  console.log('data:', data)
   return { ...data }
 }
 
