@@ -133,7 +133,6 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.DisableToolIntervalReview =
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
   } catch (error) {}
-  console.log('data:', data)
   return { ...data }
 }
 
