@@ -196,7 +196,7 @@ export function applyYaklangCodeChangeToYakRunnerPage(
     return
   }
   const content = String(data.code?.content ?? '')
-  if (content.trim() === '') return
+  if (data.op === 'create' && content.trim() === '') return
   const path = resolveYaklangCodeChangePath(data)
   const lastApplied = lastAppliedCodeByPage.get(pageId)
   if (!options?.skipReplaceDedup && lastApplied && lastApplied.content === content && lastApplied.path === path) {

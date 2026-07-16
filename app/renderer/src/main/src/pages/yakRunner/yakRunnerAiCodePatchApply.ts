@@ -1,4 +1,5 @@
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { yakitFailed } from '@/utils/notification'
 
 import { getYakRunnerPageActiveCodeString, resolveYaklangCodeChangePath } from './yakRunnerAiCodeApplyBridge'
 import { isSameYakRunnerFilePath } from './utils'
@@ -9,10 +10,19 @@ type PatchWorkingState = {
   lastVersion: number
 }
 
+export type YaklangPatchApplyResult = { ok: true; content: string } | { ok: false; reason: string }
+
 const patchWorkingByPage = new Map<string, PatchWorkingState>()
 
 export function resetYakRunnerPatchWorkingDraft(pageId: string): void {
   patchWorkingByPage.delete(pageId)
+}
+
+/** 用户在 diff 审阅中部分/全部采纳后，同步链式 patch 的工作草稿基线 */
+export function syncYakRunnerPatchWorkingDraft(pageId: string, content: string): void {
+  const prev = patchWorkingByPage.get(pageId)
+  if (!prev) return
+  patchWorkingByPage.set(pageId, { ...prev, content })
 }
 
 function normNewlines(s: string): string {
@@ -29,19 +39,32 @@ function fromLines(lines: string[]): string {
   return lines.join('\n')
 }
 
+function extractLineRangeText(base: string, startLine: number, endLine: number): string {
+  const lines = toLines(base)
+  const startIdx = Math.max(0, startLine - 1)
+  const endIdx = Math.min(lines.length, Math.max(startIdx, endLine))
+  return fromLines(lines.slice(startIdx, endIdx))
+}
+
+function validateOldSnippet(
+  base: string,
+  startLine: number,
+  endLine: number,
+  oldSnippet: string,
+): YaklangPatchApplyResult | null {
+  const actual = extractLineRangeText(base, startLine, endLine)
+  if (normNewlines(actual) !== normNewlines(oldSnippet)) {
+    return { ok: false, reason: '补丁 old_snippet 与文件内容不一致，已拒绝合并' }
+  }
+  return null
+}
+
 function applyLineRangePatch(base: string, startLine: number, endLine: number, fragment: string): string {
   const lines = toLines(base)
   const startIdx = Math.max(0, startLine - 1)
   const endIdx = Math.max(startIdx, endLine)
   const nextLines = toLines(fragment)
   return fromLines([...lines.slice(0, startIdx), ...nextLines, ...lines.slice(endIdx)])
-}
-
-function applySnippetPatch(base: string, oldSnippet: string, fragment: string): string {
-  if (!oldSnippet) return fragment || base
-  const idx = base.indexOf(oldSnippet)
-  if (idx < 0) return base
-  return base.slice(0, idx) + fragment + base.slice(idx + oldSnippet.length)
 }
 
 function applyInsertPatch(base: string, insertLine: number, fragment: string): string {
@@ -62,29 +85,71 @@ function isSamePatchTargetPath(a?: string, b?: string): boolean {
   return isSameYakRunnerFilePath(a, b)
 }
 
-function applyYaklangCodePatch(base: string, change: AIAgentGrpcApi.YaklangCodeChange): string {
+export function applyYaklangCodePatch(base: string, change: AIAgentGrpcApi.YaklangCodeChange): YaklangPatchApplyResult {
   const patch = change.code?.patch
   const fragment = String(change.code?.content ?? '')
-  if (!patch) return fragment || base
+  if (!patch) return { ok: true, content: fragment || base }
+
+  const oldSnippet = patch.old_snippet?.trim() ? patch.old_snippet : undefined
+  const startLine = patch.start_line || 1
+  const endLine = patch.end_line || patch.start_line || 1
 
   switch (patch.kind) {
-    case 'line_range':
-      return applyLineRangePatch(base, patch.start_line || 1, patch.end_line || patch.start_line || 1, fragment)
-    case 'snippet':
-      return applySnippetPatch(base, patch.old_snippet || '', fragment)
+    case 'line_range': {
+      if (oldSnippet != null) {
+        const mismatch = validateOldSnippet(base, startLine, endLine, oldSnippet)
+        if (mismatch) return mismatch
+      }
+      return { ok: true, content: applyLineRangePatch(base, startLine, endLine, fragment) }
+    }
+    case 'snippet': {
+      if (!oldSnippet) {
+        return { ok: false, reason: 'snippet 补丁缺少 old_snippet，已拒绝合并' }
+      }
+      const normBase = normNewlines(base)
+      const normOld = normNewlines(oldSnippet)
+      const idx = normBase.indexOf(normOld)
+      if (idx < 0) {
+        return { ok: false, reason: '未在文件中找到 old_snippet，补丁已拒绝合并' }
+      }
+      const normFragment = normNewlines(fragment)
+      return { ok: true, content: normBase.slice(0, idx) + normFragment + normBase.slice(idx + normOld.length) }
+    }
     case 'insert':
-      return applyInsertPatch(base, patch.insert_line || 1, fragment)
-    case 'delete':
-      return applyDeletePatch(base, patch.start_line || 1, patch.end_line || patch.start_line || 1)
+      return { ok: true, content: applyInsertPatch(base, patch.insert_line || 1, fragment) }
+    case 'delete': {
+      if (oldSnippet != null) {
+        const mismatch = validateOldSnippet(base, startLine, endLine, oldSnippet)
+        if (mismatch) return mismatch
+      }
+      return { ok: true, content: applyDeletePatch(base, startLine, endLine) }
+    }
     case 'full':
     default:
-      return fragment || base
+      return { ok: true, content: fragment || base }
   }
+}
+
+function resolvePatchMergeBase(
+  pageId: string,
+  sessionOriginal: string,
+  prev: PatchWorkingState | undefined,
+  path: string | undefined,
+): string {
+  const editorNow = getYakRunnerPageActiveCodeString(pageId) ?? ''
+  if (prev && isSamePatchTargetPath(prev.path, path)) {
+    if (editorNow.trim() !== '' && normNewlines(editorNow) !== normNewlines(prev.content)) {
+      return editorNow
+    }
+    return prev.content
+  }
+  if (editorNow.trim() !== '') return editorNow
+  return sessionOriginal
 }
 
 /**
  * Collapse backend patch events into full-file replace/create payloads for the existing diff UI.
- * Returns null when the event is a duplicate patch (same or older version).
+ * Returns null when the event is a duplicate patch (same or older version) or merge is rejected.
  */
 export function normalizeYaklangCodeChangeForReview(
   pageId: string,
@@ -117,15 +182,14 @@ export function normalizeYaklangCodeChangeForReview(
     return null
   }
 
-  const editorNow = getYakRunnerPageActiveCodeString(pageId) ?? ''
-  let base = sessionOriginal
-  if (prev && isSamePatchTargetPath(prev.path, path)) {
-    base = prev.content
-  } else if (editorNow.trim() !== '') {
-    base = editorNow
+  const base = resolvePatchMergeBase(pageId, sessionOriginal, prev, path)
+  const result = applyYaklangCodePatch(base, data)
+  if (!result.ok) {
+    yakitFailed(result.reason)
+    return null
   }
 
-  const merged = applyYaklangCodePatch(base, data)
+  const merged = result.content
   patchWorkingByPage.set(pageId, { path, content: merged, lastVersion: version })
 
   return {

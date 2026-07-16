@@ -95,6 +95,7 @@ import {
   type YakRunnerApplyCodeExtras,
   type YakRunnerCasualCodeReplaceReviewPayload,
 } from './yakRunnerAiCodeApplyBridge'
+import { syncYakRunnerPatchWorkingDraft } from './yakRunnerAiCodePatchApply'
 const { ipcRenderer } = window.require('electron')
 
 // 模拟tabs分块及对应文件
@@ -820,6 +821,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     const head = casualReviewQueue[0]
     if (!head) return
     casualReviewBaselineRef.current = mergedCode
+    syncYakRunnerPatchWorkingDraft(YAK_RUNNER_AI_PAGE_ID, mergedCode)
     setCasualReviewQueue((prev) => {
       const cur = prev[0]
       if (!cur) return prev

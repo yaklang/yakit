@@ -326,7 +326,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     if (!normalized) return
 
     const nextCode = normalized.code?.content
-    if (nextCode == null || String(nextCode).trim() === '') return
+    if (nextCode == null) return
+    if (normalized.op === 'create' && String(nextCode).trim() === '') return
 
     const isCreate = normalized.op === 'create'
     const createFileName = isCreate ? createYakRunnerGeneratedCodeFileName() : undefined
