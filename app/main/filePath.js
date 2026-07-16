@@ -7,6 +7,9 @@ const fs = require('fs')
 
 const DEFAULT_PROJECT_NAME = 'yakit-projects'
 
+/** EnpriTrace start.bat 生成的项目路径配置文件名 */
+const ENPRITRACE_PROJECT_PATH_FILE = 'project_path.txt'
+
 const DEFAULT_CONFIG = {
   YAKIT_HOME: '',
   workspaceHistory: [],
@@ -84,11 +87,45 @@ const setConfig = (key, value) => {
 // --- 核心路径 getter ---
 
 /**
+ * 读取 EnpriTrace start.bat 写入的 yakit-projects 路径。
+ * start.bat 会在应用目录下生成 project_path.txt，内容为 yakit-projects 的绝对路径。
+ */
+const readEnpriTraceProjectPath = () => {
+  /** 软件根目录 */
+  const appPath = app.isPackaged ? path.dirname(app.getPath('exe')) : app.getAppPath()
+  const projectPathFile = path.join(appPath, ENPRITRACE_PROJECT_PATH_FILE)
+  try {
+    if (!fs.existsSync(projectPathFile)) {
+      return ''
+    }
+    const content = fs
+      .readFileSync(projectPathFile, 'utf8')
+      .trim()
+      .replace(/^[\s\uFEFF]+/, '')
+    if (!content) {
+      return ''
+    }
+    if (fs.existsSync(content)) {
+      return content
+    }
+    return ''
+  } catch (error) {
+    return ''
+  }
+}
+
+/**
  * 解析 YAKIT_HOME: 支持绝对路径和相对目录名
- * 优先级: config.json > 环境变量 YAKIT_HOME > 默认值
+ * 优先级: project_path.txt > config.json > 环境变量 YAKIT_HOME > 默认值
  */
 const getYakitHome = () => {
   try {
+    const enpriTraceProjectPath = readEnpriTraceProjectPath()
+    if (enpriTraceProjectPath) {
+      _ensureDir(enpriTraceProjectPath)
+      return enpriTraceProjectPath
+    }
+
     const config = getConfig()
     let homePath = config.YAKIT_HOME
 

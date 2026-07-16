@@ -269,6 +269,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
         </div>
         <div className={styles['softwareBasics-item-cont']}>
           <YakitDragger
+            disabled
             value={currentPath}
             isShowPathNumber={false}
             selectType="folder"
