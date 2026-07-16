@@ -1,0 +1,48 @@
+{
+  "YakitSwitch": {
+    "on": "On",
+    "off": "Off"
+  },
+  "YakitSelect": {
+    "YakitSelectCustom": {
+      "cache_field_save_error": " Error saving data in cache field:",
+      "cache_field_convert_error": " Error converting data in cache field:"
+    }
+  },
+  "YakitEmpty": {
+    "noData": "No data"
+  },
+  "YakitButton": {
+    "cancel": "Cancel",
+    "ok": "OK"
+  },
+  "YakitNotification": {
+    "unknown_error": "Unknown error",
+    "modalCrashRetry": "Logic crash inside the modal. Please close and retry!",
+    "copySuccess": "Copied successfully",
+    "dataFetchFailed": "Data fetch failed: {{error}}"
+  },
+  "YakitModalConfirm": {
+    "debugInfo": "Debug Info"
+  },
+  "YakitFormDragger": {
+    "dragOrClickHere": "You can drag files here or click to select ",
+    "uploadFile": "Upload File",
+    "uploadFolder": "Upload Folder",
+    "detected": "Detected ",
+    "filesPath": " file paths",
+    "enterPath": "Please enter the path",
+    "enterValidPath": "Please enter a valid path",
+    "onlySupportFormat": "Only files in {{accept}} format are supported",
+    "pathManualInput": "Paths can be entered manually; use commas to separate multiple entries",
+    "pathManualEntry": "Path can be entered manually",
+    "multiSelectNotSupported": "Multiple selection not supported",
+    "selectFolder": "Please select a folder",
+    "selectFile": "Please select a file",
+    "autoFilteredData": "Data that does not meet the criteria has been automatically filtered",
+    "filePathCountError": "File path count error, please separate paths with commas"
+  },
+  "YakitDraggerContent": {
+    "multi_select_not_allowed": "Multiple selection is not allowed"
+  }
+}

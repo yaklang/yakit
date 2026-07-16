@@ -11,11 +11,13 @@ import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { Tooltip } from 'antd'
 import { yakitLogs } from '@/utils/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import styles from './EngineLog.module.scss'
 
 interface EngineLogProps {}
 export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['link'])
   const xtermRef = useRef<any>(null)
   const terminalOptions = useXTermOptions({
     getTerminal: () => xtermRef.current?.terminal,
@@ -29,7 +31,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
   }
 
   const liveEngineLog = useMemoizedFn((stdout) => {
-    writeToConsole(`[INFO] ${getReleaseEditionName()}-Verbose-Log: ${stdout}`)
+    writeToConsole(t('EngineLog.verbose_log', { name: getReleaseEditionName(), stdout }))
   })
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
       return
     }
 
-    writeToConsole(`欢迎使用 ${getReleaseEditionName()}!\n`)
+    writeToConsole(t('EngineLog.welcome', { name: getReleaseEditionName() }) + '\n')
 
     const offLiveStdio = yakitLogs.onLiveEngineStdio((stdout) => {
       writeToConsole(stdout)
@@ -89,7 +91,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
     setClipboardText(fullText, {
       hiddenHint: true,
       finalCallback: () => {
-        yakitNotify('success', '复制成功')
+        yakitNotify('success', t('EngineLog.copy_success'))
       },
     })
   })
@@ -111,7 +113,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
       />
       <XTerm ref={xtermRef} options={terminalOptions} />
       <div className={styles['engine-copy']}>
-        <Tooltip title="复制日志信息" placement="topRight">
+        <Tooltip title={t('EngineLog.copy_log_tooltip')} placement="topRight">
           <YakitButton
             icon={<OutlineDocumentduplicateIcon />}
             type="secondary2"

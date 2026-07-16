@@ -7,6 +7,10 @@ import { createRoot, Root } from 'react-dom/client'
 import { OutlineXIcon } from '@/assets/outline'
 import { ModalProps } from 'antd/lib/modal'
 import { ErrorBoundary } from 'react-error-boundary'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
+
+const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
 interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
   onVisibleSetter?: (setter: (i: boolean) => any) => any
@@ -76,11 +80,11 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
             <ErrorBoundary
               FallbackComponent={({ error, resetErrorBoundary }) => {
                 if (!error) {
-                  return <div>未知错误</div>
+                  return <div>{tOriginal('YakitNotification.unknown_error')}</div>
                 }
                 return (
                   <div>
-                    <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                    <p>{tOriginal('YakitNotification.modalCrashRetry')}</p>
                     <pre>{error?.message}</pre>
                   </div>
                 )
@@ -133,6 +137,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
 }
 
 const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
+  const { t } = useI18nNamespaces(['yakitUi'])
   const [visible, setVisible] = useState<boolean>(true)
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -155,7 +160,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
             }}
             {...props.cancelButtonProps}
           >
-            {props.onCancelText || '取消'}
+            {props.onCancelText || t('YakitButton.cancel')}
           </YakitButton>
           <YakitButton
             onClick={(e) => {
@@ -169,7 +174,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
             loading={loading}
             {...props.okButtonProps}
           >
-            {props.onOkText || '确定'}
+            {props.onOkText || t('YakitButton.ok')}
           </YakitButton>
         </div>
       }
@@ -203,7 +208,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
 
 export const debugYakitModal = (y: any) => {
   const m = showYakitModal({
-    title: '调试信息',
+    title: tOriginal('YakitModalConfirm.debugInfo'),
     width: '50%',
     content: (
       <div style={{ marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20 }}>{JSON.stringify(y)}</div>
@@ -216,7 +221,7 @@ export const debugYakitModal = (y: any) => {
 
 export const debugYakitModalAny = (y: any) => {
   const m = showYakitModal({
-    title: '调试信息',
+    title: tOriginal('YakitModalConfirm.debugInfo'),
     width: '50%',
     content: <div style={{ marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20 }}>{y}</div>,
     onOk: () => {
@@ -260,11 +265,11 @@ export const showYakitModal = (props: ShowModalProps) => {
             <ErrorBoundary
               FallbackComponent={({ error, resetErrorBoundary }) => {
                 if (!error) {
-                  return <div>未知错误</div>
+                  return <div>{tOriginal('YakitNotification.unknown_error')}</div>
                 }
                 return (
                   <div>
-                    <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                    <p>{tOriginal('YakitNotification.modalCrashRetry')}</p>
                     <pre>{error?.message}</pre>
                   </div>
                 )

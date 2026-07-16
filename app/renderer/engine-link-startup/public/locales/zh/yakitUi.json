@@ -1,0 +1,48 @@
+{
+  "YakitSwitch": {
+    "on": "开",
+    "off": "关"
+  },
+  "YakitSelect": {
+    "YakitSelectCustom": {
+      "cache_field_save_error": "缓存字段保存失败：",
+      "cache_field_convert_error": "缓存字段转换失败："
+    }
+  },
+  "YakitEmpty": {
+    "noData": "暂无数据"
+  },
+  "YakitButton": {
+    "cancel": "取消",
+    "ok": "确定"
+  },
+  "YakitNotification": {
+    "unknown_error": "未知错误",
+    "modalCrashRetry": "弹框内逻辑性崩溃，请关闭重试！",
+    "copySuccess": "复制成功",
+    "dataFetchFailed": "数据获取失败: {{error}}"
+  },
+  "YakitModalConfirm": {
+    "debugInfo": "调试信息"
+  },
+  "YakitFormDragger": {
+    "dragOrClickHere": "可将文件拖入框内或点击此处",
+    "uploadFile": "上传文件",
+    "uploadFolder": "上传文件夹",
+    "detected": "识别到",
+    "filesPath": "个文件路径",
+    "enterPath": "请输入路径",
+    "enterValidPath": "请输入正确的路径",
+    "onlySupportFormat": "仅支持{{accept}}格式的文件",
+    "pathManualInput": "路径支持手动输入,输入多个请用逗号分隔",
+    "pathManualEntry": "路径支持手动输入",
+    "multiSelectNotSupported": "不支持多选",
+    "selectFolder": "请选择文件夹",
+    "selectFile": "请选择文件",
+    "autoFilteredData": "已自动过滤不符合条件的数据",
+    "filePathCountError": "文件路径数识别错误,请以逗号进行分割"
+  },
+  "YakitDraggerContent": {
+    "multi_select_not_allowed": "不允许多选"
+  }
+}

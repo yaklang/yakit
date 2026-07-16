@@ -98,7 +98,7 @@ jobs:
           if-no-files-found: error
 
   ci-i18n:
-    name: i18n（zh/zh-TW/en）
+    name: i18n（renderer zh/zh-TW/en）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -112,7 +112,7 @@ jobs:
         with:
           node-version: 22.22.1
 
-      - name: Check i18n parity (zh/zh-TW/en)
+      - name: Check i18n parity (renderer zh/zh-TW/en)
         shell: bash
         run: |
           set -o pipefail
@@ -123,6 +123,34 @@ jobs:
         with:
           name: ci-log-i18n
           path: i18n-output.log
+          if-no-files-found: warn
+
+  ci-i18n-engine-link:
+    name: i18n（engine-link zh/zh-TW/en）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.1
+
+      - name: Check i18n parity (engine-link zh/zh-TW/en)
+        shell: bash
+        run: |
+          set -o pipefail
+          (cd app/renderer/engine-link-startup && node scripts/locale-parity.cjs) 2>&1 | tee i18n-engine-link-output.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-log-i18n-engine-link
+          path: i18n-engine-link-output.log
           if-no-files-found: warn
 
   ci-eslint-renderer:
@@ -331,6 +359,7 @@ jobs:
     needs:
       - prepare
       - ci-i18n
+      - ci-i18n-engine-link
       - ci-eslint-renderer
       - ci-tsc-renderer
       - ci-eslint-engine-link
@@ -374,6 +403,7 @@ jobs:
         id: pr_comment
         env:
           OUTCOME_I18N: ${{ needs.ci-i18n.result }}
+          OUTCOME_I18N_ENGINE_LINK: ${{ needs.ci-i18n-engine-link.result }}
           OUTCOME_ESLINT: ${{ needs.ci-eslint-renderer.result }}
           OUTCOME_TSC: ${{ needs.ci-tsc-renderer.result }}
           OUTCOME_ESLINT_ENGINE_LINK: ${{ needs.ci-eslint-engine-link.result }}

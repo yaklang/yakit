@@ -31,6 +31,7 @@ import MemfitDarkEmptyPng from '@/components/yakitUI/YakitEmpty/MemfitDarkEmptyP
 
 import { useTheme } from '@/hooks/useTheme'
 import { __PLATFORM__ } from '@/utils/envfile'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { Option, OptGroup } = Select
 
 /**
@@ -53,6 +54,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
   }: YakitSelectProps<OptionType>,
   ref: React.Ref<YakitBaseSelectRef>,
 ) => {
+  const { t } = useI18nNamespaces(['yakitUi'])
   const { theme } = useTheme()
   const selectRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(selectRef)
@@ -119,7 +121,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
           })
         })
         .catch((e) => {
-          yakitNotify('error', `${cacheHistoryDataKey}缓存字段保存失败：` + e)
+          yakitNotify('error', `${cacheHistoryDataKey}${t('YakitSelect.YakitSelectCustom.cache_field_save_error')}` + e)
         })
     } else if (props.mode === 'multiple') {
       // 多选;该情况下label和value 大多数时候不一样;暂不支持缓存
@@ -182,7 +184,10 @@ export const YakitSelectCustom = <ValueType, OptionType>(
             })
           })
           .catch((e) => {
-            yakitNotify('error', `${cacheHistoryDataKey}缓存字段保存失败：` + e)
+            yakitNotify(
+              'error',
+              `${cacheHistoryDataKey}${t('YakitSelect.YakitSelectCustom.cache_field_save_error')}` + e,
+            )
           })
       } else if (props.mode === 'multiple') {
         // 暂不支持删除缓存项
@@ -329,7 +334,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         notFoundContent={
           <div className={classNames('yakit-select-notFound')}>
             <img src={emptyImageTarget} alt="" style={{ width: 88 }} />
-            <div className={classNames('yakit-select-content')}>暂无数据</div>
+            <div className={classNames('yakit-select-content')}>{t('YakitEmpty.noData')}</div>
           </div>
         }
       >

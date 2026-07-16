@@ -1,0 +1,27 @@
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import HttpBackend from 'i18next-http-backend'
+import { I18nNamespace } from './namespaces'
+
+function getNS() {
+  let ns: I18nNamespace[] = ['link', 'yakitUi']
+  return ns
+}
+
+i18n
+  .use(HttpBackend)
+  .use(initReactI18next)
+  .init({
+    lng: 'zh',
+    fallbackLng: 'en',
+    supportedLngs: ['zh', 'en', 'zh-TW'],
+    ns: getNS(), // 需要预加载
+    defaultNS: '',
+    interpolation: {
+      escapeValue: false,
+    },
+    backend: { loadPath: './locales/{{lng}}/{{ns}}.json' },
+    react: { useSuspense: true },
+  })
+
+export default i18n

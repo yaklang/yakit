@@ -18,6 +18,23 @@ import { isEnpriTraceAgent, isCommunityYakit, FetchSoftwareVersion } from '@/uti
 import { yakitEngine } from '@/utils/electronBridge'
 
 // ========== Mock 所有外部依赖 ==========
+vi.mock('@/i18n/useI18nNamespaces', () => ({
+  useI18nNamespaces: () => ({
+    t: (key: string) => key,
+    i18n: {
+      language: 'zh',
+      hasResourceBundle: () => true,
+      loadNamespaces: vi.fn(async () => undefined),
+      on: vi.fn(),
+      off: vi.fn(),
+      t: (key: string) => key,
+      exists: () => true,
+      changeLanguage: vi.fn(async () => undefined),
+    },
+    isAllReady: true,
+  }),
+}))
+
 vi.mock('../../../utils', () => ({
   SystemInfo: { isDev: false },
 }))

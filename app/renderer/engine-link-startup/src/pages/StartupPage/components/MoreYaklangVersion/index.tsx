@@ -13,7 +13,6 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
   const { moreYaklangVersionList, onClosePop } = props
   const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
   const [searchVersionVal, setSearchVersionVal] = useState<string>('')
-  // const [searchVersionList, setSearchVersionList] = useState<string[]>([])
 
   useEffect(() => {
     setVersionList(moreYaklangVersionList)
@@ -21,8 +20,6 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
 
   const onSearchVersion = (version: string) => {
     setSearchVersionVal(version)
-    // const arr = versionList.filter((v) => v.includes(version))
-    // setSearchVersionList(arr)
   }
 
   const renderVersionList = useMemo(() => {

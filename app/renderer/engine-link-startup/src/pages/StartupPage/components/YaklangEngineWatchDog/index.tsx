@@ -8,6 +8,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../grpc'
 import { outputToWelcomeConsole } from '../../utils'
 import { yakitEngine } from '@/utils/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface YaklangEngineWatchDogProps {
   credential: YaklangEngineWatchDogCredential
@@ -25,6 +26,7 @@ export interface YaklangEngineWatchDogProps {
 }
 
 export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['link'])
   const yakitStatusRef = useRef<YakitStatusType>(props.yakitStatus)
   // 是否自动重启引擎进程
   const [autoStartProgress, setAutoStartProgress] = useState(false)
@@ -62,7 +64,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
     }
 
     if (props.credential.Port <= 0) {
-      outputToWelcomeConsole('端口被设置为空，无法连接引擎')
+      outputToWelcomeConsole(t('YaklangEngineWatchDog.port_empty_cannot_connect'))
       return
     }
 
@@ -70,27 +72,27 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
      * 认证要小心做，拿到准确的信息之后，尝试连接一次，确定连接成功之后才可以开始后续步骤
      * 当然引擎没有启动的时候无法连接成功，要准备根据引擎状态选择合适的方式启动引擎
      */
-    outputToWelcomeConsole('开始尝试连接 Yaklang 核心引擎')
+    outputToWelcomeConsole(t('YaklangEngineWatchDog.start_connecting_core_engine'))
     debugToPrintLog(`------ 测试目标引擎是否存在进程存活情况------`)
     yakitEngine
       .connectYaklangEngine(props.credential)
       .then(() => {
         debugToPrintLog(`------ 目标引擎进程存活 ------`)
-        outputToWelcomeConsole(`连接核心引擎成功！`)
+        outputToWelcomeConsole(t('YaklangEngineWatchDog.connect_core_engine_success'))
         if (props.onKeepaliveShouldChange) {
           props.onKeepaliveShouldChange(true)
         }
       })
       .catch((e) => {
         debugToPrintLog(`------ 目标引擎进程不存在 ------`)
-        outputToWelcomeConsole('未连接到引擎，尝试启动引擎进程')
+        outputToWelcomeConsole(t('YaklangEngineWatchDog.engine_not_connected_try_start'))
         switch (mode) {
           case 'local':
-            outputToWelcomeConsole('尝试启动本地进程')
+            outputToWelcomeConsole(t('YaklangEngineWatchDog.try_start_local_process'))
             setAutoStartProgress(true)
             return
           case 'remote':
-            outputToWelcomeConsole('远程模式不自动启动本地引擎')
+            outputToWelcomeConsole(t('YaklangEngineWatchDog.remote_mode_no_auto_start'))
             yakitNotify('error', e + '')
             return
         }
@@ -116,7 +118,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
       }
       debugToPrintLog(`[INFO] 尝试启动新的引擎进程 port:${props.credential.Port}`)
       // 只有普通模式才涉及到引擎启动的流程
-      outputToWelcomeConsole(`开始以普通权限启动本地引擎进程，本地端口为: ${props.credential.Port}`)
+      outputToWelcomeConsole(t('YaklangEngineWatchDog.start_local_engine_with_port', { port: props.credential.Port }))
 
       if (mode === 'local') {
         if (!startingUp.current) {
@@ -138,10 +140,15 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                 }
               } else {
                 if (res.status === 'timeout') {
-                  props.setCheckLog(['命令执行超时，请点击重新执行'])
+                  props.setCheckLog([t('YaklangEngineWatchDog.command_timeout_retry')])
                   props.setYakitStatus('start_timeout')
                 } else {
-                  outputToWelcomeConsole('引擎启动失败:' + res.status + ':' + res.message)
+                  outputToWelcomeConsole(
+                    t('YaklangEngineWatchDog.engine_start_failed', {
+                      status: res.status,
+                      message: res.message,
+                    }),
+                  )
                 }
                 debugToPrintLog(`[ERROR] 本地新引擎进程启动失败: ${res.status + ':' + res.message}`)
               }
@@ -151,8 +158,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
               // 旧调用直接跳过
               if (callId !== latestStartCallIdRef.current) return
               // 如果手动中断 显示中断界面 意外情况暂时不做处理
-              outputToWelcomeConsole(`引擎启动命令被中断或意外情况：${error}`)
-              props.setCheckLog(['引擎启动命令被中断或意外情况，可查看日志详细信息...'])
+              outputToWelcomeConsole(t('YaklangEngineWatchDog.engine_start_interrupted', { error }))
+              props.setCheckLog([t('YaklangEngineWatchDog.engine_start_interrupted_check_log')])
             })
         }
       }
@@ -190,7 +197,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
             return
           }
           if (!notified) {
-            outputToWelcomeConsole('引擎已准备好，可以进行连接')
+            outputToWelcomeConsole(t('YaklangEngineWatchDog.engine_ready_to_connect'))
             notified = true
           }
           failedCount = 0
@@ -201,7 +208,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
         .catch((e) => {
           failedCount++
           if (failedCount > 0 && failedCount <= 10) {
-            outputToWelcomeConsole(`引擎未完全启动，无法连接，失败次数：${failedCount}`)
+            outputToWelcomeConsole(t('YaklangEngineWatchDog.engine_not_fully_started', { count: failedCount }))
           }
           if (props.onFailed) {
             props.onFailed(failedCount)

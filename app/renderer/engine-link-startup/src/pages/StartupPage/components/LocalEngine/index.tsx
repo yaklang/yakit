@@ -18,6 +18,7 @@ import { getLocalValue } from '@/utils/kv'
 import { LocalGVS } from '@/enums/yakitGV'
 import { UpdateYakitHint } from '../UpdateYakitHint'
 import { yakitEngine } from '@/utils/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 function compare(a: string, b: string) {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
@@ -35,6 +36,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       yakitUpdate,
       setYakitUpdate,
     } = props
+    const { t } = useI18nNamespaces(['link'])
     // check Json
     const allowSecretLocalJson = useRef<AllowSecretLocalJson>(null)
     // 本地 yakit 版本
@@ -62,12 +64,12 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       }
 
       debugToPrintLog(`------ 开始执行 check ------`)
-      setLog(['开始检查随机密码模式中...'])
+      setLog([t('LocalEngine.checking_secret_password_mode')])
       try {
         const res = await grpcCheckAllowSecretLocal({ port, softwareVersion: FetchSoftwareVersion() })
         setRestartLoading(false)
         if (res.ok && res.status === 'success') {
-          setLog((arr) => arr.concat(['检查通过，已支持随机密码模式']))
+          setLog((arr) => arr.concat([t('LocalEngine.secret_password_check_passed')]))
           setYakitStatus('')
           allowSecretLocalJson.current = res.json
           handlePreCheckForLinkEngine(checkVersion)
@@ -76,41 +78,48 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         allowSecretLocalJson.current = null
         switch (res.status) {
           case 'timeout':
-            setLog((arr) => arr.concat(['命令执行超时，可查看日志详细信息...']))
+            setLog((arr) => arr.concat([t('LocalEngine.command_timeout_check_log')]))
             setYakitStatus('check_timeout')
             break
           case 'call_error':
-            setLog((arr) => arr.concat(['引擎连接超时，可查看日志详细信息...']))
+            setLog((arr) => arr.concat([t('LocalEngine.engine_connect_timeout_check_log')]))
             setYakitStatus('check_timeout')
             break
           case 'old_version':
             setLog((arr) =>
-              arr.concat([`引擎版本低，可点击${buildInEngineVersion ? '重置引擎版本更新...' : '下载引擎更新...'}`]),
+              arr.concat([
+                buildInEngineVersion
+                  ? t('LocalEngine.engine_version_low_reset')
+                  : t('LocalEngine.engine_version_low_download'),
+              ]),
             )
             setYakitStatus('old_version')
             break
           case 'port_occupied':
-            setLog((arr) => arr.concat(['端口不可用，可查看日志报错信息进行处理...']))
+            setLog((arr) => arr.concat([t('LocalEngine.port_unavailable_check_log')]))
             setYakitStatus('port_occupied_prev')
             break
           case 'antivirus_blocked':
-            setLog((arr) => arr.concat(['被杀软拦截，可将应用加入白名单后重启...']))
+            setLog((arr) => arr.concat([t('LocalEngine.antivirus_blocked_check_log')]))
             setYakitStatus('antivirus_blocked')
             break
           case 'build_yak_error':
           case 'dial_error':
-            setLog((arr) => arr.concat(['连接引擎出现问题，可点击重置引擎版本更新...']))
+            setLog((arr) => arr.concat([t('LocalEngine.engine_connect_error_reset')]))
             setYakitStatus('skipAgreement_Install')
             break
           case 'database_error':
-            setLog((arr) => arr.concat(['检测到本地数据库出现错误，可点击修复进行处理...']))
+            setLog((arr) => arr.concat([t('LocalEngine.database_error_check_log')]))
             setYakitStatus('database_error')
             break
           default:
             setLog((arr) =>
               arr.concat([
-                '无法启动，可将日志信息发送给工作人员处理...',
-                `[Reason]：${res.status}：${res.message || '无'}`,
+                t('LocalEngine.cannot_start_contact_staff'),
+                t('LocalEngine.failure_reason', {
+                  status: res.status,
+                  message: res.message || t('LocalEngine.none'),
+                }),
               ]),
             )
             setYakitStatus('allow-secret-error')
@@ -138,14 +147,14 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
       debugToPrintLog(`------ 开始执行初始化启动-连接引擎的前置版本检查 ------`)
       if (SystemInfo.isDev) {
-        setLog(['开发环境，直接连接引擎'])
+        setLog([t('LocalEngine.dev_env_direct_connect')])
         startYakEngine()
       } else if (checkVersion) {
         // SE 版本不进行 yakit 更新检查，直接检查引擎和内置的版本
         if (isEnpriTraceAgent()) {
           handleCheckEngineVersion()
         } else {
-          setLog(['检查软件是否有更新...'])
+          setLog([t('LocalEngine.checking_software_update')])
           handleCheckYakitLatestVersion()
         }
       } else {
@@ -193,16 +202,16 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             } catch (error) {}
           } else {
             debugToPrintLog(`------ 跳过检查软件版本更新逻辑 ------`)
-            setLog((old) => old.concat(['跳过检查(可在软件更新处设置启动)']))
+            setLog((old) => old.concat([t('LocalEngine.skip_check_hint')]))
           }
         })
         .catch(() => {})
         .finally(() => {
           if (showUpdateYakit) {
-            setLog([`检测到有新版本${getReleaseEditionName()}，是否安装...`])
+            setLog([t('LocalEngine.new_version_detected', { name: getReleaseEditionName() })])
             setYakitStatus('update_yakit')
           } else {
-            setLog((old) => old.concat(['软件无更新']))
+            setLog((old) => old.concat([t('LocalEngine.software_no_update')]))
             setTimeout(() => {
               handleCheckEngineVersion()
             }, 500)
@@ -228,10 +237,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       try {
         const res = await getLocalValue(LocalGVS.NoYakVersionCheck)
         if (res) {
-          setLog(['获取引擎版本号...'])
+          setLog([t('LocalEngine.fetching_engine_version')])
         } else {
           debugToPrintLog(`------ 开始检查引擎内置版本逻辑 ------`)
-          setLog(['获取引擎版本号并检查更新...'])
+          setLog([t('LocalEngine.fetching_engine_version_and_check_update')])
         }
         const localVersion = allowSecretLocalJson.current.version
         const localVersionPromise = localVersion ? Promise.resolve(localVersion) : grpcFetchLocalYakVersion(true)
@@ -248,7 +257,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
           debugToPrintLog(`------ 当前版本: ${currentYak.current} ------`)
 
           setLog((old) =>
-            old.concat([currentYak.current ? `本地引擎版本——${currentYak.current}` : '未获取到本地引擎版本号']),
+            old.concat([
+              currentYak.current
+                ? t('LocalEngine.local_engine_version', { version: currentYak.current })
+                : t('LocalEngine.local_engine_version_not_found'),
+            ]),
           )
 
           if (!currentYak.current) {
@@ -260,19 +273,19 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             handleCheckEngineSource(currentYak.current)
           } else {
             if (!!currentYak.current && !!buildInYak.current && compare(buildInYak.current, currentYak.current) > 0) {
-              setLog(['检测到有引擎版本，是否安装...'])
+              setLog([t('LocalEngine.engine_version_detected_install')])
               setYakitStatus('update_yak')
             } else {
-              setLog((old) => old.concat(['引擎无更新']))
+              setLog((old) => old.concat([t('LocalEngine.engine_no_update')]))
               handleCheckEngineSource(currentYak.current)
             }
           }
         } else {
-          setLog((old) => old.concat([`错误: ${res1.reason}`]))
+          setLog((old) => old.concat([t('LocalEngine.error_with_reason', { reason: res1.reason })]))
           startYakEngine()
         }
       } catch (error) {
-        setLog((old) => old.concat([`错误: ${error}`]))
+        setLog((old) => old.concat([t('LocalEngine.error_with_reason', { reason: error })]))
         setYakitStatus('check_yak_version_error')
       }
     })
@@ -290,7 +303,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       }
 
       debugToPrintLog(`------ 开始校验引擎来源逻辑 ------`)
-      setLog(['开始校验引擎来源...'])
+      setLog([t('LocalEngine.checking_engine_source')])
       const checkVersion = version || currentYak.current
       try {
         const promise = new Promise((_, reject) =>
@@ -307,17 +320,17 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         ])
 
         if (!res1 || !Array.isArray(res2) || res2.length === 0) {
-          setLog((old) => old.concat(['未知异常情况，无法检测来源']))
+          setLog((old) => old.concat([t('LocalEngine.unknown_error_cannot_verify_source')]))
         } else {
           if (res2.includes(res1 as string)) {
-            setLog((old) => old.concat(['引擎来源正确']))
+            setLog((old) => old.concat([t('LocalEngine.engine_source_valid')]))
           } else {
-            setLog((old) => old.concat(['引擎非官方来源']))
-            yakitNotify('info', '引擎非官方来源')
+            setLog((old) => old.concat([t('LocalEngine.engine_source_unofficial')]))
+            yakitNotify('info', t('LocalEngine.engine_source_unofficial'))
           }
         }
       } catch (error) {
-        setLog((old) => old.concat(['异常情况，无法检测来源']))
+        setLog((old) => old.concat([t('LocalEngine.abnormal_cannot_verify_source')]))
       } finally {
         startYakEngine()
       }
@@ -333,7 +346,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
       if (allowSecretLocalJson.current) {
         debugToPrintLog(`------ 准备开始启动连接引擎逻辑 ------`)
-        setLog(['准备开始启动连接引擎'])
+        setLog([t('LocalEngine.preparing_start_connect_engine')])
         setTimeout(() => {
           onLinkEngine({
             port: allowSecretLocalJson.current.port,
@@ -357,10 +370,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       buildInYak.current = ''
     })
 
-    // 监听数据库初始化中
+    // 主进程推送 i18n key（如 LocalEngine.xxx），渲染端翻译后输出日志
     useEffect(() => {
-      const offStartUpMessage = yakitEngine.onStartUpEngineMessage((str: string) => {
-        setLog([str])
+      const offStartUpMessage = yakitEngine.onStartUpEngineMessage((key: string) => {
+        setLog([t(key)])
       })
       return () => {
         offStartUpMessage()

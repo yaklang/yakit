@@ -79,7 +79,8 @@ interface EchoResult {
 
 interface YakitHomeConfig {
   YAKIT_HOME: string
-  language: string
+  lang: string
+  mode: string
   workspaceHistory: string[]
   autoStart: boolean
   currentHome: string
@@ -208,7 +209,8 @@ interface YakitBridge {
     onStartYaklangEngineError: (callback: (message: string) => void) => BridgeCleanup
     onDownloadYakEngineProgress: (callback: (state: DownloadingState) => void) => BridgeCleanup
     onDownloadYakitProgress: (callback: (state: DownloadingState) => void) => BridgeCleanup
-    onStartUpEngineMessage: (callback: (message: string) => void) => BridgeCleanup
+    /** startUp-engine-msg：payload 为 link 命名空间 i18n key（如 LocalEngine.xxx） */
+    onStartUpEngineMessage: (callback: (i18nKey: string) => void) => BridgeCleanup
   }
   dialog: {
     openFileSystemDialog: (options: OpenFileDialogOptions) => Promise<OpenFileDialogReturnValue>

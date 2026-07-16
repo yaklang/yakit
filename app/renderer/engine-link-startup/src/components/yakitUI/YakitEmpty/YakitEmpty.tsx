@@ -13,6 +13,7 @@ import MemfitDarkEmptyPng from './MemfitDarkEmptyPng.png'
 
 import { useTheme } from '@/hooks/useTheme'
 import { __PLATFORM__ } from '@/utils/envfile'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /**
  * @description:YakitEmpty
@@ -21,6 +22,7 @@ import { __PLATFORM__ } from '@/utils/envfile'
 export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
   const { theme } = useTheme()
   const { title, titleClassName, ...restProps } = props
+  const { t } = useI18nNamespaces(['yakitUi'])
 
   const emptyImageTarget = useMemo(() => {
     switch (__PLATFORM__) {
@@ -55,7 +57,9 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
           props.descriptionReactNode
         ) : (
           <div className={styles['yakit-empty']}>
-            <div className={classNames(styles['yakit-empty-title'], titleClassName)}>{title || '暂无数据'}</div>
+            <div className={classNames(styles['yakit-empty-title'], titleClassName)}>
+              {title || t('YakitEmpty.noData')}
+            </div>
             <div className={styles['yakit-empty-description']}>{props.description}</div>
           </div>
         )

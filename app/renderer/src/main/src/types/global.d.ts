@@ -486,6 +486,15 @@ interface ChildWindowPayload {
 interface ConsoleThemePayload {
   xtermThemeVars: Record<string, unknown>
 }
+interface YakitHomeConfig {
+  YAKIT_HOME: string
+  lang: string
+  mode: string
+  workspaceHistory: string[]
+  autoStart: boolean
+  currentHome: string
+  configDir: string
+}
 
 interface OpenFileDialogOptions {
   title?: string
