@@ -35,6 +35,7 @@ export interface WebFuzzerNewEditorProps {
   }
   privacy?: boolean
   foldBinaryFuzztag?: boolean
+  onFoldBinaryFuzztagChange?: (enabled: boolean) => void
 }
 export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
   React.forwardRef((props, ref) => {
@@ -54,6 +55,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       hex,
       privacy,
       foldBinaryFuzztag = true,
+      onFoldBinaryFuzztagChange,
     } = props
     const { t, i18n } = useI18nNamespaces(['webFuzzer'])
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -182,6 +184,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
           privacy,
           showHostHint: true,
           foldBinaryFuzztag,
+          onFoldBinaryFuzztagChange,
         }}
         title={
           <span style={{ fontSize: 12 }}>
