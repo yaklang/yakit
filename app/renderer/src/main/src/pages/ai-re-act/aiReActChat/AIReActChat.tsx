@@ -162,7 +162,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           mentionType: 'focusMode',
           mentionName: params.FocusModeLoop || '',
         })
+
         onStart({
+          token: session,
           params,
         })
       }

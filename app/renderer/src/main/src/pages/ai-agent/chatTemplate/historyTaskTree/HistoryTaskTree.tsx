@@ -207,6 +207,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
     } else if (activeChat?.SessionID && getSetting) {
       const session = activeChat?.SessionID
       onStart({
+        token: session,
         params: {
           IsStart: true,
           Params: {

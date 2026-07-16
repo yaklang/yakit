@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useRef, useState } from 'react'
 import { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 import { AIAgentTriggerEventInfo } from '../aiAgentType'
 import useAIAgentStore from '../useContext/useStore'
@@ -78,144 +78,18 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Task_Content }))
     }, 100)
   })
-
-  // review数据中树的数据中需要的解释和关键词工具
-  // const [planReviewTreeKeywordsMap, { set: setPlanReviewTreeKeywords, reset: resetPlanReviewTreeKeywords }] = useMap<
-  //   string,
-  //   AIAgentGrpcApi.PlanReviewRequireExtra
-  // >(new Map())
-
-  // const [reviewInfo, setReviewInfo] = useState<AIChatQSData>()
-
-  // @deprecated
-  // const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
-  //   // setReviewExpand(true)
-  //   setReviewInfo(cloneDeep(info))
-  // })
-  // @deprecated
-  // const handleShowReviewExtra = useMemoizedFn((info: AIAgentGrpcApi.PlanReviewRequireExtra) => {
-  //   setPlanReviewTreeKeywords(info.index, info)
-  // })
-  // @deprecated
-  // const handleReleaseReview = useMemoizedFn((type: ChatIPCSendType, id: string) => {
-  //   if (!reviewInfo) return
-  //   if ((reviewInfo.data as AIReviewType).id === id) {
-  //     // if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
-  //     handleStopAfterChangeState()
-  //   }
-  // })
-
-  // @deprecated 提问结束后缓存数据
-  // const handleChatingEnd = useMemoizedFn(() => {
-  //   handleStopAfterChangeState()
-  // })
-
-  // @deprecated
-  // const setSessionChatName = (session: string, name: string) => {
-  //   setActiveChat?.((prev) => {
-  //     if (!prev) return prev
-  //     if (prev.SessionID !== session) return prev
-  //     return { ...prev, Title: name }
-  //   })
-  //   emiter.emit(
-  //     'sessionData',
-  //     JSON.stringify({
-  //       type: 'updateSession',
-  //       sessionId: session,
-  //       updates: { Title: name },
-  //     }),
-  //   )
-  // }
-
-  // @deprecated
-  // const [syncIdInfoMap, { set: setSyncIdInfoMap, get: getSyncIdInfoMap, remove: removeSyncIdInfoMap }] = useMap<
-  //   string,
-  //   boolean
-  // >(new Map())
-
-  // @deprecated
-  // const onSyncIDChange = useMemoizedFn((syncID: string) => {
-  //   const item = getSyncIdInfoMap(syncID)
-  //   if (!!item) {
-  //     removeSyncIdInfoMap(syncID)
-  //   }
-  // })
-
   /** 等自由对话渲染出来再发送 */
   const handleStart = useMemoizedFn((value: HandleStartParams) => {
     setTimeout(() => {
       aiReActChatRef.current?.handleStart(value)
     })
   })
-  // @deprecated
-  // const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
-  //   handleSendInteractiveMessage(params, 'casual')
-  // })
-  // @deprecated
-  // const handleSendTask = useMemoizedFn((params: AIChatIPCSendParams) => {
-  //   handleSendInteractiveMessage(params, 'task')
-  // })
-  // @deprecated
-  // const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
-  //   handleSendInteractiveMessage(params, '')
-  // })
-  // /**发送 @deprecated IsInteractiveMessage 消息 */
-  // const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
-  //   const { value, id, optionValue } = params
-  //   if (!sessionId) return
-  //   if (!id) return
-
-  //   const info: AIInputEvent = {
-  //     IsInteractiveMessage: true,
-  //     InteractiveId: id,
-  //     InteractiveJSONInput: value,
-  //   }
-  //   onSend({ token: sessionId, type, params: info, optionValue })
-  //   handleStopAfterChangeState()
-  // })
-  // /** @deprecated 发送 IsSyncMessage 消息 */
-  // const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
-  //   if (!sessionId) return
-  //   const { syncType, SyncJsonInput, params, syncID } = data
-  //   const info: AIInputEvent = {
-  //     IsSyncMessage: true,
-  //     SyncType: syncType,
-  //     SyncJsonInput,
-  //     Params: params,
-  //     SyncID: syncID || randomString(8),
-  //   }
-  //   info.SyncID && setSyncIdInfoMap(info.SyncID, true)
-  //   onSend({ token: sessionId, type: '', params: info })
-  // })
-
-  // /**
-  //  * @deprecated 发送 IsConfigHotpatch 消息 */
-  // const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
-  //   if (!sessionId) return
-  //   const { hotpatchType, params, taskId } = data
-  //   const info: AIInputEvent = {
-  //     IsConfigHotpatch: true,
-  //     HotpatchType: hotpatchType,
-  //     Params: params,
-  //   }
-  //   if (!!taskId) {
-  //     info.TaskId = taskId
-  //   }
-  //   onSend({ token: sessionId, type: '', params: info })
-  // })
 
   const onStop = useMemoizedFn(() => {
     if (execute && sessionId) {
       onClose([sessionId])
     }
   })
-  /** @deprecated 停止回答后的状态调整||清空Review状态 */
-  // const handleStopAfterChangeState = useMemoizedFn(() => {
-  //   // 清空review信息
-  //   setReviewInfo(undefined)
-  //   resetPlanReviewTreeKeywords()
-  //   // setReviewExpand(true)
-  // })
 
   useEffect(() => {
     getRemoteValue(RemoteAIAgentGV.AIAgentReplaceForgeNoPrompt)
@@ -274,30 +148,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       emiter.off('onReActChatEvent', onEvents)
     }
   }, [])
-
-  useUpdateEffect(() => {
-    onHistoryAfter()
-  }, [activeChat?.SessionID])
-
-  /** 切换历史后的处理逻辑
-   *  切换历史后，如果选中的会话没有建立链接，需要启动grpc链接
-   */
-  const onHistoryAfter = useMemoizedFn(() => {
-    if (mode === 'welcome') {
-      setMode('re-act')
-      if (!execute) {
-        handleStart({
-          qs: '',
-        })
-      }
-    } else {
-      if (!execute) {
-        aiReActChatRef.current?.handleStart({
-          qs: '',
-        })
-      }
-    }
-  })
 
   //#region 使用 AI-Forge 模板/Tool 相关逻辑
   const [activeTool, setActiveTool] = useState<AITool>()
