@@ -1,4 +1,4 @@
-import type { FC, memo } from 'react'
+import { type FC, memo } from 'react'
 import ContextPressurePanel from './ContextPressurePanel'
 import ContextCostPanel from './ContextCostPanel'
 import ContextTokenSummary from './ContextTokenSummary'

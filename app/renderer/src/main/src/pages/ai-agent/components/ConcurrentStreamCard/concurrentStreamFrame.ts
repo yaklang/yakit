@@ -1,4 +1,5 @@
 import type { AIChatQSData, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
+import { isMap } from 'lodash'
 
 export interface ConcurrentStreamFramePayload {
   session: string
@@ -17,6 +18,7 @@ export function isConcurrentStreamFrame(data: unknown): data is ConcurrentStream
     typeof record.session === 'string' &&
     typeof record.token === 'string' &&
     typeof record.chatType === 'string' &&
-    Array.isArray(record.childrenTokens)
+    Array.isArray(record.childrenTokens) &&
+    isMap(record.rawData)
   )
 }

@@ -11,7 +11,6 @@ import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { useMemoizedFn, useSize } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import useAIAgentStore from '../../useContext/useStore'
-import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 
@@ -91,20 +90,20 @@ const TimelineCard: FC = () => {
   const timelinesLoading = useStore(store, (state) => state.requestHistoryState.timelinesLoading)
 
   /** TODO - 等待hooks */
-  const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
+  // const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
   const { virtuosoRef, handleTotalListHeightChanged, setScrollerRef, setIsAtBottomRef } = useVirtuosoAutoScroll({
     total: reActTimelines.length,
   })
   const containerRef = useRef<HTMLDivElement>(null)
   const size = useSize(containerRef)
 
-  const { firstItemIndex, handleLoadMore } = useLoadHistory({
-    loading: timelinesLoading,
-    dataLength: reActTimelines.length,
-    SessionID: activeChat?.SessionID || '',
-    fetchHasMore: () => handleHasMoreHistory('timelines'),
-    loadMore: () => handleLoadMoreHistory('timelines'),
-  })
+  // const { firstItemIndex, handleLoadMore } = useLoadHistory({
+  //   loading: timelinesLoading,
+  //   dataLength: reActTimelines.length,
+  //   SessionID: activeChat?.SessionID || '',
+  //   fetchHasMore: () => handleHasMoreHistory('timelines'),
+  //   loadMore: () => handleLoadMoreHistory('timelines'),
+  // })
 
   const components = useMemo<Components<AIAgentGrpcApi.TimelineItem>>(
     () => ({
@@ -129,7 +128,7 @@ const TimelineCard: FC = () => {
       <YakitSpin spinning={timelinesLoading}>
         <Virtuoso
           ref={virtuosoRef}
-          firstItemIndex={firstItemIndex}
+          // firstItemIndex={firstItemIndex}
           data={reActTimelines}
           components={components}
           scrollerRef={setScrollerRef}
@@ -140,7 +139,7 @@ const TimelineCard: FC = () => {
           increaseViewportBy={{ top: 300, bottom: 300 }}
           atBottomThreshold={100}
           skipAnimationFrameInResizeObserver
-          startReached={handleLoadMore}
+          // startReached={handleLoadMore}
           itemContent={itemContent}
         />
       </YakitSpin>

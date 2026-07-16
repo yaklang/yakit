@@ -20,6 +20,7 @@ import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import useDebounceFn from 'ahooks/lib/useDebounceFn'
 
 export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])

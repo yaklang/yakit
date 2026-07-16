@@ -32,7 +32,6 @@ import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitR
 import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
 import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
@@ -214,7 +213,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   const rawData = useCurrentRawData()
   const meta = useCurrentMeta()
   /** TODO - hooks未写 */
-  const { handleLoadMoreHistory, handleHasMoreHistory, fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
+  // const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
   useUpdateEffect(() => {
     scrollToIndex('LAST')
   }, [scrollToBottom])
@@ -234,13 +233,13 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   }, [highlightedItem])
 
   // 向上滚动加载
-  const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
-    loading: taskLoadMoreLoading,
-    dataLength: streams.length,
-    SessionID: session,
-    fetchHasMore: () => handleHasMoreHistory(TYPE),
-    loadMore: () => handleLoadMoreHistory(TYPE),
-  })
+  // const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
+  //   loading: taskLoadMoreLoading,
+  //   dataLength: streams.length,
+  //   SessionID: session,
+  //   fetchHasMore: () => handleHasMoreHistory(TYPE),
+  //   loadMore: () => handleLoadMoreHistory(TYPE),
+  // })
 
   const {
     virtuosoRef,
@@ -249,7 +248,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     scrollToIndex,
     scrollToItemIndex: scrollToListItem,
     handleTotalListHeightChanged,
-  } = useVirtuosoAutoScroll({ total: streams.length, isPrependingRef })
+  } = useVirtuosoAutoScroll({
+    total: streams.length,
+    // isPrependingRef
+  })
 
   const { locateToIndex } = useChatStreamLocateHighlight({
     scrollToIndex: scrollToListItem,
@@ -260,15 +262,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     scrollToIndex('LAST')
   }, [scrollToBottom])
 
-  const renderItem = useCallback(
-    (index: number, stream: ReActChatRenderElement) => {
-      if (!stream.token) return null
-      const arrayIndex = index - firstItemIndex
-      const hasNext = streams.length - arrayIndex > 1
-      return <AIChatListItem key={stream.token} hasNext={hasNext} item={stream} type="task-agent" />
-    },
-    [firstItemIndex, streams.length],
-  )
+  const renderItem = useCallback((index: number, stream: ReActChatRenderElement) => {
+    if (!stream.token) return null
+    return <AIChatListItem key={stream.token} item={stream} />
+  }, [])
   const Item = useCallback(
     ({ children, style, 'data-index': dataIndex }) => (
       <div style={style} data-index={dataIndex} className={styles['item-wrapper']}>
@@ -327,7 +324,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         ref={virtuosoRef}
         key={session}
         scrollerRef={setScrollerRef}
-        firstItemIndex={firstItemIndex}
+        // firstItemIndex={firstItemIndex}
         atBottomStateChange={setIsAtBottomRef}
         style={{ height: '100%', width: '100%' }}
         data={streams}
@@ -337,10 +334,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         atBottomThreshold={100}
         initialTopMostItemIndex={streams.length > 1 ? streams.length - 1 : 0}
         skipAnimationFrameInResizeObserver
-        // overscan={20}
-        // atTopStateChange={handleAtTopStateChange}
-        startReached={handleLoadMore}
-        // increaseViewportBy={{top: 160, bottom: 160}}
+        // startReached={handleLoadMore}
         components={components}
       />
     </div>
