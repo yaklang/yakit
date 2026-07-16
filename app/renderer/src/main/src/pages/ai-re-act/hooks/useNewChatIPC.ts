@@ -40,12 +40,12 @@ export function useChatIPC() {
     globalSessionEngine.handleSendMessage(payload)
   })
 
-  const onClose = useMemoizedFn((sessionId: string[]) => {
+  const onClose = useMemoizedFn((sessionIds: string[]) => {
     /** globalSessionEngine.forceCloseSession
      * TODO - 需要AISource且支持多个会话关闭
      * TODO - sessionId传[]:清除source下的所有会话
      */
-    // globalSessionEngine.forceCloseSession(sessionId, params.source)
+    // globalSessionEngine.forceCloseSession({ sessionIds })
   })
 
   // 组件卸载时拔插头，清理闭环

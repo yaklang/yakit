@@ -13,7 +13,6 @@ import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useC
 import useCreation from 'ahooks/lib/useCreation'
 import { useStore } from 'zustand'
 import { AIGroupStreamCardHeardWrapperProps, AIGroupStreamCardListWrapperProps } from './type'
-import { useMemoizedFn } from 'ahooks'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import AIGroupStreamCardHeard from './aiGroupStreamCardHeard/AIGroupStreamCardHeard'
 import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList'
@@ -164,74 +163,58 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
 
-  const childrenTokensLength = useStore(store, (state) => state.groups[token].childrenTokens.length)
-
   const chatLength = useStore(store, (state) => state.casualChat.elements.length)
   const taskChatLength = useStore(store, (state) => state.taskChat.elements.length)
+  const renderNum = useStore(store, (state) => state.groups[token]?.renderNum)
 
-  const getFirstItem = useMemoizedFn(() => {
-    const group = store.getState().groups[token]
-    if (!group) return
-    // 有组数据的时候，childrenTokens肯定会有数据
-    const firstItemToken = group.childrenTokens[0]
-    const firstItem = rawData.contents.get(firstItemToken)
-    return firstItem
-  })
+  /** 可能存在第一次拿到的数据为undefined  */
+  const groupData = useCreation(() => {
+    return rawData.contents.get(token)
+  }, [renderNum])
 
-  const chatType = useCreation(() => {
-    const firstItem = getFirstItem()
-    if (!firstItem) return
-    return firstItem.chatType
-  }, [])
-
-  const hasNext = useCreation(() => {
-    if (expand === false) return false
-    if (perHasNext.current === false) return false
-    if (chatType === 'reAct') {
-      perHasNext.current = store.getState().casualChat.elements[chatLength - 1].token === token
-      return perHasNext.current
-    }
-    perHasNext.current = store.getState().taskChat.elements[taskChatLength - 1].token === token
-    return perHasNext.current
-  }, [chatLength, taskChatLength])
-
-  const nodeLabel = useCreation(() => {
-    const firstItem = getFirstItem()
-    if (!firstItem) return
-    switch (firstItem.type) {
-      case AIChatQSDataTypeEnum.STREAM:
-        return getLabelByParams(firstItem.data?.NodeIdVerbose)
+  const lastToken = useCreation(() => {
+    if (!groupData) return ''
+    switch (groupData.type) {
+      case AIChatQSDataTypeEnum.STREAM_GROUP:
+        return groupData.data.lastToken
 
       default:
         return ''
     }
-  }, [])
+  }, [renderNum])
+
+  const lastItemRenderNum = useStore(store, (state) => state.items[lastToken]?.renderNum)
+
+  const isLastActiveGroup = useCreation(() => {
+    if (expand === false) return false
+    if (perHasNext.current === false) return false
+    if (groupData?.chatType === 'reAct') {
+      perHasNext.current = store.getState().casualChat.elements[chatLength - 1]?.token === token
+      return perHasNext.current
+    }
+    perHasNext.current = store.getState().taskChat.elements[taskChatLength - 1]?.token === token
+    return perHasNext.current
+  }, [chatLength, taskChatLength, groupData?.chatType])
+
+  const nodeLabel = useCreation(() => {
+    if (!groupData) return ''
+    switch (groupData.type) {
+      case AIChatQSDataTypeEnum.STREAM_GROUP:
+        return getLabelByParams(groupData.data?.NodeIdVerbose)
+
+      default:
+        return ''
+    }
+  }, [renderNum])
 
   useEffect(() => {
-    if (hasNext) {
+    if (isLastActiveGroup) {
       setExpand(false)
     }
-  }, [hasNext])
-
-  const getLastItem = useMemoizedFn(() => {
-    const group = store.getState().groups[token]
-    if (!group) return
-    const length = group.childrenTokens.length
-    // 有组数据的时候，childrenTokens肯定会有数据
-    const lastItemToken = group.childrenTokens[length - 1]
-    if (!lastItemToken) return
-    const lastItem = rawData.contents.get(lastItemToken)
-    return lastItem
-  })
-
-  const lastToken = useCreation(() => {
-    const lastItem = getLastItem()
-    if (!lastItem) return ''
-    return lastItem.id
-  }, [])
+  }, [isLastActiveGroup])
 
   const shouldShowMask = useMemo(() => {
-    const lastItem = getLastItem()
+    const lastItem = rawData.contents.get(lastToken)
     if (!lastItem) return false
     switch (lastItem.type) {
       case AIChatQSDataTypeEnum.STREAM:
@@ -241,11 +224,10 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
       default:
         return false
     }
-  }, [childrenTokensLength])
+  }, [lastToken, lastItemRenderNum])
 
   return (
     <AIGroupStreamCardHeard
-      itemData={undefined} // TODO - 需要补充该数据
       expand={expand}
       setExpand={setExpand}
       lastToken={lastToken}

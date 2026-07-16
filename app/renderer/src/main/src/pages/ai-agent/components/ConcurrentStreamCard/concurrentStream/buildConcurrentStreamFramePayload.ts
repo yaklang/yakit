@@ -1,13 +1,10 @@
 import type { OpenAIConcurrentStreamPayload } from '@/utils/openWebsite'
-import { AIChatQSDataTypeEnum, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum, ChatStoreState, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIItemKind, getAIItemKind } from '@/pages/ai-re-act/hooks/useAIItemKind'
 
 /** store 的最小依赖接口 */
 interface BuildFrameStore {
-  getState: () => {
-    tasks: Record<string, { childrenTokens?: string[] } | undefined>
-    items: Record<string, unknown>
-    groups: Record<string, { childrenTokens?: string[]; type?: string } | undefined>
-  }
+  getState: () => ChatStoreState
 }
 
 interface BuildFrameRawData {
@@ -23,11 +20,9 @@ export interface BuildConcurrentStreamFramePayloadParams {
 }
 
 /** 判断 childToken 在 store 中的类型 */
-function getKind(store: BuildFrameStore, childToken: string): 'item' | 'group' | null {
+function getKind(store: BuildFrameStore, childToken: string): AIItemKind | null {
   const state = store.getState()
-  if (state.items[childToken]) return 'item'
-  if (state.groups[childToken]) return 'group'
-  return null
+  return getAIItemKind(state, childToken)
 }
 
 /** 获取 task 节点的名称 */

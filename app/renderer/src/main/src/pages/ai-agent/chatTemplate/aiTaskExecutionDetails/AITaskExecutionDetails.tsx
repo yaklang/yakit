@@ -78,11 +78,10 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     if (!taskId) return
     let itemData: PlanItemDetailsData | undefined = undefined
     if (taskId.includes('react')) {
-      // const casualChat = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat
-      const casualChat = rawData.casualChat
+      const { casualChat } = rawData
       itemData = casualChat?.planDetailsMap.get(taskId)
       if (!itemData && casualChat?.planDetails.taskId === taskId) {
-        itemData = rawData.casualChat.planDetails
+        itemData = casualChat.planDetails
       }
     } else {
       const planDetailsMap = rawData.taskChat.planDetailsMap

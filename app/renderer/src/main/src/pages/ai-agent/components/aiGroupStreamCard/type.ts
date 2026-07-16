@@ -1,10 +1,8 @@
-import { ChatTaskDefaultGroup } from '@/pages/ai-re-act/hooks/aiRender'
 import { Dispatch, SetStateAction } from 'react'
 
 export interface AIGroupStreamCardHeardProps {
   expand: boolean
   setExpand: Dispatch<SetStateAction<boolean>>
-  itemData?: ChatTaskDefaultGroup
   lastToken: string
   nodeLabel: string
   shouldShowMask: boolean

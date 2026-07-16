@@ -75,7 +75,9 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
   useDebounceEffect(
     () => {
       if (!isClearMemory) return
-      /** TODO - 需要hooks告诉UI层，此次关闭的type(来源) */
+      /** TODO - 需要hooks告诉UI层，此次关闭的type(来源)
+       * 二次讨论：改为onClose中传回调事件
+       */
       ipcRenderer.once(`${sessionId}-end`, () => {
         onClearMemory()
         setIsClearMemory(false)

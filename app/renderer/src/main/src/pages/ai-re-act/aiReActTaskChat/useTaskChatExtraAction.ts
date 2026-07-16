@@ -1,26 +1,41 @@
-import { useMemoizedFn } from 'ahooks'
 import { type AIInputEvent, AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import { useStore } from 'zustand'
-import { useCurrentStore, useCurrentMeta } from '../hooks/useCurrentDataBySession'
+import { useCurrentStore, useCurrentMeta, useCurrentRawData } from '../hooks/useCurrentDataBySession'
+import useCreation from 'ahooks/lib/useCreation'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 /**
  * 只适用于任务规划的content footer下，不适用于子任务的上的继续
- * TODO -需要更新为最新的
  */
 export const useTaskChatExtraAction = () => {
-  /** TODO - 数据未对接 */
-  // const { reviewInfo, chatIPCData } = useChatIPCStore()
-
   const { onSend } = useAIAgentDispatcher()
 
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
+
+  const rawData = useCurrentRawData()
   const meta = useCurrentMeta()
-  const taskStatus = useStore(store, (state) => state.taskStatus)
   const execute = useStore(store, (state) => state.execute)
+
+  const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
+
+  const reviewInfo = useCreation(() => {
+    return rawData.contents.get(currentPlanReviewToken.token)
+  }, [currentPlanReviewToken.renderNum])
+
+  /**
+   * 停止任务后会返回结束标识，然后清空review id
+   * 防止hooks出现意外，UI层暂时保留该逻辑
+   */
+  const closeChatReview = useMemoizedFn(() => {
+    if (!!reviewInfo) {
+      globalSessionEngine.closeChatReview(sessionId, reviewInfo.chatType, reviewInfo.id)
+    }
+  })
 
   const sendReactCancelTask = useMemoizedFn(() => {
     const taskId = meta.currentTaskPlanID?.taskID
@@ -50,10 +65,7 @@ export const useTaskChatExtraAction = () => {
   /**取消当前指定任务 */
   const onStopTask = useMemoizedFn(() => {
     sendReactCancelTask()
-    /** TODO - 可以删除该代码，原因：停止任务后会返回结束标识，然后清空review id*/
-    // if (!!reviewInfo) {
-    //   chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
-    // }
+    closeChatReview()
     onSendPlayHistoryList()
   })
   /**取消当前执行的子任务 */
@@ -66,10 +78,8 @@ export const useTaskChatExtraAction = () => {
       SyncID: randomString(8),
     }
     onSend({ token: sessionId, type: 'task', params: info })
-    /** TODO - 目前多任务并发，出现子任务后review自动走的继续执行，不会出现review */
-    // if (!!reviewInfo) {
-    //   chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
-    // }
+    /** 目前多任务并发，出现子任务后review自动走的继续执行，不会出现review */
+    closeChatReview()
     setTimeout(() => {
       onSendPlayHistoryList()
     }, 500)
@@ -89,11 +99,7 @@ export const useTaskChatExtraAction = () => {
     }
     onSend({ token: sessionId, type: 'task', params })
     meta.currentTaskPlanID = undefined
-
-    /** TODO - 可以删除该代码，原因：停止任务后会返回结束标识，然后清空review id，则在review弹窗中不会出现继续执行的按钮 */
-    // if (!!reviewInfo) {
-    //   chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
-    // }
+    closeChatReview()
   })
 
   const onExtraAction = useMemoizedFn((type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => {
