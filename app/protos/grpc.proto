@@ -2019,6 +2019,7 @@ message AITool {
   int64 CreatedAt = 10;
   int64 UpdatedAt = 11;
   bool IsBuiltin = 12;
+  I18n VerboseNameI18n = 13;
 }
 
 message GetAIToolListResponse {
