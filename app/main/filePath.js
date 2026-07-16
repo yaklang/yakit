@@ -13,7 +13,21 @@ const DEFAULT_CONFIG = {
   autoStart: false,
 }
 
-// --- config.json 相关 ---
+// --- 版本环境变量映射 ---
+const getVersionEnvVarName = () => {
+  const appName = app.getName()
+  // 根据应用名称映射到对应的环境变量
+  const envVarMap = {
+    Yakit: 'YAKIT_HOME',
+    EnpriTraceAgent: 'ENPRITRACEAGENT_HOME',
+    EnpriTrace: 'ENPRITRACE_HOME',
+    IRify: 'IRIFY_HOME',
+    IRifyEnpriTrace: 'IRIFYENPRITRACE_HOME',
+    'Memfit AI': 'MEMFITAI_HOME',
+  }
+  const envVar = envVarMap[appName] || 'YAKIT_HOME'
+  return envVar
+}
 
 /**
  * 获取应用配置目录（只存放 config.json）
@@ -92,8 +106,12 @@ const getYakitHome = () => {
     const config = getConfig()
     let homePath = config.YAKIT_HOME
 
-    if (!homePath && process.env.YAKIT_HOME) {
-      homePath = process.env.YAKIT_HOME
+    // 获取当前版本对应的环境变量名
+    const envVarName = getVersionEnvVarName()
+
+    // 读取版本专属环境变量
+    if (!homePath && process.env[envVarName]) {
+      homePath = process.env[envVarName]
     }
 
     if (!homePath) {
