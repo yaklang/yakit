@@ -223,7 +223,6 @@ export const WebFuzzerApiDoc: React.FC<{
   })
 
   const applyDocument = useMemoizedFn((result: DocResult) => {
-    console.log(result, 'result')
     setDocId(result.docId)
     setDocInfo(result.docInfo)
     setOperations(result.operations)
@@ -315,7 +314,7 @@ export const WebFuzzerApiDoc: React.FC<{
     <div className={styles['api-doc']} style={{ display: visible ? undefined : 'none' }}>
       <div className={styles['header']}>
         <div className={styles['header-top']}>
-          <div className={styles['header-title']}>
+          <div className={styles['header-title']} style={parsing ? { visibility: 'hidden' } : {}}>
             {docInfo?.title && (
               <>
                 <OutlineBookopenIcon className={styles['header-icon']} />
@@ -358,7 +357,7 @@ export const WebFuzzerApiDoc: React.FC<{
           </div>
         </div>
         {!!docInfo?.version && (
-          <div className={styles['version']}>
+          <div className={styles['version']} style={parsing ? { visibility: 'hidden' } : {}}>
             {t('ApiDoc.version')}: {docInfo.version}
           </div>
         )}
