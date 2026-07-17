@@ -17,7 +17,7 @@ import './yakitCheckBoxAnimation.scss'
  * @param {string} wrapperClassName
  */
 export const YakitCheckbox: React.FC<YakitCheckboxProps> = (props) => {
-  const { wrapperClassName } = props
+  const { wrapperClassName, ...restProps } = props
   return props.children ? (
     <span
       className={classNames(
@@ -26,11 +26,11 @@ export const YakitCheckbox: React.FC<YakitCheckboxProps> = (props) => {
         wrapperClassName,
       )}
     >
-      <Checkbox {...props}>{props.children}</Checkbox>
+      <Checkbox {...restProps}>{props.children}</Checkbox>
     </span>
   ) : (
     <span className={classNames(styles['yakit-checkbox-wrapper'], wrapperClassName)}>
-      <Checkbox {...props} />
+      <Checkbox {...restProps} />
     </span>
   )
 }
