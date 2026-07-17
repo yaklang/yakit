@@ -3190,7 +3190,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                       streamInfo={streamInfo}
                       runtimeId={runtimeId}
                       loading={loading}
-                      defaultActiveKey={'Codec结果'}
+                      pluginType="codec"
                       pluginExecuteResultWrapper={styles['plugin-execute-result-wrapper']}
                     />
                   </div>

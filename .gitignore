@@ -1,3 +1,4 @@
+.zcode/
 bins/database/*.gzip
 bins/yak.zip
 bins/engine-version.txt

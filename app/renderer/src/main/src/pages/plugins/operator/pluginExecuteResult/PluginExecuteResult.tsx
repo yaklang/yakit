@@ -50,7 +50,14 @@ import { QueryRisksRequest } from '@/pages/risks/YakitRiskTable/YakitRiskTableTy
 import { defQueryRisksRequest } from '@/pages/risks/YakitRiskTable/constants'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { apiQueryRisksTotalByRuntimeId } from '@/pages/risks/YakitRiskTable/utils'
-import { OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon } from '@/assets/icon/outline'
+import {
+  OutlineChartpieIcon,
+  OutlineDocumenttextIcon,
+  OutlineLogIcon,
+  OutlineTableIcon,
+  OutlineTerminalIcon,
+} from '@/assets/icon/outline'
+import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
 import { LocalList, LocalPluginLog, LocalText } from './LocalPluginLog'
 import { CodeScanResult } from '@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable'
 import { YakitAuditHoleTable } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
@@ -59,6 +66,10 @@ import { ErrorBoundary } from 'react-error-boundary'
 import moment from 'moment'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
+import { setClipboardText } from '@/utils/clipboard'
+import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+
+const { ipcRenderer } = window.require('electron')
 
 const { TabPane } = PluginTabs
 
@@ -71,9 +82,12 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     pluginExecuteResultWrapper = '',
     PluginTabsRightNode,
     isCrawler = false,
+    pluginType,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitRoute'])
-
+  const handleChangeActiveKeyRef = useRef<boolean>(false)
+  const [activeKey, setActiveKey] = useState<string | undefined>(undefined)
+  const prevLoadingRef = useRef<boolean>(false)
   const [allTotal, setAllTotal] = useState<number>(0)
   const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
   const [interval, setInterval] = useState<number | undefined>(1000)
@@ -162,11 +176,18 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
   })
 
   const showTabs = useMemo(() => {
-    if (!tempTotal && !streamInfo.tabsState.find((item) => item.type === 'ssa-risk')) {
-      return streamInfo.tabsState.filter((item) => item.tabName !== t('YakitRoute.vulnerabilityAndrisk'))
+    let tabs = streamInfo.tabsState
+    // Codec 插件不展示 HTTP 流量 tab
+    if (pluginType === 'codec') {
+      tabs = tabs.filter((item) => item.type !== 'http')
     }
-    return streamInfo.tabsState
-  }, [streamInfo.tabsState, tempTotal])
+    if (!tempTotal && !tabs.find((item) => item.type === 'ssa-risk')) {
+      return tabs.filter((item) => item.tabName !== t('YakitRoute.vulnerabilityAndrisk'))
+    }
+    return tabs
+  }, [streamInfo.tabsState, tempTotal, pluginType, i18n.language])
+  const showTabsRef = useRef(showTabs)
+  showTabsRef.current = showTabs
 
   const tabBarRender = useMemoizedFn((tab: HoldGRPCStreamProps.InfoTab, length: number) => {
     if (tab.type === 'risk') {
@@ -175,6 +196,22 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
           {tab.tabName}
           <span className={styles['plugin-execute-result-tabBar']}>{length}</span>
         </>
+      )
+    }
+    if (tab.type === 'table') {
+      return (
+        <span className={styles['tab-with-icon']}>
+          <OutlineTableIcon />
+          {tab.tabName}
+        </span>
+      )
+    }
+    if (tab.type === 'text') {
+      return (
+        <span className={styles['tab-with-icon']}>
+          <OutlineDocumenttextIcon />
+          {tab.tabName}
+        </span>
       )
     }
 
@@ -199,6 +236,61 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     if (allTotal > 0) return allTotal
     return tempTotal
   }, [allTotal, tempTotal])
+  // 初始化 activeKey：兼容外部传入 defaultActiveKey 和 codec 插件逻辑
+  useEffect(() => {
+    if (defaultActiveKey) {
+      setActiveKey(defaultActiveKey)
+    } else if (pluginType === 'codec') {
+      setActiveKey('执行结果')
+    } else {
+      const logTab = showTabsRef.current.find((tab) => tab.type === 'log')
+      if (logTab) setActiveKey(logTab.tabName)
+    }
+  }, [defaultActiveKey, pluginType])
+
+  // 插件执行结束后（loading: true -> false），自动切换到最合适的 Tab
+  useEffect(() => {
+    if (prevLoadingRef.current && !loading && !handleChangeActiveKeyRef.current) {
+      const tabs = showTabsRef.current
+      const builtinTypes = new Set(['http', 'log', 'console', 'risk'])
+      const customTabs = tabs.filter((tab) => !builtinTypes.has(tab.type))
+
+      // 统一收口：只有未手动切换过 Tab 时，才执行 setActiveKey
+      const safeSetActiveKey = (key: string | undefined) => {
+        if (!handleChangeActiveKeyRef.current) setActiveKey(key)
+      }
+
+      if (customTabs.length > 0) {
+        safeSetActiveKey(customTabs[0].tabName)
+      } else {
+        const httpTab = tabs.find((tab) => tab.type === 'http')
+        if (httpTab && runtimeId) {
+          ipcRenderer
+            .invoke('QueryHTTPFlows', {
+              RuntimeId: runtimeId,
+              Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'Id' },
+            })
+            .then((rsp: { Total: number }) => {
+              if (rsp.Total > 0) {
+                safeSetActiveKey(httpTab.tabName)
+              } else {
+                const logTab = tabs.find((tab) => tab.type === 'log')
+                safeSetActiveKey(logTab?.tabName || tabs[0]?.tabName)
+              }
+            })
+            .catch(() => {
+              const logTab = tabs.find((tab) => tab.type === 'log')
+              safeSetActiveKey(logTab?.tabName || tabs[0]?.tabName)
+            })
+        } else {
+          const logTab = tabs.find((tab) => tab.type === 'log')
+          safeSetActiveKey(logTab?.tabName || tabs[0]?.tabName)
+        }
+      }
+    }
+    prevLoadingRef.current = loading
+  }, [loading])
+
   return (
     <div className={classNames(styles['plugin-execute-result'], pluginExecuteResultWrapper)}>
       {cardState.length > 0 && (
@@ -207,7 +299,14 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         </div>
       )}
       {showTabs.length > 0 && (
-        <PluginTabs defaultActiveKey={defaultActiveKey} tabBarExtraContent={{ right: PluginTabsRightNode }}>
+        <PluginTabs
+          activeKey={activeKey}
+          onChange={(key) => {
+            handleChangeActiveKeyRef.current = true
+            setActiveKey(key)
+          }}
+          tabBarExtraContent={{ right: PluginTabsRightNode }}
+        >
           {showTabs.map((ele) => (
             <TabPane
               tab={tabBarRender(ele, showRiskTotal)}
@@ -579,7 +678,7 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
     tableInfo: { columns = [], data = [], name = '' },
   } = props
   const { t } = useI18nNamespaces(['plugin', 'yakitUi'])
-  const [tableData, setTableData] = useState(data)
+  const [tableData, setTableData, getTableData] = useGetSetState(data)
   const [columnsData, setColumnsData] = useState(columns)
 
   const [sorterTable, setSorterTable] = useState<SortProps>()
@@ -614,12 +713,28 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
     if (!item) return
     const newColumns = columns.map((ele) => ({
       ...ele,
+      // 所有列均启用排序，数字列按数值排序，字符串列按字符序排序
       sorterProps: {
-        sorter: !Number.isNaN(Number(item[ele.dataKey])),
+        sorter: true,
       },
       filterProps: {
         filtersType: 'input',
       },
+      // 每列筛选旁增加复制按钮，点击复制该列数据到剪贴板
+      afterIconExtra: (
+        <div
+          className={styles['custom-table-copy-column']}
+          onClick={(e) => {
+            e.stopPropagation()
+            const colData = getTableData()
+              .map((row) => row[ele.dataKey])
+              .join('\n')
+            setClipboardText(colData)
+          }}
+        >
+          <DocumentDuplicateSvgIcon />
+        </div>
+      ),
     }))
     setColumnsData(newColumns)
   })

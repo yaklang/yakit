@@ -292,7 +292,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
           Field: 'Input',
           FieldVerbose: 'Input',
           Required: true,
-          TypeVerbose: 'yak',
+          TypeVerbose: 'text',
           DefaultValue: '',
           Help: 'Input',
         }
@@ -647,7 +647,12 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                       </div>
                     )}
                     <div className={styles['result-body']}>
-                      <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
+                      <PluginExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        pluginType={pluginType}
+                      />
                     </div>
                   </>
                 ) : (

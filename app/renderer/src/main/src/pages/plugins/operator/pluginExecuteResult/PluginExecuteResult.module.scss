@@ -1,4 +1,5 @@
 @use '../../plugins.scss';
+
 .plugin-execute-result {
   @extend %display-column-center;
   justify-content: flex-start;
@@ -8,6 +9,7 @@
   padding-top: 12px;
   min-height: 500px;
   height: 100%;
+
   .plugin-execute-result-wrapper {
     @extend %display-column-center;
     gap: 12px;
@@ -17,9 +19,9 @@
     display: inline-block;
     margin-left: 4px;
     padding: 0px 8px;
-    background: #f6544a;
+    background: var(--Colors-Use-Red-Primary);
     border-radius: 8px;
-    color: #fff;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     font-size: 12px;
     font-weight: 400;
     line-height: 16px;
@@ -34,14 +36,17 @@
     border: 0 !important;
     border-top: 1px solid var(--Colors-Use-Neutral-Border) !important;
   }
+
   .custom-table-container {
     border: 0 !important;
   }
 }
+
 .table-container {
   border: 0 !important;
   border-top: 1px solid var(--Colors-Use-Neutral-Border) !important;
 }
+
 .plugin-execute-result-tab-content {
   @extend %display-column-center;
   justify-content: flex-start;
@@ -49,8 +54,10 @@
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 12px;
   font-weight: 400;
-  line-height: 16px; /* 133.333% */
+  line-height: 16px;
+  /* 133.333% */
   overflow: hidden;
+
   .plugin-execute-result-tab-content-head {
     @extend %display-flex-center;
     justify-content: space-between;
@@ -58,15 +65,18 @@
     border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
   }
 }
+
 .plugin-execute-result-tab-content-body {
   padding: 12px;
   overflow: overlay;
 }
+
 .plugin-execute-http-flow {
   @extend %display-flex-center;
   align-items: flex-start;
   flex: 1;
   height: 100%;
+
   .plugin-execute-web-tree {
     @extend %display-column-center;
     justify-content: flex-start;
@@ -74,9 +84,25 @@
     padding: 12px;
     padding-right: 0;
   }
+
   .current-http-table-container {
     border: 0 !important;
     border-top: 1px solid var(--Colors-Use-Neutral-Border) !important;
+  }
+}
+
+.tab-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  span {
+    margin-right: 0 !important;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
   }
 }
 
@@ -84,9 +110,32 @@
   padding: 0;
 }
 
+.custom-table-copy-column {
+  display: flex;
+  align-items: center;
+  color: var(--Colors-Use-Neutral-Disable);
+  cursor: pointer;
+
+  span {
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &:hover {
+    color: var(--Colors-Use-Main-Primary);
+  }
+
+  &:active {
+    color: var(--Colors-Use-Main-Pressed);
+  }
+}
+
 .plugin-execute-port-table-container {
   border: 0 !important;
 }
+
 .plugin-execute-port-table-detail-body {
   border-left: 0;
   border-right: 0;
@@ -98,7 +147,9 @@
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
-  line-height: 16px; /* 133.333% */
+  line-height: 16px;
+
+  /* 133.333% */
   &-number {
     color: var(--Colors-Use-Main-Primary);
     margin-left: 4px;
@@ -114,6 +165,7 @@
 .plugin-execute-log {
   .log-tab-name {
     @extend %display-flex-center;
+
     .tab-number {
       @extend %display-flex-center;
       padding: 2px 6px;
@@ -129,10 +181,11 @@
       text-align: center;
     }
   }
+
   .log-tab-name-active {
     .tab-number {
       background-color: var(--Colors-Use-Main-Primary);
-      color: #fff;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
     }
   }
 }
@@ -141,6 +194,7 @@
   @extend %display-column-center;
   overflow: hidden;
   height: 100%;
+
   .risks-table-wrapper {
     padding: 0;
   }
@@ -154,7 +208,9 @@
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 12px;
   font-weight: 400;
-  line-height: 16px; /* 133.333% */
+  line-height: 16px;
+
+  /* 133.333% */
   .table-renderTitle-left {
     @extend %display-flex-center;
     gap: 8px;

@@ -151,7 +151,8 @@
     "sourceCodeDesc": "You can define the plugin input principle and write output UI here",
     "escFullScreen": "Press Esc to exit full screen",
     "anonymous": "anonymous",
-    "filterCondition": "Filter Condition"
+    "filterCondition": "Filter Condition",
+    "codecInput": "INPUT"
   },
   "PluginExecResultDefaultTabs": {
     "HTTPtraffic": "HTTP traffic",

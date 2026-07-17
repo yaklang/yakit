@@ -151,7 +151,8 @@
     "sourceCodeDesc": "可在此定義外掛輸入原理，並編寫輸出 UI",
     "escFullScreen": "按 Esc 即可退出全屏",
     "anonymous": "匿名",
-    "filterCondition": "篩選條件"
+    "filterCondition": "篩選條件",
+    "codecInput": "輸入"
   },
   "PluginExecResultDefaultTabs": {
     "HTTPtraffic": "HTTP 流量",

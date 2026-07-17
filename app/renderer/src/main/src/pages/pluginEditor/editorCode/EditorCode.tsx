@@ -211,7 +211,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             Field: 'Input',
             FieldVerbose: 'Input',
             Required: true,
-            TypeVerbose: 'yak',
+            TypeVerbose: 'text',
             DefaultValue: '',
             Help: 'Input',
           }
@@ -559,7 +559,12 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                       </div>
                     )}
                     <div className={styles['result-body']}>
-                      <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
+                      <PluginExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        pluginType={type}
+                      />
                     </div>
                   </>
                 ) : (

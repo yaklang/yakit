@@ -106,6 +106,7 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
           streamInfo={streamInfo}
           runtimeId={runtimeId}
           loading={isExecuting}
+          pluginType={plugin.Type}
           defaultActiveKey={plugin.Type === 'yak' ? t('PluginExecResultDefaultTabs.log') : undefined}
           pluginExecuteResultWrapper={styles['plugin-execute-result-wrapper']}
           isCrawler={plugin.ScriptName === '基础爬虫'}
