@@ -2,9 +2,19 @@
 !include "FileFunc.nsh"
 !include "StrFunc.nsh"
 !include "MUI2.nsh"
+!include "WinMessages.nsh"
 
 ${StrStr} # Supportable for Install Sections and Functions
 ${UnStrStr} # Supportable for Uninstall Sections and Functions
+
+; 广播 WM_SETTINGCHANGE，通知系统（包括已打开的 cmd/explorer/终端）刷新用户环境变量。
+; 仅写注册表不广播时，新值只对新启动的进程生效，已打开的终端仍使用启动时的旧快照，
+; 表现为"系统属性界面里能看到，但 cmd 里查不到/还是旧值"。
+!macro BroadcastEnvChange
+    Push $0
+    System::Call 'user32::SendMessageTimeout(p ${HWND_BROADCAST}, i ${WM_SETTINGCHANGE}, p 0, t "Environment", i 0, i 5000, *p .r0)'
+    Pop $0
+!macroend
 
 Unicode true
 
@@ -16,6 +26,7 @@ Var /Global EXE_NAME
 Var /Global KEEP_FOLDER
 Var /Global DeleteOldEngine
 Var /Global DeleteOldEngineLabel
+Var /Global ENV_VAR_NAME
 
 
 
@@ -130,30 +141,36 @@ FunctionEnd
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
     StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
     StrCpy $EXE_NAME "Yakit"
+    StrCpy $ENV_VAR_NAME "YAKIT_HOME"  ; 默认环境变量名
     ${StrStr} $0 $EXEFILE "EnpriTraceAgent"
     ${If} $0 != "" ; se
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
+        StrCpy $ENV_VAR_NAME "ENPRITRACEAGENT_HOME"  ; SE版本专用环境变量
     ${Else}
         ${StrStr} $0 $EXEFILE "IRifyEnpriTrace"
         ${If} $0 != "" ; irifyee
             StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
             StrCpy $EXE_NAME "IRifyEnpriTrace"
+            StrCpy $ENV_VAR_NAME "IRIFYENPRITRACE_HOME"  ; IRifyEE版本专用环境变量
         ${Else}
             ${StrStr} $0 $EXEFILE "EnpriTrace"
             ${If} $0 != "" ; ee
                 StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
                 StrCpy $EXE_NAME "EnpriTrace"
+                StrCpy $ENV_VAR_NAME "ENPRITRACE_HOME"  ; EE版本专用环境变量
             ${Else}
                 ${StrStr} $0 $EXEFILE "IRify"
                 ${If} $0 != "" ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
+                    StrCpy $ENV_VAR_NAME "IRIFY_HOME"  ; IRify版本专用环境变量
                 ${Else}
                     ${StrStr} $0 $EXEFILE "MemfitAI"
                     ${If} $0 != ""
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
+                        StrCpy $ENV_VAR_NAME "MEMFITAI_HOME"  ; MemfitAI版本专用环境变量
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -171,25 +188,31 @@ FunctionEnd
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
     StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
     StrCpy $EXE_NAME "Yakit"
+    StrCpy $ENV_VAR_NAME "YAKIT_HOME"  ; 默认环境变量名
     ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
+        StrCpy $ENV_VAR_NAME "ENPRITRACEAGENT_HOME"
     ${Else}
         ${If} ${FileExists} `$INSTDIR\IRifyEnpriTrace.exe` ; irifyee
             StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
             StrCpy $EXE_NAME "IRifyEnpriTrace"
+            StrCpy $ENV_VAR_NAME "IRIFYENPRITRACE_HOME"
         ${Else}
             ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee
                 StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
                 StrCpy $EXE_NAME "EnpriTrace"
+                StrCpy $ENV_VAR_NAME "ENPRITRACE_HOME"
             ${Else}
                 ${If} ${FileExists} `$INSTDIR\IRify.exe` ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
+                    StrCpy $ENV_VAR_NAME "IRIFY_HOME"
                 ${Else}
                     ${If} ${FileExists} `$INSTDIR\Memfit AI.exe` ; memfit
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
+                        StrCpy $ENV_VAR_NAME "MEMFITAI_HOME"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -232,7 +255,12 @@ FunctionEnd
 
         ; 删除注册表项
         DeleteRegValue HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME
-        DeleteRegValue HKCU "Environment" "YAKIT_HOME"
+
+        ; 删除独立的环境变量
+        DeleteRegValue HKCU "Environment" $ENV_VAR_NAME
+
+        ; 广播 WM_SETTINGCHANGE，让已运行的进程刷新环境变量，删除值立即生效
+        !insertmacro BroadcastEnvChange
     ${EndIf}
 !macroend
 
@@ -262,10 +290,14 @@ FunctionEnd
         ${EndIf}
     ${EndIf}
 
-    ; 存储安装目录
+    ; 存储安装目录和环境变量
     DetailPrint "写入环境变量..."
     WriteRegStr HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME "$INSTDIR"
-    WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects"
+    ; 使用版本独立的环境变量
+    WriteRegStr HKCU "Environment" $ENV_VAR_NAME "$INSTDIR\yakit-projects"
+    DetailPrint "已设置环境变量: $ENV_VAR_NAME = $INSTDIR\yakit-projects"
+    ; 广播 WM_SETTINGCHANGE，让已运行的进程（explorer/终端等）刷新环境变量
+    !insertmacro BroadcastEnvChange
     DetailPrint "正在安装..."
 !macroend
 
