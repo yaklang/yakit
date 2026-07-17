@@ -387,15 +387,15 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
   if (data.react_task_user_input_uuid) {
     const qsDetail = getContentMap(data.react_task_user_input_uuid)
     if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
-      getChatDataStore()?.casualChat.contents.delete(data.react_task_user_input_uuid)
-      setElements((old) =>
-        old.map((item) => {
-          if (item.token === data.react_task_user_input_uuid) {
-            return { ...item, token: data.react_task_id }
-          }
-          return item
-        }),
-      )
+      // getChatDataStore()?.casualChat.contents.delete(data.react_task_user_input_uuid)
+      // setElements((old) =>
+      //   old.map((item) => {
+      //     if (item.token === data.react_task_user_input_uuid) {
+      //       return { ...item, token: data.react_task_id }
+      //     }
+      //     return item
+      //   }),
+      // )
       return
     }
   }
