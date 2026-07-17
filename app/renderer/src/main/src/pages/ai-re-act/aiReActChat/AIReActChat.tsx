@@ -369,26 +369,21 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const syncCasualTaskTab = useMemoizedFn(() => {
       const sessionId = activeChat?.SessionID
+      if (!getTaskId() || !sessionId) return
+      if (chatDataStoreKey !== 'aiChatDataStore') return
+      emitTaskContentTab('add')
+      sessionRef.current = sessionId
+    })
+
+    const onDetails = useMemoizedFn(() => {
       if (!getTaskId()) {
         yakitNotify('error', 'taskId不存在')
         return
       }
-      if (!sessionId) return
       if (chatDataStoreKey !== 'aiChatDataStore') {
         yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
         return
       }
-
-      const isNewSession = !sessionRef.current || sessionRef.current !== sessionId
-      if (isNewSession) {
-        emitTaskContentTab('add')
-        sessionRef.current = sessionId
-      } else {
-        emitTaskContentTab('update')
-      }
-    })
-
-    const onDetails = useMemoizedFn(() => {
       syncCasualTaskTab()
     })
 
