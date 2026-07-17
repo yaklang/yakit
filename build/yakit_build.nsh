@@ -259,11 +259,6 @@ FunctionEnd
         ; 删除独立的环境变量
         DeleteRegValue HKCU "Environment" $ENV_VAR_NAME
 
-        ; 如果安装的是Yakit社区版，删除YAKIT_HOME
-        ${If} $ENV_VAR_NAME == "YAKIT_HOME"
-            DeleteRegValue HKCU "Environment" "YAKIT_HOME"
-        ${EndIf}
-
         ; 广播 WM_SETTINGCHANGE，让已运行的进程刷新环境变量，删除值立即生效
         !insertmacro BroadcastEnvChange
     ${EndIf}
