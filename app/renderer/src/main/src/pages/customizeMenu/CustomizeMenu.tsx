@@ -964,9 +964,9 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
         {isCommunityEdition() ? (
           <div className={style['header-title']}>
             {t('CustomizeMenu.FeaturesAndPlugin.pluginStore')}
-            <div className={style['header-title-extra']}>
+            {/* <div className={style['header-title-extra']}>
               ({t('CustomizeMenu.FeaturesAndPlugin.pluginStoreSortByUsage')})
-            </div>
+            </div> */}
           </div>
         ) : (
           <YakitRadioButtons
@@ -1183,13 +1183,16 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
     setLoading(true)
     ipcRenderer
       .invoke('QueryYakScript', newParams)
-      .then(async (item: QueryYakScriptsResponse) => {
-        let data = page === 1 ? item.Data : response.Data.concat(item.Data)
-        //按照使用次数排序
-        if (!keyword) {
-          const usage = await getPluginUsageCache()
-          data = sortPluginsByUsage(data, usage)
-        }
+      // TODO: 等接口
+      // .then(async (item: QueryYakScriptsResponse) => {
+      //   let data = page === 1 ? item.Data : response.Data.concat(item.Data)
+      //   //按照使用次数排序
+      //   if (!keyword) {
+      //     const usage = await getPluginUsageCache()
+      //     data = sortPluginsByUsage(data, usage)
+      //   }
+      .then((item: QueryYakScriptsResponse) => {
+        const data = page === 1 ? item.Data : response.Data.concat(item.Data)
         const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
         setHasMore(!isMore)
         setResponse({
