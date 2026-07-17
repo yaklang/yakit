@@ -1348,7 +1348,7 @@ const handleToolCallStart: AIMessageHandler = (request) => {
     ...cloneDeep(DefaultAIToolResult),
     callToolId: call_tool_id,
     toolName: tool?.name || '-',
-    verboseName: tool?.verbose_name,
+    verboseName: tool?.verbose_name_i18n,
     toolDescription: tool?.description || '',
     startTime: start_time || 0,
     startTimeMS: start_time_ms || 0,

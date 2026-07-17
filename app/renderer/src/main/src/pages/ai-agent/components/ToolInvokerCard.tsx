@@ -43,6 +43,7 @@ import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { setClipboardText } from '@/utils/clipboard'
 import { success } from '@/utils/notification'
+import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -80,7 +81,8 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
 
   // 判断路由，子窗口有些功能不展示
   const isChildWindow = useRef(isAuxOrChildWindow())
-
+  const { nodeLabel } = useAINodeLabel(data.verboseName)
+  const titleText = nodeLabel || data.toolName
   const renderContent = useMemoizedFn(() => {
     // 过滤掉打开文件
     const operationInfo = {
@@ -89,11 +91,25 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
     }
     switch (data.type) {
       case 'stream':
-        return <ToolStdoutCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
+        return (
+          <ToolStdoutCard
+            isChildWindow={isChildWindow.current}
+            {...props}
+            operationInfo={operationInfo}
+            titleText={titleText}
+          />
+        )
       case 'result':
-        return <ToolResultCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
+        return (
+          <ToolResultCard
+            isChildWindow={isChildWindow.current}
+            {...props}
+            operationInfo={operationInfo}
+            titleText={titleText}
+          />
+        )
       case 'create':
-        return <ToolLoadingCard {...props} />
+        return <ToolLoadingCard {...props} titleText={titleText} />
       default:
         return null
     }
@@ -106,7 +122,7 @@ export default memo(ToolInvokerCard)
 
 /** tool loading - processing params */
 const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
-  const { data } = props
+  const { data, titleText } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const reason = useCreation(() => {
@@ -116,7 +132,7 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
   return (
     <ChatCard
       titleIcon={<OutlineWrenchIcon1 />}
-      titleText={data.verboseName ?? data.toolName}
+      titleText={titleText}
       titleExtra={
         !!reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
@@ -138,7 +154,7 @@ const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
 
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
-  const { operationInfo, fileList, chatType, data } = props
+  const { operationInfo, fileList, chatType, data, titleText } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const { activeChat } = useAIAgentStore()
@@ -184,7 +200,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={data.verboseName ?? data.toolName}
+      titleText={titleText}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -229,8 +245,8 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
-  const { modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const { modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow, titleText } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
 
@@ -342,7 +358,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
 
   return (
     <ChatCard
-      titleText={data.verboseName ?? data.toolName}
+      titleText={titleText}
       titleIcon={<OutlineWrenchIcon1 />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
