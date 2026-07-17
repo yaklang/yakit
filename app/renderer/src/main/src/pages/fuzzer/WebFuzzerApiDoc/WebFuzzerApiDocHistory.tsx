@@ -45,7 +45,7 @@ const TIME_GROUPS = [
   { key: 'thirtyDays', label: 'HistoryChatList.thirtyDays', max: Infinity },
 ] as const
 
-const getItemTitle = (item: ApiDocHistoryItem) => item.fileName || item.title || item.sessionId
+const getItemTitle = (item: ApiDocHistoryItem) => item.title || item.fileName || item.sessionId
 
 export const WebFuzzerApiDocHistory: React.FC<{
   onSelect: (item: ApiDocHistoryItem) => void

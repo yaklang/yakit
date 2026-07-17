@@ -33,6 +33,8 @@ export type WebFuzzerEventProps = {
   onGetDiscardPackageCount: string
   /** MCP / 后端推送：新建 Web Fuzzer Tab */
   onServerPushOpenWebFuzzerTab: string
+  /** OpenAPI / API 文档解析进度 */
+  onOpenAPIParseProgress: string
   /** 保存webfuzzer历史记录 */
   onSaveHistoryDataHttpFuzzer?: string
 }

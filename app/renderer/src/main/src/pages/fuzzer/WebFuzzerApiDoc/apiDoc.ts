@@ -62,6 +62,15 @@ export interface ApiDocOperationSummary {
   tags?: string[]
 }
 
+export interface OpenAPIParseProgress {
+  task_id: string
+  percent?: number
+  stage?: string
+  message?: string
+  current?: number
+  total?: number
+}
+
 export const getExtra = (extra: YakURLResource['Extra'] | undefined, key: string) =>
   extra?.find((item) => item.Key === key)?.Value || ''
 
@@ -95,11 +104,38 @@ const buildUrl = (location: string, query: YakQueryItem[] = []) => ({
   Query: query,
 })
 
-export const openApiRequest = async (method: string, location: string, query: YakQueryItem[] = [], body?: string) => {
-  const resp = (await ipcRenderer.invoke('RequestYakURL', {
-    Method: method,
-    Url: buildUrl(location, query),
-    Body: body === undefined ? undefined : StringToUint8Array(body),
-  })) as RequestYakURLResponse
+export const openApiRequest = async (
+  method: string,
+  location: string,
+  query: YakQueryItem[] = [],
+  body?: string,
+  token?: string,
+) => {
+  const resp = (await ipcRenderer.invoke(
+    'RequestYakURL',
+    {
+      Method: method,
+      Url: buildUrl(location, query),
+      Body: body === undefined ? undefined : StringToUint8Array(body),
+    },
+    token,
+  )) as RequestYakURLResponse
   return resp.Resources || []
+}
+
+export const cancelOpenApiRequest = async (token?: string) => {
+  if (!token) return
+  try {
+    await ipcRenderer.invoke('cancel-RequestYakURL', token)
+  } catch {}
+}
+
+export const isOpenApiRequestCanceled = (error: unknown) => {
+  const { code, details, message } = (error || {}) as Record<string, unknown>
+  return (
+    code === 1 ||
+    String(details || message || error)
+      .toLowerCase()
+      .includes('cancel')
+  )
 }
