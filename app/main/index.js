@@ -268,6 +268,11 @@ function createWindow() {
     printLogOutputFile(`[mainWin] ready-to-show, isVisible: ${win.isVisible()}, isDestroyed: ${win.isDestroyed()}`)
   })
 
+  // F5 / reload 时清掉 ready 标记，避免刷新过程中误发，并让 markRenderOk 重新走一遍
+  win.webContents.on('did-start-loading', () => {
+    clearRenderMap(win)
+  })
+
   win.webContents.on('did-finish-load', () => {
     printLogOutputFile(`[mainWin] did-finish-load, URL: ${win.webContents.getURL()}`)
   })
@@ -328,6 +333,8 @@ function createWindow() {
 // 窗口render准备好再发送数据
 const renderMap = new Map()
 const messageQueue = new Map()
+// 缓存最近一次 engineLinkWin 推送过来的引擎 credential，供主窗口 F5 刷新后重推，避免白屏
+let lastEngineLinkCredential = null
 function safeSend(targetWin, channel, data) {
   if (!targetWin || targetWin.isDestroyed()) return
 
@@ -496,6 +503,7 @@ function registerGlobalIPC() {
   // ------------------- 刷新相关 -------------------
   /** 刷新缓存 */
   ipcMain.handle('trigger-reload', () => {
+    lastEngineLinkCredential = null
     clearRenderMap(engineLinkWin)
     clearRenderMap(win)
     win.webContents.reload()
@@ -508,6 +516,7 @@ function registerGlobalIPC() {
   })
   /** 强制清空刷新缓存 */
   ipcMain.handle('trigger-reload-cache', () => {
+    lastEngineLinkCredential = null
     clearRenderMap(engineLinkWin)
     clearRenderMap(win)
     win.webContents.reloadIgnoringCache()
@@ -532,12 +541,20 @@ function registerGlobalIPC() {
     markRenderOk(engineLinkWin)
   })
   ipcMain.on('main-win-uilayout-render-ok', (event) => {
+    // 队列里已有 credential 时只冲刷，避免与首次入队重复推送
+    const hadPending = (messageQueue.get(win.id) || []).some((m) => m.channel === 'from-engineLinkWin')
     markRenderOk(win)
+    // F5 后队列为空但仍有缓存时重推，避免白屏
+    if (lastEngineLinkCredential && !hadPending) {
+      safeSend(win, 'from-engineLinkWin', lastEngineLinkCredential)
+    }
   })
 
   // ------------------- 窗口发送数据操作 -------------------
   // engineLink 完成操作
   ipcMain.handle('engineLinkWin-done', async (event, data) => {
+    // 缓存 credential，供主窗口 F5 刷新后重推
+    lastEngineLinkCredential = data
     winHide(engineLinkWin)
     winShow(win, readyWinShow)
     safeSend(win, 'from-engineLinkWin', data)
@@ -545,18 +562,23 @@ function registerGlobalIPC() {
 
   // win 完成操作
   ipcMain.handle('yakitMainWin-done', async (event, data) => {
+    // 回到 engineLink 流程，清空缓存，避免主窗误用旧 credential
+    lastEngineLinkCredential = null
     winHide(win)
     winShow(engineLinkWin, readyEngineLinkShow)
     safeSend(engineLinkWin, 'from-win', data)
   })
 
-  // win 远程连接通知 engineLink 更新 认证信息
+  // win 远程控制通知 engineLink 更新 认证信息
   ipcMain.handle('updateCredential', async (event, data) => {
+    // 同步缓存，保证 F5 重推的是最新 credential
+    if (data) lastEngineLinkCredential = data
     safeSend(engineLinkWin, 'from-win-updateCredential', data)
   })
 
   // ------------------- 软件重启逻辑 -------------------
   ipcMain.handle('relaunch', () => {
+    lastEngineLinkCredential = null
     clearRenderMap(engineLinkWin)
     clearRenderMap(win)
     winClose(engineLinkWin, true)

@@ -50,7 +50,6 @@ import { ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicC
 import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import emiter from '@/utils/eventBus/eventBus'
-import { RemoteEngine } from './RemoteEngine/RemoteEngine'
 import { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 import { DownloadYakit } from './update/DownloadYakit'
 import { DownloadYaklang } from './update/DownloadYaklang'
@@ -185,13 +184,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   /** ---------- 软件状态相关属性 End ---------- */
 
   // #region 新窗口引擎已经启动好，只需要看门狗检查是否ready，此处默认初始化一些变量
-  const [showLoadingPage, setShowLoadingPage] = useState<boolean>(false)
   /** 本地引擎自检输出日志 */
   const [newCheckLog, setNewCheckLog] = useState<string[]>([])
   useEffect(() => {
     const cleanup = yakitUILayout.onFromEngineLinkWindow((data) => {
       setNewCheckLog([t('UILayout.entering')])
-      setShowLoadingPage(true)
       handleFetchBaseInfo()
       setCredential(data.credential)
       onSetEngineMode(data.credential.Mode)
@@ -390,13 +387,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       .catch((err) => console.error(err))
   })
 
-  // 切换远程模式
-  const handleLinkRemoteMode = useMemoizedFn(() => {
-    onDisconnect()
-    setYakitStatus('')
-    setShowLoadingPage(false)
-    onSetEngineMode('remote')
-  })
   // 本地连接的状态设置
   const setLinkLocalEngine = useMemoizedFn(() => {
     onDisconnect()
@@ -518,7 +508,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   })
 
   const openEngineLinkWin = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode | YakitStatusType) => {
-    setShowLoadingPage(true)
     setNewCheckLog([t('UILayout.exiting')])
     killCurrentProcess(() => {
       setTimeout(() => {
@@ -993,7 +982,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         .run({ Type: 'base64-decode', Text: resultObj.pubpem, Params: [], ScriptName: '' })
         .then((res) => {
           setNewCheckLog([t('UILayout.remoteControlConnecting')])
-          setShowLoadingPage(true)
           setYakitStatus('control-remote')
           onDisconnect()
 
@@ -1911,16 +1899,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
               />
             )}
 
-            {!engineLink && !showLoadingPage && isRemoteEngine && yakitStatus !== 'control-remote' && (
-              <RemoteEngine
-                loading={remoteLinkLoading}
-                setLoading={setRemoteLinkLoading}
-                installedEngine={isEngineInstalled.current}
-                onSubmit={handleLinkRemoteEngine}
-                onSwitchLocalEngine={handleRemoteToLocal}
-              />
-            )}
-            {!engineLink && showLoadingPage && (
+            {!engineLink && (
               <NewYakitLoading
                 yakitStatus={yakitStatus}
                 checkLog={newCheckLog}
