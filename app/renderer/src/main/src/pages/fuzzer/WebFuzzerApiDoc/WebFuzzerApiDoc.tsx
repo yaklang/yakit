@@ -4,7 +4,7 @@ import { Progress, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { shallow } from 'zustand/shallow'
 import styles from './WebFuzzerApiDoc.module.scss'
-import { OutlineBookopenIcon, OutlineClockIcon, OutlineStopIcon, OutlineUploadIcon } from '@/assets/icon/outline'
+import { OutlineBookopenIcon, OutlineClockIcon, OutlineUploadIcon } from '@/assets/icon/outline'
 import { YakURLResource } from '@/pages/yakURLTree/data'
 import {
   ApiDocInfo,
