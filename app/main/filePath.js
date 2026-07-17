@@ -18,12 +18,12 @@ const getVersionEnvVarName = () => {
   const appName = app.getName()
   // 根据应用名称映射到对应的环境变量
   const envVarMap = {
-    Yakit: 'YAKIT_HOME',
-    EnpriTraceAgent: 'ENPRITRACEAGENT_HOME',
-    EnpriTrace: 'ENPRITRACE_HOME',
-    IRify: 'IRIFY_HOME',
-    IRifyEnpriTrace: 'IRIFYENPRITRACE_HOME',
-    'Memfit AI': 'MEMFITAI_HOME',
+    yakit: 'YAKIT_HOME',
+    enpritraceagent: 'ENPRITRACEAGENT_HOME',
+    enpritrace: 'ENPRITRACE_HOME',
+    irify: 'IRIFY_HOME',
+    irifyenpritrace: 'IRIFYENPRITRACE_HOME',
+    memfit: 'MEMFITAI_HOME',
   }
   const envVar = envVarMap[appName] || 'YAKIT_HOME'
   return envVar
