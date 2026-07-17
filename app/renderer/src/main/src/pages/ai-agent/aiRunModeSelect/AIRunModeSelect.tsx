@@ -58,7 +58,6 @@ const AIRunModeSelect: React.FC = memo(() => {
   }, [setting?.EnablePlan])
   const onSetPlan = useDebounceFn(
     useMemoizedFn((checked) => {
-      if (execute) return
       handleSendConfigHotpatch({
         hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
         params: {
@@ -168,7 +167,8 @@ const AIRunModeSelect: React.FC = memo(() => {
   }, [selectedModes])
 
   const onToggleMode = useMemoizedFn((key: ModeOptionKey) => {
-    if (execute) return
+    // Plan 支持热更新，运行中可改；Multi-Agent / Goal 运行中不可改
+    if (execute && key !== 'plan') return
     switch (key) {
       case 'plan':
         onSetPlan(!enablePlan)
@@ -184,6 +184,10 @@ const AIRunModeSelect: React.FC = memo(() => {
     }
   })
 
+  const isModeLocked = useMemoizedFn((key: ModeOptionKey) => {
+    return execute && key !== 'plan'
+  })
+
   const TriggerIcon = triggerDisplay.Icon
 
   return (
@@ -194,16 +198,19 @@ const AIRunModeSelect: React.FC = memo(() => {
       overlayClassName={styles['mode-dropdown']}
       overlay={
         <div className={styles['mode-menu']}>
-          <div className={styles['mode-menu-hint']}>{execute ? 'AI 运行中，暂不可修改模式' : '请选择模式，可多选'}</div>
+          <div className={styles['mode-menu-hint']}>
+            {execute ? 'AI 运行中，仅 Plan 可修改，Multi-Agent / Goal 暂不可改' : '请选择模式，可多选'}
+          </div>
           <div className={styles['mode-list']}>
             {ModeOptionList.map((item) => {
               const Icon = item.icon
               const checked = isModeSelected(item.key)
+              const locked = isModeLocked(item.key)
               return (
                 <div
                   key={item.key}
                   className={classNames(styles['mode-option'], {
-                    [styles['mode-option-disabled']]: execute,
+                    [styles['mode-option-disabled']]: locked,
                   })}
                   onClick={() => onToggleMode(item.key)}
                 >
