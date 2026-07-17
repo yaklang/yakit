@@ -1,13 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import {
-  useCreation,
-  useDebounceEffect,
-  useGetState,
-  useInViewport,
-  useMemoizedFn,
-  useThrottleFn,
-  useUpdateEffect,
-} from 'ahooks'
+import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import { LeftSideBar } from './LeftSideBar/LeftSideBar'
 import { BottomSideBar } from './BottomSideBar/BottomSideBar'
 import { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
@@ -17,10 +9,8 @@ import {
   getCodeByPath,
   getCodeSizeByPath,
   getNameByPath,
-  getPathParent,
   getYakRunnerLastAreaFile,
   getYakRunnerLastFolderExpanded,
-  grpcFetchCreateFile,
   grpcFetchFileTree,
   judgeAreaExistFilePath,
   judgeAreaExistFileUnSave,
@@ -95,6 +85,7 @@ import {
   type YakRunnerApplyCodeExtras,
   type YakRunnerCasualCodeReplaceReviewPayload,
 } from './yakRunnerAiCodeApplyBridge'
+import { syncYakRunnerPatchWorkingDraft } from './yakRunnerAiCodePatchApply'
 const { ipcRenderer } = window.require('electron')
 
 // 模拟tabs分块及对应文件
@@ -820,6 +811,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     const head = casualReviewQueue[0]
     if (!head) return
     casualReviewBaselineRef.current = mergedCode
+    syncYakRunnerPatchWorkingDraft(YAK_RUNNER_AI_PAGE_ID, mergedCode)
     setCasualReviewQueue((prev) => {
       const cur = prev[0]
       if (!cur) return prev

@@ -46,6 +46,10 @@ import {
   getYakRunnerPageActiveCodeString,
   resolveYaklangCreateTargetPath,
 } from '../pages/yakRunner/yakRunnerAiCodeApplyBridge'
+import {
+  normalizeYaklangCodeChangeForReview,
+  resetYakRunnerPatchWorkingDraft,
+} from '../pages/yakRunner/yakRunnerAiCodePatchApply'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import { getAISourceFromChatDataStoreKey, getChatDataStoreKey } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
@@ -307,27 +311,38 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
     if (!yakRunnerPageId) return
 
-    const nextCode = data?.code?.content
-    if (nextCode == null || String(nextCode).trim() === '') return
+    const editorNow = getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? ''
+    const original =
+      data.op === 'create'
+        ? ''
+        : editorNow !== ''
+          ? editorNow
+          : casualLoadingRef.current && initialCodeInCasualRef.current != null
+            ? initialCodeInCasualRef.current
+            : ''
 
-    const isCreate = data.op === 'create'
+    // op=patch：后端只给片段，这里合并成全量 replace，再走原有 diff UI
+    const normalized = normalizeYaklangCodeChangeForReview(yakRunnerPageId, data, original)
+    if (!normalized) return
+
+    const nextCode = normalized.code?.content
+    if (nextCode == null) return
+    if (normalized.op === 'create' && String(nextCode).trim() === '') return
+
+    const isCreate = normalized.op === 'create'
     const createFileName = isCreate ? createYakRunnerGeneratedCodeFileName() : undefined
     const createPath = isCreate
       ? resolveYaklangCreateTargetPath(yakRunnerPageId, yakRunnerLastAttachedResourceInfoRef.current, createFileName)
       : undefined
     const change = isCreate
       ? {
-          ...data,
+          ...normalized,
           code: {
-            ...data.code,
+            ...normalized.code,
             path: createPath,
           },
         }
-      : data
-
-    const original = isCreate
-      ? ''
-      : (getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? initialCodeInCasualRef.current ?? '')
+      : normalized
 
     enqueueYakRunnerCasualCodeReplaceReview(yakRunnerPageId, {
       original,
@@ -379,11 +394,15 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         initialRequestInCasualRef.current = getWebFuzzerPageRequestString(httpFuzzTabPageId) ?? ''
       }
       if (yakRunnerPageId) {
+        resetYakRunnerPatchWorkingDraft(yakRunnerPageId)
         initialCodeInCasualRef.current = getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? ''
       }
     } else if (casualLoadingRef.current && !casualLoading) {
       initialRequestInCasualRef.current = null
       initialCodeInCasualRef.current = null
+      if (yakRunnerPageId) {
+        resetYakRunnerPatchWorkingDraft(yakRunnerPageId)
+      }
     }
 
     casualLoadingRef.current = casualLoading
