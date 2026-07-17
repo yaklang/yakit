@@ -215,6 +215,8 @@ export const WebFuzzerApiDoc: React.FC<{
     setOperations([])
     setSearchInput('')
     setSearchKeyword('')
+    setOverrideDomain('')
+    setOverrideIsHttps(false)
   })
 
   const resetParseState = useMemoizedFn(() => {
@@ -226,7 +228,9 @@ export const WebFuzzerApiDoc: React.FC<{
     setDocId(result.docId)
     setDocInfo(result.docInfo)
     setOperations(result.operations)
-    setOverrideDomain((prev) => result.docInfo.domain || prev)
+    // 切换/上传文档时，overrideDomain 应重置为当前文档自身的 domain，
+    // 不能保留上一个文档的 domain，否则上传新文档会把旧 host 串到新文档上
+    setOverrideDomain(result.docInfo.domain || '')
     setOverrideIsHttps(result.docInfo.isHttps)
   })
 
@@ -279,9 +283,12 @@ export const WebFuzzerApiDoc: React.FC<{
         throw new Error('openapi parse canceled')
       }
       const fileName = filePath.replace(/\\/g, '/').split('/').pop() || ''
+      // 上传新文档时不带上一个文档的 overrideDomain，避免旧 host 串到新文档。
+      // 只有当前 UI 输入框有值且与当前文档 domain 不同时才覆盖（用户显式修改）。
+      const userDomainOverride = overrideDomain && overrideDomain !== docInfo?.domain ? overrideDomain : undefined
       const result = await uploadApiDoc(content, {
         fileName,
-        overrideDomain: overrideDomain || undefined,
+        overrideDomain: userDomainOverride,
         overrideIsHttps,
         parseTaskId,
         token,
