@@ -269,12 +269,13 @@ function useTaskChat(params: UseTaskChatParams) {
           // 开始任务的执行
           const info = data as AIAgentGrpcApi.ChangeTask
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
+          handleTaskNode(res, info)
         }
 
         if (data && typeof data === 'object' && data?.type === 'pop_task') {
           // 结束任务 & 请求更新任务树最新状态数据
           const info = data as AIAgentGrpcApi.ChangeTask
-          if (info.task.task_id || res.TaskId) handleTaskNode(res, info)
+          handleTaskNode(res, info)
           sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
         }
         return
