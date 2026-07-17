@@ -103,7 +103,7 @@ const ConcurrentStreamCard: FC<{
     if (!raw) return false
     const status = raw?.data?.status
     return status === AITaskStatus.created || status === AITaskStatus.inProgress
-  }, [isChildWindow, raw])
+  }, [raw?.data?.status])
 
   const onDetails = useMemoizedFn(() => {
     const data = raw?.data
