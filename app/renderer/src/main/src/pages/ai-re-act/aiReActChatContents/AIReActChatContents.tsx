@@ -209,7 +209,8 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       }),
       [Footer, Header, Item],
     )
-    console.log('casualChat.elements', casualChatElements)
+    // const rawData = useCurrentRawData()
+    // console.log('casualChat.elements', casualChatElements, store.getState().items)
     return (
       <div ref={listRootRef} className={styles['ai-re-act-chat-contents']}>
         <Virtuoso

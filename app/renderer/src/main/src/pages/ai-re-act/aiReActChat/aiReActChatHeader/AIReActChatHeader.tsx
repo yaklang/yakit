@@ -73,15 +73,15 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
   const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
     const taskId = currentCasualTaskID
     const sessionId = activeChat?.SessionID
-    if (!taskId || !sessionId) return false
-    if (getSetting().Source !== AISourceEnum.aiAgent) return false
+    if (!currentCasualTaskID || !sessionId) return false
+    if (getSetting()?.Source !== 'ai') return false
     emiter.emit(
       'actionAITaskContentTab',
       JSON.stringify({
         type,
         params: {
           key: sessionId,
-          taskId,
+          taskId: currentCasualTaskID,
           label: label || activeChat?.Title || defaultTaskTabLabel,
           goal: '',
         },

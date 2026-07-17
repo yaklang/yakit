@@ -22,14 +22,14 @@ export function useChatIPC() {
   const onStart = useCallback(
     ({ token, params, onSuccess }: UseChatIPCStartParams) => {
       // 监听网络，直接丢给大脑处理
-      ipcRenderer.on(`${sessionId}-data`, (e, res: any) => {
-        globalSessionEngine.handleGrpcOutputEvent(sessionId, res)
+      ipcRenderer.on(`${token}-data`, (e, res: any) => {
+        globalSessionEngine.handleGrpcOutputEvent(token, res)
       })
-      ipcRenderer.on(`${sessionId}-error`, (e, res: any) => {
-        globalSessionEngine.handleSessionError(sessionId, res)
+      ipcRenderer.on(`${token}-error`, (e, res: any) => {
+        globalSessionEngine.handleSessionError(token, res)
       })
-      ipcRenderer.on(`${sessionId}-end`, (e, res: any) => {
-        globalSessionEngine.handleSessionEnd(sessionId, res)
+      ipcRenderer.on(`${token}-end`, (e, res: any) => {
+        globalSessionEngine.handleSessionEnd(token, res)
       })
 
       console.log('onStart----------args', { sessionId, token, params })
