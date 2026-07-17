@@ -19,6 +19,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const devMode = process.env.NODE_ENV !== 'production'
+const devToolEnabled = process.env.REACT_APP_DEVTOOL === 'true'
 const AUX_ENTRY = path.resolve(__dirname, 'src/auxWindow/aux-entry.tsx')
 // Windows 保留设备名 aux，不可用 aux.html
 const AUX_HTML_TEMPLATE = path.resolve(__dirname, 'public/yakit-aux.html')
@@ -134,8 +135,13 @@ module.exports = {
         config.output.path = OUTPUT_PATH
         config.output.publicPath = './'
       }
-      // 去掉打包生产map 文件
-      config.devtool = config.mode === 'development' ? 'cheap-module-source-map' : false
+      // devTool 构建保留 source map，便于 Performance 面板定位源码
+      config.devtool =
+        config.mode === 'development'
+          ? 'cheap-module-source-map'
+          : devToolEnabled
+            ? 'source-map'
+            : false
       config.ignoreWarnings = [/Failed to parse source map/]
 
       // 辅助窗口独立 entry，避免加载主应用整包

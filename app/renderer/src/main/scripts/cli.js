@@ -48,7 +48,7 @@ const envs = {
 }
 
 if (build) {
-  envs.GENERATE_SOURCEMAP = false
+  envs.GENERATE_SOURCEMAP = devtools ? 'true' : 'false'
   if (devtools) envs.REACT_APP_DEVTOOL = 'true'
 } else {
   envs.BROWSER = 'none'
