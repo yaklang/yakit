@@ -821,10 +821,12 @@ export const StartupPage: React.FC = () => {
       .listYakGrpc()
       .then(async (res) => {
         // 查找 PID
-        const pidsToKill = res
-          .filter((p) => extraPorts.includes(Number(p.port)))
-          .map((p) => p.pid)
-          .filter(Boolean)
+        const pidsToKill = !!extraPorts
+          ? res
+              .filter((p) => extraPorts.includes(Number(p.port)))
+              .map((p) => p.pid)
+              .filter(Boolean)
+          : []
 
         if (pidsToKill.length === 0) {
           callback()

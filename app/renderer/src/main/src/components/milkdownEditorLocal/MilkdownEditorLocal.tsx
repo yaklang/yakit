@@ -26,7 +26,7 @@ const LocalMilkdown: React.FC<LocalMilkdownProps> = React.memo((props, ref) => {
     if (editor) {
       if (setEditor) setEditor(editor)
     }
-  }, [loading, get])
+  }, [loading])
   useEffect(() => {
     return () => {
       const value = get()?.action(getMarkdown()) || ''
