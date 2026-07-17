@@ -22,7 +22,7 @@ const getVersionEnvVarName = () => {
     enpritraceagent: 'ENPRITRACEAGENT_HOME',
     enpritrace: 'ENPRITRACE_HOME',
     irify: 'IRIFY_HOME',
-    irifyenpritrace: 'IRIFYENPRITRACE_HOME',
+    irifyee: 'IRIFYENPRITRACE_HOME',
     memfit: 'MEMFITAI_HOME',
   }
   const envVar = envVarMap[appName] || 'YAKIT_HOME'
