@@ -12,7 +12,7 @@ import {
 import { SolidCheckIcon } from '@/assets/icon/solid'
 import { useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import styles from './AIModeSelect.module.scss'
+import styles from './AIRunModeSelect.module.scss'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
@@ -46,7 +46,7 @@ const ModeOptionList: {
   },
 ]
 
-const AIModeSelect: React.FC = memo(() => {
+const AIRunModeSelect: React.FC = memo(() => {
   const { setting, activeChat } = useAIAgentStore()
   const { setSetting } = useAIAgentDispatcher()
   const { handleSendConfigHotpatch } = useChatIPCDispatcher()
@@ -261,4 +261,4 @@ const AIModeSelect: React.FC = memo(() => {
   )
 })
 
-export default AIModeSelect
+export default AIRunModeSelect

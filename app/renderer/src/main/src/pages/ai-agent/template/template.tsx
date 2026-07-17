@@ -67,7 +67,7 @@ import {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
-import AIModeSelect from '../aiModeSelect/AIModeSelect'
+import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -427,7 +427,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           <div className={styles['footer']}>
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
-                <AIModeSelect />
+                <AIRunModeSelect />
                 <YakitButton
                   type="text2"
                   radius="50%"
