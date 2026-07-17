@@ -80,7 +80,9 @@ export const recordPluginUsage = async (name: string, extra: { id: number; headI
     id: extra.id,
     headImg: extra.headImg,
   }
-  await setRemoteValue(RemoteGV.PluginUsageRecords, JSON.stringify(data))
+  try {
+    await setRemoteValue(RemoteGV.PluginUsageRecords, JSON.stringify(data))
+  } catch {}
 }
 
 export const sortPluginsByUsage = <T extends { ScriptName: string }>(list: T[], usage: Cache) => {
@@ -123,7 +125,9 @@ export const recordPluginLastExecute = async (name: string, record: PluginLastEx
           .sort((a, b) => b[1].savedAt - a[1].savedAt)
           .slice(0, MAX_LAST_EXECUTE_RECORDS),
       )
-      await setRemoteValue(RemoteGV.PluginLastExecuteRecords, JSON.stringify(nextData, binaryReplacer))
+      try {
+        await setRemoteValue(RemoteGV.PluginLastExecuteRecords, JSON.stringify(nextData, binaryReplacer))
+      } catch {}
     })
   lastExecuteSaveQueue = saveTask
   return saveTask
