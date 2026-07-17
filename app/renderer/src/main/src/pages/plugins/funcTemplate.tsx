@@ -1424,9 +1424,12 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
 
   const [form] = Form.useForm()
   useEffect(() => {
-    form.setFieldsValue({ ...defaultFilter })
     onSetIsActive(defaultFilter)
   }, [defaultFilter])
+  useEffect(() => {
+    if (!visible) return
+    form.setFieldsValue({ ...defaultFilter })
+  }, [defaultFilter, visible])
   /**需求：详情的搜索会清除tag，插件组因为已经移出到外面，所以插件组不会被清除 */
   const onFinish = useMemoizedFn((value) => {
     for (let name of excludeFilterName) {

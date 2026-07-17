@@ -571,7 +571,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
 const handleCapabilityInventory: AIMessageHandler = (request) => {
   const { res, info, getChatDataStore, getTaskId } = request
   if (!res.TaskId) return
-  if (res.Type !== 'structured' && res.NodeId !== 'capability_inventory') return
+  if (res.Type !== 'structured' || res.NodeId !== 'capability_inventory') return
 
   const chatStore = getChatDataStore?.()
   if (!chatStore) return
@@ -695,7 +695,7 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
 const handlePerception: AIMessageHandler = (request) => {
   const { res, info, getChatDataStore, getTaskId } = request
   if (!res.TaskId) return
-  if (res.Type !== 'perception' && res.NodeId !== 'perception') return
+  if (res.Type !== 'perception' || res.NodeId !== 'perception') return
   const chatStore = getChatDataStore?.()
   if (!chatStore) return
   const ipcContent = Uint8ArrayToString(res.Content) || ''
