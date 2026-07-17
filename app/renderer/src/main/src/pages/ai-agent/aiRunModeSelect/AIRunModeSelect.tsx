@@ -58,12 +58,15 @@ const AIRunModeSelect: React.FC = memo(() => {
   }, [setting?.EnablePlan])
   const onSetPlan = useDebounceFn(
     useMemoizedFn((checked) => {
-      handleSendConfigHotpatch({
-        hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
-        params: {
-          EnablePlan: checked,
-        },
-      })
+      if (execute) {
+        // ai运行才能热更新 plan
+        handleSendConfigHotpatch({
+          hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
+          params: {
+            EnablePlan: checked,
+          },
+        })
+      }
       setSetting?.((v) => ({
         ...v,
         EnablePlan: checked,
