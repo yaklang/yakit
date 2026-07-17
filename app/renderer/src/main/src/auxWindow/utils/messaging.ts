@@ -1,5 +1,4 @@
 import { yakitApp } from '@/services/electronBridge'
-import i18n from '@/i18n/i18n'
 import { useTheme, type Theme } from '@/hook/useTheme'
 import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
 import { isAuxWindow } from '@/utils/isAuxOrChildWindow'
@@ -25,7 +24,6 @@ function handleAppSyncMessage(message: AppSyncMessage) {
       break
     }
     case 'i18n':
-      if (message.payload) void i18n.changeLanguage(message.payload)
       break
     default:
       break

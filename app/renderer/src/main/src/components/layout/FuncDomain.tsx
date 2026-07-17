@@ -32,7 +32,6 @@ import {
   getCurrentVersionSource,
   VersionSource,
   getReleaseEditionName,
-  getRemoteI18nGV,
   isCommunityEdition,
   isCommunityYakit,
   isEnpriTrace,
@@ -159,7 +158,6 @@ import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
 import { SystemInfo } from '@/constants/hardware'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { cloneDeep } from 'lodash'
-import { syncAppSettings } from '@/auxWindow/utils/messaging'
 import {
   yakitApp,
   yakitEngine,
@@ -1410,24 +1408,6 @@ const GetUIOpSettingMenu = () => {
           { label: '远程', key: 'remote' },
         ],
       },
-      {
-        key: 'i18nSwitching',
-        label: '语言切换',
-        children: [
-          {
-            key: 'zh',
-            label: '简体中文',
-          },
-          {
-            key: 'en',
-            label: '英文',
-          },
-          {
-            key: 'zh-TW',
-            label: '繁体中文',
-          },
-        ],
-      },
       { type: 'divider' },
       {
         key: 'logs',
@@ -1504,24 +1484,6 @@ const GetUIOpSettingMenu = () => {
         {
           key: 'dark',
           label: '暗色',
-        },
-      ],
-    },
-    {
-      key: 'i18nSwitching',
-      label: '语言切换',
-      children: [
-        {
-          key: 'zh',
-          label: '简体中文',
-        },
-        {
-          key: 'en',
-          label: '英文',
-        },
-        {
-          key: 'zh-TW',
-          label: '繁体中文',
         },
       ],
     },
@@ -1790,14 +1752,6 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'dark':
         setTheme('dark')
-        return
-      case 'zh':
-      case 'en':
-      case 'zh-TW':
-        i18n.changeLanguage(type)
-        setLocalValue(getRemoteI18nGV(), type)
-        yakitApp.setYakitHomeConfig('lange', JSON.stringify({ key: getRemoteI18nGV(), value: type })).catch((err) => {})
-        syncAppSettings({ type: 'i18n', payload: type })
         return
       default:
         return

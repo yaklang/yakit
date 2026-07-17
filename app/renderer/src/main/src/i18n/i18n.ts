@@ -1,35 +1,22 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import HttpBackend from 'i18next-http-backend'
+import zhResources, { ALL_ZH_NAMESPACES } from './zhResources'
 
-i18n
-  .use(HttpBackend)
-  .use(initReactI18next)
-  .init({
-    lng: 'zh',
-    fallbackLng: 'en',
-    supportedLngs: ['zh', 'en', 'zh-TW'],
-    ns: [
-      'yakitUi',
-      'yakitRoute',
-      'core',
-      'layout',
-      'plugin',
-      'yakitStore',
-      'customizeMenu',
-      'home',
-      'history',
-      'webFuzzer',
-      'aiAgent',
-      'setting',
-      'yakChat',
-    ], // 这几个需要预加载
-    defaultNS: '',
-    interpolation: {
-      escapeValue: false,
-    },
-    backend: { loadPath: './locales/{{lng}}/{{ns}}.json' },
-    react: { useSuspense: true },
-  })
+i18n.use(initReactI18next).init({
+  lng: 'zh',
+  fallbackLng: 'zh',
+  supportedLngs: ['zh'],
+  ns: [...ALL_ZH_NAMESPACES],
+  defaultNS: 'layout',
+  resources: {
+    zh: zhResources,
+  },
+  interpolation: {
+    escapeValue: false,
+  },
+  react: {
+    useSuspense: false,
+  },
+})
 
 export default i18n
