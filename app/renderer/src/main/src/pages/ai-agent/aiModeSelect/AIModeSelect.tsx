@@ -18,6 +18,7 @@ import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { AIExecutionStrategy, AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
+import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import emiter from '@/utils/eventBus/eventBus'
 import { OutlineViewGridIcon } from '@/components/yakChat/icon'
 
@@ -49,12 +50,15 @@ const AIModeSelect: React.FC = memo(() => {
   const { setting, activeChat } = useAIAgentStore()
   const { setSetting } = useAIAgentDispatcher()
   const { handleSendConfigHotpatch } = useChatIPCDispatcher()
+  const { chatIPCData } = useChatIPCStore()
+  const execute = useCreation(() => !!chatIPCData.execute, [chatIPCData.execute])
 
   const enablePlan = useCreation(() => {
     return !!setting?.EnablePlan
   }, [setting?.EnablePlan])
   const onSetPlan = useDebounceFn(
     useMemoizedFn((checked) => {
+      if (execute) return
       handleSendConfigHotpatch({
         hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
         params: {
@@ -95,6 +99,7 @@ const AIModeSelect: React.FC = memo(() => {
   const [modeVisible, setModeVisible] = useState<boolean>(false)
   const onSetStrategy = useDebounceFn(
     useMemoizedFn((next: AIExecutionStrategy) => {
+      if (execute) return
       setSetting?.((v) => ({
         ...v,
         Strategy: { ...v.Strategy, ...next },
@@ -163,6 +168,7 @@ const AIModeSelect: React.FC = memo(() => {
   }, [selectedModes])
 
   const onToggleMode = useMemoizedFn((key: ModeOptionKey) => {
+    if (execute) return
     switch (key) {
       case 'plan':
         onSetPlan(!enablePlan)
@@ -188,13 +194,19 @@ const AIModeSelect: React.FC = memo(() => {
       overlayClassName={styles['mode-dropdown']}
       overlay={
         <div className={styles['mode-menu']}>
-          <div className={styles['mode-menu-hint']}>请选择模式，可多选</div>
+          <div className={styles['mode-menu-hint']}>{execute ? 'AI 运行中，暂不可修改模式' : '请选择模式，可多选'}</div>
           <div className={styles['mode-list']}>
             {ModeOptionList.map((item) => {
               const Icon = item.icon
               const checked = isModeSelected(item.key)
               return (
-                <div key={item.key} className={styles['mode-option']} onClick={() => onToggleMode(item.key)}>
+                <div
+                  key={item.key}
+                  className={classNames(styles['mode-option'], {
+                    [styles['mode-option-disabled']]: execute,
+                  })}
+                  onClick={() => onToggleMode(item.key)}
+                >
                   <div className={styles['mode-option-left']}>
                     <div className={styles['mode-option-icon']}>
                       <Icon />
@@ -221,6 +233,7 @@ const AIModeSelect: React.FC = memo(() => {
                       type="horizontal"
                       size="small"
                       min={0}
+                      disabled={execute}
                       value={goalMinIterations}
                       onChange={(v) => onSetStrategy({ GoalMinIterations: (v as number) ?? 0 })}
                       className={styles['mode-goal-iter-input']}

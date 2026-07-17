@@ -52,6 +52,13 @@
     &:hover {
       background: var(--Colors-Use-Neutral-Bg);
     }
+    &.mode-option-disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      &:hover {
+        background: transparent;
+      }
+    }
   }
   .mode-option-left {
     display: flex;
