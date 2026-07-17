@@ -131,6 +131,11 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 ...newCache,
                 SyncPerceptionTrigger: false,
                 EnablePlan: false,
+                Strategy: {
+                  EnableMultiAgent: false,
+                  EnableGoalMode: false,
+                  GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+                },
               })
             } catch (error) {}
           })

@@ -165,6 +165,21 @@ export interface AIStartParams {
    * 需配合 EnablePlan=true 才会暴露 request_plan 动作。
    */
   EnableDetachedPlan?: boolean
+  /**
+   * 执行策略集合（多 Agent / Goal 模式等顶层运行策略）。
+   * 与 EnablePlan 可同时勾选；目前策略侧不支持热更新，变更需下次启动生效。
+   */
+  Strategy?: AIExecutionStrategy
+}
+
+/** 执行策略，对应后端 AIExecutionStrategy */
+export interface AIExecutionStrategy {
+  /** 启用多 Agent 模式：把复杂任务拆成多个并行子 Agent 执行后再汇总 */
+  EnableMultiAgent?: boolean
+  /** 启用 Goal 模式：达到 GoalMinIterations 之前禁止提前结束 */
+  EnableGoalMode?: boolean
+  /** Goal 模式下允许 finish 的最小迭代次数，<=0 由服务端默认 */
+  GoalMinIterations?: number
 }
 
 interface AIEnabledCapability {
@@ -178,6 +193,12 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AgreePolicy = 'AgreePolicy',
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
+  /**
+   * 预留：Strategy 执行策略热更新。
+   * 目前策略侧暂不支持热更新，前端 onSetStrategy 仅写回本地 setting 与会话 StartParams；
+   * 后端支持热加载后，在 onSetStrategy 中启用该 hotpatch 调用即可。
+   */
+  HotPatchType_Strategy = 'Strategy',
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
   HotPatchType_DisabledCapabilities = 'DisabledCapabilities',

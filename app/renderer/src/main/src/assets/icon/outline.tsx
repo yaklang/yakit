@@ -6346,6 +6346,69 @@ export const OutlineUserRoundCogIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineUserRoundCog} {...props} />
 }
 
+const OutlineGoal2 = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <g clipPath="url(#clip0_46287_1908)">
+      <path
+        d="M20.828 11.2432C21.3919 14.0903 20.5706 17.1574 18.3641 19.3639C14.8494 22.8786 9.15094 22.8786 5.63623 19.3639C2.12151 15.8492 2.12151 10.1507 5.63623 6.63599C7.84269 4.42952 10.9098 3.60823 13.757 4.17211M16.9503 12.2932C17.1638 13.7968 16.6923 15.3789 15.5357 16.5355C13.5831 18.4881 10.4173 18.4881 8.46465 16.5355C6.51203 14.5829 6.51203 11.417 8.46465 9.46442C9.6212 8.30788 11.2034 7.83636 12.7069 8.04986M16.9499 8.05021H19.7784L22.6068 5.22178H19.7784V2.39335L16.9499 5.22178V8.05021ZM16.9499 8.05021L12.0002 13"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_46287_1908">
+        <rect width="24" height="24" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+)
+/**
+ * @description Outline/Goal 2
+ */
+export const OutlineGoal2Icon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineGoal2} {...props} />
+}
+
+const OutlineGrid2x2Check = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M12 3V20C12 20.2652 11.8946 20.5196 11.7071 20.7071C11.5196 20.8946 11.2652 21 11 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V11C21 11.2652 20.8946 11.5196 20.7071 11.7071C20.5196 11.8946 20.2652 12 20 12H3M16 19L18 21L22 17"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/**
+ * @description Outline/Grid2x2Check
+ */
+export const OutlineGrid2x2CheckIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineGrid2x2Check} {...props} />
+}
+
+const OutlineBoxes = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M12 19L8.03 21.38C7.71894 21.5669 7.36289 21.6656 7 21.6656C6.63711 21.6656 6.28106 21.5669 5.97 21.38L2.97 19.58C2.67476 19.4026 2.43033 19.152 2.26039 18.8524C2.09045 18.5528 2.00075 18.2144 2 17.87V14.63C2.00075 14.2856 2.09045 13.9472 2.26039 13.6476C2.43033 13.348 2.67476 13.0974 2.97 12.92L7 10.5M12 19V13.5M12 19L15.97 21.38C16.2811 21.5669 16.6371 21.6656 17 21.6656C17.3629 21.6656 17.7189 21.5669 18.03 21.38L21.03 19.58C21.3252 19.4026 21.5697 19.152 21.7396 18.8524C21.9096 18.5528 21.9992 18.2144 22 17.87V14.63C21.9992 14.2856 21.9096 13.9472 21.7396 13.6476C21.5697 13.348 21.3252 13.0974 21.03 12.92L17 10.5M12 13.5L7 10.5M12 13.5L7.00001 16.4999M12 13.5L17 10.5M12 13.5L17 16.5M12 13.5L11.9998 7.9999M7 10.5V6.13009C7.00075 5.78566 7.09045 5.44727 7.26039 5.14768C7.43033 4.84809 7.67476 4.59747 7.97 4.42009L10.97 2.62009C11.2811 2.43321 11.6371 2.33447 12 2.33447C12.3629 2.33447 12.7189 2.43321 13.03 2.62009L16.03 4.42009C16.3252 4.59747 16.5697 4.84809 16.7396 5.14768C16.9096 5.44727 16.9992 5.78566 17 6.13009V10.5M7.00001 16.4999L2.26001 13.6499M7.00001 16.4999L7 21.67M17 16.5L21.74 13.6499M17 16.5V21.67M11.9998 7.9999L7.25977 5.1499M11.9998 7.9999L16.74 5.1499"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/**
+ * @description Outline/Boxes
+ */
+export const OutlineBoxesIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineBoxes} {...props} />
+}
+
 const OutlineLandPlot = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
     <path

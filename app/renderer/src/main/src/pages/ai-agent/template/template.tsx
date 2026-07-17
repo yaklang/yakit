@@ -19,18 +19,17 @@ import {
   FooterRightTypesComponentProps,
   QSInputTextareaProps,
 } from './type'
-import { Input, Tooltip } from 'antd'
+import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineArrowupIcon,
   OutlineAtsymbolIcon,
-  OutlineBanIcon,
   OutlineBrainCircuitIcon,
   OutlineCodeIcon,
   OutlineCogIcon,
   OutlineHandIcon,
 } from '@/assets/icon/outline'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
 import styles from './template.module.scss'
@@ -51,7 +50,6 @@ import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import { AIFocusMode } from '@/pages/ai-re-act/aiFocusMode/AIFocusMode'
-import useAIAgentStore from '../useContext/useStore'
 import { isString } from 'lodash'
 import OpenFileDropdown, { OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
@@ -69,10 +67,7 @@ import {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
-import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
-import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
+import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -113,7 +108,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { chatIPCData } = useChatIPCStore()
-    const { handleSendConfigHotpatch } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 
     const [manualAdditionVisible, setManualAdditionVisible] = useState<boolean>(false)
@@ -174,8 +168,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [{ type: AIInputFooterRightEnum.AIFocusMode }]
     }, [props.footerRightTypes, isOpen])
 
-    const { setting, activeChat } = useAIAgentStore()
-    const { setSetting } = useAIAgentDispatcher()
     const [disabled, setDisabled] = useState<boolean>(false)
 
     const { isHovering, dropRef } = useAIChatDrop({
@@ -386,39 +378,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       aiMilkdownInputRef.current?.setImage()
     })
 
-    const enablePlan = useCreation(() => {
-      return !!setting?.EnablePlan
-    }, [setting?.EnablePlan])
-    const onSetPlan = useDebounceFn(
-      useMemoizedFn((checked) => {
-        handleSendConfigHotpatch({
-          hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
-          params: {
-            EnablePlan: checked,
-          },
-        })
-        setSetting?.((v) => ({
-          ...v,
-          EnablePlan: checked,
-        }))
-        if (activeChat?.SessionID) {
-          emiter.emit(
-            'sessionData',
-            JSON.stringify({
-              type: 'updateSession',
-              sessionId: activeChat.SessionID,
-              updates: {
-                StartParams: {
-                  ...(activeChat.StartParams || {}),
-                  EnablePlan: checked,
-                },
-              },
-            }),
-          )
-        }
-      }),
-      { wait: 200, leading: true },
-    ).run
     return (
       <div
         className={classNames(
@@ -468,12 +427,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           <div className={styles['footer']}>
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
-                <Tooltip title="开启后会进入Plan模式,进行任务规划和执行">
-                  <YakitCheckableTag className={styles['plan-btn']} checked={enablePlan} onChange={onSetPlan}>
-                    {enablePlan ? <OutlineBrainCircuitIcon /> : <OutlineBanIcon />}
-                    Plan
-                  </YakitCheckableTag>
-                </Tooltip>
+                <AIRunModeSelect />
                 <YakitButton
                   type="text2"
                   radius="50%"

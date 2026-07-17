@@ -2276,6 +2276,22 @@ message AIStartParams {
   // 为 true 时 request_plan 走 detached plan 审阅流程；默认 false 时走旧版异步 plan-and-execute。
   // 需配合 EnablePlan=true 才会暴露 request_plan 动作。
   bool EnableDetachedPlan = 47;
+
+  // 执行策略集合。用于承载 multi-agent / goal mode 等顶层运行策略。
+  AIExecutionStrategy Strategy = 48;
+}
+
+message AIExecutionStrategy {
+  // 为 true 时启用多 Agent 模式：顶层 ReAct 暴露并偏好 dispatch_sub_react_agents，
+  // 倾向于把复杂任务拆成多个并行子 Agent 执行后再汇总。
+  bool EnableMultiAgent = 1;
+
+  // 为 true 时启用 Goal 模式：在达到 GoalMinIterations 之前禁止 finish 提前退出，
+  // 避免“做一点就汇报然后结束”。
+  bool EnableGoalMode = 2;
+
+  // Goal 模式下允许 finish 的最小迭代次数。<=0 时由服务端使用默认值。
+  int64 GoalMinIterations = 3;
 }
 
 message AITaskFilter {
