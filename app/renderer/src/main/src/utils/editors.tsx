@@ -734,6 +734,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     setHexMountKey((k) => k + 1)
   })
 
+  useEffect(() => {
+    if (showHexView) {
+      syncHexFromOrigin()
+    }
+  }, [showHexView, originValue, originalPackage])
+
   const handleHexEditorChange = useMemoizedFn(() => {
     if (props.readOnly) {
       return
