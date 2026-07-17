@@ -137,7 +137,6 @@ export const WebFuzzerApiDocHistory: React.FC<{
               <div key={group.key} className={listStyles['history-group']}>
                 <div className={listStyles['history-group-title']}>{t(group.label)}</div>
                 {group.list.map((item) => {
-                  console.log(item, 'item')
                   const title = getItemTitle(item)
                   const deleting = deletingIds.includes(item.sessionId)
                   return (

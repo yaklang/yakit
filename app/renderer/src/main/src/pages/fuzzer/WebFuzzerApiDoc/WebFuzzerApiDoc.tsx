@@ -382,7 +382,7 @@ export const WebFuzzerApiDoc: React.FC<{
                   strokeColor="var(--Colors-Use-Blue-Primary)"
                 />
                 <div className={classNames(styles['parse-empty-msg'], 'content-ellipsis')}>{parseMessage}</div>
-                <YakitButton type="outline1" danger onClick={onStopParse}>
+                <YakitButton type="outline1" danger onClick={onStopParse} disabled={canceling}>
                   {t('ApiDoc.stopParse')}
                 </YakitButton>
               </div>
