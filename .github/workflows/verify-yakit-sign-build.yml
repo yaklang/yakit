@@ -33,7 +33,8 @@ jobs:
           echo "ENGINE_VERSION=$(tr -d '\n\r' < bins/engine-version.txt)" >> "$GITHUB_ENV"
 
           PKG_VERSION=$(node -p 'require("./package.json").version')
-          SOFTWARE_VERSION=$(echo "${PKG_VERSION}" | sed -e 's/-ce//' -e 's/-ee//')
+          SOFTWARE_VERSION="${PKG_VERSION%-ce}"
+          SOFTWARE_VERSION="${SOFTWARE_VERSION%-ee}"
           echo "SOFTWARE_VERSION=${SOFTWARE_VERSION}" >> "$GITHUB_ENV"
 
           # electron-builder mac 打包依赖系统 zip；仓库自带兼容版本
