@@ -283,7 +283,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         mapKey: item.token,
       })
       if (!chatItem) return false
-      return (chatItem.data as AITaskStartInfo).taskIndex === id
+      return (chatItem.data as AITaskStartInfo).taskId === id
     })
     locateToIndex(index, 'auto')
   })

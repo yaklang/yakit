@@ -18,10 +18,10 @@ export interface HistoryTaskTreeItemProps {
 
 export interface AIHistoryContinueTaskProps {
   coordinatorId: string
-  taskIndex: string
+  taskId: string
 }
 
 export interface SendRecoverParams {
   coordinatorId: string
-  taskIndex: string
+  taskId: string
 }

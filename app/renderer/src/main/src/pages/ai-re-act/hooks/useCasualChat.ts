@@ -70,7 +70,6 @@ function useCasualChat(params: UseCasualChatParams) {
       type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
       data: {
         taskId: ownTaskId,
-        taskIndex: ownTaskId,
         taskName: info.react_task_name || info.react_user_input || ownTaskId,
         goal: info.react_user_input || '',
         status: info.react_task_status,

@@ -1018,7 +1018,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             const params = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
             const { react_task_now_status } = params
             const react_task_id = res.TaskId || params.react_task_id
-            if (['completed', 'aborted'].includes(react_task_now_status)) {
+            if (['completed', 'aborted', 'skipped'].includes(react_task_now_status)) {
               if (currentCasualTaskID.current && currentCasualTaskID.current === react_task_id) {
                 setCancelCasualLoading(false)
                 setCasualLoading(false)
