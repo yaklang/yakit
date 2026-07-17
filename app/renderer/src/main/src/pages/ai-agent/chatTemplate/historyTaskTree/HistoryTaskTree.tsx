@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import React, { memo, useRef, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss'
 import {
   AIHistoryContinueTaskProps,
@@ -126,7 +126,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 
   const loading = useCreation(() => {
     return sendRecoverParamsRef.current?.taskId === taskId && isExecuting
-  }, [isExecuting, taskId, sendRecoverParamsRef.current?.taskId])
+  }, [isExecuting, taskId])
 
   const getTaskInfo = useMemoizedFn(() => {
     return chatIPCEvents.fetchCurrentTaskPlanID()

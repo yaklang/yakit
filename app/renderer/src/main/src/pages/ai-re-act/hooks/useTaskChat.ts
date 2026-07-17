@@ -13,7 +13,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, handleTodoListData } from './utils'
+import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -269,7 +269,6 @@ function useTaskChat(params: UseTaskChatParams) {
           // 开始任务的执行
           const info = data as AIAgentGrpcApi.ChangeTask
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
-          if (info.task.task_id || res.TaskId) handleTaskNode(res, info)
         }
 
         if (data && typeof data === 'object' && data?.type === 'pop_task') {
