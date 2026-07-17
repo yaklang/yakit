@@ -47,9 +47,13 @@ import { editor as newEditor } from 'monaco-editor'
 import IModelDecoration = newEditor.IModelDecoration
 import {
   CountDirectionProps,
+  EditorDetailInfoProps,
   HTTPFuzzerClickEditorMenu,
   HTTPFuzzerRangeEditorMenu,
   HTTPFuzzerRangeReadOnlyEditorMenu,
+  SmartDecodeAnchorRect,
+  SmartDecodeFloatPanel,
+  snapshotRect,
 } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
 import { QueryFuzzerLabelResponseProps } from '@/pages/fuzzer/StringFuzzer'
 import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from '@/pages/fuzzer/InsertFileFuzzTag'
@@ -1858,6 +1862,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   // 定时消失的定时器
   const fizzSelectTimeoutId = useRef<NodeJS.Timeout>()
   const fizzRangeTimeoutId = useRef<NodeJS.Timeout>()
+  const [smartDecode, setSmartDecode] = useState<{
+    openId: number
+    rangeValue: string
+    editorInfo?: EditorDetailInfoProps
+    anchorRect: SmartDecodeAnchorRect
+  } | null>(null)
+  const openSmartDecodeRef = useRef<(rangeValue: string, info?: EditorDetailInfoProps, rect?: DOMRect) => void>()
+  openSmartDecodeRef.current = (rangeValue, info, rect) => {
+    if (!rect) return
+    setSmartDecode({
+      openId: Date.now(), // 强制 remount，避免旧拖拽位移残留
+      rangeValue,
+      editorInfo: info,
+      anchorRect: snapshotRect(rect),
+    })
+  }
   // 编辑器菜单
   const editerMenuFun = (editor: YakitIMonacoEditor) => {
     // 编辑器点击弹窗的唯一Id
@@ -2004,6 +2024,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                   toOpenAiChat={toOpenAiChat}
                   rangeValue={(editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ''}
                   fizzRangeTimeoutId={fizzRangeTimeoutId}
+                  onOpenSmartDecode={(rangeValue, anchorRect) => {
+                    openSmartDecodeRef.current?.(rangeValue, editorInfo.current, anchorRect)
+                  }}
                   hTTPFuzzerClickEditorMenuProps={
                     readOnly
                       ? undefined
@@ -2301,6 +2324,21 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         refreshRate={30}
       />
       {disabled && <div className={styles['yakit-editor-shade']}></div>}
+      {smartDecode && (
+        <div className={styles['smart-decode-float-host']}>
+          <SmartDecodeFloatPanel
+            key={smartDecode.openId}
+            rangeValue={smartDecode.rangeValue}
+            editorInfo={smartDecode.editorInfo}
+            anchorRect={smartDecode.anchorRect}
+            onClose={() => setSmartDecode(null)}
+            replace={(text) => {
+              editor?.trigger('keyboard', 'paste', { text })
+              setSmartDecode(null)
+            }}
+          />
+        </div>
+      )}
       <div
         className={styles['yakit-editor-container']}
         onContextMenu={(e) => {

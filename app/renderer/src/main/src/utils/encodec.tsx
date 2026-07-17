@@ -191,7 +191,11 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
     setResult(data)
   }, [data])
   return (
-    <div className={styles['auto-decode-container']}>
+    <div
+      className={classNames(styles['auto-decode-container'], {
+        [styles['auto-decode-container-has-source']]: isShowSource,
+      })}
+    >
       {isShowSource && (
         <AutoCard
           title={<span className={styles['auto-decode-container-title']}>{t('Encodec.selectContent')}</span>}

@@ -1,10 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Avatar, Timeline } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import styles from './HTTPFuzzerEditorMenu.module.scss'
 import { failed } from '@/utils/notification'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { OutlineXIcon } from '@/assets/icon/outline'
+import ReactDraggable from 'react-draggable'
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -50,6 +52,16 @@ export interface EditorDetailInfoProps {
   lineHeight: number
   scrollTop: number
 }
+
+export interface SmartDecodeAnchorRect {
+  top: number
+  left: number
+  right: number
+  bottom: number
+  width: number
+  height: number
+}
+
 // isOtherGroup是否为 编码/解码
 // isGroupShow插入标签是否相邻其他元素
 const directionStyle = (editorInfo, isOtherGroup = false, isGroupShow = false) => {
@@ -64,6 +76,15 @@ const directionStyle = (editorInfo, isOtherGroup = false, isGroupShow = false) =
   }
   return obj
 }
+
+export const snapshotRect = (rect: DOMRect): SmartDecodeAnchorRect => ({
+  top: rect.top,
+  left: rect.left,
+  right: rect.right,
+  bottom: rect.bottom,
+  width: rect.width,
+  height: rect.height,
+})
 
 // 拖拽左右限制
 const getItemStyle = (isDragging, draggableStyle) => {
@@ -881,6 +902,95 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
   )
 }
 
+/** 挂在 YakitEditor 上的智能解码浮层：不随选区菜单一起消失 */
+export interface SmartDecodeFloatPanelProps {
+  rangeValue: string
+  replace?: (v: string) => void
+  editorInfo?: EditorDetailInfoProps
+  anchorRect?: SmartDecodeAnchorRect
+  onClose: () => void
+}
+export const SmartDecodeFloatPanel: React.FC<SmartDecodeFloatPanelProps> = (props) => {
+  const { rangeValue, replace, editorInfo, anchorRect, onClose } = props
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const nodeRef = useRef<HTMLDivElement>(null)
+  const [wrapStyle, setWrapStyle] = useState<React.CSSProperties>({
+    position: 'absolute',
+    visibility: 'hidden',
+    pointerEvents: 'none',
+  })
+  const [dragBounds, setDragBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 })
+  const { top = 0, left = 0, bottom = 0, right = 0 } = editorInfo || {}
+  const menuWidth = right - left < 720 ? Math.floor((right - left) / 2) : undefined
+  const menuHeight = Math.floor((bottom - top) / 2 - 30)
+
+  useLayoutEffect(() => {
+    const host = wrapRef.current?.parentElement
+    if (!anchorRect || !host) return
+    const hostRect = host.getBoundingClientRect()
+    setWrapStyle({
+      position: 'absolute',
+      top: anchorRect.top - hostRect.top,
+      left: anchorRect.left - hostRect.left,
+      width: anchorRect.width,
+      height: anchorRect.height,
+      pointerEvents: 'none',
+      visibility: 'visible',
+    })
+  }, [anchorRect])
+
+  const onDragStart = useMemoizedFn((_e: any, uiData: { x: number; y: number }) => {
+    const host = wrapRef.current?.parentElement
+    const panelRect = nodeRef.current?.getBoundingClientRect()
+    if (!host || !panelRect) return
+    const hostRect = host.getBoundingClientRect()
+    setDragBounds({
+      left: hostRect.left - panelRect.left + uiData.x,
+      right: hostRect.right - panelRect.right + uiData.x,
+      top: hostRect.top - panelRect.top + uiData.y,
+      bottom: hostRect.bottom - panelRect.bottom + uiData.y,
+    })
+  })
+
+  return (
+    <div ref={wrapRef} style={wrapStyle}>
+      <ReactDraggable
+        nodeRef={nodeRef}
+        handle={`.${styles['menu-drag']}`}
+        cancel="button"
+        bounds={dragBounds}
+        onStart={onDragStart}
+      >
+        <div
+          ref={nodeRef}
+          className={styles['http-fuzzer-range-editor-menu']}
+          style={{
+            ...directionStyle(editorInfo, true),
+            left: right - left < 750 ? undefined : ['left'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
+            right: right - left < 750 ? 0 : ['middle', 'right'].includes(editorInfo?.direction.x || '') ? 0 : undefined,
+            width: menuWidth ? menuWidth : 360,
+            maxHeight: menuHeight ? menuHeight : undefined,
+            pointerEvents: 'auto',
+          }}
+        >
+          <div className={styles['menu-drag']}>
+            <YakitButton type="text2" size="small" icon={<OutlineXIcon />} onClick={onClose} />
+          </div>
+          <div className={styles['menu-content']}>
+            <DecodeComponent
+              rangeValue={rangeValue}
+              replace={(v) => {
+                replace?.(v)
+                onClose()
+              }}
+            />
+          </div>
+        </div>
+      </ReactDraggable>
+    </div>
+  )
+}
+
 export interface HTTPFuzzerRangeEditorMenuProps {
   close: () => void
   editorInfo?: EditorDetailInfoProps
@@ -889,6 +999,7 @@ export interface HTTPFuzzerRangeEditorMenuProps {
   replace?: (v: string) => void
   hTTPFuzzerClickEditorMenuProps?: HTTPFuzzerClickEditorMenuProps
   fizzRangeTimeoutId?: any
+  onOpenSmartDecode?: (rangeValue: string, anchorRect?: DOMRect) => void
   toOpenAiChat?: AIPluginComponentProps['toOpenAiChat']
 }
 export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps> = (props) => {
@@ -900,6 +1011,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
     replace,
     hTTPFuzzerClickEditorMenuProps,
     fizzRangeTimeoutId,
+    onOpenSmartDecode,
     toOpenAiChat,
   } = props
   const { t, i18n } = useI18nNamespaces(['webFuzzer'])
@@ -917,8 +1029,9 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
     let height: number = Math.floor((bottom - top) / 2 - 30)
     setMenuHeight(height)
   }, [])
-  const [segmentedType, setSegmentedType] = useState<'decode' | 'encode' | 'decodeLabel'>()
+  const [segmentedType, setSegmentedType] = useState<'encode' | 'decodeLabel'>()
   const [clickSegmentedType, setClickSegmentedType] = useState<'insert-tag' | 'aiplugin'>()
+  const rangeEditorRef = useRef<HTMLDivElement>(null)
 
   const [boxHidden, setBoxHidden] = useState<boolean>(true)
   // 0.3秒后显示
@@ -968,7 +1081,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
           {...hTTPFuzzerClickEditorMenuProps}
         />
       )}
-      <div className={styles['http-fuzzer-range-editor']}>
+      <div className={styles['http-fuzzer-range-editor']} ref={rangeEditorRef}>
         <div className={styles['http-fuzzer-range-editor-simple']}>
           <div className={styles['show-box']}>
             <div className={styles['line']}></div>
@@ -1024,11 +1137,8 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
               className={styles['decode-box']}
               style={{ width: right - left > 550 ? (i18n.language.startsWith('zh') ? 100 : 120) : undefined }}
               onClick={() => {
-                if (segmentedType === 'decode') {
-                  setSegmentedType(undefined)
-                } else {
-                  setSegmentedType('decode')
-                }
+                const anchorRect = rangeEditorRef.current?.getBoundingClientRect()
+                onOpenSmartDecode?.(rangeValue, anchorRect)
               }}
             >
               <IconSolidSparklesIcon />
@@ -1055,7 +1165,6 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
             <div className={styles['menu-content']}>
               {segmentedType === 'encode' && <EncodeComponent insert={insert} />}
               {segmentedType === 'decodeLabel' && <DecodeLableComponent insert={insert} />}
-              {segmentedType === 'decode' && <DecodeComponent rangeValue={rangeValue} replace={replace} />}
             </div>
           </div>
         )}
