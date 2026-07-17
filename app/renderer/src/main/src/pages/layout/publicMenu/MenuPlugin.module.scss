@@ -185,6 +185,9 @@
 
 .plugin-list-wrapper {
   width: 1120px;
+  :global(.func-search-wrapper) {
+    padding-bottom: 8px;
+  }
   .list-body {
     width: 100%;
     max-height: 374px;
@@ -196,6 +199,15 @@
     background: var(--Colors-Use-Basic-Background);
     border: 1px solid var(--Colors-Use-Neutral-Border);
     border-radius: 4px 4px 0px 0px;
+
+    .list-body-search {
+      width: 300px;
+    }
+
+    .plugin-search-divider {
+      margin: 24px 0;
+    }
+
     .plugins-wrapper {
       display: flex;
       flex-direction: column;
@@ -211,6 +223,10 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 16px;
+        .search-empty {
+          font-size: 12px;
+          color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        }
         .plugins-opt {
           width: 72px;
           height: 54px;

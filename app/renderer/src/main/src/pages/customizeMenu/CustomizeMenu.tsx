@@ -37,6 +37,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { QueryYakScriptsResponse, YakScript } from '../invoker/schema'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
+import { getPluginUsageCache, sortPluginsByUsage } from '@/utils/pluginUsageCache'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakEditor } from '@/utils/editors'
@@ -961,7 +962,12 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
     <>
       <div className={style['right-heard']}>
         {isCommunityEdition() ? (
-          <div className={style['header-title']}>{t('CustomizeMenu.FeaturesAndPlugin.pluginStore')}</div>
+          <div className={style['header-title']}>
+            {t('CustomizeMenu.FeaturesAndPlugin.pluginStore')}
+            {/* <div className={style['header-title-extra']}>
+              ({t('CustomizeMenu.FeaturesAndPlugin.pluginStoreSortByUsage')})
+            </div> */}
+          </div>
         ) : (
           <YakitRadioButtons
             value={type}
@@ -1177,6 +1183,14 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
     setLoading(true)
     ipcRenderer
       .invoke('QueryYakScript', newParams)
+      // TODO: 等接口
+      // .then(async (item: QueryYakScriptsResponse) => {
+      //   let data = page === 1 ? item.Data : response.Data.concat(item.Data)
+      //   //按照使用次数排序
+      //   if (!keyword) {
+      //     const usage = await getPluginUsageCache()
+      //     data = sortPluginsByUsage(data, usage)
+      //   }
       .then((item: QueryYakScriptsResponse) => {
         const data = page === 1 ? item.Data : response.Data.concat(item.Data)
         const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total

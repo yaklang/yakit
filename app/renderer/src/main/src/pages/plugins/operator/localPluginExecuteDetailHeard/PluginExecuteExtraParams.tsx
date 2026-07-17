@@ -41,6 +41,7 @@ interface PluginExecuteExtraParamsProps extends JsonFormSchemaListWrapper {
   visible: boolean
   setVisible: (b: boolean) => void
   onSave: (value: { customValue: CustomPluginExecuteFormValue; fixedValue: PluginExecuteExtraFormValue }) => void
+  refreshValue?: number
 }
 
 export interface PluginExecuteExtraParamsRefProps {
@@ -188,9 +189,18 @@ interface ExtraParamsNodeByTypeProps extends JsonFormSchemaListWrapper {
   // 是否应用默认值
   isDefaultActiveKey?: boolean
   wrapperClassName?: string
+  refreshValue?: number
 }
 export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
-  const { extraParamsGroup, pluginType, jsonSchemaListRef, isDefaultActiveKey = true, wrapperClassName } = props
+  const {
+    extraParamsGroup,
+    pluginType,
+    jsonSchemaListRef,
+    isDefaultActiveKey = true,
+    wrapperClassName,
+    jsonSchemaInitial,
+    refreshValue,
+  } = props
   const defaultActiveKey = useMemo(() => {
     if (!isDefaultActiveKey) return undefined
     return extraParamsGroup.map((ele) => ele.group)
@@ -204,7 +214,13 @@ export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React
         <YakitPanel key={`${item.group}`} header={`参数组：${item.group}`}>
           {item.data?.map((formItem) => (
             <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
-              <FormContentItemByType item={formItem} pluginType={pluginType} jsonSchemaListRef={jsonSchemaListRef} />
+              <FormContentItemByType
+                item={formItem}
+                pluginType={pluginType}
+                jsonSchemaListRef={jsonSchemaListRef}
+                jsonSchemaInitial={jsonSchemaInitial}
+                refreshValue={refreshValue}
+              />
             </React.Fragment>
           ))}
         </YakitPanel>

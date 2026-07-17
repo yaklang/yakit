@@ -80,7 +80,9 @@
       "restoreMenu": "Restore Menu",
       "restoreMenuTip": "Restore Menu Reminder",
       "confirmRestoreMenu": "After confirming restore, the frequently used plugins menu bar will be reset. Do you want to proceed?",
-      "commonPlugins": "Common Plugins"
+      "commonPlugins": "Common Plugins",
+      "recentUsed": "Recently Used",
+      "allPlugin": "All Plugin"
     },
     "MenuMode": {
       "bruteForce": "Brute Force",

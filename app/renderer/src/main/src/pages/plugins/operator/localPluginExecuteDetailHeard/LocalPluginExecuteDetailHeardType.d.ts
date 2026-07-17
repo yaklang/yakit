@@ -3,10 +3,11 @@ import { ReactNode } from 'react'
 import { YakParamProps } from '../../pluginsType'
 import { KVPair } from '@/models/kv'
 import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { FormInstance } from 'antd'
 import { ExpandAndRetractExcessiveState } from '../expandAndRetract/ExpandAndRetract'
 import { JsonFormSchemaListWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
+import type { PluginExecuteCacheConfig } from '@/utils/pluginUsageCache'
 export interface PluginExecuteDetailHeardProps {
   token: string
   /**插件 */
@@ -18,6 +19,7 @@ export interface PluginExecuteDetailHeardProps {
     stop: () => void
     cancel: () => void
     reset: () => void
+    snapshot: () => HoldGRPCStreamInfo
   }
   progressList: StreamResult.Progress[]
   runtimeId: string
@@ -37,6 +39,12 @@ export interface PluginExecuteDetailHeardProps {
   input?: string
   noHTTPRequestTemplate?: boolean
   autoExecute?: boolean
+  /** 最近一次执行配置 */
+  initialExecuteConfig?: PluginExecuteCacheConfig
+  /** 缓存本次执行配置 */
+  onCacheExecuteConfig?: (config: PluginExecuteCacheConfig) => void
+  /** 缓存主动停止时已经收到的执行结果 */
+  onExecutionStop?: (streamInfo: HoldGRPCStreamInfo) => void
 }
 
 export interface YakExtraParamProps {

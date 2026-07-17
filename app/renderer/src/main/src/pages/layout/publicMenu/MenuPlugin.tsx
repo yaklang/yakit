@@ -17,8 +17,28 @@ import styles from './MenuPlugin.module.scss'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
+import { getPluginUsageCache, markPluginRestoreOnOpen } from '@/utils/pluginUsageCache'
+import { FuncSearch } from '@/pages/plugins/funcTemplate'
+import { PluginSearchParams } from '@/pages/plugins/baseTemplateType'
+import {
+  apiFetchOnlineList,
+  convertLocalPluginsRequestParams,
+  convertPluginsRequestParams,
+} from '@/pages/plugins/utils'
+import { defaultFilter } from '@/pages/plugins/builtInData'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { grpcDownloadOnlinePlugin } from '@/pages/pluginHub/utils/grpc'
+import emiter from '@/utils/eventBus/eventBus'
 
 const { ipcRenderer } = window.require('electron')
+const defaultSearch: PluginSearchParams = {
+  type: 'fieldKeywords',
+  keyword: '',
+  userName: '',
+  fieldKeywords: '',
+  tag: '',
+}
+type SearchPluginItem = { name: string; id?: number; headImg?: string; uuid?: string }
 
 interface MenuPluginProps {
   children?: React.ReactNode
@@ -33,8 +53,13 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
   const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout', 'yakitUi'])
 
   /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
-  const onMenu = useMemoizedFn((pluginId: number, pluginName: string) => {
+  const onMenu = useMemoizedFn((pluginId: number, pluginName: string, fromRecent?: boolean) => {
     if (!pluginName) return
+
+    if (fromRecent) {
+      markPluginRestoreOnOpen(pluginName)
+      emiter.emit('onRestorePluginLastExecute', pluginName)
+    }
 
     onMenuSelect({
       route: YakitRoute.Plugin_OP,
@@ -87,58 +112,231 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
   })
 
   const [listShow, setListShow] = useState<boolean>(false)
+  const [recentPlugins, setRecentPlugins] = useState<{ name: string; id?: number; headImg?: string }[]>([])
+  const [search, setSearch] = useState<PluginSearchParams>(defaultSearch)
+  const [searchedKeyword, setSearchedKeyword] = useState('')
+  const [searchLocal, setSearchLocal] = useState<SearchPluginItem[]>([])
+  const [searchOnline, setSearchOnline] = useState<SearchPluginItem[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+
+  const getSearchKeyword = useMemoizedFn((s: PluginSearchParams) => {
+    switch (s.type) {
+      case 'userName':
+        return s.userName || ''
+      case 'tag':
+        return s.tag || ''
+      case 'fieldKeywords':
+        return s.fieldKeywords || ''
+      default:
+        return s.keyword || ''
+    }
+  })
+
+  const jumpOnlinePlugin = useMemoizedFn((item: SearchPluginItem) => {
+    if (!item.uuid) return
+    setListShow(false)
+    grpcDownloadOnlinePlugin({ uuid: item.uuid }).then((res) => {
+      onMenu(+res.Id || 0, res.ScriptName || item.name)
+    })
+  })
+
+  const onSearch = useMemoizedFn(async (value: PluginSearchParams) => {
+    const keyword = getSearchKeyword(value).trim()
+    setSearchedKeyword(keyword)
+    if (!keyword) {
+      setSearchLocal([])
+      setSearchOnline([])
+      setSearchLoading(false)
+      return
+    }
+    setSearchLoading(true)
+    try {
+      const pageParams = { page: 1, limit: 9999 }
+      const [localRes, onlineRes] = await Promise.all([
+        ipcRenderer.invoke(
+          'QueryYakScript',
+          convertLocalPluginsRequestParams({ filter: defaultFilter, search: value, pageParams }),
+        ),
+        apiFetchOnlineList(convertPluginsRequestParams(defaultFilter, value, pageParams), true),
+      ])
+      setSearchLocal(
+        (localRes?.Data || []).map((item: any) => ({
+          name: item.ScriptName,
+          id: item.Id,
+          headImg: item.HeadImg,
+        })),
+      )
+      setSearchOnline(
+        (onlineRes?.data || []).map((item: any) => ({
+          name: item.script_name,
+          uuid: item.uuid,
+          headImg: item.head_img,
+        })),
+      )
+    } finally {
+      setSearchLoading(false)
+    }
+  })
+
+  const renderPluginOpt = useMemoizedFn(
+    (
+      item: { name: string; headImg?: string; id?: number; label?: string },
+      onClick: () => void,
+      disabled?: boolean,
+      showLoading?: boolean,
+    ) => (
+      <Tooltip key={item.name} placement="bottom" title={item.label || item.name}>
+        <div
+          className={classNames(styles['plugins-opt'], {
+            [styles['disable-style']]: !!disabled,
+          })}
+          onClick={(e) => {
+            if (disabled) {
+              e.preventDefault()
+              e.stopPropagation()
+              return
+            }
+            onClick()
+          }}
+        >
+          {showLoading && (
+            <div className={styles['loading-style']} onClick={(e) => e.stopPropagation()}>
+              <LoadingOutlined />
+            </div>
+          )}
+          <Avatar className={styles['avatar-style']} src={item.headImg} icon={<PublicDefaultPluginIcon />} />
+          <div className={classNames(styles['opt-title'], 'content-ellipsis')} title={item.label || item.name}>
+            {item.label || item.name}
+          </div>
+        </div>
+      </Tooltip>
+    ),
+  )
+
+  const onListVisibleChange = useMemoizedFn((visible: boolean) => {
+    setListShow(visible)
+    if (!visible) return
+    getPluginUsageCache().then((usage) => {
+      setRecentPlugins(
+        Object.entries(usage)
+          .sort((a, b) => b[1].lastUsedAt - a[1].lastUsedAt)
+          .slice(0, 10)
+          .map(([name, item]) => ({ name, id: item.id, headImg: item.headImg })),
+      )
+    })
+  })
+
+  const renderSearchListDom = useMemo(
+    () => (
+      <YakitSpin spinning={searchLoading}>
+        <div className={styles['plugins-wrapper']}>
+          <div className={styles['plugins-title']}>{t('Layout.ExtraMenu.localPlugin')}</div>
+          <div className={styles['plugins-body']}>
+            {searchLocal.map((item) => renderPluginOpt(item, () => onMenu(item.id || 0, item.name)))}
+            {!searchLoading && !searchLocal.length && (
+              <div className={styles['search-empty']}>{t('YakitEmpty.noData')}</div>
+            )}
+          </div>
+        </div>
+        <div className={styles['plugin-search-divider']} />
+        <div className={styles['plugins-wrapper']}>
+          <div className={styles['plugins-title']}>{t('Layout.MenuPlugin.allPlugin')}</div>
+          <div className={styles['plugins-body']}>
+            {searchOnline.map((item) =>
+              renderPluginOpt({ name: item.uuid || item.name, label: item.name, headImg: item.headImg }, () =>
+                jumpOnlinePlugin(item),
+              ),
+            )}
+            {!searchLoading && !searchOnline.length && (
+              <div className={styles['search-empty']}>{t('YakitEmpty.noData')}</div>
+            )}
+          </div>
+        </div>
+      </YakitSpin>
+    ),
+    [searchLocal, searchOnline, searchLoading, i18n.language, jumpOnlinePlugin, renderPluginOpt, onMenu],
+  )
+
+  const renderRecentPluginsDom = useMemo(() => {
+    if (!recentPlugins.length) return null
+    return (
+      <>
+        <div className={styles['plugins-wrapper']}>
+          <div className={styles['plugins-title']}>{t('Layout.MenuPlugin.recentUsed')}</div>
+          <div className={styles['plugins-body']}>
+            {recentPlugins.map((item) =>
+              renderPluginOpt(item, () => onMenu(item.id || 0, item.name, true), !item.id, loading),
+            )}
+          </div>
+        </div>
+        {pluginList.length > 0 && (
+          <div className={styles['plugin-divider']}>
+            <div className={styles['divider-style']}></div>
+          </div>
+        )}
+      </>
+    )
+  }, [recentPlugins, pluginList, loading, renderPluginOpt, onMenu, i18n.language])
+
   const listDom = useMemo(() => {
+    const hasSearch = !!searchedKeyword
     return (
       <div className={styles['plugin-list-wrapper']}>
         <div className={styles['list-body']}>
-          {pluginList.map((item, index) => {
-            if (item.children && item.children.length > 0)
-              return (
-                <React.Fragment key={item.label}>
-                  <div className={styles['plugins-wrapper']}>
-                    <div className={styles['plugins-title']}>{item.label}</div>
-                    <div className={styles['plugins-body']}>
-                      {(item.children || []).map((subItem) => {
-                        return (
-                          <Tooltip key={subItem.menuName} placement="bottom" title={subItem.label}>
-                            <div
-                              key={subItem.menuName}
-                              className={classNames(styles['plugins-opt'], {
-                                [styles['disable-style']]: !subItem.yakScriptId,
-                              })}
-                              onClick={() => onMenu(subItem.yakScriptId || 0, subItem.yakScripName || '')}
-                            >
-                              {loading && (
-                                <div className={styles['loading-style']} onClick={(e) => e.stopPropagation()}>
-                                  <LoadingOutlined />
-                                </div>
-                              )}
-                              <Avatar
-                                className={styles['avatar-style']}
-                                src={subItem.headImg}
-                                icon={<PublicDefaultPluginIcon />}
-                              />
+          <div className={styles['list-body-search']}>
+            <FuncSearch value={search} onChange={setSearch} onSearch={onSearch} />
+          </div>
+          {hasSearch && renderSearchListDom}
+          {!hasSearch && renderRecentPluginsDom}
+          {!hasSearch &&
+            pluginList.map((item, index) => {
+              if (item.children && item.children.length > 0)
+                return (
+                  <React.Fragment key={item.label}>
+                    <div className={styles['plugins-wrapper']}>
+                      <div className={styles['plugins-title']}>{item.label}</div>
+                      <div className={styles['plugins-body']}>
+                        {(item.children || []).map((subItem) => {
+                          return (
+                            <Tooltip key={subItem.menuName} placement="bottom" title={subItem.label}>
                               <div
-                                className={classNames(styles['opt-title'], 'content-ellipsis')}
-                                title={subItem.label}
+                                key={subItem.menuName}
+                                className={classNames(styles['plugins-opt'], {
+                                  [styles['disable-style']]: !subItem.yakScriptId,
+                                })}
+                                onClick={() => onMenu(subItem.yakScriptId || 0, subItem.yakScripName || '')}
                               >
-                                {subItem.label}
+                                {loading && (
+                                  <div className={styles['loading-style']} onClick={(e) => e.stopPropagation()}>
+                                    <LoadingOutlined />
+                                  </div>
+                                )}
+                                <Avatar
+                                  className={styles['avatar-style']}
+                                  src={subItem.headImg}
+                                  icon={<PublicDefaultPluginIcon />}
+                                />
+                                <div
+                                  className={classNames(styles['opt-title'], 'content-ellipsis')}
+                                  title={subItem.label}
+                                >
+                                  {subItem.label}
+                                </div>
                               </div>
-                            </div>
-                          </Tooltip>
-                        )
-                      })}
+                            </Tooltip>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                  {index !== pluginList.length - 1 && (
-                    <div className={styles['plugin-divider']}>
-                      <div className={styles['divider-style']}></div>
-                    </div>
-                  )}
-                </React.Fragment>
-              )
-            return null
-          })}
+                    {index !== pluginList.length - 1 && (
+                      <div className={styles['plugin-divider']}>
+                        <div className={styles['divider-style']}></div>
+                      </div>
+                    )}
+                  </React.Fragment>
+                )
+              return null
+            })}
         </div>
 
         <div className={styles['list-custom']}>
@@ -152,7 +350,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
         </div>
       </div>
     )
-  }, [pluginList, loading, i18n.language])
+  }, [pluginList, loading, i18n.language, search, renderRecentPluginsDom, renderSearchListDom, searchedKeyword])
 
   if (props.children) {
     return (
@@ -160,11 +358,11 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
         <YakitPopover
           overlayClassName={styles['plugin-list-popover']}
           overlayStyle={{ paddingTop: 6 }}
-          placement="bottomRight"
+          placement="bottom"
           trigger={'click'}
           content={listDom}
           visible={listShow}
-          onVisibleChange={(visible) => setListShow(visible)}
+          onVisibleChange={onListVisibleChange}
         >
           <div className={styles['body-style']}>{props.children}</div>
         </YakitPopover>
@@ -229,7 +427,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
               trigger={'click'}
               content={listDom}
               visible={listShow}
-              onVisibleChange={(visible) => setListShow(visible)}
+              onVisibleChange={onListVisibleChange}
             >
               <div className={styles['body-style']}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
             </YakitPopover>

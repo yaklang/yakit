@@ -80,7 +80,9 @@
       "restoreMenu": "復原選單",
       "restoreMenuTip": "復原選單提醒",
       "confirmRestoreMenu": "確認復原後，將重置常用外掛選單欄。是否確認復原？",
-      "commonPlugins": "常用外掛"
+      "commonPlugins": "常用外掛",
+      "recentUsed": "最近使用",
+      "allPlugin": "線上插件"
     },
     "MenuMode": {
       "bruteForce": "爆破",
