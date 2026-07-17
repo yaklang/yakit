@@ -57,6 +57,7 @@ import {
 import { parseStatusCodes, sorterFunction } from '../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import emiter from '@/utils/eventBus/eventBus'
 import { HTTPHistoryAnalysisPageInfo, PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { shallow } from 'zustand/shallow'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
@@ -1430,12 +1431,6 @@ interface HttpRuleTableProps {
   onRowDoubleClick: (r?: HTTPFlowRuleData) => void
 }
 const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
-  const { currentPageTabRouteKey } = usePageInfo(
-    (s) => ({
-      currentPageTabRouteKey: s.currentPageTabRouteKey,
-    }),
-    shallow,
-  )
   const {
     tableData,
     currentSelectItem,
@@ -1703,7 +1698,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
 
   const [exportToken, setExportToken] = useState<string>('')
   const [exportPercentVisible, setExportPercentVisible] = useState<boolean>(false)
-  const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+  const exportPageContainerRef = useRef<HTMLElement>()
   const exportMITMRuleExtractedData = useMemoizedFn(() => {
     const token = randomString(40)
     setExportToken(token)
@@ -1719,7 +1714,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         token,
       )
       .then(() => {
-        percentContainerRef.current = currentPageTabRouteKey
+        exportPageContainerRef.current = getMainOperatorPageBodyContainer()
         setExportPercentVisible(true)
       })
       .catch((error) => {
@@ -1770,7 +1765,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
       ></TableVirtualResize>
       {exportPercentVisible && (
         <ImportExportProgress
-          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
+          getContainer={exportPageContainerRef.current}
           visible={exportPercentVisible}
           title={t('HttpRuleTable.export_rule_data')}
           subTitle={t('HttpRuleTable.query_in_database')}

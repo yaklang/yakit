@@ -89,8 +89,7 @@ import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import emiter from '@/utils/eventBus/eventBus'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import {
   AIModelCheckResult,
   AIModelForm,
@@ -897,13 +896,6 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
       [],
     )
 
-    const { currentPageTabRouteKey } = usePageInfo(
-      (s) => ({
-        currentPageTabRouteKey: s.currentPageTabRouteKey,
-      }),
-      shallow,
-    )
-
     useEffect(() => {
       init()
     }, [])
@@ -984,14 +976,12 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             title={t('AILocalModelList.myAdded')}
             list={supportedModelsUser}
             onRefresh={getList}
-            currentPageTabRouteKey={currentPageTabRouteKey}
           />
         )}
         <AILocalModelListWrapper
           title={t('AILocalModelList.recommendedModels')}
           list={supportedModels}
           onRefresh={getList}
-          currentPageTabRouteKey={currentPageTabRouteKey}
         />
       </YakitSpin>
     ) : (
@@ -1033,7 +1023,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             token={tokenRef.current}
             onFinished={installFinished}
             onCancel={installCancel}
-            getContainer={document.getElementById(`main-operator-page-body-${currentPageTabRouteKey}`) || undefined}
+            getContainer={getMainOperatorPageBodyContainer()}
           />
         )}
       </YakitSpin>
@@ -1041,7 +1031,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
   }),
 )
 const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.memo((props) => {
-  const { title, list, onRefresh, currentPageTabRouteKey } = props
+  const { title, list, onRefresh } = props
   return (
     <div className={styles['ai-local-model-list-wrapper']}>
       <div className={styles['ai-local-model-list-title']}>
@@ -1051,11 +1041,7 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
       <div className={styles['ai-local-model-list']}>
         {list.map((rowData) => (
           <div className={styles['ai-local-model-list-row']} key={rowData.Name}>
-            <AILocalModelListItem
-              item={rowData}
-              onRefresh={onRefresh}
-              currentPageTabRouteKey={currentPageTabRouteKey}
-            />
+            <AILocalModelListItem item={rowData} onRefresh={onRefresh} />
           </div>
         ))}
       </div>
@@ -1064,7 +1050,7 @@ const AILocalModelListWrapper: React.FC<AILocalModelListWrapperProps> = React.me
 })
 
 const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((props) => {
-  const { item, onRefresh, currentPageTabRouteKey } = props
+  const { item, onRefresh } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [isReady, setIsReady] = useState<boolean>(item.IsReady || false)
 
@@ -1347,7 +1333,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
           token={downTokenRef.current}
           onFinished={installFinished}
           onCancel={installCancel}
-          getContainer={document.getElementById(`main-operator-page-body-${currentPageTabRouteKey}`) || undefined}
+          getContainer={getMainOperatorPageBodyContainer()}
         />
       )}
       {removeVisible && (

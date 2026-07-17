@@ -30,7 +30,6 @@ export interface AILocalModelListRefProps {
 export interface AILocalModelListItemProps {
   item: LocalModelConfig
   onRefresh: () => void
-  currentPageTabRouteKey: string
 }
 export interface AIOnlineModelListItemProps {
   item: AIModelConfig
@@ -56,7 +55,6 @@ export interface AILocalModelListWrapperProps {
   title: string
   list: LocalModelConfig[]
   onRefresh: () => void
-  currentPageTabRouteKey: string
 }
 
 export interface AIOnlineModelProps {

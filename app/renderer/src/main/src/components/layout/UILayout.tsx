@@ -77,8 +77,7 @@ import { handleFetchArchitecture, handleFetchIsDev, SystemInfo } from '@/constan
 import { apiSplitUpload, ExportProjectRequest, grpcExportProject, grpcGetProjects, SplitUploadRequest } from './utils'
 import moment from 'moment'
 import { debugToPrintLog } from '@/utils/logCollection'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { NewYakitLoading } from '../basics/NewYakitLoading'
 
 import classNames from 'classnames'
@@ -129,12 +128,6 @@ export interface UILayoutProp {
 const UILayout: React.FC<UILayoutProp> = (props) => {
   const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
   const mcp = useSyncYakMcpStream({})
-  const { currentPageTabRouteKey } = usePageInfo(
-    (s) => ({
-      currentPageTabRouteKey: s.currentPageTabRouteKey,
-    }),
-    shallow,
-  )
   // #region 软件级功能设置
   // 顶部是否可以拖拽并移动软件位置
   const [drop, setDrop] = useState<boolean>(true)
@@ -1394,7 +1387,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // 判断打开 新开一级tab插件执行/全局网络配置第三方应用框/带参弹窗
   const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
-  const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+  const codecPluginContainerRef = useRef<HTMLElement>()
   const onFuzzerModal = useMemoizedFn(async (value) => {
     try {
       const val: OpenFuzzerModal = JSONParseLog(value, {
@@ -1404,7 +1397,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       openFuzzerModalVarRef.current = val
 
       if (val.isAiPlugin === 'isGetPlugin') {
-        percentContainerRef.current = currentPageTabRouteKey
+        codecPluginContainerRef.current = getMainOperatorPageBodyContainer()
         setCoedcPluginShow(true)
         return
       }
@@ -2051,7 +2044,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           // 此处通知刷新各类基于codec插件菜单
           emiter.emit('onRefPluginCodecMenu')
         }}
-        getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
+        getContainer={codecPluginContainerRef.current}
       />
 
       {/* 带参插件参数 */}

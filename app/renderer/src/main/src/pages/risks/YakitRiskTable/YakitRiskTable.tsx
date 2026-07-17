@@ -94,7 +94,6 @@ import {
   AuditCodePageInfoProps,
   PluginHubPageInfoProps,
   RuleManagementPageInfoProps,
-  usePageInfo,
 } from '@/store/pageInfo'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import ReactResizeDetector from 'react-resize-detector'
@@ -116,7 +115,7 @@ import { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/Righ
 import { JumpToAuditEditorProps } from '@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType'
 import { Selection } from '@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType'
 import { getNameByPath } from '@/pages/yakRunner/utils'
-import { shallow } from 'zustand/shallow'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
@@ -330,15 +329,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     excludeColumnsKey = [],
   } = props
   const { t, i18n } = useI18nNamespaces(['risk', 'yakitUi', 'yakitRoute'])
-  const { currentPageTabRouteKey } = usePageInfo(
-    (s) => ({
-      currentPageTabRouteKey: s.currentPageTabRouteKey,
-    }),
-    shallow,
-  )
   const { userInfo } = useStore()
   const [loading, setLoading] = useState<boolean>(false)
-  const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+  const exportPageContainerRef = useRef<HTMLElement>()
 
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   const [response, setResponse] = useState<QueryRisksResponse>({
@@ -843,7 +836,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   })
   const onExportCSV = useMemoizedFn(() => {
     if (+response.Total === 0) return
-    percentContainerRef.current = currentPageTabRouteKey
+    exportPageContainerRef.current = getMainOperatorPageBodyContainer()
     const exportValue = exportFields(t).map((item) => ({ title: item.label, key: item.value }))
     const initCheckFields = exportFields(t)
       .filter((ele) => ele.isDefaultChecked)
@@ -861,7 +854,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           getData={getExcelData}
           onClose={() => m.destroy()}
           fileName={t('YakitRoute.vulnerabilityAndrisk')}
-          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
+          getContainer={exportPageContainerRef.current}
         />
       ),
       onCancel: () => {
@@ -870,7 +863,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       },
       footer: null,
       width: 750,
-      getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined,
+      getContainer: exportPageContainerRef.current,
     })
   })
   const formatJson = (filterVal, jsonData) => {

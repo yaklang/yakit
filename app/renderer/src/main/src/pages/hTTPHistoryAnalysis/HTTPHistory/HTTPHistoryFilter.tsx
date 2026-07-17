@@ -85,7 +85,7 @@ import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightCo
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { ExportSelect } from '@/components/DataExport/DataExport'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { showResponseViaHTTPFlowID } from '@/components/ShowInBrowser'
@@ -490,13 +490,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   } = props
   const comBuiltinTagList = useCampare(builtinTagList)
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'history', 'yakitRoute'])
-  const { currentPageTabRouteKey, queryPagesDataById } = usePageInfo(
-    (s) => ({
-      currentPageTabRouteKey: s.currentPageTabRouteKey,
-      queryPagesDataById: s.queryPagesDataById,
-    }),
-    shallow,
-  )
+  const queryPagesDataById = usePageInfo((s) => s.queryPagesDataById)
   const hTTPFlowFilterTableRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(hTTPFlowFilterTableRef)
   const size = useSize(hTTPFlowFilterTableRef)
@@ -2160,7 +2154,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   // 导出为EXCEL
   const [exportDataKey, setExportDataKey] = useState<string[]>([])
   const onExcelExport = (list: number[]) => {
-    percentContainerRef.current = currentPageTabRouteKey
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -2185,9 +2178,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             fileName={!toWebFuzzer ? 'History' : 'WebFuzzer'}
             getData={(pagination) => getExcelData(pagination, list)}
             onClose={() => m.destroy()}
-            getContainer={
-              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
-            }
+            getContainer={getMainOperatorPageBodyContainer()}
           />
         )
       },
@@ -2197,7 +2188,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       width: 650,
       footer: null,
       maskClosable: false,
-      getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined,
+      getContainer: getMainOperatorPageBodyContainer(),
     })
   }
   const formatJson = (filterVal, jsonData) => {
@@ -2313,9 +2304,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   // 导出为HAR
   const [exportToken, setExportToken] = useState<string>('')
   const [percentVisible, setPercentVisible] = useState<boolean>(false)
-  const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+  const exportPageContainerRef = useRef<HTMLElement>()
   const onHarExport = (ids: number[]) => {
-    percentContainerRef.current = currentPageTabRouteKey
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -2335,9 +2325,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             exportKey={!toWebFuzzer ? 'MITM-HISTORY-EXPORT-KEYS' : 'WEBFUZZER-HISTORY-EXPORT-KEYS'}
             getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
             onClose={() => m.destroy()}
-            getContainer={
-              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
-            }
+            getContainer={getMainOperatorPageBodyContainer()}
             onHarExport={() => handleClickHarExport(ids)}
           />
         )
@@ -2350,7 +2338,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       width: 650,
       footer: null,
       maskClosable: false,
-      getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined,
+      getContainer: getMainOperatorPageBodyContainer(),
     })
   }
 
@@ -2381,7 +2369,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           ipcRenderer
             .invoke('ExportHTTPFlowStream', exportParams, token)
             .then(() => {
-              percentContainerRef.current = currentPageTabRouteKey
+              exportPageContainerRef.current = getMainOperatorPageBodyContainer()
               setPercentVisible(true)
             })
             .catch((error) => {
@@ -2809,7 +2797,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       {/* 导出HAR数据 */}
       {percentVisible && (
         <ImportExportProgress
-          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
+          getContainer={exportPageContainerRef.current}
           visible={percentVisible}
           title={t('ImportExportProgress.exportHARData')}
           token={exportToken}
