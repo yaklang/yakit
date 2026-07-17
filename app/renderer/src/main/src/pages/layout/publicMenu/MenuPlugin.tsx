@@ -358,7 +358,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
         <YakitPopover
           overlayClassName={styles['plugin-list-popover']}
           overlayStyle={{ paddingTop: 6 }}
-          placement="bottomRight"
+          placement="bottom"
           trigger={'click'}
           content={listDom}
           visible={listShow}
