@@ -217,12 +217,22 @@ function useCasualChat(params: UseCasualChatParams) {
         review.current = undefined
         setContentMap(chatData.id, chatData)
         setElements((old) => {
-          return old.map((item) => {
-            if (item.token === chatData.id && item.type === chatData.type) {
+          const newArr = old.map((item) => {
+            if (chatData.taskId && item.token === chatData.taskId && item.kind === 'task') {
+              const newChild = item.children.map((subItem) => {
+                if (subItem.token === chatData.id && subItem.type === chatData.type) {
+                  return { ...subItem, renderNum: subItem.renderNum + 1 }
+                }
+                return subItem
+              })
+              return { ...item, children: newChild, renderNum: item.renderNum + 1 }
+            } else if (item.token === chatData.id && item.type === chatData.type) {
               return { ...item, renderNum: item.renderNum + 1 }
+            } else {
+              return item
             }
-            return item
           })
+          return newArr
         })
       }
       cb && cb()
