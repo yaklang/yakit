@@ -329,8 +329,9 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
+
   const react_task_id = info.react_task_id
-  if (['completed', 'aborted'].includes(info.react_task_now_status)) {
+  if (['completed', 'aborted', 'skipped'].includes(info.react_task_now_status)) {
     if (store.getState().currentCasualTaskID && store.getState().currentCasualTaskID === react_task_id) {
       store.getState().updateState({ focusMode: '', cancelCasualLoading: false, casualLoading: false })
     }
@@ -450,7 +451,6 @@ const handleReactTaskCreated: AIMessageHandler = (request) => {
     type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
     data: {
       taskId: info.react_task_id,
-      taskIndex: info.react_task_id,
       taskName: info.react_task_name || info.react_user_input || info.react_task_id,
       goal: info.react_user_input || '',
       status: info.react_task_status,

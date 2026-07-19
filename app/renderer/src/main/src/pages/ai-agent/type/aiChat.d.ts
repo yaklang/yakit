@@ -274,6 +274,9 @@ export interface AIAgentChatMetaData {
   /** 轮询获取最新记忆列表的定时器 */
   memoryPollingTimer: NodeJS.Timeout | null
 
-  /** 记录自由对话下成组agent任务的taskID */
+  /**
+   * 记录自由对话下成组agent任务的taskID
+   * 这里记录的是任务的taskID，不是任务的唯一值(问题id-任务id)
+   */
   casualSubTaskIDs: Set<string>
 }

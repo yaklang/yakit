@@ -109,39 +109,30 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
     itemData.forges.dynamic = dynamic.forges
   }
 
+  // 只能通过字段重新赋值的方式修改，不能解构赋值
+  const applyCapabilityFields = (target: PlanItemDetailsData) => {
+    target.uuid = itemData.uuid
+    target.taskId = target.taskId || res.TaskId
+    target.tool = itemData.tool
+    target.forges = itemData.forges
+    target.skills = itemData.skills
+    target.plugins = itemData.plugins
+    target.mcp = itemData.mcp
+  }
+
   if (chatType === 'task') {
-    // 只能通过字段重新赋值的方式修改，不能解构赋值
     const oldData = rawData.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    oldData.uuid = itemData.uuid
-    oldData.taskId = oldData?.taskId || res.TaskId
-    oldData.tool = itemData.tool
-    oldData.forges = itemData.forges
-    oldData.skills = itemData.skills
-    oldData.plugins = itemData.plugins
-    oldData.mcp = itemData.mcp
+    applyCapabilityFields(oldData)
     rawData.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (chatType === 'reAct') {
     const isSubAgentTask = isCasualSubAgentTask(rawData, store, res)
+    const chatDetail = isSubAgentTask
+      ? rawData.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+      : rawData.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+    applyCapabilityFields(chatDetail)
     if (isSubAgentTask) {
-      const oldData = rawData.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-      oldData.uuid = itemData.uuid
-      oldData.taskId = oldData?.taskId || res.TaskId
-      oldData.tool = itemData.tool
-      oldData.forges = itemData.forges
-      oldData.skills = itemData.skills
-      oldData.plugins = itemData.plugins
-      oldData.mcp = itemData.mcp
-      rawData.casualChat.planDetailsMap.set(res.TaskId, oldData)
+      rawData.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
     } else {
-      // 只能通过字段重新赋值的方式修改，不能解构赋值
-      const chatDetail = rawData.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-      chatDetail.uuid = itemData.uuid
-      chatDetail.taskId = chatDetail?.taskId || res.TaskId
-      chatDetail.tool = itemData.tool
-      chatDetail.forges = itemData.forges
-      chatDetail.skills = itemData.skills
-      chatDetail.plugins = itemData.plugins
-      chatDetail.mcp = itemData.mcp
       rawData.casualChat.planDetails = chatDetail
     }
   }
@@ -157,25 +148,25 @@ const handlePerception: AIMessageHandler = (requestInfo) => {
   if (isEmpty(perception)) return
 
   perception.summary = isArray(perception.summary) ? perception.summary.join(',') : perception.summary
+  const applyPerceptionFields = (target: PlanItemDetailsData) => {
+    target.uuid = uuidv4()
+    target.taskId = target.taskId || res.TaskId
+    target.perception = perception
+  }
+
   if (chatType === 'task') {
     const oldData = rawData.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    oldData.taskId = oldData?.taskId || res.TaskId
-    oldData.uuid = uuidv4()
-    oldData.perception = perception
+    applyPerceptionFields(oldData)
     rawData.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (chatType === 'reAct') {
     const isSubAgentTask = isCasualSubAgentTask(rawData, store, res)
+    const chatDetail = isSubAgentTask
+      ? rawData.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+      : rawData.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+    applyPerceptionFields(chatDetail)
     if (isSubAgentTask) {
-      const oldData = rawData.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-      oldData.uuid = uuidv4()
-      oldData.taskId = oldData.taskId || res.TaskId
-      oldData.perception = perception
-      rawData.casualChat.planDetailsMap.set(res.TaskId, oldData)
+      rawData.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
     } else {
-      const chatDetail = rawData.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-      chatDetail.uuid = uuidv4()
-      chatDetail.taskId = chatDetail.taskId || res.TaskId
-      chatDetail.perception = perception
       rawData.casualChat.planDetails = chatDetail
     }
   }
@@ -192,26 +183,25 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
   if (isEmpty(data)) return
 
   const newData = handleTodoListData(data.items, data.task_id)
+  const applyTodoListFields = (target: PlanItemDetailsData) => {
+    target.uuid = uuidv4()
+    target.taskId = target.taskId || res.TaskId
+    target.todoList = newData
+  }
+
   if (chatType === 'task') {
     const oldData = rawData.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    oldData.uuid = uuidv4()
-    oldData.taskId = oldData.taskId || res.TaskId
-    oldData.todoList = newData
+    applyTodoListFields(oldData)
     rawData.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (chatType === 'reAct') {
-    const chatDetail = rawData.casualChat?.planDetails
     const isSubAgentTask = isCasualSubAgentTask(rawData, store, res)
+    const chatDetail = isSubAgentTask
+      ? rawData.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+      : rawData.casualChat?.planDetails
+    if (!chatDetail) return
+    applyTodoListFields(chatDetail)
     if (isSubAgentTask) {
-      const oldData = rawData.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-      oldData.uuid = uuidv4()
-      oldData.taskId = oldData.taskId || res.TaskId
-      oldData.todoList = newData
-      rawData.casualChat.planDetailsMap.set(res.TaskId, oldData)
-    } else {
-      if (!chatDetail) return
-      chatDetail.uuid = uuidv4()
-      chatDetail.taskId = chatDetail.taskId || res.TaskId
-      chatDetail.todoList = newData
+      rawData.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
     }
     store.getState().updateCasualTodoList()
   }
@@ -225,28 +215,26 @@ const handleSessionSnapshot: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
   if (isEmpty(snapshot)) return
+  const applySnapshotFields = (target: PlanItemDetailsData) => {
+    target.uuid = uuidv4()
+    target.taskId = target.taskId || res.TaskId
+    target.execution = snapshot.execution
+    target.backgroundProcesses = snapshot.background_processes
+  }
+
   if (chatType === 'task') {
     const oldData = rawData.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    oldData.taskId = oldData?.taskId || res.TaskId
-    oldData.uuid = uuidv4()
-    oldData.execution = snapshot.execution
-    oldData.backgroundProcesses = snapshot.background_processes
+    applySnapshotFields(oldData)
     rawData.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (chatType === 'reAct') {
     const isSubAgentTask = isCasualSubAgentTask(rawData, store, res)
+    const chatDetail = isSubAgentTask
+      ? rawData.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+      : rawData.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+    applySnapshotFields(chatDetail)
     if (isSubAgentTask) {
-      const oldData = rawData.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-      oldData.uuid = uuidv4()
-      oldData.taskId = oldData.taskId || res.TaskId
-      oldData.execution = snapshot.execution
-      oldData.backgroundProcesses = snapshot.background_processes
-      rawData.casualChat.planDetailsMap.set(res.TaskId, oldData)
+      rawData.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
     } else {
-      const chatDetail = rawData.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-      chatDetail.uuid = uuidv4()
-      chatDetail.taskId = chatDetail.taskId || res.TaskId
-      chatDetail.execution = snapshot.execution
-      chatDetail.backgroundProcesses = snapshot.background_processes
       rawData.casualChat.planDetails = chatDetail
     }
   }
