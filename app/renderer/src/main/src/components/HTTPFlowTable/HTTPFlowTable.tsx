@@ -78,6 +78,7 @@ import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
 import { debugToPrintLogs } from '@/utils/logCollection'
+import { serverPushStatus } from '@/utils/duplex/duplex'
 import { JSONParseLog } from '@/utils/tool'
 import {
   defFilterConfig,
@@ -374,7 +375,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     pagination,
     loading,
     offsetData,
-    { startT, setTLoad: setLoading, patchTData, noResetRefreshT: updateData, setP, refreshT },
+    { startT, notifyPushUpdate, setTLoad: setLoading, patchTData, noResetRefreshT: updateData, setP, refreshT },
   ] = useVirtualTableHook<ParamsTProps & { Filter: YakQueryHTTPFlowRequest }, HTTPFlow, 'Data', 'Id'>({
     tableBoxRef: useRef(null), // props.inViewport 判断可见性，不必再挂一个 ref
     tableRef,
@@ -822,23 +823,53 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [selected])
 
   const [updateCacheData, setUpdateCacheData] = useState<UpdateCacheData[]>([])
+  const pendingTagUpdatesRef = useRef<UpdateCacheData[]>([])
+  const pushFlushTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const MITM_PUSH_DEBOUNCE_MS = 300
+  const HTTP_FLOW_PUSH_DEBOUNCE_MS = 500
+
+  const flushPushRefresh = useMemoizedFn(() => {
+    pushFlushTimerRef.current = undefined
+    const pendingTagUpdates = pendingTagUpdatesRef.current
+    if (pendingTagUpdates.length) {
+      setUpdateCacheData((prev) => prev.concat(pendingTagUpdates))
+      setWatchRefresh((prev) => !prev)
+      pendingTagUpdatesRef.current = []
+    }
+    if (serverPushStatus) {
+      notifyPushUpdate()
+      return
+    }
+    startT()
+  })
+
+  const schedulePushRefresh = useMemoizedFn(() => {
+    if (pushFlushTimerRef.current) {
+      clearTimeout(pushFlushTimerRef.current)
+    }
+    pushFlushTimerRef.current = setTimeout(
+      flushPushRefresh,
+      fromMITM ? MITM_PUSH_DEBOUNCE_MS : HTTP_FLOW_PUSH_DEBOUNCE_MS,
+    )
+  })
 
   const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
     try {
       const updateData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onRefreshQueryHTTPFlowsFun' })
-      if (typeof updateData !== 'string') {
-        if (updateData.action === 'update') {
-          setUpdateCacheData((prev) => prev.concat(updateData))
-        }
+      if (typeof updateData !== 'string' && updateData.action === 'update') {
+        pendingTagUpdatesRef.current.push(updateData)
       }
     } catch (error) {}
-    setWatchRefresh((prev) => !prev)
-    startT()
+    schedulePushRefresh()
   })
   useEffect(() => {
     emiter.on('onRefreshQueryHTTPFlows', onRefreshQueryHTTPFlowsFun)
     return () => {
       emiter.off('onRefreshQueryHTTPFlows', onRefreshQueryHTTPFlowsFun)
+      if (pushFlushTimerRef.current) {
+        clearTimeout(pushFlushTimerRef.current)
+        pushFlushTimerRef.current = undefined
+      }
     }
   }, [])
 
