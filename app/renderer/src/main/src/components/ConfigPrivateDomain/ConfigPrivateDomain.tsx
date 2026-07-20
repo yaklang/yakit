@@ -219,7 +219,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     }
   }, [])
   const addHttpHistoryList = useMemoizedFn((url) => {
-    httpHistoryRef.current.onSetRemoteValues(url)
+    httpHistoryRef.current?.onSetRemoteValues(url)
   })
   const getHttpSetting = useMemoizedFn(() => {
     getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
@@ -248,7 +248,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   })
   /**@description 增加代理list历史 */
   const addProxyList = useMemoizedFn((url) => {
-    httpProxyRef.current.onSetRemoteValues(url)
+    httpProxyRef.current?.onSetRemoteValues(url)
   })
   // 判断输入内容是否通过
   const judgePass = () => [
