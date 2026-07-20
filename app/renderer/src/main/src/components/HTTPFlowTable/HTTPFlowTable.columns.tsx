@@ -15,6 +15,7 @@ import type { ColumnAllInfoItem, HTTPFlow } from './HTTPFlowTable.constants'
 import { isHTTPFlowFavorite, onConvertBodySizeByUnit } from './HTTPFlowTable.utils'
 import { RangeInputNumberTableWrapper } from './components'
 import style from './HTTPFlowTable.module.scss'
+import { buildColumnOrderMap, compareByColumnOrder } from '@/utils/sortByColumnOrder'
 import { defalutColumnsOrder } from '@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter'
 
 /** 需要完全排除的列字段，表格不可能出现的列 */
@@ -446,9 +447,8 @@ export const resolveHTTPFlowTableColumns = (
     const idColumn = columnArr.find((col) => col.dataKey === 'Id')
     const actionColumn = columnArr.find((col) => col.dataKey === 'action')
     const middleColumns = columnArr.filter((item) => !['Id', 'action', ...noColumnsKey].includes(item.dataKey))
-    const sortedColumns = middleColumns.sort(
-      (a, b) => columnsOrder.indexOf(a.dataKey) - columnsOrder.indexOf(b.dataKey),
-    )
+    const orderMap = buildColumnOrderMap(columnsOrder)
+    const sortedColumns = [...middleColumns].sort((a, b) => compareByColumnOrder(a.dataKey, b.dataKey, orderMap))
 
     if (idColumn) finalColumns.push(idColumn)
     sortedColumns.forEach((col) => {

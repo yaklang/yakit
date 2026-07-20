@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
-import { useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
 import { failed, yakitNotify } from '@/utils/notification'
 import style from '../MITMPage.module.scss'
 import ReactResizeDetector from 'react-resize-detector'
@@ -1099,85 +1099,102 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
     return showOptBtns && !(isOnline && isEnpriTraceAgent() && group === '基础扫描')
   }
 
-  return (
-    <div className={style['plugin-group-list']}>
-      {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />}
-      {pugGroup.map((item) => (
+  const PLUGIN_GROUP_ITEM_HEIGHT = 28
+  const listContainerRef = useRef<HTMLDivElement>(null)
+  const listWrapperRef = useRef<HTMLDivElement>(null)
+  const enableVirtualList = pugGroup.length > 20 && !editGroup
+  const [virtualList] = useVirtualList(pugGroup, {
+    containerTarget: listContainerRef,
+    wrapperTarget: listWrapperRef,
+    itemHeight: PLUGIN_GROUP_ITEM_HEIGHT,
+    overscan: 8,
+  })
+
+  const renderGroupItem = (item: YakFilterRemoteObj) => (
+    <div
+      className={classNames(style['plugin-group-item'], {
+        [style['plugin-group-item-select']]: selectGroup.findIndex((l) => l.name === item.name) !== -1,
+      })}
+      key={item.name}
+    >
+      {editGroup === item.name ? (
+        <div className={style['plugin-group-item-input']}>
+          <YakitInput
+            wrapperStyle={{ height: '100%' }}
+            style={{ height: '100%' }}
+            onBlur={() => {
+              onEditInputBlur(item, newName)
+              setEditGroup('')
+            }}
+            onPressEnter={() => {
+              onEditInputBlur(item, newName)
+              setEditGroup('')
+            }}
+            autoFocus={true}
+            value={newName}
+            onChange={(e) => setNewName(e.target.value.trim())}
+          ></YakitInput>
+        </div>
+      ) : (
         <div
-          className={classNames(style['plugin-group-item'], {
-            [style['plugin-group-item-select']]: selectGroup.findIndex((l) => l.name === item.name) !== -1,
-          })}
-          key={item.name}
+          className={classNames(style['plugin-group-item-cont'])}
+          onClick={() => {
+            onSelect(item)
+          }}
         >
-          {editGroup === item.name ? (
-            <div className={style['plugin-group-item-input']}>
-              <YakitInput
-                wrapperStyle={{ height: '100%' }}
-                style={{ height: '100%' }}
-                onBlur={() => {
-                  onEditInputBlur(item, newName)
-                  setEditGroup('')
+          <div className={classNames(style['plugin-group-item-name'], 'content-ellipsis')} title={item.name}>
+            {item.name}
+          </div>
+          <span
+            className={classNames(style['plugin-group-item-length'], {
+              [style['plugin-number-unshow']]: showExtraOptBtns(item.name),
+            })}
+          >
+            {item.total}
+          </span>
+          {showExtraOptBtns(item.name) && (
+            <div className={style['extra-opt-btns']}>
+              <YakitButton
+                icon={<OutlinePencilaltIcon />}
+                type="text2"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setEditGroup(item.name)
                 }}
-                onPressEnter={() => {
-                  onEditInputBlur(item, newName)
-                  setEditGroup('')
+              ></YakitButton>
+              <YakitButton
+                icon={<OutlineTrashIcon />}
+                type="text"
+                colors="danger"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
+                    const flag = result === 'true'
+                    if (flag) {
+                      onDelGroup(item, () => {})
+                    } else {
+                      closePluginGroupList()
+                      setDelGroup(item)
+                      setDelGroupConfirmPopVisible(true)
+                    }
+                  })
                 }}
-                autoFocus={true}
-                value={newName}
-                onChange={(e) => setNewName(e.target.value.trim())}
-              ></YakitInput>
-            </div>
-          ) : (
-            <div
-              className={classNames(style['plugin-group-item-cont'])}
-              onClick={() => {
-                onSelect(item)
-              }}
-            >
-              <div className={classNames(style['plugin-group-item-name'], 'content-ellipsis')} title={item.name}>
-                {item.name}
-              </div>
-              <span
-                className={classNames(style['plugin-group-item-length'], {
-                  [style['plugin-number-unshow']]: showExtraOptBtns(item.name),
-                })}
-              >
-                {item.total}
-              </span>
-              {showExtraOptBtns(item.name) && (
-                <div className={style['extra-opt-btns']}>
-                  <YakitButton
-                    icon={<OutlinePencilaltIcon />}
-                    type="text2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setEditGroup(item.name)
-                    }}
-                  ></YakitButton>
-                  <YakitButton
-                    icon={<OutlineTrashIcon />}
-                    type="text"
-                    colors="danger"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      getRemoteValue(RemoteGV.PluginGroupDelNoPrompt).then((result: string) => {
-                        const flag = result === 'true'
-                        if (flag) {
-                          onDelGroup(item, () => {})
-                        } else {
-                          closePluginGroupList()
-                          setDelGroup(item)
-                          setDelGroupConfirmPopVisible(true)
-                        }
-                      })
-                    }}
-                  ></YakitButton>
-                </div>
-              )}
+              ></YakitButton>
             </div>
           )}
         </div>
-      ))}
+      )}
+    </div>
+  )
+
+  return (
+    <div className={style['plugin-group-list']} ref={enableVirtualList ? listContainerRef : undefined}>
+      {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />}
+      {enableVirtualList ? (
+        <div ref={listWrapperRef}>{virtualList.map(({ data: item }) => renderGroupItem(item))}</div>
+      ) : (
+        pugGroup.map((item) => renderGroupItem(item))
+      )}
       <DelGroupConfirmPop
         ref={delGroupConfirmPopRef}
         visible={delGroupConfirmPopVisible}

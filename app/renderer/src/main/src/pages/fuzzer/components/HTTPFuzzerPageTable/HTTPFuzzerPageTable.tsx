@@ -133,25 +133,25 @@ const isNumericArray = (arr) => {
 
 export const sorterFunction = (list, sorterTable, defSorter = 'Count') => {
   // ------------  排序 开始  ------------
-  let newList = list
+  const copy = [...list]
   // 判断当前排序列是否既有数字又有字母的情况
   const isNumber = isNumericArray(
-    list.map((item) => (sorterTable?.orderBy == '' ? item[defSorter] + '' : item[sorterTable?.orderBy] + '')),
+    copy.map((item) => (sorterTable?.orderBy == '' ? item[defSorter] + '' : item[sorterTable?.orderBy] + '')),
   )
   // 重置
   if (sorterTable?.order === 'none') {
-    newList = list.sort((a, b) => compareAsc(a, b, defSorter, isNumber))
+    return copy.sort((a, b) => compareAsc(a, b, defSorter, isNumber))
   }
   // 升序
   if (sorterTable?.order === 'asc') {
-    newList = list.sort((a, b) => compareAsc(a, b, sorterTable?.orderBy, isNumber))
+    return copy.sort((a, b) => compareAsc(a, b, sorterTable?.orderBy, isNumber))
   }
   // 降序
   if (sorterTable?.order === 'desc') {
-    newList = list.sort((a, b) => compareDesc(a, b, sorterTable?.orderBy, isNumber))
+    return copy.sort((a, b) => compareDesc(a, b, sorterTable?.orderBy, isNumber))
   }
   // ------------  排序 结束  ------------
-  return newList
+  return copy
 }
 
 export const parseStatusCodes = (statusCode: string) => {
@@ -650,11 +650,16 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     ])
 
     const compareSorterTable = useCampare(sorterTable)
+    const sortedData = useMemo(() => {
+      if (!data?.length) return []
+      return sorterFunction(data, sorterTable)
+    }, [data, compareSorterTable])
+
     useThrottleEffect(
       () => {
         queryData()
       },
-      [data, isEnd, compareSorterTable],
+      [sortedData, isEnd],
       { wait: 500 },
     )
 
@@ -743,7 +748,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
           (query?.ExtractedResults && query?.ExtractedResults?.length > 0) ||
           query?.ExtractedResultsNotEmpty
         ) {
-          const newDataTable = sorterFunction(data, sorterTable) || []
+          const newDataTable = sortedData
           const l = newDataTable.length
           const searchList: FuzzerResponse[] = []
           for (let index = 0; index < l; index++) {
@@ -871,7 +876,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             scrollUpdate(searchList.length)
           }
         } else {
-          const newData = sorterFunction(data, sorterTable) || []
+          const newData = sortedData
           setExportData && setExportData([...newData])
           setListTable([...newData])
           if (newData.length > 0) {

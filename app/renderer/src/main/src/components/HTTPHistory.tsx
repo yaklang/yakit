@@ -1,12 +1,7 @@
 import React, { CSSProperties, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import 'react-resizable/css/styles.css'
-import {
-  HistoryTableTitleShow,
-  HTTP_FLOW_FAVORITE_TAG,
-  HTTPFlow,
-  HTTPFlowsFieldGroupResponse,
-  HTTPFlowTable,
-} from './HTTPFlowTable/HTTPFlowTable'
+import { HistoryTableTitleShow, HTTP_FLOW_FAVORITE_TAG, HTTPFlow, HTTPFlowTable } from './HTTPFlowTable/HTTPFlowTable'
+import { fetchHTTPFlowsFieldGroup } from '@/utils/httpFlowFieldGroupCache'
 import {
   useControllableValue,
   useCreation,
@@ -97,9 +92,7 @@ const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
 // HTTPFlowDetailMini 含 Monaco 编辑器(2165行)，延迟到选中行后才加载
-const HTTPFlowDetailMini = React.lazy(() =>
-  import('./HTTPFlowDetail').then((m) => ({ default: m.HTTPFlowDetailMini })),
-)
+const HTTPFlowDetailMini = React.lazy(() => import('./HTTPFlowDetail').then((m) => ({ default: m.HTTPFlowDetailMini })))
 
 export interface HTTPPacketFuzzable {
   defaultHttps?: boolean
@@ -471,6 +464,8 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
   setSecondNodeVisible?: (show: boolean) => void
   /** 预设排除列，透传至 `HTTPFlowTable.defaultExcludeColumnsKey` */
   defaultExcludeColumnsKey?: string[]
+  /** 父级传入时覆盖内部 viewport 检测，用于 MITM 非 log 模式暂停表格副作用 */
+  inViewportOverride?: boolean
 }
 /**
  * 此组件用于实时流量表和编辑器
@@ -511,10 +506,12 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     showHistoryAnalysisBtn = false,
     onHistoryAnalysisClick,
     defaultExcludeColumnsKey,
+    inViewportOverride,
   } = props
 
   const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
-  const [inViewport] = useInViewport(hTTPFlowRealTimeTableAndEditorRef)
+  const [internalInViewport] = useInViewport(hTTPFlowRealTimeTableAndEditorRef)
+  const inViewport = inViewportOverride ?? internalInViewport
 
   // History Id 用于区分每个history控件
   const [historyId, setHistoryId] = useState<string>(uuidv4())
@@ -665,19 +662,21 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         secondNode={
           <div style={{ width: '100%', height: '100%' }}>
             {secondNodeVisible && (
-              <React.Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}>
-              <HTTPFlowDetailMini
-                noHeader={true}
-                search={highlightSearch}
-                id={selected?.Id || 0}
-                sendToWebFuzzer={true}
-                selectedFlow={selected}
-                refresh={refresh}
-                historyId={historyId}
-                downstreamProxyStr={downstreamProxy}
-                pageType={pageType}
-                showFlod={showFlod}
-              />
+              <React.Suspense
+                fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}
+              >
+                <HTTPFlowDetailMini
+                  noHeader={true}
+                  search={highlightSearch}
+                  id={selected?.Id || 0}
+                  sendToWebFuzzer={true}
+                  selectedFlow={selected}
+                  refresh={refresh}
+                  historyId={historyId}
+                  downstreamProxyStr={downstreamProxy}
+                  pageType={pageType}
+                  showFlod={showFlod}
+                />
               </React.Suspense>
             )}
           </div>
@@ -965,14 +964,10 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     }
   })
 
-  const refreshTags = useMemoizedFn(async () => {
+  const refreshTags = useMemoizedFn(async (refreshRequest = true) => {
     setTagListLoading(true)
-    ipcRenderer
-      .invoke('HTTPFlowsFieldGroup', {
-        RefreshRequest: true,
-        IsAll: true,
-      })
-      .then((rsp: HTTPFlowsFieldGroupResponse) => {
+    fetchHTTPFlowsFieldGroup(refreshRequest)
+      .then((rsp) => {
         const tags = (rsp.Tags || []).filter((item) => item.Value && item.Value !== HTTP_FLOW_FAVORITE_TAG)
         const toFilterItem = (Value: string) => ({ label: Value, value: Value })
         let TagList: FiltersItemProps[] = [],
@@ -998,7 +993,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
 
   useEffect(() => {
     if (!inViewport) return
-    refreshTags()
+    refreshTags(false)
   }, [inViewport])
 
   const refreshAllFilters = useMemoizedFn((clearSelected?: boolean) => {
