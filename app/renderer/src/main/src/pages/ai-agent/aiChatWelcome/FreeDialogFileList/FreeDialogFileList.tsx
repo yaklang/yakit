@@ -1,8 +1,6 @@
 // import {fileToChatQuestionStore, useFileToQuestion} from "@/pages/ai-re-act/aiReActChat/store"
-import { useMemo } from 'react'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 
 enum FileListStoreKey {
   FileList = 'fileList',
@@ -15,7 +13,5 @@ export const routeKey = {
 }
 
 export const useGetStoreKey = () => {
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
-  const storeKey = useMemo(() => routeKey[currentRouteKey], [currentRouteKey])
-  return storeKey
+  return routeKey[getCurrentPageTabRouteKey()]
 }

@@ -112,7 +112,22 @@ export interface TabContentProps {
 export interface TabChildrenProps {
   softMode: SoftMode
   pageCache: PageCache[]
-  currentTabKey: YakitRoute | string
+  openMultipleMenuPage: (route: RouteToPageProps) => void
+  onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
+  /**从历史中恢复tab数据 */
+  onRestoreHistory: (v: YakitRoute | string) => void
+  /**保存tab数据 */
+  onSaveHistory: (v: YakitRoute | string) => void
+}
+
+/**
+ * @description 单个一级页签内容区，仅在本页激活状态变化时重渲染
+ */
+export interface PageBodyItemProps {
+  softMode: SoftMode
+  pageCache: PageCache[]
+  pageItem: PageCache
+  index: number
   openMultipleMenuPage: (route: RouteToPageProps) => void
   onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
   /**从历史中恢复tab数据 */
@@ -163,7 +178,8 @@ export interface TabListProps {
 export interface SubTabListProps {
   softMode: SoftMode
   pageCache: PageCache[]
-  currentTabKey: YakitRoute | string
+  /** 本页固定 routeKey，不随全局切页变化，避免 SubTabList 因 currentTabKey 变化而重渲染 */
+  pageRouteKey: YakitRoute | string
   openMultipleMenuPage: (route: RouteToPageProps) => void
   onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
   pageItem: PageCache
@@ -176,7 +192,7 @@ export interface SubTabListProps {
 
 export interface SubTabsProps {
   softMode: SoftMode
-  currentTabKey: YakitRoute | string
+  pageRouteKey: YakitRoute | string
   ref: ?any
   pageItem: PageCache
   // index: number
@@ -219,7 +235,7 @@ export interface SubTabItemProps {
   combineColor?: string
   /**是否可以拖拽 */
   isDragDisabled: boolean
-  currentTabKey: YakitRoute
+  pageRouteKey: YakitRoute | string
 }
 /**
  * @description 组

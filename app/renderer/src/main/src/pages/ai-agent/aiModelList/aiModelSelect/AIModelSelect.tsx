@@ -52,8 +52,7 @@ import { Avatar, Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { createPortal } from 'react-dom'
@@ -95,8 +94,6 @@ const modelType = (t: TFunction) => [
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { isOpen = true, mountContainer, className } = props
-
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   //#region AI model
   const { chatIPCData } = useChatIPCStore()
 
@@ -350,7 +347,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     },
   )
   const openModelTab = useMemoizedFn(() => {
-    if (currentRouteKey !== YakitRoute.AI_Agent) {
+    if (getCurrentPageTabRouteKey() !== YakitRoute.AI_Agent) {
       emiter.emit(
         'openPage',
         JSON.stringify({

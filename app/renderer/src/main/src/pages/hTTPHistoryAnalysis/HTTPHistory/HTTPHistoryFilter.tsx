@@ -85,7 +85,10 @@ import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightCo
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
-import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
+import {
+  getMainOperatorPageBodyContainer,
+  getMainOperatorPageBodyContainerOrBody,
+} from '@/utils/getMainOperatorPageBodyContainer'
 import { ExportSelect } from '@/components/DataExport/DataExport'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { showResponseViaHTTPFlowID } from '@/components/ShowInBrowser'
@@ -2178,7 +2181,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             fileName={!toWebFuzzer ? 'History' : 'WebFuzzer'}
             getData={(pagination) => getExcelData(pagination, list)}
             onClose={() => m.destroy()}
-            getContainer={getMainOperatorPageBodyContainer()}
+            getContainer={getMainOperatorPageBodyContainerOrBody()}
           />
         )
       },
@@ -2188,7 +2191,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       width: 650,
       footer: null,
       maskClosable: false,
-      getContainer: getMainOperatorPageBodyContainer(),
+      getContainer: getMainOperatorPageBodyContainerOrBody(),
     })
   }
   const formatJson = (filterVal, jsonData) => {
@@ -2325,7 +2328,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             exportKey={!toWebFuzzer ? 'MITM-HISTORY-EXPORT-KEYS' : 'WEBFUZZER-HISTORY-EXPORT-KEYS'}
             getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
             onClose={() => m.destroy()}
-            getContainer={getMainOperatorPageBodyContainer()}
+            getContainer={getMainOperatorPageBodyContainerOrBody()}
             onHarExport={() => handleClickHarExport(ids)}
           />
         )
@@ -2338,7 +2341,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       width: 650,
       footer: null,
       maskClosable: false,
-      getContainer: getMainOperatorPageBodyContainer(),
+      getContainer: getMainOperatorPageBodyContainerOrBody(),
     })
   }
 

@@ -56,7 +56,10 @@ import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/bina
 import { v4 as uuidv4 } from 'uuid'
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
-import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
+import {
+  getMainOperatorPageBodyContainer,
+  getMainOperatorPageBodyContainerOrBody,
+} from '@/utils/getMainOperatorPageBodyContainer'
 import { getHTTPFlowExportFields } from './HTTPFlowExportFields'
 import { showYakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import MITMContext from '@/pages/mitm/Context/MITMContext'
@@ -1487,7 +1490,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             fileName={'History'}
             getData={(pagination) => getExcelData(pagination, list)}
             onClose={() => m.destroy()}
-            getContainer={getMainOperatorPageBodyContainer()}
+            getContainer={getMainOperatorPageBodyContainerOrBody()}
           />
         )
       },
@@ -1499,7 +1502,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       width: 650,
       footer: null,
       maskClosable: false,
-      getContainer: getMainOperatorPageBodyContainer(),
+      getContainer: getMainOperatorPageBodyContainerOrBody(),
     })
   }
 
@@ -1529,7 +1532,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             exportKey={'MITM-HISTORY-EXPORT-KEYS'}
             getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
             onClose={() => m.destroy()}
-            getContainer={getMainOperatorPageBodyContainer()}
+            getContainer={getMainOperatorPageBodyContainerOrBody()}
             onHarExport={() => handleClickHarExport(ids)}
           />
         )
@@ -1542,7 +1545,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       width: 650,
       footer: null,
       maskClosable: false,
-      getContainer: getMainOperatorPageBodyContainer(),
+      getContainer: getMainOperatorPageBodyContainerOrBody(),
     })
   }
 
