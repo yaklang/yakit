@@ -11,9 +11,7 @@ import {
   OutlineDownloadIcon,
   OutlineNotebookIcon,
 } from '@/assets/icon/outline'
-import ModalInfo from '../ModelInfo'
 import { ColorsPreViewMDIcon, ColorsSourceCodeIcon } from '@/assets/icon/colors'
-import ChatCard from '../ChatCard'
 import { Tooltip } from 'antd'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -25,7 +23,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
 
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
-  const { content, nodeLabel, className, modalInfo, referenceNode, streaming } = props
+  const { content, nodeLabel, className, referenceNode, streaming } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { goAddNotepad } = useGoEditNotepad()
@@ -87,11 +85,9 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
   const isChildWindow = useRef(isAuxOrChildWindow())
 
   return (
-    <ChatCard
-      titleText={nodeLabel}
-      titleExtra={<ModalInfo {...modalInfo} />}
-      titleMore={
-        <div className={styles['header-extra']}>
+    <div className={classNames(styles['ai-milkdown-wrapper'], className)}>
+      <div className={styles['ai-milkdown-body']}>
+        <div className={styles['hover-actions']}>
           {!isChildWindow.current && (
             <Tooltip title={t('AIMarkdown.openFromNotepad')}>
               <YakitButton size="small" type="text" icon={<OutlineNotebookIcon />} onClick={onGoToNote} />
@@ -117,11 +113,9 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
             />
           </Tooltip>
         </div>
-      }
-      className={classNames(styles['ai-milkdown-wrapper'], className)}
-    >
-      {renderContent()}
-      {referenceNode}
-    </ChatCard>
+        {renderContent()}
+        {referenceNode}
+      </div>
+    </div>
   )
 })
