@@ -434,7 +434,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                     <>
                       {!!casualConcurrentTaskList.length && (
                         <YakitPopover
-                          overlayClassName={styles['chat-locate-popover']}
+                          classNames={{ root: styles['chat-locate-popover'] }}
                           content={
                             <div className={styles['chat-locate-list']}>
                               {casualConcurrentTaskList.map((token) => (
