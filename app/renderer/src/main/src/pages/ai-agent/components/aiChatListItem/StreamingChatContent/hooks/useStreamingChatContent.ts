@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
@@ -28,12 +28,14 @@ export function useStreamingChatContent(params: UseStreamingChatContentParams): 
   const hasStartedRef = useRef<boolean>(false)
   const [shouldType, setShouldType] = useState<boolean>(false)
 
-  const getData = useCallback((): ChatStream | null => {
-    return rawData.contents.get(token) as ChatStream
-  }, [tokenRenderNum])
+  // const getData = useCallback((): ChatStream | null => {
+  //   return rawData.contents.get(token) as ChatStream
+  // }, [tokenRenderNum])
 
   const { renderNumber, aiDataRef } = useRafPolling<ChatStream>({
-    getData,
+    getData: () => {
+      return rawData.contents.get(token) as ChatStream
+    },
     interval: 300,
     shouldStop: (data) => {
       if (data.data.status === 'start') {

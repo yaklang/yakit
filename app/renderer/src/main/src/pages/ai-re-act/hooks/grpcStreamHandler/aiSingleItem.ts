@@ -342,7 +342,7 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
     chatType: 'task',
     type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
     data: {
-      taskIndex: info.task.index,
+      // taskIndex: info.task.index,
       taskId: info.task.task_id,
       taskName: info.task.name,
       goal: info.task.goal,

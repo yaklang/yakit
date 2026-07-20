@@ -16,11 +16,12 @@ import styles from './AIRunModeSelect.module.scss'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import { AIExecutionStrategy, AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
+import { AIExecutionStrategy, AIInputEvent, AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
 import { OutlineViewGridIcon } from '@/components/yakChat/icon'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
 type ModeOptionKey = 'plan' | 'multiAgent' | 'goal'
 
@@ -49,10 +50,10 @@ const ModeOptionList: {
 /** TODO - 待修改为新版 */
 const AIRunModeSelect: React.FC = memo(() => {
   const { setting, activeChat } = useAIAgentStore()
-  const { setSetting } = useAIAgentDispatcher()
-  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
-  const { chatIPCData } = useChatIPCStore()
-  const execute = useCreation(() => !!chatIPCData.execute, [chatIPCData.execute])
+  const { setSetting, onSend } = useAIAgentDispatcher()
+  const store = useCurrentStore()
+  const sessionId = useCurrentSessionId()
+  const execute = useStore(store, (state) => state.execute)
 
   const enablePlan = useCreation(() => {
     return !!setting?.EnablePlan
@@ -61,12 +62,14 @@ const AIRunModeSelect: React.FC = memo(() => {
     useMemoizedFn((checked) => {
       if (execute) {
         // ai运行才能热更新 plan
-        handleSendConfigHotpatch({
-          hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
-          params: {
+        const info: AIInputEvent = {
+          IsConfigHotpatch: true,
+          HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
+          Params: {
             EnablePlan: checked,
           },
-        })
+        }
+        onSend({ token: sessionId, type: '', params: info })
       }
       setSetting?.((v) => ({
         ...v,
