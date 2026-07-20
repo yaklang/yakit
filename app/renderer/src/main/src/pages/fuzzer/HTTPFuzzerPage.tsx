@@ -25,8 +25,7 @@ import {
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
 import { HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
-import { HTTPFuzzerHotPatchSidebar, HotCodeTemplate, HotPatchTempItem } from './HTTPFuzzerHotPatch'
-import { WebFuzzerApiDoc } from './WebFuzzerApiDoc/WebFuzzerApiDoc'
+import { HotCodeTemplate, HotPatchTempItem } from './HTTPFuzzerHotPatch'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
 import { StringToUint8Array, Uint8ArrayToString } from '../../utils/str'
 import { PacketScanButton } from '@/pages/packetScanner/DefaultPacketScanGroup'
@@ -67,7 +66,6 @@ import { monaco } from 'react-monaco-editor'
 import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { WebFuzzerResponseExtractor } from '@/utils/extractor'
-import { HttpQueryAdvancedConfig } from './HttpQueryAdvancedConfig/HttpQueryAdvancedConfig'
 import {
   FuzzerParamItem,
   AdvancedConfigValueProps,
@@ -206,6 +204,21 @@ const WebFuzzerSynSetting = React.lazy(() => import('./components/WebFuzzerSynSe
 const HTTPHistoryAnalysis = React.lazy(() =>
   import('../hTTPHistoryAnalysis/HTTPHistoryAnalysis').then(({ HTTPHistoryAnalysis }) => ({
     default: HTTPHistoryAnalysis,
+  })),
+)
+const HttpQueryAdvancedConfig = React.lazy(() =>
+  import('./HttpQueryAdvancedConfig/HttpQueryAdvancedConfig').then(({ HttpQueryAdvancedConfig }) => ({
+    default: HttpQueryAdvancedConfig,
+  })),
+)
+const HTTPFuzzerHotPatchSidebar = React.lazy(() =>
+  import('./HTTPFuzzerHotPatch').then(({ HTTPFuzzerHotPatchSidebar }) => ({
+    default: HTTPFuzzerHotPatchSidebar,
+  })),
+)
+const WebFuzzerApiDoc = React.lazy(() =>
+  import('./WebFuzzerApiDoc/WebFuzzerApiDoc').then(({ WebFuzzerApiDoc }) => ({
+    default: WebFuzzerApiDoc,
   })),
 )
 
@@ -2375,6 +2388,16 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     () => advancedConfigShowType === 'api-doc' && advancedConfigVisible,
     [advancedConfigShowType, advancedConfigVisible],
   )
+  /** 首次打开 API 文档后保活，切走用 visible 隐藏，避免 doc 会话状态丢失 */
+  const [apiDocKeepAlive, setApiDocKeepAlive] = useState(false)
+  useEffect(() => {
+    if (apiDocVisible) setApiDocKeepAlive(true)
+  }, [apiDocVisible])
+  /** 首次打开热加载后保活 */
+  const [hotPatchKeepAlive, setHotPatchKeepAlive] = useState(false)
+  useEffect(() => {
+    if (hotPatchVisible) setHotPatchKeepAlive(true)
+  }, [hotPatchVisible])
   /** AI 侧栏展示时，与热加载一样允许拖动顶部分栏宽度 */
   const aiTopPanelResizable = useCreation(
     () => advancedConfigShowType === 'ai' && advancedConfigVisible,
@@ -2677,6 +2700,21 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     () => advancedConfigVisible && !['api-doc', 'hot-patch'].includes(advancedConfigShowType),
     [advancedConfigVisible, advancedConfigShowType],
   )
+  /** 首次打开配置/规则/AI 后保活；切到 api-doc/热加载时用 visible 隐藏，并保留上一 showType */
+  type ConfigPanelType = 'config' | 'rule' | 'ai'
+  const [configKeepAlive, setConfigKeepAlive] = useState(false)
+  const [keepConfigType, setKeepConfigType] = useState<ConfigPanelType>('config')
+  useEffect(() => {
+    if (!advancedConfigShowVisible) return
+    setConfigKeepAlive(true)
+    if (advancedConfigShowType === 'config' || advancedConfigShowType === 'rule' || advancedConfigShowType === 'ai') {
+      setKeepConfigType(advancedConfigShowType)
+    }
+  }, [advancedConfigShowVisible, advancedConfigShowType])
+  const configShowFormType: ConfigPanelType = advancedConfigShowVisible
+    ? (advancedConfigShowType as ConfigPanelType)
+    : keepConfigType
+  const leftPanelSuspenseFallback = <>{t('YakitSpin.loading')}...</>
   return (
     <>
       <div className={styles['http-fuzzer-body']} ref={fuzzerRef}>
@@ -2691,91 +2729,104 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           lineStyle={{ display: hotPatchVisible || aiTopPanelResizable ? '' : 'none' }}
           onMouseUp={onTopPanelResize}
           firstNode={
-            <React.Suspense fallback={<>{t('YakitSpin.loading')}...</>}>
-              <HttpQueryAdvancedConfig
-                advancedConfigValue={advancedConfigValue}
-                visible={advancedConfigShowVisible}
-                onInsertYakFuzzer={onInsertYakFuzzerFun}
-                onValuesChange={onGetFormValue}
-                defaultHttpResponse={
-                  Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ''
-                }
-                webFuzzerValue={requestRef.current}
-                outsideShowResponseMatcherAndExtraction={
-                  onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
-                }
-                onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
-                inViewportCurrent={inViewport === true}
-                id={props.id}
-                matchSubmitFun={matchSubmitFun}
-                showFormContentType={advancedConfigShowType}
-                fuzzerAiSlot={renderHistoryAIReActChat({
-                  externalParameters: {
-                    isOpen: false,
-                    rightIcon: {
-                      history: true,
-                      dataDetails: { type: 'text2' },
-                      add: (
-                        <Tooltip title={t('HTTPFuzzerPage.AI_new_conversation')}>
-                          <YakitButton
-                            type="text2"
-                            icon={<OutlinePlusIcon />}
-                            onClick={() => historyAIReActChatBridge.onNewChat()}
-                          />
-                        </Tooltip>
-                      ),
-                      close: (
-                        <YakitButton
-                          type="text2"
-                          icon={<OutlineXIcon />}
-                          onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
-                        />
-                      ),
-                      taskDetails: true,
-                    },
-                    footerRightTypes: [
-                      {
-                        type: AIInputFooterRightEnum.AIFocusMode,
-                        props: {
-                          value: focusModeLoop,
-                          onChange: () => {},
-                          disabled: true,
+            <>
+              {/* 左侧 Tab：懒加载；各自 Suspense，避免 sibling suspend 冲掉保活树 */}
+              {configKeepAlive && (
+                <React.Suspense fallback={leftPanelSuspenseFallback}>
+                  <HttpQueryAdvancedConfig
+                    advancedConfigValue={advancedConfigValue}
+                    visible={advancedConfigShowVisible}
+                    onInsertYakFuzzer={onInsertYakFuzzerFun}
+                    onValuesChange={onGetFormValue}
+                    defaultHttpResponse={
+                      Uint8ArrayToString(multipleReturnsHttpResponse.ResponseRaw || new Uint8Array()) || ''
+                    }
+                    webFuzzerValue={requestRef.current}
+                    outsideShowResponseMatcherAndExtraction={
+                      onlyOneResponse && !!Uint8ArrayToString(httpResponse.ResponseRaw)
+                    }
+                    onShowResponseMatcherAndExtraction={onShowResponseMatcherAndExtraction}
+                    inViewportCurrent={inViewport === true}
+                    id={props.id}
+                    matchSubmitFun={matchSubmitFun}
+                    showFormContentType={configShowFormType}
+                    fuzzerAiSlot={renderHistoryAIReActChat({
+                      externalParameters: {
+                        isOpen: false,
+                        rightIcon: {
+                          history: true,
+                          dataDetails: { type: 'text2' },
+                          add: (
+                            <Tooltip title={t('HTTPFuzzerPage.AI_new_conversation')}>
+                              <YakitButton
+                                type="text2"
+                                icon={<OutlinePlusIcon />}
+                                onClick={() => historyAIReActChatBridge.onNewChat()}
+                              />
+                            </Tooltip>
+                          ),
+                          close: (
+                            <YakitButton
+                              type="text2"
+                              icon={<OutlineXIcon />}
+                              onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
+                            />
+                          ),
+                          taskDetails: true,
                         },
+                        footerRightTypes: [
+                          {
+                            type: AIInputFooterRightEnum.AIFocusMode,
+                            props: {
+                              value: focusModeLoop,
+                              onChange: () => {},
+                              disabled: true,
+                            },
+                          },
+                        ],
+                        filterMentionType: ['focusMode'],
                       },
-                    ],
-                    filterMentionType: ['focusMode'],
-                  },
-                })}
-                proxyListRef={proxyListRef}
-                isbuttonIsSendReqStatus={isbuttonIsSendReqStatus}
-                cachedTotal={cachedTotal}
-              />
-              <HTTPFuzzerHotPatchSidebar
-                pageId={props.id}
-                visible={hotPatchVisible}
-                inViewport={inViewport}
-                hotPatchCode={hotPatchCodeRef.current}
-                hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
-                selectedTemplateName={selectedHotPatchTemplateName}
-                onChangeCode={onChangeHotPatchCode}
-                onChangeHotPatchCodeWithParamGetterCode={onChangeHotPatchCodeWithParamGetter}
-                onSaveCode={(code) => {
-                  setHotPatchCode(code)
-                }}
-                onSaveHotPatchCodeWithParamGetterCode={(code) => {
-                  setHotPatchCodeWithParamGetter(code)
-                  setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
-                }}
-                hotPatchEnabled={hotPatchEnabled}
-                onHotPatchEnabledChange={onChangeHotPatchEnabled}
-                onSelectedTemplateNameChange={setSelectedHotPatchTemplateName}
-                onInsert={(tag) => {
-                  if (webFuzzerNewEditorRef.current.reqEditor)
-                    monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
-                }}
-              />
-              <WebFuzzerApiDoc visible={apiDocVisible} onApplyRequest={onApplyApiDocRequest} />
-            </React.Suspense>
+                    })}
+                    proxyListRef={proxyListRef}
+                    isbuttonIsSendReqStatus={isbuttonIsSendReqStatus}
+                    cachedTotal={cachedTotal}
+                  />
+                </React.Suspense>
+              )}
+              {hotPatchKeepAlive && (
+                <React.Suspense fallback={leftPanelSuspenseFallback}>
+                  <HTTPFuzzerHotPatchSidebar
+                    pageId={props.id}
+                    visible={hotPatchVisible}
+                    inViewport={inViewport}
+                    hotPatchCode={hotPatchCodeRef.current}
+                    hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
+                    selectedTemplateName={selectedHotPatchTemplateName}
+                    onChangeCode={onChangeHotPatchCode}
+                    onChangeHotPatchCodeWithParamGetterCode={onChangeHotPatchCodeWithParamGetter}
+                    onSaveCode={(code) => {
+                      setHotPatchCode(code)
+                    }}
+                    onSaveHotPatchCodeWithParamGetterCode={(code) => {
+                      setHotPatchCodeWithParamGetter(code)
+                      setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                    }}
+                    hotPatchEnabled={hotPatchEnabled}
+                    onHotPatchEnabledChange={onChangeHotPatchEnabled}
+                    onSelectedTemplateNameChange={setSelectedHotPatchTemplateName}
+                    onInsert={(tag) => {
+                      if (webFuzzerNewEditorRef.current.reqEditor)
+                        monacoEditorWrite(webFuzzerNewEditorRef.current.reqEditor, tag)
+                    }}
+                  />
+                </React.Suspense>
+              )}
+              {apiDocKeepAlive && (
+                <React.Suspense fallback={leftPanelSuspenseFallback}>
+                  <WebFuzzerApiDoc visible={apiDocVisible} onApplyRequest={onApplyApiDocRequest} />
+                </React.Suspense>
+              )}
+            </>
           }
           secondNode={
             <div className={styles['http-fuzzer-page']}>
