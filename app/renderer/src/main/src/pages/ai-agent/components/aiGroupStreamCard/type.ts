@@ -1,9 +1,10 @@
+import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { Dispatch, SetStateAction } from 'react'
 
 export interface AIGroupStreamCardHeardProps {
   expand: boolean
   setExpand: Dispatch<SetStateAction<boolean>>
-  lastToken: string
+  lastItem?: ChatStream
   nodeLabel: string
   shouldShowMask: boolean
 }

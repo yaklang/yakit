@@ -10,7 +10,7 @@ const AITaskItem: React.FC<AITaskItemProps> = React.memo((props) => {
   const { token } = props
   const store = useCurrentStore()
 
-  const type = useStore(store, (state) => state.groups[token].type)
+  const type = useStore(store, (state) => state.tasks[token].type)
   switch (type) {
     case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
       return <AITaskDefaultGroupCard token={token} />

@@ -37,7 +37,7 @@ export default AITaskDefaultGroupCard
 const AITaskDefaultGroupCardListWrapper: FC<AITaskDefaultGroupCardListWrapperProps> = memo((props) => {
   const { token, setContentFocused } = props
   const store = useCurrentStore()
-  const childrenTokens = useStore(store, (state) => state.tasks[token].childrenTokens || [])
+  const childrenTokens = useStore(store, (state) => state.tasks[token]?.childrenTokens || [])
 
   return (
     <AITaskDefaultGroupContent
@@ -51,7 +51,7 @@ const AITaskDefaultGroupCardListWrapper: FC<AITaskDefaultGroupCardListWrapperPro
 const AITaskDefaultGroupCardHeardWrapper: FC<AITaskDefaultGroupCardHeardWrapperProps> = memo((props) => {
   const { token, expandToggle, expand } = props
   const store = useCurrentStore()
-  const renderNum = useStore(store, (state) => state.tasks[token].renderNum)
+  const renderNum = useStore(store, (state) => state.tasks[token]?.renderNum)
   const rawData = useCurrentRawData()
   const timeStamp = useCreation(() => {
     if (!rawData) return 0

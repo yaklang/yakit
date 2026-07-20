@@ -9,7 +9,7 @@ const AIGroupItem: React.FC<AIGroupItemProps> = React.memo((props) => {
   const { token } = props
 
   const store = useCurrentStore()
-  const type = useStore(store, (state) => state.groups[token].type)
+  const type = useStore(store, (state) => state.groups[token]?.type)
 
   switch (type) {
     case AIChatQSDataTypeEnum.STREAM_GROUP:

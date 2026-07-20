@@ -10,7 +10,7 @@ type StaticChatContentProps = {
 
 const StaticChatContent: FC<StaticChatContentProps> = ({ token }) => {
   const store = useCurrentStore()
-  const renderNum = useStore(store, (state) => state.items[token].renderNum)
+  const renderNum = useStore(store, (state) => state.items[token]?.renderNum)
   const rawData = useCurrentRawData()
   const chatItem = useMemo(() => {
     if (!rawData) return null
@@ -20,7 +20,7 @@ const StaticChatContent: FC<StaticChatContentProps> = ({ token }) => {
       return { ...itemData, data: Object.assign({}, itemData.data) } as AIChatQSData
     }
     return { ...itemData } as AIChatQSData // 浅拷贝,深层数据更新引用没变，需要依赖renderNum
-  }, [renderNum])
+  }, [token, renderNum])
 
   if (!chatItem) return null
   return <AINodeItem itemData={chatItem} renderNum={renderNum} />

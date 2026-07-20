@@ -137,7 +137,6 @@ export default AIReActTaskChat
 export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
   const { scrollToBottom, onScrollToBottom } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { activeChat } = useAIAgentStore()
   const { onExtraAction } = useTaskChatExtraAction()
 
   const store = useCurrentStore()
@@ -146,18 +145,12 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
   const execute = useStore(store, (state) => state.execute)
   const taskStatus = useStore(store, (state) => state.taskStatus)
   const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
-
   return (
     <>
       <div className={styles['tab-content']}>
-        <AIAgentChatStream
-          streams={streams}
-          session={activeChat?.SessionID || ''}
-          scrollToBottom={scrollToBottom}
-          taskStatus={taskStatus}
-        />
+        <AIAgentChatStream scrollToBottom={scrollToBottom} taskStatus={taskStatus} />
       </div>
-      {!currentPlanReviewToken && streams.length > 0 && (
+      {!currentPlanReviewToken.token && streams.length > 0 && (
         <div className={styles['footer']}>
           {execute && (
             <AIManualAdditionPopover chatType="task">
@@ -626,16 +619,12 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
   const getTaskInfo = useMemoizedFn(() => {
     return meta.currentTaskPlanID
   })
-
   const renderBtn = useMemoizedFn(() => {
     switch (getTaskInfo()?.status) {
       case AITaskStatus.inProgress:
         return (
           <YakitPopconfirm
             onConfirm={() => {
-              store.getState().updateState({
-                cancelTaskLoading: true,
-              })
               onExtraAction('stopTask', '')
             }}
             title={t('AIRenderTaskFooterExtra.cancelTaskConfirm')}
@@ -721,9 +710,6 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
 })
 
 export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.memo((props) => {
-  const store = useCurrentStore()
-  const taskChat = useStore(store, (state) => state.taskChat)
-
   const [leftExpand, setLeftExpand] = useControllableValue(props, {
     defaultValue: true,
     valuePropName: 'leftExpand',
@@ -736,12 +722,7 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         [styles['content-left-side-hidden']]: !leftExpand,
       })}
     >
-      <AIChatLeftSide
-        expand={leftExpand}
-        setExpand={setLeftExpand}
-        taskTree={taskChat?.plan?.task_tree || []}
-        taskName={taskChat?.plan?.root_task_name || ''}
-      />
+      <AIChatLeftSide expand={leftExpand} setExpand={setLeftExpand} />
       <div className={styles['open-wrapper']} onClick={() => setLeftExpand(true)}>
         <ChevrondownButton />
         <div className={styles['text']}>任务列表</div>

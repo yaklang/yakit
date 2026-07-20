@@ -40,7 +40,9 @@ export const useTaskChatExtraAction = () => {
   const sendReactCancelTask = useMemoizedFn(() => {
     const taskId = meta.currentTaskPlanID?.taskID
     if (!taskId) return
-
+    store.getState().updateState({
+      cancelTaskLoading: true,
+    })
     const info: AIInputEvent = {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
@@ -69,7 +71,7 @@ export const useTaskChatExtraAction = () => {
     onSendPlayHistoryList()
   })
   /**取消当前执行的子任务 */
-  const onStopSubTask = useMemoizedFn((syncID: string) => {
+  const onStopSubTask = useMemoizedFn(() => {
     const info: AIInputEvent = {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
@@ -102,13 +104,13 @@ export const useTaskChatExtraAction = () => {
     closeChatReview()
   })
 
-  const onExtraAction = useMemoizedFn((type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => {
+  const onExtraAction = useMemoizedFn((type: 'stopTask' | 'stopSubTask' | 'recover') => {
     switch (type) {
       case 'stopTask':
         onStopTask()
         break
       case 'stopSubTask':
-        onStopSubTask(syncID)
+        onStopSubTask()
         break
       case 'recover':
         onRecover()

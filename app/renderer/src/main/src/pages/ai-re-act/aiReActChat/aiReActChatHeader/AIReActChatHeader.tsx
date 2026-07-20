@@ -71,7 +71,6 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
   }, [title])
 
   const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
-    const taskId = currentCasualTaskID
     const sessionId = activeChat?.SessionID
     if (!currentCasualTaskID || !sessionId) return false
     if (getSetting()?.Source !== 'ai') return false
