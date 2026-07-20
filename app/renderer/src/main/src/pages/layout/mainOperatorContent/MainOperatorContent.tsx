@@ -193,7 +193,7 @@ import { scheduleIdleTask } from '@/utils/scheduleIdleTask'
 const BatchAddNewGroup = React.lazy(() => import('./BatchAddNewGroup'))
 const BatchEditGroup = React.lazy(() => import('./BatchEditGroup/BatchEditGroup'))
 const TabRenameModalContent = React.lazy(() => import('./TabRenameModalContent'))
-const PageItem = React.lazy(() => import('./renderSubPage/RenderSubPage'))
+const PageItem = React.lazy(() => import('./PageItem'))
 
 const { Content } = Layout
 const { ipcRenderer } = window.require('electron')

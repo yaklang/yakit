@@ -1,17 +1,19 @@
-import { NoPaddingRoute, RouteToPageItem } from '@/routes/newRoute'
-import React, { useEffect, useMemo, useRef } from 'react'
+import { NoPaddingRoute } from '@/routes/newRoute'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useMap, useMemoizedFn } from 'ahooks'
 import styles from './RenderSubPage.module.scss'
-import { PageItemProps, RenderFuzzerSequenceProps, RenderSubPageProps } from './RenderSubPageType'
-import FuzzerSequence from '@/pages/fuzzer/FuzzerSequence/FuzzerSequence'
+import { RenderFuzzerSequenceProps, RenderSubPageProps } from './RenderSubPageType'
+import PageItem from '../PageItem'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
 import { PageLoading } from '@ant-design/pro-layout'
 import { usePageInfo } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { shallow } from 'zustand/shallow'
 import { MultipleNodeInfo } from '../MainOperatorContentType'
+import { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 
 const FuzzerSequenceWrapper = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper'))
+const FuzzerSequence = React.lazy(() => import('@/pages/fuzzer/FuzzerSequence/FuzzerSequence'))
 
 const EMPTY_FUZZER_SEQUENCE_LIST: never[] = []
 
@@ -77,10 +79,17 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
   },
 )
 
+type SequenceTabType = Extract<WebFuzzerType, 'sequence' | 'concurrency'>
+
+/**
+ * 序列 / 并发：懒加载；按 group 首次进入后保活（display:none）；
+ * 序列↔并发共用同一实例（key 不含 type），切走配置时保留上一 mode 的 type，避免丢状态
+ */
 export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.memo((props) => {
   const { route, type, setType } = props
   const isWebFuzzerRoute = route === YakitRoute.HTTPFuzzer
-  const isSequenceOrConcurrencyType = ['sequence', 'concurrency'].includes(type)
+  const isSequenceOrConcurrencyType = type === 'sequence' || type === 'concurrency'
+  const [keepType, setKeepType] = useState<SequenceTabType>('sequence')
 
   const [pageSequenceRenderList, { set: setPageSequenceRenderList, get: getPageSequenceRenderList }] = useMap<
     string,
@@ -96,17 +105,25 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
   )
   useEffect(() => {
     if (!isWebFuzzerRoute) return
+    if (isSequenceOrConcurrencyType) {
+      setKeepType(type)
+    }
     updateRender(selectGroupId)
-  }, [type, selectGroupId, isWebFuzzerRoute])
+  }, [type, selectGroupId, isWebFuzzerRoute, isSequenceOrConcurrencyType])
   const updateRender = useMemoizedFn((id: string) => {
     if (getPageSequenceRenderList(id)) return
     if (isSequenceOrConcurrencyType && id !== '0') {
       setPageSequenceRenderList(id, true)
     }
   })
+
+  /** 切到配置等 Tab 时仍传上一 mode，避免子组件被当成 config 重置 */
+  const renderType: WebFuzzerType = isSequenceOrConcurrencyType ? type : keepType
+
   if (!isWebFuzzerRoute) {
     return null
   }
+
   return (
     <div
       className={styles['fuzzer-sequence-list']}
@@ -122,8 +139,8 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
               style={{ display: selectGroupId === ele.groupId ? '' : 'none' }}
             >
               <React.Suspense fallback={<PageLoading />}>
-                <FuzzerSequenceWrapper type={type}>
-                  <FuzzerSequence groupId={ele.groupId} setType={setType} type={type} />
+                <FuzzerSequenceWrapper type={renderType}>
+                  <FuzzerSequence groupId={ele.groupId} setType={setType} type={renderType} />
                 </FuzzerSequenceWrapper>
               </React.Suspense>
             </div>
@@ -132,16 +149,3 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
     </div>
   )
 })
-
-const PageItem: React.FC<PageItemProps> = React.memo(
-  (props) => {
-    return <RouteToPageItem {...props} />
-  },
-  (preProps, nextProps) => {
-    if (preProps.routeKey !== nextProps.routeKey) return false
-    if (preProps.yakScriptId !== nextProps.yakScriptId) return false
-    return true
-  },
-)
-
-export default PageItem
