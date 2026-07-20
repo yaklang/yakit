@@ -22,7 +22,6 @@ import { getStorageGlobalShortcutKeyEvents } from './utils/globalShortcutKey/eve
 import { useUploadInfoByEnpriTrace } from './components/layout/utils'
 import emiter from './utils/eventBus/eventBus'
 import { JSONParseLog } from './utils/tool'
-import { debugToPrintLogs } from './utils/logCollection'
 import { yakitApp, yakitProfile, yakitSocket } from './services/electronBridge'
 import { useI18nNamespaces } from './i18n/useI18nNamespaces'
 
@@ -40,40 +39,12 @@ function NewApp() {
   const { userInfo } = useStore()
   const { setGoogleChromePluginPath } = useGoogleChromePluginPath()
 
-  const onWriteLog = useMemoizedFn((event: MouseEvent) => {
-    try {
-      // 获取点击元素的关键信息
-      const target = event.target as HTMLElement
-      if (!target) return
-      const log = {
-        tag: target.tagName,
-        className: typeof target.className === 'string' ? target.className : undefined,
-        text: target.innerText ? target.innerText.slice(0, 80) : undefined,
-      }
-      debugToPrintLogs({
-        status: 'INFO',
-        title: t('NewApp.userClickEvent'),
-        content: JSON.stringify(log),
-      })
-    } catch (error) {}
-  })
-
-  const startClickMonitor = useMemoizedFn(() => {
-    document.addEventListener('click', onWriteLog)
-  })
-
-  const stopClickMonitor = useMemoizedFn(() => {
-    document.removeEventListener('click', onWriteLog)
-  })
-
   // 快捷键注册+获取全局快捷键事件集合缓存
   useEffect(() => {
     getStorageGlobalShortcutKeyEvents()
     startShortcutKeyMonitor()
-    startClickMonitor()
     return () => {
       stopShortcutKeyMonitor()
-      stopClickMonitor()
     }
   }, [])
 
@@ -147,9 +118,7 @@ function NewApp() {
   const timeRef = useRef<NodeJS.Timeout>()
   const testYak = () => {
     getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
-      const storedValues = setting
-        ? JSONParseLog(setting, { page: 'NewApp', fun: 'testYak' })
-        : {}
+      const storedValues = setting ? JSONParseLog(setting, { page: 'NewApp', fun: 'testYak' }) : {}
       const values = { ...storedValues, BaseUrl: FIXED_PRIVATE_DOMAIN_BASE_URL }
       yakitProfile
         .setOnlineProfile({
