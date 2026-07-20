@@ -191,7 +191,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
   if (isEmpty(data)) return
 
-  const newData = handleTodoListData(data.items, data.task_id, data.task_index)
+  const newData = handleTodoListData(data.items, data.task_id)
   if (chatType === 'task') {
     const oldData = rawData.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
     oldData.uuid = uuidv4()

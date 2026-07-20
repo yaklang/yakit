@@ -319,11 +319,39 @@ export const createChatStore = () => {
           }
         }),
 
-      /** 将指定item的token换成新token */
+      /** 将指定item的token换成新token，并同步更新 elements / childrenTokens 中的引用 */
       replaceItemToken: (oldToken, newToken) =>
         set((state) => {
+          if (!state.items[oldToken]) return
+
+          // 同步 items 实体
           state.items[newToken] = state.items[oldToken]
+          state.items[newToken].token = newToken
           delete state.items[oldToken]
+
+          // 同步 casualChat.elements 中的 token 引用
+          for (const el of state.casualChat.elements) {
+            if (el.token === oldToken) el.token = newToken
+          }
+
+          // 同步 taskChat.elements 中的 token 引用
+          for (const el of state.taskChat.elements) {
+            if (el.token === oldToken) el.token = newToken
+          }
+
+          // 同步 tasks[*].childrenTokens 中的 token 引用
+          for (const task of Object.values(state.tasks)) {
+            if (task.childrenTokens.includes(oldToken)) {
+              task.childrenTokens = task.childrenTokens.map((t) => (t === oldToken ? newToken : t))
+            }
+          }
+
+          // 同步 groups[*].childrenTokens 中的 token 引用
+          for (const group of Object.values(state.groups)) {
+            if (group.childrenTokens.includes(oldToken)) {
+              group.childrenTokens = group.childrenTokens.map((t) => (t === oldToken ? newToken : t))
+            }
+          }
         }),
     })),
   )
