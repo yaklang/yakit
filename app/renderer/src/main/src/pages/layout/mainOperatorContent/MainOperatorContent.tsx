@@ -188,6 +188,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { SoftMode, useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { RemoteSoftModeGV } from '@/enums/softMode'
 import { debugToPrintLogs } from '@/utils/logCollection'
+import { scheduleIdleTask } from '@/utils/scheduleIdleTask'
 
 const BatchAddNewGroup = React.lazy(() => import('./BatchAddNewGroup'))
 const BatchEditGroup = React.lazy(() => import('./BatchEditGroup/BatchEditGroup'))
@@ -761,10 +762,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey(softMode))
   useEffect(() => {
     setCurrentPageTabRouteKey(currentTabKey)
-    debugToPrintLogs({
-      status: 'INFO',
-      title: t('MainOperatorContent.switchTab'),
-      content: currentTabKey,
+    return scheduleIdleTask(() => {
+      debugToPrintLogs({
+        status: 'INFO',
+        title: t('MainOperatorContent.switchTab'),
+        content: currentTabKey,
+      })
     })
   }, [currentTabKey])
 
@@ -3625,32 +3628,26 @@ const PageTabSideEffects: React.FC<{
   softMode: SoftMode
   isSingleNode: boolean
 }> = React.memo(({ isActive, pageRouteKey, softMode, isSingleNode }) => {
-  const onSetSelectFirstMenuTabKey = useDebounceFn(
-    (tabKey: YakitRoute | string) => {
-      setRemoteValue(RemoteGV.SelectFirstMenuTabKey, tabKey)
+  useUpdateEffect(() => {
+    if (!isActive) return
+    return scheduleIdleTask(() => {
+      setRemoteValue(RemoteGV.SelectFirstMenuTabKey, pageRouteKey)
       if (isCommunityYakit() && softMode === YakitModeEnum.SecurityExpert) {
-        const index = getDefaultFixedTabs(softMode).findIndex((route) => route === tabKey)
+        const index = getDefaultFixedTabs(softMode).findIndex((route) => route === pageRouteKey)
         if (index !== -1) {
-          setRemoteValue(RemoteSoftModeGV.YakitCESecurityExpertSelectFirstTabKey, tabKey)
+          setRemoteValue(RemoteSoftModeGV.YakitCESecurityExpertSelectFirstTabKey, pageRouteKey)
         } else {
           setRemoteValue(RemoteSoftModeGV.YakitCESecurityExpertSelectFirstTabKey, '')
         }
       }
-    },
-    { wait: 200, leading: true },
-  ).run
-
-  useUpdateEffect(() => {
-    if (isActive) {
-      onSetSelectFirstMenuTabKey(pageRouteKey)
-    }
-  }, [isActive, pageRouteKey])
+    })
+  }, [isActive, pageRouteKey, softMode])
 
   useUpdateEffect(() => {
     if (!isActive || isSingleNode) return
-    setTimeout(() => {
+    return scheduleIdleTask(() => {
       document.getElementById(`page-tab-focus-${pageRouteKey}`)?.focus()
-    }, 100)
+    })
   }, [isActive, pageRouteKey, isSingleNode])
 
   return null
@@ -4018,11 +4015,11 @@ const SubTabList: React.FC<SubTabListProps> = React.memo(
     })
     /**页面聚焦 */
     const onFocusPage = useMemoizedFn(() => {
-      setTimeout(() => {
+      scheduleIdleTask(() => {
         if (!tabsRef || !tabsRef.current) return
         const ref = tabsRef.current as unknown as HTMLDivElement
         ref.focus()
-      }, 100)
+      })
     })
     const onAddGroup = useMemoizedFn((e, { pageId, type: addType }: { pageId: string; type: WebFuzzerType }) => {
       const { index } = getPageItemById(subPage, pageId)
@@ -4282,35 +4279,49 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
     useEffect(() => {
       const isActive = isPageRouteActive(pageRouteKey)
+      const cancels: Array<() => void> = []
+
       if (isActive) {
         onFocusPage()
-        if (subPage.length === 0) return
-        const groupChildrenList = subPage[subPage.length - 1].groupChildren || []
-        if (groupChildrenList.length > 0) {
-          const index = groupChildrenList.findIndex((ele) => ele.id === selectSubMenu.id)
-          if (index !== -1) {
-            setTimeout(() => {
-              scrollToRightMost()
-            }, 200)
-          }
-        }
-        if (selectSubMenu.id === subPage[subPage.length - 1].id) {
-          scrollToRightMost()
+        if (subPage.length > 0) {
+          cancels.push(
+            scheduleIdleTask(() => {
+              const groupChildrenList = subPage[subPage.length - 1].groupChildren || []
+              if (groupChildrenList.length > 0) {
+                const index = groupChildrenList.findIndex((ele) => ele.id === selectSubMenu.id)
+                if (index !== -1) {
+                  scrollToRightMost()
+                }
+              }
+              if (selectSubMenu.id === subPage[subPage.length - 1].id) {
+                scrollToRightMost()
+              }
+            }),
+          )
         }
       }
+
       if (selectSubMenu.id !== '0') {
-        if (selectSubMenu.groupId === '0') {
-          if (pageItem.route === YakitRoute.HTTPFuzzer) setType('config')
-          removeCurrentSelectGroupId(pageRouteKey)
-        } else {
-          if (pageItem.route === YakitRoute.HTTPFuzzer) {
-            addFuzzerSequenceList({
-              groupId: selectSubMenu.groupId,
-            })
-          }
-          setSelectGroupId(pageRouteKey, selectSubMenu.groupId)
-        }
-        setCurrentSelectPageId(pageRouteKey, selectSubMenu.id)
+        cancels.push(
+          scheduleIdleTask(() => {
+            if (selectSubMenu.groupId === '0') {
+              if (pageItem.route === YakitRoute.HTTPFuzzer) setType('config')
+              removeCurrentSelectGroupId(pageRouteKey)
+            } else {
+              if (pageItem.route === YakitRoute.HTTPFuzzer) {
+                addFuzzerSequenceList({
+                  groupId: selectSubMenu.groupId,
+                })
+              }
+              setSelectGroupId(pageRouteKey, selectSubMenu.groupId)
+            }
+            setCurrentSelectPageId(pageRouteKey, selectSubMenu.id)
+          }),
+        )
+      }
+
+      return () => {
+        cancels.forEach((cancel) => cancel())
       }
     }, [selectSubMenu])
     useLongPress(
