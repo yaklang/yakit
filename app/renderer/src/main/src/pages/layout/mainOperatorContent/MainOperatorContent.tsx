@@ -46,7 +46,6 @@ import {
   useCreation,
   useDebounceFn,
   useGetState,
-  useInViewport,
   useLongPress,
   useMemoizedFn,
   useThrottleFn,
@@ -98,6 +97,12 @@ import {
 import { FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
+import {
+  initSubTabGlobalListeners,
+  registerSubTabPageHandlers,
+  unregisterSubTabPageHandlers,
+} from './subTabEventRegistry'
+import { isPageRouteActive } from '@/utils/getMainOperatorPageBodyContainer'
 import { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
 import emiter from '@/utils/eventBus/eventBus'
@@ -770,6 +775,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const { resetCompareData } = useHttpFlowStore()
 
   /** ---------- 新逻辑 start ---------- */
+
+  useEffect(() => initSubTabGlobalListeners(), [])
 
   useEffect(() => {
     /**切换一级菜单选中key */
@@ -3942,20 +3949,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
 
   const tabsRef = useRef(null)
   const subTabsRef = useRef<any>()
-  const [inViewport = true] = useInViewport(tabsRef)
-
-  useEffect(() => {
-    emiter.on('switchSubMenuItem', onSelectSubMenuById)
-    ipcRenderer.on('fetch-add-group', onAddGroup)
-    if (pageItem.route === YakitRoute.HTTPFuzzer) {
-      emiter.on('sendSwitchSequenceToMainOperatorContent', onSetType)
-    }
-    return () => {
-      emiter.off('sendSwitchSequenceToMainOperatorContent', onSetType)
-      emiter.off('switchSubMenuItem', onSelectSubMenuById)
-      ipcRenderer.removeListener('fetch-add-group', onAddGroup)
-    }
-  }, [])
 
   useEffect(() => {
     // 处理外部新增一个二级tab
@@ -3986,7 +3979,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }
   }, [type])
   const onSetType = useMemoizedFn((res) => {
-    if (!inViewport) return
     try {
       const value = JSONParseLog(res, { page: 'MainOperatorContent', fun: 'onSetType' })
       setType(value.type)
@@ -4001,7 +3993,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }, 100)
   })
   const onAddGroup = useMemoizedFn((e, { pageId, type: addType }: { pageId: string; type: WebFuzzerType }) => {
-    if (!inViewport) return
     const { index } = getPageItemById(subPage, pageId)
     if (index === -1) return
     subTabsRef.current?.onNewGroup(subPage[index])
@@ -4036,20 +4027,13 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
   })
 
   const onRemoveSecondPageByFocusFun = useMemoizedFn((focus: string) => {
+    if (!isPageRouteActive(pageRouteKey)) return
     if (focus === selectSubMenu.id) {
       if (pageCache.length === 0) return
       unregisterShortcutFocusHandle(focus)
       subTabsRef.current?.onRemove(selectSubMenu)
     }
   })
-
-  // 序列导入更新菜单
-  useEffect(() => {
-    emiter.on('onRemoveSecondPageByFocus', onRemoveSecondPageByFocusFun)
-    return () => {
-      emiter.off('onRemoveSecondPageByFocus', onRemoveSecondPageByFocusFun)
-    }
-  }, [])
 
   const flatSubPage = useMemo(() => {
     const newData: MultipleNodeInfo[] = []
@@ -4070,7 +4054,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         page: 'MainOperatorContent',
         fun: 'onSelectSubMenuById',
       })
-      if (res.forceRefresh !== true && !inViewport) return
       const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
       if (index === -1) return
       const newSubPage: MultipleNodeInfo = { ...flatSubPage[index] }
@@ -4080,6 +4063,22 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
       }
     } catch (error) {}
   })
+
+  useEffect(() => {
+    registerSubTabPageHandlers(pageRouteKey, {
+      onSelectSubMenuById,
+      onAddGroup,
+      onRemoveSecondPageByFocus: onRemoveSecondPageByFocusFun,
+      ...(pageItem.route === YakitRoute.HTTPFuzzer ? { onSetType } : {}),
+    })
+    return () =>
+      unregisterSubTabPageHandlers(pageRouteKey, [
+        'onSelectSubMenuById',
+        'onAddGroup',
+        'onSetType',
+        'onRemoveSecondPageByFocus',
+      ])
+  }, [pageRouteKey, pageItem.route])
 
   return (
     <div
@@ -4234,35 +4233,27 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     useEffect(() => {
       getSecondaryTabsNum()
       getIsCloseGroupTip()
-      emiter.on('onCloseCurrentPage', onCloseCurrentPage)
-      emiter.on('onUpdateSubMenuNameFormPage', onUpdateSubMenuNameFormPage)
-      emiter.on('onUpdateSecondaryTabsNum', onUpdateSecondaryTabsNum)
-      return () => {
-        emiter.off('onCloseCurrentPage', onCloseCurrentPage)
-        emiter.off('onUpdateSubMenuNameFormPage', onUpdateSubMenuNameFormPage)
-        emiter.off('onUpdateSecondaryTabsNum', onUpdateSecondaryTabsNum)
-      }
     }, [])
 
     const tabMenuSubRef = useRef<any>()
 
     useEffect(() => {
-      // 切换选中页面时聚焦
-      onFocusPage()
-      if (subPage.length === 0) return
-      const groupChildrenList = subPage[subPage.length - 1].groupChildren || []
-      if (groupChildrenList.length > 0) {
-        // 二级tab最后一个是组
-        const index = groupChildrenList.findIndex((ele) => ele.id === selectSubMenu.id)
-        if (index !== -1) {
-          setTimeout(() => {
-            scrollToRightMost()
-          }, 200)
+      const isActive = isPageRouteActive(pageRouteKey)
+      if (isActive) {
+        onFocusPage()
+        if (subPage.length === 0) return
+        const groupChildrenList = subPage[subPage.length - 1].groupChildren || []
+        if (groupChildrenList.length > 0) {
+          const index = groupChildrenList.findIndex((ele) => ele.id === selectSubMenu.id)
+          if (index !== -1) {
+            setTimeout(() => {
+              scrollToRightMost()
+            }, 200)
+          }
         }
-      }
-      if (selectSubMenu.id === subPage[subPage.length - 1].id) {
-        //滚动到最后边
-        scrollToRightMost()
+        if (selectSubMenu.id === subPage[subPage.length - 1].id) {
+          scrollToRightMost()
+        }
       }
       if (selectSubMenu.id !== '0') {
         if (selectSubMenu.groupId === '0') {
@@ -4900,12 +4891,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         }
       } catch (error) {}
     })
-    useEffect(() => {
-      emiter.on('onCloseSubPageByInfo', onCloseSubPageByInfoFun)
-      return () => {
-        emiter.off('onCloseSubPageByInfo', onCloseSubPageByInfoFun)
-      }
-    }, [])
 
     const onShowDuplicateModal = useMemoizedFn((item: MultipleNodeInfo) => {
       const m = showYakitModal({
@@ -5883,6 +5868,23 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     const isWebFuzzerRoute = useCreation(() => {
       return pageItem.route === YakitRoute.HTTPFuzzer
     }, [pageItem.route])
+
+    useEffect(() => {
+      registerSubTabPageHandlers(pageRouteKey, {
+        onCloseCurrentPage,
+        onUpdateSubMenuNameFormPage,
+        onUpdateSecondaryTabsNum,
+        onCloseSubPageByInfo: onCloseSubPageByInfoFun,
+      })
+      return () =>
+        unregisterSubTabPageHandlers(pageRouteKey, [
+          'onCloseCurrentPage',
+          'onUpdateSubMenuNameFormPage',
+          'onUpdateSecondaryTabsNum',
+          'onCloseSubPageByInfo',
+        ])
+    }, [pageRouteKey])
+
     return (
       <DragDropContext
         onDragEnd={onSubMenuDragEnd}
