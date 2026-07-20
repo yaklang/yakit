@@ -155,7 +155,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
     }
   }, [renderNum])
 
-  // 获取流数据
+  // TODO - 可以修改为新版 获取流数据
   const { stream } = useStreamingChatContent({
     token: data.stream.EventUUID,
   })

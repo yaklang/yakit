@@ -7,7 +7,7 @@ import {
   SendRecoverParams,
 } from './HistoryTaskTreeType'
 import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { AIInputEvent, AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITree } from '../../aiTree/AITree'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -27,22 +27,55 @@ import { useStore } from 'zustand'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
-  const { data, currentTaskItem } = props
+  const store = useCurrentStore()
+  const meta = useCurrentMeta()
+  const planHistoryList = useStore(store, (state) => state.planHistoryList ?? [])
+  const taskTree = useStore(store, (state) => state.taskChat.plan.task_tree ?? [])
+  const taskName = useStore(store, (state) => state.taskChat.plan.root_task_name ?? '')
+
+  const currentTaskItem = useCreation(() => {
+    const coordinatorId = meta.currentTaskPlanID?.coordinatorId || ''
+    const item: AIAgentGrpcApi.PlanHistory = {
+      coordinator_id: coordinatorId,
+      created_at: '',
+      created_at_unix: 0,
+      session_id: '',
+      task_progress: {
+        total_tasks: 0,
+        completed_tasks: 0,
+        skipped_tasks: 0,
+        aborted_tasks: 0,
+        current_index: 0,
+        current_task_index: '',
+        current_task: '',
+        current_goal: '',
+        phase: 'NotCompleted',
+        updated_at: 0,
+      },
+      task_tree: taskTree,
+      updated_at: '',
+      updated_at_unix: 0,
+      root_task_name: taskName,
+    }
+    return item
+  }, [taskTree, taskName])
 
   const currentCoordinatorId = useCreation(() => {
     return currentTaskItem?.coordinator_id || ''
   }, [currentTaskItem?.coordinator_id])
-  const [activeKey, setActiveKey] = useState<string>(currentCoordinatorId || data.records[0]?.coordinator_id || '')
+  const [activeKey, setActiveKey] = useState<string>(
+    currentCoordinatorId || planHistoryList.records[0]?.coordinator_id || '',
+  )
   const historyContainerRef = useRef<HTMLDivElement>(null)
 
   useUpdateEffect(() => {
-    const firstItemId = data.records[0]?.coordinator_id || ''
+    const firstItemId = planHistoryList.records[0]?.coordinator_id || ''
     if (!!currentCoordinatorId) {
       setActiveKey(currentCoordinatorId)
     } else if (!!firstItemId) {
       setActiveKey(firstItemId)
     }
-  }, [currentCoordinatorId, data.records[0]])
+  }, [currentCoordinatorId, planHistoryList.records[0]])
   return (
     <div className={styles['history-task-tree-container']} ref={historyContainerRef}>
       <YakitCollapse
@@ -79,7 +112,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
             />
           </YakitCollapse.YakitPanel>
         )}
-        {data.records
+        {planHistoryList.records
           // 历史任务树会包含当前正在执行的任务树，需要将其过滤
           .filter((ele) => ele.coordinator_id !== currentCoordinatorId)
           .map((item) => {

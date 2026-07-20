@@ -2,8 +2,7 @@ import { Dispatch, SetStateAction } from 'react'
 import { AISession } from './type/aiChat'
 import { AITabsEnum } from './defaultConstant'
 import { AIStartParams } from '../ai-re-act/hooks/grpcApi'
-import { PlanLoadingStatus, CurrentExecTaskTree } from '../ai-re-act/hooks/type'
-import type { ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
+import { PlanLoadingStatus } from '../ai-re-act/hooks/type'
 export interface AIAgentProps {
   pageId: string
 }
@@ -44,16 +43,12 @@ export interface EditChatNameModalProps {
 export interface AIChatLeftSideProps {
   expand: boolean
   setExpand: Dispatch<SetStateAction<boolean>>
-  taskTree: CurrentExecTaskTree['task_tree']
-  taskName: CurrentExecTaskTree['root_task_name']
 }
 
 // 对话框回答
 export type AITabsEnumType = `${AITabsEnum}`
 
 export interface AIAgentChatStreamProps {
-  streams: ReActChatRenderElement[]
-  session: string
   defaultExpand?: boolean
   scrollToBottom: boolean
   taskStatus: PlanLoadingStatus

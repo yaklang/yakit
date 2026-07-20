@@ -24,7 +24,7 @@ const ConcurrentStreamCard: FC<{
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
 
-  const renderNum = useStore(store, (state) => state.tasks[token].renderNum)
+  const renderNum = useStore(store, (state) => state.tasks[token]?.renderNum)
 
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(
     isChildWindow || rawData.contents.get(token)?.chatType !== 'reAct',
@@ -86,7 +86,7 @@ const ConcurrentStreamCardHeardWrapper: FC<ConcurrentStreamCardHeardWrapperProps
   const rawData = useCurrentRawData()
   const metaData = useCurrentMeta()
 
-  const renderNum = useStore(store, (state) => state.tasks[token].renderNum)
+  const renderNum = useStore(store, (state) => state.tasks[token]?.renderNum)
 
   const raw = useCreation(() => {
     if (!rawData) return undefined
@@ -122,7 +122,7 @@ const ConcurrentStreamCardTip: FC<ConcurrentStreamCardTipProps> = memo((props) =
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
 
-  const renderNum = useStore(store, (state) => state.tasks[token].renderNum)
+  const renderNum = useStore(store, (state) => state.tasks[token]?.renderNum)
 
   const goal = useCreation(() => {
     const itemData = rawData.contents.get(token)
@@ -140,7 +140,7 @@ const ConcurrentStreamCardTip: FC<ConcurrentStreamCardTipProps> = memo((props) =
 const ConcurrentStreamCardListWrapper: FC<ConcurrentStreamCardListWrapperProps> = memo((props) => {
   const { token } = props
   const store = useCurrentStore()
-  const childrenTokens = useStore(store, (state) => state.tasks[token].childrenTokens || [])
+  const childrenTokens = useStore(store, (state) => state.tasks[token]?.childrenTokens || [])
 
   return <ConcurrentStreamContent isChildWindow={false} childrenTokens={childrenTokens} />
 })

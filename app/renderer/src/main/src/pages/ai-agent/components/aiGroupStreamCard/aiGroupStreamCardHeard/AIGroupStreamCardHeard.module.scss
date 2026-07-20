@@ -31,4 +31,50 @@
   .hidden-expand-btn {
     display: none;
   }
+  .stream-text {
+    overflow: hidden;
+    text-align: left;
+    position: relative;
+    flex: 1;
+    width: 0;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+
+    .ai-mask {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      background: linear-gradient(
+        to right,
+        var(--Colors-Use-Basic-Background) 0%,
+        rgba(255, 255, 255, 0) 10%,
+        rgba(255, 255, 255, 0) 90%,
+        transparent 100%
+      );
+    }
+    p {
+      margin: 0;
+      max-width: 100%;
+      display: inline-block;
+    }
+    span {
+      display: flex;
+      white-space: nowrap;
+      font-weight: 400;
+      justify-content: flex-end;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 14px;
+      letter-spacing: 0.5px;
+    }
+  }
+  .stream-text-hidden {
+    display: none;
+  }
 }

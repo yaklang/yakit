@@ -8,13 +8,16 @@ import { AIGroupStreamCardHeardProps } from '../type'
 import styles from './AIGroupStreamCardHeard.module.scss'
 
 const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((props) => {
-  const { expand, setExpand, lastToken, nodeLabel, shouldShowMask } = props
+  const { expand, setExpand, lastItem, nodeLabel, shouldShowMask } = props
 
-  const { stream } = useTypedStream({ token: lastToken ?? '' })
+  const { content } = useTypedStream({
+    getContent: () => lastItem?.data.content ?? '',
+    getStatus: () => lastItem?.data.status ?? 'end',
+  })
 
   return (
     <div
-      className={styles.title}
+      className={styles['title']}
       onClick={() => {
         setExpand(!expand)
       }}
@@ -27,7 +30,7 @@ const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((prop
             [styles['stream-text-hidden']]: expand,
           })}
         >
-          <span>{stream?.data?.content}</span>
+          <span>{content}</span>
         </p>
       </div>
       <Tooltip title="展开">

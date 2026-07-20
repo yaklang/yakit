@@ -32,15 +32,34 @@ export const AIGroupStreamNode: FC<{
   renderNum: number
 }> = memo(({ itemData, renderNum }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { stream } = useTypedStream({ token: itemData.id })
+  // 仅获取用于显示的 content（已应用打字效果）
+  const { content } = useTypedStream({
+    getContent: () => itemData.data.content,
+    getStatus: () => itemData.data.status,
+  })
   const [open, setOpen] = useState(false)
   const [openPopover, setOpenPopover] = useState(false)
 
+  // 其余原始字段通过 useCurrentRawData 获取，并订阅 renderNum 驱动重渲染
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  const tokenRenderNum = useStore(store, (state) => state.items[itemData.id]?.renderNum)
+
+  const stream = useCreation(() => {
+    const rawStream = rawData.contents.get(itemData.id)
+    if (!rawStream) return null
+    switch (rawStream.type) {
+      case AIChatQSDataTypeEnum.STREAM:
+        return rawStream
+
+      default:
+        return null
+    }
+  }, [tokenRenderNum])
   const onClose = () => {
     setOpen(false)
   }
 
-  const store = useCurrentStore()
   const { getLabelByParams } = useAINodeLabel()
 
   const nodeLabel = useCreation(() => {
@@ -58,7 +77,7 @@ export const AIGroupStreamNode: FC<{
     if (!itemData.parentGroupToken) return ''
     const parentGroupTokens = store.getState().groups[itemData.parentGroupToken].childrenTokens
     const index = parentGroupTokens.findIndex((ele) => ele === itemData.id)
-    return index === -1 ? '' : `${index}. `
+    return index === -1 ? '' : `${index + 1}. `
   }, [renderNum])
 
   const modelCode = useCreation(() => {
@@ -89,7 +108,7 @@ export const AIGroupStreamNode: FC<{
         </YakitModal>
       )}
       {seqNo}
-      {stream.data.content}
+      {content}
       <YakitPopover
         trigger={'click'}
         visible={openPopover}
@@ -149,8 +168,7 @@ export default AIGroupStreamCard
 const AIGroupStreamCardListWrapper: React.FC<AIGroupStreamCardListWrapperProps> = memo((props) => {
   const { expand, token } = props
   const store = useCurrentStore()
-  const childrenTokens = useStore(store, (state) => state.groups[token].childrenTokens || [])
-
+  const childrenTokens = useStore(store, (state) => state.groups[token]?.childrenTokens || [])
   return <AIGroupStreamCardList expand={expand} childrenTokens={childrenTokens} />
 })
 const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps> = memo((props) => {
@@ -162,7 +180,6 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
 
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
-
   const chatLength = useStore(store, (state) => state.casualChat.elements.length)
   const taskChatLength = useStore(store, (state) => state.taskChat.elements.length)
   const renderNum = useStore(store, (state) => state.groups[token]?.renderNum)
@@ -226,11 +243,23 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
     }
   }, [lastToken, lastItemRenderNum])
 
+  const lastItem = useCreation(() => {
+    const lastItem = rawData.contents.get(lastToken)
+    if (!lastItem) return undefined
+    switch (lastItem.type) {
+      case AIChatQSDataTypeEnum.STREAM:
+        return lastItem
+
+      default:
+        return undefined
+    }
+  }, [lastItemRenderNum])
+
   return (
     <AIGroupStreamCardHeard
       expand={expand}
       setExpand={setExpand}
-      lastToken={lastToken}
+      lastItem={lastItem}
       nodeLabel={nodeLabel}
       shouldShowMask={shouldShowMask}
     />

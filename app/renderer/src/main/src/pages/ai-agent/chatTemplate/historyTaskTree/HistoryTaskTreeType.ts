@@ -1,12 +1,7 @@
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITreeNodeProps } from '../../aiTree/type'
 
-export interface HistoryTaskTreeProps {
-  /** 当前任务 */
-  currentTaskItem: AIAgentGrpcApi.PlanHistory
-  // 历史任务数据源
-  data: AIAgentGrpcApi.PlanHistoryList
-}
+export interface HistoryTaskTreeProps {}
 
 export interface HistoryTaskTreeItemProps {
   // 历史任务的单条记录
