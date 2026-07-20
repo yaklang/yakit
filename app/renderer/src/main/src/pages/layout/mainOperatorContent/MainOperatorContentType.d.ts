@@ -125,7 +125,7 @@ export interface TabChildrenProps {
  */
 export interface PageBodyItemProps {
   softMode: SoftMode
-  pageCache: PageCache[]
+  pageCacheLength: number
   pageItem: PageCache
   index: number
   openMultipleMenuPage: (route: RouteToPageProps) => void
@@ -133,6 +133,18 @@ export interface PageBodyItemProps {
   /**从历史中恢复tab数据 */
   onRestoreHistory: (v: YakitRoute | string) => void
   /**保存tab数据 */
+  onSaveHistory: (v: YakitRoute | string) => void
+}
+
+/** 页签内容区（与激活状态隔离），切页时 props 不变则跳过重渲染 */
+export interface PageBodyContentProps {
+  softMode: SoftMode
+  pageCacheLength: number
+  pageItem: PageCache
+  index: number
+  openMultipleMenuPage: (route: RouteToPageProps) => void
+  onSetPageCache: (m: MultipleNodeInfo[], i: number) => void
+  onRestoreHistory: (v: YakitRoute | string) => void
   onSaveHistory: (v: YakitRoute | string) => void
 }
 
@@ -177,7 +189,8 @@ export interface TabListProps {
  */
 export interface SubTabListProps {
   softMode: SoftMode
-  pageCache: PageCache[]
+  /** 已打开一级页签数量，替代透传 pageCache 避免无关页签变更引发重渲染 */
+  pageCacheLength: number
   /** 本页固定 routeKey，不随全局切页变化，避免 SubTabList 因 currentTabKey 变化而重渲染 */
   pageRouteKey: YakitRoute | string
   openMultipleMenuPage: (route: RouteToPageProps) => void
