@@ -1,4 +1,4 @@
-import React, { forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
   CurrentPacketInfoProps,
   ManualHijackInfoProps,
@@ -628,6 +628,17 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       setManualTableTotal(data.length)
     }, [data.length])
 
+    // 性能优化：pagination 对象用 useMemo 缓存，避免每次渲染创建新引用
+    const pagination = useMemo(
+      () => ({
+        page: 1,
+        limit: 50,
+        total: data.length,
+        onChange: () => {},
+      }),
+      [data.length],
+    )
+
     const lastRatioRef = useRef<{ firstRatio: string; secondRatio: string }>({
       firstRatio: '21%',
       secondRatio: '79%',
@@ -647,7 +658,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           } catch (error) {}
         }
       })
-    })
+    }, [])
     const ResizeBoxProps = useCreation(() => {
       let p = cloneDeep(lastRatioRef.current)
       if (onlyShowFirstNode) {
@@ -681,6 +692,17 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         setManualTableSelectNumber(newSelect.length)
       }
     })
+    // 性能优化：rowSelection 对象用 useMemo 缓存
+    const rowSelection = useMemo(
+      () => ({
+        isAll: allSelected,
+        type: 'checkbox' as const,
+        selectedRowKeys,
+        onSelectAll,
+        onChangeCheckboxSingle,
+      }),
+      [allSelected, selectedRowKeys, onSelectAll, onChangeCheckboxSingle],
+    )
     /**全部放行，不用管当前选中得数据是否被修改，除了等待劫持状态全部原封不动得转发 */
     const onSubmitAllData = useMemoizedFn(() => {
       const length = data.length
@@ -753,24 +775,13 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               isShowTitle={false}
               data={data}
               renderKey="TaskID"
-              pagination={{
-                page: 1,
-                limit: 50,
-                total: data.length,
-                onChange: () => {},
-              }}
+              pagination={pagination}
               columns={columns}
               onSetCurrentRow={onSetCurrentRow}
               currentSelectItem={currentSelectItem}
               onRowContextMenu={onRowContextMenu}
               scrollToIndex={scrollToIndex}
-              rowSelection={{
-                isAll: allSelected,
-                type: 'checkbox',
-                selectedRowKeys,
-                onSelectAll,
-                onChangeCheckboxSingle,
-              }}
+              rowSelection={rowSelection}
             />
           </div>
         }

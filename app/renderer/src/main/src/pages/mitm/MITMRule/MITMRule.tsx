@@ -207,7 +207,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     }, [mitmContent.mitmStore.version])
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
-    const [originalRules, setOriginalRules] = useState<MITMContentReplacerRule[]>([])
+    // 性能优化：originalRules/originalWhiteList 仅在 onClose 中比较，不在 JSX 中渲染，改为 ref
+    const originalRulesRef = useRef<MITMContentReplacerRule[]>([])
 
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [selectedRows, setSelectedRows] = useState<MITMContentReplacerRule[]>([])
@@ -226,7 +227,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [whiteListVisible, setWhiteListVisible] = useState<boolean>(false)
     const [whiteList, setWhiteList] = useState<string[]>([])
-    const [originalWhiteList, setOriginalWhiteList] = useState<string[]>([])
+    const originalWhiteListRef = useRef<string[]>([])
     const ruleButtonRef = useRef<RuleExportAndImportHandle | null>(null)
 
     const disableTrafficGuardRef = useRef<boolean>(disableTrafficGuard)
@@ -274,10 +275,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     useEffect(() => {
       ipcRenderer.invoke('GetCurrentRules', {}).then((rsp: { Rules: MITMContentReplacerRule[] }) => {
         const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
-        setOriginalRules(newRules)
+        originalRulesRef.current = newRules
         const nextWhiteList = newRules?.[0]?.ExcludeSuffix || []
         setWhiteList(nextWhiteList)
-        setOriginalWhiteList(nextWhiteList)
+        originalWhiteListRef.current = nextWhiteList
       })
     }, [visible])
     useEffect(() => {
@@ -961,8 +962,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
 
     const onClose = useMemoizedFn(() => {
       if (
-        JSON.stringify(originalRules) !== JSON.stringify(rules) ||
-        JSON.stringify(originalWhiteList) !== JSON.stringify(whiteList)
+        JSON.stringify(originalRulesRef.current) !== JSON.stringify(rules) ||
+        JSON.stringify(originalWhiteListRef.current) !== JSON.stringify(whiteList)
       ) {
         Modal.confirm({
           title: t('YakitModal.friendlyReminder'),

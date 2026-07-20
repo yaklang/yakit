@@ -131,7 +131,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
   const [advancedFormVisible, setAdvancedFormVisible] = useState<boolean>(false)
 
   // 高级配置 关闭后存的最新的form值
-  const [advancedValue, setAdvancedValue] = useState<AdvancedConfigurationFromValue>()
+  // 性能优化：advancedValue 仅在 execStartMITM 回调中读取，不在 JSX 中渲染，改为 ref
+  const advancedValueRef = useRef<AdvancedConfigurationFromValue>()
 
   const ruleButtonRef = useRef<any>()
   const advancedFormRef = useRef<any>()
@@ -266,7 +267,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     let params = {
       ...values,
       ...advancedFormValue,
-      ...advancedValue,
+      ...advancedValueRef.current,
     }
     const extra: ExtraMITMServerProps = buildMitmExtra(params as AdvancedConfigurationFromValue)
     const { downstreamProxy = [] } = params
@@ -598,7 +599,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             visible={advancedFormVisible}
             setVisible={setAdvancedFormVisible}
             onSave={(val) => {
-              setAdvancedValue(val)
+              advancedValueRef.current = val
               setAdvancedFormVisible(false)
             }}
             enableGMTLS={stateSecretHijacking === 'enableGMTLS'}
