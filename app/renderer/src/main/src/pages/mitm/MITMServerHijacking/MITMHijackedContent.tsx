@@ -197,6 +197,22 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false) // 是否开启过替换规则
   const [curRules, setCurRules] = useState<MITMContentReplacerRule[]>([])
   const [alertVisible, setAlertVisible] = useState<boolean>(false)
+  // 性能优化：params/wrapperStyle 用 useMemo 缓存，避免每次渲染创建新对象破坏子组件 React.memo
+  const tableParams = useMemo(() => ({ SourceType: sourceType }), [sourceType])
+  const tableWrapperStyle = useMemo(() => ({ padding: 0 }), [])
+  const onQueryParams = useMemoizedFn((queryParams) => {
+    try {
+      const processQuery = JSONParseLog(queryParams, { page: 'MITMHijackedContent', fun: 'onQueryParams' }) || {}
+      delete processQuery.Pagination
+      delete processQuery.AfterId
+      delete processQuery.BeforeId
+      delete processQuery.ProcessName
+      emiter.emit(
+        'onMITMLogProcessQuery',
+        JSON.stringify({ queryStr: JSON.stringify(processQuery), version: mitmVersion }),
+      )
+    } catch (error) {}
+  })
   const getMITMFilter = useMemoizedFn(() => {
     grpcMITMGetFilter()
       .then((res: MITMFilterSchema) => {
@@ -1004,25 +1020,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             pageType="MITM"
             noTableTitle={true}
             downstreamProxyStr={downstreamProxyStr}
-            params={{ SourceType: sourceType }}
+            params={tableParams}
             onSetTableTotal={throttledSetTableTotal}
             onSetTableSelectNum={throttledSetTableSelectNum}
             onSetHasNewData={throttledSetHasNewData}
-            wrapperStyle={{ padding: 0 }}
-            onQueryParams={(queryParams) => {
-              try {
-                const processQuery =
-                  JSONParseLog(queryParams, { page: 'MITMHijackedContent', fun: 'onQueryParams' }) || {}
-                delete processQuery.Pagination
-                delete processQuery.AfterId
-                delete processQuery.BeforeId
-                delete processQuery.ProcessName
-                emiter.emit(
-                  'onMITMLogProcessQuery',
-                  JSON.stringify({ queryStr: JSON.stringify(processQuery), version: mitmVersion }),
-                )
-              } catch (error) {}
-            }}
+            wrapperStyle={tableWrapperStyle}
+            onQueryParams={onQueryParams}
             builtinTagList={builtinTagList}
           />
         </div>

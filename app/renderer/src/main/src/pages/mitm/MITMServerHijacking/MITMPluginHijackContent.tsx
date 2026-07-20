@@ -70,6 +70,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const PluginTrace = React.lazy(() => import('./PluginTrace/PluginTrace'))
 
 const { ipcRenderer } = window.require('electron')
+// 性能优化：空 Map 常量，避免每次渲染创建新对象
+const emptyBoolMap = new Map<string, boolean>()
 
 interface MITMPluginHijackContentProps {
   isHasParams: boolean
@@ -240,8 +242,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
 
   const [script, setScript] = useState<YakScript>(HotLoadDefaultData)
 
-  const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件名
-  const [hooksID, handlersID] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件id
+  // 性能优化：使用模块级空 Map 常量，避免每次渲染创建 new Map()
+  const [hooks, handlers] = useMap<string, boolean>(emptyBoolMap) // 当前hooks的插件名
+  const [hooksID, handlersID] = useMap<string, boolean>(emptyBoolMap) // 当前hooks的插件id
   const [loading, setLoading] = useState(false)
 
   // 是否允许获取默认勾选值
@@ -397,6 +400,26 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
 
   const onSearch = useMemoizedFn(() => {
     setTriggerSearch(!triggerSearch)
+  })
+
+  // 性能优化：提取 pluginListQuery 内联函数，避免每次渲染创建新引用和返回新对象
+  const pluginListQuery = useMemoizedFn(() => {
+    return {
+      Tag: tags,
+      Type: 'mitm,port-scan',
+      Keyword: searchKeyword,
+      FieldKeywords: fieldKeywords,
+      Pagination: {
+        Limit: 20,
+        Order: '',
+        Page: 1,
+        OrderBy: '',
+        RawOrder: 'is_core_plugin desc,online_official desc,updated_at desc',
+      },
+      Group: { UnSetGroup: false, Group: groupNames },
+      IsMITMParamPlugins: isHasParams ? 1 : 2,
+      IncludedScriptNames: isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList,
+    }
   })
   /**
    * @description 发送到【热加载】中调试代码
@@ -879,24 +902,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
               setSelectGroup={setSelectGroup}
               excludeType={['yak', 'codec', 'lua', 'nuclei']}
               wrapperClassName={styles['plugin-group']}
-              pluginListQuery={() => {
-                return {
-                  Tag: tags,
-                  Type: 'mitm,port-scan',
-                  Keyword: searchKeyword,
-                  FieldKeywords: fieldKeywords,
-                  Pagination: {
-                    Limit: 20,
-                    Order: '',
-                    Page: 1,
-                    OrderBy: '',
-                    RawOrder: 'is_core_plugin desc,online_official desc,updated_at desc',
-                  },
-                  Group: { UnSetGroup: false, Group: groupNames },
-                  IsMITMParamPlugins: isHasParams ? 1 : 2,
-                  IncludedScriptNames: isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList,
-                }
-              }}
+              pluginListQuery={pluginListQuery}
               total={total}
               allChecked={isHasParams ? false : isSelectAll}
               checkedPlugin={isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList}
