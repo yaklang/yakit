@@ -7,7 +7,6 @@ import {
   HTTPFlowsFieldGroupResponse,
   HTTPFlowTable,
 } from './HTTPFlowTable/HTTPFlowTable'
-import { HTTPFlowDetailMini } from './HTTPFlowDetail'
 import {
   useControllableValue,
   useCreation,
@@ -96,6 +95,11 @@ import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
+
+// HTTPFlowDetailMini 含 Monaco 编辑器(2165行)，延迟到选中行后才加载
+const HTTPFlowDetailMini = React.lazy(() =>
+  import('./HTTPFlowDetail').then((m) => ({ default: m.HTTPFlowDetailMini })),
+)
 
 export interface HTTPPacketFuzzable {
   defaultHttps?: boolean
@@ -661,6 +665,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         secondNode={
           <div style={{ width: '100%', height: '100%' }}>
             {secondNodeVisible && (
+              <React.Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}>
               <HTTPFlowDetailMini
                 noHeader={true}
                 search={highlightSearch}
@@ -673,6 +678,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                 pageType={pageType}
                 showFlod={showFlod}
               />
+              </React.Suspense>
             )}
           </div>
         }

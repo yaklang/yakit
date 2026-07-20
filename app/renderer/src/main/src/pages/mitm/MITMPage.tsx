@@ -14,7 +14,14 @@ import {
   useMemoizedFn,
   useUpdateEffect,
 } from 'ahooks'
-import { enableMITMPluginMode, MITMServerHijacking } from '@/pages/mitm/MITMServerHijacking/MITMServerHijacking'
+import type { MITMStatus } from './MITMServerHijacking/MITMHijackedContent'
+import type {
+  MITMPluginLocalList as _MITMPluginLocalListType,
+  PluginGroup as _PluginGroupType,
+  PluginSearch as _PluginSearchType,
+  YakFilterRemoteObj,
+  YakModuleListHeard as _YakModuleListHeardType,
+} from './MITMServerHijacking/MITMPluginLocalList'
 import { Uint8ArrayToString } from '@/utils/str'
 import { MITMContentReplacerRule } from './MITMRule/MITMRuleType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -24,15 +31,6 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { StartExecYakCodeModal, YakScriptParam } from '@/utils/basic'
-import MITMHijackedContent, { MITMStatus } from './MITMServerHijacking/MITMHijackedContent'
-import { MITMPluginHijackContent } from './MITMServerHijacking/MITMPluginHijackContent'
-import {
-  MITMPluginLocalList,
-  PluginGroup,
-  PluginSearch,
-  YakFilterRemoteObj,
-  YakModuleListHeard,
-} from './MITMServerHijacking/MITMPluginLocalList'
 import {
   ClientCertificate,
   defHost,
@@ -87,6 +85,27 @@ import {
 } from './MITMServerHijacking/PluginsOutput/StreamProcessor'
 import { RemoteMitmGV } from '@/enums/mitm'
 const MITMRule = React.lazy(() => import('./MITMRule/MITMRule'))
+// 劫持内容延迟加载：MITMServerHijacking/MITMHijackedContent/MITMPluginHijackContent/MITMPluginLocalList
+// 含 HTTPFlowTable(2780行)+HTTPHistory(1168行)+YakitEditor(2371行)，仅在 status !== 'idle' 时渲染
+const MITMServerHijacking = React.lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMServerHijacking').then((m) => ({ default: m.MITMServerHijacking })),
+)
+const MITMHijackedContent = React.lazy(() => import('./MITMServerHijacking/MITMHijackedContent'))
+const MITMPluginHijackContent = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginHijackContent').then((m) => ({ default: m.MITMPluginHijackContent })),
+)
+const MITMPluginLocalList = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.MITMPluginLocalList })),
+)
+const PluginGroup = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.PluginGroup })),
+)
+const PluginSearch = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.PluginSearch })),
+)
+const YakModuleListHeard = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakModuleListHeard })),
+)
 
 const { ipcRenderer } = window.require('electron')
 
@@ -444,6 +463,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
       default:
         return (
+          <React.Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}>
           <MITMServerHijacking
             port={port}
             showPort={showPort}
@@ -473,6 +493,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             updatesPlugins={updatesPlugins}
             pluginOutputRef={pluginOutputRef}
           />
+          </React.Suspense>
         )
     }
   })
@@ -812,7 +833,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
   }, [])
 
   const onEnableMITMPluginMode = useMemoizedFn((checked: boolean) => {
-    enableMITMPluginMode({ initPluginNames: listNames, version: mitmVersion })
+    import('@/pages/mitm/MITMServerHijacking/MITMServerHijacking')
+      .then((m) => m.enableMITMPluginMode({ initPluginNames: listNames, version: mitmVersion }))
       .then(() => {
         setIsSelectAll(checked)
         info(t('MITMServer.startPluginSuccess'))
@@ -1114,13 +1136,21 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
       isVer={false}
       freeze={openTabsFlag}
       isRecalculateWH={openTabsFlag}
-      firstNode={() => <div className={style['mitm-server-start-pre-first']}>{onRenderFirstNode()}</div>}
+      firstNode={() => (
+        <div className={style['mitm-server-start-pre-first']}>
+          <React.Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}>
+            {onRenderFirstNode()}
+          </React.Suspense>
+        </div>
+      )}
       lineStyle={{ display: isFullScreenFirstNode ? 'none' : '' }}
       firstMinSize={openTabsFlag ? '400px' : '24px'}
       secondMinSize={520}
       secondNode={() => (
         <div className={style['mitm-server-start-pre-second']} style={{ display: isFullScreenFirstNode ? 'none' : '' }}>
-          {onRenderSecondNode()}
+          <React.Suspense fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}>
+            {onRenderSecondNode()}
+          </React.Suspense>
         </div>
       )}
       secondNodeStyle={{
