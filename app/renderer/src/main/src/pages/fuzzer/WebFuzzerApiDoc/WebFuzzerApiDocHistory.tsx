@@ -165,7 +165,7 @@ export const WebFuzzerApiDocHistory: React.FC<{
                         <YakitPopconfirm
                           title={t('ApiDoc.deleteConfirm')}
                           placement="right"
-                          overlayClassName="api-doc-history-embedded-popconfirm"
+                          classNames={{ root: 'api-doc-history-embedded-popconfirm' }}
                           onConfirm={(e) => {
                             e?.stopPropagation()
                             onDelete(item)

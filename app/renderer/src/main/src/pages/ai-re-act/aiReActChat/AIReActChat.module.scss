@@ -397,11 +397,6 @@
   }
 }
 .chat-locate-popover {
-  :global {
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
-  }
   .chat-locate-list {
     display: flex;
     flex-direction: column;

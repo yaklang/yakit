@@ -85,7 +85,7 @@ const HistorySessionIcon: FC<{
     <Tooltip
       title={iconMeta.label}
       placement="top"
-      overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+      classNames={{ root: classNames(styles['history-item-extra-tooltip'], overlayClassName) }}
       getPopupContainer={getPopupContainer}
     >
       <div

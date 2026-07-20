@@ -1,5 +1,5 @@
 import React, { memo, useState, type FC } from 'react'
-import { Tooltip } from 'antd'
+import { MenuProps, Tooltip } from 'antd'
 import { Dropdown } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -193,68 +193,93 @@ const AIRunModeSelect: React.FC = memo(() => {
 
   const TriggerIcon = triggerDisplay.Icon
 
+  const buildMenuItems = useMemoizedFn((): MenuProps['items'] => {
+    const items: MenuProps['items'] = []
+
+    // 添加提示项（不可点击）
+    items.push({
+      key: 'hint',
+      label: execute ? 'AI 运行中，仅 Plan 可修改，Multi-Agent / Goal 暂不可改' : '请选择模式，可多选',
+      disabled: true,
+      className: styles['mode-menu-hint'],
+    })
+
+    // 添加模式选项
+    ModeOptionList.forEach((item) => {
+      const checked = isModeSelected(item.key)
+      const locked = isModeLocked(item.key)
+      const Icon = item.icon
+
+      items.push({
+        key: item.key,
+        label: (
+          <div className={styles['mode-option-left']}>
+            <div className={styles['mode-option-icon']}>
+              <Icon />
+            </div>
+            <span className={styles['mode-option-label']}>{item.label}</span>
+          </div>
+        ),
+        icon: checked ? (
+          <SolidCheckIcon className={styles['mode-option-check']} />
+        ) : (
+          <span className={styles['mode-option-check-placeholder']} />
+        ),
+        disabled: locked,
+        onClick: () => onToggleMode(item.key),
+        className: classNames(styles['mode-option'], {
+          [styles['mode-option-disabled']]: locked,
+        }),
+      })
+    })
+
+    // 添加 Goal 模式配置（如果启用）
+    if (enableGoalMode) {
+      items.push({
+        key: 'divider',
+        type: 'divider',
+        className: styles['mode-panel-divider'],
+      })
+
+      items.push({
+        key: 'goal-iter',
+        label: (
+          <div className={styles['mode-goal-iter']}>
+            <span className={styles['mode-goal-iter-label']}>最小迭代次数</span>
+            <Tooltip title="<=0 时由服务端使用默认值">
+              <div onClick={(e) => e.stopPropagation()}>
+                <YakitInputNumber
+                  type="horizontal"
+                  size="small"
+                  min={0}
+                  disabled={execute}
+                  value={goalMinIterations}
+                  onChange={(v) => onSetStrategy({ GoalMinIterations: (v as number) ?? 0 })}
+                  className={styles['mode-goal-iter-input']}
+                />
+              </div>
+            </Tooltip>
+          </div>
+        ),
+        disabled: true, // 让整个菜单项不可选，但内部 Input 可交互
+        className: styles['mode-goal-iter-item'],
+      })
+    }
+
+    return items
+  })
+
   return (
     <Dropdown
       trigger={['click']}
-      visible={modeVisible}
-      onVisibleChange={setModeVisible}
+      open={modeVisible}
+      onOpenChange={setModeVisible}
       overlayClassName={styles['mode-dropdown']}
-      overlay={
-        <div className={styles['mode-menu']}>
-          <div className={styles['mode-menu-hint']}>
-            {execute ? 'AI 运行中，仅 Plan 可修改，Multi-Agent / Goal 暂不可改' : '请选择模式，可多选'}
-          </div>
-          <div className={styles['mode-list']}>
-            {ModeOptionList.map((item) => {
-              const Icon = item.icon
-              const checked = isModeSelected(item.key)
-              const locked = isModeLocked(item.key)
-              return (
-                <div
-                  key={item.key}
-                  className={classNames(styles['mode-option'], {
-                    [styles['mode-option-disabled']]: locked,
-                  })}
-                  onClick={() => onToggleMode(item.key)}
-                >
-                  <div className={styles['mode-option-left']}>
-                    <div className={styles['mode-option-icon']}>
-                      <Icon />
-                    </div>
-                    <span className={styles['mode-option-label']}>{item.label}</span>
-                  </div>
-                  {checked ? (
-                    <SolidCheckIcon className={styles['mode-option-check']} />
-                  ) : (
-                    <span className={styles['mode-option-check-placeholder']} />
-                  )}
-                </div>
-              )
-            })}
-          </div>
-          {enableGoalMode && (
-            <>
-              <div className={styles['mode-panel-divider']} />
-              <div className={styles['mode-goal-iter']}>
-                <span className={styles['mode-goal-iter-label']}>最小迭代次数</span>
-                <Tooltip title="<=0 时由服务端使用默认值">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <YakitInputNumber
-                      type="horizontal"
-                      size="small"
-                      min={0}
-                      disabled={execute}
-                      value={goalMinIterations}
-                      onChange={(v) => onSetStrategy({ GoalMinIterations: (v as number) ?? 0 })}
-                      className={styles['mode-goal-iter-input']}
-                    />
-                  </div>
-                </Tooltip>
-              </div>
-            </>
-          )}
-        </div>
-      }
+      menu={{
+        items: buildMenuItems(),
+        className: styles['mode-menu'],
+        selectable: false, // 禁用默认选中行为
+      }}
     >
       <YakitButton
         type="outline2"
