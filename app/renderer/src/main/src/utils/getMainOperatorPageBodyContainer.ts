@@ -16,3 +16,8 @@ export function getMainOperatorPageBodyContainer() {
 export function getMainOperatorPageBodyContainerOrBody(): HTMLElement {
   return getMainOperatorPageBodyContainer() || document.body
 }
+
+/** 判断指定一级页签是否为当前激活页，用于切页副作用隔离 */
+export function isPageRouteActive(pageRouteKey: string) {
+  return getCurrentPageTabRouteKey() === pageRouteKey
+}
