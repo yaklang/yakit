@@ -255,16 +255,20 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     scrollTo(0)
   }, [isRefresh])
 
-  const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-    entries.forEach((entry) => {
-      const target = entry.target
-      containerRefPosition.current = target.getBoundingClientRect()
+  // 性能优化：ResizeObserver 用 useRef 创建一次，避免每次渲染创建新实例导致内存泄漏
+  const resizeObserverRef = useRef<ResizeObserver>()
+  if (!resizeObserverRef.current) {
+    resizeObserverRef.current = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      entries.forEach((entry) => {
+        const target = entry.target
+        containerRefPosition.current = target.getBoundingClientRect()
+      })
     })
-  })
+  }
 
   useUpdateEffect(() => {
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current)
+    if (containerRef.current && resizeObserverRef.current) {
+      resizeObserverRef.current.observe(containerRef.current)
     }
   }, [containerRef.current, height])
 

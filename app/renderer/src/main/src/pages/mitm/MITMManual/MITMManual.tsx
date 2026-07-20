@@ -323,11 +323,25 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       }
       setCurrentSelectItem(newSelectItem)
       setEditorShowIndexShowIndex(newSelectItem ? newEditorShowIndexShowIndex : 0)
-      newData = newData.map(({ Tags = [], ...rest }) => ({
-        ...rest,
-        Tags,
-        cellClassName: filterColorTag(Tags.join('|')),
-      }))
+      // 性能优化：只对新增/更新的行计算 cellClassName，未变化的行保持原对象引用，
+      // 让 TableVirtualResize 的 CellRender memo 能跳过未变化行的 reconciliation
+      const changedTaskIDs = new Set<string>()
+      for (let index = 0; index < length; index++) {
+        const item = mitmV2HijackInfoRef.current[index]
+        if (
+          item.manualHijackListAction === ManualHijackListAction.Hijack_List_Add ||
+          item.manualHijackListAction === ManualHijackListAction.Hijack_List_Update
+        ) {
+          changedTaskIDs.add(item.TaskID)
+        }
+      }
+      if (changedTaskIDs.size > 0) {
+        newData = newData.map((row) => {
+          if (!changedTaskIDs.has(row.TaskID)) return row
+          const { Tags = [] } = row
+          return { ...row, cellClassName: filterColorTag(Tags.join('|')) }
+        })
+      }
       setData([...newData])
       mitmV2HijackInfoRef.current = []
       stopFlushInterval()
@@ -564,6 +578,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
     const onScrollTo = useMemoizedFn((val: number) => {
       setScrollToIndex(val)
     })
+    // 性能优化：setLoading 提取为稳定引用，避免每次渲染创建新箭头函数破坏 ManualHijackInfo 的 React.memo
+    const onSetLoading = useMemoizedFn((l: boolean) => {
+      const item = getCurrentSelectItem()
+      if (item) setLoading(item.TaskID, l)
+    })
     const columns: ColumnsTypeProps[] = useCreation(() => {
       return [
         {
@@ -797,7 +816,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               handleAutoForward={handleAutoForward}
               onDiscardData={onDiscardData}
               loading={!!getLoading(currentSelectItem.TaskID)}
-              setLoading={(l) => setLoading(currentSelectItem.TaskID, l)}
+              setLoading={onSetLoading}
               isOnlyLookResponse={isOnlyLookResponse}
             />
           )

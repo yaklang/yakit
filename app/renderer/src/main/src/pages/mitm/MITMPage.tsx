@@ -959,8 +959,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     if (noParamsCheckList.length > 0) onSelectAll(false)
   })
 
-  const hasParamsCheckListMemo = useSortedArrayMemo(hasParamsCheckList)
-  const noParamsCheckListMemo = useSortedArrayMemo(noParamsCheckList)
+  const hasParamsCheckListMemo = useSortedArrayMemoHook(hasParamsCheckList)
+  const noParamsCheckListMemo = useSortedArrayMemoHook(noParamsCheckList)
 
   const onRenderFirstNode = useMemoizedFn(() => {
     switch (status) {
@@ -1543,11 +1543,17 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
   )
 })
 
-function useSortedArrayMemo<T extends string | number>(
+// 性能优化：用 ref 缓存上次序列化 key，避免每次渲染都执行 spread + sort + stringify
+function useSortedArrayMemoHook<T extends string | number>(
   arr: T[],
   compareFn: (a: T, b: T) => number = (a, b) => String(a).localeCompare(String(b)),
 ) {
-  return useMemo(() => {
-    return [...arr].sort(compareFn)
-  }, [JSON.stringify([...arr].sort(compareFn))])
+  const sortedRef = useRef<T[]>([])
+  const keyRef = useRef<string>('')
+  const newKey = arr.join(',')
+  if (newKey !== keyRef.current) {
+    keyRef.current = newKey
+    sortedRef.current = [...arr].sort(compareFn)
+  }
+  return sortedRef.current
 }

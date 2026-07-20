@@ -352,9 +352,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
       grpcClientMITMLoading(mitmVersion).remove()
     }
   }, [])
+  // 性能优化：用 ref 缓存 hooks 的插件名 key，只在插件名集合变化时重建 hooksItem（避免 localeCompare 排序在每次 Map 引用变化时重跑）
+  const hooksKeyRef = useRef<string>('')
   const hooksItem: YakScript[] = useCreation(() => {
     let tmpItem: YakScript[] = []
+    const keys: string[] = []
     hooks.forEach((value, key) => {
+      keys.push(key)
       if (!key.includes(hookScriptNameSearch)) return
       if (value && key) {
         tmpItem.push({
@@ -377,8 +381,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         })
       }
     })
-    return tmpItem.sort((a, b) => a.ScriptName.localeCompare(b.ScriptName))
-  }, [hooks, isHooksSearch])
+    const newKey = keys.sort().join(',')
+    if (newKey === hooksKeyRef.current) {
+      // 插件名集合未变化，跳过重建
+      return hooksItemCacheRef.current
+    }
+    hooksKeyRef.current = newKey
+    const sorted = tmpItem.sort((a, b) => a.ScriptName.localeCompare(b.ScriptName))
+    hooksItemCacheRef.current = sorted
+    return sorted
+  }, [hooks, isHooksSearch, hookScriptNameSearch])
+  const hooksItemCacheRef = useRef<YakScript[]>([])
 
   /**
    * @description 多选插件
