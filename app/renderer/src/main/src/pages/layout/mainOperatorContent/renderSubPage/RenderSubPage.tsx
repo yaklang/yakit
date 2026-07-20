@@ -8,8 +8,34 @@ import { useFuzzerSequence } from '@/store/fuzzerSequence'
 import { PageLoading } from '@ant-design/pro-layout'
 import { usePageInfo } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { shallow } from 'zustand/shallow'
+import { MultipleNodeInfo } from '../MainOperatorContentType'
 
 const FuzzerSequenceWrapper = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper'))
+
+const EMPTY_FUZZER_SEQUENCE_LIST: never[] = []
+
+/** 单个二级页签面板：display 切换不触发 PageItem 重渲染 */
+const RenderSubPagePanel = React.memo(
+  ({ route, subItem, isSelected }: { route: YakitRoute; subItem: MultipleNodeInfo; isSelected: boolean }) => (
+    <div
+      id={subItem.id}
+      tabIndex={isSelected ? 1 : -1}
+      style={{
+        display: isSelected ? '' : 'none',
+        padding: NoPaddingRoute.includes(route) ? 0 : '8px 16px 13px 16px',
+      }}
+      className={styles['page-body']}
+    >
+      <PageItem routeKey={route} params={subItem.pageParams} />
+    </div>
+  ),
+  (prev, next) =>
+    prev.isSelected === next.isSelected &&
+    prev.route === next.route &&
+    prev.subItem.id === next.subItem.id &&
+    prev.subItem.pageParams === next.subItem.pageParams,
+)
 
 export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
   (props) => {
@@ -22,23 +48,15 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
     }, [selectSubMenuId])
     return (
       <>
-        {renderSubPage.map((subItem, numberSub) => {
+        {renderSubPage.map((subItem) => {
           return (
             pageRenderList.get(subItem.id) && (
-              <React.Fragment key={subItem.id}>
-                <div
-                  key={subItem.id}
-                  id={subItem.id}
-                  tabIndex={selectSubMenuId === subItem.id ? 1 : -1}
-                  style={{
-                    display: selectSubMenuId === subItem.id ? '' : 'none',
-                    padding: NoPaddingRoute.includes(route) ? 0 : '8px 16px 13px 16px',
-                  }}
-                  className={styles['page-body']}
-                >
-                  <PageItem routeKey={route} params={subItem.pageParams} />
-                </div>
-              </React.Fragment>
+              <RenderSubPagePanel
+                key={subItem.id}
+                route={route}
+                subItem={subItem}
+                isSelected={selectSubMenuId === subItem.id}
+              />
             )
           )
         })}
@@ -52,55 +70,64 @@ export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
     if (preProps.selectSubMenuId !== nextProps.selectSubMenuId) {
       return false
     }
+    if (preProps.route !== nextProps.route) {
+      return false
+    }
     return true
   },
 )
 
 export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.memo((props) => {
   const { route, type, setType } = props
+  const isWebFuzzerRoute = route === YakitRoute.HTTPFuzzer
   const isSequenceOrConcurrencyType = ['sequence', 'concurrency'].includes(type)
 
   const [pageSequenceRenderList, { set: setPageSequenceRenderList, get: getPageSequenceRenderList }] = useMap<
     string,
     boolean
   >(new Map<string, boolean>())
-  const fuzzerSequenceList = useFuzzerSequence((s) => s.fuzzerSequenceList)
-  const selectGroupId = usePageInfo((s) => s.selectGroupId.get(YakitRoute.HTTPFuzzer) || '')
+  const fuzzerSequenceList = useFuzzerSequence(
+    (s) => (isWebFuzzerRoute ? s.fuzzerSequenceList : EMPTY_FUZZER_SEQUENCE_LIST),
+    shallow,
+  )
+  const selectGroupId = usePageInfo(
+    (s) => (isWebFuzzerRoute ? s.selectGroupId.get(YakitRoute.HTTPFuzzer) || '' : ''),
+    shallow,
+  )
   useEffect(() => {
+    if (!isWebFuzzerRoute) return
     updateRender(selectGroupId)
-  }, [type, selectGroupId])
+  }, [type, selectGroupId, isWebFuzzerRoute])
   const updateRender = useMemoizedFn((id: string) => {
-    // 控制渲染
     if (getPageSequenceRenderList(id)) return
     if (isSequenceOrConcurrencyType && id !== '0') {
       setPageSequenceRenderList(id, true)
     }
   })
+  if (!isWebFuzzerRoute) {
+    return null
+  }
   return (
     <div
       className={styles['fuzzer-sequence-list']}
       tabIndex={isSequenceOrConcurrencyType ? 1 : -1}
       style={{ display: isSequenceOrConcurrencyType ? '' : 'none' }}
     >
-      {route === YakitRoute.HTTPFuzzer && (
-        <>
-          {fuzzerSequenceList.map(
-            (ele) =>
-              getPageSequenceRenderList(ele.groupId) && (
-                <div
-                  key={ele.groupId}
-                  className={styles['fuzzer-sequence-list-item']}
-                  style={{ display: selectGroupId === ele.groupId ? '' : 'none' }}
-                >
-                  <React.Suspense fallback={<PageLoading />}>
-                    <FuzzerSequenceWrapper type={type}>
-                      <FuzzerSequence groupId={ele.groupId} setType={setType} type={type} />
-                    </FuzzerSequenceWrapper>
-                  </React.Suspense>
-                </div>
-              ),
-          )}
-        </>
+      {fuzzerSequenceList.map(
+        (ele) =>
+          getPageSequenceRenderList(ele.groupId) && (
+            <div
+              key={ele.groupId}
+              className={styles['fuzzer-sequence-list-item']}
+              style={{ display: selectGroupId === ele.groupId ? '' : 'none' }}
+            >
+              <React.Suspense fallback={<PageLoading />}>
+                <FuzzerSequenceWrapper type={type}>
+                  <FuzzerSequence groupId={ele.groupId} setType={setType} type={type} />
+                </FuzzerSequenceWrapper>
+              </React.Suspense>
+            </div>
+          ),
       )}
     </div>
   )
@@ -108,7 +135,6 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
 
 const PageItem: React.FC<PageItemProps> = React.memo(
   (props) => {
-    // useWhyDidYouUpdate("PageItem", {...props})
     return <RouteToPageItem {...props} />
   },
   (preProps, nextProps) => {
