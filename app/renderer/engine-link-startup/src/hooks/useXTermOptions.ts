@@ -2,14 +2,14 @@ import { getAllYakitColorVars } from '@/utils/theme'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Theme, useTheme } from './useTheme'
 
-const applyYakitXtermTheme = (terminal, fun) => {
+const applyYakitXtermTheme = (terminal, fun, theme: Theme) => {
   requestAnimationFrame(() => {
-    fun(terminal, getXtermTheme())
+    fun(terminal, getXtermTheme(theme))
   })
 }
 
-export const getXtermTheme = () => {
-  const vars = getAllYakitColorVars()
+export const getXtermTheme = (theme?: Theme) => {
+  const vars = getAllYakitColorVars(theme)
   return {
     foreground: vars['--Colors-Use-Neutral-Text-1-Title'],
     background: vars['--Colors-Use-Basic-Background'],
@@ -82,9 +82,9 @@ export const useXTermOptions = (params: UseXTermOptionsParams) => {
     const terminal = getTerminal()
     if (terminal) {
       if (terminal.options) {
-        applyYakitXtermTheme(terminal, onOption)
+        applyYakitXtermTheme(terminal, onOption, themeGlobal)
       } else if (terminal.setOption) {
-        applyYakitXtermTheme(terminal, onSetOption)
+        applyYakitXtermTheme(terminal, onSetOption, themeGlobal)
       }
     }
   })
@@ -95,7 +95,7 @@ export const useXTermOptions = (params: UseXTermOptionsParams) => {
         fontFamily: 'Consolas, "Lucida Console", "Courier New", monospace',
         convertEol: true,
       },
-      theme: { ...getXtermTheme() },
+      theme: { ...getXtermTheme(themeGlobal) },
     }
     if (delay) {
       setTimeout(() => {

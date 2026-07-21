@@ -1,6 +1,7 @@
 import { monaco } from 'react-monaco-editor'
 import { Theme } from '@/hooks/useTheme'
-import { isYakit } from './envfile'
+import { GetMainColor, isYakit } from './envfile'
+import { getYakitColorVars } from './yakitColorVars'
 type CssVars = Record<string, string>
 type TGeneratorColor = (vars: CssVars, theme: Theme) => Record<string, string>
 
@@ -783,54 +784,7 @@ const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
 }
 export { applyYakitMonacoTheme }
 
-/**
- * 提取所有 yakit / Colors-Use CSS 变量（包含继承 & inline）
- */
-export const getAllYakitColorVars = (theme?: 'light' | 'dark'): Record<string, string> => {
-  const el = document.documentElement
-
-  if (theme) {
-    const currentTheme = el.getAttribute('data-theme')
-    if (currentTheme !== theme) {
-      console.warn(`[getAllYakitColorVars] theme mismatch: expect=${theme}, actual=${currentTheme}`)
-    }
-  }
-
-  const computed = getComputedStyle(el)
-  const seen = new Set<string>()
-  const result: Record<string, string> = {}
-
-  for (const sheet of document.styleSheets) {
-    let rules: CSSRuleList
-    try {
-      rules = sheet.cssRules
-    } catch {
-      continue
-    }
-
-    for (const rule of rules) {
-      if (rule.type !== CSSRule.STYLE_RULE) continue
-      const styleRule = rule as CSSStyleRule
-
-      for (let i = 0; i < styleRule.style.length; i++) {
-        const prop = styleRule.style[i]
-        if ((prop.startsWith('--Colors-Use-') || prop.startsWith('--yakit-colors-')) && !seen.has(prop)) {
-          seen.add(prop)
-          const value = computed.getPropertyValue(prop).trim()
-          if (value) result[prop] = value
-        }
-      }
-    }
-  }
-
-  for (let i = 0; i < el.style.length; i++) {
-    const prop = el.style[i]
-    if ((prop.startsWith('--Colors-Use-') || prop.startsWith('--yakit-colors-')) && !seen.has(prop)) {
-      seen.add(prop)
-      const value = computed.getPropertyValue(prop).trim()
-      if (value) result[prop] = value
-    }
-  }
-
-  return result
+export const getAllYakitColorVars = (theme?: Theme): Record<string, string> => {
+  const currentTheme = theme ?? (document.documentElement.dataset.theme as Theme | undefined) ?? 'light'
+  return getYakitColorVars(currentTheme, GetMainColor(currentTheme))
 }
