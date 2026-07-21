@@ -7,13 +7,18 @@ import { copyAsUrl, ByteCountTag, showDictsAndSelect } from '../HTTPFuzzerPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { setRemoteValue } from '@/utils/kv'
 import { useMemoizedFn } from 'ahooks'
-import { HTTPFuzzerHotPatch } from '../HTTPFuzzerHotPatch'
 import { yakitNotify } from '@/utils/notification'
 import { openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
+
+const HTTPFuzzerHotPatch = React.lazy(() =>
+  import('../HTTPFuzzerHotPatch').then(({ HTTPFuzzerHotPatch }) => ({
+    default: HTTPFuzzerHotPatch,
+  })),
+)
 
 export interface WebFuzzerNewEditorProps {
   ref?: any
@@ -78,23 +83,25 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         hiddenHeader: true,
         keyboard: false,
         content: (
-          <HTTPFuzzerHotPatch
-            pageId={pageId}
-            initialHotPatchCode={hotPatchCode}
-            initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
-            onInsert={(tag) => {
-              if (reqEditor) monacoEditorWrite(reqEditor, tag)
-              m.destroy()
-            }}
-            onSaveCode={(code) => {
-              setHotPatchCode(code)
-            }}
-            onSaveHotPatchCodeWithParamGetterCode={(code) => {
-              setHotPatchCodeWithParamGetter(code)
-              setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
-            }}
-            onCancel={() => m.destroy()}
-          />
+          <React.Suspense fallback={null}>
+            <HTTPFuzzerHotPatch
+              pageId={pageId}
+              initialHotPatchCode={hotPatchCode}
+              initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
+              onInsert={(tag) => {
+                if (reqEditor) monacoEditorWrite(reqEditor, tag)
+                m.destroy()
+              }}
+              onSaveCode={(code) => {
+                setHotPatchCode(code)
+              }}
+              onSaveHotPatchCodeWithParamGetterCode={(code) => {
+                setHotPatchCodeWithParamGetter(code)
+                setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+              }}
+              onCancel={() => m.destroy()}
+            />
+          </React.Suspense>
         ),
       })
     })

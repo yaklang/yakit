@@ -126,14 +126,11 @@ import { usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, getFuzzerProces
 import { YakitCopyText } from '@/components/yakitUI/YakitCopyText/YakitCopyText'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { openABSFileLocated, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
-import { PayloadGroupNodeProps, ReadOnlyNewPayload } from '../payloadManager/newPayload'
+import type { PayloadGroupNodeProps } from '../payloadManager/newPayload'
 import { createRoot, Root } from 'react-dom/client'
 import { SolidPauseIcon, SolidPlayIcon } from '@/assets/icon/solid'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { WebFuzzerCasualReplaceReviewOverlay } from '@/pages/fuzzer/WebFuzzerCasualReplaceReviewOverlay'
-import blastingIdmp4 from '@/assets/blasting-id.mp4'
-import blastingPwdmp4 from '@/assets/blasting-pwd.mp4'
-import blastingCountmp4 from '@/assets/blasting-count.mp4'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import { WebFuzzerType } from './WebFuzzerPage/WebFuzzerPageType'
 import cloneDeep from 'lodash/cloneDeep'
@@ -143,7 +140,6 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { availableColors } from '@/components/HTTPFlowTable/HTTPFlowTable'
-import { HTTPFlowRealTimeTableAndEditor } from '@/components/HTTPHistory'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import {
   DefFuzzerTableMaxData,
@@ -169,7 +165,7 @@ import { setClipboardText } from '@/utils/clipboard'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { setEditorContext } from '@/utils/monacoSpec/yakEditor'
 import { filterColorTag } from '@/components/TableVirtualResize/utils'
-import { FuzzerConcurrentLoad, FuzzerResChartData } from './FuzzerConcurrentLoad/FuzzerConcurrentLoad'
+import type { FuzzerResChartData } from './FuzzerConcurrentLoad/FuzzerConcurrentLoad'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import { WebFuzzerDroppedProps } from './FuzzerSequence/FuzzerSequenceType'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
@@ -225,6 +221,16 @@ const HotCodeTemplate = React.lazy(() =>
 const WebFuzzerApiDoc = React.lazy(() =>
   import('./WebFuzzerApiDoc/WebFuzzerApiDoc').then(({ WebFuzzerApiDoc }) => ({
     default: WebFuzzerApiDoc,
+  })),
+)
+const FuzzerConcurrentLoad = React.lazy(() =>
+  import('./FuzzerConcurrentLoad/FuzzerConcurrentLoad').then(({ FuzzerConcurrentLoad }) => ({
+    default: FuzzerConcurrentLoad,
+  })),
+)
+const HTTPFlowRealTimeTableAndEditor = React.lazy(() =>
+  import('@/components/HTTPHistory').then(({ HTTPFlowRealTimeTableAndEditor }) => ({
+    default: HTTPFlowRealTimeTableAndEditor,
   })),
 )
 
@@ -452,10 +458,11 @@ export interface FuzzerRequestProps {
 export const showDictsAndSelect = (fun: (i: string) => any) => {
   ipcRenderer
     .invoke('GetAllPayloadGroup')
-    .then((res: { Nodes: PayloadGroupNodeProps[] }) => {
+    .then(async (res: { Nodes: PayloadGroupNodeProps[] }) => {
       if (res.Nodes.length === 0) {
         warn(tOriginal('HTTPFuzzerPage.noDictionaryAvailable'))
       } else {
+        const { ReadOnlyNewPayload } = await import('../payloadManager/newPayload')
         const y = showYakitModal({
           title: null,
           footer: null,
@@ -3226,10 +3233,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         }}
                                         key={i18n.language}
                                       >
-                                        <FuzzerConcurrentLoad
-                                          inViewportCurrent={inViewport && currentFuzzerPage}
-                                          fuzzerResChartData={fuzzerResChartData}
-                                        />
+                                        <React.Suspense fallback={null}>
+                                          <FuzzerConcurrentLoad
+                                            inViewportCurrent={inViewport && currentFuzzerPage}
+                                            fuzzerResChartData={fuzzerResChartData}
+                                          />
+                                        </React.Suspense>
                                       </div>
                                     )}
                                   </>
@@ -3297,30 +3306,32 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                             </div>
                             <div style={{ flex: 1, minHeight: 0 }}>
                               {effectiveAiRuntimeId ? (
-                                <HTTPFlowRealTimeTableAndEditor
-                                  key={effectiveAiRuntimeId}
-                                  wrapperStyle={{ padding: 0 }}
-                                  pageType="Plugin"
-                                  runtimeId={effectiveAiRuntimeId}
-                                  params={{ SourceType: 'scan' }}
-                                  filterTagDom={aiFilterTagDom}
-                                  defaultExcludeColumnsKey={aiFuzzTableExcludeColumnsKey}
-                                  httpHistoryTableTitleStyle={{
-                                    paddingTop: 12,
-                                    paddingLeft: 8,
-                                    paddingRight: 8,
-                                  }}
-                                  showSourceType={false}
-                                  showAdvancedSearch={false}
-                                  showProtocolType={false}
-                                  showColorSwatch={false}
-                                  showDelAll={false}
-                                  showBatchActions={false}
-                                  showFlod={false}
-                                  showHistoryAnalysisBtn
-                                  onHistoryAnalysisClick={jumpHTTPHistoryAnalysis}
-                                  titleHeight={47}
-                                />
+                                <React.Suspense fallback={null}>
+                                  <HTTPFlowRealTimeTableAndEditor
+                                    key={effectiveAiRuntimeId}
+                                    wrapperStyle={{ padding: 0 }}
+                                    pageType="Plugin"
+                                    runtimeId={effectiveAiRuntimeId}
+                                    params={{ SourceType: 'scan' }}
+                                    filterTagDom={aiFilterTagDom}
+                                    defaultExcludeColumnsKey={aiFuzzTableExcludeColumnsKey}
+                                    httpHistoryTableTitleStyle={{
+                                      paddingTop: 12,
+                                      paddingLeft: 8,
+                                      paddingRight: 8,
+                                    }}
+                                    showSourceType={false}
+                                    showAdvancedSearch={false}
+                                    showProtocolType={false}
+                                    showColorSwatch={false}
+                                    showDelAll={false}
+                                    showBatchActions={false}
+                                    showFlod={false}
+                                    showHistoryAnalysisBtn
+                                    onHistoryAnalysisClick={jumpHTTPHistoryAnalysis}
+                                    titleHeight={47}
+                                  />
+                                </React.Suspense>
                               ) : null}
                             </div>
                           </div>
@@ -4929,7 +4940,7 @@ const ResponseViewerSecondNode: React.FC<ResponseViewerSecondNodeProps> = React.
   )
 })
 
-// 爆破动画演示
+// 爆破动画演示（MP4 动态 import，避免打进主 chunk）
 interface BlastingAnimationAemonstrationProps {
   animationType?: string
   videoStyle?: CSSProperties
@@ -4938,15 +4949,24 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
   const { t, i18n } = useI18nNamespaces(['webFuzzer'])
   const [animationType, setAnimationType] = useState<string>(props.animationType || 'id')
 
-  const [animationResources, setAnimationResources] = useState<string>(blastingIdmp4)
+  const [animationResources, setAnimationResources] = useState<string>('')
 
   useEffect(() => {
-    if (animationType === 'id') {
-      setAnimationResources(blastingIdmp4)
-    } else if (animationType === 'pwd') {
-      setAnimationResources(blastingPwdmp4)
-    } else if (animationType === 'count') {
-      setAnimationResources(blastingCountmp4)
+    let cancelled = false
+    const load = async () => {
+      let mod: { default: string }
+      if (animationType === 'pwd') {
+        mod = await import('@/assets/blasting-pwd.mp4')
+      } else if (animationType === 'count') {
+        mod = await import('@/assets/blasting-count.mp4')
+      } else {
+        mod = await import('@/assets/blasting-id.mp4')
+      }
+      if (!cancelled) setAnimationResources(mod.default)
+    }
+    load()
+    return () => {
+      cancelled = true
     }
   }, [animationType])
 
@@ -4976,7 +4996,7 @@ export const BlastingAnimationAemonstration: React.FC<BlastingAnimationAemonstra
       )}
 
       <div className={styles['animation-cont-wrap']}>
-        <video src={animationResources} autoPlay loop style={props.videoStyle}></video>
+        {animationResources ? <video src={animationResources} autoPlay loop style={props.videoStyle}></video> : null}
       </div>
     </div>
   )
