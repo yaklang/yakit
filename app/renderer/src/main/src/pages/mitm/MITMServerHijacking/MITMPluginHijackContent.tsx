@@ -354,6 +354,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   }, [])
   // 性能优化：用 ref 缓存 hooks 的插件名 key，只在插件名集合变化时重建 hooksItem（避免 localeCompare 排序在每次 Map 引用变化时重跑）
   const hooksKeyRef = useRef<string>('')
+  const hooksItemCacheRef = useRef<YakScript[]>([])
   const hooksItem: YakScript[] = useCreation(() => {
     let tmpItem: YakScript[] = []
     const keys: string[] = []
@@ -391,7 +392,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     hooksItemCacheRef.current = sorted
     return sorted
   }, [hooks, isHooksSearch, hookScriptNameSearch])
-  const hooksItemCacheRef = useRef<YakScript[]>([])
 
   /**
    * @description 多选插件

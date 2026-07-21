@@ -200,6 +200,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   // 性能优化：params/wrapperStyle 用 useMemo 缓存，避免每次渲染创建新对象破坏子组件 React.memo
   const tableParams = useMemo(() => ({ SourceType: sourceType }), [sourceType])
   const tableWrapperStyle = useMemo(() => ({ padding: 0 }), [])
+  // 性能优化：提取 onResize 为 useMemoizedFn，避免每次渲染创建新引用
+  const onResize = useMemoizedFn((w?: number, h?: number) => {
+    if (w) setWidth(w)
+    if (h) setHeight(h)
+  })
   const onQueryParams = useMemoizedFn((queryParams) => {
     try {
       const processQuery = JSONParseLog(queryParams, { page: 'MITMHijackedContent', fun: 'onQueryParams' }) || {}
@@ -1067,14 +1072,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     <div className={styles['mitm-hijacked-content']} ref={mitmHijackedContentRef}>
       <div>
         <ReactResizeDetector
-          onResize={(w, h) => {
-            if (w) {
-              setWidth(w)
-            }
-            if (h) {
-              setHeight(h)
-            }
-          }}
+          onResize={onResize}
           handleWidth={true}
           handleHeight={true}
           refreshMode={'debounce'}
