@@ -8,8 +8,7 @@ import {
 } from '../../utils/editors'
 import { showDrawer } from '../../utils/showModal'
 import { monacoEditorWrite } from './fuzzerTemplates'
-import { QueryFuzzerLabelResponseProps, StringFuzzer, StringFuzzerRef } from './StringFuzzer'
-import { CodingPopover, FuzzerResponseToHTTPFlowDetail } from '../../components/HTTPFlowDetail'
+import type { QueryFuzzerLabelResponseProps, StringFuzzerRef } from './StringFuzzer'
 import { randomString } from '../../utils/randomUtil'
 import { failed, info, yakitFailed, yakitNotify, warn } from '../../utils/notification'
 import {
@@ -24,7 +23,7 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
-import { HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
+import type { HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
 import type { HotPatchTempItem } from './HTTPFuzzerHotPatch'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
 import { StringToUint8Array, Uint8ArrayToString } from '../../utils/str'
@@ -65,7 +64,6 @@ import { useSubscribeClose } from '@/store/tabSubscribe'
 import { monaco } from 'react-monaco-editor'
 import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { WebFuzzerResponseExtractor } from '@/utils/extractor'
 import {
   FuzzerParamItem,
   AdvancedConfigValueProps,
@@ -86,7 +84,6 @@ import {
 } from './MatcherAndExtractionCard/MatcherAndExtractionCardType'
 import { HTTPHeader } from '../mitm/MITMContentReplacerHeaderOperator'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { MatcherAndExtraction } from './MatcherAndExtractionCard/MatcherAndExtractionCard'
 import _, { throttle } from 'lodash'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FUZZER_LABEL_LIST_NUMBER } from './HTTPFuzzerEditorMenu'
@@ -139,7 +136,7 @@ import { useGlobalHotPatch, useGlobalHotPatchTag } from '@/store/globalHotPatch'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
-import { availableColors } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { availableColors } from '@/components/HTTPFlowTable/HTTPFlowTable.availableColors'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import {
   DefFuzzerTableMaxData,
@@ -233,6 +230,26 @@ const HTTPFlowRealTimeTableAndEditor = React.lazy(() =>
     default: HTTPFlowRealTimeTableAndEditor,
   })),
 )
+const MatcherAndExtraction = React.lazy(() =>
+  import('./MatcherAndExtractionCard/MatcherAndExtractionCard').then(({ MatcherAndExtraction }) => ({
+    default: MatcherAndExtraction,
+  })),
+)
+const HTTPFuzzerHistorySelector = React.lazy(() =>
+  import('./HTTPFuzzerHistory').then(({ HTTPFuzzerHistorySelector }) => ({
+    default: HTTPFuzzerHistorySelector,
+  })),
+)
+const WebFuzzerResponseExtractor = React.lazy(() =>
+  import('@/utils/extractor').then(({ WebFuzzerResponseExtractor }) => ({
+    default: WebFuzzerResponseExtractor,
+  })),
+)
+const CodingPopover = React.lazy(() =>
+  import('../../components/HTTPFlowDetail').then(({ CodingPopover }) => ({
+    default: CodingPopover,
+  })),
+)
 
 // 保留数组中非重复数据
 type TFilterNonUnique = <T>(arr: T[]) => T[]
@@ -270,22 +287,24 @@ export const analyzeFuzzerResponse = (
   index?: number,
   data?: FuzzerResponse[],
 ) => {
-  let m = showDrawer({
-    width: '90%',
-    content: (
-      <>
-        <FuzzerResponseToHTTPFlowDetail
-          response={i}
-          onClosed={() => {
-            m.destroy()
-          }}
-          index={index}
-          data={data}
-          randomChunkedData={i.RandomChunkedData}
-        />
-      </>
-    ),
-    bodyStyle: { paddingTop: 5 },
+  import('../../components/HTTPFlowDetail').then(({ FuzzerResponseToHTTPFlowDetail }) => {
+    let m = showDrawer({
+      width: '90%',
+      content: (
+        <>
+          <FuzzerResponseToHTTPFlowDetail
+            response={i}
+            onClosed={() => {
+              m.destroy()
+            }}
+            index={index}
+            data={data}
+            randomChunkedData={i.RandomChunkedData}
+          />
+        </>
+      ),
+      bodyStyle: { paddingTop: 5 },
+    })
   })
 }
 
@@ -701,39 +720,41 @@ export const newWebFuzzerTab = async (params: {
 
 /**@description 插入 yak.fuzz 语法 */
 export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
-  const stringFuzzerRef = createRef<StringFuzzerRef>()
+  import('./StringFuzzer').then(({ StringFuzzer }) => {
+    const stringFuzzerRef = createRef<StringFuzzerRef>()
 
-  const m = showYakitModal({
-    title: tOriginal('HTTPFuzzerPage.fuzzerTagDebugTool'),
-    width: '70%',
-    footer: null,
-    maskClosable: false,
-    keyboard: false,
-    onCancel: () => {
-      //关闭弹窗取消任务
-      stringFuzzerRef.current?.handleCancel()
-    },
-    subTitle: tOriginal('HTTPFuzzerPage.fuzzerTagDebugToolSubTitle'),
-    content: (
-      <StringFuzzer
-        ref={stringFuzzerRef}
-        insertCallback={(template: string) => {
-          if (!template) {
-            yakitNotify('warning', tOriginal('HTTPFuzzerPage.payloadNotify'))
-          } else {
-            if (reqEditor && template) {
-              reqEditor.trigger('keyboard', 'type', {
-                text: template,
-              })
+    const m = showYakitModal({
+      title: tOriginal('HTTPFuzzerPage.fuzzerTagDebugTool'),
+      width: '70%',
+      footer: null,
+      maskClosable: false,
+      keyboard: false,
+      onCancel: () => {
+        //关闭弹窗取消任务
+        stringFuzzerRef.current?.handleCancel()
+      },
+      subTitle: tOriginal('HTTPFuzzerPage.fuzzerTagDebugToolSubTitle'),
+      content: (
+        <StringFuzzer
+          ref={stringFuzzerRef}
+          insertCallback={(template: string) => {
+            if (!template) {
+              yakitNotify('warning', tOriginal('HTTPFuzzerPage.payloadNotify'))
             } else {
-              yakitNotify('error', tOriginal('HTTPFuzzerPage.editorBug'))
+              if (reqEditor && template) {
+                reqEditor.trigger('keyboard', 'type', {
+                  text: template,
+                })
+              } else {
+                yakitNotify('error', tOriginal('HTTPFuzzerPage.editorBug'))
+              }
+              m.destroy()
             }
-            m.destroy()
-          }
-        }}
-        close={() => m.destroy()}
-      />
-    ),
+          }}
+          close={() => m.destroy()}
+        />
+      ),
+    })
   })
 }
 
@@ -879,6 +900,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
   const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
   const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+  const [historySelectorOpen, setHistorySelectorOpen] = useState(false)
 
   // first Node
   const firstNodeRef = useRef(null)
@@ -2932,22 +2954,27 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       trigger={'click'}
                       placement={'leftTop'}
                       destroyTooltipOnHide={true}
+                      onVisibleChange={setHistorySelectorOpen}
                       content={
-                        <div style={{ width: 400 }}>
-                          <HTTPFuzzerHistorySelector
-                            currentSelectId={currentSelectId}
-                            onSelect={(e, page, showAll) => {
-                              cancelCurrentHTTPFuzzer()
-                              if (!showAll) setCurrentPage(page)
-                              loadHistory(e)
-                            }}
-                            onDeleteAllCallback={() => {
-                              setCurrentPage(0)
-                              getTotal()
-                            }}
-                            fuzzerTabIndex={props.id}
-                          />
-                        </div>
+                        historySelectorOpen ? (
+                          <div style={{ width: 400 }}>
+                            <React.Suspense fallback={null}>
+                              <HTTPFuzzerHistorySelector
+                                currentSelectId={currentSelectId}
+                                onSelect={(e, page, showAll) => {
+                                  cancelCurrentHTTPFuzzer()
+                                  if (!showAll) setCurrentPage(page)
+                                  loadHistory(e)
+                                }}
+                                onDeleteAllCallback={() => {
+                                  setCurrentPage(0)
+                                  getTotal()
+                                }}
+                                fuzzerTabIndex={props.id}
+                              />
+                            </React.Suspense>
+                          </div>
+                        ) : null
                       }
                     >
                       <YakitButton type="text" icon={<ClockIcon />} style={{ padding: '4px 0px' }}>
@@ -4183,7 +4210,11 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           closable={true}
           bodyStyle={{ padding: 0 }}
         >
-          <WebFuzzerResponseExtractor responses={successFuzzer} sendPayloadsType={sendPayloadsType} />
+          {responseExtractorVisible ? (
+            <React.Suspense fallback={null}>
+              <WebFuzzerResponseExtractor responses={successFuzzer} sendPayloadsType={sendPayloadsType} />
+            </React.Suspense>
+          ) : null}
         </YakitModal>
       </div>
     )
@@ -4736,17 +4767,19 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
               showDefaultExtra={false}
               title={secondNodeTitle && secondNodeTitle()}
               AfterBeautifyRenderBtn={
-                <CodingPopover
-                  key="coding"
-                  originValue={currentOriginalPackage}
-                  onSetCodeLoading={setCodeLoading}
-                  codeKey={codeKey}
-                  onSetCodeKey={(codeKey) => {
-                    setCodeKey(codeKey)
-                    setRemoteValue(FuzzerRemoteGV.FuzzerCodeEnCoding, codeKey)
-                  }}
-                  onSetCodeValue={setCodeValue}
-                />
+                <React.Suspense fallback={null}>
+                  <CodingPopover
+                    key="coding"
+                    originValue={currentOriginalPackage}
+                    onSetCodeLoading={setCodeLoading}
+                    codeKey={codeKey}
+                    onSetCodeKey={(codeKey) => {
+                      setCodeKey(codeKey)
+                      setRemoteValue(FuzzerRemoteGV.FuzzerCodeEnCoding, codeKey)
+                    }}
+                    onSetCodeValue={setCodeValue}
+                  />
+                </React.Suspense>
               }
               extraEnd={secondNodeExtra && secondNodeExtra()}
               editorOperationRecord="HTTP_FUZZER_PAGE_EDITOR_RECORF_RESPONSE"
@@ -4833,20 +4866,22 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
           secondNode={
             <>
               {showMatcherAndExtraction ? (
-                <MatcherAndExtraction
-                  ref={ref}
-                  onClose={onClose}
-                  onSave={onSaveMatcherAndExtraction}
-                  httpResponse={Uint8ArrayToString(assembledResponsePackage)}
-                  httpRequest={request}
-                  isHttps={isHttps}
-                  matcherValue={matcherValue}
-                  extractorValue={extractorValue}
-                  defActiveKey={activeKey}
-                  defActiveType={activeType}
-                  defActiveKeyAndOrder={activeKeyAndOrder}
-                  pageType="webfuzzer"
-                />
+                <React.Suspense fallback={null}>
+                  <MatcherAndExtraction
+                    ref={ref}
+                    onClose={onClose}
+                    onSave={onSaveMatcherAndExtraction}
+                    httpResponse={Uint8ArrayToString(assembledResponsePackage)}
+                    httpRequest={request}
+                    isHttps={isHttps}
+                    matcherValue={matcherValue}
+                    extractorValue={extractorValue}
+                    defActiveKey={activeKey}
+                    defActiveType={activeType}
+                    defActiveKeyAndOrder={activeKeyAndOrder}
+                    pageType="webfuzzer"
+                  />
+                </React.Suspense>
               ) : (
                 <></>
               )}
