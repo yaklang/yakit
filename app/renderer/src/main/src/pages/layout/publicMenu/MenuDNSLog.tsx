@@ -44,8 +44,14 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout'])
   const [token, setToken, getToken] = useGetState('')
   const [domain, setDomain, getDomain] = useGetState('')
-  const [lastRecords, setLastRecords] = useState<DNSLogEvent[]>([])
   const [records, setRecords] = useState<DNSLogEvent[]>([])
+  // 最近 3 条记录，从 records 派生，避免重复 setState
+  const lastRecords = useMemo(() => {
+    if (records.length <= 3) {
+      return records.slice(0, 3)
+    }
+    return records.slice(records.length - 3, records.length)
+  }, [records])
   const [total, setTotal] = useState<number>(0)
   const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(false)
   const [dnsMode, setDNSMode, getDNSMode] = useGetState<string>('内置')
@@ -102,7 +108,6 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
           setDomain(domain || '')
           DNSMode && setDNSMode(DNSMode)
           UseLocal !== undefined && setUseLocal(UseLocal)
-          setLastRecords([])
           setRecords([])
           setTotal(0)
         }
@@ -134,7 +139,6 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
       .then((rsp: { Domain: string; Token: string }) => {
         setToken(rsp.Token)
         setDomain(rsp.Domain)
-        setLastRecords([])
         sendPageDnslog({
           token: rsp.Token,
           domain: rsp.Domain,
@@ -162,7 +166,6 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
       .then((rsp: { Domain: string; Token: string }) => {
         setToken(rsp.Token)
         setDomain(rsp.Domain)
-        setLastRecords([])
         sendPageDnslog({
           token: rsp.Token,
           domain: rsp.Domain,
@@ -221,11 +224,6 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
           })
           .reverse()
 
-        if (lists.length <= 3) {
-          setLastRecords(lists.slice(0, 3))
-        } else {
-          setLastRecords(lists.slice(lists.length - 3, lists.length))
-        }
         setRecords(lists)
         lists.length > 0 && setLoading(false)
       })
@@ -272,7 +270,6 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
   const reset = useMemoizedFn(() => {
     setToken('')
     setDomain('')
-    setLastRecords([])
     setRecords([])
     setTotal(0)
     setLoading(false)
