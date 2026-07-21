@@ -3,6 +3,7 @@ const fs = require('fs')
 const { throttle } = require('throttle-debounce')
 const path = require('path')
 const { getYaklangEngineDir } = require('../../filePath')
+const { getLocalEngineCacheName } = require('./engineVersion')
 
 // 函数用于编码URL中的中文字符
 function encodeChineseCharacters(url) {
@@ -135,10 +136,7 @@ function engineCancelRequestWithProgress(version) {
     if (writer) {
       writer.on('close', () => {
         // 主动点取消销毁流会触发 删掉不完整的引擎版本
-        const dest = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
+        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         try {
           fs.unlinkSync(dest)
         } catch (e) {}

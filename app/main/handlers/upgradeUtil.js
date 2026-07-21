@@ -30,9 +30,41 @@ const {
   getDownloadUrl,
   getSuffix,
 } = require('./utils/network')
+const {
+  getLocalEngineCacheName,
+  writeEngineBuildType,
+  writeEngineBuildTypeByVersion,
+  fetchEngineBuildType,
+  getLatestYakLocalEnginePath,
+  fileSha256,
+  getOssEngineVersion,
+} = require('./utils/engineVersion')
 const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require('./utils/requestWithProgress')
 const { getCheckTextUrl, fetchSpecifiedYakVersionHash } = require('../handlers/utils/network')
 const { engineLogOutputFileAndUI } = require('../logFile')
+
+/** 解析当前引擎构建类型：标记文件 -> 本地 slim 缓存比对 -> OSS slim hash 比对 */
+const resolveEngineBuildType = async (version) => {
+  const localType = fetchEngineBuildType(version)
+  if (localType === 'slim') return 'slim'
+
+  const ver = getOssEngineVersion(version || '').replace(/^v/, '')
+  if (!ver || ver === 'dev' || ver.startsWith('dev/')) return localType
+
+  try {
+    const enginePath = getLatestYakLocalEnginePath()
+    if (!fs.existsSync(enginePath)) return localType
+    const onlineSlimHash = await fetchSpecifiedYakVersionHash(`slim/${ver}`, { timeout: 3000 })
+    if (onlineSlimHash && fileSha256(enginePath) === onlineSlimHash) {
+      try {
+        writeEngineBuildType('slim')
+      } catch (e) {}
+      return 'slim'
+    }
+  } catch (e) {}
+
+  return localType
+}
 
 const getUserChromeDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 const authMeta = []
@@ -242,10 +274,7 @@ const diagnosingYakVersion = () => {
 
 // 判断历史引擎版本是否存在以及正确性
 const asyncYakEngineVersionExistsAndCorrectness = (version) => {
-  const dest = path.join(
-    getYaklangEngineDir(),
-    version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-  )
+  const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
   return new Promise(async (resolve, reject) => {
     try {
       const url = await getCheckTextUrl(version)
@@ -444,10 +473,7 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const dest = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
+        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         try {
           fs.unlinkSync(dest)
         } catch (e) {}
@@ -652,10 +678,7 @@ module.exports = {
 
     const installYakEngine = (version) => {
       return new Promise((resolve, reject) => {
-        let origin = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
+        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         origin = origin.replaceAll(`"`, `\"`)
 
         let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
@@ -693,6 +716,9 @@ module.exports = {
               }
               return
             }
+            try {
+              writeEngineBuildTypeByVersion(version)
+            } catch (e) {}
             resolve()
           },
         )
@@ -701,6 +727,10 @@ module.exports = {
 
     ipcMain.handle('install-yak-engine', async (e, version) => {
       return await installYakEngine(version)
+    })
+
+    ipcMain.handle('fetch-yak-engine-build-type', async (e, version) => {
+      return await resolveEngineBuildType(version)
     })
 
     // 获取yak code文件根目录路径
@@ -816,6 +846,9 @@ module.exports = {
                 } else {
                   gracefulfs.copyFileSync(buildInPath, targetEngine)
                 }
+                try {
+                  writeEngineBuildType('full')
+                } catch (e) {}
                 resolve()
               } catch (e) {
                 reject(e)
@@ -1146,6 +1179,9 @@ module.exports = {
                 } else {
                   gracefulfs.copyFileSync(buildInPath, targetEngine)
                 }
+                try {
+                  writeEngineBuildType('full')
+                } catch (e) {}
                 resolve()
               } catch (e) {
                 reject(e)
@@ -1211,10 +1247,7 @@ module.exports = {
     // asyncDownloadLatestYak wrapper
     const asyncDownloadLatestYak = (version) => {
       return new Promise(async (resolve, reject) => {
-        const dest = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
+        const dest = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         try {
           fs.unlinkSync(dest)
         } catch (e) {}
@@ -1278,10 +1311,7 @@ module.exports = {
 
     const installYakEngine = (version) => {
       return new Promise((resolve, reject) => {
-        let origin = path.join(
-          getYaklangEngineDir(),
-          version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-        )
+        let origin = path.join(getYaklangEngineDir(), getLocalEngineCacheName(version))
         origin = origin.replaceAll(`"`, `\"`)
 
         let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
@@ -1319,6 +1349,9 @@ module.exports = {
               }
               return
             }
+            try {
+              writeEngineBuildTypeByVersion(version)
+            } catch (e) {}
             resolve()
           },
         )
@@ -1327,6 +1360,10 @@ module.exports = {
 
     ipcMain.handle(ipcEventPre + 'install-yak-engine', async (e, version) => {
       return await installYakEngine(version)
+    })
+
+    ipcMain.handle(ipcEventPre + 'fetch-yak-engine-build-type', async (e, version) => {
+      return await resolveEngineBuildType(version)
     })
 
     ipcMain.handle(ipcEventPre + 'cancel-download-yak-engine-version', async (e, version) => {

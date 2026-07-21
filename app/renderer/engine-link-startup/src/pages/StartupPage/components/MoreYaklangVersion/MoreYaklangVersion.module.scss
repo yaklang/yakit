@@ -1,5 +1,27 @@
 .more-versions-popover-content {
   width: 240px;
+  .engine-build-type-header {
+    display: flex;
+    margin-bottom: 8px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+    overflow: hidden;
+    .build-type-item {
+      flex: 1;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      cursor: pointer;
+      background: var(--Colors-Use-Neutral-Bg);
+      &-active {
+        color: var(--Colors-Use-Basic-Background);
+        background: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
   .search-version-header {
     height: 28px;
     margin-bottom: 8px;
@@ -25,14 +47,28 @@
       height: 28px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       font-size: 12px;
       color: var(--Colors-Use-Neutral-Text-1-Title);
       cursor: pointer;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      .version-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       span.active {
         color: var(--Colors-Use-Main-Primary);
+      }
+      .slim-tag {
+        flex-shrink: 0;
+        font-size: 10px;
+        color: var(--Colors-Use-Main-Primary);
+        border: 1px solid var(--Colors-Use-Main-Border);
+        border-radius: 2px;
+        padding: 0 4px;
+        line-height: 16px;
       }
     }
   }
