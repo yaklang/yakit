@@ -589,7 +589,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         } catch (error) {}
       }
     })
-  })
+  },[])
   const ResizeBoxProps = useCreation(() => {
     let p = cloneDeep(lastRatioRef.current)
     if (onlyShowFirstNode) {
