@@ -9,8 +9,15 @@ import FileTreeDrop from '@/pages/ai-agent/aiChatWelcome/FileTreeDrop/FileTreeDr
 import { Divider } from 'antd'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useCreation } from 'ahooks'
 
-const FileTreeSystem = () => {
+interface FileTreeSystemProps {
+  /** 是否有文件预览数据，用于外层自由对话变大 */
+  onFilePreviewChange?: (hasPreview: boolean) => void
+}
+
+const FileTreeSystem = (props: FileTreeSystemProps) => {
+  const { onFilePreviewChange } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   // 单选
   const [selected, setSelected] = useState<FileNodeProps>()
@@ -24,9 +31,16 @@ const FileTreeSystem = () => {
     return selected
   }, [selected])
 
+  const hasPreview = !!filePreviewData
+
   const hasEmittedRef = useRef(false)
 
-  const [firstRatio, setFirstRatio] = useState('50%')
+  // 与任务内容时间线一致：有预览时左侧 30%
+  const [firstRatio, setFirstRatio] = useState('30%')
+
+  useEffect(() => {
+    onFilePreviewChange?.(hasPreview)
+  }, [hasPreview])
 
   useEffect(() => {
     if (!filePreviewData) return
@@ -36,14 +50,39 @@ const FileTreeSystem = () => {
     hasEmittedRef.current = true
   }, [filePreviewData])
 
+  const firstNodeStyle = useCreation(() => {
+    if (!hasPreview) {
+      return { width: '100%', padding: '4px', overflow: 'hidden' as const }
+    }
+    return { width: '30%', padding: '4px', overflow: 'hidden' as const }
+  }, [hasPreview])
+
+  const secondNodeStyle = useCreation(() => {
+    if (!hasPreview) {
+      return {
+        width: 0,
+        minWidth: 0,
+        maxWidth: 0,
+        padding: 0,
+        overflow: 'hidden' as const,
+        flex: 'none',
+      }
+    }
+    return { width: '70%' }
+  }, [hasPreview])
+
   return (
     <YakitResizeBox
-      firstRatio={firstRatio}
+      firstRatio={hasPreview ? firstRatio : '100%'}
+      secondRatio={hasPreview ? undefined : '0%'}
       lineDirection="right"
-      firstMinSize={200}
-      lineStyle={{ width: 4 }}
-      firstNodeStyle={{ width: '30%', padding: '4px', overflow: 'hidden' }}
-      secondNodeStyle={{ width: '70%' }}
+      firstMinSize={280}
+      secondMinSize={hasPreview ? 100 : 0}
+      lineStyle={{ width: hasPreview ? 4 : 0 }}
+      freeze={hasPreview}
+      isRecalculateWH={hasPreview}
+      firstNodeStyle={firstNodeStyle}
+      secondNodeStyle={secondNodeStyle}
       firstNode={
         <div className={styles.fileTreeSystemLeft}>
           <div className={styles.topPanel}>

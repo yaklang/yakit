@@ -2,17 +2,11 @@ import { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { useEffect, useMemo, useState, type FC } from 'react'
 import styles from './FilePreview.module.scss'
-import { OutlineDocumentaddIcon, OutlineFolderaddIcon, OutlineFolderopenIcon } from '@/assets/icon/outline'
+import { OutlineFolderopenIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import {
-  getCodeByPath,
-  getCodeSizeByPath,
-  getNameByPath,
-  MAX_FILE_SIZE_BYTES,
-  monacaLanguageType,
-} from '@/pages/yakRunner/utils'
+import { getCodeByPath, getCodeSizeByPath, MAX_FILE_SIZE_BYTES, monacaLanguageType } from '@/pages/yakRunner/utils'
 import { useMemoizedFn } from 'ahooks'
 import { Result } from 'antd'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
@@ -21,73 +15,7 @@ import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { yakitNotify } from '@/utils/notification'
 import type { FileInfo } from '../type'
 import { getLocalFileName } from '@/components/MilkdownEditor/CustomFile/utils'
-import { onOpenFileFolder } from '../utils'
-import { historyStore, useHistoryItems } from '../store/useHistoryFolder'
-import FilePreviewRecentList from './components/FilePreviewRecentList'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const FilePreviewEmpty: FC = () => {
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  // 历史文件夹
-  const historyItems = useHistoryItems()
-  const [fileNames, setFileNames] = useState<string[]>([])
-
-  const recentFiles = useMemo(() => {
-    return historyItems.map((item, index) => ({
-      ...item,
-      name: fileNames[index] || '',
-    }))
-  }, [fileNames, historyItems])
-
-  // 在组件挂载时获取所有文件名
-  useEffect(() => {
-    const fetchFileNames = async () => {
-      const names = await Promise.all(
-        historyItems.map(async (item) => {
-          return getNameByPath(item.path || '')
-        }),
-      )
-      setFileNames(names)
-    }
-    fetchFileNames()
-  }, [historyItems])
-
-  return (
-    <div className={styles['file-preview-empty']}>
-      <div className={styles['file-preview-empty-title']}>
-        <div className={styles['file-preview-empty-title-text']}>{t('FilePreview.fileSystem')}</div>
-        <div className={styles['file-preview-empty-title-subtitle']}>{t('FilePreview.chooseFile')}</div>
-      </div>
-      <div className={styles['file-preview-empty-content']}>
-        <YakitButton
-          className={styles['file-preview-empty-content-button']}
-          icon={<OutlineDocumentaddIcon />}
-          size="large"
-          type="secondary2"
-          onClick={() => onOpenFileFolder(false)}
-        >
-          {t('YakitButton.openFile')}
-        </YakitButton>
-        <YakitButton
-          className={styles['file-preview-empty-content-button']}
-          icon={<OutlineFolderaddIcon />}
-          size="large"
-          type="secondary2"
-          onClick={() => onOpenFileFolder(true)}
-        >
-          {t('YakitButton.openFolder')}
-        </YakitButton>
-        <div className={styles['file-preview-empty-content-recent']}>
-          <FilePreviewRecentList
-            title={t('YakitButton.recentOpen')}
-            files={recentFiles}
-            onClickItem={historyStore.addHistoryItem}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
 
 const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -133,9 +61,6 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
     }
   }, [path])
 
-  if (!data) {
-    return <FilePreviewEmpty />
-  }
   return (
     <div className={styles['file-preview']}>
       <div className={styles['file-preview-title']}>

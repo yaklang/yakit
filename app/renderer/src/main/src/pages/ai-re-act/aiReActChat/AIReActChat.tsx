@@ -394,11 +394,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     }, [activeChat?.SessionID])
 
     useEffect(() => {
-      if (!casualLoading) return
-      syncCasualTaskTab()
-    }, [casualLoading, syncCasualTaskTab])
-
-    useEffect(() => {
       if (!activeChat?.Title || !activeChat?.SessionID) return
       if (sessionRef.current !== activeChat.SessionID) return
       emitTaskContentTab('update', activeChat.Title)

@@ -2,34 +2,38 @@ import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { AITaskContentProps } from './type'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { AIAgentTriggerEventInfo, AITabsEnumType } from '@/pages/ai-agent/aiAgentType'
-import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import styles from './AITaskContent.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useInViewport, useMemoizedFn } from 'ahooks'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
-import classNames from 'classnames'
 import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
 import { AIReActTaskChatContent } from '../aiReActTaskChat/AIReActTaskChat'
 import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatReviewBar'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
+import { useEnsureTaskPlanLocate } from './hooks/useEnsureTaskPlanLocate'
 
 interface TabsItemProps extends YakitTabsProps {
   taskId: string
   goal?: string
 }
 
+const TASK_CONTENT_KEY = 'taskContent'
+
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
-  const { tabBarExtraContent, emptyNode } = props
+  const { tabBarExtraContent, onTabsChange } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
   const {
     chatIPCData: { taskChat },
   } = useChatIPCStore()
   const [tabs, setTabs, getTabs] = useGetSetState<TabsItemProps[]>([])
-  const [activeKey, setActiveKey] = useState<string>('taskContent')
+  const [activeKey, setActiveKey] = useState<string>(TASK_CONTENT_KEY)
   const [scrollToBottom, setScrollToBottom] = useState(false)
+  /** 任务规划关闭后用 display:none 保留，不销毁 */
+  const [taskPlanMounted, setTaskPlanMounted] = useState(false)
 
   const isSetTaskTabRef = useRef<boolean>(false)
 
@@ -41,6 +45,10 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   })
 
   useEffect(() => {
+    onTabsChange?.(tabs.length)
+  }, [tabs.length])
+
+  useEffect(() => {
     if (inViewport) {
       emiter.on('actionAITaskContentTab', onActionAITaskContentTab)
       return () => {
@@ -48,22 +56,58 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       }
     }
   }, [inViewport])
+
+  const ensurePlanTab = useMemoizedFn(() => {
+    const inTabs = getTabs().some((item) => item.value === TASK_CONTENT_KEY)
+    if (inTabs) return
+    setTabs((prv) => {
+      if (prv.some((item) => item.value === TASK_CONTENT_KEY)) return prv
+      return [
+        {
+          label: '深度规划',
+          value: TASK_CONTENT_KEY,
+          taskId: TASK_CONTENT_KEY,
+        },
+        ...prv,
+      ]
+    })
+    setTaskPlanMounted(true)
+    isSetTaskTabRef.current = true
+  })
+
+  useEnsureTaskPlanLocate({
+    taskContentKey: TASK_CONTENT_KEY,
+    activeKey,
+    taskPlanMounted,
+    tabsLength: tabs.length,
+    hasPlanContent: !!taskChat.elements.length,
+    getTabs,
+    ensurePlanTab,
+    setActiveKey,
+  })
+
   useEffect(() => {
     if (!isSetTaskTabRef.current && taskChat.elements.length) {
       setTabs((prv) => [
         {
           label: '深度规划',
-          value: 'taskContent',
-          taskId: 'taskContent',
+          value: TASK_CONTENT_KEY,
+          taskId: TASK_CONTENT_KEY,
         },
         ...prv,
       ])
+      setTaskPlanMounted(true)
       isSetTaskTabRef.current = true
+      // 当前 active 无效时（如关掉详情后）自动选中任务规划
+      const tabsNow = getTabs()
+      setActiveKey((prev) => (tabsNow.some((item) => item.value === prev) ? prev : TASK_CONTENT_KEY))
     } else if (!taskChat.elements.length) {
-      setTabs((prv) => prv.filter((item) => item.value !== 'taskContent'))
+      setTabs((prv) => prv.filter((item) => item.value !== TASK_CONTENT_KEY))
+      setTaskPlanMounted(false)
       isSetTaskTabRef.current = false
     }
   }, [taskChat.elements.length])
+
   const onActionAITaskContentTab = useMemoizedFn((data: string) => {
     try {
       const info: AIAgentTriggerEventInfo = JSON.parse(data)
@@ -119,18 +163,24 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   })
 
   const onClose = useMemoizedFn((key: string) => {
-    if (key === activeKey) {
-      const index = getTabs().findIndex((item) => item.value === key)
-      if (index !== -1) setActiveKey(getTabs()[index - 1]?.value || 'taskContent')
+    const currentTabs = getTabs()
+    const index = currentTabs.findIndex((item) => item.value === key)
+    if (key === activeKey && index !== -1) {
+      const nextTab = currentTabs[index - 1] || currentTabs[index + 1]
+      setActiveKey(nextTab?.value || '')
     }
-    setTabs((v) => v.filter((item) => item.value !== key))
+    const nextTabs = currentTabs.filter((item) => item.value !== key)
+    setTabs(() => nextTabs)
+    // 任务规划：仅从 tab 栏移除，组件保留；其它 tab 关闭即销毁（不再渲染）
+    if (key === TASK_CONTENT_KEY && nextTabs.length === 0) {
+      // tab 栏空了会卸掉 SideTab，无法再靠 display:none 保留
+      setTaskPlanMounted(false)
+    }
   })
+
   const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[]) => {
     const [label] = node
     const finalLabel = label ?? (typeof tab.label === 'function' ? tab.label() : tab.label)
-    if (tab.value === 'taskContent') {
-      return <>{finalLabel}</>
-    }
 
     return (
       <div className={styles['tab-bar-item']}>
@@ -147,27 +197,12 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       </div>
     )
   })
-  const tabContent = useCreation(() => {
-    switch (activeKey) {
-      case 'taskContent':
-        return <AIReActTaskChatContent scrollToBottom={scrollToBottom} onScrollToBottom={onScrollToBottom} />
 
-      default:
-        const taskItem = tabs.find((item) => item.value === activeKey)
-        return (
-          <AITaskExecutionDetails
-            key={taskItem?.taskId}
-            taskId={taskItem?.taskId || taskItem?.value || ''}
-            taskGoal={taskItem?.goal}
-            taskName={taskItem?.label as string}
-          />
-        )
-    }
-  }, [activeKey, onScrollToBottom, scrollToBottom, tabs])
+  const activeTaskItem = tabs.find((item) => item.value === activeKey && item.value !== TASK_CONTENT_KEY)
 
   return (
     <div className={styles['chat-content-wrapper']} ref={divRef}>
-      {!!taskChat?.elements?.length || !!tabs.length ? (
+      {!!tabs.length && (
         <YakitSideTab
           key={i18n.language}
           type="horizontal"
@@ -180,10 +215,29 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
           t={t}
           tabBarExtraContent={tabBarExtraContent}
         >
-          {activeKey && <div className={classNames(styles['tab-content'])}>{tabContent}</div>}
+          <div className={styles['tab-content']}>
+            {/* 任务规划：关闭后仍挂载，用 display:none 隐藏 */}
+            {taskPlanMounted && (
+              <div
+                className={styles['tab-pane']}
+                style={{ display: activeKey === TASK_CONTENT_KEY ? undefined : 'none' }}
+              >
+                <AIReActTaskChatContent scrollToBottom={scrollToBottom} onScrollToBottom={onScrollToBottom} />
+              </div>
+            )}
+            {/* 其它 tab：只渲染当前激活的，关掉即销毁 */}
+            {activeTaskItem && (
+              <div className={styles['tab-pane']}>
+                <AITaskExecutionDetails
+                  key={activeTaskItem.taskId}
+                  taskId={activeTaskItem.taskId || activeTaskItem.value || ''}
+                  taskGoal={activeTaskItem.goal}
+                  taskName={activeTaskItem.label as string}
+                />
+              </div>
+            )}
+          </div>
         </YakitSideTab>
-      ) : (
-        emptyNode
       )}
 
       <AIReActTaskChatReviewBar setScrollToBottom={setScrollToBottom} />

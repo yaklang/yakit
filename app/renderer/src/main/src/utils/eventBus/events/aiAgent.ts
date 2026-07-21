@@ -10,8 +10,10 @@ export type AIAgentEventProps = {
   onRefreshAvailableAIModelList?: string
   /** 刷新ai模型列表 */
   onRefreshAIModelList?: string
-  /** ai任务树定位规划列表 */
+  /** ai任务树定位规划列表（请求：必要时先打开深度规划） */
   onAITreeLocatePlanningList?: string
+  /** 深度规划已可见，列表侧执行定位/高亮 */
+  onAITreeLocatePlanningListReady?: string
   // 知识库 路由传递的参数
   defualtAIMentionCommandParams: string
   /**ai侧边栏展开收起模式 */
