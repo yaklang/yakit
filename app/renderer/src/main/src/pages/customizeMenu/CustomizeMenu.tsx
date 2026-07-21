@@ -1183,16 +1183,13 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
     setLoading(true)
     ipcRenderer
       .invoke('QueryYakScript', newParams)
-      // TODO: 等接口
-      // .then(async (item: QueryYakScriptsResponse) => {
-      //   let data = page === 1 ? item.Data : response.Data.concat(item.Data)
-      //   //按照使用次数排序
-      //   if (!keyword) {
-      //     const usage = await getPluginUsageCache()
-      //     data = sortPluginsByUsage(data, usage)
-      //   }
-      .then((item: QueryYakScriptsResponse) => {
-        const data = page === 1 ? item.Data : response.Data.concat(item.Data)
+      .then(async (item: QueryYakScriptsResponse) => {
+        let data = page === 1 ? item.Data : response.Data.concat(item.Data)
+        // 按照使用次数排序：仅首页且无搜索关键词时，避免破坏翻页/搜索结果的顺序
+        if (page === 1 && !keyword) {
+          const usage = await getPluginUsageCache()
+          data = sortPluginsByUsage(data, usage)
+        }
         const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
         setHasMore(!isMore)
         setResponse({

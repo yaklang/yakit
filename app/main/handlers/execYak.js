@@ -70,6 +70,40 @@ module.exports = (win, getClient) => {
     return await asyncQueryExecHistory(params)
   })
 
+  // asyncSavePluginExecutionHistory wrapper
+  // 由前端插件执行结束（finished/stopped）时调用，把参数 + streamInfo 快照 + runtimeId 落库
+  const asyncSavePluginExecutionHistory = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().SavePluginExecutionHistory(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('SavePluginExecutionHistory', async (e, params) => {
+    return await asyncSavePluginExecutionHistory(params)
+  })
+
+  // asyncGetPluginExecutionUsageRanking wrapper
+  // 返回插件使用次数排行（按 plugin_id 分组 count 降序）
+  const asyncGetPluginExecutionUsageRanking = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetPluginExecutionUsageRanking(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('GetPluginExecutionUsageRanking', async (e, params) => {
+    return await asyncGetPluginExecutionUsageRanking(params)
+  })
+
   // 弹出保存窗口
   const asyncSaveFileDialog = async (params) => {
     return new Promise((resolve, reject) => {

@@ -127,7 +127,7 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
-  // 握手 用于检查前端是否可以连接当前引擎
+  // 握手 用于检查前端是否可以连接当前引擎 
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
@@ -151,6 +151,10 @@ service Yak {
   rpc Exec(ExecRequest) returns (stream ExecResult);
   rpc QueryExecHistory(ExecHistoryRequest) returns (ExecHistoryRecordResponse);
   rpc RemoveExecHistory(Empty) returns (Empty);
+  // 保存插件执行历史（前端执行结束 POST 回来，B 方案）
+  rpc SavePluginExecutionHistory(SavePluginExecutionHistoryRequest) returns (Empty);
+  // 插件使用次数排行（按 plugin 分组 count 降序）
+  rpc GetPluginExecutionUsageRanking(Empty) returns (PluginExecutionUsageRankingResponse);
   rpc LoadNucleiTemplates(Empty) returns (Empty);
   rpc AutoUpdateYakModule(Empty) returns (stream ExecResult);
   rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
@@ -623,13 +627,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -644,7 +648,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
   /*
     ChaosMakerRule: Bas
   */
@@ -2014,12 +2018,12 @@ message AITool {
   repeated string Keywords = 5;
   bool IsFavorite = 6;
   int64 ID = 7;
-  string VerboseName = 8; // 给用户看的展示名称
+  string VerboseName = 8; // 英文展示名（兼容旧前端 / 检索）；UI 语言切换请用 VerboseNameI18n
   string Author = 9;
   int64 CreatedAt = 10;
   int64 UpdatedAt = 11;
   bool IsBuiltin = 12;
-  I18n VerboseNameI18n = 13;
+  I18n VerboseNameI18n = 13; // 中英双语展示名
 }
 
 message GetAIToolListResponse {
@@ -2284,6 +2288,8 @@ message AIStartParams {
 message AIExecutionStrategy {
   // 为 true 时启用多 Agent 模式：顶层 ReAct 暴露并偏好 dispatch_sub_react_agents，
   // 倾向于把复杂任务拆成多个并行子 Agent 执行后再汇总。
+  // 注意：这是 prompt 层的软偏好（soft preference），不通过 schema/verifier 强制；
+  // 若 LLM 未选择 dispatch，框架不会阻拦。Goal 模式则有硬性运行时拦截。
   bool EnableMultiAgent = 1;
 
   // 为 true 时启用 Goal 模式：在达到 GoalMinIterations 之前禁止 finish 提前退出，
@@ -3834,7 +3840,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -6520,6 +6526,8 @@ message ExecHistoryRequest {
   Paging Pagination = 1;
   int64 YakScriptId = 3;
   string YakScriptName = 4;
+  // 按来源过滤（plugin-op | plugin-hub），可选
+  string Source = 5;
 }
 
 message ExecHistoryRecordResponse {
@@ -6561,6 +6569,48 @@ message ExecHistoryRecord {
 
   bytes Messages = 16;
 
+  // ===== 插件执行历史扩展字段（B 方案）=====
+  // 来源：plugin-op | plugin-hub
+  string Source = 17;
+  // 前端聚合的 HoldGRPCStreamInfo 快照（JSON），恢复 log/自定义 table/text/card 用
+  string StreamInfo = 18;
+  // 本次历史是正常执行完成（finished）还是用户主动停止（stopped）
+  string ResultStatus = 19;
+}
+
+// 保存插件执行历史请求（前端执行结束/停止时 POST 回后端）
+message SavePluginExecutionHistoryRequest {
+  int64 PluginId = 1;
+  string PluginName = 2; // 同时写入 FromYakModule
+  string PluginUUID = 3;
+  string PluginType = 4;
+  string Source = 5; // plugin-op | plugin-hub
+  string Input = 6;
+  // 以下均为 JSON 序列化后的字符串，后端透传不解析
+  string ExecParams = 7;          // []*KVPair
+  string FormValue = 8;
+  string ExtraParamsValue = 9;
+  string HTTPRequestTemplate = 10;
+  string LinkPluginConfig = 11;
+  string StreamInfo = 12;         // HoldGRPCStreamInfo 快照
+  string ResultStatus = 13;       // finished | stopped
+  string RuntimeId = 14;
+  string HeadImg = 15;
+}
+
+// 插件使用次数排行
+message PluginExecutionUsageRankingResponse {
+  repeated PluginExecutionUsageItem Data = 1;
+}
+
+message PluginExecutionUsageItem {
+  int64 PluginId = 1;
+  string PluginName = 2;
+  string PluginUUID = 3;
+  string PluginType = 4;
+  string HeadImg = 5;
+  int64 Count = 6;
+  int64 LastExecutedAt = 7;
 }
 
 // Fuzz 相关模型
@@ -7083,7 +7133,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-
+  
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
@@ -7702,7 +7752,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake
+// handshake 
 message HandshakeRequest {
   string Name = 1;
 }
@@ -8376,7 +8426,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory
+  // compile data only in memory 
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -8463,11 +8513,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index
+  // index 
   string RuleName = 3;
-  string ProgramName = 4;
-  // progress
-  double Progress = 5;
+  string ProgramName = 4; 
+  // progress 
+  double Progress = 5; 
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -8527,7 +8577,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"
+  string SaveKind = 14; // "memory" | "database"  
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -8679,9 +8729,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count
+  int64 Total = 3; // total ssa-risk count 
   int64 Unread = 4;// total unread ssa-risk count
 }
 

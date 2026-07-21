@@ -17,6 +17,53 @@ export interface ExecHistoryRecord {
   Messages: Uint8Array
   FromYakModule: string
   RuntimeId: string
+  // 插件执行历史扩展字段（B 方案）
+  Source?: string // plugin-op | plugin-hub
+  StreamInfo?: string // JSON: HoldGRPCStreamInfo 快照，恢复 log/自定义 table/text/card
+  ResultStatus?: string // finished | stopped
+}
+
+// 保存插件执行历史请求（前端执行结束/停止时 POST 回后端）
+export interface SavePluginExecutionHistoryRequest {
+  PluginId: number
+  PluginName: string
+  PluginUUID: string
+  PluginType: string
+  Source: string // plugin-op | plugin-hub
+  Input: string
+  // 以下均为 JSON 序列化后的字符串，后端透传不解析
+  ExecParams: string
+  FormValue: string
+  ExtraParamsValue: string
+  HTTPRequestTemplate: string
+  LinkPluginConfig: string
+  StreamInfo: string // HoldGRPCStreamInfo 快照
+  ResultStatus: string // finished | stopped
+  RuntimeId: string
+  HeadImg: string
+}
+
+// 查询插件执行历史请求（复用 QueryExecHistory）
+export interface QueryPluginExecutionHistoryRequest {
+  Pagination?: PaginationSchema
+  YakScriptId?: number
+  YakScriptName?: string
+  Source?: string // plugin-op | plugin-hub
+}
+
+// 插件使用次数排行项
+export interface PluginExecutionUsageItem {
+  PluginId: number
+  PluginName: string
+  PluginUUID: string
+  PluginType: string
+  HeadImg: string
+  Count: number
+  LastExecutedAt: number
+}
+
+export interface PluginExecutionUsageRankingResponse {
+  Data: PluginExecutionUsageItem[]
 }
 
 export interface PaginationSchema {

@@ -15,6 +15,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
   getPluginLastExecuteRecord,
   PluginExecuteCacheConfig,
+  PluginLastExecuteMeta,
   PluginLastExecuteRecord,
   recordPluginLastExecute,
   takePluginRestoreOnOpen,
@@ -56,11 +57,26 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
     const pending = pendingRef.current
     if (!pending || !streamInfo) return
     pendingRef.current = undefined
-    void recordPluginLastExecute(pending.pluginName, {
-      runtimeId: pending.runtimeId,
-      executeConfig: pending.config,
-      streamInfo,
-    }).catch(() => {})
+    // 补传 plugin 元数据，保证后端 SavePluginExecutionHistory 的 plugin_id 等字段完整，
+    // 使用次数排行（按 plugin_id 分组）才能正确统计。
+    const meta: PluginLastExecuteMeta = {
+      pluginId: plugin.Id,
+      pluginType: plugin.Type,
+      pluginUUID: plugin.UUID,
+      headImg: plugin.HeadImg || '',
+      source: 'plugin-op',
+      input: input || '',
+      linkPluginConfig: linkPluginConfig ? JSON.stringify(linkPluginConfig) : '',
+    }
+    void recordPluginLastExecute(
+      pending.pluginName,
+      {
+        runtimeId: pending.runtimeId,
+        executeConfig: pending.config,
+        streamInfo,
+      },
+      meta,
+    ).catch(() => {})
   })
 
   const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
