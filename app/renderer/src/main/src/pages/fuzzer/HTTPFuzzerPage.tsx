@@ -819,6 +819,18 @@ export interface SelectOptionProps {
   value: string
 }
 
+/** 隐藏页断开 useSize 后可能短暂得到 0/undefined，保留上一次有效尺寸避免切回闪布局 */
+const useLastValidSize = (currentSize?: Size) => {
+  const lastValidSizeRef = useRef<Size>()
+  const hasValidSize = !!(currentSize?.width || currentSize?.height)
+
+  useEffect(() => {
+    if (hasValidSize) lastValidSizeRef.current = currentSize
+  }, [currentSize, hasValidSize])
+
+  return hasValidSize ? currentSize : lastValidSizeRef.current
+}
+
 /*LINK - app\renderer\src\main\src\defaultConstants\HTTPFuzzerPage.ts*/
 /*为避免文件相互引用造成数据问题,请将 HTTPFuzzerPage 页面的常用变量放在 app\renderer\src\main\src\defaultConstants\HTTPFuzzerPage.ts */
 const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
@@ -905,6 +917,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
   const [historySelectorOpen, setHistorySelectorOpen] = useState(false)
 
+  const fuzzerRef = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(fuzzerRef)
+
   // first Node
   const firstNodeRef = useRef(null)
   const casualReviewQueueIdRef = useRef(0)
@@ -915,10 +930,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   >([])
   /** casual 审阅写回后递增，驱动 WebFuzzerNewEditor 内 refreshTrigger 变化以同步 requestRef */
   const [casualEditorApplyNonce, setCasualEditorApplyNonce] = useState(0)
-  const firstNodeSize = useSize(firstNodeRef)
+  const firstNodeSizeLive = useSize(inViewport ? firstNodeRef : null)
+  const firstNodeSize = useLastValidSize(firstNodeSizeLive)
   // second Node
   const secondNodeRef = useRef(null)
-  const secondNodeSize = useSize(secondNodeRef)
+  const secondNodeSizeLive = useSize(inViewport ? secondNodeRef : null)
+  const secondNodeSize = useLastValidSize(secondNodeSizeLive)
   const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>('true')
   const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
 
@@ -938,8 +955,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     isHttpsRef.current = advancedConfigValue.isHttps
   }, [advancedConfigValue.isHttps])
   const { setSubscribeClose, getSubscribeClose } = useSubscribeClose()
-  const fuzzerRef = useRef<HTMLDivElement>(null)
-  const [inViewport = true] = useInViewport(fuzzerRef)
   const inViewportRef = useRef<boolean>(inViewport)
   const prevInViewportRef = useRef<boolean>(inViewport)
   const { globalEnabledTemplateName, onDisableGlobalHotPatch } = useGlobalHotPatchTag()
@@ -1921,7 +1936,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     return successFuzzer.length > 0 ? successFuzzer[0] : emptyFuzzer
   }, [successFuzzer])
 
-  const [exportData, setExportData] = useState<FuzzerResponse[]>([])
   const onShowResponseMatcherAndExtraction = useMemoizedFn((params: ShowResponseMatcherAndExtractionProps) => {
     try {
       const { activeType, activeKey, order } = params
@@ -2647,7 +2661,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     return [...new Set([...successFuzzerRef.current, ...failedFuzzerRef.current].map(({ RuntimeID }) => RuntimeID))]
   })
 
-  const getContainerSize = useSize(fuzzerRef || document.body)
+  const getContainerSizeLive = useSize(inViewport ? fuzzerRef : null)
+  const getContainerSize = useLastValidSize(getContainerSizeLive)
   // 抽屉展示高度
   const showHeight = useMemo(() => getContainerSize?.height || 400, [getContainerSize])
 
@@ -3260,7 +3275,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         // onSendToWebFuzzer={onSendToWebFuzzer}
                                         success={true}
                                         data={successFuzzer}
-                                        setExportData={setExportData}
                                         query={query}
                                         setQuery={setQuery}
                                         extractedMap={extractedMap}
