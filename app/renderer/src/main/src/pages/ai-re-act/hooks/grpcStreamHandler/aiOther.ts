@@ -223,7 +223,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
     const qsDetail = rawData.contents.get(data.react_task_user_input_uuid)
     if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
       rawData.contents.delete(data.react_task_user_input_uuid)
-      store.getState().replaceItemToken(data.react_task_user_input_uuid, data.react_task_id)
+      store.getState().replaceItemToken(data.react_task_user_input_uuid, chatData.id)
       return
     }
   }
