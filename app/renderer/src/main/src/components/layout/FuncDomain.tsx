@@ -387,10 +387,11 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   const [imControlStatus, setIMControlStatus] = useState<IMControlBadgeStatus>()
   const [imControlStatusLoading, setIMControlStatusLoading] = useState<boolean>(false)
   const imControlStateRetryTimerRef = useRef<number>()
-  /** 当前远程连接状态 */
+  /** 当前远程连接状态，直接读 store，避免 useState 仅在 mount 快照导致菜单/样式 stale */
   const { dynamicStatus } = yakitDynamicStatus()
-  const [dynamicConnect] = useState<boolean>(dynamicStatus.isDynamicStatus)
-  let avatarColor = useRef<string>(randomAvatarColor())
+  const dynamicConnect = dynamicStatus.isDynamicStatus
+  /** 头像背景色，mount 时随机一次，不参与重渲染 */
+  const avatarColor = useRef<string>(randomAvatarColor())
 
   const refreshIMControlStatus = useMemoizedFn(() => {
     if (!userInfo.isLogin) {
@@ -2426,13 +2427,13 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const [yakitLastIntranetVersion, setYakitLastIntranetVersion] = useState<string>('')
   // 内网版是否下载中
   const [isYakitIntranetDownloading, setYakitIntranetDownloading] = useState<boolean>(false)
-  // 内网版下载后的文件路径
-  const [yakitIntranetFilePath, setYakitIntranetFilePath] = useState<string>('')
+  // 内网版下载后的文件路径，仅安装按钮回调使用，不参与渲染
+  const yakitIntranetFilePathRef = useRef<string>('')
 
   const onDownloadFinish = useMemoizedFn((filePath: string, status: boolean) => {
     // 下载完成后的处理逻辑
     if (status) {
-      setYakitIntranetFilePath(filePath)
+      yakitIntranetFilePathRef.current = filePath
       setShowEnpriTraceUpdateVisible(true)
       setIsIntranetYakitUpdateWait(true)
     }
@@ -3001,7 +3002,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
               onClick={() => {
                 setIntranetHintLoading(true)
                 yakitShell
-                  .installIntranetYakit(yakitIntranetFilePath)
+                  .installIntranetYakit(yakitIntranetFilePathRef.current)
                   .then(() => {
                     setShowEnpriTraceUpdateVisible(false)
                   })
@@ -3563,8 +3564,6 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
   const [show, setShow] = useState<boolean>(false)
   /** 截图功能的loading */
   const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
-  /** 录屏功能的loading */
-  const [screenCapLoading, setScreenCapLoading] = useState<boolean>(false)
   const { t } = useI18nNamespaces(['layout'])
 
   const yakitMenuData = useCreation(() => {

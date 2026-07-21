@@ -734,7 +734,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
   const { firstRunNodeFlag, runNodeList, delRunNode, clearRunNodeList } = useRunNodeStore()
   const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
   const [noPrompt, setNoPrompt] = useState<boolean>(false) // 决定确认弹窗是否需要显示
-  const [delRunNodeItem, setDelRunNodeItem] = useState<{ key: string; pid: string } | undefined>()
+  // 待关闭的运行节点，仅确认弹窗 onOk 读取，不参与渲染
+  const delRunNodeItemRef = useRef<{ key: string; pid: string } | undefined>()
 
   useEffect(() => {
     // 第一次运行节点显示提示框
@@ -771,7 +772,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
   // 点击单个运行节点关闭
   const onCloseRunNodeItem = (key: string, pid: string) => {
-    setDelRunNodeItem({ key, pid })
+    delRunNodeItemRef.current = { key, pid }
     // 若确认弹窗勾选了下次不再给提示 则直接关闭运行节点
     if (noPrompt) {
       handleKillRunNodeItem(key, pid)
@@ -784,7 +785,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     try {
       await yakitApp.killRunNode(Number(pid))
       delRunNode(key)
-      setDelRunNodeItem(undefined)
+      delRunNodeItemRef.current = undefined
       yakitNotify('success', t('GlobalState.closeNodeSuccess'))
     } catch (error) {
       yakitFailed(error + '')
@@ -1450,11 +1451,12 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
           </YakitCheckbox>
         }
         onOk={() => {
+          const delRunNodeItem = delRunNodeItemRef.current
           delRunNodeItem ? handleKillRunNodeItem(delRunNodeItem.key, delRunNodeItem.pid) : handleKillAllRunNode()
           setCloseRunNodeItemVerifyVisible(false)
         }}
         onCancel={() => {
-          setDelRunNodeItem(undefined)
+          delRunNodeItemRef.current = undefined
           setCloseRunNodeItemVerifyVisible(false)
         }}
       />
