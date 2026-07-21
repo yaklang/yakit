@@ -19,20 +19,12 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'webFuzzer'])
   const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>('true')
   const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
-  const [affixSearch, setAffixSearch] = useState<string>('')
-  const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>('')
-  const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
-  const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
-  const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
-
-  const [extractedMap, { setAll, reset }] = useMap<string, string>()
+  const [extractedMap, { setAll }] = useMap<string, string>()
 
   const isShowRef = useRef<boolean>(false)
   const secondNodeRef = useRef(null)
   const secondNodeSize = useSize(secondNodeRef)
-
-  const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
 
   useEffect(() => {
     ipcRenderer.on('fetch-extracted-to-table', (e: any, data: { type: string; extractedMap: Map<string, string> }) => {
@@ -100,23 +92,11 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
             onlyOneResponse={false}
             cachedTotal={cachedTotal}
             rsp={emptyFuzzer}
-            valueSearch={affixSearch}
-            onSearchValueChange={(value) => {
-              setAffixSearch(value)
-              if (value === '' && defaultResponseSearch !== '') {
-                setDefaultResponseSearch('')
-              }
-            }}
-            onSearch={() => {
-              setDefaultResponseSearch(affixSearch)
-            }}
-            successFuzzer={fuzzerData.successFuzzer}
-            failedFuzzer={fuzzerData.failedFuzzer}
+            getSuccessResponses={() => fuzzerData.successFuzzer}
+            failedCount={fuzzerData.failedFuzzerLength}
             secondNodeSize={secondNodeSize}
             query={query}
-            setQuery={(q) => {
-              setQuery({ ...q })
-            }}
+            setQuery={setQuery}
             sendPayloadsType="allSequenceList"
             size="middle"
             setShowExtra={() => {}}
@@ -124,14 +104,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
             setShowResponseInfoSecondEditor={() => {}}
           />
           <Divider type="vertical" style={{ marginRight: 0 }} />
-          <YakitButton
-            onClick={() => {
-              setOnlyShowFirstNode(true)
-              setShowAllResponse()
-            }}
-            type="text2"
-            icon={<OutlineReplyIcon />}
-          >
+          <YakitButton onClick={() => setShowAllResponse()} type="text2" icon={<OutlineReplyIcon />}>
             {t('YakitButton.back')}
           </YakitButton>
         </div>
@@ -143,7 +116,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
       >
         {showSuccess === 'true' && (
           <HTTPFuzzerPageTable
-            isRefresh={isRefresh}
             success={true}
             data={fuzzerData.successFuzzer}
             query={query}
@@ -155,7 +127,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
         )}
         {showSuccess === 'false' && (
           <HTTPFuzzerPageTable
-            isRefresh={isRefresh}
             success={false}
             data={fuzzerData.failedFuzzer}
             query={query}

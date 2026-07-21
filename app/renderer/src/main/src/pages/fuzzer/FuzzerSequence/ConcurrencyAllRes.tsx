@@ -66,9 +66,6 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
   const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>('true')
   const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
-  const [affixSearch, setAffixSearch] = useState<string>('')
-  const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>('')
-  const [showExtra, setShowExtra] = useState<boolean>(false)
   const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
   const successTableRef = useRef<any>()
   const secondNodeRef = useRef(null)
@@ -254,19 +251,9 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
       onlyOneResponse={false}
       cachedTotal={cachedTotal}
       rsp={emptyFuzzer}
-      valueSearch={affixSearch}
-      onSearchValueChange={(value) => {
-        setAffixSearch(value)
-        if (value === '' && defaultResponseSearch !== '') {
-          setDefaultResponseSearch('')
-        }
-      }}
-      onSearch={() => {
-        setDefaultResponseSearch(affixSearch)
-      }}
+      getSuccessResponses={() => successFuzzer}
       matchSubmit={handleMatchSubmit}
-      successFuzzer={successFuzzer}
-      failedFuzzer={failedFuzzer}
+      failedCount={failedCount}
       secondNodeSize={secondNodeSize}
       query={query}
       setQuery={(q) => {
@@ -274,7 +261,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
       }}
       // isShowMatch // TODO: 隐藏匹配/提取按钮
       sendPayloadsType="concurrencyAllRes"
-      setShowExtra={setShowExtra}
+      setShowExtra={() => {}}
       showResponseInfoSecondEditor={showResponseInfoSecondEditor}
       setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
       onShowAll={onShowAll}
