@@ -150,6 +150,7 @@ export const AIReActChatContents = React.memo(
       useVirtuosoAutoScroll({
         total: chatLength,
         isPrependingRef,
+        atBottomThreshold: 50,
       })
 
     const { locateToIndex } = useChatStreamLocateHighlight({

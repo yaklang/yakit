@@ -94,6 +94,7 @@ const TimelineCard: FC = () => {
   const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
   const { virtuosoRef, handleTotalListHeightChanged, setScrollerRef, setIsAtBottomRef } = useVirtuosoAutoScroll({
     total: reActTimelines.length,
+    atBottomThreshold: 100,
   })
   const containerRef = useRef<HTMLDivElement>(null)
   const size = useSize(containerRef)

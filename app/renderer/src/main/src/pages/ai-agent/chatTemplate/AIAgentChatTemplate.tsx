@@ -223,7 +223,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     scrollToIndex,
     scrollToItemIndex: scrollToListItem,
     handleTotalListHeightChanged,
-  } = useVirtuosoAutoScroll({ total: streams.length, isPrependingRef })
+  } = useVirtuosoAutoScroll({ total: streams.length, isPrependingRef, atBottomThreshold: 100 })
 
   const { locateToIndex } = useChatStreamLocateHighlight({
     scrollToIndex: scrollToListItem,
