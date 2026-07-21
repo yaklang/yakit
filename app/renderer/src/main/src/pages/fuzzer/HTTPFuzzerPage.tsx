@@ -875,6 +875,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const successFuzzerRef = useRef<FuzzerResponse[]>([]) // 成功的响应
   const failedFuzzerRef = useRef<FuzzerResponse[]>([]) // 失败的响应
   const fuzzerResChartDataBufferRef = useRef<FuzzerResChartData[]>([]) // 图表数据
+  /** 不可见 Tab 仍累计计数，切回时一次性刷 UI，避免后台 Tab 拖垮主线程 */
+  const successCountRef = useRef(0)
+  const failedCountRef = useRef(0)
 
   const successFuzzer: FuzzerResponse[] = useMemo(() => {
     // 当 dataVersion 变化时，创建 ref.current 的一个浅拷贝
@@ -938,6 +941,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const fuzzerRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(fuzzerRef)
   const inViewportRef = useRef<boolean>(inViewport)
+  const prevInViewportRef = useRef<boolean>(inViewport)
   const { globalEnabledTemplateName, onDisableGlobalHotPatch } = useGlobalHotPatchTag()
 
   const [hex, setHex] = useState<boolean>(false)
@@ -997,7 +1001,23 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
   useEffect(() => {
     inViewportRef.current = inViewport
+    const becameVisible = inViewport && !prevInViewportRef.current
+    prevInViewportRef.current = inViewport
     if (inViewport) {
+      // 仅「切回可见」时 flush，避免首次挂载无意义 bump；并刷新 firstResponse 引用（后台可能原地 mutate）
+      if (becameVisible) {
+        setFailedCount(failedCountRef.current)
+        setSuccessCount(successCountRef.current)
+        setFuzzerListVersion((v) => v + 1)
+        const firstFromRef = successFuzzerRef.current[0] || failedFuzzerRef.current[0]
+        if (firstFromRef) {
+          setFirstResponse({
+            ...firstFromRef,
+            Headers: firstFromRef.Headers ? firstFromRef.Headers.slice() : [],
+            RandomChunkedData: firstFromRef.RandomChunkedData ? firstFromRef.RandomChunkedData.slice() : [],
+          })
+        }
+      }
       if (!useGlobalHotPatch.getState().globalHotPatchConfig) {
         useGlobalHotPatch.getState().loadGlobalHotPatchConfig()
       }
@@ -1193,6 +1213,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setRedirectedResponse(undefined)
     setSuccessCount(0)
     setFailedCount(0)
+    successCountRef.current = 0
+    failedCountRef.current = 0
     setCurrentSelectId(undefined)
     if (!retryRef.current) {
       runtimeIdRef.current = ''
@@ -1499,6 +1521,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       ) {
         return
       }
+      successCountRef.current = successCount
+      failedCountRef.current = failedCount
+      // 非当前可见 Tab：数据仍写入 ref，暂停 UI 刷新，切回时再 flush
+      if (!inViewportRef.current) {
+        return
+      }
       setFailedCount(failedCount)
       setSuccessCount(successCount)
       setFuzzerListVersion((v) => v + 1)
@@ -1557,7 +1585,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
       // 设置第一个 response
       if (getFirstResponse().RequestRaw?.length === 0) {
-        setFirstResponse(r)
+        if (inViewportRef.current) setFirstResponse(r)
       }
 
       const tryUpsertByUUID = (list: FuzzerResponse[], item: FuzzerResponse): boolean => {
@@ -1610,11 +1638,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         const first = getFirstResponse()
         if (first?.UUID && first.UUID === existed.UUID) {
           // `existed` is mutated in-place, but state update needs a new reference to trigger re-render.
-          setFirstResponse({
-            ...existed,
-            Headers: existed.Headers ? existed.Headers.slice() : [],
-            RandomChunkedData: existed.RandomChunkedData ? existed.RandomChunkedData.slice() : [],
-          })
+          if (inViewportRef.current) {
+            setFirstResponse({
+              ...existed,
+              Headers: existed.Headers ? existed.Headers.slice() : [],
+              RandomChunkedData: existed.RandomChunkedData ? existed.RandomChunkedData.slice() : [],
+            })
+          }
         }
         return true
       }
@@ -1626,6 +1656,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           isNewRow = false
         } else {
           successCount++
+          successCountRef.current = successCount
           successFuzzerRef.current.push(r)
           // 超过最大显示 展示最新数据
           if (successFuzzerRef.current.length > fuzzerTableMaxDataRef.current) {
@@ -1639,6 +1670,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           isNewRow = false
         } else {
           failedCount++
+          failedCountRef.current = failedCount
           failedFuzzerRef.current.push(r)
         }
       }
@@ -3238,6 +3270,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         noMoreLimtAlertMsg={noMoreLimtAlertMsg}
                                         fuzzerTableMaxData={fuzzerTableMaxData}
                                         hasExtractorRules={hasExtractorRules}
+                                        inViewport={inViewport}
                                       />
                                     )}
                                     {showSuccess === 'false' && (
@@ -3249,6 +3282,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         isEnd={loading}
                                         extractedMap={extractedMap}
                                         pageId={props.id}
+                                        inViewport={inViewport}
                                       />
                                     )}
                                     {showSuccess === 'Concurrent/Load' && (

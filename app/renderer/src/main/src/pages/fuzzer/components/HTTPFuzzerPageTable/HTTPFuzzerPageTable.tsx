@@ -83,6 +83,8 @@ interface HTTPFuzzerPageTableProps {
   fuzzerTableMaxData?: number
   /**@name 是否有提取器规则 */
   hasExtractorRules?: boolean
+  /** 非可见 Tab 不挂载预览 Monaco，减轻多 Tab 内存 */
+  inViewport?: boolean
 }
 
 /**
@@ -196,6 +198,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       tableKeyUpDownEnabled = true,
       fuzzerTableMaxData = DefFuzzerTableMaxData,
       hasExtractorRules = false,
+      inViewport = true,
     } = props
     const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
     const [listTable, setListTable] = useState<FuzzerResponse[]>([])
@@ -1101,7 +1104,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             </div>
           }
           secondNode={
-            currentSelectItem && (
+            currentSelectItem &&
+            inViewport && (
               <NewHTTPPacketEditor
                 language={currentSelectItem?.DisableRenderStyles ? 'text' : undefined}
                 isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
