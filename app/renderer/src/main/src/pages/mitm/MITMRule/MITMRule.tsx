@@ -272,21 +272,20 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       return newRules
     })
 
+    // 性能优化：合并两个 [visible] useEffect 为一个，避免重复调用 GetCurrentRules IPC 和各自回调触发多次重渲染
     useEffect(() => {
+      setAddRule([])
+      clearnSearch()
+      // 获取原始规则（用于 onClose 比较）+ 当前规则（用于表格展示），一次 IPC 调用同时完成
       ipcRenderer.invoke('GetCurrentRules', {}).then((rsp: { Rules: MITMContentReplacerRule[] }) => {
         const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
         originalRulesRef.current = newRules
         const nextWhiteList = newRules?.[0]?.ExcludeSuffix || []
-        setWhiteList(nextWhiteList)
         originalWhiteListRef.current = nextWhiteList
+        setRules(onSortRules(newRules))
+        setWhiteList(nextWhiteList)
+        setIsRefresh((prev) => !prev)
       })
-    }, [visible])
-    useEffect(() => {
-      setAddRule([])
-      clearnSearch()
-      setTimeout(() => {
-        onGetCurrentRules()
-      }, 50)
     }, [visible])
     useEffect(() => {
       grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
@@ -1155,6 +1154,27 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       )
     }, [valueSearch, i18n.language])
 
+    // 性能优化：rowSelection / pagination 用 useMemo 缓存，避免每次渲染创建新引用破坏 TableVirtualResize 的 props 稳定性
+    const rowSelection = useMemo(
+      () => ({
+        isAll: isAllSelect,
+        type: 'checkbox' as const,
+        selectedRowKeys,
+        onSelectAll,
+        onChangeCheckboxSingle: onSelectChange,
+      }),
+      [isAllSelect, selectedRowKeys, onSelectAll, onSelectChange],
+    )
+    const pagination = useMemo(
+      () => ({
+        total: searchFlag ? searchRules.length : rules.length,
+        limit: 20,
+        page: 1,
+        onChange: () => {},
+      }),
+      [searchFlag, searchRules.length, rules.length],
+    )
+
     const content = () => {
       return (
         <div className={styles['mitm-rule-table']}>
@@ -1246,19 +1266,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             }
             renderKey="Id"
             data={searchFlag ? searchRules : rules}
-            rowSelection={{
-              isAll: isAllSelect,
-              type: 'checkbox',
-              selectedRowKeys,
-              onSelectAll: onSelectAll,
-              onChangeCheckboxSingle: onSelectChange,
-            }}
-            pagination={{
-              total: searchFlag ? searchRules.length : rules.length,
-              limit: 20,
-              page: 1,
-              onChange: () => {},
-            }}
+            rowSelection={rowSelection}
+            pagination={pagination}
             loading={loading}
             columns={columns}
             currentSelectItem={currentItem}

@@ -100,7 +100,7 @@ export interface CaCertData {
 const MITMFiltersModal = React.lazy(() => import('../MITMServerStartForm/MITMFiltersModal'))
 const MITMCertificateDownloadModal = React.lazy(() => import('../MITMServerStartForm/MITMCertificateDownloadModal'))
 
-export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) => {
+export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = React.memo((props) => {
   const {
     host,
     port,
@@ -618,7 +618,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
       </React.Suspense>
     </div>
   )
-}
+})
 
 interface DownStreamAgentModalProp {
   downStreamAgentModalVisible: boolean

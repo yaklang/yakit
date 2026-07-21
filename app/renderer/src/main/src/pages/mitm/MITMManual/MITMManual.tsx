@@ -1224,6 +1224,10 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
   }),
 )
 
+// 性能优化：静态样式/属性常量，避免每次渲染创建新对象破坏 NewHTTPPacketEditor 的 React.memo
+const editorTitleStyle = { overflow: 'hidden' }
+const editorExtraProps = { isShowSelectRangeMenu: true }
+
 const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props) => {
   const {
     index,
@@ -1398,7 +1402,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       readOnly={disabled}
       isResponse={isResponse}
       foldBinaryFuzztag={true}
-      titleStyle={{ overflow: 'hidden' }}
+      titleStyle={editorTitleStyle}
       isShowBeautifyRender={false}
       fromMITM={true}
       title={
@@ -1550,9 +1554,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       webSocketValue={requestPacket}
       webSocketToServer={currentPacket}
       webFuzzerValue={requestPacket}
-      extraEditorProps={{
-        isShowSelectRangeMenu: true,
-      }}
+      extraEditorProps={editorExtraProps}
       showDownBodyMenu={false}
       sendToWebFuzzer={!isResponse && !info.IsWebsocket}
       onClickOpenPacketNewWindowMenu={useMemoizedFn(() => {
