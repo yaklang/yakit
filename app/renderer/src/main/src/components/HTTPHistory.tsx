@@ -93,6 +93,9 @@ const { YakitPanel } = YakitCollapse
 
 // HTTPFlowDetailMini 含 Monaco 编辑器(2165行)，延迟到选中行后才加载
 const HTTPFlowDetailMini = React.lazy(() => import('./HTTPFlowDetail').then((m) => ({ default: m.HTTPFlowDetailMini })))
+// 性能优化：静态样式常量，避免每次渲染创建新对象
+const fullSizeStyle: CSSProperties = { width: '100%', height: '100%' }
+const loadingFallbackStyle: CSSProperties = { padding: 24, textAlign: 'center' }
 
 export interface HTTPPacketFuzzable {
   defaultHttps?: boolean
@@ -214,6 +217,15 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const clearHttpFlowSelection = useMemoizedFn(() => {
     historyAIReActChatBridge.clearTableSelection()
   })
+  // 性能优化：提取 onResize 为 useMemoizedFn，避免每次渲染创建新引用
+  const onTreeResize = useMemoizedFn((width?: number, height?: number) => {
+    if (!width || !height) return
+    setTreeWrapHeight(height)
+  })
+  // 性能优化：提取 onSelectNodesKeys 为 useMemoizedFn
+  const onSelectNodesKeys = useMemoizedFn((selectKeys: React.Key[]) => {
+    setIncludeInUrl(selectKeys.map((i) => i + ''))
+  })
 
   const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
   useDebounceEffect(() => {
@@ -282,8 +294,15 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   }, [pageType])
 
   // 用于控制HTTPFlowRealTimeTableAndEditor
-  const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
-  const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
+  // 性能优化：这两个 state 的值在 HTTPHistoryInner 的 JSX 中从未读取，
+  // 子组件 HTTPFlowRealTimeTableAndEditor 通过 useControllableValue 用自己的 defaultValue，
+  // 不受父组件值控制。setter 仅作为 trigger prop 传递，改为空函数避免无用的 state 重渲染。
+  const setOnlyShowFirstNode = useMemoizedFn((_only: boolean) => {})
+  const setSecondNodeVisible = useMemoizedFn((_show: boolean) => {})
+  const resetTableAndEditorShow = useMemoizedFn((table: boolean, editor: boolean) => {
+    setOnlyShowFirstNode(table)
+    setSecondNodeVisible(editor)
+  })
   // #endregion
 
   return (
@@ -305,10 +324,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
             />
             <div className={styles['tab-content']}>
               <ReactResizeDetector
-                onResize={(width, height) => {
-                  if (!width || !height) return
-                  setTreeWrapHeight(height)
-                }}
+                onResize={onTreeResize}
                 handleWidth={true}
                 handleHeight={true}
                 refreshMode={'debounce'}
@@ -325,7 +341,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                   treeExtraQueryparams={treeQueryparams}
                   refreshTreeFlag={refreshFlag}
                   multiple
-                  onSelectNodesKeys={(selectKeys) => setIncludeInUrl(selectKeys.map((i) => i + ''))}
+                  onSelectNodesKeys={onSelectNodesKeys}
                 ></WebTree>
               </div>
               <div
@@ -340,10 +356,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                   onSetCurTags={setCurTags}
                   onSetCurProcess={setCurProcess}
                   setBuiltinTagList={setBuiltinTagList}
-                  resetTableAndEditorShow={(table, editor) => {
-                    setOnlyShowFirstNode(table)
-                    setSecondNodeVisible(editor)
-                  }}
+                  resetTableAndEditorShow={resetTableAndEditorShow}
                 ></HistoryProcess>
               </div>
               <div className={styles['process-wrapper']} style={{ display: activeKey === 'rules' ? 'block' : 'none' }}>
@@ -352,10 +365,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                   queryparamsStr={rulesQueryparams}
                   onSetFilterRows={setMitmAggregateFilterRows}
                   httpFlowTableDataLength={httpFlowTableDataLength}
-                  resetTableAndEditorShow={(table, editor) => {
-                    setOnlyShowFirstNode(table)
-                    setSecondNodeVisible(editor)
-                  }}
+                  resetTableAndEditorShow={resetTableAndEditorShow}
                 />
               </div>
               {activeKey === 'ai' &&
@@ -514,7 +524,9 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
   const inViewport = inViewportOverride ?? internalInViewport
 
   // History Id 用于区分每个history控件
-  const [historyId, setHistoryId] = useState<string>(uuidv4())
+  // 性能优化：historyId 初始化后永不变（setHistoryId 从未调用），改为 ref 避免占 useState slot
+  const historyIdRef = useRef<string>(uuidv4())
+  const historyId = historyIdRef.current
   const [highlightSearch, setHighlightSearch] = useState('')
 
   // #region mitm页面Forward数据后需要刷新页面数据
@@ -568,6 +580,10 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     trigger: 'setSecondNodeVisible',
   })
   const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
+  // 性能优化：提取 onSelected 为 useMemoizedFn，避免每次渲染创建新引用破坏 HTTPFlowTable 的 React.memo
+  const onSelected = useMemoizedFn((i?: HTTPFlow) => {
+    if (i) setSelectedHTTPFlow(i)
+  })
   useEffect(() => {
     setSecondNodeVisible(!onlyShowFirstNode)
   }, [onlyShowFirstNode])
@@ -590,7 +606,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         } catch (error) {}
       }
     })
-  })
+  }, [])
   const ResizeBoxProps = useCreation(() => {
     let p = cloneDeep(lastRatioRef.current)
     if (onlyShowFirstNode) {
@@ -599,6 +615,21 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     }
     return p
   }, [onlyShowFirstNode])
+  // 性能优化：secondNodeStyle / lineStyle 用 useMemo 缓存，避免每次渲染创建新对象
+  const tableSecondNodeStyle = useMemo(
+    () => ({
+      display: !secondNodeVisible ? 'none' : '',
+      padding: !secondNodeVisible ? 0 : undefined,
+    }),
+    [secondNodeVisible],
+  )
+  const tableLineStyle = useMemo(
+    () => ({
+      display: !secondNodeVisible ? 'none' : '',
+      marginTop: pageType === 'MITM' ? 6 : 0,
+    }),
+    [secondNodeVisible, pageType],
+  )
   // #endregion
 
   return (
@@ -612,7 +643,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         // 隐藏详情只需要展示第一个节点
         onClickHiddenBox={() => setOnlyShowFirstNode(true)}
         firstNode={() => (
-          <div style={{ width: '100%', height: '100%' }}>
+          <div style={fullSizeStyle}>
             <HTTPFlowTable
               containerClassName={containerClassName}
               runTimeId={runtimeId}
@@ -629,9 +660,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
               showRefresh={showRefresh}
               params={params}
               includeInUrl={includeInUrl}
-              onSelected={(i) => {
-                setSelectedHTTPFlow(i)
-              }}
+              onSelected={onSelected}
               filterTagDom={filterTagDom}
               onSearch={setHighlightSearch}
               onlyShowFirstNode={onlyShowFirstNode}
@@ -660,11 +689,9 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
           </div>
         )}
         secondNode={
-          <div style={{ width: '100%', height: '100%' }}>
+          <div style={fullSizeStyle}>
             {secondNodeVisible && (
-              <React.Suspense
-                fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}
-              >
+              <React.Suspense fallback={<div style={loadingFallbackStyle}>Loading...</div>}>
                 <HTTPFlowDetailMini
                   noHeader={true}
                   search={highlightSearch}
@@ -683,14 +710,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         }
         firstMinSize={80}
         secondMinSize={200}
-        secondNodeStyle={{
-          display: !secondNodeVisible ? 'none' : '',
-          padding: !secondNodeVisible ? 0 : undefined,
-        }}
-        lineStyle={{
-          display: !secondNodeVisible ? 'none' : '',
-          marginTop: pageType === 'MITM' ? 6 : 0, // MITM列表需要和拖拽线有间距
-        }}
+        secondNodeStyle={tableSecondNodeStyle}
+        lineStyle={tableLineStyle}
         lineDirection="top"
         onMouseUp={({ firstSizePercent, secondSizePercent }) => {
           lastRatioRef.current = {
