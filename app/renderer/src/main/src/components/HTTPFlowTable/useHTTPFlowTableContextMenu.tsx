@@ -698,7 +698,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       })
   })
 
-  const onRowContextMenu = (rowData: HTTPFlow, _, event: React.MouseEvent) => {
+  // 性能优化：提取为 useMemoizedFn，避免每次渲染创建新引用破坏 TableVirtualResize 的 React.memo
+  const onRowContextMenu = useMemoizedFn((rowData: HTTPFlow, _, event: React.MouseEvent) => {
     if (rowData) {
       setSelected(rowData)
     }
@@ -847,7 +848,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       event.clientX,
       event.clientY,
     )
-  }
+  })
 
   const getBatchContextMenu = useMemoizedFn(() => {
     return menuData

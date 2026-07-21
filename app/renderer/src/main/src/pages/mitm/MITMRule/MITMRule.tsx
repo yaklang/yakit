@@ -211,7 +211,6 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const originalRulesRef = useRef<MITMContentReplacerRule[]>([])
 
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-    const [selectedRows, setSelectedRows] = useState<MITMContentReplacerRule[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -326,10 +325,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         if (checked) {
           const rows = searchFlag ? searchRules.filter((ele) => !ele.Disabled) : rules.filter((ele) => !ele.Disabled)
           setSelectedRowKeys(rows.map((ele: any) => ele.Id))
-          setSelectedRows(rows)
         } else {
           setSelectedRowKeys([])
-          setSelectedRows([])
         }
         setIsAllSelect(checked)
       },
@@ -338,13 +335,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: MITMContentReplacerRule) => {
       if (c) {
         setSelectedRowKeys([...selectedRowKeys, keys])
-        setSelectedRows([...selectedRows, rows])
       } else {
         setIsAllSelect(false)
         const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
-        const newSelectedRows = selectedRows.filter((ele) => ele.Id !== rows.Id)
         setSelectedRowKeys(newSelectedRowKeys)
-        setSelectedRows(newSelectedRows)
       }
     })
     const onSetCurrentRow = useDebounceFn(
@@ -1085,7 +1079,6 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       setIsRefresh(!isRefresh)
 
       setSelectedRowKeys([])
-      setSelectedRows([])
       setIsAllSelect(false)
     })
     const onSearch = useMemoizedFn((searchValue?: string) => {
@@ -1128,7 +1121,6 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             setIsRefresh(!isRefresh)
 
             setSelectedRowKeys([])
-            setSelectedRows([])
             setIsAllSelect(false)
           })
           .finally(() => setTimeout(() => setLoading(false), 100))

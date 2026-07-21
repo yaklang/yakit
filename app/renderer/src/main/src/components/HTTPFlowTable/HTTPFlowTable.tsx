@@ -146,6 +146,15 @@ export * from './components'
 
 const { ipcRenderer } = window.require('electron')
 
+// 性能优化：分页空回调提取为模块级常量，避免内联箭头每次渲染创建新引用
+const noopPaginationChange = () => {}
+
+// 性能优化：纯函数提升为模块级，避免组件每次渲染重新创建
+// 保留数组中非重复数据
+const filterNonUnique = (arr: (string | number)[]) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
+// 数组去重
+const filterItem = (arr: (string | number)[]) => arr.filter((item, index) => arr.indexOf(item) === index)
+
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const {
     noTableTitle = false,
@@ -199,7 +208,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const mitmAggregateFilterRows = props.mitmAggregateFilterRows || []
   const campareMitmAggregateFilterRows = useCampare(mitmAggregateFilterRows)
   const [tagsFilter, setTagsFilter] = useState<string[]>([])
-  const [tagSearchVal, setTagSearchVal] = useState<string>('')
 
   const isOneceLoading = useRef<boolean>(true)
 
@@ -215,14 +223,28 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
   const [showShieldTooManyHint, setShowShieldTooManyHint] = useState(false)
   const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
-  const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetSetState<'B' | 'K' | 'M'>('B')
+  // 性能优化：bodyLengthUnit 值从未在 JSX/memo 依赖中读取，仅通过 getter 在回调中使用，改为 ref 避免不必要重渲染
+  const bodyLengthUnitRef = useRef<'B' | 'K' | 'M'>('B')
+  const getBodyLengthUnit = useMemoizedFn(() => bodyLengthUnitRef.current)
+  const setBodyLengthUnit = useMemoizedFn((v: React.SetStateAction<'B' | 'K' | 'M'>) => {
+    bodyLengthUnitRef.current = typeof v === 'function' ? (v as any)(bodyLengthUnitRef.current) : v
+  })
   const [currentIndex, setCurrentIndex] = useState<number>()
   const [scrollToIndex, setScrollToIndex] = useState<number | string>()
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
   const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
   const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-  const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetSetState<number>()
-  const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetSetState<number>()
+  // 性能优化：afterBodyLength/beforeBodyLength 值未在 JSX/memo 依赖中读取，仅通过 getter 和在 useDebounceFn 回调中使用，改为 ref
+  const afterBodyLengthRef = useRef<number | undefined>(undefined)
+  const getAfterBodyLength = useMemoizedFn(() => afterBodyLengthRef.current)
+  const setAfterBodyLength = useMemoizedFn((v: React.SetStateAction<number | undefined>) => {
+    afterBodyLengthRef.current = typeof v === 'function' ? (v as any)(afterBodyLengthRef.current) : v
+  })
+  const beforeBodyLengthRef = useRef<number | undefined>(undefined)
+  const getBeforeBodyLength = useMemoizedFn(() => beforeBodyLengthRef.current)
+  const setBeforeBodyLength = useMemoizedFn((v: React.SetStateAction<number | undefined>) => {
+    beforeBodyLengthRef.current = typeof v === 'function' ? (v as any)(beforeBodyLengthRef.current) : v
+  })
   const [isReset, setIsReset] = useState<boolean>(false)
   const [watchRefresh, setWatchRefresh] = useState<boolean>(false)
 
@@ -230,7 +252,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const [batchVisible, setBatchVisible] = useState<boolean>(false)
 
-  const [exportDataKey, setExportDataKey] = useState<string[]>([])
+  // 性能优化：exportDataKey 值仅在 useMemoizedFn 回调中读取，从未在 JSX/memo 依赖中，改为 ref
+  const exportDataKeyRef = useRef<string[]>([])
+  const setExportDataKey = useMemoizedFn((v: string[]) => {
+    exportDataKeyRef.current = v
+  })
 
   const [drawerFormVisible, setDrawerFormVisible] = useState<boolean>(false)
 
@@ -410,12 +436,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest) => {
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     if (clientHeight === 0) return
-    const copyQuery = structuredClone(query)
-    copyQuery.Pagination = {
-      Page: 1,
-      Limit: pagination.Limit,
-      Order: 'desc',
-      OrderBy: 'Id',
+    // 性能优化：仅需覆盖 Pagination，无需深拷贝整个 query 对象
+    const copyQuery: YakQueryHTTPFlowRequest = {
+      ...query,
+      Pagination: {
+        Page: 1,
+        Limit: pagination.Limit,
+        Order: 'desc',
+        OrderBy: 'Id',
+      },
     }
     ipcRenderer
       .invoke('QueryHTTPFlows', copyQuery)
@@ -723,7 +752,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           ...getParams(),
           ...filter,
           Tags: buildHTTPFlowQueryTags(tagsFilter, onlyFavorite),
-          bodyLength: !!(afterBodyLength || beforeBodyLength || checkBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
+          bodyLength: !!(afterBodyLengthRef.current || beforeBodyLengthRef.current || checkBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
         },
         Pagination: {
           ...tableParams.Pagination,
@@ -889,10 +918,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       })
       .catch(() => {})
   }, [inViewport])
-  // 保留数组中非重复数据
-  const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
-  // 数组去重
-  const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
   // 取消屏蔽筛选
   const cancleFilter = useMemoizedFn((value) => {
@@ -965,11 +990,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setIsAllSelect(false)
   }, [data])
 
-  const onSelectAll = (newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
+  const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: HTTPFlow[], checked: boolean) => {
     setIsAllSelect(checked)
     setSelectedRowKeys(newSelectedRowKeys)
     setSelectedRows(selected)
-  }
+  })
   const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlow) => {
     if (c) {
       setSelectedRowKeys([...selectedRowKeys, keys])
@@ -1335,7 +1360,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   })
 
-  const formatJson = (filterVal, jsonData) => {
+  // 性能优化：提取为 useMemoizedFn，避免每次渲染重新创建闭包
+  const formatJson = useMemoizedFn((filterVal, jsonData) => {
     return jsonData.map((v, index) =>
       filterVal.map((j) => {
         if (['Request', 'Response'].includes(j)) {
@@ -1350,7 +1376,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         return v[j]
       }),
     )
-  }
+  })
 
   const getPageSize = useMemo(() => {
     if (total > 5000) {
@@ -1365,11 +1391,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   /**
    * @description 导出为Excel
    */
-  const initExcelData = (resolve, newExportData: HTTPFlow[], rsp, arrList) => {
+  const initExcelData = useMemoizedFn((resolve, newExportData: HTTPFlow[], rsp, arrList) => {
     let exportData: any = []
     const header: string[] = []
     const filterVal: string[] = []
-    exportDataKey.map((item) => {
+    exportDataKeyRef.current.map((item) => {
       const title = arrList.filter((i) => i.dataKey === item)[0]?.title || item
       header.push(title)
       if (item === 'request') {
@@ -1389,7 +1415,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       exportData,
       response: rsp,
     })
-  }
+  })
   const getExcelData = useMemoizedFn((pagination, list: HTTPFlow[]) => {
     return new Promise((resolve) => {
       debugToPrintLogs({
@@ -1409,7 +1435,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       }
 
       let exportParams: any = {}
-      const FieldName = arrList.filter((item) => exportDataKey.includes(item.dataKey)).map((item) => item.key)
+      const FieldName = arrList
+        .filter((item) => exportDataKeyRef.current.includes(item.dataKey))
+        .map((item) => item.key)
 
       const Ids: number[] = list.map((item) => parseInt(item.Id + ''))
       // 最大请求条数
@@ -1469,7 +1497,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     })
   })
-  const onExcelExport = (list) => {
+  const onExcelExport = useMemoizedFn((list) => {
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -1504,7 +1532,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       maskClosable: false,
       getContainer: getMainOperatorPageBodyContainerOrBody(),
     })
-  }
+  })
 
   /**
    * @description 导出为HAR
@@ -1512,7 +1540,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [exportToken, setExportToken] = useState<string>('')
   const [percentVisible, setPercentVisible] = useState<boolean>(false)
   const exportPageContainerRef = useRef<HTMLElement>()
-  const onHarExport = (ids: number[]) => {
+  const onHarExport = useMemoizedFn((ids: number[]) => {
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -1547,7 +1575,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       maskClosable: false,
       getContainer: getMainOperatorPageBodyContainerOrBody(),
     })
-  }
+  })
 
   const handleClickHarExport = useMemoizedFn((ids: number[]) => {
     handleSaveFileSystemDialog({
@@ -1561,7 +1589,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (!file.canceled) {
           const filePath = file?.filePath?.toString()
           if (filePath) {
-            const FieldName = arrList.filter((item) => exportDataKey.includes(item.dataKey)).map((item) => item.key)
+            const FieldName = arrList
+              .filter((item) => exportDataKeyRef.current.includes(item.dataKey))
+              .map((item) => item.key)
             const exportParams: ExportHTTPFlowStreamRequest = {
               Filter: {
                 IncludeId: ids,
@@ -2631,23 +2661,105 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     updateData,
   ])
 
+  // 性能优化：提取 rowSelection 为 useMemo，避免内联对象每次渲染创建新引用破坏 TableVirtualResize 的 React.memo
+  const tableRowSelection = useMemo(
+    () => ({
+      isAll: isAllSelect,
+      type: 'checkbox' as const,
+      selectedRowKeys,
+      onSelectAll,
+      onChangeCheckboxSingle: onSelectChange,
+    }),
+    [isAllSelect, selectedRowKeys, onSelectAll, onSelectChange],
+  )
+
+  // 性能优化：提取 pagination prop 为 useMemo，避免内联对象 + 内联空 onChange 每次渲染创建新引用
+  const tablePagination = useMemo(
+    () => ({
+      page: pagination.Page,
+      limit: pagination.Limit,
+      total,
+      onChange: noopPaginationChange,
+    }),
+    [pagination.Page, pagination.Limit, total],
+  )
+
+  // 性能优化：以下内联箭头提取为 useMemoizedFn，避免每次渲染创建新引用
+  const onResizeDetector = useMemoizedFn((width?: number, height?: number) => {
+    if (!width || !height) {
+      return
+    }
+    if (onlyShowFirstNode) {
+      // 窗口由小变大时 重新拉取数据
+      if (boxHeightRef.current && boxHeightRef.current < height) {
+        boxHeightRef.current = height
+        updateData()
+      } else {
+        boxHeightRef.current = height
+      }
+    }
+  })
+
+  const onFormConfigSaveOk = useMemoizedFn((config: any) => {
+    setFilterConfig(config)
+    setRemoteValue(RemoteHistoryGV.HTTPFlowTableFormConfiguration, JSON.stringify(config))
+  })
+
+  const onEditTagsCancel = useMemoizedFn(() => setEditTagsVisible(false))
+
+  const onPercentClose = useMemoizedFn((finish: boolean) => {
+    setPercentVisible(false)
+    if (finish) {
+      yakitNotify('success', t('YakitNotification.exportSuccess'))
+    }
+  })
+
+  const onAdvancedSetCancel = useMemoizedFn(() => {
+    setAdvancedSetVisible(false)
+  })
+
+  const onAdvancedSetSave = useMemoizedFn((setting: any) => {
+    setAdvancedSetVisible(false)
+    const {
+      backgroundRefresh: newBackgroundRefresh,
+      dragSelectEnabled: newDragSelectEnabled,
+      binaryDisplayEnabled: newBinaryDisplayEnabled,
+      configColumnsAll,
+    } = setting
+    // 后台刷新
+    if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
+    // 框选配置
+    if (newDragSelectEnabled !== dragSelectEnabled) {
+      setDragSelectEnabled(newDragSelectEnabled)
+      setRemoteValue(RemoteHistoryGV.DragSelectEnabled, newDragSelectEnabled ? 'true' : 'false')
+    }
+    // 二进制展示配置
+    if (newBinaryDisplayEnabled !== binaryDisplayEnabled) {
+      binaryDisplayEnabledStore.setEnabled(newBinaryDisplayEnabled)
+    }
+    // 自定义列
+    const unshowKeys = configColumnsAll.filter((item: any) => !item.isShow).map((item: any) => item.dataKey)
+    const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
+    const newColOrder = configColumnsAll.map((i: any) => i.dataKey)
+    if (
+      JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey) ||
+      JSON.stringify(newColOrder) !== JSON.stringify(columnsOrder)
+    ) {
+      setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, unshowKeys + '')
+      setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(newColOrder))
+      setExcludeColumnsKey(newExcludeColumnsKey)
+      setColumnsOrder(newColOrder)
+      // 表格列宽度需要重新计算
+      setTableKeyNumber(uuidv4())
+    }
+  })
+
+  const onShieldHintOk = useMemoizedFn(() => setShowShieldTooManyHint(false))
+
   return (
     <div ref={ref as Ref<any>} tabIndex={-1} className={style['http-history-flow-table-wrapper']}>
       <ReactResizeDetector
-        onResize={(width, height) => {
-          if (!width || !height) {
-            return
-          }
-          if (onlyShowFirstNode) {
-            // 窗口由小变大时 重新拉取数据
-            if (boxHeightRef.current && boxHeightRef.current < height) {
-              boxHeightRef.current = height
-              updateData()
-            } else {
-              boxHeightRef.current = height
-            }
-          }
-        }}
+        onResize={onResizeDetector}
         handleWidth={true}
         handleHeight={true}
         refreshMode={'debounce'}
@@ -2668,24 +2780,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           isRefresh={isRefresh}
           renderKey="Id"
           data={realData}
-          rowSelection={{
-            isAll: isAllSelect,
-            type: 'checkbox',
-            selectedRowKeys,
-            onSelectAll: onSelectAll,
-            onChangeCheckboxSingle: onSelectChange,
-          }}
+          rowSelection={tableRowSelection}
           loading={loading}
           enableDrag={true}
           enableDragSelection={dragSelectEnabled}
           columns={columns}
           onRowContextMenu={onRowContextMenu}
-          pagination={{
-            page: pagination.Page,
-            limit: pagination.Limit,
-            total,
-            onChange: (page, limit) => {},
-          }}
+          pagination={tablePagination}
           onChange={onTableChange}
           onSetCurrentRow={onSetCurrentRow}
           useUpAndDown={true}
@@ -2698,15 +2799,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         visible={drawerFormVisible}
         setVisible={setDrawerFormVisible}
         filterConfig={filterConfig}
-        saveOk={(config) => {
-          setFilterConfig(config)
-          setRemoteValue(RemoteHistoryGV.HTTPFlowTableFormConfiguration, JSON.stringify(config))
-        }}
+        saveOk={onFormConfigSaveOk}
       ></HTTPFlowTableFormConfiguration>
       <EditTagsModal
         visible={editTagsVisible}
         editTagsInfo={editTagsRef.current}
-        onCancel={() => setEditTagsVisible(false)}
+        onCancel={onEditTagsCancel}
         onOk={editTagsSuccess}
       ></EditTagsModal>
       {percentVisible && (
@@ -2716,12 +2814,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           title={t('ImportExportProgress.exportHARData')}
           token={exportToken}
           apiKey="ExportHTTPFlowStream"
-          onClose={(finish) => {
-            setPercentVisible(false)
-            if (finish) {
-              yakitNotify('success', t('YakitNotification.exportSuccess'))
-            }
-          }}
+          onClose={onPercentClose}
         />
       )}
       {advancedSetVisible && (
@@ -2729,44 +2822,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           dragSelectEnabled={dragSelectEnabled}
           binaryDisplayEnabled={binaryDisplayEnabled}
           columnsAllStr={JSON.stringify(configColumnRef.current.filter((item) => !specialCustoms(item.dataKey)))}
-          onCancel={() => {
-            setAdvancedSetVisible(false)
-          }}
-          onSave={(setting) => {
-            setAdvancedSetVisible(false)
-            const {
-              backgroundRefresh: newBackgroundRefresh,
-              dragSelectEnabled: newDragSelectEnabled,
-              binaryDisplayEnabled: newBinaryDisplayEnabled,
-              configColumnsAll,
-            } = setting
-            // 后台刷新
-            if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
-            // 框选配置
-            if (newDragSelectEnabled !== dragSelectEnabled) {
-              setDragSelectEnabled(newDragSelectEnabled)
-              setRemoteValue(RemoteHistoryGV.DragSelectEnabled, newDragSelectEnabled ? 'true' : 'false')
-            }
-            // 二进制展示配置
-            if (newBinaryDisplayEnabled !== binaryDisplayEnabled) {
-              binaryDisplayEnabledStore.setEnabled(newBinaryDisplayEnabled)
-            }
-            // 自定义列
-            const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
-            const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
-            const newColOrder = configColumnsAll.map((i) => i.dataKey)
-            if (
-              JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey) ||
-              JSON.stringify(newColOrder) !== JSON.stringify(columnsOrder)
-            ) {
-              setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, unshowKeys + '')
-              setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(newColOrder))
-              setExcludeColumnsKey(newExcludeColumnsKey)
-              setColumnsOrder(newColOrder)
-              // 表格列宽度需要重新计算
-              setTableKeyNumber(uuidv4())
-            }
-          }}
+          onCancel={onAdvancedSetCancel}
+          onSave={onAdvancedSetSave}
           defalutColumnsOrder={defalutColumnsOrderRef.current}
         ></AdvancedSet>
       )}
@@ -2776,7 +2833,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         content={t('HTTPFlowTable.shieldTooManyOnlyLatest')}
         cancelButtonProps={{ style: { display: 'none' } }}
         okButtonText={t('YakitButton.ok')}
-        onOk={() => setShowShieldTooManyHint(false)}
+        onOk={onShieldHintOk}
       />
     </div>
   )

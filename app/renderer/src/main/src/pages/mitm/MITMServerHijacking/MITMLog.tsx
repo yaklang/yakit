@@ -112,7 +112,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
   const [processLoading, setProcessLoading] = useState<boolean>(false)
   const [processList, setProcessList] = useState<ProcessItem[]>([])
   const [curProcess, setCurProcess] = useState<string[]>([])
-  const [queryparamsStr, setQueryparamsStr] = useState<string>('')
+  // 性能优化：queryparamsStr 仅在 useEffect([processVisible]) 中读取，不作为依赖、不在 JSX 中，改为 ref
+  const queryparamsStrRef = useRef<string>('')
   const renderProcessList = useMemo(() => {
     return searchProcessVal
       ? processList.filter((item) => item.process.toLocaleLowerCase().includes(searchProcessVal.toLocaleLowerCase()))
@@ -143,7 +144,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
       const value = JSONParseLog(data, { page: 'MITMLog', fun: 'onMITMLogProcessQuery' })
       const { queryStr, version } = value
       if (version !== mitmVersion) return
-      setQueryparamsStr(queryStr)
+      queryparamsStrRef.current = queryStr
     } catch (error) {}
   })
   useEffect(() => {
@@ -156,7 +157,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     if (processVisible) {
       setProcessLoading(true)
       try {
-        const query = JSONParseLog(queryparamsStr, { page: 'MITMLog', fun: 'QueryHTTPFlowsProcessNames' })
+        const query = JSONParseLog(queryparamsStrRef.current, { page: 'MITMLog', fun: 'QueryHTTPFlowsProcessNames' })
         ipcRenderer
           .invoke('QueryHTTPFlowsProcessNames', query)
           .then((res) => {
