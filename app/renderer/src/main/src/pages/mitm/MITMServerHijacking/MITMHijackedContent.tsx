@@ -190,12 +190,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const moreRuleLimitFlagRef = useRef<boolean>(true)
   const [moreRuleLimit, setMoreRuleLimit] = useState<boolean>(false)
   const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
-  const [whiteFilter, setWhiteFilter] = useState<{
+  // 性能优化：whiteFilter 仅在 setFilters 回调中读取，不在 JSX/依赖中，改为 ref 避免后台获取 filter 时重渲染
+  const whiteFilterRef = useRef<{
     baseFilter: MITMFilterSchema
     advancedFilters: MITMAdvancedFilter[]
   }>()
   const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false) // 是否开启过替换规则
-  const [curRules, setCurRules] = useState<MITMContentReplacerRule[]>([])
+  // 性能优化：curRules 仅在 setRules/setRulesAllDisable 回调中读取，不在 JSX/依赖中，改为 ref 避免后台获取规则时重渲染
+  const curRulesRef = useRef<MITMContentReplacerRule[]>([])
   const [alertVisible, setAlertVisible] = useState<boolean>(false)
   // 性能优化：params/wrapperStyle 用 useMemo 缓存，避免每次渲染创建新对象破坏子组件 React.memo
   const tableParams = useMemo(() => ({ SourceType: sourceType }), [sourceType])
@@ -223,10 +225,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       .then((res: MITMFilterSchema) => {
         const data = convertMITMFilterUI(res.FilterData || cloneDeep(defaultMITMFilterData))
         const val = data.baseFilter
-        setWhiteFilter({
+        whiteFilterRef.current = {
           baseFilter: val,
           advancedFilters: data.advancedFilters,
-        })
+        }
         const includeHostnameFlag = val?.includeHostname ? !!val?.includeHostname.length : false
         const includeUriFlag = val?.includeUri ? !!val?.includeUri.length : false
         const includeSuffixFlag = val?.includeSuffix ? !!val?.includeSuffix.length : false
@@ -241,9 +243,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       })
   })
   const setFilters = useMemoizedFn(() => {
-    if (whiteFilter) {
+    if (whiteFilterRef.current) {
       const filter: MITMFilterData = {
-        ...convertLocalMITMFilterRequest(whiteFilter),
+        ...convertLocalMITMFilterRequest(whiteFilterRef.current),
         IncludeHostnames: [],
         IncludeSuffix: [],
         IncludeUri: [],
@@ -264,7 +266,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   })
   const setRules = useMemoizedFn(() => {
     const newRules: MITMContentReplacerRule[] = []
-    curRules.forEach((item) => {
+    curRulesRef.current.forEach((item) => {
       if (item.Disabled) {
         newRules.push(item)
       } else {
@@ -287,7 +289,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       })
   })
   const setRulesAllDisable = useMemoizedFn(() => {
-    const newRules: MITMContentReplacerRule[] = curRules.map((item) => ({ ...item, Disabled: true }))
+    const newRules: MITMContentReplacerRule[] = curRulesRef.current.map((item) => ({ ...item, Disabled: true }))
     const value: MITMContentReplacersRequest = {
       replacers: newRules,
       version: mitmVersion,
@@ -308,7 +310,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       .invoke('GetCurrentRules', {})
       .then((rsp: { Rules: MITMContentReplacerRule[] }) => {
         const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
-        setCurRules([...newRules])
+        curRulesRef.current = [...newRules]
         const findOpenRepRule = newRules.find(
           (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat),
         )
