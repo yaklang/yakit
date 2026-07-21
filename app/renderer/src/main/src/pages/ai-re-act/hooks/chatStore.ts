@@ -193,6 +193,7 @@ export const createChatStore = () => {
               if (isStreamItem && lastGroup?.kind === 'group' && lastGroup.nodeId === node.nodeId) {
                 node.groupExtra?.(lastGroup.token, [node.token])
                 lastGroup.childrenTokens.push(node.token)
+                lastGroup.renderNum += 1
                 return
               }
 
@@ -204,7 +205,7 @@ export const createChatStore = () => {
                   kind: 'group',
                   token: newGroupToken,
                   type: AIChatQSDataTypeEnum.STREAM_GROUP,
-                  renderNum: 0,
+                  renderNum: 1,
                   nodeId: node.nodeId,
                   childrenTokens: [lastToken, node.token],
                 }
@@ -327,6 +328,7 @@ export const createChatStore = () => {
           // 同步 items 实体
           state.items[newToken] = state.items[oldToken]
           state.items[newToken].token = newToken
+          state.items[newToken].renderNum += 1
           delete state.items[oldToken]
 
           // 同步 casualChat.elements 中的 token 引用
