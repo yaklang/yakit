@@ -775,7 +775,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const [bugTestShow, setBugTestShow] = useState<boolean>(false)
   const [bugList, setBugList] = useState<GroupCount[]>([])
   const [bugTestValue, setBugTestValue] = useState<string>()
-  const [bugUrl, setBugUrl] = useState<string>('')
+  // 漏洞测试 URL 桥接，仅 addBugTest 回调使用，不参与渲染
+  const bugUrlRef = useRef<string>('')
   const { resetCompareData } = useHttpFlowStore()
 
   /** ---------- 新逻辑 start ---------- */
@@ -1705,7 +1706,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           selectSubItem,
           pageParams: {
             request: newRequest,
-            system: system,
+            system: systemRef.current,
             advancedConfigValue: {
               ...newAdvancedConfigValue,
               isHttps: newIsHttps,
@@ -1840,7 +1841,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const addBugTest = useMemoizedFn((type: number, res?: any) => {
     const { URL = '' } = res || {}
     if (type === 1 && URL) {
-      setBugUrl(URL)
+      bugUrlRef.current = URL
       apiFetchQueryYakScriptGroupLocal(false, [], 2)
         .then((res) => {
           setBugList(res)
@@ -1860,8 +1861,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 Targets: {
                   HTTPRequestTemplate: cloneDeep(defPluginBatchExecuteExtraFormValue),
                   InputFile: [],
-                  Input: bugUrl
-                    ? JSONParseLog(bugUrl, { page: 'MainOperatorContent', fun: 'addBugTest' }).join(',')
+                  Input: bugUrlRef.current
+                    ? JSONParseLog(bugUrlRef.current, { page: 'MainOperatorContent', fun: 'addBugTest' }).join(',')
                     : '',
                 } as HybridScanInputTarget,
               },
@@ -1870,7 +1871,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         },
       )
       setBugTestValue('')
-      setBugUrl('')
+      bugUrlRef.current = ''
     }
   })
   const addYakRunning = useMemoizedFn((res: any) => {
@@ -1965,9 +1966,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
   /** ---------- 操作系统 start ---------- */
   // 系统类型
-  const [system, setSystem] = useState<string>('')
+  // 系统类型，仅 addFuzzer pageParams 使用，不参与渲染
+  const systemRef = useRef<string>('')
   useEffect(() => {
-    ipcRenderer.invoke('fetch-system-name').then((res) => setSystem(res))
+    ipcRenderer.invoke('fetch-system-name').then((res) => {
+      systemRef.current = res
+    })
   }, [])
   /** ---------- 操作系统 end ---------- */
 
@@ -4187,7 +4191,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       scrollRight: 0,
     })
 
-    const [closeGroupTip, setCloseGroupTip] = useState<boolean>(true) // 关闭组的时候是否还需要弹窗提示,默认是要弹窗的;如果用户选择了不再提示,后续则就不需要再弹出提示框
+    const closeGroupTipRef = useRef<boolean>(true) // 关闭组弹窗提示开关，仅 onCloseGroupConfirm 读取，不参与渲染
 
     const combineColorRef = useRef<string>('')
     const scrollLeftIconRef = useRef<any>()
@@ -4381,7 +4385,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     /**@description  关闭组是否需要提示*/
     const getIsCloseGroupTip = useMemoizedFn(() => {
       getRemoteValue(Close_Group_Tip).then((e) => {
-        setCloseGroupTip(e === 'false' ? false : true)
+        closeGroupTipRef.current = e === 'false' ? false : true
       })
     })
 
@@ -5707,7 +5711,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     })
     /**@description 关闭组/删除组包括组里的页面,有一个弹窗不再提示的功能 */
     const onCloseGroupConfirm = useMemoizedFn((groupItem: MultipleNodeInfo) => {
-      if (closeGroupTip) {
+      if (closeGroupTipRef.current) {
         const m = YakitModalConfirm({
           width: 420,
           type: 'white',

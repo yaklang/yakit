@@ -37,7 +37,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
   const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>('giturl')
   const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
   const [form] = Form.useForm()
-  const [importHistoryharToken, setImportHistoryharToken] = useState<string>('')
+  // HAR 导入 stream token，仅进度组件使用，不参与渲染
+  const importHistoryharTokenRef = useRef<string>('')
   const [percentVisible, setPercentVisible] = useState<boolean>(false)
   const importMenuSelect = useMemoizedFn((type: string) => {
     switch (type) {
@@ -91,7 +92,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     }
                     m.destroy()
                     const token = randomString(40)
-                    setImportHistoryharToken(token)
+                    importHistoryharTokenRef.current = token
                     ipcRenderer
                       .invoke(
                         'ImportHTTPFlowStream',
@@ -192,7 +193,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
               <ImportExportProgress
                 visible={percentVisible}
                 title={t('Layout.ExtraMenu.importHARHistoryData')}
-                token={importHistoryharToken}
+                token={importHistoryharTokenRef.current}
                 apiKey="ImportHTTPFlowStream"
                 onClose={(finish) => {
                   setPercentVisible(false)

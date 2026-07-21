@@ -107,14 +107,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   const [menuId, setMenuId] = useState<string>('')
   /** @description 收起状态下，宽度不够时部分菜单被收起成二级菜单 */
   const [routeMenuDataAfter, setRouteMenuDataAfter] = useState<EnhancedPrivateRouteMenuProps[]>([])
-  /** @description 宽度不够时部分菜单被整合的逻辑变量 */
-  const [width, setWidth] = useState<number>(0)
   const [number, setNumber] = useState<number>(-1)
   const [moreLeft, setMoreLeft] = useState<number>(0) // 更多文字的left
 
   const [isExpand, setIsExpand] = useState<boolean>(defaultExpand)
   useEffect(() => {
-    setIsExpand(isExpand)
+    // 同步父级 defaultExpand，避免 setIsExpand(isExpand) no-op
+    setIsExpand(defaultExpand)
   }, [defaultExpand])
 
   const [customizeVisible, setCustomizeVisible] = useState<boolean>(false)
@@ -493,9 +492,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   })
 
   useEffect(() => {
-    if (!width) return
+    if (!menuLeftRef.current?.clientWidth) return
     toMove()
-  }, [width, routeMenu])
+  }, [routeMenu])
   /**
    * @description: 计算是否显示一级折叠菜单
    */
@@ -624,8 +623,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   const [importLoading, setImportLoading] = useState<boolean>(false)
   const [visibleImport, setVisibleImport] = useState<boolean>(false)
   const [menuDataString, setMenuDataString] = useState<string>('')
-  const [fileName, setFileName] = useState<string>('')
-  const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
   /** 导入菜单json */
   const onImportJSON = useMemoizedFn(() => {
     if (!menuDataString) {
@@ -693,7 +690,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             if (!w) {
               return
             }
-            setWidth(w)
+            toMove()
           }}
           handleWidth={true}
           handleHeight={true}
@@ -773,8 +770,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             onClick={() => {
                               setVisibleImport(true)
                               setMenuDataString('')
-                              setFileName('')
-                              setRefreshTrigger(!refreshTrigger)
                             }}
                           >
                             {t('Layout.HeardMenu.importJsonConfig')}
