@@ -1,4 +1,4 @@
-import { AIChatQSDataTypeEnum, type ChatStoreState } from './aiRender'
+import { AIChatQSDataTypeEnum, CurrentExecTaskTree, type ChatStoreState } from './aiRender'
 import { createStore } from 'zustand/vanilla'
 import { immer } from 'zustand/middleware/immer'
 import cloneDeep from 'lodash/cloneDeep'
@@ -8,7 +8,6 @@ import {
   DefaultPlanHistoryList,
   DefaultPlanLoadingStatus,
 } from './defaultConstant'
-import type { CurrentExecTaskTree } from './type'
 import { v4 as uuidv4 } from 'uuid'
 
 export const createChatStore = () => {
