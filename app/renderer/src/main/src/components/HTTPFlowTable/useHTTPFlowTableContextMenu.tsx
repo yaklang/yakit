@@ -16,6 +16,7 @@ import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { yakitNotify } from '@/utils/notification'
 import { openExternalWebsite, saveABSFileToOpen } from '@/utils/openWebsite'
+import type { YakDeleteHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { i18n as I18nInstance } from 'i18next'
 import { generateCSRFPocByRequest } from '@/pages/invoker/fromPacketToYakCode'
@@ -65,7 +66,7 @@ export interface UseHTTPFlowTableContextMenuOptions {
   codecMultipleHistoryPluginCom: unknown
   codecSingleHistoryPluginCom: unknown
   selectedRowKeysCom: unknown
-  onRemoveHttpHistory: (query: Record<string, unknown>) => void
+  onRemoveHttpHistory: (query: YakDeleteHTTPFlowRequest) => void
   onShareData: (ids: string[], number: number) => void
   onUploadData: (ids: string[]) => void
   onEditTags: (flow: HTTPFlow) => void
@@ -462,7 +463,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteDomain].keys,
             onClick: (v) => onRemoveHttpHistory({ URLPrefix: v?.HostPort?.split(':')[0] }),
             onClickBatch: (list) => {
-              const hosts = list.map((ele) => ele.HostPort?.split(':')[0])
+              const hosts: string[] = selectedRows
+                .map((ele) => ele.HostPort?.split(':')[0])
+                .filter((host): host is string => host !== undefined)
               onRemoveHttpHistory({
                 Filter: {
                   IncludeInUrl: hosts,
@@ -916,9 +919,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     }
     switch (key) {
       case 'deleteRecord':
-        onRemoveHttpHistory({
-          Id: selectedRowKeys,
-        })
+        onRemoveHttpHistory({ Id: selectedRowKeys.map((id) => +id) })
         break
       case 'deleteURL':
         const urls = selectedRows.map((ele) => ele.Url)
@@ -929,7 +930,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         })
         break
       case 'deleteDomain':
-        const hosts = selectedRows.map((ele) => ele.HostPort?.split(':')[0])
+        const hosts: string[] = selectedRows
+          .map((ele) => ele.HostPort?.split(':')[0])
+          .filter((host): host is string => host !== undefined)
         onRemoveHttpHistory({
           Filter: {
             IncludeInUrl: hosts,

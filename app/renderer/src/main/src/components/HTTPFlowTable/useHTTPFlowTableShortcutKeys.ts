@@ -9,6 +9,7 @@ import { YakitMultipleShortcutKey } from '@/utils/globalShortcutKey/events/multi
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { openExternalWebsite } from '@/utils/openWebsite'
 import { yakitNotify } from '@/utils/notification'
+import type { YakDeleteHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 
 const isMonacoFocused = (focus?: string[] | null) =>
   (focus || []).some((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
@@ -29,7 +30,7 @@ export interface UseHTTPFlowTableShortcutKeysOptions {
   onShieldRecord: (v: HTTPFlow) => void
   onShieldURL: (v: HTTPFlow) => void
   onShieldDomain: (v: HTTPFlow) => void
-  onRemoveHttpHistory: (query: Record<string, unknown>) => void
+  onRemoveHttpHistory: (query: YakDeleteHTTPFlowRequest) => void
 }
 
 export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKeysOptions) => {

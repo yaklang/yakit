@@ -7087,6 +7087,9 @@ message QueryHTTPFlowRequest {
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
+  // 排除包含这些 tag 的流量（用于"仅保留收藏"：删除不带收藏 tag 的流量时，
+  // 把收藏 tag 填入此处，筛选出非收藏流量后批量删除）
+  repeated string ExcludeTags = 51;
 }
 
 message HTTPFlowsToOnlineRequest {

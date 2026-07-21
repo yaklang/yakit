@@ -51,6 +51,7 @@
     "onlyFavorites": "僅收藏夾",
     "resetRequestID": "重置請求 ID",
     "doNotResetRequestID": "不重置請求 ID",
+    "keepOnlyFavorites": "僅保留收藏數據",
     "saveFile": "儲存檔案",
     "RowContextMenu": {
       "sendToWebFuzzer": "傳送到 Web Fuzzer",

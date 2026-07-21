@@ -1,6 +1,6 @@
 import React, { Ref, useEffect, useMemo, useRef, useState, useContext } from 'react'
 import { Divider, Tooltip, Badge } from 'antd'
-import { YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
+import { YakDeleteHTTPFlowRequest, YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
 import { YakScript } from '../../pages/invoker/schema'
 import { HTTPFlowDetailProp } from '../HTTPFlowDetail'
 import { yakitNotify, yakitFailed } from '../../utils/notification'
@@ -123,6 +123,7 @@ import {
   type HTTPFlowsToOnlineBatchResponse,
   SourceType,
   SHIELD_MAX_LIMIT,
+  HTTP_FLOW_FAVORITE_TAG,
 } from './HTTPFlowTable.constants'
 import {
   buildHTTPFlowQueryTags,
@@ -210,7 +211,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const comSuffixList = useCampare(suffixList)
   const [selected, setSelected, getSelected] = useGetSetState<HTTPFlow>()
 
-  const { compareState, setCompareState, setCompareLeft, setCompareRight } = useHttpFlowStore()
+  const { setCompareLeft, setCompareRight } = useHttpFlowStore()
 
   // 屏蔽数据
   const [shieldData, setShieldData, getShieldData] = useGetSetState<ShieldData>({
@@ -1183,10 +1184,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [isBackgroundRefresh, excludeColumnsKey, columnsOrder])
 
   //删除
-  const onRemoveHttpHistory = useMemoizedFn((query) => {
+  const onRemoveHttpHistory = useMemoizedFn((query: YakDeleteHTTPFlowRequest) => {
     setLoading(true)
     if (isAllSelect) {
-      onRemoveHttpHistoryAll(true, query)
+      onRemoveHttpHistoryAll({ isAddQuery: true, query })
       return
     }
     ipcRenderer
@@ -1229,60 +1230,39 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     emiter.emit('onDeleteToUpdateHTTPHistoryFilter')
   })
 
-  //删除 重置请求 ID
-  const onRemoveHttpHistoryAllAndResetId = useMemoizedFn(() => {
-    setLoading(true)
-    ipcRenderer
-      .invoke('DeleteHTTPFlows', { DeleteAll: true })
-      .then(() => {
-        setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-        onResetRefresh()
-      })
-      .catch((e: any) => {
-        yakitNotify('error', `${t('HTTPFlowTable.historyDeleteFailed')}${e}`)
-      })
-      .finally(() => {
-        onUpdateOtherPage()
-        setTimeout(() => setLoading(false), 500)
-      })
-  })
-  // 不重置请求 ID
-  const onRemoveHttpHistoryAll = useMemoizedFn((isAddQuery?: boolean, query?: any) => {
-    let newParams = {
-      Filter: {},
-      DeleteAll: false,
-    }
-    if (isAddQuery) {
-      newParams = {
-        Filter: {
-          ...params,
-          ...(query?.Filter || {}),
-        },
-        DeleteAll: false,
+  // 删除全部 / 按筛选删除
+  const onRemoveHttpHistoryAll = useMemoizedFn(
+    (opts?: { isAddQuery?: boolean; query?: YakDeleteHTTPFlowRequest; resetId?: boolean; mergeParams?: boolean }) => {
+      const { isAddQuery, query, resetId, mergeParams = true } = opts || {}
+      const deleteAll = !!resetId
+      let newParams: YakDeleteHTTPFlowRequest = {
+        Filter: {},
+        DeleteAll: deleteAll,
       }
-    }
-    setLoading(true)
-    ipcRenderer
-      .invoke('DeleteHTTPFlows', newParams)
-      .then((i: HTTPFlow) => {
-        setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-        onResetRefresh()
-      })
-      .catch((e: any) => {
-        yakitNotify('error', `${t('HTTPFlowTable.historyDeleteFailed')}${e}`)
-      })
-      .finally(() => {
-        onUpdateOtherPage()
-        setTimeout(() => setLoading(false), 300)
-      })
-    yakitNotify('info', t('HTTPFlowTable.deletingPleaseRefresh'))
-    setCompareLeft({ content: '', language: 'http' })
-    setCompareRight({ content: '', language: 'http' })
-    setCompareState(0)
-    setTimeout(() => {
-      if (props.onSelected) props.onSelected(undefined)
-    }, 400)
-  })
+      if (isAddQuery && !deleteAll) {
+        const filter = mergeParams ? { ...params, ...(query?.Filter || {}) } : query?.Filter
+        newParams = {
+          ...query,
+          Filter: filter || {},
+          DeleteAll: deleteAll,
+        }
+      }
+      setLoading(true)
+      ipcRenderer
+        .invoke('DeleteHTTPFlows', newParams)
+        .then(() => {
+          setOnlyShowFirstNode?.(true)
+          onResetRefresh()
+          onUpdateOtherPage()
+        })
+        .catch((e: any) => {
+          yakitNotify('error', `${t('HTTPFlowTable.historyDeleteFailed')}${e}`)
+        })
+        .finally(() => {
+          setTimeout(() => setLoading(false), deleteAll ? 500 : 300)
+        })
+    },
+  )
 
   const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
     const length = selectedRows.length
@@ -2487,14 +2467,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                       key: 'noResetId',
                       label: t('HTTPFlowTable.doNotResetRequestID'),
                     },
+                    {
+                      key: 'onlyFavorite',
+                      label: t('HTTPFlowTable.keepOnlyFavorites'),
+                    },
                   ],
                   onClick: ({ key }) => {
                     switch (key) {
                       case 'resetId':
-                        onRemoveHttpHistoryAllAndResetId()
+                        onRemoveHttpHistoryAll({ resetId: true })
                         break
                       case 'noResetId':
                         onRemoveHttpHistoryAll()
+                        break
+                      case 'onlyFavorite':
+                        onRemoveHttpHistoryAll({
+                          isAddQuery: true,
+                          mergeParams: false,
+                          query: { Filter: { ExcludeTags: [HTTP_FLOW_FAVORITE_TAG] } },
+                        })
                         break
                       default:
                         break
@@ -2581,7 +2572,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onHistoryAnalysisClick,
     onMultipleClick,
     onRemoveHttpHistoryAll,
-    onRemoveHttpHistoryAllAndResetId,
     onResetRefresh,
     onToggleOnlyFavorite,
     onlyFavorite,

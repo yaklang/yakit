@@ -51,6 +51,7 @@
     "onlyFavorites": "Only Favorites",
     "resetRequestID": "Reset Request ID",
     "doNotResetRequestID": "Do Not Reset Request ID",
+    "keepOnlyFavorites": "Retain only collection data",
     "saveFile": "Save File",
     "RowContextMenu": {
       "sendToWebFuzzer": "Send to Web Fuzzer",
