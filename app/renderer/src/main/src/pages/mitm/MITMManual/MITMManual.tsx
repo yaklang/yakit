@@ -628,7 +628,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           } catch (error) {}
         }
       })
-    })
+    }, [])
     const ResizeBoxProps = useCreation(() => {
       let p = cloneDeep(lastRatioRef.current)
       if (onlyShowFirstNode) {
