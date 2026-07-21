@@ -25,7 +25,7 @@ import {
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
 import { HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
-import { HotCodeTemplate, HotPatchTempItem } from './HTTPFuzzerHotPatch'
+import type { HotPatchTempItem } from './HTTPFuzzerHotPatch'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
 import { StringToUint8Array, Uint8ArrayToString } from '../../utils/str'
 import { PacketScanButton } from '@/pages/packetScanner/DefaultPacketScanGroup'
@@ -214,6 +214,12 @@ const HttpQueryAdvancedConfig = React.lazy(() =>
 const HTTPFuzzerHotPatchSidebar = React.lazy(() =>
   import('./HTTPFuzzerHotPatch').then(({ HTTPFuzzerHotPatchSidebar }) => ({
     default: HTTPFuzzerHotPatchSidebar,
+  })),
+)
+/** 与侧栏同模块：工具栏模板入口也懒加载，避免静态 import 把整份 HotPatch 打进主 chunk */
+const HotCodeTemplate = React.lazy(() =>
+  import('./HTTPFuzzerHotPatch').then(({ HotCodeTemplate }) => ({
+    default: HotCodeTemplate,
   })),
 )
 const WebFuzzerApiDoc = React.lazy(() =>
@@ -914,6 +920,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const hotPatchEnabled = !advancedConfigValue.disableHotPatch
   const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(HotPatchTempDefault))
   const [selectedHotPatchTemplateName, setSelectedHotPatchTemplateName] = useState<string>('')
+  /** 悬停/点击后再挂载模板下拉，避免一进 Fuzzer 页就拉 HotPatch chunk */
+  const [hotCodeTemplateMounted, setHotCodeTemplateMounted] = useState(false)
 
   const proxyListRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
     ...defYakitAutoCompleteRef,
@@ -2100,7 +2108,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         >
           {t('YakitButton.beautify')}
         </YakitButton>
-        <div className={styles['hot-patch-trigger']}>
+        <div className={styles['hot-patch-trigger']} onMouseEnter={() => setHotCodeTemplateMounted(true)}>
           <YakitButton
             size="small"
             type="primary"
@@ -2109,27 +2117,39 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           >
             {t('HTTPFuzzerPage.hotReload')}
           </YakitButton>
-          <HotCodeTemplate
-            type="fuzzer"
-            hotPatchTempLocal={hotPatchTempLocal}
-            onSetHotPatchTempLocal={setHotPatchTempLocal}
-            onClickHotCode={(temp, tempName) => {
-              setHotPatchCode(temp)
-              setSelectedHotPatchTemplateName(tempName || '')
-              hotPatchTrigger()
-            }}
-            onDeleteLocalTempOk={() => {
-              setSelectedHotPatchTemplateName('')
-            }}
-            triggerNode={
-              <YakitButton
-                size="small"
-                type="primary"
-                className={styles['hot-patch-trigger-dropdown']}
-                icon={<OutlineChevrondownIcon />}
+          {hotCodeTemplateMounted ? (
+            <React.Suspense fallback={null}>
+              <HotCodeTemplate
+                type="fuzzer"
+                hotPatchTempLocal={hotPatchTempLocal}
+                onSetHotPatchTempLocal={setHotPatchTempLocal}
+                onClickHotCode={(temp, tempName) => {
+                  setHotPatchCode(temp)
+                  setSelectedHotPatchTemplateName(tempName || '')
+                  hotPatchTrigger()
+                }}
+                onDeleteLocalTempOk={() => {
+                  setSelectedHotPatchTemplateName('')
+                }}
+                triggerNode={
+                  <YakitButton
+                    size="small"
+                    type="primary"
+                    className={styles['hot-patch-trigger-dropdown']}
+                    icon={<OutlineChevrondownIcon />}
+                  />
+                }
               />
-            }
-          />
+            </React.Suspense>
+          ) : (
+            <YakitButton
+              size="small"
+              type="primary"
+              className={styles['hot-patch-trigger-dropdown']}
+              icon={<OutlineChevrondownIcon />}
+              onClick={() => setHotCodeTemplateMounted(true)}
+            />
+          )}
         </div>
         <YakitPopover
           trigger={'click'}
