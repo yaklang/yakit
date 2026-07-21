@@ -70,7 +70,6 @@ interface HTTPFuzzerPageTableProps {
   extractedMap: Map<string, string>
   /**@name 数据是否传输完成 */
   isEnd: boolean
-  setExportData?: (v: FuzzerResponse[]) => void
   /**@name 是否可以调试匹配器或提取器 */
   isShowDebug?: boolean
   /**点击调试回调 */
@@ -189,7 +188,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       isRefresh,
       extractedMap,
       isEnd,
-      setExportData,
       isShowDebug,
       onDebug,
       pageId,
@@ -216,6 +214,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const bodyLengthRef = useRef<any>()
     const durationMsRef = useRef<any>()
     const tableRef = useRef<any>(null)
+    // 同一 ResponseRaw 引用复用解码结果，避免关键词过滤每批全量 Uint8ArrayToString
+    const responseSearchTextCacheRef = useRef(new WeakMap<object, string>())
 
     const [scrollToIndex, setScrollToIndex] = useState<number>()
     const [alertHeight, setAlertHeight] = useState<number>(0)
@@ -655,6 +655,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     const compareSorterTable = useCampare(sorterTable)
     const sortedData = useMemo(() => {
       if (!data?.length) return []
+      // 无排序列时直接复用原数组，避免默认全量拷贝/排序
+      if (!sorterTable?.orderBy) return data
       return sorterFunction(data, sorterTable)
     }, [data, compareSorterTable])
 
@@ -662,7 +664,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       () => {
         queryData()
       },
-      [sortedData, isEnd],
+      [sortedData, isEnd, inViewport],
       { wait: 500 },
     )
 
@@ -737,8 +739,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
      * @description 前端搜索
      */
     const queryData = useMemoizedFn(() => {
+      if (!inViewport) return
       try {
         // ------------  搜索 开始  ------------
+        const newDataTable = sortedData
         // 有搜索条件才循环
         if (
           query?.keyWord ||
@@ -751,9 +755,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
           (query?.ExtractedResults && query?.ExtractedResults?.length > 0) ||
           query?.ExtractedResultsNotEmpty
         ) {
-          const newDataTable = sortedData
           const l = newDataTable.length
           const searchList: FuzzerResponse[] = []
+          const statusCodes = query?.StatusCode ? parseStatusCodes(query.StatusCode) : []
           for (let index = 0; index < l; index++) {
             const record = newDataTable[index]
             // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
@@ -782,7 +786,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
             // 关键字搜索
             if (query?.keyWord) {
-              const responseString = Uint8ArrayToString(record.ResponseRaw || new Uint8Array())
+              const responseRaw = record.ResponseRaw || new Uint8Array()
+              let responseString = responseSearchTextCacheRef.current.get(responseRaw)
+              if (responseString === undefined) {
+                responseString = Uint8ArrayToString(responseRaw)
+                responseSearchTextCacheRef.current.set(responseRaw, responseString)
+              }
               const payloadsString = (record.Payloads || []).join('')
               let extractedResultsString = ''
               if (extractedMap.size > 0) {
@@ -796,17 +805,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
             // 状态码搜索
             if (query?.StatusCode && query?.StatusCode?.length > 0) {
-              const statusCodes = parseStatusCodes(query.StatusCode)
-              const codeIsPushArr: boolean[] = []
-              for (let index = 0; index < statusCodes.length; index++) {
-                const element = statusCodes[index]
-                if (record.StatusCode === element) {
-                  codeIsPushArr.push(true)
-                } else {
-                  codeIsPushArr.push(false)
-                }
-              }
-              statusCodeIsPush = codeIsPushArr.includes(true)
+              statusCodeIsPush = statusCodes.includes(record.StatusCode)
             }
             // 响应大小搜索
             if (query?.afterBodyLength) {
@@ -873,17 +872,14 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
               searchList.push(record)
             }
           }
-          setExportData && setExportData([...searchList])
-          setListTable([...searchList])
+          setListTable(searchList)
           if (searchList.length > 0) {
             scrollUpdate(searchList.length)
           }
         } else {
-          const newData = sortedData
-          setExportData && setExportData([...newData])
-          setListTable([...newData])
-          if (newData.length > 0) {
-            scrollUpdate(newData.length)
+          setListTable(newDataTable)
+          if (newDataTable.length > 0) {
+            scrollUpdate(newDataTable.length)
           }
         }
         // ------------  搜索 结束  ------------
