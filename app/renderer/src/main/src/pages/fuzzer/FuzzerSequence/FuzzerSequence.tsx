@@ -2658,7 +2658,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     }
     const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>('true')
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
-    const [affixSearch, setAffixSearch] = useState<string>('')
     const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>('')
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
@@ -2909,18 +2908,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
           request={requestHttpRef.current}
           cachedTotal={cachedTotal}
           rsp={httpResponse}
-          valueSearch={affixSearch}
-          onSearchValueChange={(value) => {
-            setAffixSearch(value)
-            if (value === '' && defaultResponseSearch !== '') {
-              setDefaultResponseSearch('')
-            }
-          }}
-          onSearch={() => {
-            setDefaultResponseSearch(affixSearch)
-          }}
-          successFuzzer={successFuzzer}
-          failedFuzzer={failedFuzzer}
+          onCommitSearch={setDefaultResponseSearch}
+          getSuccessResponses={() => successFuzzer}
+          failedCount={failedFuzzer.length}
           secondNodeSize={secondNodeSize}
           query={query}
           setQuery={(q) => {
