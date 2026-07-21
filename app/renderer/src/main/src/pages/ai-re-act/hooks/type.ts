@@ -15,6 +15,7 @@ import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { ChatMultiSessionController } from './ChatMultiSessionController'
+import type { YakitRouteType } from '@/enums/yakitRoute'
 
 // #region 公共 hooks 事件
 export interface UseHookBaseParams {
@@ -40,87 +41,6 @@ interface UseHookStateFunc {
 export interface UpdateRenderDataParams {
   mapKey: string
   type: AIChatQSDataType
-}
-// #endregion
-
-// #region useYakExecResult相关定义
-export interface UseYakExecResultParams extends UseHookBaseParams {}
-
-export interface UseYakExecResultState {
-  card: AIAgentGrpcApi.AIInfoCard[]
-  execFileRecord: Map<string, AIYakExecFileRecord[]>
-  yakExecResultLogs: StreamResult.Log[]
-}
-export interface UseYakExecResultEvents extends UseHookBaseEvents {
-  /** 设置UI展示的列表数据 */
-  handleSetYakResult: (newData: UseYakExecResultState) => void
-}
-// #endregion
-
-// #region useCasualChat相关定义
-export interface UseCasualChatParams extends UseHookBaseParams {
-  /** 获取流接口请求参数 */
-  getRequest: () => AIAgentSetting | undefined
-  /** 获取当前自由对话父任务 ID */
-  getCurrentCasualTaskID: () => string
-  /** review 触发回调事件 */
-  onReview?: (data: AIChatQSData) => void
-  /** 触发 review-release 后的回调事件 */
-  onReviewRelease: (id: string) => void
-  /** 收集自由对话里的子任务-taskID */
-  onSubTaskID: (taskID: string) => void
-}
-
-export interface UseCasualChatState {
-  elements: ReActChatRenderItem[]
-  toolListRenderNumber: number
-}
-export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc {
-  handleSend: handleSendFunc
-  /** 用户手动介入逻辑 */
-  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
-  /** 清空todo-list数据 */
-  resetTodoListData: () => void
-}
-// #endregion
-
-// #region useTaskChat相关定义
-export interface UseTaskChatParams extends UseHookBaseParams {
-  /** 获取流接口请求参数 */
-  getRequest: () => AIAgentSetting | undefined
-  /** 获取当前任务规划的问题ID信息 */
-  getCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
-  /** review 触发回调事件 */
-  onReview?: (data: AIChatQSData) => void
-  /** plan_review 补充数据 */
-  onReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
-  /** 触发 review-release 后的回调事件 */
-  onReviewRelease?: (id: string) => void
-  /** 向接口发送消息 */
-  sendRequest?: (request: AIInputEvent) => void
-}
-
-/** 当前正在执行的任务树 */
-export interface CurrentExecTaskTree {
-  task_tree: AIAgentGrpcApi.PlanHistory['task_tree']
-  root_task_name: AIAgentGrpcApi.PlanHistory['root_task_name']
-}
-
-export interface UseTaskChatState {
-  /** 正在执行的任务列表 */
-  plan: CurrentExecTaskTree
-  elements: ReActChatRenderItem[]
-}
-export interface UseTaskChatEvents extends UseHookBaseEvents, UseHookStateFunc {
-  handleSend: handleSendFunc
-  /** grpc接口关闭后的后续处理逻辑 */
-  handleCloseGrpc: () => void
-  /** 当前任务规划结束-触发UI展示结束标识 */
-  handlePlanExecEnd: (res: AIOutputEvent) => void
-  /** 用户手动介入逻辑 */
-  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
-  /** 清空当前任务树 */
-  handleResetPlanTree: () => void
 }
 // #endregion
 
@@ -206,9 +126,9 @@ export interface UseChatIPCState {
   /** 运行时产生risk数据的run_time_id合集 */
   riskRunTimeIDs: string[]
   /** 自由对话相关数据 */
-  casualChat: UseCasualChatState
+  casualChat: any
   /** 任务规划相关数据 */
-  taskChat: UseTaskChatState
+  taskChat: any
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
   /** 问题队列信息 */
@@ -245,6 +165,10 @@ export interface UseChatIPCState {
 export interface AIChatIPCStartParams {
   token: string
   params: AIInputEvent
+  /** 会话归属路由（不可变） */
+  route: YakitRouteType
+  /** 会话初始归属 pageId（后续可 rebind） */
+  pageId: string
 }
 
 /** 执行流途中发送消息的参数 */
@@ -260,50 +184,6 @@ export interface TaskChatTaskInfo {
   taskID: string
   status: AITaskStatusType
   coordinatorId: AIOutputEvent['CoordinatorId']
-}
-
-export interface UseChatIPCEvents {
-  /** 获取当前执行接口流的唯一标识符 */
-  fetchToken: () => string
-  /** 获取当前执行接口流的请求参数 */
-  fetchAIRequest: () => AIStartParams | undefined
-  /** 获取当前执行的自由对话问题(这个问题可能引起的是任务规划)对应的任务ID */
-  fetchCurrentCasualTaskID: () => string
-  /** 获取当前执行任务规划的问题详情 */
-  fetchCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
-  /** 获取当前外界传入的数据类实例 */
-  fetchChatDataStore: () => UseChatIPCParams['cacheDataStore']
-  /** 切换历史会话展示 */
-  onSwitchChat: (session?: string, isCreate?: boolean) => void
-  /** 开始执行接口流 */
-  onStart: (params: AIChatIPCStartParams, cb?: () => void) => void
-  /** 向执行中的接口流主动输入信息 */
-  onSend: (params: AIChatSendParams) => void
-  /** 主动结束正在执行中的接口流 */
-  onClose: (
-    token: string,
-    option?: {
-      tip: () => void
-    },
-  ) => void
-  /** 重置所有数据 */
-  onReset: () => void
-  /** 取消任务规划当前的Review */
-  handleTaskReviewRelease: (id: string) => void
-  /** 删除会话操作的关联逻辑 */
-  onDelChats: (session: string[]) => void
-  /** 用户主动取消问题的loading状态变换 */
-  handleCancelLoadingChange: (type: ChatListRenderType, status: boolean) => void
-  /** 清空指定变量数据 */
-  handleResetTarget: (target: 'memoryList') => void
-  /** 用户手动干预的执行事件 */
-  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
-  /** 加载更多历史数据 */
-  handleLoadMoreHistory: (chatType: HistoryChatType) => void
-  /** 是否还有更多历史数据 */
-  handleHasMoreHistory: (type: HistoryChatType) => boolean
-  /** 清除当前任务规划的ID信息 */
-  resetCurrentTaskPlanID: () => void
 }
 // #endregion
 

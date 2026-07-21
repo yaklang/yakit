@@ -1,7 +1,6 @@
-import { cloneDeep } from 'lodash'
-import type { AIToolResult, PlanItemDetailsData, TodoListCardData } from './aiRender'
+import type { AIToolResult, CurrentExecTaskTree, PlanItemDetailsData, TodoListCardData } from './aiRender'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
-import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from './type'
+import type { AIQuestionQueues, PlanLoadingStatus } from './type'
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {

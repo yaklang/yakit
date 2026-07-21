@@ -1,5 +1,5 @@
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import type { UseYakExecResultState } from '@/pages/ai-re-act/hooks/type'
+import { ChatStoreState } from '@/pages/ai-re-act/hooks/aiRender'
 import type { UseFileTreeEvents } from '@/pages/ai-re-act/hooks/useFileTree'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import type { Dispatch, SetStateAction } from 'react'
@@ -9,7 +9,7 @@ export enum TabKey {
   OperationLog = 'operation-log',
 }
 export interface AIFileSystemListProps {
-  execFileRecord: UseYakExecResultState['execFileRecord']
+  execFileRecord: ChatStoreState['execFileRecord']
   activeKey?: TabKey
   setActiveKey?: (key: TabKey) => void
 }

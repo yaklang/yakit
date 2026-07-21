@@ -1,12 +1,6 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
-import type {
-  AIFileSystemPin,
-  AIQuestionQueues,
-  CurrentExecTaskTree,
-  PlanLoadingStatus,
-  UseAIMessageDataState,
-} from './type'
+import type { AIFileSystemPin, AIQuestionQueues, PlanLoadingStatus, UseAIMessageDataState } from './type'
 import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 // #region AI-Agent 非会话列表外的渲染数据
@@ -459,6 +453,12 @@ export type AIChatQSData =
   | ChatTaskDefaultGroup
   | ChatStreamGroup
 // #endregion
+
+/** 当前正在执行的任务树 */
+export interface CurrentExecTaskTree {
+  task_tree: AIAgentGrpcApi.PlanHistory['task_tree']
+  root_task_name: AIAgentGrpcApi.PlanHistory['root_task_name']
+}
 
 /** @name 数据状态机定义 */
 export interface ChatStoreState {

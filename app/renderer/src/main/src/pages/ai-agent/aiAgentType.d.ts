@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction } from 'react'
 import { AISession } from './type/aiChat'
 import { AITabsEnum } from './defaultConstant'
 import { AIStartParams } from '../ai-re-act/hooks/grpcApi'
-import { PlanLoadingStatus } from '../ai-re-act/hooks/type'
+import type { PlanLoadingStatus } from '../ai-re-act/hooks/type'
 export interface AIAgentProps {
   pageId: string
 }
