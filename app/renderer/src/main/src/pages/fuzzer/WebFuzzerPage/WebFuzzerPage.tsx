@@ -13,7 +13,6 @@ import {
 import classNames from 'classnames'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { YakitRoute } from '@/enums/yakitRoute'
-import 'video-react/dist/video-react.css' // import css
 import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import emiter from '@/utils/eventBus/eventBus'
