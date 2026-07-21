@@ -4,6 +4,7 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeDataID } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum, type ReportFinishCardData } from '../aiRender'
 import { convertNodeIdToVerbose } from '../defaultConstant'
+import cloneDeep from 'lodash/cloneDeep'
 
 const handleThought: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, meta } = requestInfo
@@ -322,7 +323,7 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   if (!data || typeof data !== 'object' || data?.type !== 'push_task') return
 
   const info = data as AIAgentGrpcApi.ChangeTask
-  const newPlanTree = store.getState().taskChat.plan
+  const newPlanTree = cloneDeep(store.getState().taskChat.plan)
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
     if (item.task_id === info.task.task_id) item.progress = AITaskStatus.inProgress
     return item
@@ -332,7 +333,7 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   if (!meta.currentTaskPlanID?.taskID || !info.task.task_id) return
   const taskID = `${meta.currentTaskPlanID.taskID}-${info.task.task_id}`
   const chatDetail = rawData.contents.get(taskID)
-  if (chatDetail && chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+  if (chatDetail) {
     requestInfo.pushLog({ level: 'error', message: `${info.task.index}-push_task数据已存在` })
     return
   }
@@ -373,7 +374,7 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
   if (!data || typeof data !== 'object' || data?.type !== 'pop_task') return
 
   const info = data as AIAgentGrpcApi.ChangeTask
-  const newPlanTree = store.getState().taskChat.plan
+  const newPlanTree = cloneDeep(store.getState().taskChat.plan)
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
     if (item.task_id === info.task.task_id) item.progress = info.task.task_status
     return item

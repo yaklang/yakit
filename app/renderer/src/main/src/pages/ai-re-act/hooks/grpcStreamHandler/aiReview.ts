@@ -10,7 +10,7 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, request, meta } = requestInfo
   if (res.Type !== 'plan_review_require') return
   // 历史数据-grpc流数据在任务规划下无效，不处理
-  if (res.IsSync && chatType === 'task') return
+  if ((res.IsSync && chatType === 'task') || (!res.IsSync && chatType !== 'task')) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequire
@@ -25,6 +25,7 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
+    TaskId: meta.currentTaskPlanID?.taskID ? `${meta.currentTaskPlanID.taskID}-default` : undefined,
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
@@ -37,6 +38,7 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
     if (target) {
       store.getState().dispatchStreamingNode({
         chatType: chatType,
+        parentTaskId: chatData.TaskId,
         node: {
           token: chatData.id,
           kind: 'item',
@@ -54,13 +56,13 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
     chatData.data.selected = JSON.stringify({ suggestion: 'continue' })
     chatData.data.optionValue = 'continue'
   }
-  if (chatType !== 'task') return
   // 将数据存入hook里的缓存变量中
   rawData.contents.set(chatData.id, cloneDeep(chatData))
   // 该类型的实时数据只有任务规划才有
   if (isAuto) {
     store.getState().dispatchStreamingNode({
       chatType: chatType,
+      parentTaskId: chatData.TaskId,
       node: {
         token: chatData.id,
         kind: 'item',
@@ -115,8 +117,12 @@ const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
 }
 
 const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, request, sendRequest } = requestInfo
+  const { res, chatType, request, sendRequest } = requestInfo
   if (res.Type !== 'task_review_require') return
+  // 实时数据-没有task_review类型
+  if (!res.IsSync && chatType !== 'task') return
+  // 历史数据-task-review数据不进行展示
+  if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TaskReviewRequire
@@ -125,58 +131,25 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const chatData: AIChatQSData = {
-    ...genBaseAIChatData(res),
-    chatType: chatType,
-    id: data.id,
-    type: AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
-    data: { ...cloneDeep(data) },
-    TaskId: generateTaskNodeDataID({
-      chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
-      taskID: res.TaskId,
-      isExist: (key) => rawData.contents.has(key),
-    }),
-  }
-  // 历史数据-task-review数据不进行展示
-  if (res.IsSync) return
-
   // 实时数据处理逻辑
   const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: () => request })
   // 实时数据-(自由对话|任务规划)的 review 自动执行，并且不展示在UI上
   if (isAuto) return
 
-  if (chatType === 'task') {
-    // 任务规划下，task_review在非yolo模式时，自动执行continue操作，并且不在UI上展示操作结果
-    const info: AIInputEvent = {
-      IsInteractiveMessage: true,
-      InteractiveId: chatData.id,
-      InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
-    }
-    sendRequest(info)
-  } else {
-    const taskGroupDetail = rawData.contents.get(chatData.TaskId || '')
-    // 自由对话下，如果属于执行任务组里的task_review，在任何review模式下，后端都会自动执行continue操作，并且不在UI上展示操作结果
-    // 非执行任务组的review，正常显示到UI上，根据review模式和用户主动操作，决定结果，并且操作后，也不在UI上展示结果
-    if (!taskGroupDetail || taskGroupDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      rawData.contents.set(chatData.id, cloneDeep(chatData))
-      store.getState().updateCasualReview(chatData.id, 'add')
-      store.getState().dispatchStreamingNode({
-        chatType: chatType,
-        parentTaskId: chatData.TaskId,
-        node: {
-          token: chatData.id,
-          kind: 'item',
-          type: chatData.type,
-        },
-      })
-    }
+  // 任务规划下，task_review在非yolo模式时，自动执行continue操作，并且不在UI上展示操作结果
+  const info: AIInputEvent = {
+    IsInteractiveMessage: true,
+    InteractiveId: data.id,
+    InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
   }
+  sendRequest(info)
 }
 
 const handleToolReview: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, meta, request, sendRequest } = requestInfo
   if (res.Type !== 'tool_use_review_require') return
+  // 历史数据-tool-review数据不进行展示
+  if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ToolUseReviewRequire
@@ -198,8 +171,6 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
       isExist: (key) => rawData.contents.has(key),
     }),
   }
-  // 历史数据-tool-review数据不进行展示
-  if (res.IsSync) return
 
   // 实时数据处理逻辑
   const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: () => request })
@@ -258,6 +229,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
       isExist: (key) => rawData.contents.has(key),
     }),
   }
+  // 历史数据
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
     const target = meta.historyReviewReleaseID[data.id]
@@ -429,6 +401,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
 
   const reviewDetail = rawData.contents.get(data.id)
 
+  // 历史数据
   if (res.IsSync) {
     if (!reviewDetail) {
       meta.historyReviewReleaseID[data.id] = data
@@ -466,8 +439,17 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(id:${data?.id || '-'})没有对应的review数据` })
     return
   }
+  // 任务规划下没有该review
+  const noTaskReview =
+    !store.getState().currentPlanReviewToken.token || store.getState().currentPlanReviewToken.token !== reviewDetail.id
+  // 自由对话下没有该review
+  const noCasualReview = !store.getState().currentCasualReview.includes(reviewDetail.id)
+
+  // 实时数据
   switch (reviewDetail.type) {
     case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
+      if (noTaskReview) return
+
       reviewDetail.data.selected = JSON.stringify(data.params)
       reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
       // 清空plan-review的异步拓展信息
@@ -493,19 +475,41 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
       if (chatType === 'task') store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
       break
     case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
-    case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
-    case AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE:
-      reviewDetail.data.selected = JSON.stringify(data.params)
-      reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
-
       if (chatType === 'reAct') {
+        if (noCasualReview) return
+        reviewDetail.data.selected = JSON.stringify(data.params)
+        reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
+        store.getState().updateCasualReview(reviewDetail.id, 'remove')
         store.getState().incrementNodeVersion(reviewDetail.id, 'item')
-        if (reviewDetail.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
-          store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
-        } else {
-          store.getState().updateCasualReview(reviewDetail.id, 'remove')
-        }
+      }
+      break
+    case AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE:
+      if (chatType === 'reAct') {
+        if (noTaskReview) return
+        reviewDetail.data.selected = JSON.stringify(data.params)
+        reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
+        store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
+        store.getState().dispatchStreamingNode({
+          chatType: chatType,
+          parentTaskId: reviewDetail.TaskId,
+          node: {
+            token: reviewDetail.id,
+            kind: 'item',
+            type: reviewDetail.type,
+            isHistory: true,
+          },
+        })
+      }
+      break
+    case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+      if (chatType === 'reAct') {
+        if (noCasualReview) return
+        reviewDetail.data.selected = JSON.stringify(data.params)
+        reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
+        store.getState().updateCasualReview(reviewDetail.id, 'remove')
+        store.getState().incrementNodeVersion(reviewDetail.id, 'item')
       } else {
+        if (noTaskReview) return
         store.getState().dispatchStreamingNode({
           chatType: chatType,
           parentTaskId: reviewDetail.TaskId,
@@ -519,9 +523,11 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
       }
       break
     case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
+      // 实时数据-不会有task_review_release出现，出现则舍弃无效数据
+      break
     case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
-      // 实时数据-任务规划-所有的task_review和tool_review都会自动执行，不展示到UI上
-      // 但是自由对话里，没有在执行任务组的tool_review会展示到UI上，需要处理数据并在UI上删除掉
+      // 实时数据-任务规划-tool_review都会自动执行，不展示到UI上
+      // 自由对话里，没有在执行任务组的tool_review会展示到UI上，需要处理数据并在UI上删除掉
       rawData.contents.delete(reviewDetail.id)
       store.getState().updateCasualReview(reviewDetail.id, 'remove')
       store.getState().deleteElementNode({
