@@ -496,6 +496,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                       <NewHTTPPacketEditor
                         fromMITM={fromMITM}
                         readOnly={true}
+                        foldBinaryFuzztag={true}
                         noHeader={true}
                         originValue={flow.ResponseString}
                         defaultHttps={flow?.IsHTTPS}

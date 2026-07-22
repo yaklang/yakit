@@ -111,6 +111,12 @@ import { showYakitModal } from '../YakitModal/YakitModalConfirm'
 // 用上限淘汰最旧项防止长会话内存膨胀
 const MAX_BINARY_FOLD_ENTRIES = 500
 
+// 大内容阈值：超过此值视为大内容，跳过非必要装饰器并降级 Monaco options，
+// 保证弱 CPU（如 win7 云平台）下打开/编辑大内容时不卡顿
+const LARGE_CONTENT_THRESHOLD = 100 * 1024 // 100KB
+// 超大内容阈值：再大一档，进一步关闭更多 Monaco 特性
+const HUGE_CONTENT_THRESHOLD = 500 * 1024 // 500KB
+
 export interface CodecTypeProps {
   key?: string
   verbose: string
@@ -329,6 +335,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
     return text
   }, [value, foldBinaryEnabled])
+
+  // 大内容判定（基于传给 Monaco 的 displayValue，含占位折叠后的文本）
+  const contentSize = displayValue?.length ?? 0
+  const isLargeContent = contentSize > LARGE_CONTENT_THRESHOLD
+  const isHugeContent = contentSize > HUGE_CONTENT_THRESHOLD
+  // ref 同步给闭包（onDidChangeModelContent / onDidChangeContent 等回调里读取最新值）
+  const isLargeContentRef = useRef(isLargeContent)
+  isLargeContentRef.current = isLargeContent
+
   // 向上回调：占位 -> 真实值
   const handleBinaryChange = useMemoizedFn((content: string) => {
     const emit = setValue || onChange
@@ -1013,6 +1028,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       // 检查 model 是否已被释放
       if (!model || isModelDisposedRef.current) return []
       try {
+        const largeContent = isLargeContentRef.current
         const endsp = model.getPositionAt(1800)
         const dec: YakitIModelDecoration[] = []
         const text =
@@ -1056,6 +1072,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           ;(() => {
             try {
               if (!props.showHostHint) return
+              // 大内容跳过全文 host 正则扫描与隐私遮挡（弱 CPU 下 O(n) 正则 + 逐匹配 getPositionAt 极重）
+              if (largeContent) return
               const fullText = model.getValue()
               const hostRegex = /\nHost:\s*?([^\r\n]+)/
               const hostMatch = hostRegex.exec(fullText)
@@ -1150,7 +1168,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           })()
         }
         const needDecode = props.type && ['html', 'http', 'json'].includes(props.type)
-        if (needDecode && !disableUnicodeDecodeRef.current) {
+        if (needDecode && !disableUnicodeDecodeRef.current && !largeContent) {
           ;(() => {
             // http html json
             const text = model.getValue()
@@ -1183,6 +1201,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         ;(() => {
           const targetValue = fixContentTypeFun()
           if (!targetValue) return
+          // 大内容跳过全文 Content-Type 正则扫描
+          if (largeContent) return
           const text = model.getValue()
           let match
 
@@ -1407,9 +1427,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     // 监听光标位置变化，用于隐私模式的动态显示/隐藏
     const cursorPositionDisposable = editor.onDidChangeCursorPosition(() => {
-      if (props.type === 'http') {
-        scheduleDecorations()
-      }
+      if (props.type !== 'http') return
+      // 大内容已跳过 privacy/host 装饰器，光标移动无需触发全量重建
+      if (isLargeContentRef.current) return
+      scheduleDecorations()
     })
 
     // 监听查找面板变化
@@ -2243,6 +2264,50 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   }, [shortcutIds])
 
+  // 大内容自动降级 Monaco options：弱 CPU 下关闭 minimap、whitespace、括号着色等昂贵特性
+  const editorOptions = useMemo<newEditor.IStandaloneEditorConstructionOptions>(() => {
+    return {
+      readOnly: readOnly,
+      scrollBeyondLastLine: false,
+      fontWeight: '500',
+      fontSize: nowFontsize || 12,
+      // 大内容下折叠控件改为悬停显示，减少常驻绘制
+      showFoldingControls: isLargeContent ? 'mouseover' : 'always',
+      // 大内容下关闭未使用代码提示
+      showUnused: !isLargeContent,
+      // 大内容下限制自动换行（bounded 限制最大宽度），超大内容直接关闭以避免超长行 wrap 卡顿
+      wordWrap: isHugeContent ? 'off' : isLargeContent ? (noWordWrap ? 'off' : 'bounded') : noWordWrap ? 'off' : 'on',
+      // 大内容下关闭行高亮
+      renderLineHighlight: isLargeContent ? 'none' : renderLineHighlight,
+      lineNumbers: noLineNumber ? 'off' : 'on',
+      // 大内容下强制关闭 minimap（整篇缩略图绘制在弱 CPU 上极重）
+      minimap: noMiniMap || isLargeContent ? { enabled: false } : undefined,
+      lineNumbersMinChars: lineNumbersMinChars || 5,
+      contextmenu: false,
+      // 大内容下只在选区渲染空白，超大内容完全不渲染
+      renderWhitespace: isHugeContent ? 'none' : isLargeContent ? 'selection' : 'all',
+      // 大内容下关闭括号对着色（大文件括号匹配开销显著）
+      bracketPairColorization: {
+        enabled: !isLargeContent,
+        independentColorPoolPerBracketType: true,
+      },
+      fixedOverflowWidgets: true,
+      // 大内容下关闭校验装饰器
+      renderValidationDecorations: isLargeContent ? 'off' : renderValidationDecorations,
+    }
+  }, [
+    isLargeContent,
+    isHugeContent,
+    readOnly,
+    nowFontsize,
+    noWordWrap,
+    noMiniMap,
+    noLineNumber,
+    lineNumbersMinChars,
+    renderLineHighlight,
+    renderValidationDecorations,
+  ])
+
   return (
     <div
       ref={ref}
@@ -2265,7 +2330,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         handleWidth={true}
         handleHeight={true}
         refreshMode={'debounce'}
-        refreshRate={30}
+        refreshRate={200}
       />
       {disabled && <div className={styles['yakit-editor-shade']}></div>}
       <div
@@ -2306,6 +2371,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 if (model) {
                   yakStaticAnalyze.run(editor, model)
                   model.onDidChangeContent(() => {
+                    // 大内容跳过全量静态分析 IPC（整篇内容序列化传输开销大）
+                    if (isLargeContentRef.current) return
                     yakStaticAnalyze.run(editor, model)
                   })
                 }
@@ -2342,27 +2409,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
               if (editorDidMount) editorDidMount(editor, monaco)
             }}
-            options={{
-              readOnly: readOnly,
-              scrollBeyondLastLine: false,
-              fontWeight: '500',
-              fontSize: nowFontsize || 12,
-              showFoldingControls: 'always',
-              showUnused: true,
-              wordWrap: noWordWrap ? 'off' : 'on',
-              renderLineHighlight,
-              lineNumbers: noLineNumber ? 'off' : 'on',
-              minimap: noMiniMap ? { enabled: false } : undefined,
-              lineNumbersMinChars: lineNumbersMinChars || 5,
-              contextmenu: false,
-              renderWhitespace: 'all',
-              bracketPairColorization: {
-                enabled: true,
-                independentColorPoolPerBracketType: true,
-              },
-              fixedOverflowWidgets: true,
-              renderValidationDecorations: renderValidationDecorations,
-            }}
+            options={editorOptions}
           />
         </ShortcutKeyFocusHook>
       </div>

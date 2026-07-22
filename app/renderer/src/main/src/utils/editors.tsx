@@ -54,6 +54,31 @@ import { newWebFuzzerTab } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { JSONParseLog } from './tool'
 import { yakitEditorTools } from '@/services/electronBridge'
 
+// 大内容降级阈值：超过此体积进入 lite 模式（关 minimap/换行/二进制折叠等），弱 CPU 下减少 Monaco 渲染开销
+const PREVIEW_LITE_THRESHOLD = 128 * 1024 // 128KB
+// 超大内容/二进制阈值：超过此体积或命中二进制类型时强制 plaintext，跳过 HTTP 高亮与装饰
+const PREVIEW_PLAINTEXT_THRESHOLD = 512 * 1024 // 512KB
+
+/** 从完整 HTTP 包文本（含响应头/请求头）解析 Content-Type */
+function parseContentTypeFromPacket(packet: string): string {
+  if (!packet) return ''
+  const m = /\nContent-Type:\s*([^\r\n]+)/i.exec(packet)
+  return m ? m[1].trim() : ''
+}
+
+/** 判断是否为二进制/无需 HTTP 语法高亮的类型（.map / octet-stream / 字体 / 压缩包 / 图片 / pdf 等） */
+function isBinaryLikeContentType(ct: string, url?: string): boolean {
+  const lower = (ct || '').toLowerCase()
+  if (lower.includes('octet-stream')) return true
+  if (lower.includes('application/x-')) return true // x-gzip x-tar 等
+  if (url) {
+    if (/\.map(\?|$)/i.test(url)) return true // source map
+    if (/\.(woff2?|ttf|otf|eot|zip|gz|tar|7z|rar|exe|dll|so|dylib|png|jpe?g|gif|webp|ico|pdf)(\?|$)/i.test(url))
+      return true
+  }
+  return false
+}
+
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor
 
 export type IMonacoEditor = monacoEditor.editor.IStandaloneCodeEditor
@@ -817,6 +842,27 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }
   }, [props.defaultSearchKeyword, monacoEditor])
 
+  // 大内容/二进制降级：不截断、不改可见内容，只让底层 Monaco 用更轻的方式渲染同样全文
+  const editorDowngradeProps = useMemo(() => {
+    const size = new TextEncoder().encode(originValue ?? '').length
+    const ct = parseContentTypeFromPacket(originValue ?? '')
+    const binary = isBinaryLikeContentType(ct, props.url)
+    const isLite = size > PREVIEW_LITE_THRESHOLD
+    const isPlaintext = size > PREVIEW_PLAINTEXT_THRESHOLD || binary
+    return {
+      // 大体积/二进制：强制 plaintext，跳过 HTTP 高亮与装饰器全文扫描（.map 等本就不需要 HTTP 高亮）
+      language: isPlaintext ? 'plaintext' : props.language || 'http',
+      // 大体积：关 minimap（整篇缩略图绘制在弱 CPU 上极重）
+      noMinimap: isLite ? true : props.noMinimap,
+      // 大体积：关自动换行（超长行 wrap 在弱 CPU 极卡）
+      noWordWrap: isLite ? true : undefined,
+      // 大体积/二进制：跳过 unicode 自动解码装饰（全文 \u 正则扫描）
+      disableUnicodeDecode: isLite || binary ? true : undefined,
+      // 大体积：关二进制 fuzztag 折叠（折叠本身在大包上要扫描全文）
+      foldBinaryFuzztag: isLite ? false : props.foldBinaryFuzztag,
+    }
+  }, [originValue, props.url, props.language, props.noMinimap, props.foldBinaryFuzztag])
+
   const setTypeOptionFn = useMemoizedFn(() => {
     if (originValue.length > 0) {
       // 默认展示 originValue
@@ -1154,14 +1200,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     theme={props.theme}
                     noLineNumber={props.noLineNumber}
                     lineNumbersMinChars={props.lineNumbersMinChars}
-                    noMiniMap={props.noMinimap}
-                    type={props.language || 'http'}
+                    noMiniMap={editorDowngradeProps.noMinimap}
+                    type={editorDowngradeProps.language}
                     originValue={showValue}
                     value={props.readOnly && showValue.length > 0 ? showValue : strValue}
                     readOnly={props.readOnly}
                     disabled={props.disabled}
                     setValue={setStrValue}
-                    noWordWrap={noWordwrap}
+                    noWordWrap={editorDowngradeProps.noWordWrap ?? noWordwrap}
                     fontSize={fontSize}
                     showLineBreaks={showLineBreaks}
                     contextMenu={props.contextMenu}
@@ -1193,7 +1239,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     fixContentType={props.fixContentType}
                     originalContentType={props.originalContentType}
                     fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
-                    foldBinaryFuzztag={props.foldBinaryFuzztag}
+                    foldBinaryFuzztag={editorDowngradeProps.foldBinaryFuzztag}
+                    disableUnicodeDecode={editorDowngradeProps.disableUnicodeDecode}
                     {...props.extraEditorProps}
                   />
                 )}
