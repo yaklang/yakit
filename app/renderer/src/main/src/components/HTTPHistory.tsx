@@ -110,6 +110,9 @@ export interface HTTPFlowBodyByIdRequest {
   BufSize?: number
   RuntimeId?: string
   IsRisk?: boolean
+  // multipart 请求：指定要流式下载的文件 part 索引（来自 HTTPFlow.MultipartFiles）。
+  // 不传 = 下载完整 body（multipart 时服务端现场流式重建完整 body）。
+  PartIndex?: number
 }
 
 // 使用 HTTPHistory 或者 编辑器 控件的来源页面

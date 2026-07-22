@@ -243,6 +243,7 @@
     "targetFileNotExist": "目標檔案已不存在!",
     "fullRequest": "完整請求",
     "fullResponse": "完整響應",
+    "downloadMultipartFiles": "下載檔案",
     "selectHttpRecordToView": "選擇想要檢視的 HTTP 記錄請求",
     "request": "請求",
     "rawRequest": "原始請求",

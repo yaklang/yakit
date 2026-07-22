@@ -53,6 +53,7 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { JSONParseLog } from '@/utils/tool'
 import { HTTPFlowCodec } from '@/utils/encodec'
 import { YakitMenu, YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu'
+import { v4 as uuidv4 } from 'uuid'
 const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
 
@@ -1594,6 +1595,31 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
       .catch(() => {})
   }
 
+  // 下载超大 multipart 请求的某个文件 part：调用 GetHTTPFlowBodyById 带 PartIndex，
+  // 主进程流式写盘后弹出文件所在目录（与「下载 Body」复用同一 IPC 通道）。
+  const downloadMultipartPart = (partIndex: number) => {
+    if (!flow?.Id) return
+    ipcRenderer
+      .invoke('GetHTTPFlowBodyById', {
+        Id: flow.Id,
+        IsRequest: true,
+        PartIndex: partIndex,
+        uuid: uuidv4(),
+      })
+      .then(() => yakitNotify('success', t('YakitNotification.downloaded')))
+      .catch((e) =>
+        yakitNotify('error', t('YakitNotification.downloadFailed', { error: e + '' })),
+      )
+  }
+
+  const multipartFileMenuItems = useMemo<YakitMenuItemType[]>(() => {
+    if (!flow?.MultipartFiles || flow.MultipartFiles.length === 0) return []
+    return flow.MultipartFiles.map((f) => ({
+      key: `multipart-file-${f.PartIndex}`,
+      label: `${f.Filename} (${formatMultipartFileSize(f.Size)})`,
+    }))
+  }, [flow?.MultipartFiles])
+
   const secondNodeReqExtraBtn = () => {
     let extraBtn: ReactElement[] = []
     if (flow?.IsTooLargeRequest) {
@@ -1628,6 +1654,30 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         >
           <YakitButton type="primary" size="small">
             {t('HTTPFlowDetailRequestAndResponse.fullRequest')}
+          </YakitButton>
+        </YakitDropdownMenu>,
+      )
+    }
+    // 超大 multipart 请求：展示「下载文件」下拉，每个文件 part 一个菜单项，
+    // 点击后通过 GetHTTPFlowBodyById(PartIndex) 流式下载该文件（服务端从 sidecar 读取）。
+    if (flow?.MultipartFiles && flow.MultipartFiles.length > 0) {
+      extraBtn.push(
+        <YakitDropdownMenu
+          key="multipart-files"
+          menu={{
+            data: multipartFileMenuItems,
+            onClick: ({ key }) => {
+              const m = /^multipart-file-(\d+)$/.exec(key)
+              if (m) downloadMultipartPart(parseInt(m[1], 10))
+            },
+          }}
+          dropdown={{
+            trigger: ['click'],
+            placement: 'bottom',
+          }}
+        >
+          <YakitButton type="primary" size="small">
+            {t('HTTPFlowDetailRequestAndResponse.downloadMultipartFiles')}
           </YakitButton>
         </YakitDropdownMenu>,
       )
@@ -2168,4 +2218,18 @@ const ResByteCountTag: FC<{ editor?: IMonacoEditor; pageType?: HTTPHistorySource
   ) : (
     <></>
   )
+}
+
+// formatMultipartFileSize renders a human-readable byte size for a multipart
+// file part menu item (e.g. "1.5 MB"). Kept local to avoid a new shared util.
+function formatMultipartFileSize(bytes: number): string {
+  if (bytes <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let i = 0
+  let n = bytes
+  while (n >= 1024 && i < units.length - 1) {
+    n /= 1024
+    i++
+  }
+  return `${n >= 100 || i === 0 ? Math.round(n) : n.toFixed(1)} ${units[i]}`
 }

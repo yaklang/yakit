@@ -127,7 +127,7 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
-  // 握手 用于检查前端是否可以连接当前引擎
+  // 握手 用于检查前端是否可以连接当前引擎 
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
@@ -623,13 +623,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -644,7 +644,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
   /*
     ChaosMakerRule: Bas
   */
@@ -2014,12 +2014,12 @@ message AITool {
   repeated string Keywords = 5;
   bool IsFavorite = 6;
   int64 ID = 7;
-  string VerboseName = 8; // 给用户看的展示名称
+  string VerboseName = 8; // 英文展示名（兼容旧前端 / 检索）；UI 语言切换请用 VerboseNameI18n
   string Author = 9;
   int64 CreatedAt = 10;
   int64 UpdatedAt = 11;
   bool IsBuiltin = 12;
-  I18n VerboseNameI18n = 13;
+  I18n VerboseNameI18n = 13; // 中英双语展示名
 }
 
 message GetAIToolListResponse {
@@ -2284,6 +2284,8 @@ message AIStartParams {
 message AIExecutionStrategy {
   // 为 true 时启用多 Agent 模式：顶层 ReAct 暴露并偏好 dispatch_sub_react_agents，
   // 倾向于把复杂任务拆成多个并行子 Agent 执行后再汇总。
+  // 注意：这是 prompt 层的软偏好（soft preference），不通过 schema/verifier 强制；
+  // 若 LLM 未选择 dispatch，框架不会阻拦。Goal 模式则有硬性运行时拦截。
   bool EnableMultiAgent = 1;
 
   // 为 true 时启用 Goal 模式：在达到 GoalMinIterations 之前禁止 finish 提前退出，
@@ -3834,7 +3836,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -7011,6 +7013,11 @@ message GetHTTPFlowBodyByIdRequest {
   string RuntimeId = 4;
 
   bool IsRisk = 5;
+
+  // multipart 请求：指定要流式返回的文件 part 索引（来自 HTTPFlow.MultipartFiles）。
+  // 未设 = 返回完整 body（multipart 时现场流式重建完整 body）。
+  // 用 optional 以区分「未设」与「part 0」。
+  optional int32 PartIndex = 6;
 }
 
 message MITMExtractAggregateFlowFilterRow {
@@ -7083,7 +7090,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-
+  
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
@@ -7276,6 +7283,20 @@ message HTTPFlow {
   string TooLargeRequestBodyFile = 56;
   // 列表查询时由 SQL 计算：request 过大或 DB 中 request 过长
   bool IsRequestOversize = 57;
+
+  // 超大 multipart 请求的文件 part 列表（落盘 sidecar，manifest.json 派生）。
+  // 前端据此渲染「查看/下载 xxx 文件」下拉，而非整块 body。
+  // 非空时 GetHTTPFlowBodyById 可带 PartIndex 流式返回单个文件内容。
+  repeated MultipartFileInfo MultipartFiles = 58;
+}
+
+// MultipartFileInfo 描述一个落盘的 multipart 文件 part 元数据。
+message MultipartFileInfo {
+  int32 PartIndex = 1;    // part 在 multipart 中的解析顺序索引，对应 GetHTTPFlowBodyByIdRequest.PartIndex
+  string FieldName = 2;   // Content-Disposition: name
+  string Filename = 3;    // Content-Disposition: filename（原始文件名）
+  string ContentType = 4; // 该 part 的 Content-Type
+  int64 Size = 5;         // 该 part 内容字节数
 }
 
 message FuzzableParam {
@@ -7702,7 +7723,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake
+// handshake 
 message HandshakeRequest {
   string Name = 1;
 }
@@ -8376,7 +8397,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory
+  // compile data only in memory 
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -8463,11 +8484,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index
+  // index 
   string RuleName = 3;
-  string ProgramName = 4;
-  // progress
-  double Progress = 5;
+  string ProgramName = 4; 
+  // progress 
+  double Progress = 5; 
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -8527,7 +8548,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"
+  string SaveKind = 14; // "memory" | "database"  
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -8679,9 +8700,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count
+  int64 Total = 3; // total ssa-risk count 
   int64 Unread = 4;// total unread ssa-risk count
 }
 
