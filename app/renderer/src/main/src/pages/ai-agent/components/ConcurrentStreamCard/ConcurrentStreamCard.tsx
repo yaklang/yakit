@@ -94,12 +94,12 @@ const ConcurrentStreamCardHeardWrapper: FC<ConcurrentStreamCardHeardWrapperProps
     if (!itemData) return undefined
     switch (itemData.type) {
       case AIChatQSDataTypeEnum.TASK_NODE_GROUP:
-        return itemData
+        return { ...itemData }
 
       default:
         return undefined
     }
-  }, [renderNum])
+  }, [token, renderNum])
 
   const onClickTitle = useMemoizedFn(() => {
     if (!isChildWindow) expandToggle()

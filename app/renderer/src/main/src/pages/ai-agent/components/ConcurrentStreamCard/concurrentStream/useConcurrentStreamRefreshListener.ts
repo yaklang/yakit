@@ -35,7 +35,15 @@ export function useConcurrentStreamRefreshListener(token: string, enabled = true
         return
       }
 
-      const framePayload = buildConcurrentStreamFramePayload({ token, session, chatType, store, rawData })
+      // 刷新同样只推元数据，rawData 由子窗重新拉取，与开窗路径保持一致
+      const framePayload = buildConcurrentStreamFramePayload({
+        token,
+        session,
+        chatType,
+        store,
+        rawData,
+        withRawData: false,
+      })
       if (framePayload) {
         openAIConcurrentStream(framePayload, { silent: true })
       }

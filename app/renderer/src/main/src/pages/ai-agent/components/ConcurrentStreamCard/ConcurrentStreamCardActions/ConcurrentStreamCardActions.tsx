@@ -61,7 +61,15 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
 
   const openChildWindow = useMemoizedFn((e) => {
     e?.stopPropagation()
-    const framePayload = buildConcurrentStreamFramePayload({ token, session, chatType, store, rawData })
+    // 开窗只传轻量元数据（rawData 为空 Map），rawData 由子窗 mount 后再拉取，避免开窗瞬间克隆大 Map
+    const framePayload = buildConcurrentStreamFramePayload({
+      token,
+      session,
+      chatType,
+      store,
+      rawData,
+      withRawData: false,
+    })
     if (framePayload) {
       openAIConcurrentStream(framePayload)
     }
