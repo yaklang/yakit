@@ -8,75 +8,18 @@
   flex-direction: column;
   // gap: 4px;
   border: 1px solid transparent;
+  // 遮罩底色变量：默认走基础背景，hover/focus 时由父级切换，子模块消费
+  --group-stream-mask-bg: var(--Colors-Use-Basic-Background);
   &:hover {
     background: var(--Colors-Use-Neutral-Bg);
-    .ai-mask {
-      background: linear-gradient(
-        to right,
-        var(--Colors-Use-Neutral-Bg) 0%,
-        rgba(255, 255, 255, 0) 10%,
-        rgba(255, 255, 255, 0) 90%,
-        transparent 100%
-      );
-    }
-    .content {
-      &:not(.noMask)::before {
-        background: linear-gradient(
-          180deg,
-          var(--Colors-Use-Neutral-Bg) 0%,
-          var(--Colors-Use-Neutral-Bg) 30.21%,
-          transparent 80%
-        );
-        @supports (background: color-mix(in srgb, #000 50%, #fff)) {
-          background: linear-gradient(
-            180deg,
-            var(--Colors-Use-Neutral-Bg) 0%,
-            color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 60%, transparent) 30.21%,
-            transparent 80%
-          );
-        }
-      }
-      &:not(.noMask)::after {
-        background: linear-gradient(
-          180deg,
-          transparent 20%,
-          var(--Colors-Use-Neutral-Bg) 69.79%,
-          var(--Colors-Use-Neutral-Bg) 100%
-        );
-        @supports (background: color-mix(in srgb, #000 50%, #fff)) {
-          background: linear-gradient(
-            180deg,
-            transparent 20%,
-            color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 60%, transparent) 69.79%,
-            var(--Colors-Use-Neutral-Bg) 100%
-          );
-        }
-      }
-    }
+    --group-stream-mask-bg: var(--Colors-Use-Neutral-Bg);
   }
 }
 .container-focus {
   border-color: var(--Colors-Use-Main-Hover);
   background: var(--Colors-Use-Neutral-Bg);
-  .stream-text {
-    .ai-mask {
-      background: linear-gradient(
-        to right,
-        var(--Colors-Use-Neutral-Bg) 0%,
-        rgba(255, 255, 255, 0) 10%,
-        rgba(255, 255, 255, 0) 90%,
-        transparent 100%
-      );
-    }
-  }
-  .content {
-    &:not(.noMask)::before {
-      background: initial;
-    }
-    &:not(.noMask)::after {
-      background: initial;
-    }
-  }
+  // focus 时取消遮罩：变量置透明，子模块渐变自然透明，等效原 background: initial
+  --group-stream-mask-bg: transparent;
 }
 .stream-text {
   overflow: hidden;

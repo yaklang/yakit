@@ -1,6 +1,6 @@
 import React from 'react'
 import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
-import { AITriageChatContent } from '../aiTriageChat/AITriageChat'
+import { AITriageChatContent } from '../../aiTriageChat/AITriageChat'
 import { AIThoughtProps, AITriageChatContentWrapperProps } from './type'
 import { useCreation } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

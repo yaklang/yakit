@@ -25,7 +25,7 @@ const STATS_GAP_PX = 4
 const STATS_ROW_4_MIN_INNER_PX = 4 * STATS_TILE_PX + 3 * STATS_GAP_PX
 
 export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> = memo((props) => {
-  const { item, renderNum } = props
+  const { item, renderNum, isChildWindow } = props
   const { data, Timestamp, AIService, AIModelName } = item
   const { t } = useI18nNamespaces(['aiAgent'])
 
@@ -66,6 +66,7 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
   //   则把本卡片的 `runtime_id` 显式推送到该页签，并打开 traffic analysis 抽屉。
   // - 否则回退到全局打开「流量分析」路由页，并通过 `pageInfo` 携带本卡片的 `runtime_id`。
   const handleViewDetail = useMemoizedFn(() => {
+    if (isChildWindow) return
     const runtimeId = data?.runtime_id
     if (!runtimeId) {
       yakitNotify('error', '该发包统计缺少 runtime_id，无法查看详情')
@@ -134,9 +135,11 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
           <Tooltip title={data?.reason ?? t('AIHttpFlowFuzzStatusCard.title')}>
             <div className={styles['reason-text']}>{data?.reason ?? t('AIHttpFlowFuzzStatusCard.title')}</div>
           </Tooltip>
-          <YakitButton type="text" className={styles['view-detail-btn']} onClick={handleViewDetail}>
-            {t('AIHttpFlowFuzzStatusCard.viewDetail')}
-          </YakitButton>
+          {!isChildWindow && (
+            <YakitButton type="text" className={styles['view-detail-btn']} onClick={handleViewDetail}>
+              {t('AIHttpFlowFuzzStatusCard.viewDetail')}
+            </YakitButton>
+          )}
         </div>
 
         <div ref={statsRef} className={classNames(styles.stats, statsCompact && styles['stats--compact'])}>

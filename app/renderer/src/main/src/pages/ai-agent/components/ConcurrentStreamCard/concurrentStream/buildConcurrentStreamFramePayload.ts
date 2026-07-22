@@ -1,6 +1,12 @@
 import type { OpenAIConcurrentStreamPayload } from '@/utils/openWebsite'
-import { AIChatQSDataTypeEnum, ChatStoreState, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import {
+  AIChatQSDataTypeEnum,
+  AIYakExecFileRecord,
+  ChatStoreState,
+  type AIChatQSData,
+} from '@/pages/ai-re-act/hooks/aiRender'
 import { AIItemKind, getAIItemKind } from '@/pages/ai-re-act/hooks/useAIItemKind'
+import i18n from '@/i18n/i18n'
 
 /** store 的最小依赖接口 */
 interface BuildFrameStore {
@@ -32,11 +38,14 @@ function getKind(store: BuildFrameStore, childToken: string): AIItemKind | null 
   return getAIItemKind(state, childToken)
 }
 
+const tOriginal = i18n.getFixedT(null, 'aiAgent')
 /** 获取 task 节点的名称 */
 function getTaskName(rawData: BuildFrameRawData | null | undefined, token: string): string {
   const itemData = rawData?.contents.get(token)
   if (!itemData) return ''
   switch (itemData.type) {
+    case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
+      return tOriginal('ConcurrentStreamCard.systemInfo')
     case AIChatQSDataTypeEnum.TASK_NODE_GROUP:
       return itemData.data?.taskName ?? ''
     default:
@@ -52,10 +61,11 @@ function getTaskName(rawData: BuildFrameRawData | null | undefined, token: strin
 export function buildConcurrentStreamFramePayload(
   params: BuildConcurrentStreamFramePayloadParams,
 ): OpenAIConcurrentStreamPayload | null {
-  const { token, session, chatType, store, rawData, withRawData = false } = params
+  const { token, session, chatType, store, rawData, withRawData = true } = params
   if (!chatType || !rawData) return null
 
   const frameRawData = new Map<string, AIChatQSData>()
+  let execFileRecord = new Map<string, AIYakExecFileRecord[]>()
   const state = store.getState()
   const childrenTokens = state.tasks[token]?.childrenTokens || []
 
@@ -82,6 +92,8 @@ export function buildConcurrentStreamFramePayload(
         }
       }
     }
+
+    execFileRecord = new Map(state.execFileRecord)
   }
 
   return {
@@ -90,6 +102,7 @@ export function buildConcurrentStreamFramePayload(
     chatType: chatType as OpenAIConcurrentStreamPayload['chatType'],
     childrenTokens,
     rawData: frameRawData,
+    execFileRecord,
     taskName: getTaskName(rawData, token),
   }
 }

@@ -50,7 +50,7 @@
       top: 0;
       background: linear-gradient(
         to right,
-        var(--Colors-Use-Basic-Background) 0%,
+        var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 0%,
         rgba(255, 255, 255, 0) 10%,
         rgba(255, 255, 255, 0) 90%,
         transparent 100%

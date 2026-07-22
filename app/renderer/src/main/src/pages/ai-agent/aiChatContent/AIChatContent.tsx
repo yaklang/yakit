@@ -35,7 +35,7 @@ import { AIHorizontalScrollCard } from './aiHorizontalScrollCard/AIHorizontalScr
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
-    const { onChat, onChatFromHistory } = props
+    const { onChat } = props
     const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
     const store = useCurrentStore()
@@ -257,7 +257,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         resolve({
           params: data.params,
           onChat,
-          onChatFromHistory,
         })
       })
     })

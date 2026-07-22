@@ -1,4 +1,4 @@
-import type { AIChatQSData, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIChatQSData, AIYakExecFileRecord, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
 import { isMap } from 'lodash'
 
 export interface ConcurrentStreamFramePayload {
@@ -8,6 +8,8 @@ export interface ConcurrentStreamFramePayload {
   childrenTokens: string[]
   /** childrenTokens 中各节点 token 对应的原始数据 */
   rawData: Map<string, AIChatQSData>
+
+  execFileRecord: Map<string, AIYakExecFileRecord[]>
   taskName?: string
 }
 

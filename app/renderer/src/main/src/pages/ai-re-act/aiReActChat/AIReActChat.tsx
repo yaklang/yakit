@@ -129,7 +129,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         FocusModeLoop: value.focusMode,
       }
       const onStartChat = (res: AIHandleStartResProps) => {
-        const { params, extraParams, onChat, onChatFromHistory } = res
+        const { params, extraParams, onChat } = res
         if (!sessionID) {
           // 创建新的聊天记录
           const newChat: AISession = {
@@ -153,9 +153,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           )
           // 新建的额外操作
           onChat?.()
-        } else {
-          // 历史中的额外操作
-          onChatFromHistory?.(sessionID)
         }
         aiChatTextareaRef.current.setMention({
           mentionId: params.FocusModeLoop || randomString(8),

@@ -5,7 +5,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineArrowsexpandIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
@@ -16,6 +15,7 @@ import { AIGroupStreamCardHeardWrapperProps, AIGroupStreamCardListWrapperProps }
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import AIGroupStreamCardHeard from './aiGroupStreamCardHeard/AIGroupStreamCardHeard'
 import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList'
+import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -30,32 +30,19 @@ export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties
 export const AIGroupStreamNode: FC<{
   itemData: ChatStream
   renderNum: number
-}> = memo(({ itemData, renderNum }) => {
+  seqNo: string
+}> = memo(({ itemData, renderNum, seqNo }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
+
+  const [open, setOpen] = useState(false)
+  const [openPopover, setOpenPopover] = useState(false)
+
   // 仅获取用于显示的 content（已应用打字效果）
   const { content } = useTypedStream({
     getContent: () => itemData.data.content,
     getStatus: () => itemData.data.status,
   })
-  const [open, setOpen] = useState(false)
-  const [openPopover, setOpenPopover] = useState(false)
 
-  // 其余原始字段通过 useCurrentRawData 获取，并订阅 renderNum 驱动重渲染
-  const store = useCurrentStore()
-  const rawData = useCurrentRawData()
-  const tokenRenderNum = useStore(store, (state) => state.items[itemData.id]?.renderNum)
-
-  const stream = useCreation(() => {
-    const rawStream = rawData.contents.get(itemData.id)
-    if (!rawStream) return null
-    switch (rawStream.type) {
-      case AIChatQSDataTypeEnum.STREAM:
-        return rawStream
-
-      default:
-        return null
-    }
-  }, [tokenRenderNum])
   const onClose = () => {
     setOpen(false)
   }
@@ -73,27 +60,19 @@ export const AIGroupStreamNode: FC<{
     }
   }, [])
 
-  const seqNo = useCreation(() => {
-    if (!itemData.parentGroupToken) return ''
-    const parentGroupTokens = store.getState().groups[itemData.parentGroupToken].childrenTokens
-    const index = parentGroupTokens.findIndex((ele) => ele === itemData.id)
-    return index === -1 ? '' : `${index + 1}. `
-  }, [renderNum])
-
   const modelCode = useCreation(() => {
     if (!open) return []
-    return stream?.reference || []
+    return itemData?.reference || []
   }, [open])
   const popoverCode = useCreation(() => {
     if (!openPopover) return []
-    return stream?.reference || []
+    return itemData?.reference || []
   }, [openPopover])
 
   const hidden = useCreation(() => {
-    return !!stream?.reference?.length
-  }, [stream?.reference?.length])
+    return !!itemData?.reference?.length
+  }, [renderNum, itemData?.reference?.length])
 
-  if (!stream) return null
   return (
     <div className={styles['single-stream-text']}>
       {open && (

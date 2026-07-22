@@ -6,7 +6,6 @@ export interface AIChatContentRefProps extends AIReActChatRefProps {}
 export interface AIChatContentProps {
   ref?: React.ForwardedRef<AIChatContentRefProps>
   onChat: () => void
-  onChatFromHistory: (sessionID: string) => void
 }
 export type AIAgentTabPayload = TabHTTPPayload | TabFileSystemPayload
 interface TabHTTPPayload {

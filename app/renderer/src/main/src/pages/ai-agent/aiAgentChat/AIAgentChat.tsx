@@ -422,7 +422,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const onChat = useMemoizedFn(() => {
     onSetReAct()
   })
-  const onChatFromHistory = useMemoizedFn((session: string) => {})
 
   useEffect(() => {
     emiter.on('defualtAIMentionCommandParams', konwledgeInputStringFn)
@@ -481,7 +480,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             />
           </React.Suspense>
         ) : (
-          <AIChatContent ref={aiReActChatRef} onChat={onChat} onChatFromHistory={onChatFromHistory} />
+          <AIChatContent ref={aiReActChatRef} onChat={onChat} />
         )}
         <div className={styles['footer-forge-form']}>
           {activeForge && (

@@ -17,8 +17,8 @@
     height: 30%;
     background: linear-gradient(
       180deg,
-      var(--Colors-Use-Basic-Background) 0%,
-      var(--Colors-Use-Basic-Background) 4%,
+      var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 0%,
+      var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 4%,
       rgba(255, 255, 255, 0) 96%
     );
     pointer-events: none;
@@ -35,8 +35,8 @@
     background: linear-gradient(
       180deg,
       rgba(255, 255, 255, 0) 4%,
-      var(--Colors-Use-Basic-Background) 96%,
-      var(--Colors-Use-Basic-Background) 100%
+      var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 96%,
+      var(--group-stream-mask-bg, var(--Colors-Use-Basic-Background)) 100%
     );
     pointer-events: none;
     z-index: 1;

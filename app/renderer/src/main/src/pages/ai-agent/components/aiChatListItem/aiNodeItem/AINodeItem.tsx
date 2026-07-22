@@ -1,9 +1,10 @@
 import React from 'react'
 import { AINodeItemProps } from './type'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
-import { AITriageChatContentWrapper, AIThought } from '../../aiItemContentWrapper/AIItemContentWrapper'
-import ToolInvokerCard from '../../ToolInvokerCard'
-import { AIReviewResult } from '../../aiReviewResult/AIReviewResult'
+import {
+  AITriageChatContentWrapper,
+  AIThought,
+} from '../../aiChatListItemWrapper/aiItemContentWrapper/AIItemContentWrapper'
 import { AIReActChatReview } from '../../aiReActChatReview/AIReActChatReview'
 import styles from './AINodeItem.module.scss'
 import { AIManualIntervention } from '../../aiManualIntervention/AIManualIntervention'
@@ -15,11 +16,13 @@ import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import AiFailPlanCard from '../../aiFailPlanCard/AiFailPlanCard'
 import { AIModelErrorPrompt } from '../aiModelErrorPrompt/AIModelErrorPrompt'
-import { AIGroupStreamNode } from '../../aiGroupStreamCard/AIGroupStreamCard'
-import AIStreamCardWrapper from '../../aiStreamCardWrapper/aiStreamCardWrapper'
+import AIStreamCardWrapper from '../../aiChatListItemWrapper/aiStreamCardWrapper/aiStreamCardWrapper'
+import AIToolInvokerCardWrapper from '../../aiChatListItemWrapper/aiToolInvokerCardWrapper/AIToolInvokerCardWrapper'
+import AIReviewResultWrapper from '../../aiChatListItemWrapper/aiReviewResultWrapper/AIReviewResultWrapper'
+import AIGroupStreamNodeWrapper from '../../aiChatListItemWrapper/aiGroupStreamNodeWrapper/AIGroupStreamNodeWrapper'
 
 const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
-  const { itemData, renderNum } = props
+  const { itemData, renderNum, groupIndex } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   switch (itemData.type) {
     case AIChatQSDataTypeEnum.QUESTION:
@@ -30,7 +33,7 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
       return <AIThought itemData={itemData} renderNum={renderNum} />
 
     case AIChatQSDataTypeEnum.TOOL_RESULT:
-      return <ToolInvokerCard itemData={itemData} renderNum={renderNum} />
+      return <AIToolInvokerCardWrapper itemData={itemData} renderNum={renderNum} />
 
     case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
     case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
@@ -43,7 +46,7 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
           itemData.type === AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE
         )
           return null
-        return <AIReviewResult info={itemData} renderNum={renderNum} />
+        return <AIReviewResultWrapper itemData={itemData} renderNum={renderNum} />
       } else {
         return (
           <AIReActChatReview
@@ -63,10 +66,10 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
       return <AIToolDecision item={itemData} renderNum={renderNum} />
 
     case AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS:
-      return <AIHttpFlowFuzzStatusCard item={itemData} renderNum={renderNum} />
+      return <AIHttpFlowFuzzStatusCard item={itemData} renderNum={renderNum} isChildWindow={false} />
 
     case AIChatQSDataTypeEnum.REPORT_FINISH:
-      return <AIReportFinishCard item={itemData} renderNum={renderNum} />
+      return <AIReportFinishCard item={itemData} renderNum={renderNum} isChildWindow={false} />
 
     case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
       return (
@@ -84,12 +87,13 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
       return <AiFailPlanCard itemData={itemData} renderNum={renderNum} />
 
     case AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED:
-      return <AIModelErrorPrompt item={itemData} renderNum={renderNum} />
+      return <AIModelErrorPrompt item={itemData} renderNum={renderNum} isChildWindow={false} />
 
     case AIChatQSDataTypeEnum.STREAM:
       if (!!itemData.parentGroupToken) {
-        return <AIGroupStreamNode itemData={itemData} renderNum={renderNum} />
+        return <AIGroupStreamNodeWrapper itemData={itemData} renderNum={renderNum} groupIndex={groupIndex} />
       } else {
+        // 组
         return <AIStreamCardWrapper token={itemData.id} />
       }
     default:
