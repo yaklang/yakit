@@ -3,10 +3,12 @@ import { AITaskDefaultGroupCardHeardProps } from './type'
 import styles from './AITaskDefaultGroupCardHeard.module.scss'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { t } from 'i18next'
+
 import ConcurrentStreamCardActions from '../../ConcurrentStreamCard/ConcurrentStreamCardActions/ConcurrentStreamCardActions'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AITaskDefaultGroupCardHeard: React.FC<AITaskDefaultGroupCardHeardProps> = memo((props) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const { isChildWindow, expandToggle, timeStamp, expand, onRefresh, token } = props
   return (
     <div className={styles['ai-task-default-group-card-title']} onClick={isChildWindow ? undefined : expandToggle}>

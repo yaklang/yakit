@@ -49,7 +49,6 @@ import { HistroryAIReActChat } from './HistroryAIReActChat'
 import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
-import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
@@ -58,7 +57,6 @@ export interface HistoryAIReActChatBridge {
   // events: UseChatIPCEvents
   onStop: () => void
   onNewChat: () => void
-  onChatFromHistory: (session: string) => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
   syncSelectedHttpFlowIds: (ids: string[]) => void
   registerClearTableSelection: (fn: () => void) => void
@@ -374,13 +372,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     })
   })
 
-  const onChatFromHistory = useMemoizedFn((session: string) => {
-    // events.onDelChats([session])
-    globalSessionEngine.forceCloseSession({
-      sessionIds: [session],
-    })
-  })
-
   /** 新建会话：清空 UI、断开旧连接，并预生成新的 TimelineSessionID */
   const onNewChat = useMemoizedFn(() => {
     const currentID = activeChat?.SessionID
@@ -486,7 +477,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       // events,
       onStop,
       onNewChat,
-      onChatFromHistory,
       setActiveChat,
       syncSelectedHttpFlowIds: (ids: string[]) => {
         aiReActChatRef.current?.setHttpFlow?.(ids)
@@ -520,7 +510,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         })
       },
     }),
-    [activeID, onStop, onNewChat, onChatFromHistory, setActiveChat, handleSubmitQuery],
+    [activeID, onStop, onNewChat, setActiveChat, handleSubmitQuery],
   )
 
   const renderHistoryAIReActChat = useCallback(

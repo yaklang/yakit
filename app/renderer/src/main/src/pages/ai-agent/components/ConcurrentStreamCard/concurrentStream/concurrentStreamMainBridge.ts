@@ -25,10 +25,12 @@ export function setupConcurrentStreamMainBridge() {
     if (!requestId || !session || !token) return
 
     const { store, rawData } = globalSessionEngine.ensureSession(session)
-    const full = buildConcurrentStreamFramePayload({ token, session, chatType, store, rawData })
+    // 子窗主动拉取全量数据，必须填充 rawData + execFileRecord
+    const full = buildConcurrentStreamFramePayload({ token, session, chatType, store, rawData, withRawData: true })
     const entries = full ? Array.from(full.rawData.entries()) : []
+    const execFileRecord = full ? Array.from(full.execFileRecord.entries()) : []
 
-    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, { rawData: entries })
+    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, { rawData: entries, execFileRecord })
   }
 
   ipcRenderer.on(FETCH_REQUEST, handler)

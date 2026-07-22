@@ -5,7 +5,7 @@ import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
 } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
-import { AIChatQSDataTypeEnum, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum, AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { fetchConcurrentStreamContents } from './fetchConcurrentStreamContents'
 import styles from './AIConcurrentStream.module.scss'
 import AIConcurrentStreamContent, {
@@ -18,7 +18,7 @@ import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 // 全量进入 aux bundle，拉长 did-finish-load 与首次开窗耗时。
 const AIChildWindowTaskDefaultGroupCard = lazy(
   () =>
-    import('@/pages/ai-agent/components/AITaskDefaultGroupCard/aiChildWindowTaskDefaultGroupCard/AIChildWindowTaskDefaultGroupCard'),
+    import('@/pages/ai-agent/components/aiChildWindowItem/aiChildWindowTaskDefaultGroupCard/AIChildWindowTaskDefaultGroupCard'),
 )
 const AIChildWindowConcurrentStreamCard = lazy(
   () =>
@@ -34,12 +34,13 @@ interface AIConcurrentStreamProps {
 const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }) => {
   const [frame, setFrame] = useState<ConcurrentStreamFramePayload | null>(null)
   const [contentVersion, setContentVersion] = useState(0)
-  // rawData 是否仍在通过 fetch-concurrent-stream-contents 拉取中
+  // rawData/execFileRecord 是否仍在通过 fetch-concurrent-stream-contents 拉取中
   const [loadingContents, setLoadingContents] = useState(false)
 
-  // rawData 用 ref 存储，更新不触发渲染；
+  // rawData/execFileRecord 用 ref 存储，更新不触发渲染；
   // 组件及子组件的重渲染由 contentVersion（renderNum）驱动
   const rawDataRef = useRef<Map<string, AIChatQSData>>(new Map())
+  const execFileRecordRef = useRef<Map<string, AIYakExecFileRecord[]>>(new Map())
 
   useEffect(() => {
     if (!windowId) return
@@ -50,11 +51,13 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
       // 开窗时 frame 只携带轻量元数据（rawData 为空 Map），
       // 真正的 rawData 由下方的懒拉取 effect 通过 IPC 向主窗口请求
       startTransition(() => {
-        const newFrame = {
+        const newFrame: ConcurrentStreamFramePayload = {
           ...framePayload,
           rawData: new Map(),
+          execFileRecord: new Map(),
         }
         setFrame(newFrame)
+
         // 收到 frame 后，主动向主窗口拉取本次需要渲染的 rawData。
         getRawData(newFrame)
         setContentVersion((v) => v + 1)
@@ -81,14 +84,11 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
 
   const getRawData = useMemoizedFn((frame) => {
     setLoadingContents(true)
-
     fetchConcurrentStreamContents(frame)
       .then((entries) => {
-        rawDataRef.current = entries
+        rawDataRef.current = entries.rawData
+        execFileRecordRef.current = entries.execFileRecord
         setContentVersion((v) => v + 1)
-      })
-      .catch(() => {
-        rawDataRef.current = new Map()
       })
       .finally(() => {
         setLoadingContents(false)
@@ -120,6 +120,7 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
       chatType: frame?.chatType,
       childrenTokens: frame?.childrenTokens,
       rawData: rawDataRef.current,
+      execFileRecord: execFileRecordRef.current,
       renderNum: contentVersion,
     }
   }, [frame, contentVersion])

@@ -15,12 +15,10 @@ import { success } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isEmpty } from 'lodash'
 import classNames from 'classnames'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { useStore } from 'zustand'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
-  const { info, renderNum } = props
+  const { info, renderNum, taskLength, casualLength } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const getChatType = useMemoizedFn(() => {
@@ -28,10 +26,6 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   })
 
   const [expand, setExpand] = useState<boolean>(false)
-
-  const store = useCurrentStore()
-  const taskLength = useStore(store, (state) => state.taskChat.elements.length)
-  const casualLength = useStore(store, (state) => state.casualChat.elements.length)
 
   const isInit = useRef<boolean>(true)
 

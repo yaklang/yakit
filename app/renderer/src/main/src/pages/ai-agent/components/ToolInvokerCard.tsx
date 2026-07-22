@@ -43,8 +43,7 @@ import { success } from '@/utils/notification'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { useStore } from 'zustand'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 /** @name AI工具按钮对应图标 */
@@ -55,6 +54,7 @@ const AIToolToIconMap: Record<string, ReactNode> = {
 interface ToolInvokerCardProps {
   itemData: ChatToolResult
   renderNum: number
+  fileList: AIYakExecFileRecord[]
 }
 interface PreWrapperProps {
   code: string
@@ -66,27 +66,17 @@ interface ToolStatusCardProps {
   status: AIToolResult['tool']['status'] | 'purple' | 'neutral'
   children?: ReactNode
 }
-interface ToolStdoutCardProps extends ToolInvokerCardProps {
-  fileList: AIYakExecFileRecord[]
-}
-interface ToolResultCardProps extends ToolInvokerCardProps {
-  fileList: AIYakExecFileRecord[]
-}
+interface ToolStdoutCardProps extends ToolInvokerCardProps {}
+interface ToolResultCardProps extends ToolInvokerCardProps {}
 
 const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
-  const { itemData, renderNum } = props
-  const store = useCurrentStore()
-  const execFileRecord = useStore(store, (state) => state.execFileRecord)
-  const fileList = useCreation(() => {
-    if (!itemData?.data?.callToolId) return []
-    return execFileRecord.get(itemData?.data?.callToolId) || []
-  }, [renderNum, itemData?.data?.callToolId])
+  const { itemData } = props
 
   switch (itemData?.data?.type) {
     case 'stream':
-      return <ToolStdoutCard {...props} fileList={fileList} />
+      return <ToolStdoutCard {...props} />
     case 'result':
-      return <ToolResultCard {...props} fileList={fileList} />
+      return <ToolResultCard {...props} />
     case 'create':
       return <ToolLoadingCard {...props} />
     default:

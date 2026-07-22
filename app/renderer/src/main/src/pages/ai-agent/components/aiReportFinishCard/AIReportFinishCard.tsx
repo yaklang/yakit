@@ -19,7 +19,7 @@ import ChatCard from '../ChatCard'
 const { ipcRenderer } = window.require('electron')
 
 export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props) => {
-  const { item, renderNum } = props
+  const { item, renderNum, isChildWindow } = props
   const { data } = item
   const { t } = useI18nNamespaces(['aiAgent'])
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
@@ -38,7 +38,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
   }, [renderNum])
 
   const handleOpenReport = useMemoizedFn(() => {
-    if (!reportPath) return
+    if (!reportPath || isChildWindow) return
     if (currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
       emiter.emit(
         'onAiCodeAuditOpenTemporaryFile',
@@ -57,7 +57,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
 
   const handleDownloadReport = useMemoizedFn(async () => {
     try {
-      if (!reportPath) return
+      if (!reportPath || isChildWindow) return
       let code = await getCodeByPath(reportPath)
       if (!code) {
         yakitNotify('error', t('AIReportFinishCard.reportContentEmpty'))
@@ -87,18 +87,20 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
     <ChatCard
       titleText={title}
       titleMore={
-        <div className={styles['header-extra']}>
-          <Tooltip title={t('AIReportFinishCard.openInAICodeAudit')}>
-            <YakitButton size="small" type="text" icon={<OutlineDocumentIcon />} onClick={handleOpenReport} />
-          </Tooltip>
-          <YakitButton
-            size="small"
-            type="text"
-            icon={<OutlineDownloadIcon />}
-            onClick={handleDownloadReport}
-            loading={downloadLoading}
-          />
-        </div>
+        !isChildWindow && (
+          <div className={styles['header-extra']}>
+            <Tooltip title={t('AIReportFinishCard.openInAICodeAudit')}>
+              <YakitButton size="small" type="text" icon={<OutlineDocumentIcon />} onClick={handleOpenReport} />
+            </Tooltip>
+            <YakitButton
+              size="small"
+              type="text"
+              icon={<OutlineDownloadIcon />}
+              onClick={handleDownloadReport}
+              loading={downloadLoading}
+            />
+          </div>
+        )
       }
     >
       {content && <StreamMarkdown content={content || ''} />}

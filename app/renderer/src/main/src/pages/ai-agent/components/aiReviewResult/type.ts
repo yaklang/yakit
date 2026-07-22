@@ -6,6 +6,8 @@ import { ModalInfoProps } from '../ModelInfo'
 export interface AIReviewResultProps {
   info: AIChatQSData
   renderNum: number
+  casualLength?: number
+  taskLength?: number
 }
 export interface AISingHaveColorTextProps extends ChatCardProps {
   title: ReactNode

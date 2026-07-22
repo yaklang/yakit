@@ -83,8 +83,8 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
             overflow: isScroll ? 'overlay' : 'hidden',
           }}
         >
-          {childrenTokens.map((token) => (
-            <StaticChatContent key={token} token={token} />
+          {childrenTokens.map((token, index) => (
+            <StaticChatContent key={token} token={token} groupIndex={index} />
           ))}
         </div>
       </div>

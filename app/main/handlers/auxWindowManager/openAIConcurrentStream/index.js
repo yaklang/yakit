@@ -35,7 +35,7 @@ function register(manager, mainWindow) {
    */
   ipcMain.handle(FETCH_CONTENTS, async (_event, frame) => {
     if (!frame?.session || !frame?.token || !mainWindow || mainWindow.isDestroyed()) {
-      return { rawData: [] }
+      return { rawData: [], execFileRecord: [] }
     }
 
     const requestId = crypto.randomUUID()
@@ -44,12 +44,12 @@ function register(manager, mainWindow) {
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
         ipcMain.removeAllListeners(responseChannel)
-        resolve({ rawData: [] })
+        resolve({ rawData: [], execFileRecord: [] })
       }, 15000)
 
       ipcMain.once(responseChannel, (_responseEvent, data) => {
         clearTimeout(timeout)
-        resolve(data ?? { rawData: [] })
+        resolve(data ?? { rawData: [], execFileRecord: [] })
       })
 
       safeSendMain('fetch-concurrent-stream-contents-request', { requestId, ...frame })

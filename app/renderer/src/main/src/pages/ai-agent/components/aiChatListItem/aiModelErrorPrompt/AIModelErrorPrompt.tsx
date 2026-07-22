@@ -13,7 +13,7 @@ import { getFileNameByModelType, getModelLabelByModelType } from '@/pages/ai-age
 import styles from './AIModelErrorPrompt.module.scss'
 import { Tooltip } from 'antd'
 export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo((props) => {
-  const { item, renderNum } = props
+  const { item, renderNum, isChildWindow } = props
 
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [aiGlobalConfigData, event] = useAIGlobalConfig()
@@ -28,6 +28,7 @@ export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo(
   }, [])
   const onEdit = useMemoizedFn((e) => {
     e.stopPropagation()
+    if (isChildWindow) return
     const fileName = getFileNameByModelType(item.data.model_tier)
     if (!fileName) return
     // NOTE - 编辑事件,index为0是因为当前使用的ai模型是单选的且选中项一定是在第一个
@@ -53,14 +54,16 @@ export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo(
       titleText="模型错误"
       titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
       titleMore={
-        <Tooltip title="点此编辑当前模型">
-          <YakitButton type="text2" size="small" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
-        </Tooltip>
+        !isChildWindow && (
+          <Tooltip title="点此编辑当前模型">
+            <YakitButton type="text2" size="small" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
+          </Tooltip>
+        )
       }
     >
       <div className={styles['model-error-content']}>
         <div className={styles['model-error-item']}>
-          {getModelLabelByModelType(modelTier)}使用错误,请点击右上角编辑进行处理
+          {getModelLabelByModelType(modelTier)}使用错误{!isChildWindow && ',请点击右上角编辑进行处理'}
         </div>
         <PreWrapper code={code} />
       </div>
