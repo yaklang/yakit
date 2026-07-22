@@ -21,6 +21,9 @@ import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 import { handAIHistoryChatRemove } from '../utils'
 import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import type { YakitRouteType } from '@/enums/yakitRoute'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -126,6 +129,8 @@ const HistoryChatList: FC<{
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { activeChat } = useAIAgentStore()
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+  const currentPageId = usePageInfo((state) => state.getCurrentSelectPageId(state.getCurrentPageTabRouteKey()), shallow)
   const listRef = useRef<HTMLDivElement | null>(null)
   const chatTotalRef = useRef(0)
   const editInfo = useRef<AISession>()
@@ -229,9 +234,11 @@ const HistoryChatList: FC<{
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
         handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
-        forceCloseSessionParams: {
-          aiSource: source,
-          sessionIds: sessionIds,
+        deleteSessionsParams: {
+          source,
+          sessionIds,
+          route: currentRouteKey as YakitRouteType,
+          pageId: currentPageId || currentRouteKey,
         },
       })
     } catch (error) {

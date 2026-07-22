@@ -417,7 +417,12 @@ HTTPHistoryFilterInner.displayName = 'HTTPHistoryFilterInner'
 
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = (props) => {
   return (
-    <HistoryAIReActChatProvider source={AISourceEnum.flow} focusModeLoop="http_flow_analyze">
+    <HistoryAIReActChatProvider
+      source={AISourceEnum.flow}
+      route={YakitRoute.DB_HTTPHistoryAnalysis}
+      pageId={YakitRoute.DB_HTTPHistoryAnalysis}
+      focusModeLoop="http_flow_analyze"
+    >
       <HTTPHistoryFilterInner {...props} />
     </HistoryAIReActChatProvider>
   )

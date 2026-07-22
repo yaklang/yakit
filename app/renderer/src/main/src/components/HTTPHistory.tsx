@@ -30,7 +30,6 @@ import {
   OutlineFilterIcon,
   OutlineLog2Icon,
   OutlineMessageCirclePlusIcon,
-  OutlinePlusIcon,
   OutlineSearchIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
@@ -69,9 +68,9 @@ import {
 } from '@/assets/commonProcessIcons'
 import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
-import { ClockIcon, RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@/assets/newIcon'
 import { Tooltip } from 'antd'
-import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
+import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { YakitCheckbox } from './yakitUI/YakitCheckbox/YakitCheckbox'
 import ReactResizeDetector from 'react-resize-detector'
 import { RemoteHistoryGV } from '@/enums/history'
@@ -84,7 +83,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitSideTab } from './yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
 import { JSONParseLog } from '@/utils/tool'
-import { histroyAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from './historyAIReActChat'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
@@ -94,6 +92,7 @@ import { HTTPFlowRuleDataFilter } from './HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -436,7 +435,12 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
   return (
-    <HistoryAIReActChatProvider source={AISourceEnum.history} focusModeLoop="http_flow_analyze">
+    <HistoryAIReActChatProvider
+      source={AISourceEnum.history}
+      route={YakitRoute.DB_HTTPHistory}
+      pageId={YakitRoute.DB_HTTPHistory}
+      focusModeLoop="http_flow_analyze"
+    >
       <HTTPHistoryInner {...props} />
     </HistoryAIReActChatProvider>
   )

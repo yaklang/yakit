@@ -22,6 +22,7 @@ import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/His
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
 import { type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { YakitRouteType } from '@/enums/yakitRoute'
 import { JSONParseLog } from '@/utils/tool'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
@@ -110,6 +111,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   const { activeChat } = useAIAgentStore()
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+  const currentPageId = usePageInfo((state) => state.getCurrentSelectPageId(state.getCurrentPageTabRouteKey()), shallow)
 
   const getPopupContainer = useMemoizedFn(
     () => document.getElementById(`main-operator-page-body-${currentRouteKey}`) || document.body,
@@ -149,9 +151,11 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
-        forceCloseSessionParams: {
-          aiSource: source,
+        deleteSessionsParams: {
+          source,
           sessionIds: [],
+          route: currentRouteKey as YakitRouteType,
+          pageId: currentPageId || currentRouteKey,
         },
       })
       onClose([])
@@ -196,9 +200,11 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
-        forceCloseSessionParams: {
-          aiSource: source,
-          sessionIds: sessionIds,
+        deleteSessionsParams: {
+          source,
+          sessionIds,
+          route: currentRouteKey as YakitRouteType,
+          pageId: currentPageId || currentRouteKey,
         },
       })
       onClose(sessionIds)

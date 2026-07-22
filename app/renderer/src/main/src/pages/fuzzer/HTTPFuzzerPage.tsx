@@ -3269,8 +3269,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
   return (
     <HistoryAIReActChatProvider
       source={AISourceEnum.webFuzzer}
+      route={YakitRoute.HTTPFuzzer}
+      pageId={props.id}
       focusModeLoop="http_fuzztest"
-      httpFuzzTabPageId={props.id}
     >
       <HTTPFuzzerPageCore {...props} />
     </HistoryAIReActChatProvider>

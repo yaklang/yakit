@@ -219,7 +219,9 @@ export interface AIAgentChatData {
 }
 export interface AIAgentChatMetaData {
   /** 会话通信流建立成功后的UI回调触发事件 */
-  onSessionStartSuccess?: (sessionId: string) => void
+  onLinkSuccess?: (sessionId: string) => void
+  /** forceClose 传入的回调，在 grpc session-end 移除监听前执行 */
+  onEnd?: () => void
   /** 通过用户问题创建会话时的问题 */
   createChatQuestion?: AIInputEvent
 

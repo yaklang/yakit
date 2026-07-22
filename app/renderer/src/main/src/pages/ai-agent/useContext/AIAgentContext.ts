@@ -3,6 +3,7 @@ import { AIAgentSetting } from '../aiAgentType'
 import { AISession } from '../type/aiChat'
 import { AIChatIPCStartParams, AIChatSendParams } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentSettingDefault } from '../defaultConstant'
+import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 
 export interface AIAgentContextStore {
   /** 全局配置 */
@@ -11,20 +12,14 @@ export interface AIAgentContextStore {
   activeChat?: AISession
 }
 
-export interface UseChatIPCStartParams extends AIChatIPCStartParams {
+/** 上层 onStart 入参：route/pageId 由 useChatIPC 注入，调用方无需传递 */
+export interface UseChatIPCStartParams extends Omit<AIChatIPCStartParams, 'route' | 'pageId'> {
   onSuccess?: (sessionId: string) => void
 }
-export interface AIAgentContextDispatcher {
+export interface AIAgentContextDispatcher extends ReturnType<typeof useChatIPC> {
   setSetting: Dispatch<SetStateAction<AIAgentSetting>>
   getSetting: () => AIAgentSetting
   setActiveChat: Dispatch<SetStateAction<AISession | undefined>>
-
-  /** 开始会话 */
-  onStart: (params: UseChatIPCStartParams) => void
-  /** 会话过程中向后端发送消息 */
-  onSend: (params: AIChatSendParams) => void
-  /** 关闭指定会话 */
-  onClose: (sessionId: string[]) => void
 }
 
 export interface AIAgentContextValue {
@@ -45,5 +40,6 @@ export default createContext<AIAgentContextValue>({
     onStart: () => {},
     onSend: () => {},
     onClose: () => {},
+    onUpdatePageId: () => {},
   },
 })
