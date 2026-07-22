@@ -22,6 +22,7 @@ import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/His
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
 import { type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { YakitRouteType } from '@/enums/yakitRoute'
 import { JSONParseLog } from '@/utils/tool'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { handAIHistoryChatRemove } from './utils'
@@ -31,6 +32,8 @@ import { filterHistorySessionsBySource, getHistorySourceQuerySources, type Histo
 import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import useDebounce from 'ahooks/lib/useDebounce'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -107,6 +110,10 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   }, [aiSource, enableHistorySourceFilter, historySourceFilter])
   const [{ sessions }, dispatcher] = useSessionList(historyQuerySources)
   const { activeChat } = useAIAgentStore()
+
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+  const currentPageId = usePageInfo((state) => state.getCurrentSelectPageId(state.getCurrentPageTabRouteKey()), shallow)
+
   const getPopupContainer = useMemoizedFn(() => getMainOperatorPageBodyContainer() || document.body)
   const popupContainer = embedded ? getPopupContainer : undefined
   const embeddedOverlayClass = styles['history-chat-embedded-overlay']
@@ -143,9 +150,11 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
-        forceCloseSessionParams: {
-          aiSource: source,
+        deleteSessionsParams: {
+          source,
           sessionIds: [],
+          route: currentRouteKey as YakitRouteType,
+          pageId: currentPageId || currentRouteKey,
         },
       })
       onClose([])
@@ -190,9 +199,11 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
-        forceCloseSessionParams: {
-          aiSource: source,
-          sessionIds: sessionIds,
+        deleteSessionsParams: {
+          source,
+          sessionIds,
+          route: currentRouteKey as YakitRouteType,
+          pageId: currentPageId || currentRouteKey,
         },
       })
       onClose(sessionIds)

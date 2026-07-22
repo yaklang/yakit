@@ -25,6 +25,7 @@ import { type AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ChatListRenderTy
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
+import type { YakitRouteType } from '@/enums/yakitRoute'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -115,6 +116,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
 const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
   return {
     createChatQuestion: undefined,
+    onEnd: undefined,
     pingSyncID: '',
     pingTimer: null,
     casualMemoryList: cloneDeep(DefaultMemoryList),
@@ -138,19 +140,192 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
   }
 }
 
+/** page 归属键：`${route}::${pageId}`，pageId 为当前归属 */
+type PageKey = string
+
+interface SessionOwner {
+  /** 不可变：注册后锁死 */
+  readonly route: YakitRouteType
+  /** 不可变：注册后锁死 */
+  readonly source: AISource
+  /** 可变：始终存当前 page */
+  pageId: string
+}
+
+/** 生成 route::pageId 的唯一标识 */
+const makePageKey = (route: YakitRouteType, pageId: string): PageKey => `${route}::${pageId}`
+
 export class ChatMultiSessionController {
-  // 存放各个页面下的session集合
-  private pageSessionMap = new Map<string, Set<string>>()
+  /**
+   * 正向索引：按「当前」page 关页 / 全删
+   * pageId 换绑后旧 PageKey 不再包含该 session
+   */
+  private pageSessionMap = new Map<PageKey, Map<AISource, Set<string>>>()
+  /**
+   * 反向索引：按 sessionId O(1) 定位；换绑时只改 pageId 并搬动正向索引
+   */
+  private sessionOwnerMap = new Map<string, SessionOwner>()
+  /** 存放已建立连接的会话session集合 */
+  private readyChannels = new Set<string>()
+
+  // #region session-source-route-pageId 索引管理相关逻辑
+  /** 将 session 写入 pageSessionMap 正向索引 */
+  private addToPageSessionMap(owner: SessionOwner, sessionId: string) {
+    const pageKey = makePageKey(owner.route, owner.pageId)
+    let sourceMap = this.pageSessionMap.get(pageKey)
+    if (!sourceMap) {
+      sourceMap = new Map()
+      this.pageSessionMap.set(pageKey, sourceMap)
+    }
+    let sessionSet = sourceMap.get(owner.source)
+    if (!sessionSet) {
+      sessionSet = new Set()
+      sourceMap.set(owner.source, sessionSet)
+    }
+    sessionSet.add(sessionId)
+  }
+
+  /** 从 pageSessionMap 正向索引摘除；空 Set/Map 则清理 */
+  private removeFromPageSessionMap(owner: SessionOwner, sessionId: string) {
+    const pageKey = makePageKey(owner.route, owner.pageId)
+    const sourceMap = this.pageSessionMap.get(pageKey)
+    if (!sourceMap) return
+
+    const sessionSet = sourceMap.get(owner.source)
+    if (!sessionSet) return
+
+    sessionSet.delete(sessionId)
+    if (sessionSet.size === 0) {
+      sourceMap.delete(owner.source)
+    }
+    if (sourceMap.size === 0) {
+      this.pageSessionMap.delete(pageKey)
+    }
+  }
+
+  /**
+   * session 会话建立时注册归属索引，并标识当前会话已建立连接
+   *
+   * - route / source 建立后不可变
+   * - 若 session 已存在且仅 pageId 不同，走 rebind 而非重复注册
+   */
+  public registerSessionChannel(
+    sessionId: string,
+    owner: { route: YakitRouteType; pageId: string; source?: AIStartParams['Source'] },
+  ) {
+    const source: AISource = owner.source || 'ai'
+    const existing = this.sessionOwnerMap.get(sessionId)
+
+    if (existing) {
+      // 禁止改 route / source
+      if (existing.route !== owner.route || existing.source !== source) {
+        console.error(`[ChatMultiSessionController] registerSessionChannel: session 已存在且 route/source 不可变`, {
+          sessionId,
+          existing,
+          next: { route: owner.route, pageId: owner.pageId, source },
+        })
+        this.readyChannels.add(sessionId)
+        return
+      }
+      // 仅 pageId 不同 → rebind
+      if (existing.pageId !== owner.pageId) {
+        this.rebindSessionPageId(sessionId, owner.pageId)
+      }
+      this.readyChannels.add(sessionId)
+      return
+    }
+
+    const sessionOwner: SessionOwner = {
+      route: owner.route,
+      source,
+      pageId: owner.pageId,
+    }
+    this.sessionOwnerMap.set(sessionId, sessionOwner)
+    this.addToPageSessionMap(sessionOwner, sessionId)
+    this.readyChannels.add(sessionId)
+  }
+
+  /**
+   * 同 route 下换绑 pageId：更新 sessionOwnerMap.pageId，从旧 PageKey 摘除、写入新 PageKey
+   * route / source 不变；newPageId 与旧相同或 session 已 dispose 则 no-op
+   */
+  public rebindSessionPageId(sessionId: string, newPageId: string) {
+    const owner = this.sessionOwnerMap.get(sessionId)
+    if (!owner || owner.pageId === newPageId) return
+
+    this.removeFromPageSessionMap(owner, sessionId)
+    owner.pageId = newPageId
+    this.addToPageSessionMap(owner, sessionId)
+  }
+
+  /** 全删：用目标 route + pageId + source 查当前索引；非空 sessionIds 则直接用集合 */
+  private resolveSessionIds(params: {
+    sessionIds?: string[]
+    source: AISource
+    route: YakitRouteType
+    pageId: string
+  }): string[] {
+    const { sessionIds, source, route, pageId } = params
+    if (sessionIds?.length) return [...sessionIds]
+    return [...(this.pageSessionMap.get(makePageKey(route, pageId))?.get(source) ?? [])]
+  }
+
+  /** 该 PageKey 下所有 source 的 session 并集 */
+  private resolvePageSessionIds(route: YakitRouteType, pageId: string): string[] {
+    const sourceMap = this.pageSessionMap.get(makePageKey(route, pageId))
+    if (!sourceMap) return []
+    const ids: string[] = []
+    for (const sessionSet of sourceMap.values()) {
+      for (const id of sessionSet) {
+        ids.push(id)
+      }
+    }
+    return ids
+  }
+
+  /**
+   * 删除内存数据（仅 deleteSessions / onPageUnload 调用）
+   * 1. 先 forceClose（停流，幂等；关闭 ≠ 删除）
+   * 2. 主动摘 IPC（删除不等 end）并清业务池与归属索引
+   */
+  private disposeSessionMemory(sessionId: string) {
+    this.forceCloseSession({ sessionIds: [sessionId] })
+    // 删除路径不等 session-end，主动摘监听，避免 end 回来 ensureSession 重建池
+    this.closeIPCListeners(sessionId)
+    this.readyChannels.delete(sessionId)
+
+    if (this.activeShowSession === sessionId) {
+      this.activeShowSession = null
+    }
+
+    this.requestPool.delete(sessionId)
+    this.storePool.delete(sessionId)
+    this.rawDataPool.delete(sessionId)
+    this.metaPool.delete(sessionId)
+
+    const owner = this.sessionOwnerMap.get(sessionId)
+    if (owner) {
+      this.removeFromPageSessionMap(owner, sessionId)
+      this.sessionOwnerMap.delete(sessionId)
+    }
+  }
+  // #endregion
+
+  /** 存放当前正在展示的会话session */
+  private activeShowSession: string | null = null
+  /** 设置当前展示的会话 Session */
+  public setActiveShowSession(sessionId: string) {
+    this.activeShowSession = sessionId
+  }
+  /** 判断指定会话是否当前正在展示 */
+  public isActiveShowSession(sessionId: string) {
+    return this.activeShowSession === sessionId
+  }
 
   private requestPool = new Map<string, AIStartParams>()
   private storePool = new Map<string, ReturnType<typeof createChatStore>>()
   private rawDataPool = new Map<string, AIAgentChatData>()
   private metaPool = new Map<string, AIAgentChatMetaData>()
-
-  /** 存放所有已建立连接的会话session */
-  private readyChannels = new Set<string>()
-  /** 存放当前正在展示的会话session */
-  private activeShowSession: string | null = null
 
   /** 获取对应会话的所有数据集 */
   public ensureSession(sessionId: string) {
@@ -168,27 +343,6 @@ export class ChatMultiSessionController {
     }
   }
 
-  /** session会话建立时，注册进队列中，标识当前会话已建立连接 */
-  public registerSessionChannel(sessionId: string, source: AIStartParams['Source']) {
-    this.readyChannels.add(sessionId)
-
-    if (this.pageSessionMap.has(source || 'ai')) {
-      this.pageSessionMap.get(source || 'ai')?.add(sessionId)
-    } else {
-      const sessionSet = new Set([sessionId])
-      this.pageSessionMap.set(source || 'ai', sessionSet)
-    }
-  }
-
-  /** 设置当前展示的会话 Session */
-  public setActiveShowSession(sessionId: string) {
-    this.activeShowSession = sessionId
-  }
-  /** 判断指定会话是否当前正在展示 */
-  public isActiveShowSession(sessionId: string) {
-    return this.activeShowSession === sessionId
-  }
-
   /**
    * 更新指定会话的配置参数
    *
@@ -202,7 +356,7 @@ export class ChatMultiSessionController {
 
   /** 建立指定session会话的连接 */
   public handleStartSession(requestParams: AIChatIPCStartParams, cb?: (sessionId: string) => void) {
-    const { token: sessionId, params } = requestParams
+    const { token: sessionId, params, route, pageId } = requestParams
     const isExec = this.readyChannels.has(sessionId)
     if (isExec) {
       yakitNotify('warning', '会话已经存在，请勿重复建立！')
@@ -212,7 +366,11 @@ export class ChatMultiSessionController {
     const { request, store, rawData, meta } = this.ensureSession(sessionId)
 
     store.getState().updateState({ execute: true, casualTitle: '发送问题，开启会话...' })
-    this.registerSessionChannel(sessionId, params.Params?.Source)
+    this.registerSessionChannel(sessionId, {
+      route,
+      pageId,
+      source: params.Params?.Source,
+    })
     this.setActiveShowSession(sessionId)
 
     Object.assign(request, params.Params)
@@ -259,7 +417,7 @@ export class ChatMultiSessionController {
         },
       })
     }
-    meta.onSessionStartSuccess = cb
+    meta.onLinkSuccess = cb
 
     ipcRenderer.invoke('start-ai-re-act', sessionId, params)
 
@@ -532,8 +690,8 @@ export class ChatMultiSessionController {
           // TODO - 调用历史数据恢复方法
         }
         this.handleSessionStartSuccess(sessionId)
-        meta.onSessionStartSuccess?.(sessionId)
-        meta.onSessionStartSuccess = undefined
+        meta.onLinkSuccess?.(sessionId)
+        meta.onLinkSuccess = undefined
         return
       }
 
@@ -631,14 +789,24 @@ export class ChatMultiSessionController {
    *  一般来说，触发这个事件的情况，都是当前review数据无效了
    *  别的处理review数据事件，都由 handleSendMessage 进行处理了
    */
-  public closeChatReview(sessionId: string, chatType: ChatListRenderType, reviewToken: string) {
+  public closeChatReview(sessionId: string, reviewToken: string) {
     const { store, rawData } = this.ensureSession(sessionId)
+    const reviewDetail = rawData.contents.get(reviewToken)
+    if (!reviewDetail) {
+      yakitNotify('warning', '未获取到 review 信息, 操作无效')
+      return
+    }
 
-    if (chatType === 'reAct') {
-      const reviewDetail = rawData.contents.get(reviewToken)
+    if (reviewDetail.chatType === 'reAct') {
       rawData.contents.delete(reviewToken)
-      store.getState().updateCasualReview(reviewToken, 'remove')
-      if (reviewDetail) {
+      if (
+        reviewDetail.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE &&
+        store.getState().currentPlanReviewToken.token === reviewDetail.id
+      ) {
+        // 该类型在任务规划的review弹窗显示，需要清空当前任务规划的review
+        store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
+      } else {
+        store.getState().updateCasualReview(reviewToken, 'remove')
         store.getState().deleteElementNode({
           chatType: 'reAct',
           token: reviewDetail.id,
@@ -649,9 +817,9 @@ export class ChatMultiSessionController {
           },
         })
       }
-    } else if (chatType === 'task') {
+    } else if (reviewDetail.chatType === 'task') {
       const currentReview = store.getState().currentPlanReviewToken
-      if (!currentReview.token || currentReview.token !== reviewToken) return
+      if (!currentReview.token || currentReview.token !== reviewDetail.id) return
 
       // 不用调用deleteElementNode，因为能触发这个方法的地方，说明review还没有进入list列表中
       rawData.contents.delete(currentReview.token)
@@ -713,26 +881,62 @@ export class ChatMultiSessionController {
     // 核心状态改变
     store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话已停止' })
     this.readyChannels.delete(sessionId)
+
+    const onEnd = meta.onEnd
+    if (onEnd) {
+      onEnd()
+      meta.onEnd = undefined
+    }
     this.closeIPCListeners(sessionId)
   }
 
-  /** 关闭指定session的连接
-   * TODO - 期望传一个对象，{ sessionIds: string[]; aiSource: AISource }
-   * TODO - 需要区分删除和关闭会话两种操作，不然数据的关闭和删除会混乱
+  /**
+   * 关闭会话连接（停流）
+   * - cancel IPC、更新 execute；不摘 IPC 监听（交给 handleSessionEnd）
+   * - 有 onEnd 时写入 meta，在 session-end 移除监听前执行
+   * - **不会**删除业务池与归属索引；关闭 ≠ 删除
    */
-  public forceCloseSession(params: { sessionIds: string[] }) {
-    const { sessionIds } = params
-    for (let session of sessionIds) {
+  public forceCloseSession(params: { sessionIds: string[]; onEnd?: () => void }) {
+    const { sessionIds, onEnd } = params
+    for (const session of sessionIds) {
+      const meta = this.metaPool.get(session)
+      if (meta && onEnd) {
+        meta.onEnd = onEnd
+      }
       ipcRenderer.invoke('cancel-ai-re-act', session).catch(() => {})
+      const store = this.storePool.get(session)
+      if (store) {
+        store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话已停止' })
+      }
+      if (meta) this.closeSessionTimers(meta)
     }
   }
 
   /**
-   * 删除指定的session会话
-   * sessionIds 需要删除的session集合，如果需要全删，这该值传空数组
-   * source 需要删除的session来源页面
+   * 删除指定的 session（必须清除内存数据）
+   * - sessionIds 非空：删集合
+   * - sessionIds 空数组：按当前归属全删该 page 下该 source
+   * - pageId 为空：按当前归属全删该 route 下所有 page 的 session
+   * - 内部会先 forceClose 再卸业务池与双索引
+   * - grpc / IndexedDB 删除由上层负责
    */
-  public deleteSessions(sessionIds: string[], source: AISource) {}
+  public deleteSessions(params: { sessionIds: string[]; source: AISource; route: YakitRouteType; pageId: string }) {
+    const ids = this.resolveSessionIds(params)
+    for (const sessionId of ids) {
+      this.disposeSessionMemory(sessionId)
+    }
+  }
+
+  /**
+   * 页面生命周期卸载：卸该「当前」page 下所有 source 的 session 内存（同 delete，非仅 forceClose）
+   * 已 rebind 走的 session 不会被旧页清掉
+   */
+  public onPageUnload(route: YakitRouteType, pageId: string) {
+    const ids = this.resolvePageSessionIds(route, pageId)
+    for (const sessionId of ids) {
+      this.disposeSessionMemory(sessionId)
+    }
+  }
 }
 
 export const globalSessionEngine = new ChatMultiSessionController()

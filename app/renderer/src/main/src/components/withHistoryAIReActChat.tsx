@@ -22,6 +22,7 @@ import {
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   getWebFuzzerPageIsHttps,
@@ -45,7 +46,7 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import emiter from '@/utils/eventBus/eventBus'
 
 import { HistroryAIReActChat } from './HistroryAIReActChat'
-import { useChatIPC } from '@/pages/ai-re-act/hooks/useNewChatIPC'
+import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
@@ -171,10 +172,14 @@ function normalizeStartUserQueryToTextDescription(event: AIInputEvent): AIInputE
 
 export interface HistoryAIReActChatProviderProps {
   source: AISource
+  /** 会话归属路由（不可变） */
+  route: YakitRouteType
+  /** 会话当前归属 pageId（可变，可 rebind） */
+  pageId: string
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
   /** Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关 */
-  httpFuzzTabPageId?: string
+  // httpFuzzTabPageId?: string
   /** Yak Runner 工作区 id：AI `yaklang_code_change` 审阅/写回桥接 */
   yakRunnerPageId?: string
   /**
@@ -191,9 +196,10 @@ export interface HistoryAIReActChatProviderProps {
 /** TODO -  @whale 修改确认 */
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
   source,
+  route,
+  pageId,
   focusModeLoop,
   children,
-  httpFuzzTabPageId,
   yakRunnerPageId,
   transformInputEvent,
   resolveStartExtraParams,
@@ -230,13 +236,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onHttpFuzzRequestChange = useMemoizedFn((data: AIAgentGrpcApi.HttpFuzzRequestChange) => {
-    if (!httpFuzzTabPageId) return
+    if (!pageId) return
 
     // casual 问答期间：有完整 raw 时不自动写包，入队审阅（`op` 仅占位描述，不作为筛选项）
     if (casualLoadingRef.current) {
       const nextRaw = data?.request?.raw
       if (nextRaw != null && String(nextRaw).trim() !== '' && initialRequestInCasualRef.current != null) {
-        enqueueWebFuzzerCasualReplaceReview(httpFuzzTabPageId, {
+        enqueueWebFuzzerCasualReplaceReview(pageId, {
           original: initialRequestInCasualRef.current ?? '',
           change: data,
         })
@@ -244,7 +250,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       }
     }
 
-    applyHttpFuzzRequestChangeToWebFuzzerPage(httpFuzzTabPageId, data)
+    applyHttpFuzzRequestChangeToWebFuzzerPage(pageId, data)
   })
 
   const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
@@ -294,20 +300,21 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   // AI `http_flow_fuzz_status` 推送：把每次最新的 `runtime_id` 静默推到当前 fuzzer 页签的处理器中。
   // 用户点击「查看详情」会显式再次推送并要求打开抽屉，所以这里不主动打开。
   const onGetHttpFlowFuzzStatus = useMemoizedFn((data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => {
-    if (!httpFuzzTabPageId) return
+    if (!pageId) return
     const runtimeId = data?.runtime_id
     if (!runtimeId) return
-    pushAIFuzzStatusRuntimeIdToWebFuzzerPage(httpFuzzTabPageId, runtimeId, { source: 'auto' })
+    pushAIFuzzStatusRuntimeIdToWebFuzzerPage(pageId, runtimeId, { source: 'auto' })
   })
 
-  const { onStart, onSend, onClose } = useChatIPC()
+  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
 
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const casualLoading = useStore(store, (state) => state.casualLoading)
 
+  // TODO - @whale 修改确认 useEffect => httpFuzzTabPageId->pageId
   useEffect(() => {
-    if (!httpFuzzTabPageId && !yakRunnerPageId) {
+    if (!pageId && !yakRunnerPageId) {
       casualLoadingRef.current = false
       initialRequestInCasualRef.current = null
       initialCodeInCasualRef.current = null
@@ -315,8 +322,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }
 
     if (!casualLoadingRef.current && casualLoading) {
-      if (httpFuzzTabPageId) {
-        initialRequestInCasualRef.current = getWebFuzzerPageRequestString(httpFuzzTabPageId) ?? ''
+      if (pageId) {
+        initialRequestInCasualRef.current = getWebFuzzerPageRequestString(pageId) ?? ''
       }
       if (yakRunnerPageId) {
         resetYakRunnerPatchWorkingDraft(yakRunnerPageId)
@@ -331,7 +338,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }
 
     casualLoadingRef.current = casualLoading
-  }, [casualLoading, httpFuzzTabPageId, yakRunnerPageId])
+  }, [casualLoading, pageId, yakRunnerPageId])
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID
@@ -344,9 +351,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
     return new Promise<AIHandleStartResProps>((resolve) => {
       let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
-      if (httpFuzzTabPageId) {
-        const raw = getWebFuzzerPageRequestString(httpFuzzTabPageId)
-        const isHttps = getWebFuzzerPageIsHttps(httpFuzzTabPageId) ?? false
+      // TODO - @whale 修改确认 httpFuzzTabPageId->pageId
+      if (pageId) {
+        const raw = getWebFuzzerPageRequestString(pageId)
+        const isHttps = getWebFuzzerPageIsHttps(pageId) ?? false
         const sessionId =
           data.params.Params?.TimelineSessionID || activeChat?.SessionID || getSetting().TimelineSessionID
         params = attachWebFuzzerHttpRequestToEvent(params, sessionId, raw, isHttps)
@@ -398,9 +406,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const onSendRequest = useMemoizedFn((data: AISendParams) => {
     let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
-    if (httpFuzzTabPageId) {
-      const raw = getWebFuzzerPageRequestString(httpFuzzTabPageId)
-      const isHttps = getWebFuzzerPageIsHttps(httpFuzzTabPageId) ?? false
+    // TODO - @whale 修改确认 httpFuzzTabPageId->pageId
+    if (pageId) {
+      const raw = getWebFuzzerPageRequestString(pageId)
+      const isHttps = getWebFuzzerPageIsHttps(pageId) ?? false
       params = attachWebFuzzerHttpRequestToEvent(params, activeChat?.SessionID, raw, isHttps)
     }
     if (transformInputEvent) {
@@ -467,6 +476,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onStart,
       onSend,
       onClose,
+      onUpdatePageId,
     }
   }, [])
 

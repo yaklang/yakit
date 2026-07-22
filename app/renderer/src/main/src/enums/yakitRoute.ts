@@ -131,3 +131,5 @@ export enum YakitRoute {
   /** 技能 */
   AI_Forge = 'ai-forge',
 }
+
+export type YakitRouteType = `${YakitRoute}`

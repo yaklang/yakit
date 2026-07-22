@@ -1279,6 +1279,8 @@ const YakRunnerWithAIInner: React.FC<YakRunnerProps> = (props) => {
   return (
     <HistoryAIReActChatProvider
       source={AISourceEnum.yakRunner}
+      route={YakitRoute.YakScript}
+      pageId={YAK_RUNNER_AI_PAGE_ID}
       focusModeLoop={YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT}
       yakRunnerPageId={YAK_RUNNER_AI_PAGE_ID}
     >

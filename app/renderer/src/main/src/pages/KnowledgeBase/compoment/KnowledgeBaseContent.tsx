@@ -684,6 +684,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
   return (
     <HistoryAIReActChatProvider
       source={AISourceEnum.knowledgeBase}
+      route={YakitRoute.AI_REPOSITORY}
+      pageId={YakitRoute.AI_REPOSITORY}
       focusModeLoop=""
       resolveStartExtraParams={resolveStartExtraParams}
       mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}

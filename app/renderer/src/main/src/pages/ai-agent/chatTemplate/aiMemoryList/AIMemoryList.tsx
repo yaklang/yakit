@@ -21,7 +21,6 @@ import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultMemoryList } from '@/pages/ai-re-act/hooks/defaultConstant'
 
-const { ipcRenderer } = window.require('electron')
 const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
   return [
     {
@@ -75,14 +74,10 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
   useDebounceEffect(
     () => {
       if (!isClearMemory) return
-      /** TODO - 需要hooks告诉UI层，此次关闭的type(来源)
-       * 二次讨论：改为onClose中传回调事件
-       */
-      ipcRenderer.once(`${sessionId}-end`, () => {
+      onClose([sessionId], () => {
         onClearMemory()
         setIsClearMemory(false)
       })
-      onClose([sessionId])
     },
     [isClearMemory],
     { wait: 1000 },
