@@ -243,7 +243,6 @@
     "targetFileNotExist": "Target file does not exist!",
     "fullRequest": "Full Request",
     "fullResponse": "Full Response",
-    "downloadMultipartFiles": "Download File",
     "selectHttpRecordToView": "Select an HTTP record to view the request",
     "request": "Request",
     "rawRequest": "Raw Request",

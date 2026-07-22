@@ -108,6 +108,7 @@ export interface MultipartFileInfo {
   Filename: string
   ContentType: string
   Size: number
+  FilePath: string
 }
 
 export interface HistoryTableTitleShow {

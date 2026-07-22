@@ -7297,6 +7297,7 @@ message MultipartFileInfo {
   string Filename = 3;    // Content-Disposition: filename（原始文件名）
   string ContentType = 4; // 该 part 的 Content-Type
   int64 Size = 5;         // 该 part 内容字节数
+  string FilePath = 6;    // 该 part 落盘文件的绝对路径，前端可直接 openABSFileLocated 打开
 }
 
 message FuzzableParam {

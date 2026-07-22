@@ -53,7 +53,6 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { JSONParseLog } from '@/utils/tool'
 import { HTTPFlowCodec } from '@/utils/encodec'
 import { YakitMenu, YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu'
-import { v4 as uuidv4 } from 'uuid'
 const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
 
@@ -1595,34 +1594,21 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
       .catch(() => {})
   }
 
-  // 下载超大 multipart 请求的某个文件 part：调用 GetHTTPFlowBodyById 带 PartIndex，
-  // 主进程流式写盘后弹出文件所在目录（与「下载 Body」复用同一 IPC 通道）。
-  const downloadMultipartPart = (partIndex: number) => {
-    if (!flow?.Id) return
-    ipcRenderer
-      .invoke('GetHTTPFlowBodyById', {
-        Id: flow.Id,
-        IsRequest: true,
-        PartIndex: partIndex,
-        uuid: uuidv4(),
-      })
-      .then(() => yakitNotify('success', t('YakitNotification.downloaded')))
-      .catch((e) =>
-        yakitNotify('error', t('YakitNotification.downloadFailed', { error: e + '' })),
-      )
-  }
-
-  const multipartFileMenuItems = useMemo<YakitMenuItemType[]>(() => {
-    if (!flow?.MultipartFiles || flow.MultipartFiles.length === 0) return []
-    return flow.MultipartFiles.map((f) => ({
-      key: `multipart-file-${f.PartIndex}`,
-      label: `${f.Filename} (${formatMultipartFileSize(f.Size)})`,
-    }))
-  }, [flow?.MultipartFiles])
-
   const secondNodeReqExtraBtn = () => {
     let extraBtn: ReactElement[] = []
     if (flow?.IsTooLargeRequest) {
+      // 超大 multipart 请求的 body 已骨架化（只剩占位符），「查看 Body」无意义，
+      // 用每个落盘文件 part 的一项「查看 <filename>」替换，点击直接打开本地 part 文件，
+      // 和打开 TooLargeRequestHeaderFile / flat TooLargeRequestBodyFile 的机制一致。
+      const multipartFiles = flow?.MultipartFiles ?? []
+      const hasMultipart = multipartFiles.length > 0
+      const bodyItems: YakitMenuItemType[] = hasMultipart
+        ? multipartFiles.map((f) => ({
+            key: `multipart-file-${f.PartIndex}`,
+            label: `${f.Filename} (${formatMultipartFileSize(f.Size)})`,
+          }))
+        : [{ key: 'tooLargeRequestBodyFile', label: t('HTTPFlowDetailRequestAndResponse.viewBody') }]
+
       extraBtn.push(
         <YakitDropdownMenu
           key="intact-req"
@@ -1632,7 +1618,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 key: 'tooLargeRequestHeaderFile',
                 label: t('HTTPFlowDetailRequestAndResponse.viewHeader'),
               },
-              { key: 'tooLargeRequestBodyFile', label: t('HTTPFlowDetailRequestAndResponse.viewBody') },
+              ...bodyItems,
             ],
             onClick: ({ key }) => {
               switch (key) {
@@ -1642,8 +1628,17 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 case 'tooLargeRequestBodyFile':
                   openTooLargePacketFile(flow.TooLargeRequestBodyFile)
                   break
-                default:
+                default: {
+                  // multipart-file-<partIndex>: open the spilled part file by
+                  // its absolute FilePath from the manifest.
+                  const m = /^multipart-file-(\d+)$/.exec(key)
+                  if (m) {
+                    const idx = parseInt(m[1], 10)
+                    const f = multipartFiles.find((x) => x.PartIndex === idx)
+                    if (f?.FilePath) openTooLargePacketFile(f.FilePath)
+                  }
                   break
+                }
               }
             },
           }}
@@ -1654,30 +1649,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         >
           <YakitButton type="primary" size="small">
             {t('HTTPFlowDetailRequestAndResponse.fullRequest')}
-          </YakitButton>
-        </YakitDropdownMenu>,
-      )
-    }
-    // 超大 multipart 请求：展示「下载文件」下拉，每个文件 part 一个菜单项，
-    // 点击后通过 GetHTTPFlowBodyById(PartIndex) 流式下载该文件（服务端从 sidecar 读取）。
-    if (flow?.MultipartFiles && flow.MultipartFiles.length > 0) {
-      extraBtn.push(
-        <YakitDropdownMenu
-          key="multipart-files"
-          menu={{
-            data: multipartFileMenuItems,
-            onClick: ({ key }) => {
-              const m = /^multipart-file-(\d+)$/.exec(key)
-              if (m) downloadMultipartPart(parseInt(m[1], 10))
-            },
-          }}
-          dropdown={{
-            trigger: ['click'],
-            placement: 'bottom',
-          }}
-        >
-          <YakitButton type="primary" size="small">
-            {t('HTTPFlowDetailRequestAndResponse.downloadMultipartFiles')}
           </YakitButton>
         </YakitDropdownMenu>,
       )
