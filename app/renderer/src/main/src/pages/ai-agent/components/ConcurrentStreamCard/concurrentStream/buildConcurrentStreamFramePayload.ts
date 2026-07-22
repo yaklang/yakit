@@ -17,6 +17,13 @@ export interface BuildConcurrentStreamFramePayloadParams {
   chatType?: string
   store: BuildFrameStore
   rawData: BuildFrameRawData | null | undefined
+  /**
+   * 是否在返回的 frame 中填充 rawData（task 自身 + children + group 孙节点）。
+   * - true（默认）：用于需要立即拿到全部 rawData 的场景。
+   * - false：仅返回元数据（rawData 为空 Map），用于打开子窗口时只发轻量 payload，
+   *   子窗 mount 后再通过 fetch-concurrent-stream-contents 拉取，避免开窗瞬间克隆大 Map。
+   */
+  withRawData?: boolean
 }
 
 /** 判断 childToken 在 store 中的类型 */
@@ -45,32 +52,34 @@ function getTaskName(rawData: BuildFrameRawData | null | undefined, token: strin
 export function buildConcurrentStreamFramePayload(
   params: BuildConcurrentStreamFramePayloadParams,
 ): OpenAIConcurrentStreamPayload | null {
-  const { token, session, chatType, store, rawData } = params
+  const { token, session, chatType, store, rawData, withRawData = false } = params
   if (!chatType || !rawData) return null
 
   const frameRawData = new Map<string, AIChatQSData>()
   const state = store.getState()
   const childrenTokens = state.tasks[token]?.childrenTokens || []
 
-  // task 自身数据
-  const taskData = rawData.contents.get(token)
-  if (taskData) frameRawData.set(token, taskData)
+  if (withRawData) {
+    // task 自身数据
+    const taskData = rawData.contents.get(token)
+    if (taskData) frameRawData.set(token, taskData)
 
-  // 遍历所有子节点
-  for (const childToken of childrenTokens) {
-    const kind = getKind(store, childToken)
-    if (!kind) continue
-    const childData = rawData.contents.get(childToken)
-    if (!childData) continue
-    frameRawData.set(childToken, childData)
+    // 遍历所有子节点
+    for (const childToken of childrenTokens) {
+      const kind = getKind(store, childToken)
+      if (!kind) continue
+      const childData = rawData.contents.get(childToken)
+      if (!childData) continue
+      frameRawData.set(childToken, childData)
 
-    // group 下的所有子节点数据
-    if (kind === 'group') {
-      const groupData = state.groups[childToken]
-      for (const grandChildToken of groupData?.childrenTokens || []) {
-        const grandChildData = rawData.contents.get(grandChildToken)
-        if (!grandChildData) continue
-        frameRawData.set(grandChildToken, grandChildData)
+      // group 下的所有子节点数据
+      if (kind === 'group') {
+        const groupData = state.groups[childToken]
+        for (const grandChildToken of groupData?.childrenTokens || []) {
+          const grandChildData = rawData.contents.get(grandChildToken)
+          if (!grandChildData) continue
+          frameRawData.set(grandChildToken, grandChildData)
+        }
       }
     }
   }

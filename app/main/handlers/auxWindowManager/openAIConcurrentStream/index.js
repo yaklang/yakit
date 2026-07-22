@@ -29,7 +29,10 @@ function register(manager, mainWindow) {
     }
   }
 
-  /** @deprecated 获取数据的逻辑改为直接从主窗口推送，如需下面逻辑，需要按新版获取数据逻辑补充 */
+  /**
+   * 子窗口打开后通过 fetch-concurrent-stream-contents 主动向主窗口拉取 rawData。
+   * 这里做 requestId 中转：转发请求到主窗口，等待响应后再 resolve 子窗口的 invoke。
+   */
   ipcMain.handle(FETCH_CONTENTS, async (_event, frame) => {
     if (!frame?.session || !frame?.token || !mainWindow || mainWindow.isDestroyed()) {
       return { rawData: [] }

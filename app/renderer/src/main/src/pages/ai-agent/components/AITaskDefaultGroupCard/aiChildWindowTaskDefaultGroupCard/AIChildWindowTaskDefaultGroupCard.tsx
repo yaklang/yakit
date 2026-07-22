@@ -107,13 +107,16 @@ const AIChildWindowGroupItem: FC<{ token: string; rawData: Map<string, AIChatQSD
 /** 子窗口版 stream group 卡片，从 rawData 中按 parentGroupToken 查找子节点 */
 const AIChildWindowGroupStreamCard: FC<{ token: string; rawData: Map<string, AIChatQSData> }> = memo(
   ({ token, rawData }) => {
-    // 从 rawData 中查找属于该 group 的子节点（parentGroupToken === token）
-    const childItems: AIChatQSData[] = []
-    rawData.forEach((value) => {
-      if (value.parentGroupToken === token) {
-        childItems.push(value)
-      }
-    })
+    // 按 token + rawData 缓存该 group 的子节点，避免每次渲染都全量 forEach
+    const childItems = useCreation<AIChatQSData[]>(() => {
+      const items: AIChatQSData[] = []
+      rawData.forEach((value) => {
+        if (value.parentGroupToken === token) {
+          items.push(value)
+        }
+      })
+      return items
+    }, [rawData, token])
 
     return (
       <div className={styles['concurrent-stream-content']}>

@@ -6,6 +6,9 @@ import styles from './ConcurrentStreamCardHeard.module.scss'
 import { getAIStatusPresentation } from '@/pages/ai-agent/utils/AIStatusUtils'
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import useCreation from 'ahooks/lib/useCreation'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import { yakitNotify } from '@/utils/notification'
+import emiter from '@/utils/eventBus/eventBus'
 
 const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((props) => {
   const { token, isChildWindow, onClickTitle, rowData, coordinatorId, expand, expandToggle, onRefresh } = props
@@ -36,6 +39,26 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
     return status === AITaskStatus.created || status === AITaskStatus.inProgress
   }, [rowData?.data?.status])
 
+  const onDetails = useMemoizedFn(() => {
+    if (!rowData) return
+    const { data } = rowData
+    if (!data.taskId) {
+      yakitNotify('error', 'taskId为空')
+      return
+    }
+    emiter.emit(
+      'actionAITaskContentTab',
+      JSON.stringify({
+        type: 'add',
+        params: {
+          key: data.taskId,
+          label: data.taskName || '',
+          goal: data.goal,
+        },
+      }),
+    )
+  })
+
   return (
     <div className={styles['chat-card-title']} onClick={onClickTitle}>
       <div className={styles['chat-card-title-left']}>
@@ -55,6 +78,7 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
           coordinatorId={coordinatorId}
           taskId={rowData?.data?.taskId}
           onRefresh={onRefresh}
+          onDetails={onDetails}
         />
       </div>
     </div>
