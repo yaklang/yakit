@@ -6,7 +6,11 @@ import { OutlineSearchIcon, OutlineSelectorIcon, OutlineStarIcon } from '@/asset
 import { SolidStarIcon } from '@/assets/icon/solid'
 import { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { isCellRedSingleColor, getSingleColorType } from '@/components/TableVirtualResize/utils'
+import {
+  isCellRedSingleColor,
+  getSingleColorType,
+  shouldUseParamsIconText3,
+} from '@/components/TableVirtualResize/utils'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { formatHTTPFlowPathSuffix } from './HTTPFlowPathSuffix'
@@ -303,6 +307,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
             <CheckCircleIcon
               className={classNames({
                 [style['check-circle-icon']]: !isCellRedSingleColor(rowData.cellClassName),
+                [style['check-circle-icon-text-3']]: shouldUseParamsIconText3(rowData.cellClassName),
               })}
             />
           )}
@@ -393,11 +398,12 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       render: (_, rowData) => {
         if (!rowData.Hash) return <></>
         const colorType = getSingleColorType(rowData.cellClassName)
+        const singleColorRow = isCellRedSingleColor(rowData.cellClassName)
         const favorite = isHTTPFlowFavorite(rowData)
         return (
           <div
             className={classNames(style['action-btn-group'], {
-              [style[`hover-${colorType}-row`]]: !!colorType,
+              [style['hover-red-row']]: colorType === 'red',
             })}
           >
             {favorite ? (
@@ -408,7 +414,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
             ) : (
               <OutlineStarIcon
                 className={classNames(style['favorite-icon'], style['icon-hover'], {
-                  [style['icon-style']]: !colorType,
+                  [style['icon-style']]: !singleColorRow,
                 })}
                 onClick={(e) => actionHandlers.onToggleFavorite(e, rowData, true)}
               />
@@ -416,14 +422,14 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
             <div className={style['divider-style']} />
             <ChromeFrameSvgIcon
               className={classNames(style['icon-hover'], {
-                [style['icon-style']]: !colorType,
+                [style['icon-style']]: !singleColorRow,
               })}
               onClick={(e) => actionHandlers.onOpenInBrowser(e, rowData)}
             />
             <div className={style['divider-style']}></div>
             <ArrowCircleRightSvgIcon
               className={classNames(style['icon-hover'], {
-                [style['icon-style']]: !colorType,
+                [style['icon-style']]: !singleColorRow,
               })}
               onClick={(e) => actionHandlers.onExpand(e, rowData)}
             />

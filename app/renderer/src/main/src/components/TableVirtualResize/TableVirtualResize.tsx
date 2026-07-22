@@ -2072,6 +2072,8 @@ const CellRender = React.memo(
           [styles[`virtual-table-hover-cell-${colorTypes}`]]: !!colorTypes && mouseCellId === item.data[renderKey],
           [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
 
+          'table-cell-row-hover': !!colorTypes && mouseCellId === item.data[renderKey],
+
           [styles['virtual-table-row-cell-border-right-0']]: isLastItem,
           [styles['virtual-table-row-cell-border-right-1']]: (batchActive || isSelect) && isLastItem && lineHighlight,
           [styles['virtual-table-row-cell-border-left-1']]: (batchActive || isSelect) && colIndex === 0,
@@ -2284,6 +2286,8 @@ const CellRenderDrop = React.memo(
           [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
           [styles[`virtual-table-hover-cell-${colorTypes}`]]: !!colorTypes && mouseCellId === item.data[renderKey],
           [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
+
+          'table-cell-row-hover': !!colorTypes && mouseCellId === item.data[renderKey],
 
           [styles['virtual-table-row-cell-border-right-0']]: isLastItem,
           [styles['virtual-table-row-cell-border-right-1']]: (batchActive || isSelect) && isLastItem,

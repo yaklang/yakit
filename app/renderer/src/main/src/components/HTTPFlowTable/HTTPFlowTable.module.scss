@@ -1,3 +1,5 @@
+@use '../TableVirtualResize/styleFunction.scss' as tools;
+
 .http-history-flow-table-wrapper {
   width: 100%;
   height: 100%;
@@ -29,6 +31,16 @@
     .check-circle-icon {
       color: var(--Colors-Use-Success-Primary);
     }
+
+    .check-circle-icon-text-3 {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+  }
+}
+
+.check-circle {
+  .check-circle-icon-text-3 {
+    @include tools.colored-row-params-icon();
   }
 }
 
@@ -667,15 +679,11 @@
       width: 19px;
     }
   }
-}
 
-.hover-grey-row {
-  .icon-hover {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-  }
+  @include tools.colored-row-action-icon('.icon-hover');
 
-  .icon-hover:hover {
-    color: var(--Colors-Use-Basic-White);
+  .favorite-icon-active.icon-hover {
+    color: var(--Colors-Use-Yellow-Primary) !important;
   }
 }
 
