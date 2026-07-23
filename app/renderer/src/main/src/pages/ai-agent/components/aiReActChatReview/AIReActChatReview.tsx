@@ -272,7 +272,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       SyncID: randomString(8),
       SyncJsonInput: JSON.stringify(syncPayload),
     }
-    // chatIPCEvents.handleTaskReviewRelease(detachedReview.id)
+    globalSessionEngine.closeChatReview(sessionId, info.id)
     onSend({ token: sessionId, type: '', params })
     pendingDetachedPlanSubmitRef.current = false
   })
@@ -368,7 +368,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         setForgeOption(item)
         break
       case 'close':
-        globalSessionEngine.closeChatReview(sessionId, info.chatType, info.id)
+        globalSessionEngine.closeChatReview(sessionId, info.id)
         break
       default:
         if (editShow) return

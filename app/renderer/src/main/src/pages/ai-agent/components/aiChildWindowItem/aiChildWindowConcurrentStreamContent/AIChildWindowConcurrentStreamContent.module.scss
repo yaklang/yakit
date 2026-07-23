@@ -1,1 +1,40 @@
-@use '../../ConcurrentStreamCard/ConcurrentStreamCard.module.scss';
+// 子窗口并发流内容区样式。
+// 内容对齐 ConcurrentStreamContent.module.scss。
+
+.concurrent-stream-content {
+  width: 100%;
+  max-height: 300px;
+  overflow-y: hidden;
+  &-item {
+    margin-bottom: 8px;
+    // 连续流卡片之间去掉间距（concurrent-stream-card 本身排除在外保留间距）
+    &:has(:global(.ai-stream-chat-content-wrapper)) {
+      &
+        + .concurrent-stream-content-item:has(:global(.ai-stream-chat-content-wrapper)):not(
+          :has(:global(.concurrent-stream-card))
+        ) {
+        margin-top: -8px;
+      }
+    }
+  }
+}
+
+// 子窗口内容区外层容器：撑满父级高度
+.concurrent-stream-content-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.focused {
+  overflow-y: overlay;
+}
+
+.content {
+  width: 100%;
+  max-height: 500px;
+  background-color: var(--Colors-Use-Basic-Background);
+  padding: 4px;
+  border-radius: 8px;
+}

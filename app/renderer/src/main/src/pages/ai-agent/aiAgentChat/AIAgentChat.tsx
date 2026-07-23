@@ -121,9 +121,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
               Strategy: { EnableMultiAgent: false, EnableGoalMode: false, GoalMinIterations: 0 },
             }))
             setActiveChat?.(undefined)
-            setTimeout(() => {
-              setMode('welcome')
-            }, 100)
+            setMode('welcome')
+            // setTimeout(() => {
+            //   setMode('welcome')
+            // }, 100)
             break
           // 替换当前使用的 forge 模板
           case ReActChatEventEnum.OPEN_FORGE_FORM:

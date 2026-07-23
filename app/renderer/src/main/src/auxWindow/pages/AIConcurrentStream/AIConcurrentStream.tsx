@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, memo, startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import React, { lazy, memo, startTransition, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { yakitAuxWindow } from '@/services/electronBridge'
 import ConcurrentStreamSkeleton from '@/auxWindow/components/ConcurrentStreamSkeleton/ConcurrentStreamSkeleton'
 import {
@@ -141,25 +141,8 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
         <div className={styles.wrapper}>
           <Suspense fallback={<ConcurrentStreamSkeleton variant="card" />}>
             {isTaskDefaultGroup ? (
-              // <AITaskDefaultGroupCard
-              //   key={cardKey}
-              //   isChildWindow
-              //   onRefresh={requestRefresh}
-              //   session={frame.session}
-              //   token={frame.token}
-              //   chatType={frame.chatType}
-              //   elements={frame.elements}
-              // />
               <AIChildWindowTaskDefaultGroupCard token={frame.token} />
             ) : (
-              // <ConcurrentStreamCard
-              //   key={cardKey}
-              //   isChildWindow
-              //   session={frame.session}
-              //   token={frame.token}
-              //   chatType={frame.chatType}
-              //   elements={frame.elements}
-              // />
               <AIChildWindowConcurrentStreamCard token={frame.token} />
             )}
           </Suspense>

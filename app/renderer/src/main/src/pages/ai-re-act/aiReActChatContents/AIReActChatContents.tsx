@@ -2,7 +2,6 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } 
 import classNames from 'classnames'
 import { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
-import { useCreation } from 'ahooks'
 import { AIMarkdown } from '@/pages/ai-agent/components/aiMarkdown/AIMarkdown'
 import { AIStreamChatContent } from '@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent'
 import StreamCard from '@/pages/ai-agent/components/StreamCard'
@@ -25,7 +24,8 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
-
+import useCreation from 'ahooks/lib/useCreation'
+import useDebounceFn from 'ahooks/lib/useDebounceFn'
 const getAIReferenceNodeByType = (contentType?: string) => {
   switch (contentType) {
     case AIStreamContentType.TEXT_MARKDOWN:
@@ -248,14 +248,15 @@ export const openAIReferenceModal = (referenceList: ChatReferenceMaterialPayload
 
 export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
   const { referenceList, className } = props
+  const onClick = useDebounceFn(
+    (e) => {
+      e.stopPropagation()
+      openAIReferenceModal(referenceList)
+    },
+    { wait: 500, leading: true },
+  ).run
   return (
-    <span
-      className={classNames(styles['ai-reference-node'], className)}
-      onClick={(e) => {
-        e.stopPropagation()
-        openAIReferenceModal(referenceList)
-      }}
-    >
+    <span className={classNames(styles['ai-reference-node'], className)} onClick={onClick}>
       [参考资料]
     </span>
   )

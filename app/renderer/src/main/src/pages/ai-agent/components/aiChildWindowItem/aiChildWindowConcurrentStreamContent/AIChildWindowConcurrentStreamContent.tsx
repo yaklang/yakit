@@ -27,12 +27,15 @@ const AIChildWindowConcurrentStreamContent: FC = memo(() => {
           {childrenTokens?.map((token) => {
             const item = rawData?.get(token)
             if (!item) return <React.Fragment key={token} />
-            if (!!item.parentGroupToken) {
-              if (!rawData) return <React.Fragment key={token} />
-              return <AIChildWindowGroupItem key={token} token={token} />
-            } else {
-              return <AIChildWindowNodeItemWrapper key={token} itemData={item} />
-            }
+            return (
+              <div className={styles['concurrent-stream-content-item']} key={token}>
+                {!!item.parentGroupToken ? (
+                  <AIChildWindowGroupItem token={token} />
+                ) : (
+                  <AIChildWindowNodeItemWrapper itemData={item} />
+                )}
+              </div>
+            )
           })}
         </div>
       </div>

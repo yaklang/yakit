@@ -616,11 +616,12 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
   const taskStatus = useStore(store, (state) => state.taskStatus)
   const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
 
-  const getTaskInfo = useMemoizedFn(() => {
-    return meta.currentTaskPlanID
-  })
+  const status = useCreation(() => {
+    return meta.currentTaskPlanID?.status
+  }, [taskStatus.loading])
+
   const renderBtn = useMemoizedFn(() => {
-    switch (getTaskInfo()?.status) {
+    switch (status) {
       case AITaskStatus.inProgress:
         return (
           <YakitPopconfirm

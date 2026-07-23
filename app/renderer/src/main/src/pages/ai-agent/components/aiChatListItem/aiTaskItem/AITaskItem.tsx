@@ -15,7 +15,7 @@ const AITaskItem: React.FC<AITaskItemProps> = React.memo((props) => {
     case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
       return <AITaskDefaultGroupCard token={token} />
     case AIChatQSDataTypeEnum.TASK_NODE_GROUP:
-      return <ConcurrentStreamCard token={token} isChildWindow={false} />
+      return <ConcurrentStreamCard token={token} />
     default:
       return <></>
   }

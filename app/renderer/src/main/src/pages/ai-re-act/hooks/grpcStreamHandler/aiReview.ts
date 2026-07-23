@@ -465,6 +465,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
       // 将操作记录渲染到列表上
       store.getState().dispatchStreamingNode({
         chatType: chatType,
+        parentTaskId: reviewDetail.TaskId,
         node: {
           token: reviewDetail.id,
           kind: 'item',

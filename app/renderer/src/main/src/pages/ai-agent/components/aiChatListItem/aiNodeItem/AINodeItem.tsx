@@ -91,9 +91,9 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
 
     case AIChatQSDataTypeEnum.STREAM:
       if (!!itemData.parentGroupToken) {
+        // 组
         return <AIGroupStreamNodeWrapper itemData={itemData} renderNum={renderNum} groupIndex={groupIndex} />
       } else {
-        // 组
         return <AIStreamCardWrapper token={itemData.id} />
       }
     default:

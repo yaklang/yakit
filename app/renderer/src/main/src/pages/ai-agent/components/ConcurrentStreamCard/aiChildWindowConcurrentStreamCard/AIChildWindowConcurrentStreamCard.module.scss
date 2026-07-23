@@ -1,5 +1,15 @@
-@use '../ConcurrentStreamCard.module.scss';
-@use '../ConcurrentStreamContent/ConcurrentStreamContent.module.scss';
+// 子窗口并发流卡片样式。
+// 内容对齐 ConcurrentStreamCard.module.scss / ConcurrentStreamContent.module.scss。
+
+.chat-card {
+  position: relative;
+  width: 100%;
+  padding: 4px 8px;
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
 
 .child-chat-card {
   height: 100%;

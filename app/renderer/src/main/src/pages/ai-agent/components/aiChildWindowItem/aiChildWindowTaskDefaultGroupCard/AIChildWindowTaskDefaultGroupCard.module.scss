@@ -1,2 +1,21 @@
-@use '../../AITaskDefaultGroupCard/AITaskDefaultGroupCard.module.scss';
-@use '../../ConcurrentStreamCard/ConcurrentStreamContent/ConcurrentStreamContent.module.scss';
+// 子窗口 task default group 卡片样式。
+// 内容对齐 AITaskDefaultGroupCard.module.scss。
+
+.ai-task-default-group-card {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  background: var(--Colors-Use-Basic-Background);
+  max-height: 600px;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.child-window-card {
+  max-height: none;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+}
