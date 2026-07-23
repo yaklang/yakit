@@ -1098,7 +1098,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         editorDomNode?.removeEventListener('copy', handleEditorClipboard, true)
         editorDomNode?.removeEventListener('cut', handleEditorClipboard, true)
         unregisterBinaryFoldEntries(model)
-        editor.dispose()
+        // 不手动 editor.dispose()，交由 react-monaco-editor 卸载处理，避免双释放
       } catch (e) {}
     }
   }, [editor])
