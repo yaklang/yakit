@@ -837,9 +837,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     })
     scheduleDecorations()
 
-    // 监听光标位置变化，用于隐私模式的动态显示/隐藏
+    // 监听光标位置变化，仅隐私模式需要按光标动态显示/隐藏打码
     const cursorPositionDisposable = editor.onDidChangeCursorPosition(() => {
-      if (props.type === 'http') {
+      if (props.type === 'http' && privacyFun()) {
         scheduleDecorations()
       }
     })
