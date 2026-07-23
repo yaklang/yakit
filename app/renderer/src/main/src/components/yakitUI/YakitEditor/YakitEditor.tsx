@@ -95,6 +95,7 @@ import { keepSearchNameMapStore, useKeepSearchNameMap } from '@/store/keepSearch
 import type { IEvent } from 'monaco-editor'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
+import { editorActionBarStore, useShowActionBar } from '@/store/editorActionBar'
 import { JSONParseLog } from '@/utils/tool'
 import {
   BinaryFuzztagEntry,
@@ -287,8 +288,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const keyToOnRunRef = useRef<Record<string, string[]>>({})
 
   const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
-  /** @name 控制快捷操作栏的显示隐藏 */
-  const [showActionBar, setShowActionBar, getShowActionBar] = useGetState<boolean>(true)
+  /** @name 控制快捷操作栏的显示隐藏（全局共享） */
+  const showActionBar = useShowActionBar()
+  const { setShowActionBar, getShowActionBar } = editorActionBarStore
   const { theme: themeGlobal } = useTheme()
 
   const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
@@ -776,7 +778,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     switch (key) {
       case 'toggle-action-bar':
-        setShowActionBar(!getShowActionBar())
+        setShowActionBar((prev) => !prev)
         return
       case 'toggle-fold-binary': {
         const next = !getFoldBinaryOpen()
