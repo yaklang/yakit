@@ -6,6 +6,11 @@ import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData } from '../defaultConstant'
 import has from 'lodash/has'
+import {
+  persistIndependentItem,
+  persistToolResultIfTerminal,
+  deletePersistedContent,
+} from '../persist/contentPersistHelper'
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
   const { res, store, rawData } = request
@@ -44,8 +49,8 @@ const handleSessionTitle: AIMessageHandler = (request) => {
   store.getState().updateStateCount('sessionTitleUpdate')
 }
 
-const handleStartPlanAndExecution: AIMessageHandler = (request) => {
-  const { res, store, rawData, meta, sendRequest } = request
+const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
+  const { res, store, rawData, meta, sendRequest } = requestInfo
   if (res.Type !== 'start_plan_and_execution') return
   if (res.IsSync) return
 
@@ -55,7 +60,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
   if (!startInfo.coordinator_id) {
-    request.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
     return
   }
   meta.currentTaskPlanID = {
@@ -83,6 +88,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (request) => {
     type: AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP,
   } as AIChatQSData
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: 'task',
     node: { token: chatData.id, kind: 'task', type: chatData.type },
@@ -107,11 +113,12 @@ const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
       data: '',
     }
     rawData.contents.set(chatData.id, chatData)
+    persistIndependentItem(requestInfo.sessionId, chatData)
     store.getState().dispatchStreamingNode({
       chatType: 'task',
       node: { token: chatData.id, kind: 'item', type: chatData.type },
     })
-    handleTaskPlanEnd({ store, rawData, meta, request: requestInfo.request })
+    handleTaskPlanEnd({ store, rawData, meta, request: requestInfo.request, sessionId: requestInfo.sessionId })
   }
 }
 
@@ -186,8 +193,8 @@ const handleReactTaskEnqueue: AIMessageHandler = (request) => {
 
   sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
 }
-const handleReactTaskDequeue: AIMessageHandler = (request) => {
-  const { res, chatType, store, rawData, meta, sendRequest } = request
+const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
+  const { res, chatType, store, rawData, sendRequest } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'react_task_dequeue') return
   if (chatType === 'task') return
 
@@ -219,10 +226,13 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
   }
   rawData.contents.set(chatData.id, chatData)
 
+  persistIndependentItem(requestInfo.sessionId, chatData)
   if (data.react_task_user_input_uuid) {
     const qsDetail = rawData.contents.get(data.react_task_user_input_uuid)
     if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
       rawData.contents.delete(data.react_task_user_input_uuid)
+      // 清掉前端临时 uuid 对应的 IDB 孤儿行
+      deletePersistedContent(requestInfo.sessionId, data.react_task_user_input_uuid)
       store.getState().replaceItemToken(data.react_task_user_input_uuid, chatData.id)
       return
     }
@@ -348,6 +358,7 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
   if (!taskDetail || taskDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
   taskDetail.data.status = info.react_task_now_status as AITaskStatusType
   store.getState().incrementNodeVersion(taskDetail.id, 'task')
+  persistIndependentItem(request.sessionId, taskDetail)
 }
 
 const handleTrafficCount: AIMessageHandler = (request) => {
@@ -399,6 +410,8 @@ const handleTrafficCount: AIMessageHandler = (request) => {
   }
   if (!update) return
   store.getState().incrementNodeVersion(toolResult.id, 'item')
+  // 流量/风险计数：仅工具已终态时追加写正文
+  persistToolResultIfTerminal(request.sessionId, toolResult)
 }
 
 const handlePlan: AIMessageHandler = (requestInfo) => {
@@ -426,8 +439,8 @@ const handleYaklangCodeChange: AIMessageHandler = (requestInfo) => {
   store.getState().updateStateCount('yaklangCodeChangeUpdate')
 }
 
-const handleReactTaskCreated: AIMessageHandler = (request) => {
-  const { res, chatType, store, rawData, meta } = request
+const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'react_task_created') return
   if (res.IsSync || chatType === 'task') return
 
@@ -458,6 +471,7 @@ const handleReactTaskCreated: AIMessageHandler = (request) => {
   } as AIChatQSData
 
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   // planDetailsMap / 子任务收集仍按后端子任务 ID（res.TaskId）索引
   if (rawData.casualChat.planDetailsMap.has(info.react_task_id)) {
     rawData.casualChat.planDetailsMap.set(info.react_task_id, cloneDeep(DefaultPlanItemDetailsData))

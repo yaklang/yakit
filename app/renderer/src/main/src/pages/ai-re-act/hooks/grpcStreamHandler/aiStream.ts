@@ -2,9 +2,17 @@ import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeDataID, isToolStderrStream, isToolStdoutStream } from '../utils'
-import { AIChatQSDataTypeEnum } from '../aiRender'
+import { AIChatQSDataTypeEnum, type AIChatQSData } from '../aiRender'
 import { AIStreamContentType, convertNodeIdToVerbose } from '../defaultConstant'
 import { aiAgentLogEmitter } from '../AIAgentLogEmitter'
+import { v4 as uuidv4 } from 'uuid'
+import aiChatPersistStore from '../persist/aiChatPersistStore'
+import {
+  appendReferenceToContent,
+  persistIndependentItem,
+  persistToolResultIfTerminal,
+  upsertSessionContent,
+} from '../persist/contentPersistHelper'
 
 /** 生成stream_group组数据 */
 const genStreamGroupData = (
@@ -13,14 +21,15 @@ const genStreamGroupData = (
     tokens: string[]
   } & AIMessageHandlerParams,
 ) => {
-  const { group, tokens, res, chatType, rawData, store, meta } = params
+  const { group, tokens, sessionId, res, chatType, rawData, store, meta } = params
 
   const groupDetail = rawData.contents.get(group)
   // 设置组数据详情
   if (groupDetail && groupDetail.type === AIChatQSDataTypeEnum.STREAM_GROUP) {
     groupDetail.data.lastToken = tokens[tokens.length - 1]
+    persistIndependentItem(sessionId, groupDetail)
   } else {
-    rawData.contents.set(group, {
+    const chatData: AIChatQSData = {
       id: group,
       chatType: chatType,
       type: AIChatQSDataTypeEnum.STREAM_GROUP,
@@ -38,12 +47,19 @@ const genStreamGroupData = (
       AIService: '',
       AIModelName: '',
       Timestamp: res.Timestamp,
-    })
+    }
+    rawData.contents.set(group, chatData)
+    persistIndependentItem(sessionId, chatData)
   }
 
   tokens.forEach((mapKey) => {
     const mapValue = rawData.contents.get(mapKey)
-    if (mapValue) mapValue.parentGroupToken = group
+    if (!mapValue) return
+    mapValue.parentGroupToken = group
+    // 流已结束后才入组：需补写 parentGroupToken
+    if (mapValue.type === AIChatQSDataTypeEnum.STREAM && mapValue.data.status === 'end') {
+      upsertSessionContent(sessionId, mapValue.id, mapValue)
+    }
   })
 }
 
@@ -332,6 +348,7 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
       // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
       toolResult.data.tool.execError = toolErrorResult.content
       if (showUI) store.getState().incrementNodeVersion(toolResult.id, 'item')
+      persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
       meta.toolStderrStreamData.delete(CallToolID)
     }
     return
@@ -359,6 +376,9 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
       : toolForStreamData.data.content
     toolResult.data.tool.toolStdoutContent = { content: displayContent, isShowAll }
     store.getState().incrementNodeVersion(toolResult.id, 'item')
+    // stdout 流结束：落库该 STREAM；若工具已终态则同步刷新 TOOL_RESULT
+    upsertSessionContent(requestInfo.sessionId, toolForStreamData.id, toolForStreamData)
+    persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
     return
   }
 
@@ -370,10 +390,11 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
   streamData.data.status = 'end'
   store.getState().incrementNodeVersion(streamData.id, 'item')
+  upsertSessionContent(requestInfo.sessionId, streamData.id, streamData)
 }
 
 const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta } = requestInfo
+  const { sessionId, res, chatType, store, rawData } = requestInfo
   if (res.Type !== 'reference_material') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -382,8 +403,18 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
   const chatData = rawData.contents.get(data.event_uuid)
   const toolResult = rawData.contents.get(res.CallToolID || '')
 
+  // 收数时自动生成 refToken，立刻落表3；内存只挂 token，不存完整 payload
+  const refToken = uuidv4()
+  aiChatPersistStore.setSessionReference(sessionId, refToken, data).catch(() => {})
+
   if (chatData) {
-    chatData.reference = (chatData.reference || []).concat([data])
+    chatData.reference = [...(chatData.reference || []), refToken]
+    // STREAM：仅 status=end 后才追加写正文；未 end 只挂内存，等 finished 一并落库
+    // 非 STREAM：有内存则立刻 upsert（独立单条晚到参考资料）
+    const shouldUpsertContent = chatData.type === AIChatQSDataTypeEnum.STREAM ? chatData.data.status === 'end' : true
+    if (shouldUpsertContent) {
+      upsertSessionContent(sessionId, chatData.id, chatData)
+    }
     if (store.getState().items[chatData.id]) {
       // 属于item元素，已经在UI上渲染了
       store.getState().incrementNodeVersion(chatData.id, 'item')
@@ -434,14 +465,14 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
     // 现阶段直接注释，因为UI还没有写入专门的参考资料元素
     // const chatData: AIChatQSData = {
     //   ...genBaseAIChatData(res),
-    //   id: data.event_uuid,
+    //   id: refToken,
     //   chatType: chatType,
     //   type: AIChatQSDataTypeEnum.Reference_Material,
     //   data: {
     //     NodeId: res.NodeId,
     //     NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     //   },
-    //   reference: [data],
+    //   reference: [refToken],
     //   TaskId: generateTaskNodeDataID({
     //     chatType,
     //     planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
@@ -450,6 +481,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
     //   }),
     // }
     // rawData.contents.set(chatData.id, chatData)
+    // persistIndependentItem(requestInfo.sessionId, chatData)
     // store.getState().dispatchStreamingNode({
     //   chatType: chatType,
     //   parentTaskId: chatData.TaskId,

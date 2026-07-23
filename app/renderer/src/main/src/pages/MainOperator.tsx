@@ -71,7 +71,9 @@ import { JSONParseLog } from '@/utils/tool'
 import { apiGetGlobalNetworkConfig } from './spaceEngine/utils'
 import { setAIModal } from './ai-agent/aiModelList/AIModelList'
 import { Trans } from 'react-i18next'
-import aiChatMessageStore from './ai-agent/store/aiChatMessageStore'
+// 旧 AI 消息 IndexedDB 生命周期已屏蔽，改由 aiChatPersistStore 接管预热/关闭
+// import aiChatMessageStore from './ai-agent/store/aiChatMessageStore'
+import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -297,14 +299,26 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     checkAndShowDataMigration()
   }, [])
 
+  // 旧 aiChatMessageStore 预热/关闭已屏蔽
+  // useEffect(() => {
+  //   aiChatMessageStore.open().catch((err) => {
+  //     yakitFailed('IndexedDB打开失败: ' + (err instanceof Error ? err.message : String(err)))
+  //   })
+  //   return () => {
+  //     aiChatMessageStore.close().catch((err) => {
+  //       yakitFailed('IndexedDB关闭失败: ' + (err instanceof Error ? err.message : String(err)))
+  //     })
+  //   }
+  // }, [])
+
+  // 新 AI 会话持久化库：挂载预热、卸载关闭
   useEffect(() => {
-    // 打开indexedDB
-    aiChatMessageStore.open().catch((err) => {
-      yakitFailed('IndexedDB打开失败: ' + (err instanceof Error ? err.message : String(err)))
+    aiChatPersistStore.open().catch((err) => {
+      yakitFailed('AI会话IndexedDB打开失败: ' + (err instanceof Error ? err.message : String(err)))
     })
     return () => {
-      aiChatMessageStore.close().catch((err) => {
-        yakitFailed('IndexedDB关闭失败: ' + (err instanceof Error ? err.message : String(err)))
+      aiChatPersistStore.close().catch((err) => {
+        yakitFailed('AI会话IndexedDB关闭失败: ' + (err instanceof Error ? err.message : String(err)))
       })
     }
   }, [])

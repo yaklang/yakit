@@ -1,5 +1,5 @@
 import type { ForwardedRef } from 'react'
-import type { ChatReferenceMaterialPayload, ChatStream } from '../hooks/aiRender'
+import type { ChatStream } from '../hooks/aiRender'
 
 export interface AIReActChatContentsPProps {
   ref: ForwardedRef<AIReActChatContentsRef>
@@ -19,6 +19,7 @@ export interface AIStreamNodeProps {
 }
 
 export interface AIReferenceNodeProps {
-  referenceList: ChatReferenceMaterialPayload
+  /** 参考资料 token 列表（payload 存 IDB，完整弹框交互后置） */
+  referenceList: string[]
   className?: string
 }

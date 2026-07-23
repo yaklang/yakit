@@ -19,6 +19,7 @@ import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultPlanLoadingStatus } from './defaultConstant'
 import { ChatMultiSessionController } from './ChatMultiSessionController'
+import { persistIndependentItem } from './persist/contentPersistHelper'
 
 /**
  * 任务节点内的数据生成任务节点ID
@@ -54,10 +55,10 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
 }
 
 /** 任务规划结束后的所有数据处理 */
-export const handleTaskPlanEnd: (requestInfo: ReturnType<ChatMultiSessionController['ensureSession']>) => void = (
-  requestInfo,
-) => {
-  const { store, rawData, meta } = requestInfo
+export const handleTaskPlanEnd: (
+  requestInfo: ReturnType<ChatMultiSessionController['ensureSession']> & { sessionId: string },
+) => void = (requestInfo) => {
+  const { sessionId, store, rawData, meta } = requestInfo
 
   // 将UI列表里正在执行中的任务组状态变成error
   const actives = Array.from(meta.currentTaskPlanActiveNode)
@@ -69,6 +70,7 @@ export const handleTaskPlanEnd: (requestInfo: ReturnType<ChatMultiSessionControl
     }
     taskNodeInfo.data.status = AITaskStatus.error
     store.getState().incrementNodeVersion(taskNodeInfo.id, 'task')
+    persistIndependentItem(sessionId, taskNodeInfo)
   }
   // 将当前正在执行的任务树里, 进行中的节点状态变成error
   const newPlanTree = cloneDeep(store.getState().taskChat.plan)
