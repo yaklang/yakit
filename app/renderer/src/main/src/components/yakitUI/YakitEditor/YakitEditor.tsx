@@ -133,6 +133,9 @@ const highLightFingerprint = (list?: readonly any[]): string => {
   return s
 }
 
+/** Monaco link opener 全局只注册一次，避免多编辑器实例重复注册 */
+let linkOpenerRegistered = false
+
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const {
     forceRenderMenu = false,
@@ -278,6 +281,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   // 阻止编辑器点击URL默认打开行为 自定义外部系统默认浏览器打开URL
   useEffect(() => {
+    if (linkOpenerRegistered) return
+    linkOpenerRegistered = true
     monaco.editor.registerLinkOpener({
       open: (link) => {
         // 在系统默认浏览器中打开链接
