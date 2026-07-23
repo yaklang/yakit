@@ -1603,16 +1603,22 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
       const multipartFiles = flow?.MultipartFiles ?? []
       const hasMultipart = multipartFiles.length > 0
       const bodyItems: YakitMenuItemType[] = hasMultipart
-        ? multipartFiles.map((f) => ({
-            key: `multipart-file-${f.PartIndex}`,
-            label: `${f.Filename} (${formatMultipartFileSize(f.Size)})`,
-          }))
+        ? multipartFiles.map((f) => {
+            // 文件名过长时头尾截断（保留扩展名），完整名通过 tooltip 展示，避免撑宽下拉菜单
+            const shortName = truncateFilename(f.Filename)
+            return {
+              key: `multipart-file-${f.PartIndex}`,
+              label: `${shortName} (${formatMultipartFileSize(f.Size)})`,
+              title: `${f.Filename} (${formatMultipartFileSize(f.Size)})`,
+            }
+          })
         : [{ key: 'tooLargeRequestBodyFile', label: t('HTTPFlowDetailRequestAndResponse.viewBody') }]
 
       extraBtn.push(
         <YakitDropdownMenu
           key="intact-req"
           menu={{
+            isHint: true,
             data: [
               {
                 key: 'tooLargeRequestHeaderFile',
@@ -2203,4 +2209,15 @@ function formatMultipartFileSize(bytes: number): string {
     i++
   }
   return `${n >= 100 || i === 0 ? Math.round(n) : n.toFixed(1)} ${units[i]}`
+}
+
+// truncateFilename 缩短过长的文件名：保留开头与结尾（通常含扩展名），中间用 "…" 占位，
+// 避免下拉项被撑得过宽。完整名通过菜单项的 title（tooltip）展示。
+function truncateFilename(name: string, maxLen = 28): string {
+  if (!name || name.length <= maxLen) return name
+  // 结尾保留约 1/3 长度，通常足以容纳扩展名
+  const tail = Math.max(6, Math.floor(maxLen / 3))
+  const head = maxLen - tail - 1 // 1 字符留给 "…"
+  if (head < 4) return name.slice(0, maxLen - 1) + '…'
+  return name.slice(0, head) + '…' + name.slice(name.length - tail)
 }
