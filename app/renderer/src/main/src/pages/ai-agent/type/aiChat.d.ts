@@ -1,6 +1,6 @@
 import type { TaskChatTaskInfo, UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { PlanItemDetailsData } from '@/pages/ai-re-act/hooks/aiRender'
+import type { PlanItemDetailsData, SessionRenderContent } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { PaginationSchema } from '@/pages/invoker/schema'
@@ -178,11 +178,11 @@ export interface AIAgentChatData {
   /** yaklang_code_change 数据 */
   yaklangCodeChange?: AIAgentGrpcApi.YaklangCodeChange
 
-  /** 获取历史数据时的最早ID节点 */
-  beforeID: {
-    timelineID: number
-    chatID: number
-  }
+  /**
+   * 与 IDB sessionRender.grpcOffset 同步的事件游标。
+   * start 时对齐后写入；仅加载后端存量历史（recovery 等）时更新。
+   */
+  grpcOffset: number
 
   /** 记录数据里所有的httpRunTimeIDs */
   httpRunTimeIDs: string[]
@@ -275,6 +275,12 @@ export interface AIAgentChatMetaData {
 
   /** 轮询获取最新记忆列表的定时器 */
   memoryPollingTimer: NodeJS.Timeout | null
+
+  /**
+   * start 时从 IDB 读出的渲染树暂存，pong 后消费 hydrate，避免二次读库。
+   * 消费后应置 undefined。
+   */
+  pendingSessionRender?: SessionRenderContent
 
   /**
    * 记录自由对话下成组agent任务的taskID

@@ -5,6 +5,7 @@ import { genBaseAIChatData, generateTaskNodeDataID } from '../utils'
 import { AIChatQSDataTypeEnum, type AIToolResult } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultAIToolResult, DefaultToolResultSummary } from '../defaultConstant'
+import { persistToolResultIfTerminal, upsertSessionContent } from '../persist/contentPersistHelper'
 
 const handleToolCallStart: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, meta } = requestInfo
@@ -64,6 +65,7 @@ const handleToolCallParam: AIMessageHandler = (requestInfo) => {
 
   toolResult.data.tool.reviewParams = cloneDeep(params)
   if (toolResult.data.type === 'result') store.getState().incrementNodeVersion(toolResult.id, 'item')
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
@@ -140,6 +142,7 @@ const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
   // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
   toolResult.data.tool.dirPath = dir_path || ''
   if (toolResult.data.tool.status !== 'default') store.getState().incrementNodeVersion(toolResult.id, 'item')
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 const handleToolCallResult: AIMessageHandler = (requestInfo) => {
@@ -191,6 +194,7 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
   }
 
   store.getState().incrementNodeVersion(toolResult.id, 'item')
+  upsertSessionContent(requestInfo.sessionId, toolResult.id, toolResult)
 }
 
 const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
@@ -232,6 +236,7 @@ const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
   if (statusInfo !== 'default') {
     store.getState().incrementNodeVersion(toolResult.id, 'item')
   }
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 const handleToolCallStatus: AIMessageHandler = (requestInfo) => {
@@ -259,6 +264,7 @@ const handleToolCallStatus: AIMessageHandler = (requestInfo) => {
 
   toolResult.data.isProcessingParams = status === 'processing_params'
   store.getState().incrementNodeVersion(toolResult.id, 'item')
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 const handleToolCallReason: AIMessageHandler = (requestInfo) => {
@@ -284,6 +290,7 @@ const handleToolCallReason: AIMessageHandler = (requestInfo) => {
 
   toolResult.data.tool.reason = reason || ''
   if (toolResult.data.type !== 'create') store.getState().incrementNodeVersion(toolResult.id, 'item')
+  persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 export const aiToolResultDataHandlers = {

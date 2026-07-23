@@ -14,7 +14,7 @@ import { AIStreamContentType } from '../hooks/defaultConstant'
 import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
-import { ChatReferenceMaterialPayload, ReActChatRenderElement } from '../hooks/aiRender'
+import { ReActChatRenderElement } from '../hooks/aiRender'
 import Loading from '@/components/Loading/Loading'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -234,14 +234,15 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   }),
 )
 
-/** 挂到 body，避免 Virtuoso 滚出视口时卸载列表项导致弹窗消失 */
-export const openAIReferenceModal = (referenceList: ChatReferenceMaterialPayload, title = '参考资料') => {
-  const code = referenceList.map((item) => item.payload).join('\n')
+/** 挂到 body，避免 Virtuoso 滚出视口时卸载列表项导致弹窗消失。
+ * TODO -本阶段 referenceList 为 token 列表；按 token 查 IDB 展示完整交互后置。
+ */
+export const openAIReferenceModal = (_referenceList: string[], title = '参考资料') => {
   const modal = showYakitModal({
     title,
     cancelButtonProps: { style: { display: 'none' } },
     bodyStyle: { height: 500 },
-    content: <YakitEditor type="plaintext" readOnly value={code} />,
+    content: <YakitEditor type="plaintext" readOnly value={''} />,
     onOk: () => modal.destroy(),
   })
 }

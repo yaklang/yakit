@@ -10,7 +10,13 @@ import {
 } from './defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
 
-export const createChatStore = () => {
+export type CreateChatStoreOptions = {
+  /** 渲染树结构变更时回调（dispatchStreamingNode 改 elements/children 后），用于 dirty debounce 落库 */
+  onRenderStructureChange?: () => void
+}
+
+export const createChatStore = (options?: CreateChatStoreOptions) => {
+  const onRenderStructureChange = options?.onRenderStructureChange
   return createStore<ChatStoreState>()(
     immer((set) => ({
       execute: false,
@@ -107,6 +113,16 @@ export const createChatStore = () => {
           Object.assign(state, partial)
         }),
 
+      /** 用持久化渲染树快照整体替换 items/groups/tasks/elements（供 Controller 恢复会话） */
+      hydrateRenderTree: (content) =>
+        set((state) => {
+          state.items = content.items || {}
+          state.groups = content.groups || {}
+          state.tasks = content.tasks || {}
+          state.casualChat.elements = content.casualElements || []
+          state.taskChat.elements = content.taskElements || []
+        }),
+
       updateTaskLoadingStatus: (partial) =>
         set((state) => {
           Object.assign(state.taskStatus, partial)
@@ -139,7 +155,7 @@ export const createChatStore = () => {
           state.execFileRecord.set(keyName, keyList)
         }),
 
-      dispatchStreamingNode: ({ chatType, parentTaskId, node }) =>
+      dispatchStreamingNode: ({ chatType, parentTaskId, node }) => {
         set((state) => {
           const isHistory = node.isHistory ?? false
           const elementRef = { kind: node.kind, token: node.token, chatType, isHistory }
@@ -242,7 +258,9 @@ export const createChatStore = () => {
           } else {
             targetElements.push(elementRef)
           }
-        }),
+        })
+        onRenderStructureChange?.()
+      },
 
       /** 高频更新节点渲染 */
       incrementNodeVersion: (token, kind) =>

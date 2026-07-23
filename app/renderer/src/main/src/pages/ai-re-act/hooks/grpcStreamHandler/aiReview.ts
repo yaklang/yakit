@@ -5,6 +5,7 @@ import { genBaseAIChatData, generateTaskNodeDataID, genExecTasks, isAutoExecuteR
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { AIReviewJudgeLevelMap } from '../defaultConstant'
+import { persistIndependentItem } from '../persist/contentPersistHelper'
 
 const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, request, meta } = requestInfo
@@ -35,7 +36,9 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
       chatData.data.optionValue = target.params?.suggestion || 'continue'
     }
     rawData.contents.set(chatData.id, cloneDeep(chatData))
+    // 仅已 release（会进渲染树）时落库；仅等待 release 的中间态不落库
     if (target) {
+      persistIndependentItem(requestInfo.sessionId, chatData)
       store.getState().dispatchStreamingNode({
         chatType: chatType,
         parentTaskId: chatData.TaskId,
@@ -60,6 +63,8 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
   rawData.contents.set(chatData.id, cloneDeep(chatData))
   // 该类型的实时数据只有任务规划才有
   if (isAuto) {
+    // auto：立刻进渲染树，此时落库
+    persistIndependentItem(requestInfo.sessionId, chatData)
     store.getState().dispatchStreamingNode({
       chatType: chatType,
       parentTaskId: chatData.TaskId,
@@ -76,6 +81,7 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
       root_task_name: tasks.plans.root_task.name,
     })
   } else {
+    // 仅弹窗展示，操作完成（release）后再落库
     store.getState().updateState({ currentPlanReviewToken: { token: chatData.id, renderNum: 0 } })
   }
 }
@@ -191,6 +197,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
     // 非执行任务组的review，正常显示到UI上，根据review模式和用户主动操作，决定结果，并且操作后，也不在UI上展示结果
     if (!taskGroupDetail || taskGroupDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
       rawData.contents.set(chatData.id, cloneDeep(chatData))
+      // 操作后会从列表删除，展示态不落库
       store.getState().updateCasualReview(chatData.id, 'add')
       store.getState().dispatchStreamingNode({
         chatType: chatType,
@@ -239,6 +246,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
     }
     rawData.contents.set(chatData.id, cloneDeep(chatData))
     if (target) {
+      persistIndependentItem(requestInfo.sessionId, chatData)
       store.getState().dispatchStreamingNode({
         chatType: chatType,
         parentTaskId: chatData.TaskId,
@@ -256,8 +264,11 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
   // 将数据存入hook里的缓存变量中
   rawData.contents.set(chatData.id, cloneDeep(chatData))
   if (chatType === 'task') {
+    // 仅弹窗，操作完成后再落库
     store.getState().updateState({ currentPlanReviewToken: { token: chatData.id, renderNum: 0 } })
   } else if (chatType === 'reAct') {
+    // 立刻进渲染树，需要落库
+    persistIndependentItem(requestInfo.sessionId, chatData)
     store.getState().updateCasualReview(chatData.id, 'add')
     store.getState().dispatchStreamingNode({
       chatType: chatType,
@@ -306,6 +317,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
     }
     rawData.contents.set(chatData.id, cloneDeep(chatData))
     if (target) {
+      persistIndependentItem(requestInfo.sessionId, chatData)
       store.getState().dispatchStreamingNode({
         chatType: chatType,
         parentTaskId: chatData.TaskId,
@@ -330,6 +342,8 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
   }
   // 将数据存入hook里的缓存变量中
   rawData.contents.set(chatData.id, cloneDeep(chatData))
+  // 立刻进渲染树，需要落库
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     parentTaskId: chatData.TaskId,
@@ -413,6 +427,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
       case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
         reviewDetail.data.selected = JSON.stringify(data.params)
         reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
+        persistIndependentItem(requestInfo.sessionId, reviewDetail)
         store.getState().dispatchStreamingNode({
           chatType: chatType,
           parentTaskId: reviewDetail.TaskId,
@@ -452,6 +467,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
 
       reviewDetail.data.selected = JSON.stringify(data.params)
       reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
+      persistIndependentItem(requestInfo.sessionId, reviewDetail)
       // 清空plan-review的异步拓展信息
       meta.currentPlanReviewExtraId = ''
       meta.planReviewExtraData.clear()
@@ -482,6 +498,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
         reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
         store.getState().updateCasualReview(reviewDetail.id, 'remove')
         store.getState().incrementNodeVersion(reviewDetail.id, 'item')
+        persistIndependentItem(requestInfo.sessionId, reviewDetail)
       }
       break
     case AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE:
@@ -489,6 +506,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
         if (noTaskReview) return
         reviewDetail.data.selected = JSON.stringify(data.params)
         reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
+        persistIndependentItem(requestInfo.sessionId, reviewDetail)
         store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
         store.getState().dispatchStreamingNode({
           chatType: chatType,
@@ -503,14 +521,16 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
       }
       break
     case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+      reviewDetail.data.selected = JSON.stringify(data.params)
+      reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
       if (chatType === 'reAct') {
         if (noCasualReview) return
-        reviewDetail.data.selected = JSON.stringify(data.params)
-        reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
         store.getState().updateCasualReview(reviewDetail.id, 'remove')
         store.getState().incrementNodeVersion(reviewDetail.id, 'item')
+        persistIndependentItem(requestInfo.sessionId, reviewDetail)
       } else {
         if (noTaskReview) return
+        persistIndependentItem(requestInfo.sessionId, reviewDetail)
         store.getState().dispatchStreamingNode({
           chatType: chatType,
           parentTaskId: reviewDetail.TaskId,
@@ -564,6 +584,7 @@ const handleDetachedPlanReview: AIMessageHandler = (requestInfo) => {
   if (reviewDetail) {
     if (reviewDetail.type !== AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) return
     reviewDetail.data = { ...data }
+    // 弹窗展示态不落库，操作完成（release）后再写
     const reviewStore = store.getState().currentPlanReviewToken
     reviewStore.renderNum += 1
     store.getState().updateState({ currentPlanReviewToken: { ...reviewStore } })

@@ -5,6 +5,7 @@ import { genBaseAIChatData, generateTaskNodeDataID } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum, type ReportFinishCardData } from '../aiRender'
 import { convertNodeIdToVerbose } from '../defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
+import { persistIndependentItem } from '../persist/contentPersistHelper'
 
 const handleThought: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, meta } = requestInfo
@@ -25,6 +26,7 @@ const handleThought: AIMessageHandler = (requestInfo) => {
     }),
   }
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     parentTaskId: chatData.TaskId,
@@ -58,6 +60,7 @@ const handleResult: AIMessageHandler = (requestInfo) => {
     }),
   }
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     parentTaskId: chatData.TaskId,
@@ -92,6 +95,7 @@ const handleFailReactTask: AIMessageHandler = (requestInfo) => {
     }),
   }
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     parentTaskId: chatData.TaskId,
@@ -130,6 +134,7 @@ const handleToolCallDecision: AIMessageHandler = (requestInfo) => {
     }),
   }
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     parentTaskId: chatData.TaskId,
@@ -164,6 +169,7 @@ const handleFailPlanAndExecution: AIMessageHandler = (requestInfo) => {
     }),
   }
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     parentTaskId: chatData.TaskId,
@@ -197,6 +203,7 @@ const handleApiRequestFailed: AIMessageHandler = (requestInfo) => {
     }),
   }
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     parentTaskId: chatData.TaskId,
@@ -231,6 +238,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
     chatDetail.data.engine_status = status
     chatDetail.data.progress = status === 'working' ? payload.progress : chatDetail.data.progress
     store.getState().incrementNodeVersion(chatDetail.id, 'item')
+    persistIndependentItem(requestInfo.sessionId, chatDetail)
   } else {
     // 引擎结束态没有对应卡片时直接丢弃，保留原行为
     if (status === 'finish') return
@@ -255,6 +263,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
       }),
     }
     rawData.contents.set(chatData.id, chatData)
+    persistIndependentItem(requestInfo.sessionId, chatData)
     store.getState().dispatchStreamingNode({
       chatType: chatType,
       parentTaskId: chatData.TaskId,
@@ -300,6 +309,7 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
     }),
   }
   rawData.contents.set(chatData.id, chatData)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     parentTaskId: chatData.TaskId,
@@ -351,6 +361,7 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   }
   rawData.contents.set(chatData.id, chatData)
   meta.currentTaskPlanActiveNode.add(chatData.id)
+  persistIndependentItem(requestInfo.sessionId, chatData)
   store.getState().dispatchStreamingNode({
     chatType: chatType,
     node: {
@@ -390,6 +401,7 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
   meta.currentTaskPlanActiveNode.delete(chatDetail.id)
   chatDetail.data.status = info.task.task_status
   store.getState().incrementNodeVersion(chatDetail.id, 'task')
+  persistIndependentItem(requestInfo.sessionId, chatDetail)
 
   sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
 }

@@ -111,6 +111,15 @@ export interface ReActChatRenderElement {
   isHistory: boolean
 }
 
+/** 会话渲染树快照（zustand items/groups/tasks + 两侧 elements） */
+export interface SessionRenderContent {
+  items: Record<string, ReActChatItemMeta>
+  groups: Record<string, ReActChatGroupMeta>
+  tasks: Record<string, ReActChatTaskMeta>
+  casualElements: ReActChatRenderElement[]
+  taskElements: ReActChatRenderElement[]
+}
+
 /** 控制UI渲染的数据数组元素 */
 export interface ReActChatBaseInfo {
   chatType: ChatListRenderType
@@ -378,8 +387,8 @@ export interface AIChatQSDataBase<T extends string, U> {
   TaskId?: AIOutputEvent['TaskId']
   /** 前端专属数据，供前端逻辑和UI处理使用 */
   extraValue?: CustomPluginExecuteFormValue | Record<string, CustomPluginExecuteFormValue[]>
-  /** 参考资料 */
-  reference?: ChatReferenceMaterialPayload
+  /** 参考资料 token 列表（正文与资料分离；payload 存 sessionReference 表） */
+  reference?: string[]
   /** 父集合组的key/token(如果被收集到集合组中, 则存在该字段) */
   parentGroupToken?: string
 }
@@ -543,17 +552,17 @@ export interface ChatStoreState {
    */
   currentPlanReviewExtraUpdate: number
 
-  items: Record<string, ReActChatItemMeta>
-  groups: Record<string, ReActChatGroupMeta>
-  tasks: Record<string, ReActChatTaskMeta>
+  items: SessionRenderContent['items']
+  groups: SessionRenderContent['groups']
+  tasks: SessionRenderContent['tasks']
 
   casualChat: {
-    elements: ReActChatRenderElement[]
+    elements: SessionRenderContent['casualElements']
     /** aiChat.d.ts AIAgentChatData casualChat['planDetails'] */
     todoListUpdate: number
   }
   taskChat: {
-    elements: ReActChatRenderElement[]
+    elements: SessionRenderContent['taskElements']
     plan: CurrentExecTaskTree
   }
   // #endregion
@@ -566,6 +575,7 @@ export interface ChatStoreState {
   yakExecResultLogs: StreamResult.Log[]
 
   /** 切换session时的loading状态 */
+  /** 切换/恢复会话 loading（供 UI 遮罩与禁用交互，防止加载期间误点） */
   switchLoading: boolean
   /** 用户主动取消问题的loading状态(自由对话) */
   cancelCasualLoading: boolean
@@ -626,6 +636,12 @@ export interface ChatStoreState {
       >
     >,
   ) => void
+
+  /**
+   * 用持久化渲染树快照整体替换 items/groups/tasks/elements
+   * 供 ChatMultiSessionController 从 IDB 恢复会话使用
+   */
+  hydrateRenderTree: (content: SessionRenderContent) => void
 
   updateTaskLoadingStatus: (status: Partial<PlanLoadingStatus>) => void
 

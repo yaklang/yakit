@@ -63,8 +63,9 @@ export const AIGroupStreamNode: FC<{
   }, [])
 
   const modelCode = useCreation(() => {
+    // TODO - reference 现为 token[]；按 token 查 IDB 展示完整交互后置，弹框内容暂空
     if (!open) return []
-    return itemData?.reference || []
+    return [] as ChatReferenceMaterialPayload
   }, [open])
   const popoverCode = useCreation(() => {
     if (!openPopover) return prevPopoverCodeRef.current
