@@ -1,3 +1,5 @@
+@use '../../../components/TableVirtualResize/styleFunction.scss' as tools;
+
 .HTTPHistoryFilter {
   height: 100%;
 
@@ -62,6 +64,10 @@
 
         .check-circle-icon {
           color: var(--Colors-Use-Success-Primary);
+        }
+
+        .check-circle-icon-text-3 {
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
         }
       }
 
@@ -168,6 +174,22 @@
         .icon-hover:hover {
           color: var(--Colors-Use-Main-Primary) !important;
         }
+
+        @include tools.colored-row-action-icon('.icon-hover');
+
+        .favorite-icon-active.icon-hover {
+          color: var(--Colors-Use-Yellow-Primary) !important;
+        }
+      }
+
+      .hover-red-row {
+        .icon-hover {
+          color: var(--yakit-colors-Error-100);
+        }
+
+        .icon-hover:hover {
+          color: var(--Colors-Use-Basic-White);
+        }
       }
     }
   }
@@ -189,6 +211,12 @@
       width: 19px;
       height: 19px;
     }
+  }
+}
+
+.check-circle {
+  .check-circle-icon-text-3 {
+    @include tools.colored-row-params-icon();
   }
 }
 

@@ -58,16 +58,14 @@ export const parseColorTag = (content?: string) => {
 }
 
 /**
- * @name 判断是否为单色的情况下，同时颜色为红色和灰色
+ * @name 判断是否为单色单元格（含所有颜色，用于整行文字色继承）
  */
 export const isCellRedSingleColor = (content?: string) => {
   if (!content) return false
 
   try {
     const colors: string[] = content.split(' ').filter((item) => !!item && item.indexOf('table-cell-bg-') > -1)
-    if (colors.length === 1 && colors[0] === 'table-cell-bg-red') return true
-    if (colors.length === 1 && colors[0] === 'table-cell-bg-grey') return true
-    else return false
+    return colors.length === 1
   } catch (error) {
     return false
   }
@@ -89,4 +87,10 @@ export const getSingleColorType = (content?: string): 'red' | 'grey' | undefined
   }
 
   return
+}
+
+/** @name 参数列 icon 是否使用 Text-3（排除 red） */
+export const shouldUseParamsIconText3 = (content?: string) => {
+  if (!isCellRedSingleColor(content)) return false
+  return getSingleColorType(content) !== 'red'
 }

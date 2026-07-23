@@ -1,13 +1,13 @@
 // 颜色键值对——键一定是有序添加
 $allColors: (
-  blue: var(--Colors-Use-Blue-Bg-Hover),
-  cyan: var(--Colors-Use-Cyan-Bg),
-  green: var(--Colors-Use-Green-Bg),
-  grey: var(--Colors-Use-Grey-Bg),
-  orange: var(--Colors-Use-Orange-Bg),
-  purple: var(--Colors-Use-Purple-Bg),
+  blue: var(--Colors-Use-Blue-Border),
+  cyan: var(--Colors-Use-Cyan-Border),
+  green: var(--Colors-Use-Green-Border),
+  grey: var(--Colors-Use-Grey-Border),
+  orange: var(--Colors-Use-Orange-Border),
+  purple: var(--Colors-Use-Purple-Border),
   red: var(--Colors-Use-Error-Primary),
-  yellow: var(--Colors-Use-Yellow-Bg),
+  yellow: var(--Colors-Use-Yellow-Border),
 );
 
 $generateColors: (
@@ -22,15 +22,30 @@ $generateColors: (
 );
 
 $allColors-hover: (
-  blue: var(--Colors-Use-Blue-Border),
-  cyan: var(--Colors-Use-Cyan-Bg-Hover),
-  green: var(--Colors-Use-Green-Bg-Hover),
-  grey: var(--Colors-Use-Neutral-Text-4-Help-text),
-  orange: var(--Colors-Use-Orange-Bg-Hover),
-  purple: var(--Colors-Use-Purple-Bg-Hover),
+  blue: var(--Colors-Use-Blue-Hover),
+  cyan: var(--yakit-colors-Cyan-50),
+  green: var(--yakit-colors-Green-50),
+  grey: var(--yakit-colors-Neutral-50),
+  orange: var(--yakit-colors-Orange-50),
+  purple: var(--yakit-colors-Purple-50),
   red: var(--Colors-Use-Error-Pressed),
-  yellow: var(--Colors-Use-Yellow-Bg-Hover),
+  yellow: var(--yakit-colors-Yellow-50),
 );
+
+$yakit-color-token-names: (
+  blue: Blue,
+  cyan: Cyan,
+  green: Green,
+  grey: Neutral,
+  orange: Orange,
+  purple: Purple,
+  yellow: Yellow,
+);
+
+@function fetch-yakit-color($type, $level) {
+  $tokenName: map-get($yakit-color-token-names, $type);
+  @return var(--yakit-colors-#{$tokenName}-#{$level});
+}
 
 // 获取全部颜色集合里的颜色
 @function fetch-color($type, $kind) {
@@ -141,32 +156,34 @@ $color-mix-supports: '(background: color-mix(in srgb, #000 50%, #fff))';
             color: var(--yakit-colors-Error-100);
           }
         } @else {
-          // 单色-其他颜色处理
+          // 单色-其他颜色处理（文案 --yakit-colors-{type}-100，整行 hover 不变）
+          $textColor: fetch-yakit-color($type, 100);
+
           .virtual-table-cell-#{$type} {
             @include background-color-mix(#{fetch-color($type, 'backgroundColor')}, 100%);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: #{$textColor};
           }
 
           .virtual-table-hover-cell-#{$type} {
             @include background-color-mix(#{fetch-color($type, 'backgroundColor')}, 100%);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: #{$textColor};
           }
           .virtual-table-hover-cell-#{$type}.virtual-table-cell-#{$type} {
             @include background-color-mix(#{fetch-hover-color($type, 'backgroundColor')}, 100%);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: #{$textColor};
           }
 
           .virtual-table-active-cell-#{$type} {
             @include background-color-mix(#{fetch-color($type, 'backgroundColor')}, 100%);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: #{$textColor};
           }
           .virtual-table-active-cell-#{$type}.virtual-table-cell-#{$type} {
             @include background-color-mix(#{fetch-hover-color($type, 'backgroundColor')}, 100%);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: #{$textColor};
           }
           .virtual-table-active-cell-#{$type}.virtual-table-hover-cell-#{$type}.virtual-table-cell-#{$type} {
             @include background-color-mix(#{fetch-hover-color($type, 'backgroundColor')}, 100%);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+            color: #{$textColor};
           }
         }
       } @else {
@@ -208,6 +225,34 @@ $color-mix-supports: '(background: color-mix(in srgb, #000 50%, #fff))';
       @if length($pre) < 3 {
         @include generate-permutations-class-name($remaining, $pre);
       } @else {
+      }
+    }
+  }
+}
+
+// 单色行参数 icon：默认 80，整行 hover 90（在 .check-circle-icon-colored 内 @include）
+@mixin colored-row-params-icon() {
+  @each $type, $tokenName in $yakit-color-token-names {
+    :global(.table-cell-bg-#{$type}) & {
+      color: var(--yakit-colors-#{$tokenName}-80) !important;
+    }
+
+    :global(.table-cell-bg-#{$type}.table-cell-row-hover) & {
+      color: var(--yakit-colors-#{$tokenName}-90) !important;
+    }
+  }
+}
+
+// 单色行操作 icon：默认 100，悬浮 icon 10（在 .action-btn-group 内 @include）
+@mixin colored-row-action-icon($icon-selector) {
+  @each $type, $tokenName in $yakit-color-token-names {
+    :global(.table-cell-bg-#{$type}) & {
+      #{$icon-selector} {
+        color: var(--yakit-colors-#{$tokenName}-100) !important;
+
+        &:hover {
+          color: var(--yakit-colors-#{$tokenName}-10) !important;
+        }
       }
     }
   }

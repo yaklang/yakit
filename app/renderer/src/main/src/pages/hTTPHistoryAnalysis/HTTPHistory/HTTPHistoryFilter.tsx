@@ -59,7 +59,12 @@ import {
 } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import { ColumnsTypeProps, FiltersItemProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { filterColorTag, getSingleColorType, isCellRedSingleColor } from '@/components/TableVirtualResize/utils'
+import {
+  filterColorTag,
+  getSingleColorType,
+  isCellRedSingleColor,
+  shouldUseParamsIconText3,
+} from '@/components/TableVirtualResize/utils'
 import { yakitNotify } from '@/utils/notification'
 import { ArrowCircleRightSvgIcon, CheckCircleIcon, ChromeFrameSvgIcon, ColorSwatchIcon } from '@/assets/newIcon'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -1189,6 +1194,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
               <CheckCircleIcon
                 className={classNames({
                   [styles['check-circle-icon']]: !isCellRedSingleColor(rowData.cellClassName),
+                  [styles['check-circle-icon-text-3']]: shouldUseParamsIconText3(rowData.cellClassName),
                 })}
               />
             )}
@@ -1287,11 +1293,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         render: (_, rowData) => {
           if (!rowData.Hash) return <></>
           const colorType = getSingleColorType(rowData.cellClassName)
+          const singleColorRow = isCellRedSingleColor(rowData.cellClassName)
           const favorite = isHTTPFlowFavorite(rowData)
           return (
             <div
               className={classNames(styles['action-btn-group'], {
-                [styles[`hover-${colorType}-row`]]: !!colorType,
+                [styles['hover-red-row']]: colorType === 'red',
               })}
             >
               {favorite ? (
@@ -1305,7 +1312,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
               ) : (
                 <OutlineStarIcon
                   className={classNames(styles['favorite-icon'], styles['icon-hover'], {
-                    [styles['icon-style']]: !colorType,
+                    [styles['icon-style']]: !singleColorRow,
                   })}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -1316,7 +1323,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
               <div className={styles['divider-style']} />
               <ChromeFrameSvgIcon
                 className={classNames(styles['icon-hover'], {
-                  [styles['icon-style']]: !isCellRedSingleColor(rowData.cellClassName),
+                  [styles['icon-style']]: !singleColorRow,
                 })}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -1334,7 +1341,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
               <ArrowCircleRightSvgIcon
                 className={classNames(styles['icon-hover'], {
-                  [styles['icon-style']]: !isCellRedSingleColor(rowData.cellClassName),
+                  [styles['icon-style']]: !singleColorRow,
                 })}
                 onClick={(e) => {
                   e.stopPropagation()
