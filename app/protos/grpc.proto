@@ -151,6 +151,10 @@ service Yak {
   rpc Exec(ExecRequest) returns (stream ExecResult);
   rpc QueryExecHistory(ExecHistoryRequest) returns (ExecHistoryRecordResponse);
   rpc RemoveExecHistory(Empty) returns (Empty);
+  // 保存插件执行历史（前端执行结束 POST 回来，B 方案）
+  rpc SavePluginExecutionHistory(SavePluginExecutionHistoryRequest) returns (Empty);
+  // 插件使用次数排行（按 plugin 分组 count 降序）
+  rpc GetPluginExecutionUsageRanking(Empty) returns (PluginExecutionUsageRankingResponse);
   rpc LoadNucleiTemplates(Empty) returns (Empty);
   rpc AutoUpdateYakModule(Empty) returns (stream ExecResult);
   rpc ExecYakScript(ExecRequest) returns (stream ExecResult);
@@ -2014,12 +2018,12 @@ message AITool {
   repeated string Keywords = 5;
   bool IsFavorite = 6;
   int64 ID = 7;
-  string VerboseName = 8; // 给用户看的展示名称
+  string VerboseName = 8; // 英文展示名（兼容旧前端 / 检索）；UI 语言切换请用 VerboseNameI18n
   string Author = 9;
   int64 CreatedAt = 10;
   int64 UpdatedAt = 11;
   bool IsBuiltin = 12;
-  I18n VerboseNameI18n = 13;
+  I18n VerboseNameI18n = 13; // 中英双语展示名
 }
 
 message GetAIToolListResponse {
@@ -2284,6 +2288,8 @@ message AIStartParams {
 message AIExecutionStrategy {
   // 为 true 时启用多 Agent 模式：顶层 ReAct 暴露并偏好 dispatch_sub_react_agents，
   // 倾向于把复杂任务拆成多个并行子 Agent 执行后再汇总。
+  // 注意：这是 prompt 层的软偏好（soft preference），不通过 schema/verifier 强制；
+  // 若 LLM 未选择 dispatch，框架不会阻拦。Goal 模式则有硬性运行时拦截。
   bool EnableMultiAgent = 1;
 
   // 为 true 时启用 Goal 模式：在达到 GoalMinIterations 之前禁止 finish 提前退出，
@@ -6158,6 +6164,9 @@ message QueryYakScriptRequest {
   string VectorSearchContent = 22;
   // 为 true 时仅返回 enable_for_ai=true 的插件
   bool EnableForAI = 23;
+  // 为 true 时按插件使用次数（exec_histories 按 plugin_id 聚合 count）降序排序，
+  // 供"编辑常用插件"页按使用频次展示。优先级高于 Pagination.OrderBy。
+  bool SortByUsageCount = 24;
 }
 
 message PluginGroup {
@@ -6520,6 +6529,8 @@ message ExecHistoryRequest {
   Paging Pagination = 1;
   int64 YakScriptId = 3;
   string YakScriptName = 4;
+  // 按来源过滤（plugin-op | plugin-hub），可选
+  string Source = 5;
 }
 
 message ExecHistoryRecordResponse {
@@ -6561,6 +6572,48 @@ message ExecHistoryRecord {
 
   bytes Messages = 16;
 
+  // ===== 插件执行历史扩展字段（B 方案）=====
+  // 来源：plugin-op | plugin-hub
+  string Source = 17;
+  // 前端聚合的 HoldGRPCStreamInfo 快照（JSON），恢复 log/自定义 table/text/card 用
+  string StreamInfo = 18;
+  // 本次历史是正常执行完成（finished）还是用户主动停止（stopped）
+  string ResultStatus = 19;
+}
+
+// 保存插件执行历史请求（前端执行结束/停止时 POST 回后端）
+message SavePluginExecutionHistoryRequest {
+  int64 PluginId = 1;
+  string PluginName = 2; // 同时写入 FromYakModule
+  string PluginUUID = 3;
+  string PluginType = 4;
+  string Source = 5; // plugin-op | plugin-hub
+  string Input = 6;
+  // 以下均为 JSON 序列化后的字符串，后端透传不解析
+  string ExecParams = 7;          // []*KVPair
+  string FormValue = 8;
+  string ExtraParamsValue = 9;
+  string HTTPRequestTemplate = 10;
+  string LinkPluginConfig = 11;
+  string StreamInfo = 12;         // HoldGRPCStreamInfo 快照
+  string ResultStatus = 13;       // finished | stopped
+  string RuntimeId = 14;
+  string HeadImg = 15;
+}
+
+// 插件使用次数排行
+message PluginExecutionUsageRankingResponse {
+  repeated PluginExecutionUsageItem Data = 1;
+}
+
+message PluginExecutionUsageItem {
+  int64 PluginId = 1;
+  string PluginName = 2;
+  string PluginUUID = 3;
+  string PluginType = 4;
+  string HeadImg = 5;
+  int64 Count = 6;
+  int64 LastExecutedAt = 7;
 }
 
 // Fuzz 相关模型
