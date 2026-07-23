@@ -62,7 +62,7 @@ export interface GenerateSSAReportResponse {
 
 interface YakRunnerScanHistoryProp {}
 const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { queryPagesDataById } = usePageInfo(
     (s) => ({
       queryPagesDataById: s.queryPagesDataById,
@@ -388,7 +388,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
         ),
       },
     ],
-    [query, i18n.language],
+    [query, i18nRefresh],
   )
 
   const ResizeBoxProps = useCreation(() => {

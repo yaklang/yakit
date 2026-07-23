@@ -385,7 +385,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
 
 const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
   const { item, onRefresh, setCurrentMCP, onSetData } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const [visible, setVisible] = useState<boolean>(false)
   const [stopVisible, setStopVisible] = useState<boolean>(false)
@@ -508,7 +508,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
       desc,
       typeNode,
     }
-  }, [item.Type, item.URL, item.Command, i18n.language])
+  }, [item.Type, item.URL, item.Command, i18nRefresh])
   const localModelMenu: YakitMenuItemType[] = useCreation(() => {
     let menu: YakitMenuItemType[] = [
       {
@@ -524,7 +524,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
       },
     ]
     return menu
-  }, [i18n.language])
+  }, [i18nRefresh])
   return (
     <div className={styles['ai-mcp-list-item']} onClick={() => setCurrentMCP(item)}>
       <div className={styles['ai-mcp-heard']}>

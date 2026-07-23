@@ -100,7 +100,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       hijackFilterFlag,
       setAutoForward,
     } = props
-    const { t, i18n } = useI18nNamespaces(['history', 'yakitUi', 'mitm'])
+    const { t, i18nRefresh } = useI18nNamespaces(['history', 'yakitUi', 'mitm'])
     const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] = useGetState<SingleManualHijackInfoMessage>()
@@ -600,7 +600,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           },
         },
       ]
-    }, [i18n.language])
+    }, [i18nRefresh])
     const onlyShowFirstNode = useCreation(() => {
       return !(data.length && currentSelectItem && currentSelectItem.TaskID)
     }, [currentSelectItem, data.length])
@@ -1189,7 +1189,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     isResponse,
     isOnlyLookResponse,
   } = props
-  const { i18n, t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { i18nRefresh, t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const { currentPacket, requestPacket } = currentPacketInfo
   const [modifiedPacket, setModifiedPacket] = useControllableValue<string>(props, {
     valuePropName: 'modifiedPacket',
@@ -1258,7 +1258,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         },
       },
     }
-  }, [forResponse, info, modifiedPacket, i18n.language])
+  }, [forResponse, info, modifiedPacket, i18nRefresh])
 
   const onHijackCurrentResponse = useMemoizedFn(() => {
     if (info.Status === ManualHijackListStatus.WaitHijack) {

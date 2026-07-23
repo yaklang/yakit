@@ -82,7 +82,7 @@ enum AIChatWelcomeTabKeyEnum {
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
-    const { t, i18n } = useI18nNamespaces(['aiAgent'])
+    const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
     const { onTriageSubmit, onSetReAct, streams, api } = props
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
@@ -261,7 +261,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           ],
         },
       ]
-    }, [api, streams, installPlug, i18n.language, isSelectForgeName])
+    }, [api, streams, installPlug, i18nRefresh, isSelectForgeName])
 
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>

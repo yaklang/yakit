@@ -154,7 +154,7 @@ export const TERMINAL_KEYBOARD_Map = {
   },
 }
 const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi'])
   const { isWrite = true, wrapperClassName = '', className = '', options = {}, addons = [] } = props
   const terminalDivRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal>(
@@ -349,7 +349,7 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
         key: 'paste',
       },
     ] as YakitMenuItemType[]
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const handleContextMenu = useMemoizedFn(() => {
     showByRightContext({

@@ -297,7 +297,7 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
 
 const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo(
   forwardRef((props, ref) => {
-    const { t, i18n } = useI18nNamespaces(['portscan', 'yakitUi', 'yakitRoute'])
+    const { t, i18nRefresh } = useI18nNamespaces(['portscan', 'yakitUi', 'yakitRoute'])
     const {
       isExpand,
       executeStatus,
@@ -334,7 +334,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         { tabName: t('NewPortScanExecuteContent.logs'), type: 'log' },
         { tabName: 'Console', type: 'console' },
       ]
-    }, [i18n.language])
+    }, [i18nRefresh])
     const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
       tabs: defaultTabs,
       taskName: isEnpriTrace() ? 'Simple-Detect' : 'Port-Scan',

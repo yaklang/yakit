@@ -1220,16 +1220,16 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
           visible={editHint}
           onCallback={handleCallbackEditHint}
         />
-
-        <IRifyApplySyntaxFlowRuleUpdate
-          visible={ruleUpdateShow}
-          setVisible={(v) => {
-            setRuleUpdateShow(v)
-          }}
-          getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.Rule_Management}`) || undefined}
-          wrapClassName={styles['updateRuleModal']}
-        />
-
+        {ruleUpdateShow && (
+          <IRifyApplySyntaxFlowRuleUpdate
+            visible={ruleUpdateShow}
+            setVisible={(v) => {
+              setRuleUpdateShow(v)
+            }}
+            getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.Rule_Management}`) || undefined}
+            wrapClassName={styles['updateRuleModal']}
+          />
+        )}
         {/* 上传、下载提示 */}
         <YakitHint
           visible={infoVisible}

@@ -43,7 +43,7 @@ export const inputHTTPFuzzerHostConfigItem = (
 }
 
 const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'webFuzzer'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'webFuzzer'])
   const [params, setParams] = useState<{ Key: string; Value: string }>({ Key: '', Value: '' })
   const [configType, setConfigType] = useState<'input' | 'upload'>('input')
   const supportedHostsFileExtList = ['txt', 'hosts']
@@ -54,7 +54,7 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
       { label: t('HTTPFuzzerHosts.inputConfig'), value: 'input' },
       { label: t('HTTPFuzzerHosts.uploadFile'), value: 'upload' },
     ],
-    [i18n.language],
+    [i18nRefresh],
   )
 
   const onDownloadExampleTemplate = () => {

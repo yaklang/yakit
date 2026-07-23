@@ -39,6 +39,7 @@ import { DownloadYaklang } from './components/DownloadYaklang'
 import {
   FetchSoftwareVersion,
   GetConnectPort,
+  getLocalI18nGV,
   getReleaseEditionName,
   isCommunityEdition,
   isCommunityIRify,
@@ -70,8 +71,9 @@ import { useTheme } from '@/hooks/useTheme'
 import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './index.module.scss'
+import i18n from '@/i18n/i18n'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -1081,6 +1083,10 @@ export const StartupPage: React.FC = () => {
     const offFromMainWindow = yakitApp.onFromMainWindow((data) => {
       const type = data.yakitStatus
       if (type) {
+        // 重新获取语言
+        getLocalValue(getLocalI18nGV()).then((res) => {
+          i18n.changeLanguage(normalizeLang(res))
+        })
         handleOperations(type, data)
       }
     })

@@ -15,7 +15,7 @@ import styles from './index.module.scss'
  * @name 管理功能标签组件 (Payload/代理/热补丁)
  */
 export const ManagementTab: React.FC<{ hideIcon?: boolean }> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout'])
+  const { t } = useI18nNamespaces(['yakitRoute', 'layout'])
   const { configManagementActiveTab, setConfigManagementActiveTab } = useConfigManagementTab()
   const [payloadMenuShow, setPayloadMenuShow] = useState<boolean>(false)
 

@@ -57,7 +57,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       foldBinaryFuzztag = true,
       onFoldBinaryFuzztagChange,
     } = props
-    const { t, i18n } = useI18nNamespaces(['webFuzzer'])
+    const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer'])
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const selectionByteCount = useSelectionByteCount(reqEditor, 500)
 
@@ -143,7 +143,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
           },
         },
       }
-    }, [i18n.language])
+    }, [i18nRefresh])
 
     const copyUrl = useMemoizedFn(() => {
       copyAsUrl({ Request: newRequest, IsHTTPS: isHttps }, 'withQuery')

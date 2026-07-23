@@ -69,7 +69,7 @@ const tooltipWidth = 324
 
 interface TooltipViewProps {}
 export const TooltipView: React.FC<TooltipViewProps> = () => {
-  const { t, i18n } = useI18nNamespaces(['components'])
+  const { t, i18nRefresh } = useI18nNamespaces(['components'])
   const [visibleText, setVisibleText] = useState<boolean>(false)
   const [visibleLight, setVisibleLight] = useState<boolean>(false)
 
@@ -103,7 +103,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         }
       }
     })
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   useEffect(() => {
     if (loading) {

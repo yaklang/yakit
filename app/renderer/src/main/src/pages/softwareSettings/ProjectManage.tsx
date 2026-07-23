@@ -205,7 +205,7 @@ const DefaultProjectInfo: ProjectDescription = {
 }
 
 const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['projectManage', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['projectManage', 'yakitUi'])
 
   const { engineMode, onFinish } = props
 
@@ -501,7 +501,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
       }
     })
     return header
-  }, [params, typeShow, timeShow, i18n.language])
+  }, [params, typeShow, timeShow, i18nRefresh])
 
   const [operateShow, setOperateShow] = useState<number>(-1)
   const projectOperate = useMemoizedFn((info: ProjectDescription) => {
@@ -1664,7 +1664,7 @@ export interface FileProjectInfoProps extends ProjectDescription {
 }
 
 export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['projectManage', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['projectManage', 'yakitUi'])
   const {
     isNew = true,
     isFolder,
@@ -1835,14 +1835,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     if (isExport) return t('NewProjectAndFolder.exportProjectTitle')
     if (isImport) return t('NewProjectAndFolder.importProjectTitle')
     return t('NewProjectAndFolder.unknownCase')
-  }, [isNew, isFolder, isExport, isImport, project, i18n.language])
+  }, [isNew, isFolder, isExport, isImport, project, i18nRefresh])
 
   const submitTitle = useMemo(() => {
     if (isNew && !project) return t('NewProjectAndFolder.create')
     if (isExport) return t('YakitButton.export')
     if (isImport) return t('YakitButton.import')
     return t('YakitButton.ok')
-  }, [isNew, isExport, isImport, project, i18n.language])
+  }, [isNew, isExport, isImport, project, i18nRefresh])
 
   const [transferShow, setTransferShow] = useState<{
     isExport?: boolean

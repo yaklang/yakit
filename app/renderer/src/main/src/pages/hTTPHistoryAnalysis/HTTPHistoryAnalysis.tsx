@@ -1446,7 +1446,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     executeStatus,
     onRowDoubleClick,
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'HTTPHistoryAnalysis', 'history'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'HTTPHistoryAnalysis', 'history'])
 
   const tableRef = useRef<any>(null)
   const [loading, setLoading] = useState<boolean>(false)
@@ -1699,7 +1699,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         },
       },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const [exportToken, setExportToken] = useState<string>('')
   const [exportPercentVisible, setExportPercentVisible] = useState<boolean>(false)

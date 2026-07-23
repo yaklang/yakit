@@ -238,7 +238,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     // 此处 添加 propsTheme 字段是因为类 弹窗 / 抽屉组件是在 root 节点之外，provider包裹的入口节点就无法实时获取到theme
     propsTheme,
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['yakitUi'])
 
   const isInitRef = useRef<boolean>(false)
   const { shortcutIds } = useFocusContextStore()
@@ -272,13 +272,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   /** @name 记录右键菜单组信息 */
   const { fontSize: nowFontsize, setFontSize: setNowFontsize, initFontSize } = useEditorFontSize()
-  const DefaultMenuTopArr = useMemo(() => DefaultMenuTop(t, nowFontsize), [i18n.language, nowFontsize])
+  const DefaultMenuTopArr = useMemo(() => DefaultMenuTop(t, nowFontsize), [i18nRefresh, nowFontsize])
   const DefaultMenuBottomArr = useMemo(
     () =>
       DefaultMenuBottom(t).filter(
         (item) => !(hiddenDefaultContextMenuKeys || []).includes((item as { key?: string }).key || ''),
       ),
-    [i18n.language, hiddenDefaultContextMenuKeys],
+    [i18nRefresh, hiddenDefaultContextMenuKeys],
   )
   const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTopArr, ...DefaultMenuBottomArr])
   /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
@@ -500,8 +500,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
    * 整理右键菜单的对应关系
    * 菜单组的key值对应的组内菜单项的key值数组
    */
-  const extraMenuListsObj = useMemo(() => extraMenuLists(t), [i18n.language])
-  const baseMenuListsObj = useMemo(() => baseMenuLists(t), [i18n.language])
+  const extraMenuListsObj = useMemo(() => extraMenuLists(t), [i18nRefresh])
+  const baseMenuListsObj = useMemo(() => baseMenuLists(t), [i18nRefresh])
   useEffect(() => {
     // 往菜单组中注入codec插件
     try {
@@ -1691,7 +1691,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     props.fixContentType,
     props.originalContentType,
     props.fixContentTypeHoverMessage,
-    i18n.language,
+    i18nRefresh,
     props.privacy,
   ])
   // 定位高亮光标位置
@@ -1750,7 +1750,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         info.label = getFoldBinaryOpen() ? t('YakitEditor.hideBinaryComponent') : t('YakitEditor.showBinaryComponent')
       }
     }
-  }, [foldBinaryOpen, foldBinaryCapable, type, i18n.language])
+  }, [foldBinaryOpen, foldBinaryCapable, type, i18nRefresh])
 
   const showContextMenu = useMemoizedFn((e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     showByRightContext({

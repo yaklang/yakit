@@ -1319,7 +1319,7 @@ interface LocalOptFooterExtraProps {
 /** @name 本地插件单项-上传|编辑|导出|删除本地 */
 export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((props) => {
   const { isLogin, info, onEdit, uploadInfo, onUpload, onExport, execDelInfo = [], onDel } = props
-  const { t, i18n } = useI18nNamespaces(['pluginHub', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['pluginHub', 'yakitUi'])
 
   const isShowUpload = useMemo(() => {
     return !info.IsCorePlugin
@@ -1402,7 +1402,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         disabled: delLoading,
       },
     ]
-  }, [info, i18n.language])
+  }, [info, i18nRefresh])
 
   return (
     <div className={styles['local-opt-footer-extra']}>

@@ -64,7 +64,7 @@ export interface NewYakitLoadingProp {
 
 export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
   const { yakitStatus, checkLog, restartLoading, remoteControlRefreshLoading, btnClickCallback } = props
-  const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi'])
 
   const btns = useMemo(() => {
     if (yakitStatus === 'control-remote') {
@@ -106,12 +106,12 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
     }
 
     return null
-  }, [yakitStatus, remoteControlRefreshLoading, restartLoading, i18n.language])
+  }, [yakitStatus, remoteControlRefreshLoading, restartLoading, i18nRefresh])
 
   /** 加载页随机宣传语 */
   const loadingTitle = useMemo(
     () => LoadingTitle(t)[Math.floor(Math.random() * (LoadingTitle(t).length - 0)) + 0],
-    [i18n.language],
+    [i18nRefresh],
   )
   /** Title */
   const Title = useMemo(
@@ -119,7 +119,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
       yakitStatus === 'control-remote'
         ? t('YakitLoading.remoteControlling')
         : t('YakitLoading.welcome', { edition: getReleaseEditionName() }),
-    [yakitStatus, i18n.language],
+    [yakitStatus, i18nRefresh],
   )
 
   const startLogo = useMemo(() => {
@@ -193,7 +193,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
     }
 
     return null
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const primaryBg = useMemo(() => {
     switch (fetchEnv()) {

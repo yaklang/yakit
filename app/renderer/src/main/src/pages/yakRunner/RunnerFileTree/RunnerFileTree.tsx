@@ -124,7 +124,7 @@ export const openFolder = () => {
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const { addFileTab } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { fileTree, areaInfo, activeFile } = useStore()
   const { handleFileLoadData, setAreaInfo, setActiveFile, setFileTree } = useDispatcher()
   const storeRefs = useYakRunnerStoreRefs()
@@ -192,7 +192,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }
 
     return initTree
-  }, [fileTree, refreshTree, i18n.language])
+  }, [fileTree, refreshTree, i18nRefresh])
 
   const getHistoryList = useMemoizedFn(async (data?: string) => {
     try {
@@ -263,7 +263,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
       })
     }
     return newMenu
-  }, [historyList, fileTree, i18n.language])
+  }, [historyList, fileTree, i18nRefresh])
 
   // 新建文件
   const onNewFile = useMemoizedFn(async (path: string) => {

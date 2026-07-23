@@ -149,7 +149,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
       loadMoreData,
       onDetailSearch,
     } = props
-    const { t, i18n } = useI18nNamespaces(['pluginHub', 'yakitUi'])
+    const { t, i18nRefresh } = useI18nNamespaces(['pluginHub', 'yakitUi'])
 
     const wrapperWidth = useListenWidth(document.body)
     const admin = useAdmin()
@@ -365,7 +365,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             : t('PluginManageDetail.editorCannotOperate')
           : '',
       }
-    }, [plugin?.disable, plugin?.isAuthor, i18n.language])
+    }, [plugin?.disable, plugin?.isAuthor, i18nRefresh])
 
     // 修改者信息
     const [apply, setApply] = useState<{ name: string; img: string; description: string }>()
@@ -835,7 +835,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
           )}
         </div>
       )
-    }, [extraHeaderInfo, statusLoading, admin, delLoading, wrapperWidth, plugin, isBanOperate, i18n.language])
+    }, [extraHeaderInfo, statusLoading, admin, delLoading, wrapperWidth, plugin, isBanOperate, i18nRefresh])
 
     if (!plugin) return null
 

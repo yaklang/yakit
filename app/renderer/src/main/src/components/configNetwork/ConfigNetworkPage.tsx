@@ -1580,7 +1580,7 @@ interface DataProps extends AuthInfo {
 
 export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
   const { visible, setVisible, getContainer, params, setParams, onNtmlSave } = props
-  const { t, i18n } = useI18nNamespaces(['configNetwork', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['configNetwork', 'yakitUi'])
   const [data, setData] = useState<DataProps[]>([])
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
@@ -1752,7 +1752,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         },
       },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const onMoveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
     setData((prevRules) =>

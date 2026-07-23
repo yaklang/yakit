@@ -254,7 +254,7 @@ export default AIToolPage
 
 const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
   const { index, data, onFavorite, onRemove } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi'])
   const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false)
   const [visible, setVisible] = useState<boolean>(false)
 
@@ -294,7 +294,7 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
       baseMenu = toolMenu(t).filter((item) => (item as YakitMenuItemProps).key !== 'delete')
     }
     return baseMenu
-  }, [isBuiltin, i18n.language])
+  }, [isBuiltin, i18nRefresh])
 
   return (
     <HubGridOpt

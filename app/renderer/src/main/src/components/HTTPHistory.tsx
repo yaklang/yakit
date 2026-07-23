@@ -148,7 +148,7 @@ export const HistoryTab: YakitTabsProps[] = [
 const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
   const { pageType, ...historyProps } = props
-  const { t, i18n } = useI18nNamespaces(['history'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history'])
   // #region 左侧tab
   const [activeKey, setActiveKey] = useState<string>('web-tree')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -298,7 +298,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
         firstNode={() => (
           <div className={styles['hTTPHistory-left']}>
             <YakitSideTab
-              key={i18n.language}
+              key={i18nRefresh}
               t={t}
               yakitTabs={HistoryTab}
               activeKey={activeKey}
@@ -876,7 +876,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
   const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
   const [tagListLoading, setTagListLoading] = useState<boolean>(false)
   const [activeKey, setActiveKey] = useState<string[]>(['process', 'tag', 'builtinTag'])
-  const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history', 'yakitUi'])
   const [searchValues, setSearchValues] = useState<{ process: string; tag: string; builtinTag: string }>({
     process: '',
     tag: '',
@@ -1149,7 +1149,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
         key: 'builtinTag' as HistoryProcessPanelKey,
       },
     ],
-    [i18n.language],
+    [i18nRefresh],
   )
 
   return (

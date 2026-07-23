@@ -923,7 +923,7 @@ export default HeardMenu
 /** 展开状态下的一级菜单项 和 收起状态下的菜单鼠标悬浮二级菜单的一级菜单项 */
 const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) => {
   const { menuItem, isShow, isExpand, onSelect, setSubMenuData, activeMenuId } = props
-  const { t, i18n } = useI18nNamespaces(['yakitRoute'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitRoute'])
 
   const [visible, setVisible] = useState<boolean>(false)
   const onOpenSecondMenu = useMemoizedFn(() => {
@@ -932,7 +932,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
   })
   const lableUI = useMemo(() => {
     return isEnpriTrace() ? menuItem.label : menuItem.labelUi ? t(menuItem.labelUi) : menuItem.label
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const popoverContent = (
     <div

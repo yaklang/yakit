@@ -110,7 +110,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     updatesPlugins,
     pluginOutputRef,
   } = props
-  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['mitm', 'yakitUi'])
   const mitmContent = useContext(MITMContext)
 
   const mitmVersion = useCreation(() => {
@@ -1052,7 +1052,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         pluginName: pluginName,
       }
     })
-  }, [pluginStreamInfo, i18n.language])
+  }, [pluginStreamInfo, i18nRefresh])
   // #endregion
 
   return (

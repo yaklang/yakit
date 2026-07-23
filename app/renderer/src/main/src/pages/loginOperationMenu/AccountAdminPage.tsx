@@ -181,7 +181,7 @@ interface OrganizationAdminProps {
   treeReduceCount: TreeReduceCount
 }
 const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['admin', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['admin', 'yakitUi'])
   const { selectDepartmentId, onSelectDepartmentId, onSetSelectTitle, treeCount, treeReduceCount } = props
   const [loading, setLoading] = useState<boolean>(false)
   const [treeHeight, setTreeHeight] = useState<number>()
@@ -363,7 +363,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
     } else {
       return department
     }
-  }, [noDepartmentNum, department, i18n.language])
+  }, [noDepartmentNum, department, i18nRefresh])
 
   const refreshTreeData = (newDepartment: DataSourceProps[]) => {
     if (noDepartmentNum) {

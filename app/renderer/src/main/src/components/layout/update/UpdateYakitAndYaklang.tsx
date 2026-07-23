@@ -32,7 +32,7 @@ interface UpdateYakitHintProps {
 /** yakit 更新弹框-包括更新内容 */
 export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props) => {
   const { latest, visible, onCallback } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'layout'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'layout'])
 
   useEffect(() => {
     if (visible) {
@@ -165,7 +165,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     if (status === 'install') return t('UpdateYakitAndYaklang.downloading', { edition: getReleaseEditionName() })
     if (status === 'installed') return t('UpdateYakitAndYaklang.downloadSuccess', { edition: getReleaseEditionName() })
     return t('UpdateYakitAndYaklang.unexpectedError')
-  }, [status, i18n.language])
+  }, [status, i18nRefresh])
 
   const extraBtn = useMemo(() => {
     if (status === 'ready') {
@@ -176,7 +176,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
       )
     }
     return null
-  }, [status, i18n.language])
+  }, [status, i18nRefresh])
 
   const footerBtn = useMemo(() => {
     if (status === 'ready') {
@@ -211,7 +211,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
       )
     }
     return null
-  }, [status, breakLoading, i18n.language])
+  }, [status, breakLoading, i18nRefresh])
 
   return (
     <YakitHint

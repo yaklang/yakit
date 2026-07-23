@@ -93,7 +93,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     fromMITM = false,
     ...restProps
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'history'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'history'])
   const { goAddNotepad } = useGoEditNotepad()
   const { queryPagesDataById } = usePageInfo(
     (s) => ({
@@ -711,7 +711,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     onClickOpenBrowserMenu,
     noOpenPacketNewWindow,
     userInfo.isLogin,
-    i18n.language,
+    i18nRefresh,
     setCompareLeft,
     setCompareRight,
     noSendToComparer,

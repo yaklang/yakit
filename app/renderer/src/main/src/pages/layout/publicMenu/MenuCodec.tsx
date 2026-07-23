@@ -18,7 +18,7 @@ const { ipcRenderer } = window.require('electron')
 interface MenuCodecProps {}
 
 export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['layout'])
+  const { t, i18nRefresh } = useI18nNamespaces(['layout'])
   const [avtiveKey, setActiveKey] = useState<string>('')
 
   const [codeShow, setCodeShow] = useState<boolean>(false)
@@ -41,7 +41,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
       { key: 'SHA-256', label: t('Layout.MenuCodec.SHA256') },
       { key: 'SHA-512', label: t('Layout.MenuCodec.SHA512') },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const codeMenu = useMemo(
     () => (
@@ -68,7 +68,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
       { key: 'hex-decode', label: t('Layout.MenuCodec.hexDecode') },
       { key: 'json-unicode-decode', label: t('Layout.MenuCodec.jsonUnicodeDecode') },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
   const decodeMenu = useMemo(
     () => (
       <YakitMenu

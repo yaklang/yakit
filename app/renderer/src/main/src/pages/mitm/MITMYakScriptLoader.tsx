@@ -73,7 +73,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     setShowPluginStream,
     setAutoForward,
   } = p
-  const { t } = useI18nNamespaces(['mitm'])
+  const { t, i18nRefresh } = useI18nNamespaces(['mitm'])
   const mitmContent = useContext(MITMContext)
 
   const mitmVersion = useCreation(() => {
@@ -281,7 +281,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         />
       </Tooltip>
     )
-  }, [i, showPluginHistoryList, i18n.language])
+  }, [i, showPluginHistoryList, i18nRefresh])
 
   const onHistoryTagToMitm = (data: string) => {
     try {
@@ -317,7 +317,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         <SolidLightningboltIcon className={style['lightning-bolt-icon']} />
       </YakitPopconfirm>
     )
-  }, [i, p, i18n.language])
+  }, [i, p, i18nRefresh])
 
   const authorImgNode = useMemo(() => {
     const { IsCorePlugin, Type, HeadImg, OnlineOfficial } = i

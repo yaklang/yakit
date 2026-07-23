@@ -48,7 +48,7 @@ interface SpaceEnginePageProps {
 }
 
 export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['spaceEngine', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['spaceEngine', 'yakitUi'])
   const { pageId } = props
   const { queryPagesDataById } = usePageInfo(
     (s) => ({
@@ -89,7 +89,7 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
       { tabName: t('SpaceEnginePage.logs'), type: 'log' },
       { tabName: 'Console', type: 'console' },
     ]
-  }, [scanBeforeSave, i18n.language])
+  }, [scanBeforeSave, i18nRefresh])
 
   const [streamInfo, spaceEngineStreamEvent] = useHoldGRPCStream({
     tabs: defaultTabs,
@@ -232,7 +232,7 @@ interface SpaceEngineFormContentProps {
 }
 
 const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['spaceEngine'])
+  const { t, i18nRefresh } = useI18nNamespaces(['spaceEngine'])
   const { disabled, inViewport } = props
   const [globalNetworkConfig, setGlobalNetworkConfig] = useState<GlobalNetworkConfig>(defaultParams)
   const [engineStatus, setEngineStatus] = useState<SpaceEngineStatus>()
@@ -334,7 +334,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
       DefaultValue: '',
       Help: '',
     }
-  }, [i18n.language])
+  }, [i18nRefresh])
   const engineExtra: ReactNode = useCreation(() => {
     if (!engineStatus) return null
     return (

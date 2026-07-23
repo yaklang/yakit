@@ -283,7 +283,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
     setCopyPath,
     setFoucsedKey,
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   // 是否为输入模式
   const [isInput, setInput] = useState<boolean>(false)
   // 是否为编辑（用于默认选中文件名）
@@ -702,7 +702,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
         ...base,
       ]
     }
-  }, [info, copyPath, folderPath, i18n.language])
+  }, [info, copyPath, folderPath, i18nRefresh])
 
   // 此处关闭文件夹由于审计树没有树右键 因此只有文件树存在
   const closeFolder = useMemoizedFn(() => {

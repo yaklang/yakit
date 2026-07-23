@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useImperativeHandle } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useImperativeHandle, Suspense } from 'react'
 import { Layout, Form, Tooltip } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import {
@@ -3576,15 +3576,17 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
         onRemove={onRemove}
         onDragEnd={onDragEnd}
       />
-      <TabChildren
-        softMode={softMode}
-        pageCache={pageCache}
-        currentTabKey={currentTabKey}
-        openMultipleMenuPage={openMultipleMenuPage}
-        onSetPageCache={onSetPageCache}
-        onRestoreHistory={onRestoreHistory}
-        onSaveHistory={onSaveHistory}
-      />
+      <Suspense fallback={<div>Loading Page</div>}>
+        <TabChildren
+          softMode={softMode}
+          pageCache={pageCache}
+          currentTabKey={currentTabKey}
+          openMultipleMenuPage={openMultipleMenuPage}
+          onSetPageCache={onSetPageCache}
+          onRestoreHistory={onRestoreHistory}
+          onSaveHistory={onSaveHistory}
+        />
+      </Suspense>
     </div>
   )
 })
@@ -6273,7 +6275,7 @@ const onVerifyGroupName = (val: string, t: TFunction) => {
 }
 const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = React.memo((props) => {
   const { groupItem, onOperateGroup, onUpdateGroup } = props
-  const { t, i18n } = useI18nNamespaces(['layout'])
+  const { t, i18nRefresh } = useI18nNamespaces(['layout'])
   const [group, setGroup] = useState<MultipleNodeInfo>({ ...groupItem })
   const [name, setName] = useState<string>(group.verbose)
   useEffect(() => {
@@ -6303,7 +6305,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
         key: 'editGroup',
       },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   return (
     <div

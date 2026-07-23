@@ -69,7 +69,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
   selected,
   setSelected,
 }) => {
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const inputRef = useRef<InputRef>(null)
   // 是否可输入
   const [isInput, setIsInput] = useState<boolean>(false)
@@ -258,7 +258,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     ]
 
     return menu.filter((item) => !item.isHide) as YakitMenuItemType[]
-  }, [data.depth, isOpen, i18n.language])
+  }, [data.depth, isOpen, i18nRefresh])
 
   // 菜单点击事件
   const handleDropdown = (key: string) => {

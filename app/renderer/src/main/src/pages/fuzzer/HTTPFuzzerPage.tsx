@@ -783,7 +783,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }),
     shallow,
   )
-  const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi', 'yakitRoute'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['webFuzzer', 'yakitUi', 'yakitRoute'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
   const { checkProxyEndpoints, getProxyValue } = useProxy()
   const initWebFuzzerPageInfo = useMemoizedFn(() => {
@@ -1058,7 +1058,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         onOk: (m) => onCloseTab(m),
       },
     })
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const onCloseTab = useMemoizedFn((m) => {
     ipcRenderer
@@ -2584,7 +2584,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         {t('HTTPFuzzerPage.view_all_suffix')}
       </div>
     ),
-    [fuzzerTableMaxData, i18n.language],
+    [fuzzerTableMaxData, i18nRefresh],
   )
   const noMoreLimtAlertMsg = useMemo(
     () => (
@@ -2596,7 +2596,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         {t('HTTPFuzzerPage.performAction')}
       </div>
     ),
-    [i18n.language],
+    [i18nRefresh],
   )
 
   const renderTLSTags = useMemo(
@@ -2630,7 +2630,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         )}
       </>
     ),
-    [advancedConfigValue, i18n.language],
+    [advancedConfigValue, i18nRefresh],
   )
 
   const renderHotPatchTag = useMemo(
@@ -3146,7 +3146,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                           overflowY: 'auto',
                                           overflowX: 'hidden',
                                         }}
-                                        key={i18n.language}
+                                        key={i18nRefresh}
                                       >
                                         <FuzzerConcurrentLoad
                                           inViewportCurrent={inViewport && currentFuzzerPage}
@@ -4404,7 +4404,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       foldBinaryFuzztag = true,
       onFoldBinaryFuzztagChange,
     } = props
-    const { t, i18n } = useI18nNamespaces(['webFuzzer'])
+    const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer'])
 
     const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
       defaultValuePropName: 'showMatcherAndExtraction',
@@ -4439,7 +4439,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             fuzzerResponse.ExtractedResults.filter((i) => i.Key !== '' || i.Value !== '').length > 0,
         )
       } catch (e) {}
-    }, [fuzzerResponse, i18n.language])
+    }, [fuzzerResponse, i18nRefresh])
 
     const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
       return {
@@ -4485,7 +4485,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
           },
         },
       }
-    }, [showResponseInfoSecondEditor, i18n.language])
+    }, [showResponseInfoSecondEditor, i18nRefresh])
     const ResizeBoxProps = useCreation(() => {
       let p = {
         firstRatio: '100%',

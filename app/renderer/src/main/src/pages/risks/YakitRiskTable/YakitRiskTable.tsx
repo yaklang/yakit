@@ -329,7 +329,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     yakitRiskDetailsBorder = true,
     excludeColumnsKey = [],
   } = props
-  const { t, i18n } = useI18nNamespaces(['risk', 'yakitUi', 'yakitRoute'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi', 'yakitRoute'])
   const { currentPageTabRouteKey } = usePageInfo(
     (s) => ({
       currentPageTabRouteKey: s.currentPageTabRouteKey,
@@ -678,7 +678,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       },
     ]
     return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
-  }, [riskTypeVerbose, tag, excludeColumnsKey, i18n.language])
+  }, [riskTypeVerbose, tag, excludeColumnsKey, i18nRefresh])
 
   /**误报上传 start */
   const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
@@ -1596,7 +1596,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     boxStyle,
     detailClassName = '',
   } = props
-  const { t, i18n } = useI18nNamespaces(['risk', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['risk', 'yakitUi'])
   const [isShowCode, setIsShowCode] = useState<boolean>(true)
   const descriptionsRef = useRef<HTMLDivElement>(null)
   const descriptionsDivWidth = useListenWidth(descriptionsRef)
@@ -1811,7 +1811,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
       },
     ]
     return options
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const extraResizeBoxProps = useCreation(() => {
     let p: YakitResizeBoxProps = {

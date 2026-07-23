@@ -70,7 +70,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
   const { isModify } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const [saveLoading, setSaveLoading] = useState<boolean>(false)
   const [fetchDataLoading, setFetchDataLoading] = useState<boolean>(false)
@@ -323,7 +323,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
         removeSubscribeClose(YakitRoute.AddAITool)
       }
     }
-  }, [isModify, i18n.language])
+  }, [isModify, i18nRefresh])
   // #endregion
 
   //#region  代码评分

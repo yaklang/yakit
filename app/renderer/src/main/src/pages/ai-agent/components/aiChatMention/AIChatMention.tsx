@@ -52,7 +52,7 @@ const alphanumericKeys = [
 ]
 export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
   const { onSelect, defaultActiveTab, filterMode } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const [activeKey, setActiveKey, getActiveKey] = useGetSetState<AIMentionTabsEnum>(
     defaultActiveTab || AIMentionTabsEnum.Forge_Name,
   )
@@ -297,7 +297,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
       style={{ width: mentionWidth() }}
     >
       <YakitSideTab
-        key={i18n.language}
+        key={i18nRefresh}
         className={styles['tab-wrapper']}
         type="horizontal"
         activeKey={activeKey}

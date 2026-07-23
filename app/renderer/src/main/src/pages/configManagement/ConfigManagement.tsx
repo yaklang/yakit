@@ -17,7 +17,7 @@ const HotPatchManagement = React.lazy(() =>
 )
 
 const ConfigManagement: React.FC = memo(() => {
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout'])
   const { configManagementActiveTab, setConfigManagementActiveTab } = useConfigManagementTab()
 
   const yakitTabs: YakitTabsProps[] = useMemo(() => {
@@ -35,7 +35,7 @@ const ConfigManagement: React.FC = memo(() => {
         value: 'hotPatch',
       },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
 
   const getCurrentTabLabel = useMemo(() => {
     switch (configManagementActiveTab) {
@@ -48,7 +48,7 @@ const ConfigManagement: React.FC = memo(() => {
       default:
         return t('YakitRoute.configManagement')
     }
-  }, [configManagementActiveTab, i18n.language])
+  }, [configManagementActiveTab, i18nRefresh])
 
   useEffect(() => {
     emiter.emit(
@@ -92,6 +92,7 @@ const ConfigManagement: React.FC = memo(() => {
       activeKey={configManagementActiveTab}
       onActiveKey={(key) => setConfigManagementActiveTab(key as configManagementTabType)}
       t={t}
+      key={i18nRefresh}
     >
       <div className={styles['config-management-content']}>{content}</div>
     </YakitSideTab>

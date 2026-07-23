@@ -28,7 +28,7 @@ export interface YakRunnerAiSidePanelProps {
 
 /** Yak Runner 右侧 AI 侧栏：消费 `useHistoryAIReActChat` */
 export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ children, rootClassName }) => {
-  const { t, i18n } = useI18nNamespaces(['history', 'yakRunner'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history', 'yakRunner'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -117,7 +117,7 @@ export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ chil
   const rail = (
     <div className={styles.railRight}>
       <YakitSideTab
-        key={i18n.language}
+        key={i18nRefresh}
         t={t}
         type="vertical-right"
         yakitTabs={defaultAiTabs}

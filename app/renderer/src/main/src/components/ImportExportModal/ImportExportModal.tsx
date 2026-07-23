@@ -66,7 +66,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
     getlogListInfo,
     onFinished,
   } = props
-  const { t, i18n } = useI18nNamespaces(['components', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['components', 'yakitUi'])
 
   const [form] = Form.useForm()
 
@@ -133,7 +133,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
           ? t('ImportExportModal.importDone')
           : t('ImportExportModal.importing')
         : t('ImportExportModal.importing')
-  }, [extra.type, progressStream.length, i18n.language])
+  }, [extra.type, progressStream.length, i18nRefresh])
 
   const handleListeners = useMemoizedFn(() => {
     if (!token.current) {

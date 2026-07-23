@@ -139,7 +139,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     setAllTotal,
   } = props
   const { userInfo } = useStore()
-  const { t, i18n } = useI18nNamespaces(['yakRunnerAuditHole', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunnerAuditHole', 'yakitUi'])
 
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   const [scrollToIndex, setScrollToIndex] = useState<number>()
@@ -456,7 +456,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       },
     ]
     return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
-  }, [riskTypeVerbose, excludeColumnsKey, i18n.language])
+  }, [riskTypeVerbose, excludeColumnsKey, i18nRefresh])
 
   /**误报上传 start */
   const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
@@ -1370,7 +1370,7 @@ export const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo(
 
 export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React.memo((props) => {
   const { info, className, border, isShowExtra, isExtraClick, setLatestDisposalStatus, getSSARiskDisposal } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunnerAuditHole', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunnerAuditHole', 'yakitUi'])
   const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
   const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
     defaultValue: [],
@@ -1405,7 +1405,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
     })
     // }
     return options
-  }, [disposalData, i18n.language])
+  }, [disposalData, i18nRefresh])
 
   const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
   const initData = useMemoizedFn(async () => {
@@ -1462,7 +1462,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
       tag: severity?.tag || 'default',
       name: severity?.name || info?.Severity || '-',
     }
-  }, [info.Severity, i18n.language])
+  }, [info.Severity, i18nRefresh])
 
   // 跳转到代码审计页面
   const jumpCodeScanPage = useMemoizedFn((value?: string) => {

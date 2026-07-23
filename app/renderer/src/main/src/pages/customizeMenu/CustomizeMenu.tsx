@@ -1026,7 +1026,7 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
 /** @name 右侧系统菜单栏 */
 const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props) => {
   const { SystemRouteMenuData } = props
-  const { t, i18n } = useI18nNamespaces(['yakitRoute'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['yakitRoute'])
   const [keyword, setKeyword] = useState<string>('')
   const [systemRouteMenuData, setSystemRouteMenuData] = useState(SystemRouteMenuData)
   useDebounceEffect(
@@ -1044,7 +1044,7 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
       return item.labelUi && i18n.language !== 'zh' ? t(item.labelUi).includes(keyword) : item.label.includes(keyword)
     })
     setSystemRouteMenuData(newList)
-  }, [props.isSearch, i18n.language])
+  }, [props.isSearch, i18nRefresh])
   return (
     <Droppable droppableId="droppable3">
       {(provided, snapshot) => {

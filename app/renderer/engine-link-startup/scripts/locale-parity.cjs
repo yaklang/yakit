@@ -21,7 +21,7 @@ function flatten(obj, prefix = '') {
   return out
 }
 
-const localesPath = 'public/locales'
+const localesPath = 'src/locales'
 const root = process.cwd()
 const enDir = path.join(root, localesPath, 'en')
 const targetLangs = ['zh', 'zh-TW']

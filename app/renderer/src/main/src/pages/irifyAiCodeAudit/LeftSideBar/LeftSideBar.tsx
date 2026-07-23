@@ -11,7 +11,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
   const { addFileTab, isUnShow, active, setActive, setIsUnShow } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner'])
 
   // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
   const rendered = useRef<Set<string>>(new Set(['file-tree']))
@@ -31,7 +31,7 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
     >
       {/* 左侧边栏 */}
       <YakitSideTab
-        key={i18n.language}
+        key={i18nRefresh}
         yakitTabs={YakRunnerIrifyAiCodeAuditTab}
         activeKey={active}
         onActiveKey={onSetActive}

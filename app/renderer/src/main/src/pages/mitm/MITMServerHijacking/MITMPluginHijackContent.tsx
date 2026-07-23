@@ -184,7 +184,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     setShowPluginStream,
     setAutoForward,
   } = props
-  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi', 'webFuzzer'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['mitm', 'yakitUi', 'webFuzzer'])
   const mitmContent = useContext(MITMContext)
 
   const mitmVersion = useCreation(() => {
@@ -1000,7 +1000,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
           setShow={onSetOpenTabsFlag}
           barHint={() => ''}
           t={t}
-          key={i18n.language}
+          key={i18nRefresh}
         />
         <div
           className={classNames(styles['mitm-hijack-tab-cont-item'])}

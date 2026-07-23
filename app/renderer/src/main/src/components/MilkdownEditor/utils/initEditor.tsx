@@ -99,7 +99,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
     positionElementId,
     isControlEditorType,
   } = props
-  const { t, i18n } = useI18nNamespaces(['components'])
+  const { t, i18nRefresh } = useI18nNamespaces(['components'])
 
   const nodeViewFactory = useNodeViewFactory()
   const pluginViewFactory = usePluginViewFactory()
@@ -426,7 +426,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
           .use(fallbackContainerDirectivePlugin()) // containerDirective 兜底
       )
     },
-    [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash, i18n.language],
+    [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash, i18nRefresh],
   )
 
   const uploadImg = async (image) => {

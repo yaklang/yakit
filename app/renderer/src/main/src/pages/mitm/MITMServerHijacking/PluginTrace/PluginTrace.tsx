@@ -75,7 +75,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
       pluginTraceList,
     } = props
 
-    const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
+    const { t, i18nRefresh } = useI18nNamespaces(['mitm', 'yakitUi'])
     useImperativeHandle(
       ref,
       () => ({
@@ -311,7 +311,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
         },
       ]
       return columnArr
-    }, [i18n.language])
+    }, [i18nRefresh])
 
     const updateSelectCurTrace = useMemoizedFn((traceList) => {
       if (selectCurTrace) {

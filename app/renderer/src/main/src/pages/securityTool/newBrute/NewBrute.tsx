@@ -247,7 +247,7 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
 
 const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
   forwardRef((props, ref) => {
-    const { t, i18n } = useI18nNamespaces(['brute', 'yakitUi', 'yakitRoute'])
+    const { t, i18nRefresh } = useI18nNamespaces(['brute', 'yakitUi', 'yakitRoute'])
     const { bruteType, isExpand, executeStatus, setExecuteStatus, setIsExpand, selectNum, setProgressList, pageInfo } =
       props
     const [form] = Form.useForm()
@@ -268,7 +268,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
         { tabName: 'Console', type: 'console' },
       ]
       return tabs
-    }, [i18n.language])
+    }, [i18nRefresh])
     const [streamInfo, streamEvent] = useHoldGRPCStream({
       tabs: defaultTabs,
       taskName: 'StartBrute',

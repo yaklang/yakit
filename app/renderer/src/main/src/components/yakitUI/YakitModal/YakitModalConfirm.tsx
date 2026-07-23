@@ -9,66 +9,15 @@ import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { createRoot } from 'react-dom/client'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { ALL_I18N_NAMESPACES } from '@/i18n/namespaces'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
 export type ModalI18nNode = React.ReactNode | ((modalT: TFunction) => React.ReactNode) | string
 
-export const ALL_MODAL_I18N_NAMESPACES = [
-  'yakitUi',
-  'yakitRoute',
-  'core',
-  'layout',
-  'plugin',
-  'yakitStore',
-  'customizeMenu',
-  'home',
-  'history',
-  'webFuzzer',
-  'aiAgent',
-  'setting',
-  'yakChat',
-  'yakURLTree',
-  'yakRunnerAuditHole',
-  'yakRunner',
-  'yakPoC',
-  'websocket',
-  'vulinbox',
-  'utils',
-  'store',
-  'spaceEngine',
-  'simpleDetect',
-  'shortcutKey',
-  'screenRecorder',
-  'ruleManagement',
-  'risk',
-  'reverse',
-  'remote',
-  'projectManage',
-  'portscan',
-  'pluginHub',
-  'payload',
-  'notepad',
-  'mitm',
-  'icmpsizelog',
-  'HTTPHistoryAnalysis',
-  'hook',
-  'engineConsole',
-  'dns',
-  'cve',
-  'configNetwork',
-  'components',
-  'comparer',
-  'codec',
-  'brute',
-  'assetViewer',
-  'apiUtils',
-  'admin',
-]
-
 /** 将title, content 改为function传入 使用modalT 替换 t('') 即可解决中英文切换问题 */
 export const ModalI18nRender: React.FC<{ node?: ModalI18nNode }> = ({ node }) => {
-  const { t } = useI18nNamespaces(ALL_MODAL_I18N_NAMESPACES)
+  const { t } = useI18nNamespaces(ALL_I18N_NAMESPACES)
   if (typeof node === 'function') {
     return <>{(node as (modalT: TFunction) => React.ReactNode)(t)}</>
   }

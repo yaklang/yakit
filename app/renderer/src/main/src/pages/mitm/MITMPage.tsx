@@ -630,7 +630,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
-  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['mitm', 'yakitUi'])
 
   const MITMIdleTab: YakitTabsProps[] = useMemo(
     () => [
@@ -639,7 +639,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         value: 'plugin',
       },
     ],
-    [i18n.language],
+    [i18nRefresh],
   )
 
   /**

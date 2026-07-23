@@ -127,7 +127,7 @@ export interface UILayoutProp {
 }
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
+  const { t, i18n, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
   const mcp = useSyncYakMcpStream({})
   const { currentPageTabRouteKey } = usePageInfo(
     (s) => ({
@@ -1570,7 +1570,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         )}
       </>
     )
-  }, [performanceSamplingInfo, isShowSamplingInfo, i18n.language])
+  }, [performanceSamplingInfo, isShowSamplingInfo, i18nRefresh])
   /** ---------- 软件顶部展示采样中 End ---------- */
 
   /** ---------- 软件顶部展示录屏中状态 Start ---------- */
@@ -1596,7 +1596,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         )}
       </>
     )
-  }, [screenRecorderInfo, i18n.language])
+  }, [screenRecorderInfo, i18nRefresh])
   /** ---------- 软件顶部展示录屏中状态 End ---------- */
   // #endregion
 

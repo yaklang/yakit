@@ -80,7 +80,7 @@ const RunnerFileTreeTab: YakitTabsProps[] = [
 ]
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   const { fileTreeLoad, boxHeight } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { fileTree, activeFile, projectName, pageInfo } = useStore()
   const { handleFileLoadData, setRuntimeID } = useDispatcher()
   const [afreshName, setAfreshName] = useState<string>()
@@ -169,7 +169,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     }
 
     return initTree
-  }, [fileTree, refreshTree, i18n.language])
+  }, [fileTree, refreshTree, i18nRefresh])
 
   const getAduitList = useMemoizedFn(async () => {
     try {
@@ -243,7 +243,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     }
 
     return newMenu
-  }, [aduitList, fileTree, i18n.language])
+  }, [aduitList, fileTree, i18nRefresh])
 
   // 编译项目
   const auditCode = useMemoizedFn(() => {
@@ -461,7 +461,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     <div className={styles['runner-file-tree']}>
       {/* 左侧边栏 */}
       <YakitSideTab
-        key={i18n.language}
+        key={i18nRefresh}
         yakitTabs={RunnerFileTreeTab}
         activeKey={active}
         onActiveKey={onSetActive}
@@ -740,7 +740,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
 // 漏洞/规则 树
 export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
   const { type, projectName, onSelectedNodes, init, search, task_id, result_id, increment } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitUi'])
   /** ---------- 文件树 ---------- */
   const [riskTree, setRiskTree] = useState<FileTreeListProps[]>([])
   const [refreshRiskTree, setRefreshRiskTree] = useState<boolean>(false)
@@ -787,7 +787,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
       })
     }
     return initTree
-  }, [riskTree, refreshRiskTree, i18n.language])
+  }, [riskTree, refreshRiskTree, i18nRefresh])
 
   const clearMap = useMemoizedFn(() => {
     resetRiskMap()

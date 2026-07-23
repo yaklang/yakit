@@ -59,7 +59,7 @@ const ModifyNotepadContentTab: YakitTabsProps[] = [
 export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { tabName, spinning, listDom } = props
-    const { t, i18n } = useI18nNamespaces(['notepad', 'yakitUi'])
+    const { t, i18nRefresh } = useI18nNamespaces(['notepad', 'yakitUi'])
     //#region 目录
     const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
     const [excludeExpandedKeys, setExcludeExpandedKeys] = useState<string[]>([])
@@ -151,7 +151,7 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
               firstNode={
                 <div className={styles['notepad-tab-body']}>
                   <YakitSideTab
-                    key={i18n.language}
+                    key={i18nRefresh}
                     yakitTabs={ModifyNotepadContentTab}
                     activeKey={activeKey}
                     onActiveKey={onActiveKey}

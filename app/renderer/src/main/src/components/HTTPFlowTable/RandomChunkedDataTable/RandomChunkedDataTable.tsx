@@ -9,7 +9,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo((props) => {
   const { data } = props
-  const { t, i18n } = useI18nNamespaces(['history'])
+  const { t, i18nRefresh } = useI18nNamespaces(['history'])
   const columns: ColumnsTypeProps[] = useCreation(() => {
     return [
       {
@@ -48,7 +48,7 @@ const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo
         width: 160,
       },
     ]
-  }, [i18n.language])
+  }, [i18nRefresh])
   return (
     <div className={styles['chunked-table-container-wrapper']}>
       <div className={styles['chunked-table-container-title']}>{t('RandomChunkedDataTable.chunkDetails')}</div>

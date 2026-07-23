@@ -46,7 +46,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { onChat, onChatFromHistory } = props
-    const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
+    const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
     const chatIPCStore = useChatIPCStore()
     const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, requestHistoryState } =
       chatIPCStore.chatIPCData
@@ -371,7 +371,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
           </ExpandAndRetract>
           <div className={styles['ai-chat-tab-wrapper']}>
             <YakitSideTab
-              key={i18n.language}
+              key={i18nRefresh}
               type="horizontal"
               yakitTabs={yakitTabs}
               activeKey={activeKey}

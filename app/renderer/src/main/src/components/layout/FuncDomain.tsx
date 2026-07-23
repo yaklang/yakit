@@ -345,7 +345,7 @@ export interface FuncDomainProp {
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['layout', 'yakitUi'])
   const {
     isEngineLink,
     isReverse = false,
@@ -1013,7 +1013,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                       })}
                     >
                       <YakitDropdownMenu
-                        key={i18n.language}
+                        key={i18nRefresh}
                         menu={{
                           data: userMenu.map((item) => {
                             const obj = cloneDeep(item)

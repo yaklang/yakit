@@ -24,7 +24,7 @@ const TASK_CONTENT_KEY = 'taskContent'
 
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
   const { tabBarExtraContent, onTabsChange } = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
   const {
     chatIPCData: { taskChat },
@@ -204,7 +204,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     <div className={styles['chat-content-wrapper']} ref={divRef}>
       {!!tabs.length && (
         <YakitSideTab
-          key={i18n.language}
+          key={i18nRefresh}
           type="horizontal"
           yakitTabs={tabs}
           activeKey={activeKey}

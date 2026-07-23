@@ -9,7 +9,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const LeftSideHoleBar: React.FC<LeftSideHoleBarProps> = (props) => {
   const { isUnShow, setIsUnShow, active, setActive, statisticNode, documentCollectDom } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunnerAuditHole'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakRunnerAuditHole'])
   // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
   const rendered = useRef<Set<string>>(new Set(['statistic']))
 
@@ -28,7 +28,7 @@ export const LeftSideHoleBar: React.FC<LeftSideHoleBarProps> = (props) => {
     >
       {/* 左侧边栏 */}
       <YakitSideTab
-        key={i18n.language}
+        key={i18nRefresh}
         yakitTabs={YakRunnerAuditHoleTab}
         activeKey={active}
         onActiveKey={onSetActive}

@@ -50,7 +50,7 @@ interface MenuPluginProps {
 
 export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
   const { loading, pluginList, onMenuSelect, onRestore: restoreCallback } = props
-  const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['yakitRoute', 'layout', 'yakitUi'])
 
   /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
   const onMenu = useMemoizedFn((pluginId: number, pluginName: string, fromRecent?: boolean) => {
@@ -254,7 +254,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
         </div>
       </YakitSpin>
     ),
-    [searchLocal, searchOnline, searchLoading, i18n.language, jumpOnlinePlugin, renderPluginOpt, onMenu],
+    [searchLocal, searchOnline, searchLoading, i18nRefresh, jumpOnlinePlugin, renderPluginOpt, onMenu],
   )
 
   const renderRecentPluginsDom = useMemo(() => {
@@ -276,7 +276,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
         )}
       </>
     )
-  }, [recentPlugins, pluginList, loading, renderPluginOpt, onMenu, i18n.language])
+  }, [recentPlugins, pluginList, loading, renderPluginOpt, onMenu, i18nRefresh])
 
   const listDom = useMemo(() => {
     const hasSearch = !!searchedKeyword
@@ -350,7 +350,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
         </div>
       </div>
     )
-  }, [pluginList, loading, i18n.language, search, renderRecentPluginsDom, renderSearchListDom, searchedKeyword])
+  }, [pluginList, loading, i18nRefresh, search, renderRecentPluginsDom, renderSearchListDom, searchedKeyword])
 
   if (props.children) {
     return (

@@ -329,7 +329,7 @@ const ConnectivityCheckAction: React.FC = React.memo(() => {
 
 export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.memo(
   React.forwardRef((props, ref) => {
-    const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
+    const { t, i18nRefresh } = useI18nNamespaces(['mitm', 'yakitUi'])
     const { deviceName, pluginTunHijackDel, handleDeleteRoute, onQuitTunHijackFun, onCloseTunHijackFun } = props
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -420,7 +420,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
           },
         },
       ]
-    }, [i18n.language])
+    }, [i18nRefresh])
     // 以下为路由表查询逻辑---
     const [pluginTunHijackFind, pluginTunHijackFindActions] = usePluginTunHijack({
       PluginName: '路由表查询',

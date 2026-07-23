@@ -20,7 +20,7 @@ const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   // const {} = props
-  const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
   const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
   const [show, setShow] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -110,7 +110,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   return (
     <div className={styles['ai-agent-side-list']}>
       <YakitSideTab
-        key={i18n.language}
+        key={i18nRefresh}
         type="vertical"
         yakitTabs={AiAgentTabList}
         activeKey={active}

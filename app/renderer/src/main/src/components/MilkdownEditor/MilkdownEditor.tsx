@@ -101,7 +101,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
   const userInfo = useStore((s) => s.userInfo)
 
   const { defaultValue, collabProps, setEditor, onSaveContentBeforeDestroy } = props
-  const { t } = useI18nNamespaces(['components', 'yaktUi'])
+  const { t } = useI18nNamespaces(['components', 'yakitUi'])
 
   const milkdownRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(milkdownRef)

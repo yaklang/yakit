@@ -35,7 +35,7 @@ interface PluginHubListProps {
 }
 /** @name 插件中心 */
 export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['pluginHub'])
+  const { t, i18nRefresh } = useI18nNamespaces(['pluginHub'])
   const { rootElementId, isDetail, toPluginDetail, setHiddenDetailPage, setAutoOpenDetailTab } = props
 
   const userinfo = useStore((s) => s.userInfo)
@@ -213,7 +213,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     <div className={styles['plugin-hub-list']}>
       <div className={styles['side-bar-list']}>
         <YakitSideTab
-          key={i18n.language}
+          key={i18nRefresh}
           yakitTabs={HubSideBarList}
           activeKey={active}
           onActiveKey={(v) => {
