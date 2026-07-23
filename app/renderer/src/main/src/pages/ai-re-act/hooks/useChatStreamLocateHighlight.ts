@@ -42,48 +42,72 @@ const useChatStreamLocateHighlight = ({ scrollToIndex, listRootRef }: UseChatStr
   })
 
   const queryItemEl = useMemoizedFn((targetIndex: number) => {
-    const selector = `[data-index="${targetIndex}"]`
-    // 优先在当前列表容器内查找，避免同页多个 Virtuoso 的 data-index 撞车
-    if (listRootRef?.current) {
-      return listRootRef.current.querySelector(selector)
-    }
-    return document.querySelector(selector)
+    const root = listRootRef?.current
+    if (!root) return null
+    // 限定在当前列表容器内查找，避免同页多个 Virtuoso 的 data-index 撞车
+    return root.querySelector(`[data-index="${targetIndex}"]`)
   })
 
-  /** 等元素进入可视区域后再高亮，避免动画在不可见时播放完毕 */
-  const waitAndHighlight = useMemoizedFn((targetIndex: number) => {
-    cleanupHighlightWatcher()
-    clearHighlight()
+  const isListVisible = useMemoizedFn(() => {
+    const root = listRootRef?.current
+    const rect = root?.getBoundingClientRect()
+    return !!root && root.offsetParent !== null && !!rect && rect.width > 0 && rect.height > 0
+  })
 
-    let attempts = 0
-    const tryObserve = () => {
-      if (++attempts > 120) return
-      // Virtuoso Item 的 data-index 是 originalIndex（相对下标）
-      const el = queryItemEl(targetIndex)
-      if (!el) {
-        highlightRafRef.current = requestAnimationFrame(tryObserve)
-        return
-      }
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((e) => e.isIntersecting)) {
-            clearHighlight()
-            el.classList.add(HIGHLIGHT_CLASS)
-            highlightedElRef.current = el
-            highlightClearTimerRef.current = setTimeout(() => {
-              clearHighlight()
-            }, HIGHLIGHT_DURATION)
-            observer.disconnect()
-            highlightObserverRef.current = null
+  /** 等列表恢复可见并完成滚动后再高亮 */
+  const waitAndHighlight = useMemoizedFn(
+    (targetIndex: number, behavior: 'auto' | 'smooth', retryScrollWhenVisible: boolean) => {
+      cleanupHighlightWatcher()
+      clearHighlight()
+
+      let attempts = 0
+      let retriedScroll = false
+      const tryObserve = () => {
+        if (++attempts > 120) return
+        // listRootRef 未挂载或列表 display:none 时，等下一帧再试
+        if (!isListVisible()) {
+          highlightRafRef.current = requestAnimationFrame(tryObserve)
+          return
+        }
+        // 列表刚恢复可见：display:none 期间的 scrollToIndex 无效，补滚一次
+        if (retryScrollWhenVisible && !retriedScroll) {
+          retriedScroll = true
+          scrollToIndex(targetIndex, behavior)
+          highlightRafRef.current = requestAnimationFrame(tryObserve)
+          return
+        }
+        // Virtuoso Item 的 data-index 是 originalIndex（相对下标）
+        const el = queryItemEl(targetIndex)
+        if (!el) {
+          // scrollToIndex 后 Virtuoso 异步渲染，元素还没出来；首次找不到时补滚一次
+          if (!retriedScroll) {
+            retriedScroll = true
+            scrollToIndex(targetIndex, behavior)
           }
-        },
-        { threshold: 0.1 },
-      )
-      observer.observe(el)
-      highlightObserverRef.current = observer
-    }
-    highlightRafRef.current = requestAnimationFrame(tryObserve)
-  })
+          highlightRafRef.current = requestAnimationFrame(tryObserve)
+          return
+        }
+        const observer = new IntersectionObserver(
+          (entries) => {
+            if (entries.some((e) => e.isIntersecting)) {
+              clearHighlight()
+              el.classList.add(HIGHLIGHT_CLASS)
+              highlightedElRef.current = el
+              highlightClearTimerRef.current = setTimeout(() => {
+                clearHighlight()
+              }, HIGHLIGHT_DURATION)
+              observer.disconnect()
+              highlightObserverRef.current = null
+            }
+          },
+          { threshold: 0.1 },
+        )
+        observer.observe(el)
+        highlightObserverRef.current = observer
+      }
+      highlightRafRef.current = requestAnimationFrame(tryObserve)
+    },
+  )
 
   useEffect(() => {
     return () => {
@@ -96,8 +120,9 @@ const useChatStreamLocateHighlight = ({ scrollToIndex, listRootRef }: UseChatStr
   /** 按数组下标滚动并高亮 */
   const locateToIndex = useMemoizedFn((arrayIndex: number, behavior: 'auto' | 'smooth' = 'auto') => {
     if (arrayIndex < 0) return
+    const retryScrollWhenVisible = !isListVisible()
     scrollToIndex(arrayIndex, behavior)
-    waitAndHighlight(arrayIndex)
+    waitAndHighlight(arrayIndex, behavior, retryScrollWhenVisible)
   })
 
   return {

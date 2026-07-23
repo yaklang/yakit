@@ -12,6 +12,16 @@
   width: 100%;
   height: 100%;
   overflow: auto hidden;
+  min-width: 0;
+  .tab-pane {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    overflow: auto hidden;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .tab-bar-item {
@@ -51,5 +61,5 @@
   height: 100%;
   width: 100%;
   position: relative;
-  min-width: 200px;
+  min-width: 0;
 }

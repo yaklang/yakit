@@ -41,9 +41,6 @@ import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
 import { randomString } from '@/utils/randomUtil'
-import useGetAIMaterialsData from '../hooks/useGetAIMaterialsData'
-import { AIRecommendItem } from '@/pages/ai-agent/aiChatWelcome/type'
-import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -51,7 +48,6 @@ import useAIGlobalConfig from '../hooks/useAIGlobalConfig'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
-import AIReActTaskEmpty from './AIReActTaskEmpty'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { has } from 'lodash'
@@ -59,11 +55,11 @@ import { AITaskContent } from '../aiTaskContent/AITaskContent'
 import { useTaskChatExtraAction } from './useTaskChatExtraAction'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
-  const { setShowFreeChat, setTimeLine } = props
-  const [{ randomAIMaterialsData, loadingAIMaterials }, { onRefresh }] = useGetAIMaterialsData()
+  const { setShowFreeChat, setTimeLine, onTaskTabsChange } = props
 
   const [leftExpand, setLeftExpand] = useState(true)
   const [expand, setExpand] = useState(false)
+  const [hasTabs, setHasTabs] = useState(false)
 
   const onIsExpand = useMemoizedFn(() => {
     setLeftExpand(expand)
@@ -75,56 +71,73 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     setTimeLine(leftExpand)
   }, [leftExpand])
 
-  const onClickItem = useMemoizedFn((item: AIRecommendItem, mentionType: AIMentionCommandParams['mentionType']) => {
-    const params: AIMentionCommandParams = {
-      mentionId: randomString(8),
-      mentionType,
-      mentionName: item.name,
-    }
-    emiter.emit(
-      'setAIInputByType',
-      JSON.stringify({
-        type: 'mention',
-        params,
-      }),
-    )
+  const onTabsChange = useMemoizedFn((tabsLength: number) => {
+    const next = tabsLength > 0
+    setHasTabs(next)
+    onTaskTabsChange?.(next)
   })
+
+  // 无 tab：任务规划宽度强制为 0（覆盖 secondMinSize 默认 100px）；有 tab：时间线 30% + 规划区
+  const firstNodeStyle = useCreation(() => {
+    if (!hasTabs) {
+      return {
+        width: '100%',
+        overflow: 'hidden',
+        maxWidth: leftExpand ? '' : '30px',
+        borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
+      }
+    }
+    return {
+      width: leftExpand ? '30%' : undefined,
+      overflow: 'hidden',
+      maxWidth: leftExpand ? '' : '30px',
+      borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
+    }
+  }, [hasTabs, leftExpand])
+
+  const secondNodeStyle = useCreation(() => {
+    if (!hasTabs) {
+      return {
+        width: 0,
+        minWidth: 0,
+        maxWidth: 0,
+        padding: 0,
+        overflow: 'hidden' as const,
+        flex: 'none',
+      }
+    }
+    return {
+      width: leftExpand ? '100%' : 'calc(100% - 30px)',
+      padding: 0,
+      overflow: 'auto hidden' as const,
+    }
+  }, [hasTabs, leftExpand])
+
   return (
     <div className={styles['ai-re-act-task-chat']}>
       <YakitResizeBox
-        firstRatio={'30%'}
+        firstRatio={hasTabs ? '30%' : '100%'}
+        secondRatio={hasTabs ? undefined : '0%'}
         lineDirection="right"
-        firstMinSize={leftExpand ? 300 : 30}
-        lineStyle={{ width: leftExpand ? 4 : 0 }}
-        freeze={leftExpand}
-        firstNodeStyle={{
-          width: '30%',
-          overflow: 'hidden',
-          maxWidth: leftExpand ? '' : '30px',
-          borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
-        }}
-        secondNodeStyle={{ width: leftExpand ? '100%' : 'calc(100% - 30px)', padding: 0, overflow: 'auto hidden' }}
+        firstMinSize={leftExpand ? (hasTabs ? 300 : 280) : 30}
+        secondMinSize={hasTabs ? 100 : 0}
+        lineStyle={{ width: hasTabs && leftExpand ? 4 : 0 }}
+        freeze={hasTabs && leftExpand}
+        isRecalculateWH={hasTabs}
+        firstNodeStyle={firstNodeStyle}
+        secondNodeStyle={secondNodeStyle}
         firstNode={<AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />}
         secondNode={
-          <>
-            <AITaskContent
-              tabBarExtraContent={
-                <YakitButton
-                  type="text2"
-                  icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                  onClick={onIsExpand}
-                />
-              }
-              emptyNode={
-                <AIReActTaskEmpty
-                  loadingAIMaterials={loadingAIMaterials}
-                  randomAIMaterialsData={randomAIMaterialsData}
-                  onRefresh={onRefresh}
-                  onClickItem={onClickItem}
-                />
-              }
-            />
-          </>
+          <AITaskContent
+            onTabsChange={onTabsChange}
+            tabBarExtraContent={
+              <YakitButton
+                type="text2"
+                icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                onClick={onIsExpand}
+              />
+            }
+          />
         }
       />
     </div>

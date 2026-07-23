@@ -56,6 +56,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
     const [timeLine, setTimeLine] = useState<boolean>(true)
+    /** 任务规划是否有 tab（无则自由对话变大） */
+    const [hasTaskTabs, setHasTaskTabs] = useState(false)
+    /** 文件系统是否有文件预览（无则自由对话变大） */
+    const [hasFilePreview, setHasFilePreview] = useState(false)
     const [runTimeId, setRunTimeId] = useState<string>() // 工具卡片跳转自带runTimeID
 
     const [exportModalVisible, setExportModalVisible] = useState(false)
@@ -235,9 +239,15 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       const riskRunTimeIds = [...new Set(!!runTimeId ? [runTimeId] : riskRunTimeIDs.concat(RelatedRuntimeIDs))]
       switch (activeKey) {
         case AITabsEnum.Task_Content:
-          return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
+          return (
+            <AIReActTaskChat
+              setTimeLine={setTimeLine}
+              setShowFreeChat={setShowFreeChat}
+              onTaskTabsChange={setHasTaskTabs}
+            />
+          )
         case AITabsEnum.File_System:
-          return <AIFileSystemList />
+          return <AIFileSystemList onFilePreviewChange={setHasFilePreview} />
         case AITabsEnum.Risk:
           return !!riskRunTimeIds.length ? (
             <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />
@@ -271,6 +281,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         setActiveKey(key)
       }
       setRunTimeId(undefined)
+      // 离开文件系统时清掉预览标记，避免宽度计算残留
+      if (key !== AITabsEnum.File_System) {
+        setHasFilePreview(false)
+      }
     })
     const onOpenLog = useMemoizedFn((e) => {
       e.stopPropagation()
@@ -282,6 +296,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       showFreeChat,
       timeLine,
       taskChat,
+      hasTaskTabs,
+      hasFilePreview,
     })
 
     // useMount(() => {

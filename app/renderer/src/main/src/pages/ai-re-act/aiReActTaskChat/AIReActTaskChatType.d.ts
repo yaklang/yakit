@@ -1,12 +1,12 @@
 import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AIRecommendItem, RandomAIMaterialsDataProps } from '@/pages/ai-agent/aiChatWelcome/type'
-import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { ReactNode } from 'react'
 import { AIStartParams } from '../hooks/grpcApi'
 
 export interface AIReActTaskChatProps {
   setShowFreeChat: (show: boolean) => void
   setTimeLine: (show: boolean) => void
+  /** 任务规划 tabs 是否有内容，用于外层自由对话变大 */
+  onTaskTabsChange?: (hasTabs: boolean) => void
 }
 
 export interface AIReActTaskChatContentProps {
@@ -23,19 +23,6 @@ export interface AIRenderTaskFooterExtraProps {
   btnProps?: YakitButtonProp
   subTaskBtnProps?: YakitButtonProp
   onExtraAction: (type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => void
-}
-
-export interface AIReActTaskRecommendProps {
-  title: string
-  data: AIRecommendItem[]
-  onClickItem: (item: AIRecommendItem) => void
-}
-
-export interface AIReActTaskEmptyProps {
-  loadingAIMaterials: boolean
-  randomAIMaterialsData: RandomAIMaterialsDataProps
-  onRefresh: () => void
-  onClickItem: (item: AIRecommendItem, mentionType: AIMentionCommandParams['mentionType']) => void
 }
 
 export interface AIGlobalCommandPopoverProps {

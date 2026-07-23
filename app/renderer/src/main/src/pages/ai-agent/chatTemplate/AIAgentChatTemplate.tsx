@@ -288,9 +288,10 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     locateToIndex(index, 'auto')
   })
   useMount(() => {
-    emiter.on('onAITreeLocatePlanningList', onTreeLocate)
+    // 仅监听 Ready：由 AITaskContent 保证深度规划已可见后再发
+    emiter.on('onAITreeLocatePlanningListReady', onTreeLocate)
     return () => {
-      emiter.off('onAITreeLocatePlanningList', onTreeLocate)
+      emiter.off('onAITreeLocatePlanningListReady', onTreeLocate)
     }
   })
   return (
