@@ -156,9 +156,9 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
           name: '',
         }
         // 过滤掉数据中含有对象与数组的数据
-        tableInfo.data = tableInfo.data.filter((item) =>
-          Object.values(item).every((value) => !(typeof value === 'object')),
-        )
+        // tableInfo.data = tableInfo.data.filter((item) =>
+        //   Object.values(item).every((value) => !(typeof value === 'object')),
+        // )
         return <PluginExecuteCustomTable tableInfo={tableInfo} />
       case 'text':
         const textInfo: HoldGRPCStreamProps.InfoText = streamInfo.tabsInfoState[ele.tabName] || {
