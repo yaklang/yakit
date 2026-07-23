@@ -1,0 +1,18 @@
+.yakit-suspense-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.yakit-suspense-fallback-content {
+  box-sizing: border-box;
+  padding: 24px 0;
+}
+
+.yakit-suspense-fallback-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--yakit-colors-Main-0);
+}

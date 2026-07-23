@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Badge, Modal, Tooltip, Avatar, Form, Divider } from 'antd'
+import { Badge, Tooltip, Form, Divider } from 'antd'
 import {
   RiskStateSvgIcon,
   UISettingSvgIcon,
@@ -9,25 +9,21 @@ import {
   YakitWhiteSvgIcon,
 } from './icons'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
-import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
-import { failed, info, success, yakitFailed, warn, yakitNotify } from '@/utils/notification'
+import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import { ConfigPrivateDomain } from '../ConfigPrivateDomain/ConfigPrivateDomain'
 import { ConfigGlobalReverse } from '@/utils/basic'
 import { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigSystemProxyForm } from '@/utils/ConfigSystemProxy'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
-import Login from '@/pages/Login'
 import { useConfigManagementTab, useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
-import { defaultUserInfo, SetUserInfo } from '@/pages/MainOperator'
-import { loginOut } from '@/utils/login'
 import { UserPlatformType } from '@/pages/globalVariable'
-import SetPassword from '@/pages/SetPassword'
 import { genDefaultPagination, QueryGeneralResponse } from '@/pages/invoker/schema'
 import { Risk } from '@/pages/risks/schema'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
-import { YakitMenu, YakitMenuItemProps, YakitMenuItemType } from '../yakitUI/YakitMenu/YakitMenu'
+import { YakitMenu, YakitMenuItemProps } from '../yakitUI/YakitMenu/YakitMenu'
 import {
   getCurrentVersionSource,
   VersionSource,
@@ -37,7 +33,6 @@ import {
   isCommunityYakit,
   isEnpriTrace,
   isEnpriTraceAgent,
-  isEnpriTraceIRify,
   isIRify,
   showDevTool,
 } from '@/utils/envfile'
@@ -53,40 +48,18 @@ import { NetWorkApi } from '@/services/fetch'
 import { API } from '@/services/swagger/resposeType'
 import { addToTab } from '@/pages/MainTabs'
 import { DatabaseUpdateModal } from '@/pages/cve/CVETable'
-import { ExclamationCircleOutlined, LoadingOutlined } from '@ant-design/icons'
-import {
-  DynamicControl,
-  SelectControlType,
-  ControlMyself,
-  ControlOther,
-} from '../../pages/dynamicControl/DynamicControl'
+import { LoadingOutlined } from '@ant-design/icons'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { WinKeyborad } from '../yakitUI/YakitEditor/editorUtils'
 import { ScrecorderModal } from '@/pages/screenRecorder/ScrecorderModal'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { RouteToPageProps } from '@/pages/layout/publicMenu/PublicMenu'
 import { useRunNodeStore } from '@/store/runNode'
 import emiter from '@/utils/eventBus/eventBus'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
-import {
-  OutlineDevicemobileIcon,
-  OutlineExitIcon,
-  OutlineOfficebuildingIcon,
-  OutlinePencilaltIcon,
-  OutlinePresentationchartlineIcon,
-  OutlinePuzzleIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineShieldexclamationIcon,
-  OutlineUserRoundCogIcon,
-  OutlineWrenchIcon,
-} from '@/assets/icon/outline'
-import { RobotControl } from '@/pages/robotControl/RobotControl'
-import robotControlStyles from '@/pages/robotControl/RobotControl.module.scss'
-import { deriveIMControlBadge, type IMControlBadgeStatus, type IMControlBadgeView } from '@/pages/robotControl/status'
+import { OutlinePencilaltIcon, OutlineRefreshIcon, OutlineSearchIcon, OutlineWrenchIcon } from '@/assets/icon/outline'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
@@ -97,7 +70,7 @@ import {
   YakitCodeScanRiskDetails,
   YakitRiskDetails,
 } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
-import { SolidMobileIcon, SolidPlayIcon } from '@/assets/icon/solid'
+import { SolidPlayIcon } from '@/assets/icon/solid'
 import {
   ExecuteEnterNodeByPluginParams,
   PluginExecuteProgress,
@@ -143,7 +116,6 @@ import {
   SSARisk,
 } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { YakitAuditRiskDetails } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
-import SelectUpload from '@/pages/SelectUpload'
 import { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { mcpStreamHooks } from './hooks/useMcp/useMcp'
 import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
@@ -155,172 +127,25 @@ import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolde
 import { useDownloadYakit } from './update/DownloadYakit'
 import { JSONParseLog } from '@/utils/tool'
 import { useSoftMode, YakitModeEnum } from '@/store/softMode'
-import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
 import { SystemInfo } from '@/constants/hardware'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { cloneDeep } from 'lodash'
 import { syncAppSettings } from '@/auxWindow/utils/messaging'
-import {
-  yakitApp,
-  yakitEngine,
-  yakitNetwork,
-  yakitRisk,
-  yakitShell,
-  yakitStream,
-  yakitUILayout,
-} from '@/services/electronBridge'
-import {
-  cancelIMControlState,
-  onIMControlStateData,
-  onIMControlStateEnd,
-  onIMControlStateError,
-  subscribeIMControlState,
-} from '@/utils/imControl'
-import { CeUserInfo, CeUserItemProps, UserMenuItemType, CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
-import { CeUsageStatisticsModal } from '../CeUserMenu/CeUsageStatisticsModal'
+import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
+import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
+
+// ===== 用户功能菜单拆分模块导入 =====
+import { randomAvatarColor } from './userMenu/constants'
+import { UserAvatarIMBadge } from './userMenu/UserAvatarIMBadge'
+import { judgeDynamic } from './userMenu/judgeDynamic'
+import { useUserMenu } from './userMenu/useUserMenu'
+import { UserMenuModals } from './userMenu/UserMenuModals'
+
+// re-export 保持外部导入路径兼容
+export { randomAvatarColor }
 
 const removePrefixV = (version: string) => {
   return version.startsWith('v') ? version.substring(1) : version
-}
-
-const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean, t: TFunction) => {
-  const { companyHeadImg, companyName } = userInfo
-  // 点击且已被远程控制
-  const activeConnect: boolean = active && dynamicConnect
-  return (
-    <div
-      className={classNames(styles['judge-avatar'], {
-        [styles['judge-avatar-active']]: activeConnect,
-        [styles['judge-avatar-connect']]: dynamicConnect,
-      })}
-    >
-      <div>
-        {companyHeadImg && !!companyHeadImg.length ? (
-          <Avatar size={20} style={{ cursor: 'pointer' }} src={companyHeadImg} />
-        ) : (
-          <Avatar
-            size={20}
-            style={activeConnect ? {} : { backgroundColor: avatarColor }}
-            className={classNames(styles['judge-avatar-avatar'], {
-              [styles['judge-avatar-active-avatar']]: activeConnect,
-            })}
-          >
-            {companyName && companyName.slice(0, 1)}
-          </Avatar>
-        )}
-      </div>
-      {dynamicConnect && (
-        <div className={classNames(styles['judge-avatar-text'], { [styles['judge-avatar-active-text']]: active })}>
-          {t('FuncDomain.remoteInProgress')}
-        </div>
-      )}
-    </div>
-  )
-}
-
-type UserAvatarIMBadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
-  badge: IMControlBadgeView
-  onBadgeClick: () => void
-  children: React.ReactNode
-}
-
-const UserAvatarIMBadge = React.forwardRef<HTMLSpanElement, UserAvatarIMBadgeProps>((props, ref) => {
-  const { badge, onBadgeClick, children, className, ...restProps } = props
-  const tooltip = badge.detail ? `${badge.label}\n${badge.detail}` : badge.label
-  return (
-    <span {...restProps} ref={ref} className={classNames(styles['user-avatar-im-wrapper'], className)}>
-      {children}
-      {badge.visible && (
-        <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>{tooltip}</span>}>
-          <span
-            className={classNames(styles['im-control-badge'], styles[`im-control-badge-${badge.color}`])}
-            role="button"
-            tabIndex={0}
-            aria-label={badge.label}
-            onMouseDown={(e) => {
-              e.stopPropagation()
-            }}
-            onClick={(e) => {
-              e.stopPropagation()
-              onBadgeClick()
-            }}
-            onKeyDown={(e) => {
-              if (e.key !== 'Enter' && e.key !== ' ') return
-              e.preventDefault()
-              e.stopPropagation()
-              onBadgeClick()
-            }}
-          >
-            <SolidMobileIcon />
-          </span>
-        </Tooltip>
-      )}
-    </span>
-  )
-})
-UserAvatarIMBadge.displayName = 'UserAvatarIMBadge'
-
-const getMobileControlIconColor = (color: IMControlBadgeView['color']) => {
-  switch (color) {
-    case 'green':
-      return 'var(--Colors-Use-Success-Primary)'
-    case 'yellow':
-      return 'var(--Colors-Use-Yellow-Primary)'
-    case 'red':
-      return 'var(--Colors-Use-Error-Primary)'
-    case 'gray':
-    default:
-      return 'var(--Colors-Use-Neutral-Disable)'
-  }
-}
-
-/** 随机头像颜色 */
-export const randomAvatarColor = () => {
-  // const colorArr: string[] = ["#8863F7", "#DA5FDD", "#4A94F8", "#35D8EE", "#56C991", "#F4736B", "#FFB660", "#B4BBCA"]
-  const vars = getAllYakitColorVars()
-  const var_color_list = [
-    '--Colors-Use-Purple-Primary',
-    '--Colors-Use-Magenta-Primary',
-    '--Colors-Use-Blue-Primary',
-    '--Colors-Use-Cyan-Primary',
-    '--Colors-Use-Green-Primary',
-    '--Colors-Use-Red-Primary',
-    '--Colors-Use-Orange-Primary',
-    '--Colors-Use-Grey-Primary',
-  ]
-
-  const colorArr: string[] = var_color_list.map((it) => vars[it])
-  let color: string = colorArr[Math.round(Math.random() * 7)]
-  return color
-}
-
-const UserMenusMap: Record<string, UserMenuItemType> = {
-  divider: { type: 'divider' },
-  /** CE用户菜单 */
-  singOut: { key: 'sign-out', label: 'FuncDomain.signOut', type: 'danger', icon: <OutlineExitIcon /> },
-  pluginAudit: { key: 'plugin-audit', label: 'FuncDomain.pluginAudit', icon: <OutlinePuzzleIcon /> },
-  misstatement: { key: 'misstatement', label: 'FuncDomain.misstatement', icon: <OutlineShieldexclamationIcon /> },
-  trustList: { key: 'trust-list', label: 'FuncDomain.trustList', icon: <OutlineUserRoundCogIcon /> },
-  licenseAdmin: { key: 'license-admin', label: 'FuncDomain.licenseAdmin', icon: <OutlineOfficebuildingIcon /> },
-  dataStatistics: {
-    key: 'data-statistics',
-    label: 'FuncDomain.dataStatistics',
-    icon: <OutlinePresentationchartlineIcon />,
-  },
-  robotControl: {
-    key: 'robot-control',
-    label: 'FuncDomain.mobileControl',
-    icon: <OutlineDevicemobileIcon />,
-  },
-  roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
-  accountAdmin: { key: 'account-admin', label: 'FuncDomain.accountAdmin' },
-  setPassword: { key: 'set-password', label: 'Main.setPassword' },
-  uploadData: { key: 'upload-data', label: 'FuncDomain.uploadData' },
-  controlAdmin: { key: 'control-admin', label: 'FuncDomain.controlAdmin' },
-  dynamicControl: { key: 'dynamic-control', label: 'FuncDomain.dynamicControl' },
-  closeDynamicControl: { key: 'close-dynamic-control', label: 'FuncDomain.closeDynamicControl' },
-  holeCollect: { key: 'hole-collect', label: 'FuncDomain.holeCollect' },
-  systemConfig: { key: 'system-config', label: 'FuncDomain.systemConfig' },
 }
 
 export interface FuncDomainProp {
@@ -362,420 +187,48 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   } = props
 
   /** 登录用户信息 */
-  const { userInfo, setStoreUserInfo } = useStore()
+  const { userInfo } = useStore()
 
-  const [loginShow, setLoginShow] = useState<boolean>(false)
-  /** 用户功能菜单 */
-  const [userMenu, setUserMenu] = useState<YakitMenuItemType[]>([UserMenusMap['singOut']])
-  const [ceUserMenuShow, setCeUserMenuShow] = useState<boolean>(false)
-  const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
-  const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiKeyDetail>()
-  const [apiKeysInfoLoading, setApiKeysInfoLoading] = useState<boolean>(false)
-  const cacheApiKeyRef = useRef<string>()
-  /** 修改密码弹框 */
-  const [passwordShow, setPasswordShow] = useState<boolean>(false)
-  /** 是否允许密码框关闭 */
-  const [passwordClose, setPasswordClose] = useState<boolean>(true)
-  /** 上传数据弹框 */
-  const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
-
-  /** 发起远程弹框 受控端 - 控制端 */
-  const [dynamicControlModal, setDynamicControlModal] = useState<boolean>(false)
-  const [controlMyselfModal, setControlMyselfModal] = useState<boolean>(false)
-  const [controlOtherModal, setControlOtherModal] = useState<boolean>(false)
-  const [dynamicMenuOpen, setDynamicMenuOpen] = useState<boolean>(false)
-  /** 机器人控制弹框 */
-  const [robotControlModal, setRobotControlModal] = useState<boolean>(false)
-  const [imControlStatus, setIMControlStatus] = useState<IMControlBadgeStatus>()
-  const [imControlStatusLoading, setIMControlStatusLoading] = useState<boolean>(false)
-  const imControlStateRetryTimerRef = useRef<number>()
   /** 当前远程连接状态 */
   const { dynamicStatus } = yakitDynamicStatus()
   const [dynamicConnect] = useState<boolean>(dynamicStatus.isDynamicStatus)
   let avatarColor = useRef<string>(randomAvatarColor())
 
-  const refreshIMControlStatus = useMemoizedFn(() => {
-    if (!userInfo.isLogin) {
-      setIMControlStatus(undefined)
-      setIMControlStatusLoading(false)
-      return
-    }
-
-    if (!isEngineLink) {
-      setIMControlStatus({ Running: false })
-      setIMControlStatusLoading(false)
-      return
-    }
-
-    setIMControlStatusLoading(true)
-  })
-
-  const imControlBadge = useMemo(
-    () =>
-      deriveIMControlBadge({
-        isLogin: userInfo.isLogin,
-        loading: imControlStatusLoading,
-        status: imControlStatus,
-      }),
-    [imControlStatus, imControlStatusLoading, userInfo.isLogin],
-  )
-
-  useEffect(() => {
-    if (!userInfo.isLogin) {
-      setIMControlStatus(undefined)
-      setIMControlStatusLoading(false)
-      return
-    }
-    if (!isEngineLink) {
-      setIMControlStatus({ Running: false })
-      setIMControlStatusLoading(false)
-      return
-    }
-
-    let disposed = false
-    let currentToken = ''
-    let cleanupListeners: Array<() => void> = []
-
-    function cleanupCurrentStream() {
-      cleanupListeners.forEach((cleanup) => cleanup())
-      cleanupListeners = []
-      if (currentToken) {
-        cancelIMControlState(currentToken).catch(() => {})
-        currentToken = ''
-      }
-      if (imControlStateRetryTimerRef.current) {
-        window.clearTimeout(imControlStateRetryTimerRef.current)
-        imControlStateRetryTimerRef.current = undefined
-      }
-    }
-
-    function scheduleReconnect() {
-      if (disposed) return
-      if (imControlStateRetryTimerRef.current) {
-        window.clearTimeout(imControlStateRetryTimerRef.current)
-      }
-      imControlStateRetryTimerRef.current = window.setTimeout(() => {
-        imControlStateRetryTimerRef.current = undefined
-        startSubscribe()
-      }, 1000)
-    }
-
-    function startSubscribe() {
-      cleanupCurrentStream()
-      if (disposed) return
-      const token = `im-control-state-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-      currentToken = token
-      setIMControlStatusLoading(true)
-      cleanupListeners = [
-        onIMControlStateData(token, (state) => {
-          setIMControlStatus(state)
-          setIMControlStatusLoading(false)
-        }),
-        onIMControlStateError(token, (e) => {
-          setIMControlStatus({
-            Running: true,
-            Platforms: [
-              {
-                Platform: 'im',
-                Label: '移动端控制',
-                Connected: false,
-                Level: 'error',
-                Message: `${e}`,
-              },
-            ],
-          })
-          setIMControlStatusLoading(false)
-          scheduleReconnect()
-        }),
-        onIMControlStateEnd(token, () => {
-          setIMControlStatusLoading(false)
-          scheduleReconnect()
-        }),
-      ]
-      subscribeIMControlState(token).catch((e) => {
-        setIMControlStatus({
-          Running: true,
-          Platforms: [
-            {
-              Platform: 'im',
-              Label: '移动端控制',
-              Connected: false,
-              Level: 'error',
-              Message: `${e}`,
-            },
-          ],
-        })
-        setIMControlStatusLoading(false)
-        scheduleReconnect()
-      })
-    }
-
-    startSubscribe()
-    return () => {
-      disposed = true
-      cleanupCurrentStream()
-    }
-  }, [isEngineLink, userInfo.isLogin])
-
-  useEffect(() => {
-    // 退出菜单
-    const signOutMenu: YakitMenuItemType[] = [UserMenusMap['divider'], UserMenusMap['singOut']]
-    // EE|SE 版本
-    if (userInfo.platform === 'company') {
-      const SetUserInfoModule = () => (
-        <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
-      )
-
-      // 用户头像
-      const userAvatar: YakitMenuItemType[] = [
-        { key: 'user-info', label: SetUserInfoModule(), noStyle: true },
-        UserMenusMap['divider'],
-      ]
-      if (userInfo.role === 'admin') {
-        // 管理员
-        if (isEnpriTraceAgent()) {
-          setUserMenu([
-            ...userAvatar,
-            UserMenusMap['holeCollect'],
-            UserMenusMap['roleAdmin'],
-            UserMenusMap['accountAdmin'],
-            UserMenusMap['setPassword'],
-            UserMenusMap['pluginAudit'],
-            UserMenusMap['robotControl'],
-            ...signOutMenu,
-          ])
-        } else {
-          let cacheMenus: YakitMenuItemType[] = [
-            ...userAvatar,
-            UserMenusMap['uploadData'],
-            UserMenusMap['dynamicControl'],
-            UserMenusMap['controlAdmin'],
-            UserMenusMap['closeDynamicControl'],
-            UserMenusMap['roleAdmin'],
-            UserMenusMap['accountAdmin'],
-            UserMenusMap['setPassword'],
-            UserMenusMap['pluginAudit'],
-            UserMenusMap['misstatement'],
-            UserMenusMap['systemConfig'],
-            UserMenusMap['robotControl'],
-            ...signOutMenu,
-          ]
-          // 仅在 IRify 企业版本时显示系统配置
-          if (!isEnpriTraceIRify()) {
-            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'system-config')
-          }
-          if (dynamicConnect) {
-            // 远程中时不显示发起远程 显示退出远程
-            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'dynamic-control')
-          } else {
-            // 非远程控制时显示发起远程 不显示退出远程
-            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'close-dynamic-control')
-          }
-          // IRify 版本时管理员不显示插件管理
-          if (isIRify()) {
-            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
-          }
-          setUserMenu([...cacheMenus])
-        }
-      } else {
-        let isNew: boolean = false
-        let cacheMenus: YakitMenuItemType[] = [
-          ...userAvatar,
-          UserMenusMap['uploadData'],
-          UserMenusMap['dynamicControl'],
-          UserMenusMap['closeDynamicControl'],
-          UserMenusMap['setPassword'],
-          UserMenusMap['pluginAudit'],
-          UserMenusMap['misstatement'],
-          UserMenusMap['robotControl'],
-          ...signOutMenu,
-        ]
-        if (userInfo.role !== 'auditor') {
-          // 不为审核员时 移除插件管理
-          isNew = true
-          cacheMenus = cacheMenus.filter((item) => !['plugin-audit'].includes((item as YakitMenuItemProps).key))
-        }
-
-        // 不为审核员或超级管理员时 移除误报记录
-        if (!['superAdmin', 'auditor'].includes(userInfo.role || '')) {
-          isNew = true
-          cacheMenus = cacheMenus.filter((item) => !['misstatement'].includes((item as YakitMenuItemProps).key))
-        }
-
-        if (isEnpriTraceAgent()) {
-          isNew = true
-          cacheMenus = cacheMenus.filter(
-            (item) => !['upload-data', 'misstatement'].includes((item as YakitMenuItemProps).key),
-          )
-        }
-        // 远程中时不显示发起远程 显示退出远程
-        if (dynamicConnect) {
-          isNew = true
-          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'dynamic-control')
-        }
-        // 非远程控制时显示发起远程 不显示退出远程
-        if (!dynamicConnect) {
-          isNew = true
-          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'close-dynamic-control')
-        }
-
-        if (isNew) {
-          setUserMenu([...cacheMenus])
-        } else {
-          // 非权限人员
-          setUserMenu([UserMenusMap['robotControl'], ...signOutMenu])
-        }
-      }
-    }
-    // ce版本
-    else {
-      const SetUserInfoModule = () => (
-        <CeUserInfo
-          userInfo={userInfo}
-          apiKeysInfo={apiKeysInfo}
-          onOpenStatistics={() => {
-            setCeUserMenuShow(false)
-            setUsageStatisticsShow(true)
-          }}
-        />
-      )
-
-      // 用户头像
-      const userAvatar: UserMenuItemType[] = [{ key: 'user-info', label: SetUserInfoModule() }, UserMenusMap['divider']]
-      let isNew: boolean = false
-      // CE-超管
-      if (userInfo.role === 'superAdmin') {
-        isNew = true
-        let cacheMenus: UserMenuItemType[] = [
-          ...userAvatar,
-          UserMenusMap['pluginAudit'],
-          UserMenusMap['dataStatistics'],
-          UserMenusMap['misstatement'],
-          UserMenusMap['robotControl'],
-          UserMenusMap['divider'],
-          UserMenusMap['trustList'],
-          UserMenusMap['licenseAdmin'],
-          UserMenusMap['singOut'],
-        ]
-        if (isIRify()) {
-          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
-        }
-        setUserMenu(cacheMenus)
-      }
-      // CE-管理员
-      if (userInfo.role === 'admin') {
-        isNew = true
-        let cacheMenus: UserMenuItemType[] = [
-          ...userAvatar,
-          UserMenusMap['pluginAudit'],
-          UserMenusMap['dataStatistics'],
-          UserMenusMap['misstatement'],
-          UserMenusMap['robotControl'],
-        ].concat(signOutMenu)
-        // IRify 版本时管理员不显示插件管理
-        if (isIRify()) {
-          cacheMenus = cacheMenus.filter((item) => (item as CeUserItemProps).key !== 'plugin-audit')
-        }
-        setUserMenu(cacheMenus)
-      }
-      // CE-操作员
-      if (userInfo.role === 'operate') {
-        isNew = true
-        setUserMenu([...userAvatar, UserMenusMap['dataStatistics'], UserMenusMap['robotControl']].concat(signOutMenu))
-      }
-      // CE-license管理员
-      if (userInfo.role === 'licenseAdmin') {
-        isNew = true
-        setUserMenu([
-          ...userAvatar,
-          UserMenusMap['robotControl'],
-          UserMenusMap['divider'],
-          UserMenusMap['licenseAdmin'],
-          UserMenusMap['singOut'],
-        ])
-      }
-      // CE-审核员
-      if (userInfo.role === 'auditor') {
-        isNew = true
-        let cacheMenus: UserMenuItemType[] = [
-          ...userAvatar,
-          UserMenusMap['pluginAudit'],
-          UserMenusMap['misstatement'],
-          UserMenusMap['robotControl'],
-        ].concat(signOutMenu)
-        // IRify 版本时管理员不显示插件管理
-        if (isIRify()) {
-          cacheMenus = cacheMenus.filter((item) => (item as CeUserItemProps).key !== 'plugin-audit')
-        }
-        setUserMenu(cacheMenus)
-      }
-      // CE-非权限人员
-      if (!isNew) {
-        setUserMenu([...userAvatar, UserMenusMap['robotControl'], ...signOutMenu])
-      }
-    }
-  }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo])
-
-  const apiFetchApiKeys = useMemoizedFn((apikey: string, isLoading: boolean = false) => {
-    isLoading && setApiKeysInfoLoading(true)
-    NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
-      method: 'post',
-      url: 'apikeys',
-      data: {
-        keyword: apikey,
-      },
-    })
-      .then((res) => {
-        if (res.data.length > 0) {
-          setApiKeysInfo(res.data[0])
-        } else {
-          setApiKeysInfo(undefined)
-        }
-      })
-      .catch((err) => {
-        yakitFailed(t('FuncDomain.getApiKeyDetailFailed', { error: err }))
-      })
-      .finally(() => {
-        isLoading && setApiKeysInfoLoading(false)
-      })
-  })
-
-  const getGrpcApiKey = useDebounceFn(
-    () => {
-      if (userInfo.isLogin && userInfo.token && userInfo.platform !== 'company') {
-        yakitEngine
-          .getApiKeyByOnline({ Token: userInfo.token })
-          .then((res) => {
-            cacheApiKeyRef.current = res.ApiKey
-            apiFetchApiKeys(res.ApiKey)
-          })
-          .catch((err) => {
-            yakitFailed(t('FuncDomain.getApiKeyTokenFailed', { error: err }))
-          })
-      }
-      if (!userInfo.isLogin) {
-        setApiKeysInfo(undefined)
-        cacheApiKeyRef.current = undefined
-      }
-    },
-    { wait: 500 },
-  ).run
-
-  const onUpdateApiKey = useMemoizedFn((isLoading: boolean = false) => {
-    if (cacheApiKeyRef.current) {
-      apiFetchApiKeys(cacheApiKeyRef.current, isLoading)
-    } else {
-      getGrpcApiKey()
-    }
-  })
-
-  useEffect(() => {
-    getGrpcApiKey()
-  }, [userInfo.isLogin])
-
-  /** 渲染端通信-打开一个指定页面 */
-  const onOpenPage = useMemoizedFn((info: RouteToPageProps) => {
-    emiter.emit('menuOpenPage', JSON.stringify(info))
+  // ===== 用户功能菜单逻辑（拆分至 useUserMenu hook） =====
+  const {
+    userMenu,
+    ceUserMenuShow,
+    setCeUserMenuShow,
+    usageStatisticsShow,
+    setUsageStatisticsShow,
+    apiKeysInfo,
+    apiKeysInfoLoading,
+    onUpdateApiKey,
+    passwordShow,
+    setPasswordShow,
+    passwordClose,
+    uploadModalShow,
+    setUploadModalShow,
+    dynamicControlModal,
+    setDynamicControlModal,
+    controlMyselfModal,
+    setControlMyselfModal,
+    controlOtherModal,
+    setControlOtherModal,
+    dynamicMenuOpen,
+    setDynamicMenuOpen,
+    robotControlModal,
+    setRobotControlModal,
+    imControlBadge,
+    imControlStatus,
+    refreshIMControlStatus,
+    onUserMenuClick,
+    loginShow,
+    setLoginShow,
+  } = useUserMenu({
+    isEngineLink,
+    dynamicConnect,
+    avatarColor,
   })
 
   const { screenRecorderInfo, setRecording } = useScreenRecorder()
@@ -836,125 +289,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       })
   })
 
-  useEffect(() => {
-    // ipc通信退出登录
-    const cleanup = yakitUILayout.onSignOutRequested(() => {
-      setStoreUserInfo(defaultUserInfo)
-      loginOut(userInfo)
-    })
-    return () => {
-      cleanup()
-    }
-  }, [])
-
-  useEffect(() => {
-    // 强制修改密码
-    const cleanup = yakitUILayout.onResetPassword(() => {
-      setPasswordShow(true)
-      setPasswordClose(false)
-    })
-    return () => {
-      cleanup()
-    }
-  }, [])
-
   // mcp 全局监听
   // 引擎日志 全局监听
   useEngineConsole({})
-
-  const onCloseControlMyselfModal = useMemoizedFn(() => {
-    setControlMyselfModal(false)
-  })
-  useEffect(() => {
-    emiter.on('onCloseControlMyselfModal', onCloseControlMyselfModal)
-    return () => {
-      emiter.off('onCloseControlMyselfModal', onCloseControlMyselfModal)
-    }
-  }, [])
-
-  const onUserMenuClick = useMemoizedFn((key: string) => {
-    if (key === 'sign-out') {
-      if (dynamicStatus.isDynamicStatus || dynamicStatus.isDynamicSelfStatus) {
-        Modal.confirm({
-          title: t('YakitModal.friendlyReminder'),
-          icon: <ExclamationCircleOutlined />,
-          content: t('FuncDomain.signOutRemoteConfirm'),
-          cancelText: t('YakitButton.cancel'),
-          okText: t('YakitButton.exit'),
-          onOk() {
-            if (dynamicStatus.isDynamicStatus) {
-              yakitNetwork.logoutDynamicControl({
-                loginOut: true,
-              })
-            }
-            if (dynamicStatus.isDynamicSelfStatus) {
-              yakitNetwork.killDynamicControl().finally(() => {
-                setStoreUserInfo(defaultUserInfo)
-                loginOut(userInfo)
-                setTimeout(() => success(t('FuncDomain.signOutSuccess')), 500)
-              })
-              // 立即退出界面
-              yakitNetwork.exitDynamicControlPage()
-            }
-          },
-          onCancel() {},
-          cancelButtonProps: {
-            size: 'small',
-            className: 'modal-cancel-button',
-          },
-          okButtonProps: { size: 'small', className: 'modal-ok-button' },
-        })
-      } else {
-        setStoreUserInfo(defaultUserInfo)
-        loginOut(userInfo)
-        setTimeout(() => success(t('FuncDomain.signOutSuccess')), 500)
-      }
-    }
-    if (key === 'trust-list') {
-      onOpenPage({ route: YakitRoute.TrustListPage })
-    }
-    if (key === 'set-password') {
-      setPasswordClose(true)
-      setPasswordShow(true)
-    }
-    if (key === 'upload-data') setUploadModalShow(true)
-    if (key === 'role-admin') {
-      onOpenPage({ route: YakitRoute.RoleAdminPage })
-    }
-    if (key === 'account-admin') {
-      onOpenPage({ route: YakitRoute.AccountAdminPage })
-    }
-    if (key === 'license-admin') {
-      onOpenPage({ route: YakitRoute.LicenseAdminPage })
-    }
-    if (key === 'plugin-audit') {
-      onOpenPage({ route: YakitRoute.Plugin_Audit })
-    }
-    if (key === 'hole-collect') {
-      onOpenPage({ route: YakitRoute.HoleCollectPage })
-    }
-    if (key === 'control-admin') {
-      onOpenPage({ route: YakitRoute.ControlAdminPage })
-    }
-    if (key === 'data-statistics') {
-      onOpenPage({ route: YakitRoute.Data_Statistics })
-    }
-    if (key === 'system-config') {
-      onOpenPage({ route: YakitRoute.System_Config })
-    }
-    if (key === 'dynamic-control') {
-      setDynamicControlModal(true)
-    }
-    if (key === 'close-dynamic-control') {
-      yakitNetwork.logoutDynamicControl({ loginOut: false })
-    }
-    if (key === 'misstatement') {
-      onOpenPage({ route: YakitRoute.Misstatement })
-    }
-    if (key === 'robot-control') {
-      setRobotControlModal(true)
-    }
-  })
 
   return (
     <div className={styles['func-domain-wrapper']} onDoubleClick={(e) => e.stopPropagation()}>
@@ -1086,122 +423,36 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         )}
       </div>
 
-      {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)} />}
-
-      {apiKeysInfo && (
-        <CeUsageStatisticsModal
-          visible={usageStatisticsShow}
-          apiKeysInfo={apiKeysInfo}
-          onClose={() => setUsageStatisticsShow(false)}
-          update={() => onUpdateApiKey(true)}
-          loading={apiKeysInfoLoading}
-        />
-      )}
-
-      <YakitModal
-        visible={passwordShow}
-        closable={passwordClose}
-        title={t('Main.setPassword')}
-        destroyOnClose={true}
-        maskClosable={false}
-        bodyStyle={{ padding: '10px 24px 24px 24px' }}
-        width={520}
-        onCancel={() => setPasswordShow(false)}
-        footer={null}
-      >
-        <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-      </YakitModal>
-
-      <YakitModal
-        visible={uploadModalShow}
-        title={t('FuncDomain.uploadData')}
-        destroyOnClose={true}
-        maskClosable={false}
-        bodyStyle={{ padding: '10px 24px 24px 24px' }}
-        width={520}
-        onCancel={() => setUploadModalShow(false)}
-        footer={null}
-      >
-        <SelectUpload onCancel={() => setUploadModalShow(false)} />
-      </YakitModal>
-
-      <YakitModal
-        visible={robotControlModal}
-        title={
-          <div className={robotControlStyles['robot-modal-title']}>
-            <OutlineDevicemobileIcon
-              className={robotControlStyles['mobile-control-title-icon']}
-              style={{ color: getMobileControlIconColor(imControlBadge.color) }}
-            />
-            {t('FuncDomain.mobileControl')}
-          </div>
-        }
-        subTitle={t('RobotControl.subTitle')}
-        type="white"
-        size="large"
-        destroyOnClose={true}
-        maskClosable={false}
-        bodyStyle={{ padding: '8px 16px 16px' }}
-        width={900}
-        onCancel={() => setRobotControlModal(false)}
-        footer={null}
-      >
-        <RobotControl
-          onCancel={() => setRobotControlModal(false)}
-          onRuntimeStatusChange={refreshIMControlStatus}
-          runtimeStatus={imControlStatus}
-        />
-      </YakitModal>
-      <DynamicControl
-        mainTitle={t('FuncDomain.remoteControl')}
-        secondTitle={t('FuncDomain.selectRole')}
-        isShow={dynamicControlModal}
-        onCancel={() => setDynamicControlModal(false)}
-        width={345}
-      >
-        <SelectControlType
-          onControlMyself={() => {
-            setControlMyselfModal(true)
-            setDynamicControlModal(false)
-          }}
-          onControlOther={() => {
-            setControlOtherModal(true)
-            setDynamicControlModal(false)
-          }}
-        />
-      </DynamicControl>
-
-      <DynamicControl
-        mainTitle={t('FuncDomain.controlledSide')}
-        secondTitle={t('FuncDomain.controlledSideDesc')}
-        isShow={controlMyselfModal}
-        onCancel={() => setControlMyselfModal(false)}
-      >
-        <ControlMyself
-          goBack={() => {
-            setDynamicControlModal(true)
-            setControlMyselfModal(false)
-          }}
-        />
-      </DynamicControl>
-
-      <DynamicControl
-        mainTitle={t('FuncDomain.controllerSide')}
-        secondTitle={t('FuncDomain.controllerSideDesc')}
-        isShow={controlOtherModal}
-        onCancel={() => setControlOtherModal(false)}
-      >
-        <ControlOther
-          goBack={() => {
-            setDynamicControlModal(true)
-            setControlOtherModal(false)
-          }}
-          runControl={(v: string, url: string) => {
-            setControlOtherModal(false)
-            runDynamicControlRemote(v, url)
-          }}
-        />
-      </DynamicControl>
+      <UserMenuModals
+        loginShow={loginShow}
+        onCancelLogin={() => setLoginShow(false)}
+        usageStatisticsShow={usageStatisticsShow}
+        apiKeysInfo={apiKeysInfo}
+        apiKeysInfoLoading={apiKeysInfoLoading}
+        onCloseUsageStatistics={() => setUsageStatisticsShow(false)}
+        onUpdateApiKey={onUpdateApiKey}
+        passwordShow={passwordShow}
+        passwordClose={passwordClose}
+        onCancelPassword={() => setPasswordShow(false)}
+        userInfo={userInfo}
+        uploadModalShow={uploadModalShow}
+        onCancelUpload={() => setUploadModalShow(false)}
+        robotControlModal={robotControlModal}
+        onCancelRobotControl={() => setRobotControlModal(false)}
+        imControlBadge={imControlBadge}
+        imControlStatus={imControlStatus}
+        refreshIMControlStatus={refreshIMControlStatus}
+        dynamicControlModal={dynamicControlModal}
+        onCancelDynamicControl={() => setDynamicControlModal(false)}
+        controlMyselfModal={controlMyselfModal}
+        onCancelControlMyself={() => setControlMyselfModal(false)}
+        controlOtherModal={controlOtherModal}
+        onCancelControlOther={() => setControlOtherModal(false)}
+        setDynamicControlModal={setDynamicControlModal}
+        setControlMyselfModal={setControlMyselfModal}
+        setControlOtherModal={setControlOtherModal}
+        runDynamicControlRemote={runDynamicControlRemote}
+      />
     </div>
   )
 })
