@@ -37,7 +37,6 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { QueryYakScriptsResponse, YakScript } from '../invoker/schema'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
-import { getPluginUsageCache, sortPluginsByUsage } from '@/utils/pluginUsageCache'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakEditor } from '@/utils/editors'
@@ -964,9 +963,9 @@ const FeaturesAndPlugin: React.FC<FeaturesAndPluginProps> = React.memo((props) =
         {isCommunityEdition() ? (
           <div className={style['header-title']}>
             {t('CustomizeMenu.FeaturesAndPlugin.pluginStore')}
-            {/* <div className={style['header-title-extra']}>
+            <div className={style['header-title-extra']}>
               ({t('CustomizeMenu.FeaturesAndPlugin.pluginStoreSortByUsage')})
-            </div> */}
+            </div>
           </div>
         ) : (
           <YakitRadioButtons
@@ -1177,6 +1176,7 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
       // Type: "yak,mitm,codec,packet-hack,port-scan,nuclei", //不传查所有
       Pagination: { Limit: 20, Order: 'desc', Page: 1, OrderBy: 'updated_at' },
       Keyword: keyword,
+      SortByUsageCount: true,
     }
     if (page) newParams.Pagination.Page = page
     if (limit) newParams.Pagination.Limit = limit
@@ -1185,11 +1185,6 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
       .invoke('QueryYakScript', newParams)
       .then(async (item: QueryYakScriptsResponse) => {
         let data = page === 1 ? item.Data : response.Data.concat(item.Data)
-        // 按照使用次数排序：仅首页且无搜索关键词时，避免破坏翻页/搜索结果的顺序
-        if (page === 1 && !keyword) {
-          const usage = await getPluginUsageCache()
-          data = sortPluginsByUsage(data, usage)
-        }
         const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
         setHasMore(!isMore)
         setResponse({

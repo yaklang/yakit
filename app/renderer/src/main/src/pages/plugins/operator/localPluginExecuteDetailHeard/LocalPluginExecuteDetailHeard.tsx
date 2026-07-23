@@ -46,7 +46,6 @@ import { grpcFetchExpressionToResult } from '@/pages/pluginHub/utils/grpc'
 import { getJsonSchemaListResult, JsonFormWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
-import { recordPluginUsage } from '@/utils/pluginUsageCache'
 
 const PluginExecuteExtraParams = React.lazy(() => import('./PluginExecuteExtraParams'))
 
@@ -312,7 +311,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
       failed(`jsonSchema校验失败`)
       return
     }
-    void recordPluginUsage(plugin.ScriptName, { id: plugin.Id, headImg: plugin.HeadImg || '' }).catch(() => {})
     result.jsonSchemaSuccess.forEach((item) => {
       yakExecutorParams.push({
         Key: item.key,

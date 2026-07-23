@@ -107,17 +107,6 @@ export const getPluginUsageCache = async (): Promise<Cache> => {
   }
 }
 
-// 使用次数由后端 SavePluginExecutionHistory 落库驱动，前端点执行时不再单独记次数。
-// 保留函数供消费方调用，降级为 no-op（不丢信息：后端排行已含 PluginId/HeadImg）。
-export const recordPluginUsage = async (_name: string, _extra: { id: number; headImg: string }) => {
-  // no-op: 计数由后端 SavePluginExecutionHistory 驱动
-}
-
-export const sortPluginsByUsage = <T extends { ScriptName: string }>(list: T[], usage: Cache) => {
-  if (!Object.keys(usage).length) return list
-  return [...list].sort((a, b) => (usage[b.ScriptName]?.count || 0) - (usage[a.ScriptName]?.count || 0))
-}
-
 // ===== 最近执行记录 =====
 // 后端按 plugin 存多条历史，前端"最近执行"只取每个插件最新一条。
 // 这里通过 QueryExecHistory(YakScriptName=name, Pagination.Limit=1) 取最新一条，
