@@ -117,6 +117,22 @@ const shallowCloneMenuItems = (items: EditorMenuItemType[]): EditorMenuItemType[
   })
 }
 
+/** 高亮数组轻量指纹：只拼位置字段，避免 JSON.stringify 序列化 hoverVal 等大字段 */
+const highLightFingerprint = (list?: readonly any[]): string => {
+  if (!list?.length) return ''
+  let s = String(list.length)
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i]
+    if (item == null) continue
+    if ('startOffset' in item) {
+      s += `|${item.startOffset},${item.highlightLength ?? 0}`
+    } else {
+      s += `|${item.startLineNumber},${item.startColumn},${item.endLineNumber},${item.endColumn}`
+    }
+  }
+  return s
+}
+
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const {
     forceRenderMenu = false,
@@ -1081,14 +1097,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       } catch (e) {}
     }
   }, [editor])
+  const highLightTextKey = highLightFingerprint(highLightText)
+  const highLightFindKey = highLightFingerprint(highLightFind)
   useEffect(() => {
     if (deltaDecorationsRef.current) {
       disableUnicodeDecodeRef.current = props.disableUnicodeDecode
       deltaDecorationsRef.current()
     }
   }, [
-    JSON.stringify(highLightText),
-    JSON.stringify(highLightFind),
+    highLightTextKey,
+    highLightFindKey,
     props.disableUnicodeDecode,
     props.fixContentType,
     props.originalContentType,
@@ -1116,7 +1134,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
       } catch (error) {}
     },
-    [editor, isPositionHighLightCursor, JSON.stringify(highLightFind)],
+    [editor, isPositionHighLightCursor, highLightFindKey],
     { wait: 300 },
   )
 
