@@ -38,7 +38,12 @@ const AIChildWindowConcurrentStreamCard: FC<AIChildWindowConcurrentStreamCardPro
         token={token}
         onRefresh={requestRefresh}
       />
-      {expand ? <AIChildWindowConcurrentStreamContent /> : null}
+      {expand ? (
+        <>
+          <div className={styles['goal']}>{itemData?.data.goal}</div>
+          <AIChildWindowConcurrentStreamContent />
+        </>
+      ) : null}
     </div>
   )
 })

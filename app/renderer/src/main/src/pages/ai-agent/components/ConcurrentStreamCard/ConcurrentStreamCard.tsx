@@ -19,15 +19,14 @@ import { useConcurrentStreamRefreshListener } from './concurrentStream/useConcur
 
 const ConcurrentStreamCard: FC<{
   token: string
-  isChildWindow: boolean
-}> = memo(({ token, isChildWindow }) => {
+}> = memo(({ token }) => {
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
 
   const renderNum = useStore(store, (state) => state.tasks[token]?.renderNum)
 
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(
-    isChildWindow || rawData.contents.get(token)?.chatType !== 'reAct',
+    rawData.contents.get(token)?.chatType !== 'reAct',
   )
 
   const raw = useCreation(() => {
@@ -38,36 +37,30 @@ const ConcurrentStreamCard: FC<{
   }, [renderNum])
 
   useEffect(() => {
-    if (isChildWindow) return
     if (!raw?.data?.status) return
     if (raw.data.status !== 'processing') {
       collapseExpand()
     }
-  }, [isChildWindow, raw?.data?.status])
+  }, [raw?.data?.status])
 
-  useConcurrentStreamRefreshListener(token, !isChildWindow)
+  useConcurrentStreamRefreshListener(token, true)
 
   const presentation = useMemo(() => getAIStatusPresentation(raw?.data?.status), [raw?.data?.status])
 
   const vectorBg = useVectorStripeBg(presentation.stripeColor)
-  const showStripeBg = !expand && !isChildWindow && !!vectorBg
+  const showStripeBg = !expand && !!vectorBg
 
   // TODO - 使用className来控制样式，避免使用style
   const cardStyle = useConcurrentStreamCardStyle({
     bgColor: presentation.bgColor,
     vectorBg,
     showStripe: showStripeBg,
-    isChildWindow,
+    isChildWindow: false,
   })
 
   return (
     <div className={classNames(styles['chat-card'], 'concurrent-stream-card')} style={cardStyle}>
-      <ConcurrentStreamCardHeardWrapper
-        token={token}
-        isChildWindow={isChildWindow}
-        expand={expand}
-        expandToggle={expandToggle}
-      />
+      <ConcurrentStreamCardHeardWrapper token={token} expand={expand} expandToggle={expandToggle} />
       {expand && (
         <>
           <ConcurrentStreamCardTip token={token} />
@@ -81,7 +74,7 @@ const ConcurrentStreamCard: FC<{
 export default ConcurrentStreamCard
 
 const ConcurrentStreamCardHeardWrapper: FC<ConcurrentStreamCardHeardWrapperProps> = memo((props) => {
-  const { token, isChildWindow, expand, expandToggle } = props
+  const { token, expand, expandToggle } = props
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const metaData = useCurrentMeta()
@@ -102,13 +95,13 @@ const ConcurrentStreamCardHeardWrapper: FC<ConcurrentStreamCardHeardWrapperProps
   }, [token, renderNum])
 
   const onClickTitle = useMemoizedFn(() => {
-    if (!isChildWindow) expandToggle()
+    expandToggle()
   })
   return (
     <ConcurrentStreamCardHeard
       coordinatorId={metaData.currentTaskPlanID?.coordinatorId}
       token={token}
-      isChildWindow={isChildWindow}
+      isChildWindow={false}
       expand={expand}
       expandToggle={expandToggle}
       onClickTitle={onClickTitle}
@@ -117,7 +110,7 @@ const ConcurrentStreamCardHeardWrapper: FC<ConcurrentStreamCardHeardWrapperProps
   )
 })
 
-const ConcurrentStreamCardTip: FC<ConcurrentStreamCardTipProps> = memo((props) => {
+export const ConcurrentStreamCardTip: FC<ConcurrentStreamCardTipProps> = memo((props) => {
   const { token } = props
   const store = useCurrentStore()
   const rawData = useCurrentRawData()

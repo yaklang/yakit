@@ -8,7 +8,6 @@ export interface ConcurrentStreamCardTipProps {
 
 export interface ConcurrentStreamCardHeardWrapperProps {
   token: string
-  isChildWindow: boolean
   expand: boolean
   expandToggle: () => void
 }

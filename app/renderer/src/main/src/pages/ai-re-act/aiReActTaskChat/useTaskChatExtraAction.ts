@@ -33,7 +33,7 @@ export const useTaskChatExtraAction = () => {
    */
   const closeChatReview = useMemoizedFn(() => {
     if (!!reviewInfo) {
-      globalSessionEngine.closeChatReview(sessionId, reviewInfo.chatType, reviewInfo.id)
+      globalSessionEngine.closeChatReview(sessionId, reviewInfo.id)
     }
   })
 

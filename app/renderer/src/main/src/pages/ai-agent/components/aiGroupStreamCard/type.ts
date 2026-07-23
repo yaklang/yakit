@@ -7,6 +7,7 @@ export interface AIGroupStreamCardHeardProps {
   lastItem?: ChatStream
   nodeLabel: string
   shouldShowMask: boolean
+  childrenTokensLength: number
 }
 
 export interface AIGroupStreamCardHeardWrapperProps {

@@ -2,11 +2,11 @@ import { useBoolean, useCreation } from 'ahooks'
 import classNames from 'classnames'
 import { type FC, memo } from 'react'
 import AITaskDefaultGroupCardHeard from '../../AITaskDefaultGroupCard/aiTaskDefaultGroupCardHeard/AITaskDefaultGroupCardHeard'
-import { AIChildWindowTaskDefaultGroupCardProps } from './type'
 import styles from './AIChildWindowTaskDefaultGroupCard.module.scss'
 import useAIConcurrentStreamStore from '@/auxWindow/pages/AIConcurrentStream/useContext/useStore'
 import useAIConcurrentStreamDispatcher from '@/auxWindow/pages/AIConcurrentStream/useContext/useDispatcher'
 import AIChildWindowConcurrentStreamContent from '../aiChildWindowConcurrentStreamContent/AIChildWindowConcurrentStreamContent'
+import type { AIChildWindowTaskDefaultGroupCardProps } from './type'
 
 const AIChildWindowTaskDefaultGroupCard: FC<AIChildWindowTaskDefaultGroupCardProps> = memo((props) => {
   const { token } = props

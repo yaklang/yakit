@@ -21,11 +21,11 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
 
   const showContinueTask = useCreation(() => {
     return !!rowData && !!coordinatorId && !!rowData?.data?.taskId && !isChildWindow
-  }, [rowData?.data, coordinatorId])
+  }, [rowData?.data?.taskId])
 
   const showCancelTask = useCreation(() => {
     return rowData?.data?.status === 'processing' && !!rowData?.data?.taskId && !isChildWindow
-  }, [rowData?.data])
+  }, [rowData?.data?.status])
 
   const modalInfo = useMemo(() => {
     if (!rowData) return undefined

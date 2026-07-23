@@ -21,7 +21,7 @@ import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHand
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
-import { type AIChatQSData, AIChatQSDataTypeEnum, AIToolResult, ChatListRenderType } from './aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum, AIToolResult } from './aiRender'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
@@ -436,6 +436,7 @@ export class ChatMultiSessionController {
 
   /** 主动向grpc发送请求 */
   public handleSendMessage(payload: AIChatSendParams) {
+    // console.log('handleSendMessage', payload)
     try {
       const { token, type, params, optionValue } = payload
       if (!this.readyChannels.has(token)) {
@@ -576,12 +577,14 @@ export class ChatMultiSessionController {
               case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
                 review.data.selected = params.InteractiveJSONInput
                 review.data.optionValue = optionValue
-                const tasks = review.data
-                const plans = genExecTasks(tasks.plans.root_task)
-                store.getState().updatePlanTree({
-                  task_tree: cloneDeep(plans),
-                  root_task_name: tasks.plans.root_task.name,
-                })
+                if (optionValue === 'continue') {
+                  const tasks = review.data
+                  const plans = genExecTasks(tasks.plans.root_task)
+                  store.getState().updatePlanTree({
+                    task_tree: cloneDeep(plans),
+                    root_task_name: tasks.plans.root_task.name,
+                  })
+                }
                 store.getState().dispatchStreamingNode({
                   chatType: 'task',
                   parentTaskId: review.TaskId,
@@ -606,6 +609,7 @@ export class ChatMultiSessionController {
   }
   /** 向连接中的会话发送请求 */
   private requestMessage(sessionId: string, request: AIInputEvent) {
+    // console.log('requestMessage', sessionId, request)
     ipcRenderer.invoke('send-ai-re-act', sessionId, request)
   }
 
@@ -634,6 +638,7 @@ export class ChatMultiSessionController {
   public handleGrpcOutputEvent(sessionId: string, res: AIOutputEvent) {
     try {
       let ipcContent = Uint8ArrayToString(res.Content) || ''
+      // console.log('handleGrpcOutputEvent--', sessionId, res, ipcContent)
       if (res.Type === 'structured' && ipcContent.indexOf('level') > -1 && ipcContent.indexOf('message') > -1) {
         // 日志类型数据
         const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Log

@@ -93,24 +93,22 @@ export const AIGroupStreamNode: FC<{
         visible={openPopover}
         onVisibleChange={setOpenPopover}
         content={
-          openPopover && (
-            <div className={styles['popover-reference-wrapper']}>
-              <div className={styles['popover-reference-title']}>
-                {seqNo}
-                {nodeLabel}
-                <YakitButton
-                  onClick={() => {
-                    setOpenPopover(false)
-                    setOpen(true)
-                  }}
-                  type="text2"
-                  icon={<OutlineArrowsexpandIcon />}
-                  size="small"
-                />
-              </div>
-              {!!popoverCode.length && <Code code={popoverCode} style={{ maxHeight: '200px' }} />}
+          <div className={styles['popover-reference-wrapper']}>
+            <div className={styles['popover-reference-title']}>
+              {seqNo}
+              {nodeLabel}
+              <YakitButton
+                onClick={() => {
+                  setOpenPopover(false)
+                  setOpen(true)
+                }}
+                type="text2"
+                icon={<OutlineArrowsexpandIcon />}
+                size="small"
+              />
             </div>
-          )
+            {!!popoverCode.length && <Code code={popoverCode} style={{ maxHeight: '200px' }} />}
+          </div>
         }
         destroyTooltipOnHide={true}
       >
@@ -162,6 +160,7 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
   const chatLength = useStore(store, (state) => state.casualChat.elements.length)
   const taskChatLength = useStore(store, (state) => state.taskChat.elements.length)
   const renderNum = useStore(store, (state) => state.groups[token]?.renderNum)
+  const childrenTokensLength = useStore(store, (state) => state.groups[token]?.childrenTokens.length || 0)
 
   /** 可能存在第一次拿到的数据为undefined  */
   const groupData = useCreation(() => {
@@ -241,6 +240,7 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
       lastItem={lastItem}
       nodeLabel={nodeLabel}
       shouldShowMask={shouldShowMask}
+      childrenTokensLength={childrenTokensLength}
     />
   )
 })

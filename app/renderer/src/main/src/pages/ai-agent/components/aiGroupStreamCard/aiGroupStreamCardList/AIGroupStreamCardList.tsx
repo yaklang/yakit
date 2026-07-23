@@ -1,10 +1,9 @@
-import { useClickAway, useCreation, useThrottleFn } from 'ahooks'
+import { useClickAway, useThrottleFn } from 'ahooks'
 import classNames from 'classnames'
 import { memo, useRef, useState, useEffect } from 'react'
 import StaticChatContent from '../../aiChatListItem/StaticChatContent/StaticChatContent'
 import { AIGroupStreamCardListProps } from '../type'
 import styles from './AIGroupStreamCardList.module.scss'
-import { Tooltip } from 'antd'
 
 const BOTTOM_THRESHOLD = 10
 
@@ -63,32 +62,26 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
     }
   }, [childrenTokens.length, expand])
 
-  const collapseTooltip = useCreation(() => {
-    return !expand && childrenTokens.length > 1 ? `折叠${childrenTokens.length}条信息` : ''
-  }, [expand, childrenTokens.length])
-
   return (
-    <Tooltip title={collapseTooltip} mouseEnterDelay={0.3}>
+    <div
+      className={classNames(styles['content'], {
+        [styles.expand]: expand,
+        [styles.noMask]: isScroll,
+      })}
+    >
       <div
-        className={classNames(styles['content'], {
-          [styles.expand]: expand,
-          [styles.noMask]: isScroll,
-        })}
+        ref={contentRef}
+        onClick={() => setIsScroll(true)}
+        className={styles['content-inner']}
+        style={{
+          overflow: isScroll ? 'overlay' : 'hidden',
+        }}
       >
-        <div
-          ref={contentRef}
-          onClick={() => setIsScroll(true)}
-          className={styles['content-inner']}
-          style={{
-            overflow: isScroll ? 'overlay' : 'hidden',
-          }}
-        >
-          {childrenTokens.map((token, index) => (
-            <StaticChatContent key={token} token={token} groupIndex={index} />
-          ))}
-        </div>
+        {childrenTokens.map((token, index) => (
+          <StaticChatContent key={token} token={token} groupIndex={index} />
+        ))}
       </div>
-    </Tooltip>
+    </div>
   )
 })
 
