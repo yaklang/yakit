@@ -24,12 +24,4 @@ export enum LocalGVS {
   IrifyEEPort = 'irifyee-port',
   /** @name Memfit端口号信息 */
   MemfitPort = 'Memfit-port',
-  /** @name 软件-yakit社区版模式 */
-  YakitCEMode = 'YakitCEMode',
-  eeI18n = 'I18n_Yakit_ee',
-  ceI18n = 'I18n_Yakit',
-  seI18n = 'I18n_Yakit_se',
-  ceIRifyI18n = 'I18n_IRify',
-  eeIRifyI18n = 'I18n_IRify_ee',
-  ceAII18n = 'I18n_AIAgent',
 }

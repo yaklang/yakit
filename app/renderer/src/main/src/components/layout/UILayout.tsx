@@ -23,7 +23,6 @@ import { StringToUint8Array } from '@/utils/str'
 import {
   GetConnectPort,
   getReleaseEditionName,
-  getRemoteI18nGV,
   isCommunityYakit,
   isEnpriTraceAgent,
   isEnterpriseEdition,
@@ -86,7 +85,7 @@ import styles from './uiLayout.module.scss'
 import { JSONParseLog } from '@/utils/tool'
 import { closeDuplexConn, startupDuplexConn } from '@/utils/duplex/duplex'
 import { LocalGVS } from '@/enums/localGlobal'
-import { useSoftMode } from '@/store/softMode'
+import { SoftMode, useSoftMode } from '@/store/softMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useSyncYakMcpStream } from '@/store/yakMcpStream'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
@@ -352,7 +351,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
    * 2、操作系统
    * 3、cpu架构
    * 4、引擎是否存在
-   * 5、软件模式(yakit社区版)
+   * 5、config 中获取 yakit模式、软件语言
    */
   const handleFetchBaseInfo = useMemoizedFn(async () => {
     debugToPrintLog(`------ 主窗口获取系统基础信息 ------`)
@@ -370,24 +369,15 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       const isInstalled = await grpcFetchYakInstallResult(true)
       isEngineInstalled.current = isInstalled
     } catch (error) {}
-
-    // yakit社区版获取模式
-    if (isCommunityYakit()) {
-      getLocalValue(LocalGVS.YakitCEMode).then((mode) => {
-        if (mode) {
-          setSoftMode(mode)
-        }
-      })
-    }
-
-    // 获取语言
-    getLocalValue(getRemoteI18nGV())
-      .then((savedLang) => {
-        if (savedLang) {
-          i18n.changeLanguage(savedLang)
-        }
-      })
-      .catch((err) => console.error(err))
+    try {
+      const config = await yakitApp.getYakitHomeConfig()
+      if (isCommunityYakit()) {
+        const mode = config.yakitMode || 'classic'
+        setSoftMode(mode as SoftMode)
+      }
+      const lang = config.softLange || 'zh'
+      i18n.changeLanguage(lang)
+    } catch (error) {}
   })
 
   // 切换远程模式

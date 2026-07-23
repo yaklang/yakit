@@ -39,7 +39,6 @@ import { DownloadYaklang } from './components/DownloadYaklang'
 import {
   FetchSoftwareVersion,
   GetConnectPort,
-  getLocalI18nGV,
   getReleaseEditionName,
   isCommunityEdition,
   isCommunityIRify,
@@ -71,7 +70,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
-import { normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './index.module.scss'
 import i18n from '@/i18n/i18n'
 
@@ -1084,8 +1083,9 @@ export const StartupPage: React.FC = () => {
       const type = data.yakitStatus
       if (type) {
         // 重新获取语言
-        getLocalValue(getLocalI18nGV()).then((res) => {
-          i18n.changeLanguage(normalizeLang(res))
+        yakitApp.getYakitHomeConfig().then((config) => {
+          const lang = normalizeLang(config.softLange as Lange)
+          i18n.changeLanguage(lang)
         })
         handleOperations(type, data)
       }

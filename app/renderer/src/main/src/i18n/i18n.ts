@@ -14,7 +14,7 @@ i18n
   .use(initReactI18next)
   .init({
     lng: 'zh',
-    fallbackLng: 'en',
+    fallbackLng: false,
     supportedLngs: ['zh', 'en', 'zh-TW'],
     ns: [
       'yakitUi',
@@ -35,6 +35,7 @@ i18n
       'projectManage',
       'irifyHome',
     ] satisfies I18nNamespace[], // 这几个需要预加载
+    load: 'currentOnly',
     defaultNS: '',
     interpolation: {
       escapeValue: false,

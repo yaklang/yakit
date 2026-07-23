@@ -28,10 +28,7 @@ export const useSoftMode = create<MenuModeState>((set) => ({
   softMode: getDefaultSoftMode(),
   setSoftMode: (softMode) => {
     if (isCommunityYakit()) {
-      setLocalValue(LocalGVS.YakitCEMode, softMode + '')
-      yakitApp
-        .setYakitHomeConfig('mode', JSON.stringify({ key: LocalGVS.YakitCEMode, value: softMode + '' }))
-        .catch((err) => {})
+      yakitApp.setYakitHomeConfig('yakitMode', softMode).catch((err) => {})
     }
     set({ softMode })
   },

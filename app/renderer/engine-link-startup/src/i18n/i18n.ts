@@ -3,11 +3,6 @@ import { initReactI18next } from 'react-i18next'
 import resourcesToBackend from 'i18next-resources-to-backend'
 import { I18nNamespace } from './namespaces'
 
-function getNS() {
-  let ns: I18nNamespace[] = ['link', 'yakitUi']
-  return ns
-}
-
 i18n
   .use(
     resourcesToBackend((lng: string, ns: string) => {
@@ -19,9 +14,10 @@ i18n
   .use(initReactI18next)
   .init({
     lng: 'zh',
-    fallbackLng: 'en',
+    fallbackLng: false,
     supportedLngs: ['zh', 'en', 'zh-TW'],
-    ns: getNS(), // 需要预加载
+    load: 'currentOnly',
+    ns: ['link', 'yakitUi'] satisfies I18nNamespace[], // 需要预加载
     defaultNS: '',
     interpolation: {
       escapeValue: false,

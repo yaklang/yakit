@@ -2,7 +2,6 @@ import { info } from '@/utils/notification'
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { RemotePrivateDomainGV } from '@/enums/privateDomain'
-import { RemoteI18nGV } from '@/enums/i18n'
 import { Theme } from '@/hook/useTheme'
 import { yakitRelease } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
@@ -241,27 +240,6 @@ export const getRemoteConfigBaseUrlGV = () => {
       return RemotePrivateDomainGV.eeIRifyConfigBaseUrl
     case PRODUCT_RELEASE_EDITION.BreachTrace:
       return RemotePrivateDomainGV.basConfigBaseUrl
-  }
-}
-
-export const getRemoteI18nGV = () => {
-  switch (GetReleaseEdition()) {
-    case PRODUCT_RELEASE_EDITION.Yakit:
-      return RemoteI18nGV.ceI18n
-    case PRODUCT_RELEASE_EDITION.EnpriTrace:
-      return RemoteI18nGV.eeI18n
-    case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
-      return RemoteI18nGV.seI18n
-    case PRODUCT_RELEASE_EDITION.IRify:
-      return RemoteI18nGV.ceIRifyI18n
-    case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
-      return RemoteI18nGV.eeIRifyI18n
-    case PRODUCT_RELEASE_EDITION.BreachTrace:
-      return RemoteI18nGV.basI18n
-    case PRODUCT_RELEASE_EDITION.MEMFIT:
-      return RemoteI18nGV.ceAII18n
-    default:
-      return RemoteI18nGV.ceI18n
   }
 }
 

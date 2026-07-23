@@ -12,9 +12,7 @@ import { yakitApp, yakitShell } from '@/utils/electronBridge'
 import { useCountDown, useInViewport, useMemoizedFn } from 'ahooks'
 import { OutlineExitIcon } from '@/assets/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { getLocalI18nGV, isCommunityYakit } from '@/utils/envfile'
-import { LocalGVS } from '@/enums/yakitGV'
-import { getLocalValue, setLocalValue } from '@/utils/kv'
+import { isCommunityYakit } from '@/utils/envfile'
 import { Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './SoftwareBasics.module.scss'
@@ -63,17 +61,11 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       const newHistory = [currentPath, ...workspaceHistory.filter((p) => p !== currentPath)].slice(0, 10)
       await yakitApp.setYakitHomeConfig('workspaceHistory', newHistory)
       await yakitApp.setYakitHomeConfig('autoStart', autoStart)
-
       setSoftTheme(softTheme, true)
-
       if (isCommunityYakit()) {
-        await yakitApp.setYakitHomeConfig('mode', JSON.stringify({ key: LocalGVS.YakitCEMode, value: softMode }))
-        setLocalValue(LocalGVS.YakitCEMode, softMode)
+        await yakitApp.setYakitHomeConfig('yakitMode', softMode)
       }
-
-      await yakitApp.setYakitHomeConfig('lange', JSON.stringify({ key: getLocalI18nGV(), value: softLang }))
-      setLocalValue(getLocalI18nGV(), softLang)
-
+      await yakitApp.setYakitHomeConfig('softLange', softLang)
       if (currentPath !== originalHome) {
         await yakitApp.setYakitHomeConfig('YAKIT_HOME', currentPath)
         yakitApp.relaunchApp()
@@ -109,9 +101,15 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
       const home = config.currentHome || ''
       setCurrentPath(home)
       setOriginalHome(home)
-      setAutoStart(config.autoStart || false)
       setWorkspaceHistory(config.workspaceHistory || [])
-
+      if (isCommunityYakit()) {
+        const mode = config.yakitMode || 'classic'
+        setSoftMode(mode as YakitSoftMode)
+      }
+      const lang = normalizeLang(config.softLange as Lange)
+      i18n.changeLanguage(lang)
+      setSoftLang(lang)
+      setAutoStart(config.autoStart || false)
       const allPaths = [...new Set([home, ...(config.workspaceHistory || [])].filter(Boolean))]
       pendingFetchPathsRef.current = allPaths
       pendingAutoStartRef.current = !!(config.autoStart && home)
@@ -144,18 +142,6 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
 
   useEffect(() => {
     loadConfig()
-
-    if (isCommunityYakit()) {
-      getLocalValue(LocalGVS.YakitCEMode).then((res) => {
-        const mode = res || 'classic'
-        setSoftMode(mode as YakitSoftMode)
-      })
-    }
-
-    getLocalValue(getLocalI18nGV()).then((res) => {
-      i18n.changeLanguage(normalizeLang(res))
-      setSoftLang(normalizeLang(res))
-    })
 
     return () => {
       cancelCountdown()

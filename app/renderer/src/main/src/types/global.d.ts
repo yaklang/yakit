@@ -488,8 +488,8 @@ interface ConsoleThemePayload {
 }
 interface YakitHomeConfig {
   YAKIT_HOME: string
-  lang: string
-  mode: string
+  softLange: string
+  yakitMode: string
   workspaceHistory: string[]
   autoStart: boolean
   currentHome: string

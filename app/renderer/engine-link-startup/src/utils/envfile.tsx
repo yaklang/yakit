@@ -117,25 +117,6 @@ export const GetReleaseEdition = () => {
   }
 }
 
-export const getLocalI18nGV = () => {
-  switch (GetReleaseEdition()) {
-    case PRODUCT_RELEASE_EDITION.Yakit:
-      return LocalGVS.ceI18n
-    case PRODUCT_RELEASE_EDITION.EnpriTrace:
-      return LocalGVS.eeI18n
-    case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
-      return LocalGVS.seI18n
-    case PRODUCT_RELEASE_EDITION.IRify:
-      return LocalGVS.ceIRifyI18n
-    case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
-      return LocalGVS.eeIRifyI18n
-    case PRODUCT_RELEASE_EDITION.MEMFIT:
-      return LocalGVS.ceAII18n
-    default:
-      return LocalGVS.ceI18n
-  }
-}
-
 export const GetConnectPort = () => {
   switch (__PLATFORM__) {
     case 'enterprise':
