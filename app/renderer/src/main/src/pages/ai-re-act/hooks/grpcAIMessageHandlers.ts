@@ -560,8 +560,13 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
       : chatStore.casualChat?.planDetails
     if (!chatDetail) return
     applyTodoListFields(chatDetail)
+    if (!isSubAgentTask) {
+      chatDetail.taskId = res.TaskId
+    }
     if (isSubAgentTask) {
       chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
+    } else {
+      chatStore.casualChat.planDetails = chatDetail
     }
     callback?.(res)
   }
@@ -674,6 +679,9 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
       ? chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
       : chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
     applyCapabilityFields(chatDetail)
+    if (!isSubAgentTask) {
+      chatDetail.taskId = res.TaskId
+    }
     if (isSubAgentTask) {
       chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
     } else {
@@ -707,6 +715,9 @@ const handlePerception: AIMessageHandler = (request) => {
       ? chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
       : chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
     applyPerceptionFields(chatDetail)
+    if (!isSubAgentTask) {
+      chatDetail.taskId = res.TaskId
+    }
     if (isSubAgentTask) {
       chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
     } else {
@@ -742,6 +753,9 @@ const handleSessionSnapshot: AIMessageHandler = (request) => {
       ? chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
       : chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
     applySnapshotFields(chatDetail)
+    if (!isSubAgentTask) {
+      chatDetail.taskId = res.TaskId
+    }
     if (isSubAgentTask) {
       chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
     } else {
@@ -1916,7 +1930,7 @@ const handlePlanReviewAnalysis: AIMessageHandler = (request) => {
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequireExtra
   if (
     !data?.plans_id ||
-    !data?.index ||
+    !data?.task_id ||
     !data?.keywords?.length ||
     (currentPlanReviewId && currentPlanReviewId !== data.plans_id)
   ) {
@@ -1925,7 +1939,7 @@ const handlePlanReviewAnalysis: AIMessageHandler = (request) => {
       pushLog,
       genErrorLogData(
         res.Timestamp,
-        `${res.Type}数据异常: plans_id:${data?.plans_id || '-'};index:${data?.index || '-'};keywords:${JSON.stringify(
+        `${res.Type}数据异常: plans_id:${data?.plans_id || '-'};task_id:${data?.task_id || '-'};keywords:${JSON.stringify(
           data?.keywords || '-',
         )}`,
       ),
@@ -1936,7 +1950,7 @@ const handlePlanReviewAnalysis: AIMessageHandler = (request) => {
   if (!currentPlanReviewId) currentPlanReviewId = data.plans_id
   const reviewInfo = reviewDetail.data
   if (!reviewInfo.taskExtra) reviewInfo.taskExtra = new Map()
-  reviewInfo.taskExtra.set(data.index, data)
+  reviewInfo.taskExtra.set(data.task_id, data)
 
   const isAuto = isAutoExecuteReviewContinue({ getFunc: getRequest })
   if (!isAuto && review?.onReviewExtra) review.onReviewExtra(cloneDeep(data))

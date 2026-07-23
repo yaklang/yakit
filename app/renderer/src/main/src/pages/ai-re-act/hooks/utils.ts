@@ -104,13 +104,13 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
   const execTasks: AITaskInfoProps[] = []
   genExecTask({ task: taskTree, level: 1, tasks: execTasks })
   execTasks.shift()
-  // 将任务关联的任务名转换成task_index
+  // 将任务关联的任务名转换成 task_id
   for (let item of execTasks) {
     if (item.depends_on && item.depends_on.length > 0) {
       item.depends_on = item.depends_on
         .map((depend) => {
           const dependTask = execTasks.find((t) => t.semantic_identifier === depend)
-          return dependTask ? dependTask.index : ''
+          return dependTask ? dependTask.task_id : ''
         })
         .filter(Boolean)
     }
@@ -120,12 +120,12 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
 // #endregion
 
 /** 将树结构任务列表转换成一维数组 */
-export const handleFlatAITree = (sum: AIAgentGrpcApi.PlanTask[], task: AIAgentGrpcApi.PlanTask) => {
+export const handleFlatAITree = (sum: AIAgentGrpcApi.PlanTask[], task: AIAgentGrpcApi.PlanTask, level = 1) => {
   if (!Array.isArray(sum)) return null
-  sum.push(generateTaskChatExecution(task))
+  sum.push({ ...generateTaskChatExecution(task), level })
   if (task.subtasks && task.subtasks.length > 0) {
     for (let subtask of task.subtasks) {
-      handleFlatAITree(sum, subtask)
+      handleFlatAITree(sum, subtask, level + 1)
     }
   }
 }

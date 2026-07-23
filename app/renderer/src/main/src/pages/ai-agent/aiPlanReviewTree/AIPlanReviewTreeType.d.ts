@@ -14,8 +14,8 @@ export type PlanTaskType = keyof AIAgentGrpcApi.PlanTask
 export interface AIPlanReviewTreeItemProps {
   order: number
   item: AIAgentGrpcApi.PlanTask
-  preIndex: string
-  nextIndex: string
+  preLevel: number
+  nextLevel: number
   /**是否可以编辑 */
   editable?: boolean
   /**增加该节点得子节点 */
@@ -26,7 +26,7 @@ export interface AIPlanReviewTreeItemProps {
   onRemoveNode: (item: AIAgentGrpcApi.PlanTask) => void
   /**修改当前编辑的值 */
   setItem: (item: AIAgentGrpcApi.PlanTask, option: SetItemOption) => void
-  /**通过index获取关键词和解释 */
+  /**通过 task_id 获取关键词和解释 */
   planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
   currentPlansId: string
 }
@@ -50,8 +50,8 @@ export interface AIPlanReviewTreeArrowLineProps {}
 export interface AIPlanReviewTreeLineProps {
   order: number
   item: AIAgentGrpcApi.PlanTask
-  preIndex: string
-  nextIndex: string
+  preLevel: number
+  nextLevel: number
   expand: boolean
   onSetExpand: () => void
 }

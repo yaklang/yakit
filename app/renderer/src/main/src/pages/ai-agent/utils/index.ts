@@ -8,6 +8,18 @@ import { omit } from 'lodash'
 import { randomString } from '@/utils/randomUtil'
 import { isIRify } from '@/utils/envfile'
 
+export const getPlanTaskLevel = (task: AIAgentGrpcApi.PlanTask) => task.level ?? 1
+
+export const findPlanTaskSubtreeEnd = (list: AIAgentGrpcApi.PlanTask[], start: number) => {
+  const level = getPlanTaskLevel(list[start])
+  let end = start
+  for (let i = start + 1; i < list.length; i++) {
+    if (getPlanTaskLevel(list[i]) <= level) break
+    end = i
+  }
+  return end
+}
+
 /**
  * @name 将一维tree转换成树结构
  */
@@ -17,45 +29,28 @@ import { isIRify } from '@/utils/envfile'
  * @returns {AIAgentGrpcApi.PlanTask[]} 树形结构数组
  */
 export const reviewListToTrees = (items: AIAgentGrpcApi.PlanTask[]): AIAgentGrpcApi.PlanTask[] => {
-  // 创建映射表，以id为键存储所有节点
-  const map = {}
+  const map: Record<string, AIAgentGrpcApi.PlanTask> = {}
   const tree: AIAgentGrpcApi.PlanTask[] = []
+  const stack: { task_id: string; level: number }[] = []
 
-  // 首先构建所有节点的映射
   items.forEach((item) => {
-    // 如果是用户添加的节点且没有名称、目标和工具，则跳过
     if (item.isUserAdd && !item.name && !item.goal && !item.tools.length) return
-    // 创建节点副本并初始化children数组
-    map[item.index] = { ...item, subtasks: [] }
-  })
+    const level = getPlanTaskLevel(item)
+    const node: AIAgentGrpcApi.PlanTask = { ...item, subtasks: [] }
+    map[item.task_id] = node
 
-  // 构建树结构
-  items.forEach((item) => {
-    const node: AIAgentGrpcApi.PlanTask = map[item.index]
-    if (!node) return // 如果节点不存在，跳过
-    const parentId = getParentId(item.index)
-    // 如果有父节点，则添加到父节点的children中
-    if (parentId && map[parentId]) {
-      map[parentId].subtasks.push(node)
+    while (stack.length && stack[stack.length - 1].level >= level) {
+      stack.pop()
     }
-    // 否则作为根节点
-    else {
+    if (stack.length === 0) {
       tree.push(node)
+    } else {
+      map[stack[stack.length - 1].task_id].subtasks!.push(node)
     }
+    stack.push({ task_id: item.task_id, level })
   })
 
   return tree
-}
-
-/**
- * 从节点ID提取父节点ID
- * @param {String} id 当前节点ID
- * @returns {String|null} 父节点ID或null(如果是根节点)
- */
-const getParentId = (id) => {
-  const parts = id.split('-')
-  if (parts.length <= 1) return null
-  return parts.slice(0, -1).join('-')
 }
 
 // #region chat相关工具

@@ -34,11 +34,15 @@ function useCasualChat(params: UseCasualChatParams) {
     return getChatDataStore?.()?.casualChat
   })
   const [toolListRenderNumber, setToolListRenderNumber] = useState(0)
-  const resetTodoListData = useMemoizedFn(() => {
+  /** 新一轮自由对话出队时，重置主任务详情（避免 taskId 仍指向上一次提问） */
+  const resetTodoListData = useMemoizedFn((taskId?: string) => {
     const chatDetail = getCasualChat()
     if (!chatDetail) return
-    chatDetail.planDetails.todoList = cloneDeep(DefaultTodoListCardData)
-    setToolListRenderNumber(0)
+    chatDetail.planDetails = {
+      ...cloneDeep(DefaultPlanItemDetailsData),
+      taskId: taskId || '',
+    }
+    setToolListRenderNumber((old) => old + 1)
   })
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.casualChat?.contents

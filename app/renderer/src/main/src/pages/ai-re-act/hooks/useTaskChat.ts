@@ -143,12 +143,12 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   /** 更新任务树指定任务节点的状态 */
-  const handleUpdateTaskState = useMemoizedFn((index: string, state: AITaskInfoProps['progress']) => {
+  const handleUpdateTaskState = useMemoizedFn((taskId: string, state: AITaskInfoProps['progress']) => {
     setPlan((old) => {
       return {
         ...old,
         task_tree: old.task_tree.map((item) => {
-          if (item.index === index) item.progress = state
+          if (item.task_id === taskId) item.progress = state
           return item
         }),
       }
@@ -268,7 +268,7 @@ function useTaskChat(params: UseTaskChatParams) {
         if (data && typeof data === 'object' && data?.type === 'push_task') {
           // 开始任务的执行
           const info = data as AIAgentGrpcApi.ChangeTask
-          handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
+          handleUpdateTaskState(info.task.task_id || res.TaskId, AITaskStatus.inProgress)
           handleTaskNode(res, info)
         }
 
