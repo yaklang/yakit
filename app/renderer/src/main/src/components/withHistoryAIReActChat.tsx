@@ -22,7 +22,7 @@ import {
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { YakitRouteType } from '@/enums/yakitRoute'
+import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   getWebFuzzerPageIsHttps,
@@ -176,10 +176,6 @@ export interface HistoryAIReActChatProviderProps {
   pageId: string
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
-  /** Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关 */
-  // httpFuzzTabPageId?: string
-  /** Yak Runner 工作区 id：AI `yaklang_code_change` 审阅/写回桥接 */
-  yakRunnerPageId?: string
   /**
    * - 在 `onStartRequest` / `onSendRequest` 内置（WebFuzzer 请求附件）处理之后执行
    * - Irify「代码审计」用它把工程根路径附件追加到 `AttachedResourceInfo`
@@ -198,7 +194,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   pageId,
   focusModeLoop,
   children,
-  yakRunnerPageId,
   transformInputEvent,
   resolveStartExtraParams,
   mergeRemoteAIAgentSetting,
@@ -217,6 +212,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const chatReadyRef = useRef(false)
   const yakRunnerLastAttachedResourceInfoRef = useRef<AIInputEvent['AttachedResourceInfo']>([])
 
+  // Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关
+  const isHaveWebFuzzerPageId = useCreation(() => {
+    return route === YakitRoute.HTTPFuzzer && !!pageId
+  }, [route, pageId])
+
+  // Yak Runner 工作区 id：AI `yaklang_code_change` 审阅/写回桥接
+  const isHaveYakRunnerPageId = useCreation(() => {
+    return route === YakitRoute.YakScript && !!pageId
+  }, [route, pageId])
+
   useEffect(() => {
     if (!showFreeChat) {
       chatReadyRef.current = false
@@ -234,7 +239,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onHttpFuzzRequestChange = useMemoizedFn((data: AIAgentGrpcApi.HttpFuzzRequestChange) => {
-    if (!pageId) return
+    if (!isHaveWebFuzzerPageId) return
 
     // casual 问答期间：有完整 raw 时不自动写包，入队审阅（`op` 仅占位描述，不作为筛选项）
     if (casualLoadingRef.current) {
@@ -252,9 +257,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
-    if (!yakRunnerPageId) return
+    if (!isHaveYakRunnerPageId) return
 
-    const editorNow = getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? ''
+    const editorNow = getYakRunnerPageActiveCodeString(pageId) ?? ''
     const original =
       data.op === 'create'
         ? ''
@@ -265,7 +270,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
             : ''
 
     // op=patch：后端只给片段，这里合并成全量 replace，再走原有 diff UI
-    const normalized = normalizeYaklangCodeChangeForReview(yakRunnerPageId, data, original)
+    const normalized = normalizeYaklangCodeChangeForReview(pageId, data, original)
     if (!normalized) return
 
     const nextCode = normalized.code?.content
@@ -275,7 +280,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     const isCreate = normalized.op === 'create'
     const createFileName = isCreate ? createYakRunnerGeneratedCodeFileName() : undefined
     const createPath = isCreate
-      ? resolveYaklangCreateTargetPath(yakRunnerPageId, yakRunnerLastAttachedResourceInfoRef.current, createFileName)
+      ? resolveYaklangCreateTargetPath(pageId, yakRunnerLastAttachedResourceInfoRef.current, createFileName)
       : undefined
     const change = isCreate
       ? {
@@ -287,7 +292,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         }
       : normalized
 
-    enqueueYakRunnerCasualCodeReplaceReview(yakRunnerPageId, {
+    enqueueYakRunnerCasualCodeReplaceReview(pageId, {
       original,
       change,
       fileName: createFileName,
@@ -298,7 +303,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   // AI `http_flow_fuzz_status` 推送：把每次最新的 `runtime_id` 静默推到当前 fuzzer 页签的处理器中。
   // 用户点击「查看详情」会显式再次推送并要求打开抽屉，所以这里不主动打开。
   const onGetHttpFlowFuzzStatus = useMemoizedFn((data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => {
-    if (!pageId) return
+    if (!isHaveWebFuzzerPageId) return
     const runtimeId = data?.runtime_id
     if (!runtimeId) return
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(pageId, runtimeId, { source: 'auto' })
@@ -310,9 +315,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const execute = useStore(store, (state) => state.execute)
   const casualLoading = useStore(store, (state) => state.casualLoading)
 
-  // TODO - @whale 修改确认 useEffect => httpFuzzTabPageId->pageId
+  // TODO - @whale 修改确认 useEffect => httpFuzzTabPageId->isHaveWebFuzzerPageId
   useEffect(() => {
-    if (!pageId && !yakRunnerPageId) {
+    if (!isHaveWebFuzzerPageId && !isHaveYakRunnerPageId) {
       casualLoadingRef.current = false
       initialRequestInCasualRef.current = null
       initialCodeInCasualRef.current = null
@@ -320,23 +325,23 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }
 
     if (!casualLoadingRef.current && casualLoading) {
-      if (pageId) {
+      if (isHaveWebFuzzerPageId) {
         initialRequestInCasualRef.current = getWebFuzzerPageRequestString(pageId) ?? ''
       }
-      if (yakRunnerPageId) {
-        resetYakRunnerPatchWorkingDraft(yakRunnerPageId)
-        initialCodeInCasualRef.current = getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? ''
+      if (isHaveYakRunnerPageId) {
+        resetYakRunnerPatchWorkingDraft(pageId)
+        initialCodeInCasualRef.current = getYakRunnerPageActiveCodeString(pageId) ?? ''
       }
     } else if (casualLoadingRef.current && !casualLoading) {
       initialRequestInCasualRef.current = null
       initialCodeInCasualRef.current = null
-      if (yakRunnerPageId) {
-        resetYakRunnerPatchWorkingDraft(yakRunnerPageId)
+      if (isHaveYakRunnerPageId) {
+        resetYakRunnerPatchWorkingDraft(pageId)
       }
     }
 
     casualLoadingRef.current = casualLoading
-  }, [casualLoading, pageId, yakRunnerPageId])
+  }, [casualLoading, pageId, isHaveWebFuzzerPageId, isHaveYakRunnerPageId])
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID
@@ -349,8 +354,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
     return new Promise<AIHandleStartResProps>((resolve) => {
       let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
-      // TODO - @whale 修改确认 httpFuzzTabPageId->pageId
-      if (pageId) {
+      // TODO - @whale 修改确认 httpFuzzTabPageId->isHaveWebFuzzerPageId
+      if (isHaveWebFuzzerPageId) {
         const raw = getWebFuzzerPageRequestString(pageId)
         const isHttps = getWebFuzzerPageIsHttps(pageId) ?? false
         const sessionId =
@@ -360,8 +365,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       if (transformInputEvent) {
         params = transformInputEvent(params)
       }
-      if (yakRunnerPageId) {
-        params = appendYakRunnerWorkspaceContextToEvent(yakRunnerPageId, params)
+      if (isHaveYakRunnerPageId) {
+        params = appendYakRunnerWorkspaceContextToEvent(pageId, params)
         params = normalizeStartUserQueryToTextDescription(params)
         yakRunnerLastAttachedResourceInfoRef.current = params.AttachedResourceInfo || []
       }
@@ -397,8 +402,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const onSendRequest = useMemoizedFn((data: AISendParams) => {
     let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
-    // TODO - @whale 修改确认 httpFuzzTabPageId->pageId
-    if (pageId) {
+    // TODO - @whale 修改确认 httpFuzzTabPageId->isHaveWebFuzzerPageId
+    if (isHaveWebFuzzerPageId) {
       const raw = getWebFuzzerPageRequestString(pageId)
       const isHttps = getWebFuzzerPageIsHttps(pageId) ?? false
       params = attachWebFuzzerHttpRequestToEvent(params, activeChat?.SessionID, raw, isHttps)
@@ -406,8 +411,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     if (transformInputEvent) {
       params = transformInputEvent(params)
     }
-    if (yakRunnerPageId) {
-      params = appendYakRunnerWorkspaceContextToEvent(yakRunnerPageId, params)
+    if (isHaveYakRunnerPageId) {
+      params = appendYakRunnerWorkspaceContextToEvent(pageId, params)
       yakRunnerLastAttachedResourceInfoRef.current = params.AttachedResourceInfo || []
     }
 
