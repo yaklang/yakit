@@ -188,12 +188,12 @@
       z-index: 1;
     }
     &.output-fade-top::before {
-      top: 0;
+      top: -6px;
       background: linear-gradient(to bottom, var(--Colors-Use-Neutral-Bg), transparent);
       margin-bottom: -18px;
     }
     &.output-fade-bottom::after {
-      bottom: 0;
+      bottom: -6px;
       background: linear-gradient(to top, var(--Colors-Use-Neutral-Bg), transparent);
       margin-top: -18px;
     }
