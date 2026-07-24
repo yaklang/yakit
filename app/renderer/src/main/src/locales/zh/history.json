@@ -51,6 +51,7 @@
     "onlyFavorites": "仅收藏夹",
     "resetRequestID": "重置请求 ID",
     "doNotResetRequestID": "不重置请求 ID",
+    "keepOnlyFavorites": "仅保留收藏数据",
     "saveFile": "保存文件",
     "RowContextMenu": {
       "sendToWebFuzzer": "发送到 Web Fuzzer",

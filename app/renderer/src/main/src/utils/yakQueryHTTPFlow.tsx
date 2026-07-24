@@ -33,6 +33,7 @@ export interface YakQueryHTTPFlowRequest {
   ExcludeId?: number[]
   IncludeId?: number[]
   Tags?: string[]
+  ExcludeTags?: string[]
   HaveParamsTotal?: string
   BeforeUpdatedAt?: number
   AfterUpdatedAt?: number
@@ -56,6 +57,15 @@ export interface YakQueryHTTPFlowRequest {
   BeforeId?: number
   /** 仅前端用于 BodyLength 筛选图标状态，不会传给后端 */
   bodyLength?: boolean
+}
+
+export interface YakDeleteHTTPFlowRequest {
+  DeleteAll?: boolean
+  Id?: number[]
+  ItemHash?: string[]
+  URLPrefix?: string
+  Filter?: YakQueryHTTPFlowRequest
+  URLPrefixBatch?: string[]
 }
 
 /** QueryMITMExtractedAggregate 返回行（IPC/JSON 可能为 PascalCase 或 camelCase） */
