@@ -19,12 +19,12 @@ import { Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIAgentStore from '../../useContext/useStore'
-import { formatAIAgentSetting } from '../../utils'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import { useCurrentMeta, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { formatAIAgentSetting, onReStart } from '../../utils'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const store = useCurrentStore()
@@ -237,25 +237,27 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       onSend({ token: sessionId, type: 'task', params: info })
     } else if (execute) {
       onSendRecover(sendRecoverParamsRef.current)
-    } else if (activeChat?.SessionID && getSetting) {
-      const session = activeChat?.SessionID
-      onStart({
-        token: session,
-        params: {
-          IsStart: true,
-          Params: {
-            ...formatAIAgentSetting(getSetting()),
-            UserQuery: '',
-            TimelineSessionID: session,
-            CoordinatorId: '',
-            Sequence: 1,
-          },
+    } else if (activeChat?.SessionID) {
+      onReStart({
+        setting: {
+          ...formatAIAgentSetting(getSetting()),
+          UserQuery: '',
+          TimelineSessionID: activeChat?.SessionID,
+          CoordinatorId: '',
+          Sequence: 1,
         },
-        onSuccess: () => {
-          sendRecoverParamsRef.current && onSendRecover(sendRecoverParamsRef.current)
-        },
+        activeChat,
+        onStart: (data) => onChatStart(data),
       })
     }
+  })
+  const onChatStart = useMemoizedFn((data) => {
+    onStart({
+      ...data,
+      onSuccess: () => {
+        sendRecoverParamsRef.current && onSendRecover(sendRecoverParamsRef.current)
+      },
+    })
   })
   return isShow() ? (
     <YakitPopconfirm

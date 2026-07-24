@@ -36,6 +36,8 @@ export const AIGroupStreamNode: FC<{
 
   const [open, setOpen] = useState(false)
   const [openPopover, setOpenPopover] = useState(false)
+  // popover 关闭过渡期间保留上一次的 reference 内容，避免关闭动画途中内容先清空
+  const prevPopoverCodeRef = useRef<ChatReferenceMaterialPayload>([])
 
   // 仅获取用于显示的 content（已应用打字效果）
   const { content } = useTypedStream({
@@ -65,12 +67,14 @@ export const AIGroupStreamNode: FC<{
     return itemData?.reference || []
   }, [open])
   const popoverCode = useCreation(() => {
-    if (!openPopover) return []
-    return itemData?.reference || []
-  }, [openPopover])
+    if (!openPopover) return prevPopoverCodeRef.current
+    const code = itemData?.reference || []
+    prevPopoverCodeRef.current = code
+    return code
+  }, [openPopover, renderNum])
 
   const hidden = useCreation(() => {
-    return !!itemData?.reference?.length
+    return !itemData?.reference?.length
   }, [renderNum, itemData?.reference?.length])
 
   return (

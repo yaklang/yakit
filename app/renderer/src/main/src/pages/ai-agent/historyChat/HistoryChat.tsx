@@ -195,7 +195,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
               BeforeTimestamp: beforeTimestamp,
               Source: historyQuerySources,
             }
-      const sessionIds = sessions.map((item) => item.SessionID)
+      const sessionIds = deletedChats.map((item) => item.SessionID)
       const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },

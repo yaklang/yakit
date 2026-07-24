@@ -130,9 +130,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
       const onStartChat = (res: AIHandleStartResProps) => {
         const { params, extraParams, onChat } = res
+        let newChat: AISession | undefined = undefined
         if (!sessionID) {
           // 创建新的聊天记录
-          const newChat: AISession = {
+          newChat = {
             Id: extraParams?.chatId || session,
             Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
             question: qs,
@@ -145,8 +146,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             LastUsedAt: new Date().getTime(),
             isCreate: true,
           }
-
-          setActiveChat && setActiveChat(newChat)
+          // setActiveChat && setActiveChat(newChat)
           emiter.emit(
             'sessionData',
             JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
@@ -163,6 +163,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         onStart({
           token: session,
           params,
+          onSuccess: () => {
+            if (!sessionID && newChat) setActiveChat && setActiveChat(newChat)
+          },
         })
       }
       if (!!startRequest) {
