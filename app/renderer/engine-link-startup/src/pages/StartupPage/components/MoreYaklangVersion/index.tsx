@@ -6,6 +6,7 @@ import { isYakit } from '@/utils/envfile'
 import styles from './MoreYaklangVersion.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface MoreYaklangVersionProps {
   moreYaklangVersionList: string[]
@@ -14,6 +15,7 @@ interface MoreYaklangVersionProps {
 /** @name 更多Yaklang版本 */
 export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
   const { moreYaklangVersionList, onClosePop } = props
+  const { t, i18n } = useI18nNamespaces(['link'])
   const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
   const [searchVersionVal, setSearchVersionVal] = useState<string>('')
   /** 仅 Yakit 开放轻量版本选择；IRify/Memfit 不展示 */
@@ -52,9 +54,10 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
             value={engineBuildType}
             onChange={(e) => setEngineBuildType(e.target.value)}
             options={[
-              { label: '标准版本', value: 'full' },
-              { label: '轻量版本', value: 'slim' },
+              { label: t('MoreYaklangVersion.standard_version'), value: 'full' },
+              { label: t('MoreYaklangVersion.slim_version'), value: 'slim' },
             ]}
+            style={{ width: i18n.language === 'en' ? 240 : undefined }}
           />
         </div>
       )}
@@ -74,7 +77,7 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
                 <span className={styles['version-text']}>{v}</span>
                 {showSlimOption && engineBuildType === 'slim' ? (
                   <YakitTag color="warning" size="small">
-                    轻量
+                    {t('MoreYaklangVersion.slim')}
                   </YakitTag>
                 ) : null}
               </div>
