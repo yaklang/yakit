@@ -1,4 +1,4 @@
-import type { TaskChatTaskInfo, UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
+import type { UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { PlanItemDetailsData, SessionRenderContent } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
@@ -236,8 +236,6 @@ export interface AIAgentChatMetaData {
   /** 通知消息的消失定时器 */
   notifyMessageTimer: NodeJS.Timeout | null
 
-  /** 当前任务规划问题的re_act_task_id|coordinatorId|status */
-  currentTaskPlanID?: TaskChatTaskInfo
   /** 当前任务规划正在进行中的节点taskID */
   currentTaskPlanActiveNode: Set<string>
 

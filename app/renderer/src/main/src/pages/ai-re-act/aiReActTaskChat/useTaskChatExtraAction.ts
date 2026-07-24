@@ -1,4 +1,4 @@
-import { type AIInputEvent, AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -38,7 +38,7 @@ export const useTaskChatExtraAction = () => {
   })
 
   const sendReactCancelTask = useMemoizedFn(() => {
-    const taskId = meta.currentTaskPlanID?.taskID
+    const taskId = store.getState().taskStatus.taskID
     if (!taskId) return
     store.getState().updateState({
       cancelTaskLoading: true,
@@ -89,8 +89,7 @@ export const useTaskChatExtraAction = () => {
 
   /** @description 在任务规划的content footer下,继续按钮的出现在UI上意味着该任务肯定已经停止 */
   const onRecover = useMemoizedFn(() => {
-    const info = meta.currentTaskPlanID
-    const coordinatorId = info?.coordinatorId
+    const coordinatorId = store.getState().taskStatus.coordinatorId
     if (!coordinatorId) return
 
     const params: AIInputEvent = {
@@ -100,7 +99,7 @@ export const useTaskChatExtraAction = () => {
       SyncID: randomString(8),
     }
     onSend({ token: sessionId, type: 'task', params })
-    meta.currentTaskPlanID = undefined
+    store.getState().updateTaskLoadingStatus({ taskID: '', status: AITaskStatus.created, coordinatorId: '' })
     closeChatReview()
   })
 

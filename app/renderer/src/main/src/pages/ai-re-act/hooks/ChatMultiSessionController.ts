@@ -136,7 +136,6 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     casualMemoryList: cloneDeep(DefaultMemoryList),
     taskMemoryList: cloneDeep(DefaultMemoryList),
     notifyMessageTimer: null,
-    currentTaskPlanID: undefined,
     currentTaskPlanActiveNode: new Set(),
     historyReviewReleaseID: {},
     currentPlanReviewExtraId: '',
@@ -783,7 +782,7 @@ export class ChatMultiSessionController {
       if (params.IsFreeInput) {
         const { casualLoading, currentCasualTaskID } = store.getState()
         // 如果自由对话引起了任务规划，那么自由对话其实是空闲状态
-        const isCasualIdle = casualLoading && currentCasualTaskID === meta.currentTaskPlanID?.taskID
+        const isCasualIdle = casualLoading && currentCasualTaskID === store.getState().taskStatus.taskID
 
         if (!casualLoading || isCasualIdle) {
           // 自由对话没有问题进行中时，才改变loading的title
@@ -1109,7 +1108,7 @@ export class ChatMultiSessionController {
         handleFunc({
           sessionId,
           res,
-          chatType: meta.currentTaskPlanID?.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
+          chatType: store.getState().taskStatus.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
           store,
           rawData,
           request,

@@ -171,7 +171,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 /** @name chat-信息流展示 */
 const TYPE = 'task'
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-  const { scrollToBottom, taskStatus } = props
+  const { scrollToBottom } = props
   const listRootRef = useRef<HTMLDivElement>(null)
 
   const [highlightedItem, setHighlightedItem] = useState<{ index: number; token: number } | null>(null)
@@ -246,10 +246,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     [],
   )
 
-  const Footer = useCallback(
-    () => <TaskLoading className={styles['task-loading-footer']} taskStatus={taskStatus} />,
-    [taskStatus],
-  )
+  const Footer = useCallback(() => <TaskLoading className={styles['task-loading-footer']} />, [])
   const Header = useCallback(
     () =>
       taskLoadMoreLoading ? (

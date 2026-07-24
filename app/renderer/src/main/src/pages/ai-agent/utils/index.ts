@@ -284,6 +284,7 @@ export const onReStart = (props: ReStartParams) => {
       ...AIAgentSettingDefault,
       ...activeChat.StartParams,
       PreferSessionCachedConfig: true,
+      UserQuery: '',
     }
     // 发送初始化参数
     const aiInputEvent: AIInputEvent = {

@@ -5,7 +5,7 @@ import { AIChatQSDataTypeEnum, ChatTaskDefaultGroup, type ChatTaskNodeGroup } fr
 import { getAIStatusPresentation } from '../../utils/AIStatusUtils'
 import { useVectorStripeBg } from './hooks/useVectorStripeBg'
 import { useConcurrentStreamCardStyle } from './hooks/useConcurrentStreamCardStyle'
-import { useCurrentStore, useCurrentRawData, useCurrentMeta } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentStore, useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import type {
   ConcurrentStreamCardHeardWrapperProps,
@@ -77,9 +77,9 @@ const ConcurrentStreamCardHeardWrapper: FC<ConcurrentStreamCardHeardWrapperProps
   const { token, expand, expandToggle } = props
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
-  const metaData = useCurrentMeta()
 
   const renderNum = useStore(store, (state) => state.tasks[token]?.renderNum)
+  const coordinatorId = useStore(store, (state) => state.taskStatus.coordinatorId)
 
   const raw = useCreation(() => {
     if (!rawData) return undefined
@@ -99,7 +99,7 @@ const ConcurrentStreamCardHeardWrapper: FC<ConcurrentStreamCardHeardWrapperProps
   })
   return (
     <ConcurrentStreamCardHeard
-      coordinatorId={metaData.currentTaskPlanID?.coordinatorId}
+      coordinatorId={coordinatorId}
       token={token}
       isChildWindow={false}
       expand={expand}
