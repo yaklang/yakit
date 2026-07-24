@@ -1,0 +1,111 @@
+.root {
+  width: 100%;
+  max-height: 200px;
+  overflow: auto;
+  border-radius: 4px;
+  background: var(--Colors-Use-Neutral-Bg);
+  font-family: var(
+    --font-family-code,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    'Liberation Mono',
+    'Courier New',
+    monospace
+  );
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.preamble {
+  padding: 6px 8px 2px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.section {
+  border-top: 1px solid var(--Colors-Use-Neutral-Border);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  border: none;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  color: var(--Colors-Use-Neutral-Text-2-Label);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sectionHeader:hover {
+  color: var(--Colors-Use-Main-Primary);
+}
+
+.caret {
+  display: inline-flex;
+  width: 12px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  transform: rotate(0deg);
+  transition: transform 0.15s ease;
+}
+
+.caretCollapsed {
+  transform: rotate(-90deg);
+}
+
+.sectionTitle {
+  font-weight: 500;
+}
+
+.sectionBody {
+  padding-bottom: 4px;
+}
+
+.line {
+  display: flex;
+  min-width: 0;
+  padding: 0 8px 0 4px;
+  white-space: pre;
+  word-break: break-all;
+}
+
+.prefix {
+  flex: 0 0 14px;
+  user-select: none;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.text {
+  min-width: 0;
+  flex: 1;
+}
+
+.context {
+  background: transparent;
+}
+
+.remove {
+  background: color-mix(in srgb, var(--Colors-Use-Error-Primary) 12%, transparent);
+}
+
+.add {
+  background: color-mix(in srgb, var(--Colors-Use-Success-Primary) 14%, transparent);
+}
+
+.meta {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.raw {
+  color: var(--Colors-Use-Neutral-Text-2-Label);
+}
+
+.ws {
+  opacity: 0.45;
+}

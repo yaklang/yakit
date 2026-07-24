@@ -135,7 +135,7 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
     } else {
       emiter.emit('setYakitHeaderDraggable', true)
     }
-  }, [visible])
+  }, [visible, afterVisible])
 
   const close = () => {
     setVisible(false)

@@ -3,6 +3,8 @@ import { WebFuzzerAiStoreCardRightHeader } from '@/pages/ai-agent/components/Web
 import { AIYaklangCodeProps } from './type'
 import ChatCard from '../ChatCard'
 // import { OutlinCompileTwoIcon } from '@/assets/icon/outline'
+import { YakitInlinePatchDiff } from '@/components/yakitUI/YakitInlinePatchDiff/YakitInlinePatchDiff'
+import { isInlinePatchContent } from '@/components/yakitUI/YakitInlinePatchDiff/parseInlinePatch'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitIMonacoEditor } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import ModalInfo from '../ModelInfo'
@@ -111,6 +113,12 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
     return chatDataStoreKey === 'WebFuzzerAiStore'
   }, [chatDataStoreKey])
 
+  const isYakRunnerAiStore = useMemo(() => chatDataStoreKey === 'yakRunnerPageAiStore', [chatDataStoreKey])
+
+  const showInlinePatchDiff = useMemo(() => {
+    return isYakRunnerAiStore && isInlinePatchContent(content)
+  }, [isYakRunnerAiStore, content])
+
   const titleExtra = useMemo(() => {
     if (!modalInfo) return null
     return (
@@ -130,7 +138,7 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
       {/*  titleIcon={<OutlinCompileTwoIcon />}  */}
       <ChatCard titleText={nodeLabel} titleExtra={titleExtra}>
         <div ref={codeContainerRef} className={styles['ai-yaklang-code']}>
-          {renderCode()}
+          {showInlinePatchDiff ? <YakitInlinePatchDiff content={content} /> : renderCode()}
         </div>
         {referenceNode}
       </ChatCard>

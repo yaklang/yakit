@@ -123,7 +123,7 @@
     "chalk": "5.6.2",
     "commander": "13.1.0",
     "concurrently": "^6.2.0",
-    "electron": "27.0.0",
+    "electron": "^27.0.0",
     "electron-builder": "26.15.3",
     "env-cmd": "^10.1.0",
     "execa": "8.0.0",
