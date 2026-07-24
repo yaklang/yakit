@@ -79,8 +79,9 @@ interface EchoResult {
 
 interface YakitHomeConfig {
   YAKIT_HOME: string
-  lang: string
-  mode: string
+  softLange: string
+  yakitMode: string
+  softTheme: string
   workspaceHistory: string[]
   autoStart: boolean
   currentHome: string

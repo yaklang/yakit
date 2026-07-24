@@ -11,6 +11,8 @@ const DEFAULT_CONFIG = {
   YAKIT_HOME: '',
   workspaceHistory: [],
   autoStart: false,
+  softLange: 'zh',
+  yakitMode: 'classic',
 }
 
 // --- 版本环境变量映射 ---
