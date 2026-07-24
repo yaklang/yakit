@@ -451,6 +451,8 @@ export const HTTP_PACKET_EDITOR_FONT_SIZE = 'HTTP_PACKET_EDITOR_FONT_SIZE'
 export const HTTP_PACKET_EDITOR_Line_Breaks = 'HTTP_PACKET_EDITOR_Line_Breaks'
 /**@name 是否显示响应信息 */
 export const HTTP_PACKET_EDITOR_Response_Info = 'HTTP_PACKET_EDITOR_Response_Info'
+/**@name 是否显示编辑器快捷操作栏 */
+export const HTTP_PACKET_EDITOR_Action_Bar = 'HTTP_PACKET_EDITOR_Action_Bar'
 
 interface DataCompareProps {
   rightCode: string
