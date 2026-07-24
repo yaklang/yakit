@@ -28,13 +28,12 @@ import { formatAIAgentSetting, onReStart } from '../../utils'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const store = useCurrentStore()
-  const meta = useCurrentMeta()
   const planHistoryList = useStore(store, (state) => state.planHistoryList ?? [])
   const taskTree = useStore(store, (state) => state.taskChat.plan.task_tree ?? [])
   const taskName = useStore(store, (state) => state.taskChat.plan.root_task_name ?? '')
 
   const currentTaskItem = useCreation(() => {
-    const coordinatorId = meta.currentTaskPlanID?.coordinatorId || ''
+    const coordinatorId = store.getState().taskStatus.coordinatorId || ''
     const item: AIAgentGrpcApi.PlanHistory = {
       coordinator_id: coordinatorId,
       created_at: '',
@@ -143,9 +142,8 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const sessionId = useCurrentSessionId()
-  const meta = useCurrentMeta()
   const store = useCurrentStore()
-  const taskStatus = useStore(store, (state) => state.taskStatus)
+  const isExecuting = useStore(store, (state) => state.taskStatus.loading)
   const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
   const execute = useStore(store, (state) => state.execute)
 
@@ -156,33 +154,26 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 
   const sendRecoverParamsRef = useRef<SendRecoverParams>()
 
-  const isExecuting = useCreation(() => {
-    return taskStatus.loading
-  }, [taskStatus.loading])
-
   const loading = useCreation(() => {
     return sendRecoverParamsRef.current?.taskId === taskId && isExecuting
   }, [isExecuting, taskId])
 
-  const getTaskInfo = useMemoizedFn(() => {
-    return meta.currentTaskPlanID
-  })
-  const getTaskId = useMemoizedFn(() => {
-    const taskInfo = getTaskInfo()
-    return taskInfo?.taskID || ''
-  })
   useUpdateEffect(() => {
     if (!isExecuting && sendRecoverParamsRef.current) {
       onSendRecover(sendRecoverParamsRef.current)
     }
   }, [isExecuting])
+  /**
+   * TODO - 现在的版本中，任务中断后状态不一定是error
+   */
   const isShow = useMemoizedFn(() => {
-    const currentCoordinatorId = getTaskInfo()?.coordinatorId || ''
-    const taskInfo = getTaskInfo()
+    const taskStatus = store.getState().taskStatus
+    const currentCoordinatorId = taskStatus?.coordinatorId || ''
+
     let show = true
     if (!execute) return true
     if (coordinatorId === currentCoordinatorId) {
-      show = taskInfo?.status === AITaskStatus.error && !taskStatus?.loading
+      show = taskStatus?.status === AITaskStatus.error && !taskStatus?.loading
     }
     // 如果当前有任务正在等待被恢复
     if (sendRecoverParamsRef.current) {
@@ -191,7 +182,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
         sendRecoverParamsRef.current.coordinatorId === coordinatorId && sendRecoverParamsRef.current.taskId === taskId
       )
     }
-    const isStopping = taskInfo?.status === AITaskStatus.error && taskStatus.loading
+    const isStopping = taskStatus?.status === AITaskStatus.error && taskStatus.loading
 
     // 如果系统正处于正在停止/取消任务的全局 Loading 状态，或当前任务本身正处于停止进行中的状态
     if (cancelTaskLoading || isStopping) {
@@ -210,12 +201,13 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       SyncID: randomString(8),
     }
     onSend({ token: sessionId, type: 'task', params: info })
-    meta.currentTaskPlanID = undefined
+    store.getState().updateTaskLoadingStatus({ taskID: '', status: AITaskStatus.created, coordinatorId: '' })
 
     sendRecoverParamsRef.current = undefined
   })
   const onRecover = useMemoizedFn(() => {
-    const currentTaskId = getTaskId()
+    const taskStatus = store.getState().taskStatus
+    const currentTaskId = taskStatus.taskID
 
     if (!coordinatorId) return
     sendRecoverParamsRef.current = {

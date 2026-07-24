@@ -20,13 +20,14 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
     return
   }
 
+  const taskID = store.getState().taskStatus.taskID
   const chatData: AIChatQSData = {
     ...genBaseAIChatData(res),
     chatType: chatType,
     id: data.id,
     type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    TaskId: meta.currentTaskPlanID?.taskID ? `${meta.currentTaskPlanID.taskID}-default` : undefined,
+    TaskId: taskID ? `${taskID}-default` : undefined,
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
@@ -172,7 +173,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
     data: { ...cloneDeep(data) },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -231,7 +232,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
     data: cloneDeep(data),
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -303,7 +304,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
     data: { ...cloneDeep(data) },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
+      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -597,7 +598,7 @@ const handleDetachedPlanReview: AIMessageHandler = (requestInfo) => {
       data: { ...cloneDeep(data) },
       TaskId: generateTaskNodeDataID({
         chatType: chatType,
-        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.coordinatorId,
+        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
         taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),

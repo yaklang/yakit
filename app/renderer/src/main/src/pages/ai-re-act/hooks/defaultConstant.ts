@@ -1,4 +1,5 @@
 import type { AIToolResult, CurrentExecTaskTree, PlanItemDetailsData, TodoListCardData } from './aiRender'
+import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
 import type { AIQuestionQueues, PlanLoadingStatus } from './type'
 
@@ -134,6 +135,9 @@ export const DefaultPlanLoadingStatus: PlanLoadingStatus = {
   loading: false,
   plan: '加载中...',
   task: '加载中...',
+  taskID: '',
+  status: AITaskStatus.created,
+  coordinatorId: '',
 }
 
 export const DefaultPlanHistoryList: AIAgentGrpcApi.PlanHistoryList = {

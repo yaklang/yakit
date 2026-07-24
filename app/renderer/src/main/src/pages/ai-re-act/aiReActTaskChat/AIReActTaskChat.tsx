@@ -140,15 +140,15 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
   const { onExtraAction } = useTaskChatExtraAction()
 
   const store = useCurrentStore()
-  const meta = useCurrentMeta()
   const streams = useStore(store, (state) => state.taskChat.elements)
   const execute = useStore(store, (state) => state.execute)
-  const taskStatus = useStore(store, (state) => state.taskStatus)
+  const taskId = useStore(store, (state) => state.taskStatus.taskID)
   const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
+
   return (
     <>
       <div className={styles['tab-content']}>
-        <AIAgentChatStream scrollToBottom={scrollToBottom} taskStatus={taskStatus} />
+        <AIAgentChatStream scrollToBottom={scrollToBottom} />
       </div>
       {!currentPlanReviewToken.token && streams.length > 0 && (
         <div className={styles['footer']}>
@@ -173,7 +173,7 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
               {t('AIReActTaskChatContent.globalDirective')}
             </YakitButton>
           </AIGlobalCommandPopover>
-          {execute && !!meta.currentTaskPlanID && <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />}
+          {execute && !!taskId && <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />}
           <YakitButton
             type="outline2"
             icon={<OutlinePositionIcon />}
@@ -346,9 +346,8 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
     // 加入上下文后，停止任务再恢复任务
     syncIdOfAddAndReExecute.current = randomString(8)
     onAddToContext(syncIdOfAddAndReExecute.current)
-    const info = meta.currentTaskPlanID
-    const taskId = info?.taskID
-    const coordinatorId = info?.coordinatorId
+    const taskId = taskStatus.taskID
+    const coordinatorId = taskStatus.coordinatorId
     if (!coordinatorId) return
     currentCoordinatorIdRef.current = coordinatorId
 
@@ -611,14 +610,11 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const store = useCurrentStore()
-  const meta = useCurrentMeta()
 
   const taskStatus = useStore(store, (state) => state.taskStatus)
   const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
 
-  const status = useCreation(() => {
-    return meta.currentTaskPlanID?.status
-  }, [taskStatus.loading])
+  const status = useStore(store, (state) => state.taskStatus.status)
   const renderBtn = useMemoizedFn(() => {
     switch (status) {
       case AITaskStatus.inProgress:

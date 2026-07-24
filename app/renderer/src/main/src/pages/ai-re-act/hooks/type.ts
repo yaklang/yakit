@@ -116,6 +116,12 @@ export interface PlanLoadingStatus {
   loading: boolean
   plan: string
   task: string
+  /** 当前任务规划的 re_act_task_id，'' 表示无活动任务规划 */
+  taskID: string
+  /** 当前任务规划状态，'' (AITaskStatus.created) 表示无 */
+  status: AITaskStatusType
+  /** 当前任务规划的 coordinatorId，'' 表示无 */
+  coordinatorId: string
 }
 
 export interface UseChatIPCState {

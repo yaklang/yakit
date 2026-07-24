@@ -880,7 +880,7 @@ export declare namespace AIAgentGrpcApi {
   /** 问题状态变化消息 */
   export interface ReactTaskChanged {
     react_task_id: string
-    react_task_now_status: string
+    react_task_now_status: AITaskStatusType
     react_task_old_status: string
   }
 

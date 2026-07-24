@@ -63,24 +63,29 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
     return
   }
-  meta.currentTaskPlanID = {
-    taskID: startInfo['re-act_task'],
-    status: AITaskStatus.inProgress,
-    // 取消任务规划需要的数据id
-    coordinatorId: startInfo.coordinator_id,
-  }
+
   // 开始任务规划后，刷新历史任务树
   sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   /** 获取最新任务树状态 */
   sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
+
+  const taskStatus = {
+    taskID: startInfo['re-act_task'],
+    status: AITaskStatus.inProgress,
+    // 取消任务规划需要的数据id
+    coordinatorId: startInfo.coordinator_id,
+    loading: true,
+    plan: '加载中...',
+    task: '加载中...',
+  }
   store.getState().updateState({
-    taskStatus: { loading: true, plan: '加载中...', task: '加载中...' },
+    taskStatus,
     showPlanList: true,
     cancelTaskLoading: false,
   })
 
   // 生成任务规划里的默认任务聚合组
-  const taskID = `${meta.currentTaskPlanID.taskID}-default`
+  const taskID = `${taskStatus.taskID}-default`
   const chatData: AIChatQSData = {
     ...genBaseAIChatData(res),
     id: taskID,
@@ -105,7 +110,7 @@ const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
     return
   }
-  if (startInfo.coordinator_id === meta.currentTaskPlanID?.coordinatorId) {
+  if (startInfo.coordinator_id === store.getState().taskStatus.coordinatorId) {
     const chatData: AIChatQSData = {
       ...genBaseAIChatData(res),
       chatType: 'task',
@@ -345,9 +350,9 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
     if (store.getState().currentCasualTaskID && store.getState().currentCasualTaskID === react_task_id) {
       store.getState().updateState({ focusMode: '', cancelCasualLoading: false, casualLoading: false })
     }
-    if (meta.currentTaskPlanID?.taskID === react_task_id) {
+    if (store.getState().taskStatus.taskID === react_task_id) {
       // 该问题触发了任务规划, 所以需要将任务规划状态也调整
-      meta.currentTaskPlanID.status = info.react_task_now_status as AITaskStatus
+      store.getState().updateTaskLoadingStatus({ status: info.react_task_now_status })
       store.getState().updateState({ cancelTaskLoading: false })
     }
   }

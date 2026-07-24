@@ -26,7 +26,7 @@ import { OutlineHandleColorsIcon, ColorsOutlineWarpIcon } from '@/assets/icon/co
 import { AIChatQSDataTypeEnum, AIReviewType } from '../../../ai-re-act/hooks/aiRender'
 import { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useCurrentMeta, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
@@ -41,7 +41,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const { onSend } = useAIAgentDispatcher()
 
   const sessionId = useCurrentSessionId()
-  const metaData = useCurrentMeta()
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const taskStatusLoading = useStore(store, (state) => state.taskStatus.loading)
@@ -278,7 +277,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   })
 
   const submitDetachedPlan = useMemoizedFn(() => {
-    const taskId = metaData.currentTaskPlanID
+    const taskId = store.getState().taskStatus.taskID
     if (taskStatusLoading && taskId) {
       pendingDetachedPlanSubmitRef.current = true
       store.getState().updateState({
