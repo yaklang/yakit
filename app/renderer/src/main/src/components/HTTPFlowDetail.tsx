@@ -1597,16 +1597,34 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   const secondNodeReqExtraBtn = () => {
     let extraBtn: ReactElement[] = []
     if (flow?.IsTooLargeRequest) {
+      // 超大 multipart 请求的 body 已骨架化（只剩占位符），「查看 Body」无意义，
+      // 用每个落盘文件 part 的一项「查看 <filename>」替换，点击直接打开本地 part 文件，
+      // 和打开 TooLargeRequestHeaderFile / flat TooLargeRequestBodyFile 的机制一致。
+      const multipartFiles = flow?.MultipartFiles ?? []
+      const hasMultipart = multipartFiles.length > 0
+      const bodyItems: YakitMenuItemType[] = hasMultipart
+        ? multipartFiles.map((f) => {
+            // 文件名过长时头尾截断（保留扩展名），完整名通过 tooltip 展示，避免撑宽下拉菜单
+            const shortName = truncateFilename(f.Filename)
+            return {
+              key: `multipart-file-${f.PartIndex}`,
+              label: `${shortName} (${formatMultipartFileSize(f.Size)})`,
+              title: `${f.Filename} (${formatMultipartFileSize(f.Size)})`,
+            }
+          })
+        : [{ key: 'tooLargeRequestBodyFile', label: t('HTTPFlowDetailRequestAndResponse.viewBody') }]
+
       extraBtn.push(
         <YakitDropdownMenu
           key="intact-req"
           menu={{
+            isHint: true,
             data: [
               {
                 key: 'tooLargeRequestHeaderFile',
                 label: t('HTTPFlowDetailRequestAndResponse.viewHeader'),
               },
-              { key: 'tooLargeRequestBodyFile', label: t('HTTPFlowDetailRequestAndResponse.viewBody') },
+              ...bodyItems,
             ],
             onClick: ({ key }) => {
               switch (key) {
@@ -1616,8 +1634,17 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 case 'tooLargeRequestBodyFile':
                   openTooLargePacketFile(flow.TooLargeRequestBodyFile)
                   break
-                default:
+                default: {
+                  // multipart-file-<partIndex>: open the spilled part file by
+                  // its absolute FilePath from the manifest.
+                  const m = /^multipart-file-(\d+)$/.exec(key)
+                  if (m) {
+                    const idx = parseInt(m[1], 10)
+                    const f = multipartFiles.find((x) => x.PartIndex === idx)
+                    if (f?.FilePath) openTooLargePacketFile(f.FilePath)
+                  }
                   break
+                }
               }
             },
           }}
@@ -2168,4 +2195,29 @@ const ResByteCountTag: FC<{ editor?: IMonacoEditor; pageType?: HTTPHistorySource
   ) : (
     <></>
   )
+}
+
+// formatMultipartFileSize renders a human-readable byte size for a multipart
+// file part menu item (e.g. "1.5 MB"). Kept local to avoid a new shared util.
+function formatMultipartFileSize(bytes: number): string {
+  if (bytes <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let i = 0
+  let n = bytes
+  while (n >= 1024 && i < units.length - 1) {
+    n /= 1024
+    i++
+  }
+  return `${n >= 100 || i === 0 ? Math.round(n) : n.toFixed(1)} ${units[i]}`
+}
+
+// truncateFilename 缩短过长的文件名：保留开头与结尾（通常含扩展名），中间用 "…" 占位，
+// 避免下拉项被撑得过宽。完整名通过菜单项的 title（tooltip）展示。
+function truncateFilename(name: string, maxLen = 28): string {
+  if (!name || name.length <= maxLen) return name
+  // 结尾保留约 1/3 长度，通常足以容纳扩展名
+  const tail = Math.max(6, Math.floor(maxLen / 3))
+  const head = maxLen - tail - 1 // 1 字符留给 "…"
+  if (head < 4) return name.slice(0, maxLen - 1) + '…'
+  return name.slice(0, head) + '…' + name.slice(name.length - tail)
 }

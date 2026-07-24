@@ -82,6 +82,9 @@ export interface HTTPFlow {
   TooLargeRequestBodyFile: string
   IsRequestOversize?: boolean
   DisableRenderStyles: boolean
+  // 超大 multipart 请求的文件 part 列表（落盘 sidecar，manifest.json 派生）。
+  // 非空时详情页渲染「下载 xxx 文件」下拉，GetHTTPFlowBodyById 带 PartIndex 下载单个文件。
+  MultipartFiles?: MultipartFileInfo[]
 
   RequestString: string
   ResponseString: string
@@ -97,6 +100,15 @@ export interface FuzzableParams {
   OriginValue: Uint8Array
   AutoTemplate: Uint8Array
   IsHTTPS: boolean
+}
+
+export interface MultipartFileInfo {
+  PartIndex: number
+  FieldName: string
+  Filename: string
+  ContentType: string
+  Size: number
+  FilePath: string
 }
 
 export interface HistoryTableTitleShow {
