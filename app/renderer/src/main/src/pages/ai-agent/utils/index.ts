@@ -1,13 +1,16 @@
 import { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
-import { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
 import { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import { HandleStartParams } from '../aiAgentChat/type'
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { omit } from 'lodash'
 import { randomString } from '@/utils/randomUtil'
 import { isIRify } from '@/utils/envfile'
+import { UseChatIPCStartParams } from '../useContext/AIAgentContext'
+import { AISession } from '../type/aiChat'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
@@ -263,4 +266,35 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
 /** 生成对话得 SessionId */
 export const createActiveChatSessionId = () => {
   return randomString(40)
+}
+
+interface ReStartParams {
+  /** 优先级高于 activeChat.StartParams */
+  setting?: AIStartParams
+  activeChat: AISession
+  onStart: (params: UseChatIPCStartParams) => void
+}
+/** 重启会话 */
+export const onReStart = (props: ReStartParams) => {
+  const { setting, activeChat, onStart } = props
+  if (!activeChat?.SessionID) return
+  const execute = globalSessionEngine.ensureSession(activeChat.SessionID)?.store?.getState()?.execute ?? false
+  if (!execute) {
+    const request: AIStartParams = setting ?? {
+      ...AIAgentSettingDefault,
+      ...activeChat.StartParams,
+      PreferSessionCachedConfig: true,
+    }
+    // 发送初始化参数
+    const aiInputEvent: AIInputEvent = {
+      IsStart: true,
+      Params: {
+        ...request,
+      },
+    }
+    onStart({
+      token: activeChat?.SessionID,
+      params: aiInputEvent,
+    })
+  }
 }

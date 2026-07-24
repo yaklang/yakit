@@ -1,5 +1,5 @@
 import React, { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
-import { useCreation, useMemoizedFn, useSafeState } from 'ahooks'
+import { useCreation, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
 import { cloneDeep } from 'lodash'
 
 import AIAgentContext, {
@@ -9,7 +9,7 @@ import AIAgentContext, {
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
-import { createActiveChatSessionId, getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import { createActiveChatSessionId, getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import {
@@ -346,6 +346,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const activeID = useCreation(() => {
     return activeChat?.SessionID
   }, [activeChat])
+
+  /** 切换会话 */
+  useUpdateEffect(() => {
+    if (activeChat) onReStart({ activeChat, onStart })
+  }, [activeID])
 
   const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
     const newChat: AIHandleStartExtraProps = resolveStartExtraParams?.(data) ?? {

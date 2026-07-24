@@ -632,7 +632,6 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
   const status = useCreation(() => {
     return meta.currentTaskPlanID?.status
   }, [taskStatus.loading])
-
   const renderBtn = useMemoizedFn(() => {
     switch (status) {
       case AITaskStatus.inProgress:

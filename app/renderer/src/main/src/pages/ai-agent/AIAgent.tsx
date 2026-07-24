@@ -32,6 +32,7 @@ import { grpcDeleteAISession } from './grpc'
 import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { onReStart } from './utils'
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = '20260113'
@@ -98,6 +99,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   }, [setting])
 
   const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(YakitRoute.AI_Agent, YakitRoute.AI_Agent)
+
+  useUpdateEffect(() => {
+    if (activeChat) onReStart({ activeChat, onStart })
+  }, [activeChat?.SessionID])
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
