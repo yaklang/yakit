@@ -141,6 +141,7 @@ import { UserAvatarIMBadge } from './userMenu/UserAvatarIMBadge'
 import { judgeDynamic } from './userMenu/judgeDynamic'
 import { useUserMenu } from './userMenu/useUserMenu'
 import { UserMenuModals } from './userMenu/UserMenuModals'
+import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 
 // re-export 保持外部导入路径兼容
 export { randomAvatarColor }
@@ -1590,7 +1591,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             size="small"
             buttonStyle="solid"
             value={engineBuildType}
-            onChange={(e) => setEngineBuildType(e.target.value as 'full' | 'slim')}
+            onChange={(e) => setEngineBuildType(e.target.value)}
             options={[
               { label: '标准版本', value: 'full' },
               { label: '轻量版本', value: 'slim' },
@@ -1612,7 +1613,11 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             {renderVersionList.map((v, index) => (
               <div className={styles['version-list-item']} key={index} onClick={() => versionListItemClick(v)}>
                 {v}
-                {showSlimOption && engineBuildType === 'slim' ? <span className={styles['slim-tag']}>轻量</span> : null}
+                {showSlimOption && engineBuildType === 'slim' ? (
+                  <YakitTag color="warning" size="small">
+                    轻量
+                  </YakitTag>
+                ) : null}
               </div>
             ))}
           </>

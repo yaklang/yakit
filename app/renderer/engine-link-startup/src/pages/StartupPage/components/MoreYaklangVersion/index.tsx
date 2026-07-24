@@ -3,8 +3,9 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import React, { useEffect, useMemo, useState } from 'react'
 import { OutlineSearchIcon } from '@/assets/outline'
 import { isYakit } from '@/utils/envfile'
-import classNames from 'classnames'
 import styles from './MoreYaklangVersion.module.scss'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 
 interface MoreYaklangVersionProps {
   moreYaklangVersionList: string[]
@@ -45,22 +46,16 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
     <div className={styles['more-versions-popover-content']}>
       {showSlimOption && (
         <div className={styles['engine-build-type-header']}>
-          <div
-            className={classNames(styles['build-type-item'], {
-              [styles['build-type-item-active']]: engineBuildType === 'full',
-            })}
-            onClick={() => setEngineBuildType('full')}
-          >
-            标准版本
-          </div>
-          <div
-            className={classNames(styles['build-type-item'], {
-              [styles['build-type-item-active']]: engineBuildType === 'slim',
-            })}
-            onClick={() => setEngineBuildType('slim')}
-          >
-            轻量版本
-          </div>
+          <YakitRadioButtons
+            size="small"
+            buttonStyle="solid"
+            value={engineBuildType}
+            onChange={(e) => setEngineBuildType(e.target.value)}
+            options={[
+              { label: '标准版本', value: 'full' },
+              { label: '轻量版本', value: 'slim' },
+            ]}
+          />
         </div>
       )}
       <div className={styles['search-version-header']}>
@@ -77,7 +72,11 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
             {renderVersionList.map((v) => (
               <div className={styles['version-list-item']} key={v} onClick={() => versionListItemClick(v)}>
                 <span className={styles['version-text']}>{v}</span>
-                {showSlimOption && engineBuildType === 'slim' ? <span className={styles['slim-tag']}>轻量</span> : null}
+                {showSlimOption && engineBuildType === 'slim' ? (
+                  <YakitTag color="warning" size="small">
+                    轻量
+                  </YakitTag>
+                ) : null}
               </div>
             ))}
           </>

@@ -829,15 +829,6 @@
       span.active {
         color: var(--Colors-Use-Main-Primary);
       }
-      .slim-tag {
-        flex-shrink: 0;
-        font-size: 10px;
-        color: var(--Colors-Use-Main-Primary);
-        border: 1px solid var(--Colors-Use-Main-Border);
-        border-radius: 2px;
-        padding: 0 4px;
-        line-height: 16px;
-      }
     }
   }
 }
