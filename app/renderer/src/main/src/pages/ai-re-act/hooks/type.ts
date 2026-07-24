@@ -101,7 +101,7 @@ export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc
   /** 用户手动介入逻辑 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
   /** 清空todo-list数据 */
-  resetTodoListData: () => void
+  resetTodoListData: (taskId?: string) => void
 }
 // #endregion
 

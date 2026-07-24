@@ -24,6 +24,8 @@ import { grpcGetAIToolList } from '../aiToolList/utils'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { generateTaskChatExecution } from '../defaultConstant'
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { findPlanTaskSubtreeEnd, getPlanTaskLevel } from '@/pages/ai-agent/utils'
+import { randomString } from '@/utils/randomUtil'
 
 const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => {
   const { editable, planReviewTreeKeywordsMap, currentPlansId } = props
@@ -32,125 +34,50 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
     valuePropName: 'list',
     trigger: 'setList',
   })
-  /**
-   * 获取某个任务的下一级子任务的最大编号
-   * @param data 任务列表
-   * @param parentIndex 父任务的 index（如 "1-1"）
-   * @returns 最大的子任务编号（如 1、2、3），如果没有子任务则返回 0
-   */
-  const getMaxChildIndex = (data: AIAgentGrpcApi.PlanTask[], parentIndex: string): number => {
-    const childPrefix = `${parentIndex}-`
-    const children = data
-      .filter((task) => task.index.startsWith(childPrefix))
-      .map((task) => {
-        const childIndex = task.index.substring(childPrefix.length)
-        return parseInt(childIndex.split('-')[0]) // 提取第一段数字
-      })
 
-    return children.length > 0 ? Math.max(...children) : 0
-  }
-  /**添加子节点 */
+  /** 添加子节点 */
   const onAddSubNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
-    const parentIndex = item.index
-    const maxChildIndex = getMaxChildIndex(list, parentIndex)
-    const newChildIndex = `${parentIndex}-${maxChildIndex + 1}`
+    const parentPos = list.findIndex((task) => task.task_id === item.task_id)
+    if (parentPos === -1) return
 
+    const parentLevel = getPlanTaskLevel(item)
     const newChildTask: AIAgentGrpcApi.PlanTask = {
       ...generateTaskChatExecution(),
-      index: newChildIndex,
+      task_id: randomString(16),
+      level: parentLevel + 1,
       isUserAdd: true,
     }
 
-    // 找到父任务的位置
-    const parentPos = list.findIndex((task) => task.index === parentIndex)
-    if (parentPos === -1) return
-
-    const insertPos = parentPos + 1
+    const insertPos = findPlanTaskSubtreeEnd(list, parentPos) + 1
     list.splice(insertPos, 0, newChildTask)
     setList([...list])
     onFocusAfterAddNode(newChildTask)
   })
-  /**
-   * 获取某个层级的最后一个兄弟节点的 index
-   * @param data 任务列表
-   * @param parentIndex 父级 index（如 "1"、"1-1"）
-   * @returns 该层级的最后一个兄弟节点的 index（如 "3"、"1-2"）
-   */
-  const getLastSiblingIndex = (data: AIAgentGrpcApi.PlanTask[], siblingOfIndex: string): string | null => {
-    const parts = siblingOfIndex.split('-')
-    const parentIndex = parts.slice(0, -1).join('-') // 父级 index(如 "1-1" → "1")
 
-    // 找出所有同层级的兄弟节点
-    const siblings = data.filter((task) => {
-      const taskParts = task.index.split('-')
-      if (taskParts.length !== parts.length) return false // 必须层级相同
-      const taskParent = taskParts.slice(0, -1).join('-')
-      return taskParent === parentIndex
-    })
-
-    if (siblings.length === 0) return null
-
-    // 找到最大的兄弟编号
-    const lastSibling = siblings.reduce((prev, current) => {
-      const prevNum = parseInt(prev.index.split('-').pop()!)
-      const currentNum = parseInt(current.index.split('-').pop()!)
-      return prevNum > currentNum ? prev : current
-    })
-
-    return lastSibling.index
-  }
-
-  /**
-   * 添加兄弟节点
-   * @description 目前根节点不允许添加兄弟元素，前端逻辑已做，不删
-   * */
+  /** 添加兄弟节点 */
   const onAddBrotherNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
-    const siblingOfIndex = item.index
+    if (getPlanTaskLevel(item) === 1) return
 
-    const lastSiblingIndex = getLastSiblingIndex(list, siblingOfIndex)
-    // 计算新兄弟的 index（如 "1-1" → "1-2"）
-    const parts = siblingOfIndex.split('-')
-    const parentIndex = parts.slice(0, -1).join('-')
-    const newSiblingNum = lastSiblingIndex
-      ? parseInt(lastSiblingIndex.split('-').pop()!) + 1
-      : parseInt(parts[parts.length - 1]) + 1
-    const newSiblingIndex = parentIndex ? `${parentIndex}-${newSiblingNum}` : `${newSiblingNum}`
+    const siblingPos = list.findIndex((task) => task.task_id === item.task_id)
+    if (siblingPos === -1) return
 
     const newSiblingTask: AIAgentGrpcApi.PlanTask = {
       ...generateTaskChatExecution(),
-      index: newSiblingIndex,
+      task_id: randomString(16),
+      level: getPlanTaskLevel(item),
       isUserAdd: true,
     }
 
-    const startIndex = list.findIndex((ele) => ele.index === siblingOfIndex)
-    if (startIndex === -1) return
-    const length = list.length
-    let insertPos = startIndex
-    for (let index = startIndex + 1; index < length; index++) {
-      const current = list[index]
-      if (parentIndex) {
-        if (current.index.startsWith(siblingOfIndex)) continue
-        insertPos = index
-        break
-      } else {
-        // 当前添加的兄弟元素为根节点
-        if (current.index.length === 1) {
-          insertPos = index
-          break
-        }
-      }
-      insertPos = index + 1
-    }
-
+    const insertPos = findPlanTaskSubtreeEnd(list, siblingPos) + 1
     list.splice(insertPos, 0, newSiblingTask)
     setList([...list])
     onFocusAfterAddNode(newSiblingTask)
   })
-  /**新增节点后，聚焦在该节点上 */
+
+  /** 新增节点后，聚焦在该节点上 */
   const onFocusAfterAddNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
     setTimeout(() => {
-      // 新增的节点如果没在显示区域内，需要滚动到节点的位置
-      const dom = document.getElementById(item.index)
+      const dom = document.getElementById(item.task_id)
       if (!dom) return
       const observer = new IntersectionObserver(
         (entries) => {
@@ -167,7 +94,6 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
               }, 200)
             }
           })
-          // 观察一次后立即断开连接
           observer.disconnect()
         },
         { threshold: 0.01 },
@@ -175,19 +101,24 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
       observer.observe(dom)
     }, 200)
   })
+
   const onRemoveNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
-    const newList = list.map((ele) => {
-      if (ele.index.startsWith(item.index)) {
-        ele.isRemove = true
+    const pos = list.findIndex((ele) => ele.task_id === item.task_id)
+    if (pos === -1) return
+    const end = findPlanTaskSubtreeEnd(list, pos)
+    const newList = list.map((ele, index) => {
+      if (index >= pos && index <= end) {
+        return { ...ele, isRemove: true }
       }
       return { ...ele }
     })
     setList([...newList])
   })
+
   const setItem = useMemoizedFn((item: AIAgentGrpcApi.PlanTask, option: SetItemOption) => {
     const { label, value } = option
     const newList = list.map((ele: AIAgentGrpcApi.PlanTask) => {
-      if (ele.index === item.index) {
+      if (ele.task_id === item.task_id) {
         ele = {
           ...ele,
           [label]: value,
@@ -197,6 +128,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
     })
     setList([...newList])
   })
+
   return (
     <div className={styles['ai-plan-review-tree']}>
       {list.length > 0 ? (
@@ -204,12 +136,12 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
           <div className={styles['dot']} />
           {list.map((item, index) => {
             return (
-              <React.Fragment key={item.index}>
+              <React.Fragment key={item.task_id}>
                 <AIPlanReviewTreeItem
                   order={index}
                   item={item}
-                  preIndex={list[index - 1]?.index || ''}
-                  nextIndex={list[index + 1]?.index || ''}
+                  preLevel={list[index - 1] ? getPlanTaskLevel(list[index - 1]) : 0}
+                  nextLevel={list[index + 1] ? getPlanTaskLevel(list[index + 1]) : 0}
                   editable={editable}
                   onAddSubNode={onAddSubNode}
                   onAddBrotherNode={onAddBrotherNode}
@@ -236,8 +168,8 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
   const {
     order,
     item,
-    preIndex,
-    nextIndex,
+    preLevel,
+    nextLevel,
     editable,
     onAddSubNode,
     onAddBrotherNode,
@@ -254,16 +186,13 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     Tools: [],
     Pagination: genDefaultPagination(100),
     Total: 0,
-  }) // 只展示前100条数据+选中得数据
+  })
   const [isRef, setIsRef] = useState<boolean>(false)
 
   useEffect(() => {
     if (open) getToolList()
   }, [open])
-  /**
-   * 目前工具没有做新增功能，所以暂时显示得前100条，搜索功能使用得select默认搜索，没有调用接口；接口ToolName字段查询不是模糊搜索
-   * TODO 工具新增功能后，需要修改此处搜索查询功能
-   */
+
   const getToolList = useDebounceFn(
     useMemoizedFn(async (page?: number) => {
       setLoading(true)
@@ -299,13 +228,8 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     }),
     { wait: 500 },
   ).run
-  const indexList = useCreation(() => {
-    return item.index.trim().split('-')
-  }, [item.index])
-  /**层级 */
-  const level = useCreation(() => {
-    return indexList.length
-  }, [indexList])
+
+  const level = useCreation(() => getPlanTaskLevel(item), [item])
 
   const onSetExpand = useMemoizedFn(() => {
     if (item.isRemove) {
@@ -326,7 +250,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
         onAddSubNode(item)
         break
       case 'brother':
-        if (item.index.length === 1) return
+        if (level === 1) return
         onAddBrotherNode(item)
         break
       default:
@@ -344,13 +268,14 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
   const onSetGoal = useMemoizedFn((value: string) => {
     setItem(item, { label: 'goal', value })
   })
-  //#region 关联工具及其解释说明
+
   const extraInfo: AIAgentGrpcApi.PlanReviewRequireExtra | undefined = useCreation(() => {
-    const info = planReviewTreeKeywordsMap.get(item.index)
+    const info = planReviewTreeKeywordsMap.get(item.task_id)
     if (info?.plans_id === currentPlansId) {
       return info
     }
-  }, [item.index, planReviewTreeKeywordsMap, currentPlansId])
+  }, [item.task_id, planReviewTreeKeywordsMap, currentPlansId])
+
   useEffect(() => {
     setItem(item, { label: 'description', value: extraInfo?.description || '' })
   }, [extraInfo?.description])
@@ -359,6 +284,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
       onSetTool(extraInfo?.keywords || [])
     }
   }, [extraInfo?.keywords])
+
   const onSetTool = useMemoizedFn((value: string[]) => {
     setItem(item, { label: 'tools', value })
   })
@@ -375,7 +301,6 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
   const showTool = useCreation(() => {
     return selectValue.length > 0 || (editable && !item?.isRemove)
   }, [editable, item?.isRemove, selectValue.length])
-  //#endregion
 
   const treeItemMenuData = useCreation(() => {
     const menu = [
@@ -384,32 +309,34 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
         label: '添加子任务',
       },
     ]
-    if (item.index.length > 1) {
+    if (level > 1) {
       menu.push({
         key: 'brother',
         label: '添加兄弟任务',
       })
     }
     return menu
-  }, [item.index])
+  }, [level])
+
   const name = useCreation(() => {
     if (item?.isRemove && !item.name) return '该节点被删除'
     return item.name
   }, [item.name, item?.isRemove])
+
   return (
     <div className={styles['ai-plan-review-tree-item']} style={{ '--width': `${level * 16}px` } as React.CSSProperties}>
       <AIPlanReviewTreeLine
         order={order}
         item={item}
-        preIndex={preIndex}
-        nextIndex={nextIndex}
+        preLevel={preLevel}
+        nextLevel={nextLevel}
         expand={expand}
         onSetExpand={onSetExpand}
       />
 
       <div className={styles['tree-item-content']}>
         <div
-          id={item.index}
+          id={item.task_id}
           className={classNames(styles['title'], {
             [styles['title-editable']]: editable && !item?.isRemove,
             [styles['title-hover']]: visible && !item?.isRemove,
@@ -424,7 +351,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
             setValue={onSetName}
           />
           <div className={styles['icon-body']}>
-            {item.index.length > 1 && (
+            {level > 1 && (
               <YakitButton
                 type="text2"
                 className={styles['trash-icon']}
@@ -473,10 +400,10 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                   onDropdownVisibleChange={setOpen}
                   notFoundContent={loading ? <YakitSpin size="small" /> : null}
                 >
-                  {response.Tools.map((item) => {
+                  {response.Tools.map((toolItem) => {
                     return (
-                      <YakitSelect.Option value={item.Name} key={item.Name}>
-                        {item.Name}
+                      <YakitSelect.Option value={toolItem.Name} key={toolItem.Name}>
+                        {toolItem.Name}
                       </YakitSelect.Option>
                     )
                   })}
@@ -498,13 +425,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     </div>
   )
 })
-/**
- * @description 可编辑的div
- * TODO 编辑情况待优化
- * @param editable 是否可编辑
- * @param className 样式类名
- * @param placeholder
- * */
+
 const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props) => {
   const { editable, className, placeholder = '请输入内容...' } = props
   const [value, setValue] = useControllableValue<string>(props, {
@@ -534,70 +455,56 @@ const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props)
     </div>
   )
 })
-/**树的每一项的线 */
+
 const AIPlanReviewTreeLine: React.FC<AIPlanReviewTreeLineProps> = React.memo((props) => {
-  const { order, item, preIndex, nextIndex, expand, onSetExpand } = props
-  const indexList = useCreation(() => {
-    return item.index.trim().split('-').filter(Boolean)
-  }, [item.index])
-  const preIndexList = useCreation(() => {
-    return preIndex.trim().split('-').filter(Boolean)
-  }, [preIndex])
-  const nextIndexList = useCreation(() => {
-    return nextIndex.trim().split('-').filter(Boolean)
-  }, [nextIndex])
-  const level = useCreation(() => {
-    return indexList.length
-  }, [indexList])
+  const { order, item, preLevel, nextLevel, expand, onSetExpand } = props
+  const level = useCreation(() => getPlanTaskLevel(item), [item])
+
   const isLastNode = useCreation(() => {
-    if (!nextIndex) return true //整个树的最后一个节点
-    if (indexList.length > nextIndexList.length) return true //当前层级的最后一个节点
+    if (!nextLevel) return true
+    if (level > nextLevel) return true
     return false
-  }, [indexList, nextIndex, nextIndexList])
+  }, [level, nextLevel])
+
   const lineType = useCreation(() => {
-    if (order === 0) return '' //根节点
-    try {
-      if (indexList.length - preIndexList.length === 1) return 'start'
-      if (preIndexList.length - indexList.length === 1) return 'end'
-      return ''
-    } catch (error) {
-      return ''
-    }
-  }, [indexList, preIndexList])
+    if (order === 0) return ''
+    if (level - preLevel === 1) return 'start'
+    if (preLevel - level === 1) return 'end'
+    return ''
+  }, [level, order, preLevel])
+
   const gap = useCreation(() => {
-    if (indexList.length === 1) return 0
-    if (!nextIndexList.length) return 1
-    const gapNumber = indexList.length - nextIndexList.length
+    if (level === 1) return 0
+    if (!nextLevel) return 1
+    const gapNumber = level - nextLevel
     if (gapNumber > 1) return gapNumber
     return 0
-  }, [indexList, nextIndexList])
+  }, [level, nextLevel])
+
   const onExpand = useMemoizedFn((e: React.MouseEvent) => {
     e.stopPropagation()
     onSetExpand()
   })
+
   return (
     <div className={styles['prefix-box']}>
-      {indexList.map((index, idx) => {
-        const isEndLine = idx === level - 1 && isLastNode && indexList.length > 1
+      {Array.from({ length: level }, (_, idx) => {
+        const isEndLine = idx === level - 1 && isLastNode && level > 1
         const left = idx === 0 ? 7 : idx * 16 + 7
-        const hasBottom = gap && idx < level - 2 && idx >= 1 && idx > nextIndexList.length - 1
+        const hasBottom = gap && idx < level - 2 && idx >= 1 && idx > nextLevel - 1
         return (
           <div
             key={idx}
-            //NOTE 样式相关判断勿动，情况复杂
             className={classNames(styles['vertical-line'], {
               [styles['no-bulge-line']]: isEndLine && level !== 1,
-              [styles['slash-last-line']]: isEndLine && !nextIndex,
+              [styles['slash-last-line']]: isEndLine && !nextLevel,
               [styles['slash-right-line']]: idx === level - 1 && lineType === 'start',
               [styles['slash-left-line']]: idx === level - 1 && lineType === 'end',
-              // gap
-              [styles['slash-gap-line-before']]: gap && idx === level - 1 && indexList.length > preIndexList.length,
+              [styles['slash-gap-line-before']]: gap && idx === level - 1 && level > preLevel,
               [styles['slash-gap-line-after']]: gap && idx === level - 1,
-              [styles['gap-no-bulge-line']]: gap && idx >= 1 && idx >= nextIndexList.length,
+              [styles['gap-no-bulge-line']]: gap && idx >= 1 && idx >= nextLevel,
               [styles['gap-left-line']]:
-                gap &&
-                ((nextIndexList.length > 0 && idx === nextIndexList.length) ||
-                  (nextIndexList.length === 0 && idx === 1)),
+                gap && ((nextLevel > 0 && idx === nextLevel) || (nextLevel === 0 && idx === 1)),
             })}
             style={
               {
@@ -621,8 +528,8 @@ const AIPlanReviewTreeLine: React.FC<AIPlanReviewTreeLineProps> = React.memo((pr
     </div>
   )
 })
-/**树箭头 */
-const AIPlanReviewTreeArrowLine: React.FC<AIPlanReviewTreeArrowLineProps> = React.memo((props) => {
+
+const AIPlanReviewTreeArrowLine: React.FC<AIPlanReviewTreeArrowLineProps> = React.memo(() => {
   return (
     <div className={styles['ai-plan-review-tree-item']}>
       <div className={classNames(styles['vertical-line'], styles['arrow-box'])}>

@@ -29,11 +29,10 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
   const { tasks, className, aiTreeTitleExtraNode, taskType } = props
-  const [hoveredIndex, setHoveredIndex] = useState<string | null>(null)
+  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null)
 
-  const onNodeHoverEnd = useCallback(() => setHoveredIndex(null), [])
+  const onNodeHoverEnd = useCallback(() => setHoveredTaskId(null), [])
 
-  // position / dependsOnTasks / onClick 只在 tasks 变化时重算，hover 时保持稳定引用
   const taskMetaMap = useMemo(() => {
     const map = new Map<
       string,
@@ -42,17 +41,17 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
     tasks.forEach((item, index) => {
       const prev = tasks[index - 1]
       const next = tasks[index + 1]
-      map.set(item.index, {
+      map.set(item.task_id, {
         position: {
           isStart: index === 0,
           isEnd: index === tasks.length - 1,
           isStartOfLevel: item.level > (prev?.level ?? 0),
           isEndOfLevel: item.level > (next?.level ?? 0),
           isParentLast: item.level > (next?.level ?? 0) && (next?.level ?? 0) !== item.level - 1,
-          levelDiff: Math.abs(item.level - (next?.level ?? 2)), // START_LEVEL 加上 去掉第一层，所以是 2
+          levelDiff: Math.abs(item.level - (next?.level ?? 2)),
         },
         dependsOnTasks: (item.depends_on ?? [])
-          .map((depIndex) => tasks.find((t) => t.index === depIndex))
+          .map((depTaskId) => tasks.find((t) => t.task_id === depTaskId))
           .filter((t): t is AITaskInfoProps => !!t),
         onClick: () => emiter.emit('onAITreeLocatePlanningList', item.task_id),
       })
@@ -60,23 +59,23 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
     return map
   }, [tasks])
 
-  const hoveredTask = hoveredIndex !== null ? tasks.find((t) => t.index === hoveredIndex) : null
+  const hoveredTask = hoveredTaskId !== null ? tasks.find((t) => t.task_id === hoveredTaskId) : null
   return (
     <div
       className={classNames(styles['ai-tree'], className || '', {
-        [styles['ai-tree-hovering']]: hoveredIndex !== null,
+        [styles['ai-tree-hovering']]: hoveredTaskId !== null,
       })}
     >
       {tasks.map((item, index) => {
-        const meta = taskMetaMap.get(item.index)!
+        const meta = taskMetaMap.get(item.task_id)!
         const isDimmed =
-          hoveredIndex !== null &&
-          item.index !== hoveredIndex &&
-          !(hoveredTask?.depends_on?.includes(item.index) ?? false)
-        const isHovered = item.index === hoveredIndex
+          hoveredTaskId !== null &&
+          item.task_id !== hoveredTaskId &&
+          !(hoveredTask?.depends_on?.includes(item.task_id) ?? false)
+        const isHovered = item.task_id === hoveredTaskId
         return (
           <AITreeNode
-            key={item.index}
+            key={item.task_id}
             order={index}
             position={meta.position}
             data={item}
@@ -84,7 +83,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
             isDimmed={isDimmed}
             isHovered={isHovered}
             dependsOnTasks={meta.dependsOnTasks}
-            onNodeHover={setHoveredIndex}
+            onNodeHover={setHoveredTaskId}
             onNodeHoverEnd={onNodeHoverEnd}
             aiTreeTitleExtraNode={aiTreeTitleExtraNode}
             taskType={taskType}
@@ -117,14 +116,6 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
     }, [data.level])
     const { isStart, isEnd, isStartOfLevel, isEndOfLevel, isParentLast, levelDiff } = position
     const [infoShow, setInfoShow] = React.useState(false)
-
-    const handleFindLeafNode = useMemoizedFn((info: AITaskInfoProps) => {
-      if (data.subtasks && data.subtasks.length > 0) {
-        return handleFindLeafNode(data.subtasks[0])
-      } else {
-        return info
-      }
-    })
 
     const onDetails = useMemoizedFn(() => {
       if (!data.task_id) {
@@ -193,7 +184,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
       )
     })
 
-    const handleMouseEnter = useMemoizedFn(() => onNodeHover?.(data.index))
+    const handleMouseEnter = useMemoizedFn(() => onNodeHover?.(data.task_id))
 
     const node = useMemoizedFn(() => {
       const style = isParentLast && !data.progress ? { marginBottom: '16px' } : {}
@@ -274,7 +265,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
               {dependsOnTasks && dependsOnTasks.length > 0 ? (
                 <div className={styles['depends-on-list']}>
                   {dependsOnTasks.map((task) => (
-                    <div key={task.index} className={styles['depends-on-item']}>
+                    <div key={task.task_id} className={styles['depends-on-item']}>
                       {task.name}
                     </div>
                   ))}

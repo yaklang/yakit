@@ -505,7 +505,8 @@ export declare namespace AIAgentGrpcApi {
   export interface PlanTask {
     /** 任务id */
     task_id: string
-    index: string
+    /** 审阅树扁平化后的层级（仅前端使用） */
+    level?: number
     /** 任务名 */
     name: string
     /** 正文 */
@@ -515,7 +516,7 @@ export declare namespace AIAgentGrpcApi {
     /** 关联任务名 */
     depends_on?: string[]
     progress?: AITaskStatusType
-    subtasks?: AITaskInfoProps[]
+    subtasks?: PlanTask[]
     /**评阅时树节点是否被删 */
     isRemove: boolean
     /**关联工具 */
@@ -536,7 +537,6 @@ export declare namespace AIAgentGrpcApi {
   /** 改变任务状态 */
   export interface ChangeTask {
     task: {
-      index: string
       /** 任务名 */
       name: string
       /** 正文 */
@@ -579,7 +579,7 @@ export declare namespace AIAgentGrpcApi {
   /** plan_task_analysis 计划树中任务的补充解释和工具数据 */
   export interface PlanReviewRequireExtra {
     description: string
-    index: string
+    task_id: string
     keywords: string[]
     plans_id: string
   }

@@ -128,7 +128,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     setReviewInfo(cloneDeep(info))
   })
   const handleShowReviewExtra = useMemoizedFn((info: AIAgentGrpcApi.PlanReviewRequireExtra) => {
-    setPlanReviewTreeKeywords(info.index, info)
+    setPlanReviewTreeKeywords(info.task_id, info)
   })
   const handleReleaseReview = useMemoizedFn((type: ChatIPCSendType, id: string) => {
     if (!reviewInfo) return

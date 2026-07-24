@@ -73,18 +73,22 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   })
   const getData = useMemoizedFn(() => {
     if (!taskId) return
-    let itemData: PlanItemDetailsData | undefined = undefined
-    if (taskId.includes('react')) {
-      const casualChat = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat
-      itemData = casualChat?.planDetailsMap.get(taskId)
-      if (!itemData && casualChat?.planDetails.taskId === taskId) {
-        itemData = casualChat.planDetails
-      }
+    const sessionId = activeChat?.SessionID || ''
+    const chatData = chatIPCEvents.fetchChatDataStore()?.get(sessionId)
+    if (!chatData) return
+
+    let itemData: PlanItemDetailsData | undefined
+    const subTaskData = chatData.casualChat.planDetailsMap.get(taskId)
+    if (subTaskData) {
+      itemData = subTaskData
     } else {
-      const planDetailsMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')
-        ?.taskChat.planDetailsMap
-      if (!planDetailsMap || planDetailsMap.size === 0) return
-      itemData = planDetailsMap.get(taskId)
+      const mainPlanDetails = chatData.casualChat.planDetails
+      const currentCasualTaskId = chatIPCEvents.fetchCurrentCasualTaskID()
+      if (mainPlanDetails.taskId === taskId || currentCasualTaskId === taskId) {
+        itemData = mainPlanDetails
+      } else {
+        itemData = chatData.taskChat.planDetailsMap.get(taskId)
+      }
     }
     if (!itemData) return
     if (perPlanItemDetailsDataUUIdRef.current === itemData.uuid) return
