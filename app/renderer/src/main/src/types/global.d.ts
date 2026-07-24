@@ -798,6 +798,8 @@ interface YakitBridge {
     verifyYakEngineVersion: (version: string) => Promise<boolean>
     installYakEngine: (version: string) => Promise<unknown>
     writeEngineKeyToYakitProjects: (version?: string) => Promise<unknown>
+    /** 当前引擎构建类型：full 标准 / slim 轻量 */
+    fetchYakEngineBuildType: (version?: string) => Promise<'full' | 'slim'>
     getRemoteAuthAll: () => Promise<YakitAuthInfo[]>
     saveRemoteAuth: (params: YakitAuthInfo) => Promise<unknown>
     removeRemoteAuth: (name: string) => Promise<unknown>

@@ -33,6 +33,7 @@ import {
   isEnpriTrace,
   isEnpriTraceAgent,
   isIRify,
+  isYakit,
   showDevTool,
 } from '@/utils/envfile'
 import { invalidCacheAndUserData } from '@/utils/InvalidCacheAndUserData'
@@ -139,6 +140,7 @@ import { UserAvatarIMBadge } from './userMenu/UserAvatarIMBadge'
 import { judgeDynamic } from './userMenu/judgeDynamic'
 import { useUserMenu } from './userMenu/useUserMenu'
 import { UserMenuModals } from './userMenu/UserMenuModals'
+import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 
 // re-export 保持外部导入路径兼容
 export { randomAvatarColor }
@@ -1189,6 +1191,8 @@ interface UIOpUpdateProps {
   isRemoteMode?: boolean // 是否为远程模式
   onNoticeShow?: (visible: boolean) => void
   isUpdateYakit?: boolean // 下载引擎之前判断yakit是否需要先更新
+  /** 当前引擎构建类型：full 标准 / slim 轻量（仅 Yakit 有意义） */
+  engineBuildType?: 'full' | 'slim'
   // 是否为内网版本
   intranet?: boolean
   fetchIntranetYakitVersion?: (v: boolean) => void
@@ -1340,6 +1344,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
     onNoticeShow = () => {},
     isUpdate,
     isUpdateYakit,
+    engineBuildType = 'full',
   } = props
 
   const [updateHint, setUpdateHint] = useState<boolean>(false)
@@ -1367,6 +1372,8 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
     if (isEnpriTrace() && role === 'admin') return true
     return false
   }, [role])
+
+  const showSlimBadge = isYakit() && engineBuildType === 'slim'
 
   const versionTextMaxWidth = useMemo(() => {
     // 更多版本 立即更新 管理员编辑
@@ -1398,7 +1405,10 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
             }}
           >
             <div className={styles['update-title']}>{`Yaklang ${lastVersion || version}`}</div>
-            <div className={styles['update-time']}>{`当前版本: ${version}`}</div>
+            <div className={styles['update-time']}>
+              {`当前版本: ${version}`}
+              {showSlimBadge ? <span className={styles['engine-build-type-tag']}>轻量</span> : null}
+            </div>
           </div>
         </div>
 
@@ -1415,6 +1425,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 content={
                   <MoreYaklangVersion
                     moreYaklangVersionList={moreYaklangVersionList}
+                    currentBuildType={engineBuildType}
                     onClosePop={() => {
                       setMoreVersionPopShow(false)
                       onNoticeShow(false)
@@ -1512,18 +1523,30 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
 interface MoreYaklangVersionProps {
   moreYaklangVersionList: string[]
+  currentBuildType?: 'full' | 'slim'
   onClosePop: (visible: boolean) => void
 }
 /** @name 更多Yaklang版本 */
 const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
-  const { moreYaklangVersionList, onClosePop } = props
+  const { moreYaklangVersionList, currentBuildType = 'full', onClosePop } = props
   const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
   const [searchVersionVal, setSearchVersionVal] = useState<string>('')
   const [searchVersionList, setSearchVersionList] = useState<string[]>([])
+  /** 仅 Yakit 开放轻量版本选择；IRify/Memfit 不展示 */
+  const showSlimOption = isYakit()
+  const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>(
+    showSlimOption && currentBuildType === 'slim' ? 'slim' : 'full',
+  )
 
   useEffect(() => {
     setVersionList(moreYaklangVersionList)
   }, [moreYaklangVersionList])
+
+  useEffect(() => {
+    if (showSlimOption) {
+      setEngineBuildType(currentBuildType === 'slim' ? 'slim' : 'full')
+    }
+  }, [currentBuildType, showSlimOption])
 
   const onSearchVersion = (version: string) => {
     setSearchVersionVal(version)
@@ -1532,18 +1555,27 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
   }
 
   const renderVersionList = useMemo(() => {
-    return searchVersionVal ? searchVersionList : versionList
-  }, [searchVersionVal, searchVersionList, versionList])
+    const base = searchVersionVal ? searchVersionList : versionList
+    // 轻量版仅对正式/预发版本开放（OSS 有 yak-slim_ 产物），过滤掉 dev/ 日常构建
+    if (showSlimOption && engineBuildType === 'slim') {
+      return base.filter((v) => !v.startsWith('dev'))
+    }
+    return base
+  }, [searchVersionVal, searchVersionList, versionList, showSlimOption, engineBuildType])
 
   const versionListItemClick = (version: string) => {
     onClosePop(false)
+    const downloadVersion = showSlimOption && engineBuildType === 'slim' ? `slim/${version}` : version
     emiter.emit(
       'downYaklangSpecifyVersion',
       JSON.stringify({
-        version,
+        version: downloadVersion,
         killPssText: {
           title: '替换引擎，需关闭所有本地进程',
-          content: '确认下载并安装此版本引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。',
+          content:
+            showSlimOption && engineBuildType === 'slim'
+              ? '确认下载并安装此轻量版本引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。'
+              : '确认下载并安装此版本引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。',
         },
       }),
     )
@@ -1551,6 +1583,20 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
 
   return (
     <div className={styles['more-versions-popover-content']}>
+      {showSlimOption && (
+        <div className={styles['engine-build-type-header']}>
+          <YakitRadioButtons
+            size="small"
+            buttonStyle="solid"
+            value={engineBuildType}
+            onChange={(e) => setEngineBuildType(e.target.value)}
+            options={[
+              { label: '标准版本', value: 'full' },
+              { label: '轻量版本', value: 'slim' },
+            ]}
+          />
+        </div>
+      )}
       <div className={styles['search-version-header']}>
         <YakitInput
           value={searchVersionVal}
@@ -1565,6 +1611,11 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             {renderVersionList.map((v, index) => (
               <div className={styles['version-list-item']} key={index} onClick={() => versionListItemClick(v)}>
                 {v}
+                {showSlimOption && engineBuildType === 'slim' ? (
+                  <YakitTag color="warning" size="small">
+                    轻量
+                  </YakitTag>
+                ) : null}
               </div>
             ))}
           </>
@@ -1622,6 +1673,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const [yaklangVersion, setYaklangVersion] = useState<string>('dev') // 当前连接引擎的版本号
   const [yaklangLastVersion, setYaklangLastVersion] = useState<string>('') // 官方推荐的最新版
   const [yaklangLocalVersion, setYaklangLocalVersion] = useState<string>('') // 本地引擎文件版本号
+  const [yaklangBuildType, setYaklangBuildType] = useState<'full' | 'slim'>('full') // 当前引擎标准/轻量
   const yaklangTime = useRef<any>(null)
 
   /** 更多引擎列表 */
@@ -1849,6 +1901,22 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       }
     }
   }, [isEngineLink])
+
+  /** 获取当前引擎是标准版还是轻量版（仅 Yakit） */
+  useEffect(() => {
+    if (!isEngineLink || !isYakit() || !yaklangVersion || yaklangVersion === 'dev') {
+      setYaklangBuildType('full')
+      return
+    }
+    yakitEngine
+      .fetchYakEngineBuildType(yaklangVersion)
+      .then((type) => {
+        setYaklangBuildType(type === 'slim' ? 'slim' : 'full')
+      })
+      .catch(() => {
+        setYaklangBuildType('full')
+      })
+  }, [isEngineLink, yaklangVersion])
 
   /** 清空定时器 */
   const handleClearIntervals = useMemoizedFn(() => {
@@ -2164,6 +2232,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                   onNoticeShow={setShow}
                   isUpdate={isUpdateYaklang}
                   isUpdateYakit={isUpdateYakit}
+                  engineBuildType={yaklangBuildType}
                 />
               </div>
               <div className={styles['history-version']}>
@@ -2203,6 +2272,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     yaklangVersion,
     yaklangLastVersion,
     yaklangLocalVersion,
+    yaklangBuildType,
     moreYaklangVersionList,
     lowerYaklangLastVersion,
     isRemoteMode,

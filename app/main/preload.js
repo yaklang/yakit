@@ -272,6 +272,7 @@ process.on('loaded', function () {
       verifyYakEngineVersion: (version) => invoke('yak-engine-version-exists-and-correctness', version),
       installYakEngine: (version) => invoke('install-yak-engine', version),
       writeEngineKeyToYakitProjects: (version) => invoke('write-engine-key-to-yakit-projects', version),
+      fetchYakEngineBuildType: (version) => invoke('fetch-yak-engine-build-type', version),
       getRemoteAuthAll: () => invoke('get-yakit-remote-auth-all'),
       saveRemoteAuth: (params) => invoke('save-yakit-remote-auth', params),
       removeRemoteAuth: (name) => invoke('remove-yakit-remote-auth', name),

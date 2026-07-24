@@ -1,5 +1,18 @@
 .more-versions-popover-content {
   width: 240px;
+  .engine-build-type-header {
+    margin-bottom: 8px;
+    :global {
+      .ant-radio-group {
+        width: 100%;
+        display: flex;
+        .ant-radio-button-wrapper {
+          flex: 1;
+          text-align: center;
+        }
+      }
+    }
+  }
   .search-version-header {
     height: 28px;
     margin-bottom: 8px;
@@ -25,12 +38,17 @@
       height: 28px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       font-size: 12px;
       color: var(--Colors-Use-Neutral-Text-1-Title);
       cursor: pointer;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      .version-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
       span.active {
         color: var(--Colors-Use-Main-Primary);
       }

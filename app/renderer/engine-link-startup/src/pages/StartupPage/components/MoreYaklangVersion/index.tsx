@@ -2,7 +2,11 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import React, { useEffect, useMemo, useState } from 'react'
 import { OutlineSearchIcon } from '@/assets/outline'
+import { isYakit } from '@/utils/envfile'
 import styles from './MoreYaklangVersion.module.scss'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface MoreYaklangVersionProps {
   moreYaklangVersionList: string[]
@@ -11,8 +15,12 @@ interface MoreYaklangVersionProps {
 /** @name 更多Yaklang版本 */
 export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
   const { moreYaklangVersionList, onClosePop } = props
+  const { t, i18n } = useI18nNamespaces(['link'])
   const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
   const [searchVersionVal, setSearchVersionVal] = useState<string>('')
+  /** 仅 Yakit 开放轻量版本选择；IRify/Memfit 不展示 */
+  const showSlimOption = isYakit()
+  const [engineBuildType, setEngineBuildType] = useState<'full' | 'slim'>('full')
 
   useEffect(() => {
     setVersionList(moreYaklangVersionList)
@@ -23,16 +31,36 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
   }
 
   const renderVersionList = useMemo(() => {
-    if (!searchVersionVal) return versionList
-    return versionList.filter((v) => v.includes(searchVersionVal))
-  }, [searchVersionVal, versionList])
+    const base = !searchVersionVal ? versionList : versionList.filter((v) => v.includes(searchVersionVal))
+    // 轻量版仅对正式/预发版本开放（OSS 有 yak-slim_ 产物），过滤掉 dev/ 日常构建
+    if (showSlimOption && engineBuildType === 'slim') {
+      return base.filter((v) => !v.startsWith('dev'))
+    }
+    return base
+  }, [searchVersionVal, versionList, showSlimOption, engineBuildType])
 
   const versionListItemClick = (version: string) => {
-    onClosePop(false, version)
+    const downloadVersion = showSlimOption && engineBuildType === 'slim' ? `slim/${version}` : version
+    onClosePop(false, downloadVersion)
   }
 
   return (
     <div className={styles['more-versions-popover-content']}>
+      {showSlimOption && (
+        <div className={styles['engine-build-type-header']}>
+          <YakitRadioButtons
+            size="small"
+            buttonStyle="solid"
+            value={engineBuildType}
+            onChange={(e) => setEngineBuildType(e.target.value)}
+            options={[
+              { label: t('MoreYaklangVersion.standard_version'), value: 'full' },
+              { label: t('MoreYaklangVersion.slim_version'), value: 'slim' },
+            ]}
+            style={{ width: i18n.language === 'en' ? 240 : undefined }}
+          />
+        </div>
+      )}
       <div className={styles['search-version-header']}>
         <YakitInput
           value={searchVersionVal}
@@ -44,9 +72,14 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
       <div className={styles['version-list-wrap']}>
         {renderVersionList.length ? (
           <>
-            {renderVersionList.map((v, index) => (
+            {renderVersionList.map((v) => (
               <div className={styles['version-list-item']} key={v} onClick={() => versionListItemClick(v)}>
-                {v}
+                <span className={styles['version-text']}>{v}</span>
+                {showSlimOption && engineBuildType === 'slim' ? (
+                  <YakitTag color="warning" size="small">
+                    {t('MoreYaklangVersion.slim')}
+                  </YakitTag>
+                ) : null}
               </div>
             ))}
           </>

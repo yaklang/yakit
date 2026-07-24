@@ -253,5 +253,10 @@
     "download_speed": "下載速度",
     "retry": "重試",
     "cancel": "取消"
+  },
+  "MoreYaklangVersion": {
+    "standard_version": "標準版本",
+    "slim_version": "輕量版本",
+    "slim": "輕量"
   }
 }

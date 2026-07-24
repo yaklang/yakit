@@ -182,6 +182,7 @@ interface YakitBridge {
     writeEngineKeyToYakitProjects: (version?: string) => Promise<unknown>
     clearLocalYaklangVersionCache: () => Promise<unknown>
     installYakEngine: (version: string) => Promise<unknown>
+    fetchYakEngineBuildType: (version?: string) => Promise<'full' | 'slim'>
     cancelDownloadYakEngineVersion: (version: string) => Promise<unknown>
     getAvailableOSSDomain: () => Promise<string>
     checkAllowSecretLocalYaklangEngine: (params: CheckAllowSecretLocal) => Promise<AllowSecretLocalExecResult>
