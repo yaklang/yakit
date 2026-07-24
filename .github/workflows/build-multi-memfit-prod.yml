@@ -112,7 +112,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # 给 Windows 安装包外壳做 Authenticode 签名(上传 OSS 之前)
+  # 给 Windows 安装包外壳做 Authenticode 签名(上传 Release/OSS 之前)
   # 内置引擎已在 yaklang OSS 源头签名，此处只补安装包外壳这一层
   sign_windows:
     needs: build_memfit
@@ -166,6 +166,14 @@ jobs:
 
       - run: ls
         name: List downloaded artifacts
+
+      - name: Create Release and Upload Assets
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ./*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Release ${{ github.ref_name }}
+          tag: ${{ github.ref_name }}
 
       - name: Upload Memfit to OSS
         uses: tvrcgo/upload-to-oss@master
