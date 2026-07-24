@@ -1,6 +1,6 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
-import type { AIFileSystemPin, AIQuestionQueues, PlanLoadingStatus, UseAIMessageDataState } from './type'
+import type { AIFileSystemPin, AIQuestionQueues, UseAIMessageDataState } from './type'
 import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 // #region AI-Agent 非会话列表外的渲染数据
@@ -463,6 +463,20 @@ export type AIChatQSData =
   | ChatStreamGroup
 // #endregion
 
+// #region 状态机定义及其相关字段的定义
+/** 任务规划运行态：loading 文案 + 当前活动任务身份/状态 */
+export interface TaskPlanStatus {
+  loading: boolean
+  plan: string
+  task: string
+  /** 当前任务规划的 re_act_task_id，'' 表示无活动任务规划 */
+  taskID: string
+  /** 当前任务规划状态，AITaskStatus.created 表示无 */
+  status: AITaskStatusType
+  /** 当前任务规划的 coordinatorId，'' 表示无 */
+  coordinatorId: string
+}
+
 /** 当前正在执行的任务树 */
 export interface CurrentExecTaskTree {
   task_tree: AIAgentGrpcApi.PlanHistory['task_tree']
@@ -533,8 +547,8 @@ export interface ChatStoreState {
   focusMode: string
   /** UI是否显示中间的任务规划列表 */
   showPlanList: boolean
-  /** 任务规划的loading状态信息 */
-  taskStatus: PlanLoadingStatus
+  /** 任务规划运行态（loading 文案 + 当前活动任务） */
+  taskStatus: TaskPlanStatus
 
   /**
    * 自由对话的当前review(未操作)
@@ -643,7 +657,7 @@ export interface ChatStoreState {
    */
   hydrateRenderTree: (content: SessionRenderContent) => void
 
-  updateTaskLoadingStatus: (status: Partial<PlanLoadingStatus>) => void
+  updateTaskLoadingStatus: (status: Partial<TaskPlanStatus>) => void
 
   /** 正在等待用户操作的reviewId列表 */
   updateCasualReview: (id: string, status: 'add' | 'remove') => void
@@ -693,3 +707,4 @@ export interface ChatStoreState {
 
   replaceItemToken(oldToken: string, newToken: string)
 }
+// #endregion

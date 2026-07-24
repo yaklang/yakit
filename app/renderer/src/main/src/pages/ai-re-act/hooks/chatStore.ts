@@ -6,7 +6,7 @@ import {
   DefaultAIQuestionQueues,
   DefaultCurrentExecTaskTree,
   DefaultPlanHistoryList,
-  DefaultPlanLoadingStatus,
+  DefaultTaskPlanStatus,
 } from './defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -46,7 +46,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       casualLoading: false,
       focusMode: '',
       showPlanList: false,
-      taskStatus: cloneDeep(DefaultPlanLoadingStatus),
+      taskStatus: cloneDeep(DefaultTaskPlanStatus),
 
       currentCasualReview: [],
       currentPlanReviewToken: { token: '', renderNum: 0 },

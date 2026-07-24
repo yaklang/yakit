@@ -17,7 +17,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultPlanLoadingStatus } from './defaultConstant'
+import { DefaultTaskPlanStatus } from './defaultConstant'
 import { ChatMultiSessionController } from './ChatMultiSessionController'
 import { persistIndependentItem } from './persist/contentPersistHelper'
 
@@ -79,7 +79,7 @@ export const handleTaskPlanEnd: (
     return item
   })
   store.getState().updatePlanTree(newPlanTree)
-  store.getState().updateState({ taskStatus: cloneDeep(DefaultPlanLoadingStatus) })
+  store.getState().updateState({ taskStatus: cloneDeep(DefaultTaskPlanStatus) })
 }
 
 /** Agent 往日志窗口推送日志数据 */

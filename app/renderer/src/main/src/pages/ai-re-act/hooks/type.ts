@@ -1,12 +1,11 @@
-import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type {
   AIChatQSData,
   AIChatQSDataType,
   AIInputNotifyMessage,
   AIStreamOutput,
-  AIYakExecFileRecord,
   ChatListRenderType,
   ReActChatRenderItem,
+  TaskPlanStatus,
 } from './aiRender'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '@/pages/ai-agent/store/constants'
@@ -111,19 +110,6 @@ export interface AIQuestionQueues {
   data: AIAgentGrpcApi.QuestionQueueItem[]
 }
 
-/** 任务规划-loading状态信息 */
-export interface PlanLoadingStatus {
-  loading: boolean
-  plan: string
-  task: string
-  /** 当前任务规划的 re_act_task_id，'' 表示无活动任务规划 */
-  taskID: string
-  /** 当前任务规划状态，'' (AITaskStatus.created) 表示无 */
-  status: AITaskStatusType
-  /** 当前任务规划的 coordinatorId，'' 表示无 */
-  coordinatorId: string
-}
-
 export interface UseChatIPCState {
   /** 流执行状态 */
   execute: boolean
@@ -144,8 +130,8 @@ export interface UseChatIPCState {
   /** 记忆列表 */
   memoryList: AIAgentGrpcApi.MemoryEntryList
 
-  /** 任务规划的loading状态信息 */
-  taskStatus: PlanLoadingStatus
+  /** 任务规划运行态（loading 文案 + 当前活动任务） */
+  taskStatus: TaskPlanStatus
   /** 自由对话的loading 显示的文案 */
   casualTitle: string
   /** 自由对话的是否进行中 */

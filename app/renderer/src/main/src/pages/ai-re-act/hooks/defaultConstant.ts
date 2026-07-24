@@ -1,7 +1,13 @@
-import type { AIToolResult, CurrentExecTaskTree, PlanItemDetailsData, TodoListCardData } from './aiRender'
+import type {
+  AIToolResult,
+  CurrentExecTaskTree,
+  PlanItemDetailsData,
+  TaskPlanStatus,
+  TodoListCardData,
+} from './aiRender'
 import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
-import type { AIQuestionQueues, PlanLoadingStatus } from './type'
+import type { AIQuestionQueues } from './type'
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
@@ -130,8 +136,8 @@ export const DefaultMemoryList: AIAgentGrpcApi.MemoryEntryList = {
   },
 }
 
-/** 任务规划loading-默认值 */
-export const DefaultPlanLoadingStatus: PlanLoadingStatus = {
+/** 任务规划运行态-默认值 */
+export const DefaultTaskPlanStatus: TaskPlanStatus = {
   loading: false,
   plan: '加载中...',
   task: '加载中...',
