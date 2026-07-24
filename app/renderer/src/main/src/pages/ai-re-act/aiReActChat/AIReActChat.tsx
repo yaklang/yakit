@@ -347,8 +347,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       return typeof title === 'string' ? title : '自由对话'
     }, [title])
 
-    const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
-      const taskId = getTaskId()
+    const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string, nextTaskId?: string) => {
+      const taskId = nextTaskId || getTaskId()
       const sessionId = activeChat?.SessionID
       if (!taskId || !sessionId) return false
       if (chatDataStoreKey !== 'aiChatDataStore') return false
@@ -396,8 +396,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     useEffect(() => {
       if (!activeChat?.Title || !activeChat?.SessionID) return
       if (sessionRef.current !== activeChat.SessionID) return
-      emitTaskContentTab('update', activeChat.Title)
-    }, [activeChat?.Title, activeChat?.SessionID, emitTaskContentTab])
+      if (!reActTaskId) return
+      emitTaskContentTab('update', activeChat.Title, reActTaskId)
+    }, [activeChat?.Title, activeChat?.SessionID, emitTaskContentTab, reActTaskId])
 
     return (
       <>
