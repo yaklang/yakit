@@ -40,6 +40,24 @@ type RowOf<T extends Record<string, any[]>> = {
   [K in keyof T as K extends `${infer S}s` ? S : K]: T[K][number]
 }
 
+/** 将「列数组」结构转为行对象数组（与 UI 解耦，供 monacoSpec 等轻量引用） */
+export const getAllRows = <T extends Record<string, any[]>>(data: T): RowOf<T>[] => {
+  const keys = Object.keys(data) as (keyof T)[]
+  const length = Math.max(...keys.map((k) => data[k].length))
+
+  return Array.from({ length }, (_, index) =>
+    keys.reduce((obj, key) => {
+      const arr = data[key]
+      if (Array.isArray(arr) && index < arr.length) {
+        // 将 key 末尾的 s 去掉
+        const singular = (key as string).replace(/s$/, '')
+        ;(obj as any)[singular] = arr[index]
+      }
+      return obj
+    }, {} as RowOf<T>),
+  )
+}
+
 export type {
   TCodeCustomizeTagProps,
   CodeCustomizeModalProps,
