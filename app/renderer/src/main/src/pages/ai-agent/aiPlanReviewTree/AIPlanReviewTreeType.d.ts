@@ -1,9 +1,10 @@
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface AIPlanReviewTreeProps {
-  defaultList: AIAgentGrpcApi.PlanTask[]
-  list: AIAgentGrpcApi.PlanTask[]
-  setList: (v: AIAgentGrpcApi.PlanTask[]) => void
+  defaultList: AITaskInfoProps[]
+  list: AITaskInfoProps[]
+  setList: (v: AITaskInfoProps[]) => void
   /**是否可以编辑 */
   editable?: boolean
   planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
@@ -13,19 +14,19 @@ export interface AIPlanReviewTreeProps {
 export type PlanTaskType = keyof AIAgentGrpcApi.PlanTask
 export interface AIPlanReviewTreeItemProps {
   order: number
-  item: AIAgentGrpcApi.PlanTask
+  item: AITaskInfoProps
   preLevel: number
   nextLevel: number
   /**是否可以编辑 */
   editable?: boolean
   /**增加该节点得子节点 */
-  onAddSubNode: (item: AIAgentGrpcApi.PlanTask) => void
+  onAddSubNode: (item: AITaskInfoProps) => void
   /**增加该节点得兄弟节点 */
-  onAddBrotherNode: (item: AIAgentGrpcApi.PlanTask) => void
+  onAddBrotherNode: (item: AITaskInfoProps) => void
   /**删除节点 */
-  onRemoveNode: (item: AIAgentGrpcApi.PlanTask) => void
+  onRemoveNode: (item: AITaskInfoProps) => void
   /**修改当前编辑的值 */
-  setItem: (item: AIAgentGrpcApi.PlanTask, option: SetItemOption) => void
+  setItem: (item: AITaskInfoProps, option: SetItemOption) => void
   /**通过 task_id 获取关键词和解释 */
   planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
   currentPlansId: string
@@ -49,7 +50,7 @@ export interface AIPlanReviewTreeArrowLineProps {}
 
 export interface AIPlanReviewTreeLineProps {
   order: number
-  item: AIAgentGrpcApi.PlanTask
+  item: AITaskInfoProps
   preLevel: number
   nextLevel: number
   expand: boolean

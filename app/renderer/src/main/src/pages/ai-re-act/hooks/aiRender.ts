@@ -125,6 +125,8 @@ export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
   level: number
   /** 是否是叶子任务节点 */
   isLeaf: boolean
+  /** 子任务（树形结构，不含 level/isLeaf） */
+  subtasks?: AIAgentGrpcApi.PlanTask[]
 }
 
 /** 任务规划-执行崩溃后的错误信息展示 */

@@ -55,6 +55,35 @@ const isCasualSubAgentTask = (
     chatStore.casualChat.contents.get(`${parentTaskId}-${res.TaskId}`)?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
   )
 }
+
+type ApplyCasualPlanDetailsFields = (
+  target: PlanItemDetailsData,
+  ctx: { isMainCasualTask: boolean; taskId: string },
+) => void
+
+/** 主任务 planDetails 为单例，新一轮提问后 taskId 必须覆盖；子 agent 走 planDetailsMap */
+const resolvePlanDetailsTaskId = (target: PlanItemDetailsData, ctx: { isMainCasualTask: boolean; taskId: string }) => {
+  target.taskId = ctx.isMainCasualTask ? ctx.taskId : target.taskId || ctx.taskId
+}
+
+const updateCasualPlanItemDetails = (
+  chatStore: AIChatData,
+  res: AIOutputEvent,
+  getTaskId: AIMessageHandlerParams['getTaskId'],
+  applyFields: ApplyCasualPlanDetailsFields,
+) => {
+  if (!res.TaskId) return
+  const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
+  const chatDetail = isSubAgentTask
+    ? chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    : chatStore.casualChat.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+  applyFields(chatDetail, { isMainCasualTask: !isSubAgentTask, taskId: res.TaskId })
+  if (isSubAgentTask) {
+    chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
+  } else {
+    chatStore.casualChat.planDetails = chatDetail
+  }
+}
 /** grpc流数据转换成错误信息输出到日志中 */
 const handleErrorGRPCToLog: (
   /** 该条grpc流数据是历史数据 */
@@ -543,31 +572,18 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
   if (isEmpty(data)) return
 
   const newData = handleTodoListData(data.items, data.task_id)
-  const applyTodoListFields = (target: PlanItemDetailsData) => {
+  const applyTodoListFields: ApplyCasualPlanDetailsFields = (target, ctx) => {
     target.uuid = uuidv4()
-    target.taskId = target.taskId || res.TaskId
+    resolvePlanDetailsTaskId(target, ctx)
     target.todoList = newData
   }
 
   if (info.chatType === 'task') {
     const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    applyTodoListFields(oldData)
+    applyTodoListFields(oldData, { isMainCasualTask: false, taskId: res.TaskId })
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
-    const chatDetail = isSubAgentTask
-      ? chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-      : chatStore.casualChat?.planDetails
-    if (!chatDetail) return
-    applyTodoListFields(chatDetail)
-    if (!isSubAgentTask) {
-      chatDetail.taskId = res.TaskId
-    }
-    if (isSubAgentTask) {
-      chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
-    } else {
-      chatStore.casualChat.planDetails = chatDetail
-    }
+    updateCasualPlanItemDetails(chatStore, res, getTaskId, applyTodoListFields)
     callback?.(res)
   }
 }
@@ -660,9 +676,9 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
   if (!!dynamic?.forges) {
     itemData.forges.dynamic = dynamic.forges
   }
-  const applyCapabilityFields = (target: PlanItemDetailsData) => {
+  const applyCapabilityFields: ApplyCasualPlanDetailsFields = (target, ctx) => {
     target.uuid = itemData.uuid
-    target.taskId = target.taskId || res.TaskId
+    resolvePlanDetailsTaskId(target, ctx)
     target.tool = itemData.tool
     target.forges = itemData.forges
     target.skills = itemData.skills
@@ -671,22 +687,10 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
   }
   if (info.chatType === 'task') {
     const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    applyCapabilityFields(oldData)
+    applyCapabilityFields(oldData, { isMainCasualTask: false, taskId: res.TaskId })
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
-    const chatDetail = isSubAgentTask
-      ? chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-      : chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-    applyCapabilityFields(chatDetail)
-    if (!isSubAgentTask) {
-      chatDetail.taskId = res.TaskId
-    }
-    if (isSubAgentTask) {
-      chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
-    } else {
-      chatStore.casualChat.planDetails = chatDetail
-    }
+    updateCasualPlanItemDetails(chatStore, res, getTaskId, applyCapabilityFields)
   }
 }
 /** Type='perception'&NodeId='perception' 意图感知 */
@@ -700,29 +704,17 @@ const handlePerception: AIMessageHandler = (request) => {
   const perception = (JSON.parse(ipcContent) as AIAgentGrpcApi.PerceptionData) || {}
   if (isEmpty(perception)) return
   perception.summary = isArray(perception.summary) ? perception.summary.join(',') : perception.summary
-  const applyPerceptionFields = (target: PlanItemDetailsData) => {
+  const applyPerceptionFields: ApplyCasualPlanDetailsFields = (target, ctx) => {
     target.uuid = uuidv4()
-    target.taskId = target.taskId || res.TaskId
+    resolvePlanDetailsTaskId(target, ctx)
     target.perception = perception
   }
   if (info.chatType === 'task') {
     const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    applyPerceptionFields(oldData)
+    applyPerceptionFields(oldData, { isMainCasualTask: false, taskId: res.TaskId })
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
-    const chatDetail = isSubAgentTask
-      ? chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-      : chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-    applyPerceptionFields(chatDetail)
-    if (!isSubAgentTask) {
-      chatDetail.taskId = res.TaskId
-    }
-    if (isSubAgentTask) {
-      chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
-    } else {
-      chatStore.casualChat.planDetails = chatDetail
-    }
+    updateCasualPlanItemDetails(chatStore, res, getTaskId, applyPerceptionFields)
   }
 }
 
@@ -737,30 +729,18 @@ const handleSessionSnapshot: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
   if (isEmpty(snapshot)) return
-  const applySnapshotFields = (target: PlanItemDetailsData) => {
+  const applySnapshotFields: ApplyCasualPlanDetailsFields = (target, ctx) => {
     target.uuid = uuidv4()
-    target.taskId = target.taskId || res.TaskId
+    resolvePlanDetailsTaskId(target, ctx)
     target.execution = snapshot.execution
     target.backgroundProcesses = snapshot.background_processes
   }
   if (info.chatType === 'task') {
     const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    applySnapshotFields(oldData)
+    applySnapshotFields(oldData, { isMainCasualTask: false, taskId: res.TaskId })
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const isSubAgentTask = isCasualSubAgentTask(chatStore, res, getTaskId)
-    const chatDetail = isSubAgentTask
-      ? chatStore.casualChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-      : chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-    applySnapshotFields(chatDetail)
-    if (!isSubAgentTask) {
-      chatDetail.taskId = res.TaskId
-    }
-    if (isSubAgentTask) {
-      chatStore.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
-    } else {
-      chatStore.casualChat.planDetails = chatDetail
-    }
+    updateCasualPlanItemDetails(chatStore, res, getTaskId, applySnapshotFields)
   }
 }
 // #endregion
