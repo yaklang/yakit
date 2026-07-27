@@ -345,7 +345,7 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   const taskID = `${taskId}-${info.task.task_id}`
   const chatDetail = rawData.contents.get(taskID)
   if (chatDetail) {
-    requestInfo.pushLog({ level: 'error', message: `${info.task.index}-push_task数据已存在` })
+    requestInfo.pushLog({ level: 'error', message: `${info.task.task_id}-push_task数据已存在` })
     return
   }
   const chatData: AIChatQSData = {
@@ -397,7 +397,7 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
   const taskID = `${taskId}-${info.task.task_id}`
   const chatDetail = rawData.contents.get(taskID)
   if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-    requestInfo.pushLog({ level: 'error', message: `${info.task.index}-pop_task数据不存在` })
+    requestInfo.pushLog({ level: 'error', message: `${info.task.task_id}-pop_task数据不存在` })
     return
   }
   meta.currentTaskPlanActiveNode.delete(chatDetail.id)

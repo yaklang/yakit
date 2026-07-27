@@ -29,7 +29,7 @@ export interface BuildConcurrentStreamFramePayloadParams {
    * - false：仅返回元数据（rawData 为空 Map），用于打开子窗口时只发轻量 payload，
    *   子窗 mount 后再通过 fetch-concurrent-stream-contents 拉取，避免开窗瞬间克隆大 Map。
    */
-  withRawData?: boolean
+  withRawData: boolean
 }
 
 /** 判断 childToken 在 store 中的类型 */

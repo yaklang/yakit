@@ -96,7 +96,7 @@ const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequireExtra
   if (
     !data?.plans_id ||
-    !data?.index ||
+    !data?.task_id ||
     !data?.keywords?.length ||
     (meta.currentPlanReviewExtraId && meta.currentPlanReviewExtraId !== data.plans_id)
   ) {
@@ -114,11 +114,11 @@ const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
   if (!meta.currentPlanReviewExtraId) meta.currentPlanReviewExtraId = data.plans_id
   const reviewInfo = reviewDetail.data
   if (!reviewInfo.taskExtra) reviewInfo.taskExtra = new Map()
-  reviewInfo.taskExtra.set(data.index, data)
+  reviewInfo.taskExtra.set(data.task_id, data)
 
   const isAuto = isAutoExecuteReviewContinue({ getFunc: () => request })
   if (!isAuto) {
-    meta.planReviewExtraData.set(data.index, cloneDeep(data))
+    meta.planReviewExtraData.set(data.task_id, cloneDeep(data))
     store.getState().updateStateCount('currentPlanReviewExtraUpdate')
   }
 }

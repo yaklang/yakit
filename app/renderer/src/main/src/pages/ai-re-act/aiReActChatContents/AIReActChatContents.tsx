@@ -271,7 +271,7 @@ export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props
       {open && (
         <YakitModal
           visible={open}
-          title={title || t('AIStreamNode.viewReference')}
+          title={title || '参考资料'}
           cancelButtonProps={{ style: { display: 'none' } }}
           onOk={onClose}
           onCloseX={onClose}

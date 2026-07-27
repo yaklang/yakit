@@ -60,7 +60,6 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
 
         // 收到 frame 后，主动向主窗口拉取本次需要渲染的 rawData。
         getRawData(newFrame)
-        setContentVersion((v) => v + 1)
       })
     }
 
@@ -88,9 +87,9 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
       .then((entries) => {
         rawDataRef.current = entries.rawData
         execFileRecordRef.current = entries.execFileRecord
-        setContentVersion((v) => v + 1)
       })
       .finally(() => {
+        setContentVersion((v) => v + 1)
         setLoadingContents(false)
       })
   })
