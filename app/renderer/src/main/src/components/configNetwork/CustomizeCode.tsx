@@ -15,12 +15,12 @@ import { yakitNotify } from '@/utils/notification'
 import { invalidateCustomSnippetsCache } from '@/utils/monacoSpec/yakCompletionSchema'
 import type {
   CodeCustomizeModalProps,
-  RowOf,
   TCodeCustomizeTagProps,
   TCustomCodeGeneral,
   TCustomEditorCodeGeneral,
   TQueryCustomCodeRequest,
 } from './CustomizeCodeTypes'
+import { getAllRows } from './CustomizeCodeTypes'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -155,23 +155,6 @@ const LevelOptions = [
     value: 'snippet',
   },
 ]
-
-export const getAllRows = <T extends Record<string, any[]>>(data: T): RowOf<T>[] => {
-  const keys = Object.keys(data) as (keyof T)[]
-  const length = Math.max(...keys.map((k) => data[k].length))
-
-  return Array.from({ length }, (_, index) =>
-    keys.reduce((obj, key) => {
-      const arr = data[key]
-      if (Array.isArray(arr) && index < arr.length) {
-        // 将 key 末尾的 s 去掉
-        const singular = (key as string).replace(/s$/, '')
-        ;(obj as any)[singular] = arr[index]
-      }
-      return obj
-    }, {} as RowOf<T>),
-  )
-}
 
 const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
   const [form] = useForm()
