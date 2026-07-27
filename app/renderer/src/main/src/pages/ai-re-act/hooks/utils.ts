@@ -12,7 +12,7 @@ import {
   AIChatQSDataTypeEnum,
 } from './aiRender'
 import { AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from './grpcApi'
-import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
+import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
@@ -133,18 +133,6 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
   return execTasks
 }
 // #endregion
-
-/** 将树结构任务列表转换成一维数组 */
-export const handleFlatAITree = (sum: AITaskInfoProps[], task: AIAgentGrpcApi.PlanTask, level = 1) => {
-  if (!Array.isArray(sum)) return null
-  const hasSubtasks = !!(task.subtasks && task.subtasks.length > 0)
-  sum.push({ ...generateTaskChatExecution(task), level, isLeaf: !hasSubtasks })
-  if (hasSubtasks) {
-    for (let subtask of task.subtasks!) {
-      handleFlatAITree(sum, subtask, level + 1)
-    }
-  }
-}
 
 /** 是否自动执行review的continue操作 */
 export const isAutoExecuteReviewContinue = (params: { type?: string; getFunc?: () => AIAgentSetting | undefined }) => {

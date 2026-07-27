@@ -16,6 +16,7 @@ export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
   level: number
   /** 是否是叶子任务节点 */
   isLeaf: boolean
+  subtasks?: AITaskInfoProps[]
 }
 
 /** UI：待办清单卡片数据*/

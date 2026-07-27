@@ -202,6 +202,8 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
     applyTodoListFields(chatDetail)
     if (isSubAgentTask) {
       rawData.casualChat.planDetailsMap.set(res.TaskId, chatDetail)
+    } else {
+      rawData.casualChat.planDetails = chatDetail
     }
     store.getState().updateCasualTodoList()
   }

@@ -210,6 +210,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
   if (!res.IsSync) {
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
     rawData.casualChat.planDetails = cloneDeep(DefaultPlanItemDetailsData)
+    store.getState().updateCasualTodoList()
     store.getState().updateState({
       currentCasualTaskID: res.TaskId || data.react_task_id,
       focusMode: data.focus_mode ? data.focus_mode : '',

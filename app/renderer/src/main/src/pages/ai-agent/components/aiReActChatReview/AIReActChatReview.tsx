@@ -10,7 +10,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import AIPlanReviewTree from '@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree'
-import { handleFlatAITree } from '../../../ai-re-act/hooks/utils'
+import { genExecTasks } from '../../../ai-re-act/hooks/utils'
 import { reviewListToTrees } from '@/pages/ai-agent/utils'
 import { grpcGetAIForge } from '@/pages/ai-agent/grpc'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -61,8 +61,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       case 'plan_review_require':
       case 'detached_plan_require':
         const data = info.data as AIAgentGrpcApi.PlanReviewRequire
-        const list: AIAgentGrpcApi.PlanTask[] = []
-        handleFlatAITree(list, data.plans.root_task)
+        const list = genExecTasks(data.plans.root_task)
         initReviewTreesRef.current = [...list]
         setReviewTrees(list)
         setCurrentPlansId(data.plans_id)

@@ -404,7 +404,7 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
   chatDetail.data.status = info.task.task_status
   store.getState().incrementNodeVersion(chatDetail.id, 'task')
   persistIndependentItem(requestInfo.sessionId, chatDetail)
-
+  // 更新任务树状态
   sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
 }
 
