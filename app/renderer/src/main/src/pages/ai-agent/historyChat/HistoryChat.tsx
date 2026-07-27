@@ -329,7 +329,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
                       title={item.title}
                       placement="top"
                       getPopupContainer={popupContainer}
-                      overlayClassName={embedded ? embeddedOverlayClass : undefined}
+                      classNames={{ root: embedded ? embeddedOverlayClass : undefined }}
                     >
                       <button
                         type="button"
