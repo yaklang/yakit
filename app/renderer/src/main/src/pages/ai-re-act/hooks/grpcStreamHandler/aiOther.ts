@@ -1,16 +1,17 @@
 import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AITaskStatus, AITaskStatusType, type AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import { genBaseAIChatData, genExecTasks, handleTaskPlanEnd } from '../utils'
+import { genBaseAIChatData, genExecTasks, handleTaskPlanEnd, trySettleTaskPlanEnd } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData } from '../defaultConstant'
+import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData, DefaultTaskPlanEndGate } from '../defaultConstant'
 import has from 'lodash/has'
 import {
   persistIndependentItem,
   persistToolResultIfTerminal,
   deletePersistedContent,
 } from '../persist/contentPersistHelper'
+import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
   const { res, store, rawData } = request
@@ -68,22 +69,24 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
   sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   /** 获取最新任务树状态 */
   sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
-
+  // 重置任务规划结束的中间状态
+  meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
   const taskStatus = {
     taskID: startInfo['re-act_task'],
     status: AITaskStatus.inProgress,
     // 取消任务规划需要的数据id
     coordinatorId: startInfo.coordinator_id,
-    loading: true,
     plan: '加载中...',
     task: '加载中...',
   }
+  // 初始化任务规划运行态数据和部分UI状态
   store.getState().updateState({
     taskStatus,
     showPlanList: true,
     cancelTaskLoading: false,
   })
-
+  // 重置当前任务树详情
+  store.getState().updatePlanTree(cloneDeep(DefaultCurrentExecTaskTree))
   // 生成任务规划里的默认任务聚合组
   const taskID = `${taskStatus.taskID}-default`
   const chatData: AIChatQSData = {
@@ -290,7 +293,7 @@ const handleNotify: AIMessageHandler = (request) => {
 
 const handlePlanExecTasks: AIMessageHandler = (request) => {
   const { res, store } = request
-  if (res.Type !== 'plan_exec_tasks') return
+  if (res.Type !== 'structured' || res.NodeId !== 'plan_exec_tasks') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const list = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanHistoryList
@@ -352,9 +355,11 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
       store.getState().updateState({ focusMode: '', cancelCasualLoading: false, casualLoading: false })
     }
     if (store.getState().taskStatus.taskID === react_task_id) {
-      // 该问题触发了任务规划, 所以需要将任务规划状态也调整
-      store.getState().updateTaskLoadingStatus({ status: info.react_task_now_status })
-      store.getState().updateState({ cancelTaskLoading: false })
+      // 只推进中间状态；与 end 齐套后才落到 taskStatus.status
+      meta.taskPlanEndGate.pendingStatus = info.react_task_now_status as NonNullable<
+        AIAgentChatMetaData['taskPlanEndGate']['pendingStatus']
+      >
+      trySettleTaskPlanEnd(store, meta)
     }
   }
   // 更新自由对话-执行任务组的状态

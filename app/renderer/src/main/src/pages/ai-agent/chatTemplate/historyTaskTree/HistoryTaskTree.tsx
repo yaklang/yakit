@@ -143,7 +143,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
-  const isExecuting = useStore(store, (state) => state.taskStatus.loading)
+  const isExecuting = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
   const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
   const execute = useStore(store, (state) => state.execute)
 
@@ -183,7 +183,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       )
     }
 
-    // 如果系统正处于正在停止/取消任务的全局 Loading 状态，或当前任务本身正处于停止进行中的状态
+    // 停止/取消进行中：status 仍为 processing，用 cancelTaskLoading 表示停止中
     if (cancelTaskLoading) {
       return false
     }
@@ -216,7 +216,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
     store.getState().updateState({
       cancelCasualLoading: true,
     })
-    if (taskStatus.loading && currentTaskId) {
+    if (taskStatus.status === AITaskStatus.inProgress && currentTaskId) {
       // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
       const info: AIInputEvent = {
         IsSyncMessage: true,

@@ -17,9 +17,10 @@ import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultPlanLoadingStatus } from './defaultConstant'
+import { DefaultTaskPlanEndGate } from './defaultConstant'
 import { ChatMultiSessionController } from './ChatMultiSessionController'
 import { persistIndependentItem } from './persist/contentPersistHelper'
+import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
 /**
  * 任务节点内的数据生成任务节点ID
@@ -54,10 +55,27 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
   }
 }
 
-/** 任务规划结束后的所有数据处理 */
+/**
+ * end_plan_and_execution & react_task_status_changed 终态齐套后，才把 pendingStatus 落到 taskStatus.status
+ * 任一未到则保持 processing（等待中）
+ */
+export const trySettleTaskPlanEnd = (
+  store: ReturnType<ChatMultiSessionController['ensureSession']>['store'],
+  meta: AIAgentChatMetaData,
+) => {
+  const gate = meta.taskPlanEndGate
+  if (!gate.endReceived || !gate.pendingStatus) return
+  store.getState().updateTaskLoadingStatus({ status: gate.pendingStatus })
+  store.getState().updateState({ cancelTaskLoading: false })
+  meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
+}
+
+/** 任务规划 end 事件：结构收尾 + 清展示文案 + 推进门闩（不清 id / 不直接改 status） */
 export const handleTaskPlanEnd: (
   requestInfo: ReturnType<ChatMultiSessionController['ensureSession']> & { sessionId: string },
-) => void = (requestInfo) => {
+  /** 是否是聊天结束事件，如果是则清展示文案为已结束 */
+  isChatEnd?: boolean,
+) => void = (requestInfo, isChatEnd = false) => {
   const { sessionId, store, rawData, meta } = requestInfo
 
   // 将UI列表里正在执行中的任务组状态变成error
@@ -72,6 +90,7 @@ export const handleTaskPlanEnd: (
     store.getState().incrementNodeVersion(taskNodeInfo.id, 'task')
     persistIndependentItem(sessionId, taskNodeInfo)
   }
+
   // 将当前正在执行的任务树里, 进行中的节点状态变成error
   const newPlanTree = cloneDeep(store.getState().taskChat.plan)
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
@@ -79,7 +98,15 @@ export const handleTaskPlanEnd: (
     return item
   })
   store.getState().updatePlanTree(newPlanTree)
-  store.getState().updateState({ taskStatus: cloneDeep(DefaultPlanLoadingStatus) })
+
+  // end 只清展示文案，保留 taskID / coordinatorId / status（status 由 settle 写）
+  store.getState().updateTaskLoadingStatus({ plan: '已结束', task: '已结束' })
+  if (isChatEnd) {
+    meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
+  } else {
+    meta.taskPlanEndGate.endReceived = true
+    trySettleTaskPlanEnd(store, meta)
+  }
 }
 
 /** Agent 往日志窗口推送日志数据 */

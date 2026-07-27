@@ -3,7 +3,7 @@ import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import { useStore } from 'zustand'
-import { useCurrentStore, useCurrentMeta, useCurrentRawData } from '../hooks/useCurrentDataBySession'
+import { useCurrentStore, useCurrentRawData } from '../hooks/useCurrentDataBySession'
 import useCreation from 'ahooks/lib/useCreation'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
@@ -18,7 +18,6 @@ export const useTaskChatExtraAction = () => {
   const store = useCurrentStore()
 
   const rawData = useCurrentRawData()
-  const meta = useCurrentMeta()
   const execute = useStore(store, (state) => state.execute)
 
   const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)

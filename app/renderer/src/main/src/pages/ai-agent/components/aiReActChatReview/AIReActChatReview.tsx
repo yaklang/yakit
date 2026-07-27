@@ -18,7 +18,7 @@ import { YakParamProps } from '@/pages/plugins/pluginsType'
 import { ExecuteEnterNodeByPluginParams } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType } from '@/pages/plugins/editDetails/utils'
-import { AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIInputEvent } from '../../../ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIInputEvent, AITaskStatus } from '../../../ai-re-act/hooks/grpcApi'
 
 import classNames from 'classnames'
 import styles from './AIReActChatReview.module.scss'
@@ -43,7 +43,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
-  const taskStatusLoading = useStore(store, (state) => state.taskStatus.loading)
+  const taskStatusRunning = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
 
   const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
   const [reviewTrees, setReviewTrees] = useState<AITaskInfoProps[]>([])
@@ -52,7 +52,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => new Promise(() => {}) })
 
   const initReviewTreesRef = useRef<AITaskInfoProps[]>([])
-  /** 取消当前任务后，等待 taskStatus.loading 置为 false 再提交 detached plan */
+  /** 取消当前任务后，等待 status 离开 processing 再提交 detached plan */
   const pendingDetachedPlanSubmitRef = useRef(false)
 
   useEffect(() => {
@@ -277,14 +277,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
   const submitDetachedPlan = useMemoizedFn(() => {
     const taskId = store.getState().taskStatus.taskID
-    if (taskStatusLoading && taskId) {
+    if (taskStatusRunning && taskId) {
       pendingDetachedPlanSubmitRef.current = true
       store.getState().updateState({
         cancelTaskLoading: true,
       })
       const params: AIInputEvent = {
         IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_EXECUTE_DETACHED_PLAN,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
         SyncID: randomString(8),
         SyncJsonInput: JSON.stringify({ task_id: taskId }),
       }
@@ -295,10 +295,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   })
 
   useUpdateEffect(() => {
-    if (!taskStatusLoading && pendingDetachedPlanSubmitRef.current) {
+    if (!taskStatusRunning && pendingDetachedPlanSubmitRef.current) {
       executeDetachedPlan()
     }
-  }, [taskStatusLoading])
+  }, [taskStatusRunning])
 
   /** 继续执行 */
   const handleContinue = useMemoizedFn(() => {

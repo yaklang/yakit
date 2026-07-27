@@ -328,10 +328,10 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
   const syncIdOfAddAndReExecute = useRef<string>('')
 
   useUpdateEffect(() => {
-    if (!taskStatus.loading && currentCoordinatorIdRef.current) {
+    if (taskStatus.status !== AITaskStatus.inProgress && currentCoordinatorIdRef.current) {
       onSendRecover(currentCoordinatorIdRef.current)
     }
-  }, [taskStatus.loading])
+  }, [taskStatus.status])
 
   useEffect(() => {
     if (
@@ -368,13 +368,12 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
       cancelTaskLoading: true,
     })
 
-    if (taskStatus?.loading && taskId) {
+    if (taskStatus.status === AITaskStatus.inProgress && taskId) {
       // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
       const info: AIInputEvent = {
         IsSyncMessage: true,
         SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
         SyncJsonInput: JSON.stringify({ task_id: taskId }),
-
         SyncID: randomString(8),
       }
       onSend({ token: sessionId, type: 'task', params: info })
@@ -624,9 +623,7 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
 
   const store = useCurrentStore()
 
-  const taskStatus = useStore(store, (state) => state.taskStatus)
   const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
-
   const status = useStore(store, (state) => state.taskStatus.status)
   const renderBtn = useMemoizedFn(() => {
     switch (status) {
@@ -654,7 +651,7 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
       case AITaskStatus.error:
       case AITaskStatus.skipped:
       case AITaskStatus.cancel:
-        return !taskStatus.loading ? (
+        return (
           <YakitButton
             type="primary"
             icon={<OutlinePlay2Icon />}
@@ -670,18 +667,6 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
             {...btnProps}
           >
             {t('AIRenderTaskFooterExtra.continueTask')}
-          </YakitButton>
-        ) : (
-          <YakitButton
-            type="primary"
-            icon={<OutlineExitIcon />}
-            className={styles['task-button']}
-            radius="28px"
-            size="large"
-            colors="danger"
-            loading={true}
-          >
-            {t('AIRenderTaskFooterExtra.stoppingTask')}
           </YakitButton>
         )
       default:

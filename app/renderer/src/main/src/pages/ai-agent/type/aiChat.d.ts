@@ -239,6 +239,15 @@ export interface AIAgentChatMetaData {
   /** 当前任务规划正在进行中的节点taskID */
   currentTaskPlanActiveNode: Set<string>
 
+  /**
+   * 任务规划结束门闩：end_plan_and_execution 与 react_task_status_changed 终态都到后才把 status 落到终态
+   * 任一未到则 status 保持 processing（等待中）
+   */
+  taskPlanEndGate: {
+    endReceived: boolean
+    pendingStatus?: 'completed' | 'aborted' | 'skipped'
+  }
+
   /** 历史数据: review_release先出现的历史review数据的id-release */
   historyReviewReleaseID: Record<string, AIAgentGrpcApi.ReviewRelease>
 

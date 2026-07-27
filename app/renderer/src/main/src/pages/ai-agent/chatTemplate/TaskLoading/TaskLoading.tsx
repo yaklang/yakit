@@ -6,6 +6,7 @@ import { useAISystemStreamText } from '@/store/aiSystemStream'
 import classNames from 'classnames'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export const ScrollText: FC<{ text?: string }> = ({ text = '' }) => {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -47,7 +48,7 @@ const TaskLoading: FC<{
 }> = ({ className }) => {
   const store = useCurrentStore()
   const task = useStore(store, (state) => state.taskStatus.task)
-  const loading = useStore(store, (state) => state.taskStatus.loading)
+  const isRunning = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
   const plan = useStore(store, (state) => state.taskStatus.plan)
   const systemStream = useAISystemStreamText()
   const { displayValue, mode } = useAISystemStream({
@@ -56,7 +57,7 @@ const TaskLoading: FC<{
   })
   return (
     <div className={classNames(styles['task-loading'], className)}>
-      {loading && (
+      {isRunning && (
         <>
           <Loading
             size={16}

@@ -16,7 +16,12 @@ import {
   AttachedResourceTypeEnum,
 } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultMemoryList, DefaultPlanItemDetailsData } from './defaultConstant'
+import {
+  DefaultMemoryList,
+  DefaultPlanItemDetailsData,
+  DefaultTaskPlanEndGate,
+  DefaultTaskPlanStatus,
+} from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
@@ -137,6 +142,7 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     taskMemoryList: cloneDeep(DefaultMemoryList),
     notifyMessageTimer: null,
     currentTaskPlanActiveNode: new Set(),
+    taskPlanEndGate: cloneDeep(DefaultTaskPlanEndGate),
     historyReviewReleaseID: {},
     currentPlanReviewExtraId: '',
     planReviewExtraData: new Map(),
@@ -940,6 +946,7 @@ export class ChatMultiSessionController {
         default:
           break
       }
+
       this.requestMessage(token, params)
     } catch (error) {}
   }
@@ -951,7 +958,7 @@ export class ChatMultiSessionController {
 
   /** 会话建立成功后, 需要做的额外操作 */
   private handleSessionStartSuccess(sessionId: string) {
-    const { meta } = this.ensureSession(sessionId)
+    const { store, meta } = this.ensureSession(sessionId)
 
     // 获取任务规划历史任务树
     this.requestMessage(sessionId, {
@@ -968,6 +975,9 @@ export class ChatMultiSessionController {
         SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT,
       })
     }, 5000)
+
+    // 如果任务规划运行态有数据，则置空
+    store.getState().updateState({ taskStatus: cloneDeep(DefaultTaskPlanStatus) })
   }
 
   /** 💥 核心替换：接管原 useChatIPC 里的巨型数据分发逻辑！ */
@@ -1267,9 +1277,12 @@ export class ChatMultiSessionController {
 
       this.closeSessionTimers(meta)
       // 任务规划结束后的相关逻辑
-      handleTaskPlanEnd({ ...data, sessionId })
-      // 核心状态改变
-      store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话已停止' })
+      handleTaskPlanEnd({ ...data, sessionId }, true)
+      store.getState().updateState({
+        execute: false,
+        casualLoading: false,
+        casualTitle: '会话已停止',
+      })
       this.readyChannels.delete(sessionId)
 
       const onEnd = meta.onEnd
