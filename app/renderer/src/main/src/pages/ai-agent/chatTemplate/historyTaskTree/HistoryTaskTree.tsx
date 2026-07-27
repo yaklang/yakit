@@ -31,9 +31,9 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const planHistoryList = useStore(store, (state) => state.planHistoryList ?? [])
   const taskTree = useStore(store, (state) => state.taskChat.plan.task_tree ?? [])
   const taskName = useStore(store, (state) => state.taskChat.plan.root_task_name ?? '')
+  const coordinatorId = useStore(store, (state) => state.taskStatus.coordinatorId ?? '')
 
   const currentTaskItem = useCreation(() => {
-    const coordinatorId = store.getState().taskStatus.coordinatorId || ''
     const item: AIAgentGrpcApi.PlanHistory = {
       coordinator_id: coordinatorId,
       created_at: '',
@@ -57,7 +57,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
       root_task_name: taskName,
     }
     return item
-  }, [taskTree, taskName])
+  }, [coordinatorId, taskTree, taskName])
 
   const currentCoordinatorId = useCreation(() => {
     return currentTaskItem?.coordinator_id || ''

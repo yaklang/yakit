@@ -4,12 +4,13 @@ import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useCreation } from 'ahooks'
 import { AIGroupStreamNode } from '../../aiGroupStreamCard/AIGroupStreamCard'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
 const AIGroupStreamNodeWrapper: FC<AIGroupStreamNodeWrapperProps> = memo((props) => {
   const { itemData, renderNum, groupIndex } = props
   // 其余原始字段通过 useCurrentRawData 获取，并订阅 renderNum 驱动重渲染
   const rawData = useCurrentRawData()
-
+  const currentSessionId = useCurrentSessionId()
   const stream = useCreation(() => {
     const rawStream = rawData.contents.get(itemData.id)
     if (!rawStream) return null
@@ -28,7 +29,7 @@ const AIGroupStreamNodeWrapper: FC<AIGroupStreamNodeWrapperProps> = memo((props)
     return `${groupIndex + 1}. `
   }, [renderNum, groupIndex])
   if (!stream) return null
-  return <AIGroupStreamNode itemData={stream} renderNum={renderNum} seqNo={seqNo} />
+  return <AIGroupStreamNode itemData={stream} renderNum={renderNum} seqNo={seqNo} sessionId={currentSessionId} />
 })
 
 export default AIGroupStreamNodeWrapper

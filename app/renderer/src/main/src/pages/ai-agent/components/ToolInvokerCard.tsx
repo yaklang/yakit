@@ -179,9 +179,6 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
     }
     onSend({ token: sessionId, type: '', params: info })
   })
-  const referenceNode = useCreation(() => {
-    return !!stream?.reference ? <AIReferenceNode referenceList={stream?.reference} /> : <></>
-  }, [stream?.reference])
   return (
     <ChatCard
       titleText={nodeLabel || data.toolName}
@@ -220,7 +217,11 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
       <ToolStatusCard status={'purple'}>
         <ToolParamsLine params={data?.tool?.reviewParams} />
         <ToolTerminalOutput content={stream?.data?.content || ''} autoScrollBottom />
-        {referenceNode}
+        <AIReferenceNode
+          title={t('AIStreamNode.viewReference')}
+          referenceList={stream?.reference || []}
+          sessionId={sessionId}
+        />
       </ToolStatusCard>
       {!!fileList?.length && <FileList fileList={fileList} />}
     </ChatCard>

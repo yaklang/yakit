@@ -7,7 +7,7 @@ import { AIGroupStreamNode } from '../../aiGroupStreamCard/AIGroupStreamCard'
 
 const AIChildWindowGroupStreamNode: FC<AIChildWindowGroupStreamNodeProps> = memo((props) => {
   const { itemData, renderNum, groupIndex } = props
-  const { rawData } = useAIConcurrentStreamStore()
+  const { rawData, session } = useAIConcurrentStreamStore()
   // 其余原始字段通过 useCurrentRawData 获取，并订阅 renderNum 驱动重渲染
   const stream = useCreation(() => {
     const rawStream = rawData?.get(itemData.id)
@@ -27,7 +27,7 @@ const AIChildWindowGroupStreamNode: FC<AIChildWindowGroupStreamNodeProps> = memo
     return `${groupIndex + 1}. `
   }, [renderNum, groupIndex])
   if (!stream) return null
-  return <AIGroupStreamNode itemData={stream} renderNum={renderNum} seqNo={seqNo} />
+  return <AIGroupStreamNode itemData={stream} renderNum={renderNum} seqNo={seqNo} sessionId={session ?? ''} />
 })
 
 export default AIChildWindowGroupStreamNode

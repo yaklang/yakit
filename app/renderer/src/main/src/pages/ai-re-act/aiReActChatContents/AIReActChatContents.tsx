@@ -1,5 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
-import classNames from 'classnames'
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState, useEffect } from 'react'
 import { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
 import { AIMarkdown } from '@/pages/ai-agent/components/aiMarkdown/AIMarkdown'
@@ -14,35 +13,24 @@ import { AIStreamContentType } from '../hooks/defaultConstant'
 import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
-import { ReActChatRenderElement } from '../hooks/aiRender'
+import { ReActChatRenderElement, ChatReferenceMaterialPayload } from '../hooks/aiRender'
 import Loading from '@/components/Loading/Loading'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCreation from 'ahooks/lib/useCreation'
-import useDebounceFn from 'ahooks/lib/useDebounceFn'
-const getAIReferenceNodeByType = (contentType?: string) => {
-  switch (contentType) {
-    case AIStreamContentType.TEXT_MARKDOWN:
-      return styles['ai-text-markdown-reference-node']
-    case AIStreamContentType.CODE_YAKLANG:
-    case AIStreamContentType.CODE_HTTP_REQUEST:
-      return styles['ai-yaklang-reference-node']
-    case AIStreamContentType.TEXT_PLAIN:
-      return styles['ai-text-plain-reference-node']
-    case AIStreamContentType.LOG_TOOL:
-      return styles['ai-log-tool-reference-node']
-    default:
-      return styles['ai-stream-chat-reference-node']
-  }
-}
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
+import { Code } from '@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStreamCard'
+
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
-  const { stream, aiMarkdownProps, listItemIndex, streamChatSessionId } = props
+  const { stream, aiMarkdownProps, listItemIndex, sessionId } = props
   const { reference } = stream
   const { NodeId, content, NodeIdVerbose, CallToolID, ContentType, status } = stream.data
   // 是否仍在流式输出（结束态 status 为 'end'，历史消息亦为 'end'，据此控制流式淡入效果）
@@ -59,16 +47,14 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     }
   }, [stream.Timestamp, stream.AIModelName, stream.AIService])
   const referenceNode = useCreation(() => {
-    const className = getAIReferenceNodeByType(ContentType)
-    return !!reference ? <AIReferenceNode referenceList={reference || []} className={className} /> : <></>
-  }, [reference, ContentType])
+    return !!reference ? <AIReferenceNode referenceList={reference || []} sessionId={sessionId || ''} /> : <></>
+  }, [reference, sessionId])
   if (ContentType?.startsWith('code/')) {
     return (
       <AIYaklangCode
         contentType={ContentType}
         content={content}
         autoApplyStreamId={stream.id}
-        autoApplyChatSessionId={streamChatSessionId}
         listItemIndex={listItemIndex}
         nodeLabel={nodeLabel}
         modalInfo={modalInfo}
@@ -233,31 +219,71 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   }),
 )
 
-/** 挂到 body，避免 Virtuoso 滚出视口时卸载列表项导致弹窗消失。
- * TODO -本阶段 referenceList 为 token 列表；按 token 查 IDB 展示完整交互后置。
- */
-export const openAIReferenceModal = (_referenceList: string[], title = '参考资料') => {
-  const modal = showYakitModal({
-    title,
-    cancelButtonProps: { style: { display: 'none' } },
-    bodyStyle: { height: 500 },
-    content: <YakitEditor type="plaintext" readOnly value={''} />,
-    onOk: () => modal.destroy(),
-  })
-}
-
 export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
-  const { referenceList, className } = props
-  const onClick = useDebounceFn(
-    (e) => {
-      e.stopPropagation()
-      openAIReferenceModal(referenceList)
-    },
-    { wait: 500, leading: true },
-  ).run
-  return (
-    <span className={classNames(styles['ai-reference-node'], className)} onClick={onClick}>
-      [参考资料]
-    </span>
-  )
+  const { referenceList, sessionId, title = '' } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
+
+  const [open, setOpen] = useState(false)
+  const [modelCode, setModelCode] = useState<ChatReferenceMaterialPayload>([])
+  const [modelLoading, setModelLoading] = useState(false)
+
+  const hidden = useCreation(() => {
+    return !referenceList?.length
+  }, [referenceList?.length])
+
+  const onClose = useMemoizedFn(() => {
+    setOpen(false)
+  })
+
+  /** 按 token 列表异步获取参考资料完整数据 */
+  const fetchReference = useMemoizedFn(async (): Promise<ChatReferenceMaterialPayload> => {
+    if (!referenceList.length || !sessionId) return []
+    try {
+      const items = await globalSessionEngine.getSessionReferenceMaterials(sessionId, referenceList)
+      return items.map((item) => item.content)
+    } catch {
+      return []
+    }
+  })
+
+  // modal 打开时拉取数据
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    setModelLoading(true)
+    fetchReference()
+      .then((code) => {
+        if (!cancelled) setModelCode(code)
+      })
+      .finally(() => {
+        if (!cancelled) setModelLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
+  const openModel = useMemoizedFn(() => {
+    setOpen(true)
+  })
+  return !hidden ? (
+    <>
+      {open && (
+        <YakitModal
+          visible={open}
+          title={title || t('AIStreamNode.viewReference')}
+          cancelButtonProps={{ style: { display: 'none' } }}
+          onOk={onClose}
+          onCloseX={onClose}
+        >
+          <YakitSpin spinning={modelLoading}>
+            <Code code={modelCode} style={{ maxHeight: '500px' }} />
+          </YakitSpin>
+        </YakitModal>
+      )}
+      <YakitButton type="text" colors="primary" size="small" onClick={openModel}>
+        {t('AIStreamNode.viewReference')}
+      </YakitButton>
+    </>
+  ) : null
 })

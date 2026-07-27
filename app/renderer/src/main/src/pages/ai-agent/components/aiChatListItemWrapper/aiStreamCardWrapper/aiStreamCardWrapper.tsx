@@ -6,6 +6,7 @@ import { AIStreamCard } from '../../aiChatListItem/StreamingChatContent/Streamin
 import { AIChatQSDataTypeEnum, ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useStore } from 'zustand'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
 const AIStreamCardWrapper: FC<AIStreamCardWrapperProps> = memo((props) => {
   const { token } = props
@@ -15,7 +16,7 @@ const AIStreamCardWrapper: FC<AIStreamCardWrapperProps> = memo((props) => {
   const store = useCurrentStore()
   const renderNum = useStore(store, (state) => state.items[token]?.renderNum)
   const rawData = useCurrentRawData()
-
+  const sessionId = useCurrentSessionId()
   useRafInterval(() => {
     syncData()
   }, interval)
@@ -38,7 +39,7 @@ const AIStreamCardWrapper: FC<AIStreamCardWrapperProps> = memo((props) => {
   })
 
   if (!itemData) return null
-  return <AIStreamCard itemData={itemData} renderNum={renderNum} />
+  return <AIStreamCard itemData={itemData} renderNum={renderNum} sessionId={sessionId} />
 })
 
 export default AIStreamCardWrapper

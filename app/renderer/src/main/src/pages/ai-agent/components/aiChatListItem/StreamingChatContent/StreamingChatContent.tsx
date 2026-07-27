@@ -1,6 +1,6 @@
 import { AIStreamNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
 import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
-import { type FC, useMemo } from 'react'
+import { type FC, memo, useMemo } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import styles from './StreamingChatContent.module.scss'
@@ -8,9 +8,10 @@ import styles from './StreamingChatContent.module.scss'
 type SingleStreamProps = {
   itemData: ChatStream
   renderNum: number
+  sessionId: string
 }
 
-export const AIStreamCard: FC<SingleStreamProps> = ({ itemData, renderNum }) => {
+export const AIStreamCard: FC<SingleStreamProps> = memo(({ itemData, renderNum, sessionId }) => {
   const getContent = useMemoizedFn(() => {
     return itemData.data.content
   })
@@ -49,5 +50,5 @@ export const AIStreamCard: FC<SingleStreamProps> = ({ itemData, renderNum }) => 
     }
   }, [itemData.chatType])
   if (!stream) return null
-  return <AIStreamNode aiMarkdownProps={aiStreamNodeProps} stream={stream} />
-}
+  return <AIStreamNode aiMarkdownProps={aiStreamNodeProps} stream={stream} sessionId={sessionId} />
+})
