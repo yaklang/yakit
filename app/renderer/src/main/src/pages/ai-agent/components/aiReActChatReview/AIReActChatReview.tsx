@@ -49,7 +49,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const [reviewTrees, setReviewTrees] = useState<AITaskInfoProps[]>([])
   const [currentPlansId, setCurrentPlansId] = useState<string>('')
   const [forgeOption, setForgeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
-  const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => {} })
+  const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => new Promise(() => {}) })
 
   const initReviewTreesRef = useRef<AITaskInfoProps[]>([])
   /** 取消当前任务后，等待 taskStatus.loading 置为 false 再提交 detached plan */

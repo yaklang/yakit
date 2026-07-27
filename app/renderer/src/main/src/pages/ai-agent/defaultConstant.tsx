@@ -31,7 +31,7 @@ import {
   MemfitIcon,
 } from './aiModelList/icon'
 import { UseChatIPCState } from '../ai-re-act/hooks/type'
-import { AIAgentGrpcApi, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
 import {
   SolidCursorclickIcon,
   SolidHashtagIcon,
@@ -121,7 +121,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableGoalMode: false,
     GoalMinIterations: 0,
   },
-  Source: 'ai',
+  Source: AISourceEnum.aiAgent,
 }
 
 /** mcp 自定义服务器配置类型选项 */

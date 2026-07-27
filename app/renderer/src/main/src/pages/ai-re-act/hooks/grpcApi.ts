@@ -505,6 +505,8 @@ export declare namespace AIAgentGrpcApi {
   export interface PlanTask {
     /** 任务id */
     task_id: string
+    /** 审阅树扁平化后的层级（仅前端使用） */
+    level?: number
     /** 任务名 */
     name: string
     /** 正文 */
