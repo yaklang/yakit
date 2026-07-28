@@ -49,6 +49,7 @@ import { HistroryAIReActChat } from './HistroryAIReActChat'
 import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
@@ -221,6 +222,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const isHaveYakRunnerPageId = useCreation(() => {
     return route === YakitRoute.YakScript && !!pageId
   }, [route, pageId])
+
+  useUpdateEffect(() => {
+    // 只有配置变化了才更新，SessionID不管
+    if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
+  }, [setting])
 
   useEffect(() => {
     if (!showFreeChat) {

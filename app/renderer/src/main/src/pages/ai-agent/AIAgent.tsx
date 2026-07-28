@@ -33,6 +33,7 @@ import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { onReStart } from './utils'
+import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = '20260113'
@@ -95,6 +96,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   // 缓存全局配置数据
   useUpdateEffect(() => {
     const cache = omit(getSetting(), ['AIService', 'AIModelName'])
+    // 只有配置变化了才更新，SessionID不管
+    if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
     setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
   }, [setting])
 
