@@ -266,11 +266,30 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
   }
 
-  useUpdateEffect(() => {
-    if (containerRef.current && resizeObserverRef.current) {
-      resizeObserverRef.current.observe(containerRef.current)
+  const [inViewport] = useInViewport(containerRef)
+
+  // 隐藏页或切走时不 observe，减少 ResizeObserver 回调
+  useEffect(() => {
+    const observer = resizeObserverRef.current
+    const el = containerRef.current
+    if (!observer || !el) return
+
+    if (inViewport && height) {
+      observer.observe(el)
+    } else {
+      observer.unobserve(el)
     }
-  }, [containerRef.current, height])
+
+    return () => {
+      observer.unobserve(el)
+    }
+  }, [height, inViewport])
+
+  useEffect(() => {
+    return () => {
+      resizeObserverRef.current?.disconnect()
+    }
+  }, [])
 
   useDebounceEffect(
     () => {
@@ -309,7 +328,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }
   }, [scrollToIndex])
 
-  const [inViewport] = useInViewport(containerRef)
   const [mouseEnter, setMouseEnter] = useState<boolean>(false)
 
   const focusIdRef = useRef<string>(`${ShortcutKeyFocusType.TableVirtual}-${uuidv4()}`)

@@ -1032,6 +1032,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             wrapperStyle={tableWrapperStyle}
             onQueryParams={onQueryParams}
             builtinTagList={builtinTagList}
+            inViewportOverride={inViewport && autoForward === 'log'}
           />
         </div>
       </>
