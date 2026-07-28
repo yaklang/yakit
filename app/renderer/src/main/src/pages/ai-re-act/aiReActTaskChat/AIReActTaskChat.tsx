@@ -636,6 +636,8 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
           </YakitPopconfirm>
         )
       case AITaskStatus.error:
+      case AITaskStatus.skipped:
+      case AITaskStatus.cancel:
         return !taskStatus.loading ? (
           <YakitButton
             type="primary"

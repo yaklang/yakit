@@ -146,7 +146,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
     let show = true
     if (!chatIPCData.execute) return true
     if (coordinatorId === currentCoordinatorId) {
-      show = taskInfo?.status === AITaskStatus.error && !chatIPCData?.taskStatus?.loading
+      show = taskInfo?.status !== AITaskStatus.inProgress && !chatIPCData?.taskStatus?.loading
     }
     // 如果当前有任务正在等待被恢复
     if (sendRecoverParamsRef.current) {
@@ -155,7 +155,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
         sendRecoverParamsRef.current.coordinatorId === coordinatorId && sendRecoverParamsRef.current.taskId === taskId
       )
     }
-    const isStopping = taskInfo?.status === AITaskStatus.error && taskStatus.loading
+    const isStopping = taskInfo?.status !== AITaskStatus.inProgress && taskStatus.loading
 
     // 如果系统正处于正在停止/取消任务的全局 Loading 状态，或当前任务本身正处于停止进行中的状态
     if (chatIPCData.cancelTaskLoading || isStopping) {
