@@ -1,4 +1,3 @@
-import type { OpenAIConcurrentStreamPayload } from '@/utils/openWebsite'
 import {
   AIChatQSDataTypeEnum,
   AIYakExecFileRecord,
@@ -7,6 +6,7 @@ import {
 } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIItemKind, getAIItemKind } from '@/pages/ai-re-act/hooks/useAIItemKind'
 import i18n from '@/i18n/i18n'
+import { FramePayload } from '../concurrentStreamFrame'
 
 /** store 的最小依赖接口 */
 interface BuildFrameStore {
@@ -40,7 +40,7 @@ function getKind(store: BuildFrameStore, childToken: string): AIItemKind | null 
 
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
 /** 获取 task 节点的名称 */
-function getTaskName(rawData: BuildFrameRawData | null | undefined, token: string): string {
+export function getTaskName(rawData: BuildFrameRawData | null | undefined, token: string): string {
   const itemData = rawData?.contents.get(token)
   if (!itemData) return ''
   switch (itemData.type) {
@@ -56,32 +56,45 @@ function getTaskName(rawData: BuildFrameRawData | null | undefined, token: strin
 /**
  * 从主窗口 store + rawData 构建 ConcurrentStreamFramePayload。
  * 收集 task 自身、所有 childrenTokens 节点、group 内子节点的原始数据，
- * 逻辑由 openChildWindow 与 useConcurrentStreamRefreshListener 共用。
  */
 export function buildConcurrentStreamFramePayload(
   params: BuildConcurrentStreamFramePayloadParams,
-): OpenAIConcurrentStreamPayload | null {
-  const { token, session, chatType, store, rawData, withRawData = true } = params
+): FramePayload | null {
+  const { token, chatType, store, rawData, withRawData = true } = params
   if (!chatType || !rawData) return null
 
   const frameRawData = new Map<string, AIChatQSData>()
   let execFileRecord = new Map<string, AIYakExecFileRecord[]>()
   const state = store.getState()
-  const childrenTokens = state.tasks[token]?.childrenTokens || []
+  let childrenTokens: string[] = []
 
+  const handFileRecord = (record) => {
+    switch (record.type) {
+      case AIChatQSDataTypeEnum.TOOL_RESULT:
+        const fileRecord = state.execFileRecord.get(record.data.callToolId)
+        if (fileRecord) execFileRecord.set(record.data.callToolId, fileRecord)
+        break
+
+      default:
+        break
+    }
+  }
   if (withRawData) {
     // task 自身数据
     const taskData = rawData.contents.get(token)
     if (taskData) frameRawData.set(token, taskData)
-
+    const tokens = state.tasks[token]?.childrenTokens
     // 遍历所有子节点
-    for (const childToken of childrenTokens) {
+    for (const childToken of tokens) {
       const kind = getKind(store, childToken)
       if (!kind) continue
       const childData = rawData.contents.get(childToken)
       if (!childData) continue
       frameRawData.set(childToken, childData)
 
+      if (kind === 'item') {
+        handFileRecord(childData)
+      }
       // group 下的所有子节点数据
       if (kind === 'group') {
         const groupData = state.groups[childToken]
@@ -89,20 +102,20 @@ export function buildConcurrentStreamFramePayload(
           const grandChildData = rawData.contents.get(grandChildToken)
           if (!grandChildData) continue
           frameRawData.set(grandChildToken, grandChildData)
+          handFileRecord(grandChildData)
         }
       }
     }
-
-    execFileRecord = new Map(state.execFileRecord)
+    childrenTokens = state.tasks[token]?.childrenTokens || []
   }
 
   return {
-    session,
-    token,
-    chatType: chatType as OpenAIConcurrentStreamPayload['chatType'],
-    childrenTokens,
+    // session,
+    // token,
+    // chatType: chatType as OpenAIConcurrentStreamPayload['chatType'],
+    childrenTokens: [...childrenTokens],
     rawData: frameRawData,
-    execFileRecord,
-    taskName: getTaskName(rawData, token),
+    execFileRecord: execFileRecord,
+    // taskName: getTaskName(rawData, token),
   }
 }

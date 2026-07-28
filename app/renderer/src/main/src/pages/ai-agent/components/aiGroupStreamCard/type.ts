@@ -1,5 +1,5 @@
 import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, ReactNode, SetStateAction } from 'react'
 
 export interface AIGroupStreamCardHeardProps {
   expand: boolean
@@ -24,4 +24,5 @@ export interface AIGroupStreamCardListWrapperProps {
 export interface AIGroupStreamCardListProps {
   expand: boolean
   childrenTokens: string[]
+  rendItem?: (token: string, index: number) => ReactNode
 }

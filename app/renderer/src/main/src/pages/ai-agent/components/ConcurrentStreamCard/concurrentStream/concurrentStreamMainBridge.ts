@@ -29,8 +29,13 @@ export function setupConcurrentStreamMainBridge() {
     const full = buildConcurrentStreamFramePayload({ token, session, chatType, store, rawData, withRawData: true })
     const entries = full ? Array.from(full.rawData.entries()) : []
     const execFileRecord = full ? Array.from(full.execFileRecord.entries()) : []
+    const childrenTokens = full ? full.childrenTokens : []
 
-    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, { rawData: entries, execFileRecord })
+    ipcRenderer.send(`fetch-concurrent-stream-contents-response-${requestId}`, {
+      rawData: entries,
+      execFileRecord,
+      childrenTokens,
+    })
   }
 
   ipcRenderer.on(FETCH_REQUEST, handler)

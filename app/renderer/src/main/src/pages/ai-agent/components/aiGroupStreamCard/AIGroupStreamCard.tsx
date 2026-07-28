@@ -67,7 +67,7 @@ export const AIGroupStreamNode: FC<{
   )
 })
 
-const STREAM_MASK_THRESHOLD = 170
+export const STREAM_MASK_THRESHOLD = 170
 
 const AIGroupStreamCard: FC<{
   token: string

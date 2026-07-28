@@ -15,7 +15,7 @@ import styles from '../ConcurrentStreamCard.module.scss'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
-import { buildConcurrentStreamFramePayload } from '../concurrentStream/buildConcurrentStreamFramePayload'
+import { getTaskName } from '../concurrentStream/buildConcurrentStreamFramePayload'
 
 /** 卡片标题栏右侧操作区 */
 interface ConcurrentStreamCardActionsProps {
@@ -61,18 +61,15 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
 
   const openChildWindow = useMemoizedFn((e) => {
     e?.stopPropagation()
-    // 开窗只传轻量元数据（rawData 为空 Map），rawData 由子窗 mount 后再拉取，避免开窗瞬间克隆大 Map
-    const framePayload = buildConcurrentStreamFramePayload({
+    if (!chatType) return
+    // 开窗只传轻量元数据
+    // 只传基础类型数据
+    openAIConcurrentStream({
       token,
       session,
       chatType,
-      store,
-      rawData,
-      withRawData: false,
+      taskName: getTaskName(rawData, token),
     })
-    if (framePayload) {
-      openAIConcurrentStream(framePayload)
-    }
   })
 
   if (isChildWindow) {

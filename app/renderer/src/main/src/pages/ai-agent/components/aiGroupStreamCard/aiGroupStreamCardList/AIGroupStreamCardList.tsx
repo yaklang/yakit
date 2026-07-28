@@ -8,7 +8,7 @@ import styles from './AIGroupStreamCardList.module.scss'
 const BOTTOM_THRESHOLD = 10
 
 const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props) => {
-  const { expand, childrenTokens } = props
+  const { expand, childrenTokens, rendItem } = props
 
   const contentRef = useRef<HTMLDivElement>(null)
   const [isScroll, setIsScroll] = useState(false)
@@ -77,9 +77,9 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
           overflow: isScroll ? 'overlay' : 'hidden',
         }}
       >
-        {childrenTokens.map((token, index) => (
-          <StaticChatContent key={token} token={token} groupIndex={index} />
-        ))}
+        {childrenTokens.map((token, index) =>
+          !!rendItem ? rendItem(token, index) : <StaticChatContent key={token} token={token} groupIndex={index} />,
+        )}
       </div>
     </div>
   )

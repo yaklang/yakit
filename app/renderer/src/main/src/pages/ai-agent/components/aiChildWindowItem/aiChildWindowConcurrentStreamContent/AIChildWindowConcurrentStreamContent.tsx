@@ -5,11 +5,11 @@ import useClickFocus from '@/pages/ai-re-act/hooks/useClickFocus'
 import React, { type FC, memo } from 'react'
 import AIChildWindowGroupItem from '../aiChildWindowGroupItem/AIChildWindowGroupItem'
 import AIChildWindowNodeItemWrapper from '../aiChildWindowNodeItemWrapper/AIChildWindowNodeItemWrapper'
+import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 const AIChildWindowConcurrentStreamContent: FC = memo(() => {
   const { childrenTokens, rawData } = useAIConcurrentStreamStore()
   const { ref: scrollRef, isFocus } = useClickFocus<HTMLDivElement>()
-
   return (
     <div className={styles['concurrent-stream-content-wrapper']}>
       <div
@@ -29,7 +29,7 @@ const AIChildWindowConcurrentStreamContent: FC = memo(() => {
             if (!item) return <React.Fragment key={token} />
             return (
               <div className={styles['concurrent-stream-content-item']} key={token}>
-                {!!item.parentGroupToken ? (
+                {item.type === AIChatQSDataTypeEnum.STREAM_GROUP ? (
                   <AIChildWindowGroupItem token={token} />
                 ) : (
                   <AIChildWindowNodeItemWrapper itemData={item} />
