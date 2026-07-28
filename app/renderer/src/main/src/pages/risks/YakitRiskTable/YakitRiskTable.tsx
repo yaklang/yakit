@@ -90,11 +90,7 @@ import { FuncBtn } from '@/pages/plugins/funcTemplate'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { YakitRoute } from '@/enums/yakitRoute'
-import {
-  AuditCodePageInfoProps,
-  PluginHubPageInfoProps,
-  RuleManagementPageInfoProps,
-} from '@/store/pageInfo'
+import { AuditCodePageInfoProps, PluginHubPageInfoProps, RuleManagementPageInfoProps } from '@/store/pageInfo'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import ReactResizeDetector from 'react-resize-detector'
 import { serverPushStatus } from '@/utils/duplex/duplex'

@@ -159,16 +159,10 @@ export default function useMcpStream(props: useMcpHooks) {
     setMcpUrl(url)
   })
 
-  const mcpStreamInfo = useMemo(
-    () => ({ mcpCurrent, mcpServerUrl, mcpUrl }),
-    [mcpCurrent, mcpServerUrl, mcpUrl],
-  )
+  const mcpStreamInfo = useMemo(() => ({ mcpCurrent, mcpServerUrl, mcpUrl }), [mcpCurrent, mcpServerUrl, mcpUrl])
 
   // 稳定引用，避免 useSyncYakMcpStream 因对象重建触发无效 store 同步
-  const mcpStreamEvent = useMemo(
-    () => ({ onStart, onCancel, onSetMcpUrl }),
-    [onStart, onCancel, onSetMcpUrl],
-  )
+  const mcpStreamEvent = useMemo(() => ({ onStart, onCancel, onSetMcpUrl }), [onStart, onCancel, onSetMcpUrl])
 
   return [mcpStreamInfo, mcpStreamEvent] as const
 }
