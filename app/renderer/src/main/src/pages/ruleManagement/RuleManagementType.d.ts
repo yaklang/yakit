@@ -14,7 +14,6 @@ export interface LocalRuleGroupListProps {
   ref?: ForwardedRef<LocalRuleGroupListPropsRefProps>
   isrefresh?: boolean
   onGroupChange: (groups: string[]) => void
-  currentPageTabRouteKey: string
   canUpload: boolean
   userInfo: UserInfoProps
   onRefreshOnlienRuleManagement: () => void
@@ -82,7 +81,6 @@ export interface OnlineRuleGroupListProps {
   ref?: ForwardedRef<OnlineRuleGroupListPropsRefProps>
   isrefresh?: boolean
   onGroupChange: (groups: string[]) => void
-  currentPageTabRouteKey: string
   canDel: boolean
   userInfo: UserInfoProps
   onRefreshRuleManagement: () => void

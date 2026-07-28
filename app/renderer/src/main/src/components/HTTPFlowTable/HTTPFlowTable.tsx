@@ -56,8 +56,7 @@ import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/bina
 import { v4 as uuidv4 } from 'uuid'
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { getHTTPFlowExportFields } from './HTTPFlowExportFields'
 import { showYakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import MITMContext from '@/pages/mitm/Context/MITMContext'
@@ -183,12 +182,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   // 导出字段映射配置
   const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
-  const { currentPageTabRouteKey } = usePageInfo(
-    (s) => ({
-      currentPageTabRouteKey: s.currentPageTabRouteKey,
-    }),
-    shallow,
-  )
 
   const mitmContent = useContext(MITMContext)
 
@@ -1423,7 +1416,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
   })
   const onExcelExport = (list) => {
-    percentContainerRef.current = currentPageTabRouteKey
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -1444,9 +1436,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             fileName={'History'}
             getData={(pagination) => getExcelData(pagination, list)}
             onClose={() => m.destroy()}
-            getContainer={
-              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
-            }
+            getContainer={getMainOperatorPageBodyContainer()}
           />
         )
       },
@@ -1458,7 +1448,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       width: 650,
       footer: null,
       maskClosable: false,
-      getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined,
+      getContainer: getMainOperatorPageBodyContainer(),
     })
   }
 
@@ -1467,9 +1457,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
    */
   const [exportToken, setExportToken] = useState<string>('')
   const [percentVisible, setPercentVisible] = useState<boolean>(false)
-  const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+  const exportPageContainerRef = useRef<HTMLElement>()
   const onHarExport = (ids: number[]) => {
-    percentContainerRef.current = currentPageTabRouteKey
     const m = showYakitModal({
       title: (modalT) => modalT('HTTPFlowTable.exportFields'),
       content: (modalT) => {
@@ -1489,9 +1478,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             exportKey={'MITM-HISTORY-EXPORT-KEYS'}
             getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
             onClose={() => m.destroy()}
-            getContainer={
-              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
-            }
+            getContainer={getMainOperatorPageBodyContainer()}
             onHarExport={() => handleClickHarExport(ids)}
           />
         )
@@ -1504,7 +1491,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       width: 650,
       footer: null,
       maskClosable: false,
-      getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined,
+      getContainer: getMainOperatorPageBodyContainer(),
     })
   }
 
@@ -1536,7 +1523,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ipcRenderer
               .invoke('ExportHTTPFlowStream', exportParams, token)
               .then(() => {
-                percentContainerRef.current = currentPageTabRouteKey
+                exportPageContainerRef.current = getMainOperatorPageBodyContainer()
                 setPercentVisible(true)
               })
               .catch((error) => {
@@ -2680,7 +2667,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       ></EditTagsModal>
       {percentVisible && (
         <ImportExportProgress
-          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
+          getContainer={exportPageContainerRef.current}
           visible={percentVisible}
           title={t('ImportExportProgress.exportHARData')}
           token={exportToken}

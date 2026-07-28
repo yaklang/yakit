@@ -57,8 +57,8 @@ import { RefreshIcon } from '@/assets/newIcon'
 import { IRifyApplySyntaxFlowRuleUpdate } from '../mitm/MITMServerHijacking/MITMPluginLocalList'
 import { useStore } from '@/store'
 import { randomString } from '@/utils/randomUtil'
-import { RuleManagementPageInfoProps, usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { RuleManagementPageInfoProps } from '@/store/pageInfo'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { API } from '@/services/swagger/resposeType'
 import { isCommunityIRify, isEnpriTraceIRify } from '@/utils/envfile'
@@ -74,12 +74,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
   const [pageInfo, setPageInfo] = useState<RuleManagementPageInfoProps | undefined>(ruleManagementPageInfo)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const userInfo = useStore((s) => s.userInfo)
-  const { currentPageTabRouteKey } = usePageInfo(
-    (s) => ({
-      currentPageTabRouteKey: s.currentPageTabRouteKey,
-    }),
-    shallow,
-  )
   const localRuleGroupListRef = useRef<LocalRuleGroupListPropsRefProps>()
   const onlineRuleGroupListRef = useRef<OnlineRuleGroupListPropsRefProps>()
 
@@ -534,7 +528,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
   const infoRef = useRef<{ type: string; title: string; content: string }>({ type: '', title: '', content: '' })
   const [percentShow, setPercentShow] = useState<boolean>(false)
   const tokenRef = useRef<string>(randomString(40))
-  const containerRef = useRef<string>(currentPageTabRouteKey)
+  const containerRef = useRef<HTMLElement>()
 
   const handleUpload = useMemoizedFn(() => {
     tokenRef.current = randomString(40)
@@ -543,7 +537,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
       tokenRef.current,
     ).then((res) => {
       setInfoVisible(false)
-      containerRef.current = currentPageTabRouteKey
+      containerRef.current = getMainOperatorPageBodyContainer()
       setPercentShow(true)
     })
   })
@@ -570,7 +564,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
       tokenRef.current,
     ).then((res) => {
       setInfoVisible(false)
-      containerRef.current = currentPageTabRouteKey
+      containerRef.current = getMainOperatorPageBodyContainer()
       setPercentShow(true)
     })
   })
@@ -906,7 +900,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
               ref={localRuleGroupListRef}
               isrefresh={groupRefresh}
               onGroupChange={handleGroupChange}
-              currentPageTabRouteKey={currentPageTabRouteKey}
               canUpload={canUpAndDel}
               userInfo={userInfo}
               onRefreshOnlienRuleManagement={onRefreshOnlienRuleManagementFun}
@@ -951,7 +944,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
               ref={onlineRuleGroupListRef}
               isrefresh={groupOnlineRefresh}
               onGroupChange={handleOnlineGroupChange}
-              currentPageTabRouteKey={currentPageTabRouteKey}
               canDel={canUpAndDel}
               userInfo={userInfo}
               onRefreshRuleManagement={onRefreshRuleManagementFun}
@@ -1250,7 +1242,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         ></YakitHint>
         {percentShow && (
           <RuleUploadAndDownloadModal
-            getContainer={document.getElementById(`main-operator-page-body-${containerRef.current}`) || undefined}
+            getContainer={containerRef.current}
             type={infoRef.current.type}
             apiKey={infoRef.current.type === 'upload' ? 'SyntaxFlowRuleToOnline' : 'DownloadSyntaxFlowRule'}
             token={tokenRef.current}
