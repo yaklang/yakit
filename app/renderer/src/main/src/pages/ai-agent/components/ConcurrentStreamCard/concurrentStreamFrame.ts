@@ -1,5 +1,4 @@
 import type { AIChatQSData, AIYakExecFileRecord, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
-import { isMap } from 'lodash'
 
 export interface ConcurrentStreamFramePayload {
   session: string
@@ -13,14 +12,20 @@ export interface ConcurrentStreamFramePayload {
   taskName?: string
 }
 
-export function isConcurrentStreamFrame(data: unknown): data is ConcurrentStreamFramePayload {
+export interface FramePayload extends Pick<
+  ConcurrentStreamFramePayload,
+  'session' | 'token' | 'chatType' | 'childrenTokens'
+> {
+  renderNum?: number
+}
+export function isConcurrentStreamFrame(data: unknown): data is FramePayload {
   if (!data || typeof data !== 'object') return false
   const record = data as Record<string, unknown>
+  // 只校验元数据字段；rawData/execFileRecord 在跨 IPC 传输时可能从 Map 退化为普通对象
   return (
     typeof record.session === 'string' &&
     typeof record.token === 'string' &&
     typeof record.chatType === 'string' &&
-    Array.isArray(record.childrenTokens) &&
-    isMap(record.rawData)
+    Array.isArray(record.childrenTokens)
   )
 }

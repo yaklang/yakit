@@ -15,3 +15,17 @@
   height: 100%;
   background-color: var(--Colors-Use-Basic-Background);
 }
+
+.goal {
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  padding: 4px 0;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-break: break-all;
+}

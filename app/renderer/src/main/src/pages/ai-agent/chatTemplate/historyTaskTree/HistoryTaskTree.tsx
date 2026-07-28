@@ -25,10 +25,12 @@ import { useCurrentMeta, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurr
 import { useStore } from 'zustand'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { formatAIAgentSetting, onReStart } from '../../utils'
+import { DefaultPlanHistoryList } from '@/pages/ai-re-act/hooks/defaultConstant'
+import cloneDeep from 'lodash/cloneDeep'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const store = useCurrentStore()
-  const planHistoryList = useStore(store, (state) => state.planHistoryList ?? [])
+  const planHistoryList = useStore(store, (state) => state.planHistoryList ?? cloneDeep(DefaultPlanHistoryList))
   const taskTree = useStore(store, (state) => state.taskChat.plan.task_tree ?? [])
   const taskName = useStore(store, (state) => state.taskChat.plan.root_task_name ?? '')
   const coordinatorId = useStore(store, (state) => state.taskStatus.coordinatorId ?? '')

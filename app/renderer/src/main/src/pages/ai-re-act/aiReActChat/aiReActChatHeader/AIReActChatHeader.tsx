@@ -45,7 +45,6 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
   const store = useCurrentStore()
   const focusMode = useStore(store, (state) => state.focusMode)
   const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
-  const casualLoading = useStore(store, (state) => state.casualLoading)
 
   const sessionRef = useRef<string | undefined>(undefined)
 
@@ -56,15 +55,10 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
   }, [activeChat?.SessionID])
 
   useEffect(() => {
-    if (!casualLoading) return
-    syncCasualTaskTab()
-  }, [casualLoading])
-
-  useEffect(() => {
     if (!activeChat?.Title || !activeChat?.SessionID) return
     if (sessionRef.current !== activeChat.SessionID) return
     emitTaskContentTab('update', activeChat.Title)
-  }, [activeChat?.Title, activeChat?.SessionID])
+  }, [activeChat?.Title, activeChat?.SessionID, currentCasualTaskID])
 
   const defaultTaskTabLabel = useCreation(() => {
     return typeof title === 'string' ? title : '自由对话'
@@ -72,7 +66,8 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
 
   const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
     const sessionId = activeChat?.SessionID
-    if (!currentCasualTaskID || !sessionId) return false
+    const taskId = currentCasualTaskID
+    if (!taskId || !sessionId) return false
     if (getSetting()?.Source !== 'ai') return false
     emiter.emit(
       'actionAITaskContentTab',
@@ -80,7 +75,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
         type,
         params: {
           key: sessionId,
-          taskId: currentCasualTaskID,
+          taskId,
           label: label || activeChat?.Title || defaultTaskTabLabel,
           goal: '',
         },
@@ -108,7 +103,6 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
     }
     syncCasualTaskTab()
   })
-
   return (
     <div className={classNames(styles['chat-header'], chatContainerHeaderClassName)}>
       <div className={styles['chat-header-title']}>
@@ -121,19 +115,21 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
         )}
       </div>
       <div className={styles['chat-header-extra']}>
-        {isShowRetract ? (
+        {isShowRetract && (
           <>
             <AIReActSubAgentTask scrollToItemIndex={scrollToItemIndex} />
-            <AIReActChatHeaderExternalRightIcon rightIcon={externalParameters?.rightIcon} />
-          </>
-        ) : (
-          <>
-            {currentCasualTaskID && (
-              <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
-                任务详情
-              </YakitButton>
+            {!!externalParameters?.rightIcon ? (
+              <AIReActChatHeaderExternalRightIcon rightIcon={externalParameters?.rightIcon} />
+            ) : (
+              <>
+                {currentCasualTaskID && (
+                  <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
+                    任务详情
+                  </YakitButton>
+                )}
+                <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
+              </>
             )}
-            <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
           </>
         )}
       </div>
