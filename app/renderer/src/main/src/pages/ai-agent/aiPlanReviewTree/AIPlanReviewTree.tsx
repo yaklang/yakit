@@ -24,27 +24,29 @@ import { grpcGetAIToolList } from '../aiToolList/utils'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { generateTaskChatExecution } from '../defaultConstant'
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { findPlanTaskSubtreeEnd, getPlanTaskLevel } from '@/pages/ai-agent/utils'
 import { randomString } from '@/utils/randomUtil'
 
 const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => {
   const { editable, planReviewTreeKeywordsMap, currentPlansId } = props
-  const [list, setList] = useControllableValue<AIAgentGrpcApi.PlanTask[]>(props, {
+  const [list, setList] = useControllableValue<AITaskInfoProps[]>(props, {
     defaultValue: [],
     valuePropName: 'list',
     trigger: 'setList',
   })
 
   /** 添加子节点 */
-  const onAddSubNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
+  const onAddSubNode = useMemoizedFn((item: AITaskInfoProps) => {
     const parentPos = list.findIndex((task) => task.task_id === item.task_id)
     if (parentPos === -1) return
 
     const parentLevel = getPlanTaskLevel(item)
-    const newChildTask: AIAgentGrpcApi.PlanTask = {
+    const newChildTask: AITaskInfoProps = {
       ...generateTaskChatExecution(),
       task_id: randomString(16),
       level: parentLevel + 1,
+      isLeaf: true,
       isUserAdd: true,
     }
 
@@ -55,16 +57,17 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
   })
 
   /** 添加兄弟节点 */
-  const onAddBrotherNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
+  const onAddBrotherNode = useMemoizedFn((item: AITaskInfoProps) => {
     if (getPlanTaskLevel(item) === 1) return
 
     const siblingPos = list.findIndex((task) => task.task_id === item.task_id)
     if (siblingPos === -1) return
 
-    const newSiblingTask: AIAgentGrpcApi.PlanTask = {
+    const newSiblingTask: AITaskInfoProps = {
       ...generateTaskChatExecution(),
       task_id: randomString(16),
       level: getPlanTaskLevel(item),
+      isLeaf: true,
       isUserAdd: true,
     }
 
@@ -75,7 +78,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
   })
 
   /** 新增节点后，聚焦在该节点上 */
-  const onFocusAfterAddNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
+  const onFocusAfterAddNode = useMemoizedFn((item: AITaskInfoProps) => {
     setTimeout(() => {
       const dom = document.getElementById(item.task_id)
       if (!dom) return
@@ -102,7 +105,7 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
     }, 200)
   })
 
-  const onRemoveNode = useMemoizedFn((item: AIAgentGrpcApi.PlanTask) => {
+  const onRemoveNode = useMemoizedFn((item: AITaskInfoProps) => {
     const pos = list.findIndex((ele) => ele.task_id === item.task_id)
     if (pos === -1) return
     const end = findPlanTaskSubtreeEnd(list, pos)
@@ -115,9 +118,9 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
     setList([...newList])
   })
 
-  const setItem = useMemoizedFn((item: AIAgentGrpcApi.PlanTask, option: SetItemOption) => {
+  const setItem = useMemoizedFn((item: AITaskInfoProps, option: SetItemOption) => {
     const { label, value } = option
-    const newList = list.map((ele: AIAgentGrpcApi.PlanTask) => {
+    const newList = list.map((ele: AITaskInfoProps) => {
       if (ele.task_id === item.task_id) {
         ele = {
           ...ele,

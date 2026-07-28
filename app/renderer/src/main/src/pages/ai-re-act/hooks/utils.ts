@@ -120,11 +120,12 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
 // #endregion
 
 /** 将树结构任务列表转换成一维数组 */
-export const handleFlatAITree = (sum: AIAgentGrpcApi.PlanTask[], task: AIAgentGrpcApi.PlanTask, level = 1) => {
+export const handleFlatAITree = (sum: AITaskInfoProps[], task: AIAgentGrpcApi.PlanTask, level = 1) => {
   if (!Array.isArray(sum)) return null
-  sum.push({ ...generateTaskChatExecution(task), level })
-  if (task.subtasks && task.subtasks.length > 0) {
-    for (let subtask of task.subtasks) {
+  const hasSubtasks = !!(task.subtasks && task.subtasks.length > 0)
+  sum.push({ ...generateTaskChatExecution(task), level, isLeaf: !hasSubtasks })
+  if (hasSubtasks) {
+    for (let subtask of task.subtasks!) {
       handleFlatAITree(sum, subtask, level + 1)
     }
   }

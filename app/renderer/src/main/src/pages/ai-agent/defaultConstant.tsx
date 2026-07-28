@@ -151,7 +151,6 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
   }
   if (!!info) {
     data.task_id = info.task_id || ''
-    data.level = info.level
     data.name = info.name || ''
     data.goal = info.goal || ''
     data.progress = info.progress || AITaskStatus.created

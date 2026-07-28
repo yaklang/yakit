@@ -2,15 +2,16 @@ import { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
 import { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
+import { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import { HandleStartParams } from '../aiAgentChat/type'
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { omit } from 'lodash'
 import { randomString } from '@/utils/randomUtil'
 import { isIRify } from '@/utils/envfile'
 
-export const getPlanTaskLevel = (task: AIAgentGrpcApi.PlanTask) => task.level ?? 1
+export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
-export const findPlanTaskSubtreeEnd = (list: AIAgentGrpcApi.PlanTask[], start: number) => {
+export const findPlanTaskSubtreeEnd = (list: AITaskInfoProps[], start: number) => {
   const level = getPlanTaskLevel(list[start])
   let end = start
   for (let i = start + 1; i < list.length; i++) {
@@ -25,10 +26,10 @@ export const findPlanTaskSubtreeEnd = (list: AIAgentGrpcApi.PlanTask[], start: n
  */
 /**
  * 将扁平数组转换为树形结构
- * @param {AIAgentGrpcApi.PlanTask[]} items 扁平数据数组
+ * @param {AITaskInfoProps[]} items 扁平数据数组
  * @returns {AIAgentGrpcApi.PlanTask[]} 树形结构数组
  */
-export const reviewListToTrees = (items: AIAgentGrpcApi.PlanTask[]): AIAgentGrpcApi.PlanTask[] => {
+export const reviewListToTrees = (items: AITaskInfoProps[]): AIAgentGrpcApi.PlanTask[] => {
   const map: Record<string, AIAgentGrpcApi.PlanTask> = {}
   const tree: AIAgentGrpcApi.PlanTask[] = []
   const stack: { task_id: string; level: number }[] = []
@@ -36,7 +37,8 @@ export const reviewListToTrees = (items: AIAgentGrpcApi.PlanTask[]): AIAgentGrpc
   items.forEach((item) => {
     if (item.isUserAdd && !item.name && !item.goal && !item.tools.length) return
     const level = getPlanTaskLevel(item)
-    const node: AIAgentGrpcApi.PlanTask = { ...item, subtasks: [] }
+    const { level: _level, isLeaf: _isLeaf, ...planTaskFields } = item
+    const node: AIAgentGrpcApi.PlanTask = { ...planTaskFields, subtasks: [] }
     map[item.task_id] = node
 
     while (stack.length && stack[stack.length - 1].level >= level) {

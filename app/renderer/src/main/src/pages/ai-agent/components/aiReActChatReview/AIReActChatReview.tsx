@@ -29,6 +29,7 @@ import {
   AIChatQSData,
   AIChatQSDataTypeEnum,
   AIReviewType,
+  AITaskInfoProps,
   UIDetachedPlanReview,
 } from '../../../ai-re-act/hooks/aiRender'
 import { AIForge } from '@/pages/ai-agent/type/forge'
@@ -52,12 +53,12 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const { chatIPCData } = useChatIPCStore()
   const { chatIPCEvents } = useChatIPCDispatcher()
   const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
-  const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
+  const [reviewTrees, setReviewTrees] = useState<AITaskInfoProps[]>([])
   const [currentPlansId, setCurrentPlansId] = useState<string>('')
   const [forgeOption, setForgeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
   const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => {} })
 
-  const initReviewTreesRef = useRef<AIAgentGrpcApi.PlanTask[]>([])
+  const initReviewTreesRef = useRef<AITaskInfoProps[]>([])
   /** 取消当前任务后，等待 taskStatus.loading 置为 false 再提交 detached plan */
   const pendingDetachedPlanSubmitRef = useRef(false)
 
@@ -67,7 +68,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       case 'plan_review_require':
       case 'detached_plan_require':
         const data = review as AIAgentGrpcApi.PlanReviewRequire
-        const list: AIAgentGrpcApi.PlanTask[] = []
+        const list: AITaskInfoProps[] = []
         handleFlatAITree(list, data.plans.root_task)
         initReviewTreesRef.current = [...list]
         setReviewTrees(list)
