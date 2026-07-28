@@ -328,6 +328,7 @@ const handleQueueInfo: AIMessageHandler = (request) => {
   const { tasks, total_tasks } = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
   // 记录最新问题队列的数量，4次为空，则关闭轮询器
   if (tasks.length === 0) meta.queuePollingEmptyCount += 1
+  else meta.queuePollingEmptyCount = 0
   if (meta.queuePollingEmptyCount > 3 && meta.queuePollingTimer) {
     clearTimeout(meta.queuePollingTimer)
     meta.queuePollingTimer = null

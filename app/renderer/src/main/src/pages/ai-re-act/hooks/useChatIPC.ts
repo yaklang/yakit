@@ -5,13 +5,23 @@ import type { AIChatSendParams } from './type'
 import { useMemoizedFn } from 'ahooks'
 import type { UseChatIPCStartParams } from '@/pages/ai-agent/useContext/AIAgentContext'
 import type { YakitRouteType } from '@/enums/yakitRoute'
+import { yakitNotify } from '@/utils/notification'
 const { ipcRenderer } = window.require('electron')
 
 export function useChatIPC(route: YakitRouteType, pageId: string) {
-  // IPC 监听的 channel 用入参 token 注册，与 handleStartSession 的 token 完全对齐
-  // 这样在欢迎页"从无到有建立会话"时，不会出现 setActiveChat 异步未生效、闭包 sessionId 仍为空导致监听错位的问题
+  /**
+   * isSessionReady 已连则直接返回（不动已有监听）→ 用入参 token 挂监听 → handleStartSession
+   * prepare 异步，invoke 晚于本同步栈挂监听，不会丢流；token 不依赖 React 闭包里的 SessionID
+   */
   const onStart = useMemoizedFn(({ token, params, onSuccess }: UseChatIPCStartParams) => {
-    // 监听网络，直接丢给大脑处理
+    if (globalSessionEngine.isSessionReady(token)) {
+      yakitNotify('warning', '会话已经存在，请勿重复建立！')
+      return
+    }
+
+    ipcRenderer.removeAllListeners(`${token}-data`)
+    ipcRenderer.removeAllListeners(`${token}-error`)
+    ipcRenderer.removeAllListeners(`${token}-end`)
     ipcRenderer.on(`${token}-data`, (e, res: any) => {
       globalSessionEngine.handleGrpcOutputEvent(token, res)
     })
