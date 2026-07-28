@@ -89,7 +89,10 @@ import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import emiter from '@/utils/eventBus/eventBus'
-import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
+import {
+  getMainOperatorPageBodyContainer,
+  getMainOperatorPageBodyContainerOrBody,
+} from '@/utils/getMainOperatorPageBodyContainer'
 import {
   AIModelCheckResult,
   AIModelForm,
@@ -1023,7 +1026,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
             token={tokenRef.current}
             onFinished={installFinished}
             onCancel={installCancel}
-            getContainer={getMainOperatorPageBodyContainer()}
+            getContainer={getMainOperatorPageBodyContainerOrBody()}
           />
         )}
       </YakitSpin>
@@ -1333,7 +1336,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
           token={downTokenRef.current}
           onFinished={installFinished}
           onCancel={installCancel}
-          getContainer={getMainOperatorPageBodyContainer()}
+          getContainer={getMainOperatorPageBodyContainerOrBody()}
         />
       )}
       {removeVisible && (

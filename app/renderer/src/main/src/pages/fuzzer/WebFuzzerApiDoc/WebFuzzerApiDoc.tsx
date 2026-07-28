@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { Progress, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { shallow } from 'zustand/shallow'
 import styles from './WebFuzzerApiDoc.module.scss'
 import { OutlineBookopenIcon, OutlineClockIcon, OutlineUploadIcon } from '@/assets/icon/outline'
 import { YakURLResource } from '@/pages/yakURLTree/data'
@@ -27,7 +26,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { usePageInfo } from '@/store/pageInfo'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { randomString } from '@/utils/randomUtil'
 import emiter from '@/utils/eventBus/eventBus'
 
@@ -125,16 +124,12 @@ export const WebFuzzerApiDoc: React.FC<{
   const [overrideDomain, setOverrideDomain] = useState('')
   const [overrideIsHttps, setOverrideIsHttps] = useState(false)
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0)
-  const currentRouteKey = usePageInfo((s) => s.getCurrentPageTabRouteKey(), shallow)
   const parseTaskRef = useRef<ParseTask>()
   const mountedRef = useRef(true)
   const parsing = parseStatus !== 'idle'
   const canceling = parseStatus === 'canceling'
   const { percent: parsePercent, message: parseMessage } = parseProgress
-
-  const getPopupContainer = useMemoizedFn(
-    () => document.getElementById(`main-operator-page-body-${currentRouteKey}`) || document.body,
-  )
+  const getPopupContainer = useMemoizedFn(() => getMainOperatorPageBodyContainer() || document.body)
 
   const untagged = t('ApiDoc.untagged')
   const apiGroups = useMemo(() => {

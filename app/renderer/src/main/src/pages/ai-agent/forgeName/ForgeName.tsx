@@ -51,8 +51,11 @@ import styles from './ForgeName.module.scss'
 import { YakitProtoCheckbox } from '@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { cloneDeep } from 'lodash'
-import { AIForgeEditorPageInfoProps, usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { AIForgeEditorPageInfoProps } from '@/store/pageInfo'
+import {
+  getMainOperatorPageBodyContainer,
+  getMainOperatorPageBodyContainerOrBody,
+} from '@/utils/getMainOperatorPageBodyContainer'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
@@ -490,7 +493,6 @@ export default memo(ForwardForgeName)
 export const BatchExportAIforge = memo(
   forwardRef<BatchExportAIforgeRef, BatchExportAIforgeProps>((props, ref) => {
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
     const [exportExtra, setExportExtra] = useState<ImportExportModalExtra>({
       hint: false,
@@ -590,7 +592,7 @@ export const BatchExportAIforge = memo(
 
     return (
       <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
-        getContainer={document.getElementById(`main-operator-page-body-${currentRouteKey}`) || undefined}
+        getContainer={getMainOperatorPageBodyContainerOrBody()}
         extra={exportExtra}
         getProgressValue={(p: ExportImportAIForgeProgress) => p.Percent / 100}
         getlogListInfo={(stream: ExportImportAIForgeProgress[]) => {
@@ -670,7 +672,6 @@ export const BatchExportAIforge = memo(
 export const ImportAIforge = memo(
   forwardRef<ImportAIforgeRef, ImportAIforgeProps>((props, ref) => {
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
     const [importExtra, setImportExtra] = useState<ImportExportModalExtra>({
       hint: false,
@@ -707,7 +708,7 @@ export const ImportAIforge = memo(
 
     return (
       <ImportExportModal<ImportAIForgeFormValues, ImportAIForgeRequest, ExportImportAIForgeProgress>
-        getContainer={document.getElementById(`main-operator-page-body-${currentRouteKey}`) || undefined}
+        getContainer={getMainOperatorPageBodyContainerOrBody()}
         extra={importExtra}
         getProgressValue={(p: ExportImportAIForgeProgress) => p.Percent / 100}
         getlogListInfo={(stream: ExportImportAIForgeProgress[]) => {

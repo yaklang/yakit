@@ -3,8 +3,7 @@ import { useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineDocumentIcon, OutlineDownloadIcon } from '@/assets/icon/outline'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import type { AIReportFinishCardProps } from './AIReportFinishCardType'
@@ -22,7 +21,6 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
   const { item } = props
   const { data } = item
   const { t } = useI18nNamespaces(['aiAgent'])
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   const [downloadLoading, setDownloadLoading] = useState(false)
 
   const reportPath = data.reportPath
@@ -31,7 +29,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
 
   const handleOpenReport = useMemoizedFn(() => {
     if (!reportPath) return
-    if (currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
+    if (getCurrentPageTabRouteKey() === YakitRoute.Irify_AI_Code_Audit) {
       emiter.emit(
         'onAiCodeAuditOpenTemporaryFile',
         JSON.stringify({
