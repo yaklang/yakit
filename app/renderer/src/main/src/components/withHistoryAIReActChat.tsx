@@ -47,7 +47,6 @@ import emiter from '@/utils/eventBus/eventBus'
 
 import { HistroryAIReActChat } from './HistroryAIReActChat'
 import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
-import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
@@ -215,6 +214,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const pendingMentionRef = useRef<AIMentionCommandParams | null>(null)
   const chatReadyRef = useRef(false)
   const yakRunnerLastAttachedResourceInfoRef = useRef<AIInputEvent['AttachedResourceInfo']>([])
+  const bridgeSessionIdRef = useRef('')
+  const bridgeUnsubscribeRef = useRef<(() => void) | null>(null)
 
   // Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关
   const isHaveWebFuzzerPageId = useCreation(() => {
@@ -320,13 +321,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
 
-  const store = useCurrentStore()
-  const rawData = useCurrentRawData()
+  const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
   const execute = useStore(store, (state) => state.execute)
   const casualLoading = useStore(store, (state) => state.casualLoading)
-  const httpFuzzRequestUpdate = useStore(store, (state) => state.httpFuzzRequestUpdate)
-  const httpFlowFuzzStatusUpdate = useStore(store, (state) => state.httpFlowFuzzStatusUpdate)
-  const yaklangCodeChangeUpdate = useStore(store, (state) => state.yaklangCodeChangeUpdate)
 
   // TODO - @whale 修改确认 useEffect => httpFuzzTabPageId->isHaveWebFuzzerPageId
   useEffect(() => {
@@ -356,22 +353,35 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     casualLoadingRef.current = casualLoading
   }, [casualLoading, pageId, isHaveWebFuzzerPageId, isHaveYakRunnerPageId])
 
-  // 新版流处理器将页面桥接事件写入当前 session 的 rawData，并通过计数通知订阅者。
-  // 在此消费这些更新，保持 Web Fuzzer / Yak Runner 的页面回写能力。
-  useEffect(() => {
-    if (!rawData.httpFuzzRequest) return
-    onHttpFuzzRequestChange(clone(rawData.httpFuzzRequest))
-  }, [httpFuzzRequestUpdate])
+  const unsubscribeBridgeEvents = useMemoizedFn(() => {
+    bridgeUnsubscribeRef.current?.()
+    bridgeUnsubscribeRef.current = null
+    bridgeSessionIdRef.current = ''
+  })
 
-  useEffect(() => {
-    if (!rawData.httpFlowFuzzStatus) return
-    onGetHttpFlowFuzzStatus(clone(rawData.httpFlowFuzzStatus))
-  }, [httpFlowFuzzStatusUpdate])
+  // 新版流处理器会更新 session store 内的版本字段；直接订阅该 session，避免依赖 Provider 的 context。
+  const subscribeBridgeEvents = useMemoizedFn((sessionId: string) => {
+    if (!sessionId || bridgeSessionIdRef.current === sessionId) return
 
-  useEffect(() => {
-    if (!rawData.yaklangCodeChange) return
-    onYaklangCodeChange(clone(rawData.yaklangCodeChange))
-  }, [yaklangCodeChangeUpdate])
+    unsubscribeBridgeEvents()
+    const { store: sessionStore, rawData } = globalSessionEngine.ensureSession(sessionId)
+    bridgeSessionIdRef.current = sessionId
+    bridgeUnsubscribeRef.current = sessionStore.subscribe((state, previousState) => {
+      if (bridgeSessionIdRef.current !== sessionId) return
+
+      if (state.httpFuzzRequestUpdate !== previousState.httpFuzzRequestUpdate && rawData.httpFuzzRequest) {
+        onHttpFuzzRequestChange(clone(rawData.httpFuzzRequest))
+      }
+      if (state.httpFlowFuzzStatusUpdate !== previousState.httpFlowFuzzStatusUpdate && rawData.httpFlowFuzzStatus) {
+        onGetHttpFlowFuzzStatus(clone(rawData.httpFlowFuzzStatus))
+      }
+      if (state.yaklangCodeChangeUpdate !== previousState.yaklangCodeChangeUpdate && rawData.yaklangCodeChange) {
+        onYaklangCodeChange(clone(rawData.yaklangCodeChange))
+      }
+    })
+  })
+
+  useEffect(() => unsubscribeBridgeEvents, [unsubscribeBridgeEvents])
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID
@@ -379,10 +389,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   /** 切换会话 */
   useUpdateEffect(() => {
-    if (activeChat) onReStart({ activeChat, onStart })
-  }, [activeID])
+    if (activeChat) {
+      subscribeBridgeEvents(activeChat.SessionID)
+      onReStart({ activeChat, onStart })
+    }
+  }, [activeID, subscribeBridgeEvents])
 
   const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
+    const sessionId = data.params.Params?.TimelineSessionID || activeChat?.SessionID
+    if (sessionId) subscribeBridgeEvents(sessionId)
+
     const newChat: AIHandleStartExtraProps = resolveStartExtraParams?.(data) ?? {
       chatId: activeChat?.SessionID,
     }
@@ -419,6 +435,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onClose([currentID])
     }
     // events.onReset()
+    unsubscribeBridgeEvents()
     setActiveChat(undefined)
     setSetting((prev) => ({
       ...prev,
