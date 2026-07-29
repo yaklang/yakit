@@ -26,7 +26,12 @@ import { JSONParseLog } from '@/utils/tool'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import classNames from 'classnames'
-import { filterHistorySessionsBySource, getHistorySourceQuerySources, type HistorySourceFilter } from './source'
+import {
+  filterHistorySessionsBySource,
+  getHistorySourceQueryPlatform,
+  getHistorySourceQuerySources,
+  type HistorySourceFilter,
+} from './source'
 
 const clearLocalChats = (sessions: AISession[]) =>
   emiter.emit('onDelChats', JSON.stringify(sessions.map((item) => item.SessionID)))
@@ -103,7 +108,11 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     if (!enableHistorySourceFilter) return aiSource
     return getHistorySourceQuerySources(aiSource, historySourceFilter)
   }, [aiSource, enableHistorySourceFilter, historySourceFilter])
-  const [{ sessions }, dispatcher] = useSessionList(historyQuerySources)
+  const historyQueryPlatform = useMemo(() => {
+    if (!enableHistorySourceFilter) return []
+    return getHistorySourceQueryPlatform(historySourceFilter)
+  }, [enableHistorySourceFilter, historySourceFilter])
+  const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
   const { activeChat } = useAIAgentStore()
   const { setActiveChat } = useAIAgentDispatcher()
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
@@ -138,10 +147,15 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      if (isGlobalAIAgentHistory) {
+      if (isGlobalAIAgentHistory && historySourceFilter === 'local') {
+        // Global AI Agent 侧栏 + local 分组：清空全部来源的会话。
         await grpcDeleteAISession({ DeleteAll: true }, true)
+      } else if (isGlobalAIAgentHistory && enableHistorySourceFilter) {
+        // Global AI Agent 侧栏 + IM 平台分组：只删该平台，不波及其它来源/平台。
+        await grpcDeleteAISession({ Filter: { Source: ['im'], Platform: historyQueryPlatform } }, true)
       } else {
-        await grpcDeleteAISession({ Filter: { Source: historyQuerySources } }, true)
+        // 业务页嵌入：按当前分组的 source + platform 删除。
+        await grpcDeleteAISession({ Filter: { Source: historyQuerySources, Platform: historyQueryPlatform } }, true)
       }
       clearLocalChats(visibleSessions)
       onNewChat()
@@ -175,6 +189,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
           ? {
               SessionID: deletedChats.map((item) => item.SessionID),
               Source: historyQuerySources,
+              Platform: historyQueryPlatform,
             }
           : {
               BeforeTimestamp: beforeTimestamp,
