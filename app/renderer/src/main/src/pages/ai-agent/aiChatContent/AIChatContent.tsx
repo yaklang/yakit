@@ -44,6 +44,7 @@ import AIGlobalLoading from '../aiGlobalLoading/AIGlobalLoading'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
 import { applyForgeNameToStartParams } from '@/pages/digitalEmployee/resolver'
+import { AITaskContent } from '@/pages/ai-re-act/aiTaskContent/AITaskContent'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
@@ -318,31 +319,74 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       return (
         <div className={styles['employee-chat-content']}>
           <AIGlobalLoading loopAnimationMode="sequential" loading={requestHistoryState.initLoading}>
-            <div className={styles['employee-chat-header']}>
-              <div>
-                <strong>{activeChat?.Title || `${selectedEmployee.name} · 新对话`}</strong>
-                <span>当前会话由技能「{selectedEmployee.forge?.ForgeVerboseName || selectedEmployee.name}」驱动</span>
-              </div>
-              <div className={styles['employee-chat-actions']}>
-                <AIContextToken execute={execute} session={activeChat?.SessionID} />
-                <YakitButton type="secondary2" icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
-                  {t('AIChatContent.newChat')}
-                </YakitButton>
-                <YakitButton type="secondary2" icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
-                  {t('AIChatContent.log')}
-                </YakitButton>
-              </div>
-            </div>
-            <div className={styles['employee-react-chat']}>
-              <AIReActChat
-                mode="welcome"
-                showFreeChat={true}
-                setShowFreeChat={setShowFreeChat}
-                startRequest={startRequest}
-                ref={aiReActChatRef}
-              />
+            <div className={styles['employee-detail-layout']}>
+              <section className={styles['employee-dialog-panel']}>
+                <div className={styles['employee-chat-header']}>
+                  <div>
+                    <strong>对话</strong>
+                    <span>{activeChat?.Title || `${selectedEmployee.name} · 新对话`}</span>
+                  </div>
+                  <div className={styles['employee-chat-actions']}>
+                    <AIContextToken execute={execute} session={activeChat?.SessionID} />
+                    <YakitButton type="secondary2" icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
+                      {t('AIChatContent.newChat')}
+                    </YakitButton>
+                    <YakitButton type="secondary2" icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
+                      {t('AIChatContent.log')}
+                    </YakitButton>
+                    <YakitButton type="secondary2" icon={<OutlineClouddownloadIcon />} onClick={onOpenExportModal}>
+                      {t('AIChatContent.exportLog')}
+                    </YakitButton>
+                  </div>
+                </div>
+                <div className={styles['employee-react-chat']}>
+                  <AIReActChat
+                    mode="welcome"
+                    showFreeChat={true}
+                    setShowFreeChat={setShowFreeChat}
+                    startRequest={startRequest}
+                    ref={aiReActChatRef}
+                  />
+                </div>
+              </section>
+              <aside className={styles['employee-task-panel']}>
+                <div className={styles['employee-task-header']}>
+                  <div>
+                    <strong>思考与执行</strong>
+                    <span>实时同步任务规划与执行过程</span>
+                  </div>
+                  <span className={styles['employee-task-status']}>
+                    <i /> 智能执行
+                  </span>
+                </div>
+                <div className={styles['employee-task-content']}>
+                  <AITaskContent
+                    tabBarExtraContent={null}
+                    emptyNode={
+                      <div className={styles['employee-task-empty']}>
+                        <div className={styles['task-empty-orbit']} aria-hidden="true">
+                          <span />
+                        </div>
+                        <strong>等待任务开始</strong>
+                        <p>发送消息后，这里会实时展示任务拆解、工具调用与执行结果。</p>
+                        <div className={styles['task-empty-steps']} aria-hidden="true">
+                          <span>理解需求</span>
+                          <span>制定计划</span>
+                          <span>执行与总结</span>
+                        </div>
+                      </div>
+                    }
+                  />
+                </div>
+              </aside>
             </div>
           </AIGlobalLoading>
+          <ExportAILogsModal
+            visible={exportModalVisible}
+            onCancel={onExportCancel}
+            onOk={onExportOk}
+            loading={exportLoading}
+          />
         </div>
       )
     }

@@ -1,8 +1,6 @@
 import React from 'react'
 import classNames from 'classnames'
 import aiSenSoLogo from '@/assets/newAssets/senso-brand-logo.png'
-import pagination from '@/assets/newAssets/senso-pagination.png'
-import cardFrame from '@/assets/newAssets/senso-card-frame-normal.png'
 import quickNavAgent from '@/assets/newAssets/senso-quick-nav-01-icon.png'
 import quickNavSkill from '@/assets/newAssets/senso-quick-nav-02-icon.png'
 import quickNavKnowledge from '@/assets/newAssets/senso-quick-nav-03-icon.png'
@@ -55,7 +53,6 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
                   aria-pressed={selected}
                   aria-label={`选择${employee.name}`}
                 >
-                  <img className={styles['card-frame']} src={cardFrame} alt="" aria-hidden="true" />
                   <span className={styles['portrait-wrapper']}>
                     <img src={employee.portrait} alt={employee.name} />
                   </span>
@@ -75,8 +72,6 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
               )
             })}
           </div>
-
-          <img className={styles['page-dots']} src={pagination} alt="" aria-hidden="true" />
 
           <section className={styles['quick-navigation']} aria-label="快速导航">
             <div className={styles['quick-title']}>

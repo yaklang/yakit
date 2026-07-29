@@ -14,7 +14,29 @@
   height: 100%;
   min-height: 540px;
   overflow: auto hidden;
-  background: #f5f9ff url('../../assets/newAssets/senso-page-background-1280x720.png') center / cover no-repeat;
+  background:
+    radial-gradient(circle at 50% -6%, rgba(255, 255, 255, 0.98) 0, rgba(240, 248, 255, 0.82) 35%, transparent 61%),
+    radial-gradient(circle at 8% 76%, rgba(83, 163, 255, 0.13), transparent 35%),
+    radial-gradient(circle at 94% 34%, rgba(118, 187, 255, 0.1), transparent 30%),
+    linear-gradient(
+      135deg,
+      rgba(248, 251, 255, 0.94) 0%,
+      rgba(237, 245, 255, 0.91) 48%,
+      rgba(247, 251, 255, 0.93) 100%
+    ),
+    url('../../assets/newAssets/senso-page-background-1280x720.png') center / cover no-repeat;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.38;
+    background:
+      linear-gradient(90deg, rgba(88, 153, 223, 0.12) 1px, transparent 1px) center / 120px 120px,
+      linear-gradient(rgba(88, 153, 223, 0.08) 1px, transparent 1px) center / 120px 120px;
+    mask-image: radial-gradient(circle at 50% 42%, #000, transparent 76%);
+  }
 }
 
 .brand-header {
@@ -132,30 +154,33 @@
     content: '';
     position: absolute;
     z-index: 0;
-    inset: 1.5%;
+    inset: 0;
     pointer-events: none;
-    border: 1px solid rgba(118, 163, 215, 0.24);
+    border: 1px solid rgba(112, 161, 218, 0.24);
     border-radius: inherit;
-    background: rgba(255, 255, 255, 0.82);
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.97), rgba(245, 250, 255, 0.88));
     box-shadow:
-      0 5px 13px rgba(55, 104, 164, 0.08),
-      inset 0 0 20px rgba(89, 153, 225, 0.04);
+      0 10px 25px rgba(55, 104, 164, 0.1),
+      inset 0 1px rgba(255, 255, 255, 0.95),
+      inset 0 0 22px rgba(89, 153, 225, 0.035);
   }
 
   &::after {
     content: '';
     position: absolute;
     z-index: 5;
-    inset: -5.6% -3%;
+    inset: -2px;
     pointer-events: none;
     border: clamp(1px, 0.15vw, 2px) solid #2694ff;
-    border-radius: clamp(12px, 1.25vw, 20px);
+    border-radius: inherit;
     opacity: 0;
     box-shadow:
-      0 0 5px rgba(33, 142, 255, 0.85),
-      0 0 15px rgba(33, 142, 255, 0.3),
-      inset 0 0 11px rgba(59, 165, 255, 0.13);
-    transition: opacity 150ms ease;
+      0 0 0 3px rgba(39, 148, 255, 0.12),
+      0 8px 24px rgba(33, 142, 255, 0.23),
+      inset 0 0 16px rgba(59, 165, 255, 0.1);
+    transition:
+      opacity 160ms ease,
+      box-shadow 160ms ease;
   }
 
   &:hover,
@@ -165,25 +190,10 @@
       opacity: 1;
     }
 
-    .card-details {
-      bottom: 18%;
-    }
-
     .card-action {
       opacity: 1;
     }
   }
-}
-
-.card-frame {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  object-fit: fill;
-  border-radius: inherit;
 }
 
 .portrait-wrapper {
@@ -191,7 +201,7 @@
   z-index: 2;
   top: 4%;
   right: 4%;
-  bottom: 24%;
+  bottom: 25%;
   left: 4%;
   display: flex;
   align-items: flex-start;
@@ -224,16 +234,14 @@
   position: absolute;
   z-index: 4;
   right: 8%;
-  bottom: 7%;
+  bottom: 17%;
   left: 7%;
   min-width: 0;
   display: flex;
   align-items: flex-end;
   gap: clamp(5px, 0.7vw, 12px);
   pointer-events: none;
-  transition:
-    bottom 150ms ease,
-    opacity 150ms ease;
+  transition: opacity 150ms ease;
 }
 
 .card-order {
@@ -273,35 +281,34 @@
   position: absolute;
   z-index: 6;
   right: 7%;
-  bottom: 5%;
+  bottom: 4%;
   left: 7%;
-  height: 16%;
+  height: 13%;
   padding: 0 9%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 34%;
+  gap: 26%;
   pointer-events: none;
   color: #fff;
   font-size: clamp(10px, 1vw, 16px);
   font-weight: 500;
   white-space: nowrap;
   opacity: 0;
-  background: url('../../assets/newAssets/senso-button-select-bg.png') center / 100% 100% no-repeat;
-  transition: opacity 150ms ease;
-}
-
-.page-dots {
-  flex: 0 0 auto;
-  width: clamp(190px, 21vw, 320px);
-  height: clamp(20px, 3.2vh, 34px);
-  margin: 0 auto;
-  display: block;
-  object-fit: contain;
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1685f5 0%, #2378ef 55%, #1165dc 100%);
+  box-shadow:
+    0 5px 13px rgba(24, 115, 222, 0.3),
+    inset 0 1px rgba(255, 255, 255, 0.35);
+  transition:
+    opacity 150ms ease,
+    filter 150ms ease;
 }
 
 .quick-navigation {
   flex: 0 0 auto;
+  margin-top: clamp(5px, 1vh, 12px);
 }
 
 .quick-title {
@@ -340,7 +347,22 @@
   color: #1c3966;
   font-size: clamp(10px, 1vw, 16px);
   white-space: nowrap;
-  background: url('../../assets/newAssets/senso-quick-nav-bg.png') center / 100% 100% no-repeat;
+  border: 1px solid rgba(104, 151, 205, 0.18);
+  border-radius: clamp(9px, 0.8vw, 13px);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.98), rgba(245, 250, 255, 0.93));
+  box-shadow:
+    0 7px 18px rgba(54, 101, 158, 0.09),
+    inset 0 1px rgba(255, 255, 255, 0.9);
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+
+  &:hover {
+    border-color: rgba(42, 137, 230, 0.35);
+    box-shadow: 0 9px 22px rgba(43, 112, 186, 0.14);
+    transform: translateY(-2px);
+  }
 
   img {
     flex: 0 0 auto;
@@ -402,11 +424,22 @@
   border: 0;
   border-radius: 26px;
   cursor: pointer;
-  background: url('../../assets/newAssets/senso-button-confirm-bg.png') center / 100% 100% no-repeat;
-  filter: drop-shadow(0 5px 10px rgba(36, 129, 239, 0.2));
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: linear-gradient(100deg, #55b1ff 0%, #1d83ed 45%, #116bdc 100%);
+  box-shadow:
+    0 8px 20px rgba(29, 119, 224, 0.24),
+    inset 0 1px rgba(255, 255, 255, 0.35);
+  transition:
+    transform 150ms ease,
+    filter 150ms ease,
+    box-shadow 150ms ease;
 
   &:hover:not(:disabled) {
     filter: brightness(1.06);
+    box-shadow:
+      0 10px 24px rgba(29, 119, 224, 0.3),
+      inset 0 1px rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
   }
 
   &:disabled {

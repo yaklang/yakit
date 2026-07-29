@@ -76,14 +76,18 @@ export const DigitalEmployeeProfile: React.FC = () => {
 
   return (
     <section className={styles['employee-profile']}>
+      <div className={styles['profile-brand-lockup']}>
+        <span className={styles['profile-brand-mark']}>S</span>
+        <strong>AI SenSo</strong>
+      </div>
+      <span className={styles['profile-divider']} aria-hidden="true" />
       <div className={styles['profile-portrait']}>
         <img src={selectedEmployee.portrait} alt={selectedEmployee.name} />
       </div>
       <div className={styles['profile-main']}>
-        <div className={styles['profile-brand']}>AI SenSo 数字员工</div>
         <div className={styles['profile-title-row']}>
+          <span>当前数字员工</span>
           <h1>{selectedEmployee.name}</h1>
-          <span>当前角色</span>
         </div>
         <p>{description}</p>
         <div className={styles['profile-skills']}>
@@ -94,7 +98,7 @@ export const DigitalEmployeeProfile: React.FC = () => {
       </div>
       <div className={styles['profile-meta']}>
         <span className={styles['online-dot']} />
-        技能库已连接
+        技能已就绪
       </div>
     </section>
   )
