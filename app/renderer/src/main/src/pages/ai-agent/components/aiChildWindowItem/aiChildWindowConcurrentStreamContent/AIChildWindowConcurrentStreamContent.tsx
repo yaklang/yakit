@@ -8,7 +8,7 @@ import AIChildWindowNodeItemWrapper from '../aiChildWindowNodeItemWrapper/AIChil
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 const AIChildWindowConcurrentStreamContent: FC = memo(() => {
-  const { childrenTokens, rawData } = useAIConcurrentStreamStore()
+  const { childrenTokens, rawData, renderNum } = useAIConcurrentStreamStore()
   const { ref: scrollRef, isFocus } = useClickFocus<HTMLDivElement>()
   return (
     <div className={styles['concurrent-stream-content-wrapper']}>
@@ -32,7 +32,7 @@ const AIChildWindowConcurrentStreamContent: FC = memo(() => {
                 {item.type === AIChatQSDataTypeEnum.STREAM_GROUP ? (
                   <AIChildWindowGroupItem token={token} />
                 ) : (
-                  <AIChildWindowNodeItemWrapper itemData={item} />
+                  <AIChildWindowNodeItemWrapper itemData={item} renderNum={renderNum ?? 0} />
                 )}
               </div>
             )

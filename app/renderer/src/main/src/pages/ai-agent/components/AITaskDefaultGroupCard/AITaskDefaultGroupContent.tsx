@@ -3,12 +3,16 @@ import { type FC, useEffect, useLayoutEffect } from 'react'
 import classNames from 'classnames'
 import styles from './AITaskDefaultGroupCard.module.scss'
 import ConcurrentStreamContent from '../ConcurrentStreamCard/ConcurrentStreamContent/ConcurrentStreamContent'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const AITaskDefaultGroupContent: FC<{
-  childrenTokens: string[]
+  token: string
   isChildWindow?: boolean
   onContentFocusChange?: (focused: boolean) => void
-}> = ({ childrenTokens, isChildWindow, onContentFocusChange }) => {
+}> = ({ token, isChildWindow, onContentFocusChange }) => {
+  const store = useCurrentStore()
+  const childrenTokens = useStore(store, (state) => state.tasks[token]?.childrenTokens || [])
   const { ref: contentRef, isFocus } = useClickFocus<HTMLDivElement>()
 
   useEffect(() => {

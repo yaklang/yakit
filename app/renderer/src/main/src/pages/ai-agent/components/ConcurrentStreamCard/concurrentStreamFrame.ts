@@ -1,10 +1,17 @@
 import type { AIChatQSData, AIYakExecFileRecord, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface ConcurrentStreamFramePayload {
   session: string
   token: string
   chatType: ChatListRenderType
   taskName?: string
+  /**
+   * 根节点类型（token 在 rawData 中的 AIChatQSDataTypeEnum）。
+   * 由主窗口开窗/推送时填入，子窗口无需等待 rawData 拉取完成即可据此选择卡片组件，
+   * 使懒加载 chunk 与 IPC 拉取并行、骨架屏提前切到 card 变体。
+   */
+  rootType?: AIChatQSDataTypeEnum
   renderNum?: number
 }
 

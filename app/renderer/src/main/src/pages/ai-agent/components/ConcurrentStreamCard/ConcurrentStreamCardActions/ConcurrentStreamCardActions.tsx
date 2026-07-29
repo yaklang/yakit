@@ -6,27 +6,22 @@ import {
   OutlineChevronsUpDownIcon,
   OutlineListOneIcon,
   OutlineListTodoIcon,
-  OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
 import { openAIConcurrentStream } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from '../ConcurrentStreamCard.module.scss'
-import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { getTaskName } from '../concurrentStream/buildConcurrentStreamFramePayload'
 
 /** 卡片标题栏右侧操作区 */
 interface ConcurrentStreamCardActionsProps {
-  isChildWindow?: boolean
   expand: boolean
   onExpandToggle: () => void
-  onRefresh?: () => void
   onDetails?: () => void
-
   token: string
-
   showContinueTask: boolean
   showCancelTask: boolean
   showDetails: boolean
@@ -35,10 +30,8 @@ interface ConcurrentStreamCardActionsProps {
 }
 
 const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
-  isChildWindow,
   expand,
   onExpandToggle,
-  onRefresh,
   onDetails,
   showContinueTask,
   showCancelTask,
@@ -49,7 +42,6 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  const store = useCurrentStore()
   const session = useCurrentSessionId()
   const rawData = useCurrentRawData()
   const chatType = useCreation(() => {
@@ -68,23 +60,11 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
       token,
       session,
       chatType,
+      rootType: rawData.contents.get(token)?.type,
       taskName: getTaskName(rawData, token),
     })
   })
 
-  if (isChildWindow) {
-    return (
-      <Tooltip title={t('ConcurrentStreamCard.refresh')}>
-        <YakitButton
-          size="middle"
-          type="text"
-          icon={<OutlineRefreshIcon />}
-          onClick={onRefresh}
-          className={styles['expand-btn']}
-        />
-      </Tooltip>
-    )
-  }
   return (
     <>
       {showContinueTask && coordinatorId != null && !!taskId && (

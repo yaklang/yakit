@@ -112,7 +112,7 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
 const AIChildWindowGroupStreamCardListWrapper: React.FC<AIChildWindowGroupStreamCardListWrapperProps> = memo(
   (props) => {
     const { childItemTokens, expand } = props
-    const { rawData } = useAIConcurrentStreamStore()
+    const { rawData, renderNum } = useAIConcurrentStreamStore()
     return (
       <>
         <AIGroupStreamCardList
@@ -121,7 +121,14 @@ const AIChildWindowGroupStreamCardListWrapper: React.FC<AIChildWindowGroupStream
           rendItem={(token, index) => {
             const itemData = rawData.get(token)
             if (!itemData) return <React.Fragment key={token}></React.Fragment>
-            return <AIChildWindowNodeItemWrapper key={token} itemData={itemData} groupIndex={index} />
+            return (
+              <AIChildWindowNodeItemWrapper
+                key={token}
+                itemData={itemData}
+                groupIndex={index}
+                renderNum={renderNum ?? 0}
+              />
+            )
           }}
         />
       </>

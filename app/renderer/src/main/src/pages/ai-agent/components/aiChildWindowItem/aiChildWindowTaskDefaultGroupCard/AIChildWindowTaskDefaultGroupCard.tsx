@@ -1,16 +1,15 @@
-import { useBoolean, useCreation } from 'ahooks'
+import { useCreation } from 'ahooks'
 import classNames from 'classnames'
 import { type FC, memo } from 'react'
-import AITaskDefaultGroupCardHeard from '../../AITaskDefaultGroupCard/aiTaskDefaultGroupCardHeard/AITaskDefaultGroupCardHeard'
 import styles from './AIChildWindowTaskDefaultGroupCard.module.scss'
 import useAIConcurrentStreamStore from '@/auxWindow/pages/AIConcurrentStream/useContext/useStore'
 import useAIConcurrentStreamDispatcher from '@/auxWindow/pages/AIConcurrentStream/useContext/useDispatcher'
-import AIChildWindowConcurrentStreamContent from '../aiChildWindowConcurrentStreamContent/AIChildWindowConcurrentStreamContent'
 import type { AIChildWindowTaskDefaultGroupCardProps } from './type'
+import AIChildWindowTaskDefaultGroupCardHeard from './aiChildWindowTaskDefaultGroupCardHeard/AIChildWindowTaskDefaultGroupCardHeard'
+import AIChildWindowConcurrentStreamContent from '../aiChildWindowConcurrentStreamContent/AIChildWindowConcurrentStreamContent'
 
 const AIChildWindowTaskDefaultGroupCard: FC<AIChildWindowTaskDefaultGroupCardProps> = memo((props) => {
   const { token } = props
-  const [expand, { toggle: expandToggle }] = useBoolean(true)
 
   const { rawData, renderNum } = useAIConcurrentStreamStore()
   const { requestRefresh } = useAIConcurrentStreamDispatcher()
@@ -27,16 +26,9 @@ const AIChildWindowTaskDefaultGroupCard: FC<AIChildWindowTaskDefaultGroupCardPro
         [styles['child-window-card']]: true,
       })}
     >
-      <AITaskDefaultGroupCardHeard
-        isChildWindow={true}
-        expandToggle={expandToggle}
-        timeStamp={timeStamp}
-        expand={expand}
-        token={token}
-        onRefresh={requestRefresh}
-      />
+      <AIChildWindowTaskDefaultGroupCardHeard timeStamp={timeStamp} onRefresh={requestRefresh} />
 
-      {expand ? <AIChildWindowConcurrentStreamContent /> : null}
+      <AIChildWindowConcurrentStreamContent />
     </div>
   )
 })

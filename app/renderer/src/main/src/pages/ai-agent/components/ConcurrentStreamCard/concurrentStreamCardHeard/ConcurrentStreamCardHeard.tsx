@@ -69,7 +69,6 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
       <div className={styles['chat-card-title-more']}>
         <ConcurrentStreamCardActions
           token={token}
-          isChildWindow={isChildWindow}
           expand={expand}
           onExpandToggle={expandToggle}
           showContinueTask={showContinueTask}
@@ -77,7 +76,6 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
           showDetails={showDetails}
           coordinatorId={coordinatorId}
           taskId={rowData?.data?.taskId}
-          onRefresh={onRefresh}
           onDetails={onDetails}
         />
       </div>

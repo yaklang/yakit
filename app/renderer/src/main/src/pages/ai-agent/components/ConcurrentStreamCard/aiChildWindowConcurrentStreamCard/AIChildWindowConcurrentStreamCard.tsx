@@ -1,13 +1,12 @@
 import classNames from 'classnames'
 import { type FC, memo } from 'react'
-import ConcurrentStreamCardHeard from '../concurrentStreamCardHeard/ConcurrentStreamCardHeard'
 import styles from './AIChildWindowConcurrentStreamCard.module.scss'
 import { type ChatTaskNodeGroup } from '@/pages/ai-re-act/hooks/aiRender'
 import useAIConcurrentStreamStore from '@/auxWindow/pages/AIConcurrentStream/useContext/useStore'
 import useAIConcurrentStreamDispatcher from '@/auxWindow/pages/AIConcurrentStream/useContext/useDispatcher'
-import useBoolean from 'ahooks/lib/useBoolean'
 import useCreation from 'ahooks/lib/useCreation'
 import AIChildWindowConcurrentStreamContent from '../../aiChildWindowItem/aiChildWindowConcurrentStreamContent/AIChildWindowConcurrentStreamContent'
+import AIChildWindowConcurrentStreamCardHeard from './aiChildWindowConcurrentStreamCardHeard/AIChildWindowConcurrentStreamCardHeard'
 
 export interface AIChildWindowConcurrentStreamCardProps {
   token: string
@@ -16,7 +15,6 @@ export interface AIChildWindowConcurrentStreamCardProps {
 /** 子窗口版并发流卡片（task_node_group 类型），数据从 auxWindow context 读取 */
 const AIChildWindowConcurrentStreamCard: FC<AIChildWindowConcurrentStreamCardProps> = memo((props) => {
   const { token } = props
-  const [expand, { toggle: expandToggle }] = useBoolean(true)
 
   const { rawData, renderNum } = useAIConcurrentStreamStore()
   const { requestRefresh } = useAIConcurrentStreamDispatcher()
@@ -30,20 +28,9 @@ const AIChildWindowConcurrentStreamCard: FC<AIChildWindowConcurrentStreamCardPro
 
   return (
     <div className={classNames(styles['chat-card'], styles['child-chat-card'], 'concurrent-stream-card')}>
-      <ConcurrentStreamCardHeard
-        isChildWindow={true}
-        expand={expand}
-        expandToggle={expandToggle}
-        rowData={itemData}
-        token={token}
-        onRefresh={requestRefresh}
-      />
-      {expand ? (
-        <>
-          <div className={styles['goal']}>{itemData?.data.goal}</div>
-          <AIChildWindowConcurrentStreamContent />
-        </>
-      ) : null}
+      <AIChildWindowConcurrentStreamCardHeard rowData={itemData} onRefresh={requestRefresh} />
+      <div className={styles['goal']}>{itemData?.data.goal}</div>
+      <AIChildWindowConcurrentStreamContent />
     </div>
   )
 })

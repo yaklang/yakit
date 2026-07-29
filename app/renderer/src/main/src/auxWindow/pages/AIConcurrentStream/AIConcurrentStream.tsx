@@ -1,6 +1,5 @@
 import React, { lazy, memo, startTransition, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { yakitAuxWindow } from '@/services/electronBridge'
-import ConcurrentStreamSkeleton from '@/auxWindow/components/ConcurrentStreamSkeleton/ConcurrentStreamSkeleton'
 import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
@@ -14,6 +13,7 @@ import AIConcurrentStreamContent, {
 } from './useContext/AIConcurrentStreamContent'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import { useDebounceFn } from 'ahooks'
+import ConcurrentStreamSkeleton from '@/auxWindow/components/ConcurrentStreamSkeleton/ConcurrentStreamSkeleton'
 
 // 子卡片按需加载，避免重型卡片（AINodeItem 及其下游 review/report/fuzz 等子卡）
 // 全量进入 aux bundle，拉长 did-finish-load 与首次开窗耗时。
@@ -26,8 +26,6 @@ const AIChildWindowConcurrentStreamCard = lazy(
     import('@/pages/ai-agent/components/ConcurrentStreamCard/aiChildWindowConcurrentStreamCard/AIChildWindowConcurrentStreamCard'),
 )
 
-const { ipcRenderer } = window.require('electron')
-
 interface AIConcurrentStreamProps {
   windowId: string
 }
@@ -35,10 +33,9 @@ interface AIConcurrentStreamProps {
 const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }) => {
   const [frame, setFrame] = useState<ConcurrentStreamFramePayload | null>(null)
   const [contentVersion, setContentVersion] = useState(0)
-  // rawData/execFileRecord/childrenTokens 是否仍在通过 fetch-concurrent-stream-contents 拉取中
-  const [loadingContents, setLoadingContents] = useState(false)
+  const [loading, setLoading] = useState<boolean>(true)
 
-  // rawData/execFileRecord 用 ref 存储，更新不触发渲染；
+  // rawData/execFileRecord/childrenTokens 用 ref 存储，更新不触发渲染；
   // 组件及子组件的重渲染由 contentVersion（renderNum）驱动
   const rawDataRef = useRef<Map<string, AIChatQSData>>(new Map())
   const execFileRecordRef = useRef<Map<string, AIYakExecFileRecord[]>>(new Map())
@@ -49,21 +46,19 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
 
     const applyFrame = (payload: ConcurrentStreamFramePayload) => {
       if (!isConcurrentStreamFrame(payload)) return
+      const newFrame: ConcurrentStreamFramePayload = {
+        ...payload,
+      }
       // 开窗时 frame 只携带轻量元数据
-      // 真正的数据由下方的懒拉取 effect 通过 IPC 向主窗口请求
       startTransition(() => {
-        const newFrame: ConcurrentStreamFramePayload = {
-          ...payload,
-        }
         setFrame((v) => ({
           ...v,
           ...newFrame,
           renderNum: (v?.renderNum || newFrame.renderNum || 0) + 1,
         }))
-
-        // 收到 frame 后，主动向主窗口拉取本次需要渲染的 rawData。
-        getRawData(newFrame)
       })
+      // 收到 frame 后，主动向主窗口拉取本次需要渲染的 rawData。
+      fetchContents(newFrame)
     }
 
     const offInit = yakitAuxWindow.onInit((msg) => {
@@ -84,25 +79,35 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
     }
   }, [windowId])
 
-  const getRawData = useDebounceFn(
-    (frame) => {
-      setLoadingContents(true)
-      fetchConcurrentStreamContents(frame)
-        .then((entries) => {
-          rawDataRef.current = entries.rawData
-          execFileRecordRef.current = entries.execFileRecord
-          childrenTokensRef.current = entries.childrenTokens
-        })
-        .finally(() => {
+  const fetchContents = useMemoizedFn((frame) => {
+    setLoading(true)
+    fetchConcurrentStreamContents(frame)
+      .then((entries) => {
+        rawDataRef.current = entries.rawData
+        execFileRecordRef.current = entries.execFileRecord
+        childrenTokensRef.current = entries.childrenTokens
+      })
+      .finally(() => {
+        setTimeout(() => {
           setContentVersion((v) => v + 1)
-          setLoadingContents(false)
-        })
-    },
-    { wait: 500, leading: true },
-  ).run
+          setLoading(false)
+        }, 200)
+      })
+  })
+
+  // 首次拉取立即执行；后续刷新走 500ms 去抖，合并短时间内的多次推送
+  const getRawDataDebounced = useDebounceFn((frame) => fetchContents(frame), {
+    wait: 500,
+    leading: true,
+  }).run
+  const getRawData = useMemoizedFn((frame) => {
+    getRawDataDebounced(frame)
+  })
 
   const isTaskDefaultGroup = useMemo(() => {
     if (!frame) return false
+    // 优先用 frame 随身携带的 rootType，无需等待 rawData 拉取完成
+    if (frame.rootType != null) return frame.rootType === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
     const root = rawDataRef.current.get(frame.token)
     return root?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
   }, [frame, contentVersion])
@@ -128,8 +133,8 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
       requestRefresh,
     }
   }, [])
-  // isTaskDefaultGroup 需要读 rawData 判断根节点类型，必须等 rawData 拉取完成
-  if (!frame || loadingContents) {
+  // frame 到达即可渲染卡片：rootType 已随 frame 下发，懒加载 chunk 与 rawData 拉取并行解析
+  if (!frame || loading) {
     return <ConcurrentStreamSkeleton variant="page" />
   }
 
