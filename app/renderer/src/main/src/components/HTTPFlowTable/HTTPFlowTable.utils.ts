@@ -23,6 +23,11 @@ export interface HTTPFlowTableShieldDataSplit {
   shieldHosts: string[]
 }
 
+export const normalizeHTTPFlowTotal = (value: unknown): number => {
+  const total = Number(value)
+  return Number.isSafeInteger(total) && total >= 0 ? total : 0
+}
+
 export const safeParseHTTPFlowTableCache = <T = unknown>(value?: string): T | undefined => {
   if (!value) return undefined
   try {

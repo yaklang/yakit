@@ -94,6 +94,7 @@ import {
   buildLegacyHTTPFlowTableFilterConfig,
   getFullRange,
   hasActiveHTTPFlowTableFilterConfig,
+  normalizeHTTPFlowTotal,
   safeParseHTTPFlowTableCache,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
@@ -445,6 +446,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       let rsp: YakQueryHTTPFlowResponse
       try {
         rsp = (await ipcRenderer.invoke('QueryHTTPFlows', query)) as YakQueryHTTPFlowResponse
+        rsp.Total = normalizeHTTPFlowTotal(rsp.Total)
         if (timingToken) mitmFlowObservability.completeQuery(timingToken, rsp)
         if (pageType === 'MITM' && inViewport) {
           httpFlowLiveStreamController.observeQuery(rsp, Filter)
@@ -540,7 +542,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           httpFlowLiveDirectRecoveryGate.commitVisible(latestVisibleDataHighWaterRef.current, streamLastSeenId)
         }
         if (result.shouldContinueImmediately) requestMITMLiveRefreshRef.current('continuation')
-        if (mergedData.length) setTotal((prev) => prev + mergedData.length)
         return { ...lastResponse, Data: mergedData }
       } catch (error) {
         mitmFlowObservability.failLiveCycle(liveCycleToken)
@@ -659,7 +660,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     pageType,
   ])
 
-  // 定时刷新 total，不参与上下滚动加载
+  // Total 只用精确查询定期校准；实时流可能重放或去重，不按批次累加。
   const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest) => {
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     if (clientHeight === 0) return
@@ -674,7 +675,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     ipcRenderer
       .invoke('QueryHTTPFlows', copyQuery)
       .then((rsp: YakQueryHTTPFlowResponse) => {
-        setTotal(rsp.Total)
+        setTotal(normalizeHTTPFlowTotal(rsp.Total))
       })
       .catch(() => {
         if (extraTimerRef.current) {
@@ -745,7 +746,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       pushTData(rows)
     if (inserted !== false) {
       mitmFlowObservability.recordHTTPFlowLiveDirectBatch(inserted, events)
-      if (inserted > 0) setTotal((prev) => prev + inserted)
       return
     }
 

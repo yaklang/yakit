@@ -7,11 +7,25 @@ import {
   getClassNameData,
   hasActiveHTTPFlowTableFilterConfig,
   mergeRuleSummaryItems,
+  normalizeHTTPFlowTotal,
   safeParseHTTPFlowTableCache,
   splitHTTPFlowTableShieldData,
   uniqStrings,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
 import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
+
+describe('normalizeHTTPFlowTotal', () => {
+  it('normalizes proto-loader int64 strings before they enter numeric table state', () => {
+    expect(normalizeHTTPFlowTotal('6085')).toBe(6085)
+    expect(normalizeHTTPFlowTotal(6170)).toBe(6170)
+  })
+
+  it('rejects malformed or unsafe totals instead of displaying a concatenated value', () => {
+    expect(normalizeHTTPFlowTotal('60858546822155656571112106457874364745564464544564545446568565564678855764')).toBe(0)
+    expect(normalizeHTTPFlowTotal('invalid')).toBe(0)
+    expect(normalizeHTTPFlowTotal(-1)).toBe(0)
+  })
+})
 
 describe('getClassNameData', () => {
   it('preserves the array and row identity when the derived color class is unchanged', () => {
