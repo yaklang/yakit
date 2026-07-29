@@ -82,7 +82,10 @@ export const pruneYakEngineBuildCache = async ({ cacheDir, keepDirectories = [],
     await rm(candidate.directory, { recursive: true, force: true })
     removed.push(candidate.name)
   }
-  return { removed, retained: candidates.filter(({ directory }) => retained.has(path.resolve(directory))).map(({ name }) => name) }
+  return {
+    removed,
+    retained: candidates.filter(({ directory }) => retained.has(path.resolve(directory))).map(({ name }) => name),
+  }
 }
 
 const assertRegularFile = async (target, description) => {
@@ -381,10 +384,7 @@ export const buildYakEngine = async ({
 
   if (!canReuse) {
     await mkdir(outputDir, { recursive: true })
-    await Promise.all([
-      mkdir(goBuildCacheDir, { recursive: true }),
-      mkdir(goBuildTemporaryDir, { recursive: true }),
-    ])
+    await Promise.all([mkdir(goBuildCacheDir, { recursive: true }), mkdir(goBuildTemporaryDir, { recursive: true })])
     const buildTarget = `${outputPath}.tmp-${process.pid}-${randomUUID()}`
     const maxProcs = String(env.YAKIT_E2E_GO_MAX_PROCS || '2')
     const buildEnv = {

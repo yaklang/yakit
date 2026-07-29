@@ -3,8 +3,7 @@ const TRANSIENT_ELECTRON_CDP_MESSAGES = new Set([
   'CDP bridge is not available, API is disabled',
 ])
 
-export const isTransientElectronCDPError = (error) =>
-  TRANSIENT_ELECTRON_CDP_MESSAGES.has(error?.message)
+export const isTransientElectronCDPError = (error) => TRANSIENT_ELECTRON_CDP_MESSAGES.has(error?.message)
 
 // Callers must only wrap commands that are safe to execute again. The retry is
 // deliberately limited to exact Electron CDP bridge transport errors observed

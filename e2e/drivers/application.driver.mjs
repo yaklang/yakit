@@ -14,8 +14,7 @@ export const waitForShellWindows = async () => {
     async () => {
       try {
         const windows = await runIdempotentElectronCDPCommand(() => browser.getYakitWindowState())
-        const ready =
-          windows.length >= 2 && windows.every((window) => window.url && !window.loading && !window.crashed)
+        const ready = windows.length >= 2 && windows.every((window) => window.url && !window.loading && !window.crashed)
         if (ready) readyWindows = windows
         return ready
       } catch (error) {

@@ -927,8 +927,7 @@ describe('MITM V2 loopback HTTP performance', function () {
       report.observability = observability
       report.config.httpFlowLiveRefreshMinIntervalMs = observability?.config?.httpFlowLiveRefreshMinIntervalMs
       report.config.httpFlowLiveDirectMinIntervalMs = observability?.config?.httpFlowLiveDirectMinIntervalMs
-      report.config.httpFlowLiveDirectSustainedIntervalMs =
-        observability?.config?.httpFlowLiveDirectSustainedIntervalMs
+      report.config.httpFlowLiveDirectSustainedIntervalMs = observability?.config?.httpFlowLiveDirectSustainedIntervalMs
       report.config.httpFlowLiveDirectSustainedPendingRows =
         observability?.config?.httpFlowLiveDirectSustainedPendingRows
       report.config.mitmFlowTableOverscan = observability?.config?.mitmFlowTableOverscan
