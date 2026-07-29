@@ -1,6 +1,6 @@
 import React, { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useCreation, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
-import { cloneDeep } from 'lodash'
+import { clone, cloneDeep } from 'lodash'
 
 import AIAgentContext, {
   AIAgentContextDispatcher,
@@ -47,7 +47,7 @@ import emiter from '@/utils/eventBus/eventBus'
 
 import { HistroryAIReActChat } from './HistroryAIReActChat'
 import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
@@ -321,8 +321,12 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
 
   const store = useCurrentStore()
+  const rawData = useCurrentRawData()
   const execute = useStore(store, (state) => state.execute)
   const casualLoading = useStore(store, (state) => state.casualLoading)
+  const httpFuzzRequestUpdate = useStore(store, (state) => state.httpFuzzRequestUpdate)
+  const httpFlowFuzzStatusUpdate = useStore(store, (state) => state.httpFlowFuzzStatusUpdate)
+  const yaklangCodeChangeUpdate = useStore(store, (state) => state.yaklangCodeChangeUpdate)
 
   // TODO - @whale 修改确认 useEffect => httpFuzzTabPageId->isHaveWebFuzzerPageId
   useEffect(() => {
@@ -351,6 +355,23 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
     casualLoadingRef.current = casualLoading
   }, [casualLoading, pageId, isHaveWebFuzzerPageId, isHaveYakRunnerPageId])
+
+  // 新版流处理器将页面桥接事件写入当前 session 的 rawData，并通过计数通知订阅者。
+  // 在此消费这些更新，保持 Web Fuzzer / Yak Runner 的页面回写能力。
+  useEffect(() => {
+    if (!rawData.httpFuzzRequest) return
+    onHttpFuzzRequestChange(clone(rawData.httpFuzzRequest))
+  }, [httpFuzzRequestUpdate])
+
+  useEffect(() => {
+    if (!rawData.httpFlowFuzzStatus) return
+    onGetHttpFlowFuzzStatus(clone(rawData.httpFlowFuzzStatus))
+  }, [httpFlowFuzzStatusUpdate])
+
+  useEffect(() => {
+    if (!rawData.yaklangCodeChange) return
+    onYaklangCodeChange(clone(rawData.yaklangCodeChange))
+  }, [yaklangCodeChangeUpdate])
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID
