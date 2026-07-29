@@ -602,7 +602,7 @@ export class ChatMultiSessionController {
   // #endregion
 
   /**
-   * 无 UserQuery 建连进入恢复态：switchLoading 为 true，
+   * 无 UserQuery 建连进入恢复态：initLoading 为 true，
    * 待 hydrate / recovery_history 结束后再关
    */
   private sessionRestoreLoading = new Set<string>()
@@ -660,7 +660,7 @@ export class ChatMultiSessionController {
    * 建立指定 session 连接（新会话首问 / 打开历史 / 无问侧重连 共用）。
    * 调用方应先用 isSessionReady 判重并挂好 IPC 监听，再调本方法（prepare 异步，invoke 晚于监听）。
    * - 有 UserQuery：立刻上屏首问，pong 后发问；无树时不强制 recovery_history
-   * - 无 UserQuery：视为恢复态，置 switchLoading，pong 后 hydrate 或发 recovery_history
+   * - 无 UserQuery：视为恢复态，置 initLoading，pong 后 hydrate 或发 recovery_history
    * @returns 是否真正发起了建连
    */
   public handleStartSession(requestParams: AIChatIPCStartParams, cb?: (sessionId: string) => void): boolean {
@@ -679,11 +679,11 @@ export class ChatMultiSessionController {
     const { request, store, rawData, meta } = this.ensureSession(sessionId)
     const userQuery = (params.Params?.UserQuery || '').trim()
 
-    // 恢复态：遮罩防止 hydrate / recovery 期间误点（UI 订阅 store.switchLoading）
+    // 恢复态：遮罩防止 hydrate / recovery 期间误点（UI 订阅 store.initLoading）
     if (userQuery) {
       store.getState().updateState({ execute: true, casualTitle: '发送问题，开启会话...' })
     } else {
-      store.getState().updateState({ execute: true, switchLoading: true, casualTitle: '加载会话中...' })
+      store.getState().updateState({ execute: true, initLoading: true, casualTitle: '加载会话中...' })
       this.sessionRestoreLoading.add(sessionId)
     }
 
@@ -1076,7 +1076,7 @@ export class ChatMultiSessionController {
     if (!this.sessionRestoreLoading.has(sessionId)) return
     this.sessionRestoreLoading.delete(sessionId)
     const store = this.storePool.get(sessionId)
-    store?.getState().updateState({ switchLoading: false })
+    store?.getState().updateState({ initLoading: false })
   }
 
   /**
@@ -1115,7 +1115,7 @@ export class ChatMultiSessionController {
           await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
           this.finishSessionRestoreLoading(sessionId)
         } else {
-          // 保持 switchLoading，等 recovery_history 再关，避免 UI 提前可点
+          // 保持 initLoading，等 recovery_history 再关，避免 UI 提前可点
           this.requestRecoveryHistory(sessionId)
         }
       } else {

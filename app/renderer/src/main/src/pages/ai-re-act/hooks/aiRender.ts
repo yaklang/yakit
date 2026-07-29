@@ -601,7 +601,7 @@ export interface ChatStoreState {
 
   /** 切换session时的loading状态 */
   /** 切换/恢复会话 loading（供 UI 遮罩与禁用交互，防止加载期间误点） */
-  switchLoading: boolean
+  initLoading: boolean
   /** 用户主动取消问题的loading状态(自由对话) */
   cancelCasualLoading: boolean
   /** 用户主动取消问题的loading状态(任务规划) */

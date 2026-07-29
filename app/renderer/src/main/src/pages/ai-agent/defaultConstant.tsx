@@ -289,7 +289,7 @@ export const defaultChatIPCData: UseChatIPCState = {
   memoryList: { ...DefaultMemoryList },
   taskStatus: { plan: '', task: '', taskID: '', status: AITaskStatus.created, coordinatorId: '' },
   focusMode: '',
-  switchLoading: false,
+  initLoading: false,
   planHistoryList: cloneDeep(DefaultPlanHistoryList),
   cancelCasualLoading: false,
   cancelTaskLoading: false,

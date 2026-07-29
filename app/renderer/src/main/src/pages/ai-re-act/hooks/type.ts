@@ -140,7 +140,7 @@ export interface UseChatIPCState {
   /** 场景状态(仅供自由对话[reAct])使用 */
   focusMode: string
   /** 切换/恢复会话 loading（UI 遮罩与禁用交互；无 UserQuery 建连时置 true，hydrate/recovery 结束后 false） */
-  switchLoading: boolean
+  initLoading: boolean
   /** 任务规划历史数据-任务树 */
   planHistoryList: AIAgentGrpcApi.PlanHistoryList
   /** 用户主动取消问题的loading状态(自由对话) */

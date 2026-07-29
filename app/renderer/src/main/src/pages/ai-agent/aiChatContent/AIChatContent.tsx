@@ -48,7 +48,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     const httpTabUpdate = useStore(store, (state) => state.httpTabUpdate)
     const riskTabShow = useStore(store, (state) => state.riskTabShow)
     const riskTabUpdate = useStore(store, (state) => state.riskTabUpdate)
-    const requestHistoryState = useStore(store, (state) => state.requestHistoryState)
+    const initLoading = useStore(store, (state) => state.initLoading)
 
     const { activeChat } = useAIAgentStore()
 
@@ -263,7 +263,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     return (
       <div className={styles['ai-chat-content-wrapper']}>
-        <AIGlobalLoading loopAnimationMode="sequential" loading={requestHistoryState.initLoading}>
+        <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
           <AIHorizontalScrollCard />
           <div className={styles['ai-chat-tab-wrapper']}>
             <YakitSideTab

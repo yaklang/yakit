@@ -69,7 +69,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       execFileRecord: new Map(),
       yakExecResultLogs: [],
 
-      switchLoading: false,
+      initLoading: false,
       cancelCasualLoading: false,
       cancelTaskLoading: false,
       requestHistoryState: {
