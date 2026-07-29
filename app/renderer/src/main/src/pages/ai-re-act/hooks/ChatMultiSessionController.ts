@@ -69,6 +69,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
     grpcOffset: 0,
 
     timelineBeforeId: 0,
+    timelineNoMore: false,
 
     httpRunTimeIDs: [],
     riskRunTimeIDs: [],
@@ -965,10 +966,9 @@ export class ChatMultiSessionController {
    */
   public async loadTimelineHistory(sessionId: string): Promise<boolean> {
     const { rawData, store } = this.ensureSession(sessionId)
-    const state = store.getState()
-    // 置 loading（驱动 TimelineCard 的 YakitSpin）
+    // 置 loading（驱动 TimelineCard 的 YakitSpin）；与 finally 一致用 store.getState() 取最新
     store.getState().updateState({
-      requestHistoryState: { ...state.requestHistoryState, timelinesLoading: true },
+      requestHistoryState: { ...store.getState().requestHistoryState, timelinesLoading: true },
     })
     try {
       const request: AIEventQueryRequest = {
@@ -984,7 +984,11 @@ export class ChatMultiSessionController {
         request.Pagination!.BeforeId = rawData.timelineBeforeId
       }
       const { Events, Total } = await grpcQueryAIEvent(request, true)
-      if (Number(Total) === 0) return false
+      if (Number(Total) === 0) {
+        // 已到最旧，置尽头标记，避免 hasMoreTimeline 误判导致无限空查询
+        rawData.timelineNoMore = true
+        return false
+      }
 
       // 更新游标为最后一条（最旧）的 ID
       rawData.timelineBeforeId = Number(Events[Events.length - 1].ID)
@@ -996,7 +1000,10 @@ export class ChatMultiSessionController {
       // 前插合并去重：在 store set 回调里拿最新 state 合并，
       // 避免 await 期间实时流推入的新数据被 stale state 覆盖丢失
       store.getState().setReActTimelines(timelineItems)
-      return Events.length === ChatMultiSessionController.TIMELINE_PAGE_LIMIT
+      const hasMore = Events.length === ChatMultiSessionController.TIMELINE_PAGE_LIMIT
+      // 没拉满一页说明已到尽头，置标记
+      if (!hasMore) rawData.timelineNoMore = true
+      return hasMore
     } catch {
       return false
     } finally {
@@ -1007,12 +1014,10 @@ export class ChatMultiSessionController {
     }
   }
 
-  /** 是否还有更旧 timeline 历史可加载 */
+  /** 是否还有更旧 timeline 历史可加载（用 timelineNoMore 标记，避免无限空查询） */
   public hasMoreTimeline(sessionId: string): boolean {
     const { rawData } = this.ensureSession(sessionId)
-    // 游标为 0 表示未拉过 → 可加载；上次拉满一页 → 可加载
-    // 简化：只要没拉到过空结果就允许尝试（loadTimelineHistory 内部会判 Total===0）
-    return rawData.timelineBeforeId >= 0
+    return !rawData.timelineNoMore
   }
 
   /**

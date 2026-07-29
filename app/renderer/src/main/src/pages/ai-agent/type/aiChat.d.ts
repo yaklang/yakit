@@ -186,6 +186,8 @@ export interface AIAgentChatData {
 
   /** timeline 历史分页游标（grpcQueryAIEvent 的 BeforeId），0 表示未拉过 */
   timelineBeforeId: number
+  /** timeline 历史是否已到尽头（Total===0 或 Events.length < LIMIT 时置 true） */
+  timelineNoMore: boolean
 
   /** 记录数据里所有的httpRunTimeIDs */
   httpRunTimeIDs: string[]
