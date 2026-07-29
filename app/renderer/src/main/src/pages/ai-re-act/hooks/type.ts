@@ -1,0 +1,462 @@
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type {
+  AIChatQSData,
+  AIChatQSDataType,
+  AIStreamOutput,
+  AIYakExecFileRecord,
+  ReActChatBaseInfo,
+  ReActChatRenderItem,
+  TodoListCardData,
+} from './aiRender'
+import type { Dispatch, SetStateAction } from 'react'
+import type { Domain } from '@/pages/ai-agent/store/constants'
+import type {
+  AIAgentGrpcApi,
+  AIInputEvent,
+  AIOutputEvent,
+  AIOutputI18n,
+  AISource,
+  AIStartParams,
+  AITaskStatusType,
+} from './grpcApi'
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
+import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
+
+// #region 公共 hooks 事件
+export interface UseHookBaseParams {
+  /** 将数据推送到日志集合中 */
+  pushLog: (log: AIChatLogData) => void
+  /** 获取全部聊天数据 */
+  getChatDataStore: () => AIChatData | undefined
+}
+interface UseHookBaseEvents {
+  handleSetData: (res: AIOutputEvent) => void
+  handleResetData: () => void
+}
+export type handleSendFunc = (params: {
+  request: AIInputEvent
+  optionValue?: string
+  extraValue?: AIChatIPCStartParams['extraValue']
+  cb?: () => void
+}) => void
+
+interface UseHookStateFunc {
+  getContentMap: (token: string) => AIChatQSData | undefined
+  setContentMap: (token: string, content: AIChatQSData) => void
+  setElements: Dispatch<SetStateAction<ReActChatRenderItem[]>>
+  getElements: () => ReActChatRenderItem[]
+}
+
+/** 用于更新渲染数据的参数定义 */
+export interface UpdateRenderDataParams {
+  mapKey: string
+  type: AIChatQSDataType
+}
+// #endregion
+
+// #region useAIPerfData相关定义
+export interface UseAIPerfDataParams extends UseHookBaseParams {}
+
+export interface UseAIPerfDataEvents {
+  handleSetData: (res: AIOutputEvent) => void
+}
+// #endregion
+
+// #region useYakExecResult相关定义
+export interface UseYakExecResultParams extends UseHookBaseParams {}
+
+export interface UseYakExecResultState {
+  card: AIAgentGrpcApi.AIInfoCard[]
+  execFileRecord: Map<string, AIYakExecFileRecord[]>
+  yakExecResultLogs: StreamResult.Log[]
+}
+export interface UseYakExecResultEvents extends UseHookBaseEvents {
+  /** 设置UI展示的列表数据 */
+  handleSetYakResult: (newData: UseYakExecResultState) => void
+}
+// #endregion
+
+// #region useCasualChat相关定义
+export interface UseCasualChatParams extends UseHookBaseParams {
+  /** 获取流接口请求参数 */
+  getRequest: () => AIAgentSetting | undefined
+  /** 获取当前自由对话父任务 ID */
+  getCurrentCasualTaskID: () => string
+  /** review 触发回调事件 */
+  onReview?: (data: AIChatQSData) => void
+  /** 触发 review-release 后的回调事件 */
+  onReviewRelease: (id: string) => void
+  /** 收集自由对话里的子任务-taskID */
+  onSubTaskID: (taskID: string) => void
+}
+
+export interface UseCasualChatState {
+  elements: ReActChatRenderItem[]
+  toolListRenderNumber: number
+}
+export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc {
+  handleSend: handleSendFunc
+  /** 用户手动介入逻辑 */
+  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 清空todo-list数据 */
+  resetTodoListData: () => void
+}
+// #endregion
+
+// #region useTaskChat相关定义
+export interface UseTaskChatParams extends UseHookBaseParams {
+  /** 获取流接口请求参数 */
+  getRequest: () => AIAgentSetting | undefined
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
+  /** review 触发回调事件 */
+  onReview?: (data: AIChatQSData) => void
+  /** plan_review 补充数据 */
+  onReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
+  /** 触发 review-release 后的回调事件 */
+  onReviewRelease?: (id: string) => void
+  /** 向接口发送消息 */
+  sendRequest?: (request: AIInputEvent) => void
+}
+
+/** 当前正在执行的任务树 */
+export interface CurrentExecTaskTree {
+  task_tree: AIAgentGrpcApi.PlanHistory['task_tree']
+  root_task_name: AIAgentGrpcApi.PlanHistory['root_task_name']
+}
+
+export interface UseTaskChatState {
+  /** 正在执行的任务列表 */
+  plan: CurrentExecTaskTree
+  elements: ReActChatRenderItem[]
+}
+export interface UseTaskChatEvents extends UseHookBaseEvents, UseHookStateFunc {
+  handleSend: handleSendFunc
+  /** grpc接口关闭后的后续处理逻辑 */
+  handleCloseGrpc: () => void
+  /** 当前任务规划结束-触发UI展示结束标识 */
+  handlePlanExecEnd: (res: AIOutputEvent) => void
+  /** 用户手动介入逻辑 */
+  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 清空当前任务树 */
+  handleResetPlanTree: () => void
+}
+// #endregion
+
+// #region useChatIPC相关定义
+/** 会话类型 */
+export type ChatIPCSendType = 'casual' | 'task' | ''
+/** 会话-通知消息回调 */
+export interface AIChatIPCNotifyMessage {
+  Type: AIOutputEvent['Type']
+  NodeId: AIOutputEvent['NodeId']
+  NodeIdVerbose: AIOutputEvent['NodeIdVerbose']
+  Content: string
+  Timestamp: AIOutputEvent['Timestamp']
+}
+
+export interface UseChatIPCParams {
+  /** 切换会话时，是否自动建立会话连接(default:false) */
+  autoConnect?: boolean
+
+  /** 业务来源，用于映射 IndexedDB 消息存储域 */
+  aiSource?: AISource
+
+  /** 文件数据缓存实例类 */
+  cacheDataStore?: ChatDataStore
+  /** 设置会话的名字 */
+  setSessionChatName?: (session: string, name: string) => void
+
+  /** 查看历史会话数据 */
+  onViewChat?: (session: string) => void
+  /** 出现任务规划的触发回调(id 是 coordinatorId) */
+  onTaskStart?: () => void
+  /** 任务规划的 review 事件 */
+  onTaskReview?: (data: AIChatQSData) => void
+  /** 任务规划中 plan_review 事件的补充数据 */
+  onTaskReviewExtra?: (data: AIAgentGrpcApi.PlanReviewRequireExtra) => void
+
+  /** 主动 review-release 的回调事件 */
+  onReviewRelease?: (type: ChatIPCSendType, id: string) => void
+
+  /** 接口结束断开的回调事件 */
+  onEnd?: () => void
+
+  /** 同步信息返回 */
+  onSyncIDChange?: (syncID: string) => void
+
+  /** 获取当前Agent的全局配置数据 */
+  getSetting?: (() => AIAgentSetting) | undefined
+
+  /** http_fuzz_request_change事件的回调 */
+  onHttpFuzzRequestChange?: (data: AIAgentGrpcApi.HttpFuzzRequestChange) => void
+
+  /** http_flow_fuzz_status */
+  onGetHttpFlowFuzzStatus?: (data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => void
+
+  /** yaklang_code_change 事件的回调 */
+  onYaklangCodeChange?: (data: AIAgentGrpcApi.YaklangCodeChange) => void
+}
+
+/** 会话文件系统-pin */
+export interface AIFileSystemPin {
+  path: string
+  isFolder: boolean
+}
+
+/** 自由对话-实时问题队列 */
+export interface AIQuestionQueues {
+  total: number
+  data: AIAgentGrpcApi.QuestionQueueItem[]
+}
+
+/** 任务规划-loading状态信息 */
+export interface PlanLoadingStatus {
+  loading: boolean
+  plan: string
+  task: string
+}
+
+export interface UseChatIPCState {
+  /** 流执行状态 */
+  execute: boolean
+  /** 运行时产生http数据的run_time_id合集 */
+  httpRunTimeIDs: string[]
+  /** 运行时产生risk数据的run_time_id合集 */
+  riskRunTimeIDs: string[]
+  /** 插件输出的卡片数据 */
+  yakExecResult: UseYakExecResultState
+  /** 自由对话相关数据 */
+  casualChat: UseCasualChatState
+  /** 任务规划相关数据 */
+  taskChat: UseTaskChatState
+  /** 接口运行过程中的数据文件夹合集 */
+  grpcFolders: AIFileSystemPin[]
+  /** 问题队列信息 */
+  questionQueue: AIQuestionQueues
+  /** 时间线 */
+  reActTimelines: AIAgentGrpcApi.TimelineItem[]
+  /** 记忆列表 */
+  memoryList: AIAgentGrpcApi.MemoryEntryList
+
+  /** 任务规划的loading状态信息 */
+  taskStatus: PlanLoadingStatus
+  /** 自由对话的loading 显示的文案 */
+  casualTitle: string
+  /** 自由对话的是否进行中 */
+  casualLoading: boolean
+
+  /** 场景状态(仅供自由对话[reAct])使用 */
+  focusMode: string
+  /** 切换session时的loading状态 */
+  switchLoading: boolean
+  /** 任务规划历史数据-任务树 */
+  planHistoryList: AIAgentGrpcApi.PlanHistoryList
+  /** 用户主动取消问题的loading状态(自由对话) */
+  cancelCasualLoading: boolean
+  /** 用户主动取消问题的loading状态(任务规划) */
+  cancelTaskLoading: boolean
+  /** 流推送的提示文案（notify / rate-limit），展示时长由 duration 系列字段控制，到期自动清空 */
+  notifyMessage: { type: 'notify' | 'rate-limit'; content: string; label: AIOutputI18n } | null
+  /** 请求历史数据相关State */
+  requestHistoryState: UseAIMessageDataState
+}
+
+/** 开始启动流接口的唯一token、请求参数和额外参数 */
+export interface AIChatIPCStartParams {
+  token: string
+  params: AIInputEvent
+  /** 供前端处理逻辑和UI的额外参数 */
+  extraValue?: CustomPluginExecuteFormValue | Record<string, CustomPluginExecuteFormValue[]>
+}
+
+/** 执行流途中发送消息的参数 */
+export interface AIChatSendParams {
+  token: string
+  type: ChatIPCSendType
+  params: AIInputEvent
+  optionValue?: string
+  extraValue?: AIChatIPCStartParams['extraValue']
+}
+
+/** 任务规划的taskID和状态 */
+export interface TaskChatTaskInfo {
+  taskID: string
+  status: AITaskStatusType
+  coordinatorId: AIOutputEvent['CoordinatorId']
+}
+
+export interface UseChatIPCEvents {
+  /** 获取当前执行接口流的唯一标识符 */
+  fetchToken: () => string
+  /** 获取当前执行接口流的请求参数 */
+  fetchAIRequest: () => AIStartParams | undefined
+  /** 获取当前执行的自由对话问题(这个问题可能引起的是任务规划)对应的任务ID */
+  fetchCurrentCasualTaskID: () => string
+  /** 获取当前执行任务规划的问题详情 */
+  fetchCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
+  /** 获取当前外界传入的数据类实例 */
+  fetchChatDataStore: () => UseChatIPCParams['cacheDataStore']
+  /** 切换历史会话展示 */
+  onSwitchChat: (session?: string, isCreate?: boolean) => void
+  /** 开始执行接口流 */
+  onStart: (params: AIChatIPCStartParams, cb?: () => void) => void
+  /** 向执行中的接口流主动输入信息 */
+  onSend: (params: AIChatSendParams) => void
+  /** 主动结束正在执行中的接口流 */
+  onClose: (
+    token: string,
+    option?: {
+      tip: () => void
+    },
+  ) => void
+  /** 重置所有数据 */
+  onReset: () => void
+  /** 取消任务规划当前的Review */
+  handleTaskReviewRelease: (id: string) => void
+  /** 删除会话操作的关联逻辑 */
+  onDelChats: (session: string[]) => void
+  /** 用户主动取消问题的loading状态变换 */
+  handleCancelLoadingChange: (type: ReActChatBaseInfo['chatType'], status: boolean) => void
+  /** 清空指定变量数据 */
+  handleResetTarget: (target: 'memoryList') => void
+  /** 用户手动干预的执行事件 */
+  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 加载更多历史数据 */
+  handleLoadMoreHistory: (chatType: HistoryChatType) => void
+  /** 是否还有更多历史数据 */
+  handleHasMoreHistory: (type: HistoryChatType) => boolean
+  /** 清除当前任务规划的ID信息 */
+  resetCurrentTaskPlanID: () => void
+}
+// #endregion
+
+// #region useAIChatLog相关定义
+export interface AIChatLogToInfo {
+  type: 'log'
+  Timestamp: AIOutputEvent['Timestamp']
+  data: AIAgentGrpcApi.Log
+}
+export interface AIChatLogToStream {
+  type: 'stream'
+  Timestamp: AIOutputEvent['Timestamp']
+  data: AIStreamOutput
+}
+
+export type AIChatLogData = AIChatLogToInfo | AIChatLogToStream
+
+export interface UseAIChatLogEvents {
+  pushLog: UseHookBaseParams['pushLog']
+  sendStreamLog: (uuid: string) => void
+  /** 获取当前执行接口流的请求参数 */
+  clearLogs: () => AIStartParams | undefined
+  /** 关闭展示日志的页面窗口 */
+  cancelLogsWin: () => void
+}
+// #endregion
+
+// #region AI-Agent相关grpc流数据处理逻辑
+export interface AIMessageHandlerParams extends UseHookStateFunc {
+  /** grpc流原始数据 */
+  res: AIOutputEvent
+  /** 处理数据的额外补充数据 */
+  info: {
+    chatType: ReActChatRenderItem['chatType']
+  }
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
+  /** 获取流接口请求参数 */
+  getRequest: () => AIAgentSetting | undefined
+  /** 将数据推送到日志集合中 */
+  pushLog: UseHookBaseParams['pushLog']
+  /** review 类型相关变量和方法 */
+  review?: {
+    /** 设置review数据 */
+    handleSetReview?: (newReview: AIChatQSData | undefined) => void
+    /** 获取review数据 */
+    handleGetReview?: () => AIChatQSData | undefined
+    /** review 触发回调事件 */
+    onReview?: UseTaskChatParams['onReview']
+    /** plan_review 补充数据 */
+    onReviewExtra?: UseTaskChatParams['onReviewExtra']
+    /** 触发 review-release 后的回调事件 */
+    onReviewRelease?: (id: string) => void
+    /** 将 review 数据处理成需要展示的UI数据 */
+    handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
+    /** 向进行中的 grpc 流发送交互消息 */
+    sendRequest?: UseTaskChatParams['sendRequest']
+  }
+  /** store数据 */
+  getChatDataStore: UseHookBaseParams['getChatDataStore']
+  /** 回调方法 */
+  callback?: (data: AIOutputEvent) => void
+  /** 当前自由对话父任务 ID（任务规划请用 getCurrentTaskPlanID） */
+  getTaskId?: () => string
+}
+export type AIMessageHandler = (params: AIMessageHandlerParams) => void
+// #endregion
+
+// #region useAIMessageData相关定义
+export type loadMoreType = keyof AIChatData['beforeID']
+
+export interface AIMessageDataProps {
+  type: Domain
+  getChatStore: UseHookBaseParams['getChatDataStore']
+  setContentMap: (
+    chatType: ReActChatBaseInfo['chatType'],
+    ...args: Parameters<UseHookStateFunc['setContentMap']>
+  ) => void
+  setCasualElements: UseHookStateFunc['setElements']
+  setTaskElements: UseHookStateFunc['setElements']
+  grpcLoadMore?: (request: { limit: number; start_id?: number }) => void
+  setTimelines: Dispatch<SetStateAction<AIAgentGrpcApi.TimelineItem[]>>
+  setGrpcFiles: Dispatch<SetStateAction<AIFileSystemPin[]>>
+}
+
+/** 游标：记录每个 store 下一次加载的起始位置 */
+export interface PaginationCursors {
+  casualId?: string
+  taskId?: string
+}
+
+export interface UseAIMessageDataState {
+  /** 初始化加载中 */
+  initLoading: boolean
+  /** 加载更多加载中 */
+  casualLoadMoreLoading: boolean
+  taskLoadMoreLoading: boolean
+  /** save的加载状态 */
+  saveLoading: boolean
+  /** 时间线加载中 */
+  timelinesLoading: boolean
+}
+
+export type HistoryChatType = ReActChatBaseInfo['chatType'] | 'timelines'
+
+export interface UseAIMessageDataEvents {
+  /** 给UI使用的hasMore获取方法 */
+  handleHasMore: (chatType: HistoryChatType) => boolean
+  /** grpc请求历史数据的返回数据 */
+  handleGrpcLoadMore: (res: AIAgentGrpcApi.RecoveryHistory) => void
+  /** 初始化加载 */
+  handleLoadInit: (session: string, offset: number) => Promise<void>
+  /** 加载更多数据 */
+  handleLoadMore: (session: string, chatType: HistoryChatType) => Promise<void>
+  /** 重置状态 */
+  handleReset: () => void
+  /** 保存数据 */
+  handleSave: (
+    session: string,
+    data: {
+      casualElements: AIChatData['casualChat']['elements']
+      taskElements: AIChatData['taskChat']['elements']
+      casualContentMap: AIChatData['casualChat']['contents']
+      taskContentMap: AIChatData['taskChat']['contents']
+    },
+  ) => void
+  /** 删除会话 */
+  handleDeleteSession: (sessionId: string[]) => void
+}
+// #endregion

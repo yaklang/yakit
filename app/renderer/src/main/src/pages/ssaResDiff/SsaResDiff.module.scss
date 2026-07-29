@@ -1,0 +1,50 @@
+.ssaResDiff {
+  height: 100%;
+  padding: 12px;
+
+  .ssaResDiff-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+
+    gap: 8px;
+  }
+
+  .ssaResDiff-ssaDiffItem {
+    display: flex;
+    align-items: center;
+    flex: 1;
+
+    gap: 8px;
+
+    span {
+      white-space: nowrap;
+    }
+  }
+
+  .ssaResTable-BaseRisk,
+  .ssaResTable-CompareRisk {
+    height: 100%;
+  }
+
+  .ssaResTableAndDetail {
+    height: calc(100% - 30px);
+
+    &-top {
+      height: 100%;
+
+      .ssaResTable {
+        width: 100%;
+        height: 100%;
+
+        .table-severity-tag {
+          margin-right: 0;
+        }
+      }
+    }
+
+    &-bottom {
+      height: 100%;
+    }
+  }
+}

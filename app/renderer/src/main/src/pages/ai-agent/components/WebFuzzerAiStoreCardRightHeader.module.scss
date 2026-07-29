@@ -1,0 +1,14 @@
+.container {
+  display: flex;
+  align-items: center;
+  span {
+    cursor: pointer;
+    svg {
+      width: 14px;
+      height: 14px;
+      &:hover {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
+}

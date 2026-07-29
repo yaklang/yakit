@@ -1,0 +1,11 @@
+{
+  "viewers": {
+    "base": {
+      "PluginResultUI": {
+        "taskProgressID": "任務進度ID：",
+        "log": "日誌",
+        "taskExtraLogAndResult": "任務額外日誌與結果"
+      }
+    }
+  }
+}

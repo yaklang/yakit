@@ -1,0 +1,45 @@
+.pre-wrapper {
+  position: relative;
+  height: 100%;
+  max-height: fit-content;
+  font-size: 12px;
+  &:hover {
+    .copy-btn {
+      display: flex;
+    }
+  }
+  .code-wrapper {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    margin-bottom: 0;
+    margin-top: 4px;
+    border-radius: 4px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background-color: var(--Colors-Use-Neutral-Bg);
+    white-space: break-spaces;
+  }
+
+  .copy-btn {
+    border-color: var(--Colors-Use-Neutral-Border);
+    display: none;
+    align-items: center;
+    border-radius: 4px;
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+    .copy-icon {
+      margin: 0;
+      height: 14px;
+      width: 14px;
+      svg {
+        height: 14px;
+        width: 14px;
+      }
+    }
+  }
+}

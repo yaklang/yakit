@@ -1,0 +1,102 @@
+@use '../../../../styles/mixin.scss' as mixin;
+
+.ai-task-default-group-card {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  background: var(--Colors-Use-Basic-Background);
+  max-height: 600px;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &-title {
+    height: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+
+    &-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
+
+      .icon,
+      .icon svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        color: var(--Colors-Use-Neutral-Disable);
+      }
+
+      .text {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+      }
+
+      .time {
+        color: var(--Colors-Use-Neutral-Disable);
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 14px;
+        letter-spacing: 0.5px;
+        @include mixin.text-ellipsis(1, false, false, true);
+      }
+    }
+
+    &-right {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+  }
+
+  &-content {
+    max-height: 156px;
+    min-height: 0;
+    flex-shrink: 1;
+    overflow-y: hidden;
+    padding-top: 4px;
+    margin: 0 -2px;
+
+    &.focused {
+      overflow-y: overlay;
+    }
+  }
+}
+
+.content-inner {
+  min-height: 0;
+}
+
+.expand {
+  border: 1px solid var(--Colors-Use-Neutral-Disable);
+  background: var(--Colors-Use-Neutral-Bg);
+}
+
+.child-window-card {
+  max-height: none;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.child-window {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  border-top: none;
+  padding-top: 0;
+  overflow-y: auto;
+}

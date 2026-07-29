@@ -1,0 +1,37 @@
+{
+  "NewReverseServerPage": {
+    "startFacadeServer": "啟動FacadeServer",
+    "startFacadeServerFailed": "啟動FacadeServer失敗: ",
+    "reverseServer": "反連伺服器",
+    "reverseServerSubTitle": "使用協議埠複用技術，同時在一個埠同時實現 HTTP / RMI / HTTPS 等協議的反連"
+  },
+  "SettingReverseServer": {
+    "getRemoteAddrFailed": "獲取遠端地址失敗: ",
+    "enablePublicTunnel": "啟用公網穿透",
+    "publicTunnelHelp": "在自己的伺服器安裝 yak 核心引擎，執行",
+    "yakBridgeService": "啟動 Yak Bridge 公網服務",
+    "yakVersionRequirement": "yak version >= v1.0.11-sp9",
+    "publicBridgeAddr": "公網Bridge地址",
+    "password": "密碼",
+    "reverseAddr": "反連地址",
+    "reversePort": "反連埠",
+    "startFacadeServerBtn": "啟動FacadeServer"
+  },
+  "StartReverseServer": {
+    "applyToFacadeServerSuccess": "應用到FacadeServer成功",
+    "applyToFacadeServerFailed": "應用到FacadeServer失敗",
+    "payloadConfig": "Payload 配置: ",
+    "stopReverse": "關閉反連",
+    "httpReverseAddr": "HTTP反連地址",
+    "rmiReverseAddr": "RMI反連地址",
+    "ldapReverseAddr": "LDAP反連地址"
+  },
+  "ReverseTable": {
+    "onlyShowToken": "只看 Token",
+    "reverseType": "反連型別",
+    "connectionSource": "連線來源",
+    "response": "響應",
+    "rmiConnection": "RMI連線",
+    "rmiHandshake": "RMI握手"
+  }
+}

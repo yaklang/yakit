@@ -1,0 +1,53 @@
+# 可复用：checkout PR 头 + Yarn 缓存与安装 + 在子目录执行一条命令并上传日志 artifact。
+# 由 pull-request-test 为 ESLint/TS 各调用一次，以保持 needs.ci-* 粒度供 PR 汇总使用。
+name: PR CI yarn check (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      pr_repository:
+        type: string
+        required: true
+      pr_ref:
+        type: string
+        required: true
+      workdir:
+        type: string
+        required: true
+      run_command:
+        type: string
+        required: true
+      log_filename:
+        type: string
+        required: true
+      artifact_name:
+        type: string
+        required: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.pr_repository }}
+          ref: ${{ inputs.pr_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: ./.github/actions/pr-ci-setup-node-yarn
+
+      - name: Run check
+        shell: bash
+        run: |
+          set -o pipefail
+          root="$(git rev-parse --show-toplevel)"
+          cd "$root/${{ inputs.workdir }}"
+          ${{ inputs.run_command }} 2>&1 | tee "$root/${{ inputs.log_filename }}"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.log_filename }}
+          if-no-files-found: warn

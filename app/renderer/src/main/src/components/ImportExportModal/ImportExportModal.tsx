@@ -1,0 +1,272 @@
+import { memo, useEffect, useMemo, useRef } from 'react'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitModal, YakitModalProp } from '@/components/yakitUI/YakitModal/YakitModal'
+import { ImportAndExportStatusInfo, LogListInfo } from '@/components/YakitUploadModal/YakitUploadModal'
+import { yakitNotify } from '@/utils/notification'
+import { randomString } from '@/utils/randomUtil'
+import { useMemoizedFn, useSafeState } from 'ahooks'
+import { Form, FormInstance, FormProps } from 'antd'
+import styles from './ImportExportModal.module.scss'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+const { ipcRenderer } = window.require('electron')
+
+const ImportExportModalSize = {
+  export: {
+    width: 520,
+    labelCol: 5,
+    wrapperCol: 18,
+  },
+  import: {
+    width: 720,
+    labelCol: 6,
+    wrapperCol: 17,
+  },
+}
+
+type IsProgressFinished<P> = (progress: P) => boolean
+type GetProgressValue<P> = (progress: P) => number
+
+export type ImportExportModalExtra = {
+  hint: boolean
+} & {
+  title: string
+  type: 'export' | 'import'
+  apiKey: string
+}
+interface ImportExportModalProps<F, R, P> {
+  getContainer?: HTMLElement
+  extra: ImportExportModalExtra
+  hasDesc?: boolean
+  modelProps?: YakitModalProp
+  formProps?: FormProps
+  renderForm: (form: FormInstance) => React.ReactNode
+  onBeforeSubmit?: (values: F) => Promise<void> | void
+  onSubmitForm: (values: F) => R
+  getProgressValue: GetProgressValue<P>
+  isProgressFinished: IsProgressFinished<P>
+  getlogListInfo?: (stream: P[]) => LogListInfo[]
+  onFinished: (result: boolean) => void
+}
+/**
+ * 通用导入导出组件，参考ForgeName组件
+ */
+const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>) => {
+  const {
+    getContainer,
+    extra,
+    hasDesc = true,
+    modelProps = {},
+    formProps = {},
+    renderForm,
+    onBeforeSubmit,
+    onSubmitForm,
+    getProgressValue,
+    isProgressFinished,
+    getlogListInfo,
+    onFinished,
+  } = props
+  const { t, i18n } = useI18nNamespaces(['components', 'yakitUi'])
+
+  const [form] = Form.useForm()
+
+  const token = useRef('')
+  const [showProgressStream, setShowProgressStream] = useSafeState(false)
+  const timeRef = useRef<ReturnType<typeof setTimeout>>()
+  const importExportStreamRef = useRef<P[]>([])
+  const [progressStream, setProgressStream] = useSafeState<P[]>([])
+
+  const handleReset = useMemoizedFn(() => {
+    token.current = ''
+    setShowProgressStream(false)
+    timeRef.current = undefined
+    importExportStreamRef.current = []
+    setProgressStream([])
+  })
+
+  const onSubmit = useMemoizedFn(async () => {
+    try {
+      const values = form.getFieldsValue() as F
+      await onBeforeSubmit?.(values)
+      const params = onSubmitForm(values)
+      token.current = randomString(40)
+      handleListeners()
+      await ipcRenderer.invoke(extra.apiKey, params, token.current)
+      setShowProgressStream(true)
+    } catch (e) {
+      yakitNotify('error', `[${extra.apiKey}] error:  ${e}`)
+    }
+  })
+
+  const onCancelStream = useMemoizedFn(() => {
+    if (!token.current) return
+
+    ipcRenderer.invoke(`cancel-${extra.apiKey}`, token.current)
+    ipcRenderer.removeAllListeners(`${token.current}-data`)
+    ipcRenderer.removeAllListeners(`${token.current}-error`)
+    ipcRenderer.removeAllListeners(`${token.current}-end`)
+    clearInterval(timeRef.current)
+  })
+
+  useEffect(() => {
+    if (progressStream.length && isProgressFinished(progressStream[0])) {
+      onFinished(true)
+    }
+  }, [progressStream.length])
+  const streamData = useMemo(() => {
+    return {
+      Progress: progressStream.length ? getProgressValue(progressStream[0]) : 0,
+    }
+  }, [progressStream.length])
+  const logListInfo = useMemo(() => {
+    return getlogListInfo?.(progressStream) || []
+  }, [progressStream.length])
+  const progressTitle = useMemo(() => {
+    return extra.type === 'export'
+      ? progressStream.length
+        ? isProgressFinished(progressStream[0])
+          ? t('ImportExportModal.exportDone')
+          : t('ImportExportModal.exporting')
+        : t('ImportExportModal.exporting')
+      : progressStream.length
+        ? isProgressFinished(progressStream[0])
+          ? t('ImportExportModal.importDone')
+          : t('ImportExportModal.importing')
+        : t('ImportExportModal.importing')
+  }, [extra.type, progressStream.length, i18n.language])
+
+  const handleListeners = useMemoizedFn(() => {
+    if (!token.current) {
+      return
+    }
+    const typeTitle = extra.apiKey
+    const updateImportExportHTTPFlowStream = () => {
+      setProgressStream([...importExportStreamRef.current])
+    }
+    timeRef.current = setInterval(updateImportExportHTTPFlowStream, 500)
+    ipcRenderer.on(`${token.current}-data`, async (_, data: P) => {
+      importExportStreamRef.current.unshift(data)
+    })
+    ipcRenderer.on(`${token.current}-error`, (_, error) => {
+      yakitNotify('error', `[${typeTitle}] error:  ${error}`)
+    })
+    ipcRenderer.on(`${token.current}-end`, () => {
+      yakitNotify('info', `[${typeTitle}] finished`)
+    })
+  })
+
+  const onCancel = useMemoizedFn(() => {
+    onFinished(false)
+  })
+
+  // modal header 描述文字
+  const exportDescribeMemoizedFn = useMemoizedFn((type) => {
+    if (!hasDesc) return null
+    switch (type) {
+      case 'export':
+        return <div className={styles['export-hint']}>{t('ImportExportModal.exportHint')}</div>
+      case 'import':
+        return <div className={styles['import-hint']}>{t('ImportExportModal.importHint')}</div>
+
+      default:
+        break
+    }
+  })
+
+  useEffect(() => {
+    if (extra.hint) {
+      handleReset()
+      form.resetFields()
+    }
+    // 关闭时重置所有数据
+    return () => {
+      if (extra.hint) {
+        onCancelStream()
+      }
+    }
+  }, [extra.hint])
+
+  return (
+    <>
+      <YakitModal
+        getContainer={getContainer}
+        type="white"
+        width={ImportExportModalSize[extra.type].width}
+        centered={true}
+        keyboard={false}
+        maskClosable={false}
+        visible={extra.hint}
+        title={extra.title}
+        bodyStyle={{ padding: 0 }}
+        {...modelProps}
+        onCancel={() => {
+          onCancelStream()
+          onCancel()
+        }}
+        footerStyle={{ justifyContent: 'flex-end' }}
+        footer={
+          <>
+            {!showProgressStream ? (
+              <>
+                {extra.type === 'export' && (
+                  <YakitButton type={'outline2'} onClick={onCancel} style={{ marginRight: 8 }}>
+                    {t('YakitButton.cancel')}
+                  </YakitButton>
+                )}
+                <YakitButton onClick={onSubmit}>
+                  {extra.type === 'import' ? t('YakitButton.import') : t('YakitButton.ok')}
+                </YakitButton>
+              </>
+            ) : (
+              <YakitButton
+                type={'outline2'}
+                onClick={() => {
+                  onCancelStream()
+                  onCancel()
+                }}
+              >
+                {progressStream.length
+                  ? isProgressFinished(progressStream[0])
+                    ? t('YakitButton.finish')
+                    : t('YakitButton.cancel')
+                  : t('YakitButton.cancel')}
+              </YakitButton>
+            )}
+          </>
+        }
+      >
+        {!showProgressStream ? (
+          <div className={styles['import-export-modal']}>
+            <Form
+              form={form}
+              layout={'horizontal'}
+              labelCol={{ span: ImportExportModalSize[extra.type].labelCol }}
+              wrapperCol={{ span: ImportExportModalSize[extra.type].wrapperCol }}
+              {...formProps}
+              onSubmitCapture={(e) => {
+                e.preventDefault()
+              }}
+            >
+              {exportDescribeMemoizedFn(extra.type)}
+              {renderForm(form)}
+            </Form>
+          </div>
+        ) : (
+          <div style={{ padding: '0 16px' }}>
+            <ImportAndExportStatusInfo
+              title={progressTitle}
+              showDownloadDetail={false}
+              streamData={streamData}
+              logListInfo={logListInfo}
+            />
+          </div>
+        )}
+      </YakitModal>
+    </>
+  )
+}
+const ImportExportModal = memo(<F, R, P>(props: ImportExportModalProps<F, R, P>) => (
+  <ImportExportModalInner {...props} />
+)) as <F, R, P>(props: ImportExportModalProps<F, R, P>) => JSX.Element
+
+export default ImportExportModal

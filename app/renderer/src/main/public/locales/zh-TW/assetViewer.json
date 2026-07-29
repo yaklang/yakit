@@ -1,0 +1,45 @@
+{
+  "DomainAssetPage": {
+    "domain": "域名",
+    "sendToVulnDetection": "傳送到漏洞檢測",
+    "sendToBruteForce": "傳送到爆破",
+    "sendTo": "傳送到...",
+    "deleteSelectedConfirm": "確定刪除勾選資料嗎？",
+    "clearListConfirm": "確定清空列表資料嗎?",
+    "exportFailed": "資料匯出失敗：{{error}}",
+    "batchNotSupportSelectAll": "該批次操作不支援全選",
+    "exportName": "域名資產"
+  },
+  "PortAssetTable": {
+    "title": "Port資產",
+    "searchPlaceholder": "搜尋Port / 主機 / 標題",
+    "confirmDeleteSelected": "確定刪除勾選資料嗎？",
+    "confirmClearList": "確定清空列表資料嗎?"
+  },
+  "PortAssetQuery": {
+    "noFingerprint": "暫無指紋資訊"
+  },
+  "PortAssetDescription": {
+    "detailTitle": "port資產詳情",
+    "state": "狀態",
+    "application": "應用",
+    "failureReason": "失敗原因",
+    "fingerprintInfo": "指紋資訊",
+    "advancedQuery": "資產高階查詢"
+  },
+  "ReportViewerPage": {
+    "reportList": "報告列表",
+    "clickToInspect": "點選列表中的報告檢查內容",
+    "deleteSelectedConfirm": "確定刪除選擇的報告嗎？不可恢復",
+    "deleteAllConfirm": "確定刪除所有報告嗎? 不可恢復",
+    "generateReport": "生成報告",
+    "selectToDelete": "點選選中後，可刪除",
+    "owner": "發起人",
+    "source": "來源",
+    "selectReport": "選擇報告以在此檢視內容",
+    "pages": "共 {{total}} 頁",
+    "selectFolder": "請選擇資料夾",
+    "exportSuccess": "報告匯出成功",
+    "emptyReportData": "報告資料為空，無法匯出"
+  }
+}

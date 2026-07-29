@@ -1,0 +1,128 @@
+{
+  "UploadStatusInfo": {
+    "progress": "進度",
+    "elapsedTime": "耗時"
+  },
+  "CreateDictionaries": {
+    "dictionaryNameExists": "字典名重複",
+    "uploadHintLargeFile": "支援大檔案上傳(支援檔案型別txt)",
+    "incorrectFormat": "{{name}}非txt、csv檔案，請上傳正確格式檔案！",
+    "alreadySelected": "{{path}}已選擇",
+    "storageMethod": "可根據需求選擇以下儲存方式，儲存方式不影響使用：",
+    "fileStorage": "檔案儲存：將字典以檔案形式儲存在本地，不支援命中次數，上傳速度更快",
+    "databaseStorage": "資料庫儲存：將字典資料讀取後儲存在資料庫中，支援命中次數，搜尋更方便",
+    "largeFileStorageMethod": "大檔案儲存：上傳檔案大於20M時，支援採取大檔案儲存方式，僅支援txt，儲存更便捷",
+    "dictionaryName": "字典名",
+    "uploadFile": "上傳檔案",
+    "manualInput": "手動輸入",
+    "largeFileUpload": "大檔案上傳",
+    "uploadHint": "可將檔案拖入框內，或點選此處匯入",
+    "uploadHintFolder": "支援資料夾批次上傳(支援檔案型別txt/csv)",
+    "largeFileOnlyTxt": "大檔案儲存僅支援txt檔案型別",
+    "saveToFile": "檔案儲存",
+    "largeFileStorage": "大檔案儲存",
+    "importing": "匯入中...",
+    "deduplicating": "自動去重檢測，請耐心等待..."
+  },
+  "ReadOnlyNewPayload": {
+    "selected": "已選中：",
+    "totalCheckedItems": "{{count}}個",
+    "insert": "插入",
+    "supportInsertFileForFuzz": "支援插入檔案進行Fuzz",
+    "pleaseSelectDictionaryOrFolder": "請選擇要插入的字典或資料夾"
+  },
+  "NewPayloadLocalList": {
+    "selectDictionaryToInsert": "選擇想要插入的字典",
+    "goToDictionaryManagement": "前往 字典管理",
+    "updateFailed": "資料更新失敗：{{error}}",
+    "folderExists": "資料夾已存在",
+    "deleting": "正在刪除中...",
+    "renaming": "正在重新命名中...",
+    "deleteDictionary": "刪除字典",
+    "deleteDictionaryConfirm": "確定刪除該字典嗎?",
+    "deleteFolder": "刪除資料夾",
+    "deleteFolderConfirm": "確定刪除該資料夾及其內部所有字典嗎?",
+    "localDictionary": "本地字典",
+    "onlineDictionary": "線上字典",
+    "batchExportConfirm": "確定批次匯出選擇的字典嗎？",
+    "batchExporting": "批次匯出中...",
+    "dictionaryDetails": "字典詳情",
+    "exitEditConfirm": "確定退出編輯嗎?",
+    "save": "儲存",
+    "exit": "退出",
+    "syncToOnline": "同步到線上",
+    "syncing": "字典同步中...",
+    "syncFailed": "同步失敗",
+    "syncSuccess": "同步成功",
+    "updateSuccess": "更新成功",
+    "dictionaryManagement": "字典管理",
+    "pleaseSelectExportContent": "請選擇匯出內容",
+    "newDictionary": "新建字典",
+    "unnamedDetection": "未命名檢測"
+  },
+  "FolderComponent": {
+    "createFolderSuccess": "新建資料夾成功",
+    "createFolderFailed": "新建資料夾失敗：{{error}}",
+    "nameNotAllowSpecial": "名稱不允許出現/*,",
+    "folderNameExistsCannotCreate": "資料夾名重複，不可建立",
+    "folderNameExistsCannotEdit": "資料夾名重複，不可編輯",
+    "copyFuzztag": "複製 Fuzztag",
+    "addChildPayload": "新增子集字典"
+  },
+  "DeleteConfirm": {
+    "deleteConfirmTitle": "是否要刪除",
+    "deleteConfirmContent": "確認刪除後將會徹底刪除"
+  },
+  "FileComponent": {
+    "extendDictionary": "擴充字典",
+    "exportDictionary": "匯出字典",
+    "toDatabase": "轉為資料庫儲存",
+    "extendTo": "擴充到 {{name}}",
+    "toDatabaseWaiting": "轉為資料庫儲存中，請耐心等待..."
+  },
+  "MoveOrCopyPayload": {
+    "getDataFailed": "獲取資料失敗：{{error}}",
+    "pleaseSelect": "請選擇..."
+  },
+  "PayloadLocalContent": {
+    "fuzzModuleRenderHint": "可以透過 fuzz 模組 {{x(字典名)}} 來渲染",
+    "contentCannotBeEmpty": "內容不能為空",
+    "editorDataGetFailed": "編輯器資料獲取失敗",
+    "pleaseSelectDictionary": "請選擇字典",
+    "operationFailed": "操作字典失敗: {{error}}",
+    "backupToOther": "備份到其他字典",
+    "moveToOther": "移動到其他字典",
+    "extendTo": "擴充到 {{name}}",
+    "extend": "擴充",
+    "autoRemoveDuplicate": "自動去重",
+    "autoRemoveDuplicateWaiting": "自動去重中，請耐心等待..."
+  },
+  "PayloadOnlineContent": {
+    "editorDataGetFailed": "編輯器資料獲取失敗",
+    "hugeDictionary": "超大字典"
+  },
+  "ExportByPayloadGrpc": {
+    "selectFolder": "請選擇資料夾",
+    "exportWaiting": "匯出中，請耐心等待..."
+  },
+  "UploadOrDownloadByPayloadGrpc": {
+    "waiting": "{{type}}中，請耐心等待..."
+  },
+  "NewPayload": {
+    "getDictionaryListFailed": "獲取字典列表失敗：{{error}}",
+    "migrateData": "遷移資料",
+    "migrateDataContent": "由於Payload功能進行重構，為不影響使用，需要點選確定將舊資料進行遷移，遷移資料不會造成任何資料丟失。",
+    "engineVersionTooLow": "引擎版本過低",
+    "engineVersionTooLowContent": "當前引擎版本過低無法使用新版Payload，請將引擎更新到 v1.2.9-sp3及以上版本",
+    "migratingDataWaiting": "遷移資料中，請耐心等待...",
+    "noPayloadDictionary": "暫無 Payload 字典",
+    "newDictionary": "新建字典",
+    "selectDictionaryHint": "請點選左側列表，選擇想要檢視的字典"
+  },
+  "NewPayloadTable": {
+    "dictionaryContent": "字典內容",
+    "addHitCountFieldNotice": "新增命中次數字段，命中次數越高，在爆破時優先順序也會越高",
+    "hitCount": "命中次數",
+    "recordCount": "共{{i}}條記錄"
+  }
+}

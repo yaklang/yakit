@@ -1,0 +1,39 @@
+.more-versions-popover-content {
+  width: 240px;
+  .search-version-header {
+    height: 28px;
+    margin-bottom: 8px;
+    :global {
+      .ant-input {
+        font-size: 14px;
+        height: 26px;
+      }
+
+      .search-icon {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        svg {
+          height: 16px;
+          width: 16px;
+        }
+      }
+    }
+  }
+  .version-list-wrap {
+    max-height: 200px;
+    overflow: auto;
+    .version-list-item {
+      height: 28px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      span.active {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
+}

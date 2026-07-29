@@ -1,0 +1,15 @@
+.tcp-wrapper {
+  border-top: none;
+}
+.description-text {
+  color: #999;
+  font-size: 12px;
+}
+
+.set-ping-size-wrap {
+  display: flex;
+  align-items: center;
+  .ping-size-input-number {
+    width: 200px;
+  }
+}

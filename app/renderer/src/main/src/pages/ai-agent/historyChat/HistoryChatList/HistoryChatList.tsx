@@ -1,0 +1,341 @@
+import { useMemo, useRef, useState, type FC } from 'react'
+import styles from './HistoryChatList.module.scss'
+import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { SolidChatalt2Icon, SolidUserIcon, SolidUsersIcon } from '@/assets/icon/solid'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { Tooltip } from 'antd'
+import classNames from 'classnames'
+import { YakitAIAgentPageID } from '../../defaultConstant'
+import { EditChatNameModal } from '../../UtilModals'
+import { AISession } from '../../type/aiChat'
+import { useInfiniteScroll, useMemoizedFn } from 'ahooks'
+import { grpcDeleteAISession, grpcUpdateAISessionTitle } from '../../grpc'
+import useAIAgentStore from '../../useContext/useStore'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import { yakitNotify } from '@/utils/notification'
+import { onNewChat } from '../HistoryChat'
+import emiter from '@/utils/eventBus/eventBus'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { SessionListDispatcher } from './hook/useSessionList'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
+
+export const HOUR_MS = 60 * 60 * 1000
+export const DAY_MS = 24 * HOUR_MS
+export const WEEK_MS = 7 * DAY_MS
+export const THIRTY_DAYS_MS = 30 * DAY_MS
+
+const CHAT_GROUPS = [
+  { key: 'justNow', label: 'HistoryChatList.justNow' },
+  { key: 'oneHour', label: 'HistoryChatList.oneHour' },
+  { key: 'oneDay', label: 'HistoryChatList.oneDay' },
+  { key: 'oneWeek', label: 'HistoryChatList.oneWeek' },
+  { key: 'thirtyDays', label: 'HistoryChatList.thirtyDays' },
+] as const
+
+type ChatGroupKey = (typeof CHAT_GROUPS)[number]['key']
+
+export const normalizeTimestamp = (timestamp?: number | string) => {
+  if (!timestamp) return 0
+  const value = Number(timestamp)
+  if (Number.isNaN(value)) return 0
+  return value < 1e12 ? value * 1000 : value
+}
+
+export const getChatTimestamp = (item: AISession) => {
+  return normalizeTimestamp(item.UpdatedAt || item.CreatedAt)
+}
+
+const getChatGroupKey = (timestamp?: number | string): ChatGroupKey => {
+  const time = normalizeTimestamp(timestamp)
+  const diff = Math.max(Date.now() - time, 0)
+
+  if (diff <= HOUR_MS) return 'justNow'
+  if (diff <= DAY_MS) return 'oneHour'
+  if (diff <= WEEK_MS) return 'oneDay'
+  if (diff <= THIRTY_DAYS_MS) return 'oneWeek'
+  return 'thirtyDays'
+}
+
+const getNextActiveChat = (chats: AISession[], currentIndex: number) => {
+  const prev = chats[currentIndex - 1]
+  const next = chats[currentIndex + 1]
+  return prev ?? next
+}
+
+const updateChatTitle = (list: AISession[], info: AISession) => {
+  return list.map((item) => {
+    if (item.SessionID === info.SessionID) {
+      return info
+    }
+    return item
+  })
+}
+
+const HistorySessionIcon: FC<{
+  item: AISession
+  getPopupContainer?: () => HTMLElement
+  overlayClassName?: string
+}> = ({ item, getPopupContainer, overlayClassName }) => {
+  const iconMeta = getHistorySessionIconMeta(item)
+  const Icon = iconMeta.isIM ? (iconMeta.isGroupLike ? SolidUsersIcon : SolidUserIcon) : SolidChatalt2Icon
+
+  return (
+    <Tooltip
+      title={iconMeta.label}
+      placement="top"
+      overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+      getPopupContainer={getPopupContainer}
+    >
+      <div
+        className={classNames(
+          styles['item-icon'],
+          styles[`item-icon-${iconMeta.source}`],
+          styles[`item-icon-${iconMeta.chatKind}`],
+        )}
+      >
+        <Icon />
+      </div>
+    </Tooltip>
+  )
+}
+
+const HistoryChatList: FC<{
+  search: string
+  sessionList: AISession[]
+  aiSource: AISource[]
+  getSessions?: SessionListDispatcher['getSessions']
+  setSessions?: SessionListDispatcher['setSessions']
+  loadHistoryData?: SessionListDispatcher['loadHistoryData']
+  getPopupContainer?: () => HTMLElement
+  overlayClassName?: string
+  embedded?: boolean
+}> = ({
+  search,
+  sessionList,
+  aiSource,
+  getSessions,
+  setSessions,
+  loadHistoryData,
+  getPopupContainer,
+  overlayClassName,
+  embedded,
+}) => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { activeChat } = useAIAgentStore()
+  const { setActiveChat, setSetting } = useAIAgentDispatcher()
+  const listRef = useRef<HTMLDivElement | null>(null)
+  const chatTotalRef = useRef(0)
+  const editInfo = useRef<AISession>()
+  const [delLoading, setDelLoading] = useState<string[]>([])
+  const [editShow, setEditShow] = useState(false)
+
+  const activeSessionId = useMemo(() => {
+    return activeChat?.SessionID || ''
+  }, [activeChat])
+
+  const { loading } = useInfiniteScroll(
+    async () => {
+      const total = await loadHistoryData?.()
+      chatTotalRef.current = total ?? 0
+      return { list: [] }
+    },
+    {
+      target: listRef,
+      isNoMore: () => (getSessions?.().length || 0) >= chatTotalRef.current,
+      threshold: 100,
+      manual: embedded,
+    },
+  )
+
+  const handleOpenEditName = useMemoizedFn((info: AISession) => {
+    if (editShow) return
+    editInfo.current = info
+    setEditShow(true)
+  })
+
+  const showHistory = useMemo(() => {
+    if (!search) return sessionList
+    const lower = search.toLowerCase()
+    return sessionList.filter((item) => getSessionDisplayTitle(item).toLowerCase().includes(lower))
+  }, [sessionList, search])
+
+  const groupedHistory = useMemo(() => {
+    const groupMap = CHAT_GROUPS.reduce<Record<ChatGroupKey, AISession[]>>(
+      (acc, item) => {
+        acc[item.key] = []
+        return acc
+      },
+      {} as Record<ChatGroupKey, AISession[]>,
+    )
+
+    showHistory.forEach((item) => {
+      const groupKey = getChatGroupKey(getChatTimestamp(item))
+      groupMap[groupKey].push(item)
+    })
+
+    return CHAT_GROUPS.map((item) => ({
+      ...item,
+      list: groupMap[item.key],
+    })).filter((item) => item.list.length > 0)
+  }, [showHistory])
+
+  const handleCallbackEditName = useMemoizedFn(async (result: boolean, info?: AISession) => {
+    if (result && info) {
+      try {
+        await grpcUpdateAISessionTitle({ SessionID: info.SessionID, Title: info.Title })
+        setSessions?.((old) => updateChatTitle(old, info))
+      } catch (error) {
+        yakitNotify('error', t('HistoryChatList.updateTitleFailed', { error: String(error) }))
+      }
+    }
+    setEditShow(false)
+    editInfo.current = undefined
+  })
+
+  const handleDeleteChat = useMemoizedFn(async (info: AISession) => {
+    const { SessionID } = info
+    const isLoading = delLoading.includes(SessionID)
+    if (isLoading) return
+    const findIndex = sessionList.findIndex((item) => item.SessionID === SessionID)
+    if (findIndex === -1) {
+      yakitNotify('error', t('HistoryChatList.chatNotFound'))
+      return
+    }
+    setDelLoading((old) => [...old, SessionID])
+
+    const newChats = sessionList.filter((item) => item.SessionID !== SessionID)
+    let active: AISession | undefined
+    if (newChats.length === 0) {
+      onNewChat()
+    } else {
+      active = getNextActiveChat(sessionList, findIndex)
+    }
+
+    setSessions && setSessions(newChats)
+
+    if (activeSessionId === SessionID && active) {
+      handleSetActiveChat(active)
+    }
+
+    try {
+      await grpcDeleteAISession({ Filter: { SessionID: [SessionID], Source: aiSource } }, true)
+      emiter.emit('onDelChats', JSON.stringify([SessionID]))
+    } catch (error) {
+      setSessions?.(sessionList)
+      if (activeSessionId === SessionID) {
+        handleSetActiveChat(info)
+      }
+      yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
+    } finally {
+      setDelLoading((old) => old.filter((el) => el !== SessionID))
+    }
+  })
+
+  const handleSetActiveChat = useMemoizedFn((info: AISession) => {
+    // 暂时性逻辑，因为老版本的对话信息里没有请求参数，导致在新版本无法使用对话里的重新执行功能
+    // 所以会提示警告，由用户决定是否删除历史对话
+    // if (!info.request) {
+    //     yakitNotify("warning", "当前对话无请求参数信息，无法使用重新执行功能")
+    // }
+    setSetting?.((old) => ({
+      ...old,
+      SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,
+      EnablePlan: info?.StartParams?.EnablePlan ?? false,
+    }))
+    setActiveChat && setActiveChat(info)
+  })
+
+  return (
+    <div ref={listRef} className={styles['history-chat-list']}>
+      {groupedHistory.map((group) => {
+        return (
+          <div key={group.key} className={styles['history-group']}>
+            <div className={styles['history-group-title']}>{t(group.label)}</div>
+            {group.list.map((item) => {
+              const { SessionID } = item
+              const displayTitle = getSessionDisplayTitle(item)
+              const delStatus = delLoading.includes(SessionID)
+              return (
+                <div
+                  key={SessionID}
+                  className={classNames(styles['history-item'], {
+                    [styles['history-item-active']]: activeSessionId === SessionID,
+                  })}
+                  onClick={() => handleSetActiveChat(item)}
+                >
+                  <div className={styles['item-info']}>
+                    <HistorySessionIcon
+                      item={item}
+                      getPopupContainer={getPopupContainer}
+                      overlayClassName={overlayClassName}
+                    />
+                    <div
+                      className={classNames(styles['info-title'], 'yakit-content-single-ellipsis')}
+                      title={displayTitle}
+                    >
+                      {displayTitle}
+                    </div>
+                  </div>
+
+                  <div className={styles['item-extra']}>
+                    <Tooltip
+                      title={t('HistoryChatList.editTitle')}
+                      placement="topRight"
+                      overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+                      getPopupContainer={getPopupContainer}
+                    >
+                      <YakitButton
+                        type="text2"
+                        icon={<OutlinePencilaltIcon />}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenEditName(item)
+                        }}
+                      />
+                    </Tooltip>
+                    <YakitPopconfirm
+                      title={t('HistoryChatList.deleteConfirm')}
+                      placement="bottom"
+                      getPopupContainer={getPopupContainer}
+                      overlayClassName={overlayClassName}
+                      onConfirm={(e) => {
+                        e?.stopPropagation()
+                        handleDeleteChat(item)
+                      }}
+                    >
+                      <YakitButton
+                        loading={delStatus}
+                        type="text2"
+                        icon={<OutlineTrashIcon className={styles['del-icon']} />}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </YakitPopconfirm>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })}
+      {loading && <div className={styles['history-loading']}>{t('YakitSpin.loading')}</div>}
+
+      {editInfo.current && (
+        <EditChatNameModal
+          getContainer={
+            embedded && getPopupContainer
+              ? getPopupContainer()
+              : document.getElementById(YakitAIAgentPageID) || undefined
+          }
+          zIndex={embedded ? 1110 : undefined}
+          info={editInfo.current}
+          visible={editShow}
+          onCallback={handleCallbackEditName}
+        />
+      )}
+    </div>
+  )
+}
+
+export default HistoryChatList

@@ -1,0 +1,2091 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { MacUIOp } from './MacUIOp'
+import { PerformanceDisplay, yakProcess } from './PerformanceDisplay'
+import { FuncDomain } from './FuncDomain'
+import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
+import { GlobalState } from './GlobalState'
+import { YakitGlobalHost } from './YakitGlobalHost'
+import {
+  EngineWatchDogCallbackType,
+  YakitSettingCallbackType,
+  YakitStatusType,
+  YakitSystem,
+  YaklangEngineMode,
+} from '@/yakitGVDefine'
+import { failed, info, warn, yakitFailed, yakitNotify } from '@/utils/notification'
+import { LocalGV, RemoteGV } from '@/yakitGV'
+import { EngineModeVerbose } from '../basics/YakitLoading'
+import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
+import { getLocalValue, getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
+import { YaklangEngineWatchDog, YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
+import { StringToUint8Array } from '@/utils/str'
+import {
+  GetConnectPort,
+  getReleaseEditionName,
+  getRemoteI18nGV,
+  isCommunityYakit,
+  isEnpriTraceAgent,
+  isEnterpriseEdition,
+  isIRify,
+  isMemfit,
+} from '@/utils/envfile'
+import { AllKillEngineConfirm } from './AllKillEngineConfirm'
+import { SoftwareSettings } from '@/pages/softwareSettings/SoftwareSettings'
+import { StopIcon } from '@/assets/newIcon'
+import EnterpriseJudgeLogin from '@/pages/EnterpriseJudgeLogin'
+import {
+  ExportProjectProps,
+  getEnvTypeByProjects,
+  NewProjectAndFolder,
+  ProjectDescription,
+  ProjectIOProgress,
+  ProjectParamsProp,
+  TransferProject,
+} from '@/pages/softwareSettings/ProjectManage'
+import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
+import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
+import { useScreenRecorder } from '@/store/screenRecorder'
+import { ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicControl'
+import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
+import { useTemporaryProjectStore } from '@/store/temporaryProject'
+import emiter from '@/utils/eventBus/eventBus'
+import { RemoteEngine } from './RemoteEngine/RemoteEngine'
+import { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
+import { DownloadYakit } from './update/DownloadYakit'
+import { DownloadYaklang } from './update/DownloadYaklang'
+import { HelpDoc } from './HelpDoc/HelpDoc'
+import { SolidCheckCircleIcon, SolidHomeIcon } from '@/assets/icon/solid'
+import { setNowProjectDescription } from '@/pages/globalVariable'
+import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
+import { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
+import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
+import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
+import { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
+import NewThirdPartyApplicationConfig from '../configNetwork/NewThirdPartyApplicationConfig'
+import { usePerformanceSampling } from '@/store/performanceSampling'
+import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
+import { OutlineExitIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { CopyComponents } from '../yakitUI/YakitTag/YakitTag'
+import { Tooltip } from 'antd'
+import { openABSFileLocated } from '@/utils/openWebsite'
+import { clearTerminalMap, getMapAllTerminalKey } from '@/pages/yakRunner/BottomEditorDetails/TerminalBox/TerminalMap'
+import { grpcFetchLatestYakVersion, grpcFetchYakInstallResult } from '@/apiUtils/grpc'
+import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
+import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import { handleFetchArchitecture, handleFetchIsDev, SystemInfo } from '@/constants/hardware'
+import { apiSplitUpload, ExportProjectRequest, grpcExportProject, grpcGetProjects, SplitUploadRequest } from './utils'
+import moment from 'moment'
+import { debugToPrintLog } from '@/utils/logCollection'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { NewYakitLoading } from '../basics/NewYakitLoading'
+
+import classNames from 'classnames'
+import styles from './uiLayout.module.scss'
+import { JSONParseLog } from '@/utils/tool'
+import { closeDuplexConn, startupDuplexConn } from '@/utils/duplex/duplex'
+import { LocalGVS } from '@/enums/localGlobal'
+import { useSoftMode } from '@/store/softMode'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useSyncYakMcpStream } from '@/store/yakMcpStream'
+import { YakParamProps } from '@/pages/plugins/pluginsType'
+import {
+  yakitAI,
+  yakitApp,
+  yakitCodec,
+  yakitEngine,
+  yakitFileSystem,
+  yakitProject,
+  yakitStream,
+  yakitSystem,
+  yakitUILayout,
+  yakitWindowControls,
+} from '@/services/electronBridge'
+import {
+  CustomPluginExecuteFormValue,
+  YakExtraParamProps,
+} from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
+import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import { PluginHasParamsModal } from '../pluginHasParamsDrawer/PluginHasParamsDrawer'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
+import { DigitalEmployeeProvider, useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
+import { DigitalEmployeeSelectPage } from '@/pages/digitalEmployee/DigitalEmployeeSelectPage'
+
+const DefaultCredential: YaklangEngineWatchDogCredential = {
+  Host: '127.0.0.1',
+  IsTLS: false,
+  Password: '',
+  PemBytes: undefined,
+  Port: 0,
+  Mode: undefined,
+}
+
+export interface UILayoutProp {
+  children?: React.ReactNode
+  linkSuccess?: () => any
+}
+
+const DigitalEmployeeGate: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+  const { confirmed } = useDigitalEmployee()
+  return confirmed ? <>{children}</> : <DigitalEmployeeSelectPage />
+}
+
+const UILayout: React.FC<UILayoutProp> = (props) => {
+  const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
+  const mcp = useSyncYakMcpStream({})
+  const { currentPageTabRouteKey } = usePageInfo(
+    (s) => ({
+      currentPageTabRouteKey: s.currentPageTabRouteKey,
+    }),
+    shallow,
+  )
+  // #region 软件级功能设置
+  // 顶部是否可以拖拽并移动软件位置
+  const [drop, setDrop] = useState<boolean>(true)
+  useEffect(() => {
+    emiter.on('setYakitHeaderDraggable', (v: boolean) => setDrop(v))
+    return () => {
+      emiter.off('setYakitHeaderDraggable')
+    }
+  }, [])
+
+  /** MACOS 上双击放大窗口(不是最大化) */
+  const maxScreen = () => {
+    yakitWindowControls
+      .operate('max')
+      .then(() => {})
+      .catch(() => {})
+  }
+  // #endregion
+
+  /** ---------- 软件状态相关属性 Start ---------- */
+  const [system, setSystem] = useState<YakitSystem>('Darwin')
+
+  /** 引擎是否安装 */
+  const isEngineInstalled = useRef<boolean>(false)
+
+  /** 当前引擎模式 */
+  const [engineMode, setEngineMode, getEngineMode] = useGetSetState<YaklangEngineMode>()
+  const onSetEngineMode = useMemoizedFn((v?: YaklangEngineMode) => {
+    setEngineMode(v)
+    SystemInfo.mode = v
+  })
+  /** 是否为远程模式 */
+  const isRemoteEngine = useMemo(() => engineMode === 'remote', [engineMode])
+
+  /** 认证信息 */
+  const [credential, setCredential] = useState<YaklangEngineWatchDogCredential>({ ...DefaultCredential })
+
+  /** yakit使用状态 */
+  const [yakitStatus, setYakitStatus, getYakitStatus] = useGetSetState<YakitStatusType>('')
+
+  /** 当前引擎连接状态 */
+  const [engineLink, setEngineLink, getEngineLink] = useGetSetState<boolean>(false)
+
+  // 是否持续监听引擎进程的连接状态
+  const [keepalive, setKeepalive] = useState<boolean>(false)
+  // 模式 目前只有yakit社区版有
+  const { setSoftMode } = useSoftMode()
+  /** ---------- 软件状态相关属性 End ---------- */
+
+  // #region 新窗口引擎已经启动好，只需要看门狗检查是否ready，此处默认初始化一些变量
+  const [showLoadingPage, setShowLoadingPage] = useState<boolean>(false)
+  /** 本地引擎自检输出日志 */
+  const [newCheckLog, setNewCheckLog] = useState<string[]>([])
+  useEffect(() => {
+    const cleanup = yakitUILayout.onFromEngineLinkWindow((data) => {
+      setNewCheckLog([t('UILayout.entering')])
+      setShowLoadingPage(true)
+      handleFetchBaseInfo()
+      setCredential(data.credential)
+      onSetEngineMode(data.credential.Mode)
+      setYakitStatus('ready')
+      if (data.credential.Mode === 'local') {
+        setTimeout(() => {
+          setKeepalive(true)
+        }, 500)
+      } else {
+        setKeepalive(true)
+      }
+      setTimeout(() => {
+        setNewCheckLog([])
+      }, 2000)
+    })
+    yakitUILayout.markRendererReady()
+    return () => {
+      cleanup()
+    }
+  }, [])
+  // #endregion
+
+  const { userInfo } = useStore()
+
+  // 引擎状态断开时清空yakrunner
+  useUpdateEffect(() => {
+    if (getMapAllTerminalKey().length > 0 && !engineLink) {
+      clearTerminalMap()
+      yakitUILayout.clearRunnerTerminal()
+    }
+  }, [engineLink])
+
+  // 获取企业版配置信息
+  const { eeSystemConfig } = useEeSystemConfig()
+  const isLoginFirstRef = useRef<boolean>(true) // 只是登录的那一下需要传login参数的标志
+  useDebounceEffect(
+    () => {
+      let collectData = false
+      eeSystemConfig.forEach((item) => {
+        if (item.configName === 'collectData') {
+          collectData = item.isOpen
+        }
+      })
+      let timer
+      if (collectData && userInfo.isLogin) {
+        const token = userInfo.token
+        if (isLoginFirstRef.current) {
+          visitorsStatisticsFun(token, 'login')
+          isLoginFirstRef.current = false
+        } else {
+          visitorsStatisticsFun(token)
+        }
+        timer = setInterval(() => {
+          visitorsStatisticsFun(token)
+        }, 60000)
+      } else {
+        isLoginFirstRef.current = true
+        timer && clearInterval(timer)
+      }
+      return () => {
+        isLoginFirstRef.current = true
+        timer && clearInterval(timer)
+      }
+    },
+    [eeSystemConfig, userInfo],
+    { wait: 300 },
+  )
+
+  // #region 企业版登录成功后根据配置信息看是否需要自动上传项目
+  const projectListRef = useRef<ProjectDescription[]>([])
+
+  useEffect(() => {
+    emiter.on('autoUploadProject', (data) => {
+      try {
+        onGetProjects(JSONParseLog(data, { page: 'UILayout', fun: 'autoUploadProject' }).day)
+      } catch (error) {}
+    })
+    return () => {
+      emiter.off('autoUploadProject')
+    }
+  }, [])
+
+  const onGetProjects = useMemoizedFn((day) => {
+    const time = moment().subtract(day, 'days').startOf('day')
+    const query: ProjectParamsProp = {
+      Type: 'project',
+      FrontendType: 'project',
+      AfterUpdatedAt: time.unix(),
+      Pagination: {
+        Page: 1,
+        Limit: -1,
+        Order: 'desc',
+        OrderBy: 'updated_at',
+      },
+    }
+    grpcGetProjects(query).then((res) => {
+      const { Projects } = res
+      const name = currentProject?.ProjectName || ''
+      projectListRef.current = [...(Projects || [])].filter((item) => item.ProjectName !== name) // 过滤当前打开的项目
+      if (projectListRef.current.length > 0) {
+        onExportProject()
+      }
+    })
+  })
+  const onExportProject = useMemoizedFn(() => {
+    if (!projectListRef.current.length) return
+    const value = projectListRef.current.shift()
+    if (!value) return
+    const token = `${value.Id}-${moment().valueOf()}`
+    let filePath = ''
+    let hasError = false
+    const offData = yakitStream.onData(token, (data: ProjectIOProgress) => {
+      if (!!data.TargetPath) {
+        filePath = data.TargetPath.replace(/\\/g, '\\')
+      }
+    })
+    const offError = yakitStream.onError(token, () => {
+      hasError = true
+      failed(t('UILayout.projectSyncFailed', { name: value.ProjectName }))
+    })
+    yakitStream.onceEnd(token, () => {
+      offError()
+      offData()
+      if (hasError) {
+        onExportProject()
+        return
+      }
+      const onlineToken = `${filePath}-${moment().valueOf()}`
+      const onlineParams: SplitUploadRequest = {
+        url: 'fragment/upload',
+        path: filePath,
+        token: onlineToken,
+        type: 'Project',
+      }
+      apiSplitUpload(onlineParams, true)
+        .then((TaskStatus) => {
+          if (!TaskStatus) {
+            failed(t('UILayout.projectSyncFailed', { name: projectName }))
+          }
+          onExportProject()
+        })
+        .catch(() => {
+          failed(t('UILayout.projectSyncFailed', { name: projectName }))
+        })
+    })
+    const params: ExportProjectRequest = {
+      Id: value.Id,
+      token,
+    }
+    grpcExportProject(params)
+  })
+  // #endregion
+
+  /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
+  /**
+   * 获取信息
+   * 1、开发环境
+   * 2、操作系统
+   * 3、cpu架构
+   * 4、引擎是否存在
+   * 5、软件模式(yakit社区版)
+   */
+  const handleFetchBaseInfo = useMemoizedFn(async () => {
+    debugToPrintLog(`------ 主窗口获取系统基础信息 ------`)
+    try {
+      if (SystemInfo.isDev === undefined) await handleFetchIsDev()
+    } catch (error) {}
+    try {
+      const systemName: YakitSystem = await yakitSystem.fetchSystemName()
+      setSystem(systemName)
+    } catch (error) {}
+    try {
+      if (SystemInfo.architecture === undefined) await handleFetchArchitecture()
+    } catch (error) {}
+    try {
+      const isInstalled = await grpcFetchYakInstallResult(true)
+      isEngineInstalled.current = isInstalled
+    } catch (error) {}
+
+    // yakit社区版获取模式
+    if (isCommunityYakit()) {
+      getLocalValue(LocalGVS.YakitCEMode).then((mode) => {
+        if (mode) {
+          setSoftMode(mode)
+        }
+      })
+    }
+
+    // 获取语言
+    getLocalValue(getRemoteI18nGV())
+      .then((savedLang) => {
+        if (savedLang) {
+          i18n.changeLanguage(savedLang)
+        }
+      })
+      .catch((err) => console.error(err))
+  })
+
+  // 切换远程模式
+  const handleLinkRemoteMode = useMemoizedFn(() => {
+    onDisconnect()
+    setYakitStatus('')
+    setShowLoadingPage(false)
+    onSetEngineMode('remote')
+  })
+  // 本地连接的状态设置
+  const setLinkLocalEngine = useMemoizedFn(() => {
+    onDisconnect()
+    setYakitStatus('')
+    onSetEngineMode('local')
+    openEngineLinkWin('local')
+  })
+
+  /**
+   * 1、清空日志信息|将远程连接loading置为false(不管是不是远程连接)|
+   * 2、执行连接成功的外界回调事件
+   * 3、连接成功缓存连接模式
+   * 4、开启引擎文件的存在监控
+   */
+  useEffect(() => {
+    if (engineLink) {
+      setRemoteLinkLoading(false)
+
+      if (props.linkSuccess) {
+        props.linkSuccess()
+        // 下面的三行为以前的老逻辑
+        setYakitStatus('link')
+      }
+
+      setLocalValue(LocalGV.YaklangEngineMode, getEngineMode())
+
+      const waitTime: number = 20000
+      const id = setInterval(() => {
+        grpcFetchYakInstallResult(true)
+          .then((flag: boolean) => {
+            if (isEngineInstalled.current === flag) return
+            isEngineInstalled.current = flag
+            // 清空主进程yaklang版本缓存
+            yakitEngine.clearLocalYaklangVersionCache()
+          })
+          .catch()
+      }, waitTime)
+      return () => {
+        clearInterval(id)
+      }
+    } else {
+      // 清空主进程yaklang版本缓存
+      yakitEngine.clearLocalYaklangVersionCache()
+    }
+  }, [engineLink])
+  /** ---------- 引擎状态和连接相关逻辑 End ---------- */
+
+  /** ---------- 软件状态与是否连接引擎相关方法 Start ---------- */
+  // 断开连接
+  const onDisconnect = useMemoizedFn(() => {
+    setCredential({ ...DefaultCredential })
+    setKeepalive(false)
+    setEngineLink(false)
+  })
+  // 开始连接引擎
+  const onStartLinkEngine = useMemoizedFn((isDynamicControl?: boolean) => {
+    setTimeout(() => {
+      emiter.emit('startAndCreateEngineProcess', isDynamicControl)
+    }, 100)
+  })
+
+  const [remoteLinkLoading, setRemoteLinkLoading] = useState<boolean>(false)
+  // 开始远程连接引擎
+  const handleLinkRemoteEngine = useMemoizedFn((info: RemoteLinkInfo) => {
+    setRemoteLinkLoading(true)
+    const obj = {
+      Host: info.host,
+      IsTLS: info.tls,
+      Password: info.tls ? info.password : '',
+      PemBytes: StringToUint8Array(info.tls ? info.caPem || '' : ''),
+      Port: parseInt(info.port),
+      Mode: 'remote',
+    } as unknown as YaklangEngineWatchDogCredential
+    setCredential(obj)
+    yakitApp.updateCredential({ credential: obj })
+    onStartLinkEngine()
+  })
+  // 远程切换本地
+  const handleRemoteToLocal = useMemoizedFn(() => {
+    onSetEngineMode(undefined)
+    onDisconnect()
+    openEngineLinkWin('local')
+  })
+  /** ---------- 软件状态与是否连接引擎相关方法 End ---------- */
+
+  /** ---------- 各种操作逻辑处理 Start ---------- */
+  const setTimeoutLoading = useMemoizedFn((setLoading: (v: boolean) => any) => {
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+    }, 2000)
+  })
+
+  // 手动重连时按钮的loading
+  const [restartLoading, setRestartLoading] = useState<boolean>(false)
+  // 远程控制时的刷新按钮loading
+  const [remoteControlRefreshLoading, setRemoteControlRefreshLoading] = useState<boolean>(false)
+  useEffect(() => {
+    if (engineLink) {
+      setRestartLoading(false)
+      setRemoteControlRefreshLoading(false)
+    }
+  }, [engineLink])
+
+  const newLoadingClickCallback = useMemoizedFn((type: YaklangEngineMode | YakitStatusType) => {
+    switch (type) {
+      case 'control-remote':
+        // 远程控制连接时的刷新
+        setTimeoutLoading(setRemoteControlRefreshLoading)
+        onStartLinkEngine(true)
+        break
+      case 'local':
+        setTimeoutLoading(setRestartLoading)
+        setLinkLocalEngine()
+        return
+      default:
+        return
+    }
+  })
+
+  const openEngineLinkWin = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode | YakitStatusType) => {
+    setShowLoadingPage(true)
+    setNewCheckLog([t('UILayout.exiting')])
+    killCurrentProcess(() => {
+      setTimeout(() => {
+        // 先销毁 antd 消息通知 弹窗
+        emiter.emit('destroyMainWinAntdUiEvent')
+        if (type === 'reclaimDatabaseSpace_start') {
+          yakitApp.completeMainWindow({
+            yakitStatus: type,
+            dbPath: currentProject?.DatabasePath ? [currentProject?.DatabasePath] : [],
+          })
+        } else {
+          yakitApp.completeMainWindow({ yakitStatus: type })
+        }
+      }, 1500)
+      setTimeout(() => {
+        setNewCheckLog([])
+      }, 2000)
+    }, [GetConnectPort()])
+  })
+  useEffect(() => {
+    emiter.on('openEngineLinkWin', openEngineLinkWin)
+    return () => {
+      emiter.off('openEngineLinkWin', openEngineLinkWin)
+    }
+  }, [])
+  const killCurrentProcess = useMemoizedFn(async (callback: () => void, extraPorts?: number[]) => {
+    let finalPorts: number[] = []
+
+    // ---------- 1. 获取 fetch-yaklang-engine-addr 的端口 ----------
+    try {
+      const data = await yakitEngine.fetchYaklangEngineAddr()
+      const parts = (data.addr as string).split(':')
+      if (parts.length === 2) {
+        const fetchPort = Number(parts[1]) || 0
+        if (fetchPort) finalPorts.push(fetchPort)
+      }
+    } catch (err) {}
+
+    // 合并额外端口
+    if (Array.isArray(extraPorts)) {
+      finalPorts.push(...extraPorts)
+    }
+
+    // 去重
+    finalPorts = Array.from(new Set(finalPorts))
+
+    // ---------- 2. PS 查询所有 yak 进程 ----------
+    yakitEngine
+      .listYakGrpc()
+      .then(async (res) => {
+        // 查找 PID
+        const pidsToKill = res
+          .filter((p) => finalPorts.includes(Number(p.port)))
+          .map((p) => p.pid)
+          .filter(Boolean)
+
+        if (pidsToKill.length === 0) {
+          callback()
+          return
+        }
+
+        // ---------- 4. kill ----------
+        for (const pid of pidsToKill) {
+          try {
+            await yakitEngine.killYakGrpc(pid)
+            info(`KILL yak PROCESS: ${pid}`)
+          } catch (err) {
+            failed(`Kill yak process failed: ${err}`)
+          }
+        }
+
+        callback()
+      })
+      .catch(() => {
+        callback()
+      })
+  })
+
+  const handleOperations = useMemoizedFn((type: YakitSettingCallbackType | YaklangEngineMode) => {
+    switch (type) {
+      case 'break':
+        if (getYakitStatus() === 'link') {
+          setYakitStatus('break')
+          setTimeout(() => {
+            onDisconnect()
+          }, 100)
+          openEngineLinkWin('break')
+        }
+        return
+
+      case 'local':
+        info(t('UILayout.engineModeSwitched', { mode: EngineModeVerbose('local') }))
+        delTemporaryProject()
+        onDisconnect()
+        onSetEngineMode(undefined)
+        if (isEngineInstalled.current) {
+          setLinkLocalEngine()
+        } else {
+          openEngineLinkWin('install')
+        }
+        return
+      case 'remote':
+        info(t('UILayout.engineModeSwitched', { mode: EngineModeVerbose('remote') }))
+        delTemporaryProject()
+        onDisconnect()
+        onSetEngineMode(undefined)
+        openEngineLinkWin('remote')
+        return
+
+      case 'changeProject':
+        // yakit-ui进入项目管理
+        changeYakitMode('soft')
+        return
+      case 'encryptionProject':
+        // 加密导出
+        if (!currentProject || !currentProject.Id) {
+          failed(t('UILayout.cannotExportProject'))
+          return
+        }
+        setShowProjectManage(true)
+        const encryption = structuredClone(currentProject)
+        if (encryption.ProjectName === '[temporary]') {
+          encryption.ProjectName = t('UILayout.temporaryProject')
+          setIsExportTemporaryProjectFlag(true)
+        }
+        setProjectModalInfo({ visible: true, isNew: false, isExport: true, project: encryption })
+        return
+      case 'plaintextProject':
+        // 明文导出
+        if (!currentProject || !currentProject.Id) {
+          failed(t('UILayout.cannotExportProject'))
+          return
+        }
+        setShowProjectManage(true)
+        const plaintext = structuredClone(currentProject)
+        if (plaintext.ProjectName === '[temporary]') {
+          plaintext.ProjectName = t('UILayout.temporaryProject')
+          setIsExportTemporaryProjectFlag(true)
+        }
+        setProjectTransferShow({
+          visible: true,
+          isExport: true,
+          data: {
+            Id: plaintext.Id,
+            ProjectName: plaintext.ProjectName,
+            Password: '',
+          },
+        })
+        return
+
+      default:
+        break
+    }
+  })
+  /** ---------- 各种操作逻辑处理 End ---------- */
+
+  /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 Start ---------- */
+  // 更新yakit-modal
+  const [yakitDownload, setYakitDownload] = useState<boolean>(false)
+  // 是否为内网yakit更新
+  const [intranetYakit, setIntranetYakit] = useState<boolean>(false)
+  // 更新yaklang前置-关闭所有引擎进程modal
+  const [yaklangKillPss, setYaklangKillPss] = useState<boolean>(false)
+  const [yaklangKillBuildInEngine, setYaklangKillBuildInEngine] = useState<boolean>(false)
+  // 更新yaklang-modal
+  const [yaklangDownload, setYaklangDownload] = useState<boolean>(false)
+  // 更新yaklang-modal文案
+  const [yaklangKillPssText, setYaklangKillPssText] = useState<{ title: string; content: string }>({
+    title: t('UILayout.updateEngineTitle'),
+    content: t('UILayout.updateEngineDesc'),
+  })
+  const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>('')
+  const yaklangLastVersionRef = useRef<string>('')
+  useEffect(() => {
+    grpcFetchLatestYakVersion(true)
+      .then((data: string) => {
+        const v = data
+        yaklangLastVersionRef.current = v
+      })
+      .catch((err) => {})
+  }, [])
+  // 监听UI上的更新yakit或yaklang更新功能
+  const handleActiveDownloadModal = useMemoizedFn((type: string) => {
+    if (yaklangKillPss || yakitDownload) return
+    if (type === 'intranetYakit') {
+      setYakitDownload(true)
+      setIntranetYakit(true)
+    }
+    if (type === 'yakit') {
+      setYakitDownload(true)
+      setIntranetYakit(false)
+    }
+    if (type === 'yaklang') setYaklangKillPss(true)
+  })
+  // kill完引擎进程后开始更新引擎
+  const killedEngineToUpdate = useMemoizedFn(() => {
+    setYaklangKillPss(false)
+    if (!yaklangDownload) {
+      setEngineLink(false)
+      setKeepalive(false)
+
+      if (!yaklangSpecifyVersion) {
+        setYaklangKillPssText({
+          title: t('UILayout.updateEngineTitle'),
+          content: t('UILayout.updateEngineDesc'),
+        })
+        setYaklangDownload(true)
+        return
+      }
+      yakEngineVersionExistsAndCorrectness(
+        yaklangSpecifyVersion,
+        () => {
+          setYaklangSpecifyVersion('')
+          setLinkLocalEngine()
+        },
+        (err) => {
+          if (err.message === 'operation not permitted') {
+            setYaklangSpecifyVersion('')
+            setLinkLocalEngine()
+          } else {
+            // 引擎文件已经被删除了
+            setYakitStatus('')
+            openEngineLinkWin('install')
+          }
+        },
+        () => {
+          setYaklangDownload(true)
+        },
+      )
+    }
+  })
+  // 判断引擎版本没有问题，则直接安装，否则重新下载
+  const yakEngineVersionExistsAndCorrectness = async (
+    version: string,
+    installSuccessCallback: () => void,
+    installErrCallback: (err) => void,
+    errCallback: () => void,
+  ) => {
+    try {
+      const res = await yakitEngine.verifyYakEngineVersion(version)
+      if (res === true) {
+        // 清空主进程yaklang版本缓存
+        yakitEngine.clearLocalYaklangVersionCache()
+        yakitEngine
+          .installYakEngine(version)
+          .then(() => {
+            yakitNotify('info', t('UILayout.detectedLocalEngineInstallDirectly'))
+            yakitNotify('success', t('UILayout.installSuccessRestart', { edition: getReleaseEditionName() }))
+            installSuccessCallback()
+          })
+          .catch((err: any) => {
+            failed(
+              t('YakitNotification.installFailed', {
+                error: err.message.indexOf('operation not permitted') > -1 ? '请关闭引擎后重试' : String(err),
+              }),
+            )
+            installErrCallback(err)
+          })
+      } else {
+        errCallback && errCallback()
+      }
+    } catch (error) {
+      errCallback && errCallback()
+    }
+  }
+
+  const initBuildInEngine = () => {
+    yakitEngine
+      .restoreEngineAndPlugin({})
+      .then(() => {
+        yakitEngine.writeEngineKeyToYakitProjects().finally(() => {
+          yakitNotify('info', t('UILayout.unpackBuiltinEngineSuccess'))
+          showYakitModal({
+            closable: false,
+            maskClosable: false,
+            keyboard: false,
+            type: 'white',
+            title: (modalT) => modalT('UILayout.unpackBuiltinEngineNeedRestart'),
+            content: (modalT) => (
+              <div style={{ height: 80, padding: 24, display: 'flex', alignItems: 'center' }}>
+                <YakitButton
+                  onClick={() => {
+                    yakitApp
+                      .relaunch()
+                      .then(() => {})
+                      .catch((e) => {
+                        failed(t('UILayout.restartFailed', { error: String(e) }))
+                      })
+                  }}
+                >
+                  {modalT('UILayout.restartNow')}
+                </YakitButton>
+              </div>
+            ),
+            footer: null,
+          })
+        })
+      })
+      .catch((e) => {
+        yakitNotify('error', t('UILayout.initBuiltinEngineFailed', { error: String(e) }))
+      })
+  }
+
+  // kill完引擎进程后解压内置引擎
+  const killedEngineToBuildInEngine = useMemoizedFn(() => {
+    setYaklangKillBuildInEngine(false)
+    setYaklangKillPss(false)
+    setEngineLink(false)
+    setKeepalive(false)
+    initBuildInEngine()
+  })
+
+  // kill完引擎进程后开始更新指定Yaklang版本引擎
+  const downYaklangSpecifyVersion = (res: string) => {
+    try {
+      const { version, killPssText = {} } =
+        JSONParseLog(res, { page: 'UILayout', fun: 'downYaklangSpecifyVersion' }) || {}
+      setYaklangSpecifyVersion(version)
+      setYaklangKillPssText({
+        title: killPssText.title || '更新引擎，需关闭所有本地进程',
+        content: killPssText.content || t('UILayout.updateEngineDesc'),
+      })
+      handleActiveDownloadModal('yaklang')
+    } catch (error) {}
+  }
+
+  // 使用官方引擎 - 下载最新引擎
+  const useOfficialEngineByDownload = () => {
+    downYaklangSpecifyVersion(
+      JSON.stringify({
+        version: yaklangLastVersionRef.current,
+        killPssText: {
+          title: t('UILayout.useOfficialEngineTitle'),
+          content: t('UILayout.useOfficialEngineDownloadDesc'),
+        },
+      }),
+    )
+  }
+
+  // 使用官方引擎 - 内置引擎
+  const useOfficialEngineByDownloadByBuiltIn = () => {
+    setYaklangKillBuildInEngine(true)
+    setYaklangKillPssText({
+      title: t('UILayout.useOfficialEngineTitle'),
+      content: t('UILayout.useOfficialEngineBuiltinDesc'),
+    })
+    handleActiveDownloadModal('yaklang')
+  }
+  const onDownloadedYaklang = useMemoizedFn(() => {
+    setYaklangSpecifyVersion('')
+    setYaklangDownload(false)
+    // 下载完成后，需要延迟一会，否则可能获取的引擎版本号不是最新
+    setTimeout(() => {
+      setLinkLocalEngine()
+    }, 200)
+  })
+
+  const [killOldEngine, setKillOldEngine] = useState<boolean>(false)
+  const [killLoading, setKillLoading] = useState<boolean>(false)
+  const killOldProcess = useMemoizedFn((callback?: () => void) => {
+    let isFailed: boolean = false
+    let port: number = 0
+    let pid: number = 0
+
+    if (getEngineLink()) {
+      setKillLoading(true)
+
+      yakitEngine
+        .fetchYaklangEngineAddr()
+        .then((data) => {
+          const hosts: string[] = (data.addr as string).split(':')
+          if (hosts.length !== 2) return
+          if (+hosts[1]) port = +hosts[1] || 0
+        })
+        .catch((e) => {
+          failed(t('UILayout.fetchEngineProcessError', { error: String(e) }))
+          isFailed = true
+        })
+        .finally(() => {
+          if (isFailed) {
+            setTimeout(() => setKillLoading(false), 300)
+            return
+          }
+          yakitEngine
+            .listYakGrpc()
+            .then((i: yakProcess[]) => {
+              const pss = i.find((item) => +item.port === port)
+              if (pss) pid = pss.pid || 0
+            })
+            .catch((e) => {
+              failed(`PS | GREP yak failed ${e}`)
+              isFailed = true
+            })
+            .finally(() => {
+              if (isFailed) {
+                setTimeout(() => setKillLoading(false), 300)
+                return
+              }
+              if (!pid) {
+                failed(t('UILayout.noConnectedEngineProcess'))
+                setTimeout(() => setKillLoading(false), 300)
+                return
+              }
+
+              yakitEngine
+                .killYakGrpc(pid)
+                .then(() => {
+                  info(`KILL yak PROCESS: ${pid}`)
+                  setKillOldEngine(false)
+                  setLinkLocalEngine()
+                  callback && callback()
+                })
+                .catch((e) => {
+                  failed(`PS | GREP yak failed ${e}`)
+                })
+                .finally(() => {
+                  setTimeout(() => setKillLoading(false), 100)
+                })
+            })
+        })
+    }
+  })
+
+  useEffect(() => {
+    emiter.on('useOfficialEngineByDownloadByBuiltIn', useOfficialEngineByDownloadByBuiltIn)
+    emiter.on('useOfficialEngineByDownload', useOfficialEngineByDownload)
+    emiter.on('downYaklangSpecifyVersion', downYaklangSpecifyVersion)
+    emiter.on('activeUpdateYakitOrYaklang', handleActiveDownloadModal)
+    const cleanup = yakitUILayout.onKillOldEngineProcess(() => {
+      setKillOldEngine(true)
+    })
+    return () => {
+      emiter.off('useOfficialEngineByDownloadByBuiltIn', useOfficialEngineByDownloadByBuiltIn)
+      emiter.off('useOfficialEngineByDownload', useOfficialEngineByDownload)
+      emiter.off('downYaklangSpecifyVersion', downYaklangSpecifyVersion)
+      emiter.off('activeUpdateYakitOrYaklang', handleActiveDownloadModal)
+      cleanup()
+    }
+  }, [])
+  /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 End ---------- */
+
+  // #region 远程控制(控制端)
+  const { dynamicStatus, setDynamicStatus } = yakitDynamicStatus()
+
+  useEffect(() => {
+    // 监听退出远程控制
+    const cleanup = yakitUILayout.onLogoutDynamicControl(async (params) => {
+      if (dynamicStatus.isDynamicStatus) {
+        // 切换到本地
+        setLinkLocalEngine()
+
+        setDynamicStatus({ ...dynamicStatus, isDynamicStatus: false })
+        await remoteOperation(false, dynamicStatus)
+        // 是否退出登录
+        if (params?.loginOut) {
+          yakitUILayout.requestSignOut()
+        }
+      }
+    })
+    return () => {
+      cleanup()
+    }
+  }, [dynamicStatus.isDynamicStatus])
+  /** yaklang远程控制-自动远程模式连接 */
+  const runControlRemote = useMemoizedFn((v: string, baseUrl: string) => {
+    try {
+      const resultObj: ResultObjProps = JSONParseLog(v, { page: 'UILayout', fun: 'runControlRemote' })
+
+      // 缓存远程控制参数
+      setDynamicStatus({ ...dynamicStatus, baseUrl, ...resultObj })
+      yakitCodec
+        .run({ Type: 'base64-decode', Text: resultObj.pubpem, Params: [], ScriptName: '' })
+        .then((res) => {
+          setNewCheckLog([t('UILayout.remoteControlConnecting')])
+          setShowLoadingPage(true)
+          setYakitStatus('control-remote')
+          onDisconnect()
+
+          const obj = {
+            Host: resultObj.host,
+            IsTLS: true,
+            Password: resultObj.secret,
+            PemBytes: StringToUint8Array(res?.Result || ''),
+            Port: resultObj.port,
+            Mode: 'remote',
+          } as unknown as YaklangEngineWatchDogCredential
+          setCredential(obj)
+          yakitApp.updateCredential({ credential: obj })
+          onStartLinkEngine(true)
+        })
+        .catch((err) => {
+          warn(t('UILayout.base64DecodeFailed', { error: String(err) }))
+        })
+    } catch (error) {
+      warn(t('UILayout.parseFailed', { error: String(error) }))
+    }
+  })
+  // #endregion
+
+  // #region EE版-license
+  // 企业版-连接引擎后验证license=>展示企业登录
+  const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
+  useEffect(() => {
+    // 用户退出 - 验证license=>展示企业登录
+    const cleanup = yakitUILayout.onJudgeLicenseLogin(() => {
+      setJudgeLicense(true)
+    })
+    return () => {
+      cleanup()
+    }
+  }, [])
+  // #endregion
+
+  // #region 项目管理 & 项目导出 & 临时项目
+  const [yakitMode, setYakitMode] = useState<'soft' | ''>('')
+  // 是否展示项目管理
+  const [showProjectManage, setShowProjectManage] = useState<boolean>(false)
+  // 项目管理页面列表刷新
+  const [projectListRefreshTrigger, setProjectListRefreshTrigger] = useState<number>(0)
+  const [serverPushEnterProject, setServerPushEnterProject] = useState<{
+    id: string
+    projectName: string
+    type: string
+  } | null>(null)
+  const [enterProjectLoading, setEnterProjectLoading] = useState<boolean>(false)
+
+  const onRefreshProjectListFun = useMemoizedFn(() => {
+    setProjectListRefreshTrigger((value) => value + 1)
+  })
+
+  const isProjectDatabaseType = useMemoizedFn((projectType?: string) => {
+    if (!projectType || projectType === 'file') return false
+    return projectType === getEnvTypeByProjects() || projectType === 'project' || projectType === 'ssa_project'
+  })
+
+  useEffect(() => {
+    emiter.on('onRefreshProjectList', onRefreshProjectListFun)
+    return () => {
+      emiter.off('onRefreshProjectList', onRefreshProjectListFun)
+    }
+  }, [])
+  // 由普通项目到管理页面的提示框
+  const [linkDatabaseHint, setLinkDatabaseHint] = useState<boolean>(false)
+  // 由临时项目到管理页面的提示框
+  const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
+
+  const changeYakitMode = useMemoizedFn((type: 'soft') => {
+    if (type === 'soft' && yakitMode !== 'soft') {
+      if (temporaryProjectId && !temporaryProjectNoPromptFlag) {
+        setCloseTemporaryProjectVisible(true)
+      } else {
+        setLinkDatabaseHint(true)
+      }
+    }
+  })
+
+  const onOkEnterProjectMag = useMemoizedFn(() => {
+    yakitProject.setCurrentProject({
+      Type: getEnvTypeByProjects(),
+    })
+    setYakitMode('soft')
+    // 刷新项目管理列表
+    if (showProjectManage) {
+      emiter.emit('onRefreshProjectList')
+    }
+    setShowProjectManage(true)
+    setCurrentProject(undefined)
+    setNowProjectDescription(undefined)
+  })
+
+  /** 项目管理的选中项目回调 */
+  const softwareSettingFinish = useMemoizedFn(() => {
+    setYakitMode('')
+    setShowProjectManage(false)
+    yakitProject
+      .getCurrentProjectEx({
+        Type: getEnvTypeByProjects(),
+      })
+      .then((rsp: ProjectDescription) => {
+        setCurrentProject(rsp || undefined)
+        setNowProjectDescription(rsp || undefined)
+      })
+  })
+
+  useEffect(() => {
+    const onServerPushProjectChanged = (res?: string) => {
+      try {
+        const payload = JSONParseLog(res || '{}', { page: 'UILayout', fun: 'onServerPushProjectChanged' })
+        const action = payload?.action || 'create'
+        const projectId = payload?.id
+        const projectName = payload?.project_name || ''
+        const projectType = payload?.type || getEnvTypeByProjects()
+
+        onRefreshProjectListFun()
+
+        if (!isProjectDatabaseType(projectType) || !projectId || projectId <= 0) {
+          return
+        }
+
+        if (action === 'prompt_enter') {
+          setServerPushEnterProject({
+            id: `${projectId}`,
+            projectName,
+            type: projectType,
+          })
+          return
+        }
+
+        if (action === 'auto_enter') {
+          yakitProject
+            .setCurrentProject({ Id: projectId, Type: projectType })
+            .then(() => {
+              info(t('ProjectManage.switchDatabaseSuccess'))
+              softwareSettingFinish()
+            })
+            .catch((e) => {
+              failed(t('ProjectManage.switchDatabaseFailed') + ': ' + `${e}`)
+            })
+        }
+      } catch (error) {}
+    }
+
+    emiter.on('onServerPushProjectChanged', onServerPushProjectChanged)
+    return () => {
+      emiter.off('onServerPushProjectChanged', onServerPushProjectChanged)
+    }
+  }, [])
+
+  // 当前使用的项目
+  const [currentProject, setCurrentProject] = useState<ProjectDescription>()
+  const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
+  // 项目名字
+  const projectName = useMemo(() => {
+    if (showProjectManage) return ''
+    if (!!currentProject?.ProjectName) {
+      if (currentProject.ProjectName.length > 10) return `${currentProject.ProjectName.slice(0, 10)}...`
+      else return currentProject.ProjectName
+    }
+    return ''
+  }, [currentProject, showProjectManage])
+  // 项目加密导出
+  const [projectModalInfo, setProjectModalInfo] = useState<{
+    visible: boolean
+    isNew?: boolean
+    isFolder?: boolean
+    isExport?: boolean
+    isImport?: boolean
+    project?: ProjectDescription
+    parentNode?: ProjectDescription
+  }>({ visible: false })
+  // 项目明文导出
+  const [projectTransferShow, setProjectTransferShow] = useState<{
+    isExport?: boolean
+    isImport?: boolean
+    visible: boolean
+    data?: ExportProjectProps
+  }>({
+    visible: false,
+  })
+
+  const {
+    temporaryProjectId,
+    temporaryProjectNoPromptFlag,
+    isExportTemporaryProjectFlag,
+    setTemporaryProjectNoPromptFlag,
+    setIsExportTemporaryProjectFlag,
+    delTemporaryProject,
+  } = useTemporaryProjectStore()
+
+  // 项目明文导出成功的回调
+  const handleExportTemporaryProject = () => {
+    if (isExportTemporaryProjectFlag) {
+      setIsExportTemporaryProjectFlag(false)
+      // 由于菜单里的明文导出组件(TransferProject)是放在uilayout内，所以需要通知项目管理页面进行数据重获取
+      // 发送信号到ProjectManage去执行 getPageInfo(同时删除临时项目也是在这里操作的)
+      emiter.emit('onGetProjectInfo')
+    }
+    setProjectTransferShow({ visible: false })
+  }
+  // #endregion
+
+  /** @name 软件顶部Title */
+  const getAppTitleName: string = useMemo(() => {
+    // 引擎未连接或便携版 显示默认title
+    if (!engineLink || isEnpriTraceAgent()) return getReleaseEditionName()
+    else if (
+      !isExportTemporaryProjectFlag &&
+      temporaryProjectId &&
+      temporaryProjectId === (currentProject?.Id ? currentProject?.Id + '' : '')
+    ) {
+      return '临时项目'
+    } else {
+      return projectName ? projectName : getReleaseEditionName()
+    }
+  }, [projectName, engineLink, temporaryProjectId, currentProject])
+  /**  yakit是否进入首页 */
+  const pageShowHome = useMemo(() => {
+    const flag = engineLink && !isJudgeLicense && !showProjectManage
+    return flag
+  }, [engineLink, isJudgeLicense, showProjectManage])
+
+  /** ---------- 切换引擎时的逻辑 Start ---------- */
+  const [switchEngineLoading, setSwitchEngineLoading] = useState<boolean>(false)
+
+  useEffect(() => {
+    const cleanup = yakitUILayout.onSwitchConnectionRefresh((d: boolean) => {
+      setSwitchEngineLoading(d)
+    })
+    return () => {
+      cleanup()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (engineLink) {
+      setSwitchEngineLoading(false)
+    }
+  }, [engineLink])
+
+  // DuplexConnection 与引擎连接生命周期绑定，避免进入/离开项目管理页时反复断开重连
+  useEffect(() => {
+    if (!engineLink) {
+      closeDuplexConn()
+      return
+    }
+    startupDuplexConn()
+    return () => {
+      closeDuplexConn()
+    }
+  }, [engineLink])
+
+  useEffect(() => {
+    emiter.on('onSwitchEngine', onOkEnterProjectMag)
+    return () => {
+      emiter.off('onSwitchEngine', onOkEnterProjectMag)
+    }
+  }, [])
+  /** ---------- 切换引擎时的逻辑 End ---------- */
+
+  // #region 插件扩展/ai插件
+  const openFuzzerModalVarRef = useRef<OpenFuzzerModal>()
+  const [hasParamsOpen, setHasParamsOpen] = useState<boolean>(false)
+  const paramsValueRef = useRef<{
+    initFormValue: CustomPluginExecuteFormValue
+    requiredParams: YakParamProps[]
+    groupParams: YakExtraParamProps[]
+  }>({ initFormValue: {}, requiredParams: [], groupParams: [] })
+  const execParamsRef = useRef<YakExecutorParam[]>([])
+  const openHasParamsPlugin = useMemoizedFn((fuzzerModalVar, cache?: YakExecutorParam[]) => {
+    const requiredParams = fuzzerModalVar.params!.filter((item) => item.Required)
+    const norequiredParams = fuzzerModalVar.params!.filter((item) => !item.Required)
+    const groupParams: YakExtraParamProps[] = ParamsToGroupByGroupName(norequiredParams)
+    let initFormValue: CustomPluginExecuteFormValue = {}
+    fuzzerModalVar.params!.forEach((ele) => {
+      const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+      initFormValue = {
+        ...initFormValue,
+        [ele.Field]: value,
+      }
+    })
+
+    if (cache?.length) {
+      cache.forEach((item) => {
+        if (initFormValue.hasOwnProperty(item.Key)) {
+          initFormValue[item.Key] = item.Value
+        }
+      })
+    }
+
+    paramsValueRef.current = {
+      initFormValue: initFormValue,
+      requiredParams: requiredParams,
+      groupParams: groupParams,
+    }
+    setHasParamsOpen(true)
+  })
+  const onOkParamsDrawer = useMemoizedFn((save: boolean, exec: boolean, execParams: YakExecutorParam[]) => {
+    if (save) {
+      setRemoteValue('codec_has_params_' + openFuzzerModalVarRef.current?.scriptName!, JSON.stringify(execParams))
+    }
+    if (exec) {
+      execParamsRef.current = execParams
+      handleExecuteBefore()
+    }
+    setHasParamsOpen(false)
+  })
+
+  const addNewPluginTab = useMemoizedFn(async (obj: CodecParamsProps) => {
+    const { text, scriptName, code, execParams } = obj
+    if (!scriptName) return
+    try {
+      const plugin = await grpcFetchLocalPluginDetail({ Name: scriptName }, true)
+      const pluginId = +plugin.Id || 0
+      if (!pluginId) {
+        yakitNotify('error', '本地未找到该插件')
+        return
+      }
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.Plugin_OP,
+          params: {
+            pluginId,
+            pluginName: scriptName,
+            Input: text || '',
+            ExecParams: execParams || [],
+            Code: code,
+            PluginType: 'codec',
+            autoExecute: true,
+            noHTTPRequestTemplate: true,
+          },
+        }),
+      )
+    } catch (error) {
+      yakitNotify('error', `打开插件页面失败: ${error}`)
+    }
+  })
+
+  const handleExecuteBefore = useMemoizedFn(async () => {
+    const fuzzerModalVar = openFuzzerModalVarRef.current
+    if (!fuzzerModalVar) return
+    const codecParams: CodecParamsProps = {
+      text: fuzzerModalVar.text,
+      scriptName: fuzzerModalVar.scriptName,
+      isAiPlugin: fuzzerModalVar.isAiPlugin as boolean,
+      code: fuzzerModalVar.code,
+      execParams: execParamsRef.current,
+    }
+    if (fuzzerModalVar.isAiPlugin) {
+      try {
+        const res = await yakitAI.checkHahValidConfig()
+        apiGetGlobalNetworkConfig().then((obj: GlobalNetworkConfig) => {
+          // 如若已配置 则打开执行框
+          if (res.Ok) {
+            addNewPluginTab(codecParams)
+          } else {
+            let m = showYakitModal({
+              title: (modalT) => modalT('UILayout.addThirdPartyApp'),
+              width: 600,
+              footer: null,
+              closable: true,
+              maskClosable: false,
+              content: (
+                <>
+                  <div className={styles['ai-describe']}>{t('UILayout.selectAiTypeForApiKey')}</div>
+                  <NewThirdPartyApplicationConfig
+                    isOnlyShowAiType={true}
+                    onAdd={(data) => {
+                      // 新增，有影响ai优化级
+                      const newParams = handleAIConfig(
+                        {
+                          AppConfigs: obj.AppConfigs,
+                          AiApiPriority: obj.AiApiPriority,
+                        },
+                        data,
+                      )
+                      if (!newParams) {
+                        yakitNotify('error', t('UILayout.onFuzzerModalParamsError'))
+                        return
+                      }
+                      const params: GlobalNetworkConfig = { ...obj, ...newParams }
+                      apiSetGlobalNetworkConfig(params).then(() => {
+                        addNewPluginTab(codecParams)
+                        m.destroy()
+                      })
+                    }}
+                    onCancel={() => m.destroy()}
+                  />
+                </>
+              ),
+            })
+          }
+        })
+      } catch (error) {
+        yakitNotify('error', error + '')
+      }
+    } else {
+      addNewPluginTab(codecParams)
+    }
+  })
+
+  // 判断打开 新开一级tab插件执行/全局网络配置第三方应用框/带参弹窗
+  const [coedcPluginShow, setCoedcPluginShow] = useState<boolean>(false)
+  const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+  const onFuzzerModal = useMemoizedFn(async (value) => {
+    try {
+      const val: OpenFuzzerModal = JSONParseLog(value, {
+        page: 'UILayout',
+        fun: 'onFuzzerModal',
+      })
+      openFuzzerModalVarRef.current = val
+
+      if (val.isAiPlugin === 'isGetPlugin') {
+        percentContainerRef.current = currentPageTabRouteKey
+        setCoedcPluginShow(true)
+        return
+      }
+      if (val.params?.length) {
+        try {
+          const res = await getRemoteValue('codec_has_params_' + openFuzzerModalVarRef.current?.scriptName!)
+          if (res) {
+            const arr: YakExecutorParam[] = JSONParseLog(res, { page: 'UILayout', fun: 'codec_has_params' }) || []
+            if (val.isExec) {
+              execParamsRef.current = arr
+              handleExecuteBefore()
+            } else {
+              openHasParamsPlugin(val, arr)
+            }
+          } else {
+            openHasParamsPlugin(val)
+          }
+        } catch (error) {
+          openHasParamsPlugin(val)
+        }
+        return
+      }
+
+      execParamsRef.current = val.execParams ? val.execParams : []
+      handleExecuteBefore()
+    } catch (error) {}
+  })
+  useEffect(() => {
+    emiter.on('onOpenFuzzerModal', onFuzzerModal)
+    return () => {
+      emiter.off('onOpenFuzzerModal', onFuzzerModal)
+    }
+  }, [])
+  // #endregion
+
+  // #region 软件顶部展示采样中、录屏中
+  /** ---------- 软件顶部展示采样中 Start ---------- */
+  const { performanceSamplingInfo, setPerformanceSamplingLog, setSampling } = usePerformanceSampling()
+  const [isShowSamplingInfo, setIsShowSamplingInfo] = useState<boolean>(false)
+  const resetPerformanceSampling = useMemoizedFn(() => {
+    setSampling(false)
+    setPerformanceSamplingLog([])
+    setIsShowSamplingInfo(false)
+  })
+  useEffect(() => {
+    if (!performanceSamplingInfo.isPerformanceSampling) {
+      setIsShowSamplingInfo(true)
+    }
+  }, [performanceSamplingInfo.isPerformanceSampling])
+
+  const performanceSampling = useCreation(() => {
+    return (
+      <>
+        {performanceSamplingInfo.isPerformanceSampling ? (
+          <YakitButton
+            type="primary"
+            colors="infoBlue"
+            className={styles['stop-screen-recorder']}
+            size="middle"
+            onClick={() => {
+              emiter.emit('cancelPerformanceSampling')
+            }}
+          >
+            <div className={styles['stop-icon']}>
+              <StopIcon />
+            </div>
+            <span className={styles['stop-text']}>{t('UILayout.samplingInProgress')}</span>
+          </YakitButton>
+        ) : (
+          <>
+            {performanceSamplingInfo.log.length ? (
+              <YakitPopover
+                overlayClassName={styles['sampling-popover']}
+                content={
+                  <div
+                    onBlur={() => {
+                      setIsShowSamplingInfo(false)
+                    }}
+                  >
+                    {performanceSamplingInfo.log.map((item, index) => (
+                      <div className={classNames(styles['sampling-info'])} key={index}>
+                        <Tooltip
+                          title={t('UILayout.clickToOpenFolder')}
+                          placement="top"
+                          align={{ targetOffset: [-10, -15] }}
+                        >
+                          <span
+                            className={classNames(styles['sampling-info-item'])}
+                            onClick={() => {
+                              yakitFileSystem
+                                .isFileExists(item.path)
+                                .then((flag: boolean) => {
+                                  if (flag) {
+                                    openABSFileLocated(item.path)
+                                  } else {
+                                    failed(t('UILayout.targetFileNoLongerExists'))
+                                  }
+                                })
+                                .catch(() => {})
+                            }}
+                          >
+                            {item.path.substring(Math.max(item.path.lastIndexOf('/'), item.path.lastIndexOf('\\')) + 1)}
+                          </span>
+                        </Tooltip>
+                        <CopyComponents copyText={item.path} />
+                      </div>
+                    ))}
+                    <div className={classNames(styles['sampling-footer'])}>
+                      <div
+                        className={classNames(styles['footer-bottom'], styles['sampling-exit'])}
+                        onClick={resetPerformanceSampling}
+                      >
+                        <OutlineExitIcon />
+                        {t('YakitButton.exit')}
+                      </div>
+                      <div
+                        className={classNames(styles['footer-bottom'], styles['sampling-refresh'])}
+                        onClick={() => {
+                          resetPerformanceSampling()
+                          emiter.emit('performanceSampling')
+                        }}
+                      >
+                        <OutlineRefreshIcon />
+                        {t('UILayout.resample')}
+                      </div>
+                    </div>
+                  </div>
+                }
+                trigger="click"
+                placement="bottom"
+                visible={isShowSamplingInfo}
+                onVisibleChange={(visible) => {
+                  if (!visible) setIsShowSamplingInfo(false)
+                }}
+              >
+                <Tooltip title={t('UILayout.samplingCompleted')} placement="bottom">
+                  <YakitButton
+                    type="primary"
+                    colors="success"
+                    className={styles['stop-screen-recorder']}
+                    size="middle"
+                    onClick={() => setIsShowSamplingInfo(true)}
+                  >
+                    <div className={styles['stop-icon']}>
+                      <SolidCheckCircleIcon />
+                    </div>
+                    <span className={styles['stop-text']}>{t('UILayout.samplingCompleted')}</span>
+                  </YakitButton>
+                </Tooltip>
+              </YakitPopover>
+            ) : (
+              <></>
+            )}
+          </>
+        )}
+      </>
+    )
+  }, [performanceSamplingInfo, isShowSamplingInfo, i18n.language])
+  /** ---------- 软件顶部展示采样中 End ---------- */
+
+  /** ---------- 软件顶部展示录屏中状态 Start ---------- */
+  const { screenRecorderInfo } = useScreenRecorder()
+  const stopScreen = useCreation(() => {
+    return (
+      <>
+        {screenRecorderInfo.isRecording && (
+          <YakitButton
+            onClick={() => {
+              yakitUILayout.cancelScreenRecorder(screenRecorderInfo.token)
+            }}
+            type="primary"
+            colors="danger"
+            className={styles['stop-screen-recorder']}
+            size="middle"
+          >
+            <div className={styles['stop-icon']}>
+              <StopIcon />
+            </div>
+            <span className={styles['stop-text']}>{t('UILayout.recordingInProgress')}</span>
+          </YakitButton>
+        )}
+      </>
+    )
+  }, [screenRecorderInfo, i18n.language])
+  /** ---------- 软件顶部展示录屏中状态 End ---------- */
+  // #endregion
+
+  const SELinkedEngine = useMemoizedFn(() => {
+    setEngineLink(true)
+  })
+  const onLinkedEngine = useMemoizedFn(async () => {
+    // EE & CE
+    try {
+      const flag = await getRemoteValue(RemoteGV.TemporaryProjectNoPrompt)
+      if (flag) {
+        setTemporaryProjectNoPromptFlag(flag === 'true')
+      }
+      // INFO 开发环境\memfit默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
+      if (SystemInfo.isDev || isMemfit()) {
+        const res = await yakitProject.getDefaultProjectEx({
+          Type: getEnvTypeByProjects(),
+        })
+        if (res) {
+          yakitProject.setCurrentProject({ Id: +res.Id, Type: getEnvTypeByProjects() })
+          setCurrentProject(res)
+          setNowProjectDescription(res)
+          setShowProjectManage(false)
+          setYakitMode('')
+        }
+      } else {
+        setShowProjectManage(true)
+        setYakitMode('soft')
+      }
+    } catch (error) {
+      yakitFailed(error + '')
+    }
+
+    setTimeout(() => setEngineLink(true), 100)
+  })
+
+  const onReady = useMemoizedFn(() => {
+    // debugToPrintLog(`------ 进程存活，准备连接中... ------`)
+    if (!getEngineLink()) {
+      isEnpriTraceAgent() ? SELinkedEngine() : onLinkedEngine()
+    }
+    setYakitStatus('link')
+  })
+  const onFailed = useMemoizedFn((count: number) => {
+    // 10以上的次数属于无效次数
+    if (count > 10) {
+      setKeepalive(false)
+      return
+    }
+    debugToPrintLog(`[INFO] 目标引擎进程不存在: 主窗口探活失败${count}次`)
+    setEngineLink(false)
+
+    if (dynamicStatus.isDynamicStatus && getYakitStatus() !== 'control-remote') {
+      setNewCheckLog([t('UILayout.remoteControlReconnecting')])
+      setYakitStatus('control-remote')
+      return
+    } else {
+      if (getYakitStatus() === 'control-remote') {
+        if (count === 5) {
+          setNewCheckLog([t('UILayout.remoteControlAbnormalExit')])
+          failed(t('UILayout.remoteControlAbnormalExitFailed'))
+          setDynamicStatus({ ...dynamicStatus, isDynamicStatus: false })
+          remoteOperation(false, dynamicStatus)
+          setYakitStatus('control-remote-timeout')
+          onDisconnect()
+        }
+        return
+      }
+    }
+
+    if (getYakitStatus() === 'error' && count === 10) {
+      // 连接断开后的10次尝试过后，不在进行尝试
+      return
+    }
+
+    // 连接中触发
+    if (getYakitStatus() === 'link') {
+      if (getEngineMode() === 'remote') {
+        failed(t('UILayout.remoteConnectionDisconnected'))
+        onDisconnect()
+        setYakitStatus('')
+        handleOperations('remote')
+      } else if (getEngineMode() === 'local') {
+        if (count > 4) {
+          setYakitStatus('error')
+          openEngineLinkWin('error')
+        }
+      }
+    }
+  })
+
+  const onWatchDogCallback = useMemoizedFn((type: EngineWatchDogCallbackType) => {
+    switch (type) {
+      case 'control-remote-connect-failed':
+        setNewCheckLog([t('UILayout.remoteControlAbnormalExit')])
+        setYakitStatus('control-remote-timeout')
+        return
+      case 'remote-connect-failed':
+        setTimeout(() => {
+          setRemoteLinkLoading(false)
+        }, 300)
+        return
+
+      default:
+        return
+    }
+  })
+
+  const onDevToolRefresh = useMemoizedFn(() => {
+    killCurrentProcess(() => {
+      onDisconnect()
+      setYakitStatus('')
+      onSetEngineMode(undefined)
+    })
+  })
+  const dropClassName = { [styles['header-title-drop']]: drop }
+
+  return (
+    <DigitalEmployeeProvider enabled={engineLink && isMemfit()}>
+      <div className={styles['ui-layout-wrapper']}>
+        <div className={styles['ui-layout-container']}>
+          <div className={styles['container-wrapper']}>
+            <YaklangEngineWatchDog
+              credential={credential}
+              /* keepalive 开启之后才会触发 Ready 和 Failed */
+              keepalive={keepalive}
+              engineLink={engineLink}
+              onKeepaliveShouldChange={setKeepalive}
+              onReady={onReady}
+              onFailed={onFailed}
+              failedCallback={onWatchDogCallback}
+            />
+            <div id="yakit-header" className={styles['ui-layout-header']}>
+              {system === 'Darwin' ? (
+                <div className={classNames(styles['header-body'], styles['mac-header-body'])}>
+                  {/* 遮住底部边框线 */}
+                  <div
+                    style={{ left: yakitMode === 'soft' ? 76 : -45 }}
+                    className={styles['header-border-yakit-mask']}
+                  ></div>
+
+                  <div className={classNames(styles['yakit-header-title'])} onDoubleClick={maxScreen}>
+                    {getAppTitleName}-{`${EngineModeVerbose(engineMode || 'local', dynamicStatus)}`}
+                  </div>
+
+                  <div className={styles['header-left']}>
+                    <div>
+                      <MacUIOp
+                        currentProjectId={currentProject?.Id ? currentProject?.Id + '' : ''}
+                        pageChildrenShow={pageShowHome}
+                      />
+                    </div>
+
+                    {engineLink && (
+                      <>
+                        {!isEnpriTraceAgent() && (
+                          <div
+                            className={classNames(styles['yakit-mode-icon'], {
+                              [styles['yakit-mode-selected']]: yakitMode === 'soft',
+                            })}
+                            onClick={() => changeYakitMode('soft')}
+                          >
+                            <SolidHomeIcon className={styles['mode-icon-selected']} />
+                          </div>
+                        )}
+                        <div className={classNames(dropClassName)}>
+                          <div className={styles['divider-wrapper']}></div>
+                          <YakitGlobalHost isEngineLink={engineLink} />
+                        </div>
+                      </>
+                    )}
+                    <div className={styles['short-divider-wrapper']}>
+                      <div className={styles['divider-style']}></div>
+                    </div>
+
+                    <div className={styles['left-cpu']}>
+                      <PerformanceDisplay
+                        engineMode={engineMode}
+                        typeCallback={handleOperations}
+                        engineLink={engineLink}
+                        cpuWrapperClassName={dropClassName}
+                      />
+                    </div>
+                  </div>
+                  <div className={classNames(styles['header-title'], dropClassName)} onDoubleClick={maxScreen} />
+                  <div className={styles['header-right']}>
+                    {performanceSampling}
+
+                    {stopScreen}
+
+                    <HelpDoc system={system} />
+
+                    {engineLink && (
+                      <>
+                        <FuncDomain
+                          isEngineLink={engineLink}
+                          engineMode={engineMode || 'remote'}
+                          isRemoteMode={isRemoteEngine}
+                          mcp={mcp}
+                          onEngineModeChange={handleOperations}
+                          runDynamicControlRemote={runControlRemote}
+                          typeCallback={handleOperations}
+                          showProjectManage={showProjectManage}
+                          system={system}
+                          isJudgeLicense={isJudgeLicense}
+                          onDevToolRefresh={onDevToolRefresh}
+                        />
+                        {!showProjectManage && (
+                          <>
+                            <div className={styles['divider-wrapper']}></div>
+                            <GlobalState isEngineLink={engineLink} system={system} mcp={mcp} />
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className={classNames(styles['header-body'], styles['win-header-body'])}>
+                  <div
+                    style={{ left: yakitMode === 'soft' ? 44 : -45 }}
+                    className={styles['header-border-yakit-mask']}
+                  ></div>
+
+                  <div className={classNames(styles['yakit-header-title'])} onDoubleClick={maxScreen}>
+                    <>
+                      {getAppTitleName}-{`${EngineModeVerbose(engineMode || 'local', dynamicStatus)}`}
+                    </>
+                  </div>
+
+                  <div className={styles['header-left']}>
+                    {engineLink && (
+                      <>
+                        {!showProjectManage && <GlobalState isEngineLink={engineLink} system={system} mcp={mcp} />}
+
+                        {!isEnpriTraceAgent() && (
+                          <div
+                            className={classNames(styles['yakit-mode-icon'], {
+                              [styles['yakit-mode-selected']]: false && yakitMode === 'soft',
+                            })}
+                            onClick={() => changeYakitMode('soft')}
+                          >
+                            <SolidHomeIcon className={styles['mode-icon-selected']} />
+                          </div>
+                        )}
+
+                        <div className={styles['divider-wrapper']}></div>
+                        <div>
+                          <FuncDomain
+                            isEngineLink={engineLink}
+                            isReverse={true}
+                            engineMode={engineMode || 'remote'}
+                            isRemoteMode={isRemoteEngine}
+                            mcp={mcp}
+                            onEngineModeChange={handleOperations}
+                            runDynamicControlRemote={runControlRemote}
+                            typeCallback={handleOperations}
+                            showProjectManage={showProjectManage}
+                            system={system}
+                            isJudgeLicense={isJudgeLicense}
+                            onDevToolRefresh={onDevToolRefresh}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <HelpDoc system={system} />
+
+                    {stopScreen}
+
+                    {performanceSampling}
+                  </div>
+
+                  <div className={classNames(styles['header-title'], dropClassName)} onDoubleClick={maxScreen} />
+
+                  <div className={styles['header-right']}>
+                    <div className={styles['left-cpu']}>
+                      <PerformanceDisplay
+                        engineMode={engineMode}
+                        typeCallback={handleOperations}
+                        engineLink={engineLink}
+                        cpuWrapperClassName={dropClassName}
+                      />
+                    </div>
+                    <div className={styles['short-divider-wrapper']}>
+                      <div className={styles['divider-style']}></div>
+                    </div>
+                    <div className={classNames(dropClassName)}>
+                      {engineLink && (
+                        <>
+                          <YakitGlobalHost isEngineLink={engineLink} />
+                          <div className={styles['divider-wrapper']}></div>
+                        </>
+                      )}
+                    </div>
+                    <WinUIOp
+                      currentProjectId={currentProject?.Id ? currentProject?.Id + '' : ''}
+                      pageChildrenShow={pageShowHome}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div id="yakit-uilayout-body" className={styles['ui-layout-body']}>
+              {!engineLink && !isRemoteEngine && yaklangDownload && (
+                // 更新引擎
+                <DownloadYaklang
+                  yaklangSpecifyVersion={yaklangSpecifyVersion}
+                  system={system}
+                  visible={yaklangDownload}
+                  onCancel={onDownloadedYaklang}
+                />
+              )}
+
+              {!engineLink && !showLoadingPage && isRemoteEngine && yakitStatus !== 'control-remote' && (
+                <RemoteEngine
+                  loading={remoteLinkLoading}
+                  setLoading={setRemoteLinkLoading}
+                  installedEngine={isEngineInstalled.current}
+                  onSubmit={handleLinkRemoteEngine}
+                  onSwitchLocalEngine={handleRemoteToLocal}
+                />
+              )}
+              {!engineLink && showLoadingPage && (
+                <NewYakitLoading
+                  yakitStatus={yakitStatus}
+                  checkLog={newCheckLog}
+                  restartLoading={restartLoading}
+                  remoteControlRefreshLoading={remoteControlRefreshLoading}
+                  btnClickCallback={newLoadingClickCallback}
+                />
+              )}
+              {engineLink && (
+                <YakitSpin spinning={switchEngineLoading}>
+                  {isJudgeLicense ? (
+                    <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
+                  ) : showProjectManage ? (
+                    <SoftwareSettings
+                      engineMode={engineMode || 'local'}
+                      onEngineModeChange={handleOperations}
+                      onFinish={softwareSettingFinish}
+                      projectListRefreshTrigger={projectListRefreshTrigger}
+                    />
+                  ) : isMemfit() ? (
+                    <DigitalEmployeeGate>{props.children}</DigitalEmployeeGate>
+                  ) : (
+                    props.children
+                  )}
+                </YakitSpin>
+              )}
+
+              {engineLink && (yaklangKillPss || yakitDownload) && (
+                <div className={styles['ui-layout-body-mask']}>
+                  <AllKillEngineConfirm
+                    title={yaklangKillPssText.title}
+                    content={yaklangKillPssText.content}
+                    visible={yaklangKillPss}
+                    setVisible={setYaklangKillPss}
+                    onCancelFun={() => {
+                      setYaklangSpecifyVersion('')
+                    }}
+                    onSuccess={() =>
+                      yaklangKillBuildInEngine ? killedEngineToBuildInEngine() : killedEngineToUpdate()
+                    }
+                  />
+                  {/* 更新yakit */}
+                  <DownloadYakit
+                    system={system}
+                    visible={yakitDownload}
+                    setVisible={setYakitDownload}
+                    intranetYakit={intranetYakit}
+                  />
+                </div>
+              )}
+
+              <YakitHint
+                getContainer={document.getElementById('yakit-uilayout-body') || undefined}
+                mask={false}
+                visible={engineLink && killOldEngine}
+                title={t('UILayout.newEngineVersionFound')}
+                content={t('UILayout.newEngineVersionFoundContent')}
+                okButtonProps={{ loading: killLoading }}
+                onOk={killOldProcess}
+                cancelButtonProps={{ loading: killLoading }}
+                onCancel={() => setKillOldEngine(false)}
+              />
+            </div>
+          </div>
+        </div>
+        {/* 项目加密导出弹框 */}
+        <NewProjectAndFolder
+          {...projectModalInfo}
+          setVisible={(open: boolean) => setProjectModalInfo({ visible: open })}
+          loading={projectModalLoading}
+          setLoading={setProjectModalLoading}
+          onModalSubmit={() => {
+            setProjectModalInfo({ visible: false })
+            setTimeout(() => setProjectModalLoading(false), 300)
+          }}
+        />
+        {/* 项目明文导出弹框 */}
+        <TransferProject
+          {...projectTransferShow}
+          onSuccess={handleExportTemporaryProject}
+          setVisible={(open: boolean) => setProjectTransferShow({ visible: open })}
+        />
+
+        {/* 由普通项目进入项目管理的二次确认框 */}
+        <YakitHint
+          visible={linkDatabaseHint}
+          title={t('UILayout.enterProjectManageConfirmTitle')}
+          content={t('UILayout.enterProjectManageConfirmContent')}
+          onOk={() => {
+            onOkEnterProjectMag()
+            setLinkDatabaseHint(false)
+          }}
+          onCancel={() => setLinkDatabaseHint(false)}
+        />
+        {/* 由临时项目进入项目管理的二次确认框 */}
+        {closeTemporaryProjectVisible && (
+          <TemporaryProjectPop
+            onOk={async () => {
+              onOkEnterProjectMag()
+              setCloseTemporaryProjectVisible(false)
+            }}
+            onCancel={() => {
+              setCloseTemporaryProjectVisible(false)
+            }}
+          />
+        )}
+        {/* MCP / 后端推送：是否进入新建项目 */}
+        <YakitHint
+          visible={!!serverPushEnterProject}
+          title={t('ProjectManage.hint')}
+          content={`${t('ProjectManage.enterNewProject')} ${serverPushEnterProject?.projectName || ''}`}
+          okButtonProps={{ loading: enterProjectLoading }}
+          onOk={() => {
+            if (!serverPushEnterProject) return
+            setEnterProjectLoading(true)
+            yakitProject
+              .setCurrentProject({ Id: +serverPushEnterProject.id, Type: serverPushEnterProject.type })
+              .then(() => {
+                info(t('ProjectManage.switchDatabaseSuccess'))
+                setServerPushEnterProject(null)
+                softwareSettingFinish()
+              })
+              .catch((e) => {
+                failed(t('ProjectManage.switchDatabaseFailed') + ': ' + `${e}`)
+              })
+              .finally(() => {
+                setTimeout(() => setEnterProjectLoading(false), 500)
+              })
+          }}
+          onCancel={() => setServerPushEnterProject(null)}
+        />
+
+        <YakitGetOnlinePlugin
+          visible={coedcPluginShow}
+          pluginType={['codec']}
+          setVisible={(v) => {
+            setCoedcPluginShow(v)
+          }}
+          onFinish={() => {
+            // 此处通知刷新各类基于codec插件菜单
+            emiter.emit('onRefPluginCodecMenu')
+          }}
+          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
+        />
+
+        {/* 带参插件参数 */}
+        <PluginHasParamsModal
+          visible={hasParamsOpen}
+          pluginType={'codec'}
+          scriptName={openFuzzerModalVarRef.current?.scriptName || ''}
+          onCloseParamsModal={setHasParamsOpen}
+          onOkParamsModal={onOkParamsDrawer}
+          {...paramsValueRef.current}
+        />
+      </div>
+    </DigitalEmployeeProvider>
+  )
+}
+
+export default UILayout

@@ -1,0 +1,47 @@
+{
+  "NotepadAction": {
+    "createdAt": "最近创建时间",
+    "updatedAt": "最近更新时间",
+    "confirmDelete": "确定要删掉该文档吗"
+  },
+  "NotepadManageOnline": {
+    "fileName": "文件名称",
+    "author": "作者",
+    "collaborator": "协作人",
+    "updatedAt": "最近更新时间",
+    "createdAt": "最近创建时间",
+    "confirmBatchDelete": "确定要批量删除所选笔记吗？",
+    "noData": "请点击右上角【新建】按钮添加数据"
+  },
+  "NotepadManageLocal": {
+    "fullTextSearch": "全文搜索"
+  },
+  "NotepadManageLocalList": {
+    "title": "标题",
+    "updatedAt": "最近更新时间",
+    "createdAt": "最近创建时间",
+    "confirmDeleteSelected": "确定要删除勾选文档吗?",
+    "confirmDeleteAll": "确定要删除所有文档吗?"
+  },
+  "NotepadLocalList": {
+    "title": "标题",
+    "lastUpdateTime": "最近更新时间"
+  },
+  "ModifyNotepad": {
+    "list": "列表",
+    "catalogue": "目录",
+    "unnamedDocument": "未命名文档",
+    "dataErrorMissingDeleted": "数据异常/文档不存在/已经被删除",
+    "errorReason": "错误原因: {{message}}",
+    "saveCurrentDocument": "保存当前文档",
+    "noteIdMissing": "NoteId不存在",
+    "titleTooLong": "标题不超过50个字符",
+    "enterTitle": "请输入标题",
+    "noPermissionMessage": "没有阅读和编辑权限,请联系作者 {{userName}}",
+    "online": "在线",
+    "savedToCloud": "已经保存到云端",
+    "saving": "保存中...",
+    "connecting": "连接中...",
+    "offline": "离线"
+  }
+}

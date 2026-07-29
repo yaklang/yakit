@@ -1,0 +1,9 @@
+{
+  "pageInfo": {
+    "parseFailed": "page-info解析数据错误: {{error}}",
+    "webFuzzerCacheFailed": "webFuzzer缓存数据失败: {{error}}"
+  },
+  "fuzzerSequence": {
+    "cacheFailed": "webFuzzer序列化数据缓存数据失败: {{error}}"
+  }
+}

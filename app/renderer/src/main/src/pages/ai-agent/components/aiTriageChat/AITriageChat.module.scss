@@ -1,0 +1,96 @@
+// #region AITriageChatContent
+.triage-chat-content-wrapper {
+  display: flex;
+  gap: 4px;
+  overflow: hidden;
+  border-radius: 8px;
+  &:hover {
+    .triage-chat-content-extra {
+      opacity: 1;
+    }
+  }
+}
+.triage-chat-content {
+  display: flex;
+  .content-wrapper {
+    padding: 4px 8px;
+    border-radius: 8px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    word-break: break-all;
+    white-space: pre-wrap;
+
+    :global(.ai-milkdown-input) {
+      word-break: normal;
+      white-space: normal;
+      max-height: none;
+      overflow: visible;
+    }
+    .loading-wrapper {
+      margin-top: 4px;
+    }
+  }
+}
+.triage-chat-question {
+  justify-content: flex-end;
+  .content-wrapper {
+    background: var(--Colors-Use-Main-Focus);
+  }
+}
+.triage-chat-answer {
+  .content-wrapper {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+.triage-chat-content-extra {
+  display: flex;
+  opacity: 0;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 2px;
+  transition: opacity 0.3s ease;
+  .copy-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    padding: 4px;
+    margin-left: 0;
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+  }
+}
+
+.edit-content-wrapper {
+  padding: 8px;
+  border: 2px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  &:hover,
+  &:active {
+    border-color: var(--Colors-Use-Main-Focus);
+  }
+  &:focus,
+  &:focus-within {
+    border-color: var(--Colors-Use-Main-Border);
+  }
+  .edit-content {
+  }
+  .edit-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
+    align-items: center;
+  }
+}
+
+// #endregion

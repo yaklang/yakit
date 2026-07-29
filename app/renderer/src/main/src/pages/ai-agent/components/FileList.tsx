@@ -1,0 +1,121 @@
+import { FC } from 'react'
+import styles from './FileList.module.scss'
+import { renderFileTypeIcon } from '@/components/MilkdownEditor/CustomFile/CustomFile'
+import { IconNotepadFileTypeDir } from '@/components/MilkdownEditor/icon/icon'
+import { OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { AIYakExecFileRecord } from '@/pages/ai-re-act/hooks/aiRender'
+import { getFileActionStatus } from '@/pages/invoker/utils'
+import { PluginExecuteLogFile } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType.d'
+import { formatTimestamp } from '@/utils/timeUtil'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import emiter from '@/utils/eventBus/eventBus'
+import { AITabsEnum } from '../defaultConstant'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useMemoizedFn } from 'ahooks'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { YakitRoute } from '@/enums/yakitRoute'
+
+export interface FileListItem {
+  name: string
+  isDir?: boolean
+  desc?: string
+  status?: 'success' | 'danger' | 'white'
+  label?: string
+  time?: string
+}
+
+interface FileListProps {
+  title?: string
+  fileList?: AIYakExecFileRecord[]
+}
+
+const getFileIcon = (name, isDir) => {
+  // 后缀
+  const type = name.indexOf('.') > -1 ? name.split('.').pop() : ''
+  if (isDir) {
+    return <IconNotepadFileTypeDir />
+  }
+  return renderFileTypeIcon({ type })
+}
+
+const getFileName = (path: string, isDir: boolean): string => {
+  if (!path) return ''
+  const normalized = path.replace(/[\\/]+$/, '')
+  const parts = normalized.split(/[\\/]/)
+  const lastPart = parts[parts.length - 1]
+  if (isDir) return lastPart
+  return lastPart
+}
+
+const FileList: FC<FileListProps> = ({ title, fileList }) => {
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const switchAIActTab = () => {
+    emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log }))
+  }
+  const onOpenFileByPath = useMemoizedFn((e: React.MouseEvent<HTMLDivElement>, path: string, isDir: boolean) => {
+    e.stopPropagation()
+    if (!isDir && currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
+      const name = getFileName(path, isDir)
+      emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
+    }
+  })
+
+  return (
+    <div className={styles['file-list']}>
+      <div className={styles['file-list-title']}>
+        <span>{title ?? t('FileList.relatedFiles', { count: fileList?.length || 0 })}</span>
+        <YakitButton hidden={fileList!.length < 6} type="text" onClick={switchAIActTab}>
+          {t('YakitButton.view_all_button')}
+        </YakitButton>
+      </div>
+      <div className={styles['file-list-content']}>
+        {fileList?.slice(0, 5).map((item) => {
+          try {
+            const data = JSON.parse(item.data ?? '{}') as PluginExecuteLogFile.FileItem
+            const { color, action, message } = getFileActionStatus(data.action, data.action_message)
+            const name = getFileName(data.path, data.is_dir)
+            const Icon = getFileIcon(data.path, data.is_dir)
+            const dangerFile = color === 'danger' && !data.is_dir ? <del>{name}</del> : name
+            return (
+              <div key={item.id} className={styles['file-list-item']} onClick={switchAIActTab}>
+                <div className={styles['file-list-item-main']}>
+                  <YakitTag
+                    style={color === 'white' ? { backgroundColor: 'var(--Colors-Use-Neutral-Border)' } : {}}
+                    className={styles['file-list-item-tag']}
+                    border={false}
+                    color={color}
+                  >
+                    {action}
+                  </YakitTag>
+                  <div
+                    className={styles['file-list-item-icon']}
+                    onClick={(e) => onOpenFileByPath(e, data.path, data.is_dir)}
+                  >
+                    {Icon}
+                  </div>
+                  <div
+                    className={styles['file-list-item-name']}
+                    onClick={(e) => onOpenFileByPath(e, data.path, data.is_dir)}
+                  >
+                    {dangerFile}
+                  </div>
+                  <div className={styles['file-list-item-desc']}>{message}</div>
+                </div>
+                <div className={styles['file-list-item-actions']}>
+                  <div className={styles['file-list-item-actions-time']}>{formatTimestamp(item.timestamp)}</div>
+                  <OutlineChevronrightIcon />
+                </div>
+              </div>
+            )
+          } catch (error) {
+            return <div>{t('FileList.parseError', { error: JSON.stringify(error) })}</div>
+          }
+        })}
+      </div>
+    </div>
+  )
+}
+export default FileList

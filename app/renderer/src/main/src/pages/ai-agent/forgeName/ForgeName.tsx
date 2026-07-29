@@ -1,0 +1,747 @@
+import React, { forwardRef, memo, Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import {
+  BatchExportAIforgeProps,
+  BatchExportAIforgeRef,
+  ExportAIForgeFormValues,
+  ExportAIForgeRequest,
+  ExportImportAIForgeProgress,
+  ForgeNameProps,
+  ImportAIForgeFormValues,
+  ImportAIforgeProps,
+  ImportAIforgeRef,
+  ImportAIForgeRequest,
+} from './type'
+import { OutlineExportIcon, OutlinePencilaltIcon, OutlineSearchIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import {
+  useDebounceEffect,
+  useDebounceFn,
+  useInViewport,
+  useMemoizedFn,
+  useSelections,
+  useThrottleFn,
+  useUpdateEffect,
+  useVirtualList,
+} from 'ahooks'
+import { grpcDeleteAIForge, grpcGetAIForge, grpcQueryAIForge } from '../grpc'
+import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { SolidToolIcon } from '@/assets/icon/solid'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { Form, Tooltip } from 'antd'
+import { yakitNotify } from '@/utils/notification'
+import { AIForgeListDefaultPagination, defaultExportAIForgeRequest, ReActChatEventEnum } from '../defaultConstant'
+import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { AIForge, QueryAIForgeRequest, QueryAIForgeResponse } from '../type/forge'
+import ImportExportModal, { ImportExportModalExtra } from '@/components/ImportExportModal/ImportExportModal'
+import { openABSFileLocated } from '@/utils/openWebsite'
+import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
+import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
+import { AITool, GetAIToolListRequest } from '../type/aiTool'
+import { genDefaultPagination, PaginationSchema } from '@/pages/invoker/schema'
+import { grpcGetAIToolList } from '../aiToolList/utils'
+import { LogListInfo } from '@/components/YakitUploadModal/YakitUploadModal'
+
+import classNames from 'classnames'
+import styles from './ForgeName.module.scss'
+import { YakitProtoCheckbox } from '@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { cloneDeep } from 'lodash'
+import { AIForgeEditorPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'aiAgent')
+const { ipcRenderer } = window.require('electron')
+
+export interface ForgeNameRef {
+  openAdd: () => void
+  openImport: () => void
+  onBatchExport: () => void
+}
+/**
+ * 打开编辑 AIForge 模板页面
+ * @param info AIForge 模板信息
+ * @param source  打开来源，默认为 AI_Agent
+ * @returns
+ */
+export const handleModifyAIForge = (info: AIForge, source?: YakitRoute) => {
+  const id = Number(info.Id) || 0
+  if (!id) {
+    yakitNotify('error', tOriginal('ForgeName.templateIdError', { id: info.Id }))
+    return
+  }
+  const params: AIForgeEditorPageInfoProps = { id: id, source: source || YakitRoute.AI_Agent }
+  emiter.emit(
+    'openPage',
+    JSON.stringify({
+      route: YakitRoute.ModifyAIForge,
+      params,
+    }),
+  )
+}
+/**
+ * 打开新建 AIForge 模板页面
+ * @param source 打开来源，默认为 AI_Agent
+ */
+export const handleAddAIForge = (source?: YakitRoute) => {
+  const params: AIForgeEditorPageInfoProps = {
+    id: 0,
+    source: source || YakitRoute.AI_Agent,
+  }
+  emiter.emit(
+    'openPage',
+    JSON.stringify({
+      route: YakitRoute.AddAIForge,
+      params,
+    }),
+  )
+}
+const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRef>) => {
+  // const {} = props
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const batchExportRef = useRef<BatchExportAIforgeRef>(null)
+  const importRef = useRef<ImportAIforgeRef>(null)
+  // #region AIForge 模板增删改功能 使用功能
+  // 新建 forge 模板
+  const handleNewAIForge = useMemoizedFn(() => {
+    handleAddAIForge()
+  })
+
+  // 删除的 forge 队列
+  const [delStatus, setDelStatus] = useState<number[]>([])
+  // 删除 forge 模板
+  const handleDeleteAIForge = useMemoizedFn((info: AIForge) => {
+    const id = Number(info.Id) || 0
+    if (!id) {
+      yakitNotify('error', t('ForgeName.templateIdError', { id: info.Id }))
+      return
+    }
+    const isLoading = delStatus.includes(id)
+    if (isLoading) return
+    setDelStatus((old) => [...old, id])
+    grpcDeleteAIForge({ Id: id })
+      .then(() => {
+        yakitNotify('success', t('ForgeName.deleteForgeSuccess'))
+        setData((old) => {
+          return {
+            ...old,
+            Total: old.Total - 1,
+            Data: old.Data.filter((item) => item.Id !== info.Id),
+          }
+        })
+      })
+      .catch(() => {})
+      .finally(() => {
+        setTimeout(() => {
+          setDelStatus((old) => old.filter((el) => el !== id))
+        }, 100)
+      })
+  })
+  // 点击使用 Forge
+  const handleOnClick = useMemoizedFn((info: AIForge) => {
+    emiter.emit(
+      'onReActChatEvent',
+      JSON.stringify({
+        type: ReActChatEventEnum.OPEN_FORGE_FORM,
+        params: { value: info },
+      }),
+    )
+  })
+  // #region AI-Forge 列表数据
+  const [loading, setLoading] = useState(false)
+  const [data, setData, getData] = useGetSetState<QueryAIForgeResponse>({
+    Pagination: { ...AIForgeListDefaultPagination },
+    Data: [],
+    Total: 0,
+  })
+  const isMore = useRef(true)
+
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [list] = useVirtualList(data.Data, {
+    containerTarget: wrapperRef,
+    wrapperTarget: containerRef,
+    itemHeight: 41,
+    overscan: 5,
+  })
+
+  // 获取 AI-Forge 列表
+  const fetchData = useMemoizedFn((isInit?: boolean) => {
+    if (isInit) isMore.current = true
+    if (!isMore.current) return
+    const pageInfo = getData().Pagination
+    const request: QueryAIForgeRequest = {
+      Pagination: {
+        ...pageInfo,
+        Page: isInit ? 1 : ++pageInfo.Page,
+      },
+    }
+    if (search) request.Filter = { Keyword: search }
+
+    setLoading(true)
+    grpcQueryAIForge(request)
+      .then((res) => {
+        const newLength = res.Data?.length || 0
+        if (newLength < request.Pagination.Limit) isMore.current = false
+        else isMore.current = true
+
+        const newArr = isInit ? res.Data : getData().Data.concat(res.Data)
+        setData({ ...res, Pagination: request.Pagination, Data: newArr })
+        if (isInit) {
+          setTimeout(() => {
+            handleFillList()
+          }, 100)
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setTimeout(() => {
+          setLoading(false)
+        }, 300)
+      })
+  })
+  // 判断数据是否填充满列表
+  const handleFillList = useMemoizedFn(() => {
+    if (wrapperRef && wrapperRef.current && containerRef && containerRef.current) {
+      const { scrollHeight } = wrapperRef.current
+      const { height } = containerRef.current.getBoundingClientRect()
+      if (scrollHeight - height > -20) {
+        fetchData()
+      }
+    }
+  })
+
+  useEffect(() => {
+    emiter.on('onTriggerRefreshForgeList', handleEmiterUpdateData)
+    return () => {
+      emiter.off('onTriggerRefreshForgeList', handleEmiterUpdateData)
+    }
+  }, [])
+
+  const [search, setSearch] = useState('')
+  useDebounceEffect(
+    () => {
+      fetchData(true)
+    },
+    [search],
+    { wait: 300 },
+  )
+
+  // 通信触发的刷新列表请求
+  const handleEmiterTriggerRefresh = useDebounceFn(
+    () => {
+      isMore.current = true
+      fetchData(true)
+    },
+    { wait: 300 },
+  ).run
+
+  // 通信触发更新数据请求
+  const handleEmiterUpdateData = useMemoizedFn((id: string) => {
+    const forgesArr = getData().Data || []
+    const findIndex = forgesArr.findIndex((item) => Number(item.Id) === Number(id))
+    if (findIndex !== -1) {
+      // 存在数据则局部更新
+      grpcGetAIForge({ ID: Number(id) })
+        .then((res) => {
+          setData((old) => {
+            const newData = { ...old }
+            newData.Data[findIndex] = res
+            return newData
+          })
+        })
+        .catch(() => {})
+    } else {
+      // 不存在数据则刷新列表
+      handleEmiterTriggerRefresh()
+    }
+  })
+
+  const wrapper = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(wrapper)
+
+  useUpdateEffect(() => {
+    if (inViewport) handleFillList()
+  }, [inViewport])
+
+  // 滚动加载更多
+  const onScrollCapture = useThrottleFn(
+    () => {
+      if (!isMore.current) return
+      if (loading) return
+      if (wrapperRef && wrapperRef.current) {
+        const { height } = wrapperRef.current.getBoundingClientRect()
+        const { scrollHeight, scrollTop } = wrapperRef.current
+
+        const scrollBottom = scrollHeight - scrollTop - height
+        if (scrollBottom > -10) {
+          fetchData()
+        }
+      }
+    },
+    { wait: 200, leading: false },
+  ).run
+  // #endregion
+
+  // #region AIForge 批量导出
+  const { selected, allSelected, isSelected, toggle, toggleAll, partiallySelected } = useSelections(data.Data)
+  useEffect(() => {
+    props.onSelectChange(selected.length > 0)
+  }, [selected.length])
+  const onBatchExport = useMemoizedFn(() => {
+    const query: ExportAIForgeRequest = {
+      ForgeNames: [],
+      OutputName: '',
+      Filter: {
+        Keyword: '',
+      },
+    }
+    if (allSelected) {
+      query.Filter = {
+        Keyword: search,
+      }
+    } else {
+      query.ForgeNames = selected.map((item) => item.ForgeName)
+    }
+    batchExportRef.current?.open(query)
+  })
+
+  //#endregion
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      openAdd: handleNewAIForge,
+      openImport: () => importRef.current?.open(),
+      onBatchExport: () => onBatchExport(),
+    }),
+    [],
+  )
+
+  return (
+    <div ref={wrapper} className={styles['forge-name']}>
+      <div className={styles['header-wrapper']}>
+        <div className={styles['header-second']}>
+          <YakitInput
+            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            allowClear
+            placeholder={t('YakitInput.searchKeyWordPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className={styles['select-all']}>
+            <YakitCheckbox checked={allSelected} onChange={() => toggleAll()} indeterminate={partiallySelected} />
+            <span>全选</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={styles['forge-name-list']}>
+        <div ref={wrapperRef} className={styles['list-wrapper']} onScroll={onScrollCapture}>
+          <div ref={containerRef}>
+            {list.map(({ data, index }) => {
+              const { Id, ForgeName, Description, ToolNames, ForgeVerboseName } = data
+              const key = Number(Id) || index
+              const tools = ToolNames ? ToolNames.filter(Boolean) : []
+              const delLoading = delStatus.includes(Number(Id))
+
+              return (
+                <React.Fragment key={key}>
+                  <YakitPopover
+                    overlayClassName={styles['forge-opt-popover']}
+                    placement="right"
+                    content={
+                      <div className={styles['forge-detail']}>
+                        <div
+                          className={classNames(styles['detail-name'], 'yakit-content-single-ellipsis')}
+                          title={ForgeVerboseName || ForgeName}
+                        >
+                          {ForgeVerboseName || ForgeName}
+                        </div>
+
+                        <div className={styles['detail-content']}>
+                          <div className={styles['content-description']}>
+                            {Description || t('ForgeName.noMoreDescription')}
+                          </div>
+
+                          {tools.length > 0 && (
+                            <div className={styles['content-tools']}>
+                              <div className={styles['tools-header']}>
+                                <SolidToolIcon />
+                                {t('ForgeName.relatedTools')}
+                              </div>
+
+                              <div className={styles['tools-body']}>
+                                {tools.map((tool) => {
+                                  return (
+                                    <YakitTag key={tool} className={styles['tool-tag']}>
+                                      {tool}
+                                    </YakitTag>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    }
+                  >
+                    <div className={styles['forge-list-opt']} onClick={() => handleOnClick(data)}>
+                      <div className={classNames(styles['opt-title'])} title={ForgeVerboseName || ForgeName}>
+                        <YakitProtoCheckbox
+                          checked={isSelected(data)}
+                          onChange={() => toggle(data)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className="yakit-content-single-ellipsis">{ForgeVerboseName || ForgeName}</div>
+                      </div>
+
+                      <div className={styles['item-extra']}>
+                        <Tooltip
+                          title={t('ForgeName.exportForge')}
+                          placement="topRight"
+                          overlayClassName={styles['item-extra-tooltip']}
+                        >
+                          <YakitButton
+                            type="text2"
+                            icon={<OutlineExportIcon />}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              batchExportRef.current?.open({
+                                ForgeNames: [ForgeName],
+                                ToolNames: tools,
+                                OutputName: ForgeVerboseName || ForgeName || '',
+                              })
+                            }}
+                          />
+                        </Tooltip>
+                        <Tooltip
+                          title={t('ForgeName.editForge')}
+                          placement="topRight"
+                          overlayClassName={styles['item-extra-tooltip']}
+                        >
+                          <YakitButton
+                            type="text2"
+                            icon={<OutlinePencilaltIcon />}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleModifyAIForge(data)
+                            }}
+                          />
+                        </Tooltip>
+                        <Tooltip
+                          title={t('ForgeName.deleteForge')}
+                          placement="topRight"
+                          overlayClassName={styles['item-extra-tooltip']}
+                        >
+                          <YakitPopconfirm
+                            title={t('ForgeName.deleteForgeConfirm')}
+                            onConfirm={(e) => {
+                              e?.stopPropagation()
+                              handleDeleteAIForge(data)
+                            }}
+                            onCancel={(e) => {
+                              e?.stopPropagation()
+                            }}
+                          >
+                            <YakitButton
+                              loading={delLoading}
+                              type="text2"
+                              icon={<OutlineTrashIcon className={styles['del-icon']} />}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                              }}
+                            />
+                          </YakitPopconfirm>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </YakitPopover>
+                </React.Fragment>
+              )
+            })}
+
+            {!isMore.current && !loading && (
+              <div className={styles['forge-list-no-more']}>
+                <div className={styles['no-more-title']}>{t('YakitEmpty.end_of_list')}</div>
+              </div>
+            )}
+            {loading && (
+              <div className={styles['forge-list-loading']}>
+                <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} tip="" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <BatchExportAIforge ref={batchExportRef} />
+      <ImportAIforge ref={importRef} onSuccess={handleEmiterTriggerRefresh} />
+    </div>
+  )
+})
+
+export default memo(ForwardForgeName)
+
+export const BatchExportAIforge = memo(
+  forwardRef<BatchExportAIforgeRef, BatchExportAIforgeProps>((props, ref) => {
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+
+    const [exportExtra, setExportExtra] = useState<ImportExportModalExtra>({
+      hint: false,
+      title: t('ForgeName.exportForge'),
+      type: 'export',
+      apiKey: 'ExportAIForge',
+    })
+    const logListRef = useRef<LogListInfo[]>([])
+    const forgeExtraParams = useRef<ExportAIForgeRequest>(cloneDeep(defaultExportAIForgeRequest))
+    const exportPath = useRef<string>('')
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        open: (params: Partial<ExportAIForgeRequest>) => {
+          forgeExtraParams.current = {
+            ...cloneDeep(defaultExportAIForgeRequest),
+            ...params,
+          }
+          setExportExtra((prev) => ({ ...prev, hint: true }))
+        },
+      }),
+      [],
+    )
+
+    const handleFinishedExportHint = useMemoizedFn((result: boolean) => {
+      if (result) {
+        if (exportPath.current) {
+          openABSFileLocated(exportPath.current)
+        }
+        yakitNotify('success', t('YakitNotification.exportSuccess'))
+      }
+      exportPath.current = ''
+
+      const index = logListRef.current.findIndex((i) => i.isError)
+      if (index === -1) {
+        setExportExtra((prev) => ({ ...prev, hint: false }))
+      }
+      logListRef.current = []
+    })
+
+    const [selectLoading, setSelectLoading] = useState<boolean>(false)
+    const [searchKeyword, setSearchKeyword] = useState('')
+    const [aiTool, setAiTool] = useState<AITool[]>([])
+    const [aiToolPagination, setAiToolPagination] = useState<PaginationSchema>({
+      ...genDefaultPagination(20),
+      OrderBy: 'created_at',
+      Page: 1,
+    })
+
+    const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
+      return (
+        <div>
+          <YakitSpin spinning={selectLoading}>{originNode}</YakitSpin>
+        </div>
+      )
+    })
+
+    const getAiToolData = async (page: number, keyword = searchKeyword) => {
+      setSelectLoading(true)
+      const paginationProps: GetAIToolListRequest['Pagination'] = {
+        ...aiToolPagination,
+        Page: page,
+      }
+      const newQuery: GetAIToolListRequest = {
+        Query: keyword,
+        ToolName: '',
+        Pagination: paginationProps,
+        OnlyFavorites: false,
+      }
+      const isInit = page === 1
+      try {
+        const res = await grpcGetAIToolList(newQuery)
+        if (!res.Tools) res.Tools = []
+        if (res.Tools.length > 0) {
+          setAiToolPagination((v) => ({ ...v, Page: paginationProps.Page }))
+        }
+        const newData = res.Tools.map((item) => ({ ...item }))
+        const opsd = isInit ? newData : aiTool.concat(newData)
+        setAiTool(opsd)
+      } finally {
+        setSelectLoading(false)
+      }
+    }
+
+    const debouncedSearch = useDebounceFn(
+      (value: string) => {
+        setAiTool([])
+        setAiToolPagination((v) => ({ ...v, Page: 1 }))
+        setSearchKeyword(value)
+        getAiToolData(1, value)
+      },
+      { wait: 300 },
+    ).run
+
+    if (!exportExtra.hint) return null
+
+    return (
+      <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
+        getContainer={document.getElementById(`main-operator-page-body-${currentRouteKey}`) || undefined}
+        extra={exportExtra}
+        getProgressValue={(p: ExportImportAIForgeProgress) => p.Percent / 100}
+        getlogListInfo={(stream: ExportImportAIForgeProgress[]) => {
+          logListRef.current = stream.map((item) => ({
+            message: item.Message,
+            isError: item.MessageType === 'error',
+            key: Math.random() * 5 + '',
+          }))
+          return logListRef.current
+        }}
+        onFinished={handleFinishedExportHint}
+        formProps={{
+          initialValues: {
+            OutputName: forgeExtraParams.current?.OutputName || '',
+            ToolNames: forgeExtraParams.current?.ToolNames || [],
+          },
+        }}
+        renderForm={() => (
+          <>
+            <Form.Item label={t('ForgeName.fileName')} name="OutputName" rules={[{ required: true }]}>
+              <YakitInput />
+            </Form.Item>
+            <Form.Item label={t('ForgeName.tool')} name="ToolNames">
+              <YakitSelect
+                showSearch
+                placeholder={t('ForgeName.chooseTool')}
+                optionFilterProp="children"
+                filterOption={false}
+                onSearch={debouncedSearch}
+                onPopupScroll={(e) => {
+                  const { target } = e
+                  const ref: HTMLDivElement = target as unknown as HTMLDivElement
+                  if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight && !selectLoading) {
+                    getAiToolData(aiToolPagination.Page + 1, searchKeyword)
+                  }
+                }}
+                dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+                mode="multiple"
+                onDropdownVisibleChange={(open) => {
+                  if (open) {
+                    getAiToolData(1, searchKeyword)
+                  } else {
+                    setAiToolPagination((v) => ({ ...v, Page: 1 }))
+                    setAiTool([])
+                    setSearchKeyword('')
+                  }
+                }}
+              >
+                {aiTool.map((item) => (
+                  <YakitSelect.Option key={item.Name} value={item.Name}>
+                    {item.VerboseName || item.Name}
+                  </YakitSelect.Option>
+                ))}
+              </YakitSelect>
+            </Form.Item>
+            <Form.Item label={t('ForgeName.password')} name="Password">
+              <YakitInput />
+            </Form.Item>
+          </>
+        )}
+        onBeforeSubmit={async (values) => {
+          let name = values.OutputName + '.zip'
+          if (values.Password) name += '.enc'
+          try {
+            exportPath.current = await ipcRenderer.invoke('GenerateProjectsFilePath', name)
+          } catch (error) {}
+        }}
+        onSubmitForm={(values) => ({
+          ...forgeExtraParams.current,
+          ...values,
+        })}
+        isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100 && p.MessageType === 'success'}
+      />
+    )
+  }),
+)
+export const ImportAIforge = memo(
+  forwardRef<ImportAIforgeRef, ImportAIforgeProps>((props, ref) => {
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+
+    const [importExtra, setImportExtra] = useState<ImportExportModalExtra>({
+      hint: false,
+      title: t('ForgeName.importForge'),
+      type: 'import',
+      apiKey: 'ImportAIForge',
+    })
+    const logListRef = useRef<LogListInfo[]>([])
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        open: () => {
+          setImportExtra((prev) => ({ ...prev, hint: true }))
+        },
+      }),
+      [],
+    )
+
+    const handleFinishedImportHint = useMemoizedFn((result: boolean) => {
+      if (result) {
+        props.onSuccess?.()
+        yakitNotify('success', t('YakitNotification.imported'))
+      }
+
+      const index = logListRef.current.findIndex((i) => i.isError)
+      if (index === -1) {
+        setImportExtra((prev) => ({ ...prev, hint: false }))
+      }
+      logListRef.current = []
+    })
+
+    if (!importExtra.hint) return null
+
+    return (
+      <ImportExportModal<ImportAIForgeFormValues, ImportAIForgeRequest, ExportImportAIForgeProgress>
+        getContainer={document.getElementById(`main-operator-page-body-${currentRouteKey}`) || undefined}
+        extra={importExtra}
+        getProgressValue={(p: ExportImportAIForgeProgress) => p.Percent / 100}
+        getlogListInfo={(stream: ExportImportAIForgeProgress[]) => {
+          logListRef.current = stream.map((item) => ({
+            message: item.Message,
+            isError: item.MessageType === 'error',
+            key: Math.random() * 5 + '',
+          }))
+          return logListRef.current
+        }}
+        onFinished={handleFinishedImportHint}
+        renderForm={() => (
+          <>
+            <YakitFormDragger
+              formItemProps={{
+                name: 'InputPath',
+                label: t('ForgeName.localPath'),
+                rules: [{ required: true, message: t('ForgeName.enterLocalPath') }],
+              }}
+              multiple={false}
+              selectType={importExtra?.apiKey === 'ImportAIForge' ? 'all' : 'file'}
+              fileExtensionIsExist={false}
+            />
+            <Form.Item label={t('ForgeName.password')} name="Password">
+              <YakitInput />
+            </Form.Item>
+          </>
+        )}
+        onSubmitForm={(values) => ({
+          Overwrite: true,
+          ...values,
+        })}
+        isProgressFinished={(p: ExportImportAIForgeProgress) => p.Percent === 100}
+      />
+    )
+  }),
+)

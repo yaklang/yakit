@@ -1,0 +1,15 @@
+name: PR CI Node + Yarn 安装
+description: setup-node（不写 Actions cache，避免占满 cache 配额）+ 三段 yarn install（与 pr-ci-yarn-install 一致）
+inputs:
+  node-version:
+    description: Node 版本号
+    required: false
+    default: '22.22.1'
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - uses: ./.github/actions/pr-ci-yarn-install

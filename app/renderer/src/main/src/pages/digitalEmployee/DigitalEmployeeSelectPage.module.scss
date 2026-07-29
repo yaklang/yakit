@@ -1,0 +1,537 @@
+.employee-selection {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  color: #102b5d;
+  background: #f5f9ff;
+}
+
+.selection-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 540px;
+  overflow: auto hidden;
+  background: #f5f9ff url('../../assets/newAssets/senso-page-background-1280x720.png') center / cover no-repeat;
+}
+
+.brand-header {
+  position: absolute;
+  z-index: 3;
+  top: clamp(10px, 1.8vh, 20px);
+  left: clamp(14px, 1.6vw, 32px);
+
+  img {
+    display: block;
+    width: clamp(108px, 11vw, 172px);
+    height: auto;
+    object-fit: contain;
+  }
+}
+
+.selection-content {
+  position: relative;
+  z-index: 1;
+  width: min(88%, calc(100vh * 1.56));
+  max-width: 1680px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: clamp(42px, 6.2vh, 68px) 0 clamp(8px, 1.4vh, 18px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.page-heading {
+  flex: 0 0 auto;
+  margin: 0 auto clamp(5px, 1vh, 12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(3px, 0.7vh, 8px);
+  color: #142d5d;
+  font-weight: 400;
+}
+
+.heading-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.5vw, 24px);
+}
+
+.heading-title {
+  font-size: clamp(26px, 2.65vw, 43px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-shadow: 0 2px 10px rgba(62, 126, 204, 0.12);
+}
+
+.heading-decoration {
+  position: relative;
+  width: clamp(70px, 8.5vw, 138px);
+  height: 10px;
+  opacity: 0.9;
+  background: linear-gradient(90deg, transparent 0%, rgba(74, 162, 241, 0.25) 28%, #4aa2f1 100%) center / 100% 1px
+    no-repeat;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    right: 0;
+    width: 5px;
+    height: 5px;
+    border-top: 1px solid #3297ed;
+    border-right: 1px solid #3297ed;
+    transform: rotate(45deg);
+  }
+
+  &:last-child {
+    transform: rotate(180deg);
+  }
+}
+
+.heading-subtitle {
+  color: #8190a8;
+  font-size: clamp(11px, 0.95vw, 15px);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+
+.employee-grid {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(4px, 0.7vh, 9px) clamp(8px, 1vw, 18px);
+}
+
+.employee-card {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 271 / 210;
+  padding: 0;
+  overflow: visible;
+  color: inherit;
+  text-align: left;
+  border: 0;
+  border-radius: clamp(10px, 1vw, 16px);
+  outline: none;
+  cursor: pointer;
+  background: transparent;
+  isolation: isolate;
+
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    inset: 1.5%;
+    pointer-events: none;
+    border: 1px solid rgba(118, 163, 215, 0.24);
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow:
+      0 5px 13px rgba(55, 104, 164, 0.08),
+      inset 0 0 20px rgba(89, 153, 225, 0.04);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: 5;
+    inset: -5.6% -3%;
+    pointer-events: none;
+    border: clamp(1px, 0.15vw, 2px) solid #2694ff;
+    border-radius: clamp(12px, 1.25vw, 20px);
+    opacity: 0;
+    box-shadow:
+      0 0 5px rgba(33, 142, 255, 0.85),
+      0 0 15px rgba(33, 142, 255, 0.3),
+      inset 0 0 11px rgba(59, 165, 255, 0.13);
+    transition: opacity 150ms ease;
+  }
+
+  &:hover,
+  &:focus-visible,
+  &.employee-card-selected {
+    &::after {
+      opacity: 1;
+    }
+
+    .card-details {
+      bottom: 18%;
+    }
+
+    .card-action {
+      opacity: 1;
+    }
+  }
+}
+
+.card-frame {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  object-fit: fill;
+  border-radius: inherit;
+}
+
+.portrait-wrapper {
+  position: absolute;
+  z-index: 2;
+  top: 4%;
+  right: 4%;
+  bottom: 24%;
+  left: 4%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 11px 11px 0 0;
+  pointer-events: none;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center top;
+  }
+}
+
+.employee-badge {
+  position: absolute;
+  z-index: 4;
+  top: 8%;
+  right: 7%;
+  width: clamp(24px, 14%, 52px);
+  height: auto;
+  pointer-events: none;
+  object-fit: contain;
+}
+
+.card-details {
+  position: absolute;
+  z-index: 4;
+  right: 8%;
+  bottom: 7%;
+  left: 7%;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(5px, 0.7vw, 12px);
+  pointer-events: none;
+  transition:
+    bottom 150ms ease,
+    opacity 150ms ease;
+}
+
+.card-order {
+  flex: 0 0 auto;
+  color: #1687ef;
+  font-family: Arial, sans-serif;
+  font-size: clamp(24px, 2.35vw, 38px);
+  font-weight: 700;
+  line-height: 0.95;
+}
+
+.card-copy {
+  min-width: 0;
+
+  strong,
+  small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: #102c5c;
+    font-size: clamp(13px, 1.2vw, 20px);
+    line-height: 1.3;
+  }
+
+  small {
+    color: #72839e;
+    font-size: clamp(9px, 0.85vw, 14px);
+    line-height: 1.4;
+  }
+}
+
+.card-action {
+  position: absolute;
+  z-index: 6;
+  right: 7%;
+  bottom: 5%;
+  left: 7%;
+  height: 16%;
+  padding: 0 9%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 34%;
+  pointer-events: none;
+  color: #fff;
+  font-size: clamp(10px, 1vw, 16px);
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  background: url('../../assets/newAssets/senso-button-select-bg.png') center / 100% 100% no-repeat;
+  transition: opacity 150ms ease;
+}
+
+.page-dots {
+  flex: 0 0 auto;
+  width: clamp(190px, 21vw, 320px);
+  height: clamp(20px, 3.2vh, 34px);
+  margin: 0 auto;
+  display: block;
+  object-fit: contain;
+}
+
+.quick-navigation {
+  flex: 0 0 auto;
+}
+
+.quick-title {
+  height: clamp(23px, 3.7vh, 38px);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 22px);
+  color: #173c73;
+  font-size: clamp(11px, 1vw, 16px);
+
+  span {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #58a4ed);
+
+    &:last-child {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.quick-list {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(7px, 1.15vw, 20px);
+}
+
+.quick-item {
+  min-width: 0;
+  height: clamp(46px, 7.5vh, 72px);
+  padding: 0 clamp(6px, 0.9vw, 14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(5px, 0.7vw, 11px);
+  color: #1c3966;
+  font-size: clamp(10px, 1vw, 16px);
+  white-space: nowrap;
+  background: url('../../assets/newAssets/senso-quick-nav-bg.png') center / 100% 100% no-repeat;
+
+  img {
+    flex: 0 0 auto;
+    width: clamp(28px, 3vw, 46px);
+    height: clamp(28px, 3vw, 46px);
+    object-fit: contain;
+  }
+}
+
+.selection-footer {
+  min-height: clamp(38px, 5.6vh, 58px);
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.footer-tip {
+  padding: 0 0 clamp(5px, 0.8vh, 9px) clamp(12px, 1.6vw, 24px);
+  color: #8190a8;
+  font-size: clamp(9px, 0.78vw, 12px);
+
+  &::before {
+    content: '◇';
+    margin-right: 9px;
+    color: #4d8dce;
+    font-weight: 700;
+  }
+}
+
+.footer-action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.retry-button {
+  height: clamp(30px, 4.2vh, 38px);
+  padding: 0 18px;
+  color: #267ad1;
+  font-size: clamp(10px, 0.9vw, 13px);
+  border: 1px solid #8cbdea;
+  border-radius: 18px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.confirm-button {
+  width: clamp(230px, 22vw, 340px);
+  height: clamp(38px, 5.8vh, 52px);
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  font-size: clamp(11px, 1vw, 16px);
+  border: 0;
+  border-radius: 26px;
+  cursor: pointer;
+  background: url('../../assets/newAssets/senso-button-confirm-bg.png') center / 100% 100% no-repeat;
+  filter: drop-shadow(0 5px 10px rgba(36, 129, 239, 0.2));
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+    filter: grayscale(0.15);
+  }
+}
+
+@media (max-width: 980px), (max-height: 640px) {
+  .selection-stage {
+    min-height: 500px;
+  }
+
+  .selection-content {
+    width: 90%;
+    padding-top: 38px;
+  }
+
+  .page-heading {
+    margin-bottom: 4px;
+  }
+
+  .quick-list {
+    gap: 7px;
+  }
+
+  .selection-footer {
+    min-height: 38px;
+  }
+}
+
+@media (max-width: 760px) {
+  .employee-selection,
+  .selection-stage {
+    overflow-y: auto;
+  }
+
+  .selection-stage {
+    min-height: 100%;
+    background-size: auto 100%;
+  }
+
+  .brand-header img {
+    width: 106px;
+  }
+
+  .selection-content {
+    width: 92%;
+    min-height: 100%;
+    padding: 66px 0 18px;
+  }
+
+  .heading-title {
+    font-size: clamp(23px, 6vw, 32px);
+  }
+
+  .heading-decoration {
+    width: clamp(35px, 10vw, 64px);
+  }
+
+  .heading-subtitle {
+    max-width: 90%;
+    text-align: center;
+  }
+
+  .employee-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+
+  .card-copy strong {
+    font-size: clamp(13px, 3vw, 18px);
+  }
+
+  .card-copy small {
+    font-size: clamp(9px, 2.1vw, 12px);
+  }
+
+  .quick-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 10px;
+  }
+
+  .selection-footer {
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .footer-tip {
+    width: 100%;
+    padding-left: 0;
+    text-align: center;
+  }
+
+  .footer-action-group {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 460px) {
+  .selection-content {
+    width: 94%;
+  }
+
+  .heading-title-row {
+    gap: 7px;
+  }
+
+  .heading-decoration {
+    width: 28px;
+  }
+
+  .employee-grid {
+    grid-template-columns: 1fr;
+    width: min(100%, 340px);
+    margin: 0 auto;
+  }
+
+  .quick-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .confirm-button {
+    width: min(100%, 300px);
+  }
+}

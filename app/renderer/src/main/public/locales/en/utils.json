@@ -1,0 +1,251 @@
+{
+  "basic": {
+    "StartExecYakCodeModal": {
+      "executing": "Executing:"
+    },
+    "StartToExecYakScriptViewer": {
+      "executeSuccess": "Execution of {{verbose}} succeeded",
+      "executeError": "Execution of {{verbose}} encountered an issue:"
+    },
+    "ConfigGlobalReverse": {
+      "dnslogSuccess": "Global DNSLog configured successfully",
+      "dnslogFailed": "Failed to configure global DNSLog: {{error}}",
+      "localReverseIP": "Local reverse IP",
+      "updateYakEngineLocalIP": "Update Yak engine local IP",
+      "publicReverseConfig": "Public reverse connection config",
+      "runOnPublicServer": "Run on a public server",
+      "or": "or",
+      "configured": "Configured",
+      "yakBridgeAddress": "Yak Bridge address",
+      "yakBridgeAddressHelp": "Format: host:port, e.g. cybertunnel.run:64333",
+      "yakBridgePassword": "Yak Bridge password",
+      "yakBridgePasswordHelp": "The --secret value for the yak bridge command",
+      "globalDNSLogConfig": "Global DNSLog config",
+      "reuseYakBridgeConfig": "Reuse Yak Bridge config",
+      "dnslogConfig": "DNSLog config",
+      "dnslogAddressHelp": "DNSLog system address configured in Yak Bridge: [ip]:[port]",
+      "dnslogPassword": "DNSLog password",
+      "configureReverseConnection": "Configure reverse connection"
+    }
+  },
+  "ConfigYaklangEnvironment": {
+    "variableName": "Variable name",
+    "variableValue": "Variable value",
+    "setEnvironmentVariable": "Set environment variable",
+    "environmentVariableList": "Environment variable list",
+    "setNewVariable": "Set new variable",
+    "environmentVariableName": "Environment variable name",
+    "expiredTime": "Expiration time",
+    "deleteThisEnvironmentVariable": "Delete this environment variable",
+    "configYaklangSystemEnvironmentVariable": "Configure Yaklang system environment variable",
+    "newVariableTitle": "Set new variable",
+    "editVariableTitle": "Modify variable"
+  },
+  "ConfigSystemProxy": {
+    "getSystemProxyFailed": "Failed to get system proxy: {{error}}",
+    "setSystemProxySuccess": "System proxy configured successfully",
+    "setSystemProxyFailed": "Failed to configure system proxy: {{error}}",
+    "configSystemProxy": "Configure system proxy",
+    "currentSystemProxyStatus": "Current system proxy status:",
+    "systemProxy": "System proxy",
+    "oneClickConfig": "One-click configure system proxy",
+    "proxyHint": "Due to OS and Yak kernel limitations, the native MacOS OC/Swift interface cannot be used to set the proxy. Yak engine will open an osascript authorization page to change the system proxy. MacOS users can authorize it.",
+    "chromeStartPath": "Chrome start path",
+    "chromeStartPathHint": "If Chrome cannot start, please configure the Chrome start path",
+    "startPath": "Start path",
+    "selectStartPath": "Select start path",
+    "setChromeStartPathSuccess": "Chrome start path set successfully"
+  },
+  "ConfigPcapPermission": {
+    "unavailable": "Unable to get PCAP support information",
+    "fetchStatusFailed": "Failed to get Pcap permission status: {{error}}",
+    "fetchPlatformFailed": "Failed to get operating system for {{name}}: {{error}}",
+    "promoteFailed": "Failed to elevate Pcap user permissions: {{error}}",
+    "tooltip": "Principle: on MacOS, set permissions for /dev/bpf* groups; refer to Wireshark ChmodBPF configuration. On Linux, you can use setcap to set pcap permissions. On Windows, it is recommended to start with elevated administrator privileges via UAC.",
+    "windowsHint": "Windows can use administrator privileges to start {{name}} to gain Pcap access",
+    "unixHint": "Linux and MacOS can grant full network interface permissions to the user via permission and group settings",
+    "privilegedHint": "You can use features such as SYN scan normally without fixing anything",
+    "notPrivilegedHint": "The current engine does not have network interface access permissions",
+    "enablePcap": "Enable PCAP permissions",
+    "modalTitle": "Fix Pcap permissions"
+  },
+  "ConfigEngineProxy": {
+    "saveSuccess": "Engine proxy configured successfully",
+    "currentProxy": "Current engine proxy:",
+    "hint": "This configuration will automatically apply to most Yak plugins. If a proxy is configured in the scan module, that proxy will generally override this one.",
+    "proxyLabel": "Proxy",
+    "proxyHelp": "For example, http://127.0.0.1:7890 or socks://127.0.0.1:7890 are both valid",
+    "updateProxy": "Update engine proxy",
+    "modalTitle": "Configure engine scan proxy"
+  },
+  "ConfigSystemMcp": {
+    "startAddress": "Start address:",
+    "tool_name": "Tool Name",
+    "enable_tool": "Enable Tool",
+    "detailed_config": "Detailed Configuration",
+    "stdio_remote_disabled_tip": "STDIO requires a locally running Yak engine process and is unavailable in remote connection mode",
+    "enable_tool_success": "Tool {{name}} enabled successfully",
+    "disable_tool_success": "Tool {{name}} disabled successfully",
+    "enable_tool_failed": "Failed to enable tool {{name}}",
+    "disable_tool_failed": "Failed to disable tool {{name}}",
+    "tool_config_title": "Tool Configuration",
+    "tool_config_desc": "Filter tools by enabled capability tiers; disabled tools are not exposed on start",
+    "parameters_title": "Parameters",
+    "tool_source": "Source",
+    "source_legacy": "MCP Builtin",
+    "source_aitool": "AI Builtin",
+    "source_bridge": "Bridge",
+    "enable_legacy_mcp_tools": "Legacy MCP Tools",
+    "enable_legacy_mcp_tools_desc": "Expose traditional Yak MCP toolsets such as port_scan and httpflow",
+    "enable_ai_tool_framework": "AI Tool Framework",
+    "enable_ai_tool_framework_desc": "Expose AI built-in tools such as fs, ssa, and yakscript",
+    "enable_bridge_external_mcp": "Bridge External MCP",
+    "enable_bridge_external_mcp_desc": "Bridge tools from external MCP servers enabled in AI Agent",
+    "no_tool_tier_title": "No tool capability enabled",
+    "no_tool_tier_desc": "Enable at least one tool capability to configure individual tools",
+    "refresh_tools": "Refresh",
+    "force_sync": "Force Sync"
+  },
+  "servicesFetch": {
+    "requestTimeout": "Request timed out, please try again",
+    "loginExpired": "401, login expired/not logged in, please log in again"
+  },
+  "envfile": {
+    "setReleaseEditionSuccess": "Set {{edition}} release edition successfully"
+  },
+  "InputUtil": {
+    "rawString": "RawString",
+    "keyValue": "KeyValue",
+    "parameterIndex": "Parameter[{{index}}]",
+    "splitArrayHint": "Use | to split arrays",
+    "addKeyValuePair": "Add Key-Value Pair",
+    "enterAbsolutePath": "Please enter an absolute path",
+    "deleteTag": "Delete Tag",
+    "operations": "Operations"
+  },
+  "SelectItem": {
+    "fetchListFailed": "Failed to fetch dictionary list!",
+    "fetchContentFailed": "Failed to fetch dictionary content: {{error}}"
+  },
+  "OpenWebsite": {
+    "openingNewWindow": "Opening new window..."
+  },
+  "Exporter": {
+    "exportData": "Export Data"
+  },
+  "InvalidCacheAndUserData": {
+    "title": "Reset user data and cache",
+    "resetHint": "If your {{name}} is behaving abnormally, you can use this feature to delete all local cache and user data, then reconnect and restart.",
+    "warning": "Warning: this action will permanently delete cache data and is difficult to recover. Please proceed with caution.",
+    "syncDeleteDatabase": "Also delete all data in the database",
+    "confirmDelete": "I understand the risk, delete now",
+    "resetSuccess": "User data reset completed successfully"
+  },
+  "TimeRange": {
+    "setTimePoint": "Set time point",
+    "setStartTime": "Click here to set the start time",
+    "setEndTime": "Click here to set the end time"
+  },
+  "TimeUtil": {
+    "secondsAgo": "seconds ago",
+    "minutesAgo": "minutes ago",
+    "hoursAgo": "hours ago",
+    "daysAgo": "days ago"
+  },
+  "ProxyConfigUtil": {
+    "engineVersionTooLow": "Engine version is too low, please update to {{version}} or above",
+    "checkEngineVersionFailed": "Failed to check engine version"
+  },
+  "Encodec": {
+    "selectContent": "Select content",
+    "decodeStep": "Decode step [{{index}}]: {{verbose}} ({{type}})",
+    "originText": "Original text",
+    "viewOriginalText": "View original text",
+    "autoDecodeFailed": "Automatic decode failed: {{error}}",
+    "autoDecodeSmart": "Automatic decode (smart decode)",
+    "codeResult": "Encoded result",
+    "replaceContent": "Replace content",
+    "codecExecutionFailed": "CODEC[{{type}}] execution failed: {{error}}"
+  },
+  "ShortcutKey": {
+    "editorConflict": "Editor conflict: {{name}} - this shortcut will be overridden in the editor",
+    "screenshot": "Screenshot",
+    "closeCurrentPage": "Close current page",
+    "addSubPage": "Add sub page",
+    "sendAndJump": "Send and jump",
+    "sendOnly": "Send only",
+    "tableVirtualUp": "Table select up",
+    "tableVirtualDown": "Table select down",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select all",
+    "openCommandPalette": "Open command palette",
+    "jumpToLine": "Go to line",
+    "quickOpenFile": "Quick open file",
+    "find": "Find",
+    "findNext": "Find next",
+    "findPrev": "Find previous",
+    "selectNextMatch": "Select next match",
+    "selectAllMatches": "Select all matches",
+    "selectAllWords": "Select all matching words",
+    "expandSelection": "Expand selection",
+    "shrinkSelection": "Shrink selection",
+    "matchBracket": "Go to matching bracket",
+    "addCursorUp": "Add cursor above",
+    "addCursorDown": "Add cursor below",
+    "selectCurrentLine": "Select current line",
+    "undoLastCursor": "Undo last cursor operation",
+    "selectUp": "Select up",
+    "selectDown": "Select down",
+    "replace": "Replace",
+    "commentToggle": "Toggle comment",
+    "indent": "Indent",
+    "outdent": "Outdent",
+    "deleteLine": "Delete line",
+    "moveLineUp": "Move line up",
+    "moveLineDown": "Move line down",
+    "copyLineUp": "Copy line up",
+    "copyLineDown": "Copy line down",
+    "replaceAll": "Replace all matches",
+    "goToDefinition": "Go to definition",
+    "triggerAutoHijacked": "Switch to automatic hijack mode",
+    "forwardResponse": "Forward this HTTP response",
+    "hijackResponse": "Hijack response",
+    "dropData": "Drop",
+    "submitData": "Forward",
+    "newTemporaryFile": "New temporary file",
+    "saveFile": "Save file",
+    "closeOpenedFile": "Close opened file",
+    "openTerminal": "Open terminal",
+    "renameFile": "Rename file",
+    "deleteFile": "Delete file",
+    "copyFile": "Copy file",
+    "pasteFile": "Paste file",
+    "sendRequest": "Send request",
+    "saveWebFuzzerHistory": "Save WebFuzzer history data",
+    "exitChatCS": "Exit chatCS",
+    "chatCSNewLine": "New line in question area",
+    "chatCSSubmit": "Ask question",
+    "newPlugin": "New plugin",
+    "openSearchDoubleClick": "Open search (double-click)",
+    "switchSearchBar": "Switch search bar",
+    "searchListUp": "Search list up",
+    "searchListDown": "Search list down",
+    "closeSearch": "Close search",
+    "searchJump": "Search jump",
+    "startAudit": "Start audit",
+    "savePlugin": "Save plugin"
+  },
+  "YakEditor": {
+    "yakFormat": "Yak code formatting"
+  },
+  "PrettifyPacket": {
+    "lossyBeautifyWarning": "Original data may have issues; beautification lost some content"
+  },
+  "Duplex": {
+    "databaseTooLarge": "It is detected that writing data is slow and the current project database is too large. You can delete the HTTPFlow History traffic and click the top setting to recycle the database space."
+  }
+}

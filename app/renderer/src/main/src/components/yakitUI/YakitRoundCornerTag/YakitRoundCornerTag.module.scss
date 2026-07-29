@@ -1,0 +1,55 @@
+@use '../../../theme/themeify.scss' as tools;
+
+.yakit-round-corner-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+$color-type: (
+  blue: (
+    color: var(--Colors-Use-Blue-Primary),
+    alph: 10%,
+  ),
+  green: (
+    color: var(--Colors-Use-Green-Primary),
+    alph: 10%,
+  ),
+);
+
+@mixin generateColors() {
+  @each $type, $value in $color-type {
+    $color: map-get($value, 'color');
+    .yakit-round-corner-tag-#{$type} {
+      color: $color;
+      @include tools.color-mix-alpha(background-color, $color, map-get($value, 'alph'));
+      svg {
+        color: $color;
+      }
+    }
+  }
+}
+@include generateColors();
+
+.yakit-round-corner-tag-primary {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  svg {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}
+
+.yakit-round-corner-tag-info {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  @include tools.color-mix-alpha(background-color, var(--Colors-Use-Neutral-Text-3-Secondary), 10%);
+  svg {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+}

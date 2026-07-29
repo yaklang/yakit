@@ -1,0 +1,51 @@
+import { ReactNode } from 'react'
+export interface YakitSideTabProps extends Pick<YakitTabsItemProps, 'onTabPaneRender' | 'barHint' | 't'> {
+  yakitTabs: YakitTabsProps[]
+  setYakitTabs?: (v: YakitTabsProps[]) => void
+
+  /**TODO 点击展示的tab状态 缓存的key */
+  cacheKey?: string
+  activeKey?: string
+  onActiveKey: (s: string) => void
+
+  /** 只切换 不做显示隐藏 */
+  activeShow?: boolean
+
+  setShow?: (s: boolean) => void
+  /** type 为vertical-right ，show不生效*/
+  show?: boolean
+  /**
+   * vertical:tab在左边
+   * vertical-right:tab在右边
+   * horizontal:单击是切换tabContent，tab在上方
+   */
+  type?: 'vertical' | 'horizontal' | 'vertical-right'
+  children?: ReactNode
+
+  className?: string
+  btnItemClassName?: string
+
+  /**
+   * tab bar 上额外的元素，常用于操作按钮等
+   * 目前只支持 horizontal
+   */
+  tabBarExtraContent?: ReactNode
+}
+
+export interface YakitTabsProps {
+  icon?: ReactNode
+  /** lable需要翻译，需要传t函数。若不做翻译，就不传t。也可以传自定义函数处理label */
+  label: string | (() => ReactNode)
+  value: string
+  hint?: () => string
+}
+
+export interface YakitTabsItemProps {
+  item: YakitTabsProps
+  className?: string
+  onChange: (v: YakitTabsProps) => void
+  onTabPaneRender?: (item: YakitTabsProps, node: ReactNode[]) => ReactNode
+  rotate?: 'left' | 'right'
+  barHint?: (k: string) => string
+  t?: TFunction
+}

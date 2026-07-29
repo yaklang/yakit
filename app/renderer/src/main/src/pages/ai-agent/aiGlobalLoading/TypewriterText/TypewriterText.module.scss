@@ -1,0 +1,50 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.text {
+  display: inline-flex;
+}
+
+.text-char {
+  display: inline-block;
+}
+
+.text-char-enter {
+  display: inline-block;
+  animation: ai-loading-char-fade-in 0.2s ease-out;
+}
+
+.cursor {
+  display: inline-block;
+  min-width: 1ch;
+  color: var(--Colors-Use-Main-Primary);
+  transform: scaleY(0.5) translateY(2px);
+  animation: ai-loading-cursor-blink 0.7s steps(1) infinite;
+}
+
+@keyframes ai-loading-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ai-loading-char-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

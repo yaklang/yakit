@@ -1,0 +1,2861 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
+import {
+  useCreation,
+  useDebounceEffect,
+  useDebounceFn,
+  useInViewport,
+  useMemoizedFn,
+  useSize,
+  useUpdateEffect,
+} from 'ahooks'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { getHTTPFlowExportFields } from '@/components/HTTPFlowTable/HTTPFlowExportFields'
+import { HTTPFlowsFieldGroupResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { buildHTTPFlowSuffixOptions, formatHTTPFlowPathSuffix } from '@/components/HTTPFlowTable/HTTPFlowPathSuffix'
+import {
+  OutlineChevrondownIcon,
+  OutlineCogIcon,
+  OutlineFilterIcon,
+  OutlineMessageCirclePlusIcon,
+  OutlinePlusIcon,
+  OutlineRefreshIcon,
+  OutlineReplyIcon,
+  OutlineSearchIcon,
+  OutlineSelectorIcon,
+  OutlineStarIcon,
+  OutlineXIcon,
+} from '@/assets/icon/outline'
+import classNames from 'classnames'
+import { RemoteHistoryGV } from '@/enums/history'
+import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
+import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
+import {
+  AdvancedSet,
+  availableColors,
+  buildFavoriteTags,
+  buildHTTPFlowQueryTags,
+  CalloutColor,
+  ColorSearch,
+  ColumnAllInfoItem,
+  contentType,
+  ExportHTTPFlowStreamRequest,
+  filterHTTPFlowsByFavoriteAndTags,
+  getClassNameData,
+  getHTTPFlowReqAndResToString,
+  HistorySearch,
+  HTTP_FLOW_FAVORITE_TAG,
+  HTTPFlow,
+  ImportExportProgress,
+  onConvertBodySizeByUnit,
+  onExpandHTTPFlow,
+  onRemoveCalloutColor,
+  onSendToTab,
+  RangeInputNumberTableWrapper,
+  isHTTPFlowFavorite,
+  SourceType,
+  toggleHTTPFlowFavorite,
+  YakQueryHTTPFlowResponse,
+} from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import { ColumnsTypeProps, FiltersItemProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import { filterColorTag, getSingleColorType, isCellRedSingleColor } from '@/components/TableVirtualResize/utils'
+import { yakitNotify } from '@/utils/notification'
+import { ArrowCircleRightSvgIcon, CheckCircleIcon, ChromeFrameSvgIcon, ColorSwatchIcon } from '@/assets/newIcon'
+import { formatTimestamp } from '@/utils/timeUtil'
+import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
+import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow, saveABSFileToOpen } from '@/utils/openWebsite'
+import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
+import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
+import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { CheckedSvgIcon } from '@/components/layout/icons'
+import { Divider, Tooltip } from 'antd'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { WebTree } from '@/components/WebTree/WebTree'
+import ReactResizeDetector from 'react-resize-detector'
+import { HistoryProcess, HistoryTab } from '@/components/HTTPHistory'
+import { useBuiltinTagList } from '@/components/HTTPFlowTable/useBuiltinTagList'
+import { useCampare } from '@/hook/useCompare/useCompare'
+import { v4 as uuidv4 } from 'uuid'
+import { cloneDeep, isEqual, toArray } from 'lodash'
+import { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
+import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
+import { randomString } from '@/utils/randomUtil'
+import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
+import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { ExportSelect } from '@/components/DataExport/DataExport'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { showResponseViaHTTPFlowID } from '@/components/ShowInBrowser'
+import { setClipboardText } from '@/utils/clipboard'
+import { newWebsocketFuzzerTab } from '@/pages/websocket/WebsocketFuzzer'
+import {
+  generateCSRFPocByRequest,
+  generateYakCodeByRequest,
+  RequestToYakCodeTemplate,
+} from '@/pages/invoker/fromPacketToYakCode'
+import { useHttpFlowStore } from '@/store/httpFlow'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
+import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
+import {
+  getGlobalShortcutKeyEvents,
+  GlobalShortcutKey,
+  ShortcutKeyFocusType,
+} from '@/utils/globalShortcutKey/events/global'
+import {
+  getYakitMultipleShortcutKeyEvents,
+  YakitMultipleShortcutKey,
+} from '@/utils/globalShortcutKey/events/multiple/yakitMultiple'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { SolidStarIcon } from '@/assets/icon/solid'
+
+import styles from './HTTPHistoryFilter.module.scss'
+import {
+  buildHistoryFilterLinkedQueries,
+  buildHistoryFilterSideResizeBoxProps,
+  buildHTTPFlowPacketWindowData,
+  buildHTTPFlowQueryRequestParams,
+  buildHTTPHistoryFilterQueryFromConfig,
+  buildLegacyHTTPHistoryFilterConfig,
+  getHTTPFlowExportPageSize,
+  mergeHTTPFlowsById,
+} from './HTTPHistoryFilter.utils'
+import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
+import { JSONParseLog } from '@/utils/tool'
+import {
+  defFilterConfig,
+  FilterConfig,
+  HTTPFlowTableFormConfiguration,
+} from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
+import { FlowAiStore } from '@/pages/ai-agent/store/ChatDataStore'
+import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
+import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
+import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
+const { ipcRenderer } = window.require('electron')
+
+interface HTTPHistoryFilterProps {
+  onSetClickedHttpFlow: (flow?: HTTPFlow) => void
+  onSetFirstHttpFlow: (flow?: HTTPFlow) => void
+  onSetSelectedHttpFlowIds: (ids: string[]) => void
+  onSetHTTPFlowFilter: (filterStr: string) => void
+  refreshHttpTable?: boolean
+  isResetSelect?: boolean
+  onSetIsResetSelect?: React.Dispatch<React.SetStateAction<boolean>>
+  toWebFuzzer?: boolean
+  runtimeId?: string[]
+  sourceType?: string
+  webFuzzerPageId?: string
+  /** 来自httpFuzzerPage */
+  closable?: boolean
+}
+const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const {
+    onSetClickedHttpFlow,
+    onSetFirstHttpFlow,
+    onSetSelectedHttpFlowIds,
+    onSetHTTPFlowFilter,
+    refreshHttpTable,
+    isResetSelect,
+    onSetIsResetSelect,
+    toWebFuzzer,
+    runtimeId,
+    sourceType,
+    webFuzzerPageId,
+    closable,
+  } = props
+  const { t, i18n } = useI18nNamespaces(['history'])
+  const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+
+  const clearHttpFlowSelection = useMemoizedFn(() => {
+    historyAIReActChatBridge.clearTableSelection()
+  })
+
+  const handleSetSelectedHttpFlowIds = useMemoizedFn((ids: string[]) => {
+    setSelectedHttpFlowIds(ids)
+    onSetSelectedHttpFlowIds(ids)
+  })
+
+  const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
+  useDebounceEffect(() => {
+    historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
+  }, [compareSelectedHttpFlowIds])
+
+  const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
+    historyAIReActChatBridge.registerClearTableSelection(() => {
+      api.reset()
+    })
+    historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
+      api.deselectId(id)
+    })
+  })
+
+  // #region 左侧tab
+  const [activeKey, setActiveKey] = useState<string>('web-tree')
+  const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
+  useEffect(() => {
+    getRemoteValue(RemoteHistoryGV.HTTPHistoryFilterLeftTabs).then((setting: string) => {
+      if (setting) {
+        try {
+          const tabs = JSONParseLog(setting, {
+            page: 'HTTPHistoryFilter',
+            fun: 'HTTPHistoryFilterLeftTabs',
+          })
+          if (toWebFuzzer) {
+            setOpenTabsFlag(false)
+          } else {
+            setOpenTabsFlag(tabs.contShow)
+          }
+          onActiveKey(tabs.curTabKey)
+        } catch (error) {}
+      } else {
+        if (toWebFuzzer) {
+          setOpenTabsFlag(false)
+        }
+      }
+    })
+  }, [])
+  const onActiveKey = useMemoizedFn((key) => {
+    if (key === 'ai') {
+      setShowFreeChat(true)
+    }
+    setActiveKey(key)
+  })
+
+  useDebounceEffect(
+    () => {
+      setRemoteValue(
+        RemoteHistoryGV.HTTPHistoryFilterLeftTabs,
+        JSON.stringify({ contShow: openTabsFlag, curTabKey: activeKey }),
+      )
+    },
+    [openTabsFlag, activeKey],
+    { wait: 300 },
+  )
+
+  const ResizeBoxProps = useCreation(() => {
+    return buildHistoryFilterSideResizeBoxProps(activeKey, openTabsFlag)
+  }, [openTabsFlag, activeKey])
+  // #endregion
+
+  // #region 网站树、进程
+  const [refreshFlag, setRefreshFlag] = useState<boolean>(false)
+  const [includeInUrl, setIncludeInUrl] = useState<string[]>([])
+  const [treeQueryparams, setTreeQueryparams] = useState<string>('')
+  const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
+
+  const [curProcess, setCurProcess] = useState<string[]>([])
+  const [processQueryparams, setProcessQueryparams] = useState<string>('')
+  const [curTags, setCurTags] = useState<string[]>([])
+  const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
+  const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
+  const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState(0)
+  // 表格参数改变
+  const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
+    onSetHTTPFlowFilter(queryParams)
+    const linkedQueries = buildHistoryFilterLinkedQueries(queryParams)
+    if (!linkedQueries) return
+
+    setTreeQueryparams(linkedQueries.treeQueryparams)
+    setRefreshFlag(!!execFlag)
+    setProcessQueryparams(linkedQueries.processQueryparams)
+    setRulesQueryparams(linkedQueries.rulesQueryparams)
+  })
+  // #endregion
+  const httpHistoryFilterRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(httpHistoryFilterRef)
+  const { builtinTagList, setBuiltinTagList } = useBuiltinTagList(true, inViewport)
+
+  return (
+    <div className={styles['HTTPHistoryFilter']} ref={httpHistoryFilterRef}>
+      <YakitResizeBox
+        isVer={false}
+        freeze={openTabsFlag}
+        isRecalculateWH={openTabsFlag}
+        firstNode={
+          <div className={styles['HTTPHistoryFilter-left']}>
+            <YakitSideTab
+              key={i18n.language}
+              t={t}
+              yakitTabs={HistoryTab}
+              activeKey={activeKey}
+              onActiveKey={onActiveKey}
+              show={openTabsFlag}
+              setShow={setOpenTabsFlag}
+            />
+            <div className={styles['tab-content']}>
+              <ReactResizeDetector
+                onResize={(width, height) => {
+                  if (!width || !height) return
+                  setTreeWrapHeight(height)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={'debounce'}
+                refreshRate={50}
+              />
+              <div
+                className={styles['webTree-wrapper']}
+                style={{ display: activeKey === 'web-tree' ? 'block' : 'none' }}
+              >
+                <WebTree
+                  height={treeWrapHeight - 30}
+                  searchPlaceholder={t('HTTPHistory.pleaseEnterDomainToSearch')}
+                  treeExtraQueryparams={treeQueryparams}
+                  refreshTreeFlag={refreshFlag}
+                  onSelectNodesKeys={(selectKeys) => setIncludeInUrl(selectKeys.map((i) => i + ''))}
+                ></WebTree>
+              </div>
+              <div
+                className={styles['process-wrapper']}
+                style={{ display: activeKey === 'process' ? 'block' : 'none' }}
+              >
+                <HistoryProcess
+                  queryparamsStr={processQueryparams}
+                  refreshProcessFlag={refreshFlag}
+                  curProcess={curProcess}
+                  curTags={curTags}
+                  onSetCurTags={setCurTags}
+                  onSetCurProcess={setCurProcess}
+                  setBuiltinTagList={setBuiltinTagList}
+                ></HistoryProcess>
+              </div>
+              <div className={styles['process-wrapper']} style={{ display: activeKey === 'rules' ? 'block' : 'none' }}>
+                <HTTPFlowRuleDataFilter
+                  queryparamsStr={rulesQueryparams}
+                  onSetFilterRows={setMitmAggregateFilterRows}
+                  httpFlowTableDataLength={httpFlowTableDataLength}
+                />
+              </div>
+              <div style={{ display: activeKey === 'ai' ? 'block' : 'none', height: '100%' }}>
+                {renderHistoryAIReActChat({
+                  className: styles['ai-wrapper'],
+                  externalParameters: {
+                    isOpen: false,
+                    rightIcon: {
+                      history: true,
+                      dataDetails: { type: 'text2' },
+                      add: (
+                        <Tooltip title="新建会话">
+                          <YakitButton
+                            type="text2"
+                            icon={<OutlineMessageCirclePlusIcon />}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
+                          />
+                        </Tooltip>
+                      ),
+                      close: (
+                        <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
+                      ),
+                      taskDetails: true,
+                    },
+                    footerRightTypes: [
+                      {
+                        type: AIInputFooterRightEnum.AIFocusMode,
+                        props: {
+                          value: focusModeLoop,
+                          onChange: () => {},
+                          disabled: true,
+                        },
+                      },
+                    ],
+                    filterMentionType: ['focusMode'],
+                    onHttpFlowRemove: clearHttpFlowSelection,
+                    onAfterSubmit: clearHttpFlowSelection,
+                  },
+                })}
+              </div>
+            </div>
+          </div>
+        }
+        lineStyle={{ display: '' }}
+        firstMinSize={openTabsFlag ? '325px' : '24px'}
+        secondMinSize={720}
+        secondNode={
+          <div className={styles['HTTPHistoryFilter-right']}>
+            <HTTPFlowFilterTable
+              onQueryParams={onQueryParams}
+              includeInUrl={includeInUrl}
+              ProcessName={curProcess}
+              TagsFilter={curTags}
+              onSetSelectedHttpFlowIds={handleSetSelectedHttpFlowIds}
+              onRegisterTableSelectApi={onRegisterTableSelectApi}
+              onSetClickedHttpFlow={onSetClickedHttpFlow}
+              onSetFirstHttpFlow={onSetFirstHttpFlow}
+              refresh={refreshHttpTable}
+              isResetSelect={isResetSelect}
+              onSetIsResetSelect={onSetIsResetSelect}
+              inMouseEnterTable={true}
+              toWebFuzzer={toWebFuzzer}
+              runtimeId={runtimeId}
+              sourceType={sourceType}
+              webFuzzerPageId={webFuzzerPageId}
+              closable={closable}
+              mitmAggregateFilterRows={mitmAggregateFilterRows}
+              onDataChange={setHttpFlowTableDataLength}
+              builtinTagList={builtinTagList}
+            />
+          </div>
+        }
+        secondNodeStyle={{
+          padding: undefined,
+          display: '',
+        }}
+        {...ResizeBoxProps}
+      />
+    </div>
+  )
+})
+
+HTTPHistoryFilterInner.displayName = 'HTTPHistoryFilterInner'
+
+export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = (props) => {
+  return (
+    <HistoryAIReActChatProvider cacheDataStore={FlowAiStore} focusModeLoop="http_flow_analyze">
+      <HTTPHistoryFilterInner {...props} />
+    </HistoryAIReActChatProvider>
+  )
+}
+
+export const defalutColumnsOrder = [
+  'Method',
+  'StatusCode',
+  'Url',
+  'Host',
+  'Path',
+  'Payloads', // 此字段特殊不参与表格列自定义
+  'FromPlugin',
+  'Tags',
+  'IPAddress',
+  'BodyLength',
+  'HtmlTitle',
+  'GetParamsTotal',
+  'ContentType',
+  'PathSuffix',
+  'DurationMs',
+  'UpdatedAt',
+  'RequestSizeVerbose',
+]
+interface HTTPFlowTableProps {
+  includeInUrl?: string[]
+  ProcessName?: string[]
+  TagsFilter?: string[]
+  onQueryParams?: (queryParams: string, execFlag: boolean) => void
+  onSetSelectedHttpFlowIds?: (ids: string[]) => void
+  onSetClickedHttpFlow?: (flow?: HTTPFlow) => void
+  onSetFirstHttpFlow?: (flow?: HTTPFlow) => void
+  refresh?: boolean
+  isResetSelect?: boolean
+  onSetIsResetSelect?: React.Dispatch<React.SetStateAction<boolean>>
+  inMouseEnterTable?: boolean
+  toWebFuzzer?: boolean
+  runtimeId?: string[]
+  sourceType?: string
+  webFuzzerPageId?: string
+  closable?: boolean
+  mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
+  onDataChange?: (dataLength: number) => void
+  onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
+  builtinTagList?: FiltersItemProps[]
+}
+const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
+  const {
+    includeInUrl,
+    ProcessName,
+    TagsFilter,
+    onQueryParams,
+    onSetSelectedHttpFlowIds,
+    onSetClickedHttpFlow,
+    onSetFirstHttpFlow,
+    refresh,
+    isResetSelect = true,
+    onSetIsResetSelect,
+    inMouseEnterTable = false,
+    toWebFuzzer = false,
+    runtimeId = [],
+    sourceType = 'mitm',
+    webFuzzerPageId,
+    closable = true,
+    mitmAggregateFilterRows = [],
+    onDataChange,
+    onRegisterTableSelectApi,
+    builtinTagList = [],
+  } = props
+  const comBuiltinTagList = useCampare(builtinTagList)
+  const { t, i18n } = useI18nNamespaces(['yakitUi', 'history', 'yakitRoute'])
+  const { currentPageTabRouteKey, queryPagesDataById } = usePageInfo(
+    (s) => ({
+      currentPageTabRouteKey: s.currentPageTabRouteKey,
+      queryPagesDataById: s.queryPagesDataById,
+    }),
+    shallow,
+  )
+  const hTTPFlowFilterTableRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(hTTPFlowFilterTableRef)
+  const size = useSize(hTTPFlowFilterTableRef)
+  const [query, setQuery] = useState<YakQueryHTTPFlowRequest>({
+    SourceType: sourceType,
+    Full: false,
+    WithPayload: toWebFuzzer,
+    RuntimeIDs: runtimeId.length > 1 ? runtimeId : undefined,
+    RuntimeId: runtimeId.length === 1 ? runtimeId[0] : undefined,
+    MitmExtractAggregateFilterRows: mitmAggregateFilterRows.length > 0 ? mitmAggregateFilterRows : [],
+  })
+  const [color, setColor] = useState<string[]>([])
+  const [isShowColor, setIsShowColor] = useState<boolean>(false)
+  const [batchVisible, setBatchVisible] = useState<boolean>(false)
+  const [suffixList, setSuffixList] = useState<FiltersItemProps[]>([])
+  const comSuffixList = useCampare(suffixList)
+
+  // 表格相关变量
+  const [isRefresh, setIsRefresh] = useState<boolean>(false)
+  const [isResetSort, setIsResetSort] = useState<boolean>(false)
+  const [loading, setLoading] = useState(false)
+  const sorterTableRef = useRef<SortProps>()
+  const [data, setData] = useState<HTTPFlow[]>([])
+  const [total, setTotal] = useState<number>(0)
+  const [pagination, setPagination] = useState({
+    Page: 1,
+    Limit: 30,
+    Order: 'desc',
+    OrderBy: 'Id',
+  })
+  const [onlyFavorite, setOnlyFavorite] = useState(false)
+  const campareOnlyFavorite = useCampare(onlyFavorite)
+
+  // #region 网站树、进程
+  const refreshTabsContRef = useRef<boolean>(false)
+  const campareProcessName = useCampare(ProcessName)
+  const campareIncludeInUrl = useCampare(includeInUrl)
+  const campareTagsFilter = useCampare(TagsFilter)
+  useDebounceEffect(
+    () => {
+      setQuery((prev) => {
+        return {
+          ...prev,
+          IncludeInUrl: includeInUrl ? includeInUrl : [],
+          ProcessName: ProcessName,
+        }
+      })
+    },
+    [campareIncludeInUrl, campareProcessName],
+    { wait: 500 },
+  )
+  useDebounceEffect(
+    () => {
+      const nextTags = TagsFilter || []
+      setTagsFilter(nextTags)
+      setQuery((prev) => {
+        return {
+          ...prev,
+          Tags: buildHTTPFlowQueryTags(nextTags, onlyFavorite),
+        }
+      })
+    },
+    [campareTagsFilter, campareOnlyFavorite],
+    { wait: 500 },
+  )
+  const campareMitmAggregateFilterRows = useCampare(mitmAggregateFilterRows)
+  useDebounceEffect(
+    () => {
+      setQuery((prev) => {
+        return {
+          ...prev,
+          MitmExtractAggregateFilterRows: mitmAggregateFilterRows.length > 0 ? mitmAggregateFilterRows : [],
+        }
+      })
+    },
+    [campareMitmAggregateFilterRows],
+    { wait: 300 },
+  )
+  // #endregion
+
+  // #region 高级筛选
+  const [drawerFormVisible, setDrawerFormVisible] = useState<boolean>(false)
+  const [filterConfig, setFilterConfig] = useState<FilterConfig>(cloneDeep(defFilterConfig))
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const config = await getDefautAdvancedSearch()
+        setFilterConfig(config)
+      } catch (error) {}
+    }
+    fetchConfig()
+  }, [])
+  const getDefautAdvancedSearch = useMemoizedFn(async () => {
+    let config = filterConfig
+    try {
+      const res = await getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFormConfiguration)
+      if (!res) {
+        // 迁移旧数据
+        const [
+          filterModeRes,
+          hostNameRes,
+          urlPathRes,
+          fileSuffixRes,
+          searchContentTypeRes,
+          excludeKeywordsRes,
+          statusCodeRes,
+        ] = await Promise.allSettled([
+          getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFilterMode),
+          getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisHostName),
+          getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisUrlPath),
+          getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFileSuffix),
+          getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisContentType),
+          getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisExcludeKeywords),
+          getRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisStatusCode),
+        ])
+        const filterMode = filterModeRes.status === 'fulfilled' ? filterModeRes.value || 'shield' : 'shield'
+        const hostName = hostNameRes.status === 'fulfilled' ? hostNameRes.value : []
+        const urlPath = urlPathRes.status === 'fulfilled' ? urlPathRes.value : []
+        const fileSuffix = fileSuffixRes.status === 'fulfilled' ? fileSuffixRes.value : []
+        const searchContentType = searchContentTypeRes.status === 'fulfilled' ? searchContentTypeRes.value : ''
+        const excludeKeywords = excludeKeywordsRes.status === 'fulfilled' ? excludeKeywordsRes.value : []
+        const statusCode = statusCodeRes.status === 'fulfilled' ? statusCodeRes.value : ''
+
+        config = buildLegacyHTTPHistoryFilterConfig(config, {
+          filterMode,
+          hostName,
+          urlPath,
+          fileSuffix,
+          searchContentType,
+          excludeKeywords,
+          statusCode,
+        })
+      } else {
+        const parsedConfig = safeParse<FilterConfig>(res)
+        if (parsedConfig) {
+          config = parsedConfig
+        }
+      }
+    } catch (error) {}
+    setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFormConfiguration, JSON.stringify(config))
+    return cloneDeep(config)
+  })
+  const comFilterConfig = useCampare(filterConfig)
+  useDebounceEffect(
+    () => {
+      refreshTabsContRef.current = true
+      setQuery((prev) => {
+        return {
+          ...prev,
+          ...buildHTTPHistoryFilterQueryFromConfig(filterConfig),
+        }
+      })
+    },
+    [comFilterConfig],
+    { wait: 500 },
+  )
+  const isFilter: boolean = useCreation(
+    () => isFilterSectionActive(filterConfig.shield) || isFilterSectionActive(filterConfig.show),
+    [filterConfig],
+  )
+  // #endregion
+
+  // #region 表格勾选，表格行选中相关
+  const [clickRow, setClickRow] = useState<HTTPFlow>()
+  const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
+    if (rowDate) {
+      minWinSendToChildWin({
+        type: 'openPacketNewWindow',
+        data: getPacketNewWindow(rowDate),
+      })
+    }
+    setClickRow(rowDate)
+    onSetClickedHttpFlow && onSetClickedHttpFlow(rowDate)
+  })
+  const onSetCurrentRow = useDebounceFn(
+    (rowDate: HTTPFlow | undefined) => {
+      onRowClick(rowDate ? getHTTPFlowReqAndResToString(rowDate) : undefined)
+    },
+    { wait: 200, leading: true },
+  ).run
+
+  const getPacketNewWindow = useMemoizedFn((r) => {
+    return buildHTTPFlowPacketWindowData(r ? getHTTPFlowReqAndResToString(r) : undefined)
+  })
+  const onHTTPFlowFilterTableRowDoubleClick = useMemoizedFn((r) => {
+    openPacketNewWindow(getPacketNewWindow(r))
+  })
+
+  const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+  const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
+  const onSelectAll = useMemoizedFn(() => {
+    if (isAllSelect) {
+      setIsAllSelect(false)
+      setSelectedRowKeys([])
+      setSelectedRows([])
+    } else {
+      setIsAllSelect(true)
+      const ids = data.map((item) => item.Id + '')
+      setSelectedRowKeys(ids)
+      setSelectedRows(data.filter((item) => ids.includes(String(item.Id))))
+    }
+  })
+  const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlow) => {
+    if (c) {
+      const ids = [...selectedRowKeys, rows.Id + '']
+      setSelectedRowKeys(ids)
+      setSelectedRows(data.filter((item) => ids.includes(String(item.Id))))
+    } else {
+      setIsAllSelect(false)
+      const ids = selectedRowKeys.filter((ele) => ele !== rows.Id + '')
+      setSelectedRowKeys(ids)
+      setSelectedRows(data.filter((item) => ids.includes(String(item.Id))))
+    }
+  })
+  const compareSelectedRowKeys = useCampare(selectedRowKeys)
+  useDebounceEffect(
+    () => {
+      onSetSelectedHttpFlowIds && onSetSelectedHttpFlowIds(isAllSelect ? [] : selectedRowKeys)
+    },
+    [isAllSelect, compareSelectedRowKeys],
+    { wait: 300 },
+  )
+  const resetSelected = () => {
+    setIsAllSelect(false)
+    setSelectedRowKeys([])
+    setSelectedRows([])
+  }
+  const deselectHttpFlowId = useMemoizedFn((id: string) => {
+    setIsAllSelect(false)
+    setSelectedRowKeys((prev) => prev.filter((ele) => ele !== id))
+    setSelectedRows((prev) => prev.filter((ele) => String(ele.Id) !== id))
+  })
+  useEffect(() => {
+    if (!onRegisterTableSelectApi) return
+    onRegisterTableSelectApi({
+      reset: resetSelected,
+      deselectId: deselectHttpFlowId,
+    })
+    return () => {
+      onRegisterTableSelectApi({
+        reset: () => {},
+        deselectId: () => {},
+      })
+    }
+  }, [onRegisterTableSelectApi, deselectHttpFlowId])
+  // #endregion
+
+  // #region 表头上的筛选相关
+  /** ---- tags start ----*/
+  const [tags, setTags] = useState<FiltersItemProps[]>([])
+  const [tagSearchVal, setTagSearchVal] = useState<string>('')
+  const [tagsFilter, setTagsFilter] = useState<string[]>([])
+  /** ---- tags end ----*/
+
+  useDebounceEffect(
+    () => {
+      if (!inViewport) return
+      ipcRenderer
+        .invoke('HTTPFlowsFieldGroup', { RefreshRequest: true, IsAll: true })
+        .then((rsp: HTTPFlowsFieldGroupResponse) => {
+          setSuffixList(buildHTTPFlowSuffixOptions(rsp.Suffixes || []))
+        })
+        .catch(() => {})
+    },
+    [inViewport, refresh],
+    { wait: 500 },
+  )
+
+  /** ---- 响应长度 start ----*/
+  const [bodyLengthSort, setBodyLengthSort, getBodyLengthSort] = useGetSetState<'asc' | 'desc' | false>(false)
+  const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false)
+  const [afterBodyLength, setAfterBodyLength] = useState<number>()
+  const [beforeBodyLength, setBeforeBodyLength] = useState<number>()
+  const [bodyLengthUnit, setBodyLengthUnit] = useState<'B' | 'K' | 'M'>('B')
+  const onCheckThan0 = useDebounceFn(
+    useMemoizedFn((check: boolean) => {
+      setCheckBodyLength(check)
+      setQuery((prev) => {
+        if (!afterBodyLength) {
+          return {
+            ...prev,
+            AfterBodyLength: check ? 1 : undefined,
+          }
+        }
+        return {
+          ...prev,
+        }
+      })
+    }),
+    { wait: 200 },
+  ).run
+  const onBodyLengthSort = useMemoizedFn((sort) => {
+    const newSort = bodyLengthSort === sort ? false : sort
+    if (newSort) {
+      setIsResetSort((prev) => !prev)
+    }
+    setBodyLengthSort(newSort)
+    sorterTableRef.current = {
+      orderBy: newSort ? 'body_length' : 'Id',
+      order: newSort || 'desc',
+    }
+    queyChangeUpdateData()
+  })
+  /** ---- 响应长度 end ----*/
+
+  // url 清空网站树需要刷新
+  useUpdateEffect(() => {
+    if (query.SearchURL === '') {
+      refreshTabsContRef.current = true
+    }
+  }, [query.SearchURL])
+
+  const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+    if (!getBodyLengthSort() || newSort.orderBy !== '') {
+      sorterTableRef.current = {
+        ...newSort,
+        ...(newSort.order === 'none' ? { order: 'desc' } : {}),
+        ...(newSort.orderBy === 'DurationMs'
+          ? { orderBy: 'duration' }
+          : newSort.orderBy === 'RequestSizeVerbose'
+            ? { orderBy: 'request_length' }
+            : {}),
+      }
+      setBodyLengthSort(false)
+    }
+    setQuery((prev) => {
+      const newQuery = {
+        ...prev,
+        ...filter,
+        Tags: buildHTTPFlowQueryTags([...tagsFilter], onlyFavorite),
+        bodyLength: !!(afterBodyLength || beforeBodyLength || getBodyLengthSort() || checkBodyLength), // 主要是用来响应长度icon显示颜色
+      }
+
+      if (filter['ContentType']) {
+        newQuery.SearchContentType = filter['ContentType'].join(',')
+      }
+
+      if (filter['UpdatedAt']) {
+        const time = filter['UpdatedAt']
+        newQuery.AfterUpdatedAt = time[0]
+        newQuery.BeforeUpdatedAt = time[1]
+      } else {
+        newQuery.AfterUpdatedAt = undefined
+        newQuery.BeforeUpdatedAt = undefined
+      }
+
+      return newQuery
+    })
+  })
+  // #endregion
+
+  // #region 表格自定义相关（excludeCustomColumnsKey这个变量暂时勿动，没有做其他列兼容）
+  // 需要完全排除列字段，表格不可能出现的列
+  const noColumnsKey = toWebFuzzer ? [] : ['Payloads']
+  // 不需要参与自定义的列（也就是不需要存进缓存）
+  const excludeCustomColumnsKey: string[] = ['Payloads']
+  const specialCustoms = useMemoizedFn((key) => {
+    return excludeCustomColumnsKey.includes(key) || noColumnsKey.includes(key)
+  })
+  // 排除展示的列（包含noColumnsKey）
+  const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
+  // 默认所有列展示顺序
+  const defalutColumnsOrderRef = useRef<string[]>(defalutColumnsOrder.filter((key) => !noColumnsKey.includes(key)))
+  // 所有列展示顺序（不包含excludeCustomColumnsKey）
+  const [columnsOrder, setColumnsOrder] = useState<string[]>([])
+  useEffect(() => {
+    if (inViewport) {
+      Promise.allSettled([
+        getRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey),
+        getRemoteValue(RemoteHistoryGV.HistroyColumnsOrder),
+      ]).then((res) => {
+        let refreshTabelKey = false
+        if (res[0].status === 'fulfilled') {
+          const arr = res[0].value.split(',')
+          const excludeKeys = [...arr, ...noColumnsKey].filter((key) => key)
+          // 确保顺序缓存里面的key一定在默认所有列中存在
+          const realArr = excludeKeys.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+          if (!isEqual(realArr, excludeColumnsKey)) {
+            refreshTabelKey = true
+            setExcludeColumnsKey(realArr)
+          }
+          setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, realArr.filter((key) => !specialCustoms(key)) + '')
+        }
+        if (res[1].status === 'fulfilled') {
+          try {
+            const arr = JSONParseLog(res[1].value, { page: 'HTTPHistoryFilter', fun: 'fulfilled' }) || []
+            // 确保顺序缓存里面的key一定在默认所有列中存在
+            const arr2 = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+            // 按照 defalutColumnsOrderRef.current 顺序补充新增列
+            defalutColumnsOrderRef.current.forEach((key: string, idx: number) => {
+              if (!arr2.includes(key)) {
+                let insertIdx = arr2.findIndex((k) => defalutColumnsOrderRef.current.indexOf(k) > idx)
+                if (insertIdx === -1) {
+                  arr2.push(key)
+                } else {
+                  arr2.splice(insertIdx, 0, key)
+                }
+              }
+            })
+            // 特殊处理 Payloads 在Path后面
+            if (toWebFuzzer) {
+              if (arr2.findIndex((key: string) => key === 'Payloads') === -1) {
+                const pathIndex = arr2.findIndex((key: string) => key === 'Path')
+                arr2.splice(pathIndex + 1, 0, 'Payloads')
+              }
+            }
+            const realArr = arr2.filter((key) => !specialCustoms(key))
+            setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
+            if (!isEqual(realArr, columnsOrder)) {
+              refreshTabelKey = true
+              setColumnsOrder(realArr)
+            }
+          } catch (error) {}
+        }
+
+        if (refreshTabelKey) {
+          setTableKeyNumber(uuidv4())
+        }
+      })
+    }
+  }, [inViewport])
+  // 表格可配置列
+  const configColumnRef = useRef<ColumnAllInfoItem[]>([])
+  // 表格的key值
+  const [tableKeyNumber, setTableKeyNumber] = useState<string>(uuidv4())
+  // 序号是否固定
+  const [idFixed, setIdFixed] = useState<boolean>(true)
+
+  const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
+    // ⚠️ 注意：此处新增或删除列请务必同步 history页面，还有处理 defalutColumnsOrder 变量，这个变量是存的全部的列默认顺序key
+    const columnArr: ColumnsTypeProps[] = [
+      {
+        title: t('YakitTable.order'),
+        dataKey: 'Id',
+        fixed: idFixed ? 'left' : undefined,
+        ellipsis: false,
+        width: 96,
+        enableDrag: false,
+        sorterProps: {
+          sorter: true,
+        },
+      },
+      {
+        title: t('HTTPFlowTable.method'),
+        dataKey: 'Method',
+        width: 100,
+        filterProps: {
+          filterKey: 'Methods',
+          filtersType: 'select',
+          filterMultiple: true,
+          filters: [
+            {
+              label: 'GET',
+              value: 'GET',
+            },
+            {
+              label: 'POST',
+              value: 'POST',
+            },
+            {
+              label: 'HEAD',
+              value: 'HEAD',
+            },
+            {
+              label: 'PUT',
+              value: 'PUT',
+            },
+            {
+              label: 'DELETE',
+              value: 'DELETE',
+            },
+            {
+              label: 'PATCH',
+              value: 'PATCH',
+            },
+          ],
+        },
+      },
+      {
+        title: t('HTTPFlowTable.statusCode'),
+        dataKey: 'StatusCode',
+        width: 120,
+        filterProps: {
+          filterKey: 'StatusCode',
+          filtersType: 'input',
+          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterInputProps: {
+            placeholder: t('YakitInput.supportInputFormat'),
+            wrapperStyle: { width: 270 },
+            onRegular: (value) => {
+              // 只允许输入数字、逗号和连字符，去掉所有其他字符
+              return value.replace(/[^0-9,-]/g, '')
+            },
+          },
+        },
+        render: (text, rowData) => {
+          return (
+            <div
+              className={classNames({
+                [styles['status-code']]: !isCellRedSingleColor(rowData.cellClassName),
+              })}
+            >
+              {text}
+            </div>
+          )
+        },
+      },
+      {
+        title: 'URL',
+        dataKey: 'Url',
+        width: 400,
+        filterProps: {
+          filterKey: 'SearchURL',
+          filtersType: 'input',
+          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+        },
+      },
+      {
+        title: 'Host',
+        dataKey: 'Host',
+        width: 200,
+      },
+      {
+        title: 'Path',
+        dataKey: 'Path',
+        width: 400,
+      },
+      {
+        title: 'Payloads',
+        dataKey: 'Payloads',
+        width: 300,
+        filterProps: {
+          filterKey: 'PayloadKeyword',
+          filtersType: 'input',
+          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+        },
+        render: (v) => {
+          return v ? v.join(',') : '-'
+        },
+      },
+      {
+        title: t('HTTPFlowTable.fromPlugin'),
+        dataKey: 'FromPlugin',
+        width: 200,
+        filterProps: {
+          filterKey: 'FromPlugin',
+          filtersType: 'input',
+          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+        },
+      },
+      {
+        title: 'Tags',
+        dataKey: 'Tags',
+        width: 150,
+        render: (text) => {
+          return text
+            ? `${text}`
+                .split('|')
+                .filter(
+                  (i) =>
+                    !i.startsWith('YAKIT_COLOR_') &&
+                    i !== HTTP_FLOW_FAVORITE_TAG &&
+                    comBuiltinTagList.every(({ value }) => value !== i),
+                )
+                .join(', ')
+            : ''
+        },
+      },
+      {
+        title: 'IP',
+        dataKey: 'IPAddress',
+        width: 200,
+      },
+      {
+        title: t('HTTPFlowTable.bodyLength'),
+        dataKey: 'BodyLength',
+        width: 130,
+        filterProps: {
+          filterKey: 'bodyLength',
+          filterIcon: <OutlineSelectorIcon className={styles['filter-icon']} />,
+          filterRender: (closePopover: () => void) => (
+            <RangeInputNumberTableWrapper
+              showSort={true}
+              bodyLengthSort={getBodyLengthSort()}
+              onBodyLengthSort={onBodyLengthSort}
+              checkBodyLength={checkBodyLength}
+              onCheckThan0={onCheckThan0}
+              minNumber={afterBodyLength}
+              setMinNumber={setAfterBodyLength}
+              maxNumber={beforeBodyLength}
+              setMaxNumber={setBeforeBodyLength}
+              onReset={() => {
+                setQuery((prev) => {
+                  return {
+                    ...prev,
+                    AfterBodyLength: checkBodyLength ? 1 : undefined,
+                    BeforeBodyLength: undefined,
+                  }
+                })
+                setBeforeBodyLength(undefined)
+                setAfterBodyLength(undefined)
+                setBodyLengthUnit('B')
+                setTimeout(() => {
+                  closePopover()
+                }, 50)
+              }}
+              onSure={() => {
+                setQuery((prev) => {
+                  return {
+                    ...prev,
+                    AfterBodyLength:
+                      checkBodyLength && !afterBodyLength
+                        ? 1
+                        : afterBodyLength
+                          ? onConvertBodySizeByUnit(afterBodyLength, bodyLengthUnit)
+                          : undefined,
+                    BeforeBodyLength: beforeBodyLength
+                      ? onConvertBodySizeByUnit(beforeBodyLength, bodyLengthUnit)
+                      : undefined,
+                  }
+                })
+                setTimeout(() => {
+                  closePopover()
+                }, 50)
+              }}
+              extra={
+                <YakitSelect
+                  value={bodyLengthUnit}
+                  onSelect={setBodyLengthUnit}
+                  wrapperClassName={styles['unit-select']}
+                  size="small"
+                >
+                  <YakitSelect value="B">B</YakitSelect>
+                  <YakitSelect value="K">K</YakitSelect>
+                  <YakitSelect value="M">M</YakitSelect>
+                </YakitSelect>
+              }
+            />
+          ),
+        },
+        render: (_, rowData) => {
+          return (
+            <>
+              {/* 1M 以上的话，是红色*/}
+              {rowData.BodyLength !== -1 && (
+                <div
+                  className={classNames({
+                    [styles['body-length-text-red']]:
+                      rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName),
+                  })}
+                >
+                  {rowData.BodyLength}
+                  {rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）` : ''}
+                </div>
+              )}
+            </>
+          )
+        },
+      },
+      {
+        title: 'Title',
+        dataKey: 'HtmlTitle',
+        width: 200,
+      },
+      {
+        title: t('HTTPFlowTable.params'),
+        dataKey: 'GetParamsTotal',
+        width: 130,
+        filterProps: {
+          filterKey: 'HaveParamsTotal',
+          filtersType: 'select',
+          filtersSelectAll: {
+            isAll: true,
+          },
+          filters: [
+            {
+              label: t('HTTPFlowTable.have'),
+              value: 'true',
+            },
+            {
+              label: t('HTTPFlowTable.none'),
+              value: 'false',
+            },
+          ],
+        },
+        render: (_, rowData) => (
+          <div className={styles['check-circle']}>
+            {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
+              <CheckCircleIcon
+                className={classNames({
+                  [styles['check-circle-icon']]: !isCellRedSingleColor(rowData.cellClassName),
+                })}
+              />
+            )}
+          </div>
+        ),
+      },
+      {
+        title: t('HTTPFlowTable.contentType'),
+        dataKey: 'ContentType',
+        width: 150,
+        render: (text) => {
+          let contentTypeFixed =
+            text
+              .split(';')
+              .map((el: any) => el.trim())
+              .filter((i: any) => !i.startsWith('charset'))
+              .join(',') || '-'
+          if (contentTypeFixed.includes('/')) {
+            const contentTypeFixedNew = contentTypeFixed.split('/').pop()
+            if (!!contentTypeFixedNew) {
+              contentTypeFixed = contentTypeFixedNew
+            }
+          }
+          return <div>{contentTypeFixed === 'null' ? '' : contentTypeFixed}</div>
+        },
+        filterProps: {
+          filtersType: 'select',
+          filterMultiple: true,
+          filterSearchInputProps: {
+            size: 'small',
+          },
+          filters: contentType,
+        },
+      },
+      {
+        title: t('HTTPFlowTable.pathSuffix'),
+        dataKey: 'PathSuffix',
+        width: 100,
+        filterProps: {
+          filterKey: 'IncludeSuffix',
+          filtersType: 'select',
+          filterMultiple: true,
+          filterSearchInputProps: { size: 'small' },
+          filters: suffixList,
+        },
+        render: (_, rowData) => {
+          return <div>{formatHTTPFlowPathSuffix(rowData.Path || '', rowData.PathSuffix)}</div>
+        },
+      },
+      {
+        title: t('HTTPFlowTable.durationMs'),
+        dataKey: 'DurationMs',
+        width: 120,
+        sorterProps: {
+          sorter: true,
+        },
+        render: (text, rowData) => {
+          let timeMs: number = parseInt(text)
+          return (
+            <div
+              className={classNames({
+                [styles['duration-ms']]: !isCellRedSingleColor(rowData.cellClassName),
+              })}
+            >
+              {timeMs}
+            </div>
+          )
+        },
+      },
+      {
+        title: t('HTTPFlowTable.updatedAt'),
+        dataKey: 'UpdatedAt',
+        filterProps: {
+          filterKey: 'UpdatedAt',
+          filtersType: 'dateTime',
+        },
+        width: 200,
+        render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? '-' : formatTimestamp(text)}</div>,
+      },
+      {
+        title: t('HTTPFlowTable.requestSizeVerbose'),
+        dataKey: 'RequestSizeVerbose',
+        enableDrag: false,
+        width: 120,
+        sorterProps: {
+          sorter: true,
+        },
+        render: (text, { RequestLength }) =>
+          `${RequestLength || text.slice(0, -1)}${RequestLength > 1024 ? `（${text}）` : ''}`,
+      },
+      {
+        title: t('YakitTable.action'),
+        dataKey: 'action',
+        width: 104,
+        fixed: 'right',
+        render: (_, rowData) => {
+          if (!rowData.Hash) return <></>
+          const colorType = getSingleColorType(rowData.cellClassName)
+          const favorite = isHTTPFlowFavorite(rowData)
+          return (
+            <div
+              className={classNames(styles['action-btn-group'], {
+                [styles[`hover-${colorType}-row`]]: !!colorType,
+              })}
+            >
+              {favorite ? (
+                <SolidStarIcon
+                  className={classNames(styles['favorite-icon-active'], styles['icon-hover'])}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleHTTPFlowFavorite(rowData, false, setData, onlyFavorite)
+                  }}
+                />
+              ) : (
+                <OutlineStarIcon
+                  className={classNames(styles['favorite-icon'], styles['icon-hover'], {
+                    [styles['icon-style']]: !colorType,
+                  })}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toggleHTTPFlowFavorite(rowData, true, setData, onlyFavorite)
+                  }}
+                />
+              )}
+              <div className={styles['divider-style']} />
+              <ChromeFrameSvgIcon
+                className={classNames(styles['icon-hover'], {
+                  [styles['icon-style']]: !isCellRedSingleColor(rowData.cellClassName),
+                })}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  ipcRenderer
+                    .invoke('GetHTTPFlowById', { Id: rowData?.Id })
+                    .then((i: HTTPFlow) => {
+                      i.Url && openExternalWebsite(i.Url)
+                    })
+                    .catch((e: any) => {
+                      yakitNotify('error', `Query HTTPFlow failed: ${e}`)
+                    })
+                }}
+              />
+              <div className={styles['divider-style']}></div>
+
+              <ArrowCircleRightSvgIcon
+                className={classNames(styles['icon-hover'], {
+                  [styles['icon-style']]: !isCellRedSingleColor(rowData.cellClassName),
+                })}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  let m = showYakitDrawer({
+                    width: '80%',
+                    content: onExpandHTTPFlow(rowData, () => m.destroy(), '', t),
+                    bodyStyle: { paddingTop: 5 },
+                  })
+                }}
+              />
+            </div>
+          )
+        },
+      },
+    ]
+    let finalColumns: ColumnsTypeProps[] = []
+    // 排序
+    if (columnsOrder.length) {
+      // 提取 Id 和 action
+      const idColumn = columnArr.find((col) => col.dataKey === 'Id')
+      const actionColumn = columnArr.find((col) => col.dataKey === 'action')
+      // 过滤掉 Id 和 action以及不可能出现的列
+      const middleColumns = columnArr.filter((item) => !['Id', 'action', ...noColumnsKey].includes(item.dataKey))
+
+      // 特殊处理一下 Payloads 位置
+      const realColumnsOrder = columnsOrder.slice()
+      if (toWebFuzzer) {
+        const pathIndex = columnsOrder.findIndex((key: string) => key === 'Path')
+        realColumnsOrder.splice(pathIndex + 1, 0, 'Payloads')
+      }
+
+      // 先按 columnsOrder 排序
+      const sortedColumns = middleColumns.sort(
+        (a, b) => realColumnsOrder.indexOf(a.dataKey) - realColumnsOrder.indexOf(b.dataKey),
+      )
+
+      // 先加上Id
+      if (idColumn) finalColumns.push(idColumn)
+      sortedColumns.forEach((col) => {
+        // 加入当前 columnsOrder 里的字段
+        finalColumns.push(col)
+      })
+      // 最后加上action
+      if (actionColumn) finalColumns.push(actionColumn)
+    } else {
+      finalColumns = columnArr.slice()
+    }
+
+    const arr = finalColumns
+      .filter((item) => !['Id', 'action', ...noColumnsKey].includes(item.dataKey))
+      .map((item) => ({
+        dataKey: item.dataKey,
+        title: item.title,
+        isShow: !excludeColumnsKey.includes(item.dataKey),
+      }))
+    configColumnRef.current = arr
+
+    const realColumns = finalColumns.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
+    setIdFixed(realColumns.length !== 2)
+    return realColumns
+  }, [
+    toWebFuzzer,
+    idFixed,
+    columnsOrder,
+    JSON.stringify(noColumnsKey),
+    excludeColumnsKey,
+    tags,
+    tagsFilter,
+    tagSearchVal,
+    query,
+    checkBodyLength,
+    afterBodyLength,
+    beforeBodyLength,
+    bodyLengthUnit,
+    contentType,
+    i18n.language,
+    onlyFavorite,
+    comSuffixList,
+    comBuiltinTagList,
+  ])
+  // #endregion
+
+  // #region 表格列 设置
+  const [advancedSetVisible, setAdvancedSetVisible] = useState<boolean>(false)
+  const binaryDisplayEnabled = useBinaryDisplayEnabled()
+  const isAdvancedSet = useCreation(() => {
+    const realDefalutColumnsOrder = defalutColumnsOrderRef.current.filter((key) => !specialCustoms(key))
+    const orderFlag1 =
+      columnsOrder.length === 0 ? false : JSON.stringify(realDefalutColumnsOrder) !== JSON.stringify(columnsOrder)
+    const orderFlag2 = !!excludeColumnsKey.filter((key) => !specialCustoms(key)).length
+    return orderFlag1 || orderFlag2
+  }, [excludeColumnsKey, noColumnsKey, columnsOrder])
+  // #endregion
+
+  // #region 表格右键操作
+  const { compareState, setCompareLeft, setCompareRight } = useHttpFlowStore()
+  const getUrlWithoutQuery = useMemoizedFn((url?: string) => {
+    if (!url) return ''
+
+    try {
+      const u = new URL(url)
+      u.search = ''
+      u.hash = ''
+      return u.toString()
+    } catch {
+      return url.split('?')[0].split('#')[0]
+    }
+  })
+  const menuData = useCreation(() => {
+    return [
+      {
+        key: '发送到 Web Fuzzer',
+        label: t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
+        number: 10,
+        default: true,
+        children: [
+          {
+            key: 'sendAndJumpToWebFuzzer',
+            label: t('HTTPFlowTable.RowContextMenu.sendAndRedirect'),
+            keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys,
+          },
+          {
+            key: 'sendToWebFuzzer',
+            label: t('HTTPFlowTable.RowContextMenu.sendOnly'),
+            keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys,
+          },
+        ],
+        onClickBatch: (list, n) => {
+          onBatch((el) => onSendToTab(el, true), n, list.length === total)
+        },
+        onClickSingle: (v) => onSendToTab(v, true),
+      },
+      {
+        key: '发送到 WS Fuzzer',
+        label: t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'),
+        number: 10,
+        default: false,
+        webSocket: true,
+        children: [
+          {
+            key: 'sendAndJumpToWS',
+            label: t('HTTPFlowTable.RowContextMenu.sendAndRedirect'),
+            keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys,
+          },
+          {
+            key: 'sendToWS',
+            label: t('HTTPFlowTable.RowContextMenu.sendOnly'),
+            keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys,
+          },
+        ],
+        onClickBatch: (list, n) => {
+          onBatch((el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request), n, list.length === total)
+        },
+        onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request),
+      },
+      {
+        key: 'favorite',
+        label: t('HTTPFlowTable.RowContextMenu.favorite'),
+        default: true,
+        webSocket: true,
+        number: 20,
+        onClickSingle: (v) => toggleHTTPFlowFavorite(v, !isHTTPFlowFavorite(v), setData, onlyFavorite),
+        onClickBatch: (list, n) => toggleHTTPFlowFavoriteBatch(list, n, true),
+      },
+      {
+        key: 'cancelFavorite',
+        label: t('HTTPFlowTable.RowContextMenu.cancelFavorite'),
+        default: false,
+        webSocket: false,
+        number: 20,
+        onClickBatch: (list, n) => toggleHTTPFlowFavoriteBatch(list, n, false),
+      },
+      {
+        key: 'copyURL',
+        label: t('HTTPFlowTable.RowContextMenu.copyURL'),
+        number: 30,
+        default: true,
+        webSocket: true,
+        onClickSingle: (v) => setClipboardText(v.Url),
+        onClickBatch: (v, number) => {
+          if (v.length === 0) {
+            yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+            return
+          }
+          if (v.length < number) {
+            setClipboardText(v.map((ele) => `${ele.Url}`).join('\r\n'))
+            resetSelected()
+          } else {
+            yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number }))
+          }
+        },
+        children: [
+          {
+            key: 'copyUrlWithQuery',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
+          },
+          {
+            key: 'copyUrlWithoutQuery',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
+          },
+        ],
+      },
+      {
+        key: '下载 Response Body',
+        label: t('HTTPFlowTable.RowContextMenu.downloadResponseBody'),
+        default: true,
+        webSocket: false,
+        onClickSingle: (v) => {
+          ipcRenderer.invoke('GetResponseBodyByHTTPFlowID', { Id: v.Id }).then((bytes: { Raw: Uint8Array }) => {
+            saveABSFileToOpen(`response-body.txt`, bytes.Raw)
+          })
+        },
+      },
+      {
+        key: '浏览器中查看',
+        label: t('HTTPFlowTable.RowContextMenu.viewInBrowser'),
+        default: true,
+        webSocket: false,
+        onClickSingle: (v) => {
+          showResponseViaHTTPFlowID(v)
+        },
+        children: [
+          {
+            key: 'viewResponseInBrowser',
+            label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
+          },
+          {
+            key: 'openURLInBrowser',
+            label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
+          },
+        ],
+      },
+      {
+        key: '复制为 CSRF Poc',
+        label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc'),
+        default: true,
+        webSocket: false,
+        onClickSingle: (v) => {
+          generateCSRFPocByRequest(v.Request, v.IsHTTPS, (e) => setClipboardText(e), false)
+        },
+        children: [
+          {
+            key: 'csrfpoc',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic].keys,
+          },
+          {
+            key: 'auto-submit-csrf-poc',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit'),
+            keybindings:
+              getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit].keys,
+          },
+        ],
+      },
+      {
+        key: '复制为 Yak PoC 模版',
+        label: t('HTTPFlowTable.RowContextMenu.copyAsYakPoCTemplate'),
+        default: true,
+        webSocket: false,
+        onClickSingle: (v) => onPocMould(v),
+        children: [
+          {
+            key: '数据包 PoC 模版',
+            label: t('HTTPFlowTable.RowContextMenu.packetPoCTemplate'),
+          },
+          {
+            key: '批量检测 PoC 模版',
+            label: t('HTTPFlowTable.RowContextMenu.batchTestPoCTemplate'),
+          },
+        ],
+      },
+      {
+        key: '标注颜色',
+        label: t('HTTPFlowTable.RowContextMenu.tagColor'),
+        default: true,
+        webSocket: false,
+        number: 20,
+        children: availableColors.map((i) => {
+          return {
+            key: i.title,
+            label: i.render(t),
+          }
+        }),
+        onClickBatch: () => {},
+      },
+      {
+        key: '移除颜色',
+        label: t('HTTPFlowTable.RowContextMenu.removeColor'),
+        default: true,
+        webSocket: false,
+        number: 20,
+        onClickSingle: (v) => onRemoveCalloutColor(v, data, setData),
+        onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n),
+      },
+      {
+        key: '发送到对比器',
+        label: t('HTTPFlowTable.RowContextMenu.sendToComparer'),
+        default: true,
+        webSocket: false,
+        children: [
+          {
+            key: '发送到对比器左侧',
+            label: t('HTTPFlowTable.RowContextMenu.sendToComparerLeft'),
+            // disabled: [false, true, false][compareState]
+          },
+          {
+            key: '发送到对比器右侧',
+            label: t('HTTPFlowTable.RowContextMenu.sendToComparerRight'),
+            // disabled: [false, false, true][compareState]
+          },
+        ],
+      },
+      {
+        key: '导出数据',
+        label: t('HTTPFlowTable.RowContextMenu.exportData'),
+        default: true,
+        webSocket: false,
+        children: [
+          {
+            key: '导出为Excel',
+            label: t('HTTPFlowTable.RowContextMenu.exportToExcel'),
+          },
+          {
+            key: '导出为HAR',
+            label: t('HTTPFlowTable.RowContextMenu.exportToHAR'),
+          },
+        ],
+        onClickBatch: () => {},
+      },
+      {
+        key: '新窗口打开',
+        label: t('HTTPFlowTable.RowContextMenu.openInNewWindow'),
+        default: true,
+        webSocket: true,
+        onClickSingle: (v) => {
+          onHTTPFlowFilterTableRowDoubleClick(v)
+        },
+      },
+    ]
+  }, [data, compareState, i18n.language, onlyFavorite, total])
+
+  const contextMenuKeybindingHandle = useMemoizedFn((data) => {
+    const menus: any = []
+    for (let item of data) {
+      /** 处理带快捷键的菜单项 */
+      const info = { ...item }
+      if (info.children && info.children.length > 0) {
+        info.children = contextMenuKeybindingHandle(info.children)
+      } else {
+        if (info.keybindings && info.keybindings.length > 0) {
+          const keysContent = convertKeyboardToUIKey(info.keybindings)
+          info.label = keysContent ? (
+            <div className={styles['editor-context-menu-keybind-wrapper']}>
+              <div className={styles['content-style']}>{info.label}</div>
+              <div className={classNames(styles['keybind-style'], 'keys-style')}>{keysContent}</div>
+            </div>
+          ) : (
+            info.label
+          )
+        }
+      }
+      menus.push(info)
+    }
+    return menus
+  })
+  const getBatchContextMenu = useMemoizedFn(() => {
+    return menuData
+      .filter((f) => f.onClickBatch)
+      .map((m) => {
+        return {
+          key: m.key,
+          label: m.label,
+          children: m.children || [],
+        }
+      })
+  })
+  const getRowContextMenu = useMemoizedFn((rowData: HTTPFlow) => {
+    return contextMenuKeybindingHandle(menuData)
+      .filter((item) => (rowData.IsWebsocket ? item.webSocket : item.default))
+      .map((ele) => {
+        const isFavoriteMenu = ele.key === 'favorite'
+        return {
+          label: isFavoriteMenu
+            ? isHTTPFlowFavorite(rowData)
+              ? t('HTTPFlowTable.RowContextMenu.cancelFavorite')
+              : t('HTTPFlowTable.RowContextMenu.favorite')
+            : ele.label,
+          key: ele.key,
+          children: ele.children || [],
+        }
+      })
+  })
+  const onRowContextMenu = useMemoizedFn((rowData: HTTPFlow, _, event: React.MouseEvent) => {
+    if (rowData) {
+      onSetCurrentRow(rowData)
+    }
+
+    let rowContextmenu: any[] = []
+
+    // 批量操作
+    if (selectedRowKeys.length > 0) {
+      rowContextmenu = getBatchContextMenu()
+    } else {
+      rowContextmenu = getRowContextMenu(rowData)
+    }
+
+    showByRightContext(
+      {
+        width: 180,
+        parentTitleClick: true,
+        data: rowContextmenu,
+        onClick: ({ key, keyPath }) => {
+          // 批量操作菜单点击
+          if (selectedRowKeys.length > 0) {
+            onMultipleClick(key, keyPath)
+            return
+          }
+
+          if (keyPath.includes('标注颜色')) {
+            const colorItem = availableColors.find((e) => e.title === key)
+            if (!colorItem) return
+            CalloutColor(rowData, colorItem, data, setData)
+            return
+          }
+
+          switch (key) {
+            case 'csrfpoc':
+              generateCSRFPocByRequest(
+                rowData.Request,
+                rowData.IsHTTPS,
+                (e) => {
+                  setClipboardText(e)
+                },
+                false,
+              )
+              break
+            case 'auto-submit-csrf-poc':
+              generateCSRFPocByRequest(
+                rowData.Request,
+                rowData.IsHTTPS,
+                (e) => {
+                  setClipboardText(e)
+                },
+                true,
+              )
+              break
+            case 'sendAndJumpToWebFuzzer':
+              onSendToTab(rowData, true)
+              break
+            case 'sendToWebFuzzer':
+              onSendToTab(rowData, false)
+              break
+            case 'sendAndJumpToWS':
+              newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request)
+              break
+            case 'sendToWS':
+              newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
+              break
+            case 'copyUrlWithQuery':
+              setClipboardText(rowData.Url)
+              break
+            case 'copyUrlWithoutQuery': {
+              const nextUrl = getUrlWithoutQuery(rowData.Url)
+              if (!nextUrl) {
+                yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+                return
+              }
+              setClipboardText(nextUrl)
+              break
+            }
+            case 'openURLInBrowser':
+              rowData.Url && openExternalWebsite(rowData.Url)
+              break
+            case 'viewResponseInBrowser':
+              showResponseViaHTTPFlowID(rowData)
+              break
+            case '数据包 PoC 模版':
+              onPocMould(rowData)
+              break
+            case '批量检测 PoC 模版':
+              onBatchPocMould(rowData)
+              break
+            case '发送到对比器左侧':
+              setCompareLeft({
+                content: new Buffer(rowData.Request).toString('utf8'),
+                language: 'http',
+              })
+              break
+            case '发送到对比器右侧':
+              setCompareRight({
+                content: new Buffer(rowData.Request).toString('utf8'),
+                language: 'http',
+              })
+              break
+            case '导出为Excel':
+              onExcelExport([rowData.Id])
+              break
+            case '导出为HAR':
+              onHarExport([rowData.Id])
+              break
+            default:
+              const currentItem = menuData.find((f) => f.key === key)
+              if (!currentItem) return
+              if (currentItem.onClickSingle) currentItem.onClickSingle(rowData)
+              break
+          }
+        },
+      },
+      event.clientX,
+      event.clientY,
+    )
+  })
+
+  const onMultipleClick = useMemoizedFn((key: string, keyPath: string[]) => {
+    if (keyPath.includes('标注颜色')) {
+      const currentItemColor = menuData.find((f) => f.onClickBatch && f.key === '标注颜色')
+      const colorItem = availableColors.find((e) => e.title === key)
+      if (!currentItemColor || !colorItem) return
+      CalloutColorBatch(selectedRows, currentItemColor?.number || 0, colorItem)
+      return
+    }
+
+    switch (key) {
+      case 'sendAndJumpToWebFuzzer':
+        const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === '发送到 Web Fuzzer')
+        if (!currentItemJumpToFuzzer) return
+        onBatch((el) => onSendToTab(el, true), currentItemJumpToFuzzer?.number || 0, selectedRowKeys.length === total)
+        break
+      case 'sendToWebFuzzer':
+        const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === '发送到 Web Fuzzer')
+        if (!currentItemToFuzzer) return
+        onBatch((el) => onSendToTab(el, false), currentItemToFuzzer?.number || 0, selectedRowKeys.length === total)
+        break
+      case 'sendAndJumpToWS':
+        const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === '发送到 WS Fuzzer')
+        if (!currentItemJumpToWS) return
+        onBatch(
+          (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
+          currentItemJumpToWS?.number || 0,
+          selectedRowKeys.length === total,
+        )
+
+        break
+      case 'sendToWS':
+        const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === '发送到 WS Fuzzer')
+        if (!currentItemToWS) return
+        onBatch(
+          (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request, false),
+          currentItemToWS?.number || 0,
+          selectedRowKeys.length === total,
+        )
+        break
+      case 'copyUrlWithQuery':
+      case 'copyUrlWithoutQuery': {
+        const currentItemCopyUrl = menuData.find((f) => f.onClickBatch && f.key === 'copyURL')
+        if (!currentItemCopyUrl) return
+        if (key === 'copyUrlWithQuery') {
+          currentItemCopyUrl.onClickBatch?.(selectedRows, currentItemCopyUrl.number)
+          break
+        }
+        const urls = selectedRows.map((el) => getUrlWithoutQuery(el.Url)).filter((url) => !!url)
+        if (selectedRows.length > 0 && !urls.length) {
+          yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+          return
+        }
+        if (selectedRows.length >= (currentItemCopyUrl.number || 0)) {
+          yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number: currentItemCopyUrl.number }))
+          return
+        }
+        let copied = false
+        onBatch(
+          () => {
+            if (!copied) {
+              setClipboardText(urls.join('\r\n'))
+              copied = true
+            }
+          },
+          currentItemCopyUrl.number || 0,
+          selectedRowKeys.length === total,
+        )
+        break
+      }
+      case '导出为Excel':
+        onExcelExport(selectedRowKeys.map((id) => Number(id)))
+        break
+      case '导出为HAR':
+        onHarExport(isAllSelect ? [] : selectedRowKeys.map((id) => Number(id)))
+        break
+      default:
+        const currentItem = menuData.find((f) => f.onClickBatch && f.key === key)
+        if (!currentItem) return
+        if (currentItem.onClickBatch) currentItem.onClickBatch(selectedRows, currentItem.number)
+        break
+    }
+    setBatchVisible(false)
+  })
+  const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
+    const length = selectedRowKeys.length
+    if (length <= 0) {
+      yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+      return
+    }
+    if (isAllSelect && !all) {
+      yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
+      return
+    }
+    if (number < length) {
+      yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number }))
+      return
+    }
+    for (let i = 0; i < length; i++) {
+      const element = selectedRows[i]
+      f(element)
+      if (i === length - 1) {
+        resetSelected()
+      }
+    }
+  })
+
+  useShortcutKeyTrigger('sendAndJump*common', (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (inViewport && !item) {
+      if (clickRow) {
+        clickRow.IsWebsocket ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request) : onSendToTab(clickRow, true)
+      }
+    }
+  })
+
+  useShortcutKeyTrigger('send*common', (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (inViewport && !item) {
+      if (clickRow) {
+        clickRow.IsWebsocket
+          ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request, false)
+          : onSendToTab(clickRow, false)
+      }
+    }
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    setClipboardText(clickRow.Url || '')
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    const nextUrl = getUrlWithoutQuery(clickRow.Url)
+    if (!nextUrl) {
+      yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+      return
+    }
+    setClipboardText(nextUrl)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    clickRow.Url && openExternalWebsite(clickRow.Url)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    showResponseViaHTTPFlowID(clickRow)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), false)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), true)
+  })
+
+  // 数据包 PoC 模版
+  const onPocMould = useMemoizedFn((v: HTTPFlow) => {
+    const flow = v
+    if (!flow) return
+    generateYakCodeByRequest(
+      flow.IsHTTPS,
+      flow.Request,
+      (code) => {
+        setClipboardText(code)
+      },
+      RequestToYakCodeTemplate.Ordinary,
+    )
+  })
+  // 批量检测 PoC 模版
+  const onBatchPocMould = useMemoizedFn((v: HTTPFlow) => {
+    const flow = v as HTTPFlow
+    if (!flow) return
+    generateYakCodeByRequest(
+      flow.IsHTTPS,
+      flow.Request,
+      (code) => {
+        setClipboardText(code)
+      },
+      RequestToYakCodeTemplate.Batch,
+    )
+  })
+
+  // 标注颜色批量
+  const CalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, i: any) => {
+    if (flowList.length === 0) {
+      yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+      return
+    }
+    if (flowList.length > number) {
+      yakitNotify('warning', t('HTTPFlowTable.maxOperateData', { number }))
+      return
+    }
+    const newList = flowList.map((flow) => {
+      const existedTags = flow.Tags ? flow.Tags.split('|').filter((i) => !!i && !i.startsWith('YAKIT_COLOR_')) : []
+      existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
+      return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
+    })
+    ipcRenderer
+      .invoke('SetTagForHTTPFlow', {
+        CheckTags: newList,
+      })
+      .then(() => {
+        let newData: HTTPFlow[] = []
+        const l = data.length
+        for (let index = 0; index < l; index++) {
+          const item = data[index]
+          const find = newList.find((ele) => ele.Hash === item.Hash)
+          if (!!find) {
+            item.Tags = (find.Tags || []).join('|')
+            item.cellClassName = filterColorTag(item.Tags) || undefined
+          }
+          newData.push(item)
+        }
+        setData(newData)
+        resetSelected()
+      })
+      .catch((error) => {
+        yakitNotify('error', error + '')
+      })
+  })
+
+  // 移除颜色 批量
+  const onRemoveCalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number) => {
+    if (flowList.length === 0) {
+      yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+      return
+    }
+    if (flowList.length > number) {
+      yakitNotify('warning', t('HTTPFlowTable.maxOperateData', { number }))
+      return
+    }
+    const newList = flowList.map((flow) => {
+      const existedTags = flow.Tags ? flow.Tags.split('|').filter((i) => !!i && !i.startsWith('YAKIT_COLOR_')) : []
+      return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
+    })
+    ipcRenderer
+      .invoke('SetTagForHTTPFlow', {
+        CheckTags: newList,
+      })
+      .then(() => {
+        let newData: HTTPFlow[] = []
+        const l = data.length
+        for (let index = 0; index < l; index++) {
+          const item = data[index]
+          const find = newList.find((ele) => ele.Hash === item.Hash)
+          if (!!find) {
+            item.Tags = (find.Tags || []).join('|')
+            item.cellClassName = ''
+          }
+          newData.push(item)
+        }
+        setData(newData)
+        resetSelected()
+      })
+  })
+
+  const toggleHTTPFlowFavoriteBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, favorite: boolean) => {
+    if (flowList.length === 0) {
+      yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+      return
+    }
+    if (flowList.length > number) {
+      yakitNotify('warning', t('HTTPFlowTable.maxOperateData', { number }))
+      return
+    }
+    const newList = flowList.map((flow) => ({
+      Id: flow.Id,
+      Hash: flow.Hash,
+      Tags: buildFavoriteTags(flow.Tags, favorite),
+    }))
+    ipcRenderer
+      .invoke('SetTagForHTTPFlow', {
+        CheckTags: newList,
+      })
+      .then(() => {
+        const newData = data.map((item) => {
+          const find = newList.find((ele) => ele.Hash === item.Hash)
+          if (!find) return item
+          return {
+            ...item,
+            Tags: find.Tags.join('|'),
+          }
+        })
+        setData(onlyFavorite && !favorite ? newData.filter(isHTTPFlowFavorite) : newData)
+        setSelectedRowKeys([])
+        setSelectedRows([])
+        yakitNotify('success', favorite ? t('HTTPFlowTable.favoriteSuccess') : t('HTTPFlowTable.cancelFavoriteSuccess'))
+      })
+      .catch((e) => {
+        yakitNotify('error', `${e}`)
+      })
+  })
+
+  // 导出为EXCEL
+  const [exportDataKey, setExportDataKey] = useState<string[]>([])
+  const onExcelExport = (list: number[]) => {
+    percentContainerRef.current = currentPageTabRouteKey
+    const m = showYakitModal({
+      title: (modalT) => modalT('HTTPFlowTable.exportFields'),
+      content: (modalT) => {
+        const exportValue = [
+          ...configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey })),
+          { title: modalT('HTTPFlowTable.requestPacket'), key: 'request' },
+          { title: modalT('HTTPFlowTable.responsePacket'), key: 'response' },
+        ]
+
+        return (
+          <ExportSelect
+            exportValue={exportValue}
+            initCheckValue={
+              toWebFuzzer
+                ? exportValue.filter((i) => !['GetParamsTotal', 'request', 'response'].includes(i.key))
+                : exportValue
+            }
+            setExportTitle={(v: string[]) => {
+              setExportDataKey(['Id', ...v])
+            }}
+            exportKey={toWebFuzzer ? 'WEBFUZZER-HISTORY-EXPORT-KEYS' : 'MITM-HTTP-HISTORY-EXPORT-KEYS'}
+            fileName={!toWebFuzzer ? 'History' : 'WebFuzzer'}
+            getData={(pagination) => getExcelData(pagination, list)}
+            onClose={() => m.destroy()}
+            getContainer={
+              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+            }
+          />
+        )
+      },
+      onCancel: () => {
+        m.destroy()
+      },
+      width: 650,
+      footer: null,
+      maskClosable: false,
+      getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined,
+    })
+  }
+  const formatJson = (filterVal, jsonData) => {
+    return jsonData.map((v, index) =>
+      filterVal.map((j) => {
+        if (['Request', 'Response'].includes(j)) {
+          return new Buffer(v[j]).toString('utf8')
+        }
+        if (j === 'UpdatedAt') {
+          return formatTimestamp(v[j])
+        }
+        if (j === 'PathSuffix') {
+          return formatHTTPFlowPathSuffix(v['Path'], v['PathSuffix'])
+        }
+        return v[j]
+      }),
+    )
+  }
+  const getPageSize = useCreation(() => {
+    return getHTTPFlowExportPageSize(total)
+  }, [total])
+
+  // 导出字段映射配置
+  const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
+
+  const getExcelData = useMemoizedFn((pagination, list: number[]) => {
+    return new Promise((resolve) => {
+      const params: any = {
+        ...query,
+        OffsetId: undefined,
+        Pagination: { ...pagination },
+      }
+
+      let exportParams: any = {}
+      const FieldName = arrList.filter((item) => exportDataKey.includes(item.dataKey)).map((item) => item.key)
+
+      const Ids: number[] = list.map((id) => Number(id))
+      // 最大请求条数
+      let pageSize = getPageSize
+      // 需要多少次请求
+      let count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
+      const resultArray: number[] = []
+      for (let i = 1; i <= count; i++) {
+        resultArray.push(i)
+      }
+      const promiseList = resultArray.map((item) => {
+        params.Pagination.Limit = pageSize
+        params.Pagination.Page = item
+        exportParams = { ExportWhere: params, FieldName }
+        if (!isAllSelect) {
+          exportParams.Ids = Ids
+        }
+        return new Promise((resolve, reject) => {
+          ipcRenderer
+            .invoke('ExportHTTPFlows', exportParams)
+            .then((rsp: YakQueryHTTPFlowResponse) => {
+              resolve(rsp)
+            })
+            .catch((e) => {
+              reject(e)
+            })
+            .finally(() => {})
+        })
+      })
+      Promise.allSettled(promiseList).then((results) => {
+        let rsp: YakQueryHTTPFlowResponse = {
+          Data: [],
+          Pagination: { ...pagination, Page: 1, OrderBy: 'id', Order: '' },
+          Total: total,
+        }
+        let message: string = ''
+        results.forEach((item) => {
+          if (item.status === 'fulfilled') {
+            const value = item.value as YakQueryHTTPFlowResponse
+            rsp.Data = [...rsp.Data, ...value.Data]
+          } else {
+            message = item.reason?.message
+          }
+        })
+        if (message.length > 0) {
+          yakitNotify('warning', `${t('HTTPFlowTable.partialExportMissing')}${message}`)
+        }
+        initExcelData(resolve, rsp.Data, rsp, arrList)
+      })
+    })
+  })
+  const initExcelData = (resolve, newExportData: HTTPFlow[], rsp, arrList) => {
+    let exportData: any = []
+    const header: string[] = []
+    const filterVal: string[] = []
+    exportDataKey.map((item) => {
+      const title = arrList.filter((i) => i.dataKey === item)[0]?.title || item
+      header.push(title)
+      if (item === 'request') {
+        filterVal.push('Request')
+      } else if (item === 'response') {
+        filterVal.push('Response')
+      } else if (item === 'Id') {
+        filterVal.push('Id')
+      } else {
+        const itemData = configColumnRef.current.filter((itemIn) => itemIn.dataKey === item)[0]
+        filterVal.push(itemData.dataKey)
+      }
+    })
+    exportData = formatJson(filterVal, newExportData)
+    resolve({
+      header,
+      exportData,
+      response: rsp,
+    })
+  }
+
+  // 导出为HAR
+  const [exportToken, setExportToken] = useState<string>('')
+  const [percentVisible, setPercentVisible] = useState<boolean>(false)
+  const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+  const onHarExport = (ids: number[]) => {
+    percentContainerRef.current = currentPageTabRouteKey
+    const m = showYakitModal({
+      title: (modalT) => modalT('HTTPFlowTable.exportFields'),
+      content: (modalT) => {
+        const harFieldOptions = [
+          ...configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey })),
+          { title: modalT('HTTPFlowTable.requestPacket'), key: 'request' },
+          { title: modalT('HTTPFlowTable.responsePacket'), key: 'response' },
+        ]
+
+        return (
+          <ExportSelect
+            exportValue={harFieldOptions}
+            initCheckValue={harFieldOptions}
+            setExportTitle={(v: string[]) => {
+              setExportDataKey(['Id', ...v])
+            }}
+            exportKey={!toWebFuzzer ? 'MITM-HISTORY-EXPORT-KEYS' : 'WEBFUZZER-HISTORY-EXPORT-KEYS'}
+            getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
+            onClose={() => m.destroy()}
+            getContainer={
+              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+            }
+            onHarExport={() => handleClickHarExport(ids)}
+          />
+        )
+      },
+      onCancel: () => {
+        m.destroy()
+        setSelectedRowKeys([])
+        setSelectedRows([])
+      },
+      width: 650,
+      footer: null,
+      maskClosable: false,
+      getContainer: document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined,
+    })
+  }
+
+  const handleClickHarExport = useMemoizedFn((ids: number[]) => {
+    handleSaveFileSystemDialog({
+      title: t('HTTPFlowTable.saveFile'),
+      defaultPath: (!toWebFuzzer ? 'History' : 'WebFuzzer') + `-${Date.now()}`,
+      filters: [
+        { name: 'HAR Files', extensions: ['har'] }, // 只允许保存 .har 文件
+      ],
+    }).then((file) => {
+      if (!file.canceled) {
+        const filePath = file?.filePath?.toString()
+        if (filePath) {
+          const FieldName = arrList.filter((item) => exportDataKey.includes(item.dataKey)).map((item) => item.key)
+          const exportParams: ExportHTTPFlowStreamRequest = {
+            Filter: {
+              ...query,
+              IncludeId: ids,
+            },
+            ExportType: 'har',
+            TargetPath: filePath,
+            FieldName,
+          }
+
+          const token = randomString(40)
+          setExportToken(token)
+          ipcRenderer
+            .invoke('ExportHTTPFlowStream', exportParams, token)
+            .then(() => {
+              percentContainerRef.current = currentPageTabRouteKey
+              setPercentVisible(true)
+            })
+            .catch((error) => {
+              yakitNotify('error', `[ExportHTTPFlowStream] error: ${error}`)
+            })
+        }
+      }
+    })
+  })
+  // #endregion
+
+  const queyChangeUpdateData = useDebounceFn(
+    () => {
+      update(1)
+    },
+    { wait: 500 },
+  ).run
+
+  const onToggleOnlyFavorite = useMemoizedFn(() => {
+    const nextOnlyFavorite = !onlyFavorite
+    setOnlyFavorite(nextOnlyFavorite)
+    setQuery((prev) => ({
+      ...prev,
+      Tags: buildHTTPFlowQueryTags(tagsFilter, nextOnlyFavorite),
+    }))
+    setIsAllSelect(false)
+    setSelectedRowKeys([])
+    setSelectedRows([])
+  })
+
+  useUpdateEffect(() => {
+    queyChangeUpdateData()
+  }, [query, refresh])
+
+  const [queryParams, setQueryParams] = useState<string>('')
+  useDebounceEffect(
+    () => {
+      if (queryParams !== '') {
+        let refreshFlag = false
+        if (refreshTabsContRef.current) {
+          refreshTabsContRef.current = false
+          refreshFlag = true
+        }
+        onQueryParams?.(queryParams, refreshFlag)
+      }
+    },
+    [queryParams],
+    { wait: 500 },
+  )
+
+  const update = useMemoizedFn((page: number) => {
+    const isInit = page === 1
+    if (isInit) {
+      setLoading(true)
+    }
+
+    const currentLastId = data[data.length - 1]?.Id
+    const { requestParams, tabQueryParams } = buildHTTPFlowQueryRequestParams(
+      query,
+      pagination,
+      page,
+      sorterTableRef.current,
+      currentLastId,
+    )
+
+    setQueryParams(tabQueryParams)
+    ipcRenderer
+      .invoke('QueryHTTPFlows', requestParams)
+      .then((res: YakQueryHTTPFlowResponse) => {
+        const resData = res?.Data || []
+        const dataHasClassName: HTTPFlow[] = filterHTTPFlowsByFavoriteAndTags(
+          getClassNameData(resData),
+          tagsFilter,
+          onlyFavorite,
+        )
+        const d = isInit ? dataHasClassName : mergeHTTPFlowsById(data, dataHasClassName)
+        setData(d)
+        const currentTotal = onlyFavorite && tagsFilter.length > 0 ? d.length : res.Total
+        setTotal(currentTotal)
+        onDataChange?.(currentTotal)
+
+        const page = { ...res.Pagination }
+        delete page['AfterId']
+        delete page['BeforeId']
+        setPagination(page)
+
+        if (isInit) {
+          setIsRefresh((prev) => !prev)
+          if (isResetSelect) {
+            resetSelected()
+          } else {
+            onSetIsResetSelect && onSetIsResetSelect(true)
+          }
+        } else {
+          if (isAllSelect) {
+            setSelectedRowKeys(d.map((item) => item.Id + ''))
+            setSelectedRows(d)
+          }
+        }
+      })
+      .catch((e) => {
+        yakitNotify('error', `query HTTP Flow failed: ${e}`)
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setLoading(false)
+        }, 200)
+      })
+  })
+
+  const onDeleteToUpdateHTTPHistoryFilter = useMemoizedFn(() => {
+    refreshTabsContRef.current = true
+    update(1)
+  })
+
+  useEffect(() => {
+    emiter.on('onDeleteToUpdateHTTPHistoryFilter', onDeleteToUpdateHTTPHistoryFilter)
+    return () => {
+      emiter.off('onDeleteToUpdateHTTPHistoryFilter', onDeleteToUpdateHTTPHistoryFilter)
+    }
+  }, [])
+
+  useDebounceEffect(
+    () => {
+      if (onSetFirstHttpFlow) {
+        if (data.length) {
+          onSetFirstHttpFlow(getHTTPFlowReqAndResToString(data[0]))
+        } else {
+          onSetFirstHttpFlow(undefined)
+        }
+      }
+    },
+    [data],
+    { wait: 300 },
+  )
+
+  const onlyFavoriteTag = useMemo(
+    () =>
+      onlyFavorite && (
+        <YakitTag closable onClose={() => onToggleOnlyFavorite()} style={{ marginLeft: 8 }}>
+          {t('HTTPFlowTable.onlyFavorites')}
+        </YakitTag>
+      ),
+    [onlyFavorite, i18n.language],
+  )
+
+  return (
+    <div className={styles['HTTPFlowFilterTable']} ref={hTTPFlowFilterTableRef}>
+      <TableVirtualResize<HTTPFlow>
+        key={tableKeyNumber}
+        query={query}
+        loading={loading}
+        isRefresh={isRefresh}
+        isResetSort={isResetSort}
+        isShowTitle={true}
+        renderTitle={
+          <div className={styles['http-history-table-title']}>
+            <div
+              className={classNames(styles['http-history-table-title-space-between'], styles['http-history-table-row'])}
+            >
+              <div className={classNames(styles['http-history-table-left'])}>
+                {SourceType.map((tag) => (
+                  <YakitCheckableTag
+                    key={tag.value}
+                    checked={!!query.SourceType?.split(',').includes(tag.value)}
+                    onChange={(checked) => {
+                      setQuery((prev) => {
+                        if (checked) {
+                          const selectTypeList = [...(query.SourceType?.split(',') || []), tag.value]
+                          return {
+                            ...prev,
+                            SourceType: selectTypeList.join(','),
+                          }
+                        } else {
+                          const selectTypeList = (query.SourceType?.split(',') || []).filter((ele) => ele !== tag.value)
+                          return {
+                            ...prev,
+                            SourceType: selectTypeList.join(','),
+                          }
+                        }
+                      })
+                    }}
+                  >
+                    {tag.text(t)}
+                  </YakitCheckableTag>
+                ))}
+                <TableTotalAndSelectNumber total={total} selectNum={isAllSelect ? total : selectedRowKeys.length} />
+                {onlyFavoriteTag}
+                {!!runtimeId.length && (
+                  <>
+                    <Divider type="vertical" />
+                    <YakitTag color="info">{runtimeId + ''}</YakitTag>
+                  </>
+                )}
+              </div>
+              <div className={styles['http-history-table-right']}>
+                {webFuzzerPageId && toWebFuzzer && closable && (
+                  <YakitButton
+                    icon={<OutlineReplyIcon />}
+                    size="small"
+                    onClick={() => {
+                      const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+                        YakitRoute.HTTPFuzzer,
+                        webFuzzerPageId,
+                      )
+                      if (currentItem) {
+                        emiter.emit(
+                          'switchSubMenuItem',
+                          JSON.stringify({ pageId: webFuzzerPageId, forceRefresh: true }),
+                        )
+                        emiter.emit('switchMenuItem', JSON.stringify({ route: YakitRoute.HTTPFuzzer }))
+                      } else {
+                        yakitNotify('info', '目标页面已不存在')
+                      }
+                    }}
+                  >
+                    返回
+                  </YakitButton>
+                )}
+                {size?.width && size?.width > 820 ? (
+                  <YakitButton
+                    type="text"
+                    onClick={() => {
+                      setDrawerFormVisible(true)
+                    }}
+                    style={{ padding: 0 }}
+                  >
+                    {t('YakitButton.advancedFilter')}
+                  </YakitButton>
+                ) : (
+                  <Tooltip title={t('YakitButton.advancedFilter')} placement="top">
+                    <YakitButton
+                      type="text2"
+                      icon={<OutlineFilterIcon />}
+                      onClick={() => {
+                        setDrawerFormVisible(true)
+                      }}
+                    />
+                  </Tooltip>
+                )}
+                {isFilter && (
+                  <YakitTag color={'success'} style={{ margin: 0 }}>
+                    {t('HTTPFlowTable.configured')}
+                    <CheckedSvgIcon />
+                  </YakitTag>
+                )}
+                <Divider type="vertical" style={{ margin: 0, top: 1 }} />
+                <div className={classNames(styles['http-history-table-right-item'])}>
+                  {size?.width && size?.width > 860 && (
+                    <div className={styles['http-history-table-right-label']}>{t('HTTPFlowTable.protocolType')}</div>
+                  )}
+                  <YakitSelect
+                    size="small"
+                    value={query?.IsWebsocket || ''}
+                    wrapperStyle={{ width: 100 }}
+                    onSelect={(val) => {
+                      setQuery((prev) => {
+                        return {
+                          ...prev,
+                          IsWebsocket: val,
+                        }
+                      })
+                    }}
+                  >
+                    <YakitSelect.Option value="">{t('HTTPFlowTable.all')}</YakitSelect.Option>
+                    <YakitSelect.Option value="http/https">http/https</YakitSelect.Option>
+                    <YakitSelect.Option value="websocket">websocket</YakitSelect.Option>
+                  </YakitSelect>
+                </div>
+                <HistorySearch
+                  showPopoverSearch={size?.width ? size?.width <= 1200 : true}
+                  addonBeforeOption={[
+                    {
+                      label: t('HistorySearch.keyword'),
+                      value: 'all',
+                    },
+                    {
+                      label: t('HistorySearch.request'),
+                      value: 'request',
+                    },
+                    {
+                      label: t('HistorySearch.response'),
+                      value: 'response',
+                    },
+                  ]}
+                  handleSearch={useMemoizedFn((searchValue, searchType) => {
+                    setQuery((prev) => {
+                      return {
+                        ...prev,
+                        Keyword: searchValue,
+                        KeywordType: searchType,
+                      }
+                    })
+                  })}
+                />
+                <Tooltip title={t('HTTPFlowTable.favorites')} placement="top">
+                  <YakitButton
+                    type={onlyFavorite ? 'outline1' : 'outline2'}
+                    icon={<SolidStarIcon />}
+                    onClick={(e) => {
+                      e.currentTarget.blur()
+                      onToggleOnlyFavorite()
+                    }}
+                  />
+                </Tooltip>
+                <div className={styles['http-history-table-color-swatch']}>
+                  <YakitPopover
+                    overlayClassName={styles['http-history-table-color-popover']}
+                    content={
+                      <ColorSearch
+                        color={color}
+                        setColor={setColor}
+                        onReset={() => setColor([])}
+                        onSure={useMemoizedFn(() => {
+                          if (isShowColor) {
+                            setIsShowColor(false)
+                          }
+                          setQuery((prev) => {
+                            return {
+                              ...prev,
+                              Color: color,
+                            }
+                          })
+                        })}
+                        setIsShowColor={setIsShowColor}
+                      />
+                    }
+                    trigger="click"
+                    placement="bottomLeft"
+                    visible={isShowColor}
+                    onVisibleChange={(visible) => {
+                      if (!visible) setIsShowColor(false)
+                    }}
+                  >
+                    <YakitButton
+                      type="outline2"
+                      isHover={isShowColor || !!color.length}
+                      style={{ padding: 4 }}
+                      onClick={() => setIsShowColor(true)}
+                    >
+                      <ColorSwatchIcon />
+                    </YakitButton>
+                  </YakitPopover>
+                </div>
+                <YakitPopover
+                  overlayClassName={styles['http-history-table-drop-down-popover']}
+                  content={
+                    <YakitMenu
+                      width={150}
+                      selectedKeys={[]}
+                      data={getBatchContextMenu()}
+                      onClick={({ key, keyPath }) => {
+                        onMultipleClick(key, keyPath)
+                      }}
+                      parentTitleClick
+                    />
+                  }
+                  trigger="click"
+                  placement="bottomLeft"
+                  onVisibleChange={setBatchVisible}
+                  visible={batchVisible}
+                >
+                  <YakitButton type="outline2" disabled={selectedRowKeys.length === 0}>
+                    {t('YakitButton.batchOperation')}
+                    <OutlineChevrondownIcon />
+                  </YakitButton>
+                </YakitPopover>
+                <YakitButton
+                  icon={<OutlineCogIcon />}
+                  type={isAdvancedSet ? 'text' : 'text2'}
+                  onClick={() => {
+                    setAdvancedSetVisible(true)
+                  }}
+                  style={{ padding: isAdvancedSet ? 0 : undefined }}
+                >
+                  {isAdvancedSet && t('HTTPFlowTable.configured')}
+                </YakitButton>
+                <YakitButton
+                  type="text2"
+                  icon={<OutlineRefreshIcon />}
+                  onClick={() => {
+                    update(1)
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        }
+        renderKey="Id"
+        data={data}
+        pagination={{
+          total: total,
+          limit: pagination.Limit,
+          page: pagination.Page,
+          onChange: (page) => update(page),
+        }}
+        rowSelection={{
+          isAll: isAllSelect,
+          type: 'checkbox',
+          selectedRowKeys,
+          onSelectAll: onSelectAll,
+          onChangeCheckboxSingle: onSelectChange,
+        }}
+        columns={columns}
+        enableDrag
+        useUpAndDown
+        inMouseEnterTable={inMouseEnterTable}
+        onChange={onTableChange}
+        onRowContextMenu={onRowContextMenu}
+        currentSelectItem={clickRow}
+        onSetCurrentRow={onSetCurrentRow}
+        onRowDoubleClick={onHTTPFlowFilterTableRowDoubleClick}
+        disableDeselect={true}
+      />
+      {/* 高级筛选抽屉 */}
+      <HTTPFlowTableFormConfiguration
+        visible={drawerFormVisible}
+        setVisible={setDrawerFormVisible}
+        filterConfig={filterConfig}
+        saveOk={(config) => {
+          setFilterConfig(config)
+          setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFormConfiguration, JSON.stringify(config))
+        }}
+      ></HTTPFlowTableFormConfiguration>
+      {/* 导出HAR数据 */}
+      {percentVisible && (
+        <ImportExportProgress
+          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
+          visible={percentVisible}
+          title={t('ImportExportProgress.exportHARData')}
+          token={exportToken}
+          apiKey="ExportHTTPFlowStream"
+          onClose={(finish) => {
+            setPercentVisible(false)
+            if (finish) {
+              yakitNotify('success', t('YakitNotification.exportSuccess'))
+            }
+          }}
+        />
+      )}
+      {/* 设置 */}
+      {advancedSetVisible && (
+        <AdvancedSet
+          showBackgroundRefresh={false}
+          binaryDisplayEnabled={binaryDisplayEnabled}
+          columnsAllStr={JSON.stringify(configColumnRef.current.filter((item) => !specialCustoms(item.dataKey)))}
+          onCancel={() => {
+            setAdvancedSetVisible(false)
+          }}
+          onSave={(setting) => {
+            setAdvancedSetVisible(false)
+            const { binaryDisplayEnabled: newBinaryDisplayEnabled, configColumnsAll } = setting
+            if (newBinaryDisplayEnabled !== binaryDisplayEnabled) {
+              binaryDisplayEnabledStore.setEnabled(newBinaryDisplayEnabled)
+            }
+            // 自定义列
+            const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
+            const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
+            const newColOrder = configColumnsAll.map((i) => i.dataKey)
+            if (
+              JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey) ||
+              JSON.stringify(newColOrder) !== JSON.stringify(columnsOrder)
+            ) {
+              setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, unshowKeys + '')
+              setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(newColOrder))
+              setExcludeColumnsKey(newExcludeColumnsKey)
+              setColumnsOrder(newColOrder)
+              // 表格列宽度需要重新计算
+              setTableKeyNumber(uuidv4())
+            }
+          }}
+          defalutColumnsOrder={defalutColumnsOrderRef.current}
+        ></AdvancedSet>
+      )}
+    </div>
+  )
+})

@@ -1,0 +1,167 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { MacUIOpCloseSvgIcon, MacUIOpMaxSvgIcon, MacUIOpMinSvgIcon, MacUIOpRestoreSvgIcon } from './icons'
+import { useMemoizedFn } from 'ahooks'
+import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
+import { useRunNodeStore } from '@/store/runNode'
+import { useTemporaryProjectStore } from '@/store/temporaryProject'
+import { TemporaryProjectPop } from './WinUIOp'
+import { yakitFailed } from '@/utils/notification'
+import classNames from 'classnames'
+import styles from './uiOperate.module.scss'
+import { getReleaseEditionName } from '@/utils/envfile'
+import { yakitApp, yakitWindowControls } from '@/services/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+export interface MacUIOpProp {
+  currentProjectId: string // 当前项目id
+  pageChildrenShow: boolean
+}
+
+export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['layout'])
+  const [show, setShow] = useState<boolean>(false)
+  const [isMax, setIsMax] = useState<boolean>(false)
+
+  const operate = useMemoizedFn((type: 'close' | 'min' | 'full') => {
+    yakitWindowControls.operate(type)
+  })
+
+  useEffect(() => {
+    yakitWindowControls.requestFullScreenState()
+    const offFullScreenState = yakitWindowControls.onFullScreenState((value: boolean) => setIsMax(value))
+
+    const offEnterFull = yakitWindowControls.onEnterFullScreen(() => setIsMax(true))
+    const offLeaveFull = yakitWindowControls.onLeaveFullScreen(() => setIsMax(false))
+
+    return () => {
+      offFullScreenState()
+      offEnterFull()
+      offLeaveFull()
+    }
+  }, [])
+
+  const { runNodeList, clearRunNodeList } = useRunNodeStore()
+  const [closeRunNodeItemVerifyVisible, setCloseRunNodeItemVerifyVisible] = useState<boolean>(false)
+  const { temporaryProjectId, temporaryProjectNoPromptFlag } = useTemporaryProjectStore()
+  const lastTemporaryProjectIdRef = useRef<string>('')
+  const [closeTemporaryProjectVisible, setCloseTemporaryProjectVisible] = useState<boolean>(false)
+  const lastTemporaryProjectNoPromptRef = useRef<boolean>(false)
+
+  useEffect(() => {
+    lastTemporaryProjectNoPromptRef.current = temporaryProjectNoPromptFlag
+  }, [temporaryProjectNoPromptFlag])
+
+  useEffect(() => {
+    lastTemporaryProjectIdRef.current = temporaryProjectId
+  }, [temporaryProjectId])
+
+  const handleCloseSoft = async () => {
+    if (props.pageChildrenShow) {
+      /**
+       * 当关闭按钮出现在项目里面时，点关闭给弹窗的情况
+       * 临时项目的弹窗需要放到最后一个弹窗弹出
+       */
+      // 如果运行节点存在
+      if (Array.from(runNodeList).length) {
+        setCloseRunNodeItemVerifyVisible(true)
+        return
+      }
+
+      // 如果打开得是临时项目
+      if (
+        lastTemporaryProjectIdRef.current &&
+        props.currentProjectId &&
+        lastTemporaryProjectIdRef.current === props.currentProjectId &&
+        !lastTemporaryProjectNoPromptRef.current
+      ) {
+        setCloseTemporaryProjectVisible(true)
+        return
+      }
+    }
+    operate('close')
+  }
+
+  const handleKillAllRunNode = async () => {
+    let promises: (() => Promise<any>)[] = []
+    Array.from(runNodeList).forEach(([key, pid]) => {
+      promises.push(() => yakitApp.killRunNode(Number(pid)))
+    })
+    try {
+      await Promise.allSettled(promises.map((promiseFunc) => promiseFunc()))
+      clearRunNodeList()
+    } catch (error) {
+      yakitFailed(error + '')
+    }
+  }
+
+  return (
+    <div
+      className={styles['mac-ui-op-wrapper']}
+      onClick={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
+    >
+      <div className={styles['mac-ui-op-body']} onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+        <div className={styles['op-btn']} onClick={handleCloseSoft}>
+          {show ? (
+            <MacUIOpCloseSvgIcon />
+          ) : (
+            <div className={styles['op-hidn-btn']}>
+              <div className={classNames(styles['btn-icon'], styles['close-bg-color'])}></div>
+            </div>
+          )}
+        </div>
+        <div className={styles['op-btn']} onClick={(e) => operate('min')}>
+          {show ? (
+            <MacUIOpMinSvgIcon />
+          ) : (
+            <div className={styles['op-hidn-btn']}>
+              <div className={classNames(styles['btn-icon'], styles['min-bg-color'])}></div>
+            </div>
+          )}
+        </div>
+        <div className={styles['op-btn']} onClick={(e) => operate('full')}>
+          {show ? (
+            isMax ? (
+              <MacUIOpRestoreSvgIcon />
+            ) : (
+              <MacUIOpMaxSvgIcon />
+            )
+          ) : (
+            <div className={styles['op-hidn-btn']}>
+              <div className={classNames(styles['btn-icon'], styles['max-bg-color'])}></div>
+            </div>
+          )}
+        </div>
+        {/* 关闭运行节点确认弹框 */}
+        <YakitHint
+          visible={closeRunNodeItemVerifyVisible}
+          title={t('UIOp.closeNodesTitle')}
+          content={t('UIOp.closeNodesContent', { edition: getReleaseEditionName() })}
+          onOk={async () => {
+            await handleKillAllRunNode()
+            setCloseRunNodeItemVerifyVisible(false)
+            handleCloseSoft()
+          }}
+          onCancel={() => {
+            setCloseRunNodeItemVerifyVisible(false)
+          }}
+        />
+
+        {/* 退出临时项目确认弹框 */}
+        {closeTemporaryProjectVisible && (
+          <TemporaryProjectPop
+            title={t('UIOp.closeEditionTitle', { edition: getReleaseEditionName() })}
+            content={t('UIOp.closeTempProjectContent', { edition: getReleaseEditionName() })}
+            onOk={async () => {
+              setCloseTemporaryProjectVisible(false)
+              operate('close')
+            }}
+            onCancel={() => {
+              setCloseTemporaryProjectVisible(false)
+            }}
+          />
+        )}
+      </div>
+    </div>
+  )
+})

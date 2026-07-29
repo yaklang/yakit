@@ -1,0 +1,32 @@
+{
+  "YakPoC": {
+    "byKeyword": "By Keyword",
+    "byGroup": "By Group",
+    "selectPlugin": "Select Plugins"
+  },
+  "PluginListByGroup": {
+    "selectPrompt": "Please select keywords or plugin groups to scan"
+  },
+  "PluginGroupByKeyWord": {
+    "noDataDesc": "One-click to get default keywords and plugins. Please restart {{edition}} after downloading."
+  },
+  "PluginGroupGrid": {
+    "searchGroupNamePlaceholder": "Enter group name to search",
+    "manage": "Manage",
+    "noGroupDataDesc": "One-click to get default groups and plugins, or click Manage to create manually"
+  },
+  "PluginGroupByKeyWordItem": {
+    "plugins": " Plugins"
+  },
+  "YakPoCExecuteContent": {
+    "selectedPlugin": "Selected Plugins",
+    "pluginLog": "Plugin Log",
+    "taskList": "Task List",
+    "pluginExecute": "Plugin Execution"
+  },
+  "PluginExecuteLog": {
+    "target": "Target",
+    "timeConsuming": "Time Consuming",
+    "timeout": "Timeout"
+  }
+}

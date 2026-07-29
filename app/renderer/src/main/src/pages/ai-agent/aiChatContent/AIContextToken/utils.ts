@@ -1,0 +1,308 @@
+import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIModelTypeEnum, AIModelTypeEnumType } from '../../defaultConstant'
+import { AIEchartsDataKey, ContextPressureEchartsProps } from '../../chatTemplate/AIEcharts'
+import { AIContextStatsDetail } from '../../type/aiChat'
+import { AIChatData } from '../../type/aiChat'
+
+const MODEL_TIERS = [
+  AIModelTypeEnum.TierIntelligent,
+  AIModelTypeEnum.TierLightweight,
+  AIModelTypeEnum.TierVision,
+] as const
+
+type PerfData = AIChatData['aiPerfData']
+
+/** 比较两个 Record<tier, any[]> 类型字段在各模型层级的数组长度是否变化 */
+export const isTierArrayLengthChanged = (
+  prev: Record<string, any[]> | undefined,
+  next: Record<string, any[]> | undefined,
+) => {
+  return MODEL_TIERS.some((tier) => prev?.[tier]?.length !== next?.[tier]?.length)
+}
+
+export const isPressurePerfChanged = (
+  prev: AIChatData['aiPerfData']['pressure'] | null,
+  next: AIChatData['aiPerfData']['pressure'] | null,
+) => {
+  if (!prev && !next) return false
+  if (!prev || !next) return true
+  return isTierArrayLengthChanged(prev, next)
+}
+
+export const isFirstCostPerfChanged = (
+  prev: AIChatData['aiPerfData']['firstCost'] | null,
+  next: AIChatData['aiPerfData']['firstCost'] | null,
+) => {
+  if (!prev && !next) return false
+  if (!prev || !next) return true
+  return isTierArrayLengthChanged(prev, next)
+}
+
+export const isConsumptionPerfChanged = (
+  prev: AIAgentGrpcApi.Consumption | null,
+  next: AIAgentGrpcApi.Consumption | null,
+) => {
+  if (!prev && !next) return false
+  if (!prev || !next) return true
+  if (
+    prev.input_consumption !== next.input_consumption ||
+    prev.output_consumption !== next.output_consumption ||
+    prev.cache_hit_token !== next.cache_hit_token
+  ) {
+    return true
+  }
+  const prevTier = prev.tier_consumption
+  const nextTier = next.tier_consumption
+  return MODEL_TIERS.some(
+    (tier) => Object.keys(prevTier?.[tier] || {}).length !== Object.keys(nextTier?.[tier] || {}).length,
+  )
+}
+
+/** 比较 aiPerfData 是否发生了需要触发更新的变化 */
+export const isPerfDataChanged = (prev: PerfData, next: PerfData): boolean => {
+  const prevConsumption = prev.consumption
+  const nextConsumption = next.consumption
+  if (
+    prevConsumption?.input_consumption !== nextConsumption?.input_consumption ||
+    prevConsumption?.output_consumption !== nextConsumption?.output_consumption ||
+    prevConsumption?.cache_hit_token !== nextConsumption?.cache_hit_token
+  ) {
+    return true
+  }
+
+  // 各模型层级的 consumption keys 数量
+  const prevTier = prev.consumption?.tier_consumption
+  const nextTier = next.consumption?.tier_consumption
+  if (
+    MODEL_TIERS.some(
+      (tier) => Object.keys(prevTier?.[tier] || {}).length !== Object.keys(nextTier?.[tier] || {}).length,
+    )
+  )
+    return true
+
+  // 各模型层级的数组类字段长度
+  if (
+    isTierArrayLengthChanged(prev.pressure, next.pressure) ||
+    isTierArrayLengthChanged(prev.firstCost, next.firstCost) ||
+    isTierArrayLengthChanged(prev.totalCost, next.totalCost)
+  )
+    return true
+
+  // 上下文字节统计
+  const prevStats = prev.contextStats
+  const nextStats = next.contextStats
+  if (prevStats?.prompt_bytes !== nextStats?.prompt_bytes) return true
+  const prevD = prevStats?.data
+  const nextD = nextStats?.data
+  if (prevD?.times.length !== nextD?.times.length) return true
+
+  const prevOrderLen = prevD?.role_order?.length ?? 0
+  const nextOrderLen = nextD?.role_order?.length ?? 0
+  if (prevOrderLen > 0 || nextOrderLen > 0) {
+    if (prevOrderLen !== nextOrderLen) return true
+    if (prevOrderLen && prevD?.role_order?.join('|') !== nextD?.role_order?.join('|')) return true
+    const order = nextD?.role_order?.length ? nextD.role_order : prevD?.role_order || []
+    for (const role of order) {
+      if (prevD?.role_series?.[role]?.length !== nextD?.role_series?.[role]?.length) return true
+    }
+  }
+
+  // 上下文成分
+  if (prev.contextSections?.sections.length !== next.contextSections?.sections.length) return true
+
+  return false
+}
+
+/**
+ * 处理压力数据，获取echarts需要的数据格式
+ * @param pressure 压力未处理前的数据
+ * @param sliceLength 截取长度，默认不截取，获取全部数据
+ * @returns
+ */
+export const getPressuresData = (
+  pressure?: Record<AIModelTypeEnumType, AIAgentGrpcApi.Pressure[]>,
+  sliceLength?: number,
+) => {
+  let data: Record<AIModelTypeEnumType, AIEchartsDataKey[]> = {
+    [AIModelTypeEnum.TierIntelligent]: [],
+    [AIModelTypeEnum.TierLightweight]: [],
+    [AIModelTypeEnum.TierVision]: [],
+  }
+  let xData: Record<AIModelTypeEnumType, number[]> = {
+    [AIModelTypeEnum.TierIntelligent]: [],
+    [AIModelTypeEnum.TierLightweight]: [],
+    [AIModelTypeEnum.TierVision]: [],
+  }
+  // 要求总数据的最大值，不受sliceLength的影响
+  let maxValue: Record<AIModelTypeEnumType, number> = {
+    [AIModelTypeEnum.TierIntelligent]: 0,
+    [AIModelTypeEnum.TierLightweight]: 0,
+    [AIModelTypeEnum.TierVision]: 0,
+  }
+  if (!pressure) return { data, xData, maxValue }
+  if (!!pressure?.intelligent?.length) {
+    let intelligent: AIAgentGrpcApi.Pressure[] = pressure?.intelligent
+    maxValue.intelligent = Math.max(...intelligent.map((item) => item.current_cost_token_size || 0))
+    if (!!sliceLength) {
+      intelligent = pressure?.intelligent.slice(-sliceLength)
+    }
+
+    intelligent.forEach((item) => {
+      data.intelligent.push({
+        modelName: item.model_name || '',
+        value: item.current_cost_token_size,
+      })
+      xData.intelligent.push(item.timestamp || 0)
+    })
+  }
+  if (!!pressure?.lightweight?.length) {
+    let lightweight: AIAgentGrpcApi.Pressure[] = pressure?.lightweight
+    maxValue.lightweight = Math.max(...lightweight.map((item) => item.current_cost_token_size || 0))
+    if (!!sliceLength) {
+      lightweight = pressure?.lightweight.slice(-sliceLength)
+    }
+    pressure?.lightweight.slice(-100).forEach((item) => {
+      data.lightweight.push({
+        modelName: item.model_name || '',
+        value: item.current_cost_token_size,
+      })
+      xData.lightweight.push(item.timestamp || 0)
+    })
+  }
+  if (!!pressure?.vision?.length) {
+    let vision: AIAgentGrpcApi.Pressure[] = pressure?.vision
+    maxValue.vision = Math.max(...vision.map((item) => item.current_cost_token_size || 0))
+    if (!!sliceLength) {
+      vision = pressure?.vision.slice(-sliceLength)
+    }
+    pressure?.vision.slice(-100).forEach((item) => {
+      data.vision.push({
+        modelName: item.model_name || '',
+        value: item.current_cost_token_size,
+      })
+      xData.vision.push(item.timestamp || 0)
+    })
+  }
+  return { data, xData, maxValue }
+}
+
+/**
+ * 处理响应速度数据，获取echarts需要的数据格式
+ * @param cost 响应速度未处理前的数据
+ * @param sliceLength 截取长度，默认不截取，获取全部数据
+ * @returns
+ */
+export const getCostData = (
+  cost?: Record<AIModelTypeEnumType, AIAgentGrpcApi.AIFirstCostMS[]>,
+  sliceLength?: number,
+) => {
+  let data: ContextPressureEchartsProps['dataEcharts']['data'] = {
+    [AIModelTypeEnum.TierIntelligent]: [],
+    [AIModelTypeEnum.TierLightweight]: [],
+    [AIModelTypeEnum.TierVision]: [],
+  }
+  let xData: Record<AIModelTypeEnumType, number[]> = {
+    [AIModelTypeEnum.TierIntelligent]: [],
+    [AIModelTypeEnum.TierLightweight]: [],
+    [AIModelTypeEnum.TierVision]: [],
+  }
+  // 要求总数据的最大值，不受sliceLength的影响
+  let maxValue: Record<AIModelTypeEnumType, number> = {
+    [AIModelTypeEnum.TierIntelligent]: 0,
+    [AIModelTypeEnum.TierLightweight]: 0,
+    [AIModelTypeEnum.TierVision]: 0,
+  }
+  if (!cost) return { data, xData, maxValue }
+  if (!!cost?.intelligent?.length) {
+    let intelligent: AIAgentGrpcApi.AIFirstCostMS[] = cost?.intelligent
+    maxValue.intelligent = Math.max(...intelligent.map((item) => item.ms || 0))
+    if (!!sliceLength) {
+      intelligent = cost?.intelligent.slice(-sliceLength)
+    }
+    intelligent.forEach((item) => {
+      data.intelligent.push({
+        modelName: item.model_name || '',
+        value: item.ms,
+      })
+      xData.intelligent.push(item.timestamp || 0)
+    })
+  }
+  if (!!cost?.lightweight?.length) {
+    let lightweight: AIAgentGrpcApi.AIFirstCostMS[] = cost?.lightweight
+    maxValue.lightweight = Math.max(...lightweight.map((item) => item.ms || 0))
+    if (!!sliceLength) {
+      lightweight = cost?.lightweight.slice(-sliceLength)
+    }
+    lightweight.forEach((item) => {
+      data.lightweight.push({
+        modelName: item.model_name || '',
+        value: item.ms,
+      })
+      xData.lightweight.push(item.timestamp || 0)
+    })
+  }
+  if (!!cost?.vision?.length) {
+    let vision: AIAgentGrpcApi.AIFirstCostMS[] = cost?.vision
+    maxValue.vision = Math.max(...vision.map((item) => item.ms || 0))
+    if (!!sliceLength) {
+      vision = cost?.vision.slice(-sliceLength)
+    }
+    vision.forEach((item) => {
+      data.vision.push({
+        modelName: item.model_name || '',
+        value: item.ms,
+      })
+      xData.vision.push(item.timestamp || 0)
+    })
+  }
+  return { data, xData, maxValue }
+}
+
+/**
+ * 处理压力数据,获取每个类型的阈值
+ * @param pressure 压力未处理前的数据
+ * @returns
+ */
+export const getThreshold = (pressure?: Record<AIModelTypeEnumType, AIAgentGrpcApi.Pressure[]>) => {
+  let threshold: number = 0
+  const intelligentLength = pressure?.intelligent?.length || 0
+  const lightweightLength = pressure?.lightweight?.length || 0
+  const visionLength = pressure?.vision?.length || 0
+  const maxLength = Math.max(intelligentLength, lightweightLength, visionLength)
+  if (!!pressure?.intelligent?.length && maxLength === intelligentLength) {
+    const i = pressure.intelligent.length
+    threshold = pressure.intelligent[i - 1].pressure_token_size || 0
+  }
+  if (!!pressure?.lightweight?.length && maxLength === lightweightLength) {
+    const l = pressure.lightweight.length
+    threshold = pressure.lightweight[l - 1].pressure_token_size || 0
+  }
+  if (!!pressure?.vision?.length && maxLength === visionLength) {
+    const v = pressure.vision.length
+    threshold = pressure.vision[v - 1].pressure_token_size || 0
+  }
+  return threshold
+}
+
+export const getContextStatsData = (contextStats?: AIContextStatsDetail['data']) => {
+  if (!contextStats) {
+    return {
+      times: [],
+      total_prompt_bytes: [],
+      total_prompt_tokens: [],
+      role_order: [],
+      role_labels: {},
+      role_series: {},
+      role_tokens: {},
+    }
+  }
+  return {
+    times: contextStats.times || [],
+    total_prompt_bytes: contextStats.total_prompt_bytes || [],
+    total_prompt_tokens: contextStats.total_prompt_tokens || [],
+    role_order: contextStats.role_order || [],
+    role_labels: contextStats.role_labels || {},
+    role_series: contextStats.role_series || {},
+    role_tokens: contextStats.role_tokens || {},
+  }
+}

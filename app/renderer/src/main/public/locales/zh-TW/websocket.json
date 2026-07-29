@@ -1,0 +1,24 @@
+{
+  "WebsocketFuzzer": {
+    "clear_send_data": "清空傳送資料",
+    "selectDataFrame": "選擇 Websocket Data Frame 以檢視詳情",
+    "request": "請求",
+    "response": "響應",
+    "connected": "已建立連線",
+    "notConnected": "連線未建立",
+    "extraParams": "設定額外引數",
+    "setProxy": "設定代理",
+    "setTimeout": "設定超時(s)",
+    "closeConnectionConfirm": "確定要關閉 Websocket 連線嗎？",
+    "disconnect": "斷開",
+    "connect": "連線",
+    "buildingConnection": "正在構建 Websocket 連線",
+    "sendData": "傳送資料",
+    "sendToServer": "傳送到伺服器",
+    "realtimePreview": "Websocket 資料幀實時預覽",
+    "serverResponse": "伺服器響應",
+    "clientRequest": "客戶端請求",
+    "frameDetails": "資料幀詳情",
+    "dataSize": "資料大小: {{size}}"
+  }
+}

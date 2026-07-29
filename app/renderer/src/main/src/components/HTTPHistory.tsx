@@ -1,0 +1,1168 @@
+import React, { CSSProperties, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import 'react-resizable/css/styles.css'
+import {
+  HistoryTableTitleShow,
+  HTTP_FLOW_FAVORITE_TAG,
+  HTTPFlow,
+  HTTPFlowsFieldGroupResponse,
+  HTTPFlowTable,
+} from './HTTPFlowTable/HTTPFlowTable'
+import { HTTPFlowDetailMini } from './HTTPFlowDetail'
+import {
+  useControllableValue,
+  useCreation,
+  useDebounceEffect,
+  useInViewport,
+  useMemoizedFn,
+  useUpdateEffect,
+} from 'ahooks'
+import { useStore } from '@/store/mitmState'
+import { MitmExtractAggregateFlowFilterRow, YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import { YakitResizeBox } from './yakitUI/YakitResizeBox/YakitResizeBox'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { v4 as uuidv4 } from 'uuid'
+import classNames from 'classnames'
+import emiter from '@/utils/eventBus/eventBus'
+import { WebTree } from './WebTree/WebTree'
+import {
+  OutlineBotIcon,
+  OutlineFileSlidersIcon,
+  OutlineFilterIcon,
+  OutlineLog2Icon,
+  OutlineMessageCirclePlusIcon,
+  OutlinePlusIcon,
+  OutlineSearchIcon,
+  OutlineXIcon,
+} from '@/assets/icon/outline'
+import { YakitInput } from './yakitUI/YakitInput/YakitInput'
+import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
+import {
+  BaiduNetdiskIcon,
+  BashIcon,
+  BurpSuiteCommunityIcon,
+  BurpSuiteProfessionalIcon,
+  ChromeIcon,
+  ClashIconSvgIcon,
+  Cse360Icon,
+  CursorIcon,
+  DingtalkIcon,
+  DockerIcon,
+  ExcelIcon,
+  FeishuIcon,
+  FinderIcon,
+  FirefoxIcon,
+  JavaIcon,
+  MsedgeIcon,
+  OpenvpnIcon,
+  OperaIcon,
+  PowerpointIcon,
+  ProxifierIcon,
+  QqIcon,
+  Se360Icon,
+  TelegramIcon,
+  UToolsIcon,
+  VMwareIcon,
+  VscodeIcon,
+  WechatIcon,
+  WordIconIcon,
+  ZSHIcon,
+} from '@/assets/commonProcessIcons'
+import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
+import { YakitButton } from './yakitUI/YakitButton/YakitButton'
+import { ClockIcon, RefreshIcon } from '@/assets/newIcon'
+import { Tooltip } from 'antd'
+import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
+import { YakitCheckbox } from './yakitUI/YakitCheckbox/YakitCheckbox'
+import ReactResizeDetector from 'react-resize-detector'
+import { RemoteHistoryGV } from '@/enums/history'
+import styles from './HTTPHistory.module.scss'
+
+import MITMContext from '@/pages/mitm/Context/MITMContext'
+import { RemoteGV } from '@/yakitGV'
+import { cloneDeep } from 'lodash'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitSideTab } from './yakitSideTab/YakitSideTab'
+import { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
+import { JSONParseLog } from '@/utils/tool'
+import { histroyAiStore } from '@/pages/ai-agent/store/ChatDataStore'
+import { HistoryAIReActChatProvider, useHistoryAIReActChat } from './historyAIReActChat'
+import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
+import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
+import { yakitNotify } from '@/utils/notification'
+import { FiltersItemProps } from './TableVirtualResize/TableVirtualResizeType'
+import { HTTPFlowRuleDataFilter } from './HTTPFlowTable/HTTPFlowRuleDataFilter'
+import { useCampare } from '@/hook/useCompare/useCompare'
+import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
+
+const { ipcRenderer } = window.require('electron')
+const { YakitPanel } = YakitCollapse
+
+export interface HTTPPacketFuzzable {
+  defaultHttps?: boolean
+  sendToWebFuzzer?: boolean | (() => any) | ((isHttps: boolean, request: string) => any)
+  defaultPacket?: string
+  downstreamProxyStr?: string
+}
+
+export interface HTTPFlowBodyByIdRequest {
+  Id?: number
+  IsRequest: boolean
+  BufSize?: number
+  RuntimeId?: string
+  IsRisk?: boolean
+}
+
+// 使用 HTTPHistory 或者 编辑器 控件的来源页面
+export type HTTPHistorySourcePageType =
+  | 'MITM'
+  | 'History'
+  | 'Plugin'
+  | 'History_Analysis_ruleData'
+  | 'HTTPHistoryFilter'
+interface HTTPHistoryProp extends HistoryTableTitleShow {
+  pageType: HTTPHistorySourcePageType
+  params?: YakQueryHTTPFlowRequest
+}
+export const HistoryTab: YakitTabsProps[] = [
+  {
+    icon: <OutlineLog2Icon />,
+    label: 'HTTPHistory.websiteTree',
+    value: 'web-tree',
+  },
+  {
+    icon: <OutlineFilterIcon />,
+    label: 'RangeInputNumberTableWrapper.filter',
+    value: 'process',
+  },
+  {
+    icon: <OutlineFileSlidersIcon />,
+    label: 'HTTPFlowExtractedDataTable.ruleData',
+    value: 'rules',
+  },
+  {
+    icon: <OutlineBotIcon />,
+    label: 'HTTPHistory.AI',
+    value: 'ai',
+  },
+]
+const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const { pageType, ...historyProps } = props
+  const { t, i18n } = useI18nNamespaces(['history'])
+  // #region 左侧tab
+  const [activeKey, setActiveKey] = useState<string>('web-tree')
+  const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
+  useEffect(() => {
+    getRemoteValue(RemoteHistoryGV.HistoryLeftTabs).then((setting: string) => {
+      if (setting) {
+        try {
+          const tabs = JSONParseLog(setting, { page: 'HTTPHistory', fun: 'RemoteHistoryGV.HistoryLeftTabs' })
+          setOpenTabsFlag(tabs.contShow)
+          onActiveKey(tabs.key)
+        } catch (error) {}
+      }
+    })
+  }, [])
+
+  const onActiveKey = useMemoizedFn((key) => {
+    if (key === 'ai') {
+      setShowFreeChat(true)
+    }
+    setActiveKey(key)
+  })
+
+  useDebounceEffect(
+    () => {
+      setRemoteValue(RemoteHistoryGV.HistoryLeftTabs, JSON.stringify({ contShow: openTabsFlag, key: activeKey }))
+    },
+    [openTabsFlag, activeKey],
+    { wait: 300 },
+  )
+
+  const ResizeBoxProps = useCreation(() => {
+    let p = {
+      firstRatio: '20%',
+      secondRatio: '80%',
+    }
+
+    if (activeKey === 'rules' && openTabsFlag) {
+      p.firstRatio = '470px'
+    } else if (openTabsFlag) {
+      p.firstRatio = '20%'
+    } else {
+      p.firstRatio = '24px'
+    }
+    return p
+  }, [openTabsFlag, activeKey])
+  // #endregion
+
+  // #region 网站树、进程
+  const [refreshFlag, setRefreshFlag] = useState<boolean>(false)
+  const webTreeRef = useRef<any>()
+  const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
+  const [includeInUrl, setIncludeInUrl] = useState<string[]>([])
+  const [treeQueryparams, setTreeQueryparams] = useState<string>('')
+
+  const [curProcess, setCurProcess] = useState<string[]>([])
+  const [processQueryparams, setProcessQueryparams] = useState<string>('')
+  const [curTags, setCurTags] = useState<string[]>([])
+  const httpHistoryRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(httpHistoryRef)
+  const { builtinTagList, setBuiltinTagList } = useBuiltinTagList(true, inViewport)
+  const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
+  const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
+  const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
+  const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+
+  const clearHttpFlowSelection = useMemoizedFn(() => {
+    historyAIReActChatBridge.clearTableSelection()
+  })
+
+  const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
+  useDebounceEffect(() => {
+    historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
+  }, [compareSelectedHttpFlowIds])
+
+  const onSetSelectedHttpFlowIds = useMemoizedFn((ids: string[]) => {
+    setSelectedHttpFlowIds(ids)
+  })
+
+  const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
+    historyAIReActChatBridge.registerClearTableSelection(() => {
+      api.reset()
+    })
+    historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
+      api.deselectId(id)
+    })
+  })
+
+  const mitmContent = useContext(MITMContext)
+
+  const mitmVersion = useCreation(() => {
+    return mitmContent.mitmStore.version
+  }, [mitmContent.mitmStore.version])
+
+  // 表格参数改变
+  const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
+    try {
+      const treeQuery = JSONParseLog(queryParams, { page: 'HTTPHistory', fun: 'onQueryParams-treeQuery' }) || {}
+      delete treeQuery.IncludeInUrl
+      setTreeQueryparams(JSON.stringify(treeQuery))
+      setRefreshFlag(!!execFlag)
+
+      const processQuery = JSONParseLog(queryParams, { page: 'HTTPHistory', fun: 'onQueryParams-processQuery' }) || {}
+      delete processQuery.ProcessName
+      delete processQuery.Tags
+      setProcessQueryparams(JSON.stringify(processQuery))
+      setRulesQueryparams(queryParams || '')
+
+      if (pageType === 'MITM') {
+        emiter.emit(
+          'onMITMLogProcessQuery',
+          JSON.stringify({ queryStr: JSON.stringify(processQuery), version: mitmVersion }),
+        )
+      }
+    } catch (error) {}
+  })
+
+  // 跳转网站树指定节点
+  const onJumpWebTree = useMemoizedFn((value) => {
+    if (webTreeRef.current) {
+      const val = JSONParseLog(value, { page: 'HTTPHistory', fun: 'onJumpWebTree' })
+      const host = val.host
+      webTreeRef.current.onJumpWebTree(host)
+      setOpenTabsFlag(true)
+      onActiveKey('web-tree')
+    }
+  })
+  useEffect(() => {
+    if (pageType === 'History') {
+      emiter.on('onHistoryJumpWebTree', onJumpWebTree)
+      return () => {
+        emiter.off('onHistoryJumpWebTree', onJumpWebTree)
+      }
+    }
+  }, [pageType])
+
+  // 用于控制HTTPFlowRealTimeTableAndEditor
+  const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
+  const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
+  // #endregion
+
+  return (
+    <div className={styles.hTTPHistory} ref={httpHistoryRef}>
+      <YakitResizeBox
+        isVer={false}
+        freeze={openTabsFlag}
+        isRecalculateWH={openTabsFlag}
+        firstNode={() => (
+          <div className={styles['hTTPHistory-left']}>
+            <YakitSideTab
+              key={i18n.language}
+              t={t}
+              yakitTabs={HistoryTab}
+              activeKey={activeKey}
+              onActiveKey={onActiveKey}
+              show={openTabsFlag}
+              setShow={setOpenTabsFlag}
+            />
+            <div className={styles['tab-content']}>
+              <ReactResizeDetector
+                onResize={(width, height) => {
+                  if (!width || !height) return
+                  setTreeWrapHeight(height)
+                }}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={'debounce'}
+                refreshRate={50}
+              />
+              <div
+                className={styles['webTree-wrapper']}
+                style={{ display: activeKey === 'web-tree' ? 'block' : 'none' }}
+              >
+                <WebTree
+                  ref={webTreeRef}
+                  height={treeWrapHeight - 30}
+                  searchPlaceholder={t('HTTPHistory.pleaseEnterDomainToSearch')}
+                  treeExtraQueryparams={treeQueryparams}
+                  refreshTreeFlag={refreshFlag}
+                  multiple
+                  onSelectNodesKeys={(selectKeys) => setIncludeInUrl(selectKeys.map((i) => i + ''))}
+                ></WebTree>
+              </div>
+              <div
+                className={styles['process-wrapper']}
+                style={{ display: activeKey === 'process' ? 'block' : 'none' }}
+              >
+                <HistoryProcess
+                  queryparamsStr={processQueryparams}
+                  refreshProcessFlag={refreshFlag}
+                  curProcess={curProcess}
+                  curTags={curTags}
+                  onSetCurTags={setCurTags}
+                  onSetCurProcess={setCurProcess}
+                  setBuiltinTagList={setBuiltinTagList}
+                  resetTableAndEditorShow={(table, editor) => {
+                    setOnlyShowFirstNode(table)
+                    setSecondNodeVisible(editor)
+                  }}
+                ></HistoryProcess>
+              </div>
+              <div className={styles['process-wrapper']} style={{ display: activeKey === 'rules' ? 'block' : 'none' }}>
+                <HTTPFlowRuleDataFilter
+                  baseParams={historyProps.params}
+                  queryparamsStr={rulesQueryparams}
+                  onSetFilterRows={setMitmAggregateFilterRows}
+                  httpFlowTableDataLength={httpFlowTableDataLength}
+                  resetTableAndEditorShow={(table, editor) => {
+                    setOnlyShowFirstNode(table)
+                    setSecondNodeVisible(editor)
+                  }}
+                />
+              </div>
+              {activeKey === 'ai' &&
+                renderHistoryAIReActChat({
+                  externalParameters: {
+                    isOpen: false,
+                    rightIcon: {
+                      history: true,
+                      dataDetails: { type: 'text2' },
+                      add: (
+                        <Tooltip title={t('HTTPHistory.new_session')}>
+                          <YakitButton
+                            type="text2"
+                            icon={<OutlineMessageCirclePlusIcon />}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
+                          />
+                        </Tooltip>
+                      ),
+                      close: (
+                        <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
+                      ),
+                      taskDetails: true,
+                    },
+                    footerRightTypes: [
+                      {
+                        type: AIInputFooterRightEnum.AIFocusMode,
+                        props: {
+                          value: focusModeLoop,
+                          onChange: () => {},
+                          disabled: true,
+                        },
+                      },
+                    ],
+                    filterMentionType: ['focusMode'],
+                    onHttpFlowRemove: clearHttpFlowSelection,
+                    onAfterSubmit: clearHttpFlowSelection,
+                  },
+                })}
+            </div>
+          </div>
+        )}
+        lineStyle={{ display: '' }}
+        firstMinSize={openTabsFlag ? '325px' : '24px'}
+        secondMinSize={720}
+        secondNode={
+          <div className={styles['hTTPHistory-right']}>
+            <HTTPFlowRealTimeTableAndEditor
+              pageType={pageType}
+              includeInUrl={includeInUrl}
+              curProcess={curProcess}
+              curTags={curTags}
+              builtinTagList={builtinTagList}
+              mitmAggregateFilterRows={mitmAggregateFilterRows}
+              onQueryParams={onQueryParams}
+              onSetTableTotal={setHttpFlowTableDataLength}
+              onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+              onRegisterTableSelectApi={onRegisterTableSelectApi}
+              setOnlyShowFirstNode={setOnlyShowFirstNode}
+              setSecondNodeVisible={setSecondNodeVisible}
+              showHistoryAnalysisBtn
+              {...historyProps}
+            />
+          </div>
+        }
+        secondNodeStyle={{
+          padding: undefined,
+          display: '',
+        }}
+        {...ResizeBoxProps}
+      />
+    </div>
+  )
+}
+
+export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
+  return (
+    <HistoryAIReActChatProvider cacheDataStore={histroyAiStore} focusModeLoop="http_flow_analyze">
+      <HTTPHistoryInner {...props} />
+    </HistoryAIReActChatProvider>
+  )
+}
+
+interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
+  pageType: HTTPHistorySourcePageType
+  runtimeId?: string
+  mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
+  filterTagDom?: ReactNode
+  httpHistoryTableTitleStyle?: CSSProperties
+  containerClassName?: string
+  titleHeight?: number
+  wrapperStyle?: CSSProperties
+  showFlod?: boolean
+  params?: YakQueryHTTPFlowRequest
+  includeInUrl?: string[]
+  curProcess?: string[]
+  curTags?: string[]
+  builtinTagList?: FiltersItemProps[]
+  onQueryParams?: (queryParams: string, execFlag: boolean) => void
+  downstreamProxyStr?: string
+  onSetTableTotal?: (t: number) => void
+  onSetTableSelectNum?: (s: number) => void
+  onSetHasNewData?: (f: boolean) => void
+  onSetSelectedHttpFlowIds?: (ids: string[]) => void
+  onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
+  setOnlyShowFirstNode?: (only: boolean) => void
+  setSecondNodeVisible?: (show: boolean) => void
+  /** 预设排除列，透传至 `HTTPFlowTable.defaultExcludeColumnsKey` */
+  defaultExcludeColumnsKey?: string[]
+}
+/**
+ * 此组件用于实时流量表和编辑器
+ */
+export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEditorProps> = React.memo((props) => {
+  const {
+    pageType,
+    runtimeId,
+    mitmAggregateFilterRows = [],
+    wrapperStyle,
+    httpHistoryTableTitleStyle,
+    titleHeight,
+    containerClassName,
+    params,
+    includeInUrl,
+    filterTagDom,
+    curProcess,
+    curTags,
+    builtinTagList,
+    onQueryParams,
+    downstreamProxyStr,
+    onSetTableTotal,
+    onSetTableSelectNum,
+    onSetHasNewData,
+    onSetSelectedHttpFlowIds,
+    onRegisterTableSelectApi,
+    noTableTitle = false,
+    showSourceType = true,
+    showAdvancedSearch = true,
+    showProtocolType = true,
+    showHistorySearch = true,
+    showColorSwatch = true,
+    showBatchActions = true,
+    showDelAll = true,
+    showSetting = true,
+    showRefresh = true,
+    showFlod = true,
+    showHistoryAnalysisBtn = false,
+    onHistoryAnalysisClick,
+    defaultExcludeColumnsKey,
+  } = props
+
+  const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(hTTPFlowRealTimeTableAndEditorRef)
+
+  // History Id 用于区分每个history控件
+  const [historyId, setHistoryId] = useState<string>(uuidv4())
+  const [highlightSearch, setHighlightSearch] = useState('')
+
+  // #region mitm页面Forward数据后需要刷新页面数据
+  const { isRefreshHistory, setIsRefreshHistory } = useStore()
+  const [refresh, setRefresh] = useState<boolean>(false)
+  useUpdateEffect(() => {
+    if (isRefreshHistory && ['History', 'MITM'].includes(pageType)) {
+      setRefresh((prev) => !prev)
+      setIsRefreshHistory(false)
+    }
+  }, [inViewport])
+  // #endregion
+
+  // #region mitm页面配置代理，其余pageType使用该组件通过获取缓存，发送到webFuzzer带过去
+  const [downstreamProxy, setDownstreamProxy] = useState<string>(downstreamProxyStr || '')
+  useDebounceEffect(
+    () => {
+      if (inViewport) {
+        setDownstreamProxy(downstreamProxyStr || '')
+      }
+    },
+    [downstreamProxyStr, inViewport, pageType],
+    { wait: 300 },
+  )
+  // #endregion
+
+  // #region 流量表导出数据，统一history页面刷新
+  const [importRefresh, setImportRefresh] = useState<boolean>(false)
+  const onRefreshImportHistoryTable = useMemoizedFn(() => {
+    setImportRefresh((prev) => !prev)
+  })
+  useEffect(() => {
+    if (pageType === 'History') {
+      emiter.on('onRefreshImportHistoryTable', onRefreshImportHistoryTable)
+      return () => {
+        emiter.off('onRefreshImportHistoryTable', onRefreshImportHistoryTable)
+      }
+    }
+  }, [pageType])
+  // #endregion
+
+  // #region 编辑器部分是否显示
+  const [onlyShowFirstNode, setOnlyShowFirstNode] = useControllableValue<boolean>(props, {
+    defaultValue: true,
+    valuePropName: 'onlyShowFirstNode',
+    trigger: 'setOnlyShowFirstNode',
+  })
+  const [secondNodeVisible, setSecondNodeVisible] = useControllableValue<boolean>({
+    defaultValue: false,
+    valuePropName: 'secondNodeVisible',
+    trigger: 'setSecondNodeVisible',
+  })
+  const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
+  useEffect(() => {
+    setSecondNodeVisible(!onlyShowFirstNode)
+  }, [onlyShowFirstNode])
+  const lastRatioRef = useRef<{ firstRatio: string; secondRatio: string }>({
+    firstRatio: '50%',
+    secondRatio: '50%',
+  })
+  useEffect(() => {
+    getRemoteValue(RemoteGV.historyTableYakitResizeBox).then((res) => {
+      if (res) {
+        try {
+          const { firstSizePercent, secondSizePercent } = JSONParseLog(res, {
+            page: 'HTTPHistory',
+            fun: 'RemoteGV.historyTableYakitResizeBox',
+          })
+          lastRatioRef.current = {
+            firstRatio: firstSizePercent,
+            secondRatio: secondSizePercent,
+          }
+        } catch (error) {}
+      }
+    })
+  })
+  const ResizeBoxProps = useCreation(() => {
+    let p = cloneDeep(lastRatioRef.current)
+    if (onlyShowFirstNode) {
+      p.firstRatio = '100%'
+      p.secondRatio = '0%'
+    }
+    return p
+  }, [onlyShowFirstNode])
+  // #endregion
+
+  return (
+    <div
+      className={styles['hTTPFlowRealTimeTableAndEditor']}
+      ref={hTTPFlowRealTimeTableAndEditorRef}
+      style={wrapperStyle}
+    >
+      <YakitResizeBox
+        isVer={true}
+        // 隐藏详情只需要展示第一个节点
+        onClickHiddenBox={() => setOnlyShowFirstNode(true)}
+        firstNode={() => (
+          <div style={{ width: '100%', height: '100%' }}>
+            <HTTPFlowTable
+              containerClassName={containerClassName}
+              runTimeId={runtimeId}
+              mitmAggregateFilterRows={mitmAggregateFilterRows}
+              noTableTitle={noTableTitle}
+              showSourceType={showSourceType}
+              showAdvancedSearch={showAdvancedSearch}
+              showProtocolType={showProtocolType}
+              showHistorySearch={showHistorySearch}
+              showColorSwatch={showColorSwatch}
+              showBatchActions={showBatchActions}
+              showDelAll={showDelAll}
+              showSetting={showSetting}
+              showRefresh={showRefresh}
+              params={params}
+              includeInUrl={includeInUrl}
+              onSelected={(i) => {
+                setSelectedHTTPFlow(i)
+              }}
+              filterTagDom={filterTagDom}
+              onSearch={setHighlightSearch}
+              onlyShowFirstNode={onlyShowFirstNode}
+              setOnlyShowFirstNode={setOnlyShowFirstNode}
+              refresh={refresh}
+              importRefresh={importRefresh}
+              pageType={pageType}
+              historyId={historyId}
+              onQueryParams={onQueryParams}
+              inViewport={inViewport}
+              downstreamProxyStr={downstreamProxy}
+              ProcessName={curProcess}
+              TagsFilter={curTags}
+              builtinTagList={builtinTagList}
+              onSetTableTotal={onSetTableTotal}
+              onSetTableSelectNum={onSetTableSelectNum}
+              onSetHasNewData={onSetHasNewData}
+              onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+              onRegisterTableSelectApi={onRegisterTableSelectApi}
+              httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
+              titleHeight={titleHeight}
+              showHistoryAnalysisBtn={showHistoryAnalysisBtn}
+              onHistoryAnalysisClick={onHistoryAnalysisClick}
+              defaultExcludeColumnsKey={defaultExcludeColumnsKey}
+            />
+          </div>
+        )}
+        secondNode={
+          <div style={{ width: '100%', height: '100%' }}>
+            {secondNodeVisible && (
+              <HTTPFlowDetailMini
+                noHeader={true}
+                search={highlightSearch}
+                id={selected?.Id || 0}
+                sendToWebFuzzer={true}
+                selectedFlow={selected}
+                refresh={refresh}
+                historyId={historyId}
+                downstreamProxyStr={downstreamProxy}
+                pageType={pageType}
+                showFlod={showFlod}
+              />
+            )}
+          </div>
+        }
+        firstMinSize={80}
+        secondMinSize={200}
+        secondNodeStyle={{
+          display: !secondNodeVisible ? 'none' : '',
+          padding: !secondNodeVisible ? 0 : undefined,
+        }}
+        lineStyle={{
+          display: !secondNodeVisible ? 'none' : '',
+          marginTop: pageType === 'MITM' ? 6 : 0, // MITM列表需要和拖拽线有间距
+        }}
+        lineDirection="top"
+        onMouseUp={({ firstSizePercent, secondSizePercent }) => {
+          lastRatioRef.current = {
+            firstRatio: firstSizePercent,
+            secondRatio: secondSizePercent,
+          }
+          // 缓存比例用于下次加载
+          setRemoteValue(
+            RemoteGV.historyTableYakitResizeBox,
+            JSON.stringify({
+              firstSizePercent,
+              secondSizePercent,
+            }),
+          )
+        }}
+        {...ResizeBoxProps}
+      />
+    </div>
+  )
+})
+
+interface CommonProcessItem {
+  process: string[]
+  icon: ReactElement
+}
+const commonProcess: CommonProcessItem[] = [
+  {
+    process: ['chrome'],
+    icon: <ChromeIcon />,
+  },
+  {
+    process: ['firefox'],
+    icon: <FirefoxIcon />,
+  },
+  {
+    process: ['opera'],
+    icon: <OperaIcon />,
+  },
+  {
+    process: ['msedge'],
+    icon: <MsedgeIcon />,
+  },
+  {
+    process: ['360se'],
+    icon: <Se360Icon />,
+  },
+  {
+    process: ['360cse'],
+    icon: <Cse360Icon />,
+  },
+  {
+    process: ['wechat'],
+    icon: <WechatIcon />,
+  },
+  {
+    process: ['qq'],
+    icon: <QqIcon />,
+  },
+  {
+    process: ['code'],
+    icon: <VscodeIcon />,
+  },
+  {
+    process: ['dingtalk'],
+    icon: <DingtalkIcon />,
+  },
+  {
+    process: ['feishu'],
+    icon: <FeishuIcon />,
+  },
+  {
+    process: ['BaiduNetdisk'],
+    icon: <BaiduNetdiskIcon />,
+  },
+  {
+    process: ['clash'],
+    icon: <ClashIconSvgIcon />,
+  },
+  {
+    process: ['BurpSuiteCommunity'],
+    icon: <BurpSuiteCommunityIcon />,
+  },
+  {
+    process: ['BurpSuiteProfessional'],
+    icon: <BurpSuiteProfessionalIcon />,
+  },
+  {
+    process: ['Word'],
+    icon: <WordIconIcon />,
+  },
+  {
+    process: ['Excel'],
+    icon: <ExcelIcon />,
+  },
+  {
+    process: ['Powerpoint'],
+    icon: <PowerpointIcon />,
+  },
+  {
+    process: ['Finder'],
+    icon: <FinderIcon />,
+  },
+  {
+    process: ['cursor'],
+    icon: <CursorIcon />,
+  },
+  {
+    process: ['openvpn', 'openvpn-gui', 'openvpnserv', 'openvpnserv2'],
+    icon: <OpenvpnIcon />,
+  },
+  {
+    process: ['docker'],
+    icon: <DockerIcon />,
+  },
+  {
+    process: ['jdk', 'java'],
+    icon: <JavaIcon />,
+  },
+  {
+    process: ['zsh'],
+    icon: <ZSHIcon />,
+  },
+  {
+    process: ['bash'],
+    icon: <BashIcon />,
+  },
+  {
+    process: ['VMware'],
+    icon: <VMwareIcon />,
+  },
+  {
+    process: ['Telegram'],
+    icon: <TelegramIcon />,
+  },
+  {
+    process: ['uTools'],
+    icon: <UToolsIcon />,
+  },
+  {
+    process: ['Proxifier'],
+    icon: <ProxifierIcon />,
+  },
+]
+export const iconProcessMap = commonProcess.reduce(
+  (map, item) => {
+    item.process.forEach((name) => {
+      map[name.toLocaleLowerCase()] = item.icon
+    })
+    return map
+  },
+  {} as Record<string, ReactElement | undefined>,
+)
+export interface ProcessItem {
+  process: string
+  icon?: ReactElement
+}
+type HistoryProcessPanelKey = 'process' | 'tag' | 'builtinTag'
+interface HistoryProcessProps {
+  queryparamsStr: string
+  refreshProcessFlag: boolean
+  curProcess: string[]
+  onSetCurProcess: (curProcess: string[]) => void
+  curTags?: string[]
+  onSetCurTags?: (curTags: string[]) => void
+  resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
+  setBuiltinTagList?: (builtinTagList: FiltersItemProps[]) => void
+}
+export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
+  const {
+    queryparamsStr,
+    refreshProcessFlag,
+    curProcess,
+    curTags = [],
+    onSetCurProcess,
+    onSetCurTags,
+    resetTableAndEditorShow,
+    setBuiltinTagList: propsSetBuiltinTagList,
+  } = props
+  const processRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(processRef)
+  const [searchProcessVal, setSearchProcessVal] = useState<string>('')
+  const [processLoading, setProcessLoading] = useState<boolean>(false)
+  const [processList, setProcessList] = useState<ProcessItem[]>([])
+  const searchProcessValRef = useRef<string>(searchProcessVal)
+  const curProcessRef = useRef<string[]>(curProcess)
+  const [searchTagVal, setSearchTagVal] = useState<string>('')
+  const [tagList, setTagList] = useState<FiltersItemProps[]>([])
+  const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
+  const [tagListLoading, setTagListLoading] = useState<boolean>(false)
+  const [activeKey, setActiveKey] = useState<string[]>(['process', 'tag', 'builtinTag'])
+  const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
+  const [searchValues, setSearchValues] = useState<{ process: string; tag: string; builtinTag: string }>({
+    process: '',
+    tag: '',
+    builtinTag: '',
+  })
+  const [searchBuiltinTagVal, setSearchBuiltinTagVal] = useState<string>('')
+
+  useEffect(() => {
+    searchProcessValRef.current = searchProcessVal
+  }, [searchProcessVal])
+  useEffect(() => {
+    curProcessRef.current = curProcess
+  }, [curProcess])
+
+  const renderProcessList = useMemo(() => {
+    return searchProcessVal
+      ? processList.filter((item) => item.process.toLocaleLowerCase().includes(searchProcessVal.toLocaleLowerCase()))
+      : processList
+  }, [searchProcessVal, processList])
+
+  const onProcessItemClick = (processItem: ProcessItem) => {
+    if (curProcess.includes(processItem.process)) {
+      const newProcess = curProcess.filter((process) => process !== processItem.process)
+      onSetCurProcess(newProcess)
+    } else {
+      onSetCurProcess([...curProcess, processItem.process])
+    }
+  }
+
+  useEffect(() => {
+    if (curProcessRef.current.length) {
+      if (refreshProcessFlag) {
+        if (searchProcessValRef.current) {
+        } else {
+          resetTableAndEditorShow && resetTableAndEditorShow(true, false)
+          refreshProcess()
+        }
+      }
+    } else {
+      if (!searchProcessValRef.current) {
+        refreshProcess()
+      }
+    }
+  }, [queryparamsStr, refreshProcessFlag, inViewport])
+
+  const refreshProcess = useMemoizedFn(() => {
+    setProcessLoading(true)
+    onSetCurProcess([])
+    try {
+      const query = JSONParseLog(queryparamsStr, { page: 'HTTPHistory', fun: 'refreshProcess' })
+      ipcRenderer
+        .invoke('QueryHTTPFlowsProcessNames', query)
+        .then((res) => {
+          const processArr = (res.ProcessNames || [])
+            .filter((name: string) => name)
+            .map((name: string) => {
+              const lowerName = name.toLocaleLowerCase()
+              const icon = Object.keys(iconProcessMap).find((key) => {
+                if (key.startsWith('docker') && lowerName.startsWith('docker')) {
+                  return true
+                } else if (key.startsWith('jdk') && lowerName.startsWith('jdk')) {
+                  return true
+                } else if (key.startsWith('java') && lowerName.startsWith('java')) {
+                  return true
+                } else if (key.startsWith('vmware') && lowerName.startsWith('vmware')) {
+                  return true
+                } else {
+                  return lowerName.includes(key)
+                }
+              })
+              return { process: name, icon: icon ? iconProcessMap[icon] : undefined }
+            })
+          setProcessList(processArr)
+        })
+        .finally(() => {
+          setProcessLoading(false)
+        })
+    } catch (error) {
+      setProcessLoading(false)
+    }
+  })
+
+  const refreshTags = useMemoizedFn(async () => {
+    setTagListLoading(true)
+    ipcRenderer
+      .invoke('HTTPFlowsFieldGroup', {
+        RefreshRequest: true,
+        IsAll: true,
+      })
+      .then((rsp: HTTPFlowsFieldGroupResponse) => {
+        const tags = (rsp.Tags || []).filter((item) => item.Value && item.Value !== HTTP_FLOW_FAVORITE_TAG)
+        const toFilterItem = (Value: string) => ({ label: Value, value: Value })
+        let TagList: FiltersItemProps[] = [],
+          builtinTagList: FiltersItemProps[] = []
+        tags.forEach(({ Value, Builtin }) => {
+          if (Builtin) {
+            builtinTagList.push(toFilterItem(Value))
+          } else {
+            TagList.push(toFilterItem(Value))
+          }
+        })
+        setTagList(TagList)
+        setBuiltinTagList(builtinTagList)
+        propsSetBuiltinTagList?.(builtinTagList)
+      })
+      .catch((error) => {
+        yakitNotify('error', `query HTTP Flows Field Group failed: ${error}`)
+      })
+      .finally(() => {
+        setTagListLoading(false)
+      })
+  })
+
+  useEffect(() => {
+    if (!inViewport) return
+    refreshTags()
+  }, [inViewport])
+
+  const refreshAllFilters = useMemoizedFn((clearSelected?: boolean) => {
+    if (clearSelected) {
+      onSetCurProcess([])
+      onSetCurTags?.([])
+    }
+    refreshProcess()
+    refreshTags()
+  })
+
+  const renderTagList = useMemo(() => {
+    return searchTagVal
+      ? tagList.filter((item) => item.label.toLocaleLowerCase().includes(searchTagVal.toLocaleLowerCase()))
+      : tagList
+  }, [searchTagVal, tagList])
+
+  const renderBuiltinTagList = useMemo(() => {
+    return searchBuiltinTagVal
+      ? builtinTagList.filter((item) =>
+          item.label.toLocaleLowerCase().includes(searchBuiltinTagVal.toLocaleLowerCase()),
+        )
+      : builtinTagList
+  }, [searchBuiltinTagVal, builtinTagList])
+
+  const onTagItemClick = useMemoizedFn((tag: FiltersItemProps) => {
+    const nextTags = curTags.includes(tag.value)
+      ? curTags.filter((item) => item !== tag.value)
+      : [...curTags, tag.value]
+    onSetCurTags?.(nextTags)
+  })
+
+  const onSearch = useMemoizedFn((key: HistoryProcessPanelKey) => {
+    if (key === 'process') {
+      setSearchProcessVal(searchValues.process)
+    } else if (key === 'builtinTag') {
+      setSearchBuiltinTagVal(searchValues.builtinTag)
+    } else {
+      setSearchTagVal(searchValues.tag)
+    }
+  })
+
+  const renderSearchInput = useMemoizedFn((key: HistoryProcessPanelKey) => {
+    const hasActiveSearch =
+      key === 'process'
+        ? !!searchProcessVal.trim()
+        : key === 'builtinTag'
+          ? !!searchBuiltinTagVal.trim()
+          : !!searchTagVal.trim()
+    return (
+      <div onClick={(e) => e.stopPropagation()}>
+        <YakitPopover
+          overlayClassName={styles['history-process-popover']}
+          trigger="click"
+          content={
+            <div onKeyPress={(e) => e.stopPropagation()}>
+              <YakitInput
+                placeholder={t('YakitInput.searchKeyWordPlaceholder')}
+                value={searchValues[key]}
+                onChange={(e) => setSearchValues((pre) => ({ ...pre, [key]: e.target.value }))}
+                onPressEnter={() => {
+                  onSearch(key)
+                }}
+                allowClear
+              />
+            </div>
+          }
+          onVisibleChange={(visible) => !visible && onSearch(key)}
+        >
+          <YakitButton icon={<OutlineSearchIcon />} type={hasActiveSearch ? 'text' : 'text2'} />
+        </YakitPopover>
+      </div>
+    )
+  })
+
+  const renderPanel = useMemoizedFn((panelItem: { header: string; key: HistoryProcessPanelKey }) => {
+    const { header, key } = panelItem
+    const isProcess = key === 'process'
+    const loading = isProcess ? processLoading : tagListLoading
+    const list = isProcess ? renderProcessList : key === 'builtinTag' ? renderBuiltinTagList : renderTagList
+    if (list.length === 0) return null
+    return (
+      <YakitPanel header={header} key={key} extra={renderSearchInput(key)}>
+        {loading ? (
+          <YakitSpin style={{ display: 'block' }} />
+        ) : list.length ? (
+          list.map((item) => {
+            if (!isProcess) {
+              const checked = curTags.includes(item.value)
+              return (
+                <label
+                  className={classNames(styles['list-item'], {
+                    [styles['list-item-active']]: checked,
+                  })}
+                  key={item.value}
+                >
+                  <YakitCheckbox
+                    checked={checked}
+                    onChange={() => onTagItemClick(item)}
+                    wrapperClassName={styles['list-item-checkbox']}
+                  >
+                    <span className={styles['list-item-left']}>
+                      <Tooltip title={item.label}>
+                        <span className={styles['item-title']}>{item.label}</span>
+                      </Tooltip>
+                    </span>
+                  </YakitCheckbox>
+                </label>
+              )
+            }
+
+            const checked = curProcess.includes(item.process)
+            return (
+              <label
+                className={classNames(styles['list-item'], {
+                  [styles['list-item-active']]: checked,
+                })}
+                key={item.process}
+              >
+                <YakitCheckbox
+                  checked={checked}
+                  onChange={() => onProcessItemClick(item)}
+                  wrapperClassName={styles['list-item-checkbox']}
+                >
+                  <span className={styles['list-item-left']}>
+                    {item.icon ? <span className={styles['item-icon']}>{item.icon}</span> : null}
+                    <Tooltip title={item.process}>
+                      <span className={styles['item-title']}>{item.process}</span>
+                    </Tooltip>
+                  </span>
+                </YakitCheckbox>
+              </label>
+            )
+          })
+        ) : (
+          <YakitEmpty />
+        )}
+      </YakitPanel>
+    )
+  })
+
+  const panelList = useMemo(
+    () => [
+      {
+        header: t('HTTPHistory.process'),
+        key: 'process' as HistoryProcessPanelKey,
+      },
+      {
+        header: 'Tag',
+        key: 'tag' as HistoryProcessPanelKey,
+      },
+      {
+        header: t('HTTPHistory.builtinTag'),
+        key: 'builtinTag' as HistoryProcessPanelKey,
+      },
+    ],
+    [i18n.language],
+  )
+
+  return (
+    <div className={styles['history-process']} ref={processRef}>
+      <div className={styles['history-process-header']}>
+        <span>{t('YakitTable.filter')}</span>
+        <YakitButton type="text2" icon={<RefreshIcon />} onClick={() => refreshAllFilters(true)} />
+      </div>
+      <div className={styles['history-process-body']}>
+        <YakitCollapse activeKey={activeKey} onChange={(key) => setActiveKey(key as string[])}>
+          {panelList.map((item) => renderPanel(item))}
+        </YakitCollapse>
+      </div>
+    </div>
+  )
+})

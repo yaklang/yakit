@@ -1,0 +1,626 @@
+{
+  "source": "C:\\Users\\Titee_G\\AppData\\Local\\Temp\\codex-clipboard-9e094c73-2ff9-4f44-abf4-0efec5163ba1.png",
+  "reference_size": {
+    "width": 1280,
+    "height": 720
+  },
+  "notes": [
+    "Files ending in -complete are exact screenshot crops including their visible text.",
+    "Files ending in -bg or -frame are blank reusable backgrounds intended for dynamic text and hover states.",
+    "Transparent portraits retain source pixels and use a conservative alpha matte; original portrait crops are included as fidelity fallbacks."
+  ],
+  "assets": [
+    {
+      "file": "senso-ui-reference-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "type": "reference"
+    },
+    {
+      "file": "senso-page-background-1280x720.png",
+      "width": 1280,
+      "height": 720,
+      "type": "reconstructed reusable background"
+    },
+    {
+      "file": "senso-brand-logo.png",
+      "width": 142,
+      "height": 42,
+      "source_box": [
+        16,
+        14,
+        158,
+        56
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-header-title-strip.png",
+      "width": 655,
+      "height": 79,
+      "source_box": [
+        315,
+        50,
+        970,
+        129
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-pagination.png",
+      "width": 268,
+      "height": 27,
+      "source_box": [
+        505,
+        542,
+        773,
+        569
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-heading.png",
+      "width": 184,
+      "height": 34,
+      "source_box": [
+        548,
+        570,
+        732,
+        604
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-footer-note.png",
+      "width": 298,
+      "height": 30,
+      "source_box": [
+        25,
+        675,
+        323,
+        705
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-card-01-selected-hover.png",
+      "width": 287,
+      "height": 237,
+      "source_box": [
+        74,
+        131,
+        361,
+        368
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-card-02-normal.png",
+      "width": 255,
+      "height": 196,
+      "source_box": [
+        375,
+        143,
+        630,
+        339
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-card-03-normal.png",
+      "width": 262,
+      "height": 196,
+      "source_box": [
+        651,
+        143,
+        913,
+        339
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-card-04-normal.png",
+      "width": 257,
+      "height": 196,
+      "source_box": [
+        933,
+        143,
+        1190,
+        339
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-card-05-normal.png",
+      "width": 279,
+      "height": 185,
+      "source_box": [
+        79,
+        353,
+        358,
+        538
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-card-06-normal.png",
+      "width": 255,
+      "height": 185,
+      "source_box": [
+        375,
+        353,
+        630,
+        538
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-card-07-normal.png",
+      "width": 262,
+      "height": 185,
+      "source_box": [
+        651,
+        353,
+        913,
+        538
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-card-08-normal.png",
+      "width": 257,
+      "height": 185,
+      "source_box": [
+        933,
+        353,
+        1190,
+        538
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-01-portrait-original.png",
+      "width": 148,
+      "height": 144,
+      "source_box": [
+        105,
+        141,
+        253,
+        285
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-01-portrait-transparent.png",
+      "width": 148,
+      "height": 144,
+      "type": "transparent cutout from source"
+    },
+    {
+      "file": "senso-agent-02-portrait-original.png",
+      "width": 159,
+      "height": 138,
+      "source_box": [
+        423,
+        147,
+        582,
+        285
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-02-portrait-transparent.png",
+      "width": 159,
+      "height": 138,
+      "type": "transparent cutout from source"
+    },
+    {
+      "file": "senso-agent-03-portrait-original.png",
+      "width": 163,
+      "height": 138,
+      "source_box": [
+        690,
+        147,
+        853,
+        285
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-03-portrait-transparent.png",
+      "width": 163,
+      "height": 138,
+      "type": "transparent cutout from source"
+    },
+    {
+      "file": "senso-agent-04-portrait-original.png",
+      "width": 139,
+      "height": 137,
+      "source_box": [
+        986,
+        149,
+        1125,
+        286
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-04-portrait-transparent.png",
+      "width": 139,
+      "height": 137,
+      "type": "transparent cutout from source"
+    },
+    {
+      "file": "senso-agent-05-portrait-original.png",
+      "width": 173,
+      "height": 127,
+      "source_box": [
+        101,
+        363,
+        274,
+        490
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-05-portrait-transparent.png",
+      "width": 173,
+      "height": 127,
+      "type": "transparent cutout from source"
+    },
+    {
+      "file": "senso-agent-06-portrait-original.png",
+      "width": 157,
+      "height": 131,
+      "source_box": [
+        421,
+        355,
+        578,
+        486
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-06-portrait-transparent.png",
+      "width": 157,
+      "height": 131,
+      "type": "transparent cutout from source"
+    },
+    {
+      "file": "senso-agent-07-portrait-original.png",
+      "width": 149,
+      "height": 132,
+      "source_box": [
+        697,
+        358,
+        846,
+        490
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-07-portrait-transparent.png",
+      "width": 149,
+      "height": 132,
+      "type": "transparent cutout from source"
+    },
+    {
+      "file": "senso-agent-08-portrait-original.png",
+      "width": 174,
+      "height": 139,
+      "source_box": [
+        966,
+        351,
+        1140,
+        490
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-08-portrait-transparent.png",
+      "width": 174,
+      "height": 139,
+      "type": "transparent cutout from source"
+    },
+    {
+      "file": "senso-agent-01-badge.png",
+      "width": 39,
+      "height": 37,
+      "source_box": [
+        302,
+        145,
+        341,
+        182
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-02-badge.png",
+      "width": 39,
+      "height": 38,
+      "source_box": [
+        576,
+        153,
+        615,
+        191
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-03-badge.png",
+      "width": 47,
+      "height": 39,
+      "source_box": [
+        850,
+        153,
+        897,
+        192
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-04-badge.png",
+      "width": 42,
+      "height": 40,
+      "source_box": [
+        1133,
+        153,
+        1175,
+        193
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-05-badge.png",
+      "width": 40,
+      "height": 39,
+      "source_box": [
+        299,
+        365,
+        339,
+        404
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-06-badge.png",
+      "width": 39,
+      "height": 38,
+      "source_box": [
+        576,
+        365,
+        615,
+        403
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-07-badge.png",
+      "width": 47,
+      "height": 41,
+      "source_box": [
+        852,
+        364,
+        899,
+        405
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-agent-08-badge.png",
+      "width": 43,
+      "height": 42,
+      "source_box": [
+        1132,
+        363,
+        1175,
+        405
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-button-select-complete.png",
+      "width": 243,
+      "height": 34,
+      "source_box": [
+        96,
+        324,
+        339,
+        358
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-button-confirm-complete.png",
+      "width": 277,
+      "height": 46,
+      "source_box": [
+        914,
+        669,
+        1191,
+        715
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-button-select-bg.png",
+      "width": 258,
+      "height": 50,
+      "type": "blank reusable background"
+    },
+    {
+      "file": "senso-button-confirm-bg.png",
+      "width": 290,
+      "height": 58,
+      "type": "blank reusable background"
+    },
+    {
+      "file": "senso-card-frame-normal.png",
+      "width": 271,
+      "height": 210,
+      "type": "transparent reusable frame"
+    },
+    {
+      "file": "senso-card-frame-hover-selected.png",
+      "width": 302,
+      "height": 252,
+      "type": "transparent reusable hover frame"
+    },
+    {
+      "file": "senso-quick-nav-01-complete.png",
+      "width": 164,
+      "height": 61,
+      "source_box": [
+        94,
+        602,
+        258,
+        663
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-02-complete.png",
+      "width": 165,
+      "height": 61,
+      "source_box": [
+        278,
+        602,
+        443,
+        663
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-03-complete.png",
+      "width": 166,
+      "height": 61,
+      "source_box": [
+        461,
+        602,
+        627,
+        663
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-04-complete.png",
+      "width": 166,
+      "height": 61,
+      "source_box": [
+        649,
+        602,
+        815,
+        663
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-05-complete.png",
+      "width": 164,
+      "height": 61,
+      "source_box": [
+        835,
+        602,
+        999,
+        663
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-06-complete.png",
+      "width": 159,
+      "height": 61,
+      "source_box": [
+        1018,
+        602,
+        1177,
+        663
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-01-icon.png",
+      "width": 39,
+      "height": 38,
+      "source_box": [
+        107,
+        613,
+        146,
+        651
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-02-icon.png",
+      "width": 40,
+      "height": 38,
+      "source_box": [
+        295,
+        613,
+        335,
+        651
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-03-icon.png",
+      "width": 42,
+      "height": 38,
+      "source_box": [
+        476,
+        613,
+        518,
+        651
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-04-icon.png",
+      "width": 43,
+      "height": 38,
+      "source_box": [
+        663,
+        613,
+        706,
+        651
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-05-icon.png",
+      "width": 43,
+      "height": 38,
+      "source_box": [
+        850,
+        613,
+        893,
+        651
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-06-icon.png",
+      "width": 43,
+      "height": 40,
+      "source_box": [
+        1032,
+        612,
+        1075,
+        652
+      ],
+      "type": "exact crop"
+    },
+    {
+      "file": "senso-quick-nav-bg.png",
+      "width": 182,
+      "height": 75,
+      "type": "blank reusable background"
+    },
+    {
+      "file": "senso-card-selected-overlay-border-button-text.png",
+      "width": 287,
+      "height": 237,
+      "type": "transparent selected-state overlay: border, role text and button"
+    }
+  ]
+}

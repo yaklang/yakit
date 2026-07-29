@@ -1,0 +1,10 @@
+{
+  "UserTable": {
+    "userName": "Username",
+    "nickName": "Nickname",
+    "lastLoginTime": "Last login time",
+    "usageDurationHours": "Usage duration (h)",
+    "organization": "Organization",
+    "ipColumn": "IP"
+  }
+}

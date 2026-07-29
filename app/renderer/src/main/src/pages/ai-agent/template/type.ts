@@ -1,0 +1,88 @@
+import { ReactNode } from 'react'
+import { TextAreaProps } from 'antd/lib/input'
+import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import {
+  AIHttpFlowCommandParams,
+  AIHttpFlowRemovePayload,
+} from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
+import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import { AIChatMentionProps } from '../components/aiChatMention/type'
+import { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
+import { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
+import { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
+
+export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
+
+export interface AIChatTextareaSubmit {
+  /**传给后端的内容 */
+  qs: string
+  /**前端展示的md格式 */
+  showQS?: string
+  mentionList?: AIMentionCommandParams[]
+  /**图片 */
+  imageList?: string[]
+  /** history 勾选的流量 */
+  httpFlowList?: AIHttpFlowCommandParams[]
+  /** 编辑器选中的代码块 */
+  codeBlockList?: AICodeBlockCommandParams[]
+  focusMode?: string
+  /** 新建会话得 默认sessionId */
+  sessionId?: string
+}
+export interface AIChatTextareaRefProps {
+  setMention: (v: AIMentionCommandParams) => void
+  setValue: (v: string) => void
+  setHttpFlow: (ids: string[]) => void
+  getValue: () => void
+  editorMilkdown?: EditorMilkdownProps
+}
+export enum AIInputInnerFeatureEnum {
+  AIReviewRuleSelect = 'AIReviewRuleSelect',
+  AIModelSelect = 'AIModelSelect',
+}
+export enum AIInputFooterRightEnum {
+  AIFocusMode = 'AIFocusMode',
+}
+export type AIInputInnerFeature = `${AIInputInnerFeatureEnum}`
+export type AIInputFooterRight = `${AIInputFooterRightEnum}`
+interface FooterLeftTypesBase<T extends string, U> {
+  type: T
+  props?: U
+  component?: ReactNode
+}
+type AIReviewRuleSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
+type AIModelSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIModelSelect, AIModelSelectProps>
+type AIFocusModeType = FooterLeftTypesBase<'AIFocusMode', AIFocusModeProps>
+export type FooterLeftTypesComponentProps = AIReviewRuleSelectType | AIModelSelectType
+export type FooterRightTypesComponentProps = AIFocusModeType
+export interface AIChatTextareaProps {
+  ref?: React.ForwardedRef<AIChatTextareaRefProps>
+  /** 提交按钮的 loading 状态 */
+  loading?: boolean
+  /**输入框左下角 */
+  inputFooterLeft?: ReactNode
+  /**输入框右下角 */
+  inputFooterRight?: ReactNode
+  /**底部 */
+  footer?: ReactNode
+  onSubmit?: (v: AIChatTextareaSubmit) => void
+  className?: string
+  children?: ReactNode
+  defaultValue?: string
+  /**ai模型不存在时，是否弹窗 */
+  isOpen?: boolean
+  /** 数字员工简洁模式隐藏 Plan 开关 */
+  hidePlan?: boolean
+  filterMentionType?: AIChatMentionProps['filterMode']
+  footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
+  footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]
+  /** 图片路径前缀 */
+  chatDataStoreKey: string
+  onHttpFlowRemove?: (payload: AIHttpFlowRemovePayload) => void
+}
+
+export interface FileToChatQuestionList {
+  path: string
+  isFolder: boolean
+}

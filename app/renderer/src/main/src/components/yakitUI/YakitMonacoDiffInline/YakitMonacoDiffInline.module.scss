@@ -1,0 +1,118 @@
+.outerHost {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+}
+
+.editorHost {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.floatingBar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  box-shadow: 0 6px 28px var(--Colors-Use-Neutral-Shadow) 0 0 0 1px var(--Colors-Use-Neutral-Shadow);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  white-space: nowrap;
+  position: absolute;
+  right: 48px;
+  z-index: 50;
+  max-width: calc(100% - 24px);
+}
+
+.floatingNav {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  user-select: none;
+  min-width: 28px;
+  text-align: center;
+}
+
+.btnNav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  background: transparent;
+}
+
+.btnNav:hover:not(:disabled) {
+  color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+
+.btnNav:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.floatingSep {
+  width: 1px;
+  height: 14px;
+  background: var(--Colors-Use-Neutral-Border);
+  flex-shrink: 0;
+}
+
+.btnUndo {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  margin: 0;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 4px;
+  font: inherit;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  background: transparent;
+}
+
+.btnUndo:hover:not(:disabled) {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+
+.btnKeep {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  margin: 0;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  font: inherit;
+  font-weight: 500;
+  color: var(--Colors-Use-Main-On-Primary);
+  background: var(--Colors-Use-Main-Primary);
+  box-shadow: 0 1px 0 var(--Colors-Use-Neutral-Shadow);
+}
+
+.btnKeep:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.btnKeep:disabled,
+.btnUndo:disabled {
+  cursor: default;
+  opacity: 0.55;
+}

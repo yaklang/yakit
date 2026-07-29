@@ -1,0 +1,30 @@
+# 所有文本文件自动规范化（推荐）
+* text=auto
+
+# 强制特定文件使用 LF
+*.js text eol=lf
+*.ts text eol=lf
+*.jsx text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.go text eol=lf
+
+# 强制特定文件使用 CRLF（Windows 脚本）
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 二进制文件（不做转换）
+*.png binary
+*.jpg binary
+*.ico binary
+*.zip binary
+*.ttf binary

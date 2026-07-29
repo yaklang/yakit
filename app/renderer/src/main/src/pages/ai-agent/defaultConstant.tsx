@@ -1,0 +1,437 @@
+import { ReactNode } from 'react'
+import { AIAgentSetting } from './aiAgentType'
+import {
+  OutlineChipIcon,
+  OutlineCogIcon,
+  OutlineMCPIcon,
+  OutlineSparklesIcon,
+  OutlineTemplateIcon,
+  OutlineWrenchIcon,
+  OutlineBookOpenTextIcon,
+  OutlineBotIcon,
+  OutlineDocumenttextIcon,
+  OutlineFolderopenIcon,
+  OutlinePointerIcon,
+  OutlineEarOffIcon,
+  OutlineAIIcon,
+} from '@/assets/icon/outline'
+import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import { genDefaultPagination, PaginationSchema } from '../invoker/schema'
+import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import {
+  ChatGLMIcon,
+  ComateIcon,
+  DeepSeekIcon,
+  GeminiIcon,
+  MoonshotIcon,
+  OllamaIcon,
+  OpenAIIcon,
+  OpenRouterIcon,
+  SiliconFlowIcon,
+  TongyiIcon,
+  MemfitIcon,
+} from './aiModelList/icon'
+import { UseChatIPCState } from '../ai-re-act/hooks/type'
+import { AIAgentGrpcApi, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
+import {
+  SolidCursorclickIcon,
+  SolidHashtagIcon,
+  SolidLightbulbIcon,
+  SolidLightningboltIcon,
+  SolidToolIcon,
+} from '@/assets/icon/solid'
+import { MCPServerType } from './type/aiMCP'
+import {
+  DefaultCurrentExecTaskTree,
+  DefaultMemoryList,
+  DefaultPlanHistoryList,
+} from '../ai-re-act/hooks/defaultConstant'
+import { ColorsAIIcon } from '@/assets/icon/colors'
+import { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
+import { cloneDeep } from 'lodash'
+import { ExportAIForgeRequest } from './forgeName/type'
+
+/** AI-Agent 页面的唯一 id */
+export const YakitAIAgentPageID = 'yakit-ai-agent'
+
+export enum AIAgentTabListEnum {
+  History = 'history',
+  Setting = 'setting',
+  Forge_Name = 'forgeName',
+  Tool = 'tool',
+  AI_Model = 'AIModel',
+  MCP = 'mcp',
+  KnowledgeBase = 'knowledgeBase',
+}
+export const AiAgentTabList: YakitTabsProps[] = [
+  { value: AIAgentTabListEnum.History, label: 'AIAgentTabs.historyChat', icon: <OutlineSparklesIcon /> },
+  { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <OutlineCogIcon /> },
+  // {value: AIAgentTabListEnum.Forge_Name, label: "AIAgentTabs.skill", icon: <OutlineTemplateIcon />},
+  // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},
+  { value: AIAgentTabListEnum.AI_Model, label: 'AiAgengt.aiModel', icon: <OutlineChipIcon /> },
+  { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <OutlineMCPIcon /> },
+]
+export enum AIMentionTabsEnum {
+  /** forge 智能体 */
+  Forge_Name = 'forgeName',
+  /** 工具 */
+  Tool = 'tool',
+  /** 知识库 */
+  KnowledgeBase = 'knowledgeBase',
+  /** 文件系统 */
+  File_System = 'fileSystem',
+  /** 场景 */
+  FocusMode = 'focusMode',
+}
+export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
+  { value: AIMentionTabsEnum.Forge_Name, label: 'AIMentionTabs.skill' },
+  { value: AIMentionTabsEnum.Tool, label: 'AIMentionTabs.tool' },
+  { value: AIMentionTabsEnum.KnowledgeBase, label: 'AIMentionTabs.knowledgeBase' },
+  { value: AIMentionTabsEnum.File_System, label: 'AIMentionTabs.fileSystem' },
+  { value: AIMentionTabsEnum.FocusMode, label: 'AiAgengt.focusMode' },
+]
+
+/** ai-agent 聊天全局配置参数默认值 */
+export const AIAgentSettingDefault: AIAgentSetting = {
+  EnableSystemFileSystemOperator: true,
+  UseDefaultAIConfig: true,
+  ForgeName: '',
+  DisallowRequireForUserPrompt: true,
+  ReviewPolicy: 'manual',
+  AIReviewRiskControlScore: 0.5,
+  DisableToolUse: false,
+  AICallAutoRetry: 3,
+  AITransactionRetry: 5,
+  EnableAISearchTool: true,
+  EnableAISearchInternet: false,
+  EnableQwenNoThinkMode: false,
+  AllowPlanUserInteract: true,
+  PlanUserInteractMaxCount: 3,
+  ReActMaxIteration: 100,
+  TimelineItemLimit: 100,
+  TimelineContentSizeLimit: 60,
+  UserInteractLimit: 0,
+  TimelineSessionID: '',
+  AICallTokenLimit: 40,
+  DisableToolIntervalReview: false,
+  SyncPerceptionTrigger: false,
+  EnablePlan: false,
+  PlanExecTaskConcurrency: 2,
+  EnableDetachedPlan: true,
+}
+
+/** mcp 自定义服务器配置类型选项 */
+export const MCPTransportTypeList: { value: MCPServerType; label: string }[] = [
+  { label: 'SSE', value: 'sse' },
+  { label: 'STDIO', value: 'stdio' },
+]
+
+/**
+ * @name 生成一个[AIAgentGrpcApi.PlanTask]任务信息
+ * @description 生成的信息内不存在subtasks字段值
+ */
+export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAgentGrpcApi.PlanTask = (info) => {
+  let data: AIAgentGrpcApi.PlanTask = {
+    task_id: '',
+    index: '',
+    name: '',
+    goal: '',
+    semantic_identifier: '',
+    progress: AITaskStatus.created,
+    isRemove: false,
+    tools: [],
+    description: '',
+    total_tool_call_count: 0,
+    success_tool_call_count: 0,
+    fail_tool_call_count: 0,
+    summary: '',
+  }
+  if (!!info) {
+    data.task_id = info.task_id || ''
+    data.index = info.index || ''
+    data.name = info.name || ''
+    data.goal = info.goal || ''
+    data.progress = info.progress || AITaskStatus.created
+    data.isRemove = info.isRemove || false
+    data.tools = info.tools || []
+    data.description = info.description || ''
+    data.total_tool_call_count = info.total_tool_call_count || 0
+    data.success_tool_call_count = info.success_tool_call_count || 0
+    data.fail_tool_call_count = info.fail_tool_call_count || 0
+    data.summary = info.summary || ''
+  }
+
+  return data
+}
+/**ai 左侧tab变化信号 */
+export enum SwitchAIAgentTabEventEnum {
+  /** 切换active */
+  SET_TAB_ACTIVE = 'setTabActive',
+  /** 选中tab是否显示 */
+  SET_TAB_SHOW = 'setTabShow',
+}
+export enum AITabsEnum {
+  Task_Content = 'task-content',
+  File_System = 'file-system',
+  HTTP = 'http',
+  Risk = 'risk',
+  Operation_Log = 'operation-log',
+}
+/** @name AI 默认展示的tab集合 */
+export const AITabs = {
+  'task-content': { label: 'AITabs.taskContent', value: AITabsEnum.Task_Content },
+  'file-system': { label: 'AITabs.fileSystem', value: AITabsEnum.File_System },
+  http: { label: 'AITabs.httpTraffic', value: AITabsEnum.HTTP },
+  risk: { label: 'YakitRoute.vulnerabilityAndrisk', value: AITabsEnum.Risk },
+  'operation-log': { label: 'AITabs.readWriteLog', value: AITabsEnum.Operation_Log },
+}
+
+/** AI-Forge 列表查询条件里的页码默认条件 */
+export const AIForgeListDefaultPagination: PaginationSchema = {
+  ...genDefaultPagination(20),
+  OrderBy: 'updated_at',
+}
+
+export const tagColors: YakitTagColor[] = [
+  'blue',
+  'bluePurple',
+  'cyan',
+  'green',
+  'info',
+  'purple',
+  'success',
+  'warning',
+  'yellow',
+]
+
+export const AIOnlineModelIconMap: Record<string, ReactNode> = {
+  openai: <OpenAIIcon />,
+  chatglm: <ChatGLMIcon />,
+  moonshot: <MoonshotIcon />,
+  tongyi: <TongyiIcon />,
+  comate: <ComateIcon />,
+  deepseek: <DeepSeekIcon />,
+  siliconflow: <SiliconFlowIcon />,
+  ollama: <OllamaIcon />,
+  openrouter: <OpenRouterIcon />,
+  gemini: <GeminiIcon />,
+  'yaklang-writer': <MemfitIcon />,
+  'yaklang-rag': <MemfitIcon />,
+  'yaklang-com-search': <MemfitIcon />,
+  'yakit-plugin-search': <MemfitIcon />,
+  aibalance: <MemfitIcon />,
+}
+
+export enum AILocalModelTypeEnum {
+  AIChat = 'aichat',
+  Embedding = 'embedding',
+  SpeechToText = 'speech-to-text',
+}
+
+export const AIReviewRuleOptions = [
+  {
+    value: 'manual',
+    label: 'AIReviewRuleOptions.manualLabel',
+    describe: 'AIReviewRuleOptions.manualDesc',
+  },
+  {
+    value: 'yolo',
+    label: 'AIReviewRuleOptions.yoloLabel',
+    describe: 'AIReviewRuleOptions.yoloDesc',
+  },
+  {
+    value: 'ai',
+    label: 'AIReviewRuleOptions.aiLabel',
+    describe: 'AIReviewRuleOptions.aiDesc',
+  },
+] as const
+export type AIReviewRuleOptionsType = (typeof AIReviewRuleOptions)[number]['value']
+export const AIReviewRuleIconMap: Record<AIReviewRuleOptionsType, { icon: ReactNode; activeIcon: ReactNode }> = {
+  manual: {
+    icon: <OutlinePointerIcon />,
+    activeIcon: <OutlinePointerIcon style={{ color: 'var(--Colors-Use-Purple-Primary)' }} />,
+  },
+  yolo: {
+    icon: <OutlineEarOffIcon />,
+    activeIcon: <OutlineEarOffIcon style={{ color: 'var(--Colors-Use-Error-Primary)' }} />,
+  },
+  ai: {
+    icon: <OutlineAIIcon />,
+    activeIcon: <ColorsAIIcon />,
+  },
+}
+export enum AIMCPServerTypeEnum {
+  SSE = 'sse',
+  Stdio = 'stdio',
+  StreamableHTTP = 'streamable_http',
+}
+//#region ai hooks 默认值
+export const defaultChatIPCData: UseChatIPCState = {
+  execute: false,
+  httpRunTimeIDs: [],
+  riskRunTimeIDs: [],
+  casualChat: {
+    elements: [],
+    toolListRenderNumber: 0,
+  },
+  yakExecResult: {
+    card: [],
+    execFileRecord: new Map(),
+    yakExecResultLogs: [],
+  },
+  taskChat: {
+    plan: cloneDeep(DefaultCurrentExecTaskTree),
+    elements: [],
+  },
+  grpcFolders: [],
+  questionQueue: {
+    total: 0,
+    data: [],
+  },
+  reActTimelines: [],
+  memoryList: { ...DefaultMemoryList },
+  taskStatus: { loading: false, plan: '', task: '' },
+  focusMode: '',
+  switchLoading: false,
+  planHistoryList: cloneDeep(DefaultPlanHistoryList),
+  cancelCasualLoading: false,
+  cancelTaskLoading: false,
+  notifyMessage: null,
+  requestHistoryState: {
+    initLoading: false,
+    casualLoadMoreLoading: false,
+    taskLoadMoreLoading: false,
+    saveLoading: false,
+    timelinesLoading: false,
+  },
+  casualLoading: false,
+  casualTitle: '',
+}
+//#endregion
+
+/** @name 任务回答类型对应图标 */
+export const taskAnswerToIconMap: Record<string, ReactNode> = {
+  plan: <SolidLightbulbIcon />,
+  execute: <SolidLightningboltIcon />,
+  summary: <SolidHashtagIcon />,
+  'call-tools': <SolidToolIcon />,
+  decision: <SolidCursorclickIcon />,
+}
+
+export enum ReActChatEventEnum {
+  /** 新建会话 */
+  NEW_CHAT = 'new-chat',
+  /** 使用forge */
+  OPEN_FORGE_FORM = 'open-forge-form',
+  /** 使用工具 */
+  USE_AI_TOOL = 'use-ai-tool',
+}
+
+export const iconMap = {
+  file: <OutlineDocumenttextIcon />,
+  folder: <OutlineFolderopenIcon />,
+  forge: <OutlineBotIcon />,
+  tool: <OutlineWrenchIcon />,
+  knowledgeBase: <OutlineBookOpenTextIcon />,
+  focusMode: <OutlineBookOpenTextIcon />,
+}
+
+export enum AttachedResourceTypeEnum {
+  CONTEXT_PROVIDER_TYPE_FILE = 'file',
+  CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE = 'knowledge_base',
+  CONTEXT_PROVIDER_TYPE_AITOOL = 'aitool',
+  CONTEXT_PROVIDER_TYPE_AIFORGE = 'aiforge',
+  CONTEXT_PROVIDER_TYPE_HTTP_FLOW = 'http_flow',
+  CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File = 'file',
+  CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'selected',
+  USER_FREE_INPUT_UUID = 'user_free_input_uuid',
+}
+
+export enum AttachedResourceKeyEnum {
+  CONTEXT_PROVIDER_KEY_FILE_PATH = 'file_path',
+  CONTEXT_PROVIDER_KEY_FILE_CONTENT = 'file_content',
+  CONTEXT_PROVIDER_KEY_NAME = 'name',
+  CONTEXT_PROVIDER_KEY_SYSTEM_FLAG = 'system_flag',
+  CONTEXT_PROVIDER_KEY_HTTP_FLOW_ID = 'id',
+  CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID = 'directory_path',
+  CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID = 'file_path',
+  CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'content',
+  CONTEXT_PROVIDER_KEY_DEFAULT = 'default',
+}
+
+export enum AIModelPolicyEnum {
+  // PolicyAuto 自动策略：根据请求内容自动选择最合适的模型
+  PolicyAuto = 'auto',
+  // PolicyPerformance 性能优先：优先使用高智能模型
+  PolicyPerformance = 'performance',
+  // PolicyCost 成本优先：优先使用轻量级/低成本模型
+  PolicyCost = 'cost',
+  // PolicyBalance 平衡策略：在响应速度、智能程度和成本之间取得平衡
+  PolicyBalance = 'balance',
+}
+
+export const AIModelPolicyOptions = [
+  { value: AIModelPolicyEnum.PolicyAuto, label: 'AIModelPolicyOptions.auto' },
+  { value: AIModelPolicyEnum.PolicyPerformance, label: 'AIModelPolicyOptions.performance' },
+  { value: AIModelPolicyEnum.PolicyCost, label: 'AIModelPolicyOptions.cost' },
+  { value: AIModelPolicyEnum.PolicyBalance, label: 'AIModelPolicyOptions.balance' },
+]
+
+/**ai model type,下拉选择的值 */
+export enum AIModelTypeEnum {
+  /** 高质模型 */
+  TierIntelligent = 'intelligent',
+  /** 轻量模型 */
+  TierLightweight = 'lightweight',
+  /** 视觉模式 */
+  TierVision = 'vision',
+}
+
+export type AIModelTypeEnumType = `${AIModelTypeEnum}`
+/**接口字段名对应 */
+export const AIModelTypeInterFileNameEnum: { [K in AIModelTypeFileName]: K } = {
+  /** 高质模型 */
+  IntelligentModels: 'IntelligentModels',
+  /** 轻量模型 */
+  LightweightModels: 'LightweightModels',
+  /** 视觉模式 */
+  VisionModels: 'VisionModels',
+}
+
+export const defaultAIGlobalConfig: AIGlobalConfig = {
+  Enabled: false,
+  RoutingPolicy: AIModelPolicyEnum.PolicyAuto,
+  DisableFallback: false,
+  DefaultModelId: '',
+  GlobalWeight: 0,
+  IntelligentModels: [],
+  LightweightModels: [],
+  VisionModels: [],
+  AIPresetPrompt: '',
+  AIPlanPrompt: '',
+}
+
+export const defaultExportAIForgeRequest: ExportAIForgeRequest = {
+  ForgeNames: [],
+  TargetPath: '',
+  OutputName: '',
+  ToolNames: [],
+  Password: '',
+  Filter: {},
+}
+
+/**ai to do list 状态 */
+export enum AIToDoListStatusEnum {
+  /** 待执行 */
+  Pending = 'PENDING',
+  /** 进行中 */
+  Doing = 'DOING',
+  /** 已完成*/
+  Done = 'DONE',
+  /** 已删除 */
+  Deleted = 'DELETED',
+  /** 已跳过 */
+  Skipped = 'SKIPPED',
+}
+
+export type AIToDoListStatusEnumType = `${AIToDoListStatusEnum}`

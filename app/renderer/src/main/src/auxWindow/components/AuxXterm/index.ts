@@ -1,0 +1,5 @@
+export { default } from './AuxXterm'
+export { default as AuxXterm } from './AuxXterm'
+export type { AuxXtermRef } from './AuxXterm'
+export { useAuxTerminalPush } from './useAuxTerminalPush'
+export { getXtermTheme } from './xtermTheme'

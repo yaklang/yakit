@@ -1,0 +1,37 @@
+{
+  "NewReverseServerPage": {
+    "startFacadeServer": "Start FacadeServer",
+    "startFacadeServerFailed": "Start FacadeServer Failed: ",
+    "reverseServer": "Reverse Server",
+    "reverseServerSubTitle": "Use protocol port multiplexing technology to simultaneously achieve HTTP / RMI / HTTPS and other protocols reverse connection on one port"
+  },
+  "SettingReverseServer": {
+    "getRemoteAddrFailed": "Get Remote Address Failed: ",
+    "enablePublicTunnel": "Enable Public Tunnel",
+    "publicTunnelHelp": "Install yak core engine on your own server, execute to",
+    "yakBridgeService": "Start Yak Bridge Public Service",
+    "yakVersionRequirement": "yak version >= v1.0.11-sp9",
+    "publicBridgeAddr": "Public Bridge Address",
+    "password": "Password",
+    "reverseAddr": "Reverse Address",
+    "reversePort": "Reverse Port",
+    "startFacadeServerBtn": "Start FacadeServer"
+  },
+  "StartReverseServer": {
+    "applyToFacadeServerSuccess": "Applied to FacadeServer successfully",
+    "applyToFacadeServerFailed": "Failed to apply to FacadeServer",
+    "payloadConfig": "Payload Config: ",
+    "stopReverse": "Stop Reverse",
+    "httpReverseAddr": "HTTP Reverse Address",
+    "rmiReverseAddr": "RMI Reverse Address",
+    "ldapReverseAddr": "LDAP Reverse Address"
+  },
+  "ReverseTable": {
+    "onlyShowToken": "Only Token",
+    "reverseType": "Reverse Type",
+    "connectionSource": "Connection Source",
+    "response": "Response",
+    "rmiConnection": "RMI Connection",
+    "rmiHandshake": "RMI Handshake"
+  }
+}

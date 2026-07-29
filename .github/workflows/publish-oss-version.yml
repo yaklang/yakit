@@ -1,0 +1,106 @@
+name: Publish OSS Version Tag
+
+on:
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "Select version type"
+                required: true
+                type: choice
+                default: ce
+                options:
+                    - ce
+                    - ee
+                    - irify
+                    - irifyee
+                    - memfit
+
+jobs:
+    build_yakit:
+        runs-on: ubuntu-latest
+        env:
+            CI: ""
+
+        steps:
+            - name: Display incoming configuration parameters
+              run: echo $GITHUB_REF_NAME ${{ inputs.version }}
+
+            - name: Check if the version number is correct
+              run: |
+                  VERSION_INPUT=$GITHUB_REF_NAME
+                  if [[ $VERSION_INPUT != v* ]]; then
+                    echo "Error: Version must start with 'v'." >&2
+                    exit 1
+                  else
+                    echo "Version starts with 'v': $VERSION_INPUT"
+                    # Remove the 'v' prefix and store in SOFTWARE_VERSION
+                    SOFTWARE_VERSION="${VERSION_INPUT:1}"
+                    # Remove '-irify' suffix if exists
+                    SOFTWARE_VERSION="${SOFTWARE_VERSION%-irify}"
+                    echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
+                    # Remove '-memfit' suffix if exists
+                    SOFTWARE_VERSION="${SOFTWARE_VERSION%-memfit}"
+                    echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
+                  fi
+
+            - name: Validate version with tag suffix
+              run: |
+                TAG="$GITHUB_REF_NAME"
+                VERSION="${{ inputs.version }}"
+
+                echo "TAG=$TAG"
+                echo "INPUT_VERSION=$VERSION"
+
+                if [[ "$TAG" == *"-memfit" ]]; then
+                  if [[ "$VERSION" != "memfit" ]]; then
+                    echo "Error: tag ends with -memfit, only 'memfit' is allowed." >&2
+                    exit 1
+                  fi
+
+                elif [[ "$TAG" == *"-irify" ]]; then
+                  if [[ "$VERSION" != "irify" && "$VERSION" != "irifyee" ]]; then
+                    echo "Error: tag ends with -irify, only 'irify' or 'irifyee' are allowed." >&2
+                    exit 1
+                  fi
+
+                elif [[ "$TAG" == *"-render" ]]; then
+                  echo "Error: tag ends with -render." >&2
+                  exit 1
+
+                else
+                  if [[ "$VERSION" != "ce" && "$VERSION" != "ee" ]]; then
+                    echo "Error: normal tag, only 'ce' or 'ee' are allowed." >&2
+                    exit 1
+                  fi
+                fi
+
+            - name: Generate OSS File Path
+              run: |
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    echo "FILE_PATH=yak" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "ee" ]; then
+                    echo "FILE_PATH=vip" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
+                    echo "FILE_PATH=irify" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
+                    echo "FILE_PATH=svip" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "memfit" ]; then
+                    echo "FILE_PATH=memfit" >> $GITHUB_ENV
+                  else
+                    echo "No corresponding file path" >&2
+                    exit 1
+                  fi
+            - name: Show ENV.FILE_PATH
+              run: echo "FILE_PATH： $FILE_PATH"
+
+            - name: Update OSS latest file
+              run: echo ${{ env.SOFTWARE_VERSION }} > ./yakit-version.txt
+            - name: Upload Yakit Version to oss
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      ./yakit-version.txt:/${{ env.FILE_PATH }}/latest/yakit-version.txt

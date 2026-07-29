@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Yakit User Manual / Yakit 使用手册
+    url: https://www.yaklang.com/products/intro/
+    about: Yakit 使用问题请优先查看官网手册 / Any questions about Yakit, please check the documentation first, it may have the answer.
+  - name: Yaklang Engine / Yaklang 引擎问题
+    url: https://github.com/yaklang/yaklang/issues
+    abount: 如果你有一定技术基础，确信是引擎问题，请移步引擎仓库，提交 issue / If you have a certain technical background and are sure it is an engine problem, please move to the engine repository and submit an issue.

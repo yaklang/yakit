@@ -1,0 +1,9 @@
+{
+  "YakChatCS": {
+    "log": "日誌",
+    "debugTaskStarted": "除錯任務啟動成功，執行時 ID: {{runtimeId}}",
+    "localPluginExecuteError": "本地外掛執行出錯: {{error}}",
+    "tryPluginInPacketOrHistory": "可在資料包或History右鍵呼叫外掛進行體驗噢~👋",
+    "requestErrorRetry": "請求出現錯誤，請稍候再試"
+  }
+}

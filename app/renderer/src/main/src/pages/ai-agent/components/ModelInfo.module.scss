@@ -1,0 +1,77 @@
+.modal-info {
+  width: 100%;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  &-title {
+    width: 100%;
+    min-width: 0;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 14px;
+    padding: 3px 6px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    overflow: hidden;
+
+    .title-icon {
+      display: flex;
+      width: 14px;
+      height: 14px;
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+
+    &-text {
+      margin-left: 2px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      word-break: break-all;
+    }
+
+    /** 与标题拉开间距；时间串较长，用较小左间距即可 */
+    &-time {
+      color: var(--Colors-Use-Neutral-Disable);
+      margin-left: 10px;
+    }
+    /**
+     * 有 trailing 时：时间占中间可伸缩区，变窄时省略为 …
+     */
+    &-time-squeeze {
+      color: var(--Colors-Use-Neutral-Disable);
+      margin-left: 8px;
+      min-width: 0;
+      flex: 1 1 0;
+      text-align: right;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /** 行尾：应用/对比 等，不参与收缩 */
+    &-trailing {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      margin-left: 6px;
+    }
+    .icon-small {
+      width: 14px;
+      height: 14px;
+      svg {
+        width: 10px;
+        height: 10px;
+      }
+    }
+  }
+  &-icons {
+    display: flex;
+    align-items: center;
+  }
+}

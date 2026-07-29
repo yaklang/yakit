@@ -1,0 +1,20 @@
+html[data-theme='light'] {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #353639;
+  }
+}
+html[data-theme='dark'] {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #c8d0dd;
+  }
+}

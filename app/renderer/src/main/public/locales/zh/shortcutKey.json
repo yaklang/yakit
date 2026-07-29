@@ -1,0 +1,12 @@
+{
+  "ShortcutKey": {
+    "global": "全局",
+    "multiple": "多页面",
+    "editor": "编辑器",
+    "hotPatchManagement": "热加载管理",
+    "loadFailed": "获取快捷键失败",
+    "restoreDefault": "恢复默认设置",
+    "editShortcut": "编辑快捷键",
+    "hint": "先按所需的组合键, 再按 Enter 键, 按 Esc 键取消"
+  }
+}

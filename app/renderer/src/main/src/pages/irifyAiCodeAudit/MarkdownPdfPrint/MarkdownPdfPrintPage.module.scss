@@ -1,0 +1,51 @@
+:global(html.markdown-pdf-print-page-root),
+:global(body.markdown-pdf-print-page-root),
+:global(#root.markdown-pdf-print-page-root) {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  min-height: 100vh;
+  background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+}
+
+.markdown-pdf-print {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 8px 12px;
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  overflow: visible;
+
+  :global(.stream-markdown) {
+    width: 100%;
+    max-width: none !important;
+
+    :global(.container),
+    :global(.\!container) {
+      width: 100% !important;
+      max-width: none !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+  }
+}
+
+@media print {
+  :global(html.markdown-pdf-print-page-root),
+  :global(body.markdown-pdf-print-page-root),
+  :global(#root.markdown-pdf-print-page-root),
+  .markdown-pdf-print {
+    margin: 0 !important;
+    padding: 8px 12px;
+    background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    margin: 0;
+    size: A4;
+  }
+}

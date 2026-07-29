@@ -1,0 +1,37 @@
+{
+  "CustomizeMenu": {
+    "getMenuFailed": "獲取選單失敗：",
+    "max_limit": "最多隻能設定{{UpperLimit}}個",
+    "selectLeftMenuFirst": "請先選擇左邊一級選單",
+    "primaryMenuNameCannotBeEmpty": "一級選單名稱不能為空",
+    "menuNameDuplicate": "【{{repeatMenu}}】名稱重複，請修改",
+    "saveMenuFailed": "儲存選單失敗：",
+    "updateMenuFailed": "更新選單失敗：",
+    "saveMenuConfirm": "請問是否要儲存選單並關閉頁面？",
+    "editCommonPlugins": "編輯常用外掛",
+    "editExpertMode": "編輯專家模式",
+    "editScanMode": "編輯掃描模式",
+    "editMenuName": "修改選單名稱",
+    "emptyMenuDetected": "檢測到有空選單",
+    "emptyMenuWarning": "有{{emptyMenuLength}}個選單功能為空，空選單不會{{tip}}，是否仍要繼續{{tip}}？",
+    "unnamedMenuPrefix": "未命名",
+    "SecondMenu": {
+      "unnamedMenu1": "未命名1（選單名建議 4-16 個英文字元內最佳）",
+      "deleteMenuConfirm": "是否要刪除該選單",
+      "featureAdded": "已新增功能",
+      "noFeatureAdded": "暫未未新增功能",
+      "addFeatureHint": "可透過拖拽或點選新增按鈕，將功能新增至此處"
+    },
+    "FeaturesAndPlugin": {
+      "pluginStore": "外掛商店",
+      "systemFunctions": "系統功能",
+      "plugin": "外掛",
+      "addFunctionTip": "可透過拖拽或點選新增按鈕，將功能新增至左側選單內"
+    },
+    "PluginLocalInfoIcon": {
+      "officialPlugin": "官方外掛",
+      "privatePlugin": "私有外掛",
+      "cloudPlugin": "雲端外掛"
+    }
+  }
+}
