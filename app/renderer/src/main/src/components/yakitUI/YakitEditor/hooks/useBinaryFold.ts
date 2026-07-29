@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from 'react'
+import { useGetState, useMemoizedFn } from 'ahooks'
 import { monaco } from 'react-monaco-editor'
 import { BinaryFuzztagEntry, collapseBinaryFuzztag, expandBinaryFuzztag } from '../binaryFuzztag'
 import { MAX_BINARY_FOLD_ENTRIES } from '../constants'
@@ -13,12 +13,16 @@ export interface UseBinaryFoldParams {
 }
 
 export interface UseBinaryFoldResult {
+  foldBinaryCapable: boolean
   foldBinaryEnabled: boolean
   binaryFoldEntriesRef: React.MutableRefObject<Map<string, BinaryFuzztagEntry>>
   binaryFoldRangesRef: React.MutableRefObject<{ id: string; range: monaco.Range; ordinal: number }[]>
   binaryModifiedOrdinalsRef: React.MutableRefObject<Set<number>>
   displayValue: string | undefined
   handleBinaryChange: (content: string) => void
+  foldBinaryOpen: boolean
+  setFoldBinaryOpen: Dispatch<SetStateAction<boolean>>
+  getFoldBinaryOpen: () => boolean
 }
 
 /**
@@ -29,8 +33,14 @@ export interface UseBinaryFoldResult {
 export const useBinaryFold = (params: UseBinaryFoldParams): UseBinaryFoldResult => {
   const { value, setValue, onChange, foldBinaryFuzztag, type } = params
 
-  // 仅在 foldBinaryFuzztag 且 http 类型下启用；模型存短占位，向上抛真实值，下游消费者无感知
-  const foldBinaryEnabled = !!foldBinaryFuzztag && type === 'http'
+  const foldBinaryCapable = foldBinaryFuzztag !== undefined
+  const [foldBinaryOpen, setFoldBinaryOpen, getFoldBinaryOpen] = useGetState<boolean>(!!foldBinaryFuzztag)
+  useEffect(() => {
+    if (foldBinaryFuzztag !== undefined) {
+      setFoldBinaryOpen(!!foldBinaryFuzztag)
+    }
+  }, [foldBinaryFuzztag])
+  const foldBinaryEnabled = foldBinaryCapable && foldBinaryOpen && type === 'http'
   // 侧表：占位 id -> 原始标签信息；handleBinaryChange 据此 expand 还原真实文本
   const binaryFoldEntriesRef = useRef<Map<string, BinaryFuzztagEntry>>(new Map())
   // 占位范围（仿 privacyMaskRangesRef），用于点击命中打开 HEX 编辑弹窗
@@ -84,11 +94,15 @@ export const useBinaryFold = (params: UseBinaryFoldParams): UseBinaryFoldResult 
   })
 
   return {
+    foldBinaryCapable,
     foldBinaryEnabled,
     binaryFoldEntriesRef,
     binaryFoldRangesRef,
     binaryModifiedOrdinalsRef,
     displayValue,
     handleBinaryChange,
+    foldBinaryOpen,
+    setFoldBinaryOpen,
+    getFoldBinaryOpen,
   }
 }

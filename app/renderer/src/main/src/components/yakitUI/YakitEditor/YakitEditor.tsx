@@ -89,6 +89,12 @@ import { useYakFormat } from './hooks/useYakFormat'
 import { generateDecorations as generateDecorationsFn } from './decorations/generateDecorations'
 import { editerMenuFun } from './fizzMenu/editerMenuFun'
 import { menuReduce, sortMenuFun, contextMenuKeybindingHandle } from './menus/menuHelpers'
+import {
+  EditorDetailInfoProps,
+  SmartDecodeAnchorRect,
+  SmartDecodeFloatPanel,
+  snapshotRect,
+} from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
 
 // re-export 保持外部导入路径兼容
 export { PLUGIN_PREFIX }
@@ -211,12 +217,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   // ===== 二进制 Fuzztag 折叠：翻译边界 =====
   const {
+    foldBinaryCapable,
     foldBinaryEnabled,
     binaryFoldEntriesRef,
     binaryFoldRangesRef,
     binaryModifiedOrdinalsRef,
     displayValue,
     handleBinaryChange,
+    foldBinaryOpen,
+    setFoldBinaryOpen,
+    getFoldBinaryOpen,
   } = useBinaryFold({
     value,
     setValue,
@@ -1178,6 +1188,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         downPosYRef: downPosY,
         upPosYRef: upPosY,
         onScrollTopRef: onScrollTop,
+        onOpenSmartDecode,
       })
     }
   }, [editor, isShowSelectRangeMenu])
@@ -1200,6 +1211,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       anchorRect: snapshotRect(rect),
     })
   }
+
+  const onOpenSmartDecode = useMemoizedFn((rangeValue: string, anchorRect?: DOMRect) => {
+    openSmartDecodeRef.current?.(rangeValue, editorInfo.current, anchorRect)
+  })
   // 编辑器菜单
 
   useEffect(() => {
