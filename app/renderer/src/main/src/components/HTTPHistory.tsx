@@ -211,7 +211,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [curTags, setCurTags] = useState<string[]>([])
   const httpHistoryRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(httpHistoryRef)
-  const { builtinTagList, setBuiltinTagList } = useBuiltinTagList(true, inViewport)
+  const { builtinTagList } = useBuiltinTagList(true, inViewport)
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
   const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
@@ -358,7 +358,6 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                   curTags={curTags}
                   onSetCurTags={setCurTags}
                   onSetCurProcess={setCurProcess}
-                  setBuiltinTagList={setBuiltinTagList}
                   resetTableAndEditorShow={resetTableAndEditorShow}
                 ></HistoryProcess>
               </div>
@@ -880,7 +879,6 @@ interface HistoryProcessProps {
   curTags?: string[]
   onSetCurTags?: (curTags: string[]) => void
   resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
-  setBuiltinTagList?: (builtinTagList: FiltersItemProps[]) => void
 }
 export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
   const {
@@ -891,7 +889,6 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     onSetCurProcess,
     onSetCurTags,
     resetTableAndEditorShow,
-    setBuiltinTagList: propsSetBuiltinTagList,
   } = props
   const processRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(processRef)
@@ -992,7 +989,9 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     setTagListLoading(true)
     fetchHTTPFlowsFieldGroup(refreshRequest)
       .then((rsp) => {
-        const tags = (rsp.Tags || []).filter((item) => item.Value && item.Value !== HTTP_FLOW_FAVORITE_TAG)
+        const tags = (rsp.Tags || []).filter(
+          (item) => !!item.Value && item.Value !== HTTP_FLOW_FAVORITE_TAG && (!item.Builtin || !!item.Total),
+        )
         const toFilterItem = (Value: string) => ({ label: Value, value: Value })
         let TagList: FiltersItemProps[] = [],
           builtinTagList: FiltersItemProps[] = []
@@ -1005,7 +1004,6 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
         })
         setTagList(TagList)
         setBuiltinTagList(builtinTagList)
-        propsSetBuiltinTagList?.(builtinTagList)
       })
       .catch((error) => {
         yakitNotify('error', `query HTTP Flows Field Group failed: ${error}`)

@@ -279,7 +279,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
   // #endregion
   const httpHistoryFilterRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(httpHistoryFilterRef)
-  const { builtinTagList, setBuiltinTagList } = useBuiltinTagList(true, inViewport)
+  const { builtinTagList } = useBuiltinTagList(true, inViewport)
 
   return (
     <div className={styles['HTTPHistoryFilter']} ref={httpHistoryFilterRef}>
@@ -332,7 +332,6 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                   curTags={curTags}
                   onSetCurTags={setCurTags}
                   onSetCurProcess={setCurProcess}
-                  setBuiltinTagList={setBuiltinTagList}
                 ></HistoryProcess>
               </div>
               <div className={styles['process-wrapper']} style={{ display: activeKey === 'rules' ? 'block' : 'none' }}>
