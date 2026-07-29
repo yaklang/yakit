@@ -952,8 +952,12 @@
 // -------------------- CodeScoreModule ↓↓↓ --------------------
 .code-score-modal {
   width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
   padding-left: 16px;
   padding-right: 16px;
+  box-sizing: border-box;
+  overflow-x: hidden;
   .header-wrapper {
     width: 100%;
     padding: 12px 16px;
@@ -1030,15 +1034,23 @@
     }
 
     .error-list {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
       .list-body {
         max-height: 45vh;
-        overflow: hidden auto;
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
         gap: 8px;
         .list-opt {
           width: 100%;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
           padding: 12px 16px;
           display: flex;
           flex-direction: column;
@@ -1046,22 +1058,36 @@
           border-radius: 4px;
           border: 1px solid var(--Colors-Use-Neutral-Border);
           background: var(--Colors-Use-Neutral-Bg);
+          overflow: hidden;
           .opt-header {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 8px;
+            min-width: 0;
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
             font-size: 12px;
             font-weight: 600;
             line-height: 16px;
           }
           .opt-content {
+            min-width: 0;
+            max-width: 100%;
             color: var(--color-gray-text-04, var(--Colors-Use-Neutral-Text-1-Title));
             font-size: 12px;
             line-height: 16px;
             font-weight: 400;
+            overflow-x: hidden;
+            pre {
+              margin: 0;
+              max-width: 100%;
+              white-space: pre-wrap;
+              word-break: break-word;
+              overflow-wrap: anywhere;
+            }
             .error-position {
               color: var(--Colors-Use-Neutral-Text-3-Secondary);
+              word-break: break-all;
             }
           }
         }

@@ -367,6 +367,8 @@ export interface CodeScoreSmokingEvaluateResultProps {
   ExtraInfo: Uint8Array
   Range: GRPCRange
   Severity: string
+  /** 单条检测结果的可复制文本（引擎 FormattedCopyText，可选） */
+  FormattedCopyText?: string
 }
 /** 源码位置信息 */
 export interface GRPCRange {

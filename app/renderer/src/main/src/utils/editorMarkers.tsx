@@ -25,6 +25,8 @@ export interface YakStaticAnalyzeErrorResult {
   EndLineNumber: number
   EndColumn: number
   Tag: 'Unnecessary' | 'Deprecated' | string
+  /** 引擎格式化的可复制文本（含行号、修改建议、代码上下文） */
+  FormattedCopyText?: string
 }
 
 function getMarkerTags(name: string): MarkerTag[] {

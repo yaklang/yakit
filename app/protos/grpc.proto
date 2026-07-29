@@ -3317,6 +3317,7 @@ message SmokingEvaluateResult {
   bytes ExtraInfo = 3;
   Range Range = 4;
   string Severity = 5; // Error || Warning
+  string FormattedCopyText = 6;
 }
 
 message SmokingEvaluatePluginResponse {
@@ -4299,6 +4300,7 @@ message StaticAnalyzeErrorResult {
   bytes RawMessage = 6;
   string Severity = 7;
   string Tag = 8;
+  string FormattedCopyText = 9;
 }
 
 message StaticAnalyzeErrorResponse {
