@@ -53,19 +53,31 @@ module.exports = (win, getClient) => {
   })
 
   // asyncQueryHTTPFlows wrapper
-  const asyncQueryHTTPFlows = (params) => {
+  const asyncQueryHTTPFlows = (params, mainReceivedAtUnixMs) => {
     return new Promise((resolve, reject) => {
+      const collectTiming = !!params?.IncludeSystemTiming
+      const grpcStartedAtUnixMs = collectTiming ? Date.now() : 0
+      const grpcStartedAt = collectTiming ? process.hrtime.bigint() : 0n
       getClient().QueryHTTPFlows(params, (err, data) => {
         if (err) {
           reject(err)
           return
+        }
+        if (collectTiming && data) {
+          const grpcFinishedAtUnixMs = Date.now()
+          data.YakitMainProcessTiming = {
+            MainReceivedAtUnixMs: mainReceivedAtUnixMs,
+            GRPCStartedAtUnixMs: grpcStartedAtUnixMs,
+            GRPCFinishedAtUnixMs: grpcFinishedAtUnixMs,
+            GRPCElapsedUs: Number((process.hrtime.bigint() - grpcStartedAt) / 1000n),
+          }
         }
         resolve(data)
       })
     })
   }
   ipcMain.handle('QueryHTTPFlows', async (e, params) => {
-    return await asyncQueryHTTPFlows(params)
+    return await asyncQueryHTTPFlows(params, params?.IncludeSystemTiming ? Date.now() : 0)
   })
 
   // asyncQueryHTTPFlowByIds wrapper
@@ -391,6 +403,13 @@ module.exports = (win, getClient) => {
   })
 
   const handlerHelper = require('./handleStreamWithContext')
+  const streamSubscribeHTTPFlows = new Map()
+  ipcMain.handle('cancel-SubscribeHTTPFlows', handlerHelper.cancelHandler(streamSubscribeHTTPFlows))
+  ipcMain.handle('SubscribeHTTPFlows', (e, params, token) => {
+    const stream = getClient().SubscribeHTTPFlows(params)
+    handlerHelper.registerHandler(win, stream, streamSubscribeHTTPFlows, token)
+  })
+
   const streamExportMITMRuleExtractedData = new Map()
   ipcMain.handle(
     'cancel-ExportMITMRuleExtractedDataStream',

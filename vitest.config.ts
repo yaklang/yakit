@@ -72,6 +72,8 @@ export default defineConfig({
       'app/renderer/engine-link-startup/src/**/__test__/**/*.spec.{ts,tsx,js,jsx}',
       'app/main/**/__test__/**/*.test.{ts,tsx,js,jsx}',
       'app/main/**/__test__/**/*.spec.{ts,tsx,js,jsx}',
+      'e2e/**/__test__/**/*.test.{ts,js,mjs}',
+      'e2e/**/__test__/**/*.spec.{ts,js,mjs}',
     ],
     // keep JUnit reporter and default reporter
     reporters: [['junit', { outputFile: 'reports/junit.xml' }] as unknown as any, 'default'],

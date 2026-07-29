@@ -280,6 +280,87 @@ interface DuplexConnectionRequest {
   Timestamp?: number
 }
 
+interface SubscribeHTTPFlowsRequest {
+  ProtocolVersion?: number
+  LastSeenSequence?: number | string
+  LastSeenId?: number | string
+  ProjectGeneration?: number | string
+  DatabaseIdentity?: string
+  SessionId?: string
+  Filter?: {
+    SourceType?: string
+  }
+}
+
+interface HTTPFlowLiveSummary {
+  Id?: number | string
+  IsHTTPS?: boolean
+  Url?: string
+  SourceType?: string
+  Path?: string
+  Method?: string
+  BodyLength?: number | string
+  BodySizeVerbose?: string
+  RequestLength?: number | string
+  RequestSizeVerbose?: string
+  ContentType?: string
+  StatusCode?: number | string
+  GetParamsTotal?: number | string
+  PostParamsTotal?: number | string
+  CookieParamsTotal?: number | string
+  UpdatedAt?: number | string
+  CreatedAt?: number | string
+  Hash?: string
+  HostPort?: string
+  IPAddress?: string
+  HtmlTitle?: string
+  Tags?: string
+  NoFixContentLength?: boolean
+  IsWebsocket?: boolean
+  WebsocketHash?: string
+  IsReadTooSlowResponse?: boolean
+  IsTooLargeResponse?: boolean
+  TooLargeResponseHeaderFile?: string
+  TooLargeResponseBodyFile?: string
+  DurationMs?: number | string
+  HiddenIndex?: string
+  FromPlugin?: string
+  Host?: string
+  PathSuffix?: string
+  IsTooLargeRequest?: boolean
+  TooLargeRequestHeaderFile?: string
+  TooLargeRequestBodyFile?: string
+  IsRequestOversize?: boolean
+}
+
+interface HTTPFlowLiveGap {
+  Reason?: string
+  RequestedSequence?: number | string
+  OldestAvailableSequence?: number | string
+  LatestSequence?: number | string
+  HighWaterId?: number | string
+}
+
+interface HTTPFlowLiveEvent {
+  ProtocolVersion?: number
+  Type?: string
+  Sequence?: number | string
+  ProjectGeneration?: number | string
+  DatabaseIdentity?: string
+  ServerAtUnixMs?: number | string
+  CommittedAtUnixMs?: number | string
+  HighWaterId?: number | string
+  Flow?: HTTPFlowLiveSummary
+  Gap?: HTTPFlowLiveGap
+  SessionId?: string
+  Replayed?: boolean
+  RequestHijackAtUnixMs?: number | string
+  ResponseMirrorAtUnixMs?: number | string
+  FlowBuiltAtUnixMs?: number | string
+  PersistEnqueuedAtUnixMs?: number | string
+  PersistStartedAtUnixMs?: number | string
+}
+
 interface SetCurrentProjectRequest {
   ProjectName?: string
   Id?: number
@@ -655,6 +736,8 @@ interface YakitBridge {
   }
   httpFlow: {
     queryHistory: (payload: YakQueryHTTPFlowRequest) => Promise<GrpcEmptyResponse>
+    subscribe: (payload: SubscribeHTTPFlowsRequest, token: string) => Promise<GrpcEmptyResponse>
+    cancelSubscribe: (token: string) => Promise<GrpcEmptyResponse>
   }
   host: {
     getSystemProxy: (params?: GrpcEmptyRequest) => Promise<GetSystemProxyResult>

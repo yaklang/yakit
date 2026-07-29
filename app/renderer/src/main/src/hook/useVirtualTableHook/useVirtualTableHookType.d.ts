@@ -28,6 +28,8 @@ export type useVirtualTableHookParams<T, DataT, DataKey> = {
   maxDataLength?: number
   /** 滑窗已裁剪标记 */
   slidingClippedRef?: React.MutableRefObject<boolean>
+  /** 优先等待推送握手，握手不可用或断连时再回退轮询 */
+  preferServerPush?: boolean
 }
 
 export type VirtualPaging = {

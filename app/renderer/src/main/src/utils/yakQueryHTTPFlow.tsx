@@ -55,6 +55,14 @@ export interface YakQueryHTTPFlowRequest {
   MitmExtractAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
   AfterId?: number
   BeforeId?: number
+  /** 请求后端附带有界的链路诊断数据；不改变查询结果。 */
+  IncludeSystemTiming?: boolean
+  /** 列表不返回原始响应包；详情通过 GetHTTPFlowById 按需获取。 */
+  ExcludeResponseRaw?: boolean
+  /** 列表不返回原始请求包；需要数据包的交互通过 GetHTTPFlowById 按需获取。 */
+  ExcludeRequestRaw?: boolean
+  /** 已有游标的 MITM 实时增量查询跳过精确 Total；初始/历史/周期校准不得使用。 */
+  SkipTotal?: boolean
   /** 仅前端用于 BodyLength 筛选图标状态，不会传给后端 */
   bodyLength?: boolean
 }

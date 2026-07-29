@@ -129,6 +129,8 @@ process.on('loaded', function () {
     },
     httpFlow: {
       queryHistory: (payload) => invoke('query-http-flows', payload),
+      subscribe: (payload, token) => invoke('SubscribeHTTPFlows', payload, token),
+      cancelSubscribe: (token) => invoke('cancel-SubscribeHTTPFlows', token),
     },
     host: {
       getSystemProxy: (params = {}) => invoke('GetSystemProxy', params),

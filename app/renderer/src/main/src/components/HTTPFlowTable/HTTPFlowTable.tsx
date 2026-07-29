@@ -1,4 +1,5 @@
-import React, { Ref, useEffect, useMemo, useRef, useState, useContext } from 'react'
+import React, { Ref, useEffect, useLayoutEffect, useMemo, useRef, useState, useContext } from 'react'
+import { unstable_batchedUpdates } from 'react-dom'
 import { Divider, Tooltip, Badge } from 'antd'
 import { YakDeleteHTTPFlowRequest, YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
 import { YakScript } from '../../pages/invoker/schema'
@@ -12,6 +13,7 @@ import {
   useDebounceEffect,
   useDebounceFn,
   useMemoizedFn,
+  useThrottleFn,
   useUpdateEffect,
   useThrottleEffect,
 } from 'ahooks'
@@ -80,6 +82,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { JSONParseLog } from '@/utils/tool'
+import { yakitHTTPFlow, yakitStream } from '@/services/electronBridge'
 import {
   defFilterConfig,
   FilterConfig,
@@ -107,6 +110,7 @@ import {
   HTTP_FLOW_TABLE_SHIELD_DATA,
   OFFSET_LIMIT,
   HTTP_FLOW_TABLE_MAX_DATA_LENGTH,
+  MITM_FLOW_TABLE_OVERSCAN,
   OFFSET_STEP,
   defSort,
   type codecHistoryPluginProps,
@@ -133,6 +137,28 @@ import {
   filterHTTPFlowsByFavoriteAndTags,
 } from './HTTPFlowTable.utils'
 import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
+import {
+  createMITMLiveAdaptiveBatchState,
+  drainMITMLiveBacklog,
+  MITM_LIVE_CATCH_UP_PAYLOAD_BUDGET_BYTES,
+  selectMITMLiveInitialPageSize,
+  shouldSkipMITMLiveExactTotal,
+  updateMITMLiveAdaptiveBatchState,
+} from './HTTPFlowTable.live'
+import {
+  createHTTPFlowLiveDirectBatcher,
+  createHTTPFlowLiveDirectRecoveryGate,
+  createHTTPFlowLiveRefreshScheduler,
+  createHTTPFlowLiveStreamController,
+  httpFlowLiveSummaryToHTTPFlow,
+  shouldPreferHTTPFlowLiveRefresh,
+} from './HTTPFlowTable.stream'
+import {
+  mitmFlowObservability,
+  type HTTPFlowCommittedSignal,
+  type MITMLiveCycleToken,
+  type MITMLiveTriggerSource,
+} from './HTTPFlowTable.observability'
 
 //导出给其他组件用
 export * from './HTTPFlowTable.constants'
@@ -143,6 +169,9 @@ export * from './HTTPFlowTable.utils'
 export * from './components'
 
 const { ipcRenderer } = window.require('electron')
+
+const HTTP_FLOW_TOTAL_RECONCILE_INTERVAL = 10_000
+const HTTP_FLOW_FIELD_GROUP_REFRESH_INTERVAL = 10_000
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const {
@@ -281,6 +310,72 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const getAddDataByGrpcRef = useRef<(query: YakQueryHTTPFlowRequest) => void>(() => {})
   const offsetDataRef = useRef<HTTPFlow[]>([])
   const updateDataRef = useRef<() => void>(() => {})
+  const requestMITMLiveRefreshRef = useRef<(source: MITMLiveTriggerSource, serverSentAtUnixMs?: number) => void>(
+    () => {},
+  )
+  const flushHTTPFlowLiveRefreshRef = useRef<() => void>(() => {})
+  const flushHTTPFlowLiveDirectRef = useRef<(events: HTTPFlowLiveEvent[]) => void>(() => {})
+  const latestVisibleDataHighWaterRef = useRef(0)
+  const httpFlowLiveDirectRecoveryGate = useCreation(
+    () =>
+      createHTTPFlowLiveDirectRecoveryGate({
+        onChange: (snapshot) =>
+          mitmFlowObservability.recordHTTPFlowLiveDirectRecovery(snapshot.required, snapshot.fallbackHighWaterId),
+      }),
+    [],
+  )
+  const httpFlowLiveDirectBatcher = useCreation(
+    () =>
+      createHTTPFlowLiveDirectBatcher({
+        onFlush: (events) => unstable_batchedUpdates(() => flushHTTPFlowLiveDirectRef.current(events)),
+      }),
+    [],
+  )
+  const httpFlowLiveRefreshScheduler = useCreation(
+    () =>
+      createHTTPFlowLiveRefreshScheduler({
+        onFlush: () => flushHTTPFlowLiveRefreshRef.current(),
+      }),
+    [],
+  )
+  const httpFlowLiveStreamController = useCreation(
+    () =>
+      createHTTPFlowLiveStreamController({
+        transport: {
+          start: (request, token) => yakitHTTPFlow.subscribe(request, token),
+          cancel: (token) => yakitHTTPFlow.cancelSubscribe(token),
+          onData: (token, callback) => yakitStream.onData(token, callback),
+          onError: (token, callback) => yakitStream.onError(token, callback),
+          onEnd: (token, callback) => yakitStream.onEnd(token, callback),
+        },
+        createToken: () => randomString(40),
+        getMode: () => mitmFlowObservability.getHTTPFlowLiveStreamMode(),
+        observer: mitmFlowObservability,
+        onCommitted: (event, mode) => {
+          if (mode !== 'canary') return
+          httpFlowLiveDirectBatcher.enqueue(event)
+        },
+        onGap: () => {
+          httpFlowLiveDirectRecoveryGate.requireRecovery()
+          httpFlowLiveDirectBatcher.cancel()
+          httpFlowLiveRefreshScheduler.cancel()
+          requestMITMLiveRefreshRef.current('continuation')
+        },
+        onUnavailable: () => {
+          httpFlowLiveDirectRecoveryGate.requireRecovery()
+          httpFlowLiveDirectBatcher.cancel()
+          httpFlowLiveRefreshScheduler.cancel()
+          requestMITMLiveRefreshRef.current('continuation')
+        },
+        onReset: () => {
+          httpFlowLiveDirectRecoveryGate.reset()
+          httpFlowLiveDirectBatcher.cancel()
+          httpFlowLiveRefreshScheduler.cancel()
+        },
+      }),
+    [],
+  )
+  const mitmLiveAdaptiveBatchRef = useRef(createMITMLiveAdaptiveBatchState())
   const slidingClippedRef = useRef(false)
 
   useEffect(() => {
@@ -288,50 +383,89 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if (extraTimerRef.current) {
         clearInterval(extraTimerRef.current)
       }
+      httpFlowLiveDirectBatcher.cancel()
+      httpFlowLiveDirectRecoveryGate.reset()
+      httpFlowLiveRefreshScheduler.cancel()
+      httpFlowLiveStreamController.stop()
     }
-  }, [])
+  }, [
+    httpFlowLiveDirectBatcher,
+    httpFlowLiveDirectRecoveryGate,
+    httpFlowLiveRefreshScheduler,
+    httpFlowLiveStreamController,
+  ])
 
   // hook 用 Pagination.AfterId，后端 QueryHTTPFlows 要顶层 AfterId，这里做一层转换
-  const apiQueryHTTPFlows = useMemoizedFn(async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
-    const { Pagination, Filter } = hookParams
-    const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
-    // 仅 update（无游标）时更新 total
-    const isUpdateRequest = !AfterId && !BeforeId
-    const query: YakQueryHTTPFlowRequest = {
-      ...Filter,
-      Pagination: { ...paginationFields },
-      ...(AfterId ? { AfterId } : {}),
-      ...(BeforeId ? { BeforeId } : {}),
-    }
-    if (Array.isArray(query.Methods)) {
-      query.Methods = query.Methods.join(',')
-    }
-    if ('bodyLength' in query) {
-      delete query.bodyLength
-    }
-    //插件执行中流量数据必有runTimeId
-    if (pageType === 'Plugin' && !runTimeId) {
+  const apiQueryHTTPFlows = useMemoizedFn(
+    async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }, liveCycleToken?: MITMLiveCycleToken) => {
+      const { Pagination, Filter } = hookParams
+      const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
+      // 仅 update（无游标）时更新 total
+      const isUpdateRequest = !AfterId && !BeforeId
+      const query: YakQueryHTTPFlowRequest = {
+        ...Filter,
+        Pagination: { ...paginationFields },
+        ...(AfterId ? { AfterId } : {}),
+        ...(BeforeId ? { BeforeId } : {}),
+        IncludeSystemTiming: pageType === 'MITM' && mitmFlowObservability.isBackendSystemTimingEnabled(),
+        ExcludeResponseRaw: pageType === 'MITM',
+        ExcludeRequestRaw: pageType === 'MITM',
+        SkipTotal:
+          pageType === 'MITM' &&
+          mitmFlowObservability.isSkipLiveExactTotalEnabled() &&
+          shouldSkipMITMLiveExactTotal(AfterId, BeforeId),
+      }
+      if (Array.isArray(query.Methods)) {
+        query.Methods = query.Methods.join(',')
+      }
+      if ('bodyLength' in query) {
+        delete query.bodyLength
+      }
+      //插件执行中流量数据必有runTimeId
+      if (pageType === 'Plugin' && !runTimeId) {
+        if (isUpdateRequest) {
+          setTotal(0)
+        }
+        return { Data: [], Total: 0, Pagination: paginationFields }
+      }
+      if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
+        const time = await getRemoteValue(MITMConsts.MITMStartTimeStamp)
+        if (time) {
+          query.AfterUpdatedAt = parseInt(time, 10)
+        }
+      }
+      const timingToken =
+        pageType === 'MITM'
+          ? mitmFlowObservability.beginQuery({
+              liveCycleId: liveCycleToken?.id,
+              cursorBefore: Number(AfterId) || 0,
+              requestedRows: Number(paginationFields.Limit) || 0,
+            })
+          : undefined
+      let rsp: YakQueryHTTPFlowResponse
+      try {
+        rsp = (await ipcRenderer.invoke('QueryHTTPFlows', query)) as YakQueryHTTPFlowResponse
+        if (timingToken) mitmFlowObservability.completeQuery(timingToken, rsp)
+        if (pageType === 'MITM' && inViewport) {
+          httpFlowLiveStreamController.observeQuery(rsp, Filter)
+        }
+      } catch (error) {
+        if (timingToken) mitmFlowObservability.failQuery(timingToken)
+        throw error
+      }
       if (isUpdateRequest) {
-        setTotal(0)
+        setTotal(rsp.Total)
+        if (extraTimerRef.current) {
+          clearInterval(extraTimerRef.current)
+        }
+        extraTimerRef.current = setInterval(
+          () => getAddDataByGrpcRef.current(query),
+          HTTP_FLOW_TOTAL_RECONCILE_INTERVAL,
+        )
       }
-      return { Data: [], Total: 0, Pagination: paginationFields }
-    }
-    if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
-      const time = await getRemoteValue(MITMConsts.MITMStartTimeStamp)
-      if (time) {
-        query.AfterUpdatedAt = parseInt(time, 10)
-      }
-    }
-    const rsp = (await ipcRenderer.invoke('QueryHTTPFlows', query)) as YakQueryHTTPFlowResponse
-    if (isUpdateRequest) {
-      setTotal(rsp.Total)
-      if (extraTimerRef.current) {
-        clearInterval(extraTimerRef.current)
-      }
-      extraTimerRef.current = setInterval(() => getAddDataByGrpcRef.current(query), 1000)
-    }
-    return rsp
-  })
+      return rsp
+    },
+  )
 
   const isTopLoadRequest = useMemoizedFn((hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
     const { AfterId, BeforeId, Limit } = hookParams.Pagination
@@ -342,6 +476,77 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const grpcQueryHTTPFlows = useMemoizedFn(async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
     const { Pagination } = hookParams
     const { AfterId, BeforeId, Order, OrderBy, ...paginationFields } = Pagination
+    if (pageType === 'MITM' && !AfterId && !BeforeId) {
+      mitmLiveAdaptiveBatchRef.current = createMITMLiveAdaptiveBatchState()
+    }
+    if (pageType === 'MITM' && isTopLoadRequest(hookParams)) {
+      const viewportRows = Math.max(1, Number(Pagination.Limit) || OFFSET_LIMIT)
+      const catchUpMode = mitmLiveAdaptiveBatchRef.current.catchingUp
+      const initialPageSize = selectMITMLiveInitialPageSize(viewportRows, mitmLiveAdaptiveBatchRef.current)
+      const liveCycleToken = mitmFlowObservability.beginLiveCycle(Number(AfterId), initialPageSize)
+      try {
+        const result = await drainMITMLiveBacklog<HTTPFlow, YakQueryHTTPFlowResponse>(
+          Number(AfterId),
+          {
+            initialPageSize,
+            ...(catchUpMode
+              ? {
+                  payloadBudgetBytes: MITM_LIVE_CATCH_UP_PAYLOAD_BUDGET_BYTES,
+                  targetPagePayloadBytes: MITM_LIVE_CATCH_UP_PAYLOAD_BUDGET_BYTES,
+                }
+              : {}),
+          },
+          (cursor, limit) =>
+            apiQueryHTTPFlows(
+              {
+                ...hookParams,
+                Pagination: {
+                  ...Pagination,
+                  Page: 1,
+                  Limit: limit,
+                  AfterId: cursor,
+                },
+              },
+              liveCycleToken,
+            ),
+        )
+        const { data: mergedData, lastResponse } = result
+        mitmLiveAdaptiveBatchRef.current = updateMITMLiveAdaptiveBatchState(mitmLiveAdaptiveBatchRef.current, {
+          rows: mergedData.length,
+          payloadBytes: result.payloadBytes,
+          hasMore: result.hasMore,
+        })
+
+        if (!lastResponse) {
+          const response = await apiQueryHTTPFlows(hookParams, liveCycleToken)
+          mitmFlowObservability.completeLiveCycle(liveCycleToken, response.Data || [], {
+            hasMore: false,
+            stopReason: 'exhausted',
+          })
+          return response
+        }
+        mitmFlowObservability.completeLiveCycle(liveCycleToken, mergedData, {
+          hasMore: result.hasMore,
+          stopReason: result.stopReason,
+          payloadBytes: result.payloadBytes,
+        })
+        const streamLastSeenId = httpFlowLiveStreamController.snapshot().lastSeenId
+        const recoveryCandidate = httpFlowLiveDirectRecoveryGate.observeQuery(
+          result.cursorAfter,
+          streamLastSeenId,
+          !result.hasMore,
+        )
+        if (recoveryCandidate && mergedData.length === 0) {
+          httpFlowLiveDirectRecoveryGate.commitVisible(latestVisibleDataHighWaterRef.current, streamLastSeenId)
+        }
+        if (result.shouldContinueImmediately) requestMITMLiveRefreshRef.current('continuation')
+        if (mergedData.length) setTotal((prev) => prev + mergedData.length)
+        return { ...lastResponse, Data: mergedData }
+      } catch (error) {
+        mitmFlowObservability.failLiveCycle(liveCycleToken)
+        throw error
+      }
+    }
     if (
       !slidingClippedRef.current &&
       !backgroundRefresh &&
@@ -369,9 +574,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return apiQueryHTTPFlows(hookParams)
   })
 
-  //只有history需要裁剪
+  // 实时 MITM 同样只保留一个内存窗口，完整数据仍在数据库中并可按滚动继续加载。
   const maxDataLength = useMemo(() => {
-    return pageType === 'History' ? HTTP_FLOW_TABLE_MAX_DATA_LENGTH : 0
+    return pageType === 'History' || pageType === 'MITM' ? HTTP_FLOW_TABLE_MAX_DATA_LENGTH : 0
   }, [pageType])
 
   // 表格数据交给 useVirtualTableHook：负责上下滚动加载、中间位置拉新数据（offsetData 红点）
@@ -382,7 +587,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     pagination,
     loading,
     offsetData,
-    { startT, setTLoad: setLoading, patchTData, noResetRefreshT: updateData, setP, refreshT },
+    { startT, notifyT, setTLoad: setLoading, patchTData, pushTData, noResetRefreshT: updateData, setP, refreshT },
   ] = useVirtualTableHook<ParamsTProps & { Filter: YakQueryHTTPFlowRequest }, HTTPFlow, 'Data', 'Id'>({
     tableBoxRef: useRef(null), // props.inViewport 判断可见性，不必再挂一个 ref
     tableRef,
@@ -393,6 +598,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     inViewport: inViewport || isBackgroundRefresh,
     maxDataLength,
     slidingClippedRef,
+    preferServerPush: pageType === 'MITM',
     defaultParams: {
       Filter: {
         SourceType: props.params?.SourceType || 'mitm',
@@ -410,24 +616,65 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     },
   })
 
+  // useLayoutEffect runs after React has committed the rows and before paint,
+  // which is the closest low-overhead marker for "visible in the table".
+  useLayoutEffect(() => {
+    if (pageType !== 'MITM') return
+    mitmFlowObservability.markVisible(data)
+    latestVisibleDataHighWaterRef.current = data.reduce((highWaterId, flow) => Math.max(highWaterId, flow.Id), 0)
+    const streamLastSeenId = httpFlowLiveStreamController.snapshot().lastSeenId
+    const recovered = httpFlowLiveDirectRecoveryGate.commitVisible(
+      latestVisibleDataHighWaterRef.current,
+      streamLastSeenId,
+    )
+    if (
+      !recovered &&
+      httpFlowLiveDirectRecoveryGate.snapshot().required &&
+      (tableRef.current?.containerRef?.scrollTop ?? Number.POSITIVE_INFINITY) < 10
+    ) {
+      httpFlowLiveRefreshScheduler.request()
+    }
+  }, [
+    data,
+    httpFlowLiveDirectRecoveryGate,
+    httpFlowLiveRefreshScheduler,
+    httpFlowLiveStreamController,
+    pageType,
+    tableRef,
+  ])
+
+  useEffect(() => {
+    if (pageType !== 'MITM' || !inViewport) {
+      httpFlowLiveDirectBatcher.cancel()
+      httpFlowLiveDirectRecoveryGate.reset()
+      httpFlowLiveRefreshScheduler.cancel()
+      httpFlowLiveStreamController.stop()
+    }
+  }, [
+    httpFlowLiveDirectBatcher,
+    httpFlowLiveDirectRecoveryGate,
+    httpFlowLiveRefreshScheduler,
+    httpFlowLiveStreamController,
+    inViewport,
+    pageType,
+  ])
+
   // 定时刷新 total，不参与上下滚动加载
   const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest) => {
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     if (clientHeight === 0) return
     const copyQuery = structuredClone(query)
+    copyQuery.IncludeSystemTiming = false
     copyQuery.Pagination = {
       Page: 1,
-      Limit: pagination.Limit,
+      Limit: 1,
       Order: 'desc',
       OrderBy: 'Id',
     }
     ipcRenderer
       .invoke('QueryHTTPFlows', copyQuery)
       .then((rsp: YakQueryHTTPFlowResponse) => {
-        const resData = rsp?.Data || []
-        if (resData.length) {
-          setTotal(rsp.Total)
-        }
+        setTotal(rsp.Total)
       })
       .catch(() => {
         if (extraTimerRef.current) {
@@ -474,6 +721,47 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     patchTData((prev) => (typeof value === 'function' ? value(prev) : value))
   })
   updateDataRef.current = updateData
+  requestMITMLiveRefreshRef.current = (source, serverSentAtUnixMs) => {
+    mitmFlowObservability.recordLiveTrigger(source, serverSentAtUnixMs)
+    notifyT()
+  }
+  flushHTTPFlowLiveRefreshRef.current = () => {
+    if (pageType === 'MITM' && inViewport && mitmFlowObservability.getHTTPFlowLiveStreamMode() === 'canary') {
+      notifyT()
+    }
+  }
+  flushHTTPFlowLiveDirectRef.current = (events) => {
+    const rows = events
+      .map((event) => httpFlowLiveSummaryToHTTPFlow(event.Flow))
+      .filter((flow): flow is HTTPFlow => !!flow)
+      .sort((left, right) => right.Id - left.Id)
+    if (mitmFlowObservability.getHTTPFlowLiveStreamMode() !== 'canary') return
+    const inserted =
+      !httpFlowLiveDirectRecoveryGate.snapshot().required &&
+      rows.length > 0 &&
+      pageType === 'MITM' &&
+      inViewport &&
+      httpFlowLiveStreamController.snapshot().active &&
+      pushTData(rows)
+    if (inserted !== false) {
+      mitmFlowObservability.recordHTTPFlowLiveDirectBatch(inserted, events)
+      if (inserted > 0) setTotal((prev) => prev + inserted)
+      return
+    }
+
+    httpFlowLiveDirectRecoveryGate.markFallback(events)
+    mitmFlowObservability.recordHTTPFlowLiveDirectFallback(events.length)
+    const serverSentAtUnixMs = Math.min(
+      ...events
+        .map((event) => Number(event.ServerAtUnixMs))
+        .filter((timestamp) => Number.isFinite(timestamp) && timestamp > 0),
+    )
+    mitmFlowObservability.recordLiveTrigger(
+      'httpflow-live-stream',
+      Number.isFinite(serverSentAtUnixMs) ? serverSentAtUnixMs : undefined,
+    )
+    httpFlowLiveRefreshScheduler.request()
+  }
 
   useEffect(() => {
     if (!viewAttachIdFirstRef.current || !data.length) return
@@ -831,24 +1119,69 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const [updateCacheData, setUpdateCacheData] = useState<UpdateCacheData[]>([])
 
+  const refreshFieldGroups = useThrottleFn(() => setWatchRefresh((prev) => !prev), {
+    wait: HTTP_FLOW_FIELD_GROUP_REFRESH_INTERVAL,
+    leading: true,
+    trailing: true,
+  }).run
+
   const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
+    let serverSentAtUnixMs: number | undefined
     try {
-      const updateData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onRefreshQueryHTTPFlowsFun' })
+      const parsedData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onRefreshQueryHTTPFlowsFun' })
+      const isEnvelope =
+        parsedData &&
+        typeof parsedData === 'object' &&
+        parsedData.__yakitHTTPFlowRefreshEnvelope === 1 &&
+        'payload' in parsedData
+      const updateData = isEnvelope ? parsedData.payload : parsedData
+      const envelopeTimestamp = Number(isEnvelope ? parsedData.serverSentAtUnixMs : undefined)
+      serverSentAtUnixMs = Number.isFinite(envelopeTimestamp) && envelopeTimestamp > 0 ? envelopeTimestamp : undefined
       if (typeof updateData !== 'string') {
         if (updateData.action === 'update') {
           setUpdateCacheData((prev) => prev.concat(updateData))
         }
       }
     } catch (error) {}
-    setWatchRefresh((prev) => !prev)
-    startT()
+    refreshFieldGroups()
+    if (pageType !== 'MITM') {
+      startT()
+      return
+    }
+    if (
+      shouldPreferHTTPFlowLiveRefresh(
+        pageType,
+        inViewport,
+        mitmFlowObservability.getHTTPFlowLiveStreamMode(),
+        httpFlowLiveStreamController.snapshot(),
+      )
+    ) {
+      return
+    }
+    requestMITMLiveRefreshRef.current('duplex', serverSentAtUnixMs)
+  })
+  const onMITMFlowCommitted = useMemoizedFn((data) => {
+    if (pageType !== 'MITM' || !inViewport) return
+    try {
+      const signal = JSONParseLog(data, {
+        page: 'HTTPFlowTable',
+        fun: 'onMITMFlowCommitted',
+      }) as HTTPFlowCommittedSignal
+      const serverSentAtUnixMs = Number(signal.serverSentAtUnixMs)
+      requestMITMLiveRefreshRef.current(
+        'flow-committed',
+        Number.isFinite(serverSentAtUnixMs) && serverSentAtUnixMs > 0 ? serverSentAtUnixMs : undefined,
+      )
+    } catch (error) {}
   })
   useEffect(() => {
     emiter.on('onRefreshQueryHTTPFlows', onRefreshQueryHTTPFlowsFun)
+    emiter.on('onMITMFlowCommitted', onMITMFlowCommitted)
     return () => {
       emiter.off('onRefreshQueryHTTPFlows', onRefreshQueryHTTPFlowsFun)
+      emiter.off('onMITMFlowCommitted', onMITMFlowCommitted)
     }
-  }, [])
+  }, [onMITMFlowCommitted, onRefreshQueryHTTPFlowsFun])
 
   useEffect(() => {
     // 获取缓存的后台刷新状态
@@ -1264,8 +1597,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     },
   )
 
-  const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
-    const length = selectedRows.length
+  const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean, rows?: HTTPFlow[]) => {
+    const batchRows = rows || selectedRows
+    const length = batchRows.length
     if (length <= 0) {
       yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
       return
@@ -1279,7 +1613,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       return
     }
     for (let i = 0; i < length; i++) {
-      const element = selectedRows[i]
+      const element = batchRows[i]
       f(element)
       if (i === length - 1) {
         setSelectedRowKeys([])
@@ -2637,6 +2971,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           isRefresh={isRefresh}
           renderKey="Id"
           data={realData}
+          overscan={pageType === 'MITM' ? MITM_FLOW_TABLE_OVERSCAN : undefined}
           rowSelection={{
             isAll: isAllSelect,
             type: 'checkbox',

@@ -56,6 +56,7 @@ import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook
 import { v4 as uuidv4 } from 'uuid'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { shouldRenderVirtualTableCellForHover } from './TableVirtualResize.memo'
 const { RangePicker } = YakitDatePicker
 
 /**
@@ -2142,7 +2143,14 @@ const CellRender = React.memo(
     if (preProps.rowSelection?.selectedRowKeys !== nextProps.rowSelection?.selectedRowKeys) {
       return false
     }
-    if (preProps.mouseCellId !== nextProps.mouseCellId) {
+    if (
+      shouldRenderVirtualTableCellForHover(
+        preProps.mouseCellId,
+        nextProps.mouseCellId,
+        preProps.item.data[preProps.renderKey],
+        nextProps.item.data[nextProps.renderKey],
+      )
+    ) {
       return false
     }
     if (preProps.item.data !== nextProps.item.data) {
@@ -2378,7 +2386,14 @@ const CellRenderDrop = React.memo(
     if (preProps.rowSelection?.selectedRowKeys !== nextProps.rowSelection?.selectedRowKeys) {
       return false
     }
-    if (preProps.mouseCellId !== nextProps.mouseCellId) {
+    if (
+      shouldRenderVirtualTableCellForHover(
+        preProps.mouseCellId,
+        nextProps.mouseCellId,
+        preProps.item.data[preProps.renderKey],
+        nextProps.item.data[nextProps.renderKey],
+      )
+    ) {
       return false
     }
     if (preProps.item.data !== nextProps.item.data) {

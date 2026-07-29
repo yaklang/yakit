@@ -371,6 +371,7 @@ const matchHTTPFlowTagsFilter = (flow: HTTPFlow, tagsFilter: string[]) => {
 }
 
 export const filterHTTPFlowsByFavoriteAndTags = (list: HTTPFlow[], tagsFilter: string[], onlyFavorite: boolean) => {
+  if (!onlyFavorite && tagsFilter.length === 0) return list
   return list.filter((flow) => {
     if (onlyFavorite && !isHTTPFlowFavorite(flow)) return false
     return matchHTTPFlowTagsFilter(flow, tagsFilter)
@@ -378,17 +379,21 @@ export const filterHTTPFlowsByFavoriteAndTags = (list: HTTPFlow[], tagsFilter: s
 }
 
 export const getClassNameData = (resData: HTTPFlow[]) => {
-  const newData: HTTPFlow[] = []
-  const length = resData.length
-  for (let index = 0; index < length; index++) {
-    const item: HTTPFlow = resData[index]
-    const className: string | undefined = filterColorTag(item.Tags) || undefined
+  let newData: HTTPFlow[] | undefined
+  for (let index = 0; index < resData.length; index++) {
+    const item = resData[index]
+    const className = filterColorTag(item.Tags) || undefined
+    if (item.cellClassName === className) {
+      newData?.push(item)
+      continue
+    }
+    if (!newData) newData = resData.slice(0, index)
     newData.push({
       ...item,
       cellClassName: className,
     })
   }
-  return newData
+  return newData || resData
 }
 
 export const onConvertBodySizeByUnit = (length: number, unit: 'B' | 'K' | 'M') => {

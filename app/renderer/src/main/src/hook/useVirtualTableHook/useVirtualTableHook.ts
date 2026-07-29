@@ -9,10 +9,17 @@ import {
 } from './useVirtualTableHookType'
 import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
-import { serverPushStatus } from '@/utils/duplex/duplex'
+import { serverPushStatus, subscribeServerPushStatus } from '@/utils/duplex/duplex'
 import { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { yakitNotify } from '@/utils/notification'
 import { genDefaultPagination } from '@/pages/invoker/schema'
+import {
+  mergeVirtualTableServerPushRows,
+  prependAcceptedVirtualTableServerPushRows,
+  selectVirtualTableServerPushRows,
+  selectVirtualTableAutoRefreshAction,
+  VirtualTableViewportSnapshot,
+} from './useVirtualTableScheduler'
 
 const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
@@ -131,6 +138,7 @@ export default function useVirtualTableHook<
     inViewport: inViewportProp,
     maxDataLength = 0,
     slidingClippedRef: slidingClippedRefProp,
+    preferServerPush = false,
   } = props
 
   const isSliding = maxDataLength > 0
@@ -154,9 +162,13 @@ export default function useVirtualTableHook<
   const minIdRef = useRef<number>(0)
   // 接口是否正在请求
   const isGrpcRef = useRef<boolean>(false)
+  // Server push received while a query is running is coalesced into one
+  // immediate follow-up instead of being dropped by the single-flight guard.
+  const notificationRefreshPendingRef = useRef(false)
+  const flushNotificationRefreshRef = useRef<() => void>(() => {})
   const [total, setTotal] = useState<number>(0)
   // 是否循环接口
-  const [isLoop, setIsLoop] = useState<boolean>(!serverPushStatus)
+  const [isLoop, setIsLoop] = useState<boolean>(preferServerPush ? false : !serverPushStatus)
   // 表格排序
   const sortRef = useRef<SortProps>(defSort)
   const [loading, setLoading] = useState(false)
@@ -165,11 +177,24 @@ export default function useVirtualTableHook<
   const idRef = useRef<NodeJS.Timeout>()
   // stopT 后避免被内部逻辑(滚动/布局)再次开启轮询
   const loopPausedRef = useRef<boolean>(false)
+  const observedServerPushRef = useRef(serverPushStatus)
   // 表格是否可见
   const [internalInViewport] = useInViewport(tableBoxRef)
   const inViewport = inViewportProp ?? internalInViewport
   // 是否允许更改endLoop
   const isAllowSetEndLoopRef = useRef<boolean>(false)
+
+  useEffect(() => {
+    if (!preferServerPush) return
+    return subscribeServerPushStatus((active) => {
+      if (active) {
+        observedServerPushRef.current = true
+        setIsLoop(false)
+        return
+      }
+      if (observedServerPushRef.current && !loopPausedRef.current) setIsLoop(true)
+    })
+  }, [preferServerPush])
 
   const recoverTopIdRef = useRef(0)
   const pendingScrollRef = useRef<ScrollPending<DataT> | null>(null)
@@ -345,12 +370,14 @@ export default function useVirtualTableHook<
         }
         yakitNotify('error', `query code scan failed: ${e}`)
       })
-      .finally(() =>
+      .finally(() => {
+        const releaseDelay = notificationRefreshPendingRef.current ? 0 : 100
         setTimeout(() => {
           setLoading(false)
           isGrpcRef.current = false
-        }, 100),
-      )
+          flushNotificationRefreshRef.current()
+        }, releaseDelay)
+      })
   })
 
   // 偏移量更新顶部数据
@@ -462,7 +489,9 @@ export default function useVirtualTableHook<
       }
       getDataByGrpc(query, 'update')
     } else {
-      if (!loopPausedRef.current) setIsLoop(true)
+      // MITM waits for the push handshake; the viewport sampler enables the
+      // one-second fallback if push is still unavailable.
+      if (!loopPausedRef.current && !preferServerPush) setIsLoop(true)
     }
   })
 
@@ -526,26 +555,54 @@ export default function useVirtualTableHook<
     }
   })
 
+  const flushNotificationRefresh = useMemoizedFn(() => {
+    if (!notificationRefreshPendingRef.current || loopPausedRef.current || isGrpcRef.current || !inViewport) return
+    notificationRefreshPendingRef.current = false
+    scrollUpdate()
+  })
+  flushNotificationRefreshRef.current = flushNotificationRefresh
+
+  /** Coalesced immediate refresh for invalidation notifications. */
+  const notifyT = useMemoizedFn(() => {
+    loopPausedRef.current = false
+    notificationRefreshPendingRef.current = true
+    // Duplex push is the primary scheduler. Keep the interval only for
+    // engines that have not negotiated server push, otherwise each push also
+    // starts a duplicate one-second poller.
+    if (!preferServerPush && !serverPushStatus) setIsLoop(true)
+    flushNotificationRefresh()
+  })
+
   // 滚动条监听
   useEffect(() => {
-    let sTop, cHeight, sHeight
+    let previousSnapshot: VirtualTableViewportSnapshot | undefined
     let id = setInterval(() => {
-      const scrollTop = tableRef.current?.containerRef?.scrollTop
-      const clientHeight = tableRef.current?.containerRef?.clientHeight
-      const scrollHeight = tableRef.current?.containerRef?.scrollHeight
-      if (sTop !== scrollTop || cHeight !== clientHeight || sHeight !== scrollHeight) {
-        if (!loopPausedRef.current) setIsLoop(true)
+      const currentSnapshot: VirtualTableViewportSnapshot = {
+        scrollTop: tableRef.current?.containerRef?.scrollTop,
+        clientHeight: tableRef.current?.containerRef?.clientHeight,
+        scrollHeight: tableRef.current?.containerRef?.scrollHeight,
+        serverPushActive: serverPushStatus,
       }
-      sTop = scrollTop
-      cHeight = clientHeight
-      sHeight = scrollHeight
+      const action = selectVirtualTableAutoRefreshAction(previousSnapshot, currentSnapshot)
+      previousSnapshot = currentSnapshot
+
+      if (action === 'stop-poll' || action === 'refresh-once') {
+        setIsLoop(false)
+      }
+      if (loopPausedRef.current) return
+      if (action === 'start-poll') {
+        setIsLoop(true)
+      } else if (action === 'refresh-once') {
+        notificationRefreshPendingRef.current = true
+        flushNotificationRefreshRef.current()
+      }
     }, 1000)
     return () => clearInterval(id)
   }, [])
 
   useEffect(() => {
     if (inViewport) {
-      // scrollUpdate()
+      flushNotificationRefresh()
       if (isLoop) {
         if (idRef.current) {
           clearInterval(idRef.current)
@@ -554,7 +611,7 @@ export default function useVirtualTableHook<
       }
     }
     return () => clearInterval(idRef.current)
-  }, [inViewport, isLoop, scrollUpdate])
+  }, [flushNotificationRefresh, inViewport, isLoop, scrollUpdate])
 
   useDebounceEffect(
     () => {
@@ -601,6 +658,7 @@ export default function useVirtualTableHook<
   /** @name 关闭表格循环 */
   const stopT = useMemoizedFn(() => {
     loopPausedRef.current = true
+    notificationRefreshPendingRef.current = false
     setIsLoop(false)
     if (idRef.current) clearInterval(idRef.current)
   })
@@ -621,6 +679,42 @@ export default function useVirtualTableHook<
     setData(value)
   })
 
+  /**
+   * Commit body-free newest rows from an ordered server stream. Returning
+   * false asks the caller to recover through the normal query path.
+   */
+  const pushTData = useMemoizedFn((incoming: DataT[]): number | false => {
+    if (!incoming.length) return 0
+    const scrollTop = tableRef.current?.containerRef?.scrollTop
+    const orderBy = String(sortRef.current.orderBy || idKey).toLowerCase()
+    if (
+      !inViewport ||
+      isGrpcRef.current ||
+      typeof scrollTop !== 'number' ||
+      scrollTop >= 10 ||
+      !['desc', 'none'].includes(sortRef.current.order) ||
+      !['id', 'created_at'].includes(orderBy)
+    ) {
+      return false
+    }
+
+    const prepared = initResDataFun ? initResDataFun(incoming) : incoming
+    const snapshot = data
+    const acceptedRows = selectVirtualTableServerPushRows(snapshot, prepared, idKey)
+    if (!acceptedRows.length) return 0
+    if (getOffsetData().length) setOffsetData([])
+    setData((current) => {
+      const merged =
+        current === snapshot
+          ? prependAcceptedVirtualTableServerPushRows(current, acceptedRows, maxDataLength)
+          : mergeVirtualTableServerPushRows(current, acceptedRows, idKey, maxDataLength)
+      if (merged.clipped) slidingClippedRef.current = true
+      syncSlidingEdgeIds(merged.data, sortRef.current.order, idKey, maxIdRef, minIdRef)
+      return merged.data
+    })
+    return acceptedRows.length
+  })
+
   /** @name 设置params */
   const setP = useMemoizedFn((newParams: ParamsTProps) => {
     const data: ParamsTProps = {
@@ -636,6 +730,9 @@ export default function useVirtualTableHook<
     }
     if (data.Pagination.Order) {
       sortRef.current.order = data.Pagination.Order as 'none' | 'asc' | 'desc'
+    }
+    if (data.Pagination.OrderBy) {
+      sortRef.current.orderBy = data.Pagination.OrderBy
     }
     if (typeof newParams.startLoop === 'boolean') {
       newParams.startLoop ? startT() : stopT()
@@ -653,6 +750,6 @@ export default function useVirtualTableHook<
     pagination,
     loading,
     offsetData,
-    { startT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, patchTData, setP },
+    { startT, notifyT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, patchTData, pushTData, setP },
   ] as const
 }

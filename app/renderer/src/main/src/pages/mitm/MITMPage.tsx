@@ -515,6 +515,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
   return (
     <>
       <div
+        data-testid="mitm-page"
+        data-mitm-status={status}
+        data-mitm-version={mitmVersion}
         className={style['mitm-page']}
         ref={mitmPageRef}
         style={status === 'idle' ? { padding: 0 } : { padding: '8px 16px 0px 0px' }}

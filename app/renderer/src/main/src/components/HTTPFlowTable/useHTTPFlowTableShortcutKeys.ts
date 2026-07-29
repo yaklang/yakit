@@ -10,6 +10,7 @@ import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutK
 import { openExternalWebsite } from '@/utils/openWebsite'
 import { yakitNotify } from '@/utils/notification'
 import type { YakDeleteHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import { hydrateHTTPFlowRequest } from './HTTPFlowTable.packet'
 
 const isMonacoFocused = (focus?: string[] | null) =>
   (focus || []).some((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
@@ -48,20 +49,30 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
     onRemoveHttpHistory,
   } = options
 
+  const runWithRequestPacket = (flow: HTTPFlow, action: (hydrated: HTTPFlow) => void | Promise<void>) => {
+    hydrateHTTPFlowRequest(flow)
+      .then(action)
+      .catch((error) => yakitNotify('error', `Query HTTPFlow failed: ${error}`))
+  }
+
   useShortcutKeyTrigger('sendAndJump*common', (focus) => {
     const selected = getSelected?.()
     if (!inViewport || !selected || isMonacoFocused(focus)) return
-    selected.IsWebsocket
-      ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request)
-      : onSendToTab(selected, true, downstreamProxyStr, fromMITM)
+    runWithRequestPacket(selected, (hydrated) =>
+      hydrated.IsWebsocket
+        ? newWebsocketFuzzerTab(hydrated.IsHTTPS, hydrated.Request)
+        : onSendToTab(hydrated, true, downstreamProxyStr, fromMITM),
+    )
   })
 
   useShortcutKeyTrigger('send*common', (focus) => {
     const selected = getSelected()
     if (!inViewport || !selected || isMonacoFocused(focus)) return
-    selected.IsWebsocket
-      ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
-      : onSendToTab(selected, false, downstreamProxyStr, fromMITM)
+    runWithRequestPacket(selected, (hydrated) =>
+      hydrated.IsWebsocket
+        ? newWebsocketFuzzerTab(hydrated.IsHTTPS, hydrated.Request, false)
+        : onSendToTab(hydrated, false, downstreamProxyStr, fromMITM),
+    )
   })
 
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
@@ -132,12 +143,16 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
     const selected = getSelected()
     if (!inViewport || !selected || isMonacoFocused(focus)) return
-    generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), false)
+    runWithRequestPacket(selected, (hydrated) =>
+      generateCSRFPocByRequest(hydrated.Request, hydrated.IsHTTPS, (e) => setClipboardText(e), false),
+    )
   })
 
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
     const selected = getSelected()
     if (!inViewport || !selected || isMonacoFocused(focus)) return
-    generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), true)
+    runWithRequestPacket(selected, (hydrated) =>
+      generateCSRFPocByRequest(hydrated.Request, hydrated.IsHTTPS, (e) => setClipboardText(e), true),
+    )
   })
 }

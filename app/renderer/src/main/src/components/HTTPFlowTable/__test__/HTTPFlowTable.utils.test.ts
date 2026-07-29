@@ -3,12 +3,45 @@ import {
   buildHTTPFlowTableAdvancedQuery,
   buildLegacyHTTPFlowTableFilterConfig,
   buildRuleSummaryList,
+  filterHTTPFlowsByFavoriteAndTags,
+  getClassNameData,
   hasActiveHTTPFlowTableFilterConfig,
   mergeRuleSummaryItems,
   safeParseHTTPFlowTableCache,
   splitHTTPFlowTableShieldData,
   uniqStrings,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
+import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
+
+describe('getClassNameData', () => {
+  it('preserves the array and row identity when the derived color class is unchanged', () => {
+    const row = { Id: 1, Tags: '' } as HTTPFlow
+    const rows = [row]
+
+    expect(getClassNameData(rows)).toBe(rows)
+    expect(getClassNameData(rows)[0]).toBe(row)
+  })
+
+  it('copies only rows whose derived color class changed', () => {
+    const unchanged = { Id: 1, Tags: '' } as HTTPFlow
+    const changed = { Id: 2, Tags: 'YAKIT_COLOR_RED' } as HTTPFlow
+    const rows = [unchanged, changed]
+    const result = getClassNameData(rows)
+
+    expect(result).not.toBe(rows)
+    expect(result[0]).toBe(unchanged)
+    expect(result[1]).not.toBe(changed)
+    expect(result[1].cellClassName).toBe('table-cell-bg-red')
+  })
+})
+
+describe('filterHTTPFlowsByFavoriteAndTags', () => {
+  it('preserves the input array when no client-side filter is active', () => {
+    const rows = [{ Id: 1 }] as HTTPFlow[]
+
+    expect(filterHTTPFlowsByFavoriteAndTags(rows, [], false)).toBe(rows)
+  })
+})
 
 const defaultFilterConfig: Parameters<typeof hasActiveHTTPFlowTableFilterConfig>[0] = {
   filterMode: 'shield',

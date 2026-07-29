@@ -10,28 +10,38 @@ module.exports = {
   registerHandler: (windows, stream, streamMap, token) => {
     const currentStream = streamMap.get(token)
     if (!!currentStream) {
-      return
+      stream !== currentStream && stream?.cancel?.()
+      return false
     }
 
     streamMap.set(token, stream)
-    stream.on('data', (data) => {
-      if (!windows || windows.isDestroyed() || windows.webContents.isDestroyed()) {
-        return
+    const isCurrent = () => streamMap.get(token) === stream
+    const canSend = () => !!windows && !windows.isDestroyed() && !windows.webContents.isDestroyed()
+    const stopIfWindowUnavailable = () => {
+      if (canSend()) return false
+      if (isCurrent()) {
+        streamMap.delete(token)
+        stream?.cancel?.()
       }
+      return true
+    }
+
+    stream.on('data', (data) => {
+      if (!isCurrent() || stopIfWindowUnavailable()) return
       windows.webContents.send(`${token}-data`, data)
     })
     stream.on('error', (error) => {
-      if (!windows || windows.isDestroyed() || windows.webContents.isDestroyed()) {
-        return
-      }
+      if (!isCurrent()) return
+      streamMap.delete(token)
+      if (!canSend()) return
       windows.webContents.send(`${token}-error`, error && error.details)
     })
     stream.on('end', () => {
+      if (!isCurrent()) return
       streamMap.delete(token)
-      if (!windows || windows.isDestroyed() || windows.webContents.isDestroyed()) {
-        return
-      }
+      if (!canSend()) return
       windows.webContents.send(`${token}-end`)
     })
+    return true
   },
 }

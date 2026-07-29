@@ -3,6 +3,8 @@ syntax = "proto3";
 package ypb;
 option go_package = "/;ypb";
 
+import "httpflow_live.proto";
+
 message Empty {
 }
 
@@ -1074,6 +1076,9 @@ service Yak {
   rpc SubscribeIMControlState(SubscribeIMControlStateRequest) returns (stream IMControlStateEvent);
   // 热更新 IM 回复配置（转发回复开关 / 回复颗粒度），无需重启 IM Engine。
   rpc UpdateIMControlConfig(UpdateIMControlConfigRequest) returns (UpdateIMControlConfigResponse);
+
+  // MITM 实时流量摘要。数据库查询仍负责初始化、历史分页和 Gap 恢复。
+  rpc SubscribeHTTPFlows(SubscribeHTTPFlowsRequest) returns (stream HTTPFlowLiveEvent);
 }
 
 // IMBotConfig 描述一个 IM 平台 bot 的配置凭证。
@@ -7148,6 +7153,17 @@ message QueryHTTPFlowRequest {
   // 排除包含这些 tag 的流量（用于"仅保留收藏"：删除不带收藏 tag 的流量时，
   // 把收藏 tag 填入此处，筛选出非收藏流量后批量删除）
   repeated string ExcludeTags = 51;
+  // 返回有界的进程内链路诊断数据；不影响查询结果和数据库 schema。
+  bool IncludeSystemTiming = 52;
+  // 列表投影：保留响应元数据，但不在每一行返回原始 Response bytes。
+  // 详情仍通过 GetHTTPFlowById 按需获取完整数据包。
+  bool ExcludeResponseRaw = 53;
+  // 列表投影：保留请求元数据，但不在每一行返回原始 Request bytes。
+  // 需要数据包的交互通过 GetHTTPFlowById 按需获取。
+  bool ExcludeRequestRaw = 54;
+  // 显式跳过精确 Total；用于已有游标的实时增量查询。
+  // Data/Pagination 仍正常返回，但 Total 为 0。初始化、历史与周期校准不得开启。
+  bool SkipTotal = 55;
 }
 
 message HTTPFlowsToOnlineRequest {
@@ -7372,6 +7388,7 @@ message QueryHTTPFlowResponse {
   Paging Pagination = 1;
   repeated HTTPFlow Data = 2;
   int64 Total = 3;
+  QueryHTTPFlowSystemTiming SystemTiming = 4;
 }
 
 message HTTPFlowsFieldGroupRequest {
@@ -9695,4 +9712,42 @@ message GetSSAWorkbenchDashboardResponse {
   repeated SSAWorkbenchRiskTypeItem RiskDistribution = 4;
   repeated SSAWorkbenchRuleHitItem TopRuleHits = 5;
   repeated SSAWorkbenchRecentProject RecentProjects = 6;
+}
+
+// MITM 实时流量端到端诊断。定义放在文件末尾，避免新增消息导致已有
+// protobuf message index 大范围重排；字段仅按请求返回，不写入数据库。
+message HTTPFlowSystemTiming {
+  uint64 Id = 1;
+  int64 RequestHijackAtUnixMs = 2;
+  int64 ResponseMirrorAtUnixMs = 3;
+  int64 FlowBuiltAtUnixMs = 4;
+  int64 PersistEnqueuedAtUnixMs = 5;
+  int64 PersistStartedAtUnixMs = 6;
+  int64 PersistedAtUnixMs = 7;
+  int64 DatabaseChangeDetectedAtUnixMs = 8;
+  uint64 ProjectGeneration = 9;
+}
+
+message QueryHTTPFlowSystemTiming {
+  int64 ServerReceivedAtUnixMs = 1;
+  int64 SQLFinishedAtUnixMs = 2;
+  int64 ConversionFinishedAtUnixMs = 3;
+  int64 ResponseReadyAtUnixMs = 4;
+  int64 QueryDurationUs = 5;
+  int64 ConversionDurationUs = 6;
+  int64 AsyncWriteQueueDepth = 7;
+  string DatabaseIdentity = 8;
+  uint64 LatestPersistedId = 9;
+  int64 LatestPersistedAtUnixMs = 10;
+  uint64 LatestDetectedId = 11;
+  int64 LatestDetectedAtUnixMs = 12;
+  int64 ReturnedFlowCount = 13;
+  int64 SampledFlowCount = 14;
+  repeated HTTPFlowSystemTiming FlowTimings = 15;
+  int64 AsyncWriteQueueCapacity = 16;
+  // QueryDurationUs 的细分；只用于显式开启的有界诊断。
+  int64 CountDurationUs = 17;
+  int64 DataQueryDurationUs = 18;
+  bool CountExecuted = 19;
+  uint64 ProjectGeneration = 20;
 }

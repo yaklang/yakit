@@ -10,10 +10,44 @@ import { setRemoteValue } from '../kv'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import i18n from '@/i18n/i18n'
 import { setClipboardText } from '../clipboard'
+import {
+  mitmFlowObservability,
+  type MITMFlowCommittedMode,
+} from '@/components/HTTPFlowTable/HTTPFlowTable.observability'
+import { createMITMFlowCommittedRefreshScheduler } from '@/components/HTTPFlowTable/HTTPFlowTable.committed'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 let id = randomString(40)
 let duplexListeners: Array<() => void> = []
+let duplexStarted = false
+let flowCommittedMode: MITMFlowCommittedMode = 'shadow'
+const flowCommittedRefreshScheduler = createMITMFlowCommittedRefreshScheduler()
+
+const FLOW_COMMITTED_MESSAGE_TYPE = 'httpflow/committed'
+const FLOW_COMMITTED_SUBSCRIBE_MESSAGE_TYPE = 'httpflow/committed/subscribe'
+const FLOW_COMMITTED_UNSUBSCRIBE_MESSAGE_TYPE = 'httpflow/committed/unsubscribe'
+
+const flowCommittedSubscriptionRequest = (mode: MITMFlowCommittedMode): DuplexConnectionRequest => ({
+  MessageType: mode === 'off' ? FLOW_COMMITTED_UNSUBSCRIBE_MESSAGE_TYPE : FLOW_COMMITTED_SUBSCRIBE_MESSAGE_TYPE,
+  Timestamp: Date.now(),
+})
+
+export const setFlowCommittedMode = async (mode: MITMFlowCommittedMode) => {
+  if (!['off', 'shadow', 'canary'].includes(mode)) throw new Error(`Unsupported FlowCommitted mode: ${mode}`)
+  flowCommittedMode = mode
+  flowCommittedRefreshScheduler.cancel()
+  mitmFlowObservability.setFlowCommittedMode(mode)
+  if (!duplexStarted) return
+  await yakitDuplex.write(flowCommittedSubscriptionRequest(mode), id)
+}
+
+export const getFlowCommittedMode = () => flowCommittedMode
+
+export const setFlowCommittedShadowEnabled = async (enabled: boolean) => {
+  await setFlowCommittedMode(enabled ? 'shadow' : 'off')
+}
+
+export const isFlowCommittedShadowEnabled = () => flowCommittedMode !== 'off'
 
 const cleanupDuplexListeners = () => {
   duplexListeners.forEach((off) => off())
@@ -40,6 +74,21 @@ export interface FileMonitorProps {
 
 /**@name 推送是否开启 */
 export let serverPushStatus = false
+type ServerPushStatusListener = (active: boolean) => void
+const serverPushStatusListeners = new Set<ServerPushStatusListener>()
+
+const updateServerPushStatus = (active: boolean) => {
+  if (serverPushStatus === active) return
+  serverPushStatus = active
+  serverPushStatusListeners.forEach((listener) => listener(active))
+}
+
+export const subscribeServerPushStatus = (listener: ServerPushStatusListener) => {
+  serverPushStatusListeners.add(listener)
+  return () => {
+    serverPushStatusListeners.delete(listener)
+  }
+}
 
 interface ConcurrentLoadItem {
   number: number
@@ -52,6 +101,13 @@ export interface ConcurrentLoad {
 export let concurrentLoad: ConcurrentLoad = {
   rps: [],
   cps: [],
+}
+
+interface DuplexConnectionResponseProps {
+  Data: Buffer
+  MessageType: string
+  /** proto-loader is configured with longs: String for inbound int64 values. */
+  Timestamp: number | string
 }
 export const updateConcurrentLoad = (key: keyof ConcurrentLoad, value: ConcurrentLoadItem[]) => {
   concurrentLoad = {
@@ -81,22 +137,48 @@ export const setOpenPerformanceTips = (value: boolean) => {
 }
 
 export const startupDuplexConn = () => {
+  updateServerPushStatus(false)
   cleanupDuplexListeners()
   yakitStream.cancel('DuplexConnection', id)
 
-  const offData = yakitStream.onData(id, (data: DuplexConnectionProps) => {
+  const offData = yakitStream.onData(id, (data: DuplexConnectionResponseProps) => {
+    // Receiving any frame proves that the duplex transport is live, including
+    // compatibility engines whose first observable frame is not `global`.
+    updateServerPushStatus(true)
     try {
       const resultData: Buffer = data.Data
       const obj = JSONParseLog(Uint8ArrayToString(resultData), { page: 'duplex', fun: 'startupDuplexConn' })
       switch (data.MessageType) {
         // 当前引擎支持推送数据库更新(如若不支持则依然使用轮询请求)
         case 'global':
-          serverPushStatus = true
+          updateServerPushStatus(true)
           break
         // 通知QueryHTTPFlows轮询更新
-        case 'httpflow':
-          emiter.emit('onRefreshQueryHTTPFlows', JSON.stringify(obj))
+        case 'httpflow': {
+          const serverSentAtUnixMs = mitmFlowObservability.recordDuplexNotification(data.Timestamp, {
+            recordLiveTrigger: false,
+          })
+          emiter.emit(
+            'onRefreshQueryHTTPFlows',
+            JSON.stringify({
+              __yakitHTTPFlowRefreshEnvelope: 1,
+              serverSentAtUnixMs,
+              payload: obj,
+            }),
+          )
           break
+        }
+        // Shadow always reconciles against QueryHTTPFlows. Canary additionally
+        // emits a bounded wake-up; it never writes rows from the event itself.
+        case FLOW_COMMITTED_MESSAGE_TYPE: {
+          const signal = mitmFlowObservability.recordHTTPFlowCommitted(obj, data.Timestamp)
+          if (signal && flowCommittedMode === 'canary') {
+            flowCommittedRefreshScheduler.request(() => {
+              emiter.emit('onMITMFlowCommitted', JSON.stringify(signal))
+            })
+          }
+          break
+        }
         // 通知QueryYakScript轮询更新
         case 'yakscript':
           emiter.emit('onRefreshQueryYakScript')
@@ -203,12 +285,17 @@ export const startupDuplexConn = () => {
     } catch (error) {}
   })
   const offError = yakitStream.onError(id, (error) => {
+    updateServerPushStatus(false)
     console.log(error)
   })
 
   duplexListeners = [offData, offError]
 
-  yakitDuplex.start({}, id).then(() => {
+  duplexStarted = false
+  flowCommittedRefreshScheduler.cancel()
+  mitmFlowObservability.setFlowCommittedMode(flowCommittedMode)
+  yakitDuplex.start(flowCommittedSubscriptionRequest(flowCommittedMode), id).then(() => {
+    duplexStarted = true
     info('Server Push Enabled')
   })
 }
@@ -224,6 +311,29 @@ export const sendDuplexConn = (params: DuplexConnectionProps) => {
 }
 
 export const closeDuplexConn = () => {
+  duplexStarted = false
+  flowCommittedRefreshScheduler.cancel()
+  updateServerPushStatus(false)
   yakitStream.cancel('DuplexConnection', id)
   cleanupDuplexListeners()
+}
+
+declare global {
+  interface Window {
+    __YAKIT_MITM_FLOW_SHADOW__?: {
+      setEnabled: (enabled: boolean) => Promise<void>
+      isEnabled: () => boolean
+      setMode: (mode: MITMFlowCommittedMode) => Promise<void>
+      getMode: () => MITMFlowCommittedMode
+    }
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.__YAKIT_MITM_FLOW_SHADOW__ = {
+    setEnabled: setFlowCommittedShadowEnabled,
+    isEnabled: isFlowCommittedShadowEnabled,
+    setMode: setFlowCommittedMode,
+    getMode: getFlowCommittedMode,
+  }
 }

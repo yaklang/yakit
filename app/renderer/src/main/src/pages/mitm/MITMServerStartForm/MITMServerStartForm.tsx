@@ -389,6 +389,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
           refreshRate={50}
         />
         <Form
+          data-testid="mitm-start-form"
           form={form}
           onFinish={onStartMITM}
           labelCol={{ span: width > 610 ? 5 : 9 }}
@@ -401,6 +402,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             name="host"
           >
             <YakitAutoComplete
+              data-testid="mitm-listen-host"
               ref={hostRef}
               cacheHistoryDataKey={CacheDropDownGV.MITMDefaultHostHistoryList}
               placeholder={t('YakitInput.please_enter')}
@@ -413,6 +415,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             rules={[{ required: true, message: t('YakitForm.requiredField') }]}
           >
             <YakitInputNumber
+              data-testid="mitm-listen-port"
               wrapperClassName={styles['form-input-number']}
               style={{ width: '100%', maxWidth: 'none' }}
               min={1}
@@ -562,7 +565,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
           </Item>
           <Item label={' '} colon={false}>
             <div className={styles['mitm-submit-btns']}>
-              <YakitButton type="primary" size="large" htmlType="submit">
+              <YakitButton data-testid="mitm-start" type="primary" size="large" htmlType="submit">
                 {t('MITMServerForm.startHijack')}
               </YakitButton>
               {mitmVersion === MITMVersion.V1 && (
