@@ -51,8 +51,7 @@ import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import ImportExportModal, { ExportImportProgress, ImportExportModalExtra } from './ImportExportModal/ImportExportModal'
 import { randomString } from '@/utils/randomUtil'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -64,13 +63,6 @@ const { ipcRenderer } = window.require('electron')
 // #region 指纹管理入口
 interface FingerprintManageProp {}
 const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
-  const { currentPageTabRouteKey } = usePageInfo(
-    (s) => ({
-      currentPageTabRouteKey: s.currentPageTabRouteKey,
-    }),
-    shallow,
-  )
-
   // #region 本地组
   const localFingerprintGroupListRef = useRef<LocalFingerprintGroupListPropsRefProps>({
     handleReset: () => {},
@@ -149,7 +141,7 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
   // #endregion
 
   // #region 指纹导入导出
-  const importExportContainerRef = useRef<string>(currentPageTabRouteKey)
+  const importExportContainerRef = useRef<HTMLElement>()
   const [importExportExtra, setImportExportExtra] = useState<ImportExportModalExtra>({
     hint: false,
     title: '导入指纹',
@@ -159,7 +151,7 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
   const includeIdRef = useRef<number[]>([])
   const handleOpenImportExportHint = useMemoizedFn((extra: Omit<ImportExportModalExtra, 'hint'>) => {
     if (importExportExtra.hint) return
-    importExportContainerRef.current = currentPageTabRouteKey
+    importExportContainerRef.current = getMainOperatorPageBodyContainer()
     setImportExportExtra({ ...extra, hint: true })
   })
   const handleCallbackImportExportHint = useMemoizedFn((result: boolean) => {
@@ -266,9 +258,7 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
         </YakitEmpty>
       </div>
       <ImportExportModal<FingerprintFilter>
-        getContainer={
-          document.getElementById(`main-operator-page-body-${importExportContainerRef.current}`) || undefined
-        }
+        getContainer={importExportContainerRef.current}
         whichUse="fingerprint"
         extra={importExportExtra}
         onCallback={handleCallbackImportExportHint}

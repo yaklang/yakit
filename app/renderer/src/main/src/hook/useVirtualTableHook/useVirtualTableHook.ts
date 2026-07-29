@@ -663,6 +663,12 @@ export default function useVirtualTableHook<
     if (idRef.current) clearInterval(idRef.current)
   })
 
+  /** @name 服务端推送触发的单次增量刷新（不重启轮询定时器） */
+  const notifyPushUpdate = useMemoizedFn(() => {
+    if (loopPausedRef.current || isGrpcRef.current || !inViewport) return
+    scrollUpdate()
+  })
+
   /** @name 设置表格loading状态 */
   const setTLoad = useMemoizedFn((is: boolean) => {
     setLoading(is)
@@ -750,6 +756,18 @@ export default function useVirtualTableHook<
     pagination,
     loading,
     offsetData,
-    { startT, notifyT, stopT, refreshT, noResetRefreshT, setTLoad, setTData, patchTData, pushTData, setP },
+    {
+      startT,
+      notifyT,
+      stopT,
+      refreshT,
+      noResetRefreshT,
+      notifyPushUpdate,
+      setTLoad,
+      setTData,
+      patchTData,
+      pushTData,
+      setP,
+    },
   ] as const
 }

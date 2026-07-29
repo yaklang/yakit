@@ -23,8 +23,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { JSONParseLog } from '@/utils/tool'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import classNames from 'classnames'
 import { filterHistorySessionsBySource, getHistorySourceQuerySources, type HistorySourceFilter } from './source'
 
@@ -106,11 +105,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   const [{ sessions }, dispatcher] = useSessionList(historyQuerySources)
   const { activeChat } = useAIAgentStore()
   const { setActiveChat } = useAIAgentDispatcher()
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
-
-  const getPopupContainer = useMemoizedFn(
-    () => document.getElementById(`main-operator-page-body-${currentRouteKey}`) || document.body,
-  )
+  const getPopupContainer = useMemoizedFn(() => getMainOperatorPageBodyContainer() || document.body)
   const popupContainer = embedded ? getPopupContainer : undefined
   const embeddedOverlayClass = styles['history-chat-embedded-overlay']
   const embeddedPopconfirmClass = styles['history-chat-embedded-popconfirm']

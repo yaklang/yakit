@@ -64,4 +64,14 @@ describe('manualHijackListModel', () => {
       cellClassName: 'class:YAKIT_COLOR_RED|custom',
     })
   })
+
+  it('preserves unchanged row identity when decorating a merged batch', () => {
+    const unchanged = item('one', ManualHijackListAction.Hijack_List_Add)
+    const changed = item('two', ManualHijackListAction.Hijack_List_Update)
+
+    const result = decorateManualHijackRows([unchanged, changed], (tags) => `class:${tags}`, new Set(['two']))
+
+    expect(result[0]).toBe(unchanged)
+    expect(result[1]).not.toBe(changed)
+  })
 })

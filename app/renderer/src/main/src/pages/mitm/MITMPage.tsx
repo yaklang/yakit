@@ -14,7 +14,14 @@ import {
   useMemoizedFn,
   useUpdateEffect,
 } from 'ahooks'
-import { enableMITMPluginMode, MITMServerHijacking } from '@/pages/mitm/MITMServerHijacking/MITMServerHijacking'
+import type { MITMStatus } from './MITMServerHijacking/MITMHijackedContent'
+import type {
+  MITMPluginLocalList as _MITMPluginLocalListType,
+  PluginGroup as _PluginGroupType,
+  PluginSearch as _PluginSearchType,
+  YakFilterRemoteObj,
+  YakModuleListHeard as _YakModuleListHeardType,
+} from './MITMServerHijacking/MITMPluginLocalList'
 import { Uint8ArrayToString } from '@/utils/str'
 import { MITMContentReplacerRule } from './MITMRule/MITMRuleType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -24,15 +31,6 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { StartExecYakCodeModal, YakScriptParam } from '@/utils/basic'
-import MITMHijackedContent, { MITMStatus } from './MITMServerHijacking/MITMHijackedContent'
-import { MITMPluginHijackContent } from './MITMServerHijacking/MITMPluginHijackContent'
-import {
-  MITMPluginLocalList,
-  PluginGroup,
-  PluginSearch,
-  YakFilterRemoteObj,
-  YakModuleListHeard,
-} from './MITMServerHijacking/MITMPluginLocalList'
 import {
   ClientCertificate,
   defHost,
@@ -87,6 +85,27 @@ import {
 } from './MITMServerHijacking/PluginsOutput/StreamProcessor'
 import { RemoteMitmGV } from '@/enums/mitm'
 const MITMRule = React.lazy(() => import('./MITMRule/MITMRule'))
+// 劫持内容延迟加载：MITMServerHijacking/MITMHijackedContent/MITMPluginHijackContent/MITMPluginLocalList
+// 含 HTTPFlowTable(2780行)+HTTPHistory(1168行)+YakitEditor(2371行)，仅在 status !== 'idle' 时渲染
+const MITMServerHijacking = React.lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMServerHijacking').then((m) => ({ default: m.MITMServerHijacking })),
+)
+const MITMHijackedContent = React.lazy(() => import('./MITMServerHijacking/MITMHijackedContent'))
+const MITMPluginHijackContent = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginHijackContent').then((m) => ({ default: m.MITMPluginHijackContent })),
+)
+const MITMPluginLocalList = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.MITMPluginLocalList })),
+)
+const PluginGroup = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.PluginGroup })),
+)
+const PluginSearch = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.PluginSearch })),
+)
+const YakModuleListHeard = React.lazy(() =>
+  import('./MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakModuleListHeard })),
+)
 
 const { ipcRenderer } = window.require('electron')
 
@@ -444,35 +463,39 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
       default:
         return (
-          <MITMServerHijacking
-            port={port}
-            showPort={showPort}
-            host={host}
-            disableCACertPage={disableCACertPage}
-            status={status}
-            setStatus={setStatus}
-            autoForward={autoForward}
-            setAutoForward={setAutoForward}
-            defaultPlugins={defaultPlugins}
-            enableInitialMITMPlugin={enableInitialMITMPlugin}
-            setVisible={setVisible}
-            tipParts={tipParts}
-            setTipParts={setTipParts}
-            downstreamProxyStr={downstreamProxyStr}
-            setDownstreamProxyStr={setDownstreamProxyStr}
-            isHasParams={isHasParams}
-            onIsHasParams={setIsHasParams}
-            showPluginHistoryList={showPluginHistoryList}
-            setShowPluginHistoryList={setShowPluginHistoryList}
-            tempShowPluginHistory={tempShowPluginHistory}
-            setTempShowPluginHistory={setTempShowPluginHistory}
-            pluginStreamInfo={pluginStreamInfo}
-            showPluginStream={showPluginStream}
-            setShowPluginStream={setShowPluginStream}
-            hasPluginsStreamUpdate={hasPluginsStreamUpdate}
-            updatesPlugins={updatesPlugins}
-            pluginOutputRef={pluginOutputRef}
-          />
+          <React.Suspense
+            fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}
+          >
+            <MITMServerHijacking
+              port={port}
+              showPort={showPort}
+              host={host}
+              disableCACertPage={disableCACertPage}
+              status={status}
+              setStatus={setStatus}
+              autoForward={autoForward}
+              setAutoForward={setAutoForward}
+              defaultPlugins={defaultPlugins}
+              enableInitialMITMPlugin={enableInitialMITMPlugin}
+              setVisible={setVisible}
+              tipParts={tipParts}
+              setTipParts={setTipParts}
+              downstreamProxyStr={downstreamProxyStr}
+              setDownstreamProxyStr={setDownstreamProxyStr}
+              isHasParams={isHasParams}
+              onIsHasParams={setIsHasParams}
+              showPluginHistoryList={showPluginHistoryList}
+              setShowPluginHistoryList={setShowPluginHistoryList}
+              tempShowPluginHistory={tempShowPluginHistory}
+              setTempShowPluginHistory={setTempShowPluginHistory}
+              pluginStreamInfo={pluginStreamInfo}
+              showPluginStream={showPluginStream}
+              setShowPluginStream={setShowPluginStream}
+              hasPluginsStreamUpdate={hasPluginsStreamUpdate}
+              updatesPlugins={updatesPlugins}
+              pluginOutputRef={pluginOutputRef}
+            />
+          </React.Suspense>
         )
     }
   })
@@ -536,6 +559,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 }
 
 const CHECK_CACHE_LIST_DATA = 'CHECK_CACHE_LIST_DATA'
+// 性能优化：空 Map 常量，避免每次渲染创建新对象导致子组件 reconciliation
+const emptyBoolMap = new Map<string, boolean>()
 export interface ExtraMITMServerProps {
   /**@name 国密劫持*/
   enableGMTLS?: boolean
@@ -666,14 +691,17 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
    */
   const [selectGroup, setSelectGroup] = useState<YakFilterRemoteObj[]>([])
 
-  const [listNames, setListNames] = useState<string[]>([]) // 存储的 带参全部本地插件 或者 不带参本地插件 =》 由tab切换决定
+  // 性能优化：listNames 仅在回调中读取（onSelectAll/onSelectAllHijacking/onEnableMITMPluginMode），不在 JSX 中渲染，
+  // 改为 ref 避免 getAllSatisfyScript 的 API 回调 setListNames 触发重渲染
+  const listNamesRef = useRef<string[]>([])
 
   const [loadedPluginLen, setLoadedPluginLen] = useState<number>(0)
   const isFirst = useRef<boolean>(true)
+  // 性能优化：合并两个 getRemoteValue 为 Promise.all，减少异步回调各自 setState 导致的多次重渲染
   useEffect(() => {
     if (status === 'idle') {
-      getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
-        getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
+      Promise.all([getRemoteValue(CHECK_CACHE_LIST_DATA), getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN)]).then(
+        ([data, is]) => {
           if (!!data && !!is) {
             const cacheData: string[] = JSONParseLog(data, { page: 'MITMPage', fun: 'CHECK_CACHE_LIST_DATA' })
             if (isFirst.current) {
@@ -692,8 +720,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
               onIsHasParams(true)
             }
           }
-        })
-      })
+        },
+      )
     }
   }, [status, noParamsCheckList])
 
@@ -756,7 +784,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
    */
   const onSelectAllIdle = useMemoizedFn((checked: boolean) => {
     if (checked) {
-      setNoParamsCheckList(listNames)
+      setNoParamsCheckList([...listNamesRef.current])
     } else {
       setNoParamsCheckList([])
     }
@@ -770,7 +798,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     if (checked) {
       const value: MITMRemoveHookRequest = {
         HookName: [],
-        RemoveHookID: listNames.concat(noParamsCheckList),
+        RemoveHookID: listNamesRef.current.concat(noParamsCheckList),
         version: mitmVersion,
       }
       grpcMITMRemoveHook(value)
@@ -785,7 +813,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
       // 点按钮清空
       const value: MITMRemoveHookRequest = {
         HookName: [],
-        RemoveHookID: [...new Set([...listNames, ...hasParamsCheckList, ...noParamsCheckList])],
+        RemoveHookID: [...new Set([...listNamesRef.current, ...hasParamsCheckList, ...noParamsCheckList])],
         version: mitmVersion,
       }
       grpcMITMRemoveHook(value)
@@ -815,7 +843,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
   }, [])
 
   const onEnableMITMPluginMode = useMemoizedFn((checked: boolean) => {
-    enableMITMPluginMode({ initPluginNames: listNames, version: mitmVersion })
+    import('@/pages/mitm/MITMServerHijacking/MITMServerHijacking')
+      .then((m) => m.enableMITMPluginMode({ initPluginNames: listNamesRef.current, version: mitmVersion }))
       .then(() => {
         setIsSelectAll(checked)
         info(t('MITMServer.startPluginSuccess'))
@@ -843,7 +872,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     }
     apiQueryYakScript(query).then((res) => {
       const data = res.Data || []
-      setListNames(data.map((i) => i.ScriptName))
+      listNamesRef.current = data.map((i) => i.ScriptName)
     })
   })
 
@@ -883,8 +912,58 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     getAllSatisfyScript(t)
   })
 
-  const hasParamsCheckListMemo = useSortedArrayMemo(hasParamsCheckList)
-  const noParamsCheckListMemo = useSortedArrayMemo(noParamsCheckList)
+  // 性能优化：提取 onRenderFirstNode 中的内联函数为 useMemoizedFn，避免每次渲染创建新引用导致子组件无法跳过 reconciliation
+  const pluginListQuery = useMemoizedFn(() => {
+    return {
+      Tag: tags,
+      Type: 'mitm,port-scan',
+      Keyword: searchKeyword,
+      FieldKeywords: fieldKeywords,
+      Pagination: {
+        Limit: 20,
+        Order: '',
+        Page: 1,
+        OrderBy: '',
+        RawOrder: 'is_core_plugin desc,online_official desc,updated_at desc',
+      },
+      Group: { UnSetGroup: false, Group: groupNames },
+      IncludedScriptNames: isSelectAll ? [] : noParamsCheckList,
+      IsMITMParamPlugins: 2,
+    }
+  })
+
+  const onPluginSearch = useMemoizedFn(() => {
+    setTriggerSearch(!triggerSearch)
+  })
+
+  const onSetNoParamsCheckList = useMemoizedFn((list: string[]) => {
+    if (list.length === 0) {
+      setEnableInitialPlugin(false)
+    } else {
+      setEnableInitialPlugin(true)
+    }
+    setNoParamsCheckList(list)
+  })
+
+  // 性能优化：提取 onRenderSecondNode 中的内联函数，避免每次渲染创建新引用破坏子组件 React.memo
+  const onSetEnableInitialPlugin = useMemoizedFn((checked: boolean) => {
+    if (!checked) {
+      setNoParamsCheckList([])
+      setIsSelectAll(false)
+    }
+    setEnableInitialPlugin(checked)
+  })
+  const onSetFilterVisibleFn = useMemoizedFn((v: boolean) => {
+    if (setFiltersVisible) {
+      setFiltersVisible(v)
+    }
+  })
+  const onClearAllPlugins = useMemoizedFn(() => {
+    if (noParamsCheckList.length > 0) onSelectAll(false)
+  })
+
+  const hasParamsCheckListMemo = useSortedArrayMemoHook(hasParamsCheckList)
+  const noParamsCheckListMemo = useSortedArrayMemoHook(noParamsCheckList)
 
   const onRenderFirstNode = useMemoizedFn(() => {
     switch (status) {
@@ -909,24 +988,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 setSelectGroup={setSelectGroup}
                 excludeType={['yak', 'codec', 'lua', 'nuclei']}
                 isMITMParamPlugins={2}
-                pluginListQuery={() => {
-                  return {
-                    Tag: tags,
-                    Type: 'mitm,port-scan',
-                    Keyword: searchKeyword,
-                    FieldKeywords: fieldKeywords,
-                    Pagination: {
-                      Limit: 20,
-                      Order: '',
-                      Page: 1,
-                      OrderBy: '',
-                      RawOrder: 'is_core_plugin desc,online_official desc,updated_at desc',
-                    },
-                    Group: { UnSetGroup: false, Group: groupNames },
-                    IncludedScriptNames: isSelectAll ? [] : noParamsCheckList,
-                    IsMITMParamPlugins: 2,
-                  }
-                }}
+                pluginListQuery={pluginListQuery}
                 total={total}
                 allChecked={isSelectAll}
                 checkedPlugin={isSelectAll ? [] : noParamsCheckList}
@@ -941,9 +1003,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                   setTag={setTags}
                   setSearchKeyword={setSearchKeyword}
                   setFieldKeywords={setFieldKeywords}
-                  onSearch={() => {
-                    setTriggerSearch(!triggerSearch)
-                  }}
+                  onSearch={onPluginSearch}
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingRight: 10 }}>
@@ -958,9 +1018,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 <YakitButton
                   type="text"
                   colors="danger"
-                  onClick={() => {
-                    if (noParamsCheckList.length > 0) onSelectAll(false)
-                  }}
+                  onClick={onClearAllPlugins}
                   disabled={noParamsCheckList.length === 0}
                   className={style['empty-button']}
                 >
@@ -973,14 +1031,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 status={status}
                 hasParamsCheckList={hasParamsCheckListMemo}
                 noParamsCheckList={noParamsCheckListMemo}
-                setNoParamsCheckList={(list) => {
-                  if (list.length === 0) {
-                    setEnableInitialPlugin(false)
-                  } else {
-                    setEnableInitialPlugin(true)
-                  }
-                  setNoParamsCheckList(list)
-                }}
+                setNoParamsCheckList={onSetNoParamsCheckList}
                 tags={tags}
                 setTags={setTags}
                 searchKeyword={searchKeyword}
@@ -991,12 +1042,9 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 setIsSelectAll={setIsSelectAll}
                 isSelectAll={isSelectAll}
                 total={total}
-                setTotal={(t) => {
-                  setTotal(t)
-                  getAllSatisfyScript(t)
-                }}
-                hooks={new Map<string, boolean>()}
-                hooksID={new Map<string, boolean>()}
+                setTotal={setTotalFun}
+                hooks={emptyBoolMap}
+                hooksID={emptyBoolMap}
                 onSelectAll={onSelectAll}
                 groupNames={groupNames}
                 setGroupNames={setGroupNames}
@@ -1055,13 +1103,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             visible={visible || false}
             setVisible={setVisible}
             enableInitialPlugin={enableInitialPlugin}
-            setEnableInitialPlugin={(checked) => {
-              if (!checked) {
-                setNoParamsCheckList([])
-                setIsSelectAll(false)
-              }
-              setEnableInitialPlugin(checked)
-            }}
+            setEnableInitialPlugin={onSetEnableInitialPlugin}
           />
         )
       default:
@@ -1077,11 +1119,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             setShowPluginHistoryList={setShowPluginHistoryList}
             setTempShowPluginHistory={setTempShowPluginHistory}
             onSetRuleVisible={setVisible}
-            onSetFilterVisible={(v) => {
-              if (setFiltersVisible) {
-                setFiltersVisible(v)
-              }
-            }}
+            onSetFilterVisible={onSetFilterVisibleFn}
             pluginStreamInfo={pluginStreamInfo!}
             showPluginStream={showPluginStream!}
             setShowPluginStream={setShowPluginStream!}
@@ -1117,13 +1155,25 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
       isVer={false}
       freeze={openTabsFlag}
       isRecalculateWH={openTabsFlag}
-      firstNode={() => <div className={style['mitm-server-start-pre-first']}>{onRenderFirstNode()}</div>}
+      firstNode={() => (
+        <div className={style['mitm-server-start-pre-first']}>
+          <React.Suspense
+            fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}
+          >
+            {onRenderFirstNode()}
+          </React.Suspense>
+        </div>
+      )}
       lineStyle={{ display: isFullScreenFirstNode ? 'none' : '' }}
       firstMinSize={openTabsFlag ? '400px' : '24px'}
       secondMinSize={520}
       secondNode={() => (
         <div className={style['mitm-server-start-pre-second']} style={{ display: isFullScreenFirstNode ? 'none' : '' }}>
-          {onRenderSecondNode()}
+          <React.Suspense
+            fallback={<div style={{ padding: 24, textAlign: 'center', color: '#85899E' }}>Loading...</div>}
+          >
+            {onRenderSecondNode()}
+          </React.Suspense>
         </div>
       )}
       secondNodeStyle={{
@@ -1496,11 +1546,17 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
   )
 })
 
-function useSortedArrayMemo<T extends string | number>(
+// 性能优化：用 ref 缓存上次序列化 key，避免每次渲染都执行 spread + sort + stringify
+function useSortedArrayMemoHook<T extends string | number>(
   arr: T[],
   compareFn: (a: T, b: T) => number = (a, b) => String(a).localeCompare(String(b)),
 ) {
-  return useMemo(() => {
-    return [...arr].sort(compareFn)
-  }, [JSON.stringify([...arr].sort(compareFn))])
+  const sortedRef = useRef<T[]>([])
+  const keyRef = useRef<string>('')
+  const newKey = arr.join(',')
+  if (newKey !== keyRef.current) {
+    keyRef.current = newKey
+    sortedRef.current = [...arr].sort(compareFn)
+  }
+  return sortedRef.current
 }

@@ -2,17 +2,14 @@ import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { FiltersItemProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { yakitNotify } from '@/utils/notification'
-import { HTTPFlowsFieldGroupResponse } from './HTTPFlowTable.constants'
-
-const { ipcRenderer } = window.require('electron')
+import { fetchHTTPFlowsFieldGroup } from '@/utils/httpFlowFieldGroupCache'
 
 export const useBuiltinTagList = (enabled = true, inViewport = true) => {
   const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
 
   const refreshBuiltinTags = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('HTTPFlowsFieldGroup', { RefreshRequest: true, IsAll: true })
-      .then((rsp: HTTPFlowsFieldGroupResponse) => {
+    fetchHTTPFlowsFieldGroup(true)
+      .then((rsp) => {
         const tags = (rsp.Tags || [])
           .filter(({ Builtin, Value }) => Builtin && Value)
           .map(({ Value }) => ({ label: Value, value: Value }))
@@ -25,7 +22,16 @@ export const useBuiltinTagList = (enabled = true, inViewport = true) => {
 
   useEffect(() => {
     if (!enabled || !inViewport) return
-    refreshBuiltinTags()
+    fetchHTTPFlowsFieldGroup(false)
+      .then((rsp) => {
+        const tags = (rsp.Tags || [])
+          .filter(({ Builtin, Value }) => Builtin && Value)
+          .map(({ Value }) => ({ label: Value, value: Value }))
+        setBuiltinTagList(tags)
+      })
+      .catch((error) => {
+        yakitNotify('error', `query HTTP Flows Field Group failed: ${error}`)
+      })
   }, [enabled, inViewport])
 
   return { builtinTagList, setBuiltinTagList, refreshBuiltinTags }

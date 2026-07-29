@@ -95,10 +95,15 @@ export const applyManualHijackBatch = (
 export const decorateManualHijackRows = (
   data: SingleManualHijackInfoMessage[],
   resolveCellClassName: (tags: string) => string,
+  changedTaskIDs?: ReadonlySet<string>,
 ): SingleManualHijackInfoMessage[] => {
-  return data.map(({ Tags = [], ...rest }) => ({
-    ...rest,
-    Tags,
-    cellClassName: resolveCellClassName(Tags.join('|')),
-  }))
+  return data.map((row) => {
+    if (changedTaskIDs && !changedTaskIDs.has(row.TaskID)) return row
+    const Tags = row.Tags || []
+    return {
+      ...row,
+      Tags,
+      cellClassName: resolveCellClassName(Tags.join('|')),
+    }
+  })
 }

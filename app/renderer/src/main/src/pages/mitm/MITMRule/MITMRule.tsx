@@ -207,10 +207,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     }, [mitmContent.mitmStore.version])
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
-    const [originalRules, setOriginalRules] = useState<MITMContentReplacerRule[]>([])
+    // 性能优化：originalRules/originalWhiteList 仅在 onClose 中比较，不在 JSX 中渲染，改为 ref
+    const originalRulesRef = useRef<MITMContentReplacerRule[]>([])
 
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-    const [selectedRows, setSelectedRows] = useState<MITMContentReplacerRule[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -226,7 +226,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
     const [whiteListVisible, setWhiteListVisible] = useState<boolean>(false)
     const [whiteList, setWhiteList] = useState<string[]>([])
-    const [originalWhiteList, setOriginalWhiteList] = useState<string[]>([])
+    const originalWhiteListRef = useRef<string[]>([])
     const ruleButtonRef = useRef<RuleExportAndImportHandle | null>(null)
 
     const disableTrafficGuardRef = useRef<boolean>(disableTrafficGuard)
@@ -271,21 +271,20 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       return newRules
     })
 
-    useEffect(() => {
-      ipcRenderer.invoke('GetCurrentRules', {}).then((rsp: { Rules: MITMContentReplacerRule[] }) => {
-        const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
-        setOriginalRules(newRules)
-        const nextWhiteList = newRules?.[0]?.ExcludeSuffix || []
-        setWhiteList(nextWhiteList)
-        setOriginalWhiteList(nextWhiteList)
-      })
-    }, [visible])
+    // 性能优化：合并两个 [visible] useEffect 为一个，避免重复调用 GetCurrentRules IPC 和各自回调触发多次重渲染
     useEffect(() => {
       setAddRule([])
       clearnSearch()
-      setTimeout(() => {
-        onGetCurrentRules()
-      }, 50)
+      // 获取原始规则（用于 onClose 比较）+ 当前规则（用于表格展示），一次 IPC 调用同时完成
+      ipcRenderer.invoke('GetCurrentRules', {}).then((rsp: { Rules: MITMContentReplacerRule[] }) => {
+        const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
+        originalRulesRef.current = newRules
+        const nextWhiteList = newRules?.[0]?.ExcludeSuffix || []
+        originalWhiteListRef.current = nextWhiteList
+        setRules(onSortRules(newRules))
+        setWhiteList(nextWhiteList)
+        setIsRefresh((prev) => !prev)
+      })
     }, [visible])
     useEffect(() => {
       grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
@@ -326,10 +325,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         if (checked) {
           const rows = searchFlag ? searchRules.filter((ele) => !ele.Disabled) : rules.filter((ele) => !ele.Disabled)
           setSelectedRowKeys(rows.map((ele: any) => ele.Id))
-          setSelectedRows(rows)
         } else {
           setSelectedRowKeys([])
-          setSelectedRows([])
         }
         setIsAllSelect(checked)
       },
@@ -338,13 +335,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: MITMContentReplacerRule) => {
       if (c) {
         setSelectedRowKeys([...selectedRowKeys, keys])
-        setSelectedRows([...selectedRows, rows])
       } else {
         setIsAllSelect(false)
         const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
-        const newSelectedRows = selectedRows.filter((ele) => ele.Id !== rows.Id)
         setSelectedRowKeys(newSelectedRowKeys)
-        setSelectedRows(newSelectedRows)
       }
     })
     const onSetCurrentRow = useDebounceFn(
@@ -961,8 +955,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
 
     const onClose = useMemoizedFn(() => {
       if (
-        JSON.stringify(originalRules) !== JSON.stringify(rules) ||
-        JSON.stringify(originalWhiteList) !== JSON.stringify(whiteList)
+        JSON.stringify(originalRulesRef.current) !== JSON.stringify(rules) ||
+        JSON.stringify(originalWhiteListRef.current) !== JSON.stringify(whiteList)
       ) {
         Modal.confirm({
           title: t('YakitModal.friendlyReminder'),
@@ -1085,7 +1079,6 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       setIsRefresh(!isRefresh)
 
       setSelectedRowKeys([])
-      setSelectedRows([])
       setIsAllSelect(false)
     })
     const onSearch = useMemoizedFn((searchValue?: string) => {
@@ -1128,7 +1121,6 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             setIsRefresh(!isRefresh)
 
             setSelectedRowKeys([])
-            setSelectedRows([])
             setIsAllSelect(false)
           })
           .finally(() => setTimeout(() => setLoading(false), 100))
@@ -1153,6 +1145,27 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         />
       )
     }, [valueSearch, i18nRefresh])
+
+    // 性能优化：rowSelection / pagination 用 useMemo 缓存，避免每次渲染创建新引用破坏 TableVirtualResize 的 props 稳定性
+    const rowSelection = useMemo(
+      () => ({
+        isAll: isAllSelect,
+        type: 'checkbox' as const,
+        selectedRowKeys,
+        onSelectAll,
+        onChangeCheckboxSingle: onSelectChange,
+      }),
+      [isAllSelect, selectedRowKeys, onSelectAll, onSelectChange],
+    )
+    const pagination = useMemo(
+      () => ({
+        total: searchFlag ? searchRules.length : rules.length,
+        limit: 20,
+        page: 1,
+        onChange: () => {},
+      }),
+      [searchFlag, searchRules.length, rules.length],
+    )
 
     const content = () => {
       return (
@@ -1245,19 +1258,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             }
             renderKey="Id"
             data={searchFlag ? searchRules : rules}
-            rowSelection={{
-              isAll: isAllSelect,
-              type: 'checkbox',
-              selectedRowKeys,
-              onSelectAll: onSelectAll,
-              onChangeCheckboxSingle: onSelectChange,
-            }}
-            pagination={{
-              total: searchFlag ? searchRules.length : rules.length,
-              limit: 20,
-              page: 1,
-              onChange: () => {},
-            }}
+            rowSelection={rowSelection}
+            pagination={pagination}
             loading={loading}
             columns={columns}
             currentSelectItem={currentItem}
