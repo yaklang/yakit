@@ -372,11 +372,19 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         <YakitButton
           type="outline1"
           colors="danger"
-          onClick={() => {
+          onClick={async () => {
             // 记录时间戳
             const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
-            setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
-            emiter.emit('cleanMitmLogEvent', mitmVersion)
+            // Persist the boundary before asking the table to bootstrap again;
+            // otherwise the query can still observe the previous timestamp.
+            await setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime).catch(() => {})
+            emiter.emit(
+              'cleanMitmLogEvent',
+              JSON.stringify({
+                version: mitmVersion,
+                resetAtUnixSeconds: Number(nowTime),
+              }),
+            )
           }}
         >
           重置

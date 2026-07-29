@@ -47,6 +47,10 @@ describe('hasHTTPFlowFilterCriteria', () => {
     expect(hasHTTPFlowFilterCriteria({ SourceType: 'mitm', Full: true, WithPayload: true })).toBe(false)
   })
 
+  it('keeps the live stream active for a reset high-water boundary', () => {
+    expect(hasHTTPFlowFilterCriteria({ SourceType: 'mitm', AfterId: 6512 })).toBe(false)
+  })
+
   it('returns false when values are empty string, null-like, or empty array', () => {
     expect(
       hasHTTPFlowFilterCriteria({

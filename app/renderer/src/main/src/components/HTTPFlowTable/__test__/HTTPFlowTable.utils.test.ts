@@ -8,6 +8,7 @@ import {
   hasActiveHTTPFlowTableFilterConfig,
   mergeRuleSummaryItems,
   normalizeHTTPFlowTotal,
+  parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
   splitHTTPFlowTableShieldData,
   uniqStrings,
@@ -24,6 +25,19 @@ describe('normalizeHTTPFlowTotal', () => {
     expect(normalizeHTTPFlowTotal('60858546822155656571112106457874364745564464544564545446568565564678855764')).toBe(0)
     expect(normalizeHTTPFlowTotal('invalid')).toBe(0)
     expect(normalizeHTTPFlowTotal(-1)).toBe(0)
+  })
+})
+
+describe('parseMITMLogResetSignal', () => {
+  it('decodes the reset boundary envelope', () => {
+    expect(parseMITMLogResetSignal('{"version":"v2","resetAtUnixSeconds":123}')).toEqual({
+      version: 'v2',
+      resetAtUnixSeconds: 123,
+    })
+  })
+
+  it('accepts the legacy version-only event', () => {
+    expect(parseMITMLogResetSignal('v2')).toEqual({ version: 'v2' })
   })
 })
 

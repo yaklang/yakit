@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   mergeVirtualTableServerPushRows,
+  mergeUniqueVirtualTableRows,
   prependAcceptedVirtualTableServerPushRows,
   resolveVirtualTableServerPushActive,
   selectVirtualTableServerPushRows,
@@ -24,6 +25,29 @@ describe('resolveVirtualTableServerPushActive', () => {
   it('falls back only when both push sources are inactive', () => {
     expect(resolveVirtualTableServerPushActive(false, () => false)).toBe(false)
     expect(resolveVirtualTableServerPushActive(true, () => false)).toBe(true)
+  })
+})
+
+describe('mergeUniqueVirtualTableRows', () => {
+  it('repairs the pushed-row and query-page overlap without duplicates or order inversions', () => {
+    const current = [{ Id: 6511 }, { Id: 6510 }, { Id: 6509 }, { Id: 6508 }, { Id: 6507 }]
+    const completedPage = [{ Id: 6512 }, { Id: 6511 }]
+
+    expect(mergeUniqueVirtualTableRows([completedPage, current], 'Id', 'desc', 'Id')).toEqual([
+      { Id: 6512 },
+      { Id: 6511 },
+      { Id: 6510 },
+      { Id: 6509 },
+      { Id: 6508 },
+      { Id: 6507 },
+    ])
+  })
+
+  it('keeps the first copy so a query row can replace a body-free summary', () => {
+    const queried = { Id: 3, Hash: 'query' }
+    const pushed = { Id: 3, Hash: 'push' }
+
+    expect(mergeUniqueVirtualTableRows([[queried], [pushed]], 'Id', 'desc', 'created_at')).toEqual([queried])
   })
 })
 

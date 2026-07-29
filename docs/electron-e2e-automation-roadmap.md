@@ -1191,3 +1191,11 @@ heap `2026-07-28T09-39-45-988Z -> 2026-07-28T10-49-57-181Z` 中，`scanHitsImpl 
 heap 模式使用保留符号的 Yak，正式门禁使用 `-s -w` 发布式 Yak，二者按不同 content fingerprint 各自受管；三次正式轮次只在首轮冷构建，后两轮复用同一发布式二进制。E2E go build/tmp 在每次退出后清理，Electron/Yak/WDIO/chromedriver 无残留。任务专用 Go cache 已清到约 12 KiB，全局 Go cache 从约 3.9 GiB 主动清到约 768 KiB，受管 Yak 二进制缓存约 1.5 GiB、磁盘可用约 838 GiB；仍明确不以清理后的当前值否认历史 290 GiB 事故。
 
 当前自动化已经完成这次性能专项的阶段性闭环：微基准验证局部因果、heap 验证 caller、SQLite/proto 测试验证兼容、race 验证并发、三次 Electron 验证真实链路。剩余后端 grow 主要是首次网络 packet 物化，不再由前端猜测参数或继续盲目压测；只有新的 profile 或用户场景出现可归因热点时再开启下一阶段。
+
+## 61. 第八十七轮：MITM 重置与推送/滚动一致性修复（2026-07-29）
+
+用户回归发现两条前端正确性问题：重置后偶发遗留一行并保留旧滚动高度，以及实时推送和滚动分页交错后出现重复 ID 与局部乱序。修复不调整 batch/interval，也不修改 proto、数据库或后端接口：重置先持久化时间边界，再用当前项目持久化/推送/可见 ID 的高水位隔离旧数据；所有旧查询通过 epoch 失效，推送 batch、offset、游标、选择和虚拟滚动状态同步清空。项目数据库切换时自动撤销旧项目的高水位，避免新项目较小 ID 被隐藏。
+
+滑窗的顶部、底部和 offset 合并改为基于提交时最新 state，以 ID 去重并按当前单调顺序归并，查询行优先替换 body-free summary。虚拟表在空数据且旧 `scrollTop` 很大时显式把容器位置、wrapper 高度和 margin 归零，避免 ahooks `useVirtualList` 计算出负高度后保留旧滚动区。
+
+自动化使用截图中的重叠序列 `6512/6511 + 6511..6507` 验证结果唯一且严格降序，并覆盖 182000 px 深滚动清空、重置事件新旧格式及高水位不关闭专用实时流。HTTPFlow、虚拟表和调度相关 11 个 Vitest 文件共 144 项通过，Renderer TypeScript 检查通过；本轮未运行高资源 Electron 矩阵。

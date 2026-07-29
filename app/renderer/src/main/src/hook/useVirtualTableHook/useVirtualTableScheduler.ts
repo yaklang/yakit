@@ -18,6 +18,36 @@ export const resolveVirtualTableServerPushActive = (
   getAdditionalServerPushActive?: () => boolean,
 ) => sharedDuplexActive || getAdditionalServerPushActive?.() === true
 
+/**
+ * Merge query pages and the current viewport without duplicate IDs. For the
+ * monotonic ID/created_at orders used by live MITM, sorting after de-duplication
+ * also repairs a page that completed after a newer pushed row was committed.
+ * Groups are ordered by data freshness: the first copy of an ID wins.
+ */
+export const mergeUniqueVirtualTableRows = <T extends Record<string, any>>(
+  groups: ReadonlyArray<ReadonlyArray<T>>,
+  idKey: string,
+  order: string,
+  orderBy: string,
+): T[] => {
+  const seen = new Set<number>()
+  const rows: T[] = []
+  for (const group of groups) {
+    for (const row of group) {
+      const id = Number(row[idKey])
+      if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue
+      seen.add(id)
+      rows.push(row)
+    }
+  }
+
+  if (['id', 'created_at'].includes(String(orderBy).toLowerCase())) {
+    const direction = order === 'asc' ? 1 : -1
+    rows.sort((left, right) => direction * (Number(left[idKey]) - Number(right[idKey])))
+  }
+  return rows
+}
+
 export interface VirtualTableServerPushMerge<T> {
   data: T[]
   inserted: number

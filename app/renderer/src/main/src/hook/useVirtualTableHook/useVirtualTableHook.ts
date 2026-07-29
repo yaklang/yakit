@@ -14,6 +14,7 @@ import { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeTyp
 import { yakitNotify } from '@/utils/notification'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import {
+  mergeUniqueVirtualTableRows,
   mergeVirtualTableServerPushRows,
   prependAcceptedVirtualTableServerPushRows,
   resolveVirtualTableServerPushActive,
@@ -168,6 +169,9 @@ export default function useVirtualTableHook<
   const minIdRef = useRef<number>(0)
   // 接口是否正在请求
   const isGrpcRef = useRef<boolean>(false)
+  // Full refresh/reset invalidates older async responses so they cannot write
+  // a stale viewport back after the table has already moved to a new query.
+  const queryEpochRef = useRef(0)
   // Server push received while a query is running is coalesced into one
   // immediate follow-up instead of being dropped by the single-flight guard.
   const notificationRefreshPendingRef = useRef(false)
@@ -216,9 +220,12 @@ export default function useVirtualTableHook<
   }
 
   //裁剪数据
-  const commitSlidingData = (arr: DataT[], order: string) => {
-    setData(arr)
-    syncSlidingEdgeIds(arr, order, idKey, maxIdRef, minIdRef)
+  const commitSlidingData = (value: DataT[] | ((current: DataT[]) => DataT[]), order: string) => {
+    setData((current) => {
+      const arr = typeof value === 'function' ? value(current) : value
+      syncSlidingEdgeIds(arr, order, idKey, maxIdRef, minIdRef)
+      return arr
+    })
   }
 
   //裁剪后滚动到旧数据的最后一条
@@ -243,6 +250,7 @@ export default function useVirtualTableHook<
   const getDataByGrpc = useMemoizedFn((query, type: 'top' | 'bottom' | 'update' | 'offset') => {
     if (isGrpcRef.current) return
     isGrpcRef.current = true
+    const requestEpoch = queryEpochRef.current
     const finalParams: ParamsTProps = {
       ...query,
     }
@@ -259,6 +267,7 @@ export default function useVirtualTableHook<
     finalParams.Pagination = verifyResult.pagination
     grpcFun(finalParams)
       .then((rsp: DataResponseProps<DataT, DataKey>) => {
+        if (requestEpoch !== queryEpochRef.current) return
         let newData: DataT[] = verifyResult.isReverse ? rsp[responseKey.data].reverse() : rsp[responseKey.data]
         if (initResDataFun) {
           newData = initResDataFun(newData)
@@ -276,32 +285,32 @@ export default function useVirtualTableHook<
           }
           if (isSliding) {
             const order = query.Pagination.Order
-            const oldFirstId = data[0]?.[idKey]
-            const merged = [...newData, ...data]
-            markSlidingClip(merged.length)
-            const arr = clipSlidingData(merged, maxDataLength, 'head')
-            pendingScrollRef.current =
-              merged.length > maxDataLength && oldFirstId != null
-                ? { arr, direction: 'top', oldEdgeId: Number(oldFirstId) }
-                : null
-            commitSlidingData(arr, order)
-            if (recoverTopIdRef.current) {
-              const firstId = Number(arr[0][idKey])
-              const done = order === 'asc' ? firstId <= recoverTopIdRef.current : firstId >= recoverTopIdRef.current
-              if (done) recoverTopIdRef.current = 0
-            }
+            const orderBy = query.Pagination.OrderBy || idKey
+            commitSlidingData((current) => {
+              const oldFirstId = current[0]?.[idKey]
+              const merged = mergeUniqueVirtualTableRows([newData, current], idKey, order, orderBy)
+              const clipped = merged.length > maxDataLength
+              if (clipped) slidingClippedRef.current = true
+              const arr = clipSlidingData(merged, maxDataLength, 'head')
+              pendingScrollRef.current =
+                clipped && oldFirstId != null ? { arr, direction: 'top', oldEdgeId: Number(oldFirstId) } : null
+              if (recoverTopIdRef.current && arr.length) {
+                const firstId = Number(arr[0][idKey])
+                const done = order === 'asc' ? firstId <= recoverTopIdRef.current : firstId >= recoverTopIdRef.current
+                if (done) recoverTopIdRef.current = 0
+              }
+              return arr
+            }, order)
             setTotal(rsp.Total)
             return
           }
           if (['desc', 'none'].includes(query.Pagination.Order)) {
-            setData([...newData, ...data])
-            maxIdRef.current = newData[0][responseKey.id]
+            setData((current) => [...newData, ...current])
+            maxIdRef.current = Number(newData[0][responseKey.id])
           } else {
             // 升序
-            if (rsp.Pagination.Limit - data.length >= 0) {
-              setData([...data, ...newData])
-              maxIdRef.current = newData[newData.length - 1][responseKey.id]
-            }
+            setData((current) => (rsp.Pagination.Limit - current.length >= 0 ? [...current, ...newData] : current))
+            maxIdRef.current = Number(newData[newData.length - 1][responseKey.id])
           }
         } else if (type === 'bottom') {
           if (newData.length <= 0) {
@@ -310,23 +319,26 @@ export default function useVirtualTableHook<
             return
           }
           if (isSliding) {
-            const prevTopId = data[0]?.[idKey]
-            const oldLastId = data[data.length - 1]?.[idKey]
-            const merged = [...data, ...newData]
-            const clipped = merged.length > maxDataLength
-            markSlidingClip(merged.length)
-            if (clipped && prevTopId) {
-              recoverTopIdRef.current = Math.max(recoverTopIdRef.current, Number(prevTopId))
-            }
-            const arr = clipSlidingData(merged, maxDataLength, 'tail')
-            pendingScrollRef.current =
-              clipped && oldLastId != null ? { arr, direction: 'bottom', oldEdgeId: Number(oldLastId) } : null
-            commitSlidingData(arr, query.Pagination.Order)
+            const order = query.Pagination.Order
+            const orderBy = query.Pagination.OrderBy || idKey
+            commitSlidingData((current) => {
+              const prevTopId = current[0]?.[idKey]
+              const oldLastId = current[current.length - 1]?.[idKey]
+              const merged = mergeUniqueVirtualTableRows([newData, current], idKey, order, orderBy)
+              const clipped = merged.length > maxDataLength
+              if (clipped) {
+                slidingClippedRef.current = true
+                if (prevTopId) recoverTopIdRef.current = Math.max(recoverTopIdRef.current, Number(prevTopId))
+              }
+              const arr = clipSlidingData(merged, maxDataLength, 'tail')
+              pendingScrollRef.current =
+                clipped && oldLastId != null ? { arr, direction: 'bottom', oldEdgeId: Number(oldLastId) } : null
+              return arr
+            }, order)
             setTotal(rsp.Total)
             return
           }
-          const arr = [...data, ...newData]
-          setData(arr)
+          setData((current) => [...current, ...newData])
           if (['desc', 'none'].includes(query.Pagination.Order)) {
             minIdRef.current = newData[newData.length - 1][responseKey.id]
           } else {
@@ -341,8 +353,15 @@ export default function useVirtualTableHook<
           }
           if (isSliding && slidingClippedRef.current) return
           if (['desc', 'none'].includes(query.Pagination.Order)) {
-            const newOffsetData = newData.concat(getOffsetData())
-            maxIdRef.current = newOffsetData[0][responseKey.id]
+            const newOffsetData = isSliding
+              ? mergeUniqueVirtualTableRows(
+                  [newData, getOffsetData()],
+                  idKey,
+                  query.Pagination.Order,
+                  query.Pagination.OrderBy || idKey,
+                )
+              : newData.concat(getOffsetData())
+            maxIdRef.current = Number(newOffsetData[0][responseKey.id])
             setOffsetData(newOffsetData)
           }
         } else {
@@ -354,12 +373,13 @@ export default function useVirtualTableHook<
             finalParams.endLoop ? startT() : stopT()
             isAllowSetEndLoopRef.current = false
           }
-          setIsRefresh(!isRefresh)
+          setIsRefresh((current) => !current)
           setPagination(rsp.Pagination)
           if (isSliding) {
             const keep = query.Pagination.Order === 'asc' ? 'tail' : 'head'
-            markSlidingClip(newData.length)
-            commitSlidingData(clipSlidingData([...newData], maxDataLength, keep), query.Pagination.Order)
+            const uniqueData = mergeUniqueVirtualTableRows([newData], idKey, query.Pagination.Order, '')
+            markSlidingClip(uniqueData.length)
+            commitSlidingData(clipSlidingData(uniqueData, maxDataLength, keep), query.Pagination.Order)
           } else {
             setData([...newData])
             if (['desc', 'none'].includes(query.Pagination.Order)) {
@@ -374,14 +394,17 @@ export default function useVirtualTableHook<
         setTotal(rsp.Total)
       })
       .catch((e: any) => {
+        if (requestEpoch !== queryEpochRef.current) return
         if (idRef.current) {
           clearInterval(idRef.current)
         }
         yakitNotify('error', `query code scan failed: ${e}`)
       })
       .finally(() => {
+        if (requestEpoch !== queryEpochRef.current) return
         const releaseDelay = notificationRefreshPendingRef.current ? 0 : 100
         setTimeout(() => {
+          if (requestEpoch !== queryEpochRef.current) return
           setLoading(false)
           isGrpcRef.current = false
           flushNotificationRefreshRef.current()
@@ -396,9 +419,17 @@ export default function useVirtualTableHook<
       if (isSliding && slidingClippedRef.current) {
         setOffsetData([])
       } else if (isSliding) {
-        const merged = [...getOffsetData(), ...data]
-        markSlidingClip(merged.length)
-        commitSlidingData(clipSlidingData(merged, maxDataLength, 'head'), sortRef.current.order)
+        const buffered = getOffsetData()
+        commitSlidingData((current) => {
+          const merged = mergeUniqueVirtualTableRows(
+            [buffered, current],
+            idKey,
+            sortRef.current.order,
+            sortRef.current.orderBy || idKey,
+          )
+          if (merged.length > maxDataLength) slidingClippedRef.current = true
+          return clipSlidingData(merged, maxDataLength, 'head')
+        }, sortRef.current.order)
         setOffsetData([])
         return
       } else {
@@ -629,6 +660,7 @@ export default function useVirtualTableHook<
 
   useDebounceEffect(
     () => {
+      queryEpochRef.current += 1
       isGrpcRef.current = false
       updateData()
     },
@@ -641,6 +673,8 @@ export default function useVirtualTableHook<
 
   /** @name 重置查询条件刷新表格 */
   const refreshT = useMemoizedFn((newFilter?: FilterProps, newPagination?: VirtualPaging) => {
+    queryEpochRef.current += 1
+    isGrpcRef.current = false
     sortRef.current = defSort
     setParams({
       Filter: {
@@ -652,14 +686,11 @@ export default function useVirtualTableHook<
         ...newPagination,
       },
     })
-    setTimeout(() => {
-      isGrpcRef.current = false
-      updateData()
-    }, 100)
   })
 
   /** @name 仅刷新新表格 */
   const noResetRefreshT = useMemoizedFn(() => {
+    queryEpochRef.current += 1
     isGrpcRef.current = false
     updateData()
   })
@@ -686,6 +717,34 @@ export default function useVirtualTableHook<
   /** @name 设置表格loading状态 */
   const setTLoad = useMemoizedFn((is: boolean) => {
     setLoading(is)
+  })
+
+  /**
+   * Establish a hard viewport boundary. Older async queries are ignored and
+   * every cursor/cache/scroll value is cleared before the next bootstrap.
+   */
+  const resetTData = useMemoizedFn(() => {
+    queryEpochRef.current += 1
+    isGrpcRef.current = false
+    notificationRefreshPendingRef.current = false
+    recoverTopIdRef.current = 0
+    pendingScrollRef.current = null
+    slidingClippedRef.current = false
+    maxIdRef.current = 0
+    minIdRef.current = 0
+    setOffsetData([])
+    setData([])
+    setTotal(0)
+    setLoading(false)
+    setPagination((current) => ({
+      ...current,
+      Page: 1,
+      AfterId: undefined,
+      BeforeId: undefined,
+    }))
+    setIsRefresh((current) => !current)
+    const container = tableRef.current?.containerRef
+    if (container) container.scrollTop = 0
   })
 
   /** @name 设置表格数据 */
@@ -737,6 +796,8 @@ export default function useVirtualTableHook<
 
   /** @name 设置params */
   const setP = useMemoizedFn((newParams: ParamsTProps) => {
+    queryEpochRef.current += 1
+    isGrpcRef.current = false
     const data: ParamsTProps = {
       ...newParams,
       Pagination: {
@@ -778,6 +839,7 @@ export default function useVirtualTableHook<
       noResetRefreshT,
       notifyPushUpdate,
       setTLoad,
+      resetTData,
       setTData,
       patchTData,
       pushTData,

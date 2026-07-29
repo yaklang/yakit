@@ -28,6 +28,27 @@ export const normalizeHTTPFlowTotal = (value: unknown): number => {
   return Number.isSafeInteger(total) && total >= 0 ? total : 0
 }
 
+export interface MITMLogResetSignal {
+  version: string
+  resetAtUnixSeconds?: number
+}
+
+/** Decode the new reset envelope while keeping compatibility with the legacy version-only event. */
+export const parseMITMLogResetSignal = (value: string): MITMLogResetSignal => {
+  try {
+    const parsed = JSON.parse(value)
+    if (parsed && typeof parsed === 'object' && typeof parsed.version === 'string') {
+      const resetAtUnixSeconds = Number(parsed.resetAtUnixSeconds)
+      return {
+        version: parsed.version,
+        resetAtUnixSeconds:
+          Number.isSafeInteger(resetAtUnixSeconds) && resetAtUnixSeconds > 0 ? resetAtUnixSeconds : undefined,
+      }
+    }
+  } catch {}
+  return { version: value }
+}
+
 export const safeParseHTTPFlowTableCache = <T = unknown>(value?: string): T | undefined => {
   if (!value) return undefined
   try {
@@ -181,7 +202,7 @@ export const hasHTTPFlowFilterCriteria = (query: YakQueryHTTPFlowRequest | undef
     if (value === undefined || value === null || value === '') continue
     if (Array.isArray(value) && value.length === 0) continue
     if (typeof value === 'boolean' && value === false) continue
-    if (key === 'SourceType' || key === 'Full' || key === 'WithPayload') continue
+    if (key === 'SourceType' || key === 'Full' || key === 'WithPayload' || key === 'AfterId') continue
     return true
   }
   return false
