@@ -179,6 +179,8 @@ const makePageKey = (route: YakitRouteType, pageId: string): PageKey => `${route
 /**
  * 从渲染树快照收集「首屏」正文 token：
  * casual / task 两侧顶层 elements 各取最后 topCount 条，并展开 group/task 的 childrenTokens。
+ * 最多两层：group 的 children 是叶子 item；task 的 children 可能是 group 或 item，
+ * group 下不再嵌套 group，所以固定两层展开即可。
  */
 const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: number): string[] => {
   const tokenSet = new Set<string>()
@@ -191,7 +193,12 @@ const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: n
         group?.childrenTokens?.forEach((t) => tokenSet.add(t))
       } else if (el.kind === 'task') {
         const task = content.tasks[el.token]
-        task?.childrenTokens?.forEach((t) => tokenSet.add(t))
+        task?.childrenTokens?.forEach((childToken) => {
+          tokenSet.add(childToken)
+          // task 的 child 可能是 group，再展开一层 group 的 children（叶子 item）
+          const childGroup = content.groups[childToken]
+          childGroup?.childrenTokens?.forEach((t) => tokenSet.add(t))
+        })
       }
     }
   }
@@ -445,7 +452,7 @@ export class ChatMultiSessionController {
     }
   }
   /** 按 token 列表批量获取会话消息内容 */
-  private async persistGetSessionContents(sessionId: string, tokens: string[]) {
+  async persistGetSessionContents(sessionId: string, tokens: string[]) {
     try {
       return await aiChatPersistStore.getSessionContents(sessionId, tokens)
     } catch {
@@ -897,6 +904,19 @@ export class ChatMultiSessionController {
     ipcRenderer.invoke('send-ai-re-act', sessionId, request)
   }
 
+  /** 发 recovery_history 拉更旧事件（grpcOffset 为起点，向前回溯 RECOVERY_HISTORY_LIMIT 条） */
+  public requestRecoveryHistory(sessionId: string) {
+    const { rawData } = this.ensureSession(sessionId)
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
+      SyncJsonInput: JSON.stringify({
+        start_id: rawData.grpcOffset,
+        limit: ChatMultiSessionController.RECOVERY_HISTORY_LIMIT,
+      }),
+    })
+  }
+
   /** 会话建立成功后, 需要做的额外操作 */
   private handleSessionStartSuccess(sessionId: string) {
     const { store, meta } = this.ensureSession(sessionId)
@@ -966,14 +986,7 @@ export class ChatMultiSessionController {
           this.finishSessionRestoreLoading(sessionId)
         } else {
           // 保持 switchLoading，等 recovery_history 再关，避免 UI 提前可点
-          this.requestMessage(sessionId, {
-            IsSyncMessage: true,
-            SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
-            SyncJsonInput: JSON.stringify({
-              start_id: rawData.grpcOffset,
-              limit: ChatMultiSessionController.RECOVERY_HISTORY_LIMIT,
-            }),
-          })
+          this.requestRecoveryHistory(sessionId)
         }
       } else {
         // 带首问的新会话：用当前 store 快照（可能已有首问）+ offset

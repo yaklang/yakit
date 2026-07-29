@@ -27,6 +27,7 @@ import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
+import useLoadOlder from '../hooks/useLoadOlder'
 import { Code } from '@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStreamCard'
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
@@ -104,7 +105,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 const TYPE = 'reAct'
 
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
-  forwardRef((props, ref) => {
+  forwardRef((_, ref) => {
     const listRootRef = useRef<HTMLDivElement>(null)
     const { activeChat } = useAIAgentStore()
 
@@ -113,23 +114,13 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const chatLength = useStore(store, (state) => state.casualChat.elements.length)
     const casualTitle = useStore(store, (state) => state.casualTitle)
     const execute = useStore(store, (state) => state.execute)
-    const casualLoadMoreLoading = useStore(store, (state) => state.requestHistoryState.casualLoadMoreLoading)
+    // const casualLoadMoreLoading = useStore(store, (state) => state.requestHistoryState.casualLoadMoreLoading)
 
-    /** TODO - 新版中历史逻辑暂未补充 */
-    // const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
+    const { onRangeChange } = useLoadOlder(TYPE)
 
-    // 向上滚动加载
-    // const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
-    //   loading: casualLoadMoreLoading,
-    //   dataLength: chatLength,
-    //   SessionID: activeChat?.SessionID || '',
-    //   fetchHasMore: () => handleHasMoreHistory(TYPE),
-    //   loadMore: () => handleLoadMoreHistory(TYPE),
-    // })
     const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged, scrollToItemIndex } =
       useVirtuosoAutoScroll({
         total: chatLength,
-        // isPrependingRef,
       })
 
     const { locateToIndex } = useChatStreamLocateHighlight({
@@ -177,22 +168,22 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         <div className={styles['end']}>当前会话已停止</div>
       ) : null
     }, [casualTitle, execute, chatLength])
-    const Header = useCallback(
-      () =>
-        casualLoadMoreLoading ? (
-          <div style={{ height: 20, position: 'relative' }}>
-            <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
-          </div>
-        ) : null,
-      [casualLoadMoreLoading],
-    )
+    // const Header = useCallback(
+    //   () =>
+    //     casualLoadMoreLoading ? (
+    //       <div style={{ height: 20, position: 'relative' }}>
+    //         <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+    //       </div>
+    //     ) : null,
+    //   [casualLoadMoreLoading],
+    // )
     const components = useMemo(
       () => ({
         Item,
         Footer,
-        Header,
+        // Header,
       }),
-      [Footer, Header, Item],
+      [Footer, Item],
     )
     // const rawData = useCurrentRawData()
     // console.log('casualChat.elements', casualChatElements, store.getState().items)
@@ -202,16 +193,17 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           key={activeChat?.SessionID}
           ref={virtuosoRef}
           scrollerRef={setScrollerRef}
-          // firstItemIndex={firstItemIndex}
+          defaultItemHeight={120}
           atBottomStateChange={setIsAtBottomRef}
           data={casualChatElements}
           totalListHeightChanged={handleTotalListHeightChanged}
           itemContent={renderItem}
           initialTopMostItemIndex={chatLength > 1 ? chatLength - 1 : 0}
           components={components}
+          increaseViewportBy={{ top: 1200, bottom: 0 }}
           atBottomThreshold={50}
           skipAnimationFrameInResizeObserver
-          // startReached={handleLoadMore}
+          rangeChanged={onRangeChange}
           className={styles['re-act-contents-list']}
         />
       </div>

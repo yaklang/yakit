@@ -28,6 +28,7 @@ import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useLoadOlder from '@/pages/ai-re-act/hooks/useLoadOlder'
 import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -183,8 +184,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
   const streams = useStore(store, (state) => state.taskChat.elements)
 
-  /** TODO - hooks未写 */
-  // const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
+  const { onRangeChange } = useLoadOlder(TYPE)
+
   useUpdateEffect(() => {
     scrollToIndex('LAST')
   }, [scrollToBottom])
@@ -203,15 +204,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     }
   }, [highlightedItem])
 
-  // 向上滚动加载
-  // const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
-  //   loading: taskLoadMoreLoading,
-  //   dataLength: streams.length,
-  //   SessionID: session,
-  //   fetchHasMore: () => handleHasMoreHistory(TYPE),
-  //   loadMore: () => handleLoadMoreHistory(TYPE),
-  // })
-
   const {
     virtuosoRef,
     setIsAtBottomRef,
@@ -221,7 +213,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     handleTotalListHeightChanged,
   } = useVirtuosoAutoScroll({
     total: streams.length,
-    // isPrependingRef
   })
 
   const { locateToIndex } = useChatStreamLocateHighlight({
@@ -233,7 +224,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     scrollToIndex('LAST')
   }, [scrollToBottom])
 
-  const renderItem = useCallback((index: number, stream: ReActChatRenderElement) => {
+  const renderItem = useCallback((_: number, stream: ReActChatRenderElement) => {
     if (!stream.token) return null
     return <AIChatListItem key={stream.token} item={stream} />
   }, [])
@@ -247,22 +238,22 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   )
 
   const Footer = useCallback(() => <TaskLoading className={styles['task-loading-footer']} />, [])
-  const Header = useCallback(
-    () =>
-      taskLoadMoreLoading ? (
-        <div style={{ height: 20, position: 'relative' }}>
-          <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
-        </div>
-      ) : null,
-    [taskLoadMoreLoading],
-  )
+  // const Header = useCallback(
+  //   () =>
+  //     taskLoadMoreLoading ? (
+  //       <div style={{ height: 20, position: 'relative' }}>
+  //         <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+  //       </div>
+  //     ) : null,
+  //   [taskLoadMoreLoading],
+  // )
   const components = useMemo(
     () => ({
       Item,
       Footer,
-      Header,
+      // Header,
     }),
-    [Footer, Header, Item],
+    [Footer, Item],
   )
   const onTreeLocate = useMemoizedFn((id?: string) => {
     if (!id) return
@@ -282,7 +273,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         ref={virtuosoRef}
         key={session}
         scrollerRef={setScrollerRef}
-        // firstItemIndex={firstItemIndex}
+        defaultItemHeight={120}
         atBottomStateChange={setIsAtBottomRef}
         style={{ height: '100%', width: '100%' }}
         data={streams}
@@ -292,7 +283,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         atBottomThreshold={100}
         initialTopMostItemIndex={streams.length > 1 ? streams.length - 1 : 0}
         skipAnimationFrameInResizeObserver
-        // startReached={handleLoadMore}
+        rangeChanged={onRangeChange}
         components={components}
       />
     </div>

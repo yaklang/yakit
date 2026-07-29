@@ -181,7 +181,15 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           }
 
           if (isHistory) {
-            // 历史数据处理逻辑
+            // 历史数据：实体已在上方注册，这里只做 elements 前插（旧→新顺序重放，unshift 到头部）
+            // 前插完必须 return，否则会走到下面"默认追加"再 push 一次导致双插
+            const parentChildren = parentTaskId ? state.tasks[parentTaskId]?.childrenTokens : undefined
+            if (parentChildren) {
+              parentChildren.unshift(node.token)
+            } else {
+              targetElements.unshift(elementRef)
+            }
+            return
           } else {
             // 空列表直接追加
             if (targetElements.length === 0) {
