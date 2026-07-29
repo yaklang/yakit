@@ -16,7 +16,7 @@ import styles from './HistoryChat.module.scss'
 import { AIAgentTriggerEventInfo } from '../aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcDeleteAISession, grpcQueryAISession } from '../grpc'
-import { AISession } from '../type/aiChat'
+import { AISession, DeleteAISessionRequest } from '../type/aiChat'
 import { SideSettingButton } from '../aiChatWelcome/AIChatWelcome'
 import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/HistoryChatList'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -28,7 +28,12 @@ import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBod
 import { handAIHistoryChatRemove } from './utils'
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import classNames from 'classnames'
-import { filterHistorySessionsBySource, getHistorySourceQuerySources, type HistorySourceFilter } from './source'
+import {
+  filterHistorySessionsBySource,
+  getHistorySourceQueryPlatform,
+  getHistorySourceQuerySources,
+  type HistorySourceFilter,
+} from './source'
 import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import useDebounce from 'ahooks/lib/useDebounce'
@@ -109,7 +114,11 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     if (!enableHistorySourceFilter) return aiSource
     return getHistorySourceQuerySources(aiSource, historySourceFilter)
   }, [aiSource, enableHistorySourceFilter, historySourceFilter])
-  const [{ sessions }, dispatcher] = useSessionList(historyQuerySources)
+  const historyQueryPlatform = useMemo(() => {
+    if (!enableHistorySourceFilter) return []
+    return getHistorySourceQueryPlatform(historySourceFilter)
+  }, [enableHistorySourceFilter, historySourceFilter])
+  const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
   const { activeChat } = useAIAgentStore()
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
@@ -167,7 +176,17 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      const filter = isGlobalAIAgentHistory ? { DeleteAll: true } : { Filter: { Source: historyQuerySources } }
+      let filter: DeleteAISessionRequest = {}
+      if (isGlobalAIAgentHistory && historySourceFilter === 'local') {
+        // Global AI Agent 侧栏 + local 分组：清空全部来源的会话。
+        filter = { DeleteAll: true }
+      } else if (isGlobalAIAgentHistory && enableHistorySourceFilter) {
+        // Global AI Agent 侧栏 + IM 平台分组：只删该平台，不波及其它来源/平台。
+        filter = { Filter: { Source: ['im'], Platform: historyQueryPlatform } }
+      } else {
+        // 业务页嵌入：按当前分组的 source + platform 删除。
+        filter = { Filter: { Source: historyQuerySources, Platform: historyQueryPlatform } }
+      }
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
@@ -207,10 +226,17 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      const filter = {
-        BeforeTimestamp: beforeTimestamp,
-        Source: historyQuerySources,
-      }
+      const filter =
+        enableHistorySourceFilter && historySourceFilter !== 'local'
+          ? {
+              SessionID: sessionIds,
+              Source: historyQuerySources,
+              Platform: historyQueryPlatform,
+            }
+          : {
+              BeforeTimestamp: beforeTimestamp,
+              Source: historyQuerySources,
+            }
       const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },

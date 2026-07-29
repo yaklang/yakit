@@ -4,6 +4,7 @@ import {
   filterHistorySessionsBySource,
   getHistorySessionIconMeta,
   getHistorySourceFilterCounts,
+  getHistorySourceQueryPlatform,
   getHistorySourceQuerySources,
   getSessionDisplayTitle,
 } from '../source'
@@ -178,5 +179,11 @@ describe('history source filters', () => {
     expect(getHistorySourceQuerySources(['ai', 'im', ''], 'local')).toEqual(['ai', ''])
     expect(getHistorySourceQuerySources(['ai', 'im', ''], 'feishu')).toEqual(['im'])
     expect(getHistorySourceQuerySources(['ai'], 'feishu')).toEqual([])
+  })
+
+  it('maps visible history source filters to grpc query platforms', () => {
+    expect(getHistorySourceQueryPlatform('local')).toEqual([])
+    expect(getHistorySourceQueryPlatform('feishu')).toEqual(['feishu'])
+    expect(getHistorySourceQueryPlatform('dingtalk')).toEqual(['dingtalk'])
   })
 })

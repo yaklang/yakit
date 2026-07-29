@@ -157,6 +157,21 @@ export const getHistorySourceQuerySources = (sources: AISource[], filter: Histor
   return expectedSources.filter((source) => sources.includes(source))
 }
 
+// getHistorySourceQueryPlatform maps a history source filter tab to the IM
+// platform string sent to the backend. 'local' yields no platform filter;
+// feishu / dingtalk map to their platform values. The backend combines this
+// with Source=['im'] to narrow deletion/query to a single IM platform.
+export const getHistorySourceQueryPlatform = (filter: HistorySourceFilter): string[] => {
+  switch (filter) {
+    case 'feishu':
+      return ['feishu']
+    case 'dingtalk':
+      return ['dingtalk']
+    default:
+      return []
+  }
+}
+
 export const getIMSourceDetailText = (item?: AISession): string => {
   const badge = getIMSourceBadge(item)
   if (!badge || !item) return ''

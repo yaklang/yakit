@@ -34,7 +34,7 @@ const mergeUniqueChats = (prev: AISession[], next: AISession[]) => {
   return uniqueNext.length ? [...prev, ...uniqueNext] : prev
 }
 
-const useSessionList = (aiSource: AISource[]) => {
+const useSessionList = (aiSource: AISource[], platform: string[] = []) => {
   const [_, setPagination, getPagination] = useGetSetState(cloneDeep(initialHistoryPagination))
   const [sessions, setSessions, getSessions] = useGetSetState<AISession[]>([])
   const historyLoadingRef = useRef(false)
@@ -48,6 +48,7 @@ const useSessionList = (aiSource: AISource[]) => {
         Filter: {
           Source: aiSource,
           SessionID: [sessionId],
+          Platform: platform,
         },
       })
       setSessions((prev) => {
@@ -77,6 +78,7 @@ const useSessionList = (aiSource: AISource[]) => {
         Pagination: currentPagination,
         Filter: {
           Source: aiSource,
+          Platform: platform,
         },
       })
       if (isRefresh) {

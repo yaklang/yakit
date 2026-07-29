@@ -142,6 +142,10 @@ export interface DeleteAISessionFilter {
    * 删除来源于该来源的数据
    */
   Source?: AISource[]
+  /**
+   * 按 IM 平台删除（feishu / dingtalk），仅当 Source 含 im 时有意义
+   */
+  Platform?: string[]
 }
 
 export interface DeleteAISessionRequest {
@@ -162,6 +166,10 @@ export interface QueryAISessionRequest {
     SessionID?: string[]
     Keyword?: string
     Source?: AISource[]
+    /**
+     * 按 IM 平台筛选（feishu / dingtalk），仅当 Source 含 im 时有意义
+     */
+    Platform?: string[]
   }
 }
 export interface AIAgentChatData {
