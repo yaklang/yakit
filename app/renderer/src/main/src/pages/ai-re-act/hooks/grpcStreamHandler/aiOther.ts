@@ -330,7 +330,7 @@ const handleQueueInfo: AIMessageHandler = (request) => {
   if (tasks.length === 0) meta.queuePollingEmptyCount += 1
   else meta.queuePollingEmptyCount = 0
   if (meta.queuePollingEmptyCount > 3 && meta.queuePollingTimer) {
-    clearTimeout(meta.queuePollingTimer)
+    clearInterval(meta.queuePollingTimer)
     meta.queuePollingTimer = null
   }
 

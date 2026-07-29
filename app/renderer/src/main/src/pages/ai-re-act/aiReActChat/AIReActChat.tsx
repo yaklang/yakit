@@ -5,7 +5,7 @@ import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendRe
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import type { AIReActChatContentsRef } from '../aiReActChatContents/AIReActChatContentsType'
 import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
-import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
+import { useControllableValue, useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
@@ -26,6 +26,7 @@ import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
 import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
+import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -43,6 +44,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const store = useCurrentStore()
 
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const [inViewPort = true] = useInViewport(wrapperRef)
 
     const [showFreeChat, setShowFreeChat] = useControllableValue<boolean>(props, {
       defaultValue: true,
@@ -85,6 +87,30 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         }
       }
     }, [activeChat?.SessionID])
+
+    // #region
+    /**
+     * 1.切换Session后设置当前选中的 SessionID ，如果该组件被卸载意外着当前没有任何对话在显示
+     * 2.当该组件从不可见变可见的时候，需要设置当前选中的 SessionID
+     * */
+    useEffect(() => {
+      if (activeChat?.SessionID) {
+        globalSessionEngine?.setActiveShowSession(activeChat?.SessionID)
+      }
+      return () => {
+        globalSessionEngine?.setActiveShowSession('')
+      }
+    }, [activeChat?.SessionID])
+    useEffect(() => {
+      if (inViewPort) {
+        globalSessionEngine?.setActiveShowSession(activeChat?.SessionID ?? '')
+
+        return () => {
+          globalSessionEngine?.setActiveShowSession('')
+        }
+      }
+    }, [inViewPort])
+    //#endregion
     // #region 问题相关逻辑
     // 初始化 AI ReAct
     const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {

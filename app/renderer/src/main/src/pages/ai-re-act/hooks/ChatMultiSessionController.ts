@@ -409,7 +409,7 @@ export class ChatMultiSessionController {
   }
 
   /** TODO - 存放当前正在展示的会话session */
-  private activeShowSession: string | null = null
+  private activeShowSession: string = ''
   /** 设置当前展示的会话 Session */
   public setActiveShowSession(sessionId: string) {
     this.activeShowSession = sessionId
@@ -1064,7 +1064,7 @@ export class ChatMultiSessionController {
           store.getState().updateState({ casualTitle: '等待回复中...' })
 
           // 因为有用户问题发送，所以注册 获取问题队列轮询器
-          if (meta.queuePollingTimer) clearTimeout(meta.queuePollingTimer)
+          if (meta.queuePollingTimer) clearInterval(meta.queuePollingTimer)
           meta.queuePollingEmptyCount = 0
           meta.queuePollingTimer = setInterval(() => {
             this.requestMessage(sessionId, {

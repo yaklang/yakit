@@ -181,6 +181,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
   const session = useCurrentSessionId()
   const store = useCurrentStore()
+  const rawData = useCurrentRawData()
 
   const streams = useStore(store, (state) => state.taskChat.elements)
 
@@ -257,7 +258,16 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   )
   const onTreeLocate = useMemoizedFn((id?: string) => {
     if (!id) return
-    const index = streams.findIndex((item) => item.token === id)
+    const index = streams.findLastIndex((item) => {
+      const itemData = rawData.contents.get(item.token)
+      switch (itemData?.type) {
+        case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
+        case AIChatQSDataTypeEnum.TASK_NODE_GROUP:
+          return itemData.data?.taskId === id
+        default:
+          return false
+      }
+    })
     if (index !== -1) locateToIndex(index, 'auto')
   })
   useMount(() => {

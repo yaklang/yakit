@@ -202,7 +202,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
 
-  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
+  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => ({
+    ...cloneDeep(AIAgentSettingDefault),
+    Source: source,
+  }))
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)

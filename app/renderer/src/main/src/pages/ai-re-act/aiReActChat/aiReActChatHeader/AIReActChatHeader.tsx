@@ -213,18 +213,20 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
 
   const aiSource: AISource[] = useCreation(() => {
     switch (setting?.Source) {
-      case 'flow':
+      case AISourceEnum.flow:
         return ['flow']
-      case 'knowledgeBase':
+      case AISourceEnum.knowledgeBase:
         return ['knowledgeBase']
-      case 'webFuzzer':
+      case AISourceEnum.webFuzzer:
         return ['webFuzzer']
-      case 'irify':
+      case AISourceEnum.irify:
         return ['irify']
-      case 'yakRunner':
+      case AISourceEnum.yakRunner:
         return ['yakRunner']
-      case 'im':
+      case AISourceEnum.im:
         return ['im']
+      case AISourceEnum.history:
+        return ['history']
       default:
         return AI_AGENT_HISTORY_AI_SOURCES // AI Agent 侧栏历史会话：包含 ai、im 来源与兼容老数据的空 source
     }
