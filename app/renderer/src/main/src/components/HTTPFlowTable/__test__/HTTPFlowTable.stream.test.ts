@@ -127,6 +127,7 @@ describe('HTTPFlow live stream controller', () => {
     controller.observeQuery(queryResponse('db-a', 7, [10, 12, 11], 99), { SourceType: 'mitm' })
 
     expect(transport.starts).toHaveLength(1)
+    expect(controller.snapshot().active).toBe(true)
     expect(transport.starts[0].request).toMatchObject({
       LastSeenSequence: 0,
       LastSeenId: 12,
@@ -243,6 +244,7 @@ describe('HTTPFlow live stream controller', () => {
 
     controller.observeQuery(queryResponse('db-a', 7, [1]), { SourceType: 'mitm' })
     transport.emitError('12 UNIMPLEMENTED')
+    expect(controller.snapshot().active).toBe(false)
     controller.observeQuery(queryResponse('db-a', 7, [1, 2]), { SourceType: 'mitm' })
     expect(unavailable).toHaveBeenCalledTimes(1)
     expect(transport.starts).toHaveLength(1)

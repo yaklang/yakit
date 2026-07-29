@@ -16,6 +16,7 @@ import { genDefaultPagination } from '@/pages/invoker/schema'
 import {
   mergeVirtualTableServerPushRows,
   prependAcceptedVirtualTableServerPushRows,
+  resolveVirtualTableServerPushActive,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
   VirtualTableViewportSnapshot,
@@ -139,12 +140,17 @@ export default function useVirtualTableHook<
     maxDataLength = 0,
     slidingClippedRef: slidingClippedRefProp,
     preferServerPush = false,
+    getAdditionalServerPushActive,
   } = props
 
   const isSliding = maxDataLength > 0
   const internalSlidingClippedRef = useRef(false)
   const slidingClippedRef = slidingClippedRefProp ?? internalSlidingClippedRef
   const idKey = useMemo(() => responseKey.id, [responseKey])
+  const additionalServerPushActiveRef = useRef(getAdditionalServerPushActive)
+  additionalServerPushActiveRef.current = getAdditionalServerPushActive
+  const isServerPushActive = () =>
+    resolveVirtualTableServerPushActive(serverPushStatus, additionalServerPushActiveRef.current)
 
   const [params, setParams] = useState<ParamsTProps>(defaultParams)
   // 表格展示的完整数据
@@ -168,7 +174,7 @@ export default function useVirtualTableHook<
   const flushNotificationRefreshRef = useRef<() => void>(() => {})
   const [total, setTotal] = useState<number>(0)
   // 是否循环接口
-  const [isLoop, setIsLoop] = useState<boolean>(preferServerPush ? false : !serverPushStatus)
+  const [isLoop, setIsLoop] = useState<boolean>(preferServerPush ? false : !isServerPushActive())
   // 表格排序
   const sortRef = useRef<SortProps>(defSort)
   const [loading, setLoading] = useState(false)
@@ -186,14 +192,17 @@ export default function useVirtualTableHook<
 
   useEffect(() => {
     if (!preferServerPush) return
-    return subscribeServerPushStatus((active) => {
+    const syncServerPushStatus = (sharedDuplexActive: boolean) => {
+      const active = resolveVirtualTableServerPushActive(sharedDuplexActive, additionalServerPushActiveRef.current)
       if (active) {
         observedServerPushRef.current = true
         setIsLoop(false)
         return
       }
       if (observedServerPushRef.current && !loopPausedRef.current) setIsLoop(true)
-    })
+    }
+    syncServerPushStatus(serverPushStatus)
+    return subscribeServerPushStatus(syncServerPushStatus)
   }, [preferServerPush])
 
   const recoverTopIdRef = useRef(0)
@@ -262,7 +271,7 @@ export default function useVirtualTableHook<
               return
             }
             // 没有数据
-            serverPushStatus && setIsLoop(false)
+            isServerPushActive() && setIsLoop(false)
             return
           }
           if (isSliding) {
@@ -297,7 +306,7 @@ export default function useVirtualTableHook<
         } else if (type === 'bottom') {
           if (newData.length <= 0) {
             // 没有数据
-            serverPushStatus && setIsLoop(false)
+            isServerPushActive() && setIsLoop(false)
             return
           }
           if (isSliding) {
@@ -327,7 +336,7 @@ export default function useVirtualTableHook<
         } else if (type === 'offset') {
           if (newData.length <= 0) {
             // 没有数据
-            serverPushStatus && setIsLoop(false)
+            isServerPushActive() && setIsLoop(false)
             return
           }
           if (isSliding && slidingClippedRef.current) return
@@ -339,7 +348,7 @@ export default function useVirtualTableHook<
         } else {
           if (newData.length <= 0) {
             // 没有数据
-            serverPushStatus && setIsLoop(false)
+            isServerPushActive() && setIsLoop(false)
           }
           if (typeof finalParams.endLoop === 'boolean' && isAllowSetEndLoopRef.current) {
             finalParams.endLoop ? startT() : stopT()
@@ -465,11 +474,11 @@ export default function useVirtualTableHook<
   })
 
   // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
-  const updateData = useMemoizedFn(() => {
+  const updateData = useMemoizedFn((showLoading = true) => {
     if (boxHeightRef.current) {
       onFirst && onFirst()
       setOffsetData([])
-      setLoading(true)
+      if (showLoading) setLoading(true)
       maxIdRef.current = 0
       minIdRef.current = 0
       if (isSliding) {
@@ -524,6 +533,13 @@ export default function useVirtualTableHook<
       scrollBottomPercent = Number(((scrollTop + clientHeight) / scrollHeight).toFixed(2))
     }
 
+    // Compatibility polling and push-triggered reconciliation are background
+    // work. An empty table must not flash its full loading mask every second.
+    if (data.length === 0) {
+      updateData(false)
+      return
+    }
+
     // 滚动条接近触顶
     if (scrollTop < 10) {
       updateTopData()
@@ -544,13 +560,9 @@ export default function useVirtualTableHook<
     }
     // 滚动条在中间 增量
     else {
-      if (data.length === 0) {
-        updateData()
-      } else {
-        // 倒序的时候才需要掉接口拿偏移数据 开始裁剪后就不拿偏移数据
-        if (['desc', 'none'].includes(sortRef.current.order) && (!isSliding || !slidingClippedRef.current)) {
-          updateOffsetData()
-        }
+      // 倒序的时候才需要掉接口拿偏移数据 开始裁剪后就不拿偏移数据
+      if (['desc', 'none'].includes(sortRef.current.order) && (!isSliding || !slidingClippedRef.current)) {
+        updateOffsetData()
       }
     }
   })
@@ -569,7 +581,7 @@ export default function useVirtualTableHook<
     // Duplex push is the primary scheduler. Keep the interval only for
     // engines that have not negotiated server push, otherwise each push also
     // starts a duplicate one-second poller.
-    if (!preferServerPush && !serverPushStatus) setIsLoop(true)
+    if (!preferServerPush && !isServerPushActive()) setIsLoop(true)
     flushNotificationRefresh()
   })
 
@@ -577,11 +589,13 @@ export default function useVirtualTableHook<
   useEffect(() => {
     let previousSnapshot: VirtualTableViewportSnapshot | undefined
     let id = setInterval(() => {
+      const currentServerPushActive = isServerPushActive()
+      if (currentServerPushActive) observedServerPushRef.current = true
       const currentSnapshot: VirtualTableViewportSnapshot = {
         scrollTop: tableRef.current?.containerRef?.scrollTop,
         clientHeight: tableRef.current?.containerRef?.clientHeight,
         scrollHeight: tableRef.current?.containerRef?.scrollHeight,
-        serverPushActive: serverPushStatus,
+        serverPushActive: currentServerPushActive,
       }
       const action = selectVirtualTableAutoRefreshAction(previousSnapshot, currentSnapshot)
       previousSnapshot = currentSnapshot

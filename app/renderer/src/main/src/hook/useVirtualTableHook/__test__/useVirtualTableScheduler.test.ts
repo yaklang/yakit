@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   mergeVirtualTableServerPushRows,
   prependAcceptedVirtualTableServerPushRows,
+  resolveVirtualTableServerPushActive,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
   VirtualTableViewportSnapshot,
@@ -13,6 +14,17 @@ const snapshot = (overrides: Partial<VirtualTableViewportSnapshot> = {}): Virtua
   scrollHeight: 1200,
   serverPushActive: true,
   ...overrides,
+})
+
+describe('resolveVirtualTableServerPushActive', () => {
+  it('keeps polling stopped when the dedicated stream is active before shared duplex emits a frame', () => {
+    expect(resolveVirtualTableServerPushActive(false, () => true)).toBe(true)
+  })
+
+  it('falls back only when both push sources are inactive', () => {
+    expect(resolveVirtualTableServerPushActive(false, () => false)).toBe(false)
+    expect(resolveVirtualTableServerPushActive(true, () => false)).toBe(true)
+  })
 })
 
 describe('selectVirtualTableAutoRefreshAction', () => {

@@ -30,6 +30,8 @@ export type useVirtualTableHookParams<T, DataT, DataKey> = {
   slidingClippedRef?: React.MutableRefObject<boolean>
   /** 优先等待推送握手，握手不可用或断连时再回退轮询 */
   preferServerPush?: boolean
+  /** 组件专用推送状态；与全局 Duplex 状态合并判断，避免健康专用流仍触发兼容轮询 */
+  getAdditionalServerPushActive?: () => boolean
 }
 
 export type VirtualPaging = {

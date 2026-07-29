@@ -8,6 +8,16 @@ export interface VirtualTableViewportSnapshot {
 export type VirtualTableAutoRefreshAction = 'none' | 'start-poll' | 'stop-poll' | 'refresh-once'
 export const VIRTUAL_TABLE_SCROLL_REFRESH_DELTA = 28
 
+/**
+ * A specialized table can have its own ordered stream in addition to the
+ * shared duplex connection. Either healthy push source is enough to keep the
+ * one-second compatibility poller stopped.
+ */
+export const resolveVirtualTableServerPushActive = (
+  sharedDuplexActive: boolean,
+  getAdditionalServerPushActive?: () => boolean,
+) => sharedDuplexActive || getAdditionalServerPushActive?.() === true
+
 export interface VirtualTableServerPushMerge<T> {
   data: T[]
   inserted: number

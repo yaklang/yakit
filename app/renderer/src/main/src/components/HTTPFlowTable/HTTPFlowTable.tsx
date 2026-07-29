@@ -632,6 +632,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     maxDataLength,
     slidingClippedRef,
     preferServerPush: pageType === 'MITM',
+    getAdditionalServerPushActive: () => pageType === 'MITM' && httpFlowLiveStreamController.snapshot().active,
     defaultParams: {
       Filter: {
         SourceType: props.params?.SourceType || 'mitm',
