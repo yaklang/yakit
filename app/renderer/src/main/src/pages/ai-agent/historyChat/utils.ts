@@ -16,7 +16,7 @@ export interface HandAIHistoryChatRemoveParams {
   /** 删除 Controller 内存中的 session（含双索引与业务池） */
   deleteSessionsParams: {
     sessionIds: string[]
-    source: AISource
+    sources: AISource[]
     route: YakitRouteType
     pageId: string
   }
@@ -35,8 +35,7 @@ export const handAIHistoryChatRemove = async (params: HandAIHistoryChatRemovePar
     await grpcDeleteAISession(grpcDeleteAISessionParams, true)
     // 2.删除图片数据
     handleClearAIImage(handleClearAIImageParams)
-    // 3.删除store缓存数据
+    // 3.删除store缓存数据同时删除indexdb
     globalSessionEngine.deleteSessions(deleteSessionsParams)
-    // TODO - 4.删除indexdb
   } catch (error) {}
 }

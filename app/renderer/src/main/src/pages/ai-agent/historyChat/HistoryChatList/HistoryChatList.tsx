@@ -236,7 +236,7 @@ const HistoryChatList: FC<{
         grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
         handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
         deleteSessionsParams: {
-          source,
+          sources: [source],
           sessionIds,
           route: currentRouteKey as YakitRouteType,
           pageId: currentPageId || currentRouteKey,

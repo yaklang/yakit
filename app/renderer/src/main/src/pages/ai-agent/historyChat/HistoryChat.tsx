@@ -90,7 +90,7 @@ const isSessionMatchSource = (session: AISession, sources: AISource[]) => {
 }
 
 interface HistoryChatProps {
-  /** 会话来源过滤，AI Agent 侧栏为 ['ai', '']，各业务页为 [source] */
+  /** 会话来源过滤，AI Agent 侧栏为 ['ai', '',"im"]，各业务页为 [source] */
   aiSource: AISource[]
   /** 嵌入 Tooltip 等浮层场景：隐藏新建/固定按钮，弹层挂载到当前页面容器 */
   embedded?: boolean
@@ -145,13 +145,13 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      const source = getSetting().Source || 'ai'
       const filter = isGlobalAIAgentHistory ? { DeleteAll: true } : { Filter: { Source: historyQuerySources } }
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
         deleteSessionsParams: {
-          source,
+          // 全局历史页删全部来源；否则删当前 tab 对应来源（local=ai, feishu/dingtalk=im）
+          sources: isGlobalAIAgentHistory ? aiSource : historyQuerySources,
           sessionIds: [],
           route: currentRouteKey as YakitRouteType,
           pageId: currentPageId || currentRouteKey,
@@ -200,7 +200,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
         grpcDeleteAISessionParams: { Filter: filter },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
         deleteSessionsParams: {
-          source,
+          sources: [source],
           sessionIds,
           route: currentRouteKey as YakitRouteType,
           pageId: currentPageId || currentRouteKey,
