@@ -86,16 +86,16 @@ export const handleGrpcDataPushLog = (params: { info: AIOutputEvent; pushLog: (l
 /** 将传入任务区分出可执行任务和父任务两种情况 */
 const genExecTask = (params: { task: AIAgentGrpcApi.PlanTask; level: number; tasks: AITaskInfoProps[] }) => {
   const { task, level, tasks } = params
+  const { subtasks, ...taskInfo } = task
 
-  if (!Array.isArray(task.subtasks) || task.subtasks.length === 0) {
-    tasks.push({ ...task, subtasks: undefined, level, isLeaf: true })
+  if (!Array.isArray(subtasks) || subtasks.length === 0) {
+    tasks.push({ ...taskInfo, level, isLeaf: true })
     return
-  } else {
-    tasks.push({ ...task, subtasks: undefined, level, isLeaf: false })
   }
 
-  for (let subtask of task.subtasks) {
-    genExecTask({ level: level + 1, task: subtask, tasks: tasks })
+  tasks.push({ ...taskInfo, level, isLeaf: false })
+  for (const subtask of subtasks) {
+    genExecTask({ level: level + 1, task: subtask, tasks })
   }
 }
 
