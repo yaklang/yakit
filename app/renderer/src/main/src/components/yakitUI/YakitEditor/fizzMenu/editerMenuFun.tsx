@@ -38,6 +38,8 @@ export interface EditerMenuFunParams {
   downPosYRef: React.MutableRefObject<number | undefined>
   upPosYRef: React.MutableRefObject<number | undefined>
   onScrollTopRef: React.MutableRefObject<number | undefined>
+
+  onOpenSmartDecode: (rangeValue: string, anchorRect?: DOMRect) => void
 }
 
 /**
@@ -65,6 +67,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
     downPosYRef,
     upPosYRef,
     onScrollTopRef,
+    onOpenSmartDecode,
   } = params
 
   // 编辑器点击弹窗的唯一Id
@@ -226,6 +229,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                 toOpenAiChat={toOpenAiChat}
                 rangeValue={(editor && editor.getModel()?.getValueInRange(editor.getSelection() as any)) || ''}
                 fizzRangeTimeoutId={fizzRangeTimeoutIdRef}
+                onOpenSmartDecode={onOpenSmartDecode}
                 hTTPFuzzerClickEditorMenuProps={
                   readOnly
                     ? undefined
