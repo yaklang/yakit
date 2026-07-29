@@ -120,13 +120,11 @@ export interface AIToolCallDecision extends Omit<AIAgentGrpcApi.ToolCallDecision
 }
 
 /** 任务规划-可执行任务的数据结构 */
-export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
+export interface AITaskInfoProps extends Omit<AIAgentGrpcApi.PlanTask, 'subtasks'> {
   /** 层级(代表在树里的第几层) */
   level: number
   /** 是否是叶子任务节点 */
   isLeaf: boolean
-  /** 子任务（树形结构，不含 level/isLeaf） */
-  subtasks?: AIAgentGrpcApi.PlanTask[]
 }
 
 /** 任务规划-执行崩溃后的错误信息展示 */
