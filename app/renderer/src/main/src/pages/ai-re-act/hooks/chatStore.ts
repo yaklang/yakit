@@ -90,19 +90,27 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           const isExist = state.grpcFolders.find((item) => item.path === info.path)
           if (!isExist) state.grpcFolders.push(info)
         }),
-      /** 批量替换 grpcFolders（历史恢复用） */
+      /**
+       * 批量合并文件系统 pin 记录，按 path 去重。
+       * 在 set 回调里拿最新 state 合并，避免 Controller 用 stale state 拼接。
+       */
       setGrpcFolders: (folders) =>
         set((state) => {
-          state.grpcFolders = folders
+          state.grpcFolders = [...new Map([...folders, ...state.grpcFolders].map((item) => [item.path, item])).values()]
         }),
       updateTimeLineItem: (item) =>
         set((state) => {
           state.reActTimelines.push(item)
         }),
-      /** 批量替换 reActTimelines（历史恢复用） */
+      /**
+       * 批量前插 timeline 历史并按 id 去重。
+       * 在 set 回调里拿最新 state 合并，避免 Controller 用 stale state 拼接导致丢失实时数据。
+       */
       setReActTimelines: (timelines) =>
         set((state) => {
-          state.reActTimelines = timelines
+          const existingIds = new Set(state.reActTimelines.map((t) => t.id))
+          const deduped = timelines.filter((t) => !existingIds.has(t.id))
+          state.reActTimelines = [...deduped, ...state.reActTimelines]
         }),
 
       updateHttpData: () => {

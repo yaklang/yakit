@@ -953,13 +953,14 @@ export class ChatMultiSessionController {
 
       // 更新游标为最后一条（最旧）的 ID
       rawData.timelineBeforeId = Number(Events[Events.length - 1].ID)
-      // 解析为 TimelineItem，reverse 为时间正序（旧→新），前插到已有列表头部
+      // 解析为 TimelineItem，reverse 为时间正序（旧→新）
       const timelineItems: AIAgentGrpcApi.TimelineItem[] = Events.map((item) => {
         const ipcContent = Uint8ArrayToString(item.Content) || ''
         return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
       }).reverse()
-      // 前插：旧批次插到已有列表前面
-      store.getState().setReActTimelines([...timelineItems, ...state.reActTimelines])
+      // 前插合并去重：在 store set 回调里拿最新 state 合并，
+      // 避免 await 期间实时流推入的新数据被 stale state 覆盖丢失
+      store.getState().setReActTimelines(timelineItems)
       return Events.length === ChatMultiSessionController.TIMELINE_PAGE_LIMIT
     } catch {
       return false
@@ -1000,10 +1001,8 @@ export class ChatMultiSessionController {
       })
       // 本批次去重
       const filterFiles: AIFileSystemPin[] = [...new Map(files.map((item) => [item.path, item])).values()]
-      // 与已有 grpcFolders 合并去重
-      const state = store.getState()
-      const merged = [...new Map([...filterFiles, ...state.grpcFolders].map((item) => [item.path, item])).values()]
-      store.getState().setGrpcFolders(merged)
+      // 合并去重交给 store（在 set 回调里拿最新 state，避免 stale state 丢失实时数据）
+      store.getState().setGrpcFolders(filterFiles)
     } catch {
       // 持久化失败不打断主流程
     }
