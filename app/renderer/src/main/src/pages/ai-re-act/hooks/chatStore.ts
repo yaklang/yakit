@@ -90,9 +90,19 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           const isExist = state.grpcFolders.find((item) => item.path === info.path)
           if (!isExist) state.grpcFolders.push(info)
         }),
+      /** 批量替换 grpcFolders（历史恢复用） */
+      setGrpcFolders: (folders) =>
+        set((state) => {
+          state.grpcFolders = folders
+        }),
       updateTimeLineItem: (item) =>
         set((state) => {
           state.reActTimelines.push(item)
+        }),
+      /** 批量替换 reActTimelines（历史恢复用） */
+      setReActTimelines: (timelines) =>
+        set((state) => {
+          state.reActTimelines = timelines
         }),
 
       updateHttpData: () => {

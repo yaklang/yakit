@@ -1,5 +1,5 @@
 import { useMemoizedFn } from 'ahooks'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const PREPEND_OFFSET = 1000000
 

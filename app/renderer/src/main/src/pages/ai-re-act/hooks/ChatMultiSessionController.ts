@@ -4,6 +4,7 @@ import {
   AISource,
   AISourceEnum,
   type AIAgentGrpcApi,
+  type AIEventQueryRequest,
   type AIInputEvent,
   type AIOutputEvent,
   type AIStartParams,
@@ -25,7 +26,7 @@ import {
 } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
-import type { AIChatIPCStartParams, AIChatSendParams } from './type'
+import type { AIChatIPCStartParams, AIChatSendParams, AIFileSystemPin } from './type'
 import { yakitNotify } from '@/utils/notification'
 import { type AIChatQSData, AIChatQSDataTypeEnum, type AIToolResult, type SessionRenderContent } from './aiRender'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
@@ -62,6 +63,8 @@ const genAIAgentChatData = (): AIAgentChatData => {
     yaklangCodeChange: undefined,
 
     grpcOffset: 0,
+
+    timelineBeforeId: 0,
 
     httpRunTimeIDs: [],
     riskRunTimeIDs: [],
@@ -917,6 +920,95 @@ export class ChatMultiSessionController {
     })
   }
 
+  /** timeline 历史单次拉取条数 */
+  private static readonly TIMELINE_PAGE_LIMIT = 200
+
+  /**
+   * 拉取 timeline 历史（grpcQueryAIEvent 按 NodeId=timeline_item 过滤，BeforeId 游标分页）。
+   * 拉回后 reverse 为时间正序，前插到 store.reActTimelines；更新 timelineBeforeId 游标。
+   * @returns 是否还有更旧历史（Events.length === LIMIT）
+   */
+  public async loadTimelineHistory(sessionId: string): Promise<boolean> {
+    const { rawData, store } = this.ensureSession(sessionId)
+    const state = store.getState()
+    // 置 loading（驱动 TimelineCard 的 YakitSpin）
+    store.getState().updateState({
+      requestHistoryState: { ...state.requestHistoryState, timelinesLoading: true },
+    })
+    try {
+      const request: AIEventQueryRequest = {
+        Filter: { SessionID: sessionId, NodeId: ['timeline_item'] },
+        Pagination: {
+          Page: 1,
+          Limit: ChatMultiSessionController.TIMELINE_PAGE_LIMIT,
+          OrderBy: 'created_at',
+          Order: 'desc',
+        },
+      }
+      if (rawData.timelineBeforeId > 0) {
+        request.Pagination!.BeforeId = rawData.timelineBeforeId
+      }
+      const { Events, Total } = await grpcQueryAIEvent(request, true)
+      if (Number(Total) === 0) return false
+
+      // 更新游标为最后一条（最旧）的 ID
+      rawData.timelineBeforeId = Number(Events[Events.length - 1].ID)
+      // 解析为 TimelineItem，reverse 为时间正序（旧→新），前插到已有列表头部
+      const timelineItems: AIAgentGrpcApi.TimelineItem[] = Events.map((item) => {
+        const ipcContent = Uint8ArrayToString(item.Content) || ''
+        return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
+      }).reverse()
+      // 前插：旧批次插到已有列表前面
+      store.getState().setReActTimelines([...timelineItems, ...state.reActTimelines])
+      return Events.length === ChatMultiSessionController.TIMELINE_PAGE_LIMIT
+    } catch {
+      return false
+    } finally {
+      const curState = store.getState()
+      store.getState().updateState({
+        requestHistoryState: { ...curState.requestHistoryState, timelinesLoading: false },
+      })
+    }
+  }
+
+  /** 是否还有更旧 timeline 历史可加载 */
+  public hasMoreTimeline(sessionId: string): boolean {
+    const { rawData } = this.ensureSession(sessionId)
+    // 游标为 0 表示未拉过 → 可加载；上次拉满一页 → 可加载
+    // 简化：只要没拉到过空结果就允许尝试（loadTimelineHistory 内部会判 Total===0）
+    return rawData.timelineBeforeId >= 0
+  }
+
+  /**
+   * 拉取文件系统历史（grpcQueryAIEvent 按 EventType=filesystem_pin_* 过滤，Limit=-1 全量）。
+   * 按 path 去重合并到 store.grpcFolders。无分页。
+   */
+  public async loadFileSystemHistory(sessionId: string) {
+    const { store } = this.ensureSession(sessionId)
+    try {
+      const request: AIEventQueryRequest = {
+        Filter: { SessionID: sessionId, EventType: ['filesystem_pin_directory', 'filesystem_pin_filename'] },
+        Pagination: { Page: 1, Limit: -1, OrderBy: 'created_at', Order: 'desc' },
+      }
+      const { Events, Total } = await grpcQueryAIEvent(request, true)
+      if (Total === 0) return
+
+      const files: AIFileSystemPin[] = Events.map((item) => {
+        const ipcContent = Uint8ArrayToString(item.Content) || ''
+        const { path } = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
+        return { path, isFolder: item.Type === 'filesystem_pin_directory' }
+      })
+      // 本批次去重
+      const filterFiles: AIFileSystemPin[] = [...new Map(files.map((item) => [item.path, item])).values()]
+      // 与已有 grpcFolders 合并去重
+      const state = store.getState()
+      const merged = [...new Map([...filterFiles, ...state.grpcFolders].map((item) => [item.path, item])).values()]
+      store.getState().setGrpcFolders(merged)
+    } catch {
+      // 持久化失败不打断主流程
+    }
+  }
+
   /** 会话建立成功后, 需要做的额外操作 */
   private handleSessionStartSuccess(sessionId: string) {
     const { store, meta } = this.ensureSession(sessionId)
@@ -939,6 +1031,10 @@ export class ChatMultiSessionController {
 
     // 如果任务规划运行态有数据，则置空
     store.getState().updateState({ taskStatus: cloneDeep(DefaultTaskPlanStatus) })
+
+    // 拉取 timeline 历史（首批）+ 文件系统历史（全量），不阻塞建连主流程
+    void this.loadTimelineHistory(sessionId)
+    void this.loadFileSystemHistory(sessionId)
   }
 
   /** 关闭恢复态 loading（hydrate 完成或 recovery 结束时调用） */

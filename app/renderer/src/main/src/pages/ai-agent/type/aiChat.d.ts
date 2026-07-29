@@ -184,6 +184,9 @@ export interface AIAgentChatData {
    */
   grpcOffset: number
 
+  /** timeline 历史分页游标（grpcQueryAIEvent 的 BeforeId），0 表示未拉过 */
+  timelineBeforeId: number
+
   /** 记录数据里所有的httpRunTimeIDs */
   httpRunTimeIDs: string[]
   /** 记录数据里所有的riskRunTimeIDs */

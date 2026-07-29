@@ -10,8 +10,10 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { useMemoizedFn, useSize } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import useAIAgentStore from '../../useContext/useStore'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { useStore } from 'zustand'
 
 const TYPE_COLOR_MAP: Record<string, 'info' | 'white' | 'danger'> = {
@@ -82,28 +84,26 @@ const VirtuosoListContainer = forwardRef<HTMLDivElement, ListProps>(({ children,
 VirtuosoListContainer.displayName = 'VirtuosoListContainer'
 
 const TimelineCard: FC = () => {
-  const { activeChat } = useAIAgentStore()
-
   const store = useCurrentStore()
+  const sessionId = useCurrentSessionId()
 
   const reActTimelines = useStore(store, (state) => state.reActTimelines)
   const timelinesLoading = useStore(store, (state) => state.requestHistoryState.timelinesLoading)
 
-  /** TODO - 等待hooks */
-  // const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
+  // 向上滚动加载历史 timeline
+  const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
+    loading: timelinesLoading,
+    dataLength: reActTimelines.length,
+    SessionID: sessionId,
+    fetchHasMore: () => globalSessionEngine.hasMoreTimeline(sessionId),
+    loadMore: () => globalSessionEngine.loadTimelineHistory(sessionId),
+  })
   const { virtuosoRef, handleTotalListHeightChanged, setScrollerRef, setIsAtBottomRef } = useVirtuosoAutoScroll({
     total: reActTimelines.length,
+    isPrependingRef,
   })
   const containerRef = useRef<HTMLDivElement>(null)
   const size = useSize(containerRef)
-
-  // const { firstItemIndex, handleLoadMore } = useLoadHistory({
-  //   loading: timelinesLoading,
-  //   dataLength: reActTimelines.length,
-  //   SessionID: activeChat?.SessionID || '',
-  //   fetchHasMore: () => handleHasMoreHistory('timelines'),
-  //   loadMore: () => handleLoadMoreHistory('timelines'),
-  // })
 
   const components = useMemo<Components<AIAgentGrpcApi.TimelineItem>>(
     () => ({
@@ -128,7 +128,7 @@ const TimelineCard: FC = () => {
       <YakitSpin spinning={timelinesLoading}>
         <Virtuoso
           ref={virtuosoRef}
-          // firstItemIndex={firstItemIndex}
+          firstItemIndex={firstItemIndex}
           data={reActTimelines}
           components={components}
           scrollerRef={setScrollerRef}
@@ -139,7 +139,7 @@ const TimelineCard: FC = () => {
           increaseViewportBy={{ top: 300, bottom: 300 }}
           atBottomThreshold={100}
           skipAnimationFrameInResizeObserver
-          // startReached={handleLoadMore}
+          startReached={handleLoadMore}
           itemContent={itemContent}
         />
       </YakitSpin>

@@ -626,7 +626,11 @@ export interface ChatStoreState {
   ) => void
 
   updateFolders: (info: AIFileSystemPin) => void
+  /** 批量替换 grpcFolders（历史恢复用） */
+  setGrpcFolders: (folders: AIFileSystemPin[]) => void
   updateTimeLineItem: (item: AIAgentGrpcApi.TimelineItem) => void
+  /** 批量替换 reActTimelines（历史恢复用） */
+  setReActTimelines: (timelines: AIAgentGrpcApi.TimelineItem[]) => void
 
   /** 更新http数据 */
   updateHttpData: () => void
