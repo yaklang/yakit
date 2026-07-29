@@ -96,4 +96,49 @@ module.exports = (win, getClient) => {
   ipcMain.handle('SetMCPToolEnabled', async (e, params) => {
     return await asyncSetMCPToolEnabled(params)
   })
+
+  const asyncQueryMCPToolCallHistory = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().QueryMCPToolCallHistory(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('QueryMCPToolCallHistory', async (e, params) => {
+    return await asyncQueryMCPToolCallHistory(params)
+  })
+
+  const asyncGetMCPToolCallHistoryDetail = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetMCPToolCallHistoryDetail(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('GetMCPToolCallHistoryDetail', async (e, params) => {
+    return await asyncGetMCPToolCallHistoryDetail(params)
+  })
+
+  const asyncDeleteMCPToolCallHistory = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().DeleteMCPToolCallHistory(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('DeleteMCPToolCallHistory', async (e, params) => {
+    return await asyncDeleteMCPToolCallHistory(params)
+  })
 }

@@ -17,6 +17,7 @@ const AIToolList = React.lazy(() => import('./aiToolList/AIToolList'))
 const AIModelList = React.lazy(() => import('./aiModelList/AIModelList'))
 const HistoryChat = React.lazy(() => import('./historyChat/HistoryChat'))
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
+const MCPHistory = React.lazy(() => import('./aiMCPHistory/MCPHistory'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   // const {} = props
@@ -99,6 +100,13 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         content = (
           <React.Suspense>
             <AIMCP />
+          </React.Suspense>
+        )
+        break
+      case AIAgentTabListEnum.MCP_History:
+        content = (
+          <React.Suspense>
+            <MCPHistory />
           </React.Suspense>
         )
         break

@@ -1049,6 +1049,9 @@ service Yak {
   rpc GetMCPToolList(GetMCPToolListRequest) returns (GetMCPToolListResponse);
   rpc GetMCPToolDetail(GetMCPToolDetailRequest) returns (MCPClientToolConfig);
   rpc SetMCPToolEnabled(SetMCPToolEnabledRequest) returns (GeneralResponse);
+  rpc QueryMCPToolCallHistory(QueryMCPToolCallHistoryRequest) returns (QueryMCPToolCallHistoryResponse);
+  rpc GetMCPToolCallHistoryDetail(GetMCPToolCallHistoryDetailRequest) returns (MCPToolCallHistory);
+  rpc DeleteMCPToolCallHistory(DeleteMCPToolCallHistoryRequest) returns (Empty);
 
   // RAG Collection Search
   rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
@@ -9695,4 +9698,56 @@ message GetSSAWorkbenchDashboardResponse {
   repeated SSAWorkbenchRiskTypeItem RiskDistribution = 4;
   repeated SSAWorkbenchRuleHitItem TopRuleHits = 5;
   repeated SSAWorkbenchRecentProject RecentProjects = 6;
+}
+
+message QueryMCPToolCallHistoryRequest {
+  string Keyword = 1;
+  string Status = 2;
+  Paging Pagination = 3;
+}
+
+message MCPToolCallHistory {
+  int64 ID = 1;
+  string ToolName = 2;
+  string Arguments = 3;
+  string Result = 4;
+  bool Success = 5;
+  string ErrorMessage = 6;
+  int64 DurationMillis = 7;
+  string ClientID = 8;
+  string SessionID = 9;
+  int64 CreatedAt = 10;
+  string ClientName = 11;
+  string ClientVersion = 12;
+}
+
+message MCPToolCallHistorySummary {
+  int64 ID = 1;
+  string ToolName = 2;
+  bool Success = 3;
+  string ErrorMessage = 4;
+  int64 DurationMillis = 5;
+  string ClientID = 6;
+  string SessionID = 7;
+  int64 CreatedAt = 8;
+  string ClientName = 9;
+  string ClientVersion = 10;
+}
+
+message QueryMCPToolCallHistoryResponse {
+  repeated MCPToolCallHistorySummary Histories = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message GetMCPToolCallHistoryDetailRequest {
+  int64 ID = 1;
+}
+
+message DeleteMCPToolCallHistoryRequest {
+  repeated int64 IDs = 1;
+  bool DeleteAll = 2;
+  bool DeleteFiltered = 3;
+  string Keyword = 4;
+  string Status = 5;
 }

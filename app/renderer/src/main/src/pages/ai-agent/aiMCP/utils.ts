@@ -2,13 +2,18 @@ import { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import {
   AddMCPServerRequest,
+  DeleteMCPToolCallHistoryRequest,
   DeleteMCPServerRequest,
   GetAllMCPServersRequest,
   GetAllMCPServersResponse,
   GetMCPToolDetailRequest,
+  GetMCPToolCallHistoryDetailRequest,
   GetMCPToolListRequest,
   GetMCPToolListResponse,
   MCPServer,
+  MCPToolCallHistory,
+  QueryMCPToolCallHistoryRequest,
+  QueryMCPToolCallHistoryResponse,
   SetMCPToolEnabledRequest,
   UpdateMCPServerRequest,
 } from '../type/aiMCP'
@@ -120,6 +125,56 @@ export const grpcSetMCPToolEnabled: APIFunc<SetMCPToolEnabledRequest, GeneralRes
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcSetMCPToolEnabled 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcQueryMCPToolCallHistory: APIFunc<QueryMCPToolCallHistoryRequest, QueryMCPToolCallHistoryResponse> = (
+  params,
+  hiddenError,
+) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('QueryMCPToolCallHistory', params)
+      .then((res: QueryMCPToolCallHistoryResponse) => {
+        resolve({
+          ...res,
+          Histories: res.Histories || [],
+        })
+      })
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcQueryMCPToolCallHistory 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcGetMCPToolCallHistoryDetail: APIFunc<GetMCPToolCallHistoryDetailRequest, MCPToolCallHistory> = (
+  params,
+  hiddenError,
+) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('GetMCPToolCallHistoryDetail', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', '获取 MCP 调用详情失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcDeleteMCPToolCallHistory: APIFunc<DeleteMCPToolCallHistoryRequest, Record<string, never>> = (
+  params,
+  hiddenError,
+) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('DeleteMCPToolCallHistory', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', '删除 MCP 调用记录失败:' + err)
         reject(err)
       })
   })

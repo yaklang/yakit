@@ -4,6 +4,7 @@ import {
   OutlineChipIcon,
   OutlineCogIcon,
   OutlineMCPIcon,
+  OutlineClipboardlistIcon,
   OutlineSparklesIcon,
   OutlineTemplateIcon,
   OutlineWrenchIcon,
@@ -61,6 +62,7 @@ export enum AIAgentTabListEnum {
   Tool = 'tool',
   AI_Model = 'AIModel',
   MCP = 'mcp',
+  MCP_History = 'mcpHistory',
   KnowledgeBase = 'knowledgeBase',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
@@ -70,6 +72,7 @@ export const AiAgentTabList: YakitTabsProps[] = [
   // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},
   { value: AIAgentTabListEnum.AI_Model, label: 'AiAgengt.aiModel', icon: <OutlineChipIcon /> },
   { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <OutlineMCPIcon /> },
+  { value: AIAgentTabListEnum.MCP_History, label: 'MCP History', icon: <OutlineClipboardlistIcon /> },
 ]
 export enum AIMentionTabsEnum {
   /** forge 智能体 */
