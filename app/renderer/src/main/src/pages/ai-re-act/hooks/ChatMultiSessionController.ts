@@ -35,7 +35,11 @@ import moment from 'moment'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import aiChatPersistStore from './persist/aiChatPersistStore'
-import { persistIndependentItem, persistToolResultIfTerminal } from './persist/contentPersistHelper'
+import {
+  drainSessionContentWrites,
+  persistIndependentItem,
+  persistToolResultIfTerminal,
+} from './persist/contentPersistHelper'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -423,19 +427,50 @@ export class ChatMultiSessionController {
   }
 
   // #region IndexedDB 持久化门面（薄封装 aiChatPersistStore，错误兜底不抛穿 UI）
+  /**
+   * sessionRender 写串行链：同一 session 的渲染树写排队执行。
+   * 作用有二：
+   *  1. 保证 hydrate 快照写与随后的流式 flush 写不并发交叠（后写覆盖先写语义成立）
+   *  2. teardownDisposedSession 删除 IDB 前 drainRenderWrites 排干在飞写，
+   *     避免 delete 后迟到的 put 又写回孤儿行
+   */
+  private renderWriteChains = new Map<string, Promise<unknown>>()
+  private enqueueRenderWrite(sessionId: string, task: () => Promise<unknown>): Promise<unknown> {
+    const next = (this.renderWriteChains.get(sessionId) || Promise.resolve()).then(task, task)
+    this.renderWriteChains.set(
+      sessionId,
+      next.finally(() => {
+        if (this.renderWriteChains.get(sessionId) === next) {
+          this.renderWriteChains.delete(sessionId)
+        }
+      }),
+    )
+    return next
+  }
+  /** 排干该 session 所有在飞的渲染树写；resolve 时链已排空 */
+  private drainRenderWrites(sessionId: string): Promise<unknown> {
+    return this.renderWriteChains.get(sessionId)?.catch(() => {}) || Promise.resolve()
+  }
+
   /** 从 sessionOwnerMap 取 source，兜底 'ai' */
   private resolvePersistSource(sessionId: string): AISource {
     return this.sessionOwnerMap.get(sessionId)?.source || AISourceEnum.aiAgent
   }
 
   /** 保存会话渲染树(element)和grpcOffset */
-  private async persistSetSessionRender(sessionId: string, content: SessionRenderContent, grpcOffset?: number) {
-    try {
-      const offset = grpcOffset ?? this.rawDataPool.get(sessionId)?.grpcOffset ?? 0
-      await aiChatPersistStore.setSessionRender(sessionId, this.resolvePersistSource(sessionId), content, offset)
-    } catch {
-      // 持久化失败不打断主流程
-    }
+  private persistSetSessionRender(
+    sessionId: string,
+    content: SessionRenderContent,
+    grpcOffset?: number,
+  ): Promise<unknown> {
+    // 同步计算 offset / source 并闭包捕获，避免 enqueue 后 session 被 teardown 导致取不到
+    const offset = grpcOffset ?? this.rawDataPool.get(sessionId)?.grpcOffset ?? 0
+    const source = this.resolvePersistSource(sessionId)
+    return this.enqueueRenderWrite(sessionId, () =>
+      aiChatPersistStore.setSessionRender(sessionId, source, content, offset).catch(() => {
+        // 持久化失败不打断主流程
+      }),
+    )
   }
   /** 获取会话渲染树和grpcOffset */
   private async persistGetSessionRender(sessionId: string) {
@@ -1020,7 +1055,7 @@ export class ChatMultiSessionController {
 
     // 获取最新记忆列表数据, 并注册轮询定时器
     this.requestMessage(sessionId, { IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT })
-    if (meta.memoryPollingTimer) clearTimeout(meta.memoryPollingTimer)
+    if (meta.memoryPollingTimer) clearInterval(meta.memoryPollingTimer)
     meta.memoryPollingTimer = setInterval(() => {
       this.requestMessage(sessionId, {
         IsSyncMessage: true,
@@ -1094,7 +1129,6 @@ export class ChatMultiSessionController {
           taskElements: [...state.taskChat.elements],
         }
         await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
-        this.finishSessionRestoreLoading(sessionId)
       }
     } catch {
       this.finishSessionRestoreLoading(sessionId)
@@ -1107,33 +1141,33 @@ export class ChatMultiSessionController {
       if (!this.readyChannels.has(sessionId)) return
 
       let ipcContent = Uint8ArrayToString(res.Content) || ''
-      const parsed = JSON.parse(ipcContent)
       // console.log('handleGrpcOutputEvent--', sessionId, res, ipcContent)
-      if (
-        res.Type === 'structured' &&
-        parsed &&
-        typeof parsed === 'object' &&
-        'level' in parsed &&
-        'message' in parsed
-      ) {
-        // 日志类型数据
-        const data = parsed as AIAgentGrpcApi.Log
-        aiAgentLogEmitter.dispatch({
-          session: sessionId,
-          type: 'log',
-          Timestamp: res.Timestamp,
-          log: data,
-        })
-        return
-      } else {
-        // 所有数据，均抄送一份到日志中
-        aiAgentLogEmitter.dispatch({
-          session: sessionId,
-          type: 'log',
-          Timestamp: res.Timestamp,
-          log: { level: 'log', message: ipcContent },
-        })
+      // 仅 structured 才尝试按 Log 结构解析；其它 type 的 Content 常为纯文本，不可无条件 JSON.parse
+      if (res.Type === 'structured') {
+        try {
+          const parsed = JSON.parse(ipcContent)
+          if (parsed && typeof parsed === 'object' && 'level' in parsed && 'message' in parsed) {
+            // 日志类型数据
+            const data = parsed as AIAgentGrpcApi.Log
+            aiAgentLogEmitter.dispatch({
+              session: sessionId,
+              type: 'log',
+              Timestamp: res.Timestamp,
+              log: data,
+            })
+            return
+          }
+        } catch {
+          // 非合法 JSON / 非 Log 结构，走下方通用抄送
+        }
       }
+      // 所有数据，均抄送一份到日志中
+      aiAgentLogEmitter.dispatch({
+        session: sessionId,
+        type: 'log',
+        Timestamp: res.Timestamp,
+        log: { level: 'log', message: ipcContent },
+      })
 
       const { store, rawData, request, meta } = this.ensureSession(sessionId)
 
@@ -1262,12 +1296,7 @@ export class ChatMultiSessionController {
         return
       }
     } catch (error) {
-      aiAgentLogEmitter.dispatch({
-        session: sessionId,
-        type: 'log',
-        Timestamp: res.Timestamp,
-        log: { level: 'try-error', message: `${res.Type}-${res.NodeId}: ${error}` },
-      })
+      console.error('handleGrpcOutputEvent error', error)
     }
   }
 
@@ -1387,7 +1416,12 @@ export class ChatMultiSessionController {
     }
 
     if (deletePersist) {
-      aiChatPersistStore.deleteSessionPersist(sessionId).catch(() => {})
+      // 先排干该 session 所有在飞的 IDB 写（render / content / reference），
+      // 再发 delete 事务，确保 delete 排在所有 put 之后，避免 delete 后迟到的 put 又写回孤儿行。
+      // 内存池已在上文清空，此处只对 IDB 排干；队列本身在写完成 / finally 时自清。
+      Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+        .then(() => aiChatPersistStore.deleteSessionPersist(sessionId))
+        .catch(() => {})
     }
   }
 
@@ -1487,14 +1521,14 @@ export class ChatMultiSessionController {
       if (meta && onEnd) {
         meta.onEnd = onEnd
       }
+      // 等真实 -end；超时则手动 handleSessionEnd，避免监听泄漏 / onEnd 挂死
+      this.armSessionEndFallback(session)
       ipcRenderer.invoke('cancel-ai-re-act', session).catch(() => {})
       const store = this.storePool.get(session)
       if (store) {
         store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话关闭中...' })
       }
       if (meta) this.closeSessionTimers(meta)
-      // 等真实 -end；超时则手动 handleSessionEnd，避免监听泄漏 / onEnd 挂死
-      this.armSessionEndFallback(session)
     }
   }
 

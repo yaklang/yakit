@@ -6,11 +6,10 @@ import { AIChatQSDataTypeEnum, type AIChatQSData } from '../aiRender'
 import { AIStreamContentType, convertNodeIdToVerbose } from '../defaultConstant'
 import { aiAgentLogEmitter } from '../AIAgentLogEmitter'
 import { v4 as uuidv4 } from 'uuid'
-import aiChatPersistStore from '../persist/aiChatPersistStore'
 import {
-  appendReferenceToContent,
   persistIndependentItem,
   persistToolResultIfTerminal,
+  setSessionReferencePersist,
   upsertSessionContent,
 } from '../persist/contentPersistHelper'
 
@@ -405,7 +404,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
 
   // 收数时自动生成 refToken，立刻落表3；内存只挂 token，不存完整 payload
   const refToken = uuidv4()
-  aiChatPersistStore.setSessionReference(sessionId, refToken, data).catch(() => {})
+  setSessionReferencePersist(sessionId, refToken, data)
 
   if (chatData) {
     chatData.reference = [...(chatData.reference || []), refToken]

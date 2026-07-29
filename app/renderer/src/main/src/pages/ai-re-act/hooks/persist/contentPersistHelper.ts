@@ -1,9 +1,14 @@
 import cloneDeep from 'lodash/cloneDeep'
 import { AIChatQSDataTypeEnum, type AIChatQSData } from '../aiRender'
+import type { AIAgentGrpcApi } from '../grpcApi'
 import aiChatPersistStore from './aiChatPersistStore'
 import type { SessionContentUpdater } from './type'
 
-/** 同一 sessionId::token 的串行写队列，避免异步 put 未完成又来更新导致丢写 */
+/**
+ * 同一 sessionId::token 的串行写队列，避免异步 put 未完成又来更新导致丢写。
+ * 同时承载 sessionContent 与 sessionReference 两类写（主键结构一致 [sessionId, token]），
+ * drainSessionContentWrites 按 sessionId 前缀一并排干。
+ */
 const contentWriteChains = new Map<string, Promise<unknown>>()
 
 const contentKey = (sessionId: string, token: string) => `${sessionId}::${token}`
@@ -69,31 +74,6 @@ export const deletePersistedContent = (sessionId: string, token: string): Promis
   })
 }
 
-/**
- * 向已落库正文的 reference 追加 refToken。
- * 无旧记录时跳过（stream 尚未 end 时参考资料只挂内存，等 end 一并写入）。
- */
-export const appendReferenceToContent = (
-  sessionId: string,
-  contentToken: string,
-  refToken: string,
-): Promise<unknown> => {
-  return enqueueContentWrite(sessionId, contentToken, async () => {
-    try {
-      const old = await aiChatPersistStore.getSessionContent(sessionId, contentToken)
-      if (!old) return
-      const reference = [...(old.reference || [])]
-      if (!reference.includes(refToken)) {
-        reference.push(refToken)
-      }
-      const next: AIChatQSData = { ...clonePersistableContent(old), reference }
-      await aiChatPersistStore.setSessionContent(sessionId, contentToken, () => next)
-    } catch {
-      // 持久化失败不打断主流程
-    }
-  })
-}
-
 /** TOOL_RESULT 终态：success / failed / user_cancelled */
 export const isToolResultTerminalStatus = (status: string | undefined): boolean => {
   return status === 'success' || status === 'failed' || status === 'user_cancelled'
@@ -104,4 +84,37 @@ export const persistToolResultIfTerminal = (sessionId: string, toolResult: AICha
   if (toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) return
   if (!isToolResultTerminalStatus(toolResult.data.tool.status)) return
   return upsertSessionContent(sessionId, toolResult.id, toolResult)
+}
+
+/**
+ * 写入/覆盖参考资料（入队串行，纳入 session 排干）。
+ * 复用 contentWriteChains（key=sessionId::refToken），drainSessionContentWrites 按 sessionId 前缀一并排干。
+ */
+export const setSessionReferencePersist = (
+  sessionId: string,
+  refToken: string,
+  data: AIAgentGrpcApi.ReferenceMaterialPayload,
+): Promise<unknown> => {
+  return enqueueContentWrite(sessionId, refToken, async () => {
+    try {
+      await aiChatPersistStore.setSessionReference(sessionId, refToken, data)
+    } catch {
+      // 持久化失败不打断主流程
+    }
+  })
+}
+
+/**
+ * 排干某 session 所有在飞的正文/参考资料写，resolve 时该 session 的 token 写队列已排空。
+ * 整 session 删除前调用，确保 delete 事务排在所有 put 之后，避免 delete 后迟到的 put 又写回孤儿行。
+ */
+export const drainSessionContentWrites = (sessionId: string): Promise<unknown[]> => {
+  const prefix = `${sessionId}::`
+  const chains: Promise<unknown>[] = []
+  for (const [key, chain] of contentWriteChains) {
+    if (key.startsWith(prefix)) {
+      chains.push(chain.catch(() => {}))
+    }
+  }
+  return Promise.all(chains)
 }
