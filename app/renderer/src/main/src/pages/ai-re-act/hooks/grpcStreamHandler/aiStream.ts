@@ -12,6 +12,7 @@ import {
   setSessionReferencePersist,
   upsertSessionContent,
 } from '../persist/contentPersistHelper'
+import { ensureToolResultOnUI } from './aiToolResult'
 
 /** 生成stream_group组数据 */
 const genStreamGroupData = (
@@ -132,6 +133,8 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
     })
     toolResult.data.stream.EventUUID = event_writer_id
     toolResult.data.type = 'stream'
+    // stdout 流开始：工具卡片首次上树（create 阶段故意不上屏）
+    if (!res.IsSync) ensureToolResultOnUI(requestInfo, toolResult)
     return
   }
 
@@ -374,7 +377,7 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
       ? '...' + toolForStreamData.data.content.slice(-25600) + '...'
       : toolForStreamData.data.content
     toolResult.data.tool.toolStdoutContent = { content: displayContent, isShowAll }
-    store.getState().incrementNodeVersion(toolResult.id, 'item')
+    ensureToolResultOnUI(requestInfo, toolResult)
     // stdout 流结束：落库该 STREAM；若工具已终态则同步刷新 TOOL_RESULT
     upsertSessionContent(requestInfo.sessionId, toolForStreamData.id, toolForStreamData)
     persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
@@ -425,9 +428,13 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
       store.getState().incrementNodeVersion(chatData.id, 'task')
     } else if (chatData.type === AIChatQSDataTypeEnum.STREAM) {
       // 属于stream类型数据，但未在UI上渲染
-      if (toolResult && isToolStdoutStream(chatData.data.NodeId)) {
-        // 特殊情况，更新stdout流对应的工具执行结果卡片UI
-        store.getState().incrementNodeVersion(toolResult.id, 'item')
+      if (
+        toolResult &&
+        toolResult.type === AIChatQSDataTypeEnum.TOOL_RESULT &&
+        isToolStdoutStream(chatData.data.NodeId)
+      ) {
+        // 特殊情况，更新stdout流对应的工具执行结果卡片UI（未挂树则首次挂树）
+        ensureToolResultOnUI(requestInfo, toolResult)
       } else {
         // 触发UI渲染
         store.getState().dispatchStreamingNode({

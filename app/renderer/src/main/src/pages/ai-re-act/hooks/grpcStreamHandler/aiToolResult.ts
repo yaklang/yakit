@@ -1,14 +1,39 @@
-import type { AIMessageHandler } from '../type'
+import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeDataID } from '../utils'
-import { AIChatQSDataTypeEnum, type AIToolResult } from '../aiRender'
+import { AIChatQSDataTypeEnum, type AIChatQSData, type AIToolResult } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultAIToolResult, DefaultToolResultSummary } from '../defaultConstant'
 import { persistToolResultIfTerminal, upsertSessionContent } from '../persist/contentPersistHelper'
 
+/**
+ * 工具卡片首次上树用 dispatchStreamingNode；已在 items 里则只 bump renderNum。
+ * 全文件此前只调 incrementNodeVersion，未挂树时 UI 永远不出现。
+ */
+export const ensureToolResultOnUI = (
+  requestInfo: Pick<AIMessageHandlerParams, 'res' | 'chatType' | 'store'>,
+  toolResult: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.TOOL_RESULT }>,
+) => {
+  const { res, chatType, store } = requestInfo
+  if (store.getState().items[toolResult.id]) {
+    store.getState().incrementNodeVersion(toolResult.id, 'item')
+    return
+  }
+  store.getState().dispatchStreamingNode({
+    chatType,
+    parentTaskId: toolResult.TaskId,
+    node: {
+      token: toolResult.id,
+      kind: 'item',
+      type: toolResult.type,
+      isHistory: res.IsSync,
+    },
+  })
+}
+
 const handleToolCallStart: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta } = requestInfo
+  const { res, chatType, store, rawData } = requestInfo
   if (res.Type !== 'tool_call_start') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -44,7 +69,7 @@ const handleToolCallStart: AIMessageHandler = (requestInfo) => {
 }
 
 const handleToolCallParam: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData } = requestInfo
+  const { res, rawData } = requestInfo
   if (res.Type !== 'tool_call_param') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -64,17 +89,17 @@ const handleToolCallParam: AIMessageHandler = (requestInfo) => {
   }
 
   toolResult.data.tool.reviewParams = cloneDeep(params)
-  if (toolResult.data.type === 'result') store.getState().incrementNodeVersion(toolResult.id, 'item')
+  // 晚到 param（已 result）：刷新已上树卡片；未上树则首次挂树
+  if (toolResult.data.type === 'result') ensureToolResultOnUI(requestInfo, toolResult)
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData } = requestInfo
+  const { res, rawData } = requestInfo
   if (res.Type !== 'tool_call_watcher') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, id, selectors } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallWatcher
-
   if (!call_tool_id || !id || !selectors || !selectors?.length) {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
@@ -108,12 +133,12 @@ const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
   if (toolResult.data.type === 'stream') {
     // 历史数据-该类型不出发渲染更新
     if (res.IsSync) return
-    store.getState().incrementNodeVersion(toolResult.id, 'item')
+    ensureToolResultOnUI(requestInfo, toolResult)
   }
 }
 
 const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData } = requestInfo
+  const { res, rawData } = requestInfo
   if (res.Type !== 'tool_call_log_dir') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -141,12 +166,12 @@ const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
 
   // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
   toolResult.data.tool.dirPath = dir_path || ''
-  if (toolResult.data.tool.status !== 'default') store.getState().incrementNodeVersion(toolResult.id, 'item')
+  if (toolResult.data.tool.status !== 'default') ensureToolResultOnUI(requestInfo, toolResult)
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 const handleToolCallResult: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, meta } = requestInfo
+  const { res, rawData, meta } = requestInfo
   if (!['tool_call_user_cancel', 'tool_call_done', 'tool_call_error'].includes(res.Type)) return
   const status =
     { tool_call_user_cancel: 'user_cancelled', tool_call_done: 'success', tool_call_error: 'failed' }[res.Type] ||
@@ -155,7 +180,6 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, ...rest } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-
   if (!call_tool_id) {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
@@ -193,17 +217,16 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
     meta.toolStderrStreamData.delete(call_tool_id)
   }
 
-  store.getState().incrementNodeVersion(toolResult.id, 'item')
+  ensureToolResultOnUI(requestInfo, toolResult)
   upsertSessionContent(requestInfo.sessionId, toolResult.id, toolResult)
 }
 
 const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, meta } = requestInfo
+  const { res, rawData, meta } = requestInfo
   if (res.Type !== 'tool_call_summary') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, summary } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-
   if (!call_tool_id) {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
@@ -234,13 +257,13 @@ const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
     meta.toolStderrStreamData.delete(call_tool_id)
   }
   if (statusInfo !== 'default') {
-    store.getState().incrementNodeVersion(toolResult.id, 'item')
+    ensureToolResultOnUI(requestInfo, toolResult)
   }
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 const handleToolCallStatus: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData } = requestInfo
+  const { res, rawData } = requestInfo
   if (res.Type !== 'tool_call_status') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -263,17 +286,16 @@ const handleToolCallStatus: AIMessageHandler = (requestInfo) => {
   if (toolResult.data.isProcessingParams === isProcessingParams) return
 
   toolResult.data.isProcessingParams = status === 'processing_params'
-  store.getState().incrementNodeVersion(toolResult.id, 'item')
+  ensureToolResultOnUI(requestInfo, toolResult)
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
 const handleToolCallReason: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData } = requestInfo
+  const { res, rawData } = requestInfo
   if (res.Type !== 'tool_call_reason') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, reason } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
-
   if (!call_tool_id) {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
@@ -289,7 +311,7 @@ const handleToolCallReason: AIMessageHandler = (requestInfo) => {
   }
 
   toolResult.data.tool.reason = reason || ''
-  if (toolResult.data.type !== 'create') store.getState().incrementNodeVersion(toolResult.id, 'item')
+  if (toolResult.data.type !== 'create') ensureToolResultOnUI(requestInfo, toolResult)
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 

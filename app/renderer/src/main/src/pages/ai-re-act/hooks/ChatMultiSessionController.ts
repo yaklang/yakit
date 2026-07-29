@@ -1142,32 +1142,6 @@ export class ChatMultiSessionController {
 
       let ipcContent = Uint8ArrayToString(res.Content) || ''
       // console.log('handleGrpcOutputEvent--', sessionId, res, ipcContent)
-      // 仅 structured 才尝试按 Log 结构解析；其它 type 的 Content 常为纯文本，不可无条件 JSON.parse
-      if (res.Type === 'structured') {
-        try {
-          const parsed = JSON.parse(ipcContent)
-          if (parsed && typeof parsed === 'object' && 'level' in parsed && 'message' in parsed) {
-            // 日志类型数据
-            const data = parsed as AIAgentGrpcApi.Log
-            aiAgentLogEmitter.dispatch({
-              session: sessionId,
-              type: 'log',
-              Timestamp: res.Timestamp,
-              log: data,
-            })
-            return
-          }
-        } catch {
-          // 非合法 JSON / 非 Log 结构，走下方通用抄送
-        }
-      }
-      // 所有数据，均抄送一份到日志中
-      aiAgentLogEmitter.dispatch({
-        session: sessionId,
-        type: 'log',
-        Timestamp: res.Timestamp,
-        log: { level: 'log', message: ipcContent },
-      })
 
       const { store, rawData, request, meta } = this.ensureSession(sessionId)
 
@@ -1175,6 +1149,15 @@ export class ChatMultiSessionController {
       if (res.SyncID && meta.syncIDMap.has(res.SyncID)) {
         meta.syncIDMap.delete(res.SyncID)
         store.getState().updateStateCount('syncIDUpdate')
+      }
+
+      const mirrorToLogWindow = () => {
+        aiAgentLogEmitter.dispatch({
+          session: sessionId,
+          type: 'log',
+          Timestamp: res.Timestamp,
+          log: { level: 'log', message: ipcContent },
+        })
       }
 
       if (res.Type === 'pong') {
@@ -1240,6 +1223,7 @@ export class ChatMultiSessionController {
         return
       }
 
+      // 先解析业务 funcKey（对齐旧 useChatIPC：业务 NodeId 优先于纯日志）
       let funcKey = res.Type
       if (
         res.Type === 'structured' &&
@@ -1254,6 +1238,7 @@ export class ChatMultiSessionController {
           'stream-finished',
           'capability_inventory',
           'react_task_created',
+          'plan_exec_tasks',
         ].includes(res.NodeId)
       ) {
         funcKey = res.NodeId
@@ -1262,11 +1247,15 @@ export class ChatMultiSessionController {
       } else if (res.Type === 'report_finish' && res.NodeId === 'report-finish') {
         funcKey = res.NodeId
       } else if (res.Type === 'structured' && res.NodeId === 'system') {
-        const data = JSON.parse(ipcContent) || ''
-        if (data && typeof data === 'object' && data?.type === 'push_task') {
-          funcKey = 'push_task'
-        } else if (data && typeof data === 'object' && data?.type === 'pop_task') {
-          funcKey = 'pop_task'
+        try {
+          const data = JSON.parse(ipcContent) || ''
+          if (data && typeof data === 'object' && data?.type === 'push_task') {
+            funcKey = 'push_task'
+          } else if (data && typeof data === 'object' && data?.type === 'pop_task') {
+            funcKey = 'pop_task'
+          }
+        } catch {
+          // system 非合法 JSON 时保持 funcKey=structured
         }
       } else if (res.Type === 'perception' && res.NodeId === 'perception') {
         funcKey = 'perception'
@@ -1277,7 +1266,35 @@ export class ChatMultiSessionController {
       } else if (res.Type === 'detached_plan_require' && res.NodeId === 'detached-plan') {
         funcKey = res.Type
       }
+
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
+
+      // 纯日志：structured + Log 结构 + 无业务 handler；不可无条件 JSON.parse（stream 等为纯文本）
+      if (!handleFunc && res.Type === 'structured') {
+        try {
+          const parsed = JSON.parse(ipcContent)
+          if (
+            parsed &&
+            typeof parsed === 'object' &&
+            typeof (parsed as AIAgentGrpcApi.Log).level === 'string' &&
+            typeof (parsed as AIAgentGrpcApi.Log).message === 'string'
+          ) {
+            aiAgentLogEmitter.dispatch({
+              session: sessionId,
+              type: 'log',
+              Timestamp: res.Timestamp,
+              log: parsed as AIAgentGrpcApi.Log,
+            })
+            return
+          }
+        } catch {
+          // 非合法 JSON / 非 Log 结构，走下方通用抄送
+        }
+      }
+
+      // 所有业务数据，均抄送一份到日志中
+      mirrorToLogWindow()
+
       if (handleFunc) {
         handleFunc({
           sessionId,
@@ -1293,7 +1310,6 @@ export class ChatMultiSessionController {
             pushLogToOtherWindow({ sessionId: sessionId, Timestamp: res.Timestamp, ...log })
           },
         })
-        return
       }
     } catch (error) {
       console.error('handleGrpcOutputEvent error', error)

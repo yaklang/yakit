@@ -11,6 +11,7 @@ import {
   persistToolResultIfTerminal,
   deletePersistedContent,
 } from '../persist/contentPersistHelper'
+import { ensureToolResultOnUI } from './aiToolResult'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
@@ -421,7 +422,7 @@ const handleTrafficCount: AIMessageHandler = (request) => {
       break
   }
   if (!update) return
-  store.getState().incrementNodeVersion(toolResult.id, 'item')
+  ensureToolResultOnUI(request, toolResult)
   // 流量/风险计数：仅工具已终态时追加写正文
   persistToolResultIfTerminal(request.sessionId, toolResult)
 }
