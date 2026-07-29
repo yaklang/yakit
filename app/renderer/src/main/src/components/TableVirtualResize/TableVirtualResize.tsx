@@ -61,6 +61,7 @@ const { RangePicker } = YakitDatePicker
 /**
  * @description: 更新说明
  * 1.更新data值变化，单元格状态没变，dataKey需要和修改的值对应上
+ * 2.性能优化（弱 CPU）：hover/选中 Set 查找、ColRender/CellRender 精细 memo、scroll 区间合并 setState
  */
 interface tablePosition {
   bottom?: number
@@ -128,6 +129,29 @@ function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: R
 }
 
 const defMinWidth = 60
+
+// 滚动阈值：用于合并 setScroll 更新，减少 scrollBottom/scrollLeft 变化时的整表重渲染
+const SCROLL_BOTTOM_PAGINATION_THRESHOLD = 10
+const SCROLL_BOTTOM_NEAR_THRESHOLD = 50
+const SCROLL_HORIZONTAL_EDGE_THRESHOLD = 50
+
+/** 性能优化：按 scrollBottom 所在区间判断是否更新，避免中间区域滚动触发底部分页 UI 重渲染 */
+const shouldUpdateScrollBottomState = (prevBottom: number, nextBottom: number) => {
+  const zone = (bottom: number) =>
+    bottom <= SCROLL_BOTTOM_PAGINATION_THRESHOLD ? 0 : bottom < SCROLL_BOTTOM_NEAR_THRESHOLD ? 1 : 2
+  return zone(prevBottom) !== zone(nextBottom)
+}
+
+/** 性能优化：固定列阴影仅依赖左右边缘状态，中间区域横向滚动不触发 setScroll */
+const shouldUpdateScrollHorizontalState = (prev: ScrollProps, scrollLeft: number, scrollRight: number) => {
+  if (prev.scrollLeft === scrollLeft && prev.scrollRight === scrollRight) return false
+  if (scrollLeft < SCROLL_HORIZONTAL_EDGE_THRESHOLD || scrollRight < SCROLL_HORIZONTAL_EDGE_THRESHOLD) return true
+  const prevLeftEdge = prev.scrollLeft <= 0
+  const nextLeftEdge = scrollLeft <= 0
+  const prevRightEdge = prev.scrollRight <= 1
+  const nextRightEdge = scrollRight <= 1
+  return prevLeftEdge !== nextLeftEdge || prevRightEdge !== nextRightEdge
+}
 
 const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const defPagination = useCreation(
@@ -248,6 +272,14 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     return map
   }, [data, rowSelection?.getCheckboxProps])
 
+  // 性能优化：预构建 Set，供 CellRender O(1) 判断 checkbox 选中态（替代每 cell findIndex selectedRowKeys）
+  const selectedRowKeysSet = useMemo(
+    () => new Set<React.Key>(rowSelection?.selectedRowKeys ?? []),
+    [rowSelection?.selectedRowKeys],
+  )
+  // 性能优化：Shift 多选/框选 batchActive 高亮，替代每 cell findIndex selectedRows
+  const selectedRowsKeySet = useMemo(() => new Set(selectedRows.map((r) => r[renderKey])), [selectedRows, renderKey])
+
   useEffect(() => {
     setCurrentRow(currentSelectItem)
   }, [currentSelectItem])
@@ -255,18 +287,41 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     scrollTo(0)
   }, [isRefresh])
 
-  const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-    entries.forEach((entry) => {
-      const target = entry.target
-      containerRefPosition.current = target.getBoundingClientRect()
+  // 性能优化：ResizeObserver 用 useRef 创建一次，避免每次渲染创建新实例导致内存泄漏
+  const resizeObserverRef = useRef<ResizeObserver>()
+  if (!resizeObserverRef.current) {
+    resizeObserverRef.current = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      entries.forEach((entry) => {
+        const target = entry.target
+        containerRefPosition.current = target.getBoundingClientRect()
+      })
     })
-  })
+  }
 
-  useUpdateEffect(() => {
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current)
+  const [inViewport] = useInViewport(containerRef)
+
+  // 隐藏页或切走时不 observe，减少 ResizeObserver 回调
+  useEffect(() => {
+    const observer = resizeObserverRef.current
+    const el = containerRef.current
+    if (!observer || !el) return
+
+    if (inViewport && height) {
+      observer.observe(el)
+    } else {
+      observer.unobserve(el)
     }
-  }, [containerRef.current, height])
+
+    return () => {
+      observer.unobserve(el)
+    }
+  }, [height, inViewport])
+
+  useEffect(() => {
+    return () => {
+      resizeObserverRef.current?.disconnect()
+    }
+  }, [])
 
   useDebounceEffect(
     () => {
@@ -305,7 +360,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }
   }, [scrollToIndex])
 
-  const [inViewport] = useInViewport(containerRef)
   const [mouseEnter, setMouseEnter] = useState<boolean>(false)
 
   const focusIdRef = useRef<string>(`${ShortcutKeyFocusType.TableVirtual}-${uuidv4()}`)
@@ -440,10 +494,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   useUpdateEffect(() => {
     if (pagination.page == 1 && pagination.total == 0) {
       scrollTo(0)
-      setScroll({
-        ...scroll,
-        scrollBottom: 0,
-      })
+      // 性能优化：函数式 setState，避免依赖闭包中的 scroll
+      setScroll((prev) => ({ ...prev, scrollBottom: 0 }))
     }
   }, [pagination.page, pagination.total])
 
@@ -1100,36 +1152,30 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       // const scrollHeight = dom.scrollHeight // 滚动条内容的总高度
       const scrollBottom = scrollHeight - contentScrollTop - clientHeight
       const scrollRight = scrollWidth - scrollLeft - clientWidth
-      // 性能优化
+      // 性能优化：横向滚动仅在接近左右边缘时 setScroll，供固定列阴影使用
       if (preScrollLeft.current !== scrollLeft) {
         preScrollLeft.current = scrollLeft
-        if (scrollLeft < 50 || scrollRight < 50) {
-          setScroll({
-            ...scroll,
-            scrollLeft: scrollLeft,
-            scrollRight: scrollRight,
-          })
-        }
+        setScroll((prev) => {
+          if (!shouldUpdateScrollHorizontalState(prev, scrollLeft, scrollRight)) return prev
+          return {
+            ...prev,
+            scrollLeft,
+            scrollRight,
+          }
+        })
         return false
       }
+      // 性能优化：纵向 scrollBottom 按区间更新，ColRender 不依赖 scrollBottom 故减少连带重渲染
       if (preScrollBottom.current !== scrollBottom) {
         if (wrapperRef && containerRef && pagination) {
           const hasMore = pagination.total == data.length
-          //避免频繁set
-          if (scroll.scrollBottom < 50 && scrollBottom > 50) {
-            // 不显示暂无数据
-            setScroll({
-              ...scroll,
-              scrollBottom: scrollBottom,
-            })
-          }
-          if (scrollBottom < 50) {
-            //显示暂无数据
-            setScroll({
-              ...scroll,
-              scrollBottom: scrollBottom,
-            })
-          }
+          setScroll((prev) => {
+            if (!shouldUpdateScrollBottomState(prev.scrollBottom, scrollBottom)) return prev
+            return {
+              ...prev,
+              scrollBottom,
+            }
+          })
           //向下滑动
           if (
             preScrollBottom.current > scrollBottom &&
@@ -1604,7 +1650,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     <ColRender
                       colIndex={index}
                       currentRow={currentRow}
-                      selectedRows={selectedRows}
+                      selectedRowKeysSet={selectedRowKeysSet}
+                      selectedRowsKeySet={selectedRowsKeySet}
                       lineHighlight={lineHighlight}
                       key={`${columnsItem.dataKey}-${index}` || index}
                       columnsItem={columnsItem}
@@ -1867,7 +1914,10 @@ interface ColRenderProps {
   onRowDoubleClick?: (r: any) => void
   onRowContextMenu: (r: any, e: any, rowIndex: number) => void
   currentRow: any
-  selectedRows?: any[]
+  /** 由 Table 预构建，CellRender 内 O(1) 判断 checkbox 选中 */
+  selectedRowKeysSet: Set<React.Key>
+  /** 由 Table 预构建，CellRender 内 O(1) 判断 Shift 多选/框选 batchActive 高亮 */
+  selectedRowsKeySet: Set<React.Key>
   rowSelection: RowSelectionProps<any>
   onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
   scroll: ScrollProps
@@ -1882,6 +1932,91 @@ interface ColRenderProps {
   checkboxPropsMap: Map<React.Key, Partial<YakitProtoCheckboxProps>>
   lineHighlight?: boolean
 }
+
+interface CellRenderProps {
+  colIndex: number
+  item: { data: any; index: number }
+  columnsItem: ColumnsTypeProps
+  number: number
+  isLastItem: boolean
+  onRowClick: () => void
+  onRowDoubleClick: () => void
+  onRowContextMenu: (e: any) => void
+  currentRow: any
+  /** 由 Table 预构建，CellRender 内 O(1) 判断 checkbox 选中 */
+  selectedRowKeysSet: Set<React.Key>
+  /** 由 Table 预构建，CellRender 内 O(1) 判断 Shift 多选/框选 batchActive 高亮 */
+  selectedRowsKeySet: Set<React.Key>
+  renderKey: string
+  rowSelection: RowSelectionProps<any>
+  onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
+  setMouseEnter: (a: any) => void
+  setMouseLeave: () => void
+  mouseCellId?: string | number
+  moveRow?: (dragIndex: number, hoverIndex: number) => void
+  width?: number
+  enableDragSort?: boolean
+  moveRowEnd?: () => void
+  size: 'small' | 'middle' | 'large'
+  lineHighlight?: boolean
+}
+
+interface CellRenderDropProps extends CellRenderProps {
+  checkboxPropsMap: Map<React.Key, Partial<YakitProtoCheckboxProps>>
+}
+
+/** 性能优化：仅在本 cell hover 状态变化时触发重渲染，而非 mouseCellId 任意变化时全表重渲染 */
+function areCellRenderPropsEqual(
+  preProps: CellRenderProps | CellRenderDropProps,
+  nextProps: CellRenderProps | CellRenderDropProps,
+) {
+  if (preProps.currentRow !== nextProps.currentRow) {
+    return false
+  }
+  if (preProps.selectedRowsKeySet !== nextProps.selectedRowsKeySet) {
+    return false
+  }
+  if (preProps.selectedRowKeysSet !== nextProps.selectedRowKeysSet) {
+    return false
+  }
+  const wasHovered = preProps.mouseCellId === preProps.item.data[preProps.renderKey]
+  const isHovered = nextProps.mouseCellId === nextProps.item.data[nextProps.renderKey]
+  // 比较本 cell 是否 hover，而非 mouseCellId 引用变化，避免鼠标移动时全表 cell 重渲染
+  if (wasHovered !== isHovered) {
+    return false
+  }
+  if (preProps.item.data !== nextProps.item.data) {
+    return false
+  }
+  return true
+}
+
+/** 性能优化：ColRender 自定义 memo，忽略 filters/loading 等无关父 state；不比较 scrollBottom，避免纵向滚动连带重渲染各列 */
+function areColRenderPropsEqual(preProps: ColRenderProps, nextProps: ColRenderProps) {
+  if (preProps.list !== nextProps.list) return false
+  if (
+    preProps.scroll.scrollLeft !== nextProps.scroll.scrollLeft ||
+    preProps.scroll.scrollRight !== nextProps.scroll.scrollRight
+  ) {
+    return false
+  }
+  if (preProps.currentRow !== nextProps.currentRow) return false
+  if (preProps.selectedRowsKeySet !== nextProps.selectedRowsKeySet) return false
+  if (preProps.selectedRowKeysSet !== nextProps.selectedRowKeysSet) return false
+  if (preProps.mouseCellId !== nextProps.mouseCellId) return false
+  if (preProps.columnsItem !== nextProps.columnsItem) return false
+  if (preProps.colWidth !== nextProps.colWidth) return false
+  if (preProps.lineHighlight !== nextProps.lineHighlight) return false
+  if (preProps.size !== nextProps.size) return false
+  if (preProps.isLastItem !== nextProps.isLastItem) return false
+  if (preProps.colIndex !== nextProps.colIndex) return false
+  if (preProps.enableDragSort !== nextProps.enableDragSort) return false
+  if (preProps.width !== nextProps.width) return false
+  if (preProps.checkboxPropsMap !== nextProps.checkboxPropsMap) return false
+  return true
+}
+
+// 性能优化：列级 memo，mouseCellId 变化时仍 re-render 以触发子 CellRender 的 hover compare
 const ColRender = React.memo((props: ColRenderProps) => {
   const {
     columnsItem,
@@ -1893,7 +2028,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
     onRowDoubleClick,
     onRowContextMenu,
     currentRow,
-    selectedRows,
+    selectedRowKeysSet,
+    selectedRowsKeySet,
     colIndex,
     rowSelection,
     onChangeCheckboxSingle,
@@ -1946,7 +2082,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
                   onRowDoubleClick={() => onRowDoubleClick && onRowDoubleClick(item.data)}
                   onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
                   currentRow={currentRow}
-                  selectedRows={selectedRows}
+                  selectedRowKeysSet={selectedRowKeysSet}
+                  selectedRowsKeySet={selectedRowsKeySet}
                   lineHighlight={lineHighlight}
                   // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
                   renderKey={renderKey}
@@ -1978,7 +2115,8 @@ const ColRender = React.memo((props: ColRenderProps) => {
                   onRowDoubleClick={() => onRowDoubleClick && onRowDoubleClick(item.data)}
                   onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
                   currentRow={currentRow}
-                  selectedRows={selectedRows}
+                  selectedRowKeysSet={selectedRowKeysSet}
+                  selectedRowsKeySet={selectedRowsKeySet}
                   lineHighlight={lineHighlight}
                   // isSelect={currentRow && currentRow[renderKey] === item.data[renderKey]}
                   renderKey={renderKey}
@@ -1995,398 +2133,311 @@ const ColRender = React.memo((props: ColRenderProps) => {
         })}
     </div>
   )
-})
+}, areColRenderPropsEqual)
 
-interface CellRenderProps {
-  colIndex: number
-  item: { data: any; index: number }
-  columnsItem: ColumnsTypeProps
-  number: number
-  isLastItem: boolean
-  onRowClick: () => void
-  onRowDoubleClick: () => void
-  onRowContextMenu: (e: any) => void
-  currentRow: any
-  selectedRows?: any[]
-  // isSelect: boolean
-  renderKey: string
-  rowSelection: RowSelectionProps<any>
-  onChangeCheckboxSingle: (checked: boolean, key: string, row: any) => void
-  setMouseEnter: (a: any) => void
-  setMouseLeave: () => void
-  mouseCellId?: string | number
-  moveRow?: (dragIndex: number, hoverIndex: number) => void
-  width?: number
-  enableDragSort?: boolean
-  moveRowEnd?: () => void
-  size: 'small' | 'middle' | 'large'
-  lineHighlight?: boolean
-}
-const CellRender = React.memo(
-  (props: CellRenderProps) => {
-    const {
-      item,
-      columnsItem,
-      number,
-      isLastItem,
-      onRowClick,
-      onRowDoubleClick,
-      onRowContextMenu,
-      // isSelect,
-      colIndex,
-      renderKey,
-      rowSelection,
-      onChangeCheckboxSingle,
-      setMouseEnter,
-      setMouseLeave,
-      mouseCellId,
-      size,
-      currentRow,
-      selectedRows,
-      lineHighlight,
-    } = props
-    const isSelect = useCreation(() => {
-      return currentRow && currentRow[renderKey] === item.data[renderKey]
-    }, [currentRow])
-    const batchActive = useCreation(() => {
-      if ((selectedRows?.length || 0) > 0) {
-        return selectedRows?.findIndex((i) => i[renderKey] === item.data[renderKey]) !== -1
-      }
-      return false
-    }, [selectedRows])
+// 性能优化：CellRender memo + areCellRenderPropsEqual，hover/选中变化时仅更新受影响的 cell
+const CellRender = React.memo((props: CellRenderProps) => {
+  const {
+    item,
+    columnsItem,
+    number,
+    isLastItem,
+    onRowClick,
+    onRowDoubleClick,
+    onRowContextMenu,
+    // isSelect,
+    colIndex,
+    renderKey,
+    rowSelection,
+    onChangeCheckboxSingle,
+    setMouseEnter,
+    setMouseLeave,
+    mouseCellId,
+    size,
+    currentRow,
+    selectedRowKeysSet,
+    selectedRowsKeySet,
+    lineHighlight,
+  } = props
+  const rowKey = item.data[renderKey]
+  const isSelect = currentRow && currentRow[renderKey] === rowKey
+  // 使用 selectedRowsKeySet.has，避免 selectedRows.findIndex 的 O(n) 查找
+  const batchActive = selectedRowsKeySet.size > 0 && selectedRowsKeySet.has(rowKey)
 
-    const colorTypes = useMemo(() => {
-      const colorClassName = parseColorTag(item.data['cellClassName'])
-      return colorClassName
-    }, [item.data])
+  const colorTypes = useMemo(() => {
+    const colorClassName = parseColorTag(item.data['cellClassName'])
+    return colorClassName
+  }, [item.data])
 
-    return (
+  return (
+    <div
+      className={classNames(styles['virtual-table-row-cell'], item.data['cellClassName'], {
+        [styles['virtual-table-row-cell-middle']]: size === 'middle',
+        [styles['virtual-table-batch-active-row']]: batchActive,
+        [styles['virtual-table-hover-row']]: mouseCellId === item.data[renderKey],
+        [styles['virtual-table-active-row']]: isSelect && lineHighlight,
+
+        [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
+        [styles[`virtual-table-hover-cell-${colorTypes}`]]: !!colorTypes && mouseCellId === item.data[renderKey],
+        [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
+
+        'table-cell-row-hover': !!colorTypes && mouseCellId === item.data[renderKey],
+
+        [styles['virtual-table-row-cell-border-right-0']]: isLastItem,
+        [styles['virtual-table-row-cell-border-right-1']]: (batchActive || isSelect) && isLastItem && lineHighlight,
+        [styles['virtual-table-row-cell-border-left-1']]: (batchActive || isSelect) && colIndex === 0,
+        [styles['virtual-table-row-cell-disabled']]: item.data['disabled'] || item.data['Disabled'],
+      })}
+      style={columnsItem.customStyle && item.data['cellStyle']}
+      onClick={(e) => {
+        // @ts-ignore
+        if (e.target.nodeName === 'INPUT') return
+        onRowClick()
+      }}
+      onDoubleClick={() => {
+        onRowDoubleClick()
+      }}
+      onContextMenu={(e) => {
+        onRowContextMenu(e)
+      }}
+      id={(isSelect && colIndex === 0 && item.data[renderKey]) || ''}
+      onMouseEnter={() => {
+        setMouseEnter(item.data[renderKey])
+      }}
+      onMouseLeave={() => {
+        setMouseLeave()
+      }}
+    >
+      {colIndex === 0 && rowSelection && (
+        <span className={classNames(styles['check'])}>
+          {rowSelection.type !== 'radio' && (
+            <YakitProtoCheckbox
+              onChange={(e) => {
+                onChangeCheckboxSingle(e.target.checked, renderKey ? item.data[renderKey] : number, item.data)
+              }}
+              // selectedRowKeysSet 替代 selectedRowKeys.findIndex
+              checked={selectedRowKeysSet.has(renderKey ? item.data[renderKey] : number)}
+              disabled={item.data['disabled'] || item.data['Disabled']}
+            />
+          )}
+        </span>
+      )}
       <div
-        className={classNames(styles['virtual-table-row-cell'], item.data['cellClassName'], {
-          [styles['virtual-table-row-cell-middle']]: size === 'middle',
-          [styles['virtual-table-batch-active-row']]: batchActive,
-          [styles['virtual-table-hover-row']]: mouseCellId === item.data[renderKey],
-          [styles['virtual-table-active-row']]: isSelect && lineHighlight,
-
-          [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
-          [styles[`virtual-table-hover-cell-${colorTypes}`]]: !!colorTypes && mouseCellId === item.data[renderKey],
-          [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
-
-          'table-cell-row-hover': !!colorTypes && mouseCellId === item.data[renderKey],
-
-          [styles['virtual-table-row-cell-border-right-0']]: isLastItem,
-          [styles['virtual-table-row-cell-border-right-1']]: (batchActive || isSelect) && isLastItem && lineHighlight,
-          [styles['virtual-table-row-cell-border-left-1']]: (batchActive || isSelect) && colIndex === 0,
-          [styles['virtual-table-row-cell-disabled']]: item.data['disabled'] || item.data['Disabled'],
+        className={classNames({
+          [styles['virtual-table-row-ellipsis']]: columnsItem.ellipsis === false ? false : true,
+          [styles['virtual-table-row-no-ellipsis']]: columnsItem.ellipsis === false ? true : false,
         })}
-        style={columnsItem.customStyle && item.data['cellStyle']}
-        onClick={(e) => {
-          // @ts-ignore
-          if (e.target.nodeName === 'INPUT') return
-          onRowClick()
-        }}
-        onDoubleClick={() => {
-          onRowDoubleClick()
-        }}
-        onContextMenu={(e) => {
-          onRowContextMenu(e)
-        }}
-        id={(isSelect && colIndex === 0 && item.data[renderKey]) || ''}
-        onMouseEnter={() => {
-          setMouseEnter(item.data[renderKey])
-        }}
-        onMouseLeave={() => {
-          setMouseLeave()
-        }}
       >
-        {colIndex === 0 && rowSelection && (
-          <span className={classNames(styles['check'])}>
-            {rowSelection.type !== 'radio' && (
-              <YakitProtoCheckbox
-                onChange={(e) => {
-                  onChangeCheckboxSingle(e.target.checked, renderKey ? item.data[renderKey] : number, item.data)
-                }}
-                checked={
-                  rowSelection?.selectedRowKeys?.findIndex(
-                    (ele) => ele === (renderKey ? item.data[renderKey] : number),
-                  ) !== -1
-                }
-                disabled={item.data['disabled'] || item.data['Disabled']}
-              />
-            )}
-          </span>
-        )}
+        {columnsItem.render
+          ? columnsItem.render(item.data[columnsItem.dataKey], item.data, number)
+          : item.data[columnsItem.dataKey] || '-'}
+      </div>
+    </div>
+  )
+}, areCellRenderPropsEqual)
+const CellRenderDrop = React.memo((props: CellRenderDropProps) => {
+  const {
+    item,
+    columnsItem,
+    number,
+    isLastItem,
+    onRowClick,
+    onRowDoubleClick,
+    onRowContextMenu,
+    // isSelect,
+    colIndex,
+    renderKey,
+    rowSelection,
+    onChangeCheckboxSingle,
+    setMouseEnter,
+    setMouseLeave,
+    mouseCellId,
+    moveRow,
+    width,
+    enableDragSort,
+    moveRowEnd,
+    size,
+    currentRow,
+    selectedRowKeysSet,
+    selectedRowsKeySet,
+    checkboxPropsMap,
+    lineHighlight,
+  } = props
+  const dragRef = useRef<any>()
+
+  const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>(
+    {
+      accept: 'row',
+      collect(monitor) {
+        return {
+          handlerId: monitor.getHandlerId(),
+        }
+      },
+      hover(item: DragItem, monitor) {
+        if (!dragRef.current) {
+          return
+        }
+        const dragIndex = item.index
+        const hoverIndex = number || 0
+
+        // Don't replace items with themselves
+        if (dragIndex === hoverIndex) {
+          return
+        }
+
+        // Determine rectangle on screen
+        const hoverBoundingRect = dragRef.current?.getBoundingClientRect()
+
+        // Get vertical middle
+        const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
+
+        // Determine mouse position
+        const clientOffset = monitor.getClientOffset()
+
+        // Get pixels to the top
+        const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top
+
+        // Dragging downwards
+        if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+          return
+        }
+
+        // Dragging upwards
+        if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+          return
+        }
+        if (moveRow) moveRow(dragIndex, hoverIndex)
+        item.index = hoverIndex
+      },
+    },
+    [number],
+  )
+  const [{ isDragging }, drag] = useDrag(
+    {
+      type: 'row',
+      item: () => {
+        return { id: item.data[renderKey], index: number }
+      },
+      collect: (monitor: any) => ({
+        isDragging: monitor.isDragging(),
+      }),
+    },
+    [number],
+  )
+  useUpdateEffect(() => {
+    if (isDragging) return
+    if (moveRowEnd) moveRowEnd()
+  }, [isDragging, number])
+  drag(drop(dragRef))
+
+  const styleDrag =
+    (enableDragSort &&
+      isDragging && {
+        width,
+      }) ||
+    {}
+  const rowKey = item.data[renderKey]
+  const isSelect = currentRow && currentRow[renderKey] === rowKey
+  // 使用 selectedRowsKeySet.has，避免 selectedRows.findIndex 的 O(n) 查找
+  const batchActive = selectedRowsKeySet.size > 0 && selectedRowsKeySet.has(rowKey)
+
+  const checkboxProps: YakitProtoCheckboxProps = useCreation(() => {
+    return checkboxPropsMap.get(item.data[renderKey]) || {}
+  }, [checkboxPropsMap])
+
+  const colorTypes = useMemo(() => {
+    const colorClassName = parseColorTag(item.data['cellClassName'])
+    return colorClassName
+  }, [item.data])
+
+  return (
+    <div
+      data-handler-id={handlerId}
+      className={classNames(styles['virtual-table-row-cell'], item.data['cellClassName'], {
+        [styles['virtual-table-row-cell-middle']]: size === 'middle',
+        [styles['virtual-table-batch-active-row']]: batchActive,
+        [styles['virtual-table-hover-row']]: mouseCellId === item.data[renderKey],
+        [styles['virtual-table-active-row']]: isSelect && lineHighlight,
+
+        [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
+        [styles[`virtual-table-hover-cell-${colorTypes}`]]: !!colorTypes && mouseCellId === item.data[renderKey],
+        [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
+
+        'table-cell-row-hover': !!colorTypes && mouseCellId === item.data[renderKey],
+
+        [styles['virtual-table-row-cell-border-right-0']]: isLastItem,
+        [styles['virtual-table-row-cell-border-right-1']]: (batchActive || isSelect) && isLastItem,
+        [styles['virtual-table-row-cell-border-left-1']]: (batchActive || isSelect) && colIndex === 0 && lineHighlight,
+        [styles['virtual-table-row-cell-disabled']]: item.data['disabled'] || item.data['Disabled'],
+        [styles['virtual-table-row-cell-move']]: enableDragSort && colIndex === 0,
+      })}
+      style={columnsItem.customStyle && item.data['cellStyle']}
+      onClick={(e) => {
+        // @ts-ignore
+        if (e.target.nodeName === 'INPUT') return
+        onRowClick()
+      }}
+      onDoubleClick={() => {
+        onRowDoubleClick()
+      }}
+      onContextMenu={(e) => {
+        onRowContextMenu(e)
+      }}
+      id={(isSelect && colIndex === 0 && item.data[renderKey]) || ''}
+      onMouseEnter={() => {
+        setMouseEnter(item.data[renderKey])
+      }}
+      onMouseLeave={() => {
+        setMouseLeave()
+      }}
+      ref={enableDragSort ? dragRef : null}
+      onDragStart={() => {
+        onRowClick()
+      }}
+    >
+      {enableDragSort && isDragging && (
         <div
           className={classNames({
-            [styles['virtual-table-row-ellipsis']]: columnsItem.ellipsis === false ? false : true,
-            [styles['virtual-table-row-no-ellipsis']]: columnsItem.ellipsis === false ? true : false,
+            [styles['virtual-table-row-cell-isDragging']]: isDragging,
           })}
-        >
-          {columnsItem.render
-            ? columnsItem.render(item.data[columnsItem.dataKey], item.data, number)
-            : item.data[columnsItem.dataKey] || '-'}
-        </div>
-      </div>
-    )
-  },
-  (preProps, nextProps) => {
-    // return true; 	不渲染
-    // return false;	渲染
-
-    // if (preProps.isSelect !== nextProps.isSelect) {
-    //     return false
-    // }
-    if (preProps.currentRow !== nextProps.currentRow || preProps.selectedRows !== nextProps.selectedRows) {
-      return false
-    }
-    if (preProps.rowSelection?.selectedRowKeys !== nextProps.rowSelection?.selectedRowKeys) {
-      return false
-    }
-    if (preProps.mouseCellId !== nextProps.mouseCellId) {
-      return false
-    }
-    if (preProps.item.data !== nextProps.item.data) {
-      return false
-    }
-    return true
-  },
-)
-interface CellRenderDropProps extends CellRenderProps {
-  checkboxPropsMap: Map<React.Key, Partial<YakitProtoCheckboxProps>>
-}
-const CellRenderDrop = React.memo(
-  (props: CellRenderDropProps) => {
-    const {
-      item,
-      columnsItem,
-      number,
-      isLastItem,
-      onRowClick,
-      onRowDoubleClick,
-      onRowContextMenu,
-      // isSelect,
-      colIndex,
-      renderKey,
-      rowSelection,
-      onChangeCheckboxSingle,
-      setMouseEnter,
-      setMouseLeave,
-      mouseCellId,
-      moveRow,
-      width,
-      enableDragSort,
-      moveRowEnd,
-      size,
-      currentRow,
-      selectedRows,
-      checkboxPropsMap,
-      lineHighlight,
-    } = props
-    const dragRef = useRef<any>()
-
-    const [{ handlerId }, drop] = useDrop<DragItem, void, { handlerId: Identifier | null }>(
-      {
-        accept: 'row',
-        collect(monitor) {
-          return {
-            handlerId: monitor.getHandlerId(),
-          }
-        },
-        hover(item: DragItem, monitor) {
-          if (!dragRef.current) {
-            return
-          }
-          const dragIndex = item.index
-          const hoverIndex = number || 0
-
-          // Don't replace items with themselves
-          if (dragIndex === hoverIndex) {
-            return
-          }
-
-          // Determine rectangle on screen
-          const hoverBoundingRect = dragRef.current?.getBoundingClientRect()
-
-          // Get vertical middle
-          const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-
-          // Determine mouse position
-          const clientOffset = monitor.getClientOffset()
-
-          // Get pixels to the top
-          const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top
-
-          // Dragging downwards
-          if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-            return
-          }
-
-          // Dragging upwards
-          if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-            return
-          }
-          if (moveRow) moveRow(dragIndex, hoverIndex)
-          item.index = hoverIndex
-        },
-      },
-      [number],
-    )
-    const [{ isDragging }, drag] = useDrag(
-      {
-        type: 'row',
-        item: () => {
-          return { id: item.data[renderKey], index: number }
-        },
-        collect: (monitor: any) => ({
-          isDragging: monitor.isDragging(),
-        }),
-      },
-      [number],
-    )
-    useUpdateEffect(() => {
-      if (isDragging) return
-      if (moveRowEnd) moveRowEnd()
-    }, [isDragging, number])
-    drag(drop(dragRef))
-
-    const styleDrag =
-      (enableDragSort &&
-        isDragging && {
-          width,
-        }) ||
-      {}
-    const isSelect = useCreation(() => {
-      return currentRow && currentRow[renderKey] === item.data[renderKey]
-    }, [currentRow])
-    const batchActive = useCreation(() => {
-      if ((selectedRows?.length || 0) > 0) {
-        return selectedRows?.findIndex((i) => i[renderKey] === item.data[renderKey]) !== -1
-      }
-      return false
-    }, [selectedRows])
-
-    const checkboxProps: YakitProtoCheckboxProps = useCreation(() => {
-      return checkboxPropsMap.get(item.data[renderKey]) || {}
-    }, [checkboxPropsMap])
-
-    const colorTypes = useMemo(() => {
-      const colorClassName = parseColorTag(item.data['cellClassName'])
-      return colorClassName
-    }, [item.data])
-
-    return (
+          style={{ height: 28, left: 0, position: 'absolute', ...styleDrag }}
+        />
+      )}
+      {enableDragSort && colIndex === 0 && (
+        <DragSortIcon
+          className={classNames(styles['drag-sort-icon'], {
+            [styles['drag-sort-icon-active']]: isSelect || isDragging,
+          })}
+        />
+      )}
+      {colIndex === 0 && rowSelection && (
+        <span className={classNames(styles['check'])}>
+          {rowSelection.type !== 'radio' && (
+            <YakitProtoCheckbox
+              onChange={(e) => {
+                onChangeCheckboxSingle(e.target.checked, renderKey ? item.data[renderKey] : number, item.data)
+              }}
+              // selectedRowKeysSet 替代 selectedRowKeys.findIndex
+              checked={selectedRowKeysSet.has(renderKey ? item.data[renderKey] : number)}
+              disabled={item.data['disabled'] || item.data['Disabled']}
+              {...checkboxProps}
+            />
+          )}
+        </span>
+      )}
       <div
-        data-handler-id={handlerId}
-        className={classNames(styles['virtual-table-row-cell'], item.data['cellClassName'], {
-          [styles['virtual-table-row-cell-middle']]: size === 'middle',
-          [styles['virtual-table-batch-active-row']]: batchActive,
-          [styles['virtual-table-hover-row']]: mouseCellId === item.data[renderKey],
-          [styles['virtual-table-active-row']]: isSelect && lineHighlight,
-
-          [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
-          [styles[`virtual-table-hover-cell-${colorTypes}`]]: !!colorTypes && mouseCellId === item.data[renderKey],
-          [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
-
-          'table-cell-row-hover': !!colorTypes && mouseCellId === item.data[renderKey],
-
-          [styles['virtual-table-row-cell-border-right-0']]: isLastItem,
-          [styles['virtual-table-row-cell-border-right-1']]: (batchActive || isSelect) && isLastItem,
-          [styles['virtual-table-row-cell-border-left-1']]:
-            (batchActive || isSelect) && colIndex === 0 && lineHighlight,
-          [styles['virtual-table-row-cell-disabled']]: item.data['disabled'] || item.data['Disabled'],
-          [styles['virtual-table-row-cell-move']]: enableDragSort && colIndex === 0,
+        className={classNames({
+          [styles['virtual-table-row-ellipsis']]: columnsItem.ellipsis === false ? false : true,
+          [styles['virtual-table-row-no-ellipsis']]: columnsItem.ellipsis === false ? true : false,
         })}
-        style={columnsItem.customStyle && item.data['cellStyle']}
-        onClick={(e) => {
-          // @ts-ignore
-          if (e.target.nodeName === 'INPUT') return
-          onRowClick()
-        }}
-        onDoubleClick={() => {
-          onRowDoubleClick()
-        }}
-        onContextMenu={(e) => {
-          onRowContextMenu(e)
-        }}
-        id={(isSelect && colIndex === 0 && item.data[renderKey]) || ''}
-        onMouseEnter={() => {
-          setMouseEnter(item.data[renderKey])
-        }}
-        onMouseLeave={() => {
-          setMouseLeave()
-        }}
-        ref={enableDragSort ? dragRef : null}
-        onDragStart={() => {
-          onRowClick()
-        }}
       >
-        {enableDragSort && isDragging && (
-          <div
-            className={classNames({
-              [styles['virtual-table-row-cell-isDragging']]: isDragging,
-            })}
-            style={{ height: 28, left: 0, position: 'absolute', ...styleDrag }}
-          />
-        )}
-        {enableDragSort && colIndex === 0 && (
-          <DragSortIcon
-            className={classNames(styles['drag-sort-icon'], {
-              [styles['drag-sort-icon-active']]: isSelect || isDragging,
-            })}
-          />
-        )}
-        {colIndex === 0 && rowSelection && (
-          <span className={classNames(styles['check'])}>
-            {rowSelection.type !== 'radio' && (
-              <YakitProtoCheckbox
-                onChange={(e) => {
-                  onChangeCheckboxSingle(e.target.checked, renderKey ? item.data[renderKey] : number, item.data)
-                }}
-                checked={
-                  rowSelection?.selectedRowKeys?.findIndex(
-                    (ele) => ele === (renderKey ? item.data[renderKey] : number),
-                  ) !== -1
-                }
-                disabled={item.data['disabled'] || item.data['Disabled']}
-                {...checkboxProps}
-              />
-            )}
-          </span>
-        )}
-        <div
-          className={classNames({
-            [styles['virtual-table-row-ellipsis']]: columnsItem.ellipsis === false ? false : true,
-            [styles['virtual-table-row-no-ellipsis']]: columnsItem.ellipsis === false ? true : false,
-          })}
-        >
-          {columnsItem.render
-            ? columnsItem.render(item.data[columnsItem.dataKey], item.data, number)
-            : item.data[columnsItem.dataKey] || '-'}
-        </div>
+        {columnsItem.render
+          ? columnsItem.render(item.data[columnsItem.dataKey], item.data, number)
+          : item.data[columnsItem.dataKey] || '-'}
       </div>
-    )
-  },
-  (preProps, nextProps) => {
-    // return true; 	不渲染
-    // return false;	渲染
-    // if (preProps.isSelect !== nextProps.isSelect) {
-    //     return false
-    // }
-    if (preProps.currentRow !== nextProps.currentRow || preProps.selectedRows !== nextProps.selectedRows) {
-      return false
-    }
-    if (preProps.rowSelection?.selectedRowKeys !== nextProps.rowSelection?.selectedRowKeys) {
-      return false
-    }
-    if (preProps.mouseCellId !== nextProps.mouseCellId) {
-      return false
-    }
-    if (preProps.item.data !== nextProps.item.data) {
-      return false
-    }
-    return true
-  },
-)
+    </div>
+  )
+}, areCellRenderPropsEqual)
 /**
  * @description:表格的props描述， 包裹虚拟表格的父元素需要设置高度
  * @ref: 返回的滚动条所在的div的元素

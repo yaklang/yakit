@@ -113,6 +113,7 @@ import { MilkdownEditorLocal } from '@/components/milkdownEditorLocal/MilkdownEd
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { openAIForge } from '../yakRunnerAuditHole/YakitAuditHoleTable/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 const { YakitPanel } = YakitCollapse
 
 const { ipcRenderer } = window.require('electron')
@@ -124,8 +125,7 @@ const AuditCodeDetailTopId = 'top-message-code-scan'
 /** @name 规则组列表组件 */
 export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
   React.forwardRef((props, ref) => {
-    const { isrefresh, onGroupChange, currentPageTabRouteKey, canUpload, userInfo, onRefreshOnlienRuleManagement } =
-      props
+    const { isrefresh, onGroupChange, canUpload, userInfo, onRefreshOnlienRuleManagement } = props
     const { t } = useI18nNamespaces(['ruleManagement', 'yakitUi'])
 
     useImperativeHandle(ref, () => ({
@@ -302,7 +302,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
     const [uploadInfoVisible, setUploadInfoVisible] = useState<boolean>(false)
     const [uploadPercentShow, setUploadPercentShow] = useState<boolean>(false)
     const uploadTokenRef = useRef<string>(randomString(40))
-    const uploadContainerRef = useRef<string>(currentPageTabRouteKey)
+    const uploadContainerRef = useRef<HTMLElement>()
     const ruleGroupItemRef = useRef<SyntaxFlowGroup>()
     const handleUpload = useMemoizedFn(() => {
       if (ruleGroupItemRef.current) {
@@ -312,7 +312,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
           uploadTokenRef.current,
         ).then((res) => {
           setUploadInfoVisible(false)
-          uploadContainerRef.current = currentPageTabRouteKey
+          uploadContainerRef.current = getMainOperatorPageBodyContainer()
           setUploadPercentShow(true)
         })
       }
@@ -517,9 +517,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
           ></YakitHint>
           {uploadPercentShow && (
             <RuleUploadAndDownloadModal
-              getContainer={
-                document.getElementById(`main-operator-page-body-${uploadContainerRef.current}`) || undefined
-              }
+              getContainer={uploadContainerRef.current}
               type="upload"
               apiKey="SyntaxFlowRuleToOnline"
               token={uploadTokenRef.current}
@@ -2244,7 +2242,7 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
 
 export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
   React.forwardRef((props, ref) => {
-    const { isrefresh, onGroupChange, currentPageTabRouteKey, canDel, userInfo, onRefreshRuleManagement } = props
+    const { isrefresh, onGroupChange, canDel, userInfo, onRefreshRuleManagement } = props
     const { t } = useI18nNamespaces(['ruleManagement', 'yakitUi'])
     const powerEmptyImage = useEmptyImage('power')
 
@@ -2349,7 +2347,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
     const [downloadInfoVisible, setDownloadInfoVisible] = useState<boolean>(false)
     const [downloadPercentShow, setDownloadPercentShow] = useState<boolean>(false)
     const downloadTokenRef = useRef<string>(randomString(40))
-    const downloadContainerRef = useRef<string>(currentPageTabRouteKey)
+    const downloadContainerRef = useRef<HTMLElement>()
     const ruleGroupItemRef = useRef<API.FlowRuleGroupDetail>()
     const handleDownload = useMemoizedFn(() => {
       if (ruleGroupItemRef.current?.groupName) {
@@ -2362,7 +2360,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
           downloadTokenRef.current,
         ).then((res) => {
           setDownloadInfoVisible(false)
-          downloadContainerRef.current = currentPageTabRouteKey
+          downloadContainerRef.current = getMainOperatorPageBodyContainer()
           setDownloadPercentShow(true)
         })
       }
@@ -2511,9 +2509,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                   ></YakitHint>
                   {downloadPercentShow && (
                     <RuleUploadAndDownloadModal
-                      getContainer={
-                        document.getElementById(`main-operator-page-body-${downloadContainerRef.current}`) || undefined
-                      }
+                      getContainer={downloadContainerRef.current}
                       type="download"
                       apiKey="DownloadSyntaxFlowRule"
                       token={downloadTokenRef.current}

@@ -1,6 +1,6 @@
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
-import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn, useThrottleFn } from 'ahooks'
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { MITMResponse, TraceInfo } from '../MITMPage'
 import styles from './MITMServerHijacking.module.scss'
@@ -167,6 +167,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const [sourceType, setSourceType] = useState<string>('mitm')
   const [tableTotal, setTableTotal] = useState<number>(0)
   const [tableSelectNum, setTableSelectNum] = useState<number>(0)
+  // 性能优化：高流量下这三个 setState 由 HTTPFlowRealTimeTableAndEditor 每条流回调触发，
+  // 用 throttle 合并到 500ms 最多一次，避免 header 频繁重渲染
+  const { run: throttledSetHasNewData } = useThrottleFn((v: boolean) => setHasNewData(v), { wait: 500 })
+  const { run: throttledSetTableTotal } = useThrottleFn((v: number) => setTableTotal(v), { wait: 500 })
+  const { run: throttledSetTableSelectNum } = useThrottleFn((v: number) => setTableSelectNum(v), { wait: 500 })
   const mitmHijackedContentRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(mitmHijackedContentRef)
   const { builtinTagList } = useBuiltinTagList(autoForward === 'log', inViewport)
@@ -185,22 +190,45 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const moreRuleLimitFlagRef = useRef<boolean>(true)
   const [moreRuleLimit, setMoreRuleLimit] = useState<boolean>(false)
   const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
-  const [whiteFilter, setWhiteFilter] = useState<{
+  // 性能优化：whiteFilter 仅在 setFilters 回调中读取，不在 JSX/依赖中，改为 ref 避免后台获取 filter 时重渲染
+  const whiteFilterRef = useRef<{
     baseFilter: MITMFilterSchema
     advancedFilters: MITMAdvancedFilter[]
   }>()
   const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false) // 是否开启过替换规则
-  const [curRules, setCurRules] = useState<MITMContentReplacerRule[]>([])
+  // 性能优化：curRules 仅在 setRules/setRulesAllDisable 回调中读取，不在 JSX/依赖中，改为 ref 避免后台获取规则时重渲染
+  const curRulesRef = useRef<MITMContentReplacerRule[]>([])
   const [alertVisible, setAlertVisible] = useState<boolean>(false)
+  // 性能优化：params/wrapperStyle 用 useMemo 缓存，避免每次渲染创建新对象破坏子组件 React.memo
+  const tableParams = useMemo(() => ({ SourceType: sourceType }), [sourceType])
+  const tableWrapperStyle = useMemo(() => ({ padding: 0 }), [])
+  // 性能优化：提取 onResize 为 useMemoizedFn，避免每次渲染创建新引用
+  const onResize = useMemoizedFn((w?: number, h?: number) => {
+    if (w) setWidth(w)
+    if (h) setHeight(h)
+  })
+  const onQueryParams = useMemoizedFn((queryParams) => {
+    try {
+      const processQuery = JSONParseLog(queryParams, { page: 'MITMHijackedContent', fun: 'onQueryParams' }) || {}
+      delete processQuery.Pagination
+      delete processQuery.AfterId
+      delete processQuery.BeforeId
+      delete processQuery.ProcessName
+      emiter.emit(
+        'onMITMLogProcessQuery',
+        JSON.stringify({ queryStr: JSON.stringify(processQuery), version: mitmVersion }),
+      )
+    } catch (error) {}
+  })
   const getMITMFilter = useMemoizedFn(() => {
     grpcMITMGetFilter()
       .then((res: MITMFilterSchema) => {
         const data = convertMITMFilterUI(res.FilterData || cloneDeep(defaultMITMFilterData))
         const val = data.baseFilter
-        setWhiteFilter({
+        whiteFilterRef.current = {
           baseFilter: val,
           advancedFilters: data.advancedFilters,
-        })
+        }
         const includeHostnameFlag = val?.includeHostname ? !!val?.includeHostname.length : false
         const includeUriFlag = val?.includeUri ? !!val?.includeUri.length : false
         const includeSuffixFlag = val?.includeSuffix ? !!val?.includeSuffix.length : false
@@ -215,9 +243,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       })
   })
   const setFilters = useMemoizedFn(() => {
-    if (whiteFilter) {
+    if (whiteFilterRef.current) {
       const filter: MITMFilterData = {
-        ...convertLocalMITMFilterRequest(whiteFilter),
+        ...convertLocalMITMFilterRequest(whiteFilterRef.current),
         IncludeHostnames: [],
         IncludeSuffix: [],
         IncludeUri: [],
@@ -238,7 +266,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   })
   const setRules = useMemoizedFn(() => {
     const newRules: MITMContentReplacerRule[] = []
-    curRules.forEach((item) => {
+    curRulesRef.current.forEach((item) => {
       if (item.Disabled) {
         newRules.push(item)
       } else {
@@ -261,7 +289,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       })
   })
   const setRulesAllDisable = useMemoizedFn(() => {
-    const newRules: MITMContentReplacerRule[] = curRules.map((item) => ({ ...item, Disabled: true }))
+    const newRules: MITMContentReplacerRule[] = curRulesRef.current.map((item) => ({ ...item, Disabled: true }))
     const value: MITMContentReplacersRequest = {
       replacers: newRules,
       version: mitmVersion,
@@ -282,7 +310,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       .invoke('GetCurrentRules', {})
       .then((rsp: { Rules: MITMContentReplacerRule[] }) => {
         const newRules = rsp.Rules.map((ele) => ({ ...ele, Id: ele.Index }))
-        setCurRules([...newRules])
+        curRulesRef.current = [...newRules]
         const findOpenRepRule = newRules.find(
           (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat),
         )
@@ -999,26 +1027,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             pageType="MITM"
             noTableTitle={true}
             downstreamProxyStr={downstreamProxyStr}
-            params={{ SourceType: sourceType }}
-            onSetTableTotal={setTableTotal}
-            onSetTableSelectNum={setTableSelectNum}
-            onSetHasNewData={setHasNewData}
-            wrapperStyle={{ padding: 0 }}
-            onQueryParams={(queryParams) => {
-              try {
-                const processQuery =
-                  JSONParseLog(queryParams, { page: 'MITMHijackedContent', fun: 'onQueryParams' }) || {}
-                delete processQuery.Pagination
-                delete processQuery.AfterId
-                delete processQuery.BeforeId
-                delete processQuery.ProcessName
-                emiter.emit(
-                  'onMITMLogProcessQuery',
-                  JSON.stringify({ queryStr: JSON.stringify(processQuery), version: mitmVersion }),
-                )
-              } catch (error) {}
-            }}
+            params={tableParams}
+            onSetTableTotal={throttledSetTableTotal}
+            onSetTableSelectNum={throttledSetTableSelectNum}
+            onSetHasNewData={throttledSetHasNewData}
+            wrapperStyle={tableWrapperStyle}
+            onQueryParams={onQueryParams}
             builtinTagList={builtinTagList}
+            inViewportOverride={inViewport && autoForward === 'log'}
           />
         </div>
       </>
@@ -1059,14 +1075,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     <div className={styles['mitm-hijacked-content']} ref={mitmHijackedContentRef}>
       <div>
         <ReactResizeDetector
-          onResize={(w, h) => {
-            if (w) {
-              setWidth(w)
-            }
-            if (h) {
-              setHeight(h)
-            }
-          }}
+          onResize={onResize}
           handleWidth={true}
           handleHeight={true}
           refreshMode={'debounce'}

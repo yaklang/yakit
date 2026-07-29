@@ -70,6 +70,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const PluginTrace = React.lazy(() => import('./PluginTrace/PluginTrace'))
 
 const { ipcRenderer } = window.require('electron')
+// 性能优化：空 Map 常量，避免每次渲染创建新对象
+const emptyBoolMap = new Map<string, boolean>()
 
 interface MITMPluginHijackContentProps {
   isHasParams: boolean
@@ -240,8 +242,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
 
   const [script, setScript] = useState<YakScript>(HotLoadDefaultData)
 
-  const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件名
-  const [hooksID, handlersID] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件id
+  // 性能优化：使用模块级空 Map 常量，避免每次渲染创建 new Map()
+  const [hooks, handlers] = useMap<string, boolean>(emptyBoolMap) // 当前hooks的插件名
+  const [hooksID, handlersID] = useMap<string, boolean>(emptyBoolMap) // 当前hooks的插件id
   const [loading, setLoading] = useState(false)
 
   // 是否允许获取默认勾选值
@@ -259,15 +262,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   }, [compareHasParamsCheckList])
 
   // 初始化加载 hooks，设置定时更新 hooks 状态
+  // 性能优化：轮询间隔从 1s 延长到 2s，且仅在视口可见时轮询，减少 IPC 调用
   useEffect(() => {
+    if (!inViewport) return
     updateHooks()
     const id = setInterval(() => {
       updateHooks()
-    }, 1000)
+    }, 2000)
     return () => {
       clearInterval(id)
     }
-  }, [])
+  }, [inViewport])
 
   useEffect(() => {
     // 加载状态(从服务端加载)
@@ -347,9 +352,14 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
       grpcClientMITMLoading(mitmVersion).remove()
     }
   }, [])
+  // 性能优化：用 ref 缓存 hooks 的插件名 key，只在插件名集合变化时重建 hooksItem（避免 localeCompare 排序在每次 Map 引用变化时重跑）
+  const hooksKeyRef = useRef<string>('')
+  const hooksItemCacheRef = useRef<YakScript[]>([])
   const hooksItem: YakScript[] = useCreation(() => {
     let tmpItem: YakScript[] = []
+    const keys: string[] = []
     hooks.forEach((value, key) => {
+      keys.push(key)
       if (!key.includes(hookScriptNameSearch)) return
       if (value && key) {
         tmpItem.push({
@@ -372,8 +382,16 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         })
       }
     })
-    return tmpItem.sort((a, b) => a.ScriptName.localeCompare(b.ScriptName))
-  }, [hooks, isHooksSearch])
+    const newKey = keys.sort().join(',')
+    if (newKey === hooksKeyRef.current) {
+      // 插件名集合未变化，跳过重建
+      return hooksItemCacheRef.current
+    }
+    hooksKeyRef.current = newKey
+    const sorted = tmpItem.sort((a, b) => a.ScriptName.localeCompare(b.ScriptName))
+    hooksItemCacheRef.current = sorted
+    return sorted
+  }, [hooks, isHooksSearch, hookScriptNameSearch])
 
   /**
    * @description 多选插件
@@ -395,6 +413,26 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
 
   const onSearch = useMemoizedFn(() => {
     setTriggerSearch(!triggerSearch)
+  })
+
+  // 性能优化：提取 pluginListQuery 内联函数，避免每次渲染创建新引用和返回新对象
+  const pluginListQuery = useMemoizedFn(() => {
+    return {
+      Tag: tags,
+      Type: 'mitm,port-scan',
+      Keyword: searchKeyword,
+      FieldKeywords: fieldKeywords,
+      Pagination: {
+        Limit: 20,
+        Order: '',
+        Page: 1,
+        OrderBy: '',
+        RawOrder: 'is_core_plugin desc,online_official desc,updated_at desc',
+      },
+      Group: { UnSetGroup: false, Group: groupNames },
+      IsMITMParamPlugins: isHasParams ? 1 : 2,
+      IncludedScriptNames: isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList,
+    }
   })
   /**
    * @description 发送到【热加载】中调试代码
@@ -877,24 +915,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
               setSelectGroup={setSelectGroup}
               excludeType={['yak', 'codec', 'lua', 'nuclei']}
               wrapperClassName={styles['plugin-group']}
-              pluginListQuery={() => {
-                return {
-                  Tag: tags,
-                  Type: 'mitm,port-scan',
-                  Keyword: searchKeyword,
-                  FieldKeywords: fieldKeywords,
-                  Pagination: {
-                    Limit: 20,
-                    Order: '',
-                    Page: 1,
-                    OrderBy: '',
-                    RawOrder: 'is_core_plugin desc,online_official desc,updated_at desc',
-                  },
-                  Group: { UnSetGroup: false, Group: groupNames },
-                  IsMITMParamPlugins: isHasParams ? 1 : 2,
-                  IncludedScriptNames: isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList,
-                }
-              }}
+              pluginListQuery={pluginListQuery}
               total={total}
               allChecked={isHasParams ? false : isSelectAll}
               checkedPlugin={isHasParams ? hasParamsCheckList : isSelectAll ? [] : noParamsCheckList}

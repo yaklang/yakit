@@ -1,4 +1,4 @@
-import React, { forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
   CurrentPacketInfoProps,
   ManualHijackInfoProps,
@@ -19,10 +19,8 @@ import {
 } from '../MITMHacker/utils'
 import {
   useControllableValue,
-  useCounter,
   useCreation,
   useGetState,
-  useInterval,
   useInViewport,
   useMap,
   useMemoizedFn,
@@ -112,12 +110,33 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       boolean
     >(new Map())
 
-    const [currentOrder, { inc: addOrder, set: setOrder, reset: resetOrder }] = useCounter(1, { min: 1 })
-    const [intervalTime, setIntervalTime] = useState<number>()
+    // 性能优化：currentOrder 仅在 forwardHandlerV2 中赋值 arrivalOrder，不在 JSX 中读取，改为 ref 避免 Add 消息触发重渲染
+    const currentOrderRef = useRef<number>(1)
+    const addOrder = useMemoizedFn(() => {
+      currentOrderRef.current++
+    })
+    const setOrder = useMemoizedFn((v: number) => {
+      currentOrderRef.current = v
+    })
+    const resetOrder = useMemoizedFn(() => {
+      currentOrderRef.current = 1
+    })
+    // 性能优化：intervalTime 仅用于控制 flush 定时器的启停，不在 JSX 中读取。
+    // 改为 ref + 手动 setInterval/clearInterval，避免每次 flush 周期的两次 setState 重渲染
+    const flushIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    const startFlushInterval = useMemoizedFn(() => {
+      if (flushIntervalRef.current !== null) return
+      flushIntervalRef.current = setInterval(() => {
+        handleManualHijackList()
+      }, 100)
+    })
+    const stopFlushInterval = useMemoizedFn(() => {
+      if (flushIntervalRef.current !== null) {
+        clearInterval(flushIntervalRef.current)
+        flushIntervalRef.current = null
+      }
+    })
     const mitmV2HijackInfoRef = useRef<SingleManualHijackInfoMessage[]>([])
-    const clearMITMHijackV2 = useInterval(() => {
-      handleManualHijackList()
-    }, intervalTime)
 
     const manualHijackInfoRef = useRef<ManualHijackInfoRefProps>({
       onSubmitData: () => {},
@@ -147,7 +166,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         }
       })
       return () => {
-        clearMITMHijackV2()
+        stopFlushInterval()
         grpcClientMITMHijacked(mitmVersion).remove()
       }
     }, [])
@@ -170,7 +189,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           if (!!hijackData) {
             const item: SingleManualHijackInfoMessage = {
               ...hijackData,
-              arrivalOrder: currentOrder,
+              arrivalOrder: currentOrderRef.current,
               manualHijackListAction: ManualHijackListAction.Hijack_List_Add,
             }
             mitmV2HijackInfoRef.current.push(item)
@@ -234,8 +253,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         default:
           break
       }
-      if (mitmV2HijackInfoRef.current.length > 0 && !intervalTime) {
-        setIntervalTime(100)
+      if (mitmV2HijackInfoRef.current.length > 0 && flushIntervalRef.current === null) {
+        startFlushInterval()
       }
     })
     /**处理手动劫持数据,后端在发送数据得时候已经做过节流/防抖处理 */
@@ -304,14 +323,28 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       }
       setCurrentSelectItem(newSelectItem)
       setEditorShowIndexShowIndex(newSelectItem ? newEditorShowIndexShowIndex : 0)
-      newData = newData.map(({ Tags = [], ...rest }) => ({
-        ...rest,
-        Tags,
-        cellClassName: filterColorTag(Tags.join('|')),
-      }))
+      // 性能优化：只对新增/更新的行计算 cellClassName，未变化的行保持原对象引用，
+      // 让 TableVirtualResize 的 CellRender memo 能跳过未变化行的 reconciliation
+      const changedTaskIDs = new Set<string>()
+      for (let index = 0; index < length; index++) {
+        const item = mitmV2HijackInfoRef.current[index]
+        if (
+          item.manualHijackListAction === ManualHijackListAction.Hijack_List_Add ||
+          item.manualHijackListAction === ManualHijackListAction.Hijack_List_Update
+        ) {
+          changedTaskIDs.add(item.TaskID)
+        }
+      }
+      if (changedTaskIDs.size > 0) {
+        newData = newData.map((row) => {
+          if (!changedTaskIDs.has(row.TaskID)) return row
+          const { Tags = [] } = row
+          return { ...row, cellClassName: filterColorTag(Tags.join('|')) }
+        })
+      }
       setData([...newData])
       mitmV2HijackInfoRef.current = []
-      setIntervalTime(undefined)
+      stopFlushInterval()
     })
 
     const getMitmManualContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
@@ -545,6 +578,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
     const onScrollTo = useMemoizedFn((val: number) => {
       setScrollToIndex(val)
     })
+    // 性能优化：setLoading 提取为稳定引用，避免每次渲染创建新箭头函数破坏 ManualHijackInfo 的 React.memo
+    const onSetLoading = useMemoizedFn((l: boolean) => {
+      const item = getCurrentSelectItem()
+      if (item) setLoading(item.TaskID, l)
+    })
     const columns: ColumnsTypeProps[] = useCreation(() => {
       return [
         {
@@ -609,6 +647,17 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       setManualTableTotal(data.length)
     }, [data.length])
 
+    // 性能优化：pagination 对象用 useMemo 缓存，避免每次渲染创建新引用
+    const pagination = useMemo(
+      () => ({
+        page: 1,
+        limit: 50,
+        total: data.length,
+        onChange: () => {},
+      }),
+      [data.length],
+    )
+
     const lastRatioRef = useRef<{ firstRatio: string; secondRatio: string }>({
       firstRatio: '21%',
       secondRatio: '79%',
@@ -662,6 +711,17 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         setManualTableSelectNumber(newSelect.length)
       }
     })
+    // 性能优化：rowSelection 对象用 useMemo 缓存
+    const rowSelection = useMemo(
+      () => ({
+        isAll: allSelected,
+        type: 'checkbox' as const,
+        selectedRowKeys,
+        onSelectAll,
+        onChangeCheckboxSingle,
+      }),
+      [allSelected, selectedRowKeys, onSelectAll, onChangeCheckboxSingle],
+    )
     /**全部放行，不用管当前选中得数据是否被修改，除了等待劫持状态全部原封不动得转发 */
     const onSubmitAllData = useMemoizedFn(() => {
       const length = data.length
@@ -734,24 +794,13 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               isShowTitle={false}
               data={data}
               renderKey="TaskID"
-              pagination={{
-                page: 1,
-                limit: 50,
-                total: data.length,
-                onChange: () => {},
-              }}
+              pagination={pagination}
               columns={columns}
               onSetCurrentRow={onSetCurrentRow}
               currentSelectItem={currentSelectItem}
               onRowContextMenu={onRowContextMenu}
               scrollToIndex={scrollToIndex}
-              rowSelection={{
-                isAll: allSelected,
-                type: 'checkbox',
-                selectedRowKeys,
-                onSelectAll,
-                onChangeCheckboxSingle,
-              }}
+              rowSelection={rowSelection}
             />
           </div>
         }
@@ -767,7 +816,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               handleAutoForward={handleAutoForward}
               onDiscardData={onDiscardData}
               loading={!!getLoading(currentSelectItem.TaskID)}
-              setLoading={(l) => setLoading(currentSelectItem.TaskID, l)}
+              setLoading={onSetLoading}
               isOnlyLookResponse={isOnlyLookResponse}
             />
           )
@@ -1175,6 +1224,10 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
   }),
 )
 
+// 性能优化：静态样式/属性常量，避免每次渲染创建新对象破坏 NewHTTPPacketEditor 的 React.memo
+const editorTitleStyle = { overflow: 'hidden' }
+const editorExtraProps = { isShowSelectRangeMenu: true }
+
 const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props) => {
   const {
     index,
@@ -1349,7 +1402,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       readOnly={disabled}
       isResponse={isResponse}
       foldBinaryFuzztag={true}
-      titleStyle={{ overflow: 'hidden' }}
+      titleStyle={editorTitleStyle}
       isShowBeautifyRender={false}
       fromMITM={true}
       title={
@@ -1501,9 +1554,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       webSocketValue={requestPacket}
       webSocketToServer={currentPacket}
       webFuzzerValue={requestPacket}
-      extraEditorProps={{
-        isShowSelectRangeMenu: true,
-      }}
+      extraEditorProps={editorExtraProps}
       showDownBodyMenu={false}
       sendToWebFuzzer={!isResponse && !info.IsWebsocket}
       onClickOpenPacketNewWindowMenu={useMemoizedFn(() => {

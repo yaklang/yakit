@@ -1,7 +1,7 @@
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { Checkbox, Col, Row } from 'antd'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { MultipleNodeInfo } from './MainOperatorContentType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
@@ -28,19 +28,20 @@ const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
   const [loading, setLoading] = useState<boolean>(false)
 
   const [groupName, setGroupName] = useState(initialValues.groupName)
-  const [groupId, setGroupId] = useState('')
+  // 选中已有分组 id，仅 onFinish 提交使用，不参与渲染
+  const groupIdRef = useRef('')
   const handleGroupNameSelect = useMemoizedFn((value) => {
     const matched = allGroup.find((item) => item.id === value)
     if (matched) {
       setGroupName(matched.verbose)
-      setGroupId(matched.id)
+      groupIdRef.current = matched.id
     } else {
-      setGroupId('')
+      groupIdRef.current = ''
     }
   })
   const handleGroupNameChange = useMemoizedFn((value: string) => {
     setGroupName(value)
-    setGroupId('')
+    groupIdRef.current = ''
   })
 
   const [checkedTabs, setCheckedTabs] = useState<string[]>(initialValues.tabIds)
@@ -107,7 +108,7 @@ const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
             setLoading(true)
             onFinish({
               groupName: groupName,
-              groupId: groupId,
+              groupId: groupIdRef.current,
               tabIds: checkedTabs,
             })
           }}

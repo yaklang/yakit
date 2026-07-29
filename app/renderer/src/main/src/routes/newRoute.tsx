@@ -3,7 +3,6 @@ import i18n from '@/i18n/i18n'
 import { ShellReceiver } from '../pages/reverseShellReceiver/shellReceiver'
 import { PcapXDemo } from '@/components/playground/PcapXDemo'
 import { DataCompare } from '../pages/compare/DataCompare'
-import { HTTPHistory } from '../components/HTTPHistory'
 import { PortAssetTable } from '../pages/assetViewer/PortAssetPage'
 import { DomainAssetPage } from '../pages/assetViewer/DomainAssetPage'
 import { RiskPage } from '../pages/risks/RiskPage'
@@ -98,7 +97,7 @@ import { ControlAdminPage } from '@/pages/dynamicControl/DynamicControl'
 import { DebugMonacoEditorPage } from '@/pages/debugMonaco/DebugMonacoEditorPage'
 import { VulinboxManager } from '@/pages/vulinbox/VulinboxManager'
 import { DiagnoseNetworkPage } from '@/pages/diagnoseNetwork/DiagnoseNetworkPage'
-import HTTPFuzzerPage, { AdvancedConfigShowProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { AdvancedConfigShowProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { ErrorBoundary } from 'react-error-boundary'
 import { PageItemProps } from '@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType'
 import { WebShellViewer } from '@/pages/webShell/WebShellViewer'
@@ -173,7 +172,6 @@ import { RuleManagement } from '@/pages/ruleManagement/RuleManagement'
 import { YakRunnerAuditHole } from '@/pages/yakRunnerAuditHole/YakRunnerAuditHole'
 import { Misstatement } from '@/pages/misstatement/Misstatement'
 import { SystemConfig } from '@/pages/systemConfig/SystemConfig'
-import { HTTPHistoryAnalysis } from '@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis'
 import { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { ShortcutKeyList } from '@/pages/shortcutKey/ShortcutKey'
@@ -201,6 +199,11 @@ const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
 const AIForge = React.lazy(() => import('@/pages/aiForge/AIForge'))
+const HTTPHistory = React.lazy(() => import('../components/HTTPHistory').then((m) => ({ default: m.HTTPHistory })))
+const HTTPHistoryAnalysis = React.lazy(() =>
+  import('@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis').then((m) => ({ default: m.HTTPHistoryAnalysis })),
+)
+const HTTPFuzzerPage = React.lazy(() => import('@/pages/fuzzer/HTTPFuzzerPage'))
 
 /**
  * @description 页面路由对应的页面信息
@@ -849,9 +852,17 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.ShellReceiver:
       return <ShellReceiver />
     case YakitRoute.DB_HTTPHistory:
-      return <HTTPHistory pageType="History" />
+      return (
+        <Suspense fallback={<PageLoading />}>
+          <HTTPHistory pageType="History" />
+        </Suspense>
+      )
     case YakitRoute.DB_HTTPHistoryAnalysis:
-      return <HTTPHistoryAnalysis pageId={params?.id || ''} />
+      return (
+        <Suspense fallback={<PageLoading />}>
+          <HTTPHistoryAnalysis pageId={params?.id || ''} />
+        </Suspense>
+      )
     case YakitRoute.DB_Report:
       return <ReportViewerPage />
     case YakitRoute.DB_Risk:
