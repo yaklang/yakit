@@ -20,10 +20,11 @@ import type { SessionListDispatcher } from './hook/useSessionList'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 import { handAIHistoryChatRemove } from '../utils'
-import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import useGetChatDataStoreKey, { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import type { YakitRouteType } from '@/enums/yakitRoute'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -202,7 +203,7 @@ const HistoryChatList: FC<{
     editInfo.current = undefined
   })
 
-  const { getSetting } = useAIAgentDispatcher()
+  const { getSetting, onClose } = useAIAgentDispatcher()
   const handleDeleteChat = useMemoizedFn(async (info: AISession) => {
     const { SessionID } = info
     const isLoading = delLoading.includes(SessionID)
@@ -251,13 +252,7 @@ const HistoryChatList: FC<{
       setDelLoading((old) => old.filter((el) => el !== SessionID))
     }
   })
-
-  const handleSetActiveChat = useMemoizedFn((info: AISession) => {
-    // 暂时性逻辑，因为老版本的对话信息里没有请求参数，导致在新版本无法使用对话里的重新执行功能
-    // 所以会提示警告，由用户决定是否删除历史对话
-    // if (!info.request) {
-    //     yakitNotify("warning", "当前对话无请求参数信息，无法使用重新执行功能")
-    // }
+  const onSetChat = useMemoizedFn((info: AISession) => {
     setSetting?.((old) => ({
       ...old,
       SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,
@@ -269,6 +264,22 @@ const HistoryChatList: FC<{
       },
     }))
     setActiveChat && setActiveChat(info)
+  })
+  // 如果当前历史在aiagent页面中，直接切换会话；其余页面需要判断对话是否在执行，执行中需要先断开会话再设置新会话
+  const handleSetActiveChat = useMemoizedFn((info: AISession) => {
+    if (aiSource.some((source) => AI_AGENT_HISTORY_AI_SOURCES.includes(source))) {
+      onSetChat(info)
+      return
+    }
+    const execute = globalSessionEngine?.ensureSession(info.SessionID)?.store?.getState()?.execute
+    if (!!execute) {
+      yakitNotify('info', '在其他页面中会话正在执行中')
+      onClose([info.SessionID], () => {
+        onSetChat(info)
+      })
+    } else {
+      onSetChat(info)
+    }
   })
 
   return (

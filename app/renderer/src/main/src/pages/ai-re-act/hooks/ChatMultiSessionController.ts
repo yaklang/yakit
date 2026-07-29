@@ -1277,7 +1277,7 @@ export class ChatMultiSessionController {
     this.readyChannels.delete(sessionId)
 
     if (this.activeShowSession === sessionId) {
-      this.activeShowSession = null
+      this.activeShowSession = ''
     }
 
     this.requestPool.delete(sessionId)

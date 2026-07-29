@@ -39,6 +39,7 @@ import { useStore } from 'zustand'
 import { AIForgeFormSubmitParamsProps } from '../aiTriageChatTemplate/type'
 import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { onReStart } from '../utils'
 
 const AIChatWelcome = React.lazy(() => import('../aiChatWelcome/AIChatWelcome'))
 
@@ -46,7 +47,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat } = useAIAgentStore()
-  const { setActiveChat, setSetting, onSend, onClose } = useAIAgentDispatcher()
+  const { setActiveChat, setSetting, onStart, onClose } = useAIAgentDispatcher()
 
   /** 当前对话唯一ID */
   const sessionId = useCurrentSessionId()
@@ -55,6 +56,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
+  const initRef = useRef<boolean>(true)
 
   // 插件并发构建流 hooks
   const [streams, api] = useMultipleHoldGRPCStream()
@@ -69,6 +71,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   useEffect(() => {
     if (!!activeChat?.SessionID) {
       onSetReAct()
+      if (!initRef.current) onReStart({ activeChat, onStart })
+      initRef.current = false
     }
   }, [activeChat?.SessionID])
 
