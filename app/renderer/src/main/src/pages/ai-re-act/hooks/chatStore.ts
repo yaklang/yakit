@@ -176,6 +176,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       dispatchStreamingNode: ({ chatType, parentTaskId, node }) => {
         set((state) => {
           const isHistory = node.isHistory ?? false
+          const direction = isHistory ? 'prepend' : 'append'
           const elementRef = { kind: node.kind, token: node.token, chatType, isHistory }
           const targetElements = chatType === 'reAct' ? state.casualChat.elements : state.taskChat.elements
 
@@ -198,91 +199,105 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
             }
           }
 
-          if (isHistory) {
-            // 历史数据：实体已在上方注册，这里只做 elements 前插（旧→新顺序重放，unshift 到头部）
-            // 前插完必须 return，否则会走到下面"默认追加"再 push 一次导致双插
-            const parentChildren = parentTaskId ? state.tasks[parentTaskId]?.childrenTokens : undefined
-            if (parentChildren) {
-              parentChildren.unshift(node.token)
-            } else {
-              targetElements.unshift(elementRef)
+          /** 挂树幂等：同一 token 重复 dispatch 时跳过，避免 elements / childrenTokens 双插 */
+          const isAlreadyInTree = () => {
+            /** stream 合并后 item 挂在 group.childrenTokens，不在 siblings 顶层列表里 */
+            const isInGroupChildren = (tokens: string[] | undefined) =>
+              !!tokens?.some((t) => state.groups[t]?.childrenTokens.includes(node.token))
+
+            if (parentTaskId) {
+              const children = state.tasks[parentTaskId]?.childrenTokens
+              if (!children) return false
+              if (children.includes(node.token)) return true
+              return isInGroupChildren(children)
             }
+
+            // 顶层 item / task / group
+            if (targetElements.some((el) => el.token === node.token)) return true
+            // 顶层 stream 组内的 item
+            return targetElements.some((el) => state.groups[el.token]?.childrenTokens.includes(node.token))
+          }
+          if (isAlreadyInTree()) return
+
+          if (targetElements.length === 0) {
+            if (direction === 'append') targetElements.push(elementRef)
+            else targetElements.unshift(elementRef)
             return
-          } else {
-            // 空列表直接追加
-            if (targetElements.length === 0) {
-              targetElements.push(elementRef)
+          }
+
+          const parentChildren = parentTaskId ? state.tasks[parentTaskId]?.childrenTokens : undefined
+          if (parentTaskId && !parentChildren) return
+
+          const siblingToken = parentChildren?.length
+            ? direction === 'append'
+              ? parentChildren.at(-1)
+              : parentChildren[0]
+            : parentTaskId
+              ? undefined
+              : direction === 'append'
+                ? targetElements.at(-1)?.token
+                : targetElements[0]?.token
+
+          if (siblingToken) {
+            const siblingItem = state.items[siblingToken]
+            const siblingGroup = state.groups[siblingToken]
+            const isStreamItem = node.kind === 'item' && node.type === AIChatQSDataTypeEnum.STREAM && !!node.nodeId
+
+            if (isStreamItem && siblingGroup?.kind === 'group' && siblingGroup.nodeId === node.nodeId) {
+              if (siblingGroup.childrenTokens.includes(node.token)) return
+              node.groupExtra?.(siblingGroup.token, [node.token])
+              if (direction === 'append') siblingGroup.childrenTokens.push(node.token)
+              else siblingGroup.childrenTokens.unshift(node.token)
+              siblingGroup.renderNum += 1
               return
             }
 
-            // 定位同级上一个节点（parentChildren 为空数组时表示无兄弟节点，不做合并）
-            const parentChildren = parentTaskId ? state.tasks[parentTaskId]?.childrenTokens : undefined
-            if (parentTaskId && !parentChildren) return
-
-            const lastToken = parentChildren?.length
-              ? parentChildren.at(-1)
-              : parentTaskId
-                ? undefined
-                : targetElements.at(-1)?.token
-
-            if (lastToken) {
-              const lastItem = state.items[lastToken]
-              const lastGroup = state.groups[lastToken]
-              const isStreamItem = node.kind === 'item' && node.type === AIChatQSDataTypeEnum.STREAM && !!node.nodeId
-
-              // stream 合并：追加到已有组
-              if (isStreamItem && lastGroup?.kind === 'group' && lastGroup.nodeId === node.nodeId) {
-                node.groupExtra?.(lastGroup.token, [node.token])
-                lastGroup.childrenTokens.push(node.token)
-                lastGroup.renderNum += 1
-                return
+            if (
+              isStreamItem &&
+              siblingItem?.type === AIChatQSDataTypeEnum.STREAM &&
+              siblingItem.nodeId === node.nodeId
+            ) {
+              const newGroupToken = `${node.nodeId}-${uuidv4()}`
+              const groupChildrenTokens =
+                direction === 'append' ? [siblingToken, node.token] : [node.token, siblingToken]
+              node.groupExtra?.(newGroupToken, groupChildrenTokens)
+              state.groups[newGroupToken] = {
+                kind: 'group',
+                token: newGroupToken,
+                type: AIChatQSDataTypeEnum.STREAM_GROUP,
+                renderNum: 1,
+                nodeId: node.nodeId,
+                childrenTokens: groupChildrenTokens,
               }
-
-              // stream 合并：两个连续 item 合成新组
-              if (isStreamItem && lastItem?.type === AIChatQSDataTypeEnum.STREAM && lastItem.nodeId === node.nodeId) {
-                const newGroupToken = `${node.nodeId}-${uuidv4()}`
-                node.groupExtra?.(newGroupToken, [lastToken, node.token])
-                state.groups[newGroupToken] = {
-                  kind: 'group',
-                  token: newGroupToken,
-                  type: AIChatQSDataTypeEnum.STREAM_GROUP,
-                  renderNum: 1,
-                  nodeId: node.nodeId,
-                  childrenTokens: [lastToken, node.token],
-                }
-                if (parentChildren?.length) {
-                  parentChildren[parentChildren.length - 1] = newGroupToken
-                } else {
-                  targetElements[targetElements.length - 1] = {
-                    kind: 'group',
-                    token: newGroupToken,
-                    chatType,
-                    isHistory,
-                  }
-                }
-                return
+              const groupElementRef = { kind: 'group' as const, token: newGroupToken, chatType, isHistory }
+              if (parentChildren?.length) {
+                parentChildren[direction === 'append' ? parentChildren.length - 1 : 0] = newGroupToken
+              } else {
+                targetElements[direction === 'append' ? targetElements.length - 1 : 0] = groupElementRef
               }
+              return
             }
           }
 
-          // 默认追加（实时数据合并失败也走这里）
-          const parentChildren = parentTaskId ? state.tasks[parentTaskId]?.childrenTokens : undefined
           if (parentChildren) {
-            parentChildren.push(node.token)
+            if (direction === 'append') parentChildren.push(node.token)
+            else parentChildren.unshift(node.token)
             return
           }
 
           const lastEl = state.taskChat.elements.at(-1)
           if (
+            direction === 'append' &&
             chatType === 'task' &&
             node.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP &&
             lastEl?.kind === 'task' &&
             state.tasks[lastEl.token]?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
           ) {
-            // 非组数据放入默认任务组，且默认任务组保持在最下面
+            // 任务规划最新一个元素，一定是默认任务组，所以别的元素需要往前插入
             state.taskChat.elements.splice(state.taskChat.elements.length - 1, 0, elementRef)
           } else {
-            targetElements.push(elementRef)
+            if (direction === 'append') targetElements.push(elementRef)
+            else targetElements.unshift(elementRef)
           }
         })
         onRenderStructureChange?.()

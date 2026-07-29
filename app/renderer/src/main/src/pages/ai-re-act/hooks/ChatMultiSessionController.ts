@@ -1219,6 +1219,7 @@ export class ChatMultiSessionController {
               taskElements: [...state.taskChat.elements],
             }
             void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
+            this.finishSessionRestoreLoading(sessionId)
           }
         } catch {
           // ignore parse error
