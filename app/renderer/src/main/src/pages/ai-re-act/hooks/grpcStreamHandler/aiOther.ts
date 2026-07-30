@@ -254,6 +254,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
       token: chatData.id,
       kind: 'item',
       type: chatData.type,
+      isHistory: res.IsSync,
     },
   })
 }
