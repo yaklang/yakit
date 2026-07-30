@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
@@ -7,12 +7,22 @@ import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeWorkspace.module.scss'
 
 export interface DigitalEmployeeSidebarProps {
+  detailActive?: boolean
   onOpenTools: () => void
   toolsOpen: boolean
 }
 
-export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({ onOpenTools, toolsOpen }) => {
+export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({
+  detailActive = false,
+  onOpenTools,
+  toolsOpen,
+}) => {
   const { employees, selectedEmployee, switchEmployee } = useDigitalEmployee()
+  const [collapsed, setCollapsed] = useState(detailActive)
+
+  useEffect(() => {
+    setCollapsed(detailActive)
+  }, [detailActive])
 
   const handleSwitch = (id: string) => {
     if (selectedEmployee?.id === id) return
@@ -26,10 +36,27 @@ export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({ 
   }
 
   return (
-    <aside className={styles['employee-sidebar']}>
+    <aside
+      className={classNames(styles['employee-sidebar'], {
+        [styles['employee-sidebar-collapsed']]: collapsed,
+      })}
+    >
       <div className={styles['sidebar-title']}>
-        <span>数字员工切换</span>
-        <small>AI SenPike</small>
+        {!collapsed && (
+          <div>
+            <span>数字员工切换</span>
+            <small>AI SenPike</small>
+          </div>
+        )}
+        <button
+          type="button"
+          className={styles['sidebar-toggle']}
+          aria-label={collapsed ? '展开数字员工列表' : '收起数字员工列表'}
+          aria-expanded={!collapsed}
+          onClick={() => setCollapsed((value) => !value)}
+        >
+          {collapsed ? '›' : '‹'}
+        </button>
       </div>
       <div className={styles['employee-list']}>
         {employees.map((employee) => {
@@ -42,12 +69,12 @@ export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({ 
                 [styles['employee-list-item-active']]: active,
               })}
               onClick={() => handleSwitch(employee.id)}
-              title={employee.description}
+              title={collapsed ? `${employee.name}：${employee.description}` : employee.description}
             >
               <span className={styles['avatar']}>
                 <img src={employee.portrait} alt="" />
               </span>
-              <span className={styles['employee-name']}>{employee.name}</span>
+              {!collapsed && <span className={styles['employee-name']}>{employee.name}</span>}
               {active && <span className={styles['active-mark']} />}
             </button>
           )
@@ -59,9 +86,10 @@ export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({ 
           [styles['tool-entry-active']]: toolsOpen,
         })}
         onClick={onOpenTools}
+        aria-label="会话与设置"
       >
         <span className={styles['tool-entry-icon']}>⋯</span>
-        会话与设置
+        {!collapsed && '会话与设置'}
       </button>
     </aside>
   )

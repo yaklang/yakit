@@ -27,6 +27,7 @@ import {
   isToolStderrStream,
   isToolStdoutStream,
 } from './utils'
+import { findOptimisticQuestionId } from './optimisticQuestion'
 import { AIChatQSDataTypeEnum } from './aiRender'
 import {
   AIReviewJudgeLevelMap,
@@ -382,15 +383,18 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
       getContentMap: request.getContentMap,
     }),
   }
+  const optimisticQuestionId =
+    data.react_task_user_input_uuid ||
+    findOptimisticQuestionId(getChatDataStore()?.casualChat.contents || new Map<string, AIChatQSData>(), chatData)
   setContentMap(chatData.id, chatData)
 
-  if (data.react_task_user_input_uuid) {
-    const qsDetail = getContentMap(data.react_task_user_input_uuid)
+  if (optimisticQuestionId) {
+    const qsDetail = getContentMap(optimisticQuestionId)
     if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
-      getChatDataStore()?.casualChat.contents.delete(data.react_task_user_input_uuid)
+      getChatDataStore()?.casualChat.contents.delete(optimisticQuestionId)
       setElements((old) =>
         old.map((item) => {
-          if (item.token === data.react_task_user_input_uuid) {
+          if (item.token === optimisticQuestionId) {
             return { ...item, token: data.react_task_id }
           }
           return item

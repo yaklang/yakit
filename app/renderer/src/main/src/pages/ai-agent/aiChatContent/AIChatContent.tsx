@@ -44,7 +44,7 @@ import AIGlobalLoading from '../aiGlobalLoading/AIGlobalLoading'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
 import { applyForgeNameToStartParams } from '@/pages/digitalEmployee/resolver'
-import { AITaskContent } from '@/pages/ai-re-act/aiTaskContent/AITaskContent'
+import { DigitalEmployeeTaskProgress } from '@/pages/digitalEmployee/DigitalEmployeeTaskProgress'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
@@ -360,23 +360,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                   </span>
                 </div>
                 <div className={styles['employee-task-content']}>
-                  <AITaskContent
-                    tabBarExtraContent={null}
-                    emptyNode={
-                      <div className={styles['employee-task-empty']}>
-                        <div className={styles['task-empty-orbit']} aria-hidden="true">
-                          <span />
-                        </div>
-                        <strong>等待任务开始</strong>
-                        <p>发送消息后，这里会实时展示任务拆解、工具调用与执行结果。</p>
-                        <div className={styles['task-empty-steps']} aria-hidden="true">
-                          <span>理解需求</span>
-                          <span>制定计划</span>
-                          <span>执行与总结</span>
-                        </div>
-                      </div>
-                    }
-                  />
+                  <DigitalEmployeeTaskProgress />
                 </div>
               </aside>
             </div>

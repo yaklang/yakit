@@ -10,12 +10,15 @@
 - 默认选中第一名员工；悬停展示进入按钮；点击卡片可直接进入；底部确认按钮也可进入。
 - 选择页采用响应式 Grid/Flex 布局，以 1280×720 为视觉基准，窗口变大或变小时会自适应。
 - 进入 AI Agent 后，左侧可切换员工，顶部显示当前员工介绍和技能。
+- 进入已有会话详情时左侧员工列表默认收起，可随时展开；欢迎页保持展开，避免占用详情对话宽度。
 - 数字员工本质上绑定一个已有 AI Forge 技能，不是新建的一套聊天协议。
 - 输入框现在会自动显示当前员工对应的原版 `forge` mention 标签。
 - 用户仍可通过 `@` 或原有选择器继续添加一个或多个技能、工具、知识库标签。
 - 发送后进入详情页，详情输入框会继续保留/恢复当前员工默认技能标签。
 - 切换员工时会按现有 `selectionVersion` 重建输入编辑器，只保留新员工的默认技能标签，不残留旧员工锁定标签。
 - 请求层仍有员工技能兜底和去重：即使界面标签初始化异常，员工技能也会随消息发送；相同技能不会重复附加。
+- 自由对话继续沿用原版“前端乐观消息 + 后端出队确认”流程；后端未回传临时输入 UUID 时，前端会按最近一条同文未确认消息完成归并，避免同一次输入显示两条。
+- 右侧“思考与执行”只读取原版 `casualChat.planDetails.todoList`，展示真实任务内容、进度和后端时间戳，不再展示无数据的工具统计、目标或意图卡片。
 
 ## 2. 最重要的业务逻辑
 
@@ -58,6 +61,9 @@
 - `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeSelectPage.tsx`
 - `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeSelectPage.module.scss`
 - `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeWorkspace.module.scss`
+- `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeTaskProgress.tsx`
+- `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeTaskProgress.module.scss`
+- `app/renderer/src/main/src/pages/digitalEmployee/taskProgress.ts`
 - `app/renderer/src/main/src/pages/ai-agent/AIAgent.module.scss`
 - `app/renderer/src/main/src/pages/ai-agent/aiChatWelcome/AIChatWelcome.module.scss`
 - `app/renderer/src/main/src/pages/ai-re-act/aiReActChat/AIReActChat.module.scss`
@@ -70,6 +76,8 @@
 - `app/renderer/src/main/src/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin.ts`
 - `app/renderer/src/main/src/pages/ai-re-act/aiReActChat/AIReActChat.tsx`
 - `app/renderer/src/main/src/pages/ai-agent/utils/index.ts`
+- `app/renderer/src/main/src/pages/ai-re-act/hooks/grpcAIMessageHandlers.ts`
+- `app/renderer/src/main/src/pages/ai-re-act/hooks/optimisticQuestion.ts`
 
 ### 素材
 
@@ -89,13 +97,16 @@
 - 快捷技能卡片只作为建议展示，不再点击后向输入框塞普通文字。
 - 数字员工默认技能在输入框内显示为原版标签；`@` 添加的其他标签仍可共存。
 - 首次发送和详情页后续发送都会携带员工技能，并对重复资源去重。
+- 会话详情页左侧员工栏默认收起，展开后仍可切换员工；切回欢迎态会恢复展开。
+- 右侧任务列表不显示“第几步”或数字节点：完成为绿色对号，执行中为旋转圆环，待执行为灰色静态圆环。
+- 任务便签的辅助信息仅使用后端 `updated_at` / `created_at`，没有时间时不显示，不生成虚构描述。
 
 ## 5. 测试结果
 
 2026-07-30 本轮完成后：
 
 - TypeScript：通过。
-- 数字员工定向测试：2 个测试文件、9 项测试全部通过。
+- 数字员工与消息回显定向测试：4 个测试文件、13 项测试全部通过。
 - `git diff --check`：通过。
 
 本轮运行检查：
@@ -104,6 +115,8 @@
 - 运行页面显示当前员工“首席信息安全官”及其介绍、技能和就绪状态。
 - 输入框同时显示默认员工标签“首席信息安全官”和额外 Forge 标签“警告降噪分析”，确认原版多标签共存链路正常。
 - 选择页响应式 Grid/Flex 结构与无横向溢出约束已复核；选择页组件测试继续覆盖 8 张员工卡、默认选中、卡片直达和确认按钮。
+- 会话详情页左侧员工栏默认收起；右侧已切换为任务进度与 todo 便签，不再展示空的工具统计、目标和意图卡片。
+- Memfit 专用渲染服务在 2800 编译成功，用户已确认 Electron 恢复为正确的 AI SenPike 页面。
 
 命令：
 
@@ -112,7 +125,7 @@ cd app/renderer/src/main
 yarn tsc --noEmit -p tsconfig.json
 
 cd ../../../..
-node node_modules/vitest/vitest.mjs run app/renderer/src/main/src/pages/digitalEmployee/__test__/resolver.test.ts app/renderer/src/main/src/pages/digitalEmployee/__test__/DigitalEmployeeSelectPage.test.tsx
+node node_modules/vitest/vitest.mjs run app/renderer/src/main/src/pages/digitalEmployee/__test__/resolver.test.ts app/renderer/src/main/src/pages/digitalEmployee/__test__/DigitalEmployeeSelectPage.test.tsx app/renderer/src/main/src/pages/digitalEmployee/__test__/taskProgress.test.ts app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/optimisticQuestion.test.ts
 ```
 
 测试中存在项目原有的 React 18 `ReactDOM.render` 警告，不是本次改动引入的失败。
@@ -124,14 +137,14 @@ node node_modules/vitest/vitest.mjs run app/renderer/src/main/src/pages/digitalE
 ```powershell
 # 窗口 1：渲染进程
 $env:PORT='2800'
-yarn start-render
+yarn start-render-memfit
 
 # 窗口 2：让 Electron 指向渲染器实际地址
 $env:YAKIT_DEV_RENDERER_URL='http://127.0.0.1:2800'
 yarn start-electron
 ```
 
-如果 2800 已被本项目占用，先访问 `http://127.0.0.1:2800`：返回 200 表示渲染服务已经在运行，不要重复启动。若改用其他端口，需要同时修改两个环境变量。启动前先检查是否已有旧 Electron/Node 进程，避免多个窗口混淆。
+必须使用 `start-render-memfit`，它会设置 `REACT_APP_PLATFORM=memfit`；普通 `start-render` 会启动同仓库的通用 Yakit 界面。即使 2800 返回 200，也要先确认现有进程使用的是 Memfit 入口。若改用其他端口，需要同时修改两个环境变量。启动前先检查是否已有旧 Electron/Node 进程，避免多个窗口混淆。
 
 ## 7. Git 状态
 
@@ -153,7 +166,8 @@ yarn start-electron
 3. 详情页确认员工默认标签仍存在；连续发送后应自动恢复，不能成倍重复。
 4. 切换员工后确认新会话显示新员工标签，旧员工标签不残留。
 5. 检查大屏、小屏下选择页与 AI Agent 工作区，无横向溢出和明显跳动。
-6. 后续尽量只改布局和样式；除非定位到真实缺陷，不要重写原版聊天、mention、IPC 或模型发送逻辑。
+6. 右侧任务进度只能使用后端 todo 字段；完成、执行中、待执行分别检查绿色对号、旋转圆环和灰色圆环。
+7. 后续尽量只改布局和样式；除非定位到真实缺陷，不要重写原版聊天、mention、IPC 或模型发送逻辑。
 
 ## 9. 可直接交给新 AI 的指令
 

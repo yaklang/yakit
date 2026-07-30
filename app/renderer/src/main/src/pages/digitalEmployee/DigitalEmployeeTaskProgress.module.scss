@@ -1,0 +1,189 @@
+.progress-panel {
+  min-height: 0;
+  padding: 18px 16px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.progress-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #385779;
+
+  > div {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  strong {
+    color: #1f3d65;
+    font-size: 14px;
+  }
+
+  span {
+    font-size: 12px;
+  }
+
+  b {
+    color: #2d7dd2;
+    font-size: 13px;
+  }
+}
+
+.progress-track {
+  height: 7px;
+  margin: 12px 0 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eff8;
+
+  span {
+    height: 100%;
+    display: block;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #3d9cf5, #176fe8);
+    transition: width 200ms ease;
+  }
+}
+
+.step-list {
+  min-height: 0;
+  padding-left: 8px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 9px;
+  overflow: auto;
+}
+
+.step {
+  position: relative;
+  min-height: 58px;
+  padding: 11px 12px 11px 44px;
+  color: #7c8da3;
+  border: 1px solid rgba(100, 135, 175, 0.14);
+  border-radius: 10px;
+  background: rgba(249, 251, 254, 0.88);
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 39px;
+    left: 21px;
+    width: 1px;
+    height: 38px;
+    background: #dce7f2;
+  }
+
+  > div {
+    min-width: 0;
+  }
+
+  strong,
+  small {
+    display: block;
+  }
+
+  strong {
+    overflow: hidden;
+    color: #64778e;
+    font-size: 12px;
+    line-height: 17px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    margin-top: 3px;
+    font-size: 10px;
+  }
+}
+
+.step-marker {
+  position: absolute;
+  top: 12px;
+  left: 11px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid #cbd9e8;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.step-done {
+  color: #32af80;
+  border-color: rgba(50, 175, 128, 0.16);
+  background: rgba(242, 253, 249, 0.9);
+
+  .step-marker {
+    color: #fff;
+    border-color: #37bb89;
+    background: #37bb89;
+  }
+}
+
+.step-doing {
+  color: #247fe0;
+  border-color: rgba(36, 127, 224, 0.4);
+  background: rgba(244, 249, 255, 0.96);
+  box-shadow: 0 5px 16px rgba(41, 118, 207, 0.08);
+
+  strong,
+  small {
+    color: #2473c8;
+  }
+
+  .step-marker {
+    border-color: #d7e8f9;
+    border-top-color: #2f87e7;
+    background: #fff;
+    animation: employee-task-spin 900ms linear infinite;
+  }
+}
+
+.step-skipped {
+  opacity: 0.66;
+}
+
+@keyframes employee-task-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty {
+  width: min(82%, 300px);
+  margin: auto;
+  text-align: center;
+
+  > span {
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 12px;
+    display: block;
+    border: 8px solid #e8f3ff;
+    border-top-color: #4a9bef;
+    border-radius: 50%;
+  }
+
+  strong {
+    color: #315272;
+    font-size: 13px;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: #8a9cb0;
+    font-size: 11px;
+    line-height: 18px;
+  }
+}

@@ -222,7 +222,11 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     <AIAgentContext.Provider value={{ store, dispatcher }}>
       <div id={YakitAIAgentPageID} className={styles['ai-agent']} ref={agentRef}>
         <div className={styles['ai-agent-wrapper']}>
-          <DigitalEmployeeSidebar onOpenTools={() => setShow((value) => !value)} toolsOpen={show} />
+          <DigitalEmployeeSidebar
+            detailActive={!!store.activeChat?.SessionID}
+            onOpenTools={() => setShow((value) => !value)}
+            toolsOpen={show}
+          />
           {show && (
             <div className={classNames(styles['ai-side-list'], styles['ai-side-list-secondary'])}>
               <AIAgentSideList show={true} setShow={setShow} />
