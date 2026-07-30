@@ -19,6 +19,9 @@
 - 请求层仍有员工技能兜底和去重：即使界面标签初始化异常，员工技能也会随消息发送；相同技能不会重复附加。
 - 自由对话继续沿用原版“前端乐观消息 + 后端出队确认”流程；后端未回传临时输入 UUID 时，前端会按最近一条同文未确认消息完成归并，避免同一次输入显示两条。
 - 右侧“思考与执行”只读取原版 `casualChat.planDetails.todoList`，展示真实任务内容、进度和后端时间戳，不再展示无数据的工具统计、目标或意图卡片。
+- 选择页与员工工作区已经统一使用新生成的透明高清 `AI SenPike` Logo，不再通过白底 JPG 和 `mix-blend-mode` 适配主题。
+- 选择页 8 个员工徽章、6 个快捷导航图标已经从低分辨率截图裁片替换为项目内置 SVG 图标，高分屏与响应式缩放下保持清晰。
+- 左侧员工栏的展开/收起箭头已经替换为标准 SVG chevron，按图标几何盒垂直居中，不再依赖文字字符基线。
 
 ## 2. 最重要的业务逻辑
 
@@ -83,7 +86,8 @@
 
 - 素材目录：`app/renderer/src/main/src/assets/newAssets/`
 - 人物使用生成后的高清透明图：`senso-agent-01-portrait-hd.png` 至 `08`。
-- 项目正式 Logo 使用原有：`app/renderer/src/main/src/assets/memfitHasName.jpg`。
+- 项目正式 Logo：`ai-senpike-logo-transparent-v2.png`，由现有正确的 AI SenPike 标识生成绿色键控版本后去底得到，尺寸 1920×819、带 Alpha 通道。
+- 选择页员工徽章和快捷导航图标使用 `assets/icon/outline.tsx` 中的 SVG，不再渲染 `senso-agent-*-badge.png` 和 `senso-quick-nav-*-icon.png` 低分辨率裁片；旧裁片仅作为历史参考保留。
 - 素材用途和尺寸参考：`senso-assets-manifest.json`。
 - 不允许使用整张参考 UI 截图充当页面背景。
 
@@ -100,6 +104,8 @@
 - 会话详情页左侧员工栏默认收起，展开后仍可切换员工；切回欢迎态会恢复展开。
 - 右侧任务列表不显示“第几步”或数字节点：完成为绿色对号，执行中为旋转圆环，待执行为灰色静态圆环。
 - 任务便签的辅助信息仅使用后端 `updated_at` / `created_at`，没有时间时不显示，不生成虚构描述。
+- 展开/收起按钮使用 `OutlineChevronleftIcon` / `OutlineChevronrightIcon`，SVG 和 Ant Icon 包装层都固定为 16×16 并设为块级，箭头在 28×28 按钮中垂直居中。
+- 员工徽章颜色继续读取员工真实 `accent` 配置；图标含义按员工职责映射，不新增虚构业务字段。
 
 ## 5. 测试结果
 
@@ -107,6 +113,7 @@
 
 - TypeScript：通过。
 - 数字员工与消息回显定向测试：4 个测试文件、13 项测试全部通过。
+- 选择页补充视觉资源回归断言：8 个员工徽章和 6 个快捷入口必须渲染 SVG，每张员工卡仅保留 1 张人物位图；选择页 3 项测试复跑通过。
 - `git diff --check`：通过。
 
 本轮运行检查：
@@ -117,6 +124,8 @@
 - 选择页响应式 Grid/Flex 结构与无横向溢出约束已复核；选择页组件测试继续覆盖 8 张员工卡、默认选中、卡片直达和确认按钮。
 - 会话详情页左侧员工栏默认收起；右侧已切换为任务进度与 todo 便签，不再展示空的工具统计、目标和意图卡片。
 - Memfit 专用渲染服务在 2800 编译成功，用户已确认 Electron 恢复为正确的 AI SenPike 页面。
+- 本轮热更新日志显示 `webpack compiled with 7 warnings` 且 `No issues found`；7 个 warning 均来自项目原有 lint/依赖提示，没有本轮文件报错。
+- Windows 桌面截图助手读取 Electron 窗口时返回 `SetIsBorderRequired failed (0x80004002)`，普通浏览器又因缺少 Electron IPC 注入只能显示空白，因此本轮没有伪造整页截图结论；应在新窗口优先人工复核 Logo 尺寸、箭头居中与 SVG 清晰度。
 
 命令：
 
@@ -156,6 +165,7 @@ yarn start-electron
 - `7804ae2 fix: polish digital employee interactions`
 - 本轮默认员工标签提交请以 `git log -1 --oneline` 的最新结果为准。
 - 本轮员工切换标签重置提交也请以 `git log -1 --oneline` 的最新结果为准。
+- 本轮视觉素材优化提交为 `fix: sharpen digital employee visual assets`，提交哈希以 `git log -1 --oneline` 为准。
 
 仓库较大，`.gitignore` 已重点忽略依赖、构建产物、缓存、日志、临时文件和本地配置。不要提交 `node_modules`、构建目录或本机缓存。
 
@@ -168,6 +178,8 @@ yarn start-electron
 5. 检查大屏、小屏下选择页与 AI Agent 工作区，无横向溢出和明显跳动。
 6. 右侧任务进度只能使用后端 todo 字段；完成、执行中、待执行分别检查绿色对号、旋转圆环和灰色圆环。
 7. 后续尽量只改布局和样式；除非定位到真实缺陷，不要重写原版聊天、mention、IPC 或模型发送逻辑。
+8. 人工确认新透明 Logo 在选择页左上角与详情页顶部没有白色矩形、尺寸没有显得过小；检查 8 个员工徽章和 6 个快捷入口在 100%/125% 缩放下边缘清晰。
+9. 在详情页展开/收起左栏各一次，确认左右 chevron 都在按钮中垂直居中；若仍有视觉偏差只调图标盒/按钮布局，不改折叠状态逻辑。
 
 ## 9. 可直接交给新 AI 的指令
 

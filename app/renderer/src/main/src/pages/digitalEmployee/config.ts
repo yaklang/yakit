@@ -1,19 +1,11 @@
 import threatAnalyst from '@/assets/newAssets/senso-agent-01-portrait-hd.png'
-import threatAnalystBadge from '@/assets/newAssets/senso-agent-01-badge.png'
 import penetrationTester from '@/assets/newAssets/senso-agent-02-portrait-hd.png'
-import penetrationTesterBadge from '@/assets/newAssets/senso-agent-02-badge.png'
 import operationsManager from '@/assets/newAssets/senso-agent-03-portrait-hd.png'
-import operationsManagerBadge from '@/assets/newAssets/senso-agent-03-badge.png'
 import digitalHunter from '@/assets/newAssets/senso-agent-04-portrait-hd.png'
-import digitalHunterBadge from '@/assets/newAssets/senso-agent-04-badge.png'
 import intelligenceOfficer from '@/assets/newAssets/senso-agent-05-portrait-hd.png'
-import intelligenceOfficerBadge from '@/assets/newAssets/senso-agent-05-badge.png'
 import ciso from '@/assets/newAssets/senso-agent-06-portrait-hd.png'
-import cisoBadge from '@/assets/newAssets/senso-agent-06-badge.png'
 import digitalTeacher from '@/assets/newAssets/senso-agent-07-portrait-hd.png'
-import digitalTeacherBadge from '@/assets/newAssets/senso-agent-07-badge.png'
 import incidentResponder from '@/assets/newAssets/senso-agent-08-portrait-hd.png'
-import incidentResponderBadge from '@/assets/newAssets/senso-agent-08-badge.png'
 
 export interface DigitalEmployeeDefinition {
   id: string
@@ -24,7 +16,6 @@ export interface DigitalEmployeeDefinition {
   cardDescription: string
   skills: string[]
   portrait: string
-  badge: string
   accent: string
 }
 
@@ -38,7 +29,6 @@ export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
     cardDescription: '专注威胁检测、分析与研判',
     skills: ['威胁检测', '漏洞分析', '恶意样本分析', '情报研判', '异常流量分析'],
     portrait: threatAnalyst,
-    badge: threatAnalystBadge,
     accent: '#1478ff',
   },
   {
@@ -50,7 +40,6 @@ export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
     cardDescription: '模拟攻击、发现系统漏洞',
     skills: ['渗透测试', '漏洞挖掘', '攻击路径', '弱点验证'],
     portrait: penetrationTester,
-    badge: penetrationTesterBadge,
     accent: '#4277ff',
   },
   {
@@ -62,7 +51,6 @@ export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
     cardDescription: '安全运营全流程管理',
     skills: ['安全运营', '告警处置', '风险分析', '服务管理'],
     portrait: operationsManager,
-    badge: operationsManagerBadge,
     accent: '#735cff',
   },
   {
@@ -74,7 +62,6 @@ export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
     cardDescription: '主动狩猎、发现潜在风险',
     skills: ['威胁狩猎', '线索分析', '异常检测', '风险排查'],
     portrait: digitalHunter,
-    badge: digitalHunterBadge,
     accent: '#2b91ff',
   },
   {
@@ -86,7 +73,6 @@ export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
     cardDescription: '威胁情报搜集与分析',
     skills: ['威胁情报', '情报搜集', '关联分析', '趋势研判'],
     portrait: intelligenceOfficer,
-    badge: intelligenceOfficerBadge,
     accent: '#178bd8',
   },
   {
@@ -98,7 +84,6 @@ export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
     cardDescription: '安全战略规划与决策',
     skills: ['安全战略', '风险治理', '合规管理', '决策支持'],
     portrait: ciso,
-    badge: cisoBadge,
     accent: '#316ff6',
   },
   {
@@ -110,7 +95,6 @@ export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
     cardDescription: '安全知识培训与提升',
     skills: ['安全培训', '知识答疑', '案例教学', '能力评估'],
     portrait: digitalTeacher,
-    badge: digitalTeacherBadge,
     accent: '#13a8a8',
   },
   {
@@ -122,7 +106,6 @@ export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
     cardDescription: '快速响应、处置安全事件',
     skills: ['事件响应', '应急处置', '溯源分析', '恢复复盘'],
     portrait: incidentResponder,
-    badge: incidentResponderBadge,
     accent: '#3a7afe',
   },
 ]

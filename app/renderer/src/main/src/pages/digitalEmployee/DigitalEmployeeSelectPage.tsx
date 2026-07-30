@@ -1,23 +1,55 @@
 import React from 'react'
 import classNames from 'classnames'
-import memfitHasNameLogo from '@/assets/memfitHasName.jpg'
-import quickNavAgent from '@/assets/newAssets/senso-quick-nav-01-icon.png'
-import quickNavSkill from '@/assets/newAssets/senso-quick-nav-02-icon.png'
-import quickNavKnowledge from '@/assets/newAssets/senso-quick-nav-03-icon.png'
-import quickNavTool from '@/assets/newAssets/senso-quick-nav-04-icon.png'
-import quickNavMemory from '@/assets/newAssets/senso-quick-nav-05-icon.png'
-import quickNavDatabase from '@/assets/newAssets/senso-quick-nav-06-icon.png'
+import {
+  OutlineAcademiccapIcon,
+  OutlineBookopenIcon,
+  OutlineBrainCircuitIcon,
+  OutlineBrainIcon,
+  OutlineChartbarIcon,
+  OutlineDatabaseIcon,
+  OutlineGlobealtIcon,
+  OutlinePuzzleIcon,
+  OutlineRobotIcon,
+  OutlineSearchcircleIcon,
+  OutlineSearchIcon,
+  OutlineShieldcheckIcon,
+  OutlineShieldexclamationIcon,
+} from '@/assets/icon/outline'
+import aiSenPikeLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeSelectPage.module.scss'
 
 const QuickNavigation = [
-  { key: 'agent', title: '智能体广场', icon: quickNavAgent },
-  { key: 'skill', title: '安全技能库', icon: quickNavSkill },
-  { key: 'knowledge', title: '安全知识库', icon: quickNavKnowledge },
-  { key: 'tool', title: '工具插件库', icon: quickNavTool },
-  { key: 'memory', title: '记忆管理', icon: quickNavMemory },
-  { key: 'database', title: '安全数据库', icon: quickNavDatabase },
+  { key: 'agent', title: '智能体广场', icon: <OutlineRobotIcon /> },
+  { key: 'skill', title: '安全技能库', icon: <OutlineShieldcheckIcon /> },
+  { key: 'knowledge', title: '安全知识库', icon: <OutlineBookopenIcon /> },
+  { key: 'tool', title: '工具插件库', icon: <OutlinePuzzleIcon /> },
+  { key: 'memory', title: '记忆管理', icon: <OutlineBrainCircuitIcon /> },
+  { key: 'database', title: '安全数据库', icon: <OutlineDatabaseIcon /> },
 ]
+
+const getEmployeeBadgeIcon = (employeeId: string) => {
+  switch (employeeId) {
+    case 'threat-analyst':
+      return <OutlineSearchcircleIcon />
+    case 'penetration-tester':
+      return <OutlineGlobealtIcon />
+    case 'operations-manager':
+      return <OutlineChartbarIcon />
+    case 'digital-hunter':
+      return <OutlineSearchIcon />
+    case 'intelligence-officer':
+      return <OutlineBrainIcon />
+    case 'ciso':
+      return <OutlineShieldcheckIcon />
+    case 'digital-teacher':
+      return <OutlineAcademiccapIcon />
+    case 'incident-responder':
+      return <OutlineShieldexclamationIcon />
+    default:
+      return <OutlineShieldcheckIcon />
+  }
+}
 
 export const DigitalEmployeeSelectPage: React.FC = () => {
   const { employees, selectedEmployee, loading, error, confirmSelection, switchEmployee, retry } = useDigitalEmployee()
@@ -26,7 +58,7 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
     <main className={styles['employee-selection']}>
       <div className={styles['selection-stage']}>
         <header className={styles['brand-header']}>
-          <img src={memfitHasNameLogo} alt="AI SenPike" />
+          <img src={aiSenPikeLogo} alt="AI SenPike" />
         </header>
 
         <section className={styles['selection-content']}>
@@ -56,7 +88,9 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
                   <span className={styles['portrait-wrapper']}>
                     <img src={employee.portrait} alt={employee.name} />
                   </span>
-                  <img className={styles['employee-badge']} src={employee.badge} alt="" aria-hidden="true" />
+                  <span className={styles['employee-badge']} style={{ color: employee.accent }} aria-hidden="true">
+                    {getEmployeeBadgeIcon(employee.id)}
+                  </span>
                   <span className={styles['card-details']}>
                     <span className={styles['card-order']}>{employee.order}</span>
                     <span className={styles['card-copy']}>
@@ -82,7 +116,9 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
             <div className={styles['quick-list']}>
               {QuickNavigation.map((item) => (
                 <div className={styles['quick-item']} key={item.key} title="选择员工后可使用">
-                  <img src={item.icon} alt="" aria-hidden="true" />
+                  <span className={styles['quick-icon']} aria-hidden="true">
+                    {item.icon}
+                  </span>
                   <span>{item.title}</span>
                 </div>
               ))}

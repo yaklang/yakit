@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
-import memfitHasNameLogo from '@/assets/memfitHasName.jpg'
+import { OutlineChevronleftIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
+import aiSenPikeLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeWorkspace.module.scss'
 
@@ -55,7 +56,7 @@ export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({
           aria-expanded={!collapsed}
           onClick={() => setCollapsed((value) => !value)}
         >
-          {collapsed ? '›' : '‹'}
+          {collapsed ? <OutlineChevronrightIcon /> : <OutlineChevronleftIcon />}
         </button>
       </div>
       <div className={styles['employee-list']}>
@@ -106,7 +107,7 @@ export const DigitalEmployeeProfile: React.FC = () => {
   return (
     <section className={styles['employee-profile']}>
       <div className={styles['profile-brand-lockup']}>
-        <img src={memfitHasNameLogo} alt="AI SenPike" />
+        <img src={aiSenPikeLogo} alt="AI SenPike" />
       </div>
       <span className={styles['profile-divider']} aria-hidden="true" />
       <div className={styles['profile-portrait']}>

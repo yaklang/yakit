@@ -65,13 +65,24 @@
   display: grid;
   place-items: center;
   color: #3977b7;
-  font-size: 22px;
-  line-height: 1;
   border: 1px solid rgba(60, 126, 198, 0.18);
   border-radius: 8px;
   outline: none;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.72);
+
+  :global(.anticon) {
+    display: block;
+    width: 16px;
+    height: 16px;
+    line-height: 0;
+  }
+
+  svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+  }
 
   &:hover,
   &:focus-visible {
@@ -245,7 +256,6 @@
     width: 100%;
     height: auto;
     object-fit: contain;
-    mix-blend-mode: multiply;
   }
 }
 

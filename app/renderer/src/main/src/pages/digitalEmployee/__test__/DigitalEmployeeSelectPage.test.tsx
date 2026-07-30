@@ -36,8 +36,13 @@ describe('DigitalEmployeeSelectPage', () => {
     const { container } = render(<DigitalEmployeeSelectPage />)
     const employeeCards = container.querySelectorAll('[aria-pressed]')
     const selectedStateOverlays = container.querySelectorAll('img[src*="senso-card-selected-overlay"]')
+    const employeeBadgeIcons = container.querySelectorAll('[aria-pressed] svg')
+    const quickNavigationIcons = container.querySelectorAll('section[aria-label="快速导航"] svg')
 
     expect(employeeCards).toHaveLength(8)
+    expect(employeeBadgeIcons).toHaveLength(8)
+    expect(quickNavigationIcons).toHaveLength(6)
+    expect(employeeCards[0].querySelectorAll('img')).toHaveLength(1)
     expect(employeeCards[0]).toHaveAttribute('aria-pressed', 'true')
     expect(employeeCards[1]).toHaveAttribute('aria-pressed', 'false')
     expect(selectedStateOverlays).toHaveLength(0)
