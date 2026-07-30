@@ -550,10 +550,10 @@ export class ChatMultiSessionController {
 
   /** 仅删除内存 contents 中的条目，不删渲染树 / IDB */
   public removeContentsFromMemory(sessionId: string, tokens: string[]) {
-    const { rawData } = this.ensureSession(sessionId)
-    for (const token of tokens) {
-      rawData.contents.delete(token)
-    }
+    // const { rawData } = this.ensureSession(sessionId)
+    // for (const token of tokens) {
+    //   rawData.contents.delete(token)
+    // }
   }
   // #endregion
 

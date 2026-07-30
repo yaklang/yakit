@@ -273,7 +273,6 @@ const HistoryChatList: FC<{
     }
     const execute = globalSessionEngine?.ensureSession(info.SessionID)?.store?.getState()?.execute
     if (!!execute) {
-      yakitNotify('info', '在其他页面中会话正在执行中')
       onClose([info.SessionID], () => {
         onSetChat(info)
       })
