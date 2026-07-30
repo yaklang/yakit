@@ -2,6 +2,7 @@ import React from 'react'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
+import memfitHasNameLogo from '@/assets/memfitHasName.jpg'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeWorkspace.module.scss'
 
@@ -28,7 +29,7 @@ export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({ 
     <aside className={styles['employee-sidebar']}>
       <div className={styles['sidebar-title']}>
         <span>数字员工切换</span>
-        <small>AI SenSo</small>
+        <small>AI SenPike</small>
       </div>
       <div className={styles['employee-list']}>
         {employees.map((employee) => {
@@ -77,8 +78,7 @@ export const DigitalEmployeeProfile: React.FC = () => {
   return (
     <section className={styles['employee-profile']}>
       <div className={styles['profile-brand-lockup']}>
-        <span className={styles['profile-brand-mark']}>S</span>
-        <strong>AI SenSo</strong>
+        <img src={memfitHasNameLogo} alt="AI SenPike" />
       </div>
       <span className={styles['profile-divider']} aria-hidden="true" />
       <div className={styles['profile-portrait']}>

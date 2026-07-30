@@ -156,9 +156,9 @@
 
 .employee-profile {
   position: relative;
-  flex: 0 0 78px;
-  min-height: 78px;
-  padding: 9px clamp(18px, 2vw, 32px);
+  flex: 0 0 clamp(96px, 10.5vh, 126px);
+  min-height: 96px;
+  padding: 12px clamp(18px, 2vw, 32px);
   display: flex;
   align-items: center;
   gap: clamp(10px, 1vw, 16px);
@@ -188,38 +188,22 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  width: clamp(112px, 9vw, 148px);
 
-  strong {
-    color: #18386a;
-    font-size: clamp(15px, 1.25vw, 20px);
-    letter-spacing: -0.02em;
-    white-space: nowrap;
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    mix-blend-mode: multiply;
   }
-}
-
-.profile-brand-mark {
-  width: 34px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 17px;
-  font-weight: 800;
-  border-radius: 11px 11px 14px 14px;
-  background: linear-gradient(145deg, #55b2ff, #156fe9 66%, #0d56cb);
-  box-shadow:
-    0 7px 16px rgba(26, 113, 220, 0.24),
-    inset 0 1px rgba(255, 255, 255, 0.48);
 }
 
 .profile-divider {
   position: relative;
   z-index: 1;
   width: 1px;
-  height: 34px;
+  height: 48px;
   background: rgba(81, 126, 183, 0.18);
 }
 
@@ -227,8 +211,8 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  width: 58px;
-  height: 58px;
+  width: clamp(72px, 8vh, 92px);
+  height: clamp(72px, 8vh, 92px);
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.94);
   border-radius: 50%;
@@ -252,11 +236,11 @@
 
   p {
     max-width: min(50vw, 680px);
-    margin: 2px 0 5px;
+    margin: 4px 0 7px;
     overflow: hidden;
     color: #526b8e;
-    font-size: 11px;
-    line-height: 16px;
+    font-size: 12px;
+    line-height: 17px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -270,13 +254,13 @@
   h1 {
     margin: 0;
     color: #152f59;
-    font-size: 17px;
-    line-height: 22px;
+    font-size: clamp(18px, 1.35vw, 22px);
+    line-height: 26px;
   }
 
   > span {
     color: #7289a7;
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 
@@ -288,7 +272,7 @@
   span {
     padding: 2px 7px;
     color: #3d76ae;
-    font-size: 9px;
+    font-size: 10px;
     border: 1px solid rgba(72, 137, 205, 0.14);
     border-radius: 999px;
     background: rgba(236, 247, 255, 0.88);
@@ -298,7 +282,7 @@
 .profile-meta {
   position: absolute;
   z-index: 1;
-  top: 12px;
+  top: 16px;
   right: clamp(18px, 2vw, 32px);
   display: flex;
   align-items: center;
@@ -326,7 +310,7 @@
 }
 
 @media (max-width: 820px) {
-  .profile-brand-lockup strong,
+  .profile-brand-lockup,
   .profile-divider,
   .profile-skills,
   .profile-meta {

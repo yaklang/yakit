@@ -14,7 +14,7 @@ describe('DigitalEmployeeSelectPage', () => {
   })
 
   it('renders all employees with the first employee selected by default', () => {
-    const selectEmployee = vi.fn()
+    const switchEmployee = vi.fn(() => true)
     const confirmSelection = vi.fn(() => true)
     const employees = DIGITAL_EMPLOYEES.map((employee) => ({
       ...employee,
@@ -27,9 +27,9 @@ describe('DigitalEmployeeSelectPage', () => {
       confirmed: false,
       loading: false,
       selectionVersion: 0,
-      selectEmployee,
+      selectEmployee: vi.fn(),
       confirmSelection,
-      switchEmployee: vi.fn(() => true),
+      switchEmployee,
       retry: vi.fn(),
     })
 
@@ -49,7 +49,7 @@ describe('DigitalEmployeeSelectPage', () => {
     })
 
     fireEvent.click(employeeCards[1])
-    expect(selectEmployee).toHaveBeenCalledWith(DIGITAL_EMPLOYEES[1].id)
+    expect(switchEmployee).toHaveBeenCalledWith(DIGITAL_EMPLOYEES[1].id)
 
     const confirmButton = screen.getByRole('button', { name: '确认选择，开启智能安全工作' })
     expect(confirmButton).toBeEnabled()

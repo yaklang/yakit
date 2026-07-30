@@ -49,7 +49,6 @@ import useGetAIMaterialsData, { getAIRecommendIconByType } from '@/pages/ai-re-a
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import memfitLogo from '@/assets/memfit.jpg'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
-import { getDigitalEmployeeSkillName } from '@/pages/digitalEmployee/resolver'
 
 // const sideberRadioOptions = [
 //     {
@@ -271,7 +270,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       return (
         <div className={styles['employee-chat-welcome']} ref={welcomeRef}>
           <div className={styles['employee-welcome-copy']}>
-            <span className={styles['employee-welcome-label']}>AI SenSo · {selectedEmployee.name}</span>
+            <span className={styles['employee-welcome-label']}>AI SenPike · {selectedEmployee.name}</span>
             <h2>请告诉我，你想做什么？</h2>
             <p>
               我将调用技能库中的「{selectedEmployee.forge?.ForgeVerboseName || selectedEmployee.name}」协助你完成任务
@@ -279,17 +278,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           </div>
           <div className={styles['employee-suggestion-list']}>
             {selectedEmployee.skills.slice(0, 4).map((skill) => (
-              <button type="button" key={skill} onClick={() => onSetQuestion(`请帮我进行${skill}`)}>
-                {skill}
-              </button>
+              <span key={skill}>{skill}</span>
             ))}
           </div>
           <div className={styles['employee-input-wrapper']}>
-            <div className={styles['employee-default-skill']} aria-label="当前员工默认技能">
-              <span className={styles['employee-default-skill-label']}>默认技能</span>
-              <strong>{getDigitalEmployeeSkillName(selectedEmployee)}</strong>
-              <span className={styles['employee-default-skill-state']}>随消息发送</span>
-            </div>
             <AIChatTextarea
               ref={aiChatTextareaRef}
               onSubmit={handleTriageSubmit}
@@ -298,7 +290,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               hidePlan
             />
           </div>
-          <div className={styles['content-copy']}>@2026 亚信安全 · AI SenSo 数字员工</div>
+          <div className={styles['content-copy']}>@2026 亚信安全 · AI SenPike 数字员工</div>
         </div>
       )
     }

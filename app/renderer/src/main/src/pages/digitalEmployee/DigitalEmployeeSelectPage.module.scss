@@ -47,9 +47,10 @@
 
   img {
     display: block;
-    width: clamp(108px, 11vw, 172px);
+    width: clamp(150px, 12vw, 190px);
     height: auto;
     object-fit: contain;
+    mix-blend-mode: multiply;
   }
 }
 
@@ -169,9 +170,9 @@
     content: '';
     position: absolute;
     z-index: 5;
-    inset: -2px;
+    inset: 0;
     pointer-events: none;
-    border: clamp(1px, 0.15vw, 2px) solid #2694ff;
+    border: 2px solid #2694ff;
     border-radius: inherit;
     opacity: 0;
     box-shadow:
@@ -201,7 +202,7 @@
   z-index: 2;
   top: 4%;
   right: 4%;
-  bottom: 25%;
+  bottom: 28%;
   left: 4%;
   display: flex;
   align-items: flex-start;
@@ -234,12 +235,12 @@
   position: absolute;
   z-index: 4;
   right: 8%;
-  bottom: 17%;
+  bottom: clamp(48px, 6vh, 62px);
   left: 7%;
   min-width: 0;
   display: flex;
-  align-items: flex-end;
-  gap: clamp(5px, 0.7vw, 12px);
+  align-items: center;
+  gap: clamp(7px, 0.65vw, 11px);
   pointer-events: none;
   transition: opacity 150ms ease;
 }
@@ -248,13 +249,16 @@
   flex: 0 0 auto;
   color: #1687ef;
   font-family: Arial, sans-serif;
-  font-size: clamp(24px, 2.35vw, 38px);
+  font-size: clamp(22px, 1.8vw, 32px);
   font-weight: 700;
   line-height: 0.95;
 }
 
 .card-copy {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 
   strong,
   small {
@@ -266,32 +270,32 @@
 
   strong {
     color: #102c5c;
-    font-size: clamp(13px, 1.2vw, 20px);
-    line-height: 1.3;
+    font-size: clamp(13px, 1.05vw, 17px);
+    line-height: 1.25;
   }
 
   small {
     color: #72839e;
-    font-size: clamp(9px, 0.85vw, 14px);
-    line-height: 1.4;
+    font-size: clamp(10px, 0.75vw, 13px);
+    line-height: 1.3;
   }
 }
 
 .card-action {
   position: absolute;
   z-index: 6;
-  right: 7%;
-  bottom: 4%;
-  left: 7%;
-  height: 13%;
-  padding: 0 9%;
+  right: 8%;
+  bottom: clamp(9px, 1vh, 13px);
+  left: 8%;
+  height: clamp(28px, 3.8vh, 38px);
+  padding: 0 clamp(16px, 2vw, 30px);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 26%;
+  gap: clamp(28px, 4vw, 68px);
   pointer-events: none;
   color: #fff;
-  font-size: clamp(10px, 1vw, 16px);
+  font-size: clamp(10px, 0.9vw, 14px);
   font-weight: 500;
   white-space: nowrap;
   opacity: 0;

@@ -1,6 +1,6 @@
 import React from 'react'
 import classNames from 'classnames'
-import aiSenSoLogo from '@/assets/newAssets/senso-brand-logo.png'
+import memfitHasNameLogo from '@/assets/memfitHasName.jpg'
 import quickNavAgent from '@/assets/newAssets/senso-quick-nav-01-icon.png'
 import quickNavSkill from '@/assets/newAssets/senso-quick-nav-02-icon.png'
 import quickNavKnowledge from '@/assets/newAssets/senso-quick-nav-03-icon.png'
@@ -20,13 +20,13 @@ const QuickNavigation = [
 ]
 
 export const DigitalEmployeeSelectPage: React.FC = () => {
-  const { employees, selectedEmployee, loading, error, selectEmployee, confirmSelection, retry } = useDigitalEmployee()
+  const { employees, selectedEmployee, loading, error, confirmSelection, switchEmployee, retry } = useDigitalEmployee()
 
   return (
     <main className={styles['employee-selection']}>
       <div className={styles['selection-stage']}>
         <header className={styles['brand-header']}>
-          <img src={aiSenSoLogo} alt="AI SenSo" />
+          <img src={memfitHasNameLogo} alt="AI SenPike" />
         </header>
 
         <section className={styles['selection-content']}>
@@ -49,9 +49,9 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
                   className={classNames(styles['employee-card'], {
                     [styles['employee-card-selected']]: selected,
                   })}
-                  onClick={() => selectEmployee(employee.id)}
+                  onClick={() => switchEmployee(employee.id)}
                   aria-pressed={selected}
-                  aria-label={`选择${employee.name}`}
+                  aria-label={`选择并进入${employee.name}`}
                 >
                   <span className={styles['portrait-wrapper']}>
                     <img src={employee.portrait} alt={employee.name} />
