@@ -93,13 +93,17 @@ import {
   HTTPFlowTableFormConsts,
 } from './HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import {
+  buildHTTPFlowProjectKey,
   buildHTTPFlowTableAdvancedQuery,
   buildLegacyHTTPFlowTableFilterConfig,
   getFullRange,
   hasActiveHTTPFlowTableFilterConfig,
+  isHTTPFlowTableActive,
   normalizeHTTPFlowTotal,
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
+  shouldClearMITMResetBoundary,
+  shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
 import {
@@ -316,6 +320,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const isBackgroundRefresh = useMemo(() => {
     return backgroundRefresh && pageType !== 'MITM'
   }, [backgroundRefresh, pageType])
+  const isTableActive = isHTTPFlowTableActive(inViewport, backgroundRefresh, pageType)
 
   // 整表重新加载时清空选中（hook 在换筛选、刷新时会调 onFirst）
   const onFirst = useMemoizedFn(() => {
@@ -342,6 +347,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const latestPersistedIdRef = useRef(0)
   const latestPersistedProjectKeyRef = useRef('')
   const mitmResetAfterIdRef = useRef(0)
+  const mitmResetProjectKeyRef = useRef('')
+  const previousInViewportRef = useRef(inViewport)
   const offsetDataRef = useRef<HTTPFlow[]>([])
   const updateDataRef = useRef<() => void>(() => {})
   const requestMITMLiveRefreshRef = useRef<(source: MITMLiveTriggerSource, serverSentAtUnixMs?: number) => void>(
@@ -440,14 +447,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
       // 仅 update（无游标）时更新 total
       const isUpdateRequest = !AfterId && !BeforeId
+      const metadataOnlyBackgroundQuery = shouldUseHTTPFlowMetadataOnlyQuery(inViewport, backgroundRefresh, pageType)
       const query: YakQueryHTTPFlowRequest = {
         ...Filter,
         Pagination: { ...paginationFields },
         ...(AfterId ? { AfterId } : {}),
         ...(BeforeId ? { BeforeId } : {}),
         IncludeSystemTiming: pageType === 'MITM' && mitmFlowObservability.isBackendSystemTimingEnabled(),
-        ExcludeResponseRaw: pageType === 'MITM',
-        ExcludeRequestRaw: pageType === 'MITM',
+        ExcludeResponseRaw: pageType === 'MITM' || metadataOnlyBackgroundQuery,
+        ExcludeRequestRaw: pageType === 'MITM' || metadataOnlyBackgroundQuery,
         SkipTotal:
           pageType === 'MITM' &&
           mitmFlowObservability.isSkipLiveExactTotalEnabled() &&
@@ -486,18 +494,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (queryEpoch !== tableQueryEpochRef.current) throw new StaleHTTPFlowTableQueryError()
         rsp.Total = normalizeHTTPFlowTotal(rsp.Total)
         if (pageType === 'MITM' && inViewport) {
-          const databaseIdentity = rsp.SystemTiming?.DatabaseIdentity || ''
-          const projectGeneration = Number(rsp.SystemTiming?.ProjectGeneration) || 0
-          const projectKey = databaseIdentity && projectGeneration ? `${databaseIdentity}:${projectGeneration}` : ''
+          const projectKey = buildHTTPFlowProjectKey(
+            rsp.SystemTiming?.DatabaseIdentity,
+            rsp.SystemTiming?.ProjectGeneration,
+          )
           if (projectKey && projectKey !== latestPersistedProjectKeyRef.current) {
             const projectChanged = latestPersistedProjectKeyRef.current !== ''
             latestPersistedProjectKeyRef.current = projectKey
             latestPersistedIdRef.current = 0
-            if (projectChanged && mitmResetAfterIdRef.current > 0) {
+            if (
+              projectChanged &&
+              shouldClearMITMResetBoundary(mitmResetAfterIdRef.current, mitmResetProjectKeyRef.current, projectKey)
+            ) {
               // A reset high-water belongs to one project database only. If
-              // the project changes, remove it and repeat the bootstrap;
-              // otherwise a new project with smaller IDs would stay hidden.
+              // the database table is recreated, its generation changes even
+              // though its path stays the same. Remove the old ID boundary and
+              // repeat the bootstrap so lower IDs cannot stay hidden.
               mitmResetAfterIdRef.current = 0
+              mitmResetProjectKeyRef.current = ''
               setParams((current) => ({ ...current, AfterId: undefined }))
               throw new StaleHTTPFlowTableQueryError()
             }
@@ -519,11 +533,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setTotal(rsp.Total)
         if (extraTimerRef.current) {
           clearInterval(extraTimerRef.current)
+          extraTimerRef.current = undefined
         }
-        extraTimerRef.current = setInterval(
-          () => getAddDataByGrpcRef.current(query, queryEpoch),
-          HTTP_FLOW_TOTAL_RECONCILE_INTERVAL,
-        )
+        if (isTableActive) {
+          extraTimerRef.current = setInterval(
+            () => getAddDataByGrpcRef.current(query, queryEpoch),
+            HTTP_FLOW_TOTAL_RECONCILE_INTERVAL,
+          )
+        }
       }
       return rsp
     },
@@ -673,7 +690,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     grpcFun: grpcQueryHTTPFlows,
     onFirst,
     initResDataFun,
-    inViewport: inViewport || isBackgroundRefresh,
+    inViewport: isTableActive,
     maxDataLength,
     slidingClippedRef,
     preferServerPush: pageType === 'MITM',
@@ -698,6 +715,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     tableQueryEpochRef.current += 1
     noResetRefreshT()
   })
+
+  useEffect(() => {
+    if (!isTableActive) {
+      if (extraTimerRef.current) {
+        clearInterval(extraTimerRef.current)
+        extraTimerRef.current = undefined
+      }
+    }
+  }, [isTableActive])
+
+  useEffect(() => {
+    const becameVisible = inViewport && !previousInViewportRef.current
+    previousInViewportRef.current = inViewport
+    // Background queries intentionally omit packet bodies. Hydrate the visible
+    // viewport once on return; row details remain lazy-loaded afterwards.
+    if (becameVisible && isBackgroundRefresh) {
+      updateData()
+    }
+  }, [inViewport, isBackgroundRefresh, updateData])
 
   // useLayoutEffect runs after React has committed the rows and before paint,
   // which is the closest low-overhead marker for "visible in the table".
@@ -745,6 +781,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   // Total 只用精确查询定期校准；实时流可能重放或去重，不按批次累加。
   const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest, queryEpoch = tableQueryEpochRef.current) => {
     if (queryEpoch !== tableQueryEpochRef.current) return
+    if (!isTableActive) return
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     if (clientHeight === 0) return
     // 性能优化：仅需覆盖 Pagination，无需深拷贝整个 query 对象
@@ -1215,6 +1252,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const MITM_PUSH_DEBOUNCE_MS = 300
   const HTTP_FLOW_PUSH_DEBOUNCE_MS = 500
 
+  useEffect(() => {
+    if (isTableActive) return
+    if (pushFlushTimerRef.current) {
+      clearTimeout(pushFlushTimerRef.current)
+      pushFlushTimerRef.current = undefined
+    }
+    pendingTagUpdatesRef.current = []
+    pendingPushServerSentAtUnixMsRef.current = undefined
+  }, [isTableActive])
+
   const flushPushRefresh = useMemoizedFn(() => {
     pushFlushTimerRef.current = undefined
     const pendingTagUpdates = pendingTagUpdatesRef.current
@@ -1262,6 +1309,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }).run
 
   const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
+    if (!isTableActive) {
+      return
+    }
     try {
       const parsedData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onRefreshQueryHTTPFlowsFun' })
       const isEnvelope =
@@ -1281,7 +1331,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         pendingTagUpdatesRef.current.push(updateData)
       }
     } catch (error) {}
-    refreshFieldGroups()
+    if (inViewport) refreshFieldGroups()
     schedulePushRefresh()
   })
   const onMITMFlowCommitted = useMemoizedFn((data) => {
@@ -1359,6 +1409,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     )
     tableQueryEpochRef.current += 1
     mitmResetAfterIdRef.current = resetAfterId
+    mitmResetProjectKeyRef.current = latestPersistedProjectKeyRef.current
     latestVisibleDataHighWaterRef.current = 0
     httpFlowLiveDirectBatcher.cancel()
     httpFlowLiveDirectRecoveryGate.reset()
@@ -1702,6 +1753,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         fun: 'onDeleteToUpdateEvent',
       })
       if (sourcePage && pageType && sourcePage !== pageType) {
+        if (!isTableActive) {
+          return
+        }
         updateData()
       }
     } catch (error) {}

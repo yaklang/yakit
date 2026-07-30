@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildHTTPFlowProjectKey,
   buildHTTPFlowTableAdvancedQuery,
   buildLegacyHTTPFlowTableFilterConfig,
   buildRuleSummaryList,
   filterHTTPFlowsByFavoriteAndTags,
   getClassNameData,
   hasActiveHTTPFlowTableFilterConfig,
+  isHTTPFlowTableActive,
   mergeRuleSummaryItems,
   normalizeHTTPFlowTotal,
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
+  shouldClearMITMResetBoundary,
+  shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
   uniqStrings,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
@@ -38,6 +42,38 @@ describe('parseMITMLogResetSignal', () => {
 
   it('accepts the legacy version-only event', () => {
     expect(parseMITMLogResetSignal('v2')).toEqual({ version: 'v2' })
+  })
+})
+
+describe('MITM reset project boundary', () => {
+  it('treats a destructive database generation change as a new ID namespace', () => {
+    const oldProject = buildHTTPFlowProjectKey('project-a', 7)
+    const recreatedProject = buildHTTPFlowProjectKey('project-a', 8)
+
+    expect(shouldClearMITMResetBoundary(6512, oldProject, recreatedProject)).toBe(true)
+    expect(shouldClearMITMResetBoundary(6512, oldProject, oldProject)).toBe(false)
+  })
+
+  it('does not guess when backend project identity is unavailable', () => {
+    expect(buildHTTPFlowProjectKey('project-a', 0)).toBe('')
+    expect(shouldClearMITMResetBoundary(6512, '', 'project-a:8')).toBe(false)
+  })
+})
+
+describe('HTTP flow hidden-table policy', () => {
+  it('keeps an ordinary hidden History table idle by default', () => {
+    expect(isHTTPFlowTableActive(false, false, 'History')).toBe(false)
+    expect(shouldUseHTTPFlowMetadataOnlyQuery(false, false, 'History')).toBe(false)
+  })
+
+  it('honors explicit History background refresh without transporting packet bodies', () => {
+    expect(isHTTPFlowTableActive(false, true, 'History')).toBe(true)
+    expect(shouldUseHTTPFlowMetadataOnlyQuery(false, true, 'History')).toBe(true)
+  })
+
+  it('never turns hidden MITM into a background table through the History setting', () => {
+    expect(isHTTPFlowTableActive(false, true, 'MITM')).toBe(false)
+    expect(shouldUseHTTPFlowMetadataOnlyQuery(false, true, 'MITM')).toBe(false)
   })
 })
 

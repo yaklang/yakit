@@ -1199,3 +1199,11 @@ heap 模式使用保留符号的 Yak，正式门禁使用 `-s -w` 发布式 Yak�
 滑窗的顶部、底部和 offset 合并改为基于提交时最新 state，以 ID 去重并按当前单调顺序归并，查询行优先替换 body-free summary。虚拟表在空数据且旧 `scrollTop` 很大时显式把容器位置、wrapper 高度和 margin 归零，避免 ahooks `useVirtualList` 计算出负高度后保留旧滚动区。
 
 自动化使用截图中的重叠序列 `6512/6511 + 6511..6507` 验证结果唯一且严格降序，并覆盖 182000 px 深滚动清空、重置事件新旧格式及高水位不关闭专用实时流。HTTPFlow、虚拟表和调度相关 11 个 Vitest 文件共 144 项通过，Renderer TypeScript 检查通过；本轮未运行高资源 Electron 矩阵。
+
+## 62. 第八十八轮：重置 ID 回退与 History 隐藏态收口（2026-07-30）
+
+上一轮的前端高水位能隔离清库前迟到结果，但 HTTPFlow 表被 Drop/Recreate 后会复用较小 ID；若项目逻辑边界不变，旧 `AfterId` 会把后续新流量永久隐藏。本轮与后端 generation 轮换配套：MITM 记录重置时的 project key，收到新 generation 后自动撤销旧高水位、失效旧查询并从新数据集重新加载，不用根据 ID 大小猜测是否发生清库。另一个直接导致“重置后不再出新流量”的边界是：实时流进入 GAP recovery 时，重置后的数据库查询可能为空，旧 controller 会把订阅游标错误降到 0 并反复撞 replay-window GAP；现在空结果也使用 `Filter.AfterId` 作为可靠恢复游标，新 ID 可继续直接推送。
+
+同时收口 HTTP History 隐藏态工作。默认未开启“后台刷新”时，隐藏页面不再解析 flow 事件、不运行精确 Total 定时器，也不发列表查询；回到页面后只由虚拟表可见性切换执行一次 bootstrap，避免 dirty 补拉和 Hook 补拉互相失效。用户显式开启后台刷新时继续保持该产品能力，但隐藏态列表查询排除 Request/Response raw body，回到可见态后再执行一次完整 hydration。MITM 页面不受 History 后台开关影响，隐藏后保持停用。
+
+定向 Vitest 覆盖 generation `7 -> 8` 清除旧边界、空结果按 `AfterId` 从 GAP 恢复、缺少项目身份时不猜测、History 默认隐藏停用、显式后台 metadata-only 以及 MITM 隔离，共 68 项通过；Renderer TypeScript 检查通过，定向 ESLint 无 error。本轮未运行高资源 Electron 矩阵。

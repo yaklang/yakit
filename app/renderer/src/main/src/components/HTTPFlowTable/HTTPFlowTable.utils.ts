@@ -49,6 +49,31 @@ export const parseMITMLogResetSignal = (value: string): MITMLogResetSignal => {
   return { version: value }
 }
 
+export const buildHTTPFlowProjectKey = (databaseIdentity: unknown, projectGeneration: unknown): string => {
+  const identity = typeof databaseIdentity === 'string' ? databaseIdentity : ''
+  const generation = Number(projectGeneration)
+  return identity && Number.isSafeInteger(generation) && generation > 0 ? `${identity}:${generation}` : ''
+}
+
+export const shouldClearMITMResetBoundary = (
+  resetAfterId: number,
+  resetProjectKey: string,
+  currentProjectKey: string,
+): boolean =>
+  Number(resetAfterId) > 0 &&
+  resetProjectKey.length > 0 &&
+  currentProjectKey.length > 0 &&
+  resetProjectKey !== currentProjectKey
+
+export const isHTTPFlowTableActive = (inViewport: boolean, backgroundRefresh: boolean, pageType?: string): boolean =>
+  inViewport || (backgroundRefresh && pageType !== 'MITM')
+
+export const shouldUseHTTPFlowMetadataOnlyQuery = (
+  inViewport: boolean,
+  backgroundRefresh: boolean,
+  pageType?: string,
+): boolean => !inViewport && backgroundRefresh && pageType !== 'MITM'
+
 export const safeParseHTTPFlowTableCache = <T = unknown>(value?: string): T | undefined => {
   if (!value) return undefined
   try {

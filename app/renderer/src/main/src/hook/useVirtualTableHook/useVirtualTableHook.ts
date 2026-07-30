@@ -195,6 +195,17 @@ export default function useVirtualTableHook<
   const isAllowSetEndLoopRef = useRef<boolean>(false)
 
   useEffect(() => {
+    if (inViewport) return
+    // Hidden cached pages must not commit a late response or keep a pending
+    // refresh alive. The params/inViewport effect bootstraps once on return.
+    queryEpochRef.current += 1
+    isGrpcRef.current = false
+    notificationRefreshPendingRef.current = false
+    setLoading(false)
+    setIsLoop(false)
+  }, [inViewport])
+
+  useEffect(() => {
     if (!preferServerPush) return
     const syncServerPushStatus = (sharedDuplexActive: boolean) => {
       const active = resolveVirtualTableServerPushActive(sharedDuplexActive, additionalServerPushActiveRef.current)
@@ -506,6 +517,7 @@ export default function useVirtualTableHook<
 
   // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
   const updateData = useMemoizedFn((showLoading = true) => {
+    if (!inViewport) return
     if (boxHeightRef.current) {
       onFirst && onFirst()
       setOffsetData([])
@@ -660,11 +672,12 @@ export default function useVirtualTableHook<
 
   useDebounceEffect(
     () => {
+      if (!inViewport) return
       queryEpochRef.current += 1
       isGrpcRef.current = false
       updateData()
     },
-    [params],
+    [params, inViewport],
     {
       wait: 200,
       leading: true,

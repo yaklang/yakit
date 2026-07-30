@@ -558,7 +558,11 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
     }
 
     const nextProjectKey = projectKeyOf(identity, generation)
-    const maxID = responseMaxID(response)
+    // An empty query after MITM "reset" still has a valid resume boundary in
+    // Filter.AfterId. Losing it here makes a recovering/new subscription start
+    // from ID 0, which can repeatedly hit the replay-window GAP and never
+    // deliver post-reset rows.
+    const queryResumeID = Math.max(responseMaxID(response), asSafeNumber(filter?.AfterId))
     if (nextProjectKey !== activeProjectKey) {
       options.onReset?.()
       stopTransport()
@@ -566,7 +570,7 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
       databaseIdentity = identity
       projectGeneration = generation
       lastSeenSequence = 0
-      lastSeenId = maxID
+      lastSeenId = queryResumeID
       haveSequenceBaseline = false
       recovering = false
       unavailableProjectKey = ''
@@ -575,12 +579,12 @@ export const createHTTPFlowLiveStreamController = (options: HTTPFlowLiveStreamCo
         // A gap invalidates every direct row that was received but not yet
         // rendered. Resume from the database recovery result, not the old
         // receive cursor, or those cancelled rows could be skipped forever.
-        lastSeenId = maxID
+        lastSeenId = queryResumeID
         recovering = false
         lastSeenSequence = 0
         haveSequenceBaseline = false
       } else {
-        lastSeenId = Math.max(lastSeenId, maxID)
+        lastSeenId = Math.max(lastSeenId, queryResumeID)
       }
     }
     start()

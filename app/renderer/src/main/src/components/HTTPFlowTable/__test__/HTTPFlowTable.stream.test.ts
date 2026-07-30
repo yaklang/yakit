@@ -214,6 +214,31 @@ describe('HTTPFlow live stream controller', () => {
     expect(transport.starts[1].request).toMatchObject({ LastSeenSequence: 0, LastSeenId: 10 })
   })
 
+  it('keeps the MITM reset boundary when recovery query is empty', () => {
+    const transport = new FakeTransport()
+    const committed = vi.fn()
+    let tokenIndex = 0
+    const controller = createHTTPFlowLiveStreamController({
+      transport,
+      createToken: () => `reset-recovery-${++tokenIndex}`,
+      getMode: () => 'canary',
+      onCommitted: committed,
+    })
+    controller.observeQuery(queryResponse('db-a', 7, [6513]), { SourceType: 'mitm' })
+    transport.emitData(event('reset-recovery-1', 6, 0, 'HTTP_FLOW_LIVE_EVENT_TYPE_GAP'))
+
+    controller.observeQuery(queryResponse('db-a', 7, []), { SourceType: 'mitm', AfterId: 6513 })
+    expect(transport.starts[1].request).toMatchObject({
+      LastSeenSequence: 0,
+      LastSeenId: 6513,
+      ProjectGeneration: 7,
+    })
+
+    transport.emitData(event('reset-recovery-2', 7, 6514))
+    expect(committed).toHaveBeenCalledTimes(1)
+    expect(controller.snapshot()).toMatchObject({ lastSeenSequence: 7, lastSeenId: 6514, recovering: false })
+  })
+
   it('cancels an active shadow stream on the first heartbeat after mode is disabled', () => {
     const transport = new FakeTransport()
     let mode: 'off' | 'shadow' = 'shadow'
