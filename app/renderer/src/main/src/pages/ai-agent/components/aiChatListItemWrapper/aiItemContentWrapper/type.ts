@@ -1,4 +1,4 @@
-import { ChatThought } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { AINodeItemProps } from '../../aiChatListItem/aiNodeItem/type'
 import { AITriageChatContentProps } from '../../aiTriageChat/type'
 
@@ -8,5 +8,5 @@ interface AIItemContentWrapperProps {
 export interface AITriageChatContentWrapperProps extends Omit<AITriageChatContentProps, 'chatDataStoreKey'> {}
 
 export interface AIThoughtProps extends AIItemContentWrapperProps {
-  itemData: ChatThought
+  itemData: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.THOUGHT }>
 }

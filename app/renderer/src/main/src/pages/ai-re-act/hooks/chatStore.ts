@@ -70,6 +70,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       yakExecResultLogs: [],
 
       initLoading: false,
+      grpcLoadMoreLoading: false,
+
       cancelCasualLoading: false,
       cancelTaskLoading: false,
       requestHistoryState: {

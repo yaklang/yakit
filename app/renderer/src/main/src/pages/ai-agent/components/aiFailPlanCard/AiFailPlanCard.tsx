@@ -1,4 +1,4 @@
-import type { ChatFailPlanAndExecution, ChatFailReact } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { memo, type FC } from 'react'
 import ChatCard from '../ChatCard'
 import styles from './AiFailPlanCard.module.scss'
@@ -11,10 +11,13 @@ import { Tooltip } from 'antd'
 import useCreation from 'ahooks/lib/useCreation'
 import useToggle from 'ahooks/lib/useToggle'
 
-const AiFailPlanCard: FC<{ itemData: ChatFailReact | ChatFailPlanAndExecution; renderNum: number }> = ({
-  itemData,
-  renderNum,
-}) => {
+const AiFailPlanCard: FC<{
+  itemData: Extract<
+    AIChatQSData,
+    { type: AIChatQSDataTypeEnum.FAIL_REACT | AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION }
+  >
+  renderNum: number
+}> = ({ itemData, renderNum }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const [expand, { toggle }] = useToggle(false)
   const { nodeLabel } = useAINodeLabel(itemData.data.NodeIdVerbose)

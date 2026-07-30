@@ -945,7 +945,11 @@ export class ChatMultiSessionController {
 
   /** 发 recovery_history 拉更旧事件（grpcOffset 为起点，向前回溯 RECOVERY_HISTORY_LIMIT 条） */
   public requestRecoveryHistory(sessionId: string) {
-    const { rawData } = this.ensureSession(sessionId)
+    const { store, rawData } = this.ensureSession(sessionId)
+    const initLoading = store.getState().initLoading
+    const grpcLoadMoreLoading = store.getState().grpcLoadMoreLoading
+    if (initLoading || grpcLoadMoreLoading) return
+    store.getState().updateState({ grpcLoadMoreLoading: true })
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
@@ -1219,7 +1223,9 @@ export class ChatMultiSessionController {
               taskElements: [...state.taskChat.elements],
             }
             void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
-            this.finishSessionRestoreLoading(sessionId)
+          }
+          if (store.getState().grpcLoadMoreLoading) {
+            store.getState().updateState({ grpcLoadMoreLoading: false })
           }
         } catch {
           // ignore parse error

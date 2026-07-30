@@ -402,43 +402,43 @@ export interface AIChatQSDataBase<T extends string, U> {
   parentGroupToken?: string
 }
 
-export type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
+type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
 type ChatToolCallParams = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_PARAM, AIAgentGrpcApi.AIToolCallParams>
-export type ChatApiRequestFailed = AIChatQSDataBase<
+type ChatApiRequestFailed = AIChatQSDataBase<
   AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
   AIAgentGrpcApi.AIApiRequestFailedPayload
 >
-export type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
-export type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
+type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
+type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
 export type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
-export type ChatPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE, UIPlanReview>
+type ChatPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE, UIPlanReview>
 type ChatDetachedPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE, UIDetachedPlanReview>
-export type ChatTaskReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE, UITaskReview>
-export type ChatToolUseReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE, UIToolUseReview>
-export type ChatRequireUserInteractive = AIChatQSDataBase<
+type ChatTaskReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE, UITaskReview>
+type ChatToolUseReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE, UIToolUseReview>
+type ChatRequireUserInteractive = AIChatQSDataBase<
   AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
   UIRequireUserInteractive
 >
 type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
 export type ChatTaskNodeGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_NODE_GROUP, AITaskStartInfo>
-export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
+type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
-export type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
-export type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
+type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
+type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
 type ChatReferenceMaterial = AIChatQSDataBase<
   AIChatQSDataTypeEnum.Reference_Material,
   { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose'] }
 >
-export type ChatUserManualIntervention = AIChatQSDataBase<
+type ChatUserManualIntervention = AIChatQSDataBase<
   AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
   UserManualInterventionContext
 >
 
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
-export type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
+type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
 type ChatStreamGroup = AIChatQSDataBase<
   AIChatQSDataTypeEnum.STREAM_GROUP,
   { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose']; lastToken: string }
@@ -602,6 +602,9 @@ export interface ChatStoreState {
   /** 切换session时的loading状态 */
   /** 切换/恢复会话 loading（供 UI 遮罩与禁用交互，防止加载期间误点） */
   initLoading: boolean
+  /** 非初始化的请求grpc数据 loading */
+  grpcLoadMoreLoading: boolean
+
   /** 用户主动取消问题的loading状态(自由对话) */
   cancelCasualLoading: boolean
   /** 用户主动取消问题的loading状态(任务规划) */

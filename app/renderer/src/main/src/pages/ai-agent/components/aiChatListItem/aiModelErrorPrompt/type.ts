@@ -1,7 +1,7 @@
-import { ChatApiRequestFailed } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface AIModelErrorPromptProps {
-  item: ChatApiRequestFailed
+  item: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED }>
   renderNum: number
   isChildWindow: boolean
 }

@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, type FC } from 'react'
 import { useBoolean, useCreation, useMemoizedFn } from 'ahooks'
 import styles from './ConcurrentStreamCard.module.scss'
-import { AIChatQSDataTypeEnum, ChatTaskDefaultGroup, type ChatTaskNodeGroup } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { getAIStatusPresentation } from '../../utils/AIStatusUtils'
 import { useVectorStripeBg } from './hooks/useVectorStripeBg'
 import { useConcurrentStreamCardStyle } from './hooks/useConcurrentStreamCardStyle'
@@ -32,7 +32,9 @@ const ConcurrentStreamCard: FC<{
     if (!rawData) return null
     const itemData = rawData.contents.get(token)
     if (!itemData) return null
-    return { ...itemData } as ChatTaskNodeGroup | ChatTaskDefaultGroup | undefined
+    return { ...itemData } as
+      | Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.TASK_NODE_GROUP | AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP }>
+      | undefined
   }, [renderNum])
 
   useEffect(() => {

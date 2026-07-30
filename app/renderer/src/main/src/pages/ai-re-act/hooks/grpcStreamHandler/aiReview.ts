@@ -153,7 +153,7 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
 }
 
 const handleToolReview: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, request, sendRequest } = requestInfo
+  const { res, chatType, store, rawData, request, sendRequest } = requestInfo
   if (res.Type !== 'tool_use_review_require') return
   // 历史数据-tool-review数据不进行展示
   if (res.IsSync) return
@@ -516,7 +516,6 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
             token: reviewDetail.id,
             kind: 'item',
             type: reviewDetail.type,
-            isHistory: true,
           },
         })
       }
@@ -568,7 +567,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
 }
 
 const handleDetachedPlanReview: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta } = requestInfo
+  const { res, chatType, store, rawData } = requestInfo
   if (res.Type !== 'detached_plan_require' || res.NodeId !== 'detached-plan') return
 
   // 历史数据-grpc流数据在任务规划下无效，不处理
