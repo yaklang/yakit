@@ -15,6 +15,7 @@ import {
   OutlineShieldcheckIcon,
   OutlineShieldexclamationIcon,
 } from '@/assets/icon/outline'
+import { SolidBadgecheckIcon } from '@/assets/icon/solid'
 import aiSenPikeLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeSelectPage.module.scss'
@@ -91,6 +92,12 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
                   <span className={styles['employee-badge']} style={{ color: employee.accent }} aria-hidden="true">
                     {getEmployeeBadgeIcon(employee.id)}
                   </span>
+                  {selected && (
+                    <span className={styles['selected-state']}>
+                      <SolidBadgecheckIcon />
+                      当前选择
+                    </span>
+                  )}
                   <span className={styles['card-details']}>
                     <span className={styles['card-order']}>{employee.order}</span>
                     <span className={styles['card-copy']}>

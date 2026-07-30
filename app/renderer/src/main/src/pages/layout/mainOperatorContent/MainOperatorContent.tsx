@@ -3556,7 +3556,11 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
   })
 
   return (
-    <div className={styles['tab-menu']}>
+    <div
+      className={classNames(styles['tab-menu'], {
+        [styles['tab-menu-memfit']]: isMemfit(),
+      })}
+    >
       <ReactResizeDetector
         onResize={(_, height) => {
           if (!height) return

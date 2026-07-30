@@ -217,12 +217,12 @@
 
 .employee-profile {
   position: relative;
-  flex: 0 0 clamp(96px, 10.5vh, 126px);
-  min-height: 96px;
-  padding: 12px clamp(18px, 2vw, 32px);
+  flex: 0 0 clamp(132px, 14.5vh, 168px);
+  min-height: 132px;
+  padding: 16px clamp(24px, 2.4vw, 42px);
   display: flex;
   align-items: center;
-  gap: clamp(10px, 1vw, 16px);
+  gap: clamp(14px, 1.35vw, 22px);
   overflow: hidden;
   border-bottom: 1px solid rgba(66, 119, 184, 0.15);
   background:
@@ -232,10 +232,10 @@
   &::after {
     content: '';
     position: absolute;
-    top: -110px;
+    top: -120px;
     right: 8%;
-    width: 260px;
-    height: 260px;
+    width: 310px;
+    height: 310px;
     pointer-events: none;
     border: 1px solid rgba(59, 142, 232, 0.12);
     border-radius: 50%;
@@ -249,7 +249,7 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  width: clamp(112px, 9vw, 148px);
+  width: clamp(146px, 11vw, 188px);
 
   img {
     display: block;
@@ -263,7 +263,7 @@
   position: relative;
   z-index: 1;
   width: 1px;
-  height: 48px;
+  height: 66px;
   background: rgba(81, 126, 183, 0.18);
 }
 
@@ -271,13 +271,15 @@
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  width: clamp(72px, 8vh, 92px);
-  height: clamp(72px, 8vh, 92px);
+  width: clamp(96px, 10.8vh, 116px);
+  height: clamp(96px, 10.8vh, 116px);
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.94);
   border-radius: 50%;
   background: linear-gradient(160deg, #eaf5ff, #d8ebff);
-  box-shadow: 0 5px 15px rgba(38, 100, 174, 0.18);
+  box-shadow:
+    0 8px 22px rgba(38, 100, 174, 0.2),
+    0 0 0 5px rgba(118, 189, 255, 0.08);
 
   img {
     display: block;
@@ -295,12 +297,12 @@
   flex: 1;
 
   p {
-    max-width: min(50vw, 680px);
-    margin: 4px 0 7px;
+    max-width: min(54vw, 760px);
+    margin: 7px 0 11px;
     overflow: hidden;
     color: #526b8e;
-    font-size: 12px;
-    line-height: 17px;
+    font-size: 13px;
+    line-height: 19px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -314,25 +316,25 @@
   h1 {
     margin: 0;
     color: #152f59;
-    font-size: clamp(18px, 1.35vw, 22px);
-    line-height: 26px;
+    font-size: clamp(22px, 1.65vw, 28px);
+    line-height: 32px;
   }
 
   > span {
     color: #7289a7;
-    font-size: 13px;
+    font-size: 14px;
   }
 }
 
 .profile-skills {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 
   span {
-    padding: 2px 7px;
+    padding: 3px 10px;
     color: #3d76ae;
-    font-size: 10px;
+    font-size: 11px;
     border: 1px solid rgba(72, 137, 205, 0.14);
     border-radius: 999px;
     background: rgba(236, 247, 255, 0.88);
@@ -342,13 +344,13 @@
 .profile-meta {
   position: absolute;
   z-index: 1;
-  top: 16px;
-  right: clamp(18px, 2vw, 32px);
+  top: 19px;
+  right: clamp(24px, 2.4vw, 42px);
   display: flex;
   align-items: center;
   gap: 6px;
   color: #7390af;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .online-dot {
@@ -382,10 +384,25 @@
   }
 
   .employee-profile {
+    flex-basis: 116px;
+    min-height: 116px;
     padding-inline: 14px;
   }
 
   .profile-main p {
     max-width: 66vw;
+  }
+}
+
+@media (max-height: 720px) {
+  .employee-profile {
+    flex-basis: 118px;
+    min-height: 118px;
+    padding-block: 10px;
+  }
+
+  .profile-portrait {
+    width: 90px;
+    height: 90px;
   }
 }

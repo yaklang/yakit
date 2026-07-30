@@ -35,7 +35,7 @@ import { failed, yakitNotify } from '@/utils/notification'
 import { YakScript } from '@/pages/invoker/schema'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useStore } from '@/store'
-import { isEnpriTrace, isEnpriTraceAgent, isIRify } from '@/utils/envfile'
+import { isEnpriTrace, isEnpriTraceAgent, isIRify, isMemfit } from '@/utils/envfile'
 import { CodeGV, RemoteGV } from '@/yakitGV'
 import {
   DatabaseFirstMenuProps,
@@ -682,7 +682,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   })
 
   return (
-    <div className={style['heard-menu-body']}>
+    <div
+      className={classNames(style['heard-menu-body'], {
+        [style['heard-menu-body-memfit']]: isMemfit(),
+      })}
+    >
       <div
         className={classNames(style['heard-menu'], {
           [style['heard-menu-expand']]: isExpand,

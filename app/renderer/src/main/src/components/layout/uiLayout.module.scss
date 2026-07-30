@@ -245,6 +245,46 @@
   }
 }
 
+.ui-layout-wrapper-memfit {
+  .ui-layout-container {
+    background: #edf6ff;
+
+    .ui-layout-header {
+      height: 40px;
+      background:
+        radial-gradient(circle at 18% -140%, rgba(62, 160, 255, 0.24), transparent 54%),
+        linear-gradient(100deg, #eaf5ff 0%, #f8fbff 56%, #eef7ff 100%);
+      box-shadow: 0 3px 12px rgba(42, 103, 166, 0.08);
+
+      .header-body {
+        border-bottom-color: rgba(77, 139, 204, 0.2);
+
+        .yakit-header-title {
+          height: 39px;
+          color: #17365f;
+          line-height: 39px;
+          letter-spacing: 0.02em;
+        }
+
+        .divider-wrapper,
+        .divider-style {
+          border-color: rgba(76, 133, 194, 0.18);
+        }
+
+        .yakit-mode-icon {
+          color: #557b9f;
+          border-left-color: rgba(76, 133, 194, 0.18);
+
+          &:hover {
+            color: #167bd8;
+            background: rgba(213, 236, 255, 0.78);
+          }
+        }
+      }
+    }
+  }
+}
+
 .sampling-popover {
   width: 350px;
   padding-top: 10px;

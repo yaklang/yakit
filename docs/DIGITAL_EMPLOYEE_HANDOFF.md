@@ -22,6 +22,10 @@
 - 选择页与员工工作区已经统一使用新生成的透明高清 `AI SenPike` Logo，不再通过白底 JPG 和 `mix-blend-mode` 适配主题。
 - 选择页 8 个员工徽章、6 个快捷导航图标已经从低分辨率截图裁片替换为项目内置 SVG 图标，高分屏与响应式缩放下保持清晰。
 - 左侧员工栏的展开/收起箭头已经替换为标准 SVG chevron，按图标几何盒垂直居中，不再依赖文字字符基线。
+- 选择页选中卡片已从普通蓝边升级为蓝青渐变描边、柔和双层光晕、主题化进入按钮和“当前选择”状态标识；hover 只显示较弱描边，与真正选中态有明确层级。
+- AI Agent 顶部员工信息区已放大到约 132–168px，并同步放大 Logo、头像、标题、描述和技能标签；720px 以下高度会自动回落到紧凑尺寸。
+- 欢迎页已改为“任务引导 + 技能入口”双列、下方宽输入框的紧凑布局；窄屏和低高度会自动回落为单列或 2×2 技能网格。
+- 窗口标题栏、主菜单栏和页面标签栏新增仅 Memfit 生效的 AI SenPike 浅蓝主题，不影响其他 Yakit / IRify 等产品模式和菜单行为。
 
 ## 2. 最重要的业务逻辑
 
@@ -106,6 +110,8 @@
 - 任务便签的辅助信息仅使用后端 `updated_at` / `created_at`，没有时间时不显示，不生成虚构描述。
 - 展开/收起按钮使用 `OutlineChevronleftIcon` / `OutlineChevronrightIcon`，SVG 和 Ant Icon 包装层都固定为 16×16 并设为块级，箭头在 28×28 按钮中垂直居中。
 - 员工徽章颜色继续读取员工真实 `accent` 配置；图标含义按员工职责映射，不新增虚构业务字段。
+- 选择页 hover 与 selected 仍不改变卡片外部尺寸；渐变描边使用伪元素遮罩，状态变化不会推动 Grid 布局。
+- 顶部主题通过 `isMemfit()` 条件类实现：`ui-layout-wrapper-memfit`、`heard-menu-body-memfit`、`tab-menu-memfit`。不要把这些颜色直接覆盖到通用类。
 
 ## 5. 测试结果
 
@@ -114,6 +120,7 @@
 - TypeScript：通过。
 - 数字员工与消息回显定向测试：4 个测试文件、13 项测试全部通过。
 - 选择页补充视觉资源回归断言：8 个员工徽章和 6 个快捷入口必须渲染 SVG，每张员工卡仅保留 1 张人物位图；选择页 3 项测试复跑通过。
+- 选择页测试同时断言默认选中卡显示“当前选择”状态标识。
 - `git diff --check`：通过。
 
 本轮运行检查：
@@ -125,6 +132,8 @@
 - 会话详情页左侧员工栏默认收起；右侧已切换为任务进度与 todo 便签，不再展示空的工具统计、目标和意图卡片。
 - Memfit 专用渲染服务在 2800 编译成功，用户已确认 Electron 恢复为正确的 AI SenPike 页面。
 - 本轮热更新日志显示 `webpack compiled with 7 warnings` 且 `No issues found`；7 个 warning 均来自项目原有 lint/依赖提示，没有本轮文件报错。
+- 2026-07-30 末次运行时，持续热更新约 105 分钟的渲染进程发生 Node 堆内存溢出并退出，日志明确为 `JavaScript heap out of memory`；没有发现 `Failed to compile`、`ERROR in`、运行时 `TypeError` 或本轮 SCSS/TS 错误。白屏根因是 2800 服务退出，不是本轮 UI 代码回归。
+- 已使用 `NODE_OPTIONS=--max-old-space-size=8192` 重新启动正确的 `start-render-memfit`，2800 恢复 HTTP 200、webpack 编译成功、类型检查 `No issues found`；随后重新启动 Electron，用户已明确确认页面恢复正常。
 - Windows 桌面截图助手读取 Electron 窗口时返回 `SetIsBorderRequired failed (0x80004002)`，普通浏览器又因缺少 Electron IPC 注入只能显示空白，因此本轮没有伪造整页截图结论；应在新窗口优先人工复核 Logo 尺寸、箭头居中与 SVG 清晰度。
 
 命令：
@@ -141,31 +150,44 @@ node node_modules/vitest/vitest.mjs run app/renderer/src/main/src/pages/digitalE
 
 ## 6. 本地运行注意事项
 
-根目录 `yarn dev` 固定等待 3000 端口，但当前开发服务器实际可能分配到 2800，曾因此出现 Electron 白屏。若 3000 不可用，推荐分开启动：
+根目录 `yarn dev` 固定等待 3000 端口，但数字员工开发页使用 2800，端口或入口用错都会出现白屏/打开通用 Yakit 页面。推荐分开启动，并给长期热更新进程预留更大的 Node 堆：
 
 ```powershell
-# 窗口 1：渲染进程
+# 窗口 1：主渲染进程
+$env:NODE_OPTIONS='--max-old-space-size=8192'
 $env:PORT='2800'
 yarn start-render-memfit
 
-# 窗口 2：让 Electron 指向渲染器实际地址
+# 窗口 2：仅当 5173 启动连接页没有运行时补启
+yarn start-link-render-memfit
+
+# 窗口 3：让 Electron 指向数字员工渲染器
 $env:YAKIT_DEV_RENDERER_URL='http://127.0.0.1:2800'
 yarn start-electron
 ```
 
 必须使用 `start-render-memfit`，它会设置 `REACT_APP_PLATFORM=memfit`；普通 `start-render` 会启动同仓库的通用 Yakit 界面。即使 2800 返回 200，也要先确认现有进程使用的是 Memfit 入口。若改用其他端口，需要同时修改两个环境变量。启动前先检查是否已有旧 Electron/Node 进程，避免多个窗口混淆。
 
+若再次白屏，按以下顺序排查，不要先回退 UI 代码：
+
+1. 检查 2800 是否监听且 HTTP 返回 200。
+2. 查看渲染日志末尾是否有 `heap out of memory`、`Failed to compile` 或 `ERROR in`。
+3. 若 2800 已退出，只重启 `start-render-memfit`；若 Electron 仍保留失败页面，再重启指向 2800 的 Electron。
+4. Electron 开发模式还会创建 5173 启动连接页；新开 Electron 前确认 5173 可访问，避免主窗口一直停留在隐藏状态。
+
 ## 7. Git 状态
 
 - 仓库：`https://gitee.com/a1543733438/ai-sense.git`
 - 分支：`master`
+- 本交接生成前最新已推送提交：`d368069 fix: sharpen digital employee visual assets`。
 - 已推送的关键提交：
   - `acaae69 feat: initialize AI SenSo digital employee experience`
   - `5b74f61 feat: modernize digital employee workspace`
-- `7804ae2 fix: polish digital employee interactions`
+  - `7804ae2 fix: polish digital employee interactions`
 - 本轮默认员工标签提交请以 `git log -1 --oneline` 的最新结果为准。
 - 本轮员工切换标签重置提交也请以 `git log -1 --oneline` 的最新结果为准。
-- 本轮视觉素材优化提交为 `fix: sharpen digital employee visual assets`，提交哈希以 `git log -1 --oneline` 为准。
+- 本轮视觉素材优化提交为 `d368069 fix: sharpen digital employee visual assets`。
+- 本轮工作区与导航主题优化提交标题为 `style: polish digital employee workspace theme`；具体提交哈希请以新窗口运行 `git log -1 --oneline` 的结果为准。
 
 仓库较大，`.gitignore` 已重点忽略依赖、构建产物、缓存、日志、临时文件和本地配置。不要提交 `node_modules`、构建目录或本机缓存。
 
@@ -180,6 +202,9 @@ yarn start-electron
 7. 后续尽量只改布局和样式；除非定位到真实缺陷，不要重写原版聊天、mention、IPC 或模型发送逻辑。
 8. 人工确认新透明 Logo 在选择页左上角与详情页顶部没有白色矩形、尺寸没有显得过小；检查 8 个员工徽章和 6 个快捷入口在 100%/125% 缩放下边缘清晰。
 9. 在详情页展开/收起左栏各一次，确认左右 chevron 都在按钮中垂直居中；若仍有视觉偏差只调图标盒/按钮布局，不改折叠状态逻辑。
+10. 人工检查选择页默认卡片的渐变描边、光晕和“当前选择”标识，确认 hover 与 selected 层级不同且没有布局跳动。
+11. 在 1920×1080、1280×720 和窄窗口分别检查放大后的员工区、欢迎区双列/单列切换和输入框宽度；确认内容区仍可滚动且没有横向溢出。
+12. 检查标题栏、主菜单栏和标签栏只在 Memfit 下呈浅蓝主题，菜单点击、标签关闭和拖拽逻辑保持原样。
 
 ## 9. 可直接交给新 AI 的指令
 

@@ -1723,7 +1723,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   return (
     <DigitalEmployeeProvider enabled={engineLink && isMemfit()}>
-      <div className={styles['ui-layout-wrapper']}>
+      <div
+        className={classNames(styles['ui-layout-wrapper'], {
+          [styles['ui-layout-wrapper-memfit']]: isMemfit(),
+        })}
+      >
         <div className={styles['ui-layout-container']}>
           <div className={styles['container-wrapper']}>
             <YaklangEngineWatchDog
