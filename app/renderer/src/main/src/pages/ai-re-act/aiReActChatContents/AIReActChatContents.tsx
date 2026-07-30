@@ -114,17 +114,20 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const chatLength = useStore(store, (state) => state.casualChat.elements.length)
     const casualTitle = useStore(store, (state) => state.casualTitle)
     const execute = useStore(store, (state) => state.execute)
-    // const casualLoadMoreLoading = useStore(store, (state) => state.requestHistoryState.casualLoadMoreLoading)
+    // 向上加载历史（recovery_history）的在途状态，给 Header 转圈提示
+    const grpcLoadMoreLoading = useStore(store, (state) => state.grpcLoadMoreLoading)
 
-    const { onRangeChange } = useLoadOlder(TYPE)
+    const { onRangeChange, firstItemIndex, handleLoadMore, isPrependingRef } = useLoadOlder(TYPE)
 
     const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged, scrollToItemIndex } =
       useVirtuosoAutoScroll({
         total: chatLength,
+        isPrependingRef,
       })
 
     const { locateToIndex } = useChatStreamLocateHighlight({
-      scrollToIndex: scrollToItemIndex,
+      // Virtuoso scrollToIndex 接受绝对 index，定位下标需加 firstItemIndex 偏移
+      scrollToIndex: (index, behavior) => scrollToItemIndex(index + firstItemIndex, behavior),
       listRootRef,
     })
 
@@ -168,22 +171,22 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         <div className={styles['end']}>当前会话已停止</div>
       ) : null
     }, [casualTitle, execute, chatLength])
-    // const Header = useCallback(
-    //   () =>
-    //     casualLoadMoreLoading ? (
-    //       <div style={{ height: 20, position: 'relative' }}>
-    //         <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
-    //       </div>
-    //     ) : null,
-    //   [casualLoadMoreLoading],
-    // )
+    const Header = useCallback(
+      () =>
+        grpcLoadMoreLoading ? (
+          <div style={{ height: 20, position: 'relative' }}>
+            <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+          </div>
+        ) : null,
+      [grpcLoadMoreLoading],
+    )
     const components = useMemo(
       () => ({
         Item,
         Footer,
-        // Header,
+        Header,
       }),
-      [Footer, Item],
+      [Footer, Header, Item],
     )
     // const rawData = useCurrentRawData()
     // console.log('casualChat.elements', casualChatElements, store.getState().items)
@@ -198,11 +201,13 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           data={casualChatElements}
           totalListHeightChanged={handleTotalListHeightChanged}
           itemContent={renderItem}
-          initialTopMostItemIndex={chatLength > 1 ? chatLength - 1 : 0}
+          firstItemIndex={firstItemIndex}
+          initialTopMostItemIndex={chatLength > 1 ? { index: 'LAST' } : 0}
           components={components}
           increaseViewportBy={{ top: 1200, bottom: 0 }}
           atBottomThreshold={50}
           skipAnimationFrameInResizeObserver
+          startReached={handleLoadMore}
           rangeChanged={onRangeChange}
           className={styles['re-act-contents-list']}
         />

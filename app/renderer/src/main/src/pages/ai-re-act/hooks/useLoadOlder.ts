@@ -1,5 +1,6 @@
 import { useMemoizedFn } from 'ahooks'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useStore } from 'zustand'
 import type { ListRange } from 'react-virtuoso'
 import { globalSessionEngine } from './ChatMultiSessionController'
 import { useCurrentStore, useCurrentRawData } from './useCurrentDataBySession'
@@ -12,18 +13,20 @@ const LOAD_AHEAD = 10
 const KEEP_BEHIND = 5
 /** 强制保留最新尾部条数（人在中间看历史时，底部流式输出不丢展示） */
 const TAIL_KEEP = 30
+/** firstItemIndex 起始偏移 */
+const PREPEND_OFFSET = 1000000
 
 /**
  * 上滑加载更旧历史 + 视窗内存回收（casual / task 通用）。
  *
- * 触发机制：rangeChanged（视窗变化驱动一切）。
- * elements 全量常驻，contents 按需缓存。
+ * - Virtuoso startReached 触发 handleLoadMore，grpcOffset>0 时发 recovery_history 前插更旧事件
+ * - firstItemIndex 前插补偿：数据前插时视口不跳动
+ * - loading（grpcLoadMoreLoading）期间请求排队，结束后补发；atTop 兜底探针
  *
- * onRangeChange 一次回调做四件事：
- * 1. 可见区 [start,end] 缺正文 → 立即 hydrate（IDB → 内存 + bump renderNum）
+ * 内存回收由 rangeChanged 驱动（elements 全量常驻，contents 按需缓存）：
+ * 1. 可见区缺正文 → 立即 hydrate（IDB → 内存 + bump renderNum）
  * 2. 按方向额外预取 LOAD_AHEAD 条
- * 3. 触顶(startIndex===0)且可见区全齐且 grpcOffset>0 → requestRecoveryHistory（gRPC 兜底）
- * 4. 淘汰：keep = 视窗 + 向前 LOAD_AHEAD + 向后 KEEP_BEHIND + 最新尾部 TAIL_KEEP；
+ * 3. 淘汰：keep = 视窗 + 向前 LOAD_AHEAD + 向后 KEEP_BEHIND + 最新尾部 TAIL_KEEP；
  *    contents 里不在 keep 的删除
  *
  * @param chatType 'reAct'（casual 空闲对话）/ 'task'（任务对话）
@@ -33,26 +36,109 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
 
-  /** 上次 startIndex，用于判断滚动方向 */
+  /** recovery_history 在途状态（真实 gRPC loading，由 ChatMultiSessionController 置/关） */
+  const loading = useStore(store, (s) => s.grpcLoadMoreLoading)
+  const dataLength = useStore(store, (s) =>
+    chatType === 'reAct' ? s.casualChat.elements.length : s.taskChat.elements.length,
+  )
+
+  /** 上次 startIndex（数组下标），用于判断滚动方向 */
   const lastStartIndexRef = useRef(-1)
 
-  /** 置/关 loading（gRPC recovery 异步等待时给 Header 转圈提示） */
-  const setLoading = useMemoizedFn((on: boolean) => {
-    const state = store.getState()
-    const key = chatType === 'reAct' ? 'casualLoadMoreLoading' : 'taskLoadMoreLoading'
-    store.getState().updateState({
-      requestHistoryState: { ...state.requestHistoryState, [key]: on },
-    })
+  // #region 向上加载（与官方 useLoadHistory 一致：startReached + firstItemIndex 前插补偿 + 排队锁）
+  const [firstItemIndex, setFirstItemIndex] = useState(PREPEND_OFFSET)
+
+  const isPrependingRef = useRef(false)
+  const atTopRef = useRef(false)
+  const wasLoadingRef = useRef(false)
+
+  // 排队锁
+  const pendingRequestRef = useRef(false)
+
+  // 【核心机制：Render 阶段状态派生】
+  const [prevDataLength, setPrevDataLength] = useState(dataLength)
+  const [prevSessionID, setPrevSessionID] = useState(sessionId)
+
+  if (sessionId !== prevSessionID) {
+    setFirstItemIndex(PREPEND_OFFSET)
+    setPrevDataLength(dataLength)
+    setPrevSessionID(sessionId)
+    pendingRequestRef.current = false // 切换会话清空排队
+  } else if (dataLength !== prevDataLength) {
+    const diff = dataLength - prevDataLength
+    if (diff > 0 && isPrependingRef.current) {
+      setFirstItemIndex((prev) => Math.max(0, prev - diff))
+    }
+    setPrevDataLength(dataLength)
+  }
+
+  /** 树外（gRPC）是否还有更旧历史 */
+  const fetchHasMore = useMemoizedFn(() => !!sessionId && rawData.grpcOffset > 0)
+
+  const loadMore = useMemoizedFn(() => {
+    if (sessionId) globalSessionEngine.requestRecoveryHistory(sessionId)
   })
 
-  // 切会话时重置方向跟踪 + 清空旧 contents（旧 session Map 占内存）
+  const handleLoadMore = useMemoizedFn(() => {
+    if (!fetchHasMore() || !sessionId) return
+
+    if (loading) {
+      pendingRequestRef.current = true
+      return
+    }
+
+    isPrependingRef.current = true
+    loadMore()
+  })
+
+  const handleAtTopStateChange = useMemoizedFn((atTop: boolean) => {
+    atTopRef.current = atTop
+    if (atTop) {
+      handleLoadMore()
+    } else {
+      // 离开顶部，清空排队
+      pendingRequestRef.current = false
+    }
+  })
+
+  // 统一处理加载完成后的副作用
+  useEffect(() => {
+    // 判定条件：刚结束加载（之前是 true，现在是 false）
+    if (wasLoadingRef.current && !loading) {
+      // 在 DOM Commit 后安全释放向上插入的标记
+      isPrependingRef.current = false
+
+      // 释放后立刻检查，刚才 loading 期间是不是有被拦截的请求
+      if (pendingRequestRef.current) {
+        pendingRequestRef.current = false
+        handleLoadMore()
+      }
+      // 兜底补拉：延迟探针，loading 结束后仍停在顶部则再拉一次
+      else if (atTopRef.current) {
+        setTimeout(() => {
+          if (atTopRef.current && fetchHasMore()) {
+            handleLoadMore()
+          }
+        }, 50)
+      }
+    }
+    wasLoadingRef.current = loading
+  }, [loading, handleLoadMore, fetchHasMore])
+  // #endregion
+
+  // 切会话时重置方向跟踪与杂项 Ref + 清空旧 contents（旧 session Map 占内存）
   useEffect(() => {
     lastStartIndexRef.current = -1
+    wasLoadingRef.current = false
+    isPrependingRef.current = false
+    atTopRef.current = false
+    pendingRequestRef.current = false
     // 清空旧 session 的 contents 视窗（保留 IDB，可恢复）
     if (sessionId && rawData.contents.size > 0) {
       const tokens = [...rawData.contents.keys()]
       globalSessionEngine.removeContentsFromMemory(sessionId, tokens)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId])
 
   /** 取当前 chatType 的 elements */
@@ -121,7 +207,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
       }
     }
     // IDB 仍缺的 token 不在此触发 gRPC——recovery_history 是前插更旧事件，不是按 token 补正文。
-    // 树外更旧历史由 onRangeChange 里的"触顶 + grpcOffset>0"分支专门处理。
+    // 树外更旧历史由 startReached → handleLoadMore（grpcOffset>0）专门处理。
   })
 
   /** 计算 keep 集合（视窗 + 向前 LOAD_AHEAD + 向后 KEEP_BEHIND + 最新尾部 TAIL_KEEP） */
@@ -165,26 +251,31 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   })
 
   /**
-   * 视窗变化驱动加载 + 淘汰（接 Virtuoso rangeChanged）。
+   * 视窗变化驱动 hydrate + 淘汰（接 Virtuoso rangeChanged）。
+   * 向上加载（gRPC recovery_history）不走这里，由 startReached → handleLoadMore 承担。
    */
   const onRangeChange = useMemoizedFn(({ startIndex, endIndex }: ListRange) => {
     if (!sessionId) return
     const elements = getElements()
     if (!elements.length) return
 
+    // rangeChanged 的 index 是绝对 index（含 firstItemIndex 偏移），换算为数组下标
+    const start = startIndex - firstItemIndex
+    const end = endIndex - firstItemIndex
+
     // 跟踪滚动方向（startIndex 变小 = 向上滚）
     let direction: 'up' | 'down' | 'none' = 'none'
     if (lastStartIndexRef.current >= 0) {
-      if (startIndex < lastStartIndexRef.current) {
+      if (start < lastStartIndexRef.current) {
         direction = 'up'
-      } else if (startIndex > lastStartIndexRef.current) {
+      } else if (start > lastStartIndexRef.current) {
         direction = 'down'
       }
     }
-    lastStartIndexRef.current = startIndex
+    lastStartIndexRef.current = start
 
     // 1. 可见区缺正文 → 立即 hydrate（保证不空白）
-    const visibleMissing = collectMissingByRange(startIndex, endIndex)
+    const visibleMissing = collectMissingByRange(start, end)
     if (visibleMissing.length) {
       void hydrateTokens(visibleMissing)
     }
@@ -192,14 +283,14 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
     // 2. 方向侧预取 LOAD_AHEAD 条
     let prefetchTokens: string[] = []
     if (direction === 'up') {
-      const preLo = Math.max(0, startIndex - LOAD_AHEAD)
-      const preHi = startIndex - 1
+      const preLo = Math.max(0, start - LOAD_AHEAD)
+      const preHi = start - 1
       if (preLo <= preHi) {
         prefetchTokens = collectMissingByRange(preLo, preHi)
       }
     } else if (direction === 'down') {
-      const preLo = endIndex + 1
-      const preHi = Math.min(elements.length - 1, endIndex + LOAD_AHEAD)
+      const preLo = end + 1
+      const preHi = Math.min(elements.length - 1, end + LOAD_AHEAD)
       if (preLo <= preHi) {
         prefetchTokens = collectMissingByRange(preLo, preHi)
       }
@@ -211,20 +302,11 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
       void hydrateTokens(prefetchTokens)
     }
 
-    // 3. 触顶 + 可见区全齐 + 树外还有更旧 → gRPC recovery_history
-    if (startIndex === 0 && direction === 'up' && rawData.grpcOffset > 0) {
-      if (visibleMissing.length === 0) {
-        setLoading(true)
-        globalSessionEngine.requestRecoveryHistory(sessionId)
-        setTimeout(() => setLoading(false), 3000)
-      }
-    }
-
-    // 4. 淘汰视窗外
-    evictOutsideViewport(startIndex, endIndex)
+    // 3. 淘汰视窗外
+    evictOutsideViewport(start, end)
   })
 
-  return { onRangeChange }
+  return { onRangeChange, firstItemIndex, handleLoadMore, handleAtTopStateChange, isPrependingRef }
 }
 
 export default useLoadOlder

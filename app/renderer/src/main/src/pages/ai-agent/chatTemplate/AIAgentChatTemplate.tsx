@@ -185,13 +185,14 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
   const streams = useStore(store, (state) => state.taskChat.elements)
 
-  const { onRangeChange } = useLoadOlder(TYPE)
+  const { onRangeChange, firstItemIndex, handleLoadMore, isPrependingRef } = useLoadOlder(TYPE)
 
   useUpdateEffect(() => {
     scrollToIndex('LAST')
   }, [scrollToBottom])
 
-  const taskLoadMoreLoading = useStore(store, (state) => state.requestHistoryState.taskLoadMoreLoading)
+  // 向上加载历史（recovery_history）的在途状态，给 Header 转圈提示
+  const grpcLoadMoreLoading = useStore(store, (state) => state.grpcLoadMoreLoading)
 
   useEffect(() => {
     if (!highlightedItem) return
@@ -214,10 +215,12 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     handleTotalListHeightChanged,
   } = useVirtuosoAutoScroll({
     total: streams.length,
+    isPrependingRef,
   })
 
   const { locateToIndex } = useChatStreamLocateHighlight({
-    scrollToIndex: scrollToListItem,
+    // Virtuoso scrollToIndex 接受绝对 index，定位下标需加 firstItemIndex 偏移
+    scrollToIndex: (index, behavior) => scrollToListItem(index + firstItemIndex, behavior),
     listRootRef,
   })
 
@@ -239,22 +242,22 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   )
 
   const Footer = useCallback(() => <TaskLoading className={styles['task-loading-footer']} />, [])
-  // const Header = useCallback(
-  //   () =>
-  //     taskLoadMoreLoading ? (
-  //       <div style={{ height: 20, position: 'relative' }}>
-  //         <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
-  //       </div>
-  //     ) : null,
-  //   [taskLoadMoreLoading],
-  // )
+  const Header = useCallback(
+    () =>
+      grpcLoadMoreLoading ? (
+        <div style={{ height: 20, position: 'relative' }}>
+          <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+        </div>
+      ) : null,
+    [grpcLoadMoreLoading],
+  )
   const components = useMemo(
     () => ({
       Item,
       Footer,
-      // Header,
+      Header,
     }),
-    [Footer, Item],
+    [Footer, Header, Item],
   )
   const onTreeLocate = useMemoizedFn((id?: string) => {
     if (!id) return
@@ -290,9 +293,11 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         totalListHeightChanged={handleTotalListHeightChanged}
         totalCount={streams.length}
         itemContent={renderItem}
+        firstItemIndex={firstItemIndex}
         atBottomThreshold={100}
-        initialTopMostItemIndex={streams.length > 1 ? streams.length - 1 : 0}
+        initialTopMostItemIndex={streams.length > 1 ? { index: 'LAST' } : 0}
         skipAnimationFrameInResizeObserver
+        startReached={handleLoadMore}
         rangeChanged={onRangeChange}
         components={components}
       />
