@@ -28,4 +28,6 @@
   text-overflow: ellipsis;
   overflow: hidden;
   word-break: break-all;
+
+  flex-shrink: 0;
 }

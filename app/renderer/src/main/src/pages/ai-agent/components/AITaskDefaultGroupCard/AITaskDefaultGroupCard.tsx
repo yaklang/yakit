@@ -1,4 +1,4 @@
-import { type FC, memo, useEffect, useState } from 'react'
+import { type FC, memo, useState } from 'react'
 import classNames from 'classnames'
 import styles from './AITaskDefaultGroupCard.module.scss'
 import { useBoolean } from 'ahooks'
@@ -8,12 +8,8 @@ import AITaskDefaultGroupCardHeard from './aiTaskDefaultGroupCardHeard/AITaskDef
 const AITaskDefaultGroupCard: FC<{
   token: string
 }> = memo(({ token }) => {
-  const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
+  const [expand, { toggle: expandToggle }] = useBoolean(true)
   const [contentFocused, setContentFocused] = useState(false)
-
-  useEffect(() => {
-    collapseExpand()
-  }, [collapseExpand])
 
   return (
     <div

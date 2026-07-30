@@ -134,5 +134,5 @@ const ConcurrentStreamCardListWrapper: FC<ConcurrentStreamCardListWrapperProps> 
   const store = useCurrentStore()
   const childrenTokens = useStore(store, (state) => state.tasks[token]?.childrenTokens || [])
 
-  return <ConcurrentStreamContent isChildWindow={false} childrenTokens={childrenTokens} />
+  return <ConcurrentStreamContent childrenTokens={childrenTokens} />
 })

@@ -423,11 +423,11 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
   })
 
   const addAndReExecuteLoading = useCreation(() => {
-    return !!meta.syncIDMap?.get(syncIdOfAddAndReExecute.current)
+    return !!syncIdOfAddAndReExecute.current && !!meta.syncIDMap?.get(syncIdOfAddAndReExecute.current)
   }, [syncIDUpdate])
 
   const addAndToContextLoading = useCreation(() => {
-    return !!meta.syncIDMap?.get(syncIdOfAddToContext.current)
+    return !!syncIdOfAddToContext.current && !!meta.syncIDMap?.get(syncIdOfAddToContext.current)
   }, [syncIDUpdate])
   return (
     <div className={styles['ai-manual-addition']} onClick={(e) => e.stopPropagation()}>
@@ -448,7 +448,7 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
             onClick={(e) => e.stopPropagation()}
             loading={addAndReExecuteLoading}
             className={styles['add-and-reexecute-btn']}
-            disabled={!addAndToContextLoading}
+            disabled={addAndToContextLoading}
           >
             加入并重新执行
           </YakitButton>
@@ -459,7 +459,7 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
             onAddToContext(syncIdOfAddToContext.current)
           }}
           loading={addAndToContextLoading}
-          disabled={!addAndReExecuteLoading}
+          disabled={addAndReExecuteLoading}
         >
           加入上下文
         </YakitButton>

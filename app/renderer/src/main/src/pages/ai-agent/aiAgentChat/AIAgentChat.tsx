@@ -56,7 +56,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
-  const initRef = useRef<boolean>(true)
 
   // 插件并发构建流 hooks
   const [streams, api] = useMultipleHoldGRPCStream()
@@ -71,8 +70,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   useEffect(() => {
     if (!!activeChat?.SessionID) {
       onSetReAct()
-      if (!initRef.current) onReStart({ activeChat, onStart })
-      initRef.current = false
+      onReStart({ activeChat, onStart })
     }
   }, [activeChat?.SessionID])
 

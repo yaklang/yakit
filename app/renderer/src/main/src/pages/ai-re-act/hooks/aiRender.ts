@@ -11,12 +11,11 @@ export interface AIYakExecFileRecord extends StreamResult.Log {
 }
 
 /** 任务规划-可执行任务的数据结构 */
-export interface AITaskInfoProps extends AIAgentGrpcApi.PlanTask {
+export interface AITaskInfoProps extends Omit<AIAgentGrpcApi.PlanTask, 'subtasks'> {
   /** 层级(代表在树里的第几层) */
   level: number
   /** 是否是叶子任务节点 */
   isLeaf: boolean
-  subtasks?: AITaskInfoProps[]
 }
 
 /** UI：待办清单卡片数据*/

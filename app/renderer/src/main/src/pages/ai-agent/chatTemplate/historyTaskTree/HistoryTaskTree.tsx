@@ -157,8 +157,8 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
   const sendRecoverParamsRef = useRef<SendRecoverParams>()
 
   const loading = useCreation(() => {
-    return sendRecoverParamsRef.current?.taskId === taskId && isExecuting
-  }, [isExecuting, taskId])
+    return sendRecoverParamsRef.current?.taskId === taskId && cancelTaskLoading
+  }, [taskId, cancelTaskLoading])
 
   useUpdateEffect(() => {
     if (!isExecuting && sendRecoverParamsRef.current) {
@@ -216,7 +216,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       taskId,
     }
     store.getState().updateState({
-      cancelCasualLoading: true,
+      cancelTaskLoading: true,
     })
     if (taskStatus.status === AITaskStatus.inProgress && currentTaskId) {
       // 选停止当前任务，等待任务停止成功后，再发送恢复的数据

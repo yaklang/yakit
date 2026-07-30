@@ -8,9 +8,8 @@ import { useStore } from 'zustand'
 
 const AITaskDefaultGroupContent: FC<{
   token: string
-  isChildWindow?: boolean
   onContentFocusChange?: (focused: boolean) => void
-}> = ({ token, isChildWindow, onContentFocusChange }) => {
+}> = ({ token, onContentFocusChange }) => {
   const store = useCurrentStore()
   const childrenTokens = useStore(store, (state) => state.tasks[token]?.childrenTokens || [])
   const { ref: contentRef, isFocus } = useClickFocus<HTMLDivElement>()
@@ -34,21 +33,15 @@ const AITaskDefaultGroupContent: FC<{
     })
     return () => cancelAnimationFrame(rafId)
   }, [contentRef, childrenTokens.length])
-
   return (
     <div
       ref={contentRef}
       className={classNames(styles['ai-task-default-group-card-content'], {
         [styles['focused']]: isFocus,
-        [styles['child-window']]: isChildWindow,
       })}
     >
       <div className={styles['content-inner']}>
-        <ConcurrentStreamContent
-          childrenTokens={childrenTokens}
-          isChildWindow={isChildWindow}
-          scrollContainerRef={contentRef}
-        />
+        <ConcurrentStreamContent childrenTokens={childrenTokens} scrollContainerRef={contentRef} />
       </div>
     </div>
   )
