@@ -117,7 +117,8 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
     const { isStart, isEnd, isStartOfLevel, isEndOfLevel, isParentLast, levelDiff } = position
     const [infoShow, setInfoShow] = React.useState(false)
 
-    const onDetails = useMemoizedFn(() => {
+    const onDetails = useMemoizedFn((e) => {
+      e.stopPropagation()
       if (!data.task_id) {
         yakitNotify('error', 'task_id为空')
         return

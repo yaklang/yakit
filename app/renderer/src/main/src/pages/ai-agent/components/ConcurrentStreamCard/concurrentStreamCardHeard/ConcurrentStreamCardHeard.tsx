@@ -20,7 +20,7 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
   const presentation = useMemo(() => getAIStatusPresentation(rowData?.data?.status), [rowData?.data?.status])
 
   const showContinueTask = useCreation(() => {
-    return !!rowData && !!coordinatorId && !!rowData?.data?.taskId && !isChildWindow
+    return !!rowData && rowData.chatType === 'task' && !!coordinatorId && !!rowData?.data?.taskId && !isChildWindow
   }, [rowData?.data?.taskId])
 
   const showCancelTask = useCreation(() => {
