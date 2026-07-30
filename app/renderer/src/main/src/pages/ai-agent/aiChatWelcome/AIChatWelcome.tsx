@@ -49,6 +49,7 @@ import useGetAIMaterialsData, { getAIRecommendIconByType } from '@/pages/ai-re-a
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import memfitLogo from '@/assets/memfit.jpg'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
+import { getDigitalEmployeeDefaultMention } from '@/pages/digitalEmployee/resolver'
 
 // const sideberRadioOptions = [
 //     {
@@ -87,6 +88,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const { t, i18n } = useI18nNamespaces(['aiAgent'])
     const { onTriageSubmit, onSetReAct, streams, api } = props
     const { selectedEmployee } = useDigitalEmployee()
+    const defaultEmployeeMentions = useMemo(() => {
+      const mention = getDigitalEmployeeDefaultMention(selectedEmployee)
+      return mention ? [mention] : []
+    }, [selectedEmployee])
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -285,6 +290,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             <AIChatTextarea
               ref={aiChatTextareaRef}
               onSubmit={handleTriageSubmit}
+              defaultMentions={defaultEmployeeMentions}
               chatDataStoreKey="aiChatDataStore"
               footerRightTypes={[]}
               hidePlan

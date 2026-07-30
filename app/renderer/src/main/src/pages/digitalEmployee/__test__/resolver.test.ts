@@ -5,6 +5,7 @@ import {
   applyDigitalEmployeeSkillToInputEvent,
   applyForgeNameToStartParams,
   findForgeByVerboseName,
+  getDigitalEmployeeDefaultMention,
   normalizeForgeVerboseName,
 } from '../resolver'
 
@@ -43,6 +44,21 @@ describe('digital employee forge resolver', () => {
     ).toMatchObject({
       UserQuery: '分析当前风险',
       ForgeName: 'threat-analysis',
+    })
+  })
+
+  it('maps an employee to the original locked forge mention used by the chat input', () => {
+    expect(
+      getDigitalEmployeeDefaultMention({
+        id: 'threat-analyst',
+        forgeVerboseName: '濞佽儊鍒嗘瀽涓撳',
+        forge: forge({ Id: 18, ForgeName: 'threat-analysis', ForgeVerboseName: '濞佽儊鍒嗘瀽涓撳' }),
+      }),
+    ).toEqual({
+      mentionId: '18',
+      mentionType: 'forge',
+      mentionName: '濞佽儊鍒嗘瀽涓撳',
+      lock: true,
     })
   })
 

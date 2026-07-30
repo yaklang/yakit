@@ -45,7 +45,11 @@ import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopov
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { SolidChatIcon } from '@/assets/icon/solid'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
-import { applyDigitalEmployeeSkillToInputEvent, applyForgeNameToStartParams } from '@/pages/digitalEmployee/resolver'
+import {
+  applyDigitalEmployeeSkillToInputEvent,
+  applyForgeNameToStartParams,
+  getDigitalEmployeeDefaultMention,
+} from '@/pages/digitalEmployee/resolver'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -82,6 +86,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const { activeChat, setting } = useAIAgentStore()
     const { selectedEmployee } = useDigitalEmployee()
+    const defaultEmployeeMentions = useCreation(() => {
+      const mention = getDigitalEmployeeDefaultMention(selectedEmployee)
+      return mention ? [mention] : []
+    }, [selectedEmployee])
     const { getSession } = useSessionId()
 
     const contextTokenSession = useCreation(() => {
@@ -526,6 +534,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       ref={aiChatTextareaRef}
                       loading={false}
                       onSubmit={handleSubmit}
+                      defaultMentions={defaultEmployeeMentions}
                       hidePlan={!!selectedEmployee}
                       inputFooterRight={
                         <div className={styles['extra-footer-right']}>

@@ -1,6 +1,7 @@
 import { AIForge } from '@/pages/ai-agent/type/forge'
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { AIInputEvent, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { DigitalEmployeeDefinition } from './config'
 
 export type DigitalEmployeeSkillSource = Pick<DigitalEmployeeDefinition, 'id' | 'forgeVerboseName'> & {
@@ -27,6 +28,24 @@ export const applyForgeNameToStartParams = <T extends AIStartParams>(params: T, 
 
 export const getDigitalEmployeeSkillName = (employee?: DigitalEmployeeSkillSource) => {
   return normalizeForgeVerboseName(employee?.forge?.ForgeVerboseName || employee?.forgeVerboseName)
+}
+
+/**
+ * 将数字员工映射为原版输入框使用的 AI Forge mention。
+ * 这样员工默认技能与用户通过 @ 选择的技能走同一条提取、展示和发送链路。
+ */
+export const getDigitalEmployeeDefaultMention = (
+  employee?: DigitalEmployeeSkillSource,
+): AIMentionCommandParams | undefined => {
+  const skillName = getDigitalEmployeeSkillName(employee)
+  if (!skillName) return undefined
+
+  return {
+    mentionId: String(employee?.forge?.Id || employee?.id || skillName),
+    mentionType: 'forge',
+    mentionName: skillName,
+    lock: true,
+  }
 }
 
 export const applyDigitalEmployeeSkillToInputEvent = <T extends AIInputEvent>(

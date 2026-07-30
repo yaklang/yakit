@@ -70,6 +70,8 @@ export interface AIChatTextareaProps {
   className?: string
   children?: ReactNode
   defaultValue?: string
+  /** 输入框初始化及清空后自动恢复的默认标签（例如数字员工自带技能） */
+  defaultMentions?: AIMentionCommandParams[]
   /**ai模型不存在时，是否弹窗 */
   isOpen?: boolean
   /** 数字员工简洁模式隐藏 Plan 开关 */

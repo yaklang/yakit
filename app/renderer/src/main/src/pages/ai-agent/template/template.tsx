@@ -106,6 +106,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       className,
       children,
       defaultValue,
+      defaultMentions,
       isOpen,
       filterMentionType,
       chatDataStoreKey,
@@ -254,9 +255,29 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       })
     })
 
+    const ensureDefaultMentions = useMemoizedFn((editor?: EditorMilkdownProps) => {
+      if (!editor || !defaultMentions?.length) return
+      const currentMentions = extractDataWithMilkdown(editor).mentions
+      defaultMentions.forEach((mention) => {
+        const alreadyExists = currentMentions.some(
+          (current) =>
+            current.mentionType === mention.mentionType &&
+            (current.mentionId === mention.mentionId || current.mentionName === mention.mentionName),
+        )
+        if (!alreadyExists) {
+          editor.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, mention))
+        }
+      })
+    })
+
     const onUpdateEditor = useMemoizedFn((editor: EditorMilkdownProps) => {
       editorMilkdown.current = editor
+      ensureDefaultMentions(editor)
     })
+
+    useEffect(() => {
+      ensureDefaultMentions(editorMilkdown.current)
+    }, [defaultMentions])
 
     const onFilesChange = useMemoizedFn((files: FileToChatQuestionList[]) => {
       for (const item of files) {
@@ -285,6 +306,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const onSetValue = useMemoizedFn((value: string) => {
       if (!editorMilkdown.current) return
       setEditorValue(editorMilkdown.current, value)
+      if (!value) {
+        ensureDefaultMentions(editorMilkdown.current)
+      }
     })
     const getMarkdownValue = useMemoizedFn(() => {
       const value = editorMilkdown.current?.action(getMarkdown()) || ''
