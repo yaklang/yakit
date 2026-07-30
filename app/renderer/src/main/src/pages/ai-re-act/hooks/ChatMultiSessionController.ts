@@ -948,8 +948,8 @@ export class ChatMultiSessionController {
     const { store, rawData } = this.ensureSession(sessionId)
     const initLoading = store.getState().initLoading
     const grpcLoadMoreLoading = store.getState().grpcLoadMoreLoading
-    if (initLoading || grpcLoadMoreLoading) return
-    store.getState().updateState({ grpcLoadMoreLoading: true })
+    if (!initLoading && grpcLoadMoreLoading) return
+    if (!initLoading && !grpcLoadMoreLoading) store.getState().updateState({ grpcLoadMoreLoading: true })
     this.requestMessage(sessionId, {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
@@ -1150,7 +1150,7 @@ export class ChatMultiSessionController {
       if (!this.readyChannels.has(sessionId)) return
 
       let ipcContent = Uint8ArrayToString(res.Content) || ''
-      // console.log('handleGrpcOutputEvent--', sessionId, res, ipcContent)
+      // console.log('handleGrpcOutputEvent--', sessionId, '\n', res, '\n', ipcContent)
 
       const { store, rawData, request, meta } = this.ensureSession(sessionId)
 

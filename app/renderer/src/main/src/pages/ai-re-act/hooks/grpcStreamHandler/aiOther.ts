@@ -238,7 +238,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
 
   persistIndependentItem(requestInfo.sessionId, chatData)
   if (data.react_task_user_input_uuid) {
-    const qsDetail = rawData.contents.get(data.react_task_user_input_uuid)
+    const qsDetail = store.getState().items[data.react_task_user_input_uuid]
     if (qsDetail && qsDetail.type === AIChatQSDataTypeEnum.QUESTION) {
       rawData.contents.delete(data.react_task_user_input_uuid)
       // 清掉前端临时 uuid 对应的 IDB 孤儿行
