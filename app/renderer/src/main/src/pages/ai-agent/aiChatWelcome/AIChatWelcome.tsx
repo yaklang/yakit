@@ -87,7 +87,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
     const { t, i18n } = useI18nNamespaces(['aiAgent'])
     const { onTriageSubmit, onSetReAct, streams, api } = props
-    const { selectedEmployee } = useDigitalEmployee()
+    const { selectedEmployee, selectionVersion } = useDigitalEmployee()
     const defaultEmployeeMentions = useMemo(() => {
       const mention = getDigitalEmployeeDefaultMention(selectedEmployee)
       return mention ? [mention] : []
@@ -288,6 +288,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           </div>
           <div className={styles['employee-input-wrapper']}>
             <AIChatTextarea
+              key={`digital-employee-input-${selectionVersion}`}
               ref={aiChatTextareaRef}
               onSubmit={handleTriageSubmit}
               defaultMentions={defaultEmployeeMentions}

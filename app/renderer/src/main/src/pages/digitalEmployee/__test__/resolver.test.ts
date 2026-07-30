@@ -51,13 +51,13 @@ describe('digital employee forge resolver', () => {
     expect(
       getDigitalEmployeeDefaultMention({
         id: 'threat-analyst',
-        forgeVerboseName: '濞佽儊鍒嗘瀽涓撳',
-        forge: forge({ Id: 18, ForgeName: 'threat-analysis', ForgeVerboseName: '濞佽儊鍒嗘瀽涓撳' }),
+        forgeVerboseName: '威胁分析专家',
+        forge: forge({ Id: 18, ForgeName: 'threat-analysis', ForgeVerboseName: '威胁分析专家' }),
       }),
     ).toEqual({
       mentionId: '18',
       mentionType: 'forge',
-      mentionName: '濞佽儊鍒嗘瀽涓撳',
+      mentionName: '威胁分析专家',
       lock: true,
     })
   })

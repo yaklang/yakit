@@ -76,4 +76,26 @@ describe('DigitalEmployeeSelectPage', () => {
     fireEvent.click(screen.getByRole('button', { name: DIGITAL_EMPLOYEES[0].name }))
     expect(screen.getByRole('button', { name: '已进入' })).toBeInTheDocument()
   })
+
+  it('increments the selection version when switching employees', () => {
+    const ContextProbe = () => {
+      const { employees, selectedEmployee, selectionVersion, switchEmployee } =
+        DigitalEmployeeContext.useDigitalEmployee()
+
+      return (
+        <button type="button" onClick={() => switchEmployee(employees[1].id)}>
+          {selectedEmployee?.name}:{selectionVersion}
+        </button>
+      )
+    }
+
+    render(
+      <DigitalEmployeeContext.DigitalEmployeeProvider enabled={false}>
+        <ContextProbe />
+      </DigitalEmployeeContext.DigitalEmployeeProvider>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: `${DIGITAL_EMPLOYEES[0].name}:0` }))
+    expect(screen.getByRole('button', { name: `${DIGITAL_EMPLOYEES[1].name}:1` })).toBeInTheDocument()
+  })
 })

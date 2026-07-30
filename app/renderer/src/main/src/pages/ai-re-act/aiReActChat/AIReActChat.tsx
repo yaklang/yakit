@@ -85,7 +85,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const { activeChat, setting } = useAIAgentStore()
-    const { selectedEmployee } = useDigitalEmployee()
+    const { selectedEmployee, selectionVersion } = useDigitalEmployee()
     const defaultEmployeeMentions = useCreation(() => {
       const mention = getDigitalEmployeeDefaultMention(selectedEmployee)
       return mention ? [mention] : []
@@ -531,6 +531,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
                   <div className={classNames(styles['footer-inputs-file-list'])}>
                     <AIChatTextarea
+                      key={`digital-employee-input-${selectionVersion}`}
                       ref={aiChatTextareaRef}
                       loading={false}
                       onSubmit={handleSubmit}
