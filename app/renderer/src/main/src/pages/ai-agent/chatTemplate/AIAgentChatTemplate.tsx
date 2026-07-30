@@ -278,7 +278,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     }
   })
   return (
-    <div className={styles['ai-agent-chat-stream']}>
+    <div ref={listRootRef} className={styles['ai-agent-chat-stream']}>
       <Virtuoso<ReActChatRenderElement>
         ref={virtuosoRef}
         key={session}

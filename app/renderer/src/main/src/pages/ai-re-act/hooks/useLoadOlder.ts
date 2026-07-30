@@ -152,6 +152,9 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   const evictOutsideViewport = useMemoizedFn((startIndex: number, endIndex: number) => {
     if (!sessionId) return
     const keep = computeKeepTokens(startIndex, endIndex)
+    // 强制保留当前活跃 review 数据，避免视窗淘汰导致提交时取不到
+    const { currentPlanReviewToken } = store.getState()
+    if (currentPlanReviewToken.token) keep.add(currentPlanReviewToken.token)
     const toEvict: string[] = []
     for (const token of rawData.contents.keys()) {
       if (!keep.has(token)) toEvict.push(token)
