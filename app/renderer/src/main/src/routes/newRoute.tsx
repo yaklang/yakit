@@ -399,8 +399,8 @@ export const YakitRouteToPageInfo: Record<
   'ai-agent': { label: 'AIAgent', labelUi: 'YakitRoute.AIAgent' },
   'ssa-result-diff': { label: 'ssa-result-diff', labelUi: 'YakitRoute.ssa-result-diff' },
   'ai-repository': { label: '知识库', labelUi: 'YakitRoute.ai-repository' },
-  'add-ai-forge': { label: '新建 Forge', labelUi: 'YakitRoute.createForge' },
-  'modify-ai-forge': { label: '编辑 Forge', labelUi: 'YakitRoute.editForge' },
+  'add-ai-forge': isMemfit() ? { label: '创建智能体' } : { label: '新建 Forge', labelUi: 'YakitRoute.createForge' },
+  'modify-ai-forge': isMemfit() ? { label: '编辑智能体' } : { label: '编辑 Forge', labelUi: 'YakitRoute.editForge' },
   'add-ai-tool': { label: '新建 Tool', labelUi: 'YakitRoute.createTool' },
   'modify-ai-tool': { label: '编辑 Tool', labelUi: 'YakitRoute.editTool' },
   'ssa-compile-history': { label: 'SSA项目编译历史', labelUi: 'YakitRoute.ssaCompileHistory' },
@@ -411,7 +411,7 @@ export const YakitRouteToPageInfo: Record<
   },
   'ai-memory': { label: '记忆库', labelUi: 'YakitRoute.ai-memory' },
   'ai-tool': { label: '工具库', labelUi: 'YakitRoute.ai-tool' },
-  'ai-forge': { label: '技能库', labelUi: 'YakitRoute.ai-forge' },
+  'ai-forge': isMemfit() ? { label: '智能体广场' } : { label: '技能库', labelUi: 'YakitRoute.ai-forge' },
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
