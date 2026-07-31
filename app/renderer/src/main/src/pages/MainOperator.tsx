@@ -68,11 +68,10 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { IRifyUpdateProjectManagerModal } from './YakRunnerProjectManager/YakRunnerProjectManager'
 import { parseUrl } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
-import { apiGetGlobalNetworkConfig } from './spaceEngine/utils'
-import { setAIModal } from './ai-agent/aiModelList/AIModelList'
 import { Trans } from 'react-i18next'
 // 旧 AI 消息 IndexedDB 生命周期已屏蔽，改由 aiChatPersistStore 接管预热/关闭
 // import aiChatMessageStore from './ai-agent/store/aiChatMessageStore'
+import { DB_NAME as LEGACY_AI_CHAT_MESSAGE_DB } from './ai-agent/store/constants'
 import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
 
 const { ipcRenderer } = window.require('electron')
@@ -299,7 +298,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     checkAndShowDataMigration()
   }, [])
 
-  // 旧 aiChatMessageStore 预热/关闭已屏蔽
+  // 旧 aiChatMessageStore 预热/关闭已屏蔽；有旧库则删掉释放磁盘，没有则忽略
   // useEffect(() => {
   //   aiChatMessageStore.open().catch((err) => {
   //     yakitFailed('IndexedDB打开失败: ' + (err instanceof Error ? err.message : String(err)))
@@ -311,8 +310,17 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   //   }
   // }, [])
 
-  // 新 AI 会话持久化库：挂载预热、卸载关闭
+  // 新 AI 会话持久化库：挂载预热、卸载关闭；顺带清理旧库 aiChatMessageDB
   useEffect(() => {
+    try {
+      const req = indexedDB.deleteDatabase(LEGACY_AI_CHAT_MESSAGE_DB)
+      // 有则删、无则成功回调；失败/blocked 也不影响新库
+      req.onerror = () => undefined
+      req.onblocked = () => undefined
+    } catch {
+      // 环境不支持 IndexedDB 时忽略
+    }
+
     aiChatPersistStore.open().catch((err) => {
       yakitFailed('AI会话IndexedDB打开失败: ' + (err instanceof Error ? err.message : String(err)))
     })
