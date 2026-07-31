@@ -1213,3 +1213,7 @@ heap 模式使用保留符号的 Yak，正式门禁使用 `-s -w` 发布式 Yak�
 项目管理页会卸载当前业务页面，切换完成后重新挂载 History。旧流程的首次 params effect 可能早于 ResizeDetector 得到有效高度，因此只启动兼容轮询而没有真正查询；共享 Duplex 已激活时，该轮询又会被停止。新项目中的既有流量不会产生新的 committed 通知，最终表现为网站树已有内容但表格保持空白，直到筛选或标签切换再次触发查询。
 
 本轮把表格第一次获得有效高度定义为明确的 bootstrap 边界：活动表首次测得高度时立即刷新；隐藏表不查询，初始化后的尺寸变化继续保留原有“仅主表变高时刷新”规则。纯函数测试覆盖首次高度、隐藏态、变高、变小和详情展开状态，共 26 项 HTTPFlowTable utils 测试与 16 项虚拟表调度测试通过；Renderer TypeScript 检查通过，定向 ESLint 无 error。本轮不修改后端、proto 或数据库。
+
+## 64. 第九十轮：HTTPFlow 实时协议主文件单源化（2026-07-31）
+
+前端删除独立 `httpflow_live.proto`，其定义原样合并进唯一入口 `app/protos/grpc.proto`，与后端主 proto 逐字节同步。Electron 仍只加载该主文件；`SubscribeHTTPFlows` RPC、字段号和枚举值不变，不需要 Renderer 调用迁移，也不改变实时摘要的 body-free 契约。
