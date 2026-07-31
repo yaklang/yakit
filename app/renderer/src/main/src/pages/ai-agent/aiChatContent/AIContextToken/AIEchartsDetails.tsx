@@ -84,8 +84,9 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     const output = tierConsumption.intelligent.output_consumption || 0
     const cacheHit = tierConsumption.intelligent.cache_hit_token || 0
     let percent = 0
-    if (input !== 0 && cacheHit !== 0) {
-      percent = Number(((Number(cacheHit) / Number(input)) * 100).toFixed(2))
+    const totalInput = Number(cacheHit) + Number(input)
+    if (totalInput !== 0 && cacheHit !== 0) {
+      percent = Number(((Number(cacheHit) / totalInput) * 100).toFixed(2))
     }
     return [formatNumberUnits(input), formatNumberUnits(output), formatNumberUnits(cacheHit), percent]
   }, [renderNumber, tierConsumption?.intelligent])
@@ -96,8 +97,9 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     const output = tierConsumption.lightweight.output_consumption || 0
     const cacheHit = tierConsumption.lightweight.cache_hit_token || 0
     let percent = 0
-    if (input !== 0 && cacheHit !== 0) {
-      percent = Number(((Number(cacheHit) / Number(input)) * 100).toFixed(2))
+    const totalInput = Number(cacheHit) + Number(input)
+    if (totalInput !== 0 && cacheHit !== 0) {
+      percent = Number(((Number(cacheHit) / totalInput) * 100).toFixed(2))
     }
     return [formatNumberUnits(input), formatNumberUnits(output), formatNumberUnits(cacheHit), percent]
   }, [renderNumber, tierConsumption?.lightweight])
