@@ -12,8 +12,10 @@ import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExec
 import { AIReActTaskChatContent } from '../aiReActTaskChat/AIReActTaskChat'
 import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatReviewBar'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
+
 import { useEnsureTaskPlanLocate } from './hooks/useEnsureTaskPlanLocate'
+import { useStore } from 'zustand'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 
 interface TabsItemProps extends YakitTabsProps {
   taskId: string
@@ -26,11 +28,11 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const { tabBarExtraContent, onTabsChange } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
-  const {
-    chatIPCData: { taskChat },
-  } = useChatIPCStore()
+  const store = useCurrentStore()
+  const taskChat = useStore(store, (state) => state.taskChat)
+
   const [tabs, setTabs, getTabs] = useGetSetState<TabsItemProps[]>([])
-  const [activeKey, setActiveKey] = useState<string>(TASK_CONTENT_KEY)
+  const [activeKey, setActiveKey] = useState<string>('taskContent')
   const [scrollToBottom, setScrollToBottom] = useState(false)
   /** 任务规划关闭后用 display:none 保留，不销毁 */
   const [taskPlanMounted, setTaskPlanMounted] = useState(false)

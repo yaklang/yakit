@@ -1,6 +1,9 @@
 import { Dispatch, SetStateAction, createContext } from 'react'
 import { AIAgentSetting } from '../aiAgentType'
 import { AISession } from '../type/aiChat'
+import { AIChatIPCStartParams, AIChatSendParams } from '@/pages/ai-re-act/hooks/type'
+import { AIAgentSettingDefault } from '../defaultConstant'
+import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 
 export interface AIAgentContextStore {
   /** 全局配置 */
@@ -9,10 +12,14 @@ export interface AIAgentContextStore {
   activeChat?: AISession
 }
 
-export interface AIAgentContextDispatcher {
-  setSetting?: Dispatch<SetStateAction<AIAgentSetting>>
-  getSetting?: () => AIAgentSetting
-  setActiveChat?: Dispatch<SetStateAction<AISession | undefined>>
+/** 上层 onStart 入参：route/pageId 由 useChatIPC 注入，调用方无需传递 */
+export interface UseChatIPCStartParams extends Omit<AIChatIPCStartParams, 'route' | 'pageId'> {
+  onSuccess?: (sessionId: string) => void
+}
+export interface AIAgentContextDispatcher extends ReturnType<typeof useChatIPC> {
+  setSetting: Dispatch<SetStateAction<AIAgentSetting>>
+  getSetting: () => AIAgentSetting
+  setActiveChat: Dispatch<SetStateAction<AISession | undefined>>
 }
 
 export interface AIAgentContextValue {
@@ -22,13 +29,17 @@ export interface AIAgentContextValue {
 
 export default createContext<AIAgentContextValue>({
   store: {
-    setting: {},
+    setting: { ...AIAgentSettingDefault },
     activeChat: undefined,
   },
   dispatcher: {
-    setSetting: undefined,
-    getSetting: undefined,
+    setSetting: () => {},
+    getSetting: () => AIAgentSettingDefault,
+    setActiveChat: () => {},
 
-    setActiveChat: undefined,
+    onStart: () => {},
+    onSend: () => {},
+    onClose: () => {},
+    onUpdatePageId: () => {},
   },
 })

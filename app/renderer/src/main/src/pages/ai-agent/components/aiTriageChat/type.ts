@@ -1,15 +1,24 @@
-import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
+import { AINodeItemProps } from '../aiChatListItem/aiNodeItem/type'
+import { ChatDataStoreKey } from '../../store/ChatDataStore'
 
 export interface AITriageChatContentProps {
   isAnswer?: boolean
-  content: string
   contentClassName?: string
   chatClassName?: string
-  extraValue?: AIChatIPCStartParams['extraValue']
+  itemData: Extract<
+    AIChatQSData,
+    { type: AIChatQSDataTypeEnum.QUESTION | AIChatQSDataTypeEnum.RESULT | AIChatQSDataTypeEnum.THOUGHT }
+  >
+
+  renderNum: AINodeItemProps['renderNum']
+
+  chatDataStoreKey: ChatDataStoreKey
 }
 
 export interface AITriageChatContentEditProps {
   onCancel: () => void
-  content: AITriageChatContentProps['content']
-  extraValue?: AITriageChatContentProps['extraValue']
+  content: string
+  extraValue?: AIChatQSData['extraValue']
+  chatDataStoreKey: AITriageChatContentProps['chatDataStoreKey']
 }

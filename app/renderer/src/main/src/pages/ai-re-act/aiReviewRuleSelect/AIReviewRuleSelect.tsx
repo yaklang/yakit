@@ -4,7 +4,7 @@ import styles from './AIReviewRuleSelect.module.scss'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import classNames from 'classnames'
-import { useClickAway, useControllableValue, useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useClickAway, useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import {
   AIAgentSettingDefault,
@@ -16,22 +16,23 @@ import { OutlineSirenIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { FormItemSlider } from '@/pages/ai-agent/AIChatSetting/AIChatSetting'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
-import { AIInputEventHotPatchTypeEnum, AIStartParams } from '../hooks/grpcApi'
+import { AIInputEvent, AIInputEventHotPatchTypeEnum, AIStartParams } from '../hooks/grpcApi'
 import isEqual from 'lodash/isEqual'
-import emiter from '@/utils/eventBus/eventBus'
-import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isNil } from 'lodash'
+import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { setting } = useAIAgentStore()
-  const { setSetting } = useAIAgentDispatcher()
+  /** 当前对话唯一ID */
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
 
-  const { chatIPCData } = useChatIPCStore()
-  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
+  const { setting } = useAIAgentStore()
+  const { setSetting, onSend } = useAIAgentDispatcher()
 
   const [visible, setVisible] = useState<boolean>(false)
   const [open, setOpen] = useState<boolean>(false)
@@ -40,16 +41,13 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 
   const modelValue = useCreation(() => {
     return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
-  }, [setting?.ReviewPolicy, chatIPCData.execute])
+  }, [setting?.ReviewPolicy, execute])
   const [selectReviewPolicy, setSelectReviewPolicy] = useState<AIStartParams['ReviewPolicy']>()
 
   const displayReviewPolicy = useCreation(() => {
     if (open) return selectReviewPolicy ?? modelValue
     return modelValue
   }, [open, selectReviewPolicy, modelValue])
-
-  const refRef = useRef<HTMLDivElement>(null)
-  const [inViewport = true] = useInViewport(refRef)
 
   const aiReviewRiskControlScore = useCreation(() => {
     return setting?.AIReviewRiskControlScore || AIAgentSettingDefault.AIReviewRiskControlScore
@@ -67,51 +65,41 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     }
   }, [aiReviewRiskControlScore, visible])
 
-  const onRefreshAIReviewRuleSelect = useMemoizedFn((res: string) => {
-    if (!chatIPCData.execute) return
-    const data = JSONParseLog(res)
-    if (!!data?.reviewPolicy) {
-      handHotpatchReviewPolicy(data?.reviewPolicy as AIStartParams['ReviewPolicy'])
-    }
-    if (!!data?.aiReviewRiskControlScore) {
-      handHotpatchAIReviewRiskControlScore(data?.aiReviewRiskControlScore)
-    }
-  })
-
-  const onRefreshHistoryAIEmbeddedSetting = useMemoizedFn(() => {
-    if (open) return
-    setSelectReviewPolicy(undefined)
-    if (visible) return
-    setAIReviewRiskControlScore(undefined)
-  })
-
-  useEffect(() => {
-    if (!inViewport) return
-    emiter.on('onRefreshAIReviewRuleSelect', onRefreshAIReviewRuleSelect)
-    emiter.on('onRefreshHistoryAIEmbeddedSetting', onRefreshHistoryAIEmbeddedSetting)
-    return () => {
-      emiter.off('onRefreshAIReviewRuleSelect', onRefreshAIReviewRuleSelect)
-      emiter.off('onRefreshHistoryAIEmbeddedSetting', onRefreshHistoryAIEmbeddedSetting)
-    }
-  }, [inViewport, onRefreshAIReviewRuleSelect, onRefreshHistoryAIEmbeddedSetting])
-
+  //#region 热更新 Review 规则
+  useUpdateEffect(() => {
+    if (!!setting.ReviewPolicy) handHotpatchReviewPolicy(setting.ReviewPolicy)
+  }, [setting.ReviewPolicy])
+  /** 热更新 Review 规则 */
   const handHotpatchReviewPolicy = useMemoizedFn((value: AIStartParams['ReviewPolicy']) => {
-    handleSendConfigHotpatch({
-      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
-      params: {
+    if (!sessionId) return
+    const info: AIInputEvent = {
+      IsConfigHotpatch: true,
+      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AgreePolicy,
+      Params: {
         ReviewPolicy: value,
       },
-    })
+    }
+    onSend({ token: sessionId, type: '', params: info })
   })
+  //#endregion
 
+  //#region 热更新 AIReviewRiskControlScore
+  useUpdateEffect(() => {
+    if (!!setting.AIReviewRiskControlScore) handHotpatchAIReviewRiskControlScore(setting.AIReviewRiskControlScore)
+  }, [setting.AIReviewRiskControlScore])
+  /** 热更新 AIReviewRiskControlScore */
   const handHotpatchAIReviewRiskControlScore = useMemoizedFn((value: number) => {
-    handleSendConfigHotpatch({
-      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore,
-      params: {
-        AIReviewRiskControlScore: value,
+    if (!sessionId) return
+    const info: AIInputEvent = {
+      IsConfigHotpatch: true,
+      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_RiskControlScore,
+      Params: {
+        AIReviewRiskControlScore: value ?? 0,
       },
-    })
+    }
+    onSend({ token: sessionId, type: '', params: info })
   })
+  //#endregion
 
   const onSelectModel = useMemoizedFn((value: AIStartParams['ReviewPolicy']) => {
     setSetting && setSetting((old) => ({ ...old, ReviewPolicy: value }))
@@ -125,7 +113,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     setVisible(v)
     if (
       !v &&
-      chatIPCData.execute &&
+      execute &&
       !isNil(selectAIReviewRiskControlScore) &&
       !isEqual(selectAIReviewRiskControlScore, aiReviewRiskControlScore)
     ) {
@@ -145,7 +133,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
   })
   const onSetOpen = useMemoizedFn((v: boolean) => {
     setOpen(v)
-    if (!v && chatIPCData.execute && !isEqual(selectReviewPolicy, modelValue)) {
+    if (!v && execute && !isEqual(selectReviewPolicy, modelValue)) {
       handHotpatchReviewPolicy(selectReviewPolicy)
     }
     if (v) {
@@ -187,7 +175,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     )
   })
   return (
-    <div className={classNames(styles['review-rule-select-wrapper'], props.className)} ref={refRef}>
+    <div className={classNames(styles['review-rule-select-wrapper'], props.className)}>
       <AIChatSelect
         key={displayReviewPolicy}
         dropdownRender={(menu) => {

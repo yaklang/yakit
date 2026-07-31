@@ -14,8 +14,6 @@ import type { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/C
 import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
 const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])
 
-export type OpenAIConcurrentStreamPayload = ConcurrentStreamFramePayload
-
 const { ipcRenderer } = window.require('electron')
 
 const toWritableText = (data?: Uint8Array | string) => {
@@ -76,10 +74,7 @@ export interface OpenAIConcurrentStreamOptions {
 }
 
 /** 打开并发流 aux 子窗，创建时传入 elements 等帧数据 */
-export const openAIConcurrentStream = (
-  data: OpenAIConcurrentStreamPayload,
-  options?: OpenAIConcurrentStreamOptions,
-) => {
+export const openAIConcurrentStream = (data: ConcurrentStreamFramePayload, options?: OpenAIConcurrentStreamOptions) => {
   if (!options?.silent) {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
   }

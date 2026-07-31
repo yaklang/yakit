@@ -3,42 +3,46 @@
  */
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
-import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType, TodoListCardData } from './aiRender'
-import type { AIChatLogToInfo, AIChatLogData, TaskChatTaskInfo, AIMessageHandlerParams } from './type'
-import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AIChatQSDataTypeEnum } from './aiRender'
-import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
-import { Uint8ArrayToString } from '@/utils/str'
+import {
+  type AITaskInfoProps,
+  type ReActChatRenderItem,
+  type AIChatQSDataType,
+  type TodoListCardData,
+  type ChatListRenderType,
+  AIChatQSDataTypeEnum,
+} from './aiRender'
+import { AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from './grpcApi'
+import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
+import { aiAgentLogEmitter } from './AIAgentLogEmitter'
+import cloneDeep from 'lodash/cloneDeep'
+import { DefaultTaskPlanEndGate } from './defaultConstant'
+import type { ChatMultiSessionController } from './ChatMultiSessionController'
+import { persistIndependentItem } from './persist/contentPersistHelper'
+import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
-/** 生成任务的唯一标识 */
-export const generateTaskId = (params: {
-  chatType: ReActChatRenderItem['chatType']
-  res: AIOutputEvent
-  /** 获取当前任务规划的问题ID信息 */
-  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
-  /** 获取当前自由对话父任务 ID */
-  getTaskId?: () => string
-  getContentMap: AIMessageHandlerParams['getContentMap']
+/**
+ * 任务节点内的数据生成任务节点ID
+ * @param isExist 生成的任务节点是否已经存在，不存在则不是任务节点数据，归为默认节点内的数据
+ */
+export const generateTaskNodeDataID = (params: {
+  chatType: ChatListRenderType
+  planID?: string
+  taskID: AIOutputEvent['TaskId']
+  isExist: (key: string) => boolean
 }) => {
-  const { chatType, res, getCurrentTaskPlanID, getTaskId, getContentMap } = params
-  /** 任务规划走 getCurrentTaskPlanID；自由对话走 getTaskId */
-  const parentTaskId = (chatType === 'task' ? getCurrentTaskPlanID?.()?.taskID : getTaskId?.()) || ''
-  if (res.TaskId) {
-    if (!parentTaskId) return undefined
-    const taskGroup = getContentMap(`${parentTaskId}-${res.TaskId}`)
-    if (taskGroup?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      return taskGroup.id
-    }
+  const { chatType, planID, taskID, isExist } = params
+  const taskKey = planID ? `${planID}-${taskID}` : undefined
+
+  if (chatType === 'reAct') {
+    if (taskKey && isExist(taskKey)) return taskKey
+    return undefined
+  } else {
+    if (taskKey && isExist(taskKey)) return taskKey
+    if (planID) return `${planID}-default`
+    return undefined
   }
-  if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
-    const defaultKey = `${getCurrentTaskPlanID()?.taskID}-unknown`
-    if (getContentMap(defaultKey)?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
-      return defaultKey
-    }
-  }
-  return undefined
 }
 
 /** 生成AI-UI展示的必须基础数据 */
@@ -51,35 +55,73 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
   }
 }
 
-/** 生成一个异常日志数据的对象 */
-export const genErrorLogData = (
-  Timestamp: AIChatLogToInfo['Timestamp'],
-  message: AIChatLogToInfo['data']['message'],
-): AIChatLogToInfo => {
-  return {
-    type: 'log',
-    Timestamp,
-    data: { level: 'error', message: message },
+/**
+ * end_plan_and_execution & react_task_status_changed 终态齐套后，才把 pendingStatus 落到 taskStatus.status
+ * 任一未到则保持 processing（等待中）
+ */
+export const trySettleTaskPlanEnd = (
+  store: ReturnType<ChatMultiSessionController['ensureSession']>['store'],
+  meta: AIAgentChatMetaData,
+) => {
+  const gate = meta.taskPlanEndGate
+  if (!gate.endReceived || !gate.pendingStatus) return
+  store.getState().updateTaskLoadingStatus({ status: gate.pendingStatus })
+  store.getState().updateState({ cancelTaskLoading: false })
+  meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
+}
+
+/** 任务规划 end 事件：结构收尾 + 清展示文案 + 推进门闩（不清 id / 不直接改 status） */
+export const handleTaskPlanEnd: (
+  requestInfo: ReturnType<ChatMultiSessionController['ensureSession']> & { sessionId: string },
+  /** 是否是聊天结束事件，如果是则清展示文案为已结束 */
+  isChatEnd?: boolean,
+) => void = (requestInfo, isChatEnd = false) => {
+  const { sessionId, store, rawData, meta } = requestInfo
+
+  // 将UI列表里正在执行中的任务组状态变成error
+  const actives = Array.from(meta.currentTaskPlanActiveNode)
+  meta.currentTaskPlanActiveNode.clear()
+  for (const active of actives) {
+    const taskNodeInfo = rawData.contents.get(active)
+    if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+      continue
+    }
+    taskNodeInfo.data.status = AITaskStatus.error
+    store.getState().incrementNodeVersion(taskNodeInfo.id, 'task')
+    persistIndependentItem(sessionId, taskNodeInfo)
+  }
+
+  // 将当前正在执行的任务树里, 进行中的节点状态变成error
+  const newPlanTree = cloneDeep(store.getState().taskChat.plan)
+  newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
+    if (item.progress === AITaskStatus.inProgress) item.progress = AITaskStatus.error
+    return item
+  })
+  store.getState().updatePlanTree(newPlanTree)
+
+  // end 只清展示文案，保留 taskID / coordinatorId / status（status 由 settle 写）
+  store.getState().updateTaskLoadingStatus({ plan: '已结束', task: '已结束' })
+  if (isChatEnd) {
+    meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
+  } else {
+    meta.taskPlanEndGate.endReceived = true
+    trySettleTaskPlanEnd(store, meta)
   }
 }
 
-/** 将接口数据(AIOutputEvent)转换为日志数据(AIAgentGrpcApi.Log), 并push到日志队列中 */
-export const handleGrpcDataPushLog = (params: { info: AIOutputEvent; pushLog: (log: AIChatLogData) => void }) => {
-  try {
-    const { info, pushLog } = params
-    // 这类类型的数据从日志数据中屏蔽掉，后续的stream类型逻辑会使用到
-    if (info.Type === 'stream_start') return
-    let ipcContent = Uint8ArrayToString(info.Content) || ''
-    const logInfo: AIChatLogData = {
-      type: 'log',
-      Timestamp: info.Timestamp,
-      data: {
-        level: `${info.Type}-${info.NodeId}`,
-        message: ipcContent,
-      },
-    }
-    pushLog(logInfo)
-  } catch (error) {}
+/** Agent 往日志窗口推送日志数据 */
+export const pushLogToOtherWindow = (params: {
+  sessionId: string
+  Timestamp: AIOutputEvent['Timestamp']
+  level: string
+  message: string
+}) => {
+  aiAgentLogEmitter.dispatch({
+    session: params.sessionId,
+    type: 'log',
+    Timestamp: params.Timestamp,
+    log: { level: params.level, message: params.message },
+  })
 }
 
 // #region 处理任务规划-任务树相关方法
@@ -118,18 +160,6 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
   return execTasks
 }
 // #endregion
-
-/** 将树结构任务列表转换成一维数组 */
-export const handleFlatAITree = (sum: AITaskInfoProps[], task: AIAgentGrpcApi.PlanTask, level = 1) => {
-  if (!Array.isArray(sum)) return null
-  const hasSubtasks = !!(task.subtasks && task.subtasks.length > 0)
-  sum.push({ ...generateTaskChatExecution(task), level, isLeaf: !hasSubtasks })
-  if (hasSubtasks) {
-    for (let subtask of task.subtasks!) {
-      handleFlatAITree(sum, subtask, level + 1)
-    }
-  }
-}
 
 /** 是否自动执行review的continue操作 */
 export const isAutoExecuteReviewContinue = (params: { type?: string; getFunc?: () => AIAgentSetting | undefined }) => {
@@ -171,7 +201,7 @@ export const isToolExecStream = (nodeID: string) => {
  * indexedDB 数据库数据转 ReActChatRenderItem
  */
 export const indexedDBDataToReActChatRenderItem = (
-  chatType: ReActChatRenderItem['chatType'],
+  chatType: ChatListRenderType,
   data: DialogueRecord[],
 ): ReActChatRenderItem[] =>
   data.map((item) => {

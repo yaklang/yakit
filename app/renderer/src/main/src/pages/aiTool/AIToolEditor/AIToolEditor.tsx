@@ -62,7 +62,6 @@ import {
 import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { grpcGetAIToolById } from '@/pages/ai-agent/aiToolList/utils'
-import { apiGetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import { setAIModal } from '@/pages/ai-agent/aiModelList/AIModelList'
 import styles from './AIToolEditor.module.scss'
 import { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'

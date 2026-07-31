@@ -1,42 +1,86 @@
-import { useMemoizedFn } from 'ahooks'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import { AIReviewType } from '../hooks/aiRender'
-import { AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
+import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
+import { randomString } from '@/utils/randomUtil'
+import { useStore } from 'zustand'
+import { useCurrentStore, useCurrentRawData } from '../hooks/useCurrentDataBySession'
+import useCreation from 'ahooks/lib/useCreation'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
-/** 只适用于任务规划的content footer下，不适用于子任务的上的继续 */
+/**
+ * 只适用于任务规划的content footer下，不适用于子任务的上的继续
+ */
 export const useTaskChatExtraAction = () => {
-  const { reviewInfo, chatIPCData } = useChatIPCStore()
-  const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
-  const getTaskInfo = useMemoizedFn(() => chatIPCEvents.fetchCurrentTaskPlanID())
-  const getTaskId = useMemoizedFn(() => getTaskInfo()?.taskID)
+  const { onSend } = useAIAgentDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+
+  const rawData = useCurrentRawData()
+  const execute = useStore(store, (state) => state.execute)
+
+  const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
+
+  const reviewInfo = useCreation(() => {
+    return rawData.contents.get(currentPlanReviewToken.token)
+  }, [currentPlanReviewToken.renderNum])
+
+  /**
+   * 停止任务后会返回结束标识，然后清空review id
+   * 防止hooks出现意外，UI层暂时保留该逻辑
+   */
+  const closeChatReview = useMemoizedFn(() => {
+    if (!!reviewInfo) {
+      globalSessionEngine.closeChatReview(sessionId, reviewInfo.id)
+    }
+  })
+
+  const sendReactCancelTask = useMemoizedFn(() => {
+    const taskId = store.getState().taskStatus.taskID
+    if (!taskId) return
+    store.getState().updateState({
+      cancelTaskLoading: true,
+    })
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+      SyncJsonInput: JSON.stringify({ task_id: taskId }),
+
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: 'task', params: info })
+  })
 
   const onSendPlayHistoryList = useMemoizedFn(() => {
-    chatIPCData.execute && handleSendSyncMessage({ syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
+    if (execute) {
+      const info: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: 'task', params: info })
+    }
   })
   /**取消当前指定任务 */
   const onStopTask = useMemoizedFn(() => {
-    const taskId = getTaskId()
-    if (!taskId) return
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-      SyncJsonInput: JSON.stringify({ task_id: taskId }),
-    })
-    if (!!reviewInfo) {
-      chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
-    }
+    sendReactCancelTask()
+    closeChatReview()
     onSendPlayHistoryList()
   })
   /**取消当前执行的子任务 */
-  const onStopSubTask = useMemoizedFn((syncID: string) => {
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
+  const onStopSubTask = useMemoizedFn(() => {
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
       SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', skip_current_task: true }),
-      syncID,
-    })
-    if (!!reviewInfo) {
-      chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
+
+      SyncID: randomString(8),
     }
+    onSend({ token: sessionId, type: 'task', params: info })
+    /** 目前多任务并发，出现子任务后review自动走的继续执行，不会出现review */
+    closeChatReview()
     setTimeout(() => {
       onSendPlayHistoryList()
     }, 500)
@@ -44,27 +88,27 @@ export const useTaskChatExtraAction = () => {
 
   /** @description 在任务规划的content footer下,继续按钮的出现在UI上意味着该任务肯定已经停止 */
   const onRecover = useMemoizedFn(() => {
-    const info = getTaskInfo()
-    const coordinatorId = info?.coordinatorId
+    const coordinatorId = store.getState().taskStatus.coordinatorId
     if (!coordinatorId) return
 
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
+    const params: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
       SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
-    })
-    chatIPCEvents.resetCurrentTaskPlanID()
-    if (!!reviewInfo) {
-      chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
+      SyncID: randomString(8),
     }
+    onSend({ token: sessionId, type: 'task', params })
+    store.getState().updateTaskLoadingStatus({ taskID: '', status: AITaskStatus.created, coordinatorId: '' })
+    closeChatReview()
   })
 
-  const onExtraAction = useMemoizedFn((type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => {
+  const onExtraAction = useMemoizedFn((type: 'stopTask' | 'stopSubTask' | 'recover') => {
     switch (type) {
       case 'stopTask':
         onStopTask()
         break
       case 'stopSubTask':
-        onStopSubTask(syncID)
+        onStopSubTask()
         break
       case 'recover':
         onRecover()
@@ -74,5 +118,5 @@ export const useTaskChatExtraAction = () => {
     }
   })
 
-  return { onExtraAction, getTaskId }
+  return { onExtraAction }
 }

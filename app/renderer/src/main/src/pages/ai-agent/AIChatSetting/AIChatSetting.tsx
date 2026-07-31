@@ -37,16 +37,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
     form && form.setFieldsValue({ ...(setting || {}) })
   }, [setting])
 
-  const handleFormChange = useMemoizedFn((changedValues, value) => {
-    if (!!changedValues.ReviewPolicy) {
-      emiter.emit('onRefreshAIReviewRuleSelect', JSON.stringify({ reviewPolicy: changedValues.ReviewPolicy }))
-    }
-    if (changedValues.AIReviewRiskControlScore !== undefined) {
-      emiter.emit(
-        'onRefreshAIReviewRuleSelect',
-        JSON.stringify({ AIReviewRiskControlScore: changedValues.AIReviewRiskControlScore }),
-      )
-    }
+  const handleFormChange = useMemoizedFn((changedValues) => {
     setSetting && setSetting((old) => ({ ...old, ...changedValues }))
   })
 

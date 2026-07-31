@@ -1,7 +1,14 @@
-import { cloneDeep } from 'lodash'
-import type { AIToolResult, PlanItemDetailsData, TodoListCardData } from './aiRender'
+import type {
+  AIToolResult,
+  CurrentExecTaskTree,
+  PlanItemDetailsData,
+  TaskPlanStatus,
+  TodoListCardData,
+} from './aiRender'
+import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
-import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from './type'
+import type { AIQuestionQueues } from './type'
+import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
@@ -130,11 +137,19 @@ export const DefaultMemoryList: AIAgentGrpcApi.MemoryEntryList = {
   },
 }
 
-/** 任务规划loading-默认值 */
-export const DefaultPlanLoadingStatus: PlanLoadingStatus = {
-  loading: false,
-  plan: '加载中...',
-  task: '加载中...',
+/** 任务规划运行态-默认值 */
+export const DefaultTaskPlanStatus: TaskPlanStatus = {
+  plan: '',
+  task: '',
+  taskID: '',
+  status: AITaskStatus.created,
+  coordinatorId: '',
+}
+
+/** end_plan_and_execution & react_task_status_changed 齐了才 settle status */
+export const DefaultTaskPlanEndGate: AIAgentChatMetaData['taskPlanEndGate'] = {
+  endReceived: false,
+  pendingStatus: undefined,
 }
 
 export const DefaultPlanHistoryList: AIAgentGrpcApi.PlanHistoryList = {

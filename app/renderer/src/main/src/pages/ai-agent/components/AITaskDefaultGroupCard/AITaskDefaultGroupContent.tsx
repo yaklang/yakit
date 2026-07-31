@@ -1,16 +1,17 @@
-import { type ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
 import useClickFocus from '@/pages/ai-re-act/hooks/useClickFocus'
 import { type FC, useEffect, useLayoutEffect } from 'react'
 import classNames from 'classnames'
 import styles from './AITaskDefaultGroupCard.module.scss'
 import ConcurrentStreamContent from '../ConcurrentStreamCard/ConcurrentStreamContent/ConcurrentStreamContent'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const AITaskDefaultGroupContent: FC<{
-  elements: ReActChatTaskElementSub[]
-  session: string
-  isChildWindow?: boolean
+  token: string
   onContentFocusChange?: (focused: boolean) => void
-}> = ({ elements, session, isChildWindow, onContentFocusChange }) => {
+}> = ({ token, onContentFocusChange }) => {
+  const store = useCurrentStore()
+  const childrenTokens = useStore(store, (state) => state.tasks[token]?.childrenTokens || [])
   const { ref: contentRef, isFocus } = useClickFocus<HTMLDivElement>()
 
   useEffect(() => {
@@ -31,23 +32,16 @@ const AITaskDefaultGroupContent: FC<{
       requestAnimationFrame(scrollToBottom)
     })
     return () => cancelAnimationFrame(rafId)
-  }, [contentRef, elements.length])
-
+  }, [contentRef, childrenTokens.length])
   return (
     <div
       ref={contentRef}
       className={classNames(styles['ai-task-default-group-card-content'], {
         [styles['focused']]: isFocus,
-        [styles['child-window']]: isChildWindow,
       })}
     >
       <div className={styles['content-inner']}>
-        <ConcurrentStreamContent
-          session={session}
-          elements={elements}
-          isChildWindow={isChildWindow}
-          scrollContainerRef={contentRef}
-        />
+        <ConcurrentStreamContent childrenTokens={childrenTokens} scrollContainerRef={contentRef} />
       </div>
     </div>
   )

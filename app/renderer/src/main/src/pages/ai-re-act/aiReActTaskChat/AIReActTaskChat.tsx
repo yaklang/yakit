@@ -19,7 +19,6 @@ import styles from './AIReActTaskChat.module.scss'
 import { AIAgentChatStream, AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplate'
 import { useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
 import {
   OutlineArrowscollapseIcon,
@@ -30,13 +29,11 @@ import {
   OutlineInformationcircleIcon,
   OutlinePlay2Icon,
   OutlinePositionIcon,
-  RedoDotIcon,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import { AIChatQSData, AIChatQSDataTypeEnum, AIReviewType } from '../hooks/aiRender'
+import { AIChatQSData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
+import { AIInputEvent, AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
 import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
@@ -53,6 +50,10 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { has } from 'lodash'
 import { AITaskContent } from '../aiTaskContent/AITaskContent'
 import { useTaskChatExtraAction } from './useTaskChatExtraAction'
+import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine, onTaskTabsChange } = props
@@ -148,29 +149,23 @@ export default AIReActTaskChat
 
 export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
   const { scrollToBottom, onScrollToBottom } = props
-  const { reviewInfo, chatIPCData } = useChatIPCStore()
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { activeChat } = useAIAgentStore()
-  const { taskChat } = chatIPCData
-  const { onExtraAction, getTaskId } = useTaskChatExtraAction()
+  const { onExtraAction } = useTaskChatExtraAction()
 
-  const streams = useCreation(() => {
-    return taskChat.elements
-  }, [taskChat.elements])
+  const store = useCurrentStore()
+  const streams = useStore(store, (state) => state.taskChat.elements)
+  const execute = useStore(store, (state) => state.execute)
+  const taskId = useStore(store, (state) => state.taskStatus.taskID)
+  const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
 
   return (
     <>
       <div className={styles['tab-content']}>
-        <AIAgentChatStream
-          streams={streams}
-          session={activeChat?.SessionID || ''}
-          scrollToBottom={scrollToBottom}
-          taskStatus={chatIPCData.taskStatus}
-        />
+        <AIAgentChatStream scrollToBottom={scrollToBottom} />
       </div>
-      {!reviewInfo && streams.length > 0 && (
+      {!currentPlanReviewToken.token && streams.length > 0 && (
         <div className={styles['footer']}>
-          {chatIPCData.execute && (
+          {execute && (
             <AIManualAdditionPopover chatType="task">
               <YakitButton
                 type="outline2"
@@ -191,7 +186,7 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
               {t('AIReActTaskChatContent.globalDirective')}
             </YakitButton>
           </AIGlobalCommandPopover>
-          {chatIPCData.execute && !!getTaskId() && <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />}
+          {execute && !!taskId && <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />}
           <YakitButton
             type="outline2"
             icon={<OutlinePositionIcon />}
@@ -228,9 +223,12 @@ export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = R
 export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React.memo((props) => {
   const { children } = props
 
+  const { onSend } = useAIAgentDispatcher()
+
+  const sessionId = useCurrentSessionId()
+
   const { setting, activeChat } = useAIAgentStore()
   const { setSetting } = useAIAgentDispatcher()
-  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
   const [visible, setVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'visible',
@@ -239,12 +237,14 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const [form] = Form.useForm<AIInputSettingFormProps>()
 
   const onHotSyncPerceptionTrigger = useMemoizedFn((value: boolean) => {
-    handleSendConfigHotpatch({
-      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyncPerceptionTrigger,
-      params: {
+    const info: AIInputEvent = {
+      IsConfigHotpatch: true,
+      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyncPerceptionTrigger,
+      Params: {
         SyncPerceptionTrigger: value,
       },
-    })
+    }
+    onSend({ token: sessionId, type: 'casual', params: info })
     if (activeChat?.SessionID) {
       emiter.emit(
         'sessionData',
@@ -311,35 +311,41 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
 
 const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => {
   const { chatType, onCancel } = props
-  const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
-  const { chatIPCData, syncIdInfoMap } = useChatIPCStore()
+
+  const { onSend } = useAIAgentDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const meta = useCurrentMeta()
+  const store = useCurrentStore()
+  const taskStatus = useStore(store, (state) => state.taskStatus)
+  const execute = useStore(store, (state) => state.execute)
+  const syncIDUpdate = useStore(store, (state) => state.syncIDUpdate)
+
   const [prompt, setPrompt] = useState<string>()
 
   const currentCoordinatorIdRef = useRef<string>('')
   const syncIdOfAddToContext = useRef<string>('')
   const syncIdOfAddAndReExecute = useRef<string>('')
 
-  const taskStatus = useCreation(() => chatIPCData?.taskStatus, [chatIPCData?.taskStatus])
-
   useUpdateEffect(() => {
-    if (!taskStatus.loading && currentCoordinatorIdRef.current) {
+    if (taskStatus.status !== AITaskStatus.inProgress && currentCoordinatorIdRef.current) {
       onSendRecover(currentCoordinatorIdRef.current)
     }
-  }, [taskStatus.loading])
+  }, [taskStatus.status])
 
   useEffect(() => {
     if (
-      (syncIdOfAddToContext.current && !syncIdInfoMap?.get(syncIdOfAddToContext.current)) ||
-      (syncIdOfAddAndReExecute.current && !syncIdInfoMap?.get(syncIdOfAddAndReExecute.current))
+      (syncIdOfAddToContext.current && !meta.syncIDMap?.get(syncIdOfAddToContext.current)) ||
+      (syncIdOfAddAndReExecute.current && !meta.syncIDMap?.get(syncIdOfAddAndReExecute.current))
     ) {
       onReset()
     }
-  }, [syncIdInfoMap])
+  }, [syncIDUpdate])
 
   useEffect(() => {
-    if (chatIPCData.execute) return
+    if (execute) return
     onReset()
-  }, [chatIPCData.execute])
+  }, [execute])
 
   const onReset = useMemoizedFn(() => {
     onCancel()
@@ -353,27 +359,37 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
     // 加入上下文后，停止任务再恢复任务
     syncIdOfAddAndReExecute.current = randomString(8)
     onAddToContext(syncIdOfAddAndReExecute.current)
-    const info = chatIPCEvents.fetchCurrentTaskPlanID()
-    const taskId = info?.taskID
-    const coordinatorId = info?.coordinatorId
+    const taskId = taskStatus.taskID
+    const coordinatorId = taskStatus.coordinatorId
     if (!coordinatorId) return
     currentCoordinatorIdRef.current = coordinatorId
-    chatIPCEvents.handleCancelLoadingChange('task', true)
-    if (taskStatus?.loading && taskId) {
+
+    store.getState().updateState({
+      cancelTaskLoading: true,
+    })
+
+    if (taskStatus.status === AITaskStatus.inProgress && taskId) {
       // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+      const info: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
         SyncJsonInput: JSON.stringify({ task_id: taskId }),
-      })
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: 'task', params: info })
     } else {
       onSendRecover(coordinatorId)
     }
   })
   const onSendRecover = useMemoizedFn((coordinatorId: string) => {
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
       SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
-    })
+
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: 'task', params: info })
     currentCoordinatorIdRef.current = ''
   })
   const getTypeBySyncID = useMemoizedFn(() => {
@@ -383,11 +399,14 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
   })
   const onAddToContext = useMemoizedFn((syncID: string) => {
     if (!prompt?.trim()) return
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_USER_INTERVENTION,
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_USER_INTERVENTION,
       SyncJsonInput: JSON.stringify({ content: prompt }),
-      syncID: syncID,
-    })
+
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: 'task', params: info })
     onAddToList()
   })
   const onAddToList = useMemoizedFn(() => {
@@ -400,8 +419,16 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
       AIService: '',
       AIModelName: '',
     }
-    chatIPCEvents.handleUserManualIntervention(chatData)
+    globalSessionEngine.pushDataToSession(sessionId, chatData)
   })
+
+  const addAndReExecuteLoading = useCreation(() => {
+    return !!syncIdOfAddAndReExecute.current && !!meta.syncIDMap?.get(syncIdOfAddAndReExecute.current)
+  }, [syncIDUpdate])
+
+  const addAndToContextLoading = useCreation(() => {
+    return !!syncIdOfAddToContext.current && !!meta.syncIDMap?.get(syncIdOfAddToContext.current)
+  }, [syncIDUpdate])
   return (
     <div className={styles['ai-manual-addition']} onClick={(e) => e.stopPropagation()}>
       <div className={styles['ai-manual-addition-heard']}>人工介入</div>
@@ -419,9 +446,9 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
           <YakitButton
             type="outline2"
             onClick={(e) => e.stopPropagation()}
-            loading={!!syncIdInfoMap?.get(syncIdOfAddAndReExecute.current)}
+            loading={addAndReExecuteLoading}
             className={styles['add-and-reexecute-btn']}
-            disabled={!!syncIdInfoMap?.get(syncIdOfAddToContext.current)}
+            disabled={addAndToContextLoading}
           >
             加入并重新执行
           </YakitButton>
@@ -431,8 +458,8 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
             syncIdOfAddToContext.current = randomString(8)
             onAddToContext(syncIdOfAddToContext.current)
           }}
-          loading={!!syncIdInfoMap?.get(syncIdOfAddToContext.current)}
-          disabled={!!syncIdInfoMap?.get(syncIdOfAddAndReExecute.current)}
+          loading={addAndToContextLoading}
+          disabled={addAndReExecuteLoading}
         >
           加入上下文
         </YakitButton>
@@ -593,31 +620,17 @@ const AIPlanPrompt: React.FC<AIPlanPromptProps> = React.memo(
 export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.memo((props) => {
   const { onExtraAction, btnProps, children } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { chatIPCEvents } = useChatIPCDispatcher()
-  const { chatIPCData } = useChatIPCStore()
 
-  const taskChat = useCreation(() => {
-    return chatIPCData.taskChat
-  }, [chatIPCData.taskChat])
+  const store = useCurrentStore()
 
-  const taskStatus = useCreation(() => {
-    return chatIPCData.taskStatus
-  }, [chatIPCData.taskStatus])
-
-  const cancelTaskLoading = useCreation(() => {
-    return chatIPCData.cancelTaskLoading
-  }, [chatIPCData.cancelTaskLoading])
-  const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchCurrentTaskPlanID()
-  })
-
+  const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
+  const status = useStore(store, (state) => state.taskStatus.status)
   const renderBtn = useMemoizedFn(() => {
-    switch (getTaskInfo()?.status) {
+    switch (status) {
       case AITaskStatus.inProgress:
         return (
           <YakitPopconfirm
             onConfirm={() => {
-              chatIPCEvents.handleCancelLoadingChange('task', true)
               onExtraAction('stopTask', '')
             }}
             title={t('AIRenderTaskFooterExtra.cancelTaskConfirm')}
@@ -638,32 +651,22 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
       case AITaskStatus.error:
       case AITaskStatus.skipped:
       case AITaskStatus.cancel:
-        return !taskStatus.loading ? (
+        return (
           <YakitButton
             type="primary"
             icon={<OutlinePlay2Icon />}
             radius="28px"
             size="large"
             onClick={() => {
-              chatIPCEvents.handleCancelLoadingChange('task', true)
+              store.getState().updateState({
+                cancelTaskLoading: true,
+              })
               onExtraAction('recover', '')
             }}
             loading={cancelTaskLoading}
             {...btnProps}
           >
             {t('AIRenderTaskFooterExtra.continueTask')}
-          </YakitButton>
-        ) : (
-          <YakitButton
-            type="primary"
-            icon={<OutlineExitIcon />}
-            className={styles['task-button']}
-            radius="28px"
-            size="large"
-            colors="danger"
-            loading={true}
-          >
-            {t('AIRenderTaskFooterExtra.stoppingTask')}
           </YakitButton>
         )
       default:
@@ -703,7 +706,6 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
 })
 
 export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = React.memo((props) => {
-  const { taskChat } = useChatIPCStore().chatIPCData
   const [leftExpand, setLeftExpand] = useControllableValue(props, {
     defaultValue: true,
     valuePropName: 'leftExpand',
@@ -716,12 +718,7 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         [styles['content-left-side-hidden']]: !leftExpand,
       })}
     >
-      <AIChatLeftSide
-        expand={leftExpand}
-        setExpand={setLeftExpand}
-        taskTree={taskChat?.plan?.task_tree || []}
-        taskName={taskChat?.plan?.root_task_name || ''}
-      />
+      <AIChatLeftSide expand={leftExpand} setExpand={setLeftExpand} />
       <div className={styles['open-wrapper']} onClick={() => setLeftExpand(true)}>
         <ChevrondownButton />
         <div className={styles['text']}>任务列表</div>

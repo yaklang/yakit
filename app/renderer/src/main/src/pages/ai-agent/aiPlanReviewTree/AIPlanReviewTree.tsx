@@ -283,7 +283,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
     setItem(item, { label: 'description', value: extraInfo?.description || '' })
   }, [extraInfo?.description])
   useEffect(() => {
-    if (!item.tools.length) {
+    if (!item?.tools?.length) {
       onSetTool(extraInfo?.keywords || [])
     }
   }, [extraInfo?.keywords])

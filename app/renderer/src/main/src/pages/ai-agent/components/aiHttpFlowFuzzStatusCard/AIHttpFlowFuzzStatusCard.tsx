@@ -1,6 +1,6 @@
 import React, { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
-import { useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { AIHttpFlowFuzzStatusCardProps } from './type'
@@ -9,8 +9,6 @@ import { Tooltip } from 'antd'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import ChatCard from '../ChatCard'
 import ModalInfo, { type ModalInfoProps } from '../ModelInfo'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
   hasWebFuzzerPageOnAIFuzzStatus,
   pushAIFuzzStatusRuntimeIdToWebFuzzerPage,
@@ -18,6 +16,8 @@ import {
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { yakitNotify } from '@/utils/notification'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
 
 const STATS_TILE_PX = 91
 const STATS_GAP_PX = 4
@@ -25,7 +25,7 @@ const STATS_GAP_PX = 4
 const STATS_ROW_4_MIN_INNER_PX = 4 * STATS_TILE_PX + 3 * STATS_GAP_PX
 
 export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> = memo((props) => {
-  const { item } = props
+  const { item, renderNum, isChildWindow } = props
   const { data, Timestamp, AIService, AIModelName } = item
   const { t } = useI18nNamespaces(['aiAgent'])
 
@@ -35,29 +35,45 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
       title: AIModelName,
       icon: AIService,
     }),
-    [Timestamp, AIModelName, AIService],
+    [],
   )
 
-  const p = data.progress
-  const total = p?.total_requests ?? 0
-  const ok = p?.successful_responses ?? 0
-  const fail = p?.failed_requests ?? 0
-  const avgMs = p?.average_response_ms
+  const total = useCreation(() => {
+    return data.progress?.total_requests ?? 0
+  }, [renderNum])
 
-  const { chatIPCEvents } = useChatIPCDispatcher()
+  const ok = useCreation(() => {
+    return data.progress?.successful_responses ?? 0
+  }, [renderNum])
 
+  const fail = useCreation(() => {
+    return data.progress?.failed_requests ?? 0
+  }, [renderNum])
+
+  const avgMs = useCreation(() => {
+    return data.progress?.average_response_ms ?? 0
+  }, [renderNum])
+
+  const { getCurrentSelectPageId, currentPageTabRouteKey } = usePageInfo(
+    (s) => ({
+      getCurrentSelectPageId: s.getCurrentSelectPageId,
+      currentPageTabRouteKey: s.currentPageTabRouteKey,
+    }),
+    shallow,
+  )
   // 「查看详情」点击：
   // - 若卡片所在的会话绑定了某个 Web Fuzzer 页签（`WebFuzzerAiStore`），
   //   则把本卡片的 `runtime_id` 显式推送到该页签，并打开 traffic analysis 抽屉。
   // - 否则回退到全局打开「流量分析」路由页，并通过 `pageInfo` 携带本卡片的 `runtime_id`。
   const handleViewDetail = useMemoizedFn(() => {
+    if (isChildWindow) return
     const runtimeId = data?.runtime_id
     if (!runtimeId) {
       yakitNotify('error', '该发包统计缺少 runtime_id，无法查看详情')
       return
     }
-    const store = chatIPCEvents.fetchChatDataStore()
-    const fuzzerPageId = store instanceof WebFuzzerAiStore ? store.fuzzerPageId : ''
+    const fuzzerPageId =
+      currentPageTabRouteKey === YakitRoute.WebsocketFuzzer ? getCurrentSelectPageId(currentPageTabRouteKey) : ''
     if (fuzzerPageId && hasWebFuzzerPageOnAIFuzzStatus(fuzzerPageId)) {
       // Web Fuzzer 页内：直接把本卡片的 runtime_id 推过去；
       // 当右侧无本地发包响应时空状态会切换为 history 表，已可见的 history 表则会按新 key 重新加载。
@@ -119,9 +135,11 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
           <Tooltip title={data?.reason ?? t('AIHttpFlowFuzzStatusCard.title')}>
             <div className={styles['reason-text']}>{data?.reason ?? t('AIHttpFlowFuzzStatusCard.title')}</div>
           </Tooltip>
-          <YakitButton type="text" className={styles['view-detail-btn']} onClick={handleViewDetail}>
-            {t('AIHttpFlowFuzzStatusCard.viewDetail')}
-          </YakitButton>
+          {!isChildWindow && (
+            <YakitButton type="text" className={styles['view-detail-btn']} onClick={handleViewDetail}>
+              {t('AIHttpFlowFuzzStatusCard.viewDetail')}
+            </YakitButton>
+          )}
         </div>
 
         <div ref={statsRef} className={classNames(styles.stats, statsCompact && styles['stats--compact'])}>

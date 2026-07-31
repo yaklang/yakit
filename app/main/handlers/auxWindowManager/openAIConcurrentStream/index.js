@@ -29,9 +29,13 @@ function register(manager, mainWindow) {
     }
   }
 
+  /**
+   * 子窗口打开后通过 fetch-concurrent-stream-contents 主动向主窗口拉取 rawData。
+   * 这里做 requestId 中转：转发请求到主窗口，等待响应后再 resolve 子窗口的 invoke。
+   */
   ipcMain.handle(FETCH_CONTENTS, async (_event, frame) => {
     if (!frame?.session || !frame?.token || !mainWindow || mainWindow.isDestroyed()) {
-      return { contentEntries: [] }
+      return { rawData: [], execFileRecord: [], childrenTokens: [] }
     }
 
     const requestId = crypto.randomUUID()
@@ -40,12 +44,12 @@ function register(manager, mainWindow) {
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
         ipcMain.removeAllListeners(responseChannel)
-        resolve({ contentEntries: [] })
+        resolve({ rawData: [], execFileRecord: [], childrenTokens: [] })
       }, 15000)
 
       ipcMain.once(responseChannel, (_responseEvent, data) => {
         clearTimeout(timeout)
-        resolve(data ?? { contentEntries: [] })
+        resolve(data ?? { rawData: [], execFileRecord: [], childrenTokens: [] })
       })
 
       safeSendMain('fetch-concurrent-stream-contents-request', { requestId, ...frame })
@@ -53,7 +57,7 @@ function register(manager, mainWindow) {
   })
 
   ipcMain.handle('open-ai-concurrent-stream-window', async (_event, data) => {
-    if (!data || typeof data !== 'object' || !Array.isArray(data.elements)) return
+    if (!data || typeof data !== 'object') return
     const singletonKey = buildSingletonKey(data)
     const title = typeof data.taskName === 'string' && data.taskName ? data.taskName : 'Concurrent Stream'
     return manager.create({
@@ -64,16 +68,6 @@ function register(manager, mainWindow) {
       width: 1200,
       height: 800,
     })
-  })
-
-  ipcMain.on('request-ai-concurrent-stream-refresh', (event, params) => {
-    for (const entry of manager.windows.values()) {
-      if (entry.win.isDestroyed()) continue
-      if (entry.meta.route !== ROUTE) continue
-      if (entry.win.webContents !== event.sender) continue
-      safeSendMain('refresh-ai-concurrent-stream', params)
-      return
-    }
   })
 }
 

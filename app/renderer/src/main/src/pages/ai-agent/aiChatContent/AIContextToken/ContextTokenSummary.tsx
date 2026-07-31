@@ -1,6 +1,4 @@
-import React, { memo, useCallback } from 'react'
-import { useCreation } from 'ahooks'
-import { cloneDeep, isEmpty } from 'lodash'
+import React, { memo } from 'react'
 import { formatNumberUnits } from '../../utils'
 import { OutlineArrowdownIcon, OutlineArrowupIcon } from '@/assets/icon/outline'
 import classNames from 'classnames'
@@ -9,13 +7,20 @@ import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { CONTEXT_PERF_POLL_INTERVAL, ContextPerfPanelProps, useContextPerfStore } from './useContextPerfStore'
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import styles from '../AIChatContent.module.scss'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useCreation from 'ahooks/lib/useCreation'
+import cloneDeep from 'lodash/cloneDeep'
+import isEmpty from 'lodash/isEmpty'
 
-const ContextTokenSummary: React.FC<ContextPerfPanelProps> = ({ session, execute }) => {
-  const getPerfData = useContextPerfStore(session)
-  const getData = useCallback(() => getPerfData()?.consumption ?? null, [getPerfData])
+const ContextTokenSummary: React.FC<ContextPerfPanelProps> = () => {
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+
+  const getPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: consumption } = useRafPolling<AIAgentGrpcApi.Consumption | null>({
-    getData,
+    getData: () => getPerfData.consumption ?? null,
     interval: CONTEXT_PERF_POLL_INTERVAL,
     shouldStop: () => !execute,
     resetDeps: [execute],

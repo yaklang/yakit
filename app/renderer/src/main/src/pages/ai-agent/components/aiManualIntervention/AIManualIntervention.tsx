@@ -9,7 +9,7 @@ import ChatCard from '../ChatCard'
 import { formatTimestamp } from '@/utils/timeUtil'
 
 export const AIManualIntervention: React.FC<AIManualInterventionProps> = memo((props) => {
-  const { info, timestamp } = props
+  const { info, renderNum } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -19,6 +19,9 @@ export const AIManualIntervention: React.FC<AIManualInterventionProps> = memo((p
     setIsScroll(false)
   }, containerRef)
 
+  const timestamp = useCreation(() => {
+    return info.Timestamp
+  }, [renderNum])
   const data: UserManualInterventionContext = useCreation(() => {
     if (info.type === AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION) {
       return info.data
@@ -27,7 +30,7 @@ export const AIManualIntervention: React.FC<AIManualInterventionProps> = memo((p
       type: '',
       content: '',
     }
-  }, [info.data, info.type])
+  }, [renderNum])
 
   return (
     <ChatCard

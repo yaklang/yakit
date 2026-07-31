@@ -4,7 +4,6 @@ import {
   AIModelCheckResultProps,
   AIModelFormAddOptions,
   AIModelFormProps,
-  AIModelFormSetAIGlobalConfigOptions,
   AIModelFormUpdateOptions,
 } from './AIModelFormType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
@@ -19,7 +18,6 @@ import {
   AIModelConfig,
   AIModelTypeFileName,
   AIProvider,
-  DEFAULT_AI_API_TYPE,
   grpcQueryAIProviderAll,
   grpcAIConfigHealthCheck,
   normalizeAIAPIType,
@@ -50,7 +48,7 @@ import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 const defaultFormValues = {
   Type: '',
-  api_type: DEFAULT_AI_API_TYPE,
+  api_type: 'chat_completions',
   model_type: AIModelTypeEnum.TierIntelligent,
 }
 /**是否认为是同一个ai model */

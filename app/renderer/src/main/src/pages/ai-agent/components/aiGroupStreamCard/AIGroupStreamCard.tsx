@@ -1,16 +1,17 @@
-import { ChatReferenceMaterialPayload, ReActChatElement } from '@/pages/ai-re-act/hooks/aiRender'
-import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo } from 'react'
+import { AIChatQSDataTypeEnum, ChatReferenceMaterialPayload, ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo, memo } from 'react'
 import styles from './AIGroupStreamCard.module.scss'
-import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineArrowsexpandIcon, OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import classNames from 'classnames'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
-import { Tooltip } from 'antd'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useCreation from 'ahooks/lib/useCreation'
+import { useStore } from 'zustand'
+import { AIGroupStreamCardHeardWrapperProps, AIGroupStreamCardListWrapperProps } from './type'
+import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
+import AIGroupStreamCardHeard from './aiGroupStreamCardHeard/AIGroupStreamCardHeard'
+import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList'
+import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
+import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -22,237 +23,171 @@ export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties
   )
 }
 
-const AIStreamNode: FC<{
-  chatType: ReActChatElement['chatType']
-  token: string
-  index: number
-  session: string
-  nodeLabel?: string
-}> = ({ chatType, token, index, session, nodeLabel }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
-  const { stream } = useTypedStream({ chatType, token, session })
-  const [open, setOpen] = useState(false)
-  const [openPopover, setOpenPopover] = useState(false)
+export const AIGroupStreamNode: FC<{
+  itemData: ChatStream
+  renderNum: number
+  seqNo: string
+  sessionId: string
+}> = memo(({ itemData, renderNum, seqNo, sessionId }) => {
+  // 仅获取用于显示的 content（已应用打字效果）
+  const { content } = useTypedStream({
+    getContent: () => itemData.data.content,
+    getStatus: () => itemData.data.status,
+  })
 
-  const onClose = () => {
-    setOpen(false)
-  }
+  const { getLabelByParams } = useAINodeLabel()
 
-  if (!stream) return null
-  return (
-    <div className={styles['single-stream-text']}>
-      <YakitModal
-        visible={open}
-        title={`${index}. ${nodeLabel}`}
-        cancelButtonProps={{ style: { display: 'none' } }}
-        onOk={onClose}
-        onCloseX={onClose}
-      >
-        <Code code={stream.reference || []} style={{ maxHeight: '500px' }} />
-      </YakitModal>
-      {index}. {stream.data.content}
-      <YakitPopover
-        trigger={'click'}
-        visible={openPopover}
-        onVisibleChange={setOpenPopover}
-        content={
-          <div className={styles['popover-reference-wrapper']}>
-            <div className={styles['popover-reference-title']}>
-              {index}. {nodeLabel}
-              <YakitButton
-                onClick={() => {
-                  setOpenPopover(false)
-                  setOpen(true)
-                }}
-                type="text2"
-                icon={<OutlineArrowsexpandIcon />}
-                size="small"
-              />
-            </div>
-            {!!stream.reference && <Code code={stream.reference} style={{ maxHeight: '200px' }} />}
-          </div>
-        }
-      >
-        <YakitButton
-          hidden={!stream.reference || stream.reference.length === 0}
-          className={styles.button}
-          type="text"
-          colors="primary"
-          size="small"
-        >
-          {t('AIStreamNode.viewReference')}
-        </YakitButton>
-      </YakitPopover>
-    </div>
-  )
-}
+  const nodeLabel = useCreation(() => {
+    if (!itemData) return
+    switch (itemData.type) {
+      case AIChatQSDataTypeEnum.STREAM:
+        return getLabelByParams(itemData.data?.NodeIdVerbose)
 
-const BOTTOM_THRESHOLD = 10
-const STREAM_MASK_THRESHOLD = 170
-
-const AIGroupStreamCard: FC<{
-  elements: ReActChatElement[]
-  hasNext?: boolean
-  session: string
-}> = ({ elements, hasNext, session }) => {
-  const lastElement = elements[elements.length - 1]
-  const { stream } = useTypedStream({ chatType: lastElement?.chatType, token: lastElement?.token ?? '', session })
-  const { nodeLabel } = useAINodeLabel(stream?.data.NodeIdVerbose)
-  const [expand, setExpand] = useState(true)
-  const content = stream?.data.content || ''
-  const shouldShowMask = useMemo(() => content.length > STREAM_MASK_THRESHOLD, [content])
-  const contentRef = useRef<HTMLDivElement>(null)
-  const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
-
-  const [isScroll, setIsScroll] = useState(false)
-  const allowAutoScrollRef = useRef<boolean>(true)
-
-  // 点击其他地方取消滚动
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      const target = event.target as Node | null
-      if (!contentRef.current) return
-      if (!target) return
-
-      if (!contentRef.current.contains(target)) {
-        setIsScroll(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
+      default:
+        return ''
     }
   }, [])
 
-  // 有滚动条的时候自动滚动到底部
-  useEffect(() => {
-    const el = contentRef.current
-    if (!el || !expand) return
-
-    const onScroll = (): void => {
-      const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight
-      allowAutoScrollRef.current = distanceToBottom <= BOTTOM_THRESHOLD
-    }
-
-    el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
-  }, [expand])
-
-  useEffect(() => {
-    if (!expand) return
-    allowAutoScrollRef.current = true
-  }, [expand])
-
-  // 无滚动条的时候自动滚动到底部
-  useEffect(() => {
-    const el = contentRef.current
-    if (!el || !expand) return
-    if (!allowAutoScrollRef.current) return
-    if (hasNext) return
-    requestAnimationFrame(() => {
-      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-    })
-    let rafId = 0
-    const observer = new ResizeObserver(() => {
-      if (!allowAutoScrollRef.current) return
-      cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(() => {
-        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-      })
-    })
-    observer.observe(el)
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      observer.disconnect()
-    }
-  }, [elements.length, expand, hasNext])
-
-  useEffect(() => {
-    if (hasNext) {
-      setExpand(false)
-    }
-  }, [hasNext])
-  if (!stream) return null
-  const collapseTooltip = !expand && elements.length > 1 ? `折叠${elements.length}条信息` : ''
+  const hidden = useCreation(() => {
+    return !itemData?.reference?.length
+  }, [renderNum, itemData?.reference?.length])
 
   return (
-    <Tooltip title={collapseTooltip} mouseEnterDelay={0.3}>
-      <div
-        className={classNames(styles.container, {
-          [styles['container-focus']]: isFocus,
-        })}
-        ref={containerRef}
-      >
-        <div
-          className={styles.title}
-          onClick={() => {
-            setExpand(!expand)
-          }}
-        >
-          <div className={styles['title-node-label']}>
-            {/* <OutlineBrainIcon className={styles['brain-icon']} /> */}
-            {nodeLabel}
-          </div>
-          <div className={styles['stream-text']}>
-            {shouldShowMask && <div className={styles['ai-mask']} />}
-            <p
-              className={classNames({
-                [styles['stream-text-hidden']]: expand,
-              })}
-            >
-              <span>{content}</span>
-            </p>
-          </div>
-          <Tooltip title="展开">
-            <YakitButton
-              size="small"
-              type="text"
-              icon={<OutlineChevronsUpDownIcon />}
-              className={classNames(styles['expand-btn'], {
-                [styles['hidden-expand-btn']]: expand,
-              })}
-            />
-          </Tooltip>
-          <Tooltip title="收起">
-            <YakitButton
-              size="small"
-              type="text"
-              icon={<OutlineChevronsDownUpIcon />}
-              className={classNames(styles['expand-btn'], {
-                [styles['hidden-expand-btn']]: !expand,
-              })}
-            />
-          </Tooltip>
-        </div>
-        <div
-          className={classNames(styles.content, {
-            [styles.expand]: expand,
-            [styles.noMask]: isScroll,
-          })}
-        >
-          <div
-            ref={contentRef}
-            onClick={() => setIsScroll(true)}
-            className={styles['content-inner']}
-            style={{
-              overflow: isScroll ? 'overlay' : 'hidden',
-            }}
-          >
-            {elements.map((el, index) => (
-              <AIStreamNode
-                session={session}
-                nodeLabel={nodeLabel}
-                key={el.token}
-                chatType={el.chatType}
-                token={el.token}
-                index={index + 1}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </Tooltip>
+    <div className={styles['single-stream-text']}>
+      {seqNo}
+      {content}
+      {!hidden && (
+        <AIReferenceNode
+          referenceList={itemData.reference || []}
+          sessionId={sessionId}
+          title={`${seqNo}${nodeLabel}`}
+        />
+      )}
+    </div>
   )
-}
+})
+
+export const STREAM_MASK_THRESHOLD = 170
+
+const AIGroupStreamCard: FC<{
+  token: string
+}> = memo(({ token }) => {
+  const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
+  const [expand, setExpand] = useState(true)
+
+  return (
+    <div
+      className={classNames(styles.container, {
+        [styles['container-focus']]: isFocus,
+      })}
+      ref={containerRef}
+    >
+      <AIGroupStreamCardHeardWrapper expand={expand} setExpand={setExpand} token={token} />
+      <AIGroupStreamCardListWrapper expand={expand} token={token} />
+    </div>
+  )
+})
 export default AIGroupStreamCard
+
+const AIGroupStreamCardListWrapper: React.FC<AIGroupStreamCardListWrapperProps> = memo((props) => {
+  const { expand, token } = props
+  const store = useCurrentStore()
+  const childrenTokens = useStore(store, (state) => state.groups[token]?.childrenTokens || [])
+  return <AIGroupStreamCardList expand={expand} childrenTokens={childrenTokens} />
+})
+const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps> = memo((props) => {
+  const { expand, setExpand, token } = props
+
+  const { getLabelByParams } = useAINodeLabel()
+
+  const perHasNext = useRef<boolean>(true)
+
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  const chatLength = useStore(store, (state) => state.casualChat.elements.length)
+  const taskChatLength = useStore(store, (state) => state.taskChat.elements.length)
+  const renderNum = useStore(store, (state) => state.groups[token]?.renderNum)
+  const childrenTokensLength = useStore(store, (state) => state.groups[token]?.childrenTokens.length || 0)
+
+  /** 可能存在第一次拿到的数据为undefined  */
+  const groupData = useCreation(() => {
+    return rawData.contents.get(token)
+  }, [renderNum])
+
+  const lastToken = useCreation(() => {
+    if (!groupData) return ''
+    switch (groupData.type) {
+      case AIChatQSDataTypeEnum.STREAM_GROUP:
+        return groupData.data.lastToken
+
+      default:
+        return ''
+    }
+  }, [renderNum])
+
+  const lastItemRenderNum = useStore(store, (state) => state.items[lastToken]?.renderNum)
+
+  const isLastActiveGroup = useCreation(() => {
+    if (expand === false) return false
+    if (perHasNext.current === false) return false
+    if (groupData?.chatType === 'reAct') {
+      perHasNext.current = store.getState().casualChat.elements[chatLength - 1]?.token === token
+      return perHasNext.current
+    }
+    perHasNext.current = store.getState().taskChat.elements[taskChatLength - 1]?.token === token
+    return perHasNext.current
+  }, [chatLength, taskChatLength, groupData?.chatType])
+
+  const nodeLabel = useCreation(() => {
+    if (!groupData) return ''
+    switch (groupData.type) {
+      case AIChatQSDataTypeEnum.STREAM_GROUP:
+        return getLabelByParams(groupData.data?.NodeIdVerbose)
+
+      default:
+        return ''
+    }
+  }, [renderNum])
+
+  useEffect(() => {
+    if (isLastActiveGroup) {
+      setExpand(false)
+    }
+  }, [isLastActiveGroup])
+
+  const shouldShowMask = useMemo(() => {
+    const lastItem = rawData.contents.get(lastToken)
+    if (!lastItem) return false
+    switch (lastItem.type) {
+      case AIChatQSDataTypeEnum.STREAM:
+        const contentLength = lastItem.data?.content?.length || 0
+        return contentLength > STREAM_MASK_THRESHOLD
+
+      default:
+        return false
+    }
+  }, [lastToken, lastItemRenderNum])
+
+  const lastItem = useCreation(() => {
+    const lastItem = rawData.contents.get(lastToken)
+    if (!lastItem) return undefined
+    switch (lastItem.type) {
+      case AIChatQSDataTypeEnum.STREAM:
+        return lastItem
+
+      default:
+        return undefined
+    }
+  }, [lastItemRenderNum])
+
+  return (
+    <AIGroupStreamCardHeard
+      expand={expand}
+      setExpand={setExpand}
+      lastItem={lastItem}
+      nodeLabel={nodeLabel}
+      shouldShowMask={shouldShowMask}
+      childrenTokensLength={childrenTokensLength}
+    />
+  )
+})

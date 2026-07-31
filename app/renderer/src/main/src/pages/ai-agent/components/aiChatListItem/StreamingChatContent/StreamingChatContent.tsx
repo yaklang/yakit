@@ -1,65 +1,54 @@
 import { AIStreamNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
-import { AIChatQSDataTypeEnum, type ReActChatElement, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
-import { memo, type FC } from 'react'
+import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import { type FC, memo, useMemo } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
-import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
-import AITaskDefaultGroupCard from '../../AITaskDefaultGroupCard/AITaskDefaultGroupCard'
-import ConcurrentStreamCard from '../../ConcurrentStreamCard/ConcurrentStreamCard'
-
-type StreamCls = { className: string } | { aiMarkdownProps?: { className: string } }
-
-type StreamingChatContentProps = ReActChatRenderItem & {
-  streamClassName?: StreamCls
-  hasNext?: boolean
-  session: string
-  itemIndex?: number
-}
+import { useCreation, useMemoizedFn } from 'ahooks'
+import styles from './StreamingChatContent.module.scss'
 
 type SingleStreamProps = {
-  chatType: ReActChatElement['chatType']
-  token: string
-  streamClassName?: StreamCls
-  session: string
-  listItemIndex?: number
+  itemData: ChatStream
+  renderNum: number
+  sessionId: string
 }
 
-const AIStreamCard: FC<SingleStreamProps> = ({ chatType, token, streamClassName, session, listItemIndex }) => {
-  const { stream } = useTypedStream({ chatType, token, session })
-  if (!stream) return null
+export const AIStreamCard: FC<SingleStreamProps> = memo(({ itemData, renderNum, sessionId }) => {
+  const getContent = useMemoizedFn(() => {
+    return itemData.data.content
+  })
 
-  return (
-    <AIStreamNode {...streamClassName} stream={stream} listItemIndex={listItemIndex} streamChatSessionId={session} />
-  )
-}
+  const getStatus = useMemoizedFn(() => {
+    return itemData.data.status
+  })
+  // 仅获取用于显示的 content（已应用打字效果）
+  const { content } = useTypedStream({
+    getContent: () => getContent(),
+    getStatus: () => getStatus(),
+  })
 
-const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
-  const { streamClassName, chatType, token, hasNext, session, itemIndex: listItemIndex } = props
-  if (props.kind === 'task') {
-    if (props.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
-      return (
-        <AITaskDefaultGroupCard
-          token={token}
-          session={session}
-          chatType={chatType}
-          elements={props.children}
-          hasNext={hasNext}
-        />
-      )
-    } else {
-      return <ConcurrentStreamCard token={token} session={session} elements={props.children} chatType={chatType} />
+  const stream = useMemo<ChatStream | null>(() => {
+    // 用打字机处理后的 content 覆盖原始 content，其余字段保持原始引用
+    return {
+      ...itemData,
+      data: {
+        ...itemData.data,
+        content,
+      },
     }
-  }
-  if (props.kind === 'group') {
-    return <AIGroupStreamCard session={session} elements={props.children} hasNext={hasNext} />
-  }
-  return (
-    <AIStreamCard
-      session={session}
-      chatType={chatType}
-      token={token}
-      listItemIndex={listItemIndex}
-      streamClassName={streamClassName}
-    />
-  )
-}
-export default memo(StreamingChatContent)
+  }, [content, renderNum])
+
+  const aiStreamNodeProps = useCreation(() => {
+    switch (itemData.chatType) {
+      case 'reAct':
+        return {
+          className: styles['ai-mark-down-wrapper'],
+        }
+
+      default:
+        return {
+          className: '',
+        }
+    }
+  }, [itemData.chatType])
+  if (!stream) return null
+  return <AIStreamNode aiMarkdownProps={aiStreamNodeProps} stream={stream} sessionId={sessionId} />
+})

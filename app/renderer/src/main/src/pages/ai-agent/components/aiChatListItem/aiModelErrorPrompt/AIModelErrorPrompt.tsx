@@ -9,40 +9,29 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePencilaltIcon } from '@/assets/icon/outline'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { onEditAIModel } from '@/pages/ai-agent/aiModelList/AIModelList'
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getFileNameByModelType, getModelLabelByModelType } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import styles from './AIModelErrorPrompt.module.scss'
 import { Tooltip } from 'antd'
 export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo((props) => {
-  const { item } = props
+  const { item, renderNum, isChildWindow } = props
 
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [aiGlobalConfigData, event] = useAIGlobalConfig()
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
-  const data: AIAgentGrpcApi.AIApiRequestFailedPayload = useCreation(() => {
-    return (
-      item?.data || {
-        error_code: '-',
-        model_tier: '',
-        provider_name: '',
-        model_name: '',
-        cause: '',
-        liteforge_action: '',
-      }
-    )
-  }, [item?.data])
+
   const modalInfo = useCreation(() => {
     return {
-      title: data.model_name,
+      title: item.data.model_name,
       time: item.Timestamp,
-      icon: data.provider_name,
+      icon: item.data.provider_name,
     }
-  }, [item.Timestamp, data])
+  }, [])
   const onEdit = useMemoizedFn((e) => {
     e.stopPropagation()
-    const fileName = getFileNameByModelType(data.model_tier)
+    if (isChildWindow) return
+    const fileName = getFileNameByModelType(item.data.model_tier)
     if (!fileName) return
-    // todo 编辑事件,index为0是因为当前使用的ai模型是单选的且选中项一定是在第一个
+    // NOTE - 编辑事件,index为0是因为当前使用的ai模型是单选的且选中项一定是在第一个
     onEditAIModel({
       aiGlobalConfig,
       index: 0,
@@ -54,21 +43,29 @@ export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo(
       },
     })
   })
+  const code = useCreation(() => {
+    return item.data.cause
+  }, [renderNum])
+  const modelTier = useCreation(() => {
+    return item.data.model_tier
+  }, [renderNum])
   return (
     <ChatCard
       titleText="模型错误"
       titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
       titleMore={
-        <Tooltip title="点此编辑当前模型">
-          <YakitButton type="text2" size="small" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
-        </Tooltip>
+        !isChildWindow && (
+          <Tooltip title="点此编辑当前模型">
+            <YakitButton type="text2" size="small" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
+          </Tooltip>
+        )
       }
     >
       <div className={styles['model-error-content']}>
         <div className={styles['model-error-item']}>
-          {getModelLabelByModelType(data.model_tier)}使用错误,请点击右上角编辑进行处理
+          {getModelLabelByModelType(modelTier)}使用错误{!isChildWindow && ',请点击右上角编辑进行处理'}
         </div>
-        <PreWrapper code={data.cause} />
+        <PreWrapper code={code} />
       </div>
     </ChatCard>
   )

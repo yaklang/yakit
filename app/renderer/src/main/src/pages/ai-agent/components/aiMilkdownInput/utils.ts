@@ -3,8 +3,8 @@ import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
 import { AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
 import { AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import { AICodeBlockCommandParams, aiCodeBlockCustomId } from './aiCodeBlock/aiCustomCodeBlockPlugin'
-import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
+import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 
 /**md编辑器中匹配出提及相关数据/纯文本 */
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
@@ -122,7 +122,7 @@ export const setEditorValue = (editor: EditorMilkdownProps, value: string) => {
 
 export interface AIInputWithParamsTemplate {
   description: string
-  param: AIChatIPCStartParams['extraValue']
+  param: AIChatQSData['extraValue']
 }
 /**
  *

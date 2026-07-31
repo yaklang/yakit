@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineDocumentIcon, OutlineDownloadIcon } from '@/assets/icon/outline'
@@ -18,17 +18,25 @@ import ChatCard from '../ChatCard'
 const { ipcRenderer } = window.require('electron')
 
 export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props) => {
-  const { item } = props
+  const { item, renderNum, isChildWindow } = props
   const { data } = item
   const { t } = useI18nNamespaces(['aiAgent'])
   const [downloadLoading, setDownloadLoading] = useState(false)
 
-  const reportPath = data.reportPath
-  const title = data.title
-  const content = data.content
+  const reportPath = useCreation(() => {
+    return data.reportPath
+  }, [renderNum])
+
+  const title = useCreation(() => {
+    return data.title
+  }, [renderNum])
+
+  const content = useCreation(() => {
+    return data.content
+  }, [renderNum])
 
   const handleOpenReport = useMemoizedFn(() => {
-    if (!reportPath) return
+    if (!reportPath || isChildWindow) return
     if (getCurrentPageTabRouteKey() === YakitRoute.Irify_AI_Code_Audit) {
       emiter.emit(
         'onAiCodeAuditOpenTemporaryFile',
@@ -47,7 +55,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
 
   const handleDownloadReport = useMemoizedFn(async () => {
     try {
-      if (!reportPath) return
+      if (!reportPath || isChildWindow) return
       let code = await getCodeByPath(reportPath)
       if (!code) {
         yakitNotify('error', t('AIReportFinishCard.reportContentEmpty'))
@@ -77,18 +85,20 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
     <ChatCard
       titleText={title}
       titleMore={
-        <div className={styles['header-extra']}>
-          <Tooltip title={t('AIReportFinishCard.openInAICodeAudit')}>
-            <YakitButton size="small" type="text" icon={<OutlineDocumentIcon />} onClick={handleOpenReport} />
-          </Tooltip>
-          <YakitButton
-            size="small"
-            type="text"
-            icon={<OutlineDownloadIcon />}
-            onClick={handleDownloadReport}
-            loading={downloadLoading}
-          />
-        </div>
+        !isChildWindow && (
+          <div className={styles['header-extra']}>
+            <Tooltip title={t('AIReportFinishCard.openInAICodeAudit')}>
+              <YakitButton size="small" type="text" icon={<OutlineDocumentIcon />} onClick={handleOpenReport} />
+            </Tooltip>
+            <YakitButton
+              size="small"
+              type="text"
+              icon={<OutlineDownloadIcon />}
+              onClick={handleDownloadReport}
+              loading={downloadLoading}
+            />
+          </div>
+        )
       }
     >
       {content && <StreamMarkdown content={content || ''} />}

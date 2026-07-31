@@ -1,6 +1,7 @@
 import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ReactNode } from 'react'
 import { AIStartParams } from '../hooks/grpcApi'
+import { ChatListRenderType } from '../hooks/aiRender'
 
 export interface AIReActTaskChatProps {
   setShowFreeChat: (show: boolean) => void
@@ -69,6 +70,6 @@ export interface AIPlanPromptProps {
 }
 
 export interface AIManualAdditionProps {
-  chatType: ReActChatBaseInfo['chatType']
+  chatType: ChatListRenderType
   onCancel: () => void
 }

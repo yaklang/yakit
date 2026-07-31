@@ -1,7 +1,6 @@
 import Icon from '@ant-design/icons'
 import { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
 import React from 'react'
-import { v4 as uuidv4 } from 'uuid'
 
 interface IconProps extends CustomIconComponentProps {
   onClick: (e: React.MouseEvent) => void

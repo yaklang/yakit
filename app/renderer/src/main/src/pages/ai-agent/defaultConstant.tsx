@@ -5,7 +5,6 @@ import {
   OutlineCogIcon,
   OutlineMCPIcon,
   OutlineSparklesIcon,
-  OutlineTemplateIcon,
   OutlineWrenchIcon,
   OutlineBookOpenTextIcon,
   OutlineBotIcon,
@@ -32,7 +31,7 @@ import {
   MemfitIcon,
 } from './aiModelList/icon'
 import { UseChatIPCState } from '../ai-re-act/hooks/type'
-import { AIAgentGrpcApi, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
 import {
   SolidCursorclickIcon,
   SolidHashtagIcon,
@@ -122,6 +121,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableGoalMode: false,
     GoalMinIterations: 0,
   },
+  Source: AISourceEnum.aiAgent,
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -276,11 +276,6 @@ export const defaultChatIPCData: UseChatIPCState = {
     elements: [],
     toolListRenderNumber: 0,
   },
-  yakExecResult: {
-    card: [],
-    execFileRecord: new Map(),
-    yakExecResultLogs: [],
-  },
   taskChat: {
     plan: cloneDeep(DefaultCurrentExecTaskTree),
     elements: [],
@@ -292,9 +287,9 @@ export const defaultChatIPCData: UseChatIPCState = {
   },
   reActTimelines: [],
   memoryList: { ...DefaultMemoryList },
-  taskStatus: { loading: false, plan: '', task: '' },
+  taskStatus: { plan: '', task: '', taskID: '', status: AITaskStatus.created, coordinatorId: '' },
   focusMode: '',
-  switchLoading: false,
+  initLoading: false,
   planHistoryList: cloneDeep(DefaultPlanHistoryList),
   cancelCasualLoading: false,
   cancelTaskLoading: false,

@@ -1,24 +1,15 @@
 import React, { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
-import { useCreation, useInViewport, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
-import { cloneDeep } from 'lodash'
+import { useCreation, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
+import { clone, cloneDeep } from 'lodash'
 
 import AIAgentContext, {
   AIAgentContextDispatcher,
   AIAgentContextStore,
 } from '@/pages/ai-agent/useContext/AIAgentContext'
-import ChatIPCContent, {
-  AIChatIPCSendParams,
-  AISendConfigHotpatchParams,
-  AISendSyncMessageParams,
-  ChatIPCContextDispatcher,
-  ChatIPCContextStore,
-  defaultDispatcherOfChatIPC,
-} from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
-import { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { createActiveChatSessionId, getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import { createActiveChatSessionId, getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import {
@@ -30,7 +21,8 @@ import {
   AISendParams,
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import { AIAgentGrpcApi, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   getWebFuzzerPageIsHttps,
@@ -50,24 +42,21 @@ import {
   normalizeYaklangCodeChangeForReview,
   resetYakRunnerPatchWorkingDraft,
 } from '../pages/yakRunner/yakRunnerAiCodePatchApply'
-import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
-import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
-import { getAISourceFromChatDataStoreKey, getChatDataStoreKey } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import useDeleteAIImageByNode from '@/pages/ai-agent/components/aiMilkdownInput/aiCustomFile/hooks/useDeleteAIImageByNode'
 import emiter from '@/utils/eventBus/eventBus'
 
 import { HistroryAIReActChat } from './HistroryAIReActChat'
-import { loadHistoryAIEmbeddedReviewPolicy, setHistoryAIReviewPolicy } from './historyAIReActChatStorage'
+import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
+import { useStore } from 'zustand'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
 export interface HistoryAIReActChatBridge {
   activeID?: string
-  events: UseChatIPCEvents
+  // events: UseChatIPCEvents
   onStop: () => void
   onNewChat: () => void
-  onChatFromHistory: (session: string) => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
   syncSelectedHttpFlowIds: (ids: string[]) => void
   registerClearTableSelection: (fn: () => void) => void
@@ -180,13 +169,13 @@ function normalizeStartUserQueryToTextDescription(event: AIInputEvent): AIInputE
 }
 
 export interface HistoryAIReActChatProviderProps {
-  cacheDataStore: ChatDataStore
+  source: AISource
+  /** 会话归属路由（不可变） */
+  route: YakitRouteType
+  /** 会话当前归属 pageId（可变，可 rebind） */
+  pageId: string
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
-  /** Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关 */
-  httpFuzzTabPageId?: string
-  /** Yak Runner 工作区 id：AI `yaklang_code_change` 审阅/写回桥接 */
-  yakRunnerPageId?: string
   /**
    * - 在 `onStartRequest` / `onSendRequest` 内置（WebFuzzer 请求附件）处理之后执行
    * - Irify「代码审计」用它把工程根路径附件追加到 `AttachedResourceInfo`
@@ -199,22 +188,22 @@ export interface HistoryAIReActChatProviderProps {
 }
 
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
-  cacheDataStore,
+  source,
+  route,
+  pageId,
   focusModeLoop,
   children,
-  httpFuzzTabPageId,
-  yakRunnerPageId,
   transformInputEvent,
   resolveStartExtraParams,
   mergeRemoteAIAgentSetting,
 }: HistoryAIReActChatProviderProps) {
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
-  const refRef = useRef<HTMLDivElement>(null)
 
-  const [inViewport = true] = useInViewport(refRef)
-
-  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
+  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => ({
+    ...cloneDeep(AIAgentSettingDefault),
+    Source: source,
+  }))
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)
@@ -224,55 +213,23 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const pendingMentionRef = useRef<AIMentionCommandParams | null>(null)
   const chatReadyRef = useRef(false)
   const yakRunnerLastAttachedResourceInfoRef = useRef<AIInputEvent['AttachedResourceInfo']>([])
-  const embeddedSettingCacheReadyRef = useRef(false)
-  const lastPersistedEmbeddedSettingRef = useRef<{
-    ReviewPolicy?: AIAgentSetting['ReviewPolicy']
-  }>({})
+  const bridgeSessionIdRef = useRef('')
+  const bridgeUnsubscribeRef = useRef<(() => void) | null>(null)
 
-  const applyHistoryAIEmbeddedReviewPolicy = useMemoizedFn(async () => {
-    const reviewPolicy = await loadHistoryAIEmbeddedReviewPolicy()
-    lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: reviewPolicy }
-    setSetting((prev) => ({
-      ...prev,
-      ReviewPolicy: reviewPolicy,
-    }))
-  })
+  // Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关
+  const isHaveWebFuzzerPageId = useCreation(() => {
+    return route === YakitRoute.HTTPFuzzer && !!pageId
+  }, [route, pageId])
 
-  useEffect(() => {
-    applyHistoryAIEmbeddedReviewPolicy().finally(() => {
-      embeddedSettingCacheReadyRef.current = true
-    })
-  }, [applyHistoryAIEmbeddedReviewPolicy])
+  // Yak Runner 工作区 id：AI `yaklang_code_change` 审阅/写回桥接
+  const isHaveYakRunnerPageId = useCreation(() => {
+    return route === YakitRoute.YakScript && !!pageId
+  }, [route, pageId])
 
   useUpdateEffect(() => {
-    if (!showFreeChat) return
-    applyHistoryAIEmbeddedReviewPolicy()
-  }, [showFreeChat, applyHistoryAIEmbeddedReviewPolicy])
-
-  useUpdateEffect(() => {
-    if (!inViewport) return
-    applyHistoryAIEmbeddedReviewPolicy()
-  }, [inViewport, applyHistoryAIEmbeddedReviewPolicy])
-
-  useEffect(() => {
-    const onRefreshEmbeddedSetting = () => {
-      applyHistoryAIEmbeddedReviewPolicy()
-    }
-    emiter.on('onRefreshHistoryAIEmbeddedSetting', onRefreshEmbeddedSetting)
-    return () => {
-      emiter.off('onRefreshHistoryAIEmbeddedSetting', onRefreshEmbeddedSetting)
-    }
-  }, [applyHistoryAIEmbeddedReviewPolicy])
-
-  useUpdateEffect(() => {
-    if (!embeddedSettingCacheReadyRef.current) return
-    const policy = setting.ReviewPolicy ?? AIAgentSettingDefault.ReviewPolicy ?? 'manual'
-    if (lastPersistedEmbeddedSettingRef.current.ReviewPolicy === policy) return
-    setHistoryAIReviewPolicy(policy).then(() => {
-      lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: policy }
-      emiter.emit('onRefreshHistoryAIEmbeddedSetting', '')
-    })
-  }, [setting.ReviewPolicy])
+    // 只有配置变化了才更新，SessionID不管
+    if (activeChat?.SessionID) globalSessionEngine.updateSessionConfig(activeChat?.SessionID, getSetting())
+  }, [setting])
 
   useEffect(() => {
     if (!showFreeChat) {
@@ -291,13 +248,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onHttpFuzzRequestChange = useMemoizedFn((data: AIAgentGrpcApi.HttpFuzzRequestChange) => {
-    if (!httpFuzzTabPageId) return
+    if (!isHaveWebFuzzerPageId) return
 
     // casual 问答期间：有完整 raw 时不自动写包，入队审阅（`op` 仅占位描述，不作为筛选项）
     if (casualLoadingRef.current) {
       const nextRaw = data?.request?.raw
       if (nextRaw != null && String(nextRaw).trim() !== '' && initialRequestInCasualRef.current != null) {
-        enqueueWebFuzzerCasualReplaceReview(httpFuzzTabPageId, {
+        enqueueWebFuzzerCasualReplaceReview(pageId, {
           original: initialRequestInCasualRef.current ?? '',
           change: data,
         })
@@ -305,13 +262,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       }
     }
 
-    applyHttpFuzzRequestChangeToWebFuzzerPage(httpFuzzTabPageId, data)
+    applyHttpFuzzRequestChangeToWebFuzzerPage(pageId, data)
   })
 
   const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
-    if (!yakRunnerPageId) return
+    if (!isHaveYakRunnerPageId) return
 
-    const editorNow = getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? ''
+    const editorNow = getYakRunnerPageActiveCodeString(pageId) ?? ''
     const original =
       data.op === 'create'
         ? ''
@@ -322,7 +279,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
             : ''
 
     // op=patch：后端只给片段，这里合并成全量 replace，再走原有 diff UI
-    const normalized = normalizeYaklangCodeChangeForReview(yakRunnerPageId, data, original)
+    const normalized = normalizeYaklangCodeChangeForReview(pageId, data, original)
     if (!normalized) return
 
     const nextCode = normalized.code?.content
@@ -332,7 +289,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     const isCreate = normalized.op === 'create'
     const createFileName = isCreate ? createYakRunnerGeneratedCodeFileName() : undefined
     const createPath = isCreate
-      ? resolveYaklangCreateTargetPath(yakRunnerPageId, yakRunnerLastAttachedResourceInfoRef.current, createFileName)
+      ? resolveYaklangCreateTargetPath(pageId, yakRunnerLastAttachedResourceInfoRef.current, createFileName)
       : undefined
     const change = isCreate
       ? {
@@ -344,7 +301,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         }
       : normalized
 
-    enqueueYakRunnerCasualCodeReplaceReview(yakRunnerPageId, {
+    enqueueYakRunnerCasualCodeReplaceReview(pageId, {
       original,
       change,
       fileName: createFileName,
@@ -355,34 +312,18 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   // AI `http_flow_fuzz_status` 推送：把每次最新的 `runtime_id` 静默推到当前 fuzzer 页签的处理器中。
   // 用户点击「查看详情」会显式再次推送并要求打开抽屉，所以这里不主动打开。
   const onGetHttpFlowFuzzStatus = useMemoizedFn((data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => {
-    if (!httpFuzzTabPageId) return
+    if (!isHaveWebFuzzerPageId) return
     const runtimeId = data?.runtime_id
     if (!runtimeId) return
-    pushAIFuzzStatusRuntimeIdToWebFuzzerPage(httpFuzzTabPageId, runtimeId, { source: 'auto' })
+    pushAIFuzzStatusRuntimeIdToWebFuzzerPage(pageId, runtimeId, { source: 'auto' })
   })
 
-  const aiSource = useCreation(
-    () => getAISourceFromChatDataStoreKey(getChatDataStoreKey(cacheDataStore)) ?? 'ai',
-    [cacheDataStore],
-  )
+  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
 
-  const [chatIPCData, events] = useChatIPC({
-    autoConnect: true,
-    aiSource,
-    cacheDataStore,
-    getSetting,
-    onHttpFuzzRequestChange,
-    onGetHttpFlowFuzzStatus,
-    onYaklangCodeChange,
-  })
-
-  const imageStoreKey = useCreation(() => getChatDataStoreKey(cacheDataStore), [cacheDataStore])
-  const [, { onClearImage }] = useDeleteAIImageByNode()
-
-  const { execute, casualLoading } = chatIPCData
-
+  const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
+  const casualLoading = useStore(store, (state) => state.casualLoading)
   useEffect(() => {
-    if (!httpFuzzTabPageId && !yakRunnerPageId) {
+    if (!isHaveWebFuzzerPageId && !isHaveYakRunnerPageId) {
       casualLoadingRef.current = false
       initialRequestInCasualRef.current = null
       initialCodeInCasualRef.current = null
@@ -390,60 +331,79 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }
 
     if (!casualLoadingRef.current && casualLoading) {
-      if (httpFuzzTabPageId) {
-        initialRequestInCasualRef.current = getWebFuzzerPageRequestString(httpFuzzTabPageId) ?? ''
+      if (isHaveWebFuzzerPageId) {
+        initialRequestInCasualRef.current = getWebFuzzerPageRequestString(pageId) ?? ''
       }
-      if (yakRunnerPageId) {
-        resetYakRunnerPatchWorkingDraft(yakRunnerPageId)
-        initialCodeInCasualRef.current = getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? ''
+      if (isHaveYakRunnerPageId) {
+        resetYakRunnerPatchWorkingDraft(pageId)
+        initialCodeInCasualRef.current = getYakRunnerPageActiveCodeString(pageId) ?? ''
       }
     } else if (casualLoadingRef.current && !casualLoading) {
       initialRequestInCasualRef.current = null
       initialCodeInCasualRef.current = null
-      if (yakRunnerPageId) {
-        resetYakRunnerPatchWorkingDraft(yakRunnerPageId)
+      if (isHaveYakRunnerPageId) {
+        resetYakRunnerPatchWorkingDraft(pageId)
       }
     }
 
     casualLoadingRef.current = casualLoading
-  }, [casualLoading, httpFuzzTabPageId, yakRunnerPageId])
+  }, [casualLoading, pageId, isHaveWebFuzzerPageId, isHaveYakRunnerPageId])
+
+  const unsubscribeBridgeEvents = useMemoizedFn(() => {
+    bridgeUnsubscribeRef.current?.()
+    bridgeUnsubscribeRef.current = null
+    bridgeSessionIdRef.current = ''
+  })
+
+  // 新版流处理器会更新 session store 内的版本字段；直接订阅该 session，避免依赖 Provider 的 context。
+  const subscribeBridgeEvents = useMemoizedFn((sessionId: string) => {
+    if (!sessionId || bridgeSessionIdRef.current === sessionId) return
+
+    unsubscribeBridgeEvents()
+    const { store: sessionStore, rawData } = globalSessionEngine.ensureSession(sessionId)
+    bridgeSessionIdRef.current = sessionId
+    bridgeUnsubscribeRef.current = sessionStore.subscribe((state, previousState) => {
+      if (bridgeSessionIdRef.current !== sessionId) return
+
+      if (state.httpFuzzRequestUpdate !== previousState.httpFuzzRequestUpdate && rawData.httpFuzzRequest) {
+        onHttpFuzzRequestChange(clone(rawData.httpFuzzRequest))
+      }
+      if (state.httpFlowFuzzStatusUpdate !== previousState.httpFlowFuzzStatusUpdate && rawData.httpFlowFuzzStatus) {
+        onGetHttpFlowFuzzStatus(clone(rawData.httpFlowFuzzStatus))
+      }
+      if (state.yaklangCodeChangeUpdate !== previousState.yaklangCodeChangeUpdate && rawData.yaklangCodeChange) {
+        onYaklangCodeChange(clone(rawData.yaklangCodeChange))
+      }
+    })
+  })
+
+  useEffect(() => unsubscribeBridgeEvents, [unsubscribeBridgeEvents])
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID
   }, [activeChat])
 
+  /** 切换会话 */
   useUpdateEffect(() => {
-    events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
-  }, [activeChat])
-
-  const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
-    const { value, id, optionValue } = params
-    if (!activeID) return
-    if (!id) return
-
-    const info: AIInputEvent = {
-      IsInteractiveMessage: true,
-      InteractiveId: id,
-      InteractiveJSONInput: value,
+    if (activeChat) {
+      subscribeBridgeEvents(activeChat.SessionID)
+      onReStart({ activeChat, onStart })
     }
-    events.onSend({ token: activeID, type, params: info, optionValue })
-  })
-
-  const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
-    const targetParams = { ...params, FocusModeLoop: focusModeLoop }
-    handleSendInteractiveMessage(targetParams, 'casual')
-  })
+  }, [activeID, subscribeBridgeEvents])
 
   const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
+    const sessionId = data.params.Params?.TimelineSessionID || activeChat?.SessionID
+    if (sessionId) subscribeBridgeEvents(sessionId)
+
     const newChat: AIHandleStartExtraProps = resolveStartExtraParams?.(data) ?? {
       chatId: activeChat?.SessionID,
     }
 
     return new Promise<AIHandleStartResProps>((resolve) => {
       let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
-      if (httpFuzzTabPageId) {
-        const raw = getWebFuzzerPageRequestString(httpFuzzTabPageId)
-        const isHttps = getWebFuzzerPageIsHttps(httpFuzzTabPageId) ?? false
+      if (isHaveWebFuzzerPageId) {
+        const raw = getWebFuzzerPageRequestString(pageId)
+        const isHttps = getWebFuzzerPageIsHttps(pageId) ?? false
         const sessionId =
           data.params.Params?.TimelineSessionID || activeChat?.SessionID || getSetting().TimelineSessionID
         params = attachWebFuzzerHttpRequestToEvent(params, sessionId, raw, isHttps)
@@ -451,8 +411,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       if (transformInputEvent) {
         params = transformInputEvent(params)
       }
-      if (yakRunnerPageId) {
-        params = appendYakRunnerWorkspaceContextToEvent(yakRunnerPageId, params)
+      if (isHaveYakRunnerPageId) {
+        params = appendYakRunnerWorkspaceContextToEvent(pageId, params)
         params = normalizeStartUserQueryToTextDescription(params)
         yakRunnerLastAttachedResourceInfoRef.current = params.AttachedResourceInfo || []
       }
@@ -463,17 +423,14 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     })
   })
 
-  const onChatFromHistory = useMemoizedFn((session: string) => {
-    events.onDelChats([session])
-  })
-
   /** 新建会话：清空 UI、断开旧连接，并预生成新的 TimelineSessionID */
   const onNewChat = useMemoizedFn(() => {
     const currentID = activeChat?.SessionID
-    if (execute && currentID) {
-      events.onClose(currentID)
+    if (store.getState().execute && currentID) {
+      onClose([currentID])
     }
-    events.onReset()
+    // events.onReset()
+    unsubscribeBridgeEvents()
     setActiveChat(undefined)
     setSetting((prev) => ({
       ...prev,
@@ -484,48 +441,24 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     aiReActChatRef.current?.setValue('')
   })
 
-  const handleDelChats = useMemoizedFn((jsonString: string) => {
-    try {
-      const sessions: string[] = JSON.parse(jsonString)
-      if (!sessions.length || imageStoreKey === 'unknown') return
-      onClearImage({
-        chatDataStoreKey: imageStoreKey,
-        sessionID: sessions,
-      })
-      events.onDelChats(sessions)
-    } catch (error) {}
-  })
-
-  useEffect(() => {
-    emiter.on('onDelChats', handleDelChats)
-    return () => {
-      emiter.off('onDelChats', handleDelChats)
-    }
-  }, [handleDelChats])
-
   const onStop = useMemoizedFn(() => {
-    if (execute && activeID) {
-      events.onClose(activeID)
+    if (store.getState().execute && activeID) {
+      onClose([activeID])
     }
-  })
-
-  const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
-    const targetParams = { ...params, FocusModeLoop: focusModeLoop }
-    handleSendInteractiveMessage(targetParams, '')
   })
 
   const onSendRequest = useMemoizedFn((data: AISendParams) => {
     let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
-    if (httpFuzzTabPageId) {
-      const raw = getWebFuzzerPageRequestString(httpFuzzTabPageId)
-      const isHttps = getWebFuzzerPageIsHttps(httpFuzzTabPageId) ?? false
+    if (isHaveWebFuzzerPageId) {
+      const raw = getWebFuzzerPageRequestString(pageId)
+      const isHttps = getWebFuzzerPageIsHttps(pageId) ?? false
       params = attachWebFuzzerHttpRequestToEvent(params, activeChat?.SessionID, raw, isHttps)
     }
     if (transformInputEvent) {
       params = transformInputEvent(params)
     }
-    if (yakRunnerPageId) {
-      params = appendYakRunnerWorkspaceContextToEvent(yakRunnerPageId, params)
+    if (isHaveYakRunnerPageId) {
+      params = appendYakRunnerWorkspaceContextToEvent(pageId, params)
       yakRunnerLastAttachedResourceInfoRef.current = params.AttachedResourceInfo || []
     }
 
@@ -539,83 +472,36 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   /** 与输入框提交一致：执行中走自由输入，否则开启新会话 */
   const handleSubmitQuery = useMemoizedFn((value: HandleStartParams) => {
     const sessionID = activeChat?.SessionID
-    if (execute && sessionID) {
-      const { extra, attachedResourceInfo } = getAIReActRequestParams(value)
+    if (store.getState().execute && sessionID) {
+      const { attachedResourceInfo } = getAIReActRequestParams(value)
       const chatMessage: AIInputEvent = {
         IsFreeInput: true,
         FreeInput: value.qs,
         AttachedResourceInfo: attachedResourceInfo,
         FocusModeLoop: value.focusMode ?? focusModeLoop,
       }
-      const onSend = (res: AISendResProps) => {
+      const onSendChat = (res: AISendResProps) => {
         const { params } = res
-        events.onSend({
+        onSend({
           token: sessionID,
           type: 'casual',
           params: {
             IsFreeInput: true,
             ...params,
           },
-          extraValue: extra,
         })
         emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: sessionID }))
         aiReActChatRef.current?.setValue('')
       }
       onSendRequest({ params: chatMessage })
-        .then(onSend)
+        .then(onSendChat)
         .catch(() => {
-          onSend({ params: chatMessage })
+          onSendChat({ params: chatMessage })
         })
       return
     }
     aiReActChatRef.current?.handleStart(value)
   })
-
-  const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
-    if (!activeID) return
-    const { syncType, SyncJsonInput } = data
-    const params = { ...data.params, FocusModeLoop: focusModeLoop }
-    const info: AIInputEvent = {
-      IsSyncMessage: true,
-      SyncType: syncType,
-      SyncJsonInput,
-      Params: params,
-    }
-    events.onSend({ token: activeID, type: '', params: info })
-  })
-
-  const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
-    if (!activeID) return
-    const { hotpatchType } = data
-
-    const params = { ...data.params, FocusModeLoop: focusModeLoop }
-    const info: AIInputEvent = {
-      IsConfigHotpatch: true,
-      HotpatchType: hotpatchType,
-      Params: params,
-    }
-    events.onSend({ token: activeID, type: '', params: info })
-  })
-
-  const store: ChatIPCContextStore = useCreation(() => {
-    return {
-      chatIPCData,
-      planReviewTreeKeywordsMap: new Map(),
-      reviewExpand: false,
-    }
-  }, [chatIPCData])
-
-  const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
-    return {
-      ...defaultDispatcherOfChatIPC,
-      chatIPCEvents: events,
-      handleSendCasual,
-      handleStop: onStop,
-      handleSend,
-      handleSendSyncMessage,
-      handleSendConfigHotpatch,
-    }
-  }, [events])
 
   const stores: AIAgentContextStore = useMemo(() => {
     return {
@@ -629,16 +515,19 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       getSetting: getSetting,
       setSetting: setSetting,
       setActiveChat: setActiveChat,
+      onStart,
+      onSend,
+      onClose,
+      onUpdatePageId,
     }
   }, [])
 
   const historyAIReActChatBridge: HistoryAIReActChatBridge = useMemo(
     () => ({
       activeID,
-      events,
+      // events,
       onStop,
       onNewChat,
-      onChatFromHistory,
       setActiveChat,
       syncSelectedHttpFlowIds: (ids: string[]) => {
         aiReActChatRef.current?.setHttpFlow?.(ids)
@@ -672,7 +561,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         })
       },
     }),
-    [activeID, events, onStop, onNewChat, onChatFromHistory, setActiveChat, handleSubmitQuery],
+    [activeID, onStop, onNewChat, setActiveChat, handleSubmitQuery],
   )
 
   const renderHistoryAIReActChat = useCallback(
@@ -680,20 +569,18 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       <HistroryAIReActChat
         className={className}
         title={title}
-        refRef={refRef}
         showFreeChat={showFreeChat}
         setShowFreeChat={setShowFreeChat}
         aiReActChatRef={aiReActChatRef}
         onStartRequest={onStartRequest}
         onSendRequest={onSendRequest}
-        inViewport={inViewport}
-        setSetting={setSetting}
         mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}
         onChatReady={flushPendingMention}
         externalParameters={externalParameters}
+        source={source}
       />
     ),
-    [inViewport, flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat],
+    [flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat, source],
   )
 
   const contextValue = useMemo(
@@ -709,9 +596,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   return (
     <AIAgentContext.Provider value={{ store: stores, dispatcher: dispatchers }}>
-      <ChatIPCContent.Provider value={{ store, dispatcher }}>
-        <HistoryAIReActChatContext.Provider value={contextValue}>{children}</HistoryAIReActChatContext.Provider>
-      </ChatIPCContent.Provider>
+      <HistoryAIReActChatContext.Provider value={contextValue}>{children}</HistoryAIReActChatContext.Provider>
     </AIAgentContext.Provider>
   )
 })

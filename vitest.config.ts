@@ -4,6 +4,19 @@ import path from 'path'
 
 const ENGINE_LINK_SRC = path.resolve(__dirname, 'app/renderer/engine-link-startup/src')
 const RENDERER_MAIN_SRC = path.resolve(__dirname, 'app/renderer/src/main/src')
+const I18N_STUB = path.resolve(__dirname, 'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/i18nStub.ts')
+const I18NEXT_BACKEND_STUB = path.resolve(
+  __dirname,
+  'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/i18next-resources-to-backend.ts',
+)
+const ELECTRON_BRIDGE_STUB = path.resolve(
+  __dirname,
+  'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/electronBridgeStub.ts',
+)
+const STYLE_STUB = path.resolve(
+  __dirname,
+  'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/styleStub.ts',
+)
 
 function resolveAtRoot(root: string, id: string) {
   const rel = id.startsWith('@/') ? id.slice(2) : id
@@ -33,10 +46,32 @@ function resolveAtRoot(root: string, id: string) {
 export default defineConfig({
   plugins: [
     {
+      name: 'stub-style-modules',
+      enforce: 'pre',
+      resolveId(id) {
+        const clean = id.split('?')[0]
+        if (/\.(css|scss|sass|less)$/.test(clean)) {
+          return STYLE_STUB
+        }
+        return null
+      },
+      load(id) {
+        if (id === STYLE_STUB || /\.(css|scss|sass|less)(\?.*)?$/.test(id)) {
+          return 'export default {}'
+        }
+        return null
+      },
+    },
+    {
       name: 'resolve-at-monorepo',
       enforce: 'pre',
       resolveId(id, importer) {
+        if (id === 'i18next-resources-to-backend') return I18NEXT_BACKEND_STUB
+        if (id === '@/i18n/i18n' || id === 'i18n/i18n') return I18N_STUB
+        if (id === '@/services/electronBridge') return ELECTRON_BRIDGE_STUB
+
         if (!id.startsWith('@/')) return null
+
         const eng = resolveAtRoot(ENGINE_LINK_SRC, id)
         const main = resolveAtRoot(RENDERER_MAIN_SRC, id)
         const imp = (importer || '').split(path.sep).join('/')
@@ -55,11 +90,15 @@ export default defineConfig({
       '@engne': path.resolve(__dirname, 'app/renderer/engine-link-startup/src'),
       '@engine': path.resolve(__dirname, 'app/renderer/engine-link-startup/src'),
       '@app': path.resolve(__dirname, 'app'),
+      'i18next-resources-to-backend': I18NEXT_BACKEND_STUB,
+      '@/i18n/i18n': I18N_STUB,
+      '@/services/electronBridge': ELECTRON_BRIDGE_STUB,
     },
   },
   test: {
     environment: 'jsdom',
     globals: true,
+    css: false,
     // run from repo root
     root: path.resolve(__dirname),
     // run renderer setup to register testing-library matchers

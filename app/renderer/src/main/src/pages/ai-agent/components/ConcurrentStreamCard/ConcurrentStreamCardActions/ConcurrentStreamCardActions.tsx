@@ -6,22 +6,22 @@ import {
   OutlineChevronsUpDownIcon,
   OutlineListOneIcon,
   OutlineListTodoIcon,
-  OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
-import type { OpenAIConcurrentStreamPayload } from '@/utils/openWebsite'
 import { openAIConcurrentStream } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from '../ConcurrentStreamCard.module.scss'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCreation, useMemoizedFn } from 'ahooks'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { getTaskName } from '../concurrentStream/buildConcurrentStreamFramePayload'
 
 /** 卡片标题栏右侧操作区 */
 interface ConcurrentStreamCardActionsProps {
-  isChildWindow?: boolean
   expand: boolean
   onExpandToggle: () => void
-  onRefresh?: () => void
   onDetails?: () => void
-  framePayload: OpenAIConcurrentStreamPayload
+  token: string
   showContinueTask: boolean
   showCancelTask: boolean
   showDetails: boolean
@@ -30,39 +30,47 @@ interface ConcurrentStreamCardActionsProps {
 }
 
 const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
-  isChildWindow,
   expand,
   onExpandToggle,
-  onRefresh,
   onDetails,
-  framePayload,
   showContinueTask,
   showCancelTask,
   showDetails,
   coordinatorId,
   taskId,
+  token,
 }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  if (isChildWindow) {
-    return (
-      <Tooltip title={t('ConcurrentStreamCard.refresh')}>
-        <YakitButton
-          size="middle"
-          type="text"
-          icon={<OutlineRefreshIcon />}
-          onClick={onRefresh}
-          className={styles['expand-btn']}
-        />
-      </Tooltip>
-    )
-  }
+  const session = useCurrentSessionId()
+  const rawData = useCurrentRawData()
+  const chatType = useCreation(() => {
+    if (!rawData) return
+    const itemData = rawData.contents.get(token)
+    if (!itemData) return
+    return itemData.chatType
+  }, [])
+
+  const openChildWindow = useMemoizedFn((e) => {
+    e?.stopPropagation()
+    if (!chatType) return
+    // 开窗只传轻量元数据
+    // 只传基础类型数据
+    openAIConcurrentStream({
+      token,
+      session,
+      chatType,
+      rootType: rawData.contents.get(token)?.type,
+      taskName: getTaskName(rawData, token),
+    })
+  })
+
   return (
     <>
       {showContinueTask && coordinatorId != null && !!taskId && (
         <AIHistoryContinueTask coordinatorId={coordinatorId} taskId={taskId} />
       )}
-      {showCancelTask && !!taskId && <AIHistorySkipTask taskId={taskId} isTask={framePayload.chatType === 'task'} />}
+      {showCancelTask && !!taskId && <AIHistorySkipTask taskId={taskId} isTask={chatType === 'task'} />}
       {showDetails && (
         <Tooltip title="任务详情" placement="top">
           <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
@@ -73,10 +81,7 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
           size="small"
           type="text"
           icon={<OutlineListOneIcon />}
-          onClick={(e) => {
-            e.stopPropagation()
-            openAIConcurrentStream(framePayload)
-          }}
+          onClick={openChildWindow}
           className={styles['expand-btn']}
         />
       </Tooltip>

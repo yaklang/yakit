@@ -1,8 +1,9 @@
-import { UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
-import { AIAgentGrpcApi, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
-import { PlanItemDetailsData, ReActChatRenderItem, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import type { UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
+import type { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { PlanItemDetailsData, SessionRenderContent } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { PaginationSchema } from '@/pages/invoker/schema'
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {
@@ -38,7 +39,6 @@ export interface AIChatData {
   httpRunTimeIDs: UseChatIPCState['httpRunTimeIDs']
   /** 记录数据里所有的riskRunTimeIDs */
   riskRunTimeIDs: UseChatIPCState['riskRunTimeIDs']
-  yakExecResult: UseChatIPCState['yakExecResult']
   /** 性能相关数据 */
   aiPerfData: {
     /** 消耗Token */
@@ -163,4 +163,140 @@ export interface QueryAISessionRequest {
     Keyword?: string
     Source?: AISource[]
   }
+}
+export interface AIAgentChatData {
+  /** http_fuzz_request_change事件通知数据 */
+  httpFuzzRequest?: AIAgentGrpcApi.HttpFuzzRequestChange
+  /** http_flow_fuzz_status事件通知数据 */
+  httpFlowFuzzStatus?: AIAgentGrpcApi.GetHttpFlowFuzzStatus
+  /** 更新会话的标题  */
+  sessionTitle?: string
+  /** 记忆列表 */
+  memoryList: AIAgentGrpcApi.MemoryEntryList
+  /** 系统流信息(isSystem=true&type=stream) */
+  systemStream: string
+  /** yaklang_code_change 数据 */
+  yaklangCodeChange?: AIAgentGrpcApi.YaklangCodeChange
+
+  /**
+   * 与 IDB sessionRender.grpcOffset 同步的事件游标。
+   * start 时对齐后写入；仅加载后端存量历史（recovery 等）时更新。
+   */
+  grpcOffset: number
+
+  /** timeline 历史分页游标（grpcQueryAIEvent 的 BeforeId），0 表示未拉过 */
+  timelineBeforeId: number
+  /** timeline 历史是否已到尽头（Total===0 或 Events.length < LIMIT 时置 true） */
+  timelineNoMore: boolean
+
+  /** 记录数据里所有的httpRunTimeIDs */
+  httpRunTimeIDs: string[]
+  /** 记录数据里所有的riskRunTimeIDs */
+  riskRunTimeIDs: string[]
+  /** 性能相关数据 */
+  aiPerfData: {
+    /** 消耗Token */
+    consumption: AIAgentGrpcApi.Consumption
+    /** 上下文压力 */
+    pressure: Record<AIAgentGrpcApi.Pressure['model_tier'], AIAgentGrpcApi.Pressure[]>
+    /** 首字符响应耗时 */
+    firstCost: Record<AIAgentGrpcApi.AIFirstCostMS['model_tier'], AIAgentGrpcApi.AIFirstCostMS[]>
+    /** 总对话耗时 */
+    totalCost: Record<AIAgentGrpcApi.AITotalCostMS['model_tier'], AIAgentGrpcApi.AITotalCostMS[]>
+    /** 上下文字节统计 */
+    contextStats: AIContextStatsDetail
+    /** 上下文成分 */
+    contextSections: AIContextSectionsDetail
+  }
+  /** 自由对话(ReAct)会话 */
+  casualChat: {
+    /** react 任务对应的详情数据 */
+    planDetails: PlanItemDetailsData
+    /** 自由会话啊的子任务对应的详情数据 */
+    planDetailsMap: Map<string, PlanItemDetailsData>
+  }
+  taskChat: {
+    /** 任务列表的子任务对应的详情数据 */
+    planDetailsMap: Map<string, PlanItemDetailsData>
+  }
+  /** 会话内每条信息的详情 */
+  contents: Map<string, AIChatQSData>
+}
+export interface AIAgentChatMetaData {
+  /** 会话通信流建立成功后的UI回调触发事件 */
+  onLinkSuccess?: (sessionId: string) => void
+  /** forceClose 传入的回调，在 grpc session-end 移除监听前执行 */
+  onEnd?: () => void
+  /** 通过用户问题创建会话时的问题 */
+  createChatQuestion?: AIInputEvent
+
+  /** 建立会话后的ping请求测试连通性-ping的唯一ID和轮询定时器 */
+  pingSyncID: string
+  pingTimer: ReturnType<typeof setInterval> | null
+
+  /** 自由对话的实时记忆列表 */
+  casualMemoryList: AIAgentGrpcApi.MemoryEntryList
+  /** 任务规划的实时记忆列表 */
+  taskMemoryList: AIAgentGrpcApi.MemoryEntryList
+  /** 通知消息的消失定时器 */
+  notifyMessageTimer: NodeJS.Timeout | null
+
+  /** 当前任务规划正在进行中的节点taskID */
+  currentTaskPlanActiveNode: Set<string>
+
+  /**
+   * 任务规划结束门闩：end_plan_and_execution 与 react_task_status_changed 终态都到后才把 status 落到终态
+   * 任一未到则 status 保持 processing（等待中）
+   */
+  taskPlanEndGate: {
+    endReceived: boolean
+    pendingStatus?: 'completed' | 'aborted' | 'skipped'
+  }
+
+  /** 历史数据: review_release先出现的历史review数据的id-release */
+  historyReviewReleaseID: Record<string, AIAgentGrpcApi.ReviewRelease>
+
+  /** 当前plan_review对应的扩展数据ID */
+  currentPlanReviewExtraId: string
+  /** 当前plan_review的异步详细数据 */
+  planReviewExtraData: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
+
+  /** 记录tool_xxx_stderr的stream数据 */
+  toolStderrStreamData: Map<string, { content: string; uuid: string; status: 'start' | 'end' }>
+
+  /** 记录都存在过的系统信息uuid, 只展示最新的一条系统信息 */
+  systemEventUUID: string[]
+
+  /** 顶部卡片临时缓冲区 */
+  cardKVPair: Map<string, AIAgentGrpcApi.AICacheCard>
+  cardKVPaidTimer: NodeJS.Timeout | null
+
+  /** 用于文件操作记录的计数器, 主要给文件操作记录加上order属性 */
+  execFileRecordOrder: number
+
+  /** 同步ID-是否已处理 */
+  syncIDMap: Map<string, boolean>
+
+  /**
+   * 轮询获取最新问题队列的空队列次数
+   * 如果超过3次，直接关闭轮询器，等待用户问问题后重启
+   */
+  queuePollingEmptyCount: number
+  /** 轮询获取最新问题队列的定时器 */
+  queuePollingTimer: NodeJS.Timeout | null
+
+  /** 轮询获取最新记忆列表的定时器 */
+  memoryPollingTimer: NodeJS.Timeout | null
+
+  /**
+   * start 时从 IDB 读出的渲染树暂存，pong 后消费 hydrate，避免二次读库。
+   * 消费后应置 undefined。
+   */
+  pendingSessionRender?: SessionRenderContent
+
+  /**
+   * 记录自由对话下成组agent任务的taskID
+   * 这里记录的是任务的taskID，不是任务的唯一值(问题id-任务id)
+   */
+  casualSubTaskIDs: Set<string>
 }

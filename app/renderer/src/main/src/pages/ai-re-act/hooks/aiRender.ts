@@ -1,7 +1,163 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n, AIInputEvent } from './grpcApi'
-import type { AIChatIPCStartParams } from './type'
+import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
+import type { AIFileSystemPin, AIQuestionQueues, UseAIMessageDataState } from './type'
+import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
+// #region AI-Agent 非会话列表外的渲染数据
+/** 插件执行中的文件操作记录 */
+export interface AIYakExecFileRecord extends StreamResult.Log {
+  /** 前端主动对接口流输出的文件记录进行先后操作的记录 */
+  order: number
+}
+
+/** 任务规划-可执行任务的数据结构 */
+export interface AITaskInfoProps extends Omit<AIAgentGrpcApi.PlanTask, 'subtasks'> {
+  /** 层级(代表在树里的第几层) */
+  level: number
+  /** 是否是叶子任务节点 */
+  isLeaf: boolean
+}
+
+/** UI：待办清单卡片数据*/
+export interface TodoListCardData {
+  items: AIAgentGrpcApi.TodoListUpdateItem[]
+  stats: AIAgentGrpcApi.TodoListUpdateStats
+  /** UI定时刷新数据渲染，用于确定数据是否有更新 */
+  uuid: string
+}
+
+/** 用户输入框上的AI提示消息 */
+export interface AIInputNotifyMessage {
+  type: 'notify' | 'rate-limit'
+  content: string
+  label: AIOutputI18n
+}
+
+export type ForgesAndSkillsDynamicItem = Omit<AIAgentGrpcApi.PlanItemDetailsDynamicForgesItem, 'category'> &
+  Omit<AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem, 'category'> & {
+    category: 'forge' | 'skill'
+  }
+
+/** 任务树节点的详情数据 */
+export interface PlanItemDetailsData {
+  /** UI定时刷新数据渲染，用于确定数据是否有更新 */
+  uuid: string
+  /** 任务id */
+  taskId: string
+  todoList: TodoListCardData
+  tool: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  forges: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicForgesItem[]
+  }
+  skills: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem[]
+  }
+  plugins: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  mcp: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  /** 目前没有这个数据 */
+  mcpServices: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  perception: AIAgentGrpcApi.PerceptionData
+  execution: AIAgentGrpcApi.SessionSnapshot['execution']
+  backgroundProcesses: AIAgentGrpcApi.SessionSnapshot['background_processes']
+}
+// #endregion
+
+// #region AI-Agent 用于触发会话列表的渲染数据
+/** 会话列表类型(任务规划|自由对话) */
+export type ChatListRenderType = 'reAct' | 'task'
+
+/** 响应式骨架模型 (纯净的字典与关系树) */
+export interface ReActChatBaseMeta {
+  token: string
+  type: AIChatQSDataType
+  renderNum: number // 精准驱动打字机刷新的原子计数器，历史记录中永远为 0
+}
+export interface ReActChatItemMeta extends ReActChatBaseMeta {
+  kind: 'item'
+  /** 组的标识符 */
+  nodeId: AIOutputEvent['NodeId']
+}
+export interface ReActChatGroupMeta extends ReActChatBaseMeta {
+  kind: 'group'
+  /** 组的标识符 */
+  nodeId: AIOutputEvent['NodeId']
+  childrenTokens: string[]
+}
+export interface ReActChatTaskMeta extends ReActChatBaseMeta {
+  kind: 'task'
+  childrenTokens: string[]
+}
+
+/** UI 视图渲染路标 (控制元素怎么画、要不要动画、数据从哪来) */
+export interface ReActChatRenderElement {
+  kind: 'item' | 'group' | 'task'
+  token: string
+  chatType: ChatListRenderType
+  /** 决定是否触发工具链折叠与渐入动画 */
+  isHistory: boolean
+}
+
+/** 会话渲染树快照（zustand items/groups/tasks + 两侧 elements） */
+export interface SessionRenderContent {
+  items: Record<string, ReActChatItemMeta>
+  groups: Record<string, ReActChatGroupMeta>
+  tasks: Record<string, ReActChatTaskMeta>
+  casualElements: ReActChatRenderElement[]
+  taskElements: ReActChatRenderElement[]
+}
+
+/** 控制UI渲染的数据数组元素 */
+export interface ReActChatBaseInfo {
+  chatType: ChatListRenderType
+  token: string
+  /** 决定具体样式的组件路由 */
+  type: AIChatQSDataType
+  /** 高频更新时精准触发单项重渲染的“版本号” */
+  renderNum: number
+
+  /** 是否是已加载的历史缓存数据（用于拦截重复写入 DB） */
+  isCached?: boolean
+  /** 缓存数据里的顺序 */
+  cacheOrder?: number
+}
+
+/** 独立 UI 节点 */
+export interface ReActChatElement extends ReActChatBaseInfo {
+  kind: 'item'
+}
+/** stream合成组group的节点 */
+export interface ReActChatGroupElement extends ReActChatBaseInfo {
+  kind: 'group'
+  children: ReActChatElement[]
+}
+
+/** 进入 task 容器内部的子节点类型集合 */
+export type ReActChatTaskElementSub = ReActChatElement | ReActChatGroupElement
+/** 任务内的所有节点 */
+export interface ReActChatTaskElement extends ReActChatBaseInfo {
+  kind: 'task'
+  children: ReActChatTaskElementSub[]
+}
+
+export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement | ReActChatTaskElement
+
+// #endregion
+
+// #region UI元素渲染的详细数据结构
 /** 工具流式输出里的可选操作列表 */
 export interface ToolStreamSelectors {
   callToolId: string
@@ -25,7 +181,7 @@ export interface AIStreamOutput {
 export interface AIToolResult {
   type: 'create' | 'stream' | 'result'
   callToolId: string
-  /**工具名称 */
+  /** 工具名称 */
   toolName: string
   /** 工具显示名称（多语言） */
   verboseName?: AIOutputI18n
@@ -108,12 +264,6 @@ export type AIReviewType =
   | UIRequireUserInteractive
   | UIExecAIForgeReview
 
-/** 插件执行中的文件操作记录 */
-export interface AIYakExecFileRecord extends StreamResult.Log {
-  /** 前端主动对接口流输出的文件记录进行先后操作的记录 */
-  order: number
-}
-
 /** 工具执行结果的决策展示数据 */
 export interface AIToolCallDecision extends Omit<AIAgentGrpcApi.ToolCallDecision, 'i18n'> {
   i18n: AIOutputI18n
@@ -159,56 +309,6 @@ export interface ReportFinishCardData {
   content: string
 }
 
-/** UI：待办清单卡片数据*/
-export interface TodoListCardData {
-  items: AIAgentGrpcApi.TodoListUpdateItem[]
-  stats: AIAgentGrpcApi.TodoListUpdateStats
-  /** UI定时刷新数据渲染，用于确定数据是否有更新 */
-  uuid: string
-}
-
-export type ForgesAndSkillsDynamicItem = Omit<AIAgentGrpcApi.PlanItemDetailsDynamicForgesItem, 'category'> &
-  Omit<AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem, 'category'> & {
-    category: 'forge' | 'skill'
-  }
-
-/** 任务树节点的详情数据 */
-export interface PlanItemDetailsData {
-  /** UI定时刷新数据渲染，用于确定数据是否有更新 */
-  uuid: string
-  /** 任务id */
-  taskId: string
-  todoList: TodoListCardData
-  tool: {
-    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
-    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
-  }
-  forges: {
-    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
-    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicForgesItem[]
-  }
-  skills: {
-    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
-    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem[]
-  }
-  plugins: {
-    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
-    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
-  }
-  mcp: {
-    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
-    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
-  }
-  /** 目前没有这个数据 */
-  mcpServices: {
-    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
-    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
-  }
-  perception: AIAgentGrpcApi.PerceptionData
-  execution: AIAgentGrpcApi.SessionSnapshot['execution']
-  backgroundProcesses: AIAgentGrpcApi.SessionSnapshot['background_processes']
-}
-
 /** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */
 export interface HttpFlowFuzzStatusCardData {
   fuzz_id: string
@@ -220,7 +320,9 @@ export interface HttpFlowFuzzStatusCardData {
   /** working 推送的进度；finish 时保留最后一次 */
   progress?: AIAgentGrpcApi.HttpFlowFuzzStatusProgress
 }
+// #endregion
 
+// #region chat 问答内容组件的类型集合(包括了类型推导)
 export enum AIChatQSDataTypeEnum {
   /**用户的自由输入 */
   QUESTION = 'question',
@@ -273,72 +375,43 @@ export enum AIChatQSDataTypeEnum {
   /** 任务规划-未标识组的默认组 */
   TASK_DEFAULT_GROUP = 'task_default_group',
 }
-
 export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
 
-/** 控制UI渲染的数据数组元素 */
-export interface ReActChatBaseInfo {
-  chatType: 'reAct' | 'task'
-  token: string
-  type: AIChatQSDataType
-  /** 触发渲染的次数, 无实际逻辑意义 */
-  renderNum: number
-  /** 是否是已缓存数据 */
-  isCached?: boolean
-  /** 缓存数据里的顺序 */
-  cacheOrder?: number
-}
-
-/** 独立 UI 节点 */
-export interface ReActChatElement extends ReActChatBaseInfo {
-  kind: 'item'
-}
-/** stream合成组group的节点 */
-export interface ReActChatGroupElement extends ReActChatBaseInfo {
-  kind: 'group'
-  children: ReActChatElement[]
-}
-
-/** 进入 task 容器内部的子节点类型集合 */
-export type ReActChatTaskElementSub = ReActChatElement | ReActChatGroupElement
-/** 任务内的所有节点 */
-export interface ReActChatTaskElement extends ReActChatBaseInfo {
-  kind: 'task'
-  children: ReActChatTaskElementSub[]
-}
-
-export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement | ReActChatTaskElement
-
-// #region chat 问答内容组件的类型集合(包括了类型推导)
 export interface AIChatQSDataBase<T extends string, U> {
   type: T
   data: U
+  /** id就是token */
   id: string
-  chatType: ReActChatBaseInfo['chatType']
+  chatType: ChatListRenderType
   AIService: AIOutputEvent['AIService']
   AIModelName: AIOutputEvent['AIModelName']
   Timestamp: AIOutputEvent['Timestamp']
-  /** 节点信息所属的任务聚合组 key（parentTaskId-taskId） */
-  taskId?: string
+  /**
+   * 节点信息所属的任务节点索引
+   * 索引结构
+   * 问题: 问题id-default
+   * 任务: 问题id-任务id
+   */
+  TaskId?: AIOutputEvent['TaskId']
   /** 前端专属数据，供前端逻辑和UI处理使用 */
-  extraValue?: AIChatIPCStartParams['extraValue']
-  /** 参考资料 */
-  reference?: ChatReferenceMaterialPayload
-  /** 父集合组的key(如果被收集到集合组中, 则存在该字段) */
-  parentGroupKey?: string
+  extraValue?: CustomPluginExecuteFormValue | Record<string, CustomPluginExecuteFormValue[]>
+  /** 参考资料 token 列表（正文与资料分离；payload 存 sessionReference 表） */
+  reference?: string[]
+  /** 父集合组的key/token(如果被收集到集合组中, 则存在该字段) */
+  parentGroupToken?: string
 }
 
-type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, { qs: string; setting: AIInputEvent }>
+type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
 type ChatToolCallParams = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_PARAM, AIAgentGrpcApi.AIToolCallParams>
-export type ChatApiRequestFailed = AIChatQSDataBase<
+type ChatApiRequestFailed = AIChatQSDataBase<
   AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
   AIAgentGrpcApi.AIApiRequestFailedPayload
 >
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
 type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
-type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
+export type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
 type ChatPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE, UIPlanReview>
 type ChatDetachedPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE, UIDetachedPlanReview>
 type ChatTaskReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE, UITaskReview>
@@ -349,7 +422,7 @@ type ChatRequireUserInteractive = AIChatQSDataBase<
 >
 type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
 export type ChatTaskNodeGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_NODE_GROUP, AITaskStartInfo>
-export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
+type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
 type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
 type ChatFailReact = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_REACT, FailReactError>
@@ -357,15 +430,18 @@ type ChatReferenceMaterial = AIChatQSDataBase<
   AIChatQSDataTypeEnum.Reference_Material,
   { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose'] }
 >
-/** 用于渲染State定义使用, 无实际逻辑意义 */
-type ChatStreamGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM_GROUP, undefined>
-export type ChatUserManualIntervention = AIChatQSDataBase<
+type ChatUserManualIntervention = AIChatQSDataBase<
   AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
   UserManualInterventionContext
 >
+
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
-export type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
+type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
+type ChatStreamGroup = AIChatQSDataBase<
+  AIChatQSDataTypeEnum.STREAM_GROUP,
+  { NodeId: AIOutputEvent['NodeId']; NodeIdVerbose: AIOutputEvent['NodeIdVerbose']; lastToken: string }
+>
 
 export type AIChatQSData =
   | ChatQuestion
@@ -386,11 +462,266 @@ export type AIChatQSData =
   | ChatFailReact
   | ChatToolCallResult
   | ChatReferenceMaterial
-  | ChatStreamGroup
   | ChatUserManualIntervention
   | ChatToolCallParams
   | ChatApiRequestFailed
   | ChatHttpFlowFuzzStatus
   | ChatReportFinish
   | ChatTaskDefaultGroup
+  | ChatStreamGroup
+// #endregion
+
+// #region 状态机定义及其相关字段的定义
+/** 任务规划运行态：展示文案 + 当前活动任务身份/状态（是否在跑只看 status） */
+export interface TaskPlanStatus {
+  plan: string
+  task: string
+  /** 当前任务规划的 re_act_task_id，'' 表示无活动任务规划 */
+  taskID: string
+  /**
+   * 当前任务规划状态，AITaskStatus.created 表示无；
+   * processing 表示执行中或等待 end∧change 齐套；终态表示已结束
+   */
+  status: AITaskStatusType
+  /** 当前任务规划的 coordinatorId，'' 表示无 */
+  coordinatorId: string
+}
+
+/** 当前正在执行的任务树 */
+export interface CurrentExecTaskTree {
+  task_tree: AIAgentGrpcApi.PlanHistory['task_tree']
+  root_task_name: AIAgentGrpcApi.PlanHistory['root_task_name']
+}
+
+/** @name 数据状态机定义 */
+export interface ChatStoreState {
+  /** 会话执行状态 */
+  execute: boolean
+
+  /** aiChat.d.ts AIAgentChatData httpFuzzRequest */
+  httpFuzzRequestUpdate: number
+  /** aiChat.d.ts AIAgentChatData httpFlowFuzzStatus */
+  httpFlowFuzzStatusUpdate: number
+  /**
+   * 更新会话标题名
+   * aiChat.d.ts AIAgentChatData sessionTitle
+   */
+  sessionTitleUpdate: number
+  /**
+   * 记忆列表
+   * aiChat.d.ts AIAgentChatData memoryList
+   */
+  memoryListUpdate: number
+  /**
+   * 系统流信息(isSystem=true&type=stream)
+   * aiChat.d.ts AIAgentChatData systemStream
+   */
+  updateSystemStream: number
+  /**
+   * yaklang_code_change 更新
+   * aiChat.d.ts AIAgentChatData yaklangCodeChange
+   */
+  yaklangCodeChangeUpdate: number
+  /** aiChat.d.ts AIAgentChatMetaData syncIDMap */
+  syncIDUpdate: number
+
+  /** 接口运行过程中的数据文件夹合集 */
+  grpcFolders: AIFileSystemPin[]
+  /** 时间线 */
+  reActTimelines: AIAgentGrpcApi.TimelineItem[]
+
+  /** 流推送的提示文案（notify / rate-limit），展示时长由 duration 系列字段控制，到期自动清空 */
+  notifyMessage: AIInputNotifyMessage | null
+  /** 任务规划历史数据-任务树 */
+  planHistoryList: AIAgentGrpcApi.PlanHistoryList
+  /** 问题队列信息 */
+  questionQueue: AIQuestionQueues
+
+  /** 运行时产生http数据(是否显示tab，是否刷新数据) */
+  httpTabShow: boolean
+  /** aiChat.d.ts AIAgentChatData httpRunTimeIDs */
+  httpTabUpdate: number
+  /** 运行时产生risk数据(是否显示tab，是否刷新数据) */
+  riskTabShow: boolean
+  /** aiChat.d.ts AIAgentChatData riskRunTimeIDs */
+  riskTabUpdate: number
+
+  // #region 会话列表相关数据
+  /** 当前自由对话问题的re_act_task_id */
+  currentCasualTaskID: string
+  /** 自由对话的loading 显示的文案 */
+  casualTitle: string
+  /** 自由对话的是否进行中 */
+  casualLoading: boolean
+  /** 场景状态(仅供自由对话[reAct])使用 */
+  focusMode: string
+  /** UI是否显示中间的任务规划列表 */
+  showPlanList: boolean
+  /** 任务规划运行态（展示文案 + 当前活动任务；是否在跑看 status） */
+  taskStatus: TaskPlanStatus
+
+  /**
+   * 自由对话的当前review(未操作)
+   * 通过token去rawData中contents里取数据，token是唯一的
+   */
+  currentCasualReview: string[]
+  /**
+   * 任务规划当前显示的review数据
+   * 通过token去rawData中contents里取数据，token是唯一的
+   */
+  currentPlanReviewToken: { token: string; renderNum: number }
+  /**
+   * 当前review是plan时，异步数据的更新版本
+   * aiChat.d.ts AIAgentChatMetaData planReviewExtraData
+   */
+  currentPlanReviewExtraUpdate: number
+
+  items: SessionRenderContent['items']
+  groups: SessionRenderContent['groups']
+  tasks: SessionRenderContent['tasks']
+
+  casualChat: {
+    elements: SessionRenderContent['casualElements']
+    /** aiChat.d.ts AIAgentChatData casualChat['planDetails'] */
+    todoListUpdate: number
+  }
+  taskChat: {
+    elements: SessionRenderContent['taskElements']
+    plan: CurrentExecTaskTree
+  }
+  // #endregion
+
+  /** UI上的头部的card横向滚动列表数据 */
+  card: AIAgentGrpcApi.AIInfoCard[]
+  /** 工具卡片相关的文件数据 */
+  execFileRecord: Map<string, AIYakExecFileRecord[]>
+  /** 文件操作列表 */
+  yakExecResultLogs: StreamResult.Log[]
+
+  /** 切换session时的loading状态 */
+  /** 切换/恢复会话 loading（供 UI 遮罩与禁用交互，防止加载期间误点） */
+  initLoading: boolean
+  /** 非初始化的请求grpc数据 loading */
+  grpcLoadMoreLoading: boolean
+
+  /** 用户主动取消问题的loading状态(自由对话) */
+  cancelCasualLoading: boolean
+  /** 用户主动取消问题的loading状态(任务规划) */
+  cancelTaskLoading: boolean
+
+  /**
+   * TODO - 有问题，需要调整 请求历史数据相关State
+   */
+  requestHistoryState: UseAIMessageDataState
+
+  /** 更新精准字段数据依赖的渲染版本号 */
+  updateStateCount: (
+    type:
+      | 'httpFuzzRequestUpdate'
+      | 'httpFlowFuzzStatusUpdate'
+      | 'sessionTitleUpdate'
+      | 'memoryListUpdate'
+      | 'updateSystemStream'
+      | 'yaklangCodeChangeUpdate'
+      | 'syncIDUpdate'
+      | 'currentPlanReviewExtraUpdate',
+  ) => void
+
+  updateFolders: (info: AIFileSystemPin) => void
+  /** 批量替换 grpcFolders（历史恢复用） */
+  setGrpcFolders: (folders: AIFileSystemPin[]) => void
+  updateTimeLineItem: (item: AIAgentGrpcApi.TimelineItem) => void
+  /** 批量替换 reActTimelines（历史恢复用） */
+  setReActTimelines: (timelines: AIAgentGrpcApi.TimelineItem[]) => void
+
+  /** 更新http数据 */
+  updateHttpData: () => void
+  /** 更新risk数据 */
+  updateRiskData: () => void
+
+  /** 精准字段级数据修改(除去列表数据外的其他数据) */
+  updateState: (
+    partial: Partial<
+      Omit<
+        ChatStoreState,
+        | 'httpFuzzRequestUpdate'
+        | 'httpFlowFuzzStatusUpdate'
+        | 'sessionTitleUpdate'
+        | 'memoryListUpdate'
+        | 'updateSystemStream'
+        | 'yaklangCodeChangeUpdate'
+        | 'syncIDUpdate'
+        | 'grpcFolders'
+        | 'reActTimelines'
+        | 'httpTabShow'
+        | 'httpTabUpdate'
+        | 'riskTabShow'
+        | 'riskTabUpdate'
+        | 'currentCasualReview'
+        | 'currentPlanReviewExtraUpdate'
+        | 'items'
+        | 'groups'
+        | 'tasks'
+        | 'casualChat'
+        | 'taskChat'
+      >
+    >,
+  ) => void
+
+  /**
+   * 用持久化渲染树快照整体替换 items/groups/tasks/elements
+   * 供 ChatMultiSessionController 从 IDB 恢复会话使用
+   */
+  hydrateRenderTree: (content: SessionRenderContent) => void
+
+  updateTaskLoadingStatus: (status: Partial<TaskPlanStatus>) => void
+
+  /** 正在等待用户操作的reviewId列表 */
+  updateCasualReview: (id: string, status: 'add' | 'remove') => void
+
+  /** 更新自由对话列表的todoList，真实数据存放在内存池中 */
+  updateCasualTodoList: () => void
+  updatePlanTree: (planTree: CurrentExecTaskTree) => void
+
+  /** 更新 每个工具执行过程中-文件的操作记录 */
+  updateExecFileRecord: (callToolID: string, info: StreamResult.Log, order: number) => void
+
+  dispatchStreamingNode: (params: {
+    chatType: ChatListRenderType
+    /** 是否属于任务组的子节点 */
+    parentTaskId?: string
+    node: {
+      kind: ReActChatRenderElement['kind']
+      token: string
+      type: AIChatQSDataType
+      isHistory?: boolean
+      /**
+       * 专供合并成组的逻辑使用
+       *
+       * 是否能合并成组的标识符-AIOutputEvent['NodeId']
+       * 只有在AIOutputEvent['ContentType']为default时，才能合并成组，并且才会有值
+       */
+      nodeId?: AIOutputEvent['NodeId']
+      /**
+       * 专供合并成组的逻辑使用
+       *
+       * 比如 合并成组、添加到组中时，需要对非状态机里数据做的额外处理操作
+       * @param groupToken 组token
+       * @param tokens 新添加到组中的token集合
+       */
+      groupExtra?: (groupToken: string, tokens: string[]) => void
+    }
+  }) => void
+  incrementNodeVersion: (token: string, kind: ReActChatRenderElement['kind']) => void
+
+  deleteElementNode(
+    params: {
+      taskID?: string
+      groupID?: string
+      onDelContent: (mapKey: string) => void
+    } & Omit<ReActChatRenderElement, 'isHistory'>,
+  )
+
+  replaceItemToken(oldToken: string, newToken: string)
+}
 // #endregion

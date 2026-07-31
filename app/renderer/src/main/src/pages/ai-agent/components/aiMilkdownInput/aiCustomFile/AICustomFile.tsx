@@ -8,13 +8,11 @@ import classNames from 'classnames'
 import { yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { Progress } from 'antd'
-import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 
 const { ipcRenderer } = window.require('electron')
 
 export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
-  const { sessionId, chatDataStoreKey: chatDataStoreKeyProp } = props
-  const { chatDataStoreKey: chatDataStoreKeyFromStore } = useGetChatDataStoreKey()
+  const { sessionId, chatDataStoreKey } = props
   const { node, contentRef, view, selected, setAttrs } = useNodeViewContext()
 
   const [showSrc, setShowSrc] = useState<string>('')
@@ -58,13 +56,6 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
     }
   }, [])
 
-  const resolveChatDataStoreKey = useMemoizedFn(() => {
-    if (chatDataStoreKeyFromStore && chatDataStoreKeyFromStore !== 'unknown') {
-      return chatDataStoreKeyFromStore
-    }
-    return chatDataStoreKeyProp || ''
-  })
-
   const onSaveLocal = useMemoizedFn(async (blobUrl: string) => {
     setShowSrc(blobUrl)
     try {
@@ -79,7 +70,6 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
       setProgress(0)
       const filename = `image_${Date.now()}.${suffix}`
       setAttrs({ alt: filename })
-      const chatDataStoreKey = resolveChatDataStoreKey()
       if (!chatDataStoreKey) {
         yakitNotify('error', '图片保存失败: 无法识别当前 AI 存储路径')
         return

@@ -23,6 +23,10 @@
     word-break: break-all;
     white-space: pre-wrap;
 
+    max-width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+
     :global(.ai-milkdown-input) {
       word-break: normal;
       white-space: normal;
@@ -35,7 +39,7 @@
   }
 }
 .triage-chat-question {
-  justify-content: flex-end;
+  justify-content: flex-start;
   .content-wrapper {
     background: var(--Colors-Use-Main-Focus);
   }

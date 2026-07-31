@@ -1,43 +1,64 @@
-import React, { Suspense, lazy, startTransition, useEffect, useMemo, useState } from 'react'
+import React, { lazy, memo, startTransition, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { yakitAuxWindow } from '@/services/electronBridge'
-import ChatIPCContext from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
-import ConcurrentStreamSkeleton from '@/auxWindow/components/ConcurrentStreamSkeleton/ConcurrentStreamSkeleton'
 import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
 } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
-import { AIChatQSDataTypeEnum, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
-import { buildConcurrentStreamContext } from './buildConcurrentStreamContext'
+import { AIChatQSDataTypeEnum, AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { fetchConcurrentStreamContents } from './fetchConcurrentStreamContents'
 import styles from './AIConcurrentStream.module.scss'
+import AIConcurrentStreamContent, {
+  AIConcurrentStreamDispatcher,
+  AIConcurrentStreamStore,
+} from './useContext/AIConcurrentStreamContent'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import { useDebounceFn } from 'ahooks'
+import ConcurrentStreamSkeleton from '@/auxWindow/components/ConcurrentStreamSkeleton/ConcurrentStreamSkeleton'
 
-const ConcurrentStreamCard = lazy(() => import('@/pages/ai-agent/components/ConcurrentStreamCard/ConcurrentStreamCard'))
-const AITaskDefaultGroupCard = lazy(
-  () => import('@/pages/ai-agent/components/AITaskDefaultGroupCard/AITaskDefaultGroupCard'),
+// 子卡片按需加载，避免重型卡片（AINodeItem 及其下游 review/report/fuzz 等子卡）
+// 全量进入 aux bundle，拉长 did-finish-load 与首次开窗耗时。
+const AIChildWindowTaskDefaultGroupCard = lazy(
+  () =>
+    import('@/pages/ai-agent/components/aiChildWindowItem/aiChildWindowTaskDefaultGroupCard/AIChildWindowTaskDefaultGroupCard'),
 )
-
-const { ipcRenderer } = window.require('electron')
+const AIChildWindowConcurrentStreamCard = lazy(
+  () =>
+    import('@/pages/ai-agent/components/ConcurrentStreamCard/aiChildWindowConcurrentStreamCard/AIChildWindowConcurrentStreamCard'),
+)
 
 interface AIConcurrentStreamProps {
   windowId: string
 }
 
-const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = ({ windowId }) => {
+const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }) => {
   const [frame, setFrame] = useState<ConcurrentStreamFramePayload | null>(null)
   const [contentVersion, setContentVersion] = useState(0)
-  const [contentEntries, setContentEntries] = useState<Array<[string, AIChatQSData]> | null>(null)
-  const [loadingContents, setLoadingContents] = useState(false)
+  const [loading, setLoading] = useState<boolean>(true)
+
+  // rawData/execFileRecord/childrenTokens 用 ref 存储，更新不触发渲染；
+  // 组件及子组件的重渲染由 contentVersion（renderNum）驱动
+  const rawDataRef = useRef<Map<string, AIChatQSData>>(new Map())
+  const execFileRecordRef = useRef<Map<string, AIYakExecFileRecord[]>>(new Map())
+  const childrenTokensRef = useRef<string[]>([])
 
   useEffect(() => {
     if (!windowId) return
 
-    const applyFrame = (payload: Record<string, unknown>) => {
+    const applyFrame = (payload: ConcurrentStreamFramePayload) => {
       if (!isConcurrentStreamFrame(payload)) return
+      const newFrame: ConcurrentStreamFramePayload = {
+        ...payload,
+      }
+      // 开窗时 frame 只携带轻量元数据
       startTransition(() => {
-        setFrame(payload)
-        setContentEntries(null)
-        setContentVersion((v) => v + 1)
+        setFrame((v) => ({
+          ...v,
+          ...newFrame,
+          renderNum: (v?.renderNum || newFrame.renderNum || 0) + 1,
+        }))
       })
+      // 收到 frame 后，主动向主窗口拉取本次需要渲染的 rawData。
+      fetchContents(newFrame)
     }
 
     const offInit = yakitAuxWindow.onInit((msg) => {
@@ -58,89 +79,81 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = ({ windowId }) => 
     }
   }, [windowId])
 
-  useEffect(() => {
-    if (!frame || contentVersion === 0) return
-
-    let cancelled = false
-    setLoadingContents(true)
-
+  const fetchContents = useMemoizedFn((frame) => {
+    setLoading(true)
     fetchConcurrentStreamContents(frame)
       .then((entries) => {
-        if (!cancelled) setContentEntries(entries)
-      })
-      .catch(() => {
-        if (!cancelled) setContentEntries([])
+        rawDataRef.current = entries.rawData
+        execFileRecordRef.current = entries.execFileRecord
+        childrenTokensRef.current = entries.childrenTokens
       })
       .finally(() => {
-        if (!cancelled) setLoadingContents(false)
+        setTimeout(() => {
+          setContentVersion((v) => v + 1)
+          setLoading(false)
+        }, 200)
       })
+  })
 
-    return () => {
-      cancelled = true
-    }
-  }, [frame, contentVersion])
-
-  const contextValue = useMemo(() => {
-    if (!frame || !contentEntries) return null
-    return buildConcurrentStreamContext({ ...frame, contentEntries })
-  }, [contentEntries, frame])
+  // 首次拉取立即执行；后续刷新走 500ms 去抖，合并短时间内的多次推送
+  const getRawDataDebounced = useDebounceFn((frame) => fetchContents(frame), {
+    wait: 500,
+    leading: true,
+  }).run
+  const getRawData = useMemoizedFn((frame) => {
+    getRawDataDebounced(frame)
+  })
 
   const isTaskDefaultGroup = useMemo(() => {
-    if (!frame || !contentEntries) return false
-    const root = contentEntries.find(([key]) => key === frame.token)?.[1]
+    if (!frame) return false
+    // 优先用 frame 随身携带的 rootType，无需等待 rawData 拉取完成
+    if (frame.rootType != null) return frame.rootType === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
+    const root = rawDataRef.current.get(frame.token)
     return root?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
-  }, [contentEntries, frame])
+  }, [frame, contentVersion])
 
-  const cardKey = `${frame?.session}:${frame?.token}:${frame?.chatType}`
-
-  const requestRefresh = () => {
+  // 刷新：通过 IPC 通知主窗口重新构建并推送最新 frame（含最新 rawData）
+  const requestRefresh = useMemoizedFn(() => {
     if (!frame) return
-    ipcRenderer.send('request-ai-concurrent-stream-refresh', {
-      type: 'openAIConcurrentStream',
-      data: {
-        session: frame.session,
-        token: frame.token,
-        chatType: frame.chatType,
-      },
-    })
-  }
-
-  if (!frame || loadingContents || !contextValue) {
+    getRawData(frame)
+  })
+  const store: AIConcurrentStreamStore = useMemo(() => {
+    return {
+      session: frame?.session ?? '',
+      token: frame?.token ?? '',
+      chatType: frame?.chatType ?? 'task',
+      childrenTokens: [...childrenTokensRef.current],
+      rawData: rawDataRef.current,
+      execFileRecord: execFileRecordRef.current,
+      renderNum: contentVersion,
+    }
+  }, [contentVersion])
+  const dispatcher: AIConcurrentStreamDispatcher = useMemo(() => {
+    return {
+      requestRefresh,
+    }
+  }, [])
+  // frame 到达即可渲染卡片：rootType 已随 frame 下发，懒加载 chunk 与 rawData 拉取并行解析
+  if (!frame || loading) {
     return <ConcurrentStreamSkeleton variant="page" />
   }
 
   return (
-    <ChatIPCContext.Provider value={contextValue}>
+    <AIConcurrentStreamContent.Provider value={{ store, dispatcher }}>
       <div className={styles.page}>
         <div className={styles.divider} />
         <div className={styles.wrapper}>
           <Suspense fallback={<ConcurrentStreamSkeleton variant="card" />}>
             {isTaskDefaultGroup ? (
-              <AITaskDefaultGroupCard
-                key={cardKey}
-                isChildWindow
-                onRefresh={requestRefresh}
-                session={frame.session}
-                token={frame.token}
-                chatType={frame.chatType}
-                elements={frame.elements}
-              />
+              <AIChildWindowTaskDefaultGroupCard token={frame.token} />
             ) : (
-              <ConcurrentStreamCard
-                key={cardKey}
-                isChildWindow
-                onRefresh={requestRefresh}
-                session={frame.session}
-                token={frame.token}
-                chatType={frame.chatType}
-                elements={frame.elements}
-              />
+              <AIChildWindowConcurrentStreamCard token={frame.token} />
             )}
           </Suspense>
         </div>
       </div>
-    </ChatIPCContext.Provider>
+    </AIConcurrentStreamContent.Provider>
   )
-}
+})
 
 export default AIConcurrentStream

@@ -1,13 +1,7 @@
-import { CSSProperties, Dispatch, ReactNode, SetStateAction, MutableRefObject } from 'react'
+import { Dispatch, SetStateAction } from 'react'
 import { AISession } from './type/aiChat'
-import { AITreeNodeProps } from './aiTree/type'
-import { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { AITabsEnum } from './defaultConstant'
-import { AIAgentGrpcApi, AIStartParams } from '../ai-re-act/hooks/grpcApi'
-import { AIChatQSData, AIStreamOutput, AITaskInfoProps } from '../ai-re-act/hooks/aiRender'
-import { UseYakExecResultState, PlanLoadingStatus, CurrentExecTaskTree } from '../ai-re-act/hooks/type'
-import { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
-import { UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
+import { AIStartParams } from '../ai-re-act/hooks/grpcApi'
 export interface AIAgentProps {
   pageId: string
 }
@@ -48,19 +42,14 @@ export interface EditChatNameModalProps {
 export interface AIChatLeftSideProps {
   expand: boolean
   setExpand: Dispatch<SetStateAction<boolean>>
-  taskTree: CurrentExecTaskTree['task_tree']
-  taskName: CurrentExecTaskTree['root_task_name']
 }
 
 // 对话框回答
 export type AITabsEnumType = `${AITabsEnum}`
 
 export interface AIAgentChatStreamProps {
-  streams: ReActChatRenderItem[]
-  session: string
   defaultExpand?: boolean
   scrollToBottom: boolean
-  taskStatus: PlanLoadingStatus
 }
 
 // #endregion

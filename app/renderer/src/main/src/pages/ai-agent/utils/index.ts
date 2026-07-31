@@ -1,13 +1,16 @@
 import { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
-import { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
 import { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
 import { HandleStartParams } from '../aiAgentChat/type'
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { omit } from 'lodash'
 import { randomString } from '@/utils/randomUtil'
 import { isIRify } from '@/utils/envfile'
+import { UseChatIPCStartParams } from '../useContext/AIAgentContext'
+import { AISession } from '../type/aiChat'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
@@ -180,8 +183,8 @@ const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedReso
 }
 /** @name 将前端的结构转化为符合定义的结构 */
 export const getAIReActRequestParams = (value: HandleStartParams) => {
-  const { extraValue, mentionList = [], imageList = [], httpFlowList = [], codeBlockList = [], showQS } = value
-  let extra: HandleStartParams['extraValue'] = {}
+  const { mentionList = [], imageList = [], httpFlowList = [], codeBlockList = [] } = value
+
   let attachedResourceInfo: AIInputEvent['AttachedResourceInfo'] = []
   for (let item of mentionList) {
     const addItem = getResourceInfoByMention(item)
@@ -254,12 +257,7 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
     attachedResourceInfo = [...attachedResourceInfo, ...addItem]
   }
 
-  if (!!showQS) {
-    extra.showQS = showQS
-  }
-  extra = Object.assign(extraValue || {}, extra)
   return {
-    extra,
     attachedResourceInfo,
   }
 }
@@ -268,4 +266,36 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
 /** 生成对话得 SessionId */
 export const createActiveChatSessionId = () => {
   return randomString(40)
+}
+
+interface ReStartParams {
+  /** 优先级高于 activeChat.StartParams */
+  setting?: AIStartParams
+  activeChat: AISession
+  onStart: (params: UseChatIPCStartParams) => void
+}
+/** 重启会话 */
+export const onReStart = (props: ReStartParams) => {
+  const { setting, activeChat, onStart } = props
+  if (!activeChat?.SessionID) return
+  const execute = globalSessionEngine.getSessionExecute(activeChat.SessionID)
+  if (!execute) {
+    const request: AIStartParams = setting ?? {
+      ...AIAgentSettingDefault,
+      ...activeChat.StartParams,
+      PreferSessionCachedConfig: true,
+      UserQuery: '',
+    }
+    // 发送初始化参数
+    const aiInputEvent: AIInputEvent = {
+      IsStart: true,
+      Params: {
+        ...request,
+      },
+    }
+    onStart({
+      token: activeChat?.SessionID,
+      params: aiInputEvent,
+    })
+  }
 }

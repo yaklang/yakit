@@ -1,13 +1,6 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
-import classNames from 'classnames'
-import {
-  AIReActChatContentsPProps,
-  AIReferenceNodeProps,
-  AIReActChatContentsRef,
-  AIStreamNodeProps,
-} from './AIReActChatContentsType'
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState, useEffect } from 'react'
+import { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
-import { useCreation } from 'ahooks'
 import { AIMarkdown } from '@/pages/ai-agent/components/aiMarkdown/AIMarkdown'
 import { AIStreamChatContent } from '@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent'
 import StreamCard from '@/pages/ai-agent/components/StreamCard'
@@ -20,40 +13,31 @@ import { AIStreamContentType } from '../hooks/defaultConstant'
 import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
-import { ChatReferenceMaterialPayload, ReActChatRenderItem } from '../hooks/aiRender'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
+import { ReActChatRenderElement, ChatReferenceMaterialPayload } from '../hooks/aiRender'
 import Loading from '@/components/Loading/Loading'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
-import useLoadHistory from '../hooks/useLoadHistory'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useCreation from 'ahooks/lib/useCreation'
+import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
+import useLoadOlder from '../hooks/useLoadOlder'
+import { Code } from '@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStreamCard'
 
-const getAIReferenceNodeByType = (contentType?: string) => {
-  switch (contentType) {
-    case AIStreamContentType.TEXT_MARKDOWN:
-      return styles['ai-text-markdown-reference-node']
-    case AIStreamContentType.CODE_YAKLANG:
-    case AIStreamContentType.CODE_HTTP_REQUEST:
-      return styles['ai-yaklang-reference-node']
-    case AIStreamContentType.TEXT_PLAIN:
-      return styles['ai-text-plain-reference-node']
-    case AIStreamContentType.LOG_TOOL:
-      return styles['ai-log-tool-reference-node']
-    default:
-      return styles['ai-stream-chat-reference-node']
-  }
-}
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
-  const { stream, aiMarkdownProps, listItemIndex, streamChatSessionId } = props
+  const { stream, aiMarkdownProps, listItemIndex, sessionId } = props
   const { reference } = stream
   const { NodeId, content, NodeIdVerbose, CallToolID, ContentType, status } = stream.data
   // 是否仍在流式输出（结束态 status 为 'end'，历史消息亦为 'end'，据此控制流式淡入效果）
   const streaming = status !== 'end'
-  const { yakExecResult } = useChatIPCStore().chatIPCData
+  const store = useCurrentStore()
+  const execFileRecord = useStore(store, (state) => state.execFileRecord)
   const { nodeLabel } = useAINodeLabel(NodeIdVerbose)
 
   const modalInfo: ModalInfoProps = useCreation(() => {
@@ -64,16 +48,14 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     }
   }, [stream.Timestamp, stream.AIModelName, stream.AIService])
   const referenceNode = useCreation(() => {
-    const className = getAIReferenceNodeByType(ContentType)
-    return !!reference ? <AIReferenceNode referenceList={reference || []} className={className} /> : <></>
-  }, [reference, ContentType])
+    return !!reference ? <AIReferenceNode referenceList={reference || []} sessionId={sessionId || ''} /> : <></>
+  }, [reference, sessionId])
   if (ContentType?.startsWith('code/')) {
     return (
       <AIYaklangCode
         contentType={ContentType}
         content={content}
         autoApplyStreamId={stream.id}
-        autoApplyChatSessionId={streamChatSessionId}
         listItemIndex={listItemIndex}
         nodeLabel={nodeLabel}
         modalInfo={modalInfo}
@@ -93,7 +75,6 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
         />
       )
     case AIStreamContentType.TEXT_PLAIN: {
-      const { execFileRecord } = yakExecResult
       const fileList = execFileRecord.get(CallToolID)
       return (
         <StreamCard
@@ -122,29 +103,22 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   }
 })
 const TYPE = 'reAct'
-export const AIReActChatContents = React.memo(
-  forwardRef<AIReActChatContentsRef, AIReActChatContentsPProps>((props, ref) => {
-    const { chats } = props
-    const listRootRef = useRef<HTMLDivElement>(null)
-    const {
-      casualTitle,
-      requestHistoryState: { casualLoadMoreLoading },
-      execute,
-    } = useChatIPCStore().chatIPCData
 
+export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
+  forwardRef((_, ref) => {
+    const listRootRef = useRef<HTMLDivElement>(null)
     const { activeChat } = useAIAgentStore()
 
-    const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
+    const store = useCurrentStore()
+    const casualChatElements = useStore(store, (state) => state.casualChat.elements)
+    const chatLength = useStore(store, (state) => state.casualChat.elements.length)
+    const casualTitle = useStore(store, (state) => state.casualTitle)
+    const execute = useStore(store, (state) => state.execute)
+    // 向上加载历史（recovery_history）的在途状态，给 Header 转圈提示
+    const grpcLoadMoreLoading = useStore(store, (state) => state.grpcLoadMoreLoading)
 
-    const chatLength = useCreation(() => chats.elements.length, [chats.elements.length])
-    // 向上滚动加载
-    const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
-      loading: casualLoadMoreLoading,
-      dataLength: chatLength,
-      SessionID: activeChat?.SessionID || '',
-      fetchHasMore: () => handleHasMoreHistory(TYPE),
-      loadMore: () => handleLoadMoreHistory(TYPE),
-    })
+    const { onRangeChange, firstItemIndex, handleLoadMore, isPrependingRef } = useLoadOlder(TYPE)
+
     const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged, scrollToItemIndex } =
       useVirtuosoAutoScroll({
         total: chatLength,
@@ -152,21 +126,20 @@ export const AIReActChatContents = React.memo(
       })
 
     const { locateToIndex } = useChatStreamLocateHighlight({
-      scrollToIndex: scrollToItemIndex,
+      // Virtuoso scrollToIndex 接受绝对 index，定位下标需加 firstItemIndex 偏移
+      scrollToIndex: (index, behavior) => scrollToItemIndex(index + firstItemIndex, behavior),
       listRootRef,
     })
 
-    useImperativeHandle(ref, () => ({ scrollToItemIndex: locateToIndex }), [locateToIndex])
+    useImperativeHandle(ref, () => ({ scrollToItemIndex: (index, behavior) => locateToIndex(index, behavior) }), [])
 
-    const renderItem = useCallback(
-      (index: number, item?: ReActChatRenderItem) => {
-        if (!item?.token) return null
-        const arrayIndex = index - firstItemIndex
-        const hasNext = chatLength - arrayIndex > 1
-        return <AIChatListItem key={item.token} hasNext={hasNext} itemIndex={arrayIndex} item={item} type="re-act" />
-      },
-      [chatLength, firstItemIndex],
-    )
+    const renderItem = useCallback((_, item?: ReActChatRenderElement) => {
+      if (!item?.token) return null
+      // TODO -
+      // 如果token变化，可能存在以下情况
+      // 例如group中list监听数组长度变化确认更新,会出现长度没变token变化，list层不会渲染，token变化的组件拿不到最新的token一直是旧的
+      return <AIChatListItem key={item.token} item={item} />
+    }, [])
     const Item = useCallback(
       ({ children, style, 'data-index': dataIndex }) => (
         <div style={style} data-index={dataIndex} className={styles['item-wrapper']}>
@@ -200,12 +173,12 @@ export const AIReActChatContents = React.memo(
     }, [casualTitle, execute, chatLength])
     const Header = useCallback(
       () =>
-        casualLoadMoreLoading ? (
+        grpcLoadMoreLoading ? (
           <div style={{ height: 20, position: 'relative' }}>
             <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
           </div>
         ) : null,
-      [casualLoadMoreLoading],
+      [grpcLoadMoreLoading],
     )
     const components = useMemo(
       () => ({
@@ -215,24 +188,27 @@ export const AIReActChatContents = React.memo(
       }),
       [Footer, Header, Item],
     )
+    // const rawData = useCurrentRawData()
+    // console.log('casualChat.elements', casualChatElements, store.getState().items)
     return (
       <div ref={listRootRef} className={styles['ai-re-act-chat-contents']}>
         <Virtuoso
           key={activeChat?.SessionID}
           ref={virtuosoRef}
           scrollerRef={setScrollerRef}
-          firstItemIndex={firstItemIndex}
+          defaultItemHeight={26}
           atBottomStateChange={setIsAtBottomRef}
-          data={chats.elements}
+          data={casualChatElements}
           totalListHeightChanged={handleTotalListHeightChanged}
           itemContent={renderItem}
-          initialTopMostItemIndex={chats.elements.length > 1 ? chats.elements.length - 1 : 0}
+          firstItemIndex={firstItemIndex}
+          initialTopMostItemIndex={chatLength > 1 ? { index: 'LAST' } : 0}
           components={components}
+          // increaseViewportBy={{ top: 1200, bottom: 0 }}
           atBottomThreshold={50}
           skipAnimationFrameInResizeObserver
-          // atTopStateChange={handleAtTopStateChange}
           startReached={handleLoadMore}
-          // increaseViewportBy={{ top: 200, bottom: 0 }}
+          rangeChanged={onRangeChange}
           className={styles['re-act-contents-list']}
         />
       </div>
@@ -240,29 +216,71 @@ export const AIReActChatContents = React.memo(
   }),
 )
 
-/** 挂到 body，避免 Virtuoso 滚出视口时卸载列表项导致弹窗消失 */
-export const openAIReferenceModal = (referenceList: ChatReferenceMaterialPayload, title = '参考资料') => {
-  const code = referenceList.map((item) => item.payload).join('\n')
-  const modal = showYakitModal({
-    title,
-    cancelButtonProps: { style: { display: 'none' } },
-    bodyStyle: { height: 500 },
-    content: <YakitEditor type="plaintext" readOnly value={code} />,
-    onOk: () => modal.destroy(),
-  })
-}
-
 export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
-  const { referenceList, className } = props
-  return (
-    <span
-      className={classNames(styles['ai-reference-node'], className)}
-      onClick={(e) => {
-        e.stopPropagation()
-        openAIReferenceModal(referenceList)
-      }}
-    >
-      [参考资料]
-    </span>
-  )
+  const { referenceList, sessionId, title = '' } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
+
+  const [open, setOpen] = useState(false)
+  const [modelCode, setModelCode] = useState<ChatReferenceMaterialPayload>([])
+  const [modelLoading, setModelLoading] = useState(false)
+
+  const hidden = useCreation(() => {
+    return !referenceList?.length
+  }, [referenceList?.length])
+
+  const onClose = useMemoizedFn(() => {
+    setOpen(false)
+  })
+
+  /** 按 token 列表异步获取参考资料完整数据 */
+  const fetchReference = useMemoizedFn(async (): Promise<ChatReferenceMaterialPayload> => {
+    if (!referenceList.length || !sessionId) return []
+    try {
+      const items = await globalSessionEngine.getSessionReferenceMaterials(sessionId, referenceList)
+      return items.map((item) => item.content)
+    } catch {
+      return []
+    }
+  })
+
+  // modal 打开时拉取数据
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    setModelLoading(true)
+    fetchReference()
+      .then((code) => {
+        if (!cancelled) setModelCode(code)
+      })
+      .finally(() => {
+        if (!cancelled) setModelLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
+  const openModel = useMemoizedFn(() => {
+    setOpen(true)
+  })
+  return !hidden ? (
+    <>
+      {open && (
+        <YakitModal
+          visible={open}
+          title={title || '参考资料'}
+          cancelButtonProps={{ style: { display: 'none' } }}
+          onOk={onClose}
+          onCloseX={onClose}
+        >
+          <YakitSpin spinning={modelLoading}>
+            <Code code={modelCode} style={{ maxHeight: '500px' }} />
+          </YakitSpin>
+        </YakitModal>
+      )}
+      <YakitButton type="text" colors="primary" size="small" onClick={openModel}>
+        {t('AIStreamNode.viewReference')}
+      </YakitButton>
+    </>
+  ) : null
 })

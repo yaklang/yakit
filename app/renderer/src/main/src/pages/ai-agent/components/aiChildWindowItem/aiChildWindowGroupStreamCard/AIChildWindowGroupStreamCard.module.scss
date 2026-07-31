@@ -1,0 +1,24 @@
+// 子窗口 stream group 卡片样式。
+// 内容对齐 AIGroupStreamCard.module.scss。
+
+.container {
+  width: 100%;
+  border-radius: 8px;
+  padding: 2px 4px 0;
+  display: flex;
+  flex-direction: column;
+  // gap: 4px;
+  border: 1px solid transparent;
+  // 遮罩底色变量：默认走基础背景，hover/focus 时由父级切换，子模块消费
+  --group-stream-mask-bg: var(--Colors-Use-Basic-Background);
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg);
+    --group-stream-mask-bg: var(--Colors-Use-Neutral-Bg);
+  }
+}
+.container-focus {
+  border-color: var(--Colors-Use-Main-Hover);
+  background: var(--Colors-Use-Neutral-Bg);
+  // focus 时取消遮罩：变量置透明，子模块渐变自然透明，等效原 background: initial
+  --group-stream-mask-bg: transparent;
+}

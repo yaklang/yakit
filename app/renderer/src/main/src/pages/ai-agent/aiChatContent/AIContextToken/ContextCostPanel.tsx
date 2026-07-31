@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react'
+import React, { memo } from 'react'
 import { useCreation } from 'ahooks'
 import { cloneDeep } from 'lodash'
 import { ResponseSpeedEcharts } from '../../chatTemplate/AIEcharts'
@@ -9,14 +9,19 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { CONTEXT_PERF_POLL_INTERVAL, ContextPerfPanelProps, useContextPerfStore } from './useContextPerfStore'
 import styles from '../AIChatContent.module.scss'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
-const ContextCostPanel: React.FC<ContextPerfPanelProps> = ({ session, execute }) => {
+const ContextCostPanel: React.FC<ContextPerfPanelProps> = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const getPerfData = useContextPerfStore(session)
-  const getData = useCallback(() => getPerfData()?.firstCost ?? null, [getPerfData])
+
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+
+  const aiPerfData = useContextPerfStore()
 
   const { renderNumber, aiDataRef: firstCost } = useRafPolling({
-    getData,
+    getData: () => aiPerfData.firstCost ?? null,
     interval: CONTEXT_PERF_POLL_INTERVAL,
     shouldStop: () => !execute,
     resetDeps: [execute],

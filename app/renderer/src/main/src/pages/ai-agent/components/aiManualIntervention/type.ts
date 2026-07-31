@@ -1,6 +1,6 @@
-import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface AIManualInterventionProps {
-  info: AIChatQSData
-  timestamp: number
+  info: Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION }>
+  renderNum: number
 }

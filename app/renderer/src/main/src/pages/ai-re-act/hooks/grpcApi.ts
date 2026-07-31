@@ -505,6 +505,8 @@ export declare namespace AIAgentGrpcApi {
   export interface PlanTask {
     /** 任务id */
     task_id: string
+    /** 审阅树扁平化后的层级（仅前端使用） */
+    level?: number
     /** 任务名 */
     name: string
     /** 正文 */
@@ -878,7 +880,7 @@ export declare namespace AIAgentGrpcApi {
   /** 问题状态变化消息 */
   export interface ReactTaskChanged {
     react_task_id: string
-    react_task_now_status: string
+    react_task_now_status: AITaskStatusType
     react_task_old_status: string
   }
 

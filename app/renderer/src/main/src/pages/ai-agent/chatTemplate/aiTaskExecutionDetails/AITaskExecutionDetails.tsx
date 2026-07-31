@@ -18,8 +18,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIToDoListItem } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
 import { useCreation, useInterval, useMemoizedFn, useSelections } from 'ahooks'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import useAIAgentStore from '../../useContext/useStore'
 import { ForgesAndSkillsDynamicItem, PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
@@ -37,6 +35,7 @@ import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumbe
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
   AIAgentGrpcApi,
+  AIInputEvent,
   AIInputEventHotPatchTypeEnum,
   AIInputEventSyncTypeEnum,
   AIStartParams,
@@ -52,11 +51,15 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoListDetail'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import { randomString } from '@/utils/randomUtil'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
-  const { chatIPCEvents } = useChatIPCDispatcher()
-  const { activeChat } = useAIAgentStore()
+  const rawData = useCurrentRawData()
+  const store = useCurrentStore()
 
   const [planItemDetailsData, setPlanItemDetailsData] = useState<PlanItemDetailsData>()
   const perPlanItemDetailsDataUUIdRef = useRef<string>('')
@@ -73,21 +76,17 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   })
   const getData = useMemoizedFn(() => {
     if (!taskId) return
-    const sessionId = activeChat?.SessionID || ''
-    const chatData = chatIPCEvents.fetchChatDataStore()?.get(sessionId)
-    if (!chatData) return
-
     let itemData: PlanItemDetailsData | undefined
-    const subTaskData = chatData.casualChat.planDetailsMap.get(taskId)
+    const subTaskData = rawData.casualChat.planDetailsMap.get(taskId)
     if (subTaskData) {
       itemData = subTaskData
     } else {
-      const mainPlanDetails = chatData.casualChat.planDetails
-      const currentCasualTaskId = chatIPCEvents.fetchCurrentCasualTaskID()
+      const mainPlanDetails = rawData.casualChat.planDetails
+      const currentCasualTaskId = store.getState().currentCasualTaskID
       if (mainPlanDetails.taskId === taskId || currentCasualTaskId === taskId) {
         itemData = mainPlanDetails
       } else {
-        itemData = chatData.taskChat.planDetailsMap.get(taskId)
+        itemData = rawData.taskChat.planDetailsMap.get(taskId)
       }
     }
     if (!itemData) return
@@ -395,15 +394,19 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props) => {
   const { list } = props
 
-  const { handleSendSyncMessage } = useChatIPCDispatcher()
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
 
   const onRemove = useMemoizedFn((processes: AIBrowserProcessesProps['list'][number]) => {
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_CLOSE_BROWSER,
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_CLOSE_BROWSER,
+      SyncID: randomString(8),
       SyncJsonInput: JSON.stringify({
         process_id: processes.process_id,
       }),
-    })
+    }
+    onSend({ token: sessionId, type: '', params: info })
   })
   return (
     <div className={classNames(styles['browser-processes'])}>
@@ -429,7 +432,9 @@ const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props)
 
 const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.memo((props) => {
   const { title, type, onClose, taskId } = props
-  const { handleSendConfigHotpatch, handleSendSyncMessage } = useChatIPCDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
 
   const [keyword, setKeyword] = useState<string>()
   const [loading, setLoading] = useState<boolean>(false)
@@ -650,17 +655,22 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         Type: item.type,
       }
     })
-    handleSendConfigHotpatch({
-      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnabledCapabilities,
-      params: {
+    const info: AIInputEvent = {
+      IsConfigHotpatch: true,
+      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnabledCapabilities,
+      Params: {
         EnabledCapabilities: enabledCapabilities,
       },
-      taskId,
-    })
+      TaskId: taskId,
+    }
+    onSend({ token: sessionId, type: '', params: info })
     setTimeout(() => {
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
-      })
+      const info: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: info })
     }, 1000)
     onClose()
   })
@@ -760,14 +770,17 @@ const typeOptions = [
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
   const { type, colTitle, fixedList, dynamicList, taskId } = props
 
-  const { handleSendConfigHotpatch, handleSendSyncMessage } = useChatIPCDispatcher()
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
+
   const [configType, setConfigType] = useState<'fixed' | 'dynamic'>('fixed')
 
   const [visible, setVisible] = useState<boolean>(false)
   const onRemove = useMemoizedFn((dynamicItem) => {
-    handleSendConfigHotpatch({
-      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_DisabledCapabilities,
-      params: {
+    const info: AIInputEvent = {
+      IsConfigHotpatch: true,
+      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_DisabledCapabilities,
+      Params: {
         EnabledCapabilities: dynamicList
           .filter((ele) => isEqual(ele, dynamicItem))
           .map((item) => ({
@@ -775,12 +788,16 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             Type: getType(item.category),
           })),
       },
-      taskId,
-    })
+      TaskId: taskId,
+    }
+    onSend({ token: sessionId, type: '', params: info })
     setTimeout(() => {
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
-      })
+      const info: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: info })
     }, 1000)
   })
   const renderHeader = useMemoizedFn(() => {

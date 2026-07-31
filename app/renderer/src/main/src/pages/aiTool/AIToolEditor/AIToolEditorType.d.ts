@@ -1,5 +1,6 @@
 import { AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
 import { SaveAIToolRequest } from '@/pages/ai-agent/type/aiTool'
+import { ForwardedRef } from 'react'
 
 export interface AIToolEditorProps {
   pageId: string
@@ -8,7 +9,7 @@ export interface AIToolEditorProps {
 }
 export interface AIToolEditorInfoFormRef {
   setFormValues: (values: SaveAIToolRequest) => void
-  getFormValues: () => Promise<EditorAIForge | null>
+  getFormValues: () => Promise<SaveAIToolRequest | null>
 }
 export interface AIToolEditorInfoFormProps {
   ref?: ForwardedRef<AIToolEditorInfoFormRef>

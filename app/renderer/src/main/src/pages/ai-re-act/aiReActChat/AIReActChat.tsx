@@ -2,53 +2,35 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react
 
 import styles from './AIReActChat.module.scss'
 import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
-import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import type { AIReActChatContentsRef } from '../aiReActChatContents/AIReActChatContentsType'
 import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
-import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
+import { useControllableValue, useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
-import { ColorsChatIcon } from '@/assets/icon/colors'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import { ChevrondownButton, ChevronleftButton, RoundedStopButton } from './AIReActComponent'
-import { Tooltip } from 'antd'
-import { ClockIcon } from '@/assets/newIcon'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
-import { AIInputEvent, AIInputEventSyncTypeEnum, AIStartParams } from '../hooks/grpcApi'
+import { ChevrondownButton } from './AIReActComponent'
+import { AIInputEvent, AIInputEventSyncTypeEnum, AISourceEnum, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
-import useGetChatDataStoreKey, {
-  getAISourceFromChatDataStoreKey,
-  getAISourceListFromChatDataStoreKey,
-} from '../hooks/useGetChatDataStoreKey'
-import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import emiter from '@/utils/eventBus/eventBus'
-import { omit } from 'lodash'
-import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
-import { AIToDoList } from './aiToDoList/AIToDoList'
-import { cloneDeep } from 'lodash'
-import { DefaultTodoListCardData } from '../hooks/defaultConstant'
-import { TodoListCardData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
-import { OutlineLandPlotIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
-import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { SolidChatIcon } from '@/assets/icon/solid'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useCurrentSessionId from '../hooks/useCurrentSessionId'
+import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
+import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
+import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
+import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
     const {
-      mode,
       chatContainerClassName,
       chatContainerHeaderClassName,
       title = '自由对话',
@@ -56,21 +38,13 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       externalParameters,
     } = props
-    const { setActiveChat } = useAIAgentDispatcher()
+    const { setActiveChat, getSetting, onStart, onSend } = useAIAgentDispatcher()
 
-    const { chatDataStoreKey } = useGetChatDataStoreKey()
-    const historyChatAISource = useCreation(
-      () => getAISourceListFromChatDataStoreKey(chatDataStoreKey),
-      [chatDataStoreKey],
-    )
-    const sessionRef = useRef<string | undefined>(undefined)
-    const { chatIPCData } = useChatIPCStore()
-    const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
-    const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
-    const focusMode = useCreation(() => chatIPCData.focusMode, [chatIPCData.focusMode])
-    const notifyMessage = useCreation(() => chatIPCData.notifyMessage, [chatIPCData.notifyMessage])
+    const sessionId = useCurrentSessionId()
+    const store = useCurrentStore()
 
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const [inViewPort = true] = useInViewport(wrapperRef)
 
     const [showFreeChat, setShowFreeChat] = useControllableValue<boolean>(props, {
       defaultValue: true,
@@ -80,12 +54,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const { activeChat, setting } = useAIAgentStore()
     const { getSession } = useSessionId()
-
-    const contextTokenSession = useCreation(() => {
-      return activeChat?.SessionID || setting.TimelineSessionID
-    }, [activeChat?.SessionID, setting.TimelineSessionID])
-
-    const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -119,6 +87,30 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         }
       }
     }, [activeChat?.SessionID])
+
+    // #region
+    /**
+     * 1.切换Session后设置当前选中的 SessionID ，如果该组件被卸载意外着当前没有任何对话在显示
+     * 2.当该组件从不可见变可见的时候，需要设置当前选中的 SessionID
+     * */
+    useEffect(() => {
+      if (activeChat?.SessionID) {
+        globalSessionEngine?.setActiveShowSession(activeChat?.SessionID)
+      }
+      return () => {
+        globalSessionEngine?.setActiveShowSession('')
+      }
+    }, [activeChat?.SessionID])
+    useEffect(() => {
+      if (inViewPort) {
+        globalSessionEngine?.setActiveShowSession(activeChat?.SessionID ?? '')
+
+        return () => {
+          globalSessionEngine?.setActiveShowSession('')
+        }
+      }
+    }, [inViewPort])
+    //#endregion
     // #region 问题相关逻辑
     // 初始化 AI ReAct
     const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
@@ -126,7 +118,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         yakitNotify('error', '请先配置 AI ReAct 参数')
         return
       }
-      if (execute) {
+      if (store.getState().execute) {
         handleSend(value)
       } else {
         handleStart(value)
@@ -139,19 +131,20 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       const { qs, sessionId } = value
       const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
 
+      const source = getSetting().Source ?? AISourceEnum.aiAgent // getSetting保证最新
       const request: AIStartParams = {
         ...formatAIAgentSetting(setting),
         UserQuery: qs,
         CoordinatorId: '',
         Sequence: 1,
         PreferSessionCachedConfig: true,
-        Source: getAISourceFromChatDataStoreKey(chatDataStoreKey),
+        Source: source,
       }
 
       const session = getSession(sessionId)
 
       request.TimelineSessionID = session
-      const { extra, attachedResourceInfo } = getAIReActRequestParams(value)
+      const { attachedResourceInfo } = getAIReActRequestParams(value)
       // 发送初始化参数
       const aiInputEvent: AIInputEvent = {
         IsStart: true,
@@ -161,11 +154,12 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         AttachedResourceInfo: attachedResourceInfo,
         FocusModeLoop: value.focusMode,
       }
-      const onStart = (res: AIHandleStartResProps) => {
-        const { params, extraParams, onChat, onChatFromHistory } = res
+      const onStartChat = (res: AIHandleStartResProps) => {
+        const { params, extraParams, onChat } = res
+        let newChat: AISession | undefined = undefined
         if (!sessionID) {
           // 创建新的聊天记录
-          const newChat: AISession = {
+          newChat = {
             Id: extraParams?.chatId || session,
             Title: qs || `AI Agent - ${new Date().toLocaleString()}`,
             question: qs,
@@ -178,39 +172,43 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             LastUsedAt: new Date().getTime(),
             isCreate: true,
           }
-
-          setActiveChat && setActiveChat(newChat)
+          // setActiveChat && setActiveChat(newChat)
           emiter.emit(
             'sessionData',
             JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
           )
           // 新建的额外操作
           onChat?.()
-        } else {
-          // 历史中的额外操作
-          onChatFromHistory?.(sessionID)
         }
         aiChatTextareaRef.current.setMention({
           mentionId: params.FocusModeLoop || randomString(8),
           mentionType: 'focusMode',
           mentionName: params.FocusModeLoop || '',
         })
-        chatIPCEvents.onStart({ token: request.TimelineSessionID!, params, extraValue: extra })
+
+        onStart({
+          token: session,
+          params,
+          onSuccess: () => {
+            // 必须成功链接后再设置 activeChat
+            if (!sessionID && newChat) setActiveChat && setActiveChat(newChat)
+          },
+        })
       }
       if (!!startRequest) {
         startRequest({
           params: aiInputEvent,
         })
           .then((res) => {
-            onStart(res)
+            onStartChat(res)
           })
           .catch(() => {
-            onStart({
+            onStartChat({
               params: aiInputEvent,
             })
           })
       } else {
-        onStart({
+        onStartChat({
           params: aiInputEvent,
         })
       }
@@ -220,23 +218,22 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const handleSend = useMemoizedFn((data: HandleStartParams) => {
       if (!activeChat?.SessionID) return
       try {
-        const { extra, attachedResourceInfo } = getAIReActRequestParams(data)
+        const { attachedResourceInfo } = getAIReActRequestParams(data)
         const chatMessage: AIInputEvent = {
           IsFreeInput: true,
           FreeInput: data.qs,
           AttachedResourceInfo: attachedResourceInfo,
           FocusModeLoop: data.focusMode,
         }
-        const onSend = (res: AISendResProps) => {
+        const onSendChat = (res: AISendResProps) => {
           const { params } = res
-          chatIPCEvents.onSend({
+          onSend({
             token: activeChat.SessionID,
             type: 'casual',
             params: {
               IsFreeInput: true,
               ...params,
             },
-            extraValue: extra,
           })
           emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: activeChat.SessionID }))
         }
@@ -245,17 +242,17 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             .then((res) => {
               const { params } = res
               // 发送到服务端
-              onSend({
+              onSendChat({
                 params,
               })
             })
             .catch(() => {
-              onSend({
+              onSendChat({
                 params: chatMessage,
               })
             })
         } else {
-          onSend({
+          onSendChat({
             params: chatMessage,
           })
         }
@@ -265,11 +262,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     // #endregion
 
     const isShowRetract = useCreation(() => {
-      return mode === 'task' && showFreeChat
-    }, [mode, showFreeChat])
+      return showFreeChat
+    }, [showFreeChat])
     const isShowExpand = useCreation(() => {
-      return mode === 'task' && !showFreeChat
-    }, [mode, showFreeChat])
+      return !showFreeChat
+    }, [showFreeChat])
     const handleSwitchShowFreeChat = useMemoizedFn((v) => {
       setShowFreeChat(v)
     })
@@ -278,127 +275,23 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       aiChatTextareaRef?.current?.setValue(value ?? '')
     })
 
-    const cancelCasualLoading = useCreation(() => {
-      return chatIPCData.cancelCasualLoading
-    }, [chatIPCData.cancelCasualLoading])
-    const casualLoading = useCreation(() => {
-      return chatIPCData.casualLoading
-    }, [chatIPCData.casualLoading])
     const handleStopCasualTask = useMemoizedFn(() => {
-      const currentCasualTaskID = chatIPCEvents.fetchCurrentCasualTaskID()
-      if (!chatIPCData.execute || !currentCasualTaskID) return
+      const currentCasualTaskID = store.getState().currentCasualTaskID
+      if (!store.getState().execute || !currentCasualTaskID) return
 
-      chatIPCEvents.handleCancelLoadingChange('reAct', true)
-      const params: AISendSyncMessageParams = {
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+      store.getState().updateState({
+        cancelCasualLoading: true,
+      })
+      const info: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
         SyncJsonInput: JSON.stringify({ task_id: currentCasualTaskID }),
+        SyncID: randomString(8),
       }
-      handleSendSyncMessage(params)
+      onSend({ token: sessionId, type: 'casual', params: info })
     })
-
-    const getPlanDetails = useMemoizedFn(() => {
-      if (!activeChat?.SessionID) return
-      return chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat?.planDetails
-    })
-
-    const reActTaskId: string = useCreation(() => {
-      if (!activeChat?.SessionID) return ''
-      return getPlanDetails()?.taskId ?? ''
-    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
-
-    const todoData: TodoListCardData = useCreation(() => {
-      if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
-      try {
-        return getPlanDetails()?.todoList || cloneDeep(DefaultTodoListCardData)
-      } catch (error) {
-        return cloneDeep(DefaultTodoListCardData)
-      }
-    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
 
     const aiReActChatContentsRef = useRef<AIReActChatContentsRef>(null)
-    const casualConcurrentTaskList = useCreation(() => {
-      return chatIPCData.casualChat.elements
-        .filter((item) => item.kind === 'task' && item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP)
-        .map((item) => item.token)
-    }, [chatIPCData.casualChat.elements])
-
-    const getCasualConcurrentTaskName = useMemoizedFn((token: string) => {
-      const contentMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat?.contents
-      const chatData = contentMap?.get(token)
-      return (
-        (chatData?.data as { taskName?: string; goal?: string })?.taskName ||
-        (chatData?.data as { goal?: string })?.goal ||
-        token
-      )
-    })
-
-    const onScrollToConcurrentTask = useMemoizedFn((token: string) => {
-      const index = chatIPCData.casualChat.elements.findIndex((item) => item.kind === 'task' && item.token === token)
-      if (index !== -1) {
-        aiReActChatContentsRef.current?.scrollToItemIndex(index, 'smooth')
-      }
-    })
-
-    const getTaskId = useMemoizedFn(() => {
-      return chatIPCEvents.fetchCurrentCasualTaskID()
-    })
-
-    const defaultTaskTabLabel = useCreation(() => {
-      return typeof title === 'string' ? title : '自由对话'
-    }, [title])
-
-    const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string, nextTaskId?: string) => {
-      const taskId = nextTaskId || getTaskId()
-      const sessionId = activeChat?.SessionID
-      if (!taskId || !sessionId) return false
-      if (chatDataStoreKey !== 'aiChatDataStore') return false
-      emiter.emit(
-        'actionAITaskContentTab',
-        JSON.stringify({
-          type,
-          params: {
-            key: sessionId,
-            taskId,
-            label: label || activeChat?.Title || defaultTaskTabLabel,
-            goal: '',
-          },
-        }),
-      )
-      return true
-    })
-
-    const syncCasualTaskTab = useMemoizedFn(() => {
-      const sessionId = activeChat?.SessionID
-      if (!getTaskId() || !sessionId) return
-      if (chatDataStoreKey !== 'aiChatDataStore') return
-      emitTaskContentTab('add')
-      sessionRef.current = sessionId
-    })
-
-    const onDetails = useMemoizedFn(() => {
-      if (!getTaskId()) {
-        yakitNotify('error', 'taskId不存在')
-        return
-      }
-      if (chatDataStoreKey !== 'aiChatDataStore') {
-        yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
-        return
-      }
-      syncCasualTaskTab()
-    })
-
-    useEffect(() => {
-      if (sessionRef.current && sessionRef.current !== activeChat?.SessionID) {
-        sessionRef.current = undefined
-      }
-    }, [activeChat?.SessionID])
-
-    useEffect(() => {
-      if (!activeChat?.Title || !activeChat?.SessionID) return
-      if (sessionRef.current !== activeChat.SessionID) return
-      if (!reActTaskId) return
-      emitTaskContentTab('update', activeChat.Title, reActTaskId)
-    }, [activeChat?.Title, activeChat?.SessionID, emitTaskContentTab, reActTaskId])
 
     return (
       <>
@@ -415,124 +308,28 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             })}
           >
             <div className={classNames(styles['chat-container'], chatContainerClassName)}>
-              <div className={classNames(styles['chat-header'], chatContainerHeaderClassName)}>
-                <div className={styles['chat-header-title']}>
-                  <ColorsChatIcon />
-                  <span className={styles['chat-header-title-text']}>{title}</span>
-                  {focusMode && (
-                    <YakitTag fullRadius={true} className={styles['chat-header-focus-mode']}>
-                      场景:<span className={styles['text']}>{focusMode}</span>
-                    </YakitTag>
-                  )}
-                </div>
-                <div className={styles['chat-header-extra']}>
-                  {isShowRetract && (
-                    <>
-                      {!!casualConcurrentTaskList.length && (
-                        <YakitPopover
-                          overlayClassName={styles['chat-locate-popover']}
-                          content={
-                            <div className={styles['chat-locate-list']}>
-                              {casualConcurrentTaskList.map((token) => (
-                                <div
-                                  key={token}
-                                  className={styles['chat-locate-item']}
-                                  onClick={() => onScrollToConcurrentTask(token)}
-                                >
-                                  <SolidChatIcon /> {getCasualConcurrentTaskName(token)}
-                                </div>
-                              ))}
-                            </div>
-                          }
-                          placement="bottom"
-                        >
-                          <YakitButton type="outline2" radius="28px" icon={<OutlineLandPlotIcon />}>
-                            子Agent任务
-                          </YakitButton>
-                        </YakitPopover>
-                      )}
-                      {externalParameters?.rightIcon ? (
-                        <>
-                          {getTaskId() && externalParameters.rightIcon.taskDetails && <TaskDetailsPopover />}
-                          {externalParameters.rightIcon.dataDetails && (
-                            <AIContextToken
-                              iconOnly
-                              execute={execute}
-                              session={contextTokenSession}
-                              buttonProps={
-                                externalParameters.rightIcon.dataDetails === true
-                                  ? undefined
-                                  : externalParameters.rightIcon.dataDetails
-                              }
-                            />
-                          )}
-                          {externalParameters.rightIcon.history && (
-                            <Tooltip
-                              trigger={['click']}
-                              destroyTooltipOnHide
-                              overlayClassName={styles['history-chat-tooltip']}
-                              title={
-                                <div className={styles['history-chat-tooltip-content']}>
-                                  <HistoryChat embedded aiSource={historyChatAISource} />
-                                </div>
-                              }
-                            >
-                              <YakitButton type="text2" icon={<ClockIcon />} title="" />
-                            </Tooltip>
-                          )}
-                          {externalParameters.rightIcon.add}
-                          {externalParameters.rightIcon.close}
-                        </>
-                      ) : (
-                        <>
-                          {getTaskId() && (
-                            <YakitButton
-                              type="outline2"
-                              radius="28px"
-                              icon={<OutlineListTodoIcon />}
-                              onClick={onDetails}
-                            >
-                              任务详情
-                            </YakitButton>
-                          )}
-                          <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-              {reActTaskId === chatIPCEvents.fetchCurrentCasualTaskID() && todoData?.items?.length > 0 && (
-                <div className={styles['todoList-wrapper']}>
-                  <AIToDoList className={styles['to-do-list']} todoData={todoData} />
-                </div>
-              )}
-              <AIReActChatContents ref={aiReActChatContentsRef} chats={chatIPCData.casualChat} />
+              <AIReActChatHeader
+                title={title}
+                chatContainerHeaderClassName={chatContainerHeaderClassName}
+                isShowRetract={isShowRetract}
+                externalParameters={externalParameters}
+                handleSwitchShowFreeChat={handleSwitchShowFreeChat}
+                scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
+              />
+              <AIToDoListWrapper />
+              <AIReActChatContents ref={aiReActChatContentsRef} />
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>
                 <div className={styles['footer-inputs']}>
-                  {execute && questionQueue?.total > 0 && <AITaskQuery />}
-                  {execute && notifyMessage?.content && <AINotifyMessage notifyMessage={notifyMessage} />}
-
+                  <AITaskQuery />
+                  <AINotifyMessage />
                   <div className={classNames(styles['footer-inputs-file-list'])}>
-                    <AIChatTextarea
+                    <AIReactChatTextarea
                       ref={aiChatTextareaRef}
-                      loading={false}
-                      onSubmit={handleSubmit}
-                      inputFooterRight={
-                        <div className={styles['extra-footer-right']}>
-                          {casualLoading && (
-                            <RoundedStopButton
-                              loading={cancelCasualLoading}
-                              onClick={handleStopCasualTask}
-                              style={{ width: 24, height: 24 }}
-                            />
-                          )}
-                        </div>
-                      }
-                      chatDataStoreKey={chatDataStoreKey}
-                      {...omit(externalParameters, 'rightIcon')}
+                      handleSubmit={handleSubmit}
+                      externalParameters={externalParameters}
+                      handleStopCasualTask={handleStopCasualTask}
                     />
                   </div>
                 </div>
@@ -549,10 +346,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   }),
 )
 
-const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo((props) => {
-  const { notifyMessage } = props
+const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo(() => {
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+  const notifyMessage = useStore(store, (state) => state.notifyMessage)
+
   const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
-  return (
+
+  return execute && notifyMessage?.content ? (
     <div className={styles['notify-message']}>
       <div>{nodeLabel}</div>
       <div className={styles['content-wrapper']}>
@@ -564,5 +365,7 @@ const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo((props) => {
         </div>
       </div>
     </div>
+  ) : (
+    <></>
   )
 })

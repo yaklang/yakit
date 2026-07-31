@@ -22,27 +22,13 @@
   padding: 4px 0;
   @include mixin.text-ellipsis;
 }
-.content {
-  width: 100%;
-  max-height: 500px;
-  background-color: var(--Colors-Use-Basic-Background);
-  padding: 4px;
-  border-radius: 8px;
-}
 
-.concurrent-stream-content {
-  height: 100%;
+.chat-card {
+  position: relative;
+  width: 100%;
+  padding: 4px 8px;
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-}
-
-.task-name {
-  width: 100%;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 16px;
-  letter-spacing: 0.5px;
-  min-width: 0;
-  @include mixin.text-ellipsis(1, false, false, true);
 }

@@ -14,7 +14,7 @@ import { QSInputTextarea } from '../template/template'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { yakitNotify } from '@/utils/notification'
 import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
-import { AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AISourceEnum, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 
 import classNames from 'classnames'
 import styles from './AITriageChatTemplate.module.scss'
@@ -213,6 +213,7 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
     const request: AIStartParams = {
       ForgeName: `${info.ForgeVerboseName || info.ForgeName}`,
       UserQuery: '',
+      Source: AISourceEnum.aiAgent,
     }
 
     if (isUIParams) {
@@ -221,26 +222,26 @@ export const AIForgeForm: React.FC<AIForgeFormProps> = memo((props) => {
           .validateFields()
           .then(async (value: any) => {
             const kvPair = getYakExecutorParam({ ...value })
-            onSubmit(
-              {
+            onSubmit({
+              request: {
                 ...request,
                 ForgeParams: kvPair,
               },
-              value,
-            )
+              formValue: value,
+            })
           })
           .catch(() => {})
       }
     } else {
-      onSubmit(
-        {
+      onSubmit({
+        request: {
           ...request,
           UserQuery: question.trim() || '',
         },
-        {
+        formValue: {
           UserQuery: question.trim() || '',
         },
-      )
+      })
     }
 
     setTimeout(() => {

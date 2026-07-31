@@ -1,9 +1,8 @@
-import { AIAgentChatMode, HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { AIChatQSData } from '../hooks/aiRender'
 import { AIInputEvent } from '../hooks/grpcApi'
 import React from 'react'
 import { AIChatTextareaProps, AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
-import { UseChatIPCState } from '../hooks/type'
 import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export type DataDetailsButtonProps = Omit<YakitButtonProp, 'icon' | 'children'>
@@ -21,7 +20,6 @@ export interface AIHandleStartResProps {
   params: AIInputEvent
   extraParams?: AIHandleStartExtraProps
   onChat?: () => void
-  onChatFromHistory?: (sessionID: string) => void
 }
 export interface AISendParams {
   params: AIInputEvent
@@ -46,7 +44,6 @@ type ExternalParametersRightIcon = Partial<{
   [RightIconType.taskDetails]: boolean
 }>
 export interface AIReActChatProps {
-  mode: AIAgentChatMode
   chatContainerClassName?: string
   chatContainerHeaderClassName?: string
   showFreeChat: boolean
@@ -68,9 +65,7 @@ export interface AIReActChatProps {
   }
 }
 
-export interface AINotifyMessageProps {
-  notifyMessage: UseChatIPCState['notifyMessage']
-}
+export interface AINotifyMessageProps {}
 export interface AIReActLogProps {
   logs: AIChatQSData[]
   setLogVisible: (visible: boolean) => void
