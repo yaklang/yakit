@@ -15,7 +15,8 @@ export class AIAgentLogEmitter {
     isStream?: boolean,
   ) {
     const { ipcRenderer } = window.require('electron')
-    ipcRenderer.send('forward-ai-chat-log-data', {
+    // 主进程用 ipcMain.handle 注册，必须用 invoke；send 不会触发 handle
+    void ipcRenderer.invoke('forward-ai-chat-log-data', {
       sessionId,
       level: level,
       message: message,

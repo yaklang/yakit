@@ -1223,14 +1223,14 @@ export class ChatMultiSessionController {
         store.getState().updateStateCount('syncIDUpdate')
       }
 
-      const mirrorToLogWindow = () => {
-        aiAgentLogEmitter.dispatch({
-          session: sessionId,
-          type: 'log',
-          Timestamp: res.Timestamp,
-          log: { level: 'log', message: ipcContent },
-        })
-      }
+      // const mirrorToLogWindow = () => {
+      //   aiAgentLogEmitter.dispatch({
+      //     session: sessionId,
+      //     type: 'log',
+      //     Timestamp: res.Timestamp,
+      //     log: { level: 'log', message: ipcContent },
+      //   })
+      // }
 
       if (res.Type === 'pong') {
         // 如果返回的pong没有值，但是pingSyncID有值，说明该条消息已经过期
@@ -1368,7 +1368,7 @@ export class ChatMultiSessionController {
       }
 
       // 所有业务数据，均抄送一份到日志中
-      mirrorToLogWindow()
+      // mirrorToLogWindow()
 
       if (handleFunc) {
         handleFunc({
