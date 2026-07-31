@@ -9,15 +9,9 @@ import {
   type YaklangLanguageSuggestionResponse,
 } from '@/utils/monacoSpec/yakCompletionSchema'
 import { getModelContext } from '@/utils/monacoSpec/yakEditor'
-<<<<<<< HEAD
 type IWordAtPosition = editor.IWordAtPosition
 import type { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
-import { getAllRows } from '@/components/configNetwork/CustomizeCode'
-=======
-import IWordAtPosition = editor.IWordAtPosition
-import { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
 import { getAllRows } from '@/components/configNetwork/CustomizeCodeTypes'
->>>>>>> 5c1520f4e3 (perf: 拆分 getAllRows 并移除 md-editor 死依赖以减小启动体积)
 const { ipcRenderer } = window.require('electron')
 
 export const highlightKinds: string[] = [

@@ -2,13 +2,8 @@ import { type editor, type IRange, languages, type Position } from 'monaco-edito
 import type { CancellationToken } from 'typescript'
 import { monaco } from 'react-monaco-editor'
 import { getModelContext } from './yakEditor'
-<<<<<<< HEAD
-import { getAllRows } from '@/components/configNetwork/CustomizeCode'
-import type { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
-=======
 import { getAllRows } from '@/components/configNetwork/CustomizeCodeTypes'
-import { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
->>>>>>> 5c1520f4e3 (perf: 拆分 getAllRows 并移除 md-editor 死依赖以减小启动体积)
+import type { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
 import { highlightKinds } from './fuzzHTTPMonacoSpec'
 
 const { ipcRenderer } = window.require('electron')

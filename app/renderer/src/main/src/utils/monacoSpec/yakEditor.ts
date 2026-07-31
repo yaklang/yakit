@@ -11,15 +11,9 @@ import {
   maybeAutoTriggerCallbackOnParen,
 } from './yakCompletionSchema'
 import { setupCompletionHint } from './yakCompletionHint'
-<<<<<<< HEAD
 import { KeyCode, KeyMod, type languages } from 'monaco-editor'
 type CodeAction = languages.CodeAction
 type CodeActionList = languages.CodeActionList
-=======
-import { KeyCode, KeyMod, languages } from 'monaco-editor'
-import CodeAction = languages.CodeAction
-import CodeActionList = languages.CodeActionList
->>>>>>> 5c1520f4e3 (perf: 拆分 getAllRows 并移除 md-editor 死依赖以减小启动体积)
 
 export const YaklangMonacoSpec = 'yak'
 // export const GolangMonacoSpec = "go";

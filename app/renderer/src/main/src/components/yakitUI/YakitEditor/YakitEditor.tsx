@@ -1098,7 +1098,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         editorDomNode?.removeEventListener('copy', handleEditorClipboard, true)
         editorDomNode?.removeEventListener('cut', handleEditorClipboard, true)
         unregisterBinaryFoldEntries(model)
-        // 不手动 editor.dispose()，交由 react-monaco-editor 卸载处理，避免双释放
+        // 先释放 model（含大文本 buffer），再 dispose editor。
+        // editor.dispose() 只 detach model 不释放其 buffer；model 须显式 dispose 才会从 modelService._models 移除并释放文本缓冲区。
+        // 否则大内容（如数 MB 响应）的 TextModel 会被 modelService 强引用持久持有，关闭后内存无法回收。
+        model.dispose()
+        editor.dispose()
       } catch (e) {}
     }
   }, [editor])
