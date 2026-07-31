@@ -13,8 +13,28 @@ import { monaco as monacoApi } from 'react-monaco-editor'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import { YakitMonacoDiffInline } from '@/components/yakitUI/YakitMonacoDiffInline/YakitMonacoDiffInline'
 
 const CODE_BLOCK_MAX_HEIGHT = 200
+
+// 将 `*** Begin Patch` 文本块解析为 original / incoming 两份，供 diff 高亮。
+// 约定（unified 风格）：`-` 删除行、`+` 新增行、其余（`*** ` 文件头 / `@@ ` 行 / 上下文）两边都放。
+const parsePatchToDiff = (block: string): { original: string; incoming: string } => {
+  const original: string[] = []
+  const incoming: string[] = []
+  for (const raw of block.split(/\r?\n/)) {
+    if (raw === '*** Begin Patch' || raw === '*** End Patch' || raw.startsWith('@@')) continue
+    const body = raw.slice(1)
+    if (raw.startsWith('-')) original.push(body)
+    else if (raw.startsWith('+')) incoming.push(body)
+    else {
+      const line = raw.startsWith(' ') ? body : raw
+      original.push(line)
+      incoming.push(line)
+    }
+  }
+  return { original: original.join('\n'), incoming: incoming.join('\n') }
+}
 
 export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) => {
   const { content: defContent, nodeLabel, modalInfo, contentType, referenceNode } = props
@@ -31,6 +51,14 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
   const type = useCreation(() => {
     return contentType.split('/')?.[1] || 'plaintext'
   }, [contentType])
+
+  const diffLanguage = useCreation(() => (type === 'yaklang' ? 'yak' : type), [type])
+  // 仅当 content 以 `*** Begin Patch` 开头时，才以 YakitMonacoDiffInline 只读展示
+  const isPatch = useCreation(() => defContent.trimStart().startsWith('*** Begin Patch'), [defContent])
+  const { original: patchOriginal, incoming: patchIncoming } = useCreation(
+    () => (isPatch ? parsePatchToDiff(defContent) : { original: '', incoming: '' }),
+    [isPatch, defContent],
+  )
 
   const bindContentHeightEditor = useMemoizedFn((editor: YakitIMonacoEditor) => {
     const setEditorScrollActive = (active: boolean) => {
@@ -87,6 +115,20 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
       default:
         // case AIStreamContentType.CODE_YAKLANG:
         // case AIStreamContentType.CODE_PYTHON:
+        if (isPatch) {
+          return (
+            <div style={{ height: CODE_BLOCK_MAX_HEIGHT }}>
+              <YakitMonacoDiffInline
+                reuseKey="yaklang-patch-diff"
+                original={patchOriginal}
+                incoming={patchIncoming}
+                hunks={[]}
+                onDecision={() => {}}
+                language={diffLanguage}
+              />
+            </div>
+          )
+        }
         return (
           <YakitEditor
             type={type}

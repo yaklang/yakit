@@ -12,6 +12,7 @@ import { useTheme } from '@/hook/useTheme'
 import { useEditorFontSize } from '@/store/editorFontSize'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
+import { YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
 import styles from './YakitMonacoDiffInline.module.scss'
 
 const tOriginal = i18n.getFixedT(null, ['yakitUi'])
@@ -64,6 +65,18 @@ function modEndLineForHunk(hunks: YakitMonacoDiffInlineHunk[], i: number, modMax
   const newLen = h.newLines.length
   const modEnd1 = newLen > 0 ? modStart1 + newLen - 1 : Math.max(1, modStart1 - 1)
   return Math.min(Math.max(1, modEnd1), modMax)
+}
+
+const updateEditorValue = (editor: monacoEditor.editor.IStandaloneCodeEditor, nextValue: string) => {
+  const model = editor.getModel()
+  if (!model || model.getValue() === nextValue) return
+
+  editor.executeEdits('yakit-monaco-diff-inline', [
+    {
+      range: model.getFullModelRange(),
+      text: nextValue,
+    },
+  ])
 }
 
 type DiffWidgetHost = {
@@ -401,6 +414,19 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
     const modEditor = diffEditor.getModifiedEditor()
     const scrollTop = modEditor.getScrollTop()
     const scrollLeft = modEditor.getScrollLeft()
+
+    // 仅 yak 语言走原地更新：避免 diff 重新 setModel 后，绿色修改块反复重绘闪动
+    if (language === YaklangMonacoSpec && prevModels?.original.getLanguageId() === language) {
+      const restoreScroll = () => {
+        modEditor.setScrollTop(scrollTop)
+        modEditor.setScrollLeft(scrollLeft)
+      }
+      updateEditorValue(diffEditor.getOriginalEditor(), original)
+      updateEditorValue(modEditor, incoming)
+      restoreScroll()
+      widgetHostRef.current?.remountWidgets(restoreScroll)
+      return
+    }
 
     const originalModel = monaco.editor.createModel(original, language)
     const modifiedModel = monaco.editor.createModel(incoming, language)
