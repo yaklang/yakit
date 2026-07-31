@@ -319,8 +319,11 @@ export class ChatMultiSessionController {
   }
 
   /**
-   * 全删：非空 sessionIds 直接用集合；否则按 route + pageId 收集 sources 数组中每个 source 的 session
-   * @param sources 指定要删除的来源集合（agent 页面下可能同时含 ai 与 im，支持精确删其一或全部）
+   * 非空 sessionIds 直接使用指定集合；空数组表示按 source 全删。
+   *
+   * gRPC 的按 source 全删不区分 route / pageId，因此这里也必须遍历反向索引，
+   * 收集所有页面中对应 source 的 session。否则在 B 页全删后只会停止 B，
+   * 同 source 的 A 页会话仍会继续运行。
    */
   private resolveSessionIds(params: {
     sessionIds?: string[]
@@ -328,16 +331,13 @@ export class ChatMultiSessionController {
     route: YakitRouteType
     pageId: string
   }): string[] {
-    const { sessionIds, sources, route, pageId } = params
+    const { sessionIds, sources } = params
     if (sessionIds?.length) return [...sessionIds]
-    const sourceMap = this.pageSessionMap.get(makePageKey(route, pageId))
-    if (!sourceMap) return []
+
+    const sourceSet = new Set(sources)
     const ids: string[] = []
-    for (const source of sources) {
-      const sessionSet = sourceMap.get(source)
-      if (sessionSet) {
-        for (const id of sessionSet) ids.push(id)
-      }
+    for (const [sessionId, owner] of this.sessionOwnerMap) {
+      if (sourceSet.has(owner.source)) ids.push(sessionId)
     }
     return ids
   }
@@ -1568,8 +1568,7 @@ export class ChatMultiSessionController {
   /**
    * 删除指定的 session（必须清除内存数据）
    * - sessionIds 非空：删集合
-   * - sessionIds 空数组：按当前归属全删该 page 下该 source
-   * - pageId 为空：按当前归属全删该 route 下所有 page 的 session
+   * - sessionIds 空数组：按 source 全删所有 route / page 下的 session
    * - 内部会先 forceClose 再卸业务池与双索引，并同步删除该会话 IDB 三表
    * - grpc 删除由上层负责
    */

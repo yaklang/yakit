@@ -31,11 +31,11 @@ export interface HandAIHistoryChatRemoveParams {
 export const handAIHistoryChatRemove = async (params: HandAIHistoryChatRemoveParams) => {
   try {
     const { grpcDeleteAISessionParams, handleClearAIImageParams, deleteSessionsParams } = params
-    // 1.删除grpc数据
-    await grpcDeleteAISession(grpcDeleteAISessionParams, true)
-    // 2.删除图片数据
-    handleClearAIImage(handleClearAIImageParams)
-    // 3.删除store缓存数据同时删除indexdb
+    // 1.先停止并清理仍在运行的会话，避免历史已删除但后台任务继续执行
     globalSessionEngine.deleteSessions(deleteSessionsParams)
+    // 2.删除grpc数据
+    await grpcDeleteAISession(grpcDeleteAISessionParams, true)
+    // 3.删除图片数据
+    handleClearAIImage(handleClearAIImageParams)
   } catch (error) {}
 }
