@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type FC } from 'react'
+import { memo, useMemo, useRef, useState, type FC } from 'react'
 import styles from './HistoryChatList.module.scss'
 import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { SolidChatalt2Icon, SolidUserIcon, SolidUsersIcon } from '@/assets/icon/solid'
@@ -9,7 +9,7 @@ import classNames from 'classnames'
 import { YakitAIAgentPageID } from '../../defaultConstant'
 import { EditChatNameModal } from '../../UtilModals'
 import { AISession } from '../../type/aiChat'
-import { useInfiniteScroll, useMemoizedFn } from 'ahooks'
+import { useCreation, useInfiniteScroll, useMemoizedFn } from 'ahooks'
 import { grpcUpdateAISessionTitle } from '../../grpc'
 import useAIAgentStore from '../../useContext/useStore'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
@@ -17,7 +17,7 @@ import { yakitNotify } from '@/utils/notification'
 import { onNewChat } from '../HistoryChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
-import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITaskStatus, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 import { handAIHistoryChatRemove } from '../utils'
 import useGetChatDataStoreKey, { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
@@ -25,6 +25,10 @@ import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { HistoryChatListItemProps } from './type'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { useStore } from 'zustand'
+import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -135,7 +139,6 @@ const HistoryChatList: FC<{
   const listRef = useRef<HTMLDivElement | null>(null)
   const chatTotalRef = useRef(0)
   const editInfo = useRef<AISession>()
-  const [delLoading, setDelLoading] = useState<string[]>([])
   const [editShow, setEditShow] = useState(false)
 
   const chatDataStoreKey = useGetChatDataStoreKey()
@@ -205,52 +208,53 @@ const HistoryChatList: FC<{
 
   const { getSetting, onClose } = useAIAgentDispatcher()
   const handleDeleteChat = useMemoizedFn(async (info: AISession) => {
-    const { SessionID } = info
-    const isLoading = delLoading.includes(SessionID)
-    if (isLoading) return
-    const findIndex = sessionList.findIndex((item) => item.SessionID === SessionID)
-    if (findIndex === -1) {
-      yakitNotify('error', t('HistoryChatList.chatNotFound'))
-      return
-    }
-    setDelLoading((old) => [...old, SessionID])
+    return new Promise<void>(async (resolve, reject) => {
+      const { SessionID } = info
 
-    const newChats = sessionList.filter((item) => item.SessionID !== SessionID)
-    let active: AISession | undefined
-    if (newChats.length === 0) {
-      onNewChat()
-    } else {
-      active = getNextActiveChat(sessionList, findIndex)
-    }
-
-    setSessions && setSessions(newChats)
-
-    if (activeSessionId === SessionID && active) {
-      handleSetActiveChat(active)
-    }
-
-    try {
-      const sessionIds = [SessionID]
-      const source = getSetting().Source || 'ai'
-      await handAIHistoryChatRemove({
-        grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
-        handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
-        deleteSessionsParams: {
-          sources: [source],
-          sessionIds,
-          route: currentRouteKey as YakitRouteType,
-          pageId: currentPageId || currentRouteKey,
-        },
-      })
-    } catch (error) {
-      setSessions?.(sessionList)
-      if (activeSessionId === SessionID) {
-        handleSetActiveChat(info)
+      const findIndex = sessionList.findIndex((item) => item.SessionID === SessionID)
+      if (findIndex === -1) {
+        yakitNotify('error', t('HistoryChatList.chatNotFound'))
+        reject()
+        return
       }
-      yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
-    } finally {
-      setDelLoading((old) => old.filter((el) => el !== SessionID))
-    }
+
+      const newChats = sessionList.filter((item) => item.SessionID !== SessionID)
+      let active: AISession | undefined
+      if (newChats.length === 0) {
+        onNewChat()
+      } else {
+        active = getNextActiveChat(sessionList, findIndex)
+      }
+
+      setSessions && setSessions(newChats)
+
+      if (activeSessionId === SessionID && active) {
+        handleSetActiveChat(active)
+      }
+
+      try {
+        const sessionIds = [SessionID]
+        const source = getSetting().Source || 'ai'
+        await handAIHistoryChatRemove({
+          grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
+          handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
+          deleteSessionsParams: {
+            sources: [source],
+            sessionIds,
+            route: currentRouteKey as YakitRouteType,
+            pageId: currentPageId || currentRouteKey,
+          },
+        })
+        resolve()
+      } catch (error) {
+        setSessions?.(sessionList)
+        if (activeSessionId === SessionID) {
+          handleSetActiveChat(info)
+        }
+        yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
+        reject()
+      }
+    })
   })
   const onSetChat = useMemoizedFn((info: AISession) => {
     setSetting?.((old) => ({
@@ -293,66 +297,16 @@ const HistoryChatList: FC<{
           <div key={group.key} className={styles['history-group']}>
             <div className={styles['history-group-title']}>{t(group.label)}</div>
             {group.list.map((item) => {
-              const { SessionID } = item
-              const displayTitle = getSessionDisplayTitle(item)
-              const delStatus = delLoading.includes(SessionID)
               return (
-                <div
-                  key={SessionID}
-                  className={classNames(styles['history-item'], {
-                    [styles['history-item-active']]: activeSessionId === SessionID,
-                  })}
-                  onClick={() => handleSetActiveChat(item)}
-                >
-                  <div className={styles['item-info']}>
-                    <HistorySessionIcon
-                      item={item}
-                      getPopupContainer={getPopupContainer}
-                      overlayClassName={overlayClassName}
-                    />
-                    <div
-                      className={classNames(styles['info-title'], 'yakit-content-single-ellipsis')}
-                      title={displayTitle}
-                    >
-                      {displayTitle}
-                    </div>
-                  </div>
-
-                  <div className={styles['item-extra']}>
-                    <Tooltip
-                      title={t('HistoryChatList.editTitle')}
-                      placement="topRight"
-                      overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
-                      getPopupContainer={getPopupContainer}
-                    >
-                      <YakitButton
-                        type="text2"
-                        icon={<OutlinePencilaltIcon />}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleOpenEditName(item)
-                        }}
-                      />
-                    </Tooltip>
-                    <YakitPopconfirm
-                      title={t('HistoryChatList.deleteConfirm')}
-                      placement="bottom"
-                      getPopupContainer={getPopupContainer}
-                      overlayClassName={overlayClassName}
-                      onConfirm={(e) => {
-                        e?.stopPropagation()
-                        handleDeleteChat(item)
-                      }}
-                    >
-                      <YakitButton
-                        loading={delStatus}
-                        type="text2"
-                        icon={<OutlineTrashIcon className={styles['del-icon']} />}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </YakitPopconfirm>
-                  </div>
-                </div>
+                <HistoryChatListItem
+                  key={item.SessionID}
+                  item={item}
+                  handleSetActiveChat={handleSetActiveChat}
+                  getPopupContainer={getPopupContainer}
+                  overlayClassName={overlayClassName}
+                  handleOpenEditName={handleOpenEditName}
+                  handleDeleteChat={handleDeleteChat}
+                />
               )
             })}
           </div>
@@ -378,3 +332,88 @@ const HistoryChatList: FC<{
 }
 
 export default HistoryChatList
+
+const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
+  const { item, handleSetActiveChat, getPopupContainer, handleOpenEditName, overlayClassName, handleDeleteChat } = props
+
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const activeSessionId = useCurrentSessionId()
+
+  const store = useCreation(() => {
+    return globalSessionEngine?.ensureSession(item.SessionID)?.store
+  }, [item.SessionID])
+
+  const casualLoading = useStore(store, (state) => state.casualLoading)
+  const taskLoading = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
+
+  const [delLoading, setDelLoading] = useState<boolean>(false)
+  const displayTitle = useCreation(() => {
+    return getSessionDisplayTitle(item)
+  }, [item])
+  const handleDeleteChatItem = useMemoizedFn(async (info: AISession) => {
+    setDelLoading(true)
+    handleDeleteChat(info).finally(() => {
+      setTimeout(() => {
+        setDelLoading(false)
+      }, 200)
+    })
+  })
+  const loading = useCreation(() => {
+    return casualLoading || taskLoading
+  }, [casualLoading, taskLoading])
+  return (
+    <div
+      key={item.SessionID}
+      className={classNames(styles['history-item'], {
+        [styles['history-item-active']]: activeSessionId === item.SessionID,
+      })}
+      onClick={() => handleSetActiveChat(item)}
+    >
+      <div className={styles['item-info']}>
+        {loading ? (
+          <YakitSolidLoading />
+        ) : (
+          <HistorySessionIcon item={item} getPopupContainer={getPopupContainer} overlayClassName={overlayClassName} />
+        )}
+        <div className={classNames(styles['info-title'], 'yakit-content-single-ellipsis')} title={displayTitle}>
+          {displayTitle}
+        </div>
+      </div>
+
+      <div className={styles['item-extra']}>
+        <Tooltip
+          title={t('HistoryChatList.editTitle')}
+          placement="topRight"
+          overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+          getPopupContainer={getPopupContainer}
+        >
+          <YakitButton
+            type="text2"
+            icon={<OutlinePencilaltIcon />}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleOpenEditName(item)
+            }}
+          />
+        </Tooltip>
+        <YakitPopconfirm
+          title={t('HistoryChatList.deleteConfirm')}
+          placement="bottom"
+          getPopupContainer={getPopupContainer}
+          overlayClassName={overlayClassName}
+          onConfirm={(e) => {
+            e?.stopPropagation()
+            handleDeleteChatItem(item)
+          }}
+        >
+          <YakitButton
+            loading={delLoading}
+            type="text2"
+            icon={<OutlineTrashIcon className={styles['del-icon']} />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </YakitPopconfirm>
+      </div>
+    </div>
+  )
+})
