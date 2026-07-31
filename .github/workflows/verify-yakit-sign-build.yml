@@ -1,179 +1,88 @@
 name: Verify Yakit Sign and Notarize Build
 
 on:
-    workflow_dispatch:
-        inputs:
-            version:
-                description: "Version type to verify"
-                required: true
-                type: choice
-                default: ce
-                options:
-                    - ce
-                    - ee
-            engineVersion:
-                description: "Specify engine version (optional, default latest)"
-                required: false
-                type: string
+  workflow_dispatch:
 
 jobs:
-    verify_sign_build:
-        runs-on: macos-15
-        env:
-            CI: ""
-            NODE_OPTIONS: --max_old_space_size=4096
-            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-            APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-            APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+  verify_sign_build:
+    runs-on: macos-15
+    env:
+      # electron-builder 在 CI=true 时会改变部分行为，此处显式清空
+      CI: ''
+      NODE_OPTIONS: --max_old_space_size=4096
+      # 签名 + 公证（after-sign.js / signature.sh）
+      APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
-        steps:
-            - name: Display incoming configuration parameters
-              run: echo ${{ inputs.version }} ${{ inputs.engineVersion }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: yarn
 
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 22.12.0
-                  cache: "yarn"
-                  cache-dependency-path: yarn.lock
+      - name: Prepare build env
+        run: |
+          set -euo pipefail
+          mkdir -p bins/scripts
 
-            - run: cp buildutil/zip /usr/local/bin/zip
-            - run: chmod +x /usr/local/bin/zip
+          wget -q -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
+          echo "ENGINE_VERSION=$(tr -d '\n\r' < bins/engine-version.txt)" >> "$GITHUB_ENV"
 
-            - name: Download yakit-chrome-extension
-              run: |
-                  extensionVersion=$(curl -fsL "https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
-                    echo "Failed to download!" >&2
-                    exit 1
-                  }
-                  wget -O bins/scripts/google-chrome-plugin.zip https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
-              shell: bash
+          PKG_VERSION=$(node -p 'require("./package.json").version')
+          SOFTWARE_VERSION="${PKG_VERSION%-ce}"
+          SOFTWARE_VERSION="${SOFTWARE_VERSION%-ee}"
+          echo "SOFTWARE_VERSION=${SOFTWARE_VERSION}" >> "$GITHUB_ENV"
 
-            - name: Fetch latest engine version
-              if: ${{ !inputs.engineVersion }}
-              run: wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
-            - name: Fetch specified engine version
-              if: ${{ inputs.engineVersion }}
-              run: |
-                  mkdir -p bins
-                  echo "${{ inputs.engineVersion }}" > bins/engine-version.txt
-            - name: Export engine version
-              run: |
-                  cat bins/engine-version.txt
-                  YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
-                  echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
+          # electron-builder mac 打包依赖系统 zip；仓库自带兼容版本
+          cp buildutil/zip /usr/local/bin/zip && chmod +x /usr/local/bin/zip
 
-            - name: Download Yak Engine (macOS)
-              run: |
-                  wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_amd64
-                  wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64
-              shell: bash
+          # extraFiles 强制打包 chrome 扩展，缺失会直接导致 pack 失败
+          extensionVersion=$(curl -fsL "https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt" | tr -d '\n\r') || {
+            echo "Failed to download chrome extension version" >&2
+            exit 1
+          }
+          wget -q -O bins/scripts/google-chrome-plugin.zip \
+            "https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip"
+        shell: bash
 
-            - name: Signature Mac Engine
-              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
-              shell: bash
+      - name: Download and sign Yak engine
+        run: |
+          set -euo pipefail
+          YAK_BASE="https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}"
+          wget -q -O bins/yak_darwin_amd64 "${YAK_BASE}/yak_darwin_amd64"
+          wget -q -O bins/yak_darwin_arm64 "${YAK_BASE}/yak_darwin_arm64"
+          # 下载官方 sha256（打包进 app 的 engine-sha256.txt）；签名会把二进制打成 zip
+          wget -q -O bins/yak_darwin_amd64.sha256.txt "${YAK_BASE}/yak_darwin_amd64.sha256.txt"
+          wget -q -O bins/yak_darwin_arm64.sha256.txt "${YAK_BASE}/yak_darwin_arm64.sha256.txt"
+          chmod +x ./packageScript/script/signature.sh
+          # 无 build 参数：导入证书并对引擎 codesign（验证签名链路需要）
+          ./packageScript/script/signature.sh
+        shell: bash
 
-            - name: Fetch macOS sha256
-              run: |
-                  wget -O bins/yak_darwin_amd64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_amd64.sha256.txt
-                  wget -O bins/yak_darwin_arm64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64.sha256.txt
-              shell: bash
+      - name: Install dependencies
+        run: yarn install
 
-            - name: Extract package version
-              id: extract_version
-              uses: Saionaro/extract-package-version@v1.1.1
-            - name: Crop Yakit-CE package version
-              uses: mad9000/actions-find-and-replace-string@5
-              id: package_ce_version
-              with:
-                  source: ${{ steps.extract_version.outputs.version }}
-                  find: "-ce"
-                  replace: ""
-            - name: Crop Yakit-EE package version
-              uses: mad9000/actions-find-and-replace-string@5
-              id: package_version
-              with:
-                  source: ${{ steps.package_ce_version.outputs.value }}
-                  find: "-ee"
-                  replace: ""
-            - name: Export software version
-              run: echo "SOFTWARE_VERSION=${{ steps.package_version.outputs.value }}" >> $GITHUB_ENV
+      - name: Build Yakit
+        run: |
+          set -euo pipefail
+          chmod +x ./packageScript/script/buildPreScript.sh ./packageScript/script/installRender.sh
+          ./packageScript/script/buildPreScript.sh yakit
+          rm -rf ./app/renderer/engine-link-startup/dist ./app/renderer/pages ./release
+          ./packageScript/script/installRender.sh ce
+          # signNormal -> CSC_IDENTITY_AUTO_DISCOVERY=true，具备 Apple 密钥时会走公证
+          yarn pack-mac
+        shell: bash
 
-            - name: Generate software prefix name
-              run: |
-                  if [ "${{ inputs.version }}" = "ce" ]; then
-                    echo "ENV_Software_Name=Yakit" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "ee" ]; then
-                    echo "ENV_Software_Name=EnpriTrace" >> $GITHUB_ENV
-                  else
-                    echo "Unsupported version: ${{ inputs.version }}" >&2
-                    exit 1
-                  fi
-
-            - name: Install dependencies
-              run: yarn install
-              working-directory: ./
-
-            - name: Prepare render download versions
-              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh yakit
-              shell: bash
-
-            - name: Download prebuilt render from OSS
-              run: |
-                  rm -rf ./app/renderer/engine-link-startup/dist
-                  rm -rf ./app/renderer/pages
-                  rm -rf ./release
-                  chmod +x ./packageScript/script/installRender.sh
-                  ./packageScript/script/installRender.sh ${{ inputs.version }}
-              shell: bash
-
-            - name: Enable code signing env
-              run: |
-                  echo "APPLE_ID=${APPLE_ID}" >> $GITHUB_ENV
-                  echo "APPLE_APP_SPECIFIC_PASSWORD=${APPLE_APP_SPECIFIC_PASSWORD}" >> $GITHUB_ENV
-                  echo "APPLE_TEAM_ID=${APPLE_TEAM_ID}" >> $GITHUB_ENV
-                  echo "CERT_PASSWORD=${CERT_PASSWORD}" >> $GITHUB_ENV
-                  {
-                    echo "CERT_BASE64<<EOF"
-                    echo "${CERT_BASE64}"
-                    echo "EOF"
-                  } >> $GITHUB_ENV
-              shell: bash
-
-            - name: Build Yakit (macOS only)
-              env:
-                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
-              working-directory: ./
-              run: |
-                  yarn add -D dmg-license
-                  if [ "${{ inputs.version }}" = "ce" ]; then
-                    yarn pack-mac
-                  elif [ "${{ inputs.version }}" = "ee" ]; then
-                    yarn pack-mac-ee
-                  else
-                    echo "Unsupported version: ${{ inputs.version }}" >&2
-                    exit 1
-                  fi
-
-            - name: Check build output
-              run: |
-                  for dmg in "./release/${ENV_Software_Name}-${SOFTWARE_VERSION}-darwin-x64.dmg" "./release/${ENV_Software_Name}-${SOFTWARE_VERSION}-darwin-arm64.dmg"; do
-                    if [ ! -f "${dmg}" ]; then
-                      echo "Error: missing ${dmg}" >&2
-                      exit 1
-                    fi
-                    echo "Found: ${dmg}"
-                  done
-              shell: bash
-
-            - name: Upload mac installers
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-sign-verify
-                  path: |
-                      ./release/${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin-x64.dmg
-                      ./release/${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin-arm64.dmg
-                  if-no-files-found: error
-                  retention-days: 3
+      - name: Upload mac installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: Yakit-${{ env.SOFTWARE_VERSION }}-darwin-dmg
+          path: |
+            ./release/Yakit-${{ env.SOFTWARE_VERSION }}-darwin-x64.dmg
+            ./release/Yakit-${{ env.SOFTWARE_VERSION }}-darwin-arm64.dmg
+          if-no-files-found: error
+          retention-days: 3
