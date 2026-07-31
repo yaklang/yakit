@@ -1207,3 +1207,9 @@ heap 模式使用保留符号的 Yak，正式门禁使用 `-s -w` 发布式 Yak�
 同时收口 HTTP History 隐藏态工作。默认未开启“后台刷新”时，隐藏页面不再解析 flow 事件、不运行精确 Total 定时器，也不发列表查询；回到页面后只由虚拟表可见性切换执行一次 bootstrap，避免 dirty 补拉和 Hook 补拉互相失效。用户显式开启后台刷新时继续保持该产品能力，但隐藏态列表查询排除 Request/Response raw body，回到可见态后再执行一次完整 hydration。MITM 页面不受 History 后台开关影响，隐藏后保持停用。
 
 定向 Vitest 覆盖 generation `7 -> 8` 清除旧边界、空结果按 `AfterId` 从 GAP 恢复、缺少项目身份时不猜测、History 默认隐藏停用、显式后台 metadata-only 以及 MITM 隔离，共 68 项通过；Renderer TypeScript 检查通过，定向 ESLint 无 error。本轮未运行高资源 Electron 矩阵。
+
+## 63. 第八十九轮：项目切换后的 History 首次布局 bootstrap（2026-07-31）
+
+项目管理页会卸载当前业务页面，切换完成后重新挂载 History。旧流程的首次 params effect 可能早于 ResizeDetector 得到有效高度，因此只启动兼容轮询而没有真正查询；共享 Duplex 已激活时，该轮询又会被停止。新项目中的既有流量不会产生新的 committed 通知，最终表现为网站树已有内容但表格保持空白，直到筛选或标签切换再次触发查询。
+
+本轮把表格第一次获得有效高度定义为明确的 bootstrap 边界：活动表首次测得高度时立即刷新；隐藏表不查询，初始化后的尺寸变化继续保留原有“仅主表变高时刷新”规则。纯函数测试覆盖首次高度、隐藏态、变高、变小和详情展开状态，共 26 项 HTTPFlowTable utils 测试与 16 项虚拟表调度测试通过；Renderer TypeScript 检查通过，定向 ESLint 无 error。本轮不修改后端、proto 或数据库。

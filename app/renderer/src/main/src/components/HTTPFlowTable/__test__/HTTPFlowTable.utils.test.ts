@@ -13,6 +13,7 @@ import {
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
   shouldClearMITMResetBoundary,
+  shouldRefreshHTTPFlowTableAfterResize,
   shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
   uniqStrings,
@@ -74,6 +75,23 @@ describe('HTTP flow hidden-table policy', () => {
   it('never turns hidden MITM into a background table through the History setting', () => {
     expect(isHTTPFlowTableActive(false, true, 'MITM')).toBe(false)
     expect(shouldUseHTTPFlowMetadataOnlyQuery(false, true, 'MITM')).toBe(false)
+  })
+})
+
+describe('HTTP flow table layout bootstrap', () => {
+  it('bootstraps when the first usable height arrives', () => {
+    expect(shouldRefreshHTTPFlowTableAfterResize(undefined, 640, true, true)).toBe(true)
+    expect(shouldRefreshHTTPFlowTableAfterResize(0, 640, false, true)).toBe(true)
+  })
+
+  it('does not bootstrap a hidden table', () => {
+    expect(shouldRefreshHTTPFlowTableAfterResize(undefined, 640, true, false)).toBe(false)
+  })
+
+  it('keeps the existing grow-only refresh after initialization', () => {
+    expect(shouldRefreshHTTPFlowTableAfterResize(640, 720, true, true)).toBe(true)
+    expect(shouldRefreshHTTPFlowTableAfterResize(640, 720, false, true)).toBe(false)
+    expect(shouldRefreshHTTPFlowTableAfterResize(640, 600, true, true)).toBe(false)
   })
 })
 

@@ -103,6 +103,7 @@ import {
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
   shouldClearMITMResetBoundary,
+  shouldRefreshHTTPFlowTableAfterResize,
   shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
@@ -3169,15 +3170,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (!width || !height) {
       return
     }
-    if (onlyShowFirstNode) {
-      // 窗口由小变大时 重新拉取数据
-      if (boxHeightRef.current && boxHeightRef.current < height) {
-        boxHeightRef.current = height
-        updateData()
-      } else {
-        boxHeightRef.current = height
-      }
-    }
+    const previousHeight = boxHeightRef.current
+    boxHeightRef.current = height
+    // A freshly mounted History table can run its params effect before the
+    // ResizeDetector has produced a usable height. Shared duplex push then
+    // stops compatibility polling, so existing rows have no later event that
+    // can wake the empty table. The first valid layout is therefore an
+    // explicit bootstrap boundary.
+    if (shouldRefreshHTTPFlowTableAfterResize(previousHeight, height, onlyShowFirstNode, isTableActive)) updateData()
   })
 
   const onFormConfigSaveOk = useMemoizedFn((config: any) => {

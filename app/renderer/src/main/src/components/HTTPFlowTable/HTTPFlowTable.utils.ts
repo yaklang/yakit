@@ -74,6 +74,17 @@ export const shouldUseHTTPFlowMetadataOnlyQuery = (
   pageType?: string,
 ): boolean => !inViewport && backgroundRefresh && pageType !== 'MITM'
 
+export const shouldRefreshHTTPFlowTableAfterResize = (
+  previousHeight: number | undefined,
+  nextHeight: number,
+  onlyShowFirstNode: boolean | undefined,
+  isTableActive: boolean,
+): boolean => {
+  if (!isTableActive || !Number.isFinite(nextHeight) || nextHeight <= 0) return false
+  if (!previousHeight || previousHeight <= 0) return true
+  return onlyShowFirstNode === true && nextHeight > previousHeight
+}
+
 export const safeParseHTTPFlowTableCache = <T = unknown>(value?: string): T | undefined => {
   if (!value) return undefined
   try {
