@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import OpenPacketNewWindow from './components/OpenPacketNewWindow/OpenPacketNewWindow'
+import { LargeContentViewer } from './components/LargeContentViewer/LargeContentViewer'
 import styles from './ChildNewApp.module.scss'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { coordinate } from './pages/globalVariable'
@@ -66,6 +67,8 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
           )
         case 'openSSARiskNewWindow':
           return <RightBugAuditResult info={parentWinData.data} boxStyle={{ height: '100%' }} />
+        case 'openLargeContentViewer':
+          return <LargeContentViewer data={parentWinData.data} />
       }
     }
     return null

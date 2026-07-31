@@ -46,6 +46,23 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
   }
 }
 
+export interface LargeContentViewerItem {
+  content: string
+  title?: string
+}
+// 大内容轻量查看器：复用单例子窗口通道，避免 4.9MB 内容塞进当前页 Monaco 卡顿
+export const openLargeContentViewer = (data: LargeContentViewerItem) => {
+  if (childWindowHash) {
+    minWinSendToChildWin({ type: 'openLargeContentViewer', data })
+  } else {
+    yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
+    yakitWindow.openChildWindow({
+      type: 'openLargeContentViewer',
+      data: data,
+    })
+  }
+}
+
 export const openRiskNewWindow = (data?: Risk) => {
   if (childWindowHash) {
     minWinSendToChildWin({ type: 'openRiskNewWindow', data })

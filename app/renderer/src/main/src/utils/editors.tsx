@@ -1,4 +1,5 @@
 import React, { ReactElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
 import MonacoEditor, { monaco } from 'react-monaco-editor'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import HexEditor from 'react-hex-editor'
@@ -53,11 +54,14 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { newWebFuzzerTab } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { JSONParseLog } from './tool'
 import { yakitEditorTools } from '@/services/electronBridge'
+import { openLargeContentViewer } from '@/utils/openWebsite'
 
 // 大内容降级阈值：超过此体积进入 lite 模式（关 minimap/换行/二进制折叠等），弱 CPU 下减少 Monaco 渲染开销
 const PREVIEW_LITE_THRESHOLD = 128 * 1024 // 128KB
 // 超大内容/二进制阈值：超过此体积或命中二进制类型时强制 plaintext，跳过 HTTP 高亮与装饰
 const PREVIEW_PLAINTEXT_THRESHOLD = 512 * 1024 // 512KB
+// 截断阈值：只读场景超过此体积在 Monaco 只预览头部，提供"加载全部"按钮在新窗口用轻量查看器看全文
+const PREVIEW_TRUNCATE_THRESHOLD = 512 * 1024 // 512KB
 
 /** 从完整 HTTP 包文本（含响应头/请求头）解析 Content-Type */
 function parseContentTypeFromPacket(packet: string): string {
@@ -865,6 +869,19 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }
   }, [originValue, props.url, props.language, props.noMinimap, props.foldBinaryFuzztag])
 
+  // 大内容截断：只读场景超过阈值时，Monaco 只预览头部，提供"加载全部"在新窗口用轻量查看器看全文。
+  // 编辑场景不截断，保证可编辑性。原始全文存 ref 供"加载全部"传给新窗口。
+  const fullOriginValueRef = useRef(originValue)
+  fullOriginValueRef.current = originValue
+  const isTruncated = !!props.readOnly && originValue.length > PREVIEW_TRUNCATE_THRESHOLD
+  // 传给 Monaco 的值：截断时用头部 + 提示，否则用原文
+  const monacoOriginValue = useMemo(() => {
+    if (!isTruncated) return originValue
+    const head = originValue.slice(0, PREVIEW_TRUNCATE_THRESHOLD)
+    const totalKB = (originValue.length / 1024).toFixed(0)
+    return `${head}\n...[内容已截断,共 ${totalKB}KB,点击工具栏"加载全部"在新窗口查看完整内容]...\n\n`
+  }, [isTruncated, originValue])
+
   const setTypeOptionFn = useMemoizedFn(() => {
     if (originValue.length > 0) {
       // 大内容早退：跳过 formatPacketRender（IPC + 可能的 Uint8ArrayToString/DOMPurify/prettier 主线程解析）
@@ -1016,6 +1033,55 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const handleEditorMount = useMemoizedFn((editor: YakitIMonacoEditor) => {
     setMonacoEditor(editor)
   })
+
+  // 截断场景：在 Monaco 内容末尾（截断提示行）用 ContentWidget 挂"加载全部"按钮
+  useEffect(() => {
+    if (!monacoEditor || !isTruncated) return
+    const editor = monacoEditor
+    const widgetId = 'load-all-content-widget'
+    let root: ReturnType<typeof createRoot> | null = null
+    const widget = {
+      getId() {
+        return widgetId
+      },
+      getDomNode() {
+        const dom = document.createElement('div')
+        dom.style.zIndex = '10'
+        dom.style.transform = 'translateY(6px)'
+        root = createRoot(dom)
+        root.render(
+          <YakitButton
+            size="small"
+            type="primary"
+            onClick={() =>
+              openLargeContentViewer({
+                content: fullOriginValueRef.current,
+                title: isResponse ? 'Response' : 'Request',
+              })
+            }
+          >
+            加载全部
+          </YakitButton>,
+        )
+        return dom
+      },
+      getPosition() {
+        const model = editor.getModel()
+        if (!model) return null
+        return {
+          position: { lineNumber: model.getLineCount(), column: 1 },
+          preference: [1, 2],
+        }
+      },
+    }
+    editor.addContentWidget(widget as any)
+    return () => {
+      try {
+        editor.removeContentWidget(widget as any)
+        root?.unmount()
+      } catch (e) {}
+    }
+  }, [monacoEditor, isTruncated, isResponse])
 
   const onTypeOptionChange = useMemoizedFn((value: RenderTypeOptionVal, checked: boolean) => {
     setType(checked ? value : undefined)
@@ -1216,8 +1282,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     lineNumbersMinChars={props.lineNumbersMinChars}
                     noMiniMap={editorDowngradeProps.noMinimap}
                     type={editorDowngradeProps.language}
-                    originValue={showValue}
-                    value={props.readOnly && showValue.length > 0 ? showValue : strValue}
+                    originValue={isTruncated ? monacoOriginValue : showValue}
+                    value={
+                      isTruncated ? monacoOriginValue : props.readOnly && showValue.length > 0 ? showValue : strValue
+                    }
                     readOnly={props.readOnly}
                     disabled={props.disabled}
                     setValue={setStrValue}
