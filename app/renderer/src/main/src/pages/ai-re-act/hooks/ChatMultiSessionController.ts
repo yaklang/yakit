@@ -635,6 +635,41 @@ export class ChatMultiSessionController {
    * 避免 end 丢失导致监听泄漏 / onEnd 永不触发
    */
   private sessionEndFallbackTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  /** 等待 session-end 的调用方；同一会话可被多个流程同时等待 */
+  private sessionEndWaiters = new Map<string, Set<() => void>>()
+
+  /** 唤醒等待指定 session-end 的所有调用方 */
+  private resolveSessionEndWaiters(sessionId: string) {
+    const waiters = this.sessionEndWaiters.get(sessionId)
+    if (!waiters) return
+    this.sessionEndWaiters.delete(sessionId)
+    waiters.forEach((resolve) => resolve())
+  }
+
+  /**
+   * 停止仍在执行的会话，并等待真实 session-end 或 fallback 完成。
+   * 无执行态会话时立即完成；所有 cancel 并发发出，等待上限不叠加。
+   */
+  public async stopExecutingSessionsAndWait(sessionIds: string[]): Promise<void> {
+    const executingSessionIds = [...new Set(this.filterExecutingSessionIds(sessionIds))]
+    if (!executingSessionIds.length) return
+
+    const waitForEnd = executingSessionIds.map(
+      (sessionId) =>
+        new Promise<void>((resolve) => {
+          let waiters = this.sessionEndWaiters.get(sessionId)
+          if (!waiters) {
+            waiters = new Set()
+            this.sessionEndWaiters.set(sessionId, waiters)
+          }
+          waiters.add(resolve)
+        }),
+    )
+
+    this.forceCloseSession({ sessionIds: executingSessionIds })
+    await Promise.all(waitForEnd)
+  }
+
   /** 取消已有的 session-end 兜底定时器 */
   private clearSessionEndFallback(sessionId: string) {
     const timer = this.sessionEndFallbackTimers.get(sessionId)
@@ -1435,6 +1470,12 @@ export class ChatMultiSessionController {
    * @param deletePersist 是否同步删除 IDB。页面销毁只卸内存时应为 false，并先 flush 渲染树；显式删会话时为 true。
    */
   private disposeSessionMemory(sessionId: string, deletePersist = false) {
+    // 已收到 session-end 的会话无需再次 cancel；直接卸池，避免批量删除二次等待 fallback。
+    if (!this.readyChannels.has(sessionId)) {
+      this.teardownDisposedSession(sessionId, deletePersist)
+      return
+    }
+
     if (deletePersist) {
       // 显式删除：取消待写 debounce 即可，无需再刷进 IDB
       this.clearSessionRenderPersistTimer(sessionId)
@@ -1571,6 +1612,7 @@ export class ChatMultiSessionController {
       this.teardownDisposedSession(sessionId, pendingDeletePersist)
     }
 
+    this.resolveSessionEndWaiters(sessionId)
     onEnd?.()
   }
 

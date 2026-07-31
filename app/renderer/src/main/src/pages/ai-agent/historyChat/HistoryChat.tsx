@@ -15,7 +15,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import styles from './HistoryChat.module.scss'
 import { AIAgentTriggerEventInfo } from '../aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
-import { grpcDeleteAISession } from '../grpc'
+import { grpcDeleteAISession, grpcQueryAISession } from '../grpc'
 import { AISession } from '../type/aiChat'
 import { SideSettingButton } from '../aiChatWelcome/AIChatWelcome'
 import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/HistoryChatList'
@@ -34,6 +34,7 @@ import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import useDebounce from 'ahooks/lib/useDebounce'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -97,7 +98,7 @@ interface HistoryChatProps {
 }
 
 const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
-  const { setActiveChat, onClose, getSetting } = useAIAgentDispatcher()
+  const { setActiveChat, getSetting } = useAIAgentDispatcher()
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
   const enableHistorySourceFilter = useMemo(() => aiSource.includes('im'), [aiSource])
@@ -136,9 +137,30 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
   const chatDataStoreKey = useGetChatDataStoreKey()
 
+  /** 查询与删除条件匹配的完整历史集合，避免分页列表漏掉待删除 session。 */
+  const queryTargetSessionIds = useMemoizedFn(async (sources?: AISource[], beforeTimestamp?: number) => {
+    const { Data } = await grpcQueryAISession(
+      {
+        Pagination: { Page: 1, Limit: -1, OrderBy: 'last_used_at', Order: 'desc' },
+        Filter: sources?.length ? { Source: sources } : undefined,
+      },
+      true,
+    )
+    return Data.filter((session) => beforeTimestamp === undefined || getChatTimestamp(session) <= beforeTimestamp).map(
+      (session) => session.SessionID,
+    )
+  })
+
+  /** 补齐尚未写入历史表、但当前路由内已经运行的会话。 */
+  const getRouteSessionIds = useMemoizedFn((sources: AISource[]) => {
+    const route = currentRouteKey as YakitRouteType
+    return sources.flatMap((source) => globalSessionEngine.getSessionIdsBySourceAndRoute(source, route))
+  })
+
   const handleClearAllChat = useMemoizedFn(async () => {
     if (clearLoading) return
-    if (!isGlobalAIAgentHistory && visibleSessions.length === 0) {
+    const sources = isGlobalAIAgentHistory ? aiSource : historyQuerySources
+    if (!isGlobalAIAgentHistory && visibleSessions.length === 0 && getRouteSessionIds(sources).length === 0) {
       yakitNotify('info', t('HistoryChat.noChatsToClear'))
       return
     }
@@ -146,18 +168,23 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     setClearLoading(true)
     try {
       const filter = isGlobalAIAgentHistory ? { DeleteAll: true } : { Filter: { Source: historyQuerySources } }
+      const sessionIds = [
+        ...new Set([
+          ...(await queryTargetSessionIds(isGlobalAIAgentHistory ? undefined : sources)),
+          ...getRouteSessionIds(sources),
+        ]),
+      ]
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
         deleteSessionsParams: {
           // 全局历史页删全部来源；否则删当前 tab 对应来源（local=ai, feishu/dingtalk=im）
-          sources: isGlobalAIAgentHistory ? aiSource : historyQuerySources,
-          sessionIds: [],
+          sources,
+          sessionIds,
           route: currentRouteKey as YakitRouteType,
           pageId: currentPageId || currentRouteKey,
         },
       })
-      onClose([])
       onNewChat()
       setActiveChat?.(undefined)
       dispatcher.setSessions?.([])
@@ -175,26 +202,26 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     if (clearLoading) return
 
     const beforeTimestamp = Date.now() - days * DAY_MS
-    const deletedChats = visibleSessions.filter((item) => getChatTimestamp(item) <= beforeTimestamp)
+    let sessionIds: string[] = []
 
-    if (deletedChats.length === 0) {
+    try {
+      sessionIds = await queryTargetSessionIds(historyQuerySources, beforeTimestamp)
+    } catch (e) {
+      yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      return
+    }
+
+    if (sessionIds.length === 0) {
       yakitNotify('info', t('HistoryChat.noChatsBeforeDays', { days }))
       return
     }
 
     setClearLoading(true)
     try {
-      const filter =
-        enableHistorySourceFilter && historySourceFilter !== 'local'
-          ? {
-              SessionID: deletedChats.map((item) => item.SessionID),
-              Source: historyQuerySources,
-            }
-          : {
-              BeforeTimestamp: beforeTimestamp,
-              Source: historyQuerySources,
-            }
-      const sessionIds = deletedChats.map((item) => item.SessionID)
+      const filter = {
+        BeforeTimestamp: beforeTimestamp,
+        Source: historyQuerySources,
+      }
       const source = getSetting().Source || 'ai'
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },
@@ -206,9 +233,8 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
           pageId: currentPageId || currentRouteKey,
         },
       })
-      onClose(sessionIds)
       const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
-      const activeDeleted = !!activeChat && deletedChats.some((item) => item.SessionID === activeChat.SessionID)
+      const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)
 
       if (nextChats.length === 0) {
         onNewChat()

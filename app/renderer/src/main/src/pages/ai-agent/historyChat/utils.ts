@@ -29,13 +29,12 @@ export interface HandAIHistoryChatRemoveParams {
  * 4.删除indexdb
  */
 export const handAIHistoryChatRemove = async (params: HandAIHistoryChatRemoveParams) => {
-  try {
-    const { grpcDeleteAISessionParams, handleClearAIImageParams, deleteSessionsParams } = params
-    // 1.先停止并清理仍在运行的会话，避免历史已删除但后台任务继续执行
-    globalSessionEngine.deleteSessions(deleteSessionsParams)
-    // 2.删除grpc数据
-    await grpcDeleteAISession(grpcDeleteAISessionParams, true)
-    // 3.删除图片数据
-    handleClearAIImage(handleClearAIImageParams)
-  } catch (error) {}
+  const { grpcDeleteAISessionParams, handleClearAIImageParams, deleteSessionsParams } = params
+
+  // 必须等待 session-end（含 5 秒 fallback）完成，才删除后端历史。
+  // sessionId 是全局唯一的，显式目标集合已与本次 gRPC 删除条件对齐，不再按当前 page 截断。
+  await globalSessionEngine.stopExecutingSessionsAndWait(deleteSessionsParams.sessionIds)
+  await grpcDeleteAISession(grpcDeleteAISessionParams, true)
+  handleClearAIImage(handleClearAIImageParams)
+  globalSessionEngine.deleteSessions(deleteSessionsParams)
 }

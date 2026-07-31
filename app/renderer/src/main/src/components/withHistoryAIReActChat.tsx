@@ -49,6 +49,7 @@ import { HistroryAIReActChat } from './HistroryAIReActChat'
 import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 import { useStore } from 'zustand'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
@@ -320,7 +321,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
 
-  const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
+  const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
   const casualLoading = useStore(store, (state) => state.casualLoading)
 
