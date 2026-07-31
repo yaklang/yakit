@@ -2,7 +2,7 @@ import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeDataID, isToolStderrStream, isToolStdoutStream } from '../utils'
-import { AIChatQSDataTypeEnum, type AIChatQSData } from '../aiRender'
+import { AIChatQSDataTypeEnum, type AIChatQSData, type ChatStream } from '../aiRender'
 import { AIStreamContentType, convertNodeIdToVerbose } from '../defaultConstant'
 import { aiAgentLogEmitter } from '../AIAgentLogEmitter'
 import { v4 as uuidv4 } from 'uuid'
@@ -60,6 +60,25 @@ const genStreamGroupData = (
     if (mapValue.type === AIChatQSDataTypeEnum.STREAM && mapValue.data.status === 'end') {
       upsertSessionContent(sessionId, mapValue.id, mapValue)
     }
+  })
+}
+
+/** 将 STREAM 挂到渲染树（含同 NodeId 合并成组） */
+const dispatchStreamToUI = (params: AIMessageHandlerParams & { streamData: ChatStream; isHistory: boolean }) => {
+  const { chatType, store, streamData, isHistory } = params
+  store.getState().dispatchStreamingNode({
+    chatType,
+    parentTaskId: streamData.TaskId,
+    node: {
+      token: streamData.id,
+      kind: 'item',
+      type: streamData.type,
+      isHistory,
+      nodeId: streamData.data.ContentType === AIStreamContentType.DEFAULT ? streamData.data.NodeId : undefined,
+      groupExtra: (group: string, tokens: string[]) => {
+        genStreamGroupData({ group, tokens, ...params })
+      },
+    },
   })
 }
 
@@ -278,21 +297,8 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   streamData.data.content += content
 
   if (isRender) {
-    // 判断是否成为组UI数据展示
-    store.getState().dispatchStreamingNode({
-      chatType: chatType,
-      parentTaskId: streamData.TaskId,
-      node: {
-        token: streamData.id,
-        kind: 'item',
-        type: streamData.type,
-        isHistory: res.IsSync,
-        nodeId: res.ContentType === AIStreamContentType.DEFAULT ? res.NodeId : undefined,
-        groupExtra: (group: string, tokens: string[]) => {
-          genStreamGroupData({ group, tokens, ...requestInfo })
-        },
-      },
-    })
+    // 首包上屏（与官方一致：历史/实时都立刻挂树；打字机由 useTypedStream 的 shouldType 控制）
+    dispatchStreamToUI({ ...requestInfo, streamData, isHistory: !!res.IsSync })
   }
 }
 
@@ -437,20 +443,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
         ensureToolResultOnUI(requestInfo, toolResult)
       } else {
         // 触发UI渲染
-        store.getState().dispatchStreamingNode({
-          chatType: chatType,
-          parentTaskId: chatData.TaskId,
-          node: {
-            token: chatData.id,
-            kind: 'item',
-            type: chatData.type,
-            isHistory: res.IsSync,
-            nodeId: chatData.data.ContentType === AIStreamContentType.DEFAULT ? chatData.data.NodeId : undefined,
-            groupExtra: (group: string, tokens: string[]) => {
-              genStreamGroupData({ group, tokens, ...requestInfo })
-            },
-          },
-        })
+        dispatchStreamToUI({ ...requestInfo, streamData: chatData, isHistory: !!res.IsSync })
       }
       return
     } else {
