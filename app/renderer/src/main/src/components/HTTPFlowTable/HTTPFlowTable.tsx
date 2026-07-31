@@ -1,9 +1,8 @@
-import React, { Ref, useEffect, useLayoutEffect, useMemo, useRef, useState, useContext } from 'react'
-import { unstable_batchedUpdates } from 'react-dom'
+import React, { type Ref, useEffect, useLayoutEffect, useMemo, useRef, useState, useContext } from 'react'
 import { Divider, Tooltip, Badge } from 'antd'
-import { YakDeleteHTTPFlowRequest, YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
-import { YakScript } from '../../pages/invoker/schema'
-import { HTTPFlowDetailProp } from '../HTTPFlowDetail'
+import type { YakDeleteHTTPFlowRequest, YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
+import type { YakScript } from '../../pages/invoker/schema'
+import type { HTTPFlowDetailProp } from '../HTTPFlowDetail'
 import { yakitNotify, yakitFailed } from '../../utils/notification'
 import style from './HTTPFlowTable.module.scss'
 import { formatTimestamp } from '../../utils/timeUtil'
@@ -23,7 +22,7 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
 import { ColorSwatchIcon, ChevronDownIcon, CloudDownloadIcon } from '@/assets/newIcon'
 import classNames from 'classnames'
-import { ColumnsTypeProps, FiltersItemProps, SortProps } from '../TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, FiltersItemProps, SortProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import { YakitCheckableTag } from '../yakitUI/YakitTag/YakitCheckableTag'
@@ -40,12 +39,12 @@ import { CheckedSvgIcon } from '../layout/icons'
 import { ExportSelect } from '../DataExport/DataExport'
 import emiter from '@/utils/eventBus/eventBus'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
-import { HTTPHistorySourcePageType } from '../HTTPHistory'
+import type { HTTPHistorySourcePageType } from '../HTTPHistory'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
-import { ParamsTProps, VirtualTableRefreshReason } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import type { ParamsTProps, VirtualTableRefreshReason } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
@@ -89,7 +88,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { yakitHTTPFlow, yakitStream } from '@/services/electronBridge'
 import {
   defFilterConfig,
-  FilterConfig,
+  type FilterConfig,
   HTTPFlowTableFormConfiguration,
   HTTPFlowTableFormConsts,
 } from './HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
@@ -173,6 +172,7 @@ import {
   type MITMLiveCycleToken,
   type MITMLiveTriggerSource,
 } from './HTTPFlowTable.observability'
+import { unstable_batchedUpdates } from 'react-dom'
 
 //导出给其他组件用
 export * from './HTTPFlowTable.constants'
@@ -706,7 +706,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
         if (Number(rsp.Total) - offsetDataRef.current.length > 200) {
           updateDataRef.current()
-          return { Data: [], Total: 0, Pagination: paginationFields }
+          return { Data: [], Total: 0, Pagination: { ...paginationFields, Order, OrderBy } }
         }
       } catch (error) {}
     }
@@ -1155,7 +1155,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       .then((data) => {
         if (!data) return
         try {
-          let cacheDataList = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'getShieldList' })?.data || []
+          const cacheDataList = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'getShieldList' })?.data || []
           const current = getShieldData()?.data || []
           if (isEqual(current, cacheDataList)) return
           if (cacheDataList.length > SHIELD_MAX_LIMIT && isOneceLoading.current) {
@@ -1723,7 +1723,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       },
       onExpand: (e: React.MouseEvent, rowData: HTTPFlow) => {
         e.stopPropagation()
-        let m = showYakitDrawer({
+        const m = showYakitDrawer({
           width: '80%',
           content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr, t, pageType),
           bodyStyle: { paddingTop: 5 },
@@ -1904,7 +1904,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return jsonData.map((v, index) =>
       filterVal.map((j) => {
         if (['Request', 'Response'].includes(j)) {
-          return new Buffer(v[j]).toString('utf8')
+          return Buffer.from(v[j]).toString('utf8')
         }
         if (j === 'UpdatedAt') {
           return formatTimestamp(v[j])
@@ -1988,9 +1988,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
       const Ids: number[] = list.map((item) => parseInt(item.Id + ''))
       // 最大请求条数
-      let pageSize = getPageSize
+      const pageSize = getPageSize
       // 需要多少次请求
-      let count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
+      const count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
       const resultArray: number[] = []
       for (let i = 1; i <= count; i++) {
         resultArray.push(i)
@@ -2016,7 +2016,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       })
       Promise.allSettled(promiseList)
         .then((results) => {
-          let rsp: YakQueryHTTPFlowResponse = {
+          const rsp: YakQueryHTTPFlowResponse = {
             Data: [],
             Pagination: { ...pagination, Page: 1, OrderBy: 'id', Order: '' },
             Total: parseInt(total + ''),
@@ -2337,7 +2337,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       .invoke('SetTagForHTTPFlow', params)
       .then(() => {
         yakitNotify('success', t('HTTPFlowTable.editTagSuccess'))
-        let newData: HTTPFlow[] = []
+        const newData: HTTPFlow[] = []
         const l = data.length
         for (let index = 0; index < l; index++) {
           const item = { ...data[index] }
@@ -2436,7 +2436,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
    * @description 屏蔽URL
    */
   const onShieldURL = useMemoizedFn((v: HTTPFlow) => {
-    let Url = v?.Url
+    const Url = v?.Url
     // 根据URL拿到ID数组
     appendShieldItem(Url)
   })
@@ -2648,7 +2648,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   useEffect(() => {
     if (props.params?.SourceType !== undefined) {
-      let selectTypeList = props.params?.SourceType.split(',') || ['']
+      const selectTypeList = props.params?.SourceType.split(',') || ['']
       setParams((prev) => ({ ...prev, SourceType: selectTypeList.join(',') }))
     }
   }, [props.params?.SourceType])

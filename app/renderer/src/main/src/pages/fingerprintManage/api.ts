@@ -1,7 +1,7 @@
-import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
-import { DbOperateMessage } from '../layout/mainOperatorContent/utils'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { DbOperateMessage } from '../layout/mainOperatorContent/utils'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 const { ipcRenderer } = window.require('electron')
 
 export interface FingerprintGroup {

@@ -1,5 +1,5 @@
-import React, { ReactNode, useState } from 'react'
-import { YakitSideTabProps, YakitTabsItemProps } from './YakitSideTabType'
+import React, { type ReactNode, useState } from 'react'
+import type { YakitSideTabProps, YakitTabsItemProps } from './YakitSideTabType'
 import classNames from 'classnames'
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'

@@ -1,4 +1,4 @@
-import { MutableRefObject, useEffect, useRef, useState } from 'react'
+import { type MutableRefObject, useEffect, useRef, useState } from 'react'
 import { useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
 
 type TargetValue<T> = T | undefined | null
@@ -21,7 +21,7 @@ function useListenWidth(target: BasicTarget): number {
 
   const resizeObserver = useCreation(() => {
     return new ResizeObserver((entries: ResizeObserverEntry[]) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         const { clientWidth, clientHeight } = entry.target
         onSetWrapperWidth(clientWidth)
       }
@@ -33,9 +33,9 @@ function useListenWidth(target: BasicTarget): number {
 
     if (typeof target === 'string') {
       const dom = document.getElementById(target)
-      if (!!dom) resizeObserver.observe(dom)
+      if (dom) resizeObserver.observe(dom)
     } else if ('current' in target) {
-      if (!!target.current) resizeObserver.observe(target.current)
+      if (target.current) resizeObserver.observe(target.current)
     } else {
       resizeObserver.observe(target)
     }

@@ -1,7 +1,7 @@
 import { yakitNotify } from '@/utils/notification'
-import { QueryRisksRequest, QueryRisksResponse } from './YakitRiskTableType'
-import { Risk } from '../schema'
-import { FieldName, Fields } from '../RiskTable'
+import type { QueryRisksRequest, QueryRisksResponse } from './YakitRiskTableType'
+import type { Risk } from '../schema'
+import type { FieldName, Fields } from '../RiskTable'
 import { defQueryRisksRequest } from './constants'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'risk'])

@@ -1,7 +1,7 @@
 import { yakitNotify } from '@/utils/notification'
-import { PortScanExecuteExtraFormValue } from './NewPortScanType'
-import { StartBruteParams } from '../newBrute/NewBruteType'
-import { GenerateSSAReportResponse } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
+import type { PortScanExecuteExtraFormValue } from './NewPortScanType'
+import type { StartBruteParams } from '../newBrute/NewBruteType'
+import type { GenerateSSAReportResponse } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -10,7 +10,7 @@ const { ipcRenderer } = window.require('electron')
  */
 export const apiPortScan: (params: PortScanExecuteExtraFormValue, token: string) => Promise<null> = (params, token) => {
   return new Promise((resolve, reject) => {
-    let executeParams: PortScanExecuteExtraFormValue = {
+    const executeParams: PortScanExecuteExtraFormValue = {
       ...params,
     }
     ipcRenderer
@@ -60,7 +60,7 @@ export interface RecordPortScanRequest {
  */
 export const apiSimpleDetect: (params: RecordPortScanRequest, token: string) => Promise<null> = (params, token) => {
   return new Promise((resolve, reject) => {
-    let executeParams = {
+    const executeParams = {
       ...params,
     }
     ipcRenderer
@@ -109,7 +109,7 @@ export const apiSimpleDetectCreatReport: (params: CreatReportRequest, token: str
   token,
 ) => {
   return new Promise((resolve, reject) => {
-    let executeParams: CreatReportRequest = {
+    const executeParams: CreatReportRequest = {
       ...params,
     }
     ipcRenderer
@@ -137,7 +137,7 @@ export const apiGenerateSSAReport: (params: GenerateSSAReport, token: string) =>
   token,
 ) => {
   return new Promise((resolve, reject) => {
-    let executeParams: GenerateSSAReport = {
+    const executeParams: GenerateSSAReport = {
       ...params,
     }
     ipcRenderer

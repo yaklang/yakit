@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { PortScanExecuteExtraFormValue } from './NewPortScanType'
-import { Checkbox, Form, FormInstance, Tooltip } from 'antd'
+import type { PortScanExecuteExtraFormValue } from './NewPortScanType'
+import { Checkbox, Form, type FormInstance, Tooltip } from 'antd'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import styles from './NewPortScanExtraParamsDrawer.module.scss'
@@ -9,9 +9,9 @@ import { ScanKind, ScanKindKeys, defaultPorts } from '@/pages/portscan/PortScanP
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
-import { GlobalNetworkConfig, defaultParams } from '@/components/configNetwork/ConfigNetworkPage'
-import { PcapMetadata } from '@/models/Traffic'
+import type { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { type GlobalNetworkConfig, defaultParams } from '@/components/configNetwork/ConfigNetworkPage'
+import type { PcapMetadata } from '@/models/Traffic'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -21,7 +21,7 @@ import { yakitInfo } from '@/utils/notification'
 import { apiGetGlobalNetworkConfig, apiGetPcapMetadata, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import { OutlineRefreshIcon } from '@/assets/icon/outline'
-import { CheckboxValueType } from 'antd/lib/checkbox/Group'
+import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { isEnpriTraceAgent } from '@/utils/envfile'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
@@ -351,7 +351,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
       res = PresetPorts['all'] || ''
     }
 
-    if (!!res) {
+    if (res) {
       form.setFieldsValue({ Ports: res })
     }
   })

@@ -1,6 +1,5 @@
-import { FormInstance } from 'antd'
-import { PortScanExecuteExtraFormValue } from '../securityTool/newPortScan/NewPortScanType'
-import { SimpleDetectExtraParam } from './SimpleDetectExtraParamsDrawer'
+import { type FormInstance } from 'antd'
+import { type SimpleDetectExtraParam } from './SimpleDetectExtraParamsDrawer'
 
 export interface SimpleDetectProps {
   pageId: string

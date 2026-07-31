@@ -1,7 +1,7 @@
-import { YakitSystem } from '@/yakitGVDefine'
+import type { YakitSystem } from '@/yakitGVDefine'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
-import { EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType } from './EditorMenu'
-import { YakitIMonacoEditor } from './YakitEditorType'
+import type { EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType } from './EditorMenu'
+import type { YakitIMonacoEditor } from './YakitEditorType'
 import { throttle } from 'lodash'
 import { expandBinaryFuzztagByModelKey } from './binaryFuzztag'
 

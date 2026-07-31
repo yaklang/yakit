@@ -2,7 +2,7 @@ import httpQueryStyles from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdv
 import matcherStyles from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtraction.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { HollowLightningBoltIcon, QuestionMarkCircleIcon, RemoveIcon, TerminalIcon, TrashIcon } from '@/assets/newIcon'
-import React, { ReactNode, useEffect, useMemo, useState } from 'react'
+import React, { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { Form, Tooltip } from 'antd'
 import classNames from 'classnames'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
@@ -15,7 +15,7 @@ import { RuleExportAndImportButton } from '@/pages/mitm/MITMRule/MITMRule'
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { InputItem, ManyMultiSelectForString } from '@/utils/inputUtil'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 
 import webFuzzerStyles from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss'
 import { OutlineCodeIcon, OutlineQrcodeIcon } from '@/assets/icon/outline'
@@ -331,7 +331,7 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
       setEnPayloadValue(defPayloadEncoder)
       setDePayloadValue(defPayloadDecoder)
     } else if (editAction) {
-      let codec = params.Content.split('##############################################')
+      const codec = params.Content.split('##############################################')
       if (packetMode && codec.length === 2) {
         setEnPacketValue(codec[0])
         setDePacketValue(codec[1])
@@ -360,7 +360,7 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
   const [shellScript, setShellScript] = useState<string>('')
 
   useEffect(() => {
-    let ss = (params.Tags || '')
+    const ss = (params.Tags || '')
       .split(',')
       .filter((item) => item !== 'webshell-packet-codec' && item !== 'webshell-payload-codec')
       .join(',')

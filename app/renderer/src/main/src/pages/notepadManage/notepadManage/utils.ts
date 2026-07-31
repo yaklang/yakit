@@ -1,18 +1,18 @@
-import { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
+import type { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
 import { getTypeAndNameByPath } from '@/components/MilkdownEditor/CustomFile/CustomFile'
 import { defaultNoteFilter } from '@/defaultConstants/ModifyNotepad'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
-import { PluginListPageMeta, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
+import type { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
+import type { PluginListPageMeta, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { getRemoteHttpSettingGV } from '@/utils/envfile'
 import emiter from '@/utils/eventBus/eventBus'
 import { getRemoteValue } from '@/utils/kv'
 import { failed, yakitNotify } from '@/utils/notification'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import cloneDeep from 'lodash/cloneDeep'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -199,7 +199,7 @@ export const apiDownloadStorageType: APIFunc<string, string> = (filePath) => {
                   return
                 }
                 const value = JSONParseLog(setting)
-                let url = value.BaseUrl
+                const url = value.BaseUrl
                 // 重要！！！ 此处仅供测试时使用 上线请复原
                 // resolve(`http://192.168.3.88:8080/install_package${match[1]}`)
                 resolve(`${url}/install_package${match[1]}`)
@@ -473,12 +473,12 @@ export const grpcSearchNoteContent: APIFunc<SearchNoteContentRequest, SearchNote
  * @description 根据id进行分组，构建树形结构
  */
 const SearchNoteContentGroupById = (arr: NoteContent[]) => {
-  let map = {}
+  const map = {}
   const keys: string[] = []
-  let groupList: SearchNoteContentTree[] = []
+  const groupList: SearchNoteContentTree[] = []
   const length = arr.length
-  for (var i = 0; i < length; i++) {
-    var ai = arr[i]
+  for (let i = 0; i < length; i++) {
+    const ai = arr[i]
     if (!map[ai.Note.Id]) {
       const id = `${ai.Note.Id}-${uuidv4()}`
       groupList.push({
@@ -489,8 +489,8 @@ const SearchNoteContentGroupById = (arr: NoteContent[]) => {
       keys.push(`${ai.Note.Id}`)
       map[ai.Note.Id] = ai
     } else {
-      for (var j = 0; j < groupList.length; j++) {
-        var dj = groupList[j]
+      for (let j = 0; j < groupList.length; j++) {
+        const dj = groupList[j]
         if (dj.key === `${ai.Note.Id}`) {
           const id = `${ai.Note.Id}-${uuidv4()}`
           dj.children.push({ ...ai, Id: id })

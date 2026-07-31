@@ -1,4 +1,4 @@
-import { AITool } from '../type/aiTool'
+import { type AITool } from '../type/aiTool'
 
 export interface AIToolListProps {}
 export type ToolQueryType = 'all' | 'collect'

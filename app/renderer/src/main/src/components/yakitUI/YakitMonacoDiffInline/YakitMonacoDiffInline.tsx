@@ -404,7 +404,6 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
       modifiedModel.dispose()
       diffEditorRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reuseKey, language])
 
   useUpdateEffect(() => {

@@ -8,7 +8,7 @@ import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import './css/index.scss'
 import { yakitNotify } from '@/utils/notification'
 import { getMarkdown } from '@milkdown/kit/utils'
-import { CollabStatus, CustomMilkdownProps, DeleteOSSFileItem, MilkdownEditorProps } from './MilkdownEditorType'
+import type { CollabStatus, CustomMilkdownProps, DeleteOSSFileItem, MilkdownEditorProps } from './MilkdownEditorType'
 
 import { diffLines } from 'diff'
 import {
@@ -25,7 +25,7 @@ import { httpDeleteNotepadFile } from '@/apiUtils/http'
 import { deletedFileUrlsCtx } from './utils/trackDeletePlugin'
 import moment from 'moment'
 import { useStore } from '@/store'
-import { CollabManager, CollabUserInfo } from './CollabManager'
+import { CollabManager, type CollabUserInfo } from './CollabManager'
 import emiter from '@/utils/eventBus/eventBus'
 
 import { collabServiceCtx } from '@milkdown/plugin-collab'
@@ -33,9 +33,9 @@ import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { tokenOverdue } from '@/services/fetch'
 import { isBoolean } from 'lodash'
 import { notepadSaveStatus } from './WebsocketProvider/constants'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { apiSaveNotepad } from '@/pages/notepadManage/notepadManage/utils'
-import useInitEditorHooks, { InitEditorHooksCollabProps } from './utils/initEditor'
+import useInitEditorHooks, { type InitEditorHooksCollabProps } from './utils/initEditor'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import i18n from '@/i18n/i18n'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -191,7 +191,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
   // 校验文件是否真的被删除 如果不在defaultValue中 则是真的删除
   const judgeDeleteFile = useMemoizedFn((fileNames: string[] = []) => {
     const value = get()?.action(getMarkdown()) || ''
-    let newFileNames = fileNames.filter((fileName) => !value.includes(fileName))
+    const newFileNames = fileNames.filter((fileName) => !value.includes(fileName))
     return newFileNames
   })
 

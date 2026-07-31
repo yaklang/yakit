@@ -1,4 +1,4 @@
-import React, { Ref, useEffect, useRef, useState } from 'react'
+import React, { type Ref, useEffect, useRef, useState } from 'react'
 import { Divider, Tooltip } from 'antd'
 import { useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import styles from './CodeScanResultTable.module.scss'
@@ -8,23 +8,27 @@ import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitD
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { QuerySyntaxFlowResultRequest, QuerySyntaxFlowResultResponse, SyntaxFlowResult } from '../YakRunnerCodeScanType'
+import type {
+  QuerySyntaxFlowResultRequest,
+  QuerySyntaxFlowResultResponse,
+  SyntaxFlowResult,
+} from '../YakRunnerCodeScanType'
 import emiter from '@/utils/eventBus/eventBus'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { apiFetchQuerySyntaxFlowResult } from '../utils'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { OutlineArrowcirclerightIcon, OutlineRefreshIcon, OutlineTerminalIcon } from '@/assets/icon/outline'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import ReactResizeDetector from 'react-resize-detector'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { SeverityMapTag } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { AuditCodePageInfoProps } from '@/store/pageInfo'
+import type { AuditCodePageInfoProps } from '@/store/pageInfo'
 import { JSONParseLog } from '@/utils/tool'
 
 const OFFSET_LIMIT = 30
@@ -599,7 +603,7 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
 
   useEffect(() => {
     let sTop, cHeight, sHeight
-    let id = setInterval(() => {
+    const id = setInterval(() => {
       const scrollTop = tableRef.current?.containerRef?.scrollTop
       const clientHeight = tableRef.current?.containerRef?.clientHeight
       const scrollHeight = tableRef.current?.containerRef?.scrollHeight

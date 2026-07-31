@@ -31,7 +31,7 @@ export const useTaskChatExtraAction = () => {
    * 防止hooks出现意外，UI层暂时保留该逻辑
    */
   const closeChatReview = useMemoizedFn(() => {
-    if (!!reviewInfo) {
+    if (reviewInfo) {
       globalSessionEngine.closeChatReview(sessionId, reviewInfo.id)
     }
   })

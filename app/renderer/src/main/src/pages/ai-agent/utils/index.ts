@@ -1,15 +1,15 @@
-import { AIAgentSetting } from '../aiAgentType'
+import type { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
 import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
-import { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
-import { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
-import { HandleStartParams } from '../aiAgentChat/type'
-import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
+import type { AITaskInfoProps } from '../../ai-re-act/hooks/aiRender'
+import type { HandleStartParams } from '../aiAgentChat/type'
+import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { omit } from 'lodash'
 import { randomString } from '@/utils/randomUtil'
 import { isIRify } from '@/utils/envfile'
-import { UseChatIPCStartParams } from '../useContext/AIAgentContext'
-import { AISession } from '../type/aiChat'
+import type { UseChatIPCStartParams } from '../useContext/AIAgentContext'
+import type { AISession } from '../type/aiChat'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from '../historyChat/utils'
 
@@ -187,14 +187,14 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
   const { mentionList = [], imageList = [], httpFlowList = [], codeBlockList = [] } = value
 
   let attachedResourceInfo: AIInputEvent['AttachedResourceInfo'] = []
-  for (let item of mentionList) {
+  for (const item of mentionList) {
     const addItem = getResourceInfoByMention(item)
     if (addItem) {
       attachedResourceInfo = [...attachedResourceInfo, addItem] // 不需要去重，按显示顺序给后端
     }
   }
 
-  for (let item of imageList) {
+  for (const item of imageList) {
     const addImageItem = {
       Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
       Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
@@ -206,7 +206,7 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
   }
 
   const httpFlowIdSet = new Set<string>()
-  for (let item of httpFlowList) {
+  for (const item of httpFlowList) {
     const ids = (item.flowIds || '')
       .split(',')
       .map((id) => id.trim())
@@ -222,7 +222,7 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
     },
   ]
 
-  for (let item of codeBlockList) {
+  for (const item of codeBlockList) {
     const content = {
       path: item.path,
       startLine: item.range?.startLineNumber,

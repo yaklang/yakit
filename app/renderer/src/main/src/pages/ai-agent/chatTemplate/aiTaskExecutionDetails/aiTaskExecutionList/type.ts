@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { PlanItemDetailsCategoryTypes } from '../type'
+import type { ReactNode } from 'react'
+import type { PlanItemDetailsCategoryTypes } from '../type'
 
 export interface AITaskExecutionListProps<T> {
   list: T[]

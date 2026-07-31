@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn, useThrottleEffect, useThrottleFn } from 'ahooks'
-import { OffsetCoordinate, SashMouseFunc, SplitViewPositionProp, SplitViewProp } from './SplitViewType'
+import type { OffsetCoordinate, SashMouseFunc, SplitViewPositionProp, SplitViewProp } from './SplitViewType'
 import { calculateOffsetRange, generateKnownSplitSize, offsetSplitPosition, resizedSplitSize } from './utils'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -199,7 +199,7 @@ export const SplitView: React.FC<SplitViewProp> = memo((props) => {
 
   const wrapperResizeObserver = useCreation(() => {
     return new ResizeObserver((entries: ResizeObserverEntry[]) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         try {
           const { dataset } = (entry.target as HTMLDivElement) || {}
           if (!dataset) continue

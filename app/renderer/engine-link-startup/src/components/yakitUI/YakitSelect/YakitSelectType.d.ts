@@ -1,11 +1,8 @@
-import { SelectProps } from 'antd'
-import { OptionProps } from 'rc-select/lib/Option'
-import { ReactNode } from 'react'
+import type { SelectProps } from 'antd'
+import type { OptionProps } from 'rc-select/lib/Option'
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
-import { CacheDataHistoryProps, YakitOptionTypeProps } from '../utils'
-import { BaseSelectRef } from 'rc-select'
-import { BaseOptionType, DefaultOptionType } from 'antd/lib/select'
-import { type } from 'os'
+import type { CacheDataHistoryProps, YakitOptionTypeProps } from '../utils'
+import type { BaseOptionType, DefaultOptionType } from 'antd/lib/select'
 
 /**
  * @description: YakitSelectProps

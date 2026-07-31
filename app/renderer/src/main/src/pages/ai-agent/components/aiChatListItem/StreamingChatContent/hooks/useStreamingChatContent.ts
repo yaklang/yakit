@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 

@@ -1,5 +1,3 @@
-import React from 'react'
-
 export interface WebsiteTreeViewerProp {}
 
 export interface WebsiteForest {
@@ -36,7 +34,7 @@ export const ConvertWebsiteForestToTreeData = (forest: WebsiteForest) => {
       urls: t.urls || [],
     }
     try {
-      ;(t.children || []).map(viewTree).forEach((r) => {
+      (t.children || []).map(viewTree).forEach((r) => {
         r.parent = antDTreeData
         antDTreeData.children.push(r)
       })

@@ -186,7 +186,6 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
     // 不依赖配置项：通过 ref 承载，变化在下一步即生效。
     // readLatest/scheduleStep/alignToFull/clearTimer 均为 useMemoizedFn 稳定引用，无需列入。
     // 仅挂载时建立一次调度；token 切换由父组件卸载/重建实例承担（key 绑定 token）。
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return { content: displayed, isTyping }

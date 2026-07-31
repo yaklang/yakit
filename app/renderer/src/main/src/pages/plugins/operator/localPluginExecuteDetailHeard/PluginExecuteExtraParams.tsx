@@ -3,8 +3,8 @@ import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from
 import styles from './PluginExecuteExtraParams.module.scss'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Divider, Form, FormInstance } from 'antd'
-import {
+import { Divider, Form, type FormInstance } from 'antd'
+import type {
   PluginExecuteExtraFormValue,
   CustomPluginExecuteFormValue,
   YakExtraParamProps,
@@ -13,16 +13,16 @@ import { yakitFailed } from '@/utils/notification'
 import { FormContentItemByType } from './LocalPluginExecuteDetailHeard'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import { VariableList } from '@/pages/httpRequestBuilder/HTTPRequestBuilder'
 import { SolidPlusIcon } from '@/assets/icon/solid'
-import { KVPair } from '@/models/kv'
-import { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
-import { YakParamProps } from '../../pluginsType'
+import type { KVPair } from '@/models/kv'
+import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakParamProps } from '../../pluginsType'
 import { defPluginExecuteFormValue } from './constants'
 import { splitPluginParamsData } from '@/pages/pluginEditor/utils/convert'
 import { RemotePluginGV } from '@/enums/plugin'
-import { JsonFormSchemaListWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
+import type { JsonFormSchemaListWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

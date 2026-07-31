@@ -1,5 +1,6 @@
-import { SoftwareVersion } from '@/utils/envfile'
-import React, { Dispatch, SetStateAction } from 'react'
+import type { SoftwareVersion } from '@/utils/envfile'
+import type { Dispatch, SetStateAction } from 'react'
+import type React from 'react'
 
 export interface LocalEngineProps {
   ref?: React.ForwardedRef<LocalEngineLinkFuncProps>

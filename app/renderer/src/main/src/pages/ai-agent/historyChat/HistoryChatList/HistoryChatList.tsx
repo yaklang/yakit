@@ -8,7 +8,7 @@ import { Tooltip } from 'antd'
 import classNames from 'classnames'
 import { YakitAIAgentPageID } from '../../defaultConstant'
 import { EditChatNameModal } from '../../UtilModals'
-import { AISession } from '../../type/aiChat'
+import type { AISession } from '../../type/aiChat'
 import { useCreation, useInfiniteScroll, useMemoizedFn } from 'ahooks'
 import { grpcUpdateAISessionTitle } from '../../grpc'
 import useAIAgentStore from '../../useContext/useStore'
@@ -22,7 +22,7 @@ import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 import { handAIHistoryChatRemove } from '../utils'
 import useGetChatDataStoreKey, { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
-import { HistoryChatListItemProps } from './type'
+import type { HistoryChatListItemProps } from './type'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
@@ -265,12 +265,12 @@ const HistoryChatList: FC<{
       return
     }
     const activeExecute = globalSessionEngine?.getSessionExecute(info.SessionID)
-    if (!!activeExecute) {
+    if (activeExecute) {
       yakitNotify('info', '会话正在执行中')
       return
     }
     const currentExecute = globalSessionEngine?.getSessionExecute(activeSessionId)
-    if (!!currentExecute) {
+    if (currentExecute) {
       setCloseLoading(true)
       onClose([activeSessionId], () => {
         onSetChat(info)

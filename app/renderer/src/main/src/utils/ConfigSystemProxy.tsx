@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Form, Upload } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
@@ -12,7 +13,7 @@ import { getRemoteValue, setRemoteValue } from './kv'
 import { RemoteGV } from '@/yakitGV'
 import styles from './ConfigSystemProxy.module.scss'
 import emiter from './eventBus/eventBus'
-import { APINoRequestFunc } from '@/apiUtils/type'
+import type { APINoRequestFunc } from '@/apiUtils/type'
 import { JSONParseLog } from './tool'
 import { yakitHost } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -214,7 +215,7 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
               showUploadList={false}
               beforeUpload={(f) => {
                 const file_name = f.name
-                // @ts-ignore
+                // @ts-expect-error 类型定义不完整，需要忽略此行
                 const path: string = f?.path || ''
                 if (path.length > 0) {
                   setChromePath(path)

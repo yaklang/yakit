@@ -1,17 +1,17 @@
 import { FolderDefault, FolderDefaultExpanded, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { FC, useEffect, useMemo, useRef, useState } from 'react'
+import { type FC, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './FileTreeSystemItem.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { setClipboardText } from '@/utils/clipboard'
-import { FileTreeSystemItemProps } from '../type'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { FileTreeSystemItemProps } from '../type'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitProtoCheckbox } from '@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox'
-import { AIMentionCommandParams } from '../../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type { AIMentionCommandParams } from '../../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import emiter from '@/utils/eventBus/eventBus'
 import { customFolderStore } from '../store/useCustomFolder'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { InputRef } from 'antd'
+import type { InputRef } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import {
   getPathJoin,
@@ -20,7 +20,7 @@ import {
   grpcFetchCreateFolder,
   grpcFetchRenameFileTree,
 } from '@/pages/yakRunner/utils'
-import { FileMonitorProps } from '@/utils/duplex/duplex'
+import type { FileMonitorProps } from '@/utils/duplex/duplex'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -115,7 +115,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
 
     let fileName = inputVal
-    let lastDotIndex = inputVal.lastIndexOf('.')
+    const lastDotIndex = inputVal.lastIndexOf('.')
     // 文件路径中没有点号，即没有后缀
     if (lastDotIndex === -1 && !data.isFolder) {
       fileName = `${inputVal}.yak`
@@ -281,18 +281,20 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
         onResetTree?.()
         break
       case 'sendToChat':
-        const params: AIMentionCommandParams = {
-          mentionId: data.path,
-          mentionType: data.isFolder ? 'folder' : 'file',
-          mentionName: data.path,
+        {
+          const params: AIMentionCommandParams = {
+            mentionId: data.path,
+            mentionType: data.isFolder ? 'folder' : 'file',
+            mentionName: data.path,
+          }
+          emiter.emit(
+            'setAIInputByType',
+            JSON.stringify({
+              type: 'mention',
+              params,
+            }),
+          )
         }
-        emiter.emit(
-          'setAIInputByType',
-          JSON.stringify({
-            type: 'mention',
-            params,
-          }),
-        )
         break
       default:
         break

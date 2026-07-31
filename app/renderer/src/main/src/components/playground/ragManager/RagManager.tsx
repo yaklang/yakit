@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { RagCollectionList } from './RagCollectionList'
 import { RagEntryTable } from './RagEntryTable'
-import { RagManagerProps, VectorStoreCollection } from './types'
+import type { RagManagerProps, VectorStoreCollection } from './types'
 import styles from './RagManager.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

@@ -1,7 +1,11 @@
 import { DEFAULT_LOG_LIMIT } from '@/defaultConstants/HoldGRPCStream'
 import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
-import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type {
+  HoldGRPCStreamInfo,
+  HoldGRPCStreamProps,
+  StreamResult,
+} from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { checkStreamValidity, convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { DefaultTabs } from '@/hook/useHoldGRPCStream/constant'
 import { cloneDeep } from 'lodash'
@@ -362,45 +366,49 @@ export class StreamProcessor {
           break
 
         case 'fixed-table':
-          const table = info.params as StreamResult.Table
-          tabInfo = {
-            tabName: table.table_name,
-            type: 'table',
+          {
+            const table = info.params as StreamResult.Table
+            tabInfo = {
+              tabName: table.table_name,
+              type: 'table',
+            }
+
+            this.placeTab(tabInfo)
+
+            if (this.tabTable.get(table.table_name)) {
+              this.pushLogs(obj)
+              break
+            } else {
+              this.onNewTable?.(table.table_name)
+            }
+
+            this.tabTable.set(table.table_name, {
+              name: table.table_name,
+              columns: table.columns.map((i) => ({
+                title: i,
+                dataKey: i,
+              })),
+              data: new Map(),
+            } satisfies HoldGRPCStreamProps.CacheTable)
           }
-
-          this.placeTab(tabInfo)
-
-          if (this.tabTable.get(table.table_name)) {
-            this.pushLogs(obj)
-            break
-          } else {
-            this.onNewTable?.(table.table_name)
-          }
-
-          this.tabTable.set(table.table_name, {
-            name: table.table_name,
-            columns: table.columns.map((i) => ({
-              title: i,
-              dataKey: i,
-            })),
-            data: new Map(),
-          } satisfies HoldGRPCStreamProps.CacheTable)
           break
 
         case 'text':
-          const text = info.params as StreamResult.Text
-          tabInfo = {
-            tabName: text.tab_name,
-            type: 'text',
-          }
+          {
+            const text = info.params as StreamResult.Text
+            tabInfo = {
+              tabName: text.tab_name,
+              type: 'text',
+            }
 
-          this.placeTab(tabInfo)
+            this.placeTab(tabInfo)
 
-          if (this.tabsText.get(text.tab_name)) {
-            this.pushLogs(obj)
-            break
+            if (this.tabsText.get(text.tab_name)) {
+              this.pushLogs(obj)
+              break
+            }
+            this.tabsText.set(text.tab_name, '')
           }
-          this.tabsText.set(text.tab_name, '')
           break
 
         default:

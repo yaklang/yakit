@@ -1,7 +1,7 @@
-import React, { CSSProperties, ReactNode } from 'react'
+import React, { type CSSProperties, type ReactNode } from 'react'
 import classNames from 'classnames'
 import { YakitSpin } from '../YakitSpin/YakitSpin'
-import { YakitSpinProps } from '../YakitSpin/YakitSpinType'
+import type { YakitSpinProps } from '../YakitSpin/YakitSpinType'
 import styles from './YakitSuspense.module.scss'
 
 export interface YakitSuspenseFallbackProps {

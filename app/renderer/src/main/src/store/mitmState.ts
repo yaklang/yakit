@@ -2,8 +2,8 @@
  * @description MITM
  */
 
-import { MitmStatus } from '@/pages/mitm/MITMPage'
-import { TunSessionStateProps } from '@/pages/mitm/MITMServerHijacking/PluginTunHijack/PluginTunHijackType'
+import type { MitmStatus } from '@/pages/mitm/MITMPage'
+import type { TunSessionStateProps } from '@/pages/mitm/MITMServerHijacking/PluginTunHijack/PluginTunHijackType'
 import { tunSessionStateDefault } from '@/pages/mitm/MITMServerHijacking/PluginTunHijack/usePluginTunHijack'
 import { create } from 'zustand'
 

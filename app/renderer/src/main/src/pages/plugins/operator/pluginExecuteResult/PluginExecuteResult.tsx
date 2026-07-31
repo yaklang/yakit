@@ -2,7 +2,7 @@ import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { HorizontalScrollCard } from '../horizontalScrollCard/HorizontalScrollCard'
 import styles from './PluginExecuteResult.module.scss'
-import {
+import type {
   AuditHoleTableOnTabProps,
   PluginExecuteCodeProps,
   PluginExecuteCustomTableProps,
@@ -24,10 +24,10 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
-import { RouteToPageProps } from '@/pages/layout/publicMenu/PublicMenu'
+import type { RouteToPageProps } from '@/pages/layout/publicMenu/PublicMenu'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { formatJson } from '@/pages/yakitStore/viewers/base'
 import { EngineConsole } from '@/components/baseConsole/BaseConsole'
 import { WebTree } from '@/components/WebTree/WebTree'
@@ -36,8 +36,8 @@ import ReactResizeDetector from 'react-resize-detector'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { SolidViewgridIcon } from '@/assets/icon/solid'
 import { ExportExcel } from '@/components/DataExport/DataExport'
-import { QueryPortsRequest } from '@/pages/assetViewer/PortAssetPage'
-import { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { QueryPortsRequest } from '@/pages/assetViewer/PortAssetPage'
+import type { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { PortTable } from '@/pages/assetViewer/PortTable/PortTable'
 import { defQueryPortsRequest } from '@/pages/assetViewer/PortTable/utils'
@@ -46,7 +46,7 @@ import { yakitFailed } from '@/utils/notification'
 import { sorterFunction } from '@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import { YakitRiskTable } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { QueryRisksRequest } from '@/pages/risks/YakitRiskTable/YakitRiskTableType'
+import type { QueryRisksRequest } from '@/pages/risks/YakitRiskTable/YakitRiskTableType'
 import { defQueryRisksRequest } from '@/pages/risks/YakitRiskTable/constants'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { apiQueryRisksTotalByRuntimeId } from '@/pages/risks/YakitRiskTable/utils'
@@ -128,15 +128,15 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
   const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
     switch (ele.type) {
       case 'risk':
-        return !!runtimeId ? (
+        return runtimeId ? (
           <VulnerabilitiesRisksTable runtimeId={runtimeId} allTotal={allTotal} setAllTotal={onSetRiskTotal} />
         ) : (
           <></>
         )
       case 'port':
-        return !!runtimeId ? <PluginExecutePortTable runtimeId={runtimeId} /> : <></>
+        return runtimeId ? <PluginExecutePortTable runtimeId={runtimeId} /> : <></>
       case 'http':
-        return !!runtimeId ? (
+        return runtimeId ? (
           <PluginExecuteHttpFlow
             runtimeId={runtimeId}
             website={!!streamInfo.tabsInfoState['website']?.targets}
@@ -149,8 +149,8 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         return <PluginExecuteLog loading={loading} messageList={streamInfo.logState} />
       case 'console':
         return <EngineConsole isMini={true} />
-      case 'table':
-        let tableInfo: HoldGRPCStreamProps.InfoTable = streamInfo.tabsInfoState[ele.tabName] || {
+      case 'table': {
+        const tableInfo: HoldGRPCStreamProps.InfoTable = streamInfo.tabsInfoState[ele.tabName] || {
           columns: [],
           data: [],
           name: '',
@@ -160,14 +160,17 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         //   Object.values(item).every((value) => !(typeof value === 'object')),
         // )
         return <PluginExecuteCustomTable tableInfo={tableInfo} />
-      case 'text':
+      }
+      case 'text': {
         const textInfo: HoldGRPCStreamProps.InfoText = streamInfo.tabsInfoState[ele.tabName] || {
           content: '',
         }
         return <PluginExecuteCode content={textInfo.content} />
-      case 'result':
+      }
+      case 'result': {
         const { customProps } = ele
         return <CodeScanResult {...(customProps || {})} isExecuting={loading} runtimeId={runtimeId} />
+      }
       case 'ssa-risk':
         return <AuditHoleTableOnTab runtimeId={runtimeId} />
       default:
@@ -469,7 +472,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
         type: 'plugin-log',
       },
     ]
-    if (!!echartsLists.length) {
+    if (echartsLists.length) {
       tab.push({
         name: t('PluginExecuteLog.statistical_chart'),
         icon: <OutlineChartpieIcon />,
@@ -477,7 +480,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
         type: 'echarts-statistics',
       })
     }
-    if (!!textLists.length) {
+    if (textLists.length) {
       tab.push({
         name: t('PluginExecuteLog.output_text'),
         icon: <OutlineTerminalIcon />,
@@ -490,7 +493,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
 
   const renderTabContent = useMemoizedFn((type) => {
     switch (type) {
-      case 'plugin-log':
+      case 'plugin-log': {
         const currentTime = moment().format('YYYY-MM-DD')
         return (
           <LocalPluginLog
@@ -504,6 +507,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
             }
           />
         )
+      }
       case 'echarts-statistics':
         return <LocalList list={echartsLists} />
       case 'output-text':

@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react'
-import { NotepadLocalSearchProps } from './NotepadManageLocalType'
+import type { NotepadLocalSearchProps } from './NotepadManageLocalType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useCreation, useMemoizedFn, useUpdateEffect, useInViewport } from 'ahooks'
 import {
-  NoteContent,
-  SearchNoteContentRequest,
-  SearchNoteContentTree,
-  SearchNoteContentTreeResponse,
+  type NoteContent,
+  type SearchNoteContentRequest,
+  type SearchNoteContentTree,
+  type SearchNoteContentTreeResponse,
   grpcQueryNoteById,
   grpcSearchNoteContent,
 } from '../utils'
@@ -15,10 +15,10 @@ import styles from './NotepadLocalSearch.module.scss'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { yakitNotify } from '@/utils/notification'
 import YakitTree from '@/components/yakitUI/YakitTree/YakitTree'
-import { DataNode } from 'antd/lib/tree'
+import type { DataNode } from 'antd/lib/tree'
 import Highlighter from 'react-highlight-words'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { useGoEditNotepad } from '../../hook/useGoEditNotepad'
 import { NotepadRemoteGV } from '@/enums/notepad'
 

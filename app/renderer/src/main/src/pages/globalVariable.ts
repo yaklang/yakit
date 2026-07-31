@@ -1,5 +1,4 @@
-import { Route } from 'antd/lib/breadcrumb/Breadcrumb'
-import { ProjectDescription } from './softwareSettings/ProjectManage'
+import type { ProjectDescription } from './softwareSettings/ProjectManage'
 
 export interface coordinateProps {
   screenX: number
@@ -33,7 +32,7 @@ export const UserPlatformType: UserPlatformTypeProps = {
 interface info {
   [key: string]: { status: boolean; info: string }
 }
-export let SimpleCloseInfo: info = {}
+export const SimpleCloseInfo: info = {}
 export const setSimpleInfo = (key: string, status: boolean, info: string) => {
   SimpleCloseInfo[key] = {
     status,

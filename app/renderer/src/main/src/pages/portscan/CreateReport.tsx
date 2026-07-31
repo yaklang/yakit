@@ -3,12 +3,12 @@ import { Progress } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { failed, yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
-import { ExecResult } from '../invoker/schema'
+import type { ExecResult } from '../invoker/schema'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
-  CreatReportRequest,
-  GenerateSSAReport,
+  type CreatReportRequest,
+  type GenerateSSAReport,
   apiCancelSimpleDetectCreatReport,
   apiGenerateSSAReport,
   apiSimpleDetectCreatReport,
@@ -16,7 +16,7 @@ import {
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import emiter from '@/utils/eventBus/eventBus'
-import { ShowModalProps } from '@/utils/showModal'
+import type { ShowModalProps } from '@/utils/showModal'
 
 const { ipcRenderer } = window.require('electron')
 

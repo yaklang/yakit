@@ -1,4 +1,4 @@
-import { FC, memo } from 'react'
+import { type FC, memo } from 'react'
 import type { AIChildWindowTaskDefaultGroupCardHeardProps } from './type'
 import styles from './AIChildWindowTaskDefaultGroupCardHeard.module.scss'
 import { OutlineInformationcircleIcon, OutlineRefreshIcon } from '@/assets/icon/outline'

@@ -1,8 +1,8 @@
 import { pluginTypeToName } from '@/pages/plugins/builtInData'
 import { defPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/constants'
-import { PluginBatchExecuteExtraFormValue } from '@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor'
-import { PluginBatchExecutorTaskProps } from '@/pages/plugins/utils'
-import { PluginBatchExecutorPageInfoProps } from '@/store/pageInfo'
+import type { PluginBatchExecuteExtraFormValue } from '@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor'
+import type { PluginBatchExecutorTaskProps } from '@/pages/plugins/utils'
+import type { PluginBatchExecutorPageInfoProps } from '@/store/pageInfo'
 import cloneDeep from 'lodash/cloneDeep'
 
 export const defaultPluginBatchExecutorPageInfo: PluginBatchExecutorPageInfoProps = {

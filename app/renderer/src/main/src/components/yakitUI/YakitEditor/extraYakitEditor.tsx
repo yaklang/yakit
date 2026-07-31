@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
+import type {
   OtherMenuListProps,
   YakitEditorExtraRightMenuType,
   YakitEditorProps,
@@ -7,23 +7,23 @@ import {
 } from './YakitEditorType'
 import { YakitEditor } from './YakitEditor'
 import { failed, info, yakitNotify } from '@/utils/notification'
-import { ShareValueProps, newWebFuzzerTab } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { type ShareValueProps, newWebFuzzerTab } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { generateCSRFPocByRequest } from '@/pages/invoker/fromPacketToYakCode'
 import { StringToUint8Array } from '@/utils/str'
 import { showResponseViaResponseRaw } from '@/components/ShowInBrowser'
 import { openExternalWebsite, saveABSFileToOpen } from '@/utils/openWebsite'
 import { Modal } from 'antd'
 import { execAutoDecode, execCodec } from '@/utils/encodec'
-import { YakitSystem } from '@/yakitGVDefine'
+import type { YakitSystem } from '@/yakitGVDefine'
 import { useStore } from '@/store'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { defaultAdvancedConfigShow } from '@/defaultConstants/HTTPFuzzerPage'
 import { v4 as uuidv4 } from 'uuid'
 import { newWebsocketFuzzerTab } from '@/pages/websocket/WebsocketFuzzer'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { HTTPFlowBodyByIdRequest } from '@/components/HTTPHistory'
+import type { HTTPFlowBodyByIdRequest } from '@/components/HTTPHistory'
 import { setClipboardText } from '@/utils/clipboard'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { GetReleaseEdition, PRODUCT_RELEASE_EDITION } from '@/utils/envfile'
@@ -246,7 +246,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 info(t('YakitEditor.HTTPPacketYakitEditor.packetEmpty'))
                 return
               }
-              let content = '```' + text + '\n```'
+              const content = '```' + text + '\n```'
               goAddNotepad({
                 title: `${t('YakitEditor.HTTPPacketYakitEditor.packet')}-${Date.now()}`,
                 content,

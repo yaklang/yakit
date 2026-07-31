@@ -1,4 +1,4 @@
-import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 
 const CHAT_SEED_BY_STYLE: Record<IrifyAiCodeAuditStyle, string> = {
   code: '开始审计',

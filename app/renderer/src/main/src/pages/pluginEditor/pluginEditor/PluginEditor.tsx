@@ -1,8 +1,8 @@
 import React, {
-  Dispatch,
-  ForwardedRef,
-  ReactNode,
-  SetStateAction,
+  type Dispatch,
+  type ForwardedRef,
+  type ReactNode,
+  type SetStateAction,
   forwardRef,
   memo,
   useEffect,
@@ -23,12 +23,12 @@ import {
 import { SolidStoreIcon } from '@/assets/icon/solid'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
 import { WebsiteGV } from '@/enums/website'
-import { EditorInfo, EditorInfoFormRefProps } from '../editorInfo/EditorInfo'
-import { EditorCode, EditorCodeRefProps } from '../editorCode/EditorCode'
-import { KeyParamsFetchPluginDetail, YakitPluginBaseInfo, YakitPluginInfo } from '../base'
+import { EditorInfo, type EditorInfoFormRefProps } from '../editorInfo/EditorInfo'
+import { EditorCode, type EditorCodeRefProps } from '../editorCode/EditorCode'
+import type { KeyParamsFetchPluginDetail, YakitPluginBaseInfo, YakitPluginInfo } from '../base'
 import cloneDeep from 'lodash/cloneDeep'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import type { YakScript } from '@/pages/invoker/schema'
 import {
   checkPluginIsModify,
   pluginConvertLocalToUI,
@@ -42,17 +42,17 @@ import { onCodeToInfo } from '@/pages/plugins/editDetails/utils'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useStore } from '@/store'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { httpCopyPluginToOnline } from '@/pages/pluginHub/utils/http'
-import { localYakInfo } from '@/pages/plugins/pluginsType'
+import type { localYakInfo } from '@/pages/plugins/pluginsType'
 import { grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { apiFetchOnlinePluginInfo } from '@/pages/plugins/utils'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AddYakitScriptPageInfoProps } from '@/store/pageInfo'
+import type { AddYakitScriptPageInfoProps } from '@/store/pageInfo'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { useSubscribeClose } from '@/store/tabSubscribe'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { PluginUploadModal } from '@/pages/pluginHub/pluginUploadModal/PluginUploadModal'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'

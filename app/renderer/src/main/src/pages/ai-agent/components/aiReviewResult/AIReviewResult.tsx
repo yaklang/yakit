@@ -1,5 +1,5 @@
 import { memo, useRef, useState } from 'react'
-import { AIReviewParamsProps, AIReviewResultProps, AISingHaveColorTextProps } from './type'
+import type { AIReviewParamsProps, AIReviewResultProps, AISingHaveColorTextProps } from './type'
 import { useClickAway, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './AIReviewResult.module.scss'
 import React from 'react'
@@ -67,16 +67,18 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
         case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
         case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
         case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
-          const userSelected = JSON.parse(info.data?.selected || '')
-          if (info.data.optionValue === 'continue') {
-            btnText = t('YakitButton.runNow')
-          } else {
-            const selectBtn = info.data.selectors.find((item) => item.value === info.data.optionValue)
-            btnText = selectBtn ? selectBtn.prompt : t('AIReviewResult.unknownAction')
+          {
+            const userSelected = JSON.parse(info.data?.selected || '')
+            if (info.data.optionValue === 'continue') {
+              btnText = t('YakitButton.runNow')
+            } else {
+              const selectBtn = info.data.selectors.find((item) => item.value === info.data.optionValue)
+              btnText = selectBtn ? selectBtn.prompt : t('AIReviewResult.unknownAction')
+            }
+            userInput = userSelected.extra_prompt || ''
           }
-          userInput = userSelected.extra_prompt || ''
           break
-        case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+        case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE: {
           const aiSelected = JSON.parse(info.data.selected || '')
           const aiSelectType = info.data.options.find(
             (item) => (item.prompt || item.prompt_title) === info.data.optionValue,
@@ -84,6 +86,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
           btnText = aiSelectType?.prompt || aiSelectType?.prompt_title || t('AIReviewResult.unknownAction')
           userInput = aiSelected.suggestion || ''
           break
+        }
         default:
           break
       }
@@ -95,13 +98,15 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     }
   }, [i18nRefresh])
   const renderContent = useMemoizedFn(() => {
-    let paramsValue = !!userAction.userInput ? <PreWrapper code={userAction.userInput} /> : null
+    let paramsValue = userAction.userInput ? <PreWrapper code={userAction.userInput} /> : null
     switch (info.type) {
       case 'tool_use_review_require':
-        const { params } = info.data
-        try {
-          paramsValue = !!paramsValue ? paramsValue : <AIReviewParams params={params} isPreStyle={true} />
-        } catch (error) {}
+        {
+          const { params } = info.data
+          try {
+            paramsValue = paramsValue ? paramsValue : <AIReviewParams params={params} isPreStyle={true} />
+          } catch (error) {}
+        }
         break
       default:
         break

@@ -1,27 +1,25 @@
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { RequestYakURLResponse, YakURLResource } from '../yakURLTree/data'
+import type { RequestYakURLResponse, YakURLResource } from '../yakURLTree/data'
 import { FileDefault, FileSuffix, FolderDefault } from '../yakRunner/FileTree/icon'
-import { AuditDetailItemProps, AuditYakUrlProps } from './AuditCode/AuditCodeType'
+import type { AuditDetailItemProps, AuditYakUrlProps } from './AuditCode/AuditCodeType'
 
 import emiter from '@/utils/eventBus/eventBus'
-import { failed, warn } from '@/utils/notification'
-import { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from './YakRunnerAuditCodeType'
+import { failed } from '@/utils/notification'
+import type { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from './YakRunnerAuditCodeType'
 import cloneDeep from 'lodash/cloneDeep'
-import { randomString } from '@/utils/randomUtil'
-import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
-import { FileDetailInfo, OptionalFileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
+import type { FileDetailInfo, OptionalFileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
 import { v4 as uuidv4 } from 'uuid'
-import { FileNodeMapProps, FileNodeProps } from './FileTree/FileTreeType'
-import { QuerySSARisksResponse, SSARisk } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { FileNodeMapProps, FileNodeProps } from './FileTree/FileTreeType'
+import type { QuerySSARisksResponse, SSARisk } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { SeverityMapTag } from '../risks/YakitRiskTable/YakitRiskTable'
-import { CodeRangeProps } from './RightAuditDetail/RightAuditDetail'
-import {
+import type { CodeRangeProps } from './RightAuditDetail/RightAuditDetail'
+import type {
   QuerySyntaxFlowScanTaskRequest,
   QuerySyntaxFlowScanTaskResponse,
 } from '../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer'
 import { genDefaultPagination } from '../invoker/schema'
-import { APIFunc } from '@/apiUtils/type'
-import { JumpToAuditEditorProps } from './BottomEditorDetails/BottomEditorDetailsType'
+import type { APIFunc } from '@/apiUtils/type'
+import type { JumpToAuditEditorProps } from './BottomEditorDetails/BottomEditorDetailsType'
 import { getNameByPath, initFileTreeData } from '../yakRunner/utils'
 const { ipcRenderer } = window.require('electron')
 
@@ -202,7 +200,7 @@ export const grpcFetchAuditCodeRiskOrRuleList: (Programs: string) => Promise<Que
  */
 export const loadAuditFromYakURLRaw = (
   params: AuditYakUrlProps,
-  body?: Buffer,
+  body?: Uint8Array,
   Page?: number,
   PageSize?: number,
 ): Promise<RequestYakURLResponse | null> => {
@@ -277,7 +275,7 @@ export const getAuditCodeHistory = (): Promise<YakRunnerHistoryProps[]> => {
 export const judgeAreaExistAuditPath = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
   return new Promise(async (resolve, reject) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-    let hasPath: string[] = []
+    const hasPath: string[] = []
     newAreaInfo.forEach((item, index) => {
       item.elements.forEach((itemIn, indexIn) => {
         itemIn.files.forEach((file, fileIndex) => {
@@ -307,13 +305,13 @@ export const removeAuditCodeAreaFilesInfo = (areaInfo: AreaInfoProps[], removePa
       })
     })
     // 移除elements层
-    let indexArr: number[] = [] // 还有数据的项目
+    const indexArr: number[] = [] // 还有数据的项目
     newAreaInfo.forEach((item, idx) => {
       if (item.elements.length !== 0) {
         indexArr.push(idx)
       }
     })
-    let resultAreaInfo: AreaInfoProps[] = []
+    const resultAreaInfo: AreaInfoProps[] = []
     indexArr.forEach((index) => {
       resultAreaInfo.push(newAreaInfo[index])
     })
@@ -406,7 +404,7 @@ export const addAuditCodeAreaFileInfo = (
   activeFile?: FileDetailInfo,
 ) => {
   let newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-  let newActiveFile: FileDetailInfo = info
+  const newActiveFile: FileDetailInfo = info
   try {
     // 如若存在激活项则向激活项后添加新增项并重新指定激活项目
     if (newAreaInfo.length > 0 && activeFile) {
@@ -459,7 +457,7 @@ export const addAuditCodeAreaFileInfo = (
 export const removeAuditCodeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
   const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
   let newActiveFile: FileDetailInfo | undefined = undefined
-  let activeFileArr: FileDetailInfo[] = []
+  const activeFileArr: FileDetailInfo[] = []
   newAreaInfo.forEach((item, idx) => {
     item.elements.forEach((itemIn, idxin) => {
       itemIn.files.forEach((file, fileIndex) => {
@@ -491,7 +489,7 @@ export const removeAuditCodeAreaFileInfo = (areaInfo: AreaInfoProps[], info: Fil
     })
   })
   if (!newActiveFile && activeFileArr.length > 0) {
-    let delIndex = activeFileArr.findIndex((item) => item.path === info.path)
+    const delIndex = activeFileArr.findIndex((item) => item.path === info.path)
     if (delIndex > -1) {
       newActiveFile = activeFileArr[delIndex - 1 < 0 ? 0 : delIndex - 1]
     }

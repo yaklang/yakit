@@ -1,14 +1,13 @@
-import { CancellationToken, editor, languages, Position } from 'monaco-editor'
+import { type CancellationToken, type editor, languages, type Position } from 'monaco-editor'
 import { SyntaxFlowMonacoSpec } from './syntaxflowEditor'
 import {
-  YaklangLanguageSuggestionRequest,
-  Range,
-  YaklangLanguageSuggestionResponse,
+  type YaklangLanguageSuggestionRequest,
+  type Range,
+  type YaklangLanguageSuggestionResponse,
   getCompletionItemKindByName,
   getSortTextByKindAndLabel,
 } from './yakCompletionSchema'
 import { monaco } from 'react-monaco-editor'
-import { before } from 'lodash'
 const { ipcRenderer } = window.require('electron')
 
 export const newSyntaxflowCompletionHandlerProvider = (
@@ -44,14 +43,14 @@ export const newSyntaxflowCompletionHandlerProvider = (
       } as YaklangLanguageSuggestionRequest)
       .then((r: YaklangLanguageSuggestionResponse) => {
         if (r.SuggestionMessage.length > 0) {
-          let range = {
+          const range = {
             startLineNumber: position.lineNumber,
             endLineNumber: position.lineNumber,
             startColumn: rng.StartColumn,
             endColumn: rng.EndColumn,
           }
-          let suggestions = r.SuggestionMessage.map((i) => {
-            let item = {
+          const suggestions = r.SuggestionMessage.map((i) => {
+            const item = {
               insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
               insertText: i.InsertText,
               kind: getCompletionItemKindByName(i.Kind),
@@ -85,7 +84,7 @@ const getSyntaxflowCompletionPosition = (model: editor.ITextModel, position: Pos
   if (word == undefined) {
     word = { word: '', startColumn: position.column, endColumn: position.column } as monaco.editor.IWordAtPosition
   }
-  let range = new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn)
+  const range = new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn)
   // console.log("range : ", range, model.getValueInRange(range));
 
   const line = model.getLineContent(position.lineNumber)
@@ -93,7 +92,7 @@ const getSyntaxflowCompletionPosition = (model: editor.ITextModel, position: Pos
   // console.log("beforePosition: ", beforePosition);
 
   // this range just for monaco completion range
-  let rng = {
+  const rng = {
     Code: '',
     StartColumn: word.startColumn,
     EndColumn: word.endColumn,

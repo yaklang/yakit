@@ -1,5 +1,5 @@
-import React, { forwardRef, memo, Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import {
+import React, { forwardRef, memo, type Ref, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type {
   BatchExportAIforgeProps,
   BatchExportAIforgeRef,
   ExportAIForgeFormValues,
@@ -36,26 +36,23 @@ import { Form, Tooltip } from 'antd'
 import { yakitNotify } from '@/utils/notification'
 import { AIForgeListDefaultPagination, defaultExportAIForgeRequest, ReActChatEventEnum } from '../defaultConstant'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { AIForge, QueryAIForgeRequest, QueryAIForgeResponse } from '../type/forge'
-import ImportExportModal, { ImportExportModalExtra } from '@/components/ImportExportModal/ImportExportModal'
+import type { AIForge, QueryAIForgeRequest, QueryAIForgeResponse } from '../type/forge'
+import ImportExportModal, { type ImportExportModalExtra } from '@/components/ImportExportModal/ImportExportModal'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { AITool, GetAIToolListRequest } from '../type/aiTool'
-import { genDefaultPagination, PaginationSchema } from '@/pages/invoker/schema'
+import type { AITool, GetAIToolListRequest } from '../type/aiTool'
+import { genDefaultPagination, type PaginationSchema } from '@/pages/invoker/schema'
 import { grpcGetAIToolList } from '../aiToolList/utils'
-import { LogListInfo } from '@/components/YakitUploadModal/YakitUploadModal'
+import type { LogListInfo } from '@/components/YakitUploadModal/YakitUploadModal'
 
 import classNames from 'classnames'
 import styles from './ForgeName.module.scss'
 import { YakitProtoCheckbox } from '@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { cloneDeep } from 'lodash'
-import { AIForgeEditorPageInfoProps } from '@/store/pageInfo'
-import {
-  getMainOperatorPageBodyContainer,
-  getMainOperatorPageBodyContainerOrBody,
-} from '@/utils/getMainOperatorPageBodyContainer'
+import type { AIForgeEditorPageInfoProps } from '@/store/pageInfo'
+import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')

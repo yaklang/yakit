@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle, ReactElement } from 'react'
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import {
   useMemoizedFn,
   useCreation,
@@ -8,12 +8,12 @@ import {
   useDebounceEffect,
 } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
-import { PluginFilterParams, PluginSearchParams } from '../baseTemplateType'
+import type { PluginFilterParams, PluginSearchParams } from '../baseTemplateType'
 import {
-  HybridScanRequest,
-  YakPoCExecutorInputValueProps,
-  PluginInfoProps,
-  PluginBatchExecutorTaskProps,
+  type HybridScanRequest,
+  type YakPoCExecutorInputValueProps,
+  type PluginInfoProps,
+  type PluginBatchExecutorTaskProps,
   apiHybridScan,
   apiHybridScanByMode,
   apiCancelHybridScan,
@@ -27,27 +27,27 @@ import { Form } from 'antd'
 import '../plugins.scss'
 import styles from './PluginBatchExecutor.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon } from '@/assets/icon/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import classNames from 'classnames'
 import {
   PluginExecuteProgress,
   PluginFixFormParams,
 } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import {
+import type {
   PluginExecuteExtraFormValue,
   RequestType,
 } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
-import { HybridScanControlAfterRequest, HybridScanModeType, HybridScanTaskSourceType } from '@/models/HybridScan'
+import type { HybridScanControlAfterRequest, HybridScanModeType, HybridScanTaskSourceType } from '@/models/HybridScan'
 import { randomString } from '@/utils/randomUtil'
 import useHoldBatchGRPCStream from '@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream'
 import { PluginExecuteResult } from '../operator/pluginExecuteResult/PluginExecuteResult'
-import { ExpandAndRetract, ExpandAndRetractExcessiveState } from '../operator/expandAndRetract/ExpandAndRetract'
-import { PageNodeItemProps, PluginBatchExecutorPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { ExpandAndRetract, type ExpandAndRetractExcessiveState } from '../operator/expandAndRetract/ExpandAndRetract'
+import { type PageNodeItemProps, type PluginBatchExecutorPageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { PluginLocalListDetails } from '../operator/PluginLocalListDetails/PluginLocalListDetails'
+import type { PluginLocalDetailsProps } from '../operator/PluginLocalListDetails/PluginLocalListDetailsType'
 import { PluginExecuteLog } from '@/pages/securityTool/yakPoC/YakPoC'
 import { Uint8ArrayToString } from '@/utils/str'
 import { yakitNotify } from '@/utils/notification'
@@ -61,7 +61,7 @@ import { getRouteByTaskSource } from './HybridScanTaskListDrawer'
 import { defaultPocPageInfo } from '@/defaultConstants/YakPoC'
 import { RemoteGV } from '@/yakitGV'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { JSONParseLog } from '@/utils/tool'
 
@@ -280,10 +280,12 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         defaultFilters={{
           plugin_type: cloneDeep(pluginTypeFilterList),
         }}
-        pluginDetailsProps={{
-          title: '选择插件',
-          bodyClassName: styles['plugin-batch-executor-body'],
-        }}
+        pluginDetailsProps={
+          {
+            title: '选择插件',
+            bodyClassName: styles['plugin-batch-executor-body'],
+          } as unknown as PluginLocalDetailsProps
+        }
         fetchListInPageFirstAfter={fetchListInPageFirstAfter}
         selectNum={selectNum}
         setSelectNum={setSelectNum}
@@ -737,7 +739,7 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
       const { params } = inputValue
       const isRawHTTPRequest = !!params.HTTPRequestTemplate.IsRawHTTPRequest
       const isHttpFlowId = !!params.HTTPRequestTemplate.IsHttpFlowId
-      const httpFlowId = !!params.HTTPRequestTemplate.HTTPFlowId ? params.HTTPRequestTemplate.HTTPFlowId.join(',') : ''
+      const httpFlowId = params.HTTPRequestTemplate.HTTPFlowId ? params.HTTPRequestTemplate.HTTPFlowId.join(',') : ''
       // 请求类型新增了请求id，兼容之前的版本
       const requestType = {
         IsRawHTTPRequest: isRawHTTPRequest,

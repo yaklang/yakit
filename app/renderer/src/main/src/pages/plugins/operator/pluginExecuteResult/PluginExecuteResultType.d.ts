@@ -1,6 +1,9 @@
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { ReactNode } from 'react'
+import {
+  type HoldGRPCStreamInfo,
+  type HoldGRPCStreamProps,
+  type StreamResult,
+} from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type ReactNode } from 'react'
 
 export interface PluginExecuteResultProps {
   runtimeId: string

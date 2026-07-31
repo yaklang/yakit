@@ -1,6 +1,6 @@
 import { isNumberNaN } from '@/utils/tool'
-import { EChartsOption } from '@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType'
-import { GraphData } from '@/pages/graph/base'
+import type { EChartsOption } from '@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType'
+import type { GraphData } from '@/pages/graph/base'
 import groupBy from 'lodash/groupBy'
 import numeral from 'numeral'
 import { chartsColorList } from '@/pages/globalVariable'
@@ -130,7 +130,7 @@ const getLineSeriesAndAxis = (graphData) => {
     if (index === 0) {
       xAxis = group[key].map((ele) => ele.key)
     }
-    if (group.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(group, key)) {
       const item = group[key]
       const data = item.map((ele) => ele.value)
       series.push({
@@ -230,10 +230,10 @@ export const getPieOption = (graphData: GraphData) => {
                     >
                         <span
                             style='
-                                color: #ccd2de; 
-                                font-size: 16px; 
-                                font-weight: 400; 
-                                line-height: 18px; 
+                                color: #ccd2de;
+                                font-size: 16px;
+                                font-weight: 400;
+                                line-height: 18px;
                                 max-width: 200px;
                                 white-space: nowrap;
                                 text-overflow: ellipsis;
@@ -393,10 +393,10 @@ export const getWordCloudOption = (graphData: GraphData) => {
                     >
                         <span
                             style='
-                                color: #ccd2de; 
-                                font-size: 16px; 
-                                font-weight: 400; 
-                                line-height: 18px; 
+                                color: #ccd2de;
+                                font-size: 16px;
+                                font-weight: 400;
+                                line-height: 18px;
                                 max-width: 200px;
                                 white-space: nowrap;
                                 text-overflow: ellipsis;

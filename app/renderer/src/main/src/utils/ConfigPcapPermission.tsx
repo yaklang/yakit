@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { Alert, Form, Tooltip } from 'antd'
 import { yakitNotify } from '@/utils/notification'
 import { getReleaseEditionName } from './envfile'

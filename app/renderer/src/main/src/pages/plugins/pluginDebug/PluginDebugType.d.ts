@@ -1,7 +1,5 @@
-import { YakitDrawerProps } from '@/components/yakitUI/YakitDrawer/YakitDrawerType'
-import { YakScript } from '@/pages/invoker/schema'
-import { PluginDataProps } from '../pluginsType'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import { type PluginDataProps } from '../pluginsType'
+import { type HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 
 export interface PluginDebugProps {
   plugin?: PluginDataProps

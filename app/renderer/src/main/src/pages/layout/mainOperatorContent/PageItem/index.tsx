@@ -1,6 +1,6 @@
 import React from 'react'
 import { RouteToPageItem } from '@/routes/newRoute'
-import { PageItemProps } from '../renderSubPage/RenderSubPageType'
+import type { PageItemProps } from '../renderSubPage/RenderSubPageType'
 
 const PageItem: React.FC<PageItemProps> = React.memo(
   (props) => {

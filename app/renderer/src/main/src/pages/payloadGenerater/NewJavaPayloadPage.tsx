@@ -14,19 +14,19 @@ import { failed, info, success, warn } from '../../utils/notification'
 import {
   BRIDGE_ADDR,
   BRIDGE_SECRET,
-  FacadesRequest,
-  SettingReverseParamsInfo,
+  type FacadesRequest,
+  type SettingReverseParamsInfo,
 } from '../reverseServer/NewReverseServerPage'
 import { randomString } from '@/utils/randomUtil'
-import { ReverseNotification, ReverseTable } from '../reverseServer/ReverseTable'
+import { type ReverseNotification, ReverseTable } from '../reverseServer/ReverseTable'
 import { getRemoteValue } from '@/utils/kv'
 import { ExtractExecResultMessage } from '@/components/yakitLogSchema'
-import { ExecResultLog } from '../invoker/batch/ExecMessageViewer'
+import type { ExecResultLog } from '../invoker/batch/ExecMessageViewer'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import ReactResizeDetector from 'react-resize-detector'
 
 import './javaPayloadPage.scss'
-import { NetInterface } from '@/models/Traffic'
+import type { NetInterface } from '@/models/Traffic'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -85,7 +85,7 @@ export const convertRequest = (value: ParamsRefProps) => {
     Class: dataRef.Class,
     Options: [],
   }
-  for (let name in dataRef) {
+  for (const name in dataRef) {
     if (!excludeKey.includes(name)) data.Options.push({ Key: name, Value: dataRef[name] })
   }
   return data
@@ -142,7 +142,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
 
     setLoading(true)
     getRemoteValue(BRIDGE_ADDR).then((addr: string) => {
-      if (!!addr) {
+      if (addr) {
         initParams.BridgeParam.Addr = addr
         getRemoteValue(BRIDGE_SECRET)
           .then((secret: string) => {
@@ -272,7 +272,7 @@ export const JavaPayloadPage: React.FC<JavaPayloadPageProp> = React.memo((props)
    */
   const startUpFacadeServer = (value: ParamsRefProps, addr: SettingReverseParamsInfo, remote: string) => {
     const classData = { ...convertRequest({ ...value }) }
-    let startFacadeParams: FacadesRequest = {
+    const startFacadeParams: FacadesRequest = {
       ...addr,
       GenerateClassParams: { ...classData },
       Token: getToken(),
@@ -652,7 +652,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
   const [params, setParams] = useState<ParamsProps>({ ...paramsData })
 
   const setParamsValue = useMemoizedFn((args: { key: string; value: string | number | boolean }[]) => {
-    for (let item of args) paramsRef.current[item.key] = item.value
+    for (const item of args) paramsRef.current[item.key] = item.value
     setParams({ ...paramsRef.current })
     setParamsData({ ...paramsRef.current })
     formInstance.setFieldsValue({ ...paramsRef.current })
@@ -704,7 +704,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
       .invoke(isGadget ? 'GetAllYsoGadgetOptions' : 'GetAllYsoClassOptions', isGadget ? undefined : { Gadget: 'None' })
       .then((d: { Options: YsoOptionInfo[] }) => {
         const { Options } = d
-        let optionArr: OptionInfo[] = Options.map((item) => {
+        const optionArr: OptionInfo[] = Options.map((item) => {
           const info: OptionInfo = {
             ...item,
             NameVerbose: isGadget ? (
@@ -737,7 +737,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
         .invoke('GetAllYsoClassOptions', { Gadget: targetOption.Name })
         .then((d: { Options: YsoOptionInfo[] }) => {
           const { Options } = d
-          let optionArr: OptionInfo[] = Options.map((item) => {
+          const optionArr: OptionInfo[] = Options.map((item) => {
             const info: OptionInfo = {
               ...item,
               NameVerbose: useGadget ? (
@@ -775,10 +775,10 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
 
         const paramsOptions: { [key: string]: string | number | boolean } = {}
         const formLists: FormList[] = []
-        for (let el of Options) {
+        for (const el of Options) {
           if (Object.keys(el.BindOptions).length > 0) {
             const relation: string[] = []
-            for (let bindValue in el.BindOptions) {
+            for (const bindValue in el.BindOptions) {
               relation.push(`${bindValue}||${el.BindOptions[bindValue].Options.map((item) => item.Key).join('||')}`)
             }
             formBindRef.current[el.Key] = [...relation]
@@ -818,9 +818,9 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
     const bindRef = formBindRef.current
     const paramsValue = paramsRef.current
 
-    for (let keyName in bindRef) {
+    for (const keyName in bindRef) {
       const valueArr = bindRef[keyName] || []
-      for (let bindKey of valueArr) {
+      for (const bindKey of valueArr) {
         if (bindKey.indexOf(key) > -1) {
           const value = bindKey.split('||').shift()
           if ((!!paramsValue[keyName]).toString() !== value) {
@@ -924,7 +924,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                     if (Array.isArray(value) && value.length > 0) return Promise.resolve()
                     return Promise.reject(new Error(''))
                   } else {
-                    if (!!value) return Promise.resolve()
+                    if (value) return Promise.resolve()
                     return Promise.reject(new Error(''))
                   }
                 },
@@ -963,7 +963,7 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                 optionLabelProp="NameVerbose"
                 value={params.Class}
                 onChange={(value) => {
-                  if (!!value) {
+                  if (value) {
                     setParamsValue([
                       { key: 'Gadget', value: 'None' },
                       { key: 'Class', value: value },
@@ -1044,13 +1044,13 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
                     checked={!!params[item.Key]}
                     onChange={(check) => {
                       const info: { key: string; value: string | boolean }[] = [{ key: item.Key, value: check }]
-                      for (let name in formBindRef.current) {
+                      for (const name in formBindRef.current) {
                         if (name === item.Key) {
                           const keyArr = formBindRef.current[name].filter((item) => item.indexOf(check.toString()) > -1)
                           if (keyArr.length > 0) {
                             const keys = keyArr[keyArr.length - 1].split('||')
                             keys.shift()
-                            for (let keyName of keys) info.push({ key: keyName, value: '' })
+                            for (const keyName of keys) info.push({ key: keyName, value: '' })
                           }
                           break
                         }

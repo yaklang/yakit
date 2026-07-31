@@ -1,6 +1,6 @@
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { ShowModalProps } from '@/utils/showModal'
+import type { ShowModalProps } from '@/utils/showModal'
 
 import styles from './InstallPluginModal.module.scss'
 import { useMemoizedFn, useRequest, useSafeState } from 'ahooks'

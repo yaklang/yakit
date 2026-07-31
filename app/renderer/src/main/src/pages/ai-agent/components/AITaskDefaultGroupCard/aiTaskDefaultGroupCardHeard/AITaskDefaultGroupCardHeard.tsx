@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { useCreation } from 'ahooks'
-import { AITaskDefaultGroupCardHeardProps } from './type'
+import type { AITaskDefaultGroupCardHeardProps } from './type'
 import styles from './AITaskDefaultGroupCardHeard.module.scss'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { formatTimestamp } from '@/utils/timeUtil'

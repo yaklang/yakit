@@ -1,7 +1,7 @@
 import { yakitNotify } from '@/utils/notification'
-import { DataNode } from 'antd/lib/tree'
-import { BruteExecuteExtraFormValue, StartBruteParams } from './NewBruteType'
-import { PayloadGroupNodeProps } from '@/pages/payloadManager/newPayload'
+import type { DataNode } from 'antd/lib/tree'
+import type { BruteExecuteExtraFormValue, StartBruteParams } from './NewBruteType'
+import type { PayloadGroupNodeProps } from '@/pages/payloadManager/newPayload'
 import cloneDeep from 'lodash/cloneDeep'
 import { defaultBruteExecuteExtraFormValue } from '@/defaultConstants/NewBrute'
 
@@ -84,8 +84,8 @@ export const apiPayloadByType: (value: string) => Promise<string> = (value) => {
  */
 export const convertStartBruteParams = (params: BruteExecuteExtraFormValue): StartBruteParams => {
   const { usernames = '', passwords = '', Targets = '' } = params
-  const usernamesArr = !!usernames ? usernames.split(/\r?\n/) : []
-  const passwordsArr = !!passwords ? passwords.split(/\r?\n/) : []
+  const usernamesArr = usernames ? usernames.split(/\r?\n/) : []
+  const passwordsArr = passwords ? passwords.split(/\r?\n/) : []
   const newParams = cloneDeep(params)
   delete newParams.usernames
   delete newParams.passwords
@@ -93,8 +93,8 @@ export const convertStartBruteParams = (params: BruteExecuteExtraFormValue): Sta
   delete newParams.replaceDefaultPasswordDict
   const data: StartBruteParams = {
     ...newParams,
-    ReplaceDefaultUsernameDict: !!!params.replaceDefaultUsernameDict,
-    ReplaceDefaultPasswordDict: !!!params.replaceDefaultPasswordDict,
+    ReplaceDefaultUsernameDict: !params.replaceDefaultUsernameDict,
+    ReplaceDefaultPasswordDict: !params.replaceDefaultPasswordDict,
     Usernames: usernamesArr.concat(params.UsernamesDict || []),
     Passwords: passwordsArr.concat(params.PasswordsDict || []),
     Targets: Targets.split(/,|\r?\n/).join('\n'),
@@ -112,8 +112,8 @@ export const startBruteParamsConvertToFormValue = (params: StartBruteParams): Br
   const data: BruteExecuteExtraFormValue = {
     ...defaultBruteExecuteExtraFormValue,
     ...params,
-    replaceDefaultUsernameDict: !!!params.ReplaceDefaultUsernameDict,
-    replaceDefaultPasswordDict: !!!params.ReplaceDefaultPasswordDict,
+    replaceDefaultUsernameDict: !params.ReplaceDefaultUsernameDict,
+    replaceDefaultPasswordDict: !params.ReplaceDefaultPasswordDict,
     usernames: (params.Usernames?.length || 0) > 0 ? params.Usernames?.join(',') : '',
     passwords: (params.Passwords?.length || 0) > 0 ? params.Passwords?.join(',') : '',
   }
@@ -125,7 +125,7 @@ export const startBruteParamsConvertToFormValue = (params: StartBruteParams): Br
  */
 export const apiStartBrute: (params: StartBruteParams, token: string) => Promise<null> = (params, token) => {
   return new Promise((resolve, reject) => {
-    let executeParams: StartBruteParams = {
+    const executeParams: StartBruteParams = {
       ...params,
     }
     ipcRenderer

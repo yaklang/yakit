@@ -1,7 +1,7 @@
-import React, { FC, useRef, useState, useMemo, memo } from 'react'
+import { type FC, useRef, useState, useMemo, memo } from 'react'
 import ReactECharts from 'echarts-for-react'
-import type { EChartsOption, ECElementEvent, ECharts } from 'echarts'
-import { GraphData } from '../utils'
+import type { EChartsOption, ECElementEvent } from 'echarts'
+import type { GraphData } from '../utils'
 import { getCssVar } from '@/utils/tool'
 import { useTheme } from '@/hook/useTheme'
 

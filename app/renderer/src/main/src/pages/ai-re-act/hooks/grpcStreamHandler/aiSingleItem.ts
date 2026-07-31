@@ -284,9 +284,9 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || '{}'
 
   const parsed = JSON.parse(ipcContent) as AIAgentGrpcApi.ReportFinishPayload
-  let report_path = parsed?.report_path ?? ''
-  let title = parsed?.title ?? ''
-  let content = parsed?.summary_markdown ?? ''
+  const report_path = parsed?.report_path ?? ''
+  const title = parsed?.title ?? ''
+  const content = parsed?.summary_markdown ?? ''
 
   if (!report_path) {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据缺少 report_path` })

@@ -1,5 +1,5 @@
-import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { DebugPluginRequest } from '@/pages/plugins/utils'
+import { type HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type DebugPluginRequest } from '@/pages/plugins/utils'
 export interface TunSessionStateProps {
   deviceName: string | null
   configuredRoutes?: string[]

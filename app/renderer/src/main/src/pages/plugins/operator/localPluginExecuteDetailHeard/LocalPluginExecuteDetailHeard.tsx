@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type {
   ExecuteEnterNodeByPluginParamsProps,
   FormExtraSettingProps,
   OutputFormComponentsByTypeProps,
@@ -15,8 +15,8 @@ import {
 import { PluginDetailHeader } from '../../baseTemplate'
 import styles from './LocalPluginExecuteDetailHeard.module.scss'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useNetwork } from 'ahooks'
-import { Divider, Form, Input, Progress } from 'antd'
-import { PluginParamDataEditorProps, YakParamProps } from '../../pluginsType'
+import { Divider, Form, Progress } from 'antd'
+import type { PluginParamDataEditorProps, YakParamProps } from '../../pluginsType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -30,11 +30,11 @@ import { failed } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import classNames from 'classnames'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
-import { PluginExecuteExtraParamsRefProps } from './PluginExecuteExtraParams'
-import { DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, apiFetchOnlinePluginInfo } from '../../utils'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { PluginExecuteExtraParamsRefProps } from './PluginExecuteExtraParams'
+import { type DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, apiFetchOnlinePluginInfo } from '../../utils'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { GetPluginLanguage } from '../../builtInData'
@@ -133,8 +133,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   }, [executeStatus])
   /**本地插件和内置插件不做更新相关逻辑 */
   const getOnlinePlugin = useMemoizedFn(() => {
-    if (!!plugin.isLocalPlugin) return
-    if (!!plugin.IsCorePlugin) return
+    if (plugin.isLocalPlugin) return
+    if (plugin.IsCorePlugin) return
     apiFetchOnlinePluginInfo({ uuid: plugin.UUID }, true).then((info) => {
       if (Number(info.updated_at || 0) > Number(plugin.UpdatedAt || 0)) {
         setIsShowUpdate(true)
@@ -249,7 +249,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             isInline
           />
         )
-      case 'codec':
+      case 'codec': {
         const codecItem: YakParamProps = {
           Field: 'Input',
           FieldVerbose: 'Input',
@@ -278,6 +278,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             />
           </>
         )
+      }
       case 'mitm':
         return (
           <>
@@ -326,7 +327,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
       ),
     }
 
-    let executeParams: DebugPluginRequest = {
+    const executeParams: DebugPluginRequest = {
       Code: code || '',
       PluginType: plugin.Type,
       Input: value['Input'],
@@ -821,7 +822,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
           <YakitSwitch size="large" disabled={disabled} />
         </Form.Item>
       )
-    case 'select':
+    case 'select': {
       let selectProps: YakitSelectProps = {
         options: extraSetting?.data || [],
       }
@@ -836,7 +837,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
           <YakitSelect {...selectProps} disabled={disabled} />
         </Form.Item>
       )
-    case 'http-packet':
+    }
+    case 'http-packet': {
       const defaultValue = item.DefaultValue || ''
       return (
         <Form.Item
@@ -873,7 +875,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
           />
         </Form.Item>
       )
-    case 'yak':
+    }
+    case 'yak': {
       let language: string = pluginType || ''
       try {
         const info = JSONParseLog(item.ExtraSetting || '', {
@@ -912,7 +915,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
           <YakitEditor type={language} readOnly={disabled} noLineNumber={true} noMiniMap={true} />
         </Form.Item>
       )
-    case 'json':
+    }
+    case 'json': {
       if (typeof jsonSchemaListRef?.current !== 'object') return <></>
       let schema: any = {}
       let uiSchema: any = {}
@@ -944,6 +948,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
           isInline={isInline}
         />
       )
+    }
     default:
       return <></>
   }

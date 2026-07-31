@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AICustomFileProps } from './type'
+import type { AICustomFileProps } from './type'
 import { useNodeViewContext } from '@prosemirror-adapter/react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import styles from './AICustomFile.module.scss'
@@ -102,7 +102,7 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
       contentEditable={false}
     >
       {isUpdate && <Progress type="circle" percent={progress} className={styles['progress']} width={30} />}
-      <img src={!!showSrc ? `atom://${showSrc}` : ''} alt={attrs.alt || '暂无图片'} />
+      <img src={showSrc ? `atom://${showSrc}` : ''} alt={attrs.alt || '暂无图片'} />
     </div>
   )
 })

@@ -1,4 +1,5 @@
-import React, { Dispatch, SetStateAction, useEffect, useMemo, useRef } from 'react'
+import type React from 'react'
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useRef } from 'react'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'

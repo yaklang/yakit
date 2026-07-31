@@ -1,4 +1,3 @@
-import React from 'react'
 import { failed } from '../../utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 
@@ -22,7 +21,7 @@ export const generateYakCodeByRequest = (
       CodeTemplate: template || RequestToYakCodeTemplate.Ordinary,
     })
     .then((r: { Code: Uint8Array }) => {
-      onResult(new Buffer(r.Code).toString())
+      onResult(Buffer.from(r.Code).toString())
     })
     .catch((e) => {
       failed(`Generate Yak Code Failed：${e}`)

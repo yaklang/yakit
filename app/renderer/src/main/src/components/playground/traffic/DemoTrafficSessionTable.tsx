@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { ChaosMakerRule } from '@/models/ChaosMaker'
-import { info } from '@/utils/notification'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { DemoVirtualTable } from '@/demoComponents/virtualTable/VirtualTable'
-import { TrafficSession } from '@/models/Traffic'
-import { TrafficViewerControlIf } from '@/components/playground/traffic/base'
+import type { TrafficSession } from '@/models/Traffic'
+import type { TrafficViewerControlIf } from '@/components/playground/traffic/base'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface DemoTrafficSessionTableProp extends TrafficViewerControlIf {}

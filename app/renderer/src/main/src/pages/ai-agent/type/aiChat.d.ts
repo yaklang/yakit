@@ -3,7 +3,7 @@ import type { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-
 import type { PlanItemDetailsData, SessionRenderContent } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
-import { PaginationSchema } from '@/pages/invoker/schema'
+import { type PaginationSchema } from '@/pages/invoker/schema'
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {

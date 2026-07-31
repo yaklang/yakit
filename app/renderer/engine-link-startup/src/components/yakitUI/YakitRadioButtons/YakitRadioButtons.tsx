@@ -1,6 +1,6 @@
 import { Radio } from 'antd'
-import React from 'react'
-import { YakitRadioButtonsProps } from './YakitRadioButtonsType'
+import type React from 'react'
+import type { YakitRadioButtonsProps } from './YakitRadioButtonsType'
 import styles from './YakitRadioButtons.module.scss'
 import classNames from 'classnames'
 

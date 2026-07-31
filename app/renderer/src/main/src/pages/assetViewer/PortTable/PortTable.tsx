@@ -1,24 +1,23 @@
 import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
 import { ExportExcel } from '@/components/DataExport/DataExport'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { QueryGeneralResponse, genDefaultPagination } from '@/pages/invoker/schema'
+import { type QueryGeneralResponse, genDefaultPagination } from '@/pages/invoker/schema'
 import { formatTimestamp } from '@/utils/timeUtil'
 import React, { useState, useMemo, useEffect, useRef, useImperativeHandle } from 'react'
-import { QueryPortsRequest, portAssetFormatJson, PortTableAndDetail } from '../PortAssetPage'
-import { PortAsset } from '../models'
+import { type QueryPortsRequest, portAssetFormatJson, PortTableAndDetail } from '../PortAssetPage'
+import type { PortAsset } from '../models'
 import { defQueryPortsRequest, apiQueryPortsBase, apiQueryPortsIncrementOrderAsc } from './utils'
 import { useDebounceFn, useMemoizedFn, useInterval, useCreation, useControllableValue, useUpdateEffect } from 'ahooks'
 import styles from './PortTable.module.scss'
-import { PortTableProps } from './PortTableType'
+import type { PortTableProps } from './PortTableType'
 import ReactResizeDetector from 'react-resize-detector'
-import { Divider } from 'antd'
 import classNames from 'classnames'
 import { onRemoveToolFC } from '@/utils/deleteTool'
 import { isEnpriTraceAgent } from '@/utils/envfile'
@@ -155,7 +154,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
     })
 
     const onRemove = useMemoizedFn(() => {
-      return new Promise((resolve, reject) => {
+      return new Promise<void>((resolve, reject) => {
         const transferParams = {
           selectedRowKeys: allSelected ? [] : selected.map((ele) => ele.Id),
           params: { ...query },
@@ -169,7 +168,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
             setSelected([])
             onRefreshData()
             getAllData()
-            resolve(null)
+            resolve()
           })
           .catch((err) => {
             reject(err)
@@ -456,7 +455,7 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
       setSendPopoverVisible(false)
     })
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-      let sort = { ...newSort }
+      const sort = { ...newSort }
       if (sort.order === 'none') {
         sort.order = 'desc'
         sort.orderBy = 'id'

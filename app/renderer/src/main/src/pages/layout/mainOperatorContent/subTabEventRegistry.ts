@@ -1,4 +1,4 @@
-import { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
+import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
 import emiter from '@/utils/eventBus/eventBus'
 
@@ -44,7 +44,7 @@ function dispatchActive<K extends keyof SubTabPageEventHandlers>(
 ) {
   const handler = handlersByRouteKey.get(getCurrentPageTabRouteKey())?.[method]
   if (typeof handler === 'function') {
-    ;(handler as (...a: unknown[]) => void)(...args)
+    (handler as (...a: unknown[]) => void)(...args)
   }
 }
 
@@ -55,7 +55,7 @@ function dispatchAllHandlers<K extends keyof SubTabPageEventHandlers>(
   handlersByRouteKey.forEach((handlers) => {
     const handler = handlers[method]
     if (typeof handler === 'function') {
-      ;(handler as (...a: unknown[]) => void)(...args)
+      (handler as (...a: unknown[]) => void)(...args)
     }
   })
 }

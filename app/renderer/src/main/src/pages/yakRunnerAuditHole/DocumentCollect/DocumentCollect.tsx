@@ -1,19 +1,11 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { Tooltip } from 'antd'
+import type React from 'react'
+import { useRef, useState } from 'react'
 import {} from '@ant-design/icons'
-import { useMemoizedFn, useSize } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import styles from './DocumentCollect.module.scss'
-import { failed } from '@/utils/notification'
-import classNames from 'classnames'
-import { DocumentCollectProps, HoleResourceType, HoleTreeNode } from './DocumentCollectType'
-import { grpcFetchHoleTree } from '../utils'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import type { DocumentCollectProps, HoleResourceType, HoleTreeNode } from './DocumentCollectType'
 import { OutlineDocumentIcon, OutlineLink2Icon, OutlineVariableIcon } from '@/assets/icon/outline'
-import YakitTree, { TreeKey } from '@/components/yakitUI/YakitTree/YakitTree'
-import { RequestYakURLResponse } from '@/pages/yakURLTree/data'
-import { SolidFolderIcon, SolidFolderopenIcon } from '@/assets/icon/solid'
-import { SSARisksFilter } from '../YakitAuditHoleTable/YakitAuditHoleTableType'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import type { SSARisksFilter } from '../YakitAuditHoleTable/YakitAuditHoleTableType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { RefreshIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -114,7 +106,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
                 const newParams = JSONParseLog(filter, { page: 'DocumentCollect', fun: 'onSelectedNodes' })
                 setQuery({ ...query, ...cacheQueryRef.current, ...newParams })
                 // 缓存选中前所更改的参数内容 将其置为空用于还原
-                let cache: SSARisksFilter = {}
+                const cache: SSARisksFilter = {}
                 Object.keys(newParams).forEach((key) => {
                   cache[key] = []
                 })

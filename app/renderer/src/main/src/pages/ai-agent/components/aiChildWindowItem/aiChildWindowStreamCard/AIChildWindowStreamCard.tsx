@@ -2,7 +2,7 @@ import { type FC, memo } from 'react'
 import type { AIChildWindowStreamCardProps } from './type'
 import { AIStreamCard } from '../../aiChatListItem/StreamingChatContent/StreamingChatContent'
 import useCreation from 'ahooks/lib/useCreation'
-import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import useAIConcurrentStreamStore from '@/auxWindow/pages/AIConcurrentStream/useContext/useStore'
 
 const AIChildWindowStreamCard: FC<AIChildWindowStreamCardProps> = memo((props) => {

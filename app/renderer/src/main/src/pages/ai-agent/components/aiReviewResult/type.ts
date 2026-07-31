@@ -1,7 +1,7 @@
-import { AIChatQSData, UIToolUseReview } from '@/pages/ai-re-act/hooks/aiRender'
-import { ReactNode } from 'react'
-import { ChatCardProps } from '../ChatCard'
-import { ModalInfoProps } from '../ModelInfo'
+import type { AIChatQSData, UIToolUseReview } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ReactNode } from 'react'
+import type { ChatCardProps } from '../ChatCard'
+import type { ModalInfoProps } from '../ModelInfo'
 
 export interface AIReviewResultProps {
   info: AIChatQSData

@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import {
+import type {
   NewPortScanExecuteProps,
   NewPortScanExecuteContentProps,
   NewPortScanExecuteFormProps,
@@ -10,11 +10,11 @@ import {
 import styles from './NewPortScan.module.scss'
 import {
   ExpandAndRetract,
-  ExpandAndRetractExcessiveState,
+  type ExpandAndRetractExcessiveState,
 } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import { useControllableValue, useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -29,7 +29,7 @@ import classNames from 'classnames'
 import { Checkbox, Divider, Form } from 'antd'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import cloneDeep from 'lodash/cloneDeep'
-import { ScanKind, ScanPortTemplate, defaultPorts } from '@/pages/portscan/PortScanPage'
+import { ScanKind, defaultPorts } from '@/pages/portscan/PortScanPage'
 import { YakitFormDraggerContentPath } from '@/components/yakitUI/YakitForm/YakitForm'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -38,20 +38,26 @@ import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResul
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { PluginLocalListDetails } from '@/pages/plugins/operator/PluginLocalListDetails/PluginLocalListDetails'
-import { PluginFilterParams, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
+import type { PluginLocalDetailsProps } from '@/pages/plugins/operator/PluginLocalListDetails/PluginLocalListDetailsType'
+import type { PluginFilterParams, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
 import { defaultSearch } from '@/pages/plugins/builtInData'
 import { defaultLinkPluginConfig } from '@/pages/plugins/utils'
 import { getLinkPluginConfig } from '@/pages/plugins/singlePluginExecution/SinglePluginExecution'
-import { RecordPortScanRequest, apiCancelPortScan, apiCancelSimpleDetect, apiPortScan, apiSimpleDetect } from './utils'
-import { CheckboxValueType } from 'antd/es/checkbox/Group'
+import {
+  type RecordPortScanRequest,
+  apiCancelPortScan,
+  apiCancelSimpleDetect,
+  apiPortScan,
+  apiSimpleDetect,
+} from './utils'
+import type { CheckboxValueType } from 'antd/es/checkbox/Group'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { yakitNotify } from '@/utils/notification'
-import { CreateReportContentProps, onCreateReportModal } from '@/pages/portscan/CreateReport'
+import { type CreateReportContentProps, onCreateReportModal } from '@/pages/portscan/CreateReport'
 import { v4 as uuidv4 } from 'uuid'
 import { apiGetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
-import { GlobalNetworkConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { shallow } from 'zustand/shallow'
-import { PageNodeItemProps, ScanPortPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, type ScanPortPageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { pluginTypeFilterList } from '@/defaultConstants/PluginBatchExecutor'
 import { defaultScanPortPageInfo } from '@/defaultConstants/NewPortScan'
@@ -102,9 +108,11 @@ export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
         },
       ]}
       pluginGroupExcludeType={['yak', 'codec', 'lua']}
-      pluginDetailsProps={{
-        bodyClassName: styles['port-scan-body'],
-      }}
+      pluginDetailsProps={
+        {
+          bodyClassName: styles['port-scan-body'],
+        } as unknown as PluginLocalDetailsProps
+      }
       allCheck={allCheck}
       setAllCheck={setAllCheck}
     >
@@ -450,7 +458,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         filters.plugin_type = cloneDeep(pluginTypeFilterList)
       }
       const linkPluginConfig = getLinkPluginConfig(selectList, { ...pluginListSearchInfo, filters }, allCheck)
-      let executeParams: PortScanExecuteExtraFormValue = {
+      const executeParams: PortScanExecuteExtraFormValue = {
         ...extraParamsValue,
         ...value,
         Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
@@ -473,7 +481,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
           'NewPortScanExecuteContent.riskAssessmentReport',
         )}`
         taskNameRef.current = taskName
-        let PortScanRequest = { ...executeParams, TaskName: `${taskName}-${uuidRef.current}` }
+        const PortScanRequest = { ...executeParams, TaskName: `${taskName}-${uuidRef.current}` }
         const simpleDetectPrams: RecordPortScanRequest = {
           PortScanRequest,
         }
@@ -669,7 +677,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
   })
   /**选择预设端口设置Ports值 */
   const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
-    let res: string = (checkedValue || [])
+    const res: string = (checkedValue || [])
       .map((i) => {
         if (typeof i === 'string' && portTemplates[i]) {
           return portTemplates[i]
@@ -677,7 +685,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
         return PresetPorts[i as string] || ''
       })
       .join(',')
-    if (!!res) {
+    if (res) {
       form.setFieldsValue({ Ports: res })
     }
   })
@@ -796,7 +804,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
             onChange={(e) => setTemplateName(e.target.value)}
             onPressEnter={onSaveTemplate}
           />
-          <div style={{ display: 'flex', justifyContent: 'end', gap: 8, marginTop: 25 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 25 }}>
             <YakitButton
               type="outline2"
               onClick={() => {

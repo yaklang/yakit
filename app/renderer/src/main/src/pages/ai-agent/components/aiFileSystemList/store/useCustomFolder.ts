@@ -1,5 +1,5 @@
 import { bindExternalStoreHook, createExternalStore } from '@/utils/createExternalStore'
-import { HistoryItem } from '../type'
+import type { HistoryItem } from '../type'
 import { historyStore } from './useHistoryFolder'
 import { mergeOnePath } from '../utils'
 import { onFileNotify } from '../FileTreeSystemListWrapper/FileTreeSystemListWrapper'

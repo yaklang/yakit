@@ -1,5 +1,5 @@
 import type { AIChatQSData, AIYakExecFileRecord, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface ConcurrentStreamFramePayload {
   session: string

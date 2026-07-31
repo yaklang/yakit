@@ -1,6 +1,6 @@
 import { yakitFailed } from '@/utils/notification'
 
-export function Uint8ArrayToString(fileData: Buffer | Uint8Array, encoding?: 'utf8' | 'latin1' | any) {
+export function Uint8ArrayToString(fileData: Uint8Array, encoding?: 'utf8' | 'latin1' | any) {
   try {
     return Buffer.from(fileData).toString(encoding ? encoding : 'utf8')
   } catch (e) {
@@ -9,15 +9,15 @@ export function Uint8ArrayToString(fileData: Buffer | Uint8Array, encoding?: 'ut
   }
 }
 
-export function StringToUint8Array(str: string, encoding?: 'latin1' | 'ascii' | 'utf8') {
+export function StringToUint8Array(str: string, encoding?: 'latin1' | 'ascii' | 'utf8'): Uint8Array {
   try {
     if (!encoding) {
-      return Buffer.from(str, 'utf8')
+      return Buffer.from(str, 'utf8') as unknown as Uint8Array
     }
-    return Buffer.from(str, encoding)
+    return Buffer.from(str, encoding) as unknown as Uint8Array
   } catch (e) {
     yakitFailed(`String ${str} Encode Failed: ${e}`)
-    return Buffer.from(`${str}`, encoding)
+    return Buffer.from(`${str}`, encoding) as unknown as Uint8Array
   }
 }
 

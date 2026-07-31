@@ -1,7 +1,7 @@
 import React from 'react'
 import styles from './EditorInfo.module.scss'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
-import { TFunction } from '@/i18n/useI18nNamespaces'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 export interface TempExampleInfo {
   label: string
   desc: string

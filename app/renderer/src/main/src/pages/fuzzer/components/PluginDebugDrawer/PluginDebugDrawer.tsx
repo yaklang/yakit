@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { PluginDebugDrawerProps } from './PluginDebugDrawerType'
-import { usePageInfo } from '@/store/pageInfo'
+import type { PluginDebugDrawerProps } from './PluginDebugDrawerType'
 import { shallow } from 'zustand/shallow'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import classNames from 'classnames'
@@ -11,7 +10,7 @@ import { SolidStoreIcon } from '@/assets/icon/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { NucleiPluginTemplate } from '@/pages/pluginDebugger/defaultData'
 import { PluginDebugBody } from '@/pages/plugins/pluginDebug/PluginDebug'
-import { PluginDataProps } from '@/pages/plugins/pluginsType'
+import type { PluginDataProps } from '@/pages/plugins/pluginsType'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useMenuHeight } from '@/store/menuHeight'
@@ -80,7 +79,7 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
   }, [visible])
   return (
     <YakitDrawer
-      getContainer={!!getContainer ? getContainer : false}
+      getContainer={getContainer ? getContainer : false}
       placement="bottom"
       mask={false}
       closable={false}

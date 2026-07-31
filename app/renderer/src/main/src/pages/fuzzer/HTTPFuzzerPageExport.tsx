@@ -1,6 +1,5 @@
-import React from 'react'
-import { FuzzerResponse } from './HTTPFuzzerPage'
-import { exportData, ExtractableData, ExtractableValue } from '../../utils/exporter'
+import type { FuzzerResponse } from './HTTPFuzzerPage'
+import { exportData, type ExtractableData, type ExtractableValue } from '../../utils/exporter'
 
 export const exportHTTPFuzzerResponse = (responses: FuzzerResponse[], extractedMap) => {
   exportData(

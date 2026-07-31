@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { showModal } from '@/utils/showModal'
 import { Alert, Button, Form, Space, Spin, Table, Tag, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'

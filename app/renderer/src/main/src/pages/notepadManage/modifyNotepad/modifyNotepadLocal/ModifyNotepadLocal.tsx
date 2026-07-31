@@ -1,28 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ModifyNotepadLocalProps } from './ModifyNotepadLocalType'
+import type { ModifyNotepadLocalProps } from './ModifyNotepadLocalType'
 import moment from 'moment'
 import {
-  CreateNoteRequest,
-  DeleteNoteRequest,
-  Note,
-  NoteFilter,
-  UpdateNoteRequest,
+  type CreateNoteRequest,
+  type DeleteNoteRequest,
+  type Note,
+  type NoteFilter,
+  type UpdateNoteRequest,
   grpcCreateNote,
   grpcDeleteNote,
   grpcQueryNoteById,
   grpcUpdateNote,
 } from '../../notepadManage/utils'
-import { ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type ModifyNotepadPageInfoProps, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
-import { useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import {
-  OutlineDotshorizontalIcon,
-  OutlineTrashIcon,
-  OutlineStoreIcon,
-  OutlineExportIcon,
-  OutlineArrownarrowdownIcon,
-  OutlineArrowupIcon,
-} from '@/assets/icon/outline'
+import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { OutlineDotshorizontalIcon, OutlineTrashIcon, OutlineStoreIcon, OutlineExportIcon } from '@/assets/icon/outline'
 import { cataloguePlugin } from '@/components/MilkdownEditor/utils/cataloguePlugin'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -32,25 +25,21 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { FuncFilterPopover } from '@/pages/plugins/funcTemplate'
 import { cloneDeep } from 'lodash'
 import { ModifyNotepadContent } from '../ModifyNotepad'
-import { ModifyNotepadContentRefProps } from '../ModifyNotepadType'
+import type { ModifyNotepadContentRefProps } from '../ModifyNotepadType'
 import styles from './ModifyNotepadLocal.module.scss'
 import emiter from '@/utils/eventBus/eventBus'
-import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { getMarkdown } from '@milkdown/kit/utils'
 import { yakitNotify } from '@/utils/notification'
 import { NotepadExport } from '../../notepadManage/notepadManageLocal/NotepadImportAndExport'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { MilkdownEditorLocal } from '@/components/milkdownEditorLocal/MilkdownEditorLocal'
-import { APIFunc } from '@/apiUtils/type'
-import { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
+import type { APIFunc } from '@/apiUtils/type'
+import type { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { defaultNote } from '@/defaultConstants/Note'
 import Mark from 'mark.js'
-import { Divider } from 'antd'
 import { useGoEditNotepad } from '../../hook/useGoEditNotepad'
-import { v4 as uuidv4 } from 'uuid'
-import { editorViewCtx } from '@milkdown/core'
-import { Decoration, DecorationSet } from 'prosemirror-view'
 
 const NotepadLocalList = React.lazy(() => import('./NotepadLocalList/NotepadLocalList'))
 /**高亮关键字中当前选中的高亮元素样式 */
@@ -132,7 +121,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
           }, 200)
         })
     } else {
-      let Content = pageInfo.content || ''
+      const Content = pageInfo.content || ''
       // 新建笔记本并保存
       const params: CreateNoteRequest = {
         Title: initTabName(),

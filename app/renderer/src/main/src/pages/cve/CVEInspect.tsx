@@ -1,13 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { AutoCard } from '@/components/AutoCard'
-import { Descriptions, Empty, List, Tabs } from 'antd'
-import { CVEDetail, CVEDetailEx, CWEDetail } from '@/pages/cve/models'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import type { CVEDetail, CWEDetail } from '@/pages/cve/models'
 import { ResizeBox } from '@/components/ResizeBox'
 import { CVEDescription, CWEDescription, CWEDescriptionItem } from '@/pages/cve/CVEDescription'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import styles from './CVETable.module.scss'
 import { ArrowsExpandIcon, ArrowsRetractIcon } from '@/assets/newIcon'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useCreation } from 'ahooks'
 
 export interface CVEInspectProp {
   selected?: string
@@ -39,7 +38,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
   }, [cwes])
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -52,7 +51,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
     }
     return p
   }, [firstFull, secondFull, cwes])
-  return !!selected ? (
+  return selected ? (
     <div className={styles['cve-inspect']}>
       <ResizeBox
         firstMinSize={400}

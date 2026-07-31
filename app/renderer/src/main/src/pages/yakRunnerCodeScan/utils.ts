@@ -1,13 +1,13 @@
 import { info, yakitNotify } from '@/utils/notification'
-import {
+import type {
   DeleteSyntaxFlowResultRequest,
   DeleteSyntaxFlowResultResponse,
   QuerySyntaxFlowResultRequest,
   QuerySyntaxFlowResultResponse,
   SyntaxFlowScanRequest,
 } from './YakRunnerCodeScanType'
-import { APIOptionalFunc } from '@/apiUtils/type'
-import { QuerySyntaxFlowRuleRequest, SyntaxFlowRuleFilter } from '../ruleManagement/RuleManagementType'
+import type { APIOptionalFunc } from '@/apiUtils/type'
+import type { QuerySyntaxFlowRuleRequest, SyntaxFlowRuleFilter } from '../ruleManagement/RuleManagementType'
 import { grpcFetchLocalRuleList } from '../ruleManagement/api'
 
 const { ipcRenderer } = window.require('electron')

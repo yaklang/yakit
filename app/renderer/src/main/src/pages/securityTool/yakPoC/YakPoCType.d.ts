@@ -1,7 +1,8 @@
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { HybridScanControlAfterRequest } from '@/models/HybridScan'
-import { GroupCount } from '@/pages/invoker/schema'
-import { DataScanParamsProps } from '@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor'
+import { type StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type HybridScanControlAfterRequest } from '@/models/HybridScan'
+import { type GroupCount } from '@/pages/invoker/schema'
+import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import type { PocPageInfoProps } from '@/store/pageInfo'
 
 export interface YakPoCProps {
   pageId: string

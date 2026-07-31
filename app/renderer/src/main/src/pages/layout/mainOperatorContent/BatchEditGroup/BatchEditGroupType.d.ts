@@ -1,4 +1,4 @@
-import { MultipleNodeInfo } from '../MainOperatorContentType'
+import { type MultipleNodeInfo } from '../MainOperatorContentType'
 
 export interface BatchEditGroupProps {
   groupName: string

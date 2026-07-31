@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Form, Space, Modal, Divider } from 'antd'
+import { Form, Modal, Divider } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MitmStatus } from '@/pages/mitm/MITMPage'
+import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, type ExtraMITMServerProps, type MitmStatus } from '@/pages/mitm/MITMPage'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
-import { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
+import type { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import styles from './MITMServerStartForm.module.scss'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -13,24 +13,22 @@ import { yakitFailed } from '@/utils/notification'
 import { CogIcon, RefreshIcon } from '@/assets/newIcon'
 import { RuleExportAndImportButton } from '../MITMRule/MITMRule'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { AdvancedConfigurationFromValue, buildMitmExtra } from '../MITMAdvancedConfig'
+import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { type AdvancedConfigurationFromValue, buildMitmExtra } from '../MITMAdvancedConfig'
 import ReactResizeDetector from 'react-resize-detector'
 import { useWatch } from 'antd/es/form/Form'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { RemoveIcon } from '@/assets/newIcon'
-import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { CacheDropDownGV } from '@/yakitGV'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
 import { toMITMHacker } from '@/pages/hacker/httpHacker'
 import { OutlineXIcon } from '@/assets/icon/outline'
-import { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
@@ -180,7 +178,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
       form.setFieldsValue({ enableInitialPlugin: !!a })
     })
     getRemoteValue(MITMConsts.MITMDefaultPort).then((e) => {
-      if (!!e) {
+      if (e) {
         form.setFieldsValue({ port: e })
       } else {
         form.setFieldsValue({ port: defPort })
@@ -264,7 +262,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
   const execStartMITM = useMemoizedFn((values) => {
     // 获取高级配置的默认值
     const advancedFormValue = advancedFormRef.current?.getValue()
-    let params = {
+    const params = {
       ...values,
       ...advancedFormValue,
       ...advancedValueRef.current,

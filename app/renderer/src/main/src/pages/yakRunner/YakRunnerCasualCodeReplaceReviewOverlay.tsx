@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 
@@ -102,7 +102,6 @@ const YakRunnerCasualCodeReplaceReviewOverlay = memo(function YakRunnerCasualCod
     setReviewBaseline(sessionSnapshot)
     setDraftIncoming(incoming)
     prevIncomingRef.current = null
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roundKey, sessionSnapshot])
 
   useEffect(() => {

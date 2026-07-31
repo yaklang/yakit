@@ -1,22 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  useGetState,
-  useInterval,
-  useMemoizedFn,
-  useSize,
-  useThrottleFn,
-  useUpdateEffect,
-  useVirtualList,
-} from 'ahooks'
-import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
+import type { API } from '@/services/swagger/resposeType'
 import styles from './MessageCenter.module.scss'
-import { failed, success, warn, info, yakitNotify } from '@/utils/notification'
+import { failed, yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
-import { YakitButton, YakitButtonProp } from '../yakitUI/YakitButton/YakitButton'
+import { YakitButton, type YakitButtonProp } from '../yakitUI/YakitButton/YakitButton'
 import { Resizable } from 're-resizable'
 import YakitTabs from '../yakitUI/YakitTabs/YakitTabs'
-import ReactResizeDetector from 'react-resize-detector'
 import { formatTimestampJudge } from '@/utils/timeUtil'
 import { RemoveIcon } from '@/assets/newIcon'
 import { useStore } from '@/store'
@@ -26,12 +17,11 @@ import {
   apiFetchMessageRead,
   apiFetchQueryAllTask,
   apiFetchQueryMessage,
-  MessageQueryDataProps,
-  MessageQueryParamsProps,
+  type MessageQueryDataProps,
 } from './utils'
 import emiter from '@/utils/eventBus/eventBus'
 import { RollingLoadList } from '../RollingLoadList/RollingLoadList'
-import { PageNodeItemProps, PluginHubPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { type PluginHubPageInfoProps } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { pluginSupplementJSONConvertToData } from '@/pages/pluginEditor/utils/convert'
 import { apiGetNotepadDetail } from '@/pages/notepadManage/notepadManage/utils'
@@ -42,9 +32,8 @@ import { isEnpriTrace } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
   getEnvTypeByProjects,
-  ProjectParamsProp,
-  ProjectParamsProps,
-  ProjectsResponse,
+  type ProjectParamsProp,
+  type ProjectsResponse,
 } from '@/pages/softwareSettings/ProjectManage'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import moment from 'moment'
@@ -199,7 +188,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             </span>
           </>
         )
-      case 'deleteComment':
+      case 'deleteComment': {
         const { text, imgs } = pluginSupplementJSONConvertToData(data.description) || {}
         return (
           <>
@@ -214,6 +203,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             </span>
           </>
         )
+      }
       case 'notepad':
         return (
           <span
@@ -237,7 +227,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             })}
           </span>
         )
-      case 'task':
+      case 'task': {
         const { status, created_at, updated_at, description, taskName } = data
         if (status === 1) {
           return (
@@ -284,7 +274,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
         } else {
           return <></>
         }
-
+      }
       default:
         return <></>
     }
@@ -971,7 +961,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
       ipcRenderer
         .invoke('GetProjects', param)
         .then((rsp: ProjectsResponse) => {
-          let newReNames = rsp.Projects.map((item) => {
+          const newReNames = rsp.Projects.map((item) => {
             return item.ProjectName
           })
           resolve(newReNames)
@@ -1016,7 +1006,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
 
       setTaskList(data)
       // 此处还需校验新任务是否在项目管理中已存在，如若存在后续还将提示用户存在重名项目
-      let names = newTaskList.map((item) => item.taskName || '').filter((name) => name !== '')
+      const names = newTaskList.map((item) => item.taskName || '').filter((name) => name !== '')
       const newReNames = await onJudgeRepeat(names)
       setReNames(newReNames)
       // 打开任务通知Modal

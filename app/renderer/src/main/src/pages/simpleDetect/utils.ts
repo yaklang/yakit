@@ -1,6 +1,6 @@
 import { yakitNotify } from '@/utils/notification'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
-import { RecordPortScanRequest } from '../securityTool/newPortScan/utils'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { RecordPortScanRequest } from '../securityTool/newPortScan/utils'
 
 const { ipcRenderer } = window.require('electron')
 

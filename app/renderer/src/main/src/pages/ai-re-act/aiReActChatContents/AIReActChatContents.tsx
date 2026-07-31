@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState, useEffect } from 'react'
-import { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
+import type { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
 import { AIMarkdown } from '@/pages/ai-agent/components/aiMarkdown/AIMarkdown'
 import { AIStreamChatContent } from '@/pages/ai-agent/components/aiStreamChatContent/AIStreamChatContent'
@@ -8,12 +8,12 @@ import { taskAnswerToIconMap } from '@/pages/ai-agent/defaultConstant'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import { AIChatListItem } from '@/pages/ai-agent/components/aiChatListItem/AIChatListItem'
 import { AIYaklangCode } from '@/pages/ai-agent/components/aiYaklangCode/AIYaklangCode'
-import { ModalInfoProps } from '@/pages/ai-agent/components/ModelInfo'
+import type { ModalInfoProps } from '@/pages/ai-agent/components/ModelInfo'
 import { AIStreamContentType } from '../hooks/defaultConstant'
 import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
-import { ReActChatRenderElement, ChatReferenceMaterialPayload } from '../hooks/aiRender'
+import type { ReActChatRenderElement, ChatReferenceMaterialPayload } from '../hooks/aiRender'
 import Loading from '@/components/Loading/Loading'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -48,7 +48,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     }
   }, [stream.Timestamp, stream.AIModelName, stream.AIService])
   const referenceNode = useCreation(() => {
-    return !!reference ? <AIReferenceNode referenceList={reference || []} sessionId={sessionId || ''} /> : <></>
+    return reference ? <AIReferenceNode referenceList={reference || []} sessionId={sessionId || ''} /> : <></>
   }, [reference, sessionId])
   if (ContentType?.startsWith('code/')) {
     return (
@@ -152,7 +152,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const Footer = useCallback(() => {
       return execute ? (
         <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
-          {!!casualTitle ? (
+          {casualTitle ? (
             <Loading
               size={14}
               style={{

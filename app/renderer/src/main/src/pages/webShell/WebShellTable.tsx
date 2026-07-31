@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { defQueryWebShellRequest, QueryWebShellRequest } from '@/pages/webShell/WebShellViewer'
+import { defQueryWebShellRequest, type QueryWebShellRequest } from '@/pages/webShell/WebShellViewer'
 import { ResizeBox } from '@/components/ResizeBox'
-import { ShellType, WebShellDetail } from '@/pages/webShell/models'
+import { ShellType, type WebShellDetail } from '@/pages/webShell/models'
 import cveStyles from '@/pages/cve/CVETable.module.scss'
-import mitmStyles from '@/pages/mitm/MITMServerHijacking/MITMServerHijacking.module.scss'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -17,16 +16,15 @@ import {
 } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { Button, Space, Tooltip } from 'antd'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { genDefaultPagination, PaginationSchema, QueryGeneralResponse } from '@/pages/invoker/schema'
+import { genDefaultPagination, type PaginationSchema, type QueryGeneralResponse } from '@/pages/invoker/schema'
 import style from '@/components/HTTPFlowTable/HTTPFlowTable.module.scss'
 import { showModal } from '@/utils/showModal'
 import { RemarkDetail, WebShellCreatorForm } from '@/pages/webShell/WebShellComp'
-import { YakitMenu, YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { type YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { deleteWebShell, featurePing } from '@/pages/webShell/WebShellManager'
-import { addToTab } from '@/pages/MainTabs'
 import {
   DragonFailIcon,
   DragonSuccessIcon,
@@ -209,7 +207,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
               <YakitButton
                 type="primary"
                 onClick={() => {
-                  let m = showModal({
+                  const m = showModal({
                     title: '备注',
                     width: '60%',
                     content: <RemarkDetail remark={i.Remark} />,
@@ -385,21 +383,23 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
     if (!selected) return
     switch (key) {
       case 'webshell-curd-edit':
-        const edit = showModal({
-          title: '编辑 Shell',
-          width: '60%',
-          content: (
-            <WebShellCreatorForm
-              closeModal={() => {
-                edit && edit.destroy()
-                refList()
-              }}
-              isCreate={false}
-              modified={selected}
-            />
-          ),
-          modalAfterClose: () => edit && edit.destroy(),
-        })
+        {
+          const edit = showModal({
+            title: '编辑 Shell',
+            width: '60%',
+            content: (
+              <WebShellCreatorForm
+                closeModal={() => {
+                  edit && edit.destroy()
+                  refList()
+                }}
+                isCreate={false}
+                modified={selected}
+              />
+            ),
+            modalAfterClose: () => edit && edit.destroy(),
+          })
+        }
         break
       case 'webshell-curd-delete':
         deleteWebShell(selected.Id, selected.Url, refList)
@@ -487,7 +487,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                     type="primary"
                     onClick={() => {
                       // setDataBaseUpdateVisible(true)
-                      let m = showModal({
+                      const m = showModal({
                         title: '添加网站',
                         width: '60%',
                         content: (

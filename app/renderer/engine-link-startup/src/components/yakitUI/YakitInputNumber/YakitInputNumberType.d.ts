@@ -1,5 +1,4 @@
-import { InputNumberProps } from 'antd'
-import { SizeType } from 'antd/lib/config-provider/SizeContext'
+import type { InputNumberProps } from 'antd'
 
 export declare type YakitSizeType = 'small' | 'middle' | 'large' | 'maxLarge' | undefined
 export declare type ValueType = string | number

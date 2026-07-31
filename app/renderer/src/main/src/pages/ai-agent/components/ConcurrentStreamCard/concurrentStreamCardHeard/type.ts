@@ -1,4 +1,4 @@
-import { ChatTaskNodeGroup } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ChatTaskNodeGroup } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface ConcurrentStreamCardHeardProps {
   token: string

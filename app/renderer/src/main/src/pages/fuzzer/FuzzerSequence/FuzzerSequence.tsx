@@ -1,5 +1,5 @@
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import type {
   ExtraSettingProps,
   FuzzerSequenceProps,
   FuzzerSequenceResponse,
@@ -21,7 +21,7 @@ import {
   SolidStopIcon,
   SolidSwitchConfigurationIcon,
 } from '@/assets/icon/solid'
-import { DragDropContext, Droppable, Draggable, DropResult, ResponderProvided } from '@hello-pangea/dnd'
+import { DragDropContext, Droppable, Draggable, type DropResult, type ResponderProvided } from '@hello-pangea/dnd'
 import {
   useControllableValue,
   useCreation,
@@ -59,25 +59,25 @@ import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
 import {
   FuzzerExtraShow,
-  FuzzerRequestProps,
-  FuzzerResponse,
-  FuzzerShowSuccess,
+  type FuzzerRequestProps,
+  type FuzzerResponse,
+  type FuzzerShowSuccess,
   ResponseViewer,
   SecondNodeExtra,
   SecondNodeTitle,
   advancedConfigValueToFuzzerRequests,
 } from '../HTTPFuzzerPage'
 import { randomString } from '@/utils/randomUtil'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
-import { HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor } from '@/utils/editors'
+import { getRemoteValue } from '@/utils/kv'
+import type { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import { HTTP_PACKET_EDITOR_Response_Info, type IMonacoEditor } from '@/utils/editors'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import {
   HTTPFuzzerPageTable,
-  HTTPFuzzerPageTableDebugPayload,
-  HTTPFuzzerPageTableQuery,
+  type HTTPFuzzerPageTableDebugPayload,
+  type HTTPFuzzerPageTableQuery,
 } from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
-import {
+import type {
   MatcherValueProps,
   ExtractorValueProps,
   MatchingAndExtraction,
@@ -92,17 +92,16 @@ import { ArrowsExpandIcon, ArrowsRetractIcon, QuestionMarkCircleIcon } from '@/a
 import { WebFuzzerNewEditor } from '../WebFuzzerNewEditor/WebFuzzerNewEditor'
 import { shallow } from 'zustand/shallow'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
-import { PageNodeItemProps, WebFuzzerPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, type WebFuzzerPageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { compareAsc } from '@/pages/yakitStore/viewers/base'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { monacoEditorWrite } from '../fuzzerTemplates'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { ShareImportExportData } from '../components/ShareImportExportData'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import sequencemp4 from '@/assets/sequence.mp4'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import { Uint8ArrayToString } from '@/utils/str'
-import { DebugProps } from './FuzzerPageSetting'
+import type { DebugProps } from './FuzzerPageSetting'
 import emiter from '@/utils/eventBus/eventBus'
 import {
   DefFuzzerTableMaxData,
@@ -115,7 +114,7 @@ import { WebsiteGV } from '@/enums/website'
 import { setEditorContext } from '@/utils/monacoSpec/yakEditor'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { filterColorTag } from '@/components/TableVirtualResize/utils'
-import { FuzzerConcurrentLoad, FuzzerResChartData } from '../FuzzerConcurrentLoad/FuzzerConcurrentLoad'
+import { FuzzerConcurrentLoad, type FuzzerResChartData } from '../FuzzerConcurrentLoad/FuzzerConcurrentLoad'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { cloneDeep, isEqual } from 'lodash'
@@ -123,11 +122,10 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
 import { updateConcurrentLoad } from '@/utils/duplex/duplex'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { isEmpty } from 'lodash'
 import { AdvancedSetV2, ConcurrencyItem, initSetValue } from './FuzzerPageConcurrency'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { useProxy } from '@/hook/useProxy'
-import { HotCodeTemplate, HotPatchTempItem } from '../HTTPFuzzerHotPatch'
+import { HotCodeTemplate, type HotPatchTempItem } from '../HTTPFuzzerHotPatch'
 import { useGlobalHotPatchTag } from '@/store/globalHotPatch'
 
 const ResponseCard = React.lazy(() => import('./ResponseCard'))
@@ -336,10 +334,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
       // 成功/失败计数
       if (Response.Ok) {
-        let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
+        const currentSuccessCount = successCountRef.current.get(FuzzerIndex)
         successCountRef.current.set(FuzzerIndex, (currentSuccessCount || 0) + 1)
       } else {
-        let currentFailedCount = failedCountRef.current.get(FuzzerIndex)
+        const currentFailedCount = failedCountRef.current.get(FuzzerIndex)
         failedCountRef.current.set(FuzzerIndex, (currentFailedCount || 0) + 1)
       }
       onSetFirstAsSelected(FuzzerIndex)
@@ -355,7 +353,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
       // RuntimeID 收集
       if (Response.RuntimeID) {
-        let runtimeId = runtimeIdBufferRef.current.get(FuzzerIndex)
+        const runtimeId = runtimeIdBufferRef.current.get(FuzzerIndex)
         if (runtimeId) {
           runtimeId.push(Response.RuntimeID)
           runtimeIdBufferRef.current.set(FuzzerIndex, [...new Set(runtimeId)])
@@ -365,7 +363,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       }
 
       // 构建响应对象
-      let r = {
+      const r = {
         ...Response,
         Headers: Response.Headers || [],
         UUID: Response.UUID,
@@ -374,14 +372,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       } as FuzzerResponse
 
       if (Response.MatchedByMatcher) {
-        let colors = filterColorTag(Response.HitColor) || undefined
+        const colors = filterColorTag(Response.HitColor) || undefined
         r.cellClassName = colors
       }
 
       // 分类存储成功/失败响应
       if (Response.Ok) {
-        let successList = successBufferRef.current.get(FuzzerIndex)
-        let fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
+        const successList = successBufferRef.current.get(FuzzerIndex)
+        const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
         if (successList) {
           successList.push(r)
           if (successList.length > fuzzerTableMaxData) {
@@ -392,7 +390,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           successBufferRef.current.set(FuzzerIndex, [r])
         }
       } else {
-        let failedList = failedBufferRef.current.get(FuzzerIndex)
+        const failedList = failedBufferRef.current.get(FuzzerIndex)
         if (failedList) {
           failedList.push(r)
           failedBufferRef.current.set(FuzzerIndex, failedList)
@@ -406,7 +404,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       }
 
       // 图表数据
-      let fuzzerResChartData = fuzzerResChartDataBufferRef.current.get(FuzzerIndex)
+      const fuzzerResChartData = fuzzerResChartDataBufferRef.current.get(FuzzerIndex)
       if (fuzzerResChartData) {
         fuzzerResChartData.push({
           Count: (r.Count as number) + 1,
@@ -502,7 +500,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     if (!inViewport) return
     onUpdateSequence()
     getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
-      if (!!remoteData) {
+      if (remoteData) {
         hotPatchCodeWithParamGetterRef.current = `${remoteData}`
       }
     })
@@ -659,7 +657,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
       // 主要用于查看全部数据
       if (Response.RuntimeID) {
-        let runtimeId = runtimeIdBufferRef.current.get(FuzzerIndex)
+        const runtimeId = runtimeIdBufferRef.current.get(FuzzerIndex)
         if (runtimeId) {
           runtimeId.push(Response.RuntimeID)
           runtimeIdBufferRef.current.set(FuzzerIndex, [...new Set(runtimeId)])
@@ -677,13 +675,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
       } as FuzzerResponse
 
       if (Response.MatchedByMatcher) {
-        let colors = filterColorTag(Response.HitColor) || undefined
+        const colors = filterColorTag(Response.HitColor) || undefined
         r.cellClassName = colors
       }
 
       if (Response.Ok) {
-        let successList = successBufferRef.current.get(FuzzerIndex)
-        let fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
+        const successList = successBufferRef.current.get(FuzzerIndex)
+        const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
         if (successList) {
           successList.push(r)
           // 超过最大显示 展示最新数据
@@ -696,7 +694,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           successBufferRef.current.set(FuzzerIndex, [r])
         }
       } else {
-        let failedList = failedBufferRef.current.get(FuzzerIndex)
+        const failedList = failedBufferRef.current.get(FuzzerIndex)
         if (failedList) {
           failedList.push(r)
           failedBufferRef.current.set(FuzzerIndex, failedList)
@@ -709,7 +707,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         fuzzerIndexArr.current.push(FuzzerIndex)
       }
 
-      let fuzzerResChartData = fuzzerResChartDataBufferRef.current.get(FuzzerIndex)
+      const fuzzerResChartData = fuzzerResChartDataBufferRef.current.get(FuzzerIndex)
       if (fuzzerResChartData) {
         fuzzerResChartData.push({
           Count: (r.Count as number) + 1,
@@ -830,8 +828,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         setCurrentList(newList)
       }
 
-      let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
-      let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
+      const currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
+      const currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
 
       if (successBuffer.length + failedBuffer.length === 1) {
         const onlyOneResponse = successBuffer.length === 1 ? successBuffer[0] : failedBuffer[0]
@@ -885,10 +883,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
   useEffect(() => {
     const id = setInterval(() => {
       fuzzerIndexArr.current.forEach((fuzzerIndex) => {
-        let currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
-        let currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
-        let lastSuccessCount = getResponseRef.current(fuzzerIndex)?.successCount || 0
-        let lastFailedCount = getResponseRef.current(fuzzerIndex)?.failedCount || 0
+        const currentSuccessCount = successCountRef.current.get(fuzzerIndex) || 0
+        const currentFailedCount = failedCountRef.current.get(fuzzerIndex) || 0
+        const lastSuccessCount = getResponseRef.current(fuzzerIndex)?.successCount || 0
+        const lastFailedCount = getResponseRef.current(fuzzerIndex)?.failedCount || 0
         // 判断是否有更新
         if (currentSuccessCount !== lastSuccessCount || currentFailedCount !== lastFailedCount) {
           updateDataRef.current(fuzzerIndex)
@@ -1085,7 +1083,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
         const httpParamsItem: FuzzerRequestProps = {
           ...advancedConfigValueToFuzzerRequests(webFuzzerPageInfo.advancedConfigValue),
-          RequestRaw: Buffer.from(webFuzzerPageInfo.request, 'utf8'), // StringToUint8Array(request, "utf8"),
+          RequestRaw: Buffer.from(webFuzzerPageInfo.request, 'utf8') as unknown as Uint8Array, // StringToUint8Array(request, "utf8"),
           HotPatchCode: webFuzzerPageInfo.hotPatchCode,
           HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
           // 并发模式下禁用继承，避免并发请求之间互相干扰
@@ -1687,7 +1685,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const extractorData: ExtractorValueProps = {
       extractorList: [],
     }
-    let data = {
+    const data = {
       matcher: { ...matchData },
       extractor: { ...extractorData },
     }
@@ -2786,7 +2784,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
     const [firstFull, setFirstFull] = useState<boolean>(false)
     const [secondFull, setSecondFull] = useState<boolean>(false)
     const ResizeBoxProps = useCreation(() => {
-      let p = {
+      const p = {
         firstRatio: '50%',
         secondRatio: '50%',
       }
@@ -2924,7 +2922,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
           matchSubmit={() => {
             const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
             if (!currentItem?.pageParamsInfo) return
-            const { webFuzzerPageInfo: { advancedConfigValue } = {} } = currentItem?.pageParamsInfo
+            const { webFuzzerPageInfo } = currentItem?.pageParamsInfo ?? {}
+            const { advancedConfigValue } = webFuzzerPageInfo ?? {}
             if (advancedConfigValue?.matchers?.length || advancedConfigValue?.extractors?.length) {
               onMatchSubmit?.()
             } else {

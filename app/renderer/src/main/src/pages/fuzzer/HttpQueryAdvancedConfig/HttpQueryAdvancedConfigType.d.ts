@@ -1,7 +1,11 @@
-import { KVPair } from '@/models/kv'
-import { MatchingAndExtraction } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
-import { ReactNode } from 'react'
-import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
+import { type KVPair } from '@/models/kv'
+import type {
+  MatchingAndExtraction,
+  HTTPResponseMatcher,
+  HTTPResponseExtractor,
+} from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import { type ReactNode } from 'react'
+import { type WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
 
 export type FilterMode = 'drop' | 'match' | 'onlyMatch' | 'fail'
 
@@ -24,7 +28,7 @@ export interface AdvancedConfigValueProps {
   overwriteSNI: string
   actualHost: string
   timeout: number
-  dialTimeoutSeconds: nnumber
+  dialTimeoutSeconds: number
   batchTarget?: Uint8Array
   // Random Chunked
   enableRandomChunked: boolean
@@ -127,7 +131,7 @@ export interface HttpQueryAdvancedConfigProps {
   showFormContentType: WebFuzzerType
   /** Web Fuzzer 选中 AI 时替换表单主体区域 */
   fuzzerAiSlot?: ReactNode
-  proxyListRef: React.Ref
+  proxyListRef: React.Ref<any>
   isbuttonIsSendReqStatus: boolean
   cachedTotal: number
 }

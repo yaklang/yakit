@@ -1,6 +1,7 @@
-import React, { useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
-import { PluginOperationGroupListRefProps, PluginOperationGroupList } from './PluginOperationGroupList'
+import { type PluginOperationGroupListRefProps, PluginOperationGroupList } from './PluginOperationGroupList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SolidPlusIcon } from '@/assets/icon/solid'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -36,7 +37,7 @@ export const PluginGroupDrawer: React.FC<PluginFroupMagDrawerProp> = (props) => 
 
   // 新增分组
   const addNewGroup = () => {
-    let m = showYakitModal({
+    const m = showYakitModal({
       title: '新增分组',
       width: 500,
       footer: null,

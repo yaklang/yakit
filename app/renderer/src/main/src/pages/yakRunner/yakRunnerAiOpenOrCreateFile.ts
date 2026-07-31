@@ -3,8 +3,8 @@ import moment from 'moment'
 import emiter from '@/utils/eventBus/eventBus'
 import { FileDefault, FileSuffix } from './FileTree/icon'
 import { getMapFileDetail, setMapFileDetail } from './FileTreeMap/FileMap'
-import { AreaInfoProps } from './YakRunnerType'
-import { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
+import type { AreaInfoProps } from './YakRunnerType'
+import type { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
 import {
   addAreaFileInfo,
   getFileSuffixFromName,

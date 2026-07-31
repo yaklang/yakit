@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 /**
  * @description 在线判断
  * @property isJudgingLogin 是否判断登录

@@ -1,6 +1,6 @@
 import { defaultModifyNotepadPageInfo } from '@/defaultConstants/ModifyNotepad'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { usePageInfo, ModifyNotepadPageInfoProps, PageNodeItemProps } from '@/store/pageInfo'
+import { usePageInfo, type ModifyNotepadPageInfoProps, type PageNodeItemProps } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { useMemoizedFn } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'

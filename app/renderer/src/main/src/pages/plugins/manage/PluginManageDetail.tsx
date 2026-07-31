@@ -1,4 +1,5 @@
-import React, { ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
   PluginDetailHeader,
   PluginDetails,
@@ -13,15 +14,14 @@ import {
   OutlineClouddownloadIcon,
   OutlineCodeIcon,
   OutlineLightbulbIcon,
-  OutlineLoadingIcon,
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
 import { useGetState, useMemoizedFn } from 'ahooks'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import cloneDeep from 'lodash/cloneDeep'
-import { Image, Tooltip } from 'antd'
+import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
+import type {
   PluginFilterParams,
   PluginInfoRefProps,
   PluginListPageMeta,
@@ -30,10 +30,10 @@ import {
 } from '../baseTemplateType'
 import { ReasonModal } from './PluginManage'
 import { ApplicantIcon, AuthorImg, CodeScoreModule, FilterPopoverBtn } from '../funcTemplate'
-import { PluginBaseParamProps, PluginDataProps, PluginSettingParamProps } from '../pluginsType'
+import type { PluginBaseParamProps, PluginDataProps, PluginSettingParamProps } from '../pluginsType'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { OnlinePluginAppAction } from '../pluginReducer'
-import { YakitPluginListOnlineResponse, YakitPluginOnlineDetail } from '../online/PluginsOnlineType'
+import type { OnlinePluginAppAction } from '../pluginReducer'
+import type { YakitPluginListOnlineResponse, YakitPluginOnlineDetail } from '../online/PluginsOnlineType'
 import { convertPluginsRequestParams } from '../utils'
 import { convertRemoteToRemoteInfo, onCodeToInfo } from '../editDetails/utils'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -44,7 +44,7 @@ import { GetPluginLanguage } from '../builtInData'
 import {
   PluginGroup,
   TagsAndGroupRender,
-  YakFilterRemoteObj,
+  type YakFilterRemoteObj,
 } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import { pluginSupplementJSONConvertToData, riskDetailConvertOnlineToLocal } from '@/pages/pluginEditor/utils/convert'
 import { httpAuditPluginOperate, httpFetchAuditPluginDetail } from '@/pages/pluginHub/utils/http'
@@ -53,8 +53,8 @@ import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
 import useAdmin from '@/hook/useAdmin'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { YakitPluginSupplement } from '@/pages/pluginEditor/base'
-import { DownloadingState } from '@/yakitGVDefine'
+import type { YakitPluginSupplement } from '@/pages/pluginEditor/base'
+import type { DownloadingState } from '@/yakitGVDefine'
 import { PluginLog } from '@/pages/pluginHub/pluginLog/PluginLog'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -199,7 +199,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
               const supplementInfo = pluginSupplementJSONConvertToData(res.pluginSupplement || '')
               setSupplement(supplementInfo ? { ...supplementInfo } : undefined)
               // 设置基础信息
-              let infoData: PluginBaseParamProps = {
+              const infoData: PluginBaseParamProps = {
                 ScriptName: res.script_name,
                 Help: res.help,
                 RiskDetail: riskDetailConvertOnlineToLocal(res.riskInfo),
@@ -220,7 +220,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
               setInfoParams({ ...infoData })
               setCacheTags(infoData?.Tags || [])
               // 设置配置信息
-              let settingData: PluginSettingParamProps = {
+              const settingData: PluginSettingParamProps = {
                 EnablePluginSelector: !!res.enable_plugin_selector,
                 PluginSelectorTypes: res.plugin_selector_types,
                 Content: res.content || '',
@@ -350,7 +350,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
     const [plugin, setPlugin] = useState<API.PluginsAuditDetailResponse>()
     // 判断不同权限不同审核状态下的按钮展示
     const extraHeaderInfo = useMemo(() => {
-      const isPass = !!plugin?.pen ? (plugin.status === 3 ? true : plugin?.status === 1) : plugin?.status === 1
+      const isPass = plugin?.pen ? (plugin.status === 3 ? true : plugin?.status === 1) : plugin?.status === 1
       // isBtns-是否展示通过和不通过按钮
       // isPass-是否展示钢笔 icon
       return { isBtns: !plugin?.pen, isPass: isPass }
@@ -359,7 +359,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
     const isBanOperate = useMemo(() => {
       return {
         isBan: !!plugin?.disable,
-        hint: !!plugin?.disable
+        hint: plugin?.disable
           ? plugin?.isAuthor
             ? t('PluginManageDetail.authorCannotOperate')
             : t('PluginManageDetail.editorCannotOperate')

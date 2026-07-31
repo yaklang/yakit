@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { useDebounce, useMemoizedFn } from 'ahooks'
 import { OutlineBookopenIcon, OutlineSearchIcon, OutlineTrashIcon } from '@/assets/icon/outline'
@@ -18,8 +19,8 @@ import {
 } from '@/pages/ai-agent/historyChat/HistoryChatList/HistoryChatList'
 import historyChatStyles from '@/pages/ai-agent/historyChat/HistoryChat.module.scss'
 import listStyles from '@/pages/ai-agent/historyChat/HistoryChatList/HistoryChatList.module.scss'
-import { YakURLResource } from '@/pages/yakURLTree/data'
-import { ApiDocHistoryItem, getExtra, openApiRequest, toNumber } from './apiDoc'
+import type { YakURLResource } from '@/pages/yakURLTree/data'
+import { type ApiDocHistoryItem, getExtra, openApiRequest, toNumber } from './apiDoc'
 
 const parseHistoryItem = (resource: YakURLResource): ApiDocHistoryItem => {
   const extra = resource.Extra || []

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 export type WebFuzzerType = 'config' | 'sequence' | 'rule' | 'concurrency' | 'hot-patch' | 'api-doc' | 'ai'
 

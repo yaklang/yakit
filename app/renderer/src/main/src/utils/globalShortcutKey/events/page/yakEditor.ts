@@ -1,13 +1,13 @@
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { YakitKeyBoard, YakitKeyMod } from '../../keyboard'
-import { ShortcutKeyEventInfo } from '../pageMaps'
+import type { ShortcutKeyEventInfo } from '../pageMaps'
 import {
   convertKeyEventToKeyCombination,
   handleShortcutKey,
   parseShortcutKeyEvent,
   sortKeysCombination,
 } from '../../utils'
-import { System, SystemInfo } from '@/constants/hardware'
+import { type System, SystemInfo } from '@/constants/hardware'
 import { addScopeShow } from '../global'
 import { JSONParseLog } from '@/utils/tool'
 import i18n from '@/i18n/i18n'
@@ -211,8 +211,8 @@ export const isConflictToYakEditor = (Shortcut: string[]) => {
       item.keys.includes(YakitKeyMod.CtrlCmd) &&
       (Shortcut.includes(YakitKeyMod.Control) || Shortcut.includes(YakitKeyMod.Meta))
     ) {
-      let newKeys = item.keys.filter((item) => item !== YakitKeyMod.CtrlCmd)
-      let newShortcut = Shortcut.filter((item) => item !== YakitKeyMod.Control && item !== YakitKeyMod.Meta)
+      const newKeys = item.keys.filter((item) => item !== YakitKeyMod.CtrlCmd)
+      const newShortcut = Shortcut.filter((item) => item !== YakitKeyMod.Control && item !== YakitKeyMod.Meta)
       if (JSON.stringify(sortKeysCombination(newKeys)) === JSON.stringify(sortKeysCombination(newShortcut))) {
         result = tOriginal('ShortcutKey.editorConflict', { name: tOriginal(item.name) })
       }
@@ -379,10 +379,10 @@ export const isYakEditorDefaultShortcut = (ev: KeyboardEvent): boolean => {
   if (!keys) return true
   // 非组合快捷键不拦截monaco正常输入
   if (!isAllowPass(keys)) return true
-  let nowKey = sortKeysCombination(keys).join('')
+  const nowKey = sortKeysCombination(keys).join('')
   let has = false
   YakEditorDefaultShortcut.forEach((item) => {
-    let itemKey = sortKeysCombination(item.keys).join('')
+    const itemKey = sortKeysCombination(item.keys).join('')
     if (nowKey === itemKey) {
       has = true
     }
@@ -394,10 +394,10 @@ export const isYakEditorDefaultShortcut = (ev: KeyboardEvent): boolean => {
 export const isYakEditorShortcut = (ev: KeyboardEvent): boolean => {
   const keys = convertKeyEventToKeyCombination(ev)
   if (!keys) return false
-  let nowKey = sortKeysCombination(keys).join('')
+  const nowKey = sortKeysCombination(keys).join('')
   let has = false
   Object.keys(getYakEditorShortcutKeyEvents()).forEach((key) => {
-    let itemKey = sortKeysCombination(getYakEditorShortcutKeyEvents()[key].keys).join('')
+    const itemKey = sortKeysCombination(getYakEditorShortcutKeyEvents()[key].keys).join('')
     if (nowKey === itemKey) {
       has = true
     }

@@ -1,7 +1,6 @@
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
-import { BrutePageInfoProps } from '@/store/pageInfo'
-import React from 'react'
+import { type ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import { type BrutePageInfoProps } from '@/store/pageInfo'
+import type React from 'react'
 
 export interface StartBruteParams {
   Type: string

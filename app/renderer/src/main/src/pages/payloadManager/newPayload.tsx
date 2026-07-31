@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Divider, Progress, Tooltip } from 'antd'
 import {
   useCreation,
@@ -40,11 +41,11 @@ import {
   DragDropContext,
   Droppable,
   Draggable,
-  BeforeCapture,
-  DropResult,
-  ResponderProvided,
-  DragStart,
-  DragUpdate,
+  type BeforeCapture,
+  type DropResult,
+  type ResponderProvided,
+  type DragStart,
+  type DragUpdate,
 } from '@hello-pangea/dnd'
 import {
   SolidChevrondownIcon,
@@ -62,8 +63,8 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import Dragger from 'antd/lib/upload/Dragger'
 import { v4 as uuidv4 } from 'uuid'
-import { DeletePayloadProps, NewPayloadTable, Payload, QueryPayloadParams } from './PayloadLocalTable'
-import { PaginationSchema, QueryGeneralResponse } from '../invoker/schema'
+import { type DeletePayloadProps, NewPayloadTable, type Payload, type QueryPayloadParams } from './PayloadLocalTable'
+import type { PaginationSchema, QueryGeneralResponse } from '../invoker/schema'
 import { randomString } from '@/utils/randomUtil'
 import _isEqual from 'lodash/isEqual'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -77,22 +78,22 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { isEnpriTrace } from '@/utils/envfile'
 import { NewPayloadOnlineList } from './onlinePayload/NewPayloadOnlineList'
-import { UserInfoProps, useStore } from '@/store'
+import { type UserInfoProps, useStore } from '@/store'
 import {
   apiDeleteOnlinePayloadList,
   apiGetOnlinePayloadFile,
   apiGetOnlinePayloadList,
   apiUpdateOnlinePayloadFile,
 } from './utils'
-import { DeleteOnlinePayloadProps, NewPayloadOnlineTable } from './onlinePayload/PayloadOnlineTable'
-import { API } from '@/services/swagger/resposeType'
+import { type DeleteOnlinePayloadProps, NewPayloadOnlineTable } from './onlinePayload/PayloadOnlineTable'
+import type { API } from '@/services/swagger/resposeType'
 import { useTheme } from '@/hook/useTheme'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -393,7 +394,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
 
   const beforeUploadFun = useDebounceFn(
     (fileList: any[]) => {
-      let arr: {
+      const arr: {
         path: string
         name: string
       }[] = []
@@ -410,7 +411,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
           warn(t('CreateDictionaries.alreadySelected', { path: f.path }))
           return
         }
-        let name = f.name.split('.')[0]
+        const name = f.name.split('.')[0]
         arr.push({
           path: f.path,
           name,
@@ -763,7 +764,7 @@ export const isIncludeSpecial = (v: string) => /[/*,]/.test(v)
 const nodesToDataFun = (nodes: PayloadGroupNodeProps[]) => {
   return nodes.map((item) => {
     const { Type, Name, Nodes, Number } = item
-    let obj: DataItem = {
+    const obj: DataItem = {
       type: Type,
       name: Name,
       id: `${Type}-${Name}`,
@@ -916,9 +917,9 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
       if (selectData) {
         if (selectData.type === 'Folder') {
           setFolder(selectData.name)
-          let item = selectData.node?.filter((item) => item.id === selectItem) || []
-          let group: string = item.length > 0 ? item[0].name : ''
-          let type: string = item.length > 0 ? item[0].type : ''
+          const item = selectData.node?.filter((item) => item.id === selectItem) || []
+          const group: string = item.length > 0 ? item[0].name : ''
+          const type: string = item.length > 0 ? item[0].type : ''
           setGroup(group)
           setContentType(type === 'DataBase' ? 'table' : 'editor')
           setShowType && setShowType('local')
@@ -935,7 +936,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
   // 将渲染数组捏回后端结构数据
   const dataToNodesFun = useMemoizedFn((data: DataItem[]) => {
     return data.map((item) => {
-      let obj: PayloadGroupNodeProps = {
+      const obj: PayloadGroupNodeProps = {
         Name: item.name,
         Type: item.type,
         Nodes: [],
@@ -1039,7 +1040,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
       const uuid = uuidv4()
       const newData = copyData.map((item) => {
         if (item.id === combineItem.id) {
-          let item: DataItem = {
+          const item: DataItem = {
             type: 'Folder',
             name: getOnlyFolderName(),
             id: uuid,
@@ -1084,7 +1085,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
       const uuid = uuidv4()
       const newData = copyData.map((item) => {
         if (item.id === combineItem.id) {
-          let item: DataItem = {
+          const item: DataItem = {
             type: 'Folder',
             name: getOnlyFolderName(),
             id: uuid,
@@ -1374,40 +1375,44 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                     onClick: ({ key }) => {
                       switch (key) {
                         case 'createDictionaries':
-                          const m = showYakitModal({
-                            getContainer: document.getElementById('new-payload') || document.body,
-                            title: null,
-                            footer: null,
-                            width: 566,
-                            type: 'white',
-                            closable: false,
-                            maskClosable: false,
-                            hiddenHeader: true,
-                            content: (
-                              <CreateDictionaries
-                                title={t('NewPayloadLocalList.newDictionary')}
-                                type="dictionaries"
-                                onQueryGroup={onQueryGroup}
-                                onClose={() => {
-                                  m.destroy()
-                                }}
-                              />
-                            ),
-                          })
+                          {
+                            const m = showYakitModal({
+                              getContainer: document.getElementById('new-payload') || document.body,
+                              title: null,
+                              footer: null,
+                              width: 566,
+                              type: 'white',
+                              closable: false,
+                              maskClosable: false,
+                              hiddenHeader: true,
+                              content: (
+                                <CreateDictionaries
+                                  title={t('NewPayloadLocalList.newDictionary')}
+                                  type="dictionaries"
+                                  onQueryGroup={onQueryGroup}
+                                  onClose={() => {
+                                    m.destroy()
+                                  }}
+                                />
+                              ),
+                            })
+                          }
                           break
                         case 'createFolder':
-                          // 生成 UUID
-                          const uuid = uuidv4()
-                          setData([
-                            {
-                              type: 'Folder',
-                              name: '',
-                              id: uuid,
-                              isCreate: true,
-                              number: 0,
-                            },
-                            ...data,
-                          ])
+                          {
+                            // 生成 UUID
+                            const uuid = uuidv4()
+                            setData([
+                              {
+                                type: 'Folder',
+                                name: '',
+                                id: uuid,
+                                isCreate: true,
+                                number: 0,
+                              },
+                              ...data,
+                            ])
+                          }
                           break
                         default:
                           break
@@ -1800,7 +1805,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     // 如果删除的包含选中项 则重新选择
     const sourceFolders = findFoldersById(data, id)
     if (sourceFolders && sourceFolders?.node && showType === 'local') {
-      let results = sourceFolders.node.find((item) => item.id === selectItem)
+      const results = sourceFolders.node.find((item) => item.id === selectItem)
       if (results) setContentType(undefined)
     }
   })
@@ -2005,28 +2010,30 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                           setClipboardText(`{{payload(${inputName}/*)}}`)
                           break
                         case 'addChildPayload':
-                          // 注: 此处需注意文件夹
-                          const m = showYakitModal({
-                            getContainer: document.getElementById('new-payload') || document.body,
-                            title: null,
-                            footer: null,
-                            width: 566,
-                            type: 'white',
-                            closable: false,
-                            maskClosable: false,
-                            hiddenHeader: true,
-                            content: (
-                              <CreateDictionaries
-                                title={t('FolderComponent.addChildPayload')}
-                                type="dictionaries"
-                                onQueryGroup={onQueryGroup}
-                                folder={folder.name}
-                                onClose={() => {
-                                  m.destroy()
-                                }}
-                              />
-                            ),
-                          })
+                          {
+                            // 注: 此处需注意文件夹
+                            const m = showYakitModal({
+                              getContainer: document.getElementById('new-payload') || document.body,
+                              title: null,
+                              footer: null,
+                              width: 566,
+                              type: 'white',
+                              closable: false,
+                              maskClosable: false,
+                              hiddenHeader: true,
+                              content: (
+                                <CreateDictionaries
+                                  title={t('FolderComponent.addChildPayload')}
+                                  type="dictionaries"
+                                  onQueryGroup={onQueryGroup}
+                                  folder={folder.name}
+                                  onClose={() => {
+                                    m.destroy()
+                                  }}
+                                />
+                              ),
+                            })
+                          }
                           break
                         case 'rename':
                           setEditInput(true)
@@ -2318,7 +2325,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const selectData = findFoldersById(copyData, id)
     if (selectData) {
       if (selectData.type === 'Folder') {
-        let node =
+        const node =
           selectData.node?.map((item) => {
             if (item.id === id) {
               return { ...item, name: newName, id: `${item.type}-${newName}` }
@@ -2346,7 +2353,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
 
   // 获取所有文件名
   const getAllFileName = useMemoizedFn(() => {
-    let name: string[] = []
+    const name: string[] = []
     data.forEach((item) => {
       if (item.type !== 'Folder') {
         name.push(item.name)
@@ -2399,7 +2406,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
     const selectData = findFoldersById(copyData, id)
     if (selectData) {
       if (selectData.type === 'Folder') {
-        let node = selectData.node?.filter((item) => item.id !== id)
+        const node = selectData.node?.filter((item) => item.id !== id)
         const newData = copyData.map((item) => {
           if (item.id === selectData.id && node) {
             return { ...item, node }
@@ -2410,7 +2417,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
           return item
         })
         setData(newData)
-        let results = selectData.node?.find((item) => item.id === selectItem)
+        const results = selectData.node?.find((item) => item.id === selectItem)
         if (results && showType === 'local') setContentType(undefined)
       } else {
         const newData = copyData.filter((item) => item.id !== id)
@@ -2718,7 +2725,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                       if (e.target.checked) {
                         setExportData && setExportData((old) => filterItem([...old, ...getDataBaseIds([file])]))
                       } else {
-                        let notExportArr = getDataBaseIds([file])
+                        const notExportArr = getDataBaseIds([file])
                         setExportData &&
                           setExportData((old: string[]) => old.filter((item) => !notExportArr.includes(item)))
                       }
@@ -2763,30 +2770,32 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                           setClipboardText(`{{payload(${inputName})}}`)
                           break
                         case 'importPayload':
-                          const m = showYakitModal({
-                            getContainer: document.getElementById('new-payload') || document.body,
-                            title: null,
-                            footer: null,
-                            width: 566,
-                            type: 'white',
-                            closable: false,
-                            maskClosable: false,
-                            hiddenHeader: true,
-                            content: (
-                              <CreateDictionaries
-                                title={t('FileComponent.extendTo', {
-                                  name: inputName,
-                                })}
-                                type="payload"
-                                onQueryGroup={onQueryGroup}
-                                folder={folder}
-                                group={inputName}
-                                onClose={() => {
-                                  m.destroy()
-                                }}
-                              />
-                            ),
-                          })
+                          {
+                            const m = showYakitModal({
+                              getContainer: document.getElementById('new-payload') || document.body,
+                              title: null,
+                              footer: null,
+                              width: 566,
+                              type: 'white',
+                              closable: false,
+                              maskClosable: false,
+                              hiddenHeader: true,
+                              content: (
+                                <CreateDictionaries
+                                  title={t('FileComponent.extendTo', {
+                                    name: inputName,
+                                  })}
+                                  type="payload"
+                                  onQueryGroup={onQueryGroup}
+                                  folder={folder}
+                                  group={inputName}
+                                  onClose={() => {
+                                    m.destroy()
+                                  }}
+                                />
+                              ),
+                            })
+                          }
                           break
                         case 'exportCsv':
                           onExportCsv()
@@ -2901,7 +2910,7 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
     ipcRenderer
       .invoke('GetAllPayloadGroup')
       .then((res: { Nodes: PayloadGroupNodeProps[] }) => {
-        let arr: MoveOrCopyParamsProps[] = []
+        const arr: MoveOrCopyParamsProps[] = []
         res.Nodes.forEach((item) => {
           if (item.Type !== 'Folder') {
             arr.push({ file: item.Name, folder: '' })
@@ -2924,7 +2933,7 @@ export const MoveOrCopyPayload: React.FC<MoveOrCopyPayloadProps> = (props) => {
         value={value}
         onSelect={(val) => {
           setValue(val)
-          let item = fileArr.filter((item) => item.file === val)[0]
+          const item = fileArr.filter((item) => item.file === val)[0]
           copyMoveValueRef.current = item
         }}
         placeholder={t('MoveOrCopyPayload.pleaseSelect')}
@@ -3155,7 +3164,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
         m.destroy()
       },
       onOk: async () => {
-        let result = await onCopyOrMoveFun(id, true)
+        const result = await onCopyOrMoveFun(id, true)
         if (result) {
           setSelectPayloadArr([])
           m.destroy()
@@ -3176,7 +3185,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
         y.destroy()
       },
       onOk: async () => {
-        let result = await onCopyOrMoveFun(id)
+        const result = await onCopyOrMoveFun(id)
         if (result) {
           setSelectPayloadArr([])
           y.destroy()
@@ -3833,7 +3842,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
     if (!exportType) {
       return ''
     }
-    let exportObj = {
+    const exportObj = {
       file: 'ExportAllPayloadFromFile',
       csv: 'ExportAllPayload',
       all: 'ExportPayloadDBAndFile',
@@ -3845,7 +3854,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
     if (!exportType) {
       return ''
     }
-    let cancelExportObj = {
+    const cancelExportObj = {
       file: 'cancel-ExportAllPayloadFromFile',
       csv: 'cancel-ExportAllPayload',
       all: 'cancel-ExportPayloadDBAndFile',
@@ -3858,7 +3867,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
     handleOpenFileSystemDialog({ title: t('ExportByPayloadGrpc.selectFolder'), properties: ['openDirectory'] }).then(
       (data) => {
         if (data.filePaths.length) {
-          let absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
+          const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
           if (exportType === 'all') {
             exportPathRef.current = absolutePath
             ipcRenderer.invoke(
@@ -4132,7 +4141,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
       .invoke('GetAllPayloadGroup')
       .then((res: { Nodes: PayloadGroupNodeProps[] }) => {
         cacheNodesRef.current = res.Nodes
-        let newData: DataItem[] = nodesToDataFun(res.Nodes)
+        const newData: DataItem[] = nodesToDataFun(res.Nodes)
         setData(newData)
         if (obj) {
           // 选中
@@ -4245,7 +4254,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
   }, [])
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
       firstMinSize: 250,
@@ -4456,7 +4465,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
   // 注：此处只会在页面进入时拿去一次 因此不用考虑反复获取最新的情况
   const onQueryGroup = () => {
     cacheNodesRef.current = Nodes
-    let newData: DataItem[] = nodesToDataFun(Nodes)
+    const newData: DataItem[] = nodesToDataFun(Nodes)
     setData(newData)
   }
 

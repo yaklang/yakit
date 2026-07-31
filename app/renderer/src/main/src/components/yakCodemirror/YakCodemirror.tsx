@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styles from './YakCodemirror.module.scss'
-import { YakCodemirrorProps } from './YakCodemirror.moduleType'
+import type { YakCodemirrorProps } from './YakCodemirror.moduleType'
 import { Controlled as CodeMirror } from 'react-codemirror2'
 
 // 正确的样式导入方式
@@ -111,7 +112,7 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
     // xq-light (清爽的浅色主题)     theme: "xq-light"
     // solarized (Solarized Light)    theme: "solarized"
     // neat (简洁主题)    theme: "neat"
-    let setting: any = {
+    const setting: any = {
       mode: fileName ? getLanguageMode(fileName) : language,
       theme: currentTheme === 'dark' ? 'material' : theme,
       lineNumbers: true,

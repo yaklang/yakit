@@ -21,7 +21,7 @@ export const onRemoveToolFC = (props: removeProps<any>) => {
     selectedRowKeysNmae = 'Ids',
   } = props
   let newParams = {}
-  let newNoEnterQuery = ['Pagination', ...noEnterQuery]
+  const newNoEnterQuery = ['Pagination', ...noEnterQuery]
   const queryHaveValue = {}
   // 找出有查询条件
   for (const key in params) {

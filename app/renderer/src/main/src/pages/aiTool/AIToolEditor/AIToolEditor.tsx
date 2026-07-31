@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { AIToolEditorInfoFormProps, AIToolEditorProps, EditorAIToolTab } from './AIToolEditorType'
+import type { AIToolEditorInfoFormProps, AIToolEditorProps, EditorAIToolTab } from './AIToolEditorType'
 import { useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -25,28 +25,28 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { PluginEditorBuiltInTags } from '@/pages/pluginEditor/defaultconstants'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import {
   getValueByType,
   getYakExecutorParam,
   onCodeToInfo,
   ParamsToGroupByGroupName,
 } from '@/pages/plugins/editDetails/utils'
-import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import {
   ExecuteEnterNodeByPluginParams,
   PluginExecuteProgress,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
-import { apiCancelDebugPlugin, apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
+import { apiCancelDebugPlugin, apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { getJsonSchemaListResult } from '@/components/JsonFormWrapper/JsonFormWrapper'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { CodeScoreModal } from '@/pages/plugins/funcTemplate'
-import {
+import type {
   AITool,
   AIToolGenerateMetadataRequest,
   SaveAIToolRequest,
@@ -59,12 +59,12 @@ import {
   grpcUpdateAITool,
   isAITool,
 } from '../utils'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { grpcGetAIToolById } from '@/pages/ai-agent/aiToolList/utils'
 import { setAIModal } from '@/pages/ai-agent/aiModelList/AIModelList'
 import styles from './AIToolEditor.module.scss'
-import { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
+import type { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
@@ -198,7 +198,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
           reject(t('AIToolEditor.editIdRequired'))
           return
         }
-        const func = !!toolIdRef.current ? grpcUpdateAITool : grpcSaveAITool
+        const func = toolIdRef.current ? grpcUpdateAITool : grpcSaveAITool
         func(params)
           .then((res: AITool | DbOperateMessage) => {
             if (isAITool(res)) {
@@ -237,8 +237,8 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
       emiter.emit(
         'closePage',
         JSON.stringify({
-          route: !!isModify ? YakitRoute.ModifyAITool : YakitRoute.AddAITool,
-          source: !!isModify ? getModifyAIToolSource() : getAddAIToolSource(),
+          route: isModify ? YakitRoute.ModifyAITool : YakitRoute.AddAITool,
+          source: isModify ? getModifyAIToolSource() : getAddAIToolSource(),
         }),
       )
     })
@@ -370,11 +370,11 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
       let formData: CustomPluginExecuteFormValue = {}
       if (form) formData = (form.getFieldsValue() || {}) as CustomPluginExecuteFormValue
 
-      let defaultValue: CustomPluginExecuteFormValue | undefined = { ...formData }
+      const defaultValue: CustomPluginExecuteFormValue | undefined = { ...formData }
 
       let newFormValue: CustomPluginExecuteFormValue = {}
       codeInfo.forEach((ele) => {
-        let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
+        const initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
         const value = getValueByType(initValue, ele.TypeVerbose)
         newFormValue = {
           ...newFormValue,

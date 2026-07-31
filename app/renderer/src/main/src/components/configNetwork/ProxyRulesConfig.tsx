@@ -1,4 +1,5 @@
-import React, { memo, useEffect, useMemo, useState } from 'react'
+import type React from 'react'
+import { memo, useMemo, useState } from 'react'
 import { Tooltip, Form, Divider, Table, Modal } from 'antd'
 import {
   OutlinePencilaltIcon,
@@ -12,7 +13,7 @@ import {
 import { SolidCheckCircleIcon, SolidExclamationIcon, SolidXcircleIcon } from '@/assets/icon/solid'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useMemoizedFn } from 'ahooks'
-import { ProxyEndpoint, ProxyRoute } from '@/apiUtils/grpc'
+import type { ProxyEndpoint, ProxyRoute } from '@/apiUtils/grpc'
 import { randomString } from '@/utils/randomUtil'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'

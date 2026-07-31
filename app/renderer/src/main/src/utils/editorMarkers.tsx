@@ -1,8 +1,7 @@
-import React from 'react'
-import monaco, { MarkerSeverity, MarkerTag, languages } from 'monaco-editor'
+import { MarkerSeverity, MarkerTag } from 'monaco-editor'
 import { Uint8ArrayToString } from '@/utils/str'
-import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
-import { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
+import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
 import { SeverityMapTag } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 import { JSONParseLog } from './tool'
 

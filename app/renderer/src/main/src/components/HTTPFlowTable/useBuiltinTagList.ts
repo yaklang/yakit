@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { FiltersItemProps } from '../TableVirtualResize/TableVirtualResizeType'
+import type { FiltersItemProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { yakitNotify } from '@/utils/notification'
 import { fetchHTTPFlowsFieldGroup } from '@/utils/httpFlowFieldGroupCache'
 

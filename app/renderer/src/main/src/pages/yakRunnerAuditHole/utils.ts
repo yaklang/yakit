@@ -1,4 +1,4 @@
-import { RequestYakURLResponse } from '../yakURLTree/data'
+import type { RequestYakURLResponse } from '../yakURLTree/data'
 const { ipcRenderer } = window.require('electron')
 
 /**

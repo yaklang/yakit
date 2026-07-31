@@ -2,19 +2,18 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useInViewport, useMemoizedFn, useSize } from 'ahooks'
 import { OutlineSearchIcon } from '@/assets/icon/outline'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
-import { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { MultipleSelect } from './HTTPFlowTable'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { RefreshIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
 import {
-  MitmExtractAggregateFlowFilterRow,
-  YakQueryHTTPFlowRequest,
+  type MitmExtractAggregateFlowFilterRow,
+  type YakQueryHTTPFlowRequest,
   normalizeQueryMITMExtractedAggregateResponse,
 } from '@/utils/yakQueryHTTPFlow'
 import {

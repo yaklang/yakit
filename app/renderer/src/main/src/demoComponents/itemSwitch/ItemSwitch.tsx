@@ -1,6 +1,7 @@
-import React, { memo } from 'react'
+import type React from 'react'
+import { memo } from 'react'
 import { Form } from 'antd'
-import { ItemSwitchProps } from './ItemSwitchType'
+import type { ItemSwitchProps } from './ItemSwitchType'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 
 const { Item } = Form

@@ -1,4 +1,5 @@
-import React, { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { type MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import HexEditor from 'react-hex-editor'
 import oneDarkPro from 'react-hex-editor/themes/oneDarkPro'
 import { useTheme } from '@/hook/useTheme'

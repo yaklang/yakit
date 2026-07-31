@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Progress } from 'antd'
-import { DownloadingState, YakitSettingCallbackType, YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
+import type { DownloadingState, YakitSettingCallbackType, YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { setLocalValue } from '@/utils/kv'
 import { failed, info, success } from '@/utils/notification'
 import { getCurrentVersionSource, getReleaseEditionName, isEnterpriseEdition, isIRify, isMemfit } from '@/utils/envfile'
-import { UpdateContentProp } from '../FuncDomain'
+import type { UpdateContentProp } from '../FuncDomain'
 import { NetWorkApi } from '@/services/fetch'
 import { LocalGVS } from '@/enums/localGlobal'
 import { safeFormatDownloadProcessState } from '../utils'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { yakitEngine, yakitShell, yakitWindowControls } from '@/services/electronBridge'
 
@@ -104,7 +104,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
 
   /** 下载 */
   const handleDownload = useMemoizedFn(() => {
-    let version = latest.startsWith('v') ? latest.substring(1) : latest
+    const version = latest.startsWith('v') ? latest.substring(1) : latest
     setStatus('install')
     yakitEngine
       .downloadLatestYakit(version, {

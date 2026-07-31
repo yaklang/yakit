@@ -1,8 +1,7 @@
-import { QueryPortsRequest } from '@/pages/assetViewer/PortAssetPage'
-import { PortAsset } from '@/pages/assetViewer/models'
-import { QueryGeneralResponse, genDefaultPagination } from '@/pages/invoker/schema'
+import type { QueryPortsRequest } from '@/pages/assetViewer/PortAssetPage'
+import type { PortAsset } from '@/pages/assetViewer/models'
+import { type QueryGeneralResponse } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
 
 const { ipcRenderer } = window.require('electron')
 

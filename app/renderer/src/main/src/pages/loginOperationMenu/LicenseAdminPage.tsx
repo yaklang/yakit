@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { API } from '@/services/swagger/resposeType'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { API } from '@/services/swagger/resposeType'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import moment from 'moment'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
@@ -16,7 +17,7 @@ import {
   OutlineSearchIcon,
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
-import { Form, Space, Tooltip, Typography } from 'antd'
+import { Form, Tooltip, Typography } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import locale from 'antd/es/date-picker/locale/zh_CN'
@@ -390,14 +391,14 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
   }
 
   const onFinish = useMemoizedFn((values) => {
-    let params: NewUrmRequest = {
+    const params: NewUrmRequest = {
       ...values,
       durationDate: values.durationDate.unix(),
     }
     if (editInfo?.id) params.id = editInfo.id
     if (editInfo && values.maxUser > editInfo.maxUser) {
       params.maxActivationNum = values.maxActivationNum + 1
-      let m = YakitModalConfirm({
+      const m = YakitModalConfirm({
         width: 420,
         type: 'white',
         onCancelText: '取消',
@@ -587,7 +588,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
       },
     })
       .then((res) => {
-        let data = res.data || []
+        const data = res.data || []
         if (data.length > 0) {
           setPagination((v) => ({ ...v, page: paginationProps.page }))
         }
@@ -616,7 +617,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
     const { id, license, company_version, products } = values
     const selectDate = response.data.filter((item) => item.id === id)[0]
     const { company, maxUser } = selectDate
-    let params: LicenseCreatRequest = {
+    const params: LicenseCreatRequest = {
       license,
       company,
       maxUser,

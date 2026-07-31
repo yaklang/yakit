@@ -1,4 +1,4 @@
-import { PluginExecuteExtraFormValue } from './LocalPluginExecuteDetailHeardType'
+import type { PluginExecuteExtraFormValue } from './LocalPluginExecuteDetailHeardType'
 
 export const defPluginExecuteFormValue: PluginExecuteExtraFormValue = {
   IsHttps: false,

@@ -1,17 +1,16 @@
-import { ArrowCircleRightSvgIcon, FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon } from '@/assets/newIcon'
+import { ArrowCircleRightSvgIcon } from '@/assets/newIcon'
 import { DurationMsToColor, RangeInputNumberTable, StatusCodeToColor } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { compareAsc, compareDesc } from '@/pages/yakitStore/viewers/base'
 import {
   HTTP_PACKET_EDITOR_Response_Info,
-  IMonacoEditor,
+  type IMonacoEditor,
   NewHTTPPacketEditor,
-  RenderTypeOptionVal,
+  type RenderTypeOptionVal,
 } from '@/utils/editors'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { failed, yakitFailed, yakitNotify } from '@/utils/notification'
@@ -24,7 +23,7 @@ import {
   analyzeFuzzerResponse,
   ByteCountTag,
   copyAsUrl,
-  FuzzerResponse,
+  type FuzzerResponse,
   onAddOverlayWidget,
 } from '../../HTTPFuzzerPage'
 import styles from './HTTPFuzzerPageTable.module.scss'
@@ -41,12 +40,12 @@ import ReactResizeDetector from 'react-resize-detector'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { DefFuzzerTableMaxData } from '@/defaultConstants/HTTPFuzzerPage'
 import { CodingPopover } from '@/components/HTTPFlowDetail'
-import { OutlineSearchIcon, OutlineSelectorIcon } from '@/assets/icon/outline'
+import { OutlineSelectorIcon } from '@/assets/icon/outline'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { isCellRedSingleColor } from '@/components/TableVirtualResize/utils'
 import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { ExportDataType } from '@/utils/exporter'
+import type { ExportDataType } from '@/utils/exporter'
 import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from './extractedFilter'
 import { useChunkAutoScrollToBottom } from '../../hooks/useAutoScrollToBottom'
 
@@ -123,8 +122,8 @@ export interface HTTPFuzzerPageTableQuery {
 // 判断数组值是否是数字 字符串类型数字也算
 const isNumericArray = (arr) => {
   // 利用正则表达式进行匹配
-  var regex = /^\d+$/
-  for (var i = 0; i < arr.length; i++) {
+  const regex = /^\d+$/
+  for (let i = 0; i < arr.length; i++) {
     if (!regex.test(arr[i])) {
       return false
     }
@@ -838,7 +837,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
               // 不为空判断
               if (query?.ExtractedResultsNotEmpty) {
-                isHaveDataIsPush = !!extractedMap.size
+                isHaveDataIsPush = extractedMap.size
                   ? extractedResultsString.trim().length > 0
                   : (record.ExtractedResults || []).some((item) => item.Value && item.Value.trim().length > 0)
               }
@@ -929,7 +928,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     ).run
 
     const ResizeBoxProps = useCreation(() => {
-      let p = {
+      const p = {
         firstRatio: '50%',
         secondRatio: '50%',
       }
@@ -977,7 +976,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       if (currentSelectItem) {
         setCodeKey('utf-8')
         getRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify).then((res) => {
-          if (!!res) {
+          if (res) {
             setTypeOptionVal(res)
           } else {
             setTypeOptionVal(undefined)

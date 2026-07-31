@@ -1,5 +1,5 @@
-import { OtherMenuListProps, YakitIMonacoEditor } from './YakitEditorType'
-import { EditorMenuItemType } from './EditorMenu'
+import type { OtherMenuListProps, YakitIMonacoEditor } from './YakitEditorType'
+import type { EditorMenuItemType } from './EditorMenu'
 import { Space } from 'antd'
 import { showModal } from '@/utils/showModal'
 import { AutoCard } from '../../AutoCard'
@@ -9,13 +9,11 @@ import { monacoEditorClear, monacoEditorWrite } from '@/pages/fuzzer/fuzzerTempl
 import { failed } from '@/utils/notification'
 import { fetchCursorContent, fetchSelectionRange } from './editorUtils'
 import emiter from '@/utils/eventBus/eventBus'
-import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
-import { CodecResponseProps, CodecWorkProps } from '@/pages/codec/NewCodec'
+import type { CodecResponseProps, CodecWorkProps } from '@/pages/codec/NewCodec'
 import { getClipboardText, setClipboardText } from '@/utils/clipboard'
-import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
-import { TFunction } from '@/i18n/useI18nNamespaces'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -195,7 +193,7 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
       ],
       onRun: (editor: YakitIMonacoEditor, key: string) => {
         try {
-          // @ts-ignore
+          // @ts-expect-error 类型定义不完整，需要忽略此行
           const text = editor.getModel()?.getValueInRange(editor.getSelection()) || ''
           execCodec(key, text, t, false, editor)
         } catch (e) {
@@ -213,7 +211,7 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
       ],
       onRun: (editor: YakitIMonacoEditor, key: string) => {
         try {
-          // @ts-ignore
+          // @ts-expect-error 类型定义不完整，需要忽略此行
           const text = editor.getModel()?.getValueInRange(editor.getSelection()) || ''
           execCodec(key, text, t, false, editor)
         } catch (e) {
@@ -267,7 +265,7 @@ export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
           const selection = editor.getSelection()
           let text = model?.getValue()
           if (selection) {
-            let selectText = model?.getValueInRange(selection) || ''
+            const selectText = model?.getValueInRange(selection) || ''
             if (selectText.length > 0) {
               text = selectText
             }
@@ -296,7 +294,7 @@ const execCodec = async (
     .invoke('Codec', { Text: text, Type: typeStr, ScriptName: scriptName })
     .then((result: { Result: string }) => {
       if (replaceEditor) {
-        let m = showModal({
+        const m = showModal({
           width: '50%',
           content: (
             <AutoCard
@@ -354,8 +352,8 @@ const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEdi
   ipcRenderer.invoke('NewCodec', params).then((result: CodecResponseProps) => {
     if (editor) {
       // monacoEditorClear(editor)
-      // monacoEditorReplace(editor, new Buffer(result.Result).toString("utf8"))
-      monacoEditorWrite(editor, new Buffer(result.RawResult).toString('utf8'), editor.getModel()?.getFullModelRange())
+      // monacoEditorReplace(editor, Buffer.from(result.Result).toString("utf8"))
+      monacoEditorWrite(editor, Buffer.from(result.RawResult).toString('utf8'), editor.getModel()?.getFullModelRange())
       return
     }
   })
@@ -368,7 +366,7 @@ const customMutateRequest = (key: string, text?: string, editor?: YakitIMonacoEd
   ipcRenderer
     .invoke('Codec', { Type: key, Text: text, Params: [], ScriptName: key })
     .then((res) => {
-      monacoEditorWrite(editor, new Buffer(res?.Result || '').toString('utf8'), editor.getModel()?.getFullModelRange())
+      monacoEditorWrite(editor, Buffer.from(res?.Result || '').toString('utf8'), editor.getModel()?.getFullModelRange())
     })
     .catch((err) => {
       if (err) throw err

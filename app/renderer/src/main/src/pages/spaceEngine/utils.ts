@@ -1,12 +1,12 @@
-import { APINoRequestFunc } from '@/apiUtils/type'
-import {
+import type { APINoRequestFunc } from '@/apiUtils/type'
+import type {
   GlobalNetworkConfig,
   HandleAIConfigProps,
   ThirdPartyApplicationConfig,
 } from '@/components/configNetwork/ConfigNetworkPage'
-import { GetThirdPartyAppConfigTemplateResponse } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
-import { SpaceEngineStartParams, SpaceEngineStatus } from '@/models/SpaceEngine'
-import { PcapMetadata } from '@/models/Traffic'
+import type { GetThirdPartyAppConfigTemplateResponse } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
+import type { SpaceEngineStartParams, SpaceEngineStatus } from '@/models/SpaceEngine'
+import type { PcapMetadata } from '@/models/Traffic'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
 

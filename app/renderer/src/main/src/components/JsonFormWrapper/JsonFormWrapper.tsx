@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import styles from './JsonFormWrapper.module.scss'
 import validator from '@rjsf/validator-ajv8' // 添加这行
 import JsonForm from '@rjsf/antd'
-import { RJSFSchema, UiSchema, WidgetProps } from '@rjsf/utils'
+import type { RJSFSchema, UiSchema, WidgetProps } from '@rjsf/utils'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitDragger } from '../yakitUI/YakitForm/YakitForm'
@@ -15,7 +15,7 @@ import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButton
 import classNames from 'classnames'
 import ArrayFieldTemplate from './templates/ArrayFieldTemplate'
 import ObjectFieldTemplate from './templates/ObjectFieldTemplate'
-import { ColumnSchemaProps, EditTable, UiSchemaTableProps } from './editTable/EditTable'
+import { type ColumnSchemaProps, EditTable, type UiSchemaTableProps } from './editTable/EditTable'
 import { cloneDeep } from 'lodash'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
@@ -44,10 +44,10 @@ const mergeUiSchemaRowFormClass = (uiSchema: UiSchema = {}): UiSchema => {
 
 export const getJsonSchemaListResult = (obj: { [key: string]: any }) => {
   // 此处的key用于筛选重复的表单数据
-  let keyError: string[] = []
-  let jsonSchemaError: JsonFormValidateProps[] = []
-  let keySuccess: string[] = []
-  let jsonSchemaSuccess: JsonFormValidateProps[] = []
+  const keyError: string[] = []
+  const jsonSchemaError: JsonFormValidateProps[] = []
+  const keySuccess: string[] = []
+  const jsonSchemaSuccess: JsonFormValidateProps[] = []
 
   Object.keys(obj).forEach((key) => {
     const result: JsonFormValidateProps = obj[key]()
@@ -120,7 +120,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
 
   useEffect(() => {
     if (jsonSchemaListRef.current) {
-      if (!jsonSchemaListRef.current.hasOwnProperty(field)) {
+      if (!Object.prototype.hasOwnProperty.call(jsonSchemaListRef.current, field)) {
         jsonSchemaListRef.current = {
           ...jsonSchemaListRef.current,
           [field]: validate,

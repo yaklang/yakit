@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type {
   CustomizeMenuProps,
   FeaturesAndPluginProps,
   FirstMenuItemProps,
@@ -28,14 +28,21 @@ import {
 } from '@/assets/newIcon'
 import { SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon } from '@/assets/icon/colors'
 import classNames from 'classnames'
-import { DragDropContext, Droppable, Draggable, DragUpdate, ResponderProvided, DropResult } from '@hello-pangea/dnd'
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  type DragUpdate,
+  type ResponderProvided,
+  type DropResult,
+} from '@hello-pangea/dnd'
 import { Avatar, Input, Modal, Tooltip } from 'antd'
 import { useCreation, useDebounceEffect, useHover, useMemoizedFn, useThrottleFn } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { QueryYakScriptsResponse, YakScript } from '../invoker/schema'
+import type { QueryYakScriptsResponse, YakScript } from '../invoker/schema'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -45,14 +52,14 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import {
-  EnhancedPrivateRouteMenuProps,
+  type EnhancedPrivateRouteMenuProps,
   privateConvertDatabase,
   privateExchangeProps,
   privateUnionMenus,
 } from '../layout/HeardMenu/HeardMenuType'
 import {
-  DatabaseFirstMenuProps,
-  DatabaseMenuItemProps,
+  type DatabaseFirstMenuProps,
+  type DatabaseMenuItemProps,
   InvalidFirstMenuItem,
   InvalidPageMenuItem,
   PrivateAllMenus,
@@ -67,7 +74,7 @@ import { CodeGV, RemoteGV } from '@/yakitGV'
 import { isCommunityEdition } from '@/utils/envfile'
 import { publicConvertDatabase, publicExchangeProps, publicUnionMenus } from '../layout/publicMenu/utils'
 import { PrivateOutlineDefaultPluginIcon } from '@/routes/privateIcon'
-import { EnhancedCustomRouteMenuProps, filterCodeMenus, menusConvertJsonData } from './utils'
+import { type EnhancedCustomRouteMenuProps, filterCodeMenus, menusConvertJsonData } from './utils'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useTheme } from '@/hook/useTheme'
@@ -87,10 +94,10 @@ const reorder = (list: EnhancedCustomRouteMenuProps[], startIndex: number, endIn
 const convertMenuLabel = (menus: EnhancedCustomRouteMenuProps[]) => {
   const newMenus: string[] = []
   try {
-    for (let item of menus) {
+    for (const item of menus) {
       newMenus.push(item.label)
       if (item.children && item.children.length > 0) {
-        for (let subItem of item.children) newMenus.push(subItem.label)
+        for (const subItem of item.children) newMenus.push(subItem.label)
       }
     }
     return newMenus
@@ -140,7 +147,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
 
   /** 获取系统功能菜单列表所有一维(仅适配private版本)  */
   const SystemRouteMenuData = useCreation(() => {
-    let data: EnhancedCustomRouteMenuProps[] = privateExchangeProps(Object.values(PrivateAllMenus))
+    const data: EnhancedCustomRouteMenuProps[] = privateExchangeProps(Object.values(PrivateAllMenus))
     systemRouteMenuDataRef.current = data
     return data
   }, [PrivateAllMenus])
@@ -164,7 +171,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
       .then((res: { Data: DatabaseFirstMenuProps[] }) => {
         const database = databaseConvertData(res.Data || [])
         const caches: DatabaseMenuItemProps[] = []
-        for (let item of database) {
+        for (const item of database) {
           // 过滤代码中无效的一级菜单项
           if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
 
@@ -188,11 +195,11 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
                 deleteCache.current = JSON.parse(val) || {}
                 filters = deleteCache.current[menuMode] || []
               } catch (error) {}
-              for (let item of localMenus) {
+              for (const item of localMenus) {
                 if (filters.includes(item.label)) continue
                 const menu: EnhancedCustomRouteMenuProps = { ...item, children: [] }
                 if (item.children && item.children.length > 0) {
-                  for (let subitem of item.children) {
+                  for (const subitem of item.children) {
                     if (!filters.includes(`${item.label}-${subitem.label}`)) {
                       menu.children?.push({ ...subitem })
                     }
@@ -413,7 +420,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
   })
   /** 保存到数据库和更新前端渲染的菜单数据 */
   const onSaveLocal = useMemoizedFn(() => {
-    let firstStageMenu = menuData.map((ele) => ele.label).sort()
+    const firstStageMenu = menuData.map((ele) => ele.label).sort()
     if (firstStageMenu.filter((ele) => !ele).length > 0) {
       yakitNotify('error', t('CustomizeMenu.primaryMenuNameCannotBeEmpty'))
       return
@@ -1184,7 +1191,7 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
     ipcRenderer
       .invoke('QueryYakScript', newParams)
       .then(async (item: QueryYakScriptsResponse) => {
-        let data = page === 1 ? item.Data : response.Data.concat(item.Data)
+        const data = page === 1 ? item.Data : response.Data.concat(item.Data)
         const isMore = item.Data.length < item.Pagination.Limit || data.length === response.Total
         setHasMore(!isMore)
         setResponse({

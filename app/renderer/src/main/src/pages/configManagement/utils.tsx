@@ -1,4 +1,4 @@
-import { HotPatchTempItem } from '../fuzzer/HTTPFuzzerHotPatch'
+import type { HotPatchTempItem } from '../fuzzer/HTTPFuzzerHotPatch'
 
 interface HotPatchTemplateTeam {
   tags: string

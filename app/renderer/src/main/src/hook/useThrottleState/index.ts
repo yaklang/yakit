@@ -1,6 +1,6 @@
-import { Dispatch, SetStateAction, useRef, useState } from 'react'
+import { type Dispatch, type SetStateAction, useRef, useState } from 'react'
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
-import { ThrottleOptions } from './throtleOptions'
+import type { ThrottleOptions } from './throtleOptions'
 import { isFunction } from './utils'
 
 type GetStateAction<S> = () => S

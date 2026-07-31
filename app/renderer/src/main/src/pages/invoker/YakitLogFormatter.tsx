@@ -1,11 +1,8 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
-import { Card, Col, Divider, Row, Space, Timeline } from 'antd'
+import React, { useEffect, useRef, useState } from 'react'
+import { Card, Col, Divider, Row, Space } from 'antd'
 import { formatTime, formatTimestamp } from '../../utils/timeUtil'
-import { showModal } from '../../utils/showModal'
-import { GraphData } from '../graph/base'
-import { ExecResultLog } from './batch/ExecMessageViewer'
-import { LogLevelToCode } from '../../components/HTTPFlowTable/HTTPFlowTable'
-import { HTTPFlowRiskViewer, YakitHTTPFlowRisk } from '../../components/HTTPFlowRiskViewer'
+import type { GraphData } from '../graph/base'
+import { HTTPFlowRiskViewer, type YakitHTTPFlowRisk } from '../../components/HTTPFlowRiskViewer'
 import { AutoCard } from '../../components/AutoCard'
 import { openABSFileLocated } from '../../utils/openWebsite'
 import styles from './YakitLogFormatter.module.scss'
@@ -26,9 +23,9 @@ import { YakEditor } from '@/utils/editors'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { SolidCalendarIcon } from '@/assets/icon/solid'
 import { setClipboardText } from '@/utils/clipboard'
-import { PluginExecuteLogFile } from '../plugins/operator/pluginExecuteResult/PluginExecuteResultType.d'
+import type { PluginExecuteLogFile } from '../plugins/operator/pluginExecuteResult/PluginExecuteResultType.d'
 import { onOpenLocalFileByPath } from '../notepadManage/notepadManage/utils'
-import { getFileActionStatus, isPluginExecuteLogFileItem, modeToPermissions } from './utils'
+import { getFileActionStatus, isPluginExecuteLogFileItem } from './utils'
 import { getLocalFileName } from '@/components/MilkdownEditor/CustomFile/utils'
 import { SafeMarkdown } from '../assetViewer/reportRenders/markdownRender'
 import { JSONParseLog } from '@/utils/tool'
@@ -79,7 +76,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
         return <EditorLogShow {...props} />
       case 'json-table':
         try {
-          let obj: { head: string[]; data: string[][] } = JSONParseLog(data, {
+          const obj: { head: string[]; data: string[][] } = JSONParseLog(data, {
             page: 'YakitLogFormatter',
             fun: 'json-table',
           })

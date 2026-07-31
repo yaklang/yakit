@@ -1,5 +1,5 @@
 import type { AIMessageHandler } from '../type'
-import { AIInputEventSyncTypeEnum, AITaskStatus, AITaskStatusType, type AIAgentGrpcApi } from '../grpcApi'
+import { AIInputEventSyncTypeEnum, AITaskStatus, type AITaskStatusType, type AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, genExecTasks, handleTaskPlanEnd, trySettleTaskPlanEnd } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'

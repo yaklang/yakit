@@ -8,8 +8,8 @@ import { randomString } from '@/utils/randomUtil'
 import { PropertyIcon } from '@/pages/payloadManager/icon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { CloudDownloadIcon } from '@/assets/newIcon'
-import { useState, useEffect, FC, Dispatch, SetStateAction } from 'react'
-import { KnowledgeBaseContentProps } from '@/pages/KnowledgeBase/TKnowledgeBase'
+import { useState, useEffect, type FC, type Dispatch, type SetStateAction } from 'react'
+import type { KnowledgeBaseContentProps } from '@/pages/KnowledgeBase/TKnowledgeBase'
 import { mergeKnowledgeBaseList } from '@/pages/KnowledgeBase/utils'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
 import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
@@ -26,12 +26,12 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
 
   const beforeUploadFun = useDebounceFn(
     async (fileList: Array<File & { path: string }>) => {
-      let arr: {
+      const arr: {
         path: string
         name: string
       }[] = []
       fileList.forEach((f) => {
-        let name = f.name.split('.')[0]
+        const name = f.name.split('.')[0]
         arr.push({
           path: f.path,
           name,

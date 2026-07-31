@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { AITaskQueryItemProps, AITaskQueryProps } from './type'
+import type { AITaskQueryItemProps, AITaskQueryProps } from './type'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineArrowupIcon,
@@ -11,7 +11,7 @@ import {
 } from '@/assets/icon/outline'
 import styles from './AITaskQuery.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { type AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { Tooltip } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'

@@ -1,5 +1,5 @@
-import React from 'react'
-import { YakitCardProps } from './YakitCardType'
+import type React from 'react'
+import type { YakitCardProps } from './YakitCardType'
 
 import styles from './YakitCard.module.scss'
 import classNames from 'classnames'

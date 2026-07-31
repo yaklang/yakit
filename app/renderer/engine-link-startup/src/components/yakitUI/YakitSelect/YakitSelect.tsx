@@ -1,6 +1,6 @@
 import { Select } from 'antd'
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import type {
   YakitBaseSelectRef,
   YakitDefaultOptionType,
   YakitSelectCacheDataHistoryProps,
@@ -8,7 +8,7 @@ import {
 } from './YakitSelectType'
 import styles from './YakitSelect.module.scss'
 import classNames from 'classnames'
-import { BaseOptionType } from 'antd/lib/select'
+import { type BaseOptionType } from 'antd/lib/select'
 import { YakitTag } from '../YakitTag/YakitTag'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { setRemoteValue } from '@/utils/kv'
@@ -16,10 +16,10 @@ import { yakitNotify } from '@/utils/notification'
 import { OutlineCheckIcon, OutlineXIcon } from '@/assets/outline'
 import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
 import {
-  CacheDataHistoryProps,
+  type CacheDataHistoryProps,
   onGetRemoteValuesBase,
   onSetRemoteValuesBase,
-  YakitOptionTypeProps,
+  type YakitOptionTypeProps,
 } from '@/components/utils'
 
 import YakitEmptyPng from '@/components/yakitUI/YakitEmpty/YakitEmptyPng.png'
@@ -143,7 +143,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     if (!cacheHistoryDataKey) return
     onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
       const value = cacheData.defaultValue ? cacheData.defaultValue.split(',') : []
-      let newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options, !!cacheData.firstUse)
+      const newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options, !!cacheData.firstUse)
       //非form表单时,设置value
       if (isCacheDefaultValue) {
         if (props.onChange) props.onChange(value, newOption)

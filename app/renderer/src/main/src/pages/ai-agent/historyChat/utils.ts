@@ -1,9 +1,9 @@
 import {
-  AIClearImageParams,
+  type AIClearImageParams,
   handleClearAIImage,
 } from '../components/aiMilkdownInput/aiCustomFile/hooks/useDeleteAIImageByNode'
 import { grpcDeleteAISession } from '../grpc'
-import { DeleteAISessionRequest } from '../type/aiChat'
+import type { DeleteAISessionRequest } from '../type/aiChat'
 import { globalSessionEngine, type DeleteSessionsParams } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 export { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from './deleteSource'
 

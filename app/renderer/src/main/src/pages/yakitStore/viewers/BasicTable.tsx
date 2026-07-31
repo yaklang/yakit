@@ -1,4 +1,5 @@
-import React, { useState, useEffect, ReactNode } from 'react'
+import type React from 'react'
+import { type ReactNode } from 'react'
 import { BaseTable, features, useTablePipeline } from '../../../alibaba/ali-react-table-dist'
 import * as antd from 'antd'
 

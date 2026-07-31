@@ -7,8 +7,8 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './AIStartModelForm.module.scss'
 import { yakitNotify } from '@/utils/notification'
 import { grpcStartLocalModel } from '../utils'
-import { StartLocalModelRequest } from '../../type/aiModel'
-import { AIStartModelFormProps } from './AIStartModelFormType'
+import type { StartLocalModelRequest } from '../../type/aiModel'
+import type { AIStartModelFormProps } from './AIStartModelFormType'
 
 const { ipcRenderer } = window.require('electron')
 

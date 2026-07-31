@@ -1,15 +1,24 @@
-import React, { ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, {
+  type ForwardedRef,
+  forwardRef,
+  memo,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { OutlineOpenIcon } from '@/assets/icon/outline'
 import { SolidPlayIcon } from '@/assets/icon/solid'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { pluginTypeToName } from '@/pages/plugins/builtInData'
 import { Divider, Form, Tooltip } from 'antd'
-import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import {
   ParamsToGroupByGroupName,
   getValueByType,
@@ -22,17 +31,17 @@ import {
   PluginExecuteProgress,
   PluginFixFormParams,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
-import { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import {
   ExtraParamsNodeByType,
   FixExtraParamsNode,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { randomString } from '@/utils/randomUtil'
-import { failed, warn, yakitNotify } from '@/utils/notification'
-import { DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin } from '@/pages/plugins/utils'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import { failed, yakitNotify } from '@/utils/notification'
+import { type DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin } from '@/pages/plugins/utils'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import emiter from '@/utils/eventBus/eventBus'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
@@ -44,7 +53,7 @@ import { CodeScoreModal } from '@/pages/plugins/funcTemplate'
 import classNames from 'classnames'
 import '../../plugins/plugins.scss'
 import styles from './EditorCode.module.scss'
-import { getJsonSchemaListResult, JsonFormValidateProps } from '@/components/JsonFormWrapper/JsonFormWrapper'
+import { getJsonSchemaListResult } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import { delInvalidPluginExecuteParams } from '../utils/convert'
 
 export interface EditorCodeRefProps {
@@ -155,7 +164,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
     // 设置非(yak|lua)类型的插件参数初始值
     const onSettingDefault = useMemoizedFn(() => {
-      let defaultValue: CustomPluginExecuteFormValue = { ...defPluginExecuteFormValue, requestType: 'input' }
+      const defaultValue: CustomPluginExecuteFormValue = { ...defPluginExecuteFormValue, requestType: 'input' }
       form.setFieldsValue({ ...cloneDeep(defaultValue) })
     })
 
@@ -184,7 +193,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
       let newFormValue: CustomPluginExecuteFormValue = {}
       params.forEach((ele) => {
-        let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
+        const initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
         const value = getValueByType(initValue, ele.TypeVerbose)
         newFormValue = {
           ...newFormValue,
@@ -206,7 +215,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
               jsonSchemaListRef={jsonSchemaListRef}
             />
           )
-        case 'codec':
+        case 'codec': {
           const codecItem: YakParamProps = {
             Field: 'Input',
             FieldVerbose: 'Input',
@@ -233,6 +242,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
               />
             </>
           )
+        }
         case 'mitm':
           return (
             <>

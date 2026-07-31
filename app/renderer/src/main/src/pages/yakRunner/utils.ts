@@ -1,18 +1,17 @@
-import { failed, warn, yakitNotify } from '@/utils/notification'
+import { failed, warn } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
-import { CodeScoreSmokingEvaluateResponseProps } from '../plugins/funcTemplateType'
-import { RequestYakURLResponse } from '../yakURLTree/data'
-import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from './FileTree/FileTreeType'
+import type { RequestYakURLResponse } from '../yakURLTree/data'
+import type { FileNodeMapProps, FileNodeProps, FileTreeListProps } from './FileTree/FileTreeType'
 import { FileDefault, FileSuffix, FolderDefault } from './FileTree/icon'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import {
   ConvertYakStaticAnalyzeErrorToMarker,
-  IMonacoEditorMarker,
-  YakStaticAnalyzeErrorResult,
+  type IMonacoEditorMarker,
+  type YakStaticAnalyzeErrorResult,
 } from '@/utils/editorMarkers'
-import { AreaInfoProps, TabFileProps, YakRunnerHistoryProps } from './YakRunnerType'
+import type { AreaInfoProps, TabFileProps, YakRunnerHistoryProps } from './YakRunnerType'
 import cloneDeep from 'lodash/cloneDeep'
-import { FileDetailInfo, OptionalFileDetailInfo } from './RunnerTabs/RunnerTabsType'
+import type { FileDetailInfo, OptionalFileDetailInfo } from './RunnerTabs/RunnerTabsType'
 import { v4 as uuidv4 } from 'uuid'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
@@ -477,7 +476,7 @@ export const getCodeByPath = (path: string, loadTreeType?: 'file' | 'audit'): Pr
       ipcRenderer.on(`${token}-error`, async (e, error) => {
         // 此处在 ssadb 模式时不做node兼容处理
         try {
-          let newContent = await getCodeByNode(path)
+          const newContent = await getCodeByNode(path)
           resolve(newContent)
         } catch (error) {
           failed(tOriginal('YakRunner.readFileFailedWithError', { error }))
@@ -547,7 +546,7 @@ export const onSyntaxCheck = (code: string, type: string) => {
  */
 export const judgeAreaExistFileUnSave = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
   return new Promise(async (resolve, reject) => {
-    let unSaveArr: string[] = []
+    const unSaveArr: string[] = []
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
     newAreaInfo.forEach((item, index) => {
       item.elements.forEach((itemIn, indexIn) => {
@@ -587,7 +586,7 @@ export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string):
 export const judgeAreaExistFilesPath = (areaInfo: AreaInfoProps[], pathArr: string[]): Promise<FileDetailInfo[]> => {
   return new Promise(async (resolve, reject) => {
     const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-    let hasArr: FileDetailInfo[] = []
+    const hasArr: FileDetailInfo[] = []
     newAreaInfo.forEach((item, index) => {
       item.elements.forEach((itemIn, indexIn) => {
         itemIn.files.forEach((file, fileIndex) => {
@@ -676,7 +675,7 @@ export const updateAreaFilesPathInfo = (
 export const removeYakRunnerAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
   const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
   let newActiveFile: FileDetailInfo | undefined = undefined
-  let activeFileArr: FileDetailInfo[] = []
+  const activeFileArr: FileDetailInfo[] = []
   newAreaInfo.forEach((item, idx) => {
     item.elements.forEach((itemIn, idxin) => {
       itemIn.files.forEach((file, fileIndex) => {
@@ -708,7 +707,7 @@ export const removeYakRunnerAreaFileInfo = (areaInfo: AreaInfoProps[], info: Fil
     })
   })
   if (!newActiveFile && activeFileArr.length > 1) {
-    let delIndex = activeFileArr.findIndex((item) => item.path === info.path)
+    const delIndex = activeFileArr.findIndex((item) => item.path === info.path)
     if (delIndex > -1) {
       newActiveFile = activeFileArr[delIndex - 1 < 0 ? 0 : delIndex - 1]
     }
@@ -732,13 +731,13 @@ export const removeAreaFilesInfo = (areaInfo: AreaInfoProps[], removePath: strin
       })
     })
     // 移除elements层
-    let indexArr: number[] = [] // 还有数据的项目
+    const indexArr: number[] = [] // 还有数据的项目
     newAreaInfo.forEach((item, idx) => {
       if (item.elements.length !== 0) {
         indexArr.push(idx)
       }
     })
-    let resultAreaInfo: AreaInfoProps[] = []
+    const resultAreaInfo: AreaInfoProps[] = []
     indexArr.forEach((index) => {
       resultAreaInfo.push(newAreaInfo[index])
     })
@@ -809,7 +808,7 @@ export const isResetActiveFile = (
  */
 export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo, activeFile?: FileDetailInfo) => {
   let newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-  let newActiveFile: FileDetailInfo = info
+  const newActiveFile: FileDetailInfo = info
   try {
     // 如若存在激活项则向激活项后添加新增项并重新指定激活项目
     if (newAreaInfo.length > 0 && activeFile) {
@@ -1119,7 +1118,7 @@ export const loadFolderDetail = (path) => {
     grpcFetchFileTree(path)
       .then((res) => {
         if (res.length > 0) {
-          let childArr: string[] = []
+          const childArr: string[] = []
           // 文件Map
           res.forEach((item) => {
             // 注入文件结构Map

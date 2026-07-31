@@ -1,16 +1,16 @@
 import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import styles from './UserTable.module.scss'
-import { IPTableProps, UserTableProps } from './UserTableType'
+import type { IPTableProps, UserTableProps } from './UserTableType'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import moment from 'moment'
 import { OutlineSearchIcon } from '@/assets/icon/outline'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import useHttpVirtualTableHook from '@/hook/useHttpVirtualTableHook/useHttpVirtualTableHook'
 import ReactResizeDetector from 'react-resize-detector'
-import { RangeTimeProps } from '../DataStatistics'
+import type { RangeTimeProps } from '../DataStatistics'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const UserTable: React.FC<UserTableProps> = React.memo(
@@ -87,7 +87,7 @@ export const UserTable: React.FC<UserTableProps> = React.memo(
     )
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-      let sort = { ...newSort }
+      const sort = { ...newSort }
       const finalParams = {
         ...tableParams,
         order: sort.order,
@@ -235,7 +235,7 @@ export const IPTable: React.FC<IPTableProps> = React.memo(
     )
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-      let sort = { ...newSort }
+      const sort = { ...newSort }
       const finalParams = {
         ...tableParams,
         order: sort.order,

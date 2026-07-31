@@ -1,6 +1,5 @@
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
-import { isCommunityEdition } from '@/utils/envfile'
+import type { API } from '@/services/swagger/resposeType'
 import { yakitHost } from '@/services/electronBridge'
 let MachineID: string = ''
 

@@ -1,4 +1,4 @@
-import React, { CSSProperties, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, { type CSSProperties, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Alert, Form, Space, Tooltip, Typography, Modal } from 'antd'
 import { failed, info, yakitNotify } from '../../utils/notification'
 import { CheckOutlined, CloseOutlined, CloudUploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
@@ -21,11 +21,11 @@ import { CacheDropDownGV, RemoteGV } from '@/yakitGV'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { MITMConsts } from './MITMConsts'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import classNames from 'classnames'
-import { OutlineChevronupIcon, OutlineSaveIcon } from '@/assets/icon/outline'
+import { OutlineChevronupIcon } from '@/assets/icon/outline'
 import { OutlineRefreshIcon } from '@/assets/icon/outline'
 import { v4 as uuidv4 } from 'uuid'
 import { chromeLauncherMinParams, chromeLauncherParamsArr } from '@/defaultConstants/mitm'
@@ -103,7 +103,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
     })
 
     getRemoteValue(RemoteMitmGV.MitmStartChromeCheck).then((e) => {
-      if (!!e) {
+      if (e) {
         setChormeCheck(e)
       } else {
         setChormeCheck('customSet')
@@ -137,7 +137,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   })
   const startChrome = useMemoizedFn(async (baseStart: boolean) => {
     const { proxyUsername: username = '', proxyPassword: password = '' } = await loadAdvancedConfig()
-    let newParams: {
+    const newParams: {
       host: string
       port: number
       chromePath?: string
@@ -246,7 +246,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                   properties: ['openDirectory'],
                 }).then((data) => {
                   if (data.filePaths.length) {
-                    let absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
+                    const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
                     setUserDataDir(absolutePath)
                   }
                 })

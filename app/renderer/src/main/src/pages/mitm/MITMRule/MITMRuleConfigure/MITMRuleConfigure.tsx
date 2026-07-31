@@ -3,8 +3,9 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { failed, info } from '@/utils/notification'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { Spin } from 'antd'
-import React, { useEffect, useState } from 'react'
-import { MITMRuleExportProps, MITMRuleImportProps } from './MITMRuleConfigureType'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import type { MITMRuleExportProps, MITMRuleImportProps } from './MITMRuleConfigureType'
 import styles from './MITMRuleConfigure.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useMemoizedFn } from 'ahooks'
@@ -46,7 +47,7 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
     >
       <Spin spinning={loading}>
         <div style={{ height: 466 }}>
-          <YakitEditor type={'json'} value={new Buffer(value).toString('utf8')} readOnly={true} />
+          <YakitEditor type={'json'} value={Buffer.from(value).toString('utf8')} readOnly={true} />
         </div>
       </Spin>
     </YakitModal>
@@ -65,12 +66,12 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
   }, [isUseDefRules])
   const [loading, setLoading] = useState(false)
   const onImport = useMemoizedFn(() => {
-    if (!new Buffer(params.JsonRaw).toString('utf8')) {
+    if (!Buffer.from(params.JsonRaw).toString('utf8')) {
       failed(t('MITMRuleImport.please_enter_data'))
       return
     }
     try {
-      let rules = JSONParseLog(new Buffer(params.JsonRaw).toString('utf8'), {
+      const rules = JSONParseLog(Buffer.from(params.JsonRaw).toString('utf8'), {
         page: 'MITMRuleConfigure',
         fun: 'onImport',
       }).map((item, index) => ({
@@ -129,7 +130,7 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
         <div style={{ height: 466 }}>
           <YakitEditor
             type={'json'}
-            value={new Buffer(params.JsonRaw).toString('utf8')}
+            value={Buffer.from(params.JsonRaw).toString('utf8')}
             setValue={(e) => {
               setParams({ ...params, JsonRaw: Buffer.from(e) })
             }}

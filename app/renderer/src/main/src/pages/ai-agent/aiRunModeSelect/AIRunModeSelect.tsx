@@ -1,4 +1,5 @@
-import React, { memo, useState, type FC } from 'react'
+import type React from 'react'
+import { memo, useState, type FC } from 'react'
 import { Tooltip } from 'antd'
 import { Dropdown } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -16,7 +17,11 @@ import styles from './AIRunModeSelect.module.scss'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import { AIExecutionStrategy, AIInputEvent, AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import {
+  type AIExecutionStrategy,
+  type AIInputEvent,
+  AIInputEventHotPatchTypeEnum,
+} from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
 import { OutlineViewGridIcon } from '@/components/yakChat/icon'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'

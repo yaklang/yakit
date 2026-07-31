@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react'
+import type React from 'react'
+import { useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { OutlinCompileTwoIcon, OutlineDocumenttextIcon, OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
-import { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
+import type { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
 import { RunnerFileTree } from '../RunnerFileTree/RunnerFileTree'
 import { YakHelpDoc } from '../YakHelpDoc/YakHelpDoc'
 

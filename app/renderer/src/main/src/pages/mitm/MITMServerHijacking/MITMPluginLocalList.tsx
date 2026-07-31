@@ -1,5 +1,5 @@
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
 import { failed, yakitNotify } from '@/utils/notification'
 import style from '../MITMPage.module.scss'
@@ -16,21 +16,21 @@ import {
   ImportIcon,
   SolidCloudDownloadIcon,
 } from '@/assets/newIcon'
-import { DownloadOnlinePluginAllResProps, TagValue, YakModuleList } from '@/pages/yakitStore/YakitStorePage'
+import { type DownloadOnlinePluginAllResProps, type TagValue, YakModuleList } from '@/pages/yakitStore/YakitStorePage'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
-import { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
-import { GroupCount, QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
-import { ImportLocalPlugin, MitmStatus } from '../MITMPage'
+import type { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
+import type { GroupCount, QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
+import { ImportLocalPlugin, type MitmStatus } from '../MITMPage'
 import { MITMYakScriptLoader } from '../MITMYakScriptLoader'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { randomString } from '@/utils/randomUtil'
 import { getReleaseEditionName, isCommunityEdition, isEnpriTraceAgent } from '@/utils/envfile'
 import {
-  DownloadOnlinePluginsRequest,
-  PluginGroupDel,
-  PluginGroupRename,
+  type DownloadOnlinePluginsRequest,
+  type PluginGroupDel,
+  type PluginGroupRename,
   apiFetchDeleteYakScriptGroupLocal,
   apiFetchDeleteYakScriptGroupOnline,
   apiFetchGetYakScriptGroupLocal,
@@ -44,18 +44,18 @@ import {
   apiQueryYakScript,
 } from '@/pages/plugins/utils'
 import emiter from '@/utils/eventBus/eventBus'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { UpdateGroupList, UpdateGroupListItem } from '@/pages/pluginHub/group/UpdateGroupList'
+import { UpdateGroupList, type UpdateGroupListItem } from '@/pages/pluginHub/group/UpdateGroupList'
 import { DelGroupConfirmPop } from '@/pages/pluginHub/group/PluginOperationGroupList'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
+import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -715,7 +715,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
             groupName: name,
             checked: true,
           }))
-          let copyAllGroup = [...res.AllGroup]
+          const copyAllGroup = [...res.AllGroup]
           const newAllGroup = copyAllGroup.map((name) => ({
             groupName: name,
             checked: false,
@@ -759,8 +759,8 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     // 旧
     const originCheckedGroup = groupList.filter((item) => item.checked).map((item) => item.groupName)
 
-    let saveGroup: string[] = []
-    let removeGroup: string[] = []
+    const saveGroup: string[] = []
+    const removeGroup: string[] = []
     checkedGroup.forEach((groupName: string) => {
       saveGroup.push(groupName)
     })

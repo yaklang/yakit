@@ -1,5 +1,5 @@
-import React from 'react'
-import { Tabs, TabsProps } from 'antd'
+import type React from 'react'
+import { Tabs, type TabsProps } from 'antd'
 
 import classNames from 'classnames'
 import styles from './PluginTabs.module.scss'

@@ -1,8 +1,8 @@
-import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
-import { KVPair } from '@/models/kv'
-import { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
+import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import type { KVPair } from '@/models/kv'
+import type { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
-import {
+import type {
   DeletePluginEnvRequest,
   PluginEnvData,
   QueryPluginEnvRequest,

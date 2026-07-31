@@ -1,6 +1,6 @@
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
-import {
+import type {
   AITool,
   DeleteAIToolRequest,
   GetAIToolListRequest,

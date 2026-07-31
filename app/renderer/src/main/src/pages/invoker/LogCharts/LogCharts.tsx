@@ -1,9 +1,9 @@
-import { GraphData } from '@/pages/graph/base'
+import type { GraphData } from '@/pages/graph/base'
 import classNames from 'classnames'
 import * as echarts from 'echarts'
 import React, { useRef, useEffect, useState } from 'react'
 import styles from './LogCharts.module.scss'
-import { EChartsOption } from '@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType'
+import type { EChartsOption } from '@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType'
 import { getBarOption, getLineOption, getPieOption } from './chartsOption'
 import { useMemoizedFn } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
@@ -57,7 +57,7 @@ const LogCharts: React.FC<LogChartsProps> = React.memo((props) => {
       case 'bar':
       case 'line':
         if (Array.isArray(option.series)) {
-          //@ts-ignore
+          //@ts-expect-error 类型定义不完整，需要忽略此行
           newLegendList = (option.series || []).map((ele) => ({ key: ele.name as string }))
         }
         break

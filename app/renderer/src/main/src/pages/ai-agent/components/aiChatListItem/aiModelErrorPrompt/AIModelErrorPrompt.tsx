@@ -1,5 +1,5 @@
 import React from 'react'
-import { AIModelErrorPromptProps } from './type'
+import type { AIModelErrorPromptProps } from './type'
 import ChatCard from '../../ChatCard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ModalInfo from '../../ModelInfo'

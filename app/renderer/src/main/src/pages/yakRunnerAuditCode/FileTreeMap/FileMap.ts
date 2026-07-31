@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { FileNodeMapProps } from '../FileTree/FileTreeType'
+import type { FileNodeMapProps } from '../FileTree/FileTreeType'
 export const filesMap: Map<string, FileNodeMapProps> = new Map()
 
 export const getMapFail: FileNodeMapProps = {

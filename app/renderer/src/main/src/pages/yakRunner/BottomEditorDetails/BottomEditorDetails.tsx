@@ -1,42 +1,41 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Popover, Tooltip } from 'antd'
-import { SettingOutlined } from '@ant-design/icons'
-import { useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './BottomEditorDetails.module.scss'
-import { failed, success, warn, info } from '@/utils/notification'
+import { failed } from '@/utils/notification'
 import classNames from 'classnames'
-import { BottomEditorDetailsProps, JumpToEditorProps, OutputInfoProps, ShowItemType } from './BottomEditorDetailsType'
+import type {
+  BottomEditorDetailsProps,
+  JumpToEditorProps,
+  OutputInfoProps,
+  ShowItemType,
+} from './BottomEditorDetailsType'
 import { HelpInfoList } from '../CollapseList/CollapseList'
-import { OutlineCogIcon, OutlineExitIcon, OutlineTrashIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { OutlineCogIcon, OutlineExitIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SyntaxCheckList } from './SyntaxCheckList/SyntaxCheckList'
 import useStore from '../hooks/useStore'
 import emiter from '@/utils/eventBus/eventBus'
-import { Selection } from '../RunnerTabs/RunnerTabsType'
-import { ExecResult } from '@/pages/invoker/schema'
-import { writeExecResultXTerm, writeXTerm, xtermClear, xtermFit } from '@/utils/xtermUtils'
-import ReactResizeDetector from 'react-resize-detector'
+import type { Selection } from '../RunnerTabs/RunnerTabsType'
+import type { ExecResult } from '@/pages/invoker/schema'
+import { writeExecResultXTerm, writeXTerm, xtermClear } from '@/utils/xtermUtils'
 import {
   defaultTerminaFont,
   defaultTerminalFont,
-  DefaultTerminaSettingProps,
+  type DefaultTerminaSettingProps,
   TerminalBox,
   TerminalListBox,
   useTerminalHook,
 } from './TerminalBox/TerminalBox'
-import { System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
+import { type System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { v4 as uuidv4 } from 'uuid'
-import { ChevronDownIcon, ChevronUpIcon, InformationCircleIcon, OutlinePlusIcon } from '@/assets/newIcon'
+import { OutlinePlusIcon } from '@/assets/newIcon'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import YakitXterm from '@/components/yakitUI/YakitXterm/YakitXterm'
 import { RemoteGV } from '@/yakitGV'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { Uint8ArrayToString } from '@/utils/str'
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -166,6 +165,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // xtermClear(xtermRef)
     ipcRenderer.on('client-yak-data', async (e: any, data: ExecResult) => {
       if (data.IsMessage) {
+        // ignore
       }
       if (data?.Raw) {
         outputCahceRef.current += Buffer.from(data.Raw).toString('utf8')

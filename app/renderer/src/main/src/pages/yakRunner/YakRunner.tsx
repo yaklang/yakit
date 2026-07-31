@@ -1,8 +1,9 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import { LeftSideBar } from './LeftSideBar/LeftSideBar'
 import { BottomSideBar } from './BottomSideBar/BottomSideBar'
-import { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
+import type { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
 import {
   addAreaFileInfo,
   excludeAreaInfoCode,
@@ -28,20 +29,20 @@ import {
   saveYakRunnerUnsavedFile,
   updateAreaFileInfo,
 } from './utils'
-import { AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps, YakRunnerProps } from './YakRunnerType'
+import type { AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps, YakRunnerProps } from './YakRunnerType'
 import { failed, success, yakitNotify } from '@/utils/notification'
-import YakRunnerContext, { YakRunnerContextDispatcher, YakRunnerContextStore } from './hooks/YakRunnerContext'
+import YakRunnerContext, { type YakRunnerContextDispatcher, type YakRunnerContextStore } from './hooks/YakRunnerContext'
 import { FileDefault, FileSuffix, FolderDefault } from './FileTree/icon'
 import { RunnerTabs, YakRunnerWelcomePage } from './RunnerTabs/RunnerTabs'
 
-import { DragDropContext, ResponderProvided, DropResult } from '@hello-pangea/dnd'
+import { DragDropContext, type ResponderProvided, type DropResult } from '@hello-pangea/dnd'
 
 import classNames from 'classnames'
 import styles from './YakRunner.module.scss'
 import { SplitView } from './SplitView/SplitView'
 import { BottomEditorDetails } from './BottomEditorDetails/BottomEditorDetails'
-import { ShowItemType } from './BottomEditorDetails/BottomEditorDetailsType'
-import { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
+import type { ShowItemType } from './BottomEditorDetails/BottomEditorDetailsType'
+import type { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
 import cloneDeep from 'lodash/cloneDeep'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
@@ -57,7 +58,7 @@ import { sendDuplexConn } from '@/utils/duplex/duplex'
 import { StringToUint8Array } from '@/utils/str'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { LeftSideType } from './LeftSideBar/LeftSideBarType'
+import type { LeftSideType } from './LeftSideBar/LeftSideBarType'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ShortcutKeyPage } from '@/utils/globalShortcutKey/events/pageMaps'
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from '@/utils/globalShortcutKey/utils'
@@ -65,11 +66,15 @@ import { getStorageYakRunnerShortcutKeyEvents } from '@/utils/globalShortcutKey/
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { WatchFolderID } from './FileTreeMap/watchFolderID'
 import { randomString } from '@/utils/randomUtil'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
 import { YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/focusMode'
-import { YakRunnerAiAttachProvider, YakRunnerAiAttachRef, useYakRunnerAiAttachRef } from './YakRunnerAiAttachContext'
+import {
+  YakRunnerAiAttachProvider,
+  type YakRunnerAiAttachRef,
+  useYakRunnerAiAttachRef,
+} from './YakRunnerAiAttachContext'
 import { YakRunnerAiSidePanel } from './YakRunnerAiSidePanel'
 import { YakRunnerCasualCodeReplaceReviewOverlay } from './YakRunnerCasualCodeReplaceReviewOverlay'
 import { createYakRunnerScratchFileForAI, openOrCreateYakRunnerFileAtPath } from './yakRunnerAiOpenOrCreateFile'
@@ -173,7 +178,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
                         child:[path11,path12,...]
                     }]
                 */
-        let childArr: string[] = []
+        const childArr: string[] = []
         // 文件Map
         value.forEach((item) => {
           // 注入文件结构Map
@@ -216,7 +221,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   useEffect(() => {
     loadIndexRef.current = 0
     clearMap()
-    let id = setInterval(() => {
+    const id = setInterval(() => {
       loadFileMap()
     }, 100)
     return () => clearInterval(id)
@@ -286,7 +291,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
           setMapFileDetail(rootPath, node)
           const children: FileTreeListProps[] = []
 
-          let childArr: string[] = []
+          const childArr: string[] = []
           list.forEach((item) => {
             // 注入文件结构Map
             childArr.push(item.path)
@@ -499,7 +504,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
       } else {
         handleFetchFileList(path, (value) => {
           if (value.length > 0) {
-            let childArr: string[] = []
+            const childArr: string[] = []
             value.forEach((item) => {
               // 注入文件结构Map
               childArr.push(item.path)
@@ -602,7 +607,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   useDebounceEffect(
     () => {
       // 由于更改分布信息时activeFile也会改变 因此两者埋点合并
-      let newAreaInfo = excludeAreaInfoCode(areaInfo)
+      const newAreaInfo = excludeAreaInfoCode(areaInfo)
       let newActiveFile: FileDetailInfo | undefined = undefined
       if (activeFile) {
         newActiveFile = cloneDeep(activeFile)
@@ -1053,7 +1058,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const onDragStart = useMemoizedFn(() => {
     // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
     if (document.activeElement !== null) {
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       document.activeElement.blur()
     }
   })
@@ -1101,7 +1106,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
               const [ele] = newAreaInfo[index].elements[indexIn].files.splice(source.index, 1)
               element = ele
 
-              let filesLength = newAreaInfo[index].elements[indexIn].files.length
+              const filesLength = newAreaInfo[index].elements[indexIn].files.length
               // 校验是否仅有一项 移除后是否为空 为空则删除此大项
               if (filesLength === 0) {
                 if (item.elements.length > 1) {

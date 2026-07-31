@@ -1,5 +1,5 @@
-import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
-import { AIReActChatProps } from '../AIReActChatType'
+import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
+import type { AIReActChatProps } from '../AIReActChatType'
 
 export interface AIReactChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>

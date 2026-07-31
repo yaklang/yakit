@@ -15,20 +15,20 @@ import {
 import { yakitNotify } from '@/utils/notification'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { cloneDeep, isEqual } from 'lodash'
 import { TraceSvgSvgIcon } from '@/assets/icons'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteMitmGV } from '@/enums/mitm'
 import classNames from 'classnames'
-import { PluginExecutionTrace, PluginTraceProps, QueryPluginTrace } from './type'
+import type { PluginExecutionTrace, PluginTraceProps, QueryPluginTrace } from './type'
 import styles from './PluginTrace.module.scss'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const TraceStatusMapTag = (t: TFunction) => {
   return [
@@ -173,7 +173,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
       })
     }, [])
     const ResizeBoxProps = useCreation(() => {
-      let p = cloneDeep(lastRatioRef.current)
+      const p = cloneDeep(lastRatioRef.current)
       if (!secondNodeVisible) {
         p.firstRatio = '100%'
         p.secondRatio = '0%'
@@ -586,7 +586,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                           <Divider type="vertical" style={{ height: 16, margin: '0 8px' }} />
                           <span className={styles['content-heard-body-time']}>
                             开始时间:
-                            {!!selectCurTrace?.StartTime ? formatTimestamp(selectCurTrace?.StartTime) : '-'}
+                            {selectCurTrace?.StartTime ? formatTimestamp(selectCurTrace?.StartTime) : '-'}
                           </span>
                           <Divider type="vertical" style={{ height: 16, margin: '0 8px' }} />
                           {traceStatusTag(selectCurTrace?.Status)}

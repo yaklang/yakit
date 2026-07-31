@@ -1,13 +1,13 @@
-import React, { ReactNode } from 'react'
-import { Col, Form, FormItemProps, Input, InputProps, Row, Upload, Select } from 'antd'
+import type React from 'react'
+import { type ReactNode } from 'react'
+import { Col, Form, type FormItemProps, Input, type InputProps, Row, Upload, Select } from 'antd'
 import '@ant-design/compatible/assets/index.css'
-import { DraggerProps } from 'antd/lib/upload'
-import { TextAreaProps } from 'antd/lib/input'
+import type { DraggerProps } from 'antd/lib/upload'
+import type { TextAreaProps } from 'antd/lib/input'
 
 import './FormItemUtil.css'
-import { ManyMultiSelectForString } from '../../utils/inputUtil'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
-import { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 
 const { Item } = Form
@@ -59,10 +59,8 @@ export interface ItemDraggerTextAreaProps extends ItemGeneralParams {
 export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) => {
   const {
     isItem = true,
-    // @ts-ignore
     dragger: { className: DraggerClassName, ...restDragger } = {},
     item = {},
-    // @ts-ignore
     textarea: { isBubbing = false, setValue, ...restTextarea } = {},
     prefixNode,
     suffixNode,
@@ -82,19 +80,19 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
           onChange={(e) => {
             if (restTextarea.onChange) restTextarea.onChange(e)
             setValue && setValue(e.target.value)
-            if (!!isBubbing) e.stopPropagation()
+            if (isBubbing) e.stopPropagation()
           }}
           onPressEnter={(e) => {
             if (restTextarea.onPressEnter) restTextarea.onPressEnter(e)
-            if (!!isBubbing) e.stopPropagation()
+            if (isBubbing) e.stopPropagation()
           }}
           onFocus={(e) => {
             if (restTextarea.onFocus) restTextarea.onFocus(e)
-            if (!!isBubbing) e.stopPropagation()
+            if (isBubbing) e.stopPropagation()
           }}
           onClick={(e) => {
             if (restTextarea.onClick) restTextarea.onClick(e)
-            if (!!isBubbing) e.stopPropagation()
+            if (isBubbing) e.stopPropagation()
           }}
         ></YakitInput.TextArea>
       </Dragger>
@@ -119,19 +117,19 @@ export const ItemDraggerTextArea: React.FC<ItemDraggerTextAreaProps> = (props) =
               onChange={(e) => {
                 if (restTextarea.onChange) restTextarea.onChange(e)
                 setValue && setValue(e.target.value)
-                if (!!isBubbing) e.stopPropagation()
+                if (isBubbing) e.stopPropagation()
               }}
               onPressEnter={(e) => {
                 if (restTextarea.onPressEnter) restTextarea.onPressEnter(e)
-                if (!!isBubbing) e.stopPropagation()
+                if (isBubbing) e.stopPropagation()
               }}
               onFocus={(e) => {
                 if (restTextarea.onFocus) restTextarea.onFocus(e)
-                if (!!isBubbing) e.stopPropagation()
+                if (isBubbing) e.stopPropagation()
               }}
               onClick={(e) => {
                 if (restTextarea.onClick) restTextarea.onClick(e)
-                if (!!isBubbing) e.stopPropagation()
+                if (isBubbing) e.stopPropagation()
               }}
             ></YakitInput.TextArea>
           </Dragger>
@@ -153,10 +151,8 @@ export interface ItemDraggerInputProps extends ItemGeneralParams {
 export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
   const {
     isItem = true,
-    // @ts-ignore
     dragger: { className: DraggerClassName, ...restDragger } = {},
     item = {},
-    // @ts-ignore
     input: { isBubbing = false, setValue, ...restInput } = {},
     prefixNode,
     suffixNode,
@@ -174,19 +170,19 @@ export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
           onChange={(e) => {
             if (restInput.onChange) restInput.onChange(e)
             setValue && setValue(e.target.value)
-            if (!!isBubbing) e.stopPropagation()
+            if (isBubbing) e.stopPropagation()
           }}
           onPressEnter={(e) => {
             if (restInput.onPressEnter) restInput.onPressEnter(e)
-            if (!!isBubbing) e.stopPropagation()
+            if (isBubbing) e.stopPropagation()
           }}
           onFocus={(e) => {
             if (restInput.onFocus) restInput.onFocus(e)
-            if (!!isBubbing) e.stopPropagation()
+            if (isBubbing) e.stopPropagation()
           }}
           onClick={(e) => {
             if (restInput.onClick) restInput.onClick(e)
-            if (!!isBubbing) e.stopPropagation()
+            if (isBubbing) e.stopPropagation()
           }}
         ></YakitInput>
       </Dragger>
@@ -209,19 +205,19 @@ export const ItemDraggerInput: React.FC<ItemDraggerInputProps> = (props) => {
               onChange={(e) => {
                 if (restInput.onChange) restInput.onChange(e)
                 setValue && setValue(e.target.value)
-                if (!!isBubbing) e.stopPropagation()
+                if (isBubbing) e.stopPropagation()
               }}
               onPressEnter={(e) => {
                 if (restInput.onPressEnter) restInput.onPressEnter(e)
-                if (!!isBubbing) e.stopPropagation()
+                if (isBubbing) e.stopPropagation()
               }}
               onFocus={(e) => {
                 if (restInput.onFocus) restInput.onFocus(e)
-                if (!!isBubbing) e.stopPropagation()
+                if (isBubbing) e.stopPropagation()
               }}
               onClick={(e) => {
                 if (restInput.onClick) restInput.onClick(e)
-                if (!!isBubbing) e.stopPropagation()
+                if (isBubbing) e.stopPropagation()
               }}
             ></YakitInput>
           </Dragger>
@@ -242,7 +238,6 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
   const {
     isItem = true,
     item = {},
-    // @ts-ignore
     select: {
       setValue,
       data = [],
@@ -278,7 +273,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
               disabled={item[optDisabled]}
               record={item}
             >
-              {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
+              {renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
             </YakitSelect.Option>
           )
         })}
@@ -312,7 +307,7 @@ export const ItemSelects: React.FC<ItemSelectsProps<any>> = (props) => {
                   disabled={item[optDisabled]}
                   record={item}
                 >
-                  {!!renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
+                  {renderOpt ? renderOpt(item) : item[optText] ? item[optText] : value}
                 </YakitSelect.Option>
               )
             })}

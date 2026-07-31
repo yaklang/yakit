@@ -1,8 +1,8 @@
 import React, { memo, useEffect, useRef, useState } from 'react'
-import { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
+import type { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentTriggerEventInfo } from '../aiAgentType'
+import type { AIAgentTriggerEventInfo } from '../aiAgentType'
 import useAIAgentStore from '../useContext/useStore'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
@@ -18,8 +18,8 @@ import { grpcGetAIForge } from '../grpc'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { AIForge } from '../type/forge'
-import { AITool } from '../type/aiTool'
+import type { AIForge } from '../type/forge'
+import type { AITool } from '../type/aiTool'
 import { AIChatContent } from '../aiChatContent/AIChatContent'
 import { AITabsEnum, ReActChatEventEnum } from '../defaultConstant'
 import { grpcGetAIToolById } from '../aiToolList/utils'
@@ -31,12 +31,12 @@ import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './AIAgentChat.module.scss'
-import { AIChatContentRefProps } from '../aiChatContent/type'
-import { PageNodeItemProps } from '@/store/pageInfo'
+import type { AIChatContentRefProps } from '../aiChatContent/type'
+import type { PageNodeItemProps } from '@/store/pageInfo'
 import { Trans } from 'react-i18next'
-import { AIInputWithParamsTemplate, aiInputWithParamsTemplate } from '../components/aiMilkdownInput/utils'
+import { type AIInputWithParamsTemplate, aiInputWithParamsTemplate } from '../components/aiMilkdownInput/utils'
 import { useStore } from 'zustand'
-import { AIForgeFormSubmitParamsProps } from '../aiTriageChatTemplate/type'
+import type { AIForgeFormSubmitParamsProps } from '../aiTriageChatTemplate/type'
 import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { onReStart } from '../utils'
@@ -68,7 +68,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   })
 
   useEffect(() => {
-    if (!!activeChat?.SessionID) {
+    if (activeChat?.SessionID) {
       onSetReAct()
       onReStart({ activeChat, onStart })
     }
@@ -129,18 +129,19 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             // }, 100)
             break
           // 替换当前使用的 forge 模板
-          case ReActChatEventEnum.OPEN_FORGE_FORM:
+          case ReActChatEventEnum.OPEN_FORGE_FORM: {
             const { value: forgeValue } = data.params || {}
             handleClearActiveTool()
             handleTriggerExecForge(forgeValue, data.useForge)
             break
-          // 替换当前使用的 ai tool
-          case ReActChatEventEnum.USE_AI_TOOL:
+            // 替换当前使用的 ai tool
+          }
+          case ReActChatEventEnum.USE_AI_TOOL: {
             const { value: toolValue } = data.params || {}
             handleClearActiveForge()
             handleAITool(toolValue)
             break
-
+          }
           default:
             break
         }
@@ -228,7 +229,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         footerStyle: { padding: '0 24px 24px' },
         content: (modalT) => (
           <div className={styles['forge-modal-content']}>
-            {!!execute ? (
+            {execute ? (
               <>
                 <Trans
                   i18nKey="AIAgentChat.interruptConfirm"
@@ -273,7 +274,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const handleSubmitForge = useMemoizedFn((data: AIForgeFormSubmitParamsProps) => {
     const { request, formValue } = data
     setMode('re-act')
-    const description = `${t('AIAgentChat.useForgeTask', { name: request.ForgeName || '' })}${!!formValue ? t('AIAgentChat.params') : ''}`
+    const description = `${t('AIAgentChat.useForgeTask', { name: request.ForgeName || '' })}${formValue ? t('AIAgentChat.params') : ''}`
 
     const params: AIInputWithParamsTemplate = {
       description,
@@ -310,7 +311,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       }
       let forgeInfo = cloneDeep(forge)
       if (!useForge) {
-        let res = await grpcGetAIForge({ ID: forgeID })
+        const res = await grpcGetAIForge({ ID: forgeID })
         forgeInfo = cloneDeep(res)
       }
       if (!activeForge) setActiveForge(forgeInfo)

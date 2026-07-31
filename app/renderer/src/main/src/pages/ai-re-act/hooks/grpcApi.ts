@@ -6,11 +6,11 @@ import type { AIForge } from '@/pages/ai-agent/type/forge'
 import type { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
 import type { AITaskInfoProps } from './aiRender'
 
-import {
+import type {
   AIToDoListStatusEnumType,
   AttachedResourceKeyEnum,
   AttachedResourceTypeEnum,
-  type AIModelTypeEnumType,
+  AIModelTypeEnumType,
 } from '@/pages/ai-agent/defaultConstant'
 
 // #region 双工接口请求和响应结构

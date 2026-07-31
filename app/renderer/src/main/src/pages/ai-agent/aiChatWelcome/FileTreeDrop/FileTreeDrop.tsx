@@ -3,9 +3,8 @@ import styles from './FileTreeDrop.module.scss'
 import type { FC, ReactNode } from 'react'
 import { useMemo } from 'react'
 import { historyStore } from '../../components/aiFileSystemList/store/useHistoryFolder'
-import { customFolderStore } from '../../components/aiFileSystemList/store/useCustomFolder'
 import { useFileTreeDrop } from '../hooks/useFileTreeDrop'
-import { DragSource } from '../type'
+import type { DragSource } from '../type'
 
 type FileTreeDropRenderProps = {
   setDragSource: (source: DragSource) => void

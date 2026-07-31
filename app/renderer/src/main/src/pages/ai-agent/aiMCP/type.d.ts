@@ -1,4 +1,4 @@
-import { MCPServer, MCPServerTool } from '../type/aiMCP'
+import { type MCPServer, type MCPServerTool } from '../type/aiMCP'
 
 export interface AIMCPProps {}
 export interface AIMCPListProps {

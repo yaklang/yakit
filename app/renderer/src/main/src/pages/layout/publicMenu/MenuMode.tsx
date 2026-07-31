@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import {
   PublicAIAgentIcon,
   PublicAuditCodeIcon,
@@ -36,7 +36,7 @@ import {
   PublicWebsocketFuzzerIcon,
 } from '@/routes/publicIcon'
 import { useMemoizedFn } from 'ahooks'
-import { RouteToPageProps } from './PublicMenu'
+import type { RouteToPageProps } from './PublicMenu'
 import { Tooltip } from 'antd'
 import { YakitRouteToPageInfo, ResidentPluginName } from '@/routes/newRoute'
 import { YakitRoute } from '@/enums/yakitRoute'

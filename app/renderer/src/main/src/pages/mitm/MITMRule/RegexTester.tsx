@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { editor } from 'monaco-editor'
+import { type editor } from 'monaco-editor'
 import * as monaco from 'monaco-editor'
 import classNames from 'classnames'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'

@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react'
-import { MITMHackerProps } from './MITMHackerType'
+import type { MITMHackerProps } from './MITMHackerType'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { MITMPage } from '../MITMPage'
-import MITMContext, { MITMContextStore, MITMVersion } from '../Context/MITMContext'
+import MITMContext, { type MITMContextStore, MITMVersion } from '../Context/MITMContext'
 import { useStore } from '@/store/mitmState'
 import emiter from '@/utils/eventBus/eventBus'
 

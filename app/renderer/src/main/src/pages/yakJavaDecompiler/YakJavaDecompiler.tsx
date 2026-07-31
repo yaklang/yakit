@@ -1,25 +1,24 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {} from 'antd'
 import {} from '@ant-design/icons'
 import { useGetState, useMemoizedFn } from 'ahooks'
-import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
 import styles from './YakJavaDecompiler.module.scss'
-import { failed, success, warn, info, yakitNotify } from '@/utils/notification'
+import { failed, warn, yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
-import { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
-import { AreaInfoProps, OpenFileByPathProps, YakJavaDecompilerHistoryProps } from './YakJavaDecompilerType'
-import { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
-import YakRunnerContext, { YakRunnerContextDispatcher, YakRunnerContextStore } from './hooks/YakRunnerContext'
+import type { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
+import type { AreaInfoProps, OpenFileByPathProps, YakJavaDecompilerHistoryProps } from './YakJavaDecompilerType'
+import type { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
+import YakRunnerContext, { type YakRunnerContextDispatcher, type YakRunnerContextStore } from './hooks/YakRunnerContext'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { LeftSideBar } from './LeftSideBar/LeftSideBar'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
-import { DragDropContext, DropResult, ResponderProvided } from '@hello-pangea/dnd'
+import { DragDropContext, type DropResult, type ResponderProvided } from '@hello-pangea/dnd'
 import cloneDeep from 'lodash/cloneDeep'
 import { BottomSideBar } from './BottomSideBar/BottomSideBar'
 import { BottomEditorDetails } from './BottomEditorDetails/BottomEditorDetails'
-import { ShowItemType } from './BottomEditorDetails/BottomEditorDetailsType'
-import { LeftSideType } from './LeftSideBar/LeftSideBarType'
+import type { ShowItemType } from './BottomEditorDetails/BottomEditorDetailsType'
+import type { LeftSideType } from './LeftSideBar/LeftSideBarType'
 import { RunnerTabs, YakJavaDecompilerWelcomePage } from './RunnerTabs/RunnerTabs'
 import emiter from '@/utils/eventBus/eventBus'
 import { clearMapFileDetail, getMapAllFileKey, getMapFileDetail, setMapFileDetail } from './FileTreeMap/FileMap'
@@ -40,7 +39,7 @@ import {
 } from './utils'
 import { FileDefault, FileSuffix, FolderDefault } from '../yakRunner/FileTree/icon'
 import moment from 'moment'
-import { YakURLResource } from '../yakURLTree/data'
+import type { YakURLResource } from '../yakURLTree/data'
 import { getNameByPath, monacaLanguageType } from '../yakRunner/utils'
 const { ipcRenderer } = window.require('electron')
 export interface YakJavaDecompilerProps {}
@@ -85,7 +84,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
       } else {
         handleFetchFileList(path, (value) => {
           if (value.length > 0) {
-            let childArr: string[] = []
+            const childArr: string[] = []
             value.forEach((item) => {
               // 注入文件结构Map
               childArr.push(item.path)
@@ -144,7 +143,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
     handleFetchFileList(path, (value) => {
       isFetchRef.current = false
       if (value.length > 0) {
-        let childArr: string[] = []
+        const childArr: string[] = []
         // 文件Map
         value.forEach((item) => {
           // 注入文件结构Map
@@ -183,7 +182,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
   useEffect(() => {
     loadIndexRef.current = 0
     clearMap()
-    let id = setInterval(() => {
+    const id = setInterval(() => {
       loadFileMap()
     }, 100)
     return () => clearInterval(id)
@@ -220,7 +219,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
           setMapFileDetail(rootPath, node)
           const children: FileTreeListProps[] = []
 
-          let childArr: string[] = []
+          const childArr: string[] = []
           list.forEach((item) => {
             // 注入文件结构Map
             childArr.push(item.path)
@@ -384,7 +383,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
   const onDragStart = useMemoizedFn(() => {
     // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
     if (document.activeElement !== null) {
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       document.activeElement.blur()
     }
   })
@@ -432,7 +431,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
               const [ele] = newAreaInfo[index].elements[indexIn].files.splice(source.index, 1)
               element = ele
 
-              let filesLength = newAreaInfo[index].elements[indexIn].files.length
+              const filesLength = newAreaInfo[index].elements[indexIn].files.length
               // 校验是否仅有一项 移除后是否为空 为空则删除此大项
               if (filesLength === 0) {
                 if (item.elements.length > 1) {

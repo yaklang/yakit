@@ -1,5 +1,4 @@
-import { ReactNode } from 'react'
-import { YakRunnerStoreRefs } from '../hooks/useYakRunnerStoreRefs'
+import { type YakRunnerStoreRefs } from '../hooks/useYakRunnerStoreRefs'
 
 // 文件树的结构只需要path 其详细内容则被存入Map中
 export interface FileTreeListProps {

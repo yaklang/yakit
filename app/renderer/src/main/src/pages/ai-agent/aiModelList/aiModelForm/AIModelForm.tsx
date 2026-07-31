@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type {
   AIConfigAPIKeyFormItemProps,
   AIModelCheckResultProps,
   AIModelFormAddOptions,
@@ -7,39 +7,39 @@ import {
   AIModelFormUpdateOptions,
 } from './AIModelFormType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
-import { Form, FormInstance } from 'antd'
+import { Form, type FormInstance } from 'antd'
 import {
-  AIThirdPartyApplicationConfig,
+  type AIThirdPartyApplicationConfig,
   NewAIThirdPartyApplicationConfigBase,
 } from '@/components/configNetwork/NewAIThirdPartyApplicationConfig'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  AIGlobalConfig,
-  AIModelConfig,
-  AIModelTypeFileName,
-  AIProvider,
+  type AIGlobalConfig,
+  type AIModelConfig,
+  type AIModelTypeFileName,
+  type AIProvider,
   grpcQueryAIProviderAll,
   grpcAIConfigHealthCheck,
   normalizeAIAPIType,
-  AIConfigHealthCheckResponse,
+  type AIConfigHealthCheckResponse,
 } from '../utils'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
-import { YakitAutoCompleteProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AIModelTypeEnum, AIModelTypeEnumType, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
+import { AIModelTypeEnum, type AIModelTypeEnumType, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { cloneDeep, has, isNil } from 'lodash'
-import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIModelForm.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { HorizontalScrollCard } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
-import { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { NewHTTPPacketEditor, RenderTypeOptionVal } from '@/utils/editors'
+import type { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { NewHTTPPacketEditor, type RenderTypeOptionVal } from '@/utils/editors'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { setRemoteValue } from '@/utils/kv'
@@ -264,7 +264,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const isShowSaveLoadingRef = useRef<boolean>(true)
   const formRef = useRef<{ form: FormInstance }>(null)
   const footerRef = useRef<HTMLDivElement>(null)
-  let currentIndexInConfigRef = useRef<number>(-1) //更新时，该值为当前模型在全局配置列表中的下标
+  const currentIndexInConfigRef = useRef<number>(-1) //更新时，该值为当前模型在全局配置列表中的下标
   const [inViewport = true] = useInViewport(footerRef)
 
   const [aiGlobalConfigData, event] = useAIGlobalConfig({ isShowLoading: false })
@@ -279,7 +279,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
   const formValues = useCreation(() => {
     let value
-    if (!!item) {
+    if (item) {
       value = {
         model_type: aiModelType,
         api_key_id: item.ProviderId,
@@ -294,9 +294,9 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
   const getAIGlobalConfig = useMemoizedFn(() => {
     event.getLastAIGlobalConfig().then((res) => {
-      if (!!item) {
+      if (item) {
         // 编辑时，需要先保存该模型的配置在列表的下标，后续更新时需要用到
-        const fileName = !!aiModelType ? getFileNameByModelType(aiModelType) : ''
+        const fileName = aiModelType ? getFileNameByModelType(aiModelType) : ''
         if (!fileName) return
         const index = (aiGlobalConfigData?.aiGlobalConfigRef.current?.[fileName] || []).findIndex((i) =>
           isEqualAIModel(i, item),
@@ -698,7 +698,7 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
 
   const getOptions = useDebounceFn(
     useMemoizedFn((aiType) => {
-      if (!!aiType) {
+      if (aiType) {
         setLoading(true)
         grpcQueryAIProviderAll(aiType)
           .then((res) => {
@@ -744,7 +744,7 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
         {...formProps}
         name="api_key"
         help={
-          !!aiType ? (
+          aiType ? (
             <div style={{ height: 30 }}>
               如无法自动获取，请
               <YakitButton type="text" onClick={() => getOptions(aiType)} style={{ padding: 0, fontSize: 14 }}>

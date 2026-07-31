@@ -1,4 +1,4 @@
-import { AIChatQSDataTypeEnum, CurrentExecTaskTree, type ChatStoreState } from './aiRender'
+import { AIChatQSDataTypeEnum, type CurrentExecTaskTree, type ChatStoreState } from './aiRender'
 import { createStore } from 'zustand/vanilla'
 import { immer } from 'zustand/middleware/immer'
 import { enableMapSet } from 'immer'

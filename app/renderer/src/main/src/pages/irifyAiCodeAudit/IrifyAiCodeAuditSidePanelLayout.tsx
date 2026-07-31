@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 import { OutlineBotIcon, OutlinePlusIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -14,7 +15,7 @@ import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
 import { resolveIrifyAuditDefaultChatSeed } from './irifyAiCodeAuditConstants'
 import emiter from '@/utils/eventBus/eventBus'
 import { IrifyAiAuditStyleToggle } from './IrifyAiAuditStyleToggle'
-import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 
 const defaultAiTabs: YakitTabsProps[] = [
   {

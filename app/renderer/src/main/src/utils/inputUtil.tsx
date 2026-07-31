@@ -1,31 +1,15 @@
-import React, { CSSProperties, useEffect, useRef, useState } from 'react'
-import {
-  Button,
-  Checkbox,
-  Col,
-  Form,
-  Input,
-  InputNumber,
-  Popover,
-  Radio,
-  Row,
-  Select,
-  Spin,
-  Switch,
-  Tag,
-  Tooltip,
-  Typography,
-  Upload,
-} from 'antd'
+import type React from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
+import { Button, Checkbox, Col, Form, Input, InputNumber, Row, Spin, Tag, Tooltip, Typography, Upload } from 'antd'
 import '@ant-design/compatible/assets/index.css'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import TimeRange, { TimePoint } from './timeRange'
-import { CheckboxOptionType } from 'antd/lib/checkbox'
-import { CheckboxValueType } from 'antd/es/checkbox/Group'
+import type { CheckboxOptionType } from 'antd/lib/checkbox'
+import type { CheckboxValueType } from 'antd/es/checkbox/Group'
 import './editableTagsGroup.css'
 import { randomColor } from './randomUtil'
-import { LiteralUnion } from 'antd/lib/_util/type'
-import { FormItemProps } from '@ant-design/compatible/lib/form'
+import type { LiteralUnion } from 'antd/lib/_util/type'
+import type { FormItemProps } from '@ant-design/compatible/lib/form'
 import './inputUtil.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -247,14 +231,14 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
       const ret: { key: string; value?: string }[] = []
       try {
         JSON.parse(initValue, (key: string, value?: string) => {
-          if (!!key) {
+          if (key) {
             value = value || undefined
             ret.push({ key, value: value })
           }
         })
         if (ret.length > 0) {
           for (const obj of ret) {
-            for (let { key, value } of props.defaultItems || []) {
+            for (const { key, value } of props.defaultItems || []) {
               if (obj.key == key) {
                 obj.value = value || undefined
               }
@@ -272,10 +256,10 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
   }, [initValue])
 
   useEffect(() => {
-    if (!!items) {
+    if (items) {
       const data: any = {}
       items.map((value) => {
-        if (!!value.key) {
+        if (value.key) {
           data[value.key] = value.value || ''
         }
       })
@@ -568,7 +552,7 @@ export interface MultiSelectForStringProps extends InputBase {
 }
 
 export const MultiSelectForString: React.FC<MultiSelectForStringProps> = (p) => {
-  let sep = p.defaultSep || ','
+  const sep = p.defaultSep || ','
   return (
     <MultiSelect
       disabled={p.disabled}
@@ -583,7 +567,7 @@ export const MultiSelectForString: React.FC<MultiSelectForStringProps> = (p) => 
 }
 
 export const ManyMultiSelectForString: React.FC<MultiSelectForStringProps> = (p) => {
-  let sep = p.defaultSep || ','
+  const sep = p.defaultSep || ','
   let value: string[]
   if (!p.value) {
     value = []
@@ -635,7 +619,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = (p) => {
         options={p.data}
         value={p.value}
         onChange={(values: CheckboxValueType[]) => {
-          let a = values as string[]
+          const a = values as string[]
           p.setValue(a)
         }}
       />

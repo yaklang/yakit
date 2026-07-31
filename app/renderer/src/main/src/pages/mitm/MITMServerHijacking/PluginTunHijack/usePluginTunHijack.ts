@@ -1,16 +1,15 @@
 import { useCreation, useMemoizedFn, useSafeState } from 'ahooks'
-import {
+import type {
   OptionalDebugPluginRequest,
   pluginTunHijackActionsProps,
   PluginTunHijackParams,
   PluginTunHijackStateProps,
   TunSessionStateProps,
 } from './PluginTunHijackType'
-import { useEffect, useRef } from 'react'
-import { yakitNotify } from '@/utils/notification'
-import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
+import { useRef } from 'react'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
 import { randomString } from '@/utils/randomUtil'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 
 // 会话级（Session-level）的状态，用于存储当前活动 TUN 设备的信息

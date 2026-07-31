@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, ReactNode } from 'react'
+import React, { type MouseEventHandler, type ReactNode } from 'react'
 import styles from './ExpandAndRetract.module.scss'
 import { OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon } from '@/assets/icon/outline'
 import classNames from 'classnames'

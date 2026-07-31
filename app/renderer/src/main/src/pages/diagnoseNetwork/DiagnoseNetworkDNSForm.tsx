@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { Form } from 'antd'
 import { InputItem } from '@/utils/inputUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'

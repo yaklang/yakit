@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import styles from '../PayloadLocalTable.module.scss'
-import { failed, success, warn, info } from '@/utils/notification'
+import { failed, success, warn } from '@/utils/notification'
 import classNames from 'classnames'
-import { Divider, Form, Space, Table, Tooltip } from 'antd'
+import { Divider, Form, Table, Tooltip } from 'antd'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
@@ -16,11 +17,10 @@ import {
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { PaginationSchema, QueryGeneralRequest, QueryGeneralResponse } from '../../invoker/schema'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { setClipboardText } from '@/utils/clipboard'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { apiUpdateOnlinePayload } from '../utils'
 const { ipcRenderer } = window.require('electron')
 
@@ -94,7 +94,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
 // 判断是否为大于等于0的数字
 const judgeNum = (num) => {
   try {
-    let newNum: number = parseInt(num)
+    const newNum: number = parseInt(num)
     return typeof newNum === 'number' && newNum >= 0
   } catch (error) {
     return false
@@ -369,7 +369,7 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
       title: '操作',
       dataIndex: 'operation',
       width: 132,
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       render: (_, record: API.PayloadDetail) => {
         return (
           <div className={styles['table-operation']}>
@@ -565,7 +565,7 @@ export const NewPayloadOnlineTable: React.FC<NewPayloadOnlineTableProps> = (prop
         }}
         bordered
         dataSource={response?.data}
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         columns={columns as ColumnTypes}
         pagination={{
           showQuickJumper: true,

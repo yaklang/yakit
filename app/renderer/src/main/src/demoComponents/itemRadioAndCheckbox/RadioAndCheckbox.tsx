@@ -1,8 +1,8 @@
-import React, { memo } from 'react'
-import { Checkbox, Form, Radio } from 'antd'
+import type React from 'react'
+import { memo } from 'react'
+import { Form } from 'antd'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { ItemCheckBoxProps, ItemRadioProps } from './RadioAndCheckboxtype'
-import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import type { ItemRadioProps } from './RadioAndCheckboxtype'
 
 import '../demoStyle.scss'
 

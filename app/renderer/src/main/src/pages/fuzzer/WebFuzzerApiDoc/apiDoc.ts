@@ -1,4 +1,4 @@
-import { RequestYakURLResponse, YakURLResource } from '@/pages/yakURLTree/data'
+import type { RequestYakURLResponse, YakURLResource } from '@/pages/yakURLTree/data'
 import { StringToUint8Array } from '@/utils/str'
 
 const { ipcRenderer } = window.require('electron')

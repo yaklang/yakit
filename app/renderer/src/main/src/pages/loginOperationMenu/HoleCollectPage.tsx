@@ -1,25 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Table, Space, Tooltip, Typography, Form } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { showModal } from '@/utils/showModal'
 import styles from './HoleCollectPage.module.scss'
-import { failed, success, warn, info } from '@/utils/notification'
-import classNames from 'classnames'
+import { failed, success } from '@/utils/notification'
 import { ExportExcel } from '../../components/DataExport/DataExport'
-import { genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse } from '../invoker/schema'
+import { genDefaultPagination } from '../invoker/schema'
 import { TitleColor } from '../risks/RiskTable'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { PaginationSchema } from '../../pages/invoker/schema'
+import type { PaginationSchema } from '../../pages/invoker/schema'
 import { RiskDetails, cellColorFontSetting } from '../risks/RiskTable'
-import { Risk } from '../risks/schema'
+import type { Risk } from '../risks/schema'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 const { Paragraph } = Typography
@@ -47,7 +47,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
 
   const onFinish = useMemoizedFn((values) => {
     const { net_work, risk_type, search, severity, user_name } = values
-    let obj = {
+    const obj = {
       search,
       risk_type: risk_type ? risk_type.join(',') : undefined,
       severity: severity === 'all' ? undefined : severity,
@@ -109,7 +109,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
 
   const delRisk = (hash?: string[]) => {
     setLoading(true)
-    let obj: API.GetRiskWhere = {}
+    const obj: API.GetRiskWhere = {}
     if (hash) {
       obj.hash = hash
     }
@@ -203,7 +203,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             <YakitButton
               type={'text'}
               onClick={() => {
-                let info: Risk = {
+                const info: Risk = {
                   Hash: i.hash,
                   IP: i.ip,
                   Url: i.url,

@@ -1,18 +1,19 @@
-import React, { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
+import type React from 'react'
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useCreation, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
 import { clone, cloneDeep } from 'lodash'
 
 import AIAgentContext, {
-  AIAgentContextDispatcher,
-  AIAgentContextStore,
+  type AIAgentContextDispatcher,
+  type AIAgentContextStore,
 } from '@/pages/ai-agent/useContext/AIAgentContext'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { createActiveChatSessionId, getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
-import { AISession } from '@/pages/ai-agent/type/aiChat'
-import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
-import {
+import type { AISession } from '@/pages/ai-agent/type/aiChat'
+import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import type {
   AIHandleStartExtraProps,
   AIHandleStartParams,
   AIHandleStartResProps,
@@ -21,7 +22,7 @@ import {
   AISendParams,
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,

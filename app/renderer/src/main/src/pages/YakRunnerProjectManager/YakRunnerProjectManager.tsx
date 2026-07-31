@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { YakRunnerProjectManagerProps } from './YakRunnerProjectManagerType'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { YakRunnerProjectManagerProps } from './YakRunnerProjectManagerType'
 import { useMemoizedFn } from 'ahooks'
 import styles from './YakRunnerProjectManager.module.scss'
 import { AuditHistoryTable, AuditModalFormModal } from '../yakRunnerAuditCode/AuditCode/AuditCode'

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { useTheme } from '@/hook/useTheme'
 import styles from './MarkdownPdfPrintPage.module.scss'

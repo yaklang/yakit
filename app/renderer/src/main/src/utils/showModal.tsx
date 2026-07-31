@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
-import { ModalProps } from 'antd/lib/modal'
-import { DrawerProps, Modal } from 'antd'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import type { ModalProps } from 'antd/lib/modal'
+import { type DrawerProps, Modal } from 'antd'
 import { ErrorBoundary } from 'react-error-boundary'
 import { createRoot } from 'react-dom/client'
 import emiter from './eventBus/eventBus'
@@ -8,7 +9,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import i18n from '@/i18n/i18n'
-import { ModalI18nNode, ModalI18nRender } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { type ModalI18nNode, ModalI18nRender } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {

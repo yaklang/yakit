@@ -1,4 +1,4 @@
-import { NotepadActionsProps, NotepadSaveStatusProps, WSConnectedStatusProps } from './WebsocketProviderType'
+import type { NotepadActionsProps, NotepadSaveStatusProps, WSConnectedStatusProps } from './WebsocketProviderType'
 
 /**同步消息 */
 export const messageSync = 0

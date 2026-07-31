@@ -1,6 +1,6 @@
 import React from 'react'
 import { RightBugAuditResult } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
-import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 
 interface HoleBugDetailProps {
   info?: SSARisk

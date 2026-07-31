@@ -1,5 +1,4 @@
-import { SingleManualHijackControlMessage } from '@/pages/mitm/MITMManual/utils'
-import { MITMHackerPageInfoProps } from '@/store/pageInfo'
+import type { SingleManualHijackControlMessage } from '@/pages/mitm/MITMManual/utils'
 
 export enum ManualHijackListAction {
   Hijack_List_Add = 'add',

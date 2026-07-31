@@ -1,5 +1,5 @@
-import { ResultObjProps } from '@/pages/dynamicControl/DynamicControl'
-import { API } from '@/services/swagger/resposeType'
+import type { ResultObjProps } from '@/pages/dynamicControl/DynamicControl'
+import type { API } from '@/services/swagger/resposeType'
 import { create } from 'zustand'
 
 export interface UserInfoProps {

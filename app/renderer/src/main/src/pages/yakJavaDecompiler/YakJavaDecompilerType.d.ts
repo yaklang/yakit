@@ -1,4 +1,5 @@
-import { FileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
+import { type FileDetailInfo, type Selection } from './RunnerTabs/RunnerTabsType'
+import type { YakURLResource } from '@/pages/yakURLTree/data'
 export interface TabFileProps {
   // 窗口唯一标识符
   id: string

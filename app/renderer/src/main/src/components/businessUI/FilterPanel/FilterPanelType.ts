@@ -1,4 +1,4 @@
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 
 export interface FilterPanelGroupItem {
   /** 单项过滤条件key */

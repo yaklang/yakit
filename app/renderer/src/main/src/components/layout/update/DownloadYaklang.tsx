@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { getReleaseEditionName } from '@/utils/envfile'
 import { failed, success } from '@/utils/notification'
-import { YakitSystem, DownloadingState } from '@/yakitGVDefine'
+import type { YakitSystem, DownloadingState } from '@/yakitGVDefine'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { Progress } from 'antd'
 import { YaklangInstallHintSvgIcon } from '../icons'
@@ -88,7 +88,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
           },
           speed: 0,
           percent: 100,
-          // @ts-ignore
+          // @ts-expect-error 类型定义不完整，需要忽略此行
           size: getDownloadProgress().size,
         })
 

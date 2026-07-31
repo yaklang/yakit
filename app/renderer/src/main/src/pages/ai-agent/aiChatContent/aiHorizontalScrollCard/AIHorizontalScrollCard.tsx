@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { AIHorizontalScrollCardProps } from './type'
+import type { AIHorizontalScrollCardProps } from './type'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { HorizontalScrollCard } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { useStore } from 'zustand'

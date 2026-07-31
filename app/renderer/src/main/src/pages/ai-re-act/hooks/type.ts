@@ -13,7 +13,7 @@ import type { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AISource, AIStartPara
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { ChatMultiSessionController } from './ChatMultiSessionController'
+import type { ChatMultiSessionController } from './ChatMultiSessionController'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 

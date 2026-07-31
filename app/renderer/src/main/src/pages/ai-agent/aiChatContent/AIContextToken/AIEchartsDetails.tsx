@@ -1,15 +1,16 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import {
   AICostDetailsEcharts,
-  AICostDetailsEchartsProps,
+  type AICostDetailsEchartsProps,
   AIPressureDetailsEcharts,
-  AIPressureDetailsEchartsProps,
+  type AIPressureDetailsEchartsProps,
   TokenCountEcharts,
   type ContextStatsChartMetric,
 } from '../../chatTemplate/AIEcharts'
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIChatData } from '../../type/aiChat'
+import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIChatData } from '../../type/aiChat'
 import { formatNumberUnits } from '../../utils'
 import {
   OutlineArrowdownIcon,
@@ -25,7 +26,7 @@ import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import ContextTable from './ContextTable/ContextTable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { AIModelConfig } from '../../aiModelList/utils'
+import type { AIModelConfig } from '../../aiModelList/utils'
 import AITokens from './AITokens'
 import styles from '../AIChatContent.module.scss'
 

@@ -1,4 +1,4 @@
-import { FC, memo } from 'react'
+import { type FC, memo } from 'react'
 import type { AIChildWindowGroupStreamNodeProps } from './type'
 import useAIConcurrentStreamStore from '@/auxWindow/pages/AIConcurrentStream/useContext/useStore'
 import useCreation from 'ahooks/lib/useCreation'

@@ -10,7 +10,7 @@ import { OutlinePlusIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
 import { useMemoizedFn } from 'ahooks'
-import { Ctx } from '@milkdown/kit/ctx'
+import { type Ctx } from '@milkdown/kit/ctx'
 import {
   createBlankHeading1,
   createBlankHeading2,
@@ -26,15 +26,15 @@ import {
 } from '../utils/utils'
 import { Tooltip } from 'antd'
 import {
-  BlockListProps,
+  type BlockListProps,
   createMilkdownMenuListByKey,
   localBlockKey,
   MilkdownMenuKeyEnum,
   onlineBlockKey,
 } from '../constants'
-import { HttpUploadImgBaseRequest } from '@/apiUtils/http'
+import type { HttpUploadImgBaseRequest } from '@/apiUtils/http'
 import { useStore } from '@/store'
-import { InitEditorHooksLocalProps } from '../utils/initEditor'
+import type { InitEditorHooksLocalProps } from '../utils/initEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface BlockViewProps {
@@ -53,9 +53,7 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
 
   const [visibleAdd, setVisibleAdd] = useState(false)
   const [blockList, setBlockList] = useState<BlockListProps[]>(
-    !!localProps?.local
-      ? createMilkdownMenuListByKey(t, localBlockKey)
-      : createMilkdownMenuListByKey(t, onlineBlockKey),
+    localProps?.local ? createMilkdownMenuListByKey(t, localBlockKey) : createMilkdownMenuListByKey(t, onlineBlockKey),
   ) // 后期选中某个类型的组件可能不会显示一些操作
 
   const { view, prevState } = usePluginViewContext()

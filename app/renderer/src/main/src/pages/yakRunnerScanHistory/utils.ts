@@ -1,6 +1,6 @@
 import { yakitNotify } from '@/utils/notification'
-import { APIOptionalFunc } from '@/apiUtils/type'
-import { QuerySSAProgramRequest, QuerySSAProgramResponse } from './YakRunnerScanHistory'
+import type { APIOptionalFunc } from '@/apiUtils/type'
+import type { QuerySSAProgramRequest, QuerySSAProgramResponse } from './YakRunnerScanHistory'
 
 const { ipcRenderer } = window.require('electron')
 

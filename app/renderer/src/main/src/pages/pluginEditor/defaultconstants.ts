@@ -1,6 +1,6 @@
-import { API } from '@/services/swagger/resposeType'
-import { YakitPluginInfo } from './base'
-import { localYakInfo } from '../plugins/pluginsType'
+import type { API } from '@/services/swagger/resposeType'
+import type { YakitPluginInfo } from './base'
+import type { localYakInfo } from '../plugins/pluginsType'
 
 /**
  * @name 插件编辑页-内置的 tags 标签

@@ -1,19 +1,19 @@
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { GetPluginLanguage } from '@/pages/plugins/builtInData'
 import { onCodeToInfo } from '@/pages/plugins/editDetails/utils'
 import cloneDeep from 'lodash/cloneDeep'
-import { YakitPluginBaseInfo, YakitPluginInfo, YakitPluginSupplement } from '../base'
-import { API } from '@/services/swagger/resposeType'
+import type { YakitPluginBaseInfo, YakitPluginInfo, YakitPluginSupplement } from '../base'
+import type { API } from '@/services/swagger/resposeType'
 import { DefaultAPIPluginsRequest, DefaultGRPCSavePluginRequest } from '../defaultconstants'
 import { toolDelInvalidKV } from '@/utils/tool'
-import { YakParamProps, YakRiskInfoProps, localYakInfo } from '@/pages/plugins/pluginsType'
-import {
+import type { YakParamProps, YakRiskInfoProps, localYakInfo } from '@/pages/plugins/pluginsType'
+import type {
   CustomPluginExecuteFormValue,
   PluginExecuteExtraFormValue,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { defPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/constants'
-import { KVPair } from '@/models/kv'
-import { ImageTextareaData } from '../pluginImageTextarea/PluginImageTextareaType'
+import type { KVPair } from '@/models/kv'
+import type { ImageTextareaData } from '../pluginImageTextarea/PluginImageTextareaType'
 
 /**
  * @name 本地插件参数数据(YakParamProps)-转换成-线上插件参数数据(API.YakitPluginParam)
@@ -73,7 +73,7 @@ export const pluginParamsConvertOnlineToLocal = (online: API.YakitPluginParam[])
 export const riskDetailConvertLocalToOnline = (risks?: YakRiskInfoProps[]) => {
   const arr: API.PluginsRiskDetail[] = []
   const local = risks || []
-  for (let item of local) {
+  for (const item of local) {
     if (item.Level && item.CVE && item.TypeVerbose) {
       arr.push({
         level: item.Level,
@@ -93,7 +93,7 @@ export const riskDetailConvertLocalToOnline = (risks?: YakRiskInfoProps[]) => {
 export const riskDetailConvertOnlineToLocal = (risks?: API.PluginsRiskDetail[]) => {
   const arr: YakRiskInfoProps[] = []
   const local = risks || []
-  for (let item of local) {
+  for (const item of local) {
     if (item.level && item.cve && item.typeVerbose) {
       arr.push({
         Level: item.level,
@@ -154,7 +154,7 @@ export const pluginConvertLocalToUI = async (value: YakScript) => {
 export const pluginConvertUIToLocal = (value: YakitPluginInfo, local?: YakScript) => {
   let data: localYakInfo = cloneDeep(DefaultGRPCSavePluginRequest)
 
-  if (!!local) {
+  if (local) {
     data = {
       ...data,
       Id: Number(local.Id || 0) || undefined,
@@ -211,7 +211,7 @@ export const pluginConvertUIToLocal = (value: YakitPluginInfo, local?: YakScript
 export const pluginConvertUIToOnline = (value: YakitPluginInfo, local?: YakScript) => {
   let data: API.PluginsRequest = cloneDeep(DefaultAPIPluginsRequest)
 
-  if (!!local) {
+  if (local) {
     data = {
       script_name: local.ScriptName,
       is_general_module: local.IsGeneralModule,
@@ -256,7 +256,7 @@ export const pluginConvertUIToOnline = (value: YakitPluginInfo, local?: YakScrip
  * @name 本地插件结构(YakScript)转换线上保存结构(API.PluginsRequest)
  */
 export const pluginConvertLocalToOnline = (value: YakScript) => {
-  let data: API.PluginsRequest = cloneDeep(DefaultAPIPluginsRequest)
+  const data: API.PluginsRequest = cloneDeep(DefaultAPIPluginsRequest)
 
   data.type = value.Type
   data.script_name = value.ScriptName
@@ -335,7 +335,7 @@ export const splitPluginParamsData = (value: Record<string, any>, customs: YakPa
   let fixedValue: PluginExecuteExtraFormValue = { ...defPluginExecuteFormValue }
 
   const data = cloneDeep(value)
-  for (let item of customs) {
+  for (const item of customs) {
     if (data[item.Field] !== undefined) {
       customValue[item.Field] = data[item.Field]
       delete data[item.Field]
@@ -368,7 +368,7 @@ export const pluginConvertMergeToUIs = async (value: API.PluginsAuditDetailRespo
     PluginSelectorTypes: [],
   }
   // 新插件基础信息
-  let newBaseInfo: YakitPluginBaseInfo = {
+  const newBaseInfo: YakitPluginBaseInfo = {
     Type: '',
     ScriptName: '',
     Help: '',
@@ -444,7 +444,7 @@ export const pluginSupplementConvertToJSON = (data: ImageTextareaData, file: { u
     info.push({ type: 'text', value: data.value })
   }
   if (isImage) {
-    for (let item of data.imgs) {
+    for (const item of data.imgs) {
       info.push({ type: 'image', value: item })
     }
   }
@@ -468,7 +468,7 @@ export const pluginSupplementJSONConvertToData = (json: string) => {
   try {
     const data = JSON.parse(json)
     if (!Array.isArray(data)) return null
-    for (let item of data) {
+    for (const item of data) {
       if (item.type === 'text') {
         supplement.text += item.value
       }

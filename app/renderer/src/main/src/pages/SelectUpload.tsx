@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Form, Progress } from 'antd'
 import { useMemoizedFn, useGetState } from 'ahooks'
 import { failed, success, warn } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
-import { FileProjectInfoProps, ProjectIOProgress, ProjectsResponse } from './softwareSettings/ProjectManage'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import type { FileProjectInfoProps, ProjectIOProgress, ProjectsResponse } from './softwareSettings/ProjectManage'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 import { OutlineChevrondownIcon } from '@/assets/icon/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -90,7 +89,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
       if (newProgress === 0) {
         newProgress = 1
       }
-      let intProgress = newProgress / 100
+      const intProgress = newProgress / 100
 
       setPercent(intProgress * 0.5 + 0.5)
     })
@@ -114,7 +113,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
       return
     }
     ipcRenderer.on(`${token}-data`, async (e, data: ProjectIOProgress) => {
-      if (!!data.TargetPath) {
+      if (data.TargetPath) {
         filePath.current = data.TargetPath.replace(/\\/g, '\\')
       }
       if (data.Percent > 0) {

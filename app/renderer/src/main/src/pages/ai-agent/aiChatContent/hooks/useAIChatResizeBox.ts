@@ -1,7 +1,7 @@
-import { YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
+import type { YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { useCreation } from 'ahooks'
 import { useRef, useState } from 'react'
-import { AITabsEnumType } from '../../aiAgentType'
+import type { AITabsEnumType } from '../../aiAgentType'
 import { AITabsEnum } from '../../defaultConstant'
 
 type ResizeBoxProps = Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'>
@@ -29,7 +29,7 @@ export function useAIChatResizeBox(params: Params) {
 
   const resizeBoxProps = useCreation<ResizeBoxProps>(() => {
     const { activeKey, showFreeChat, timeLine, hasTaskTabs, hasFilePreview } = params
-    let override = overrideRef.current
+    const override = overrideRef.current
     // 消费一次就清掉
     overrideRef.current = null
     if (!activeKey) {

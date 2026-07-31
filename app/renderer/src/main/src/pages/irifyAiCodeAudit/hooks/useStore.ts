@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import YakRunnerContext, { YakRunnerContextStore } from './YakRunnerContext'
+import YakRunnerContext, { type YakRunnerContextStore } from './YakRunnerContext'
 
 export default function useStore(): YakRunnerContextStore {
   const { store } = useContext(YakRunnerContext)

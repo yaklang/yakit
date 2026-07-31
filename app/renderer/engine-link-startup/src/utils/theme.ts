@@ -1,5 +1,5 @@
 import { monaco } from 'react-monaco-editor'
-import { Theme } from '@/hooks/useTheme'
+import type { Theme } from '@/hooks/useTheme'
 import { isYakit } from './envfile'
 type CssVars = Record<string, string>
 type TGeneratorColor = (vars: CssVars, theme: Theme) => Record<string, string>

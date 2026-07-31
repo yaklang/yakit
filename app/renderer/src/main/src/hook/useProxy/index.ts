@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
-import { GlobalProxyRulesConfig, grpcGetGlobalProxyRulesConfig, grpcSetGlobalProxyRulesConfig } from '@/apiUtils/grpc'
+import {
+  type GlobalProxyRulesConfig,
+  grpcGetGlobalProxyRulesConfig,
+  grpcSetGlobalProxyRulesConfig,
+} from '@/apiUtils/grpc'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /** @name 代理下拉选项类型 */
@@ -126,7 +130,7 @@ export const useProxy = (): UseProxyReturn => {
    */
   const comparePointUrl = useMemoizedFn((findKey: string): string => {
     const findPoint = proxyConfig.Endpoints.find(({ Id }) => Id === findKey)
-    if (!!findPoint) {
+    if (findPoint) {
       const { Url, UserName, Password } = findPoint
       if (UserName && Password) {
         const protocolMatch = Url.match(/^((?:https?|socks4a?|socks5|socks|s5|s4a|s4):\/\/)(.*)$/)

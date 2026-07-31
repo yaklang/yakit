@@ -1,4 +1,5 @@
-import React, { memo, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { PluginsContainer, PluginsLayout, statusTag } from '../baseTemplate'
 import {
   AuthorImg,
@@ -11,7 +12,7 @@ import {
   PluginsList,
   TypeSelect,
 } from '../funcTemplate'
-import { TypeSelectOpt } from '../funcTemplateType'
+import type { TypeSelectOpt } from '../funcTemplateType'
 import {
   OutlineClouddownloadIcon,
   OutlineClouduploadIcon,
@@ -33,22 +34,22 @@ import {
   useMemoizedFn,
   useUpdateEffect,
 } from 'ahooks'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { Form, Progress, Tooltip } from 'antd'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { BackInfoProps, DetailRefProps, PluginManageDetail } from './PluginManageDetail'
-import { PluginFilterParams, PluginSearchParams, PluginListPageMeta } from '../baseTemplateType'
+import { type BackInfoProps, type DetailRefProps, PluginManageDetail } from './PluginManageDetail'
+import type { PluginFilterParams, PluginSearchParams, PluginListPageMeta } from '../baseTemplateType'
 import { initialOnlineState, pluginOnlineReducer } from '../pluginReducer'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import { yakitNotify } from '@/utils/notification'
-import { YakitPluginOnlineDetail } from '../online/PluginsOnlineType'
+import type { YakitPluginOnlineDetail } from '../online/PluginsOnlineType'
 import {
-  DownloadOnlinePluginsRequest,
-  PluginsQueryProps,
+  type DownloadOnlinePluginsRequest,
+  type PluginsQueryProps,
   apiDeletePluginCheck,
   apiDownloadPluginCheck,
   apiFetchCheckList,
@@ -67,16 +68,16 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { DefaultStatusList, defaultSearch } from '../builtInData'
 import { useStore } from '@/store'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { PluginGroupList } from '../local/PluginsLocalType'
+import type { PluginGroupList } from '../local/PluginsLocalType'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { PluginGroupDrawer } from '@/pages/pluginHub/group/PluginGroupDrawer'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { UpdateGroupList, UpdateGroupListItem } from '@/pages/pluginHub/group/UpdateGroupList'
+import { UpdateGroupList, type UpdateGroupListItem } from '@/pages/pluginHub/group/UpdateGroupList'
 import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import Dragger from 'antd/lib/upload/Dragger'
 import { PropertyIcon } from '@/pages/payloadManager/icon'
-import { RcFile } from 'antd/lib/upload'
+import type { RcFile } from 'antd/lib/upload'
 import { RemoteGV } from '@/yakitGV'
 import { ListDelGroupConfirmPop } from '@/pages/pluginHub/group/PluginOperationGroupList'
 import { RemotePluginGV } from '@/enums/plugin'
@@ -178,7 +179,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
       }
 
       setLoading(true)
-      const params: PluginListPageMeta = !!reset
+      const params: PluginListPageMeta = reset
         ? { page: 1, limit: 20 }
         : {
             page: response.pagemeta.page + 1,
@@ -381,12 +382,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
           setSearchs({ ...delSearch })
           setFilters({ ...delFilter })
           onClearSelecteds()
-          if (!!plugin) setPlugin(undefined)
+          if (plugin) setPlugin(undefined)
         })
       }
       // 单个删除
-      else if (!!onlyPlugin) {
-        let delRequest: API.PluginsWhereDeleteRequest = { uuid: [onlyPlugin.uuid] }
+      else if (onlyPlugin) {
+        const delRequest: API.PluginsWhereDeleteRequest = { uuid: [onlyPlugin.uuid] }
         apiDelPlugins({ ...delRequest, description: reason }, () => {
           // 当前
 
@@ -398,7 +399,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             },
           })
 
-          if (!!plugin) {
+          if (plugin) {
             // 将删除结果回传到详情页
             if (detailRef && detailRef.current) {
               detailRef.current.onDelCallback([onlyPlugin], true)
@@ -428,7 +429,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
           setFilters({ ...delFilter })
           onClearSelecteds()
           // 以前详情页的逻辑
-          if (!!plugin) setPlugin(undefined)
+          if (plugin) setPlugin(undefined)
         })
       }
     }
@@ -649,8 +650,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     // 旧
     const originCheckedGroup = groupList.filter((item) => item.checked).map((item) => item.groupName)
 
-    let saveGroup: string[] = []
-    let removeGroup: string[] = []
+    const saveGroup: string[] = []
+    const removeGroup: string[] = []
     checkedGroup.forEach((groupName: string) => {
       saveGroup.push(groupName)
     })
@@ -1148,46 +1149,48 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     onClick: ({ key }) => {
                       switch (key) {
                         case 'resetAll':
-                          let m = showYakitModal({
-                            title: (modalT) => modalT('YakitButton.resetAll'),
-                            centered: true,
-                            width: 400,
-                            closable: true,
-                            maskClosable: false,
-                            footer: (
-                              <div
-                                style={{
-                                  textAlign: 'right',
-                                  width: '100%',
-                                  margin: '0 15px 15px',
-                                }}
-                              >
-                                <YakitButton
-                                  type="outline1"
-                                  style={{ marginRight: 15 }}
-                                  onClick={() => {
-                                    m.destroy()
+                          {
+                            const m = showYakitModal({
+                              title: (modalT) => modalT('YakitButton.resetAll'),
+                              centered: true,
+                              width: 400,
+                              closable: true,
+                              maskClosable: false,
+                              footer: (
+                                <div
+                                  style={{
+                                    textAlign: 'right',
+                                    width: '100%',
+                                    margin: '0 15px 15px',
                                   }}
                                 >
-                                  {t('YakitButton.cancel')}
-                                </YakitButton>
-                                <YakitButton
-                                  onClick={() => {
-                                    onResetAll()
-                                    m.destroy()
-                                  }}
-                                >
-                                  {t('YakitButton.confirm')}
-                                </YakitButton>
-                              </div>
-                            ),
-                            content: (modalT) => (
-                              <div style={{ padding: 15 }}>{modalT('PluginManage.resetConfirm')}</div>
-                            ),
-                            onCancel: () => {
-                              m.destroy()
-                            },
-                          })
+                                  <YakitButton
+                                    type="outline1"
+                                    style={{ marginRight: 15 }}
+                                    onClick={() => {
+                                      m.destroy()
+                                    }}
+                                  >
+                                    {t('YakitButton.cancel')}
+                                  </YakitButton>
+                                  <YakitButton
+                                    onClick={() => {
+                                      onResetAll()
+                                      m.destroy()
+                                    }}
+                                  >
+                                    {t('YakitButton.confirm')}
+                                  </YakitButton>
+                                </div>
+                              ),
+                              content: (modalT) => (
+                                <div style={{ padding: 15 }}>{modalT('PluginManage.resetConfirm')}</div>
+                              ),
+                              onCancel: () => {
+                                m.destroy()
+                              },
+                            })
+                          }
                           break
                         case 'uploadPluginLibrary':
                           setUploadPluginLibraryVisible(true)
@@ -1451,7 +1454,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         visible={showReason.visible}
         setVisible={onCancelReason}
         type={showReason.type}
-        total={!!activeDelPlugin.current ? 1 : selectNum || response.pagemeta.total}
+        total={activeDelPlugin.current ? 1 : selectNum || response.pagemeta.total}
         onOK={onReasonCallback}
       />
       <PluginGroupDrawer
@@ -1780,7 +1783,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
   const isCancelRef = useRef<boolean>(false)
 
   const suffixFun = (file_name: string) => {
-    let file_index = file_name.lastIndexOf('.')
+    const file_index = file_name.lastIndexOf('.')
     return file_name.slice(file_index, file_name.length)
   }
 
@@ -1789,7 +1792,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
     if (file) {
       setLoading(true)
       ipcRenderer
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         .invoke('upload-group-data', { path: file.path })
         .then((res) => {
           if (res.code === 200 && !isCancelRef.current) {
@@ -1928,7 +1931,7 @@ const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
   const [file, setFile] = useState<RcFile>()
 
   const suffixFun = (file_name: string) => {
-    let file_index = file_name.lastIndexOf('.')
+    const file_index = file_name.lastIndexOf('.')
     return file_name.slice(file_index, file_name.length)
   }
 
@@ -1980,7 +1983,7 @@ const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
           type="primary"
           disabled={!file}
           onClick={() => {
-            // @ts-ignore
+            // @ts-expect-error 类型定义不完整，需要忽略此行
             const path = file.path
             if (!path) return
             onUploadPluginLibrary(path)

@@ -1,5 +1,4 @@
-import React, { ReactNode, Suspense } from 'react'
-import i18n from '@/i18n/i18n'
+import React, { type ReactNode, Suspense } from 'react'
 import { ShellReceiver } from '../pages/reverseShellReceiver/shellReceiver'
 import { PcapXDemo } from '@/components/playground/PcapXDemo'
 import { DataCompare } from '../pages/compare/DataCompare'
@@ -10,7 +9,7 @@ import { DNSLogPage } from '../pages/dnslog/DNSLogPage'
 import { ICMPSizeLoggerPage } from '../pages/icmpsizelog/ICMPSizeLoggerPage'
 import { RandomPortLogPage } from '../pages/randomPortLog/RandomPortLogPage'
 import { ReportViewerPage } from '../pages/assetViewer/ReportViewerPage'
-import { StartFacadeServerParams } from '../pages/reverseServer/ReverseServer_New'
+import type { StartFacadeServerParams } from '../pages/reverseServer/ReverseServer_New'
 import { JavaPayloadPage } from '@/pages/payloadGenerater/NewJavaPayloadPage'
 import { NewReverseServerPage } from '@/pages/reverseServer/NewReverseServerPage'
 import { AccountAdminPage } from '@/pages/loginOperationMenu/AccountAdminPage'
@@ -99,15 +98,15 @@ import { VulinboxManager } from '@/pages/vulinbox/VulinboxManager'
 import { DiagnoseNetworkPage } from '@/pages/diagnoseNetwork/DiagnoseNetworkPage'
 import type { AdvancedConfigShowProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { ErrorBoundary } from 'react-error-boundary'
-import { PageItemProps } from '@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType'
+import type { PageItemProps } from '@/pages/layout/mainOperatorContent/renderSubPage/RenderSubPageType'
 import { WebShellViewer } from '@/pages/webShell/WebShellViewer'
-import { WebShellDetail } from '@/pages/webShell/models'
+import type { WebShellDetail } from '@/pages/webShell/models'
 import { WebShellDetailOpt } from '@/pages/webShell/WebShellDetailOpt'
-import {
+import type {
   FuzzerParamItem,
   AdvancedConfigValueProps,
 } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
-import { HTTPResponseExtractor } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import type { HTTPResponseExtractor } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType'
 import { ConfigNetworkPage } from '@/components/configNetwork/ConfigNetworkPage'
 import { PluginManage } from '@/pages/plugins/manage/PluginManage'
 import { OnlineJudgment } from '@/pages/plugins/onlineJudgment/OnlineJudgment'
@@ -124,7 +123,7 @@ import { NewPayload } from '@/pages/payloadManager/newPayload'
 import { NewCodec } from '@/pages/codec/NewCodec'
 import { DataStatistics } from '@/pages/dataStatistics/DataStatistics'
 import { PluginBatchExecutor } from '@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor'
-import {
+import type {
   AddYakitScriptPageInfoProps,
   AuditCodePageInfoProps,
   BrutePageInfoProps,
@@ -172,13 +171,13 @@ import { RuleManagement } from '@/pages/ruleManagement/RuleManagement'
 import { YakRunnerAuditHole } from '@/pages/yakRunnerAuditHole/YakRunnerAuditHole'
 import { Misstatement } from '@/pages/misstatement/Misstatement'
 import { SystemConfig } from '@/pages/systemConfig/SystemConfig'
-import { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
+import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { ShortcutKeyList } from '@/pages/shortcutKey/ShortcutKey'
 import { AIAgent } from '@/pages/ai-agent/AIAgent'
 import { SolidClipboardlistIcon, SolidCodecIcon, SolidTerminalIcon } from '@/assets/icon/solid'
 import { PublicToolDataCompareIcon, PublicToolVulinboxIcon } from './publicIcon'
-import { SoftMode, YakitModeEnum } from '@/store/softMode'
+import { type SoftMode, YakitModeEnum } from '@/store/softMode'
 
 const HTTPHacker = React.lazy(() => import('../pages/hacker/httpHacker'))
 const MITMHacker = React.lazy(() => import('@/pages/mitm/MITMHacker/MITMHacker'))
@@ -1053,7 +1052,7 @@ export interface DatabaseMenuItemProps {
 /** @name 数据库菜单数据转换为前端数据 */
 export const databaseConvertData = (data: DatabaseFirstMenuProps[]) => {
   const menus: DatabaseMenuItemProps[] = []
-  for (let item of data) {
+  for (const item of data) {
     const menu: DatabaseMenuItemProps = {
       route: undefined,
       label: item.Group,
@@ -1063,7 +1062,7 @@ export const databaseConvertData = (data: DatabaseFirstMenuProps[]) => {
       children: [],
     }
     if (item.Items && item.Items.length > 0) {
-      for (let subItem of item.Items) {
+      for (const subItem of item.Items) {
         const subMenu: DatabaseMenuItemProps = {
           route: subItem.Route as YakitRoute,
           label: subItem.Verbose,
@@ -2083,7 +2082,7 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
 // 通过传入的 YakitRoute数组 快速生成页面数据数组
 const routeToChildren: (route: (YakitRoute | ResidentPluginName)[]) => PrivateRouteMenuProps[] = (route) => {
   const menus: PrivateRouteMenuProps[] = []
-  for (let name of route) {
+  for (const name of route) {
     if (PrivateAllMenus[name]) menus.push(PrivateAllMenus[name])
   }
   return menus

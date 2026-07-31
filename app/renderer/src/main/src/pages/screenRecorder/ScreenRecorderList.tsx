@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { useCreation, useMemoizedFn, useSelections, useUpdateEffect } from 'ahooks'
-import { genDefaultPagination, QueryGeneralResponse } from '@/pages/invoker/schema'
+import { genDefaultPagination, type QueryGeneralResponse } from '@/pages/invoker/schema'
 import { Divider, Form, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { failed, yakitFailed, yakitNotify } from '@/utils/notification'
+import { failed, yakitNotify } from '@/utils/notification'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import styles from './ScreenRecorder.module.scss'
 import {
   ChevronDownIcon,
   ClockIcon,
-  CloudUploadIcon,
   InformationCircleIcon,
   PencilAltIcon,
   PlayIcon,
@@ -25,7 +25,7 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitMenu, YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { YakitMenu, type YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import classNames from 'classnames'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { isEnterpriseEdition } from '@/utils/envfile'
@@ -40,7 +40,7 @@ import noPictures from '@/assets/noPictures.png'
 import { LoadingOutlined } from '@ant-design/icons'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface ScreenRecorderListProp {
   refreshTrigger?: boolean

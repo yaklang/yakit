@@ -1,6 +1,6 @@
 import { useNodeViewContext } from '@prosemirror-adapter/react'
 import styles from './CustomFile.module.scss'
-import { useEffect, useRef, useState, ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { randomString } from '@/utils/randomUtil'
 import { yakitNotify } from '@/utils/notification'
 import {
@@ -28,14 +28,14 @@ import { SolidXcircleIcon } from '@/assets/icon/solid'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import React from 'react'
 import { SolidCloudDownloadIcon } from '@/assets/newIcon'
-import useDownloadUrlToLocalHooks, { DownloadUrlToLocal } from '@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal'
+import useDownloadUrlToLocalHooks, { type DownloadUrlToLocal } from '@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal'
 import {
   apiDownloadStorageType,
   onOpenLocalFileByPath,
   saveDialogAndGetLocalFileInfo,
 } from '@/pages/notepadManage/notepadManage/utils'
-import { YakitHintProps } from '@/components/yakitUI/YakitHint/YakitHintType'
-import useUploadOSSHooks, { UploadFileTypeProps, UploadOSSStartProps } from '@/hook/useUploadOSS/useUploadOSS'
+import type { YakitHintProps } from '@/components/yakitUI/YakitHint/YakitHintType'
+import useUploadOSSHooks, { type UploadFileTypeProps, type UploadOSSStartProps } from '@/hook/useUploadOSS/useUploadOSS'
 import { getHttpFileLinkInfo, getLocalFileLinkInfo } from './utils'
 import { setClipboardText } from '@/utils/clipboard'
 import { getFileNameByUrl } from '../utils/trackDeletePlugin'
@@ -325,7 +325,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
           e.preventDefault()
         }}
       >
-        {!!(fileInfo.path || fileInfo.url) ? (
+        {fileInfo.path || fileInfo.url ? (
           <CustomFileItem
             title={renderFileTypeIcon({ type: fileInfo?.type })}
             subTitle={fileInfo.name}

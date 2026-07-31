@@ -1,5 +1,5 @@
 import Icon from '@ant-design/icons'
-import { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
+import type { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
 import React from 'react'
 
 import styles from './AITree.module.scss'

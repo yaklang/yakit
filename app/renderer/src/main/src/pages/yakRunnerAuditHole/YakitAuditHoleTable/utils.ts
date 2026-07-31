@@ -1,5 +1,5 @@
 import { yakitNotify } from '@/utils/notification'
-import {
+import type {
   DeleteSSARisksRequest,
   QueryNewSSARisksRequest,
   QueryNewSSARisksResponse,
@@ -7,16 +7,16 @@ import {
   QuerySSARisksResponse,
   SSARisksFilter,
 } from './YakitAuditHoleTableType'
-import { FieldGroup } from '@/pages/risks/YakitRiskTable/utils'
-import { FieldName } from '@/pages/risks/RiskTable'
-import { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
+import type { FieldGroup } from '@/pages/risks/YakitRiskTable/utils'
+import type { FieldName } from '@/pages/risks/RiskTable'
+import type { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
 import { grpcGetAIForge } from '@/pages/ai-agent/grpc'
-import { GetAIForgeRequest } from '@/pages/ai-agent/type/forge'
-import { JSONParseLog, JSONParseLogOption } from '@/utils/tool'
+import type { GetAIForgeRequest } from '@/pages/ai-agent/type/forge'
+import { JSONParseLog, type JSONParseLogOption } from '@/utils/tool'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'yakRunnerAuditHole'])
 
@@ -275,7 +275,7 @@ export const openAIForge = (params: {
       }
       let paramsUIConfig: YakParamProps = JSONParseLog(res.ParamsUIConfig, jsonParseLogParams)
       paramsUIConfig = handleParamsUIConfig(paramsUIConfig)
-      let newRes = { ...res, ParamsUIConfig: JSON.stringify(paramsUIConfig) }
+      const newRes = { ...res, ParamsUIConfig: JSON.stringify(paramsUIConfig) }
       emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_Agent }))
       setTimeout(() => {
         emiter.emit(

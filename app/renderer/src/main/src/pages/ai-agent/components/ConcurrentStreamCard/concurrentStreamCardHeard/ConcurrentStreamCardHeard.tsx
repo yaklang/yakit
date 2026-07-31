@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from 'react'
+import { type FC, memo, useMemo } from 'react'
 import ModalInfo from '../../ModelInfo'
 import ConcurrentStreamCardActions from '../ConcurrentStreamCardActions/ConcurrentStreamCardActions'
 import type { ConcurrentStreamCardHeardProps } from './type'

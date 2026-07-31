@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'r
 import { useMemoizedFn } from 'ahooks'
 import { useTranslation } from 'react-i18next'
 import i18nInstance from './i18n'
-import { I18nNamespace } from './namespaces'
+import type { I18nNamespace } from './namespaces'
 
 export type Lange = 'zh' | 'zh-TW' | 'en'
 const SUPPORTED_LANGS: Lange[] = ['zh', 'zh-TW', 'en']

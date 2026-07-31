@@ -1,22 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import type React from 'react'
+import { useMemo, useState } from 'react'
 import { Card } from 'antd'
-import { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { Uint8ArrayToString } from '@/utils/str'
 import { ThunderboltOutlined } from '@ant-design/icons'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { HighLightText, OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type { HighLightText, OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { yakitNotify } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useMemoizedFn } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
-import { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
+import type { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
 import { OutlineLog2Icon } from '@/assets/icon/outline'
 import { newWebsocketFuzzerTab } from './WebsocketFuzzer'
-import { HistoryHighLightText } from '@/components/HTTPFlowDetail'
+import type { HistoryHighLightText } from '@/components/HTTPFlowDetail'
 import styles from './HTTPFlowForWebsocketViewer.module.scss'
-import { IMonacoEditor } from '@/utils/editors'
+import type { IMonacoEditor } from '@/utils/editors'
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
 import { ByteCountTag } from '../fuzzer/HTTPFuzzerPage'
@@ -50,7 +51,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
 
   const handleJumpWebTree = useMemoizedFn(() => {
     try {
-      let url = new URL(flow.Url)
+      const url = new URL(flow.Url)
       emiter.emit('onHistoryJumpWebTree', JSON.stringify({ host: url.host }))
     } catch (error) {
       return ''

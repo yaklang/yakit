@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ReportItemRenderProp } from './render'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ReportItemRenderProp } from './render'
 import { Table } from 'antd'
 import { MinusSquareOutlined, PlusSquareOutlined } from '@ant-design/icons'
 import classNames from 'classnames'
@@ -72,13 +73,13 @@ export const FoldTable: React.FC<RiskTableProp> = (props) => {
   const [extendItem, setExtendItem] = useState<boolean>(true)
   useEffect(() => {
     if (Array.isArray(data)) {
-      let header: string[] = []
+      const header: string[] = []
       data.map((item, index) => {
-        let newArr: any = Object.entries(item)
+        const newArr: any = Object.entries(item)
         newArr.sort(function (a: any, b: any) {
           return a[1].sort - b[1].sort
         })
-        let itemData: any = {}
+        const itemData: any = {}
         newArr.map((itemIn: any[], indexIn: number) => {
           if (index === 0) {
             header.push(itemIn[0])
@@ -154,15 +155,15 @@ export interface ReportTableProp {
 export const ReportMergeTable: React.FC<ReportTableProp> = (props) => {
   const { data: content } = props
 
-  let header: string[] = []
-  let data: any[] = []
+  const header: string[] = []
+  const data: any[] = []
   if (Array.isArray(content.data)) {
     content.data.map((item, index) => {
-      let newArr = Object.entries(item)
+      const newArr = Object.entries(item)
       newArr.sort(function (a: any, b: any) {
         return a[1].sort - b[1].sort
       })
-      let itemData: any[] = []
+      const itemData: any[] = []
       newArr.map((itemIn: any) => {
         if (index === 0) {
           header.push(itemIn[0])
@@ -225,7 +226,7 @@ export const ReportMergeTable: React.FC<ReportTableProp> = (props) => {
     const info: { [key: string]: any } = {
       key: `${index}`,
     }
-    for (let i in item) {
+    for (const i in item) {
       info[`name-${i}`] = item[i]
     }
     return info
@@ -261,14 +262,14 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
   const [header, setHeader] = useState<string[]>([])
   const [dataSource, setDataSource] = useState<any[]>([])
   useEffect(() => {
-    let header: string[] = []
-    let tableData: any[] = []
+    const header: string[] = []
+    const tableData: any[] = []
     data.map((item, index) => {
-      let newArr: any = Object.entries(item)
+      const newArr: any = Object.entries(item)
       newArr.sort(function (a: any, b: any) {
         return a[1].sort - b[1].sort
       })
-      let itemData: any = {}
+      const itemData: any = {}
       newArr.map((itemIn: any[], indexIn: number) => {
         if (index === 0) {
           header.push(itemIn[0])

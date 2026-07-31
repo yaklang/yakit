@@ -1,5 +1,5 @@
 import React from 'react'
-import { AINodeItemProps } from './type'
+import type { AINodeItemProps } from './type'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import {
   AITriageChatContentWrapper,
@@ -40,7 +40,7 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
     case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
     case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
     case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
-      if (!!itemData.data?.selected) {
+      if (itemData.data?.selected) {
         if (
           itemData.type === AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE ||
           itemData.type === AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE
@@ -90,7 +90,7 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
       return <AIModelErrorPrompt item={itemData} renderNum={renderNum} isChildWindow={false} />
 
     case AIChatQSDataTypeEnum.STREAM:
-      if (!!itemData.parentGroupToken) {
+      if (itemData.parentGroupToken) {
         // 组
         return <AIGroupStreamNodeWrapper itemData={itemData} renderNum={renderNum} groupIndex={groupIndex} />
       } else {

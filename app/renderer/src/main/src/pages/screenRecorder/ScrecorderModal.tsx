@@ -1,17 +1,16 @@
-import { InformationCircleIcon, PlayIcon, RemoveIcon } from '@/assets/newIcon'
+import { InformationCircleIcon, PlayIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { randomString } from '@/utils/randomUtil'
 import { useMemoizedFn } from 'ahooks'
 import { Form } from 'antd'
 import classNames from 'classnames'
-import React, { CSSProperties, ReactNode, useEffect, useState } from 'react'
+import React, { type CSSProperties, type ReactNode, useEffect, useState } from 'react'
 import styles from './ScrecorderModal.module.scss'
 import { Screen_Recorder_Framerate, Screen_Recorder_CoefficientPTS } from './ScreenRecorderList'
 
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
 

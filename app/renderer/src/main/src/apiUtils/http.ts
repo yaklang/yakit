@@ -1,8 +1,8 @@
 import { yakitNotify } from '@/utils/notification'
-import { APIFunc } from './type'
+import type { APIFunc } from './type'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
-import { UploadImgTypeProps } from '@/hook/useUploadOSS/useUploadOSS'
+import type { API } from '@/services/swagger/resposeType'
+import type { UploadImgTypeProps } from '@/hook/useUploadOSS/useUploadOSS'
 import { yakitUpload } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['apiUtils', 'yakitUi'])

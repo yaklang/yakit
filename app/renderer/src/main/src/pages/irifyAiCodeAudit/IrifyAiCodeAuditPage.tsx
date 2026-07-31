@@ -1,22 +1,27 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
-import { AuditCodePageInfoProps } from '@/store/pageInfo'
-import { IrifyAiCodeAuditStyle, resolveIrifyFocusModeLoop, isIrifyAuditStyleConfirmed } from './irifyAiCodeAuditStyle'
+import type { AuditCodePageInfoProps } from '@/store/pageInfo'
+import {
+  type IrifyAiCodeAuditStyle,
+  resolveIrifyFocusModeLoop,
+  isIrifyAuditStyleConfirmed,
+} from './irifyAiCodeAuditStyle'
 import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
-import { AIInputEvent, AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { type AIInputEvent, AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { IrifyAiCodeAuditSidePanelLayout } from './IrifyAiCodeAuditSidePanelLayout'
 import {
   appendIrifyWorkbenchAttachments,
   IrifyWorkbenchAiAttachProvider,
-  IrifyWorkbenchAiAttachRef,
+  type IrifyWorkbenchAiAttachRef,
   useIrifyWorkbenchAiAttachRef,
 } from './IrifyWorkbenchAiAttachContext'
 import styles from './IrifyAiCodeAuditPage.module.scss'
 import { YakRunnerIrifyAiCodeAudit } from './YakRunnerIrifyAiCodeAudit'
 import { IrifyAiCodeAuditOnboardingMask } from './IrifyAiCodeAuditOnboardingMask'
-import { emitIrifyAiCodeAuditOpenFileTree, IrifyAiCodeAuditOnboardingRequest } from './utils'
+import { emitIrifyAiCodeAuditOpenFileTree, type IrifyAiCodeAuditOnboardingRequest } from './utils'
 
 const resolveAuditStyle = (info?: AuditCodePageInfoProps): IrifyAiCodeAuditStyle => {
   if (info?.auditStyle === 'skill') return 'skill'

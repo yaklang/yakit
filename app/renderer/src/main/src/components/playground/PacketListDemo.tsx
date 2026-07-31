@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { TrafficPacket, TrafficSession, TrafficTCPReassembled } from '@/models/Traffic'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { TrafficPacket, TrafficSession, TrafficTCPReassembled } from '@/models/Traffic'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { Form } from 'antd'
@@ -50,7 +50,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
   const [selected, setSelected] = useState<TrafficPacket | TrafficSession | TrafficTCPReassembled>()
   const HexEditorRef = React.useRef<any>(null)
   const [treeData, setTreeData] = useState<TreeNode[]>()
-  const [showData, setShowData] = useState<Uint8Array>(new Buffer([]))
+  const [showData, setShowData] = useState<Uint8Array>(new Uint8Array([]))
   const [nonce, setNonce] = useState(0)
   const [viewer, setViewer] = useState('packet')
   const [keyToScope, setKeyToScope] = useState<{ [key: string]: any }>({})
@@ -100,36 +100,36 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
         typ = 'reassembled'
       }
       ipcRenderer.invoke('ParseTraffic', { Id: data.Id, Type: typ }).then((data) => {
-        let res = JSONParseLog(data.Result, { page: 'PacketListDemo', fun: 'parseData' })
-        let result = res.Result
-        let keyToScope = {}
-        let toTreeData = (obj, keys: string[]) => {
-          let data: TreeNode[] = []
+        const res = JSONParseLog(data.Result, { page: 'PacketListDemo', fun: 'parseData' })
+        const result = res.Result
+        const keyToScope = {}
+        const toTreeData = (obj, keys: string[]) => {
+          const data: TreeNode[] = []
           if (!(obj instanceof Array)) {
             return undefined
           }
           obj.forEach((v, index) => {
-            let { name, value } = v
-            let newKeys = [...keys, name + index]
+            const { name, value } = v
+            const newKeys = [...keys, name + index]
             if (value?.leaf) {
-              let title = value?.verbose ? name + ':' + value.verbose : name
+              const title = value?.verbose ? name + ':' + value.verbose : name
               data.push({
                 key: newKeys.join('-'),
                 title: title,
               })
               keyToScope[newKeys.join('-')] = value?.scope
             } else {
-              let children = toTreeData(value, newKeys)
+              const children = toTreeData(value, newKeys)
               data.push({
                 key: newKeys.join('-'),
                 title: name,
                 children: children,
               })
-              let scopeList: any[] = []
+              const scopeList: any[] = []
               children?.forEach((v) => {
                 scopeList.push(keyToScope[v.key])
               })
-              let scope: number[] = [0, 0]
+              const scope: number[] = [0, 0]
               if (scopeList.length > 0) {
                 scope[0] = scopeList[0][0]
                 scope[1] = scopeList[scopeList.length - 1][1]
@@ -139,7 +139,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
           })
           return data
         }
-        let tdata = toTreeData(result, [])
+        const tdata = toTreeData(result, [])
         setKeyToScope(keyToScope)
         setTreeData(tdata)
         const decodedString = atob(res.RAW)
@@ -158,7 +158,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
   })
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -244,7 +244,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                       height={treeHeight}
                       // showSearch={false}
                       onSelect={(selectedKeys, info) => {
-                        let scope = keyToScope[selectedKeys[0]]
+                        const scope = keyToScope[selectedKeys[0]]
                         if (scope?.length == 2) {
                           HexEditorRef.current.setSelectionRange(Math.floor(scope[0] / 8), Math.ceil(scope[1] / 8))
                         }

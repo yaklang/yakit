@@ -23,19 +23,19 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { BanIcon, CogIcon, DragSortIcon, PencilAltIcon, RemoveIcon, TrashIcon } from '@/assets/newIcon'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import { TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps } from '../TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import ProxyRulesConfig from './ProxyRulesConfig'
 import { v4 as uuidv4 } from 'uuid'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
-import { PcapMetadata } from '@/models/Traffic'
-import { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
-import { KVPair } from '@/models/kv'
+import type { PcapMetadata } from '@/models/Traffic'
+import type { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { KVPair } from '@/models/kv'
 import { getLocalValue, getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
 import { LocalGVS } from '@/enums/localGlobal'
 import { RemoteGV } from '@/yakitGV'
-import { DragDropContext, Draggable, DropResult, Droppable } from '@hello-pangea/dnd'
+import { DragDropContext, Draggable, type DropResult, Droppable } from '@hello-pangea/dnd'
 import NewThirdPartyApplicationConfig from './NewThirdPartyApplicationConfig'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
@@ -58,9 +58,9 @@ import {
   setAIModal,
 } from '@/pages/ai-agent/aiModelList/AIModelList'
 import { AIModelPolicyOptions, AIModelTypeEnum, AIModelTypeInterFileNameEnum } from '@/pages/ai-agent/defaultConstant'
-import { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
+import type { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
 import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
-import { AIModelActionProps, AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
+import type { AIModelActionProps, AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { setOpenPerformanceTips } from '@/utils/duplex/duplex'
 
@@ -156,11 +156,11 @@ export interface ThirdPartyApplicationConfig {
   /**为空，不传给后端 */
   EnableThinkingOpt?: boolean
 }
-type TenumBuffer = Buffer | Uint8Array
+type TenumBuffer = Uint8Array
 
 export interface IsSetGlobalNetworkConfig {
-  Pkcs12Bytes: Buffer
-  Pkcs12Password?: Buffer
+  Pkcs12Bytes: Uint8Array
+  Pkcs12Password?: Uint8Array
 }
 
 interface ClientCertificatePem {
@@ -272,7 +272,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         setNetInterfaceList(interfaceList)
       })
       if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0) {
-        let newArr = ClientCertificates.map((item, index) => {
+        const newArr = ClientCertificates.map((item, index) => {
           return { ...item, name: t('ConfigNetworkPage.certificateName', { index: index + 1 }) }
         })
         setCertificateParams(newArr)
@@ -520,7 +520,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
   const closeCard = useMemoizedFn((item: ClientCertificatePfx) => {
     if (Array.isArray(certificateParams)) {
-      let cache: ClientCertificatePfx[] = certificateParams.filter((itemIn) => item.name !== itemIn.name)
+      const cache: ClientCertificatePfx[] = certificateParams.filter((itemIn) => item.name !== itemIn.name)
       setCertificateParams(cache)
     }
   })
@@ -927,7 +927,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                       <YakitTag
                         key={index}
                         onClick={() => {
-                          let m = showYakitModal({
+                          const m = showYakitModal({
                             title: (modalT) => modalT('ConfigNetworkPage.editThirdPartyApp'),
                             width: 600,
                             closable: true,
@@ -978,7 +978,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   <YakitButton
                     type={'outline1'}
                     onClick={() => {
-                      let m = showYakitModal({
+                      const m = showYakitModal({
                         title: (modalT) => modalT('ConfigNetworkPage.addThirdPartyApp'),
                         width: 600,
                         footer: null,
@@ -1156,7 +1156,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     showUploadList={false}
                     beforeUpload={(f) => {
                       const file_name = f.name
-                      // @ts-ignore
+                      // @ts-expect-error 类型定义不完整，需要忽略此行
                       const path: string = f?.path || ''
                       if (path.length > 0) {
                         setChromePath(path)

@@ -17,7 +17,7 @@ import styles from './knowledgeBase.module.scss'
 import type { CreateKnowledgeBaseData, KnowledgeBaseContentProps } from './TKnowledgeBase'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { KnowledgeBaseTableHeaderProps } from './compoment/KnowledgeBaseTableHeader'
+import type { KnowledgeBaseTableHeaderProps } from './compoment/KnowledgeBaseTableHeader'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { isForcedSetAIModal } from '../ai-agent/aiModelList/utils'
 import { useCheckKnowledgePlugin } from './hooks/useCheckKnowledgePlugin'
@@ -124,13 +124,11 @@ const KnowledgeBase: FC = () => {
         failed(error + '')
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [installPlug, binariesToInstallLoading])
 
   useEffect(() => {
     const FirstknowledgeBaseID = knowledgeBases?.find((item) => item.IsImported === false)?.ID
     setKnowledgeBaseID(FirstknowledgeBaseID || '')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const onCloseKnowledgeRepository = () => {
@@ -182,7 +180,6 @@ const KnowledgeBase: FC = () => {
     } else {
       getAIModelListOption()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewport])
 
   const knowledgeBaseEntrance = useMemo(() => {
@@ -218,7 +215,6 @@ const KnowledgeBase: FC = () => {
           />
         )
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     installPlug,
     binariesToInstallLoading,

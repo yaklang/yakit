@@ -46,7 +46,7 @@ export const execPacketScanWithNewTab = (params: {
           request,
           https,
           httpFlowIds,
-          selectGroupListByKeyWord: !!verbose ? [verbose] : [],
+          selectGroupListByKeyWord: verbose ? [verbose] : [],
         },
       }),
     )

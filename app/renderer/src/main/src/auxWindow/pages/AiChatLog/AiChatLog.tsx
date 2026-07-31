@@ -1,4 +1,5 @@
-import React, { useRef } from 'react'
+import type React from 'react'
+import { useRef } from 'react'
 import AuxXterm, { type AuxXtermRef, useAuxTerminalPush } from '@/auxWindow/components/AuxXterm'
 import styles from '@/auxWindow/styles/terminalPage.module.scss'
 

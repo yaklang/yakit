@@ -9,28 +9,26 @@ import { useStore } from '@/store'
 import { success, yakitNotify, yakitFailed, warn } from '@/utils/notification'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
-import { HTTPFlowsShareRequest, HTTPFlowsShareResponse, ShareDataProps } from './shareDataType'
+import type { HTTPFlowsShareRequest, HTTPFlowsShareResponse, ShareDataProps } from './shareDataType'
 import { isCommunityEdition } from '@/utils/envfile'
 import { saveABSFileAnotherOpen } from '@/utils/openWebsite'
-import { Uint8ArrayToString, StringToUint8Array } from '@/utils/str'
-import { NewHTTPPacketEditor } from '@/utils/editors'
+import { Uint8ArrayToString } from '@/utils/str'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { FuzzerRequestProps } from '../../HTTPFuzzerPage'
-import { AdvancedConfigValueProps } from '../../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import type { FuzzerRequestProps } from '../../HTTPFuzzerPage'
+import type { AdvancedConfigValueProps } from '../../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import emiter from '@/utils/eventBus/eventBus'
 import { randomString } from '@/utils/randomUtil'
 import { generateGroupId } from '@/pages/layout/mainOperatorContent/MainOperatorContent'
-import { MultipleNodeInfo } from '@/pages/layout/mainOperatorContent/MainOperatorContentType'
+import type { MultipleNodeInfo } from '@/pages/layout/mainOperatorContent/MainOperatorContentType'
 import { defaultAdvancedConfigValue, DefFuzzerTableMaxData } from '@/defaultConstants/HTTPFuzzerPage'
 import { FuncBtn } from '@/pages/plugins/funcTemplate'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import i18n from '@/i18n/i18n'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
@@ -153,7 +151,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
       const { Status, YamlContent }: { Status: { Ok: boolean; Reason: string }; YamlContent: string } =
         await ipcRenderer.invoke('ExportHTTPFuzzerTaskToYaml', params)
       if (Status.Ok) {
-        if (!!Status.Reason) {
+        if (Status.Reason) {
           Status.Reason.split('\n').forEach((msg) => {
             warn(msg)
           })
@@ -240,7 +238,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
       })
       if (canceled) return
       if (filePaths.length) {
-        let absolutePath = filePaths[0].replace(/\\/g, '\\')
+        const absolutePath = filePaths[0].replace(/\\/g, '\\')
         readYamlContent(absolutePath)
       } else {
         throw new Error(t('ShareImportExportData.getPathFailed'))
@@ -268,7 +266,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
         },
       )
       if (Status.Ok) {
-        if (!!Status.Reason) {
+        if (Status.Reason) {
           Status.Reason.split('\n').forEach((msg) => {
             warn(msg)
           })

@@ -1,16 +1,17 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import styles from './EditTable.module.scss'
 import { failed, warn } from '@/utils/notification'
 import classNames from 'classnames'
-import { Form, FormInstance, Table, Tooltip } from 'antd'
+import { Form, type FormInstance, Table, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { EllipsisOutlined, InfoCircleOutlined, PlusOutlined } from '@ant-design/icons'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { v4 as uuidv4 } from 'uuid'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { DefaultOptionType } from 'antd/lib/select'
+import type { DefaultOptionType } from 'antd/lib/select'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -557,7 +558,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 width: 80,
                 onClick: async (e) => {
                   switch (e.key) {
-                    case 'edit':
+                    case 'edit': {
                       // 如果当前没有编辑中的行,直接编辑
                       if (editingId === '') {
                         onEdit(record)
@@ -576,6 +577,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                         onEdit(record)
                       }
                       return
+                    }
                     case 'copy':
                       onCopy(record)
                       return
@@ -587,10 +589,11 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                       }
 
                       return
-                    case 'delete':
+                    case 'delete': {
                       const newData = data.filter((item) => item._id !== record._id)
                       setData(newData)
                       return
+                    }
                   }
                 },
               })

@@ -1,5 +1,5 @@
-import { Dispatch, FC, SetStateAction, useEffect } from 'react'
-import { VectorStoreEntry } from '../TKnowledgeBase'
+import { type Dispatch, type FC, type SetStateAction, useEffect } from 'react'
+import type { VectorStoreEntry } from '../TKnowledgeBase'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import classNames from 'classnames'
 import styles from '../knowledgeBase.module.scss'
@@ -46,7 +46,6 @@ const VectorDetailDrawer: FC<VectorDetailDrawerProps> = ({
 
   useEffect(() => {
     openVectorDetailDrawerData.vectorDetailModalVisible && openVectorDetailDrawerData.selectedVectorDetail?.ID && run()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openVectorDetailDrawerData.selectedVectorDetail])
 
   return (

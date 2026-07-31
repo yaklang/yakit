@@ -1,8 +1,9 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useInViewport, useMemoizedFn, useSize } from 'ahooks'
-import { ModifyPluginCallback, PluginEditor, PluginEditorRefProps } from '../pluginEditor/PluginEditor'
+import { type ModifyPluginCallback, PluginEditor, type PluginEditorRefProps } from '../pluginEditor/PluginEditor'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -69,7 +70,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
   })
   const unsavedHintCallback = useMemoizedFn((val: boolean) => {
     if (val) {
-      if (!!editorRef.current) {
+      if (editorRef.current) {
         setUnsavedLoading(true)
         editorRef.current.onSaveAndExit((val) => {
           if (val) {

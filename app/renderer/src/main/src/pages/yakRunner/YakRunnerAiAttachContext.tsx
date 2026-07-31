@@ -1,4 +1,5 @@
-import React, { createContext, useContext, MutableRefObject } from 'react'
+import type React from 'react'
+import { createContext, useContext, type MutableRefObject } from 'react'
 
 /** 与左侧工作区同步，供 RunnerTabs 发送代码块时填充 `directory_path`（rootPath） */
 export interface YakRunnerAiAttachRef {

@@ -1,6 +1,5 @@
-import { ReactNode } from 'react'
-import { CodeScoreSmokingEvaluateResponseProps } from '@/pages/plugins/funcTemplateType'
-import { IMonacoEditorMarker } from '@/utils/editorMarkers'
+import { type ReactNode } from 'react'
+import { type IMonacoEditorMarker } from '@/utils/editorMarkers'
 export interface CursorPosition {
   lineNumber: number // 当前行号
   column: number // 当前字符位置

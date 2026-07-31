@@ -1,5 +1,6 @@
-import React, { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type React from 'react'
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
+import type {
   Selection,
   CursorPosition,
   FileDetailInfo,
@@ -26,11 +27,11 @@ import {
 import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
 import { YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect } from 'ahooks'
+import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
-import { AreaInfoProps, TabFileProps, YakJavaDecompilerHistoryProps } from '../YakJavaDecompilerType.d'
-import { IMonacoEditor } from '@/utils/editors'
+import type { AreaInfoProps, TabFileProps, YakJavaDecompilerHistoryProps } from '../YakJavaDecompilerType.d'
+import type { IMonacoEditor } from '@/utils/editors'
 import {
   getYakJavaDecompilerHistory,
   isResetJavaDecompilerActiveFile,
@@ -39,15 +40,13 @@ import {
   updateJavaDecompilerAreaFileInfo,
 } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
-import { failed, info, warn, success } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
-import { Divider, Result, Upload } from 'antd'
+import { Result } from 'antd'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { v4 as uuidv4 } from 'uuid'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { getMapFileDetail } from '../FileTreeMap/FileMap'
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
@@ -119,7 +118,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       item.elements.forEach((itemIn, indexIn) => {
         if (itemIn.id === tabsId) {
           // 筛选出迁移项
-          let newFileDetailInfo: FileDetailInfo[] = []
+          const newFileDetailInfo: FileDetailInfo[] = []
           let activeIndex: number = 0
           itemIn.files.forEach((file, fileIndex) => {
             if (file.path === info.path) {
@@ -177,7 +176,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       item.elements.forEach((itemIn, indexIn) => {
         if (itemIn.id === tabsId) {
           // 筛选出迁移项
-          let newFileDetailInfo: FileDetailInfo[] = []
+          const newFileDetailInfo: FileDetailInfo[] = []
           let activeIndex: number = 0
           itemIn.files.forEach((file, fileIndex) => {
             if (file.isActive) {
@@ -298,7 +297,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
               closeArr = itemIn.files.filter((item) => item.path !== info.path)
 
               // 剩余展示项
-              let onlyArr = itemIn.files
+              const onlyArr = itemIn.files
                 .filter((item) => item.path === info.path)
                 .map((item) => {
                   if (item.path === info.path) {
@@ -362,7 +361,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       },
     ]
     if (splitDirection.length > 0) {
-      let direction: YakitMenuItemType[] = splitDirection.map((item) => {
+      const direction: YakitMenuItemType[] = splitDirection.map((item) => {
         return {
           label: onDirectionToName(item),
           key: item,
@@ -591,7 +590,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
     try {
       // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
       if (document.activeElement !== null) {
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         document.activeElement.blur()
       }
       const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)

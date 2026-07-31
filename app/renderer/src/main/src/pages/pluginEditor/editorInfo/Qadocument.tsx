@@ -1,4 +1,4 @@
-import React, { ReactElement, useMemo } from 'react'
+import React, { type ReactElement, useMemo } from 'react'
 import image_1 from '@/assets/qa/image_1.png'
 import image_2 from '@/assets/qa/image_2.png'
 import image_3 from '@/assets/qa/image_3.png'

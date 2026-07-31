@@ -1,7 +1,7 @@
-import { YakitInputProps } from '@/components/yakitUI/YakitInput/YakitInputType'
-import { ForwardedRef, ReactNode } from 'react'
-import { HTTPCookieSetting, HTTPHeader } from '../MITMContentReplacerHeaderOperator'
-import { MitmStatus } from '../MITMPage'
+import type { YakitInputProps } from '@/components/yakitUI/YakitInput/YakitInputType'
+import type { ForwardedRef, ReactNode } from 'react'
+import type { HTTPCookieSetting, HTTPHeader } from '../MITMContentReplacerHeaderOperator'
+import type { MitmStatus } from '../MITMPage'
 
 export interface MITMSecondaryStagesItem {
   Regexp: string

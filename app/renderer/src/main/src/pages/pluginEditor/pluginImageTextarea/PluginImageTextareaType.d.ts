@@ -1,4 +1,4 @@
-import { ForwardedRef } from 'react'
+import { type ForwardedRef } from 'react'
 
 /** 上传图片基础信息 */
 export interface TextareaForImage {

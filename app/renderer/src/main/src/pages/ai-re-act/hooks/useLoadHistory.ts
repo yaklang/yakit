@@ -90,7 +90,6 @@ const useLoadHistory = ({ loading, dataLength, SessionID, fetchHasMore, loadMore
     isPrependingRef.current = false
     atTopRef.current = false
     pendingRequestRef.current = false
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [SessionID])
 
   return {

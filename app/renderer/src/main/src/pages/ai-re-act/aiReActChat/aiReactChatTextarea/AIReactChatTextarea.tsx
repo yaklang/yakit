@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react'
-import { AIReactChatTextareaProps } from './type'
+import type { AIReactChatTextareaProps } from './type'
 import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import styles from '../AIReActChat.module.scss'
 import { RoundedStopButton } from '../AIReActComponent'

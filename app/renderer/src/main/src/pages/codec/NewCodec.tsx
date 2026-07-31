@@ -36,12 +36,12 @@ import {
   DragDropContext,
   Droppable,
   Draggable,
-  BeforeCapture,
-  DropResult,
-  ResponderProvided,
-  DragStart,
-  DragUpdate,
-  DraggableProvided,
+  type BeforeCapture,
+  type DropResult,
+  type ResponderProvided,
+  type DragStart,
+  type DragUpdate,
+  type DraggableProvided,
 } from '@hello-pangea/dnd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
@@ -55,24 +55,24 @@ import {
   NewCodecSelectUI,
   NewCodecTextAreaUI,
 } from './NewCodecUIStore'
-import { CheckboxValueType } from 'antd/lib/checkbox/Group'
+import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { EnterOutlined } from '@ant-design/icons'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { pluginTypeToName } from '../plugins/builtInData'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import HexEditor from 'react-hex-editor'
 import oneDarkPro from 'react-hex-editor/themes/oneDarkPro'
-import { HexEditorHandle } from 'react-hex-editor/dist/types'
+import type { HexEditorHandle } from 'react-hex-editor/dist/types'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useSubscribeClose } from '@/store/tabSubscribe'
 import emiter from '@/utils/eventBus/eventBus'
-import { MultipleNodeInfo } from '../layout/mainOperatorContent/MainOperatorContentType'
+import type { MultipleNodeInfo } from '../layout/mainOperatorContent/MainOperatorContentType'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { useTheme } from '@/hook/useTheme'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
@@ -241,7 +241,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
   })
 
   const suffixFun = (file_name: string) => {
-    let file_index = file_name.lastIndexOf('.')
+    const file_index = file_name.lastIndexOf('.')
     return file_name.slice(file_index, file_name.length)
   }
 
@@ -351,7 +351,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                     maxCount={1}
                     showUploadList={false}
                     beforeUpload={(f) => {
-                      // @ts-ignore
+                      // @ts-expect-error 类型定义不完整，需要忽略此行
                       const path: string = f?.path || ''
                       if (path.length > 0) {
                         onImport(path)
@@ -1136,20 +1136,20 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
       return
     }
     if (!codecFlow) {
-      let isAlready = mitmSaveData.find((item) => item.FlowName === filterName)
+      const isAlready = mitmSaveData.find((item) => item.FlowName === filterName)
       if (isAlready) {
         warn(t('NewCodecMiddleRunList.nameAlreadyExists'))
         return
       }
     }
-    let name = codecFlow?.FlowName || filterName
+    const name = codecFlow?.FlowName || filterName
     if (!name) return
     const saveObj: SaveObjProps = {
       historyName: name,
       rightItems,
     }
 
-    let codecParams: CustomizeCodecFlowProps = {
+    const codecParams: CustomizeCodecFlowProps = {
       FlowName: name,
       // 后端所需内容
       WorkFlow: [],
@@ -1157,7 +1157,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
       WorkFlowUI: JSON.stringify(saveObj),
     }
     rightItems.forEach((item) => {
-      let obj: CodecWorkProps = {
+      const obj: CodecWorkProps = {
         CodecType: item.codecType,
         Params: [],
       }
@@ -1222,12 +1222,12 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
 
   // 执行函数
   const runCodecFun = useMemoizedFn((runItems: RightItemsProps[]) => {
-    let newCodecParams: { Text: string; WorkFlow: CodecWorkProps[] } = {
+    const newCodecParams: { Text: string; WorkFlow: CodecWorkProps[] } = {
       Text: inputEditor,
       WorkFlow: [],
     }
     runItems.forEach((item) => {
-      let obj: CodecWorkProps = {
+      const obj: CodecWorkProps = {
         CodecType: item.codecType,
         Params: [],
       }
@@ -2183,7 +2183,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
   // 构造页面左边列表数据
   const initLeftData = useMemoizedFn((Methods: CodecMethod[]) => {
     // 分类的类名
-    let tagList: string[] = []
+    const tagList: string[] = []
     let data: LeftDataProps[] = []
     // 固定顺序
     const NewMethods = Methods.sort((a, b) => differentiate(a.CodecName) - differentiate(b.CodecName))
@@ -2310,14 +2310,15 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
               require: Required,
               regex: Regex,
             } as RightItemsInputProps
-          case 'checkbox':
-            let checkArr = [{ label: Label, value: Name }]
+          case 'checkbox': {
+            const checkArr = [{ label: Label, value: Name }]
             return {
               type: 'checkbox',
               name: Name,
               checkArr,
               require: Required,
             } as RightItemsCheckProps
+          }
           case 'monaco':
             return {
               type: 'editor',

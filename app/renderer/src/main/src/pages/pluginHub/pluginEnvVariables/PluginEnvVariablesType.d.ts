@@ -1,4 +1,4 @@
-import { KVPair } from '@/models/kv'
+import { type KVPair } from '@/models/kv'
 
 export interface PluginEnvVariablesProps {
   /** 是否为插件详情页面的环境变量 */

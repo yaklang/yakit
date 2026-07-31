@@ -1,12 +1,12 @@
 import {
   AIChatQSDataTypeEnum,
-  AIYakExecFileRecord,
-  ChatStoreState,
+  type AIYakExecFileRecord,
+  type ChatStoreState,
   type AIChatQSData,
 } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIItemKind, getAIItemKind } from '@/pages/ai-re-act/hooks/useAIItemKind'
+import { type AIItemKind, getAIItemKind } from '@/pages/ai-re-act/hooks/useAIItemKind'
 import i18n from '@/i18n/i18n'
-import { FramePayload } from '../concurrentStreamFrame'
+import type { FramePayload } from '../concurrentStreamFrame'
 
 /** store 的最小依赖接口 */
 interface BuildFrameStore {
@@ -64,17 +64,17 @@ export function buildConcurrentStreamFramePayload(
   if (!chatType || !rawData) return null
 
   const frameRawData = new Map<string, AIChatQSData>()
-  let execFileRecord = new Map<string, AIYakExecFileRecord[]>()
+  const execFileRecord = new Map<string, AIYakExecFileRecord[]>()
   const state = store.getState()
   let childrenTokens: string[] = []
 
   const handFileRecord = (record) => {
     switch (record.type) {
-      case AIChatQSDataTypeEnum.TOOL_RESULT:
+      case AIChatQSDataTypeEnum.TOOL_RESULT: {
         const fileRecord = state.execFileRecord.get(record.data.callToolId)
         if (fileRecord) execFileRecord.set(record.data.callToolId, fileRecord)
         break
-
+      }
       default:
         break
     }

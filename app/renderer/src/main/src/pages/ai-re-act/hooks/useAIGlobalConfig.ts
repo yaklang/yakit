@@ -1,9 +1,9 @@
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AIGlobalConfig,
-  AIModelConfig,
-  ServerAIGlobalConfig,
+  type AIGlobalConfig,
+  type AIModelConfig,
+  type ServerAIGlobalConfig,
   grpcGetAIGlobalConfig,
   grpcSetAIGlobalConfig,
 } from '@/pages/ai-agent/aiModelList/utils'
@@ -12,7 +12,7 @@ import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { shallow } from 'zustand/shallow'
 import { cloneDeep } from 'lodash'
 import { getFileNameByModelType } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig

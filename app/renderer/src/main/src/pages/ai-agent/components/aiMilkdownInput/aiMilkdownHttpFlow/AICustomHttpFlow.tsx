@@ -1,10 +1,10 @@
-import React from 'react'
+import type React from 'react'
 import { useNodeViewContext } from '@prosemirror-adapter/react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlineLog2Icon } from '@/assets/icon/outline'
-import { AIHttpFlowRemovePayload } from './aiHttpFlowPlugin'
+import type { AIHttpFlowRemovePayload } from './aiHttpFlowPlugin'
 import styles from './AICustomHttpFlow.module.scss'
 
 interface AICustomHttpFlowProps {

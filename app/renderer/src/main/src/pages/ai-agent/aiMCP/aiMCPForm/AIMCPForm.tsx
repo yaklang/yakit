@@ -1,22 +1,22 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
+import React, { type ReactNode, useEffect, useRef, useState } from 'react'
 import styles from './AIMCPForm.module.scss'
 import { Divider, Form } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { AIMCPServerTypeEnum } from '../../defaultConstant'
-import { AIMCPFormProps } from './type'
-import { AddMCPServerRequest, MCPServerType, UpdateMCPServerRequest } from '../../type/aiMCP'
+import type { AIMCPFormProps } from './type'
+import type { AddMCPServerRequest, MCPServerType, UpdateMCPServerRequest } from '../../type/aiMCP'
 import { grpcAddMCPServer, grpcUpdateMCPServer } from '../utils'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { yakitNotify } from '@/utils/notification'
 import { OutlinePluscircleIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { InputHTTPHeaderForm } from '@/pages/mitm/MITMRule/MITMRuleFromModal'
-import { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
-import { KVPair } from '@/models/kv'
+import type { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
+import type { KVPair } from '@/models/kv'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
   const { onCancel, defaultValues } = props
@@ -31,7 +31,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
   const headerItemIndexRef = useRef<number>()
 
   useEffect(() => {
-    if (!!defaultValues) {
+    if (defaultValues) {
       form.setFieldsValue({
         Name: defaultValues.Name || '',
         Type: defaultValues.Type || AIMCPServerTypeEnum.SSE,
@@ -55,7 +55,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
       try {
         console.log('handleSubmit', value)
         setLoading(true)
-        if (!!defaultValues?.ID) {
+        if (defaultValues?.ID) {
           const updateValue: UpdateMCPServerRequest = {
             ...value,
             ID: defaultValues.ID,

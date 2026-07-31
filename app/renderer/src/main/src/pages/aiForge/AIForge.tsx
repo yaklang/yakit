@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AIForgePageItemProps, AIForgeProps } from './AIForgeType'
+import type { AIForgePageItemProps, AIForgeProps } from './AIForgeType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSelections } from 'ahooks'
-import { AIForge, QueryAIForgeRequest, QueryAIForgeResponse } from '../ai-agent/type/forge'
+import type { AIForge, QueryAIForgeRequest, QueryAIForgeResponse } from '../ai-agent/type/forge'
 import { AIForgeListDefaultPagination } from '../ai-agent/defaultConstant'
 import { grpcDeleteAIForge, grpcQueryAIForge } from '../ai-agent/grpc'
 import { HubGridList, HubGridOpt } from '../pluginHub/pluginHubList/funcTemplate'
@@ -23,7 +23,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { Divider } from 'antd'
-import { BatchExportAIforgeRef, ExportAIForgeRequest, ImportAIforgeRef } from '../ai-agent/forgeName/type'
+import type { BatchExportAIforgeRef, ExportAIForgeRequest, ImportAIforgeRef } from '../ai-agent/forgeName/type'
 import {
   BatchExportAIforge,
   handleAddAIForge,
@@ -159,7 +159,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
     batchExportRef.current?.open(query)
   })
   const onExport = useMemoizedFn((data: AIForge) => {
-    const tools = !!data?.ToolNames?.length ? data.ToolNames.filter(Boolean) : []
+    const tools = data?.ToolNames?.length ? data.ToolNames.filter(Boolean) : []
     batchExportRef.current?.open({
       ForgeNames: [data.ForgeName],
       ToolNames: tools,

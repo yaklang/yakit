@@ -1,5 +1,5 @@
 import { useCreation, useDebounceFn, useInViewport, useKeyPress, useMemoizedFn } from 'ahooks'
-import { RefObject } from 'react'
+import type { RefObject } from 'react'
 
 function useSwitchSelectByKeyboard<T>(
   ref: RefObject<HTMLDivElement | null> | null,

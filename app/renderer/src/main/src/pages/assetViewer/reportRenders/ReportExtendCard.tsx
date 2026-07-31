@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { MinusSquareOutlined, PlusSquareOutlined } from '@ant-design/icons'
 import styles from './ReportExtendCard.module.scss'
 import { YakEditor } from '@/utils/editors'
@@ -16,7 +17,7 @@ export const FoldHoleCard: React.FC<FoldHoleCardProps> = (props) => {
   const [dataSource, setDataSource] = useState<any[]>([])
   const [extendItem, setExtendItem] = useState<boolean>(false)
   useEffect(() => {
-    let newArr = (Object.entries(data) || []).filter((item) => typeof item[1] !== 'string')
+    const newArr = (Object.entries(data) || []).filter((item) => typeof item[1] !== 'string')
     newArr.sort(function (a, b) {
       return a[1].sort - b[1].sort
     })

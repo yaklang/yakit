@@ -1,16 +1,16 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetState, useMap, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
 import YakitXterm from '@/components/yakitUI/YakitXterm/YakitXterm'
 import { OutlineTerminalIcon, OutlineTrashIcon } from '@/assets/icon/outline'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import classNames from 'classnames'
 import styles from './TerminalBox.module.scss'
 import { v4 as uuidv4 } from 'uuid'
 import { failed, warn } from '@/utils/notification'
 import { writeExecResultXTerm, writeXTerm, xtermClear } from '@/utils/xtermUtils'
 import { Uint8ArrayToString } from '@/utils/str'
-import { ExecResult } from '@/pages/invoker/schema'
-import { TerminalDetailsProps } from './TerminalMap'
+import type { ExecResult } from '@/pages/invoker/schema'
+import type { TerminalDetailsProps } from './TerminalMap'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 
@@ -157,6 +157,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
     // xtermClear(xtermRef)
     ipcRenderer.on('client-yak-data', async (e: any, data: ExecResult) => {
       if (data.IsMessage) {
+        // ignore
       }
       if (data?.Raw) {
         outputCahceRef.current += Buffer.from(data.Raw).toString('utf8')
@@ -176,7 +177,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
 
   // 构造xtrem列表数据
   const initTerminalListData = useMemo(() => {
-    let listData: TerminalDetailsProps[] = []
+    const listData: TerminalDetailsProps[] = []
     terminalIds.forEach((item) => {
       try {
         const terminalCache = get(item)
@@ -263,7 +264,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
       const terminalCache = getMapAllTerminalKey()
       if (terminalCache.length > 0) {
         // 默认展开第一项
-        let runnerId: string = terminalCache[0]
+        const runnerId: string = terminalCache[0]
 
         const terminalItemCache = get(runnerId)
         if (!terminalItemCache) return
@@ -339,7 +340,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
 
   // 输出
   const onWriteXTerm = useMemoizedFn((id: string, path: string, data: Uint8Array) => {
-    let outPut = Uint8ArrayToString(data)
+    const outPut = Uint8ArrayToString(data)
     const terminalCache = get(id)
     try {
       if (terminalCache) {
@@ -367,8 +368,8 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
       // 列表关闭
       if (terminalIds.length > 1) {
         if (terminalRunnerId === id) {
-          let itemIndex = terminalIds.indexOf(id)
-          let index = itemIndex === terminalIds.length - 1 ? itemIndex - 1 : itemIndex + 1
+          const itemIndex = terminalIds.indexOf(id)
+          const index = itemIndex === terminalIds.length - 1 ? itemIndex - 1 : itemIndex + 1
           onSelectTerminalItem(terminalIds[index])
         }
         remove(id)

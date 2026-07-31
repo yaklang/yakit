@@ -1,4 +1,4 @@
-import { HTTPFlowsFieldGroupResponse } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
+import type { HTTPFlowsFieldGroupResponse } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 
 const { ipcRenderer } = window.require('electron')
 

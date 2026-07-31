@@ -1,5 +1,6 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
-import { failed, info, success } from '@/utils/notification'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import { info } from '@/utils/notification'
 import { Spin } from 'antd'
 import LicensePage from './LicensePage'
 import { ConfigPrivateDomain } from '@/components/ConfigPrivateDomain/ConfigPrivateDomain'

@@ -1,5 +1,5 @@
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AITreeNodeProps } from '../../aiTree/type'
+import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AITreeNodeProps } from '../../aiTree/type'
 
 export interface HistoryTaskTreeProps {}
 
