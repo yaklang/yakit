@@ -56,4 +56,3 @@ describe('AIAgentLogEmitter stream buffer', () => {
     )
   })
 })
-
