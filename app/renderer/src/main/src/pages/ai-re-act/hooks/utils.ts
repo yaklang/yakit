@@ -18,7 +18,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultTaskPlanEndGate } from './defaultConstant'
-import { ChatMultiSessionController } from './ChatMultiSessionController'
+import type { ChatMultiSessionController } from './ChatMultiSessionController'
 import { persistIndependentItem } from './persist/contentPersistHelper'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
