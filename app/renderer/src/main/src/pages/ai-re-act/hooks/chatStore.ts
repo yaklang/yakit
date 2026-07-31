@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid'
 // state 里有 Map（execFileRecord），Immer 操作 Map/Set 前必须加载 MapSet 插件
 enableMapSet()
 export type CreateChatStoreOptions = {
-  /** 渲染树结构变更时回调（dispatchStreamingNode 改 elements/children 后），用于 dirty debounce 落库 */
+  /** 渲染树结构变更时回调（dispatch / delete / replaceItemToken），用于 dirty debounce 落库 */
   onRenderStructureChange?: () => void
 }
 
@@ -316,10 +316,17 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
         }),
 
       /** 删除指定token的节点，并将关联节点一并更新 */
-      deleteElementNode: (params) =>
+      deleteElementNode: (params) => {
+        let deleted = false
         set((state) => {
           const { token, kind, chatType, taskID, groupID, onDelContent } = params
+          const exists =
+            (kind === 'item' && !!state.items[token]) ||
+            (kind === 'group' && !!state.groups[token]) ||
+            (kind === 'task' && !!state.tasks[token])
+          if (!exists) return
 
+          deleted = true
           const removeChatElement = (targetToken: string) => {
             const target = chatType === 'reAct' ? state.casualChat : state.taskChat
             target.elements = target.elements.filter((item) => item.token !== targetToken)
@@ -380,13 +387,17 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
               break
             }
           }
-        }),
+        })
+        if (deleted) onRenderStructureChange?.()
+      },
 
       /** 将指定item的token换成新token，并同步更新 elements / childrenTokens 中的引用 */
-      replaceItemToken: (oldToken, newToken) =>
+      replaceItemToken: (oldToken, newToken) => {
+        let replaced = false
         set((state) => {
           if (!state.items[oldToken]) return
 
+          replaced = true
           // 同步 items 实体
           state.items[newToken] = state.items[oldToken]
           state.items[newToken].token = newToken
@@ -416,7 +427,9 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
               group.childrenTokens = group.childrenTokens.map((t) => (t === oldToken ? newToken : t))
             }
           }
-        }),
+        })
+        if (replaced) onRenderStructureChange?.()
+      },
     })),
   )
 }

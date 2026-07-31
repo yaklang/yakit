@@ -278,7 +278,7 @@ interface ReStartParams {
 export const onReStart = (props: ReStartParams) => {
   const { setting, activeChat, onStart } = props
   if (!activeChat?.SessionID) return
-  const execute = globalSessionEngine.ensureSession(activeChat.SessionID)?.store?.getState()?.execute ?? false
+  const execute = globalSessionEngine.getSessionExecute(activeChat.SessionID)
   if (!execute) {
     const request: AIStartParams = setting ?? {
       ...AIAgentSettingDefault,

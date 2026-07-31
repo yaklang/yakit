@@ -16,14 +16,12 @@ const contentKey = (sessionId: string, token: string) => `${sessionId}::${token}
 function enqueueContentWrite(sessionId: string, token: string, task: () => Promise<unknown>): Promise<unknown> {
   const key = contentKey(sessionId, token)
   const next = (contentWriteChains.get(key) || Promise.resolve()).then(task, task)
-  contentWriteChains.set(
-    key,
-    next.finally(() => {
-      if (contentWriteChains.get(key) === next) {
-        contentWriteChains.delete(key)
-      }
-    }),
-  )
+  contentWriteChains.set(key, next)
+  next.finally(() => {
+    if (contentWriteChains.get(key) === next) {
+      contentWriteChains.delete(key)
+    }
+  })
   return next
 }
 

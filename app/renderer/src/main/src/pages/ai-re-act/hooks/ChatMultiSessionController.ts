@@ -227,7 +227,7 @@ export class ChatMultiSessionController {
   /** recovery_history 单次拉取条数 */
   private static readonly RECOVERY_HISTORY_LIMIT = 60
   /** ping请求探连成功的轮询时间 */
-  private static readonly PING_POLLING_INTERVAL = 1000
+  private static readonly PING_POLLING_INTERVAL = 3000
   // #endregion
 
   // #region session-source-route-pageId 索引管理相关变量和逻辑
@@ -356,6 +356,31 @@ export class ChatMultiSessionController {
   }
 
   /**
+   * 按 source + route 查询当前索引中的 sessionId 集合（跨该 route 下所有 pageId）
+   */
+  public getSessionIdsBySourceAndRoute(source: AISource, route: YakitRouteType): string[] {
+    const ids: string[] = []
+    for (const [sessionId, owner] of this.sessionOwnerMap) {
+      if (owner.source === source && owner.route === route) {
+        ids.push(sessionId)
+      }
+    }
+    return ids
+  }
+
+  /** 从传入的 sessionId 集合中筛出 store.execute === true 的会话 */
+  public filterExecutingSessionIds(sessionIds: string[]): string[] {
+    return sessionIds.filter((sessionId) => this.getSessionExecute(sessionId))
+  }
+
+  /**
+   * 只读查询 session 是否在执行中；无内存池时返回 false，不会 ensureSession 造空池
+   */
+  public getSessionExecute(sessionId: string): boolean {
+    return this.storePool.get(sessionId)?.getState().execute === true
+  }
+
+  /**
    * 同 route 下换绑 pageId：更新 sessionOwnerMap.pageId，从旧 PageKey 摘除、写入新 PageKey
    * route / source 不变；newPageId 与旧相同或 session 已 dispose 则 no-op
    */
@@ -412,8 +437,8 @@ export class ChatMultiSessionController {
    */
   public updateSessionConfig(sessionId: string, config: Partial<Omit<AIStartParams, 'Source'>>) {
     const { request } = this.ensureSession(sessionId)
-    delete config['Source']
-    Object.assign(request, config)
+    const { Source: _omit, ...rest } = config as AIStartParams
+    Object.assign(request, rest)
   }
 
   private activeShowSession: string = ''
@@ -437,14 +462,12 @@ export class ChatMultiSessionController {
   private renderWriteChains = new Map<string, Promise<unknown>>()
   private enqueueRenderWrite(sessionId: string, task: () => Promise<unknown>): Promise<unknown> {
     const next = (this.renderWriteChains.get(sessionId) || Promise.resolve()).then(task, task)
-    this.renderWriteChains.set(
-      sessionId,
-      next.finally(() => {
-        if (this.renderWriteChains.get(sessionId) === next) {
-          this.renderWriteChains.delete(sessionId)
-        }
-      }),
-    )
+    this.renderWriteChains.set(sessionId, next)
+    next.finally(() => {
+      if (this.renderWriteChains.get(sessionId) === next) {
+        this.renderWriteChains.delete(sessionId)
+      }
+    })
     return next
   }
   /** 排干该 session 所有在飞的渲染树写；resolve 时链已排空 */
@@ -1229,11 +1252,11 @@ export class ChatMultiSessionController {
             }
             void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
           }
-          if (store.getState().grpcLoadMoreLoading) {
-            store.getState().updateState({ grpcLoadMoreLoading: false })
-          }
         } catch {
           // ignore parse error
+        }
+        if (store.getState().grpcLoadMoreLoading) {
+          store.getState().updateState({ grpcLoadMoreLoading: false })
         }
         // recovery 批次结束：关闭旧会话 UI/逻辑 loading
         this.finishSessionRestoreLoading(sessionId)
@@ -1456,6 +1479,9 @@ export class ChatMultiSessionController {
         .then(() => aiChatPersistStore.deleteSessionPersist(sessionId))
         .catch(() => {})
     }
+    // deletePersist=false（页面卸载）时不排干：disposeSessionMemory 已先 flush 渲染树，
+    // 该异步写靠闭包快照完成且 enqueueRenderWrite 的 finally 会自清链，写入正是「保留可恢复数据」所需；
+    // 此处再 drain 只会空等，且无 delete 要对齐顺序，故跳过。
   }
 
   /** 关闭会话的所有定时器 */
@@ -1502,6 +1528,7 @@ export class ChatMultiSessionController {
   // 监听 session-error 事件
   public handleSessionError(sessionId: string, error: any) {
     // 暂无业务逻辑处理
+    console.error('handleSessionError--', sessionId, error)
   }
 
   // 监听 session-end 事件（含 cancel 后 5s 兜底合成）
@@ -1533,6 +1560,12 @@ export class ChatMultiSessionController {
     this.closeIPCListeners(sessionId)
 
     const pendingDeletePersist = this.pendingDisposeSessions.get(sessionId)
+    // dispose 窗口内可能仍有结构/内容变更：卸池前再刷一次树（显式删 IDB 时无需写）
+    // flush 本身不受 pendingDispose 拦截（仅 markSessionRenderDirty 会拦截）
+    if (this.storePool.has(sessionId) && pendingDeletePersist !== true) {
+      this.flushSessionRender(sessionId)
+    }
+
     if (pendingDeletePersist !== undefined) {
       this.pendingDisposeSessions.delete(sessionId)
       this.teardownDisposedSession(sessionId, pendingDeletePersist)
@@ -1565,6 +1598,43 @@ export class ChatMultiSessionController {
     }
   }
 
+  /** 该 session 是否仍在内存业务池中（无池则多为仅 IDB 有数据的孤儿 session） */
+  private hasSessionMemory(sessionId: string) {
+    return (
+      this.storePool.has(sessionId) ||
+      this.rawDataPool.has(sessionId) ||
+      this.metaPool.has(sessionId) ||
+      this.requestPool.has(sessionId)
+    )
+  }
+
+  /**
+   * 无内存池的 session：清理索引/监听后删 IDB，不走 forceClose 异步链
+   * 写队列是模块级、可晚于内存池存活，删前仍需 drain，避免迟到 put 复活孤儿行
+   */
+  private deletePersistOnlySession(sessionId: string) {
+    this.clearSessionRenderPersistTimer(sessionId)
+    this.pendingDisposeSessions.delete(sessionId)
+    this.clearSessionEndFallback(sessionId)
+    this.closeIPCListeners(sessionId)
+    this.readyChannels.delete(sessionId)
+    this.sessionRestoreLoading.delete(sessionId)
+
+    if (this.activeShowSession === sessionId) {
+      this.activeShowSession = ''
+    }
+
+    const owner = this.sessionOwnerMap.get(sessionId)
+    if (owner) {
+      this.removeFromPageSessionMap(owner, sessionId)
+      this.sessionOwnerMap.delete(sessionId)
+    }
+
+    Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+      .then(() => aiChatPersistStore.deleteSessionPersist(sessionId))
+      .catch(() => {})
+  }
+
   /**
    * 删除指定的 session（必须清除内存数据）
    * - sessionIds 非空：删集合
@@ -1573,9 +1643,22 @@ export class ChatMultiSessionController {
    * - grpc 删除由上层负责
    */
   public deleteSessions(params: { sessionIds: string[]; sources: AISource[]; route: YakitRouteType; pageId: string }) {
+    const { sessionIds, sources } = params
+    const isBulkDelete = !sessionIds?.length
     const ids = this.resolveSessionIds(params)
+
     for (const sessionId of ids) {
-      this.disposeSessionMemory(sessionId, true)
+      if (this.hasSessionMemory(sessionId)) {
+        this.disposeSessionMemory(sessionId, true)
+      } else {
+        this.deletePersistOnlySession(sessionId)
+      }
+    }
+
+    if (isBulkDelete) {
+      for (const source of sources) {
+        void this.persistDeleteBySource(source)
+      }
     }
   }
 
