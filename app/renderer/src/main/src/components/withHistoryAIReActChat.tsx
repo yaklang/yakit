@@ -49,7 +49,6 @@ import { HistroryAIReActChat } from './HistroryAIReActChat'
 import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 import { useStore } from 'zustand'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
@@ -321,10 +320,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
 
-  const store = useCurrentStore()
-  const execute = useStore(store, (state) => state.execute)
+  const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
   const casualLoading = useStore(store, (state) => state.casualLoading)
-
   useEffect(() => {
     if (!isHaveWebFuzzerPageId && !isHaveYakRunnerPageId) {
       casualLoadingRef.current = false
@@ -429,7 +426,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   /** 新建会话：清空 UI、断开旧连接，并预生成新的 TimelineSessionID */
   const onNewChat = useMemoizedFn(() => {
     const currentID = activeChat?.SessionID
-    if (execute && currentID) {
+    if (store.getState().execute && currentID) {
       onClose([currentID])
     }
     // events.onReset()
@@ -445,7 +442,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onStop = useMemoizedFn(() => {
-    if (execute && activeID) {
+    if (store.getState().execute && activeID) {
       onClose([activeID])
     }
   })
@@ -475,7 +472,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   /** 与输入框提交一致：执行中走自由输入，否则开启新会话 */
   const handleSubmitQuery = useMemoizedFn((value: HandleStartParams) => {
     const sessionID = activeChat?.SessionID
-    if (execute && sessionID) {
+    if (store.getState().execute && sessionID) {
       const { attachedResourceInfo } = getAIReActRequestParams(value)
       const chatMessage: AIInputEvent = {
         IsFreeInput: true,
