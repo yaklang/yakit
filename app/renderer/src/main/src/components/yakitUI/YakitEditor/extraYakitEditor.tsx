@@ -38,6 +38,9 @@ const { ipcRenderer } = window.require('electron')
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = 'HTTP_PACKET_EDITOR_DisableUnicodeDecode'
 
+// 模块级常量：固定数组，避免每次 render 新建数组导致 YakitEditor React.memo 浅比较失效
+const HIDDEN_DEFAULT_CONTEXT_MENU_KEYS = ['copy']
+
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, 'menuType'> {
   defaultHttps?: boolean
   originValue: string
@@ -723,7 +726,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
       menuType={rightMenuType}
       readOnly={readOnly}
       contextMenu={rightContextMenu}
-      hiddenDefaultContextMenuKeys={['copy']}
+      hiddenDefaultContextMenuKeys={HIDDEN_DEFAULT_CONTEXT_MENU_KEYS}
       disableUnicodeDecode={disableUnicodeDecode}
       {...restProps}
       {...extraEditorProps}

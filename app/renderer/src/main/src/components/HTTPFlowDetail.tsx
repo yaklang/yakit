@@ -58,6 +58,11 @@ const { ipcRenderer } = window.require('electron')
 const RandomChunkedDataTable = React.lazy(() => import('./HTTPFlowTable/RandomChunkedDataTable/RandomChunkedDataTable'))
 export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any
 
+// 模块级常量：extraEditorProps 内容固定，提为常量避免每次 render 新建对象导致子组件 React.memo 浅比较失效
+const SHARED_EXTRA_EDITOR_PROPS = {
+  isShowSelectRangeMenu: true,
+} as const
+
 export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
   id: number
   payloads?: string[]
@@ -284,6 +289,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     }
   }
 
+  // 稳定 contextMenu/downbodyProps 引用，避免每次 render 新建对象导致三层 React.memo 浅比较失效
+  // （NewHTTPPacketEditor → HTTPPacketYakitEditor → YakitEditor），消除 YakitEditor 无谓重渲染及菜单 cloneDeep/JSON.stringify effect
+  const requestContextMenu = useMemo(() => ({ ...sendCodeCompareMenuItem('request') }), [i18n.language, flow?.Id])
+  const responseContextMenu = useMemo(() => ({ ...sendCodeCompareMenuItem('response') }), [i18n.language, flow?.Id])
+  const requestDownbodyParams = useMemo(() => ({ Id: flow?.Id, IsRequest: true }), [flow?.Id])
+  const responseDownbodyParams = useMemo(() => ({ Id: flow?.Id, IsRequest: false }), [flow?.Id])
+
   const formatUpdatedAt = useMemo(() => formatTimestamp(flow?.UpdatedAt || 0), [flow])
   return (
     <YakitSpin
@@ -449,15 +461,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         defaultHttps={flow?.IsHTTPS}
                         // actions={[...actionFuzzer]}
                         noSendToComparer={true}
-                        extraEditorProps={{
-                          isShowSelectRangeMenu: true,
-                        }}
-                        contextMenu={{
-                          ...sendCodeCompareMenuItem('request'),
-                        }}
+                        extraEditorProps={SHARED_EXTRA_EDITOR_PROPS}
+                        contextMenu={requestContextMenu}
                         url={flow.Url}
                         downstreamProxyStr={props.downstreamProxyStr}
-                        downbodyParams={{ Id: flow.Id, IsRequest: true }}
+                        downbodyParams={requestDownbodyParams}
                         onEditor={(editor) => {
                           setReqEditor(editor)
                         }}
@@ -502,15 +510,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         // actions={[...actionFuzzer]}
                         webFuzzerValue={flow.RequestString || ''}
                         noSendToComparer={true}
-                        extraEditorProps={{
-                          isShowSelectRangeMenu: true,
-                        }}
-                        contextMenu={{
-                          ...sendCodeCompareMenuItem('response'),
-                        }}
+                        extraEditorProps={SHARED_EXTRA_EDITOR_PROPS}
+                        contextMenu={responseContextMenu}
                         url={flow.Url}
                         downstreamProxyStr={props.downstreamProxyStr}
-                        downbodyParams={{ Id: flow.Id, IsRequest: false }}
+                        downbodyParams={responseDownbodyParams}
                         onEditor={(editor) => {
                           setResEditor(editor)
                         }}
@@ -1371,6 +1375,21 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }
   }
 
+  // 稳定 contextMenu/downbodyProps 引用，避免每次 render 新建对象导致三层 React.memo 浅比较失效
+  const requestContextMenu = useMemo(() => ({ ...sendCodeCompareMenuItem('request') }), [i18n.language, flow?.Id])
+  const responseContextMenu = useMemo(() => ({ ...sendCodeCompareMenuItem('response') }), [i18n.language, flow?.Id])
+  const requestDownbodyParams = useMemo(() => ({ Id: flow?.Id, IsRequest: true }), [flow?.Id])
+  const responseDownbodyParams = useMemo(() => ({ Id: flow?.Id, IsRequest: false }), [flow?.Id])
+  // extraEditorProps 内容全稳定（execAutoDecodeCallback 是 useMemoizedFn），提为 useMemo 避免新建对象
+  const sharedExtraEditorProps = useMemo(
+    () => ({
+      renderLineHighlight: 'none' as const,
+      isShowSelectRangeMenu: true,
+      execAutoDecodeCallback,
+    }),
+    [execAutoDecodeCallback],
+  )
+
   // 是否显示原始数据
   const [isShowBeforeData, setShowBeforeData] = useState<boolean>(false)
   // 请求/原始请求
@@ -1844,9 +1863,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             defaultHttps={flow.IsHTTPS}
             noMinimap={true}
             noSendToComparer={true}
-            contextMenu={{
-              ...sendCodeCompareMenuItem('request'),
-            }}
+            contextMenu={requestContextMenu}
             // 这个为了解决不可见字符的问题
             defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
             extra={
@@ -1883,15 +1900,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             highLightFindClass="hight-light-rule-color"
             isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
             url={flow.Url}
-            downbodyParams={{ Id: flow.Id, IsRequest: true }}
+            downbodyParams={requestDownbodyParams}
             onClickOpenPacketNewWindowMenu={getPacketNewWindow}
             noPacketModifier={noPacketModifier}
             noOpenPacketNewWindow={noOpenPacketNewWindow}
-            extraEditorProps={{
-              renderLineHighlight: 'none',
-              isShowSelectRangeMenu: true,
-              execAutoDecodeCallback,
-            }}
+            extraEditorProps={sharedExtraEditorProps}
           />
         )
       }}
@@ -1965,9 +1978,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
               return titleEle
             })()}
             noSendToComparer={true}
-            contextMenu={{
-              ...sendCodeCompareMenuItem('response'),
-            }}
+            contextMenu={responseContextMenu}
             extra={secondNodeResExtraBtn()}
             AfterBeautifyRenderBtn={
               <>
@@ -2018,15 +2029,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             highLightFindClass="hight-light-rule-color"
             isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
             url={flow.Url}
-            downbodyParams={{ Id: flow.Id, IsRequest: false }}
+            downbodyParams={responseDownbodyParams}
             onClickOpenPacketNewWindowMenu={getPacketNewWindow}
             noPacketModifier={noPacketModifier}
             noOpenPacketNewWindow={noOpenPacketNewWindow}
-            extraEditorProps={{
-              renderLineHighlight: 'none',
-              isShowSelectRangeMenu: true,
-              execAutoDecodeCallback,
-            }}
+            extraEditorProps={sharedExtraEditorProps}
           />
         )
       }}
