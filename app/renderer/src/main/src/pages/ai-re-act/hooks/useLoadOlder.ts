@@ -5,6 +5,7 @@ import type { ListRange } from 'react-virtuoso'
 import { globalSessionEngine } from './ChatMultiSessionController'
 import { useCurrentStore, useCurrentRawData } from './useCurrentDataBySession'
 import useCurrentSessionId from './useCurrentSessionId'
+import { AITaskStatus } from './grpcApi'
 import type { ChatListRenderType } from './aiRender'
 
 /** 向上/向下固定预取条数 */
@@ -22,6 +23,8 @@ const PREPEND_OFFSET = 1000000
  * - Virtuoso startReached 触发 handleLoadMore，grpcOffset>0 时发 recovery_history 前插更旧事件
  * - firstItemIndex 前插补偿：数据前插时视口不跳动
  * - loading（grpcLoadMoreLoading）期间请求排队，结束后补发；atTop 兜底探针
+ * - 互斥防后端表死锁：消息处理中（casualLoading / taskStatus.status=processing）禁止 gRPC
+ *   向上加载（排队等处理结束补发）；反向由 handleSendMessage 拦 grpcLoadMoreLoading 期间的发送
  *
  * 内存回收由 rangeChanged 驱动（elements 全量常驻，contents 按需缓存）：
  * 1. 可见区缺正文 → 立即 hydrate（IDB → 内存 + bump renderNum）
@@ -41,6 +44,13 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   const dataLength = useStore(store, (s) =>
     chatType === 'reAct' ? s.casualChat.elements.length : s.taskChat.elements.length,
   )
+  /**
+   * 消息处理中（自由对话 casualLoading / 任务规划 taskStatus.status=processing）。
+   * 处理中禁止 gRPC 向上加载，避免与流式写入并发导致后端表死锁（IDB hydrate 不受影响）。
+   */
+  const processing = useStore(store, (s) =>
+    chatType === 'reAct' ? s.casualLoading : s.taskStatus.status === AITaskStatus.inProgress,
+  )
 
   /** 上次 startIndex（数组下标），用于判断滚动方向 */
   const lastStartIndexRef = useRef(-1)
@@ -51,6 +61,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   const isPrependingRef = useRef(false)
   const atTopRef = useRef(false)
   const wasLoadingRef = useRef(false)
+  const wasProcessingRef = useRef(false)
 
   // 排队锁
   const pendingRequestRef = useRef(false)
@@ -82,7 +93,8 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   const handleLoadMore = useMemoizedFn(() => {
     if (!fetchHasMore() || !sessionId) return
 
-    if (loading) {
+    // gRPC 加载中或消息处理中：排队等结束，防后端表死锁
+    if (loading || processing) {
       pendingRequestRef.current = true
       return
     }
@@ -124,12 +136,22 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
     }
     wasLoadingRef.current = loading
   }, [loading, handleLoadMore, fetchHasMore])
+
+  // 消息处理结束（processing true→false）后，补发排队中的向上加载
+  useEffect(() => {
+    if (wasProcessingRef.current && !processing && pendingRequestRef.current) {
+      pendingRequestRef.current = false
+      handleLoadMore()
+    }
+    wasProcessingRef.current = processing
+  }, [processing, handleLoadMore])
   // #endregion
 
   // 切会话时重置方向跟踪与杂项 Ref + 清空旧 contents（旧 session Map 占内存）
   useEffect(() => {
     lastStartIndexRef.current = -1
     wasLoadingRef.current = false
+    wasProcessingRef.current = false
     isPrependingRef.current = false
     atTopRef.current = false
     pendingRequestRef.current = false

@@ -1,6 +1,7 @@
 import { AIChatQSDataTypeEnum, CurrentExecTaskTree, type ChatStoreState } from './aiRender'
 import { createStore } from 'zustand/vanilla'
 import { immer } from 'zustand/middleware/immer'
+import { enableMapSet } from 'immer'
 import cloneDeep from 'lodash/cloneDeep'
 import {
   DefaultAIQuestionQueues,
@@ -9,7 +10,8 @@ import {
   DefaultTaskPlanStatus,
 } from './defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
-
+// state 里有 Map（execFileRecord），Immer 操作 Map/Set 前必须加载 MapSet 插件
+enableMapSet()
 export type CreateChatStoreOptions = {
   /** 渲染树结构变更时回调（dispatchStreamingNode 改 elements/children 后），用于 dirty debounce 落库 */
   onRenderStructureChange?: () => void

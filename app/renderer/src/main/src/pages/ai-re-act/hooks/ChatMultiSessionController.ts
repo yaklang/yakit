@@ -769,6 +769,12 @@ export class ChatMultiSessionController {
 
       const { store, rawData, meta } = this.ensureSession(token)
 
+      // 向上加载历史（recovery_history）进行中时禁止发送消息，避免与 gRPC 查询并发导致后端表死锁
+      if (store.getState().grpcLoadMoreLoading) {
+        yakitNotify('warning', '历史消息加载中，请稍后再发送')
+        return
+      }
+
       if (params.IsFreeInput) {
         const { casualLoading, currentCasualTaskID, taskStatus } = store.getState()
         // 如果自由对话引起了任务规划，那么自由对话其实是空闲状态

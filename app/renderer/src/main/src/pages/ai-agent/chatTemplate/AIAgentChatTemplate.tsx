@@ -286,7 +286,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         ref={virtuosoRef}
         key={session}
         scrollerRef={setScrollerRef}
-        defaultItemHeight={120}
         atBottomStateChange={setIsAtBottomRef}
         style={{ height: '100%', width: '100%' }}
         data={streams}
