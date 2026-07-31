@@ -290,11 +290,23 @@ const uint8ArrayToString = (data?: Uint8Array) => {
   }
 }
 
+// 解码缓存：按 Uint8Array 引用缓存解码结果，避免同一份字节（如 4.9MB 响应）在多次选中行/打开详情时重复同步解码。
+// WeakMap 以字节数组为 key，当 flow 被 GC 或字段被替换时缓存条目自动回收，不会内存膨胀。
+const uint8StringCache = new WeakMap<Uint8Array, string>()
+const cachedUint8ArrayToString = (data?: Uint8Array) => {
+  if (!data?.length) return ''
+  const cached = uint8StringCache.get(data)
+  if (cached !== undefined) return cached
+  const str = uint8ArrayToString(data)
+  uint8StringCache.set(data, str)
+  return str
+}
+
 export const getHTTPFlowReqAndResToString = (flow: HTTPFlow) => {
   return {
     ...flow,
-    RequestString: uint8ArrayToString(flow?.Request),
-    ResponseString: uint8ArrayToString(flow?.Response),
+    RequestString: cachedUint8ArrayToString(flow?.Request),
+    ResponseString: cachedUint8ArrayToString(flow?.Response),
   }
 }
 
