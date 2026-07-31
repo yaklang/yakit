@@ -43,7 +43,6 @@ import { YakitCopyText } from './yakitUI/YakitCopyText/YakitCopyText'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import PluginTabs from './businessUI/PluginTabs/PluginTabs'
 import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
-import { asynSettingState } from '@/utils/optimizeRender'
 import { HighLightText } from './yakitUI/YakitEditor/YakitEditorType'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useCampare } from '@/hook/useCompare/useCompare'
@@ -1472,13 +1471,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     if (rspType === 'response') {
       setOriginRspValue(beforeRspValue)
     } else {
-      if (setValueTimer.current) {
-        clearInterval(setValueTimer.current)
-        setValueTimer.current = null
-      }
-      if (!flow?.ResponseString) setOriginRspValue(flow?.ResponseString || '')
-      // 超大数据分片赋值
-      else setValueTimer.current = asynSettingState(flow?.ResponseString || '', setOriginRspValue)
+      // 直接一次性赋值完整响应字符串。
+      // 不再使用 asynSettingState 分片定时赋值：弱 CPU 上分片会把 1 次大渲染变成 5 次 1MB 渲染，
+      // 叠加 old+content 字符串拼接的 O(n) 内存复制，总开销反而更大，且带来 5 秒间歇性卡顿、5 秒才显示完整内容。
+      // 配合 Monaco 大内容降级（plaintext + 跳过装饰器 + 关 minimap/换行），一次性赋值的渲染成本已被大幅压缩。
+      setOriginRspValue(flow?.ResponseString || '')
     }
   }, [rspType, flow?.Response])
 

@@ -582,7 +582,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
   const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
   // 性能优化：提取 onSelected 为 useMemoizedFn，避免每次渲染创建新引用破坏 HTTPFlowTable 的 React.memo
   const onSelected = useMemoizedFn((i?: HTTPFlow) => {
-    if (i) setSelectedHTTPFlow(i)
+    // 子组件关闭详情时会上抛 undefined，这里必须接受 undefined 才能清空父级 selected，释放大响应字符串
+    setSelectedHTTPFlow(i)
   })
   useEffect(() => {
     setSecondNodeVisible(!onlyShowFirstNode)
