@@ -187,7 +187,6 @@ export interface HistoryAIReActChatProviderProps {
   mergeRemoteAIAgentSetting?: (cache: AIAgentSetting, prev: AIAgentSetting) => AIAgentSetting
 }
 
-/** TODO -  @whale 修改确认 */
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
   source,
   route,
@@ -325,7 +324,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const execute = useStore(store, (state) => state.execute)
   const casualLoading = useStore(store, (state) => state.casualLoading)
 
-  // TODO - @whale 修改确认 useEffect => httpFuzzTabPageId->isHaveWebFuzzerPageId
   useEffect(() => {
     if (!isHaveWebFuzzerPageId && !isHaveYakRunnerPageId) {
       casualLoadingRef.current = false
@@ -405,7 +403,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
     return new Promise<AIHandleStartResProps>((resolve) => {
       let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
-      // TODO - @whale 修改确认 httpFuzzTabPageId->isHaveWebFuzzerPageId
       if (isHaveWebFuzzerPageId) {
         const raw = getWebFuzzerPageRequestString(pageId)
         const isHttps = getWebFuzzerPageIsHttps(pageId) ?? false
@@ -454,7 +451,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const onSendRequest = useMemoizedFn((data: AISendParams) => {
     let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
-    // TODO - @whale 修改确认 httpFuzzTabPageId->isHaveWebFuzzerPageId
     if (isHaveWebFuzzerPageId) {
       const raw = getWebFuzzerPageRequestString(pageId)
       const isHttps = getWebFuzzerPageIsHttps(pageId) ?? false

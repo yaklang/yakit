@@ -43,7 +43,6 @@ interface HistoryAIReActChatProps {
   source: AISource
 }
 
-/** TODO -  @whale 修改确认 */
 const HistroryAIReActChat: FC<HistoryAIReActChatProps> = memo((props) => {
   const {
     showFreeChat,

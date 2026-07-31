@@ -152,7 +152,7 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
     }),
     shallow,
   )
-  /** TODO - 这个pageId获取待修改@whale  */
+
   const webFuzzerAiStoreFuzzerPageId = useMemo((): string | undefined => {
     return getCurrentSelectPageId(currentPageTabRouteKey)
   }, [currentPageTabRouteKey])

@@ -416,7 +416,6 @@ export class ChatMultiSessionController {
     Object.assign(request, config)
   }
 
-  /** TODO - 存放当前正在展示的会话session */
   private activeShowSession: string = ''
   /** 设置当前展示的会话 Session */
   public setActiveShowSession(sessionId: string) {
