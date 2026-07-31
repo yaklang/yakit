@@ -844,7 +844,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
   // 大内容/二进制降级：不截断、不改可见内容，只让底层 Monaco 用更轻的方式渲染同样全文
   const editorDowngradeProps = useMemo(() => {
-    const size = new TextEncoder().encode(originValue ?? '').length
+    // 用字符数 O(1) 近似字节阈值，避免对 4.9MB 字符串做 TextEncoder.encode（主线程 O(n) 编码）。
+    // UTF-8 字节 ≈ 字符数 × 1~3，用 length 判断偏保守（降级更早），对性能有利且不会漏判大内容。
+    const size = (originValue ?? '').length
     const ct = parseContentTypeFromPacket(originValue ?? '')
     const binary = isBinaryLikeContentType(ct, props.url)
     const isLite = size > PREVIEW_LITE_THRESHOLD
@@ -865,6 +867,18 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
   const setTypeOptionFn = useMemoizedFn(() => {
     if (originValue.length > 0) {
+      // 大内容早退：跳过 formatPacketRender（IPC + 可能的 Uint8ArrayToString/DOMPurify/prettier 主线程解析）
+      // 和 TextEncoder.encode（4.9MB 主线程 O(n) 编码），直接只给 HEX 选项。
+      // 弱 CPU 上大内容美化/渲染本就不可用，且配合 Monaco 大内容降级已足够。
+      if (originValue.length > PREVIEW_LITE_THRESHOLD) {
+        setTypeOptions([
+          {
+            value: 'hex',
+            label: 'HEX',
+          },
+        ])
+        return
+      }
       // 默认展示 originValue
       const encoder = new TextEncoder()
       const bytes = encoder.encode(originValue)

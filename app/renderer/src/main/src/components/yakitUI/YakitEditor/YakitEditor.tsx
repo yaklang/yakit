@@ -1678,8 +1678,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   }, [editor])
   useEffect(() => {
+    // disableUnicodeDecodeRef 无论大小内容都需同步，保证切回小内容时 generateDecorations 用到最新值
+    disableUnicodeDecodeRef.current = props.disableUnicodeDecode
+    // 大内容时跳过 decorations 重建：generateDecorations 内部已对 host/unicode/content-type 做大内容守卫，
+    // 但 deltaDecorations 在大 model 上本身有开销，且 JSON.stringify(highLightText) 对大数组也耗 CPU。
+    // 大内容上规则高亮本就难以阅读，跳过可避免叠加在 Monaco 首渲染上的帧丢失。
+    if (isLargeContentRef.current) return
     if (deltaDecorationsRef.current) {
-      disableUnicodeDecodeRef.current = props.disableUnicodeDecode
       deltaDecorationsRef.current()
     }
   }, [
