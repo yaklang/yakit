@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  indexedDBDataToReActChatRenderItem as toReActChatItems,
-  getTreeDataIds,
-  toDialogueData,
-} from '../utils'
+import { indexedDBDataToReActChatRenderItem as toReActChatItems, getTreeDataIds, toDialogueData } from '../utils'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
 
 describe('dialogue transform helpers', () => {
