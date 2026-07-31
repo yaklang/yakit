@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { indexedDBDataToReActChatRenderItem, getTreeDataIds, toDialogueData } from '../utils'
+import {
+  indexedDBDataToReActChatRenderItem as toReActChatItems,
+  getTreeDataIds,
+  toDialogueData,
+} from '../utils'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
 
 describe('dialogue transform helpers', () => {
@@ -24,7 +28,7 @@ describe('dialogue transform helpers', () => {
         cacheOrder: 1,
       } as any,
     ]
-    const items = indexedDBDataToReActChatRenderItem('reAct', data)
+    const items = toReActChatItems('reAct', data)
     expect(items[0]).toMatchObject({ token: 'g1', isGroup: true, isCached: true })
     expect(items[1]).toMatchObject({ token: 'i1', isGroup: false, kind: 'item' })
   })

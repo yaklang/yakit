@@ -21,8 +21,8 @@ describe('ensureToolResultOnUI', () => {
     expect(store.getState().items['call-1']).toBeTruthy()
     expect(store.getState().casualChat.elements.some((e) => e.token === 'call-1')).toBe(true)
 
-    const renderBefore = store.getState().items['call-1'].renderNum
+    const { renderNum: prevNum } = store.getState().items['call-1']
     ensureToolResultOnUI({ res, chatType: 'reAct', store }, toolResult)
-    expect(store.getState().items['call-1'].renderNum).toBe(renderBefore + 1)
+    expect(store.getState().items['call-1'].renderNum).toBe(prevNum + 1)
   })
 })

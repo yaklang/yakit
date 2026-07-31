@@ -68,9 +68,9 @@ describe('chatStore basics', () => {
       chatType: 'reAct',
       node: { token: 'i1', kind: 'item', type: 'thought' },
     })
-    const before = store.getState().items.i1.renderNum
+    const { renderNum: prevNum } = store.getState().items.i1
     store.getState().incrementNodeVersion('i1', 'item')
-    expect(store.getState().items.i1.renderNum).toBe(before + 1)
+    expect(store.getState().items.i1.renderNum).toBe(prevNum + 1)
 
     const memBefore = store.getState().memoryListUpdate
     store.getState().updateStateCount('memoryListUpdate')
