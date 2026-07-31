@@ -16,7 +16,7 @@ import { yakitNotify } from '@/utils/notification'
 import { ImportExportProgress } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import emiter from '@/utils/eventBus/eventBus'
 import styles from './ExtraMenu.module.scss'
-import { isYakit } from '@/utils/envfile'
+import { isMemfit, isYakit } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import { ExtraMenuItem, getExtraMenu } from '@/routes/newRoute'
@@ -161,7 +161,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
   const renderContent = useMemoizedFn(() => {
     return (
       <>
-        {isYakit() && (
+        {(isYakit() || isMemfit()) && (
           <>
             <YakitPopover
               overlayClassName={styles['menu-popover']}
