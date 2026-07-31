@@ -29,6 +29,7 @@ import { HistoryChatListItemProps } from './type'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -269,6 +270,7 @@ const HistoryChatList: FC<{
     }))
     setActiveChat && setActiveChat(info)
   })
+  const [closeLoading, setCloseLoading] = useState(false)
   // 如果当前历史在aiagent页面中，直接切换会话；其余页面需要判断对话是否在执行，执行中需要先断开会话再设置新会话
   const handleSetActiveChat = useMemoizedFn((info: AISession) => {
     if (aiSource.some((source) => AI_AGENT_HISTORY_AI_SOURCES.includes(source))) {
@@ -277,13 +279,17 @@ const HistoryChatList: FC<{
     }
     const activeExecute = globalSessionEngine?.getSessionExecute(info.SessionID)
     if (!!activeExecute) {
-      yakitNotify('info', '在其他页面中会话正在执行中')
+      yakitNotify('info', '会话正在执行中')
       return
     }
     const currentExecute = globalSessionEngine?.getSessionExecute(activeSessionId)
     if (!!currentExecute) {
-      onClose([info.SessionID], () => {
+      setCloseLoading(true)
+      onClose([activeSessionId], () => {
         onSetChat(info)
+        setTimeout(() => {
+          setCloseLoading(false)
+        }, 200)
       })
     } else {
       onSetChat(info)
@@ -291,43 +297,45 @@ const HistoryChatList: FC<{
   })
 
   return (
-    <div ref={listRef} className={styles['history-chat-list']}>
-      {groupedHistory.map((group) => {
-        return (
-          <div key={group.key} className={styles['history-group']}>
-            <div className={styles['history-group-title']}>{t(group.label)}</div>
-            {group.list.map((item) => {
-              return (
-                <HistoryChatListItem
-                  key={item.SessionID}
-                  item={item}
-                  handleSetActiveChat={handleSetActiveChat}
-                  getPopupContainer={getPopupContainer}
-                  overlayClassName={overlayClassName}
-                  handleOpenEditName={handleOpenEditName}
-                  handleDeleteChat={handleDeleteChat}
-                />
-              )
-            })}
-          </div>
-        )
-      })}
-      {loading && <div className={styles['history-loading']}>{t('YakitSpin.loading')}</div>}
+    <YakitSpin spinning={closeLoading}>
+      <div ref={listRef} className={styles['history-chat-list']}>
+        {groupedHistory.map((group) => {
+          return (
+            <div key={group.key} className={styles['history-group']}>
+              <div className={styles['history-group-title']}>{t(group.label)}</div>
+              {group.list.map((item) => {
+                return (
+                  <HistoryChatListItem
+                    key={item.SessionID}
+                    item={item}
+                    handleSetActiveChat={handleSetActiveChat}
+                    getPopupContainer={getPopupContainer}
+                    overlayClassName={overlayClassName}
+                    handleOpenEditName={handleOpenEditName}
+                    handleDeleteChat={handleDeleteChat}
+                  />
+                )
+              })}
+            </div>
+          )
+        })}
+        {loading && <div className={styles['history-loading']}>{t('YakitSpin.loading')}</div>}
 
-      {editInfo.current && (
-        <EditChatNameModal
-          getContainer={
-            embedded && getPopupContainer
-              ? getPopupContainer()
-              : document.getElementById(YakitAIAgentPageID) || undefined
-          }
-          zIndex={embedded ? 1110 : undefined}
-          info={editInfo.current}
-          visible={editShow}
-          onCallback={handleCallbackEditName}
-        />
-      )}
-    </div>
+        {editInfo.current && (
+          <EditChatNameModal
+            getContainer={
+              embedded && getPopupContainer
+                ? getPopupContainer()
+                : document.getElementById(YakitAIAgentPageID) || undefined
+            }
+            zIndex={embedded ? 1110 : undefined}
+            info={editInfo.current}
+            visible={editShow}
+            onCallback={handleCallbackEditName}
+          />
+        )}
+      </div>
+    </YakitSpin>
   )
 }
 
