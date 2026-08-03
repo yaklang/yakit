@@ -1,5 +1,5 @@
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIForge: vi.fn() }))
@@ -7,10 +7,12 @@ vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIForge: vi.fn() }))
 import { DigitalEmployeeSelectPage } from '../DigitalEmployeeSelectPage'
 import * as DigitalEmployeeContext from '../DigitalEmployeeContext'
 import { DIGITAL_EMPLOYEES } from '../config'
+import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
 
 describe('DigitalEmployeeSelectPage', () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.mocked(grpcQueryAIForge).mockReset()
   })
 
   it('renders all employees with the first employee selected by default', () => {
@@ -99,6 +101,54 @@ describe('DigitalEmployeeSelectPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '下一页' }))
     expect(screen.getByRole('button', { name: '切换到第 2 页' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('button', { name: '下一页' })).toBeDisabled()
+  })
+
+  it('appends every Forge returned beyond the eight configured employees', async () => {
+    const forges = DIGITAL_EMPLOYEES.map((employee) => ({
+      Id: employee.order,
+      ForgeName: `forge-${employee.order}`,
+      ForgeVerboseName: employee.name,
+      ForgeType: 'config' as const,
+    }))
+    forges.push({
+      Id: 9,
+      ForgeName: 'ssa_project_scan_check',
+      ForgeVerboseName: 'SSA项目检查',
+      ForgeType: 'config',
+    })
+    vi.mocked(grpcQueryAIForge).mockResolvedValue({
+      Pagination: { Page: 1, Limit: 100 },
+      Data: forges,
+      Total: forges.length,
+    } as never)
+
+    const ContextProbe = () => {
+      const { employees } = DigitalEmployeeContext.useDigitalEmployee()
+      return (
+        <div>
+          <span data-testid="employee-count">{employees.length}</span>
+          {employees.map((employee) => (
+            <span key={employee.id} data-portrait={employee.portrait}>
+              {employee.name}
+            </span>
+          ))}
+        </div>
+      )
+    }
+
+    render(
+      <DigitalEmployeeContext.DigitalEmployeeProvider enabled>
+        <ContextProbe />
+      </DigitalEmployeeContext.DigitalEmployeeProvider>,
+    )
+
+    await waitFor(() => expect(screen.getByTestId('employee-count')).toHaveTextContent('9'))
+    expect(screen.getByText('SSA项目检查')).toHaveAttribute('data-portrait', DIGITAL_EMPLOYEES[0].portrait)
+    expect(grpcQueryAIForge).toHaveBeenCalledTimes(1)
+    expect(grpcQueryAIForge).toHaveBeenCalledWith(
+      expect.objectContaining({ Pagination: expect.objectContaining({ Page: 1, Limit: 100 }) }),
+      true,
+    )
   })
 
   it('allows the selected employee to enter before Forge resolution completes', () => {

@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
 import { AIForge } from '@/pages/ai-agent/type/forge'
-import { DIGITAL_EMPLOYEES, DigitalEmployeeDefinition, getDigitalEmployeeForgeId } from './config'
+import {
+  DIGITAL_EMPLOYEES,
+  DIGITAL_EMPLOYEE_PORTRAITS,
+  DigitalEmployeeDefinition,
+  getDigitalEmployeeForgeId,
+} from './config'
 import { findForgeById } from './resolver'
 
 export type DigitalEmployeeResolveStatus = 'idle' | 'loading' | 'ready' | 'missing' | 'error'
@@ -29,6 +34,55 @@ const createInitialEmployees = (): DigitalEmployee[] => {
 }
 
 const DEFAULT_EMPLOYEE_ID = DIGITAL_EMPLOYEES[0]?.id
+const FORGE_PAGE_SIZE = 100
+const GENERATED_EMPLOYEE_ACCENTS = ['#237fea', '#735cff', '#13a8a8', '#178bd8']
+
+const queryForgePage = (page: number) => {
+  return grpcQueryAIForge(
+    {
+      Pagination: {
+        Page: page,
+        Limit: FORGE_PAGE_SIZE,
+        OrderBy: 'id',
+        Order: 'asc',
+      },
+    },
+    true,
+  )
+}
+
+const queryAllForges = async () => {
+  const firstPage = await queryForgePage(1)
+  const pageCount = Math.ceil(firstPage.Total / FORGE_PAGE_SIZE)
+  const remainingPages =
+    pageCount > 1 ? await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) => queryForgePage(index + 2))) : []
+  const forgeMap = new Map<number, AIForge>()
+  const responses = [firstPage, ...remainingPages]
+  responses.forEach((response) => {
+    const pageForges = response.Data || []
+    pageForges.forEach((forge) => forgeMap.set(forge.Id, forge))
+  })
+  return [...forgeMap.values()].sort((a, b) => a.Id - b.Id)
+}
+
+const createGeneratedEmployee = (forge: AIForge): DigitalEmployee => {
+  const displayName = forge.ForgeVerboseName?.trim() || forge.ForgeName || `智能体 ${forge.Id}`
+  const description = forge.Description?.trim() || `${displayName}智能体`
+  return {
+    id: `forge-${forge.Id}`,
+    order: forge.Id,
+    forgeId: forge.Id,
+    name: displayName,
+    forgeVerboseName: displayName,
+    description,
+    cardDescription: description,
+    skills: forge.Tag?.length ? forge.Tag : [forge.ForgeType],
+    portrait: DIGITAL_EMPLOYEE_PORTRAITS[(forge.Id - 1) % DIGITAL_EMPLOYEE_PORTRAITS.length],
+    accent: GENERATED_EMPLOYEE_ACCENTS[(forge.Id - 1) % GENERATED_EMPLOYEE_ACCENTS.length],
+    forge,
+    status: 'ready',
+  }
+}
 
 const DigitalEmployeeContext = createContext<DigitalEmployeeContextValue>({
   employees: createInitialEmployees(),
@@ -63,38 +117,28 @@ export const DigitalEmployeeProvider: React.FC<DigitalEmployeeProviderProps> = (
     setError(undefined)
     setEmployees((prev) => prev.map((employee) => ({ ...employee, status: 'loading' })))
 
-    const resolved = await Promise.all(
-      DIGITAL_EMPLOYEES.map(async (employee): Promise<DigitalEmployee> => {
-        try {
-          const forgeId = getDigitalEmployeeForgeId(employee)
-          const result = await grpcQueryAIForge(
-            {
-              Pagination: {
-                Page: 1,
-                Limit: 1,
-                OrderBy: 'updated_at',
-                Order: 'desc',
-              },
-              Filter: {
-                Id: forgeId,
-              },
-            },
-            true,
-          )
-          const forge = findForgeById(result.Data || [], forgeId)
-          return {
-            ...employee,
-            forge,
-            status: forge ? 'ready' : 'missing',
-          }
-        } catch (requestError) {
-          return {
-            ...employee,
-            status: 'error',
-          }
+    let resolved: DigitalEmployee[]
+    try {
+      const forges = await queryAllForges()
+      const configuredForgeIds = new Set(DIGITAL_EMPLOYEES.map(getDigitalEmployeeForgeId))
+      const configuredEmployees = DIGITAL_EMPLOYEES.map((employee): DigitalEmployee => {
+        const forge = findForgeById(forges, getDigitalEmployeeForgeId(employee))
+        return {
+          ...employee,
+          forge,
+          status: forge ? 'ready' : 'missing',
         }
-      }),
-    )
+      })
+      const generatedEmployees = forges
+        .filter((forge) => !configuredForgeIds.has(forge.Id))
+        .map(createGeneratedEmployee)
+      resolved = [...configuredEmployees, ...generatedEmployees]
+    } catch (requestError) {
+      resolved = DIGITAL_EMPLOYEES.map((employee) => ({
+        ...employee,
+        status: 'error',
+      }))
+    }
 
     if (requestVersion !== requestVersionRef.current) return
     setEmployees(resolved)

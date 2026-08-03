@@ -21,6 +21,17 @@ export interface DigitalEmployeeDefinition {
   accent: string
 }
 
+export const DIGITAL_EMPLOYEE_PORTRAITS = [
+  threatAnalyst,
+  penetrationTester,
+  operationsManager,
+  digitalHunter,
+  intelligenceOfficer,
+  ciso,
+  digitalTeacher,
+  incidentResponder,
+]
+
 export const getDigitalEmployeeForgeId = (employee: Pick<DigitalEmployeeDefinition, 'order' | 'forgeId'>) => {
   return employee.forgeId ?? employee.order
 }
