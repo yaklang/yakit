@@ -155,7 +155,17 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
                       </span>
                       <span className={styles['card-action']}>
                         <span>选择 TA / 进入</span>
-                        <span aria-hidden="true">〉</span>
+                        <span className={styles['card-action-arrows']} aria-hidden="true">
+                          <span className={styles['card-action-arrow']}>
+                            <OutlineChevronrightIcon />
+                          </span>
+                          <span className={styles['card-action-arrow']}>
+                            <OutlineChevronrightIcon />
+                          </span>
+                          <span className={styles['card-action-arrow']}>
+                            <OutlineChevronrightIcon />
+                          </span>
+                        </span>
                       </span>
                     </button>
                   )

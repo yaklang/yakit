@@ -39,10 +39,13 @@ describe('DigitalEmployeeSelectPage', () => {
     const employeeCards = container.querySelectorAll('[aria-pressed]')
     const selectedStateOverlays = container.querySelectorAll('img[src*="senso-card-selected-overlay"]')
     const employeeBadgeIcons = container.querySelectorAll('[aria-pressed] > span[aria-hidden="true"] svg')
+    const actionArrowGroups = container.querySelectorAll('[aria-pressed] .card-action-arrows')
     const quickNavigationIcons = container.querySelectorAll('section[aria-label="快速导航"] svg')
 
     expect(employeeCards).toHaveLength(DIGITAL_EMPLOYEES.length)
     expect(employeeBadgeIcons).toHaveLength(DIGITAL_EMPLOYEES.length)
+    expect(actionArrowGroups).toHaveLength(DIGITAL_EMPLOYEES.length)
+    actionArrowGroups.forEach((group) => expect(group.querySelectorAll('svg')).toHaveLength(3))
     expect(quickNavigationIcons).toHaveLength(6)
     expect(employeeCards[0].querySelectorAll('img')).toHaveLength(1)
     expect(screen.getByText('当前选择')).toBeInTheDocument()

@@ -246,6 +246,12 @@
   cursor: pointer;
   background: transparent;
   isolation: isolate;
+  transform: translateY(0);
+  transform-style: preserve-3d;
+  perspective: 900px;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease;
 
   &::before {
     content: '';
@@ -269,7 +275,8 @@
     inset: 0;
     pointer-events: none;
     padding: 2px;
-    background: linear-gradient(135deg, #63d8ff 0%, #238cff 48%, #536dff 100%);
+    background: linear-gradient(115deg, #63d8ff 0%, #238cff 26%, #7d6bff 50%, #24ccff 72%, #63d8ff 100%);
+    background-size: 300% 100%;
     -webkit-mask:
       linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
@@ -288,12 +295,39 @@
 
   &:hover,
   &:focus-visible {
+    transform: translateY(-3px) scale(1.004);
+
     &::after {
       opacity: 0.62;
     }
 
     .card-action {
       opacity: 1;
+    }
+
+    .portrait-wrapper img {
+      filter:
+        drop-shadow(0 16px 15px rgba(34, 88, 158, 0.2))
+        drop-shadow(0 3px 3px rgba(32, 91, 163, 0.14));
+      transform: translate3d(0, -4px, 24px) scale(1.035);
+    }
+
+    .portrait-wrapper::before {
+      opacity: 0.92;
+      transform: translateX(-50%) scale(1.08);
+    }
+
+    .portrait-wrapper::after {
+      opacity: 0.34;
+      transform: translateX(-50%) scaleX(1.08);
+    }
+
+    .employee-badge {
+      transform: translate3d(0, -2px, 32px) rotate(3deg);
+    }
+
+    .card-action-arrow {
+      animation-play-state: running;
     }
   }
 
@@ -311,12 +345,26 @@
     }
 
     &::after {
-      opacity: 1;
+      opacity: 0.92;
       filter: drop-shadow(0 6px 11px rgba(35, 134, 239, 0.24));
+      animation:
+        employee-border-flow 3.2s linear infinite,
+        employee-border-breathe 2.4s ease-in-out infinite;
     }
 
     .portrait-wrapper {
       background: radial-gradient(circle at 50% 42%, rgba(76, 179, 255, 0.12), transparent 66%);
+    }
+
+    .portrait-wrapper img {
+      filter:
+        drop-shadow(0 17px 16px rgba(29, 91, 172, 0.22))
+        drop-shadow(0 3px 3px rgba(39, 106, 184, 0.16));
+      transform: translate3d(0, -3px, 22px) scale(1.025);
+    }
+
+    .portrait-wrapper::before {
+      opacity: 0.86;
     }
 
     .card-action {
@@ -325,6 +373,14 @@
       box-shadow:
         0 7px 18px rgba(33, 125, 226, 0.32),
         inset 0 1px rgba(255, 255, 255, 0.42);
+    }
+
+    .card-action-arrow {
+      animation-play-state: running;
+    }
+
+    .selected-state {
+      animation: employee-selected-pill-breathe 2.4s ease-in-out infinite;
     }
   }
 }
@@ -342,13 +398,63 @@
   overflow: hidden;
   border-radius: 11px 11px 0 0;
   pointer-events: none;
+  perspective: 760px;
+  transform-style: preserve-3d;
+
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    top: 9%;
+    left: 50%;
+    width: 72%;
+    aspect-ratio: 1;
+    opacity: 0.58;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.96), rgba(133, 205, 255, 0.2) 36%, transparent 69%),
+      radial-gradient(circle, rgba(50, 151, 242, 0.2), transparent 68%);
+    filter: blur(1px);
+    transform: translateX(-50%);
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    bottom: 5%;
+    left: 50%;
+    width: 55%;
+    height: 7%;
+    opacity: 0.22;
+    border-radius: 50%;
+    background: rgba(22, 76, 144, 0.58);
+    filter: blur(8px);
+    transform: translateX(-50%);
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease;
+  }
 
   img {
+    position: relative;
+    z-index: 2;
     display: block;
     width: 100%;
     height: 100%;
     object-fit: contain;
     object-position: center top;
+    filter:
+      drop-shadow(0 12px 13px rgba(39, 91, 157, 0.16))
+      drop-shadow(0 2px 2px rgba(33, 84, 151, 0.1));
+    transform: translateY(0);
+    transform-origin: center bottom;
+    transition:
+      transform 220ms cubic-bezier(0.2, 0.72, 0.24, 1),
+      filter 220ms ease;
   }
 }
 
@@ -368,6 +474,10 @@
   box-shadow:
     0 4px 12px rgba(49, 111, 183, 0.14),
     inset 0 1px rgba(255, 255, 255, 0.9);
+  transform: translateY(0);
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease;
 
   :global(.anticon) {
     display: block;
@@ -496,7 +606,116 @@
     inset 0 1px rgba(255, 255, 255, 0.35);
   transition:
     opacity 150ms ease,
-    filter 150ms ease;
+    filter 150ms ease,
+    box-shadow 180ms ease;
+}
+
+.card-action-arrows {
+  display: flex;
+  align-items: center;
+  margin-left: clamp(2px, 0.25vw, 5px);
+}
+
+.card-action-arrow {
+  width: 8px;
+  height: 13px;
+  margin-left: -2px;
+  display: grid;
+  place-items: center;
+  opacity: 0.2;
+  transform: translateX(-3px);
+  animation: employee-arrow-flow 1.35s ease-in-out infinite;
+  animation-play-state: paused;
+
+  &:nth-child(2) {
+    animation-delay: 150ms;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 300ms;
+  }
+
+  :global(.anticon),
+  svg {
+    display: block;
+    width: 11px;
+    height: 11px;
+  }
+}
+
+@keyframes employee-arrow-flow {
+  0%,
+  14% {
+    opacity: 0.18;
+    transform: translateX(-3px);
+  }
+
+  42% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  72%,
+  100% {
+    opacity: 0.22;
+    transform: translateX(3px);
+  }
+}
+
+@keyframes employee-border-flow {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes employee-border-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes employee-selected-pill-breathe {
+  0%,
+  100% {
+    opacity: 0.82;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.025);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .employee-card,
+  .portrait-wrapper::before,
+  .portrait-wrapper::after,
+  .portrait-wrapper img,
+  .employee-badge,
+  .card-action {
+    transition: none;
+  }
+
+  .employee-card.employee-card-selected::after,
+  .employee-card.employee-card-selected .selected-state,
+  .card-action-arrow {
+    animation: none;
+  }
+
+  .card-action-arrow {
+    opacity: 0.78;
+    transform: none;
+  }
 }
 
 .quick-navigation {
