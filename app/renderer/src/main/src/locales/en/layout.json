@@ -316,6 +316,12 @@
     "noYaklangLatestVersion": "Failed to fetch the latest engine version",
     "updateContentSuccess": "Update content modified successfully"
   },
+  "MoreYaklangVersion": {
+    "standardVersion": "Standard Version",
+    "slimVersion": "Slim Version",
+    "slim": "Slim",
+    "slimVersionTip": "The slim build removes SSA compilation, SyntaxFlow rule scanning, and AST/Build for non-Yak languages. It uses fewer resources and responds faster, suitable for daily tooling and Yak coding."
+  },
   "RobotControl": {
     "subTitle": "Bring external chat tools and webhooks into AI Agent robots.",
     "createRobot": "New Robot",

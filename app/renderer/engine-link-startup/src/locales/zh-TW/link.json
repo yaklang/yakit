@@ -257,6 +257,7 @@
   "MoreYaklangVersion": {
     "standard_version": "標準版本",
     "slim_version": "輕量版本",
-    "slim": "輕量"
+    "slim": "輕量",
+    "slim_version_tip": "輕量版去除了 SSA 編譯、SyntaxFlow 規則掃描、以及非 Yak 語言的 AST/Build，資源佔用更低、回應更快，適合日常工具使用與 Yak 編碼。"
   }
 }
