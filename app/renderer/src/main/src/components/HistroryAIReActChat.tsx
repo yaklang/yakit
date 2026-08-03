@@ -27,6 +27,9 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { loadHistoryAIEmbeddedReviewPolicy, setHistoryAIReviewPolicy } from './historyAIReActChatStorage'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
+import AIGlobalLoading from '@/pages/ai-agent/aiGlobalLoading/AIGlobalLoading'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 interface HistoryAIReActChatProps {
   showFreeChat: boolean
@@ -60,6 +63,8 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = memo((props) => {
 
   const { setSetting } = useAIAgentDispatcher()
   const { setting } = useAIAgentStore()
+  const store = useCurrentStore()
+  const initLoading = useStore(store, (state) => state.initLoading)
 
   const [_, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
 
@@ -230,7 +235,9 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = memo((props) => {
 
   return (
     <div ref={refRef} className={classNames(styles['ai-wrapper'], className)}>
-      {resultRender}
+      <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
+        {resultRender}
+      </AIGlobalLoading>
     </div>
   )
 })
