@@ -50,12 +50,15 @@ export interface YakitTagProps extends Omit<TagProps, 'color'> {
  * @param {(e:MouseEvent) => void} onAfterCopy 复制文字后得事件
  * @param {string} copyText 复制文字
  * @param {string} iconColor 复制Icon文字
+ * @param {string} copySuccessText 复制成功提示文案，不传则使用默认「复制成功」
  */
 export interface CopyComponentsProps {
   className?: string
   onAfterCopy?: (e: MouseEvent) => void
   copyText: string
   iconColor?: string
+  /** 复制成功提示文案，不传则使用默认「复制成功」 */
+  copySuccessText?: string
 }
 
 /**

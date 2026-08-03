@@ -16,7 +16,8 @@
   },
   "CodecRunListHistoryStore": {
     "historyStore": "歷史儲存",
-    "clearHistoryConfirm": "確定要清空歷史儲存嗎？"
+    "clearHistoryConfirm": "確定要清空歷史儲存嗎？",
+    "copySuccess": "已複製為 codecflow fuzztag"
   },
   "NewCodecMiddleRunList": {
     "dragHint": "請從左側列表拖入要使用的 Codec 工具",
