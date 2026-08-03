@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import {
   OutlineAcademiccapIcon,
@@ -6,6 +6,8 @@ import {
   OutlineBrainCircuitIcon,
   OutlineBrainIcon,
   OutlineChartbarIcon,
+  OutlineChevronleftIcon,
+  OutlineChevronrightIcon,
   OutlineDatabaseIcon,
   OutlineGlobealtIcon,
   OutlinePuzzleIcon,
@@ -28,6 +30,8 @@ const QuickNavigation = [
   { key: 'memory', title: '记忆管理', icon: <OutlineBrainCircuitIcon /> },
   { key: 'database', title: '安全数据库', icon: <OutlineDatabaseIcon /> },
 ]
+
+const EMPLOYEES_PER_PAGE = 8
 
 const getEmployeeBadgeIcon = (employeeId: string) => {
   switch (employeeId) {
@@ -54,6 +58,43 @@ const getEmployeeBadgeIcon = (employeeId: string) => {
 
 export const DigitalEmployeeSelectPage: React.FC = () => {
   const { employees, selectedEmployee, loading, error, confirmSelection, switchEmployee, retry } = useDigitalEmployee()
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [currentPage, setCurrentPage] = useState(0)
+  const employeePages = useMemo(() => {
+    const pages: (typeof employees)[] = []
+    for (let index = 0; index < employees.length; index += EMPLOYEES_PER_PAGE) {
+      pages.push(employees.slice(index, index + EMPLOYEES_PER_PAGE))
+    }
+    return pages
+  }, [employees])
+
+  const pageCount = employeePages.length
+
+  useEffect(() => {
+    if (pageCount === 0 || currentPage < pageCount) return
+    setCurrentPage(pageCount - 1)
+  }, [currentPage, pageCount])
+
+  const goToPage = (page: number) => {
+    if (pageCount === 0) return
+    const nextPage = Math.max(0, Math.min(page, pageCount - 1))
+    setCurrentPage(nextPage)
+    const carousel = carouselRef.current
+    if (!carousel) return
+    const nextLeft = carousel.clientWidth * nextPage
+    if (typeof carousel.scrollTo === 'function') {
+      carousel.scrollTo({ left: nextLeft, behavior: 'smooth' })
+    } else {
+      carousel.scrollLeft = nextLeft
+    }
+  }
+
+  const handleCarouselScroll = () => {
+    const carousel = carouselRef.current
+    if (!carousel || carousel.clientWidth === 0) return
+    const nextPage = Math.round(carousel.scrollLeft / carousel.clientWidth)
+    setCurrentPage(Math.max(0, Math.min(nextPage, pageCount - 1)))
+  }
 
   return (
     <main className={styles['employee-selection']}>
@@ -72,47 +113,93 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
             <span className={styles['heading-subtitle']}>登录后请选择一位数字员工，开启你的智能安全工作</span>
           </h1>
 
-          <div className={styles['employee-grid']} aria-busy={loading}>
-            {employees.map((employee) => {
-              const selected = selectedEmployee?.id === employee.id
-              return (
-                <button
-                  type="button"
-                  key={employee.id}
-                  className={classNames(styles['employee-card'], {
-                    [styles['employee-card-selected']]: selected,
-                  })}
-                  onClick={() => switchEmployee(employee.id)}
-                  aria-pressed={selected}
-                  aria-label={`选择并进入${employee.name}`}
-                >
-                  <span className={styles['portrait-wrapper']}>
-                    <img src={employee.portrait} alt={employee.name} />
-                  </span>
-                  <span className={styles['employee-badge']} style={{ color: employee.accent }} aria-hidden="true">
-                    {getEmployeeBadgeIcon(employee.id)}
-                  </span>
-                  {selected && (
-                    <span className={styles['selected-state']}>
-                      <SolidBadgecheckIcon />
-                      当前选择
-                    </span>
-                  )}
-                  <span className={styles['card-details']}>
-                    <span className={styles['card-order']}>{employee.order}</span>
-                    <span className={styles['card-copy']}>
-                      <strong>{employee.name}</strong>
-                      <small>{employee.cardDescription}</small>
-                    </span>
-                  </span>
-                  <span className={styles['card-action']}>
-                    <span>选择 TA / 进入</span>
-                    <span aria-hidden="true">〉</span>
-                  </span>
-                </button>
-              )
-            })}
+          <div
+            ref={carouselRef}
+            className={styles['employee-carousel']}
+            aria-busy={loading}
+            onScroll={handleCarouselScroll}
+          >
+            {employeePages.map((pageEmployees, pageIndex) => (
+              <div className={styles['employee-page']} key={pageIndex} aria-label={`数字员工第 ${pageIndex + 1} 页`}>
+                {pageEmployees.map((employee) => {
+                  const selected = selectedEmployee?.id === employee.id
+                  return (
+                    <button
+                      type="button"
+                      key={employee.id}
+                      className={classNames(styles['employee-card'], {
+                        [styles['employee-card-selected']]: selected,
+                      })}
+                      onClick={() => switchEmployee(employee.id)}
+                      aria-pressed={selected}
+                      aria-label={`选择并进入${employee.name}`}
+                    >
+                      <span className={styles['portrait-wrapper']}>
+                        <img src={employee.portrait} alt={employee.name} />
+                      </span>
+                      <span className={styles['employee-badge']} style={{ color: employee.accent }} aria-hidden="true">
+                        {getEmployeeBadgeIcon(employee.id)}
+                      </span>
+                      {selected && (
+                        <span className={styles['selected-state']}>
+                          <SolidBadgecheckIcon />
+                          当前选择
+                        </span>
+                      )}
+                      <span className={styles['card-details']}>
+                        <span className={styles['card-order']}>{employee.order}</span>
+                        <span className={styles['card-copy']}>
+                          <strong>{employee.name}</strong>
+                          <small>{employee.cardDescription}</small>
+                        </span>
+                      </span>
+                      <span className={styles['card-action']}>
+                        <span>选择 TA / 进入</span>
+                        <span aria-hidden="true">〉</span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
           </div>
+
+          {pageCount > 1 && (
+            <nav className={styles['carousel-controls']} aria-label="数字员工翻页">
+              <button
+                type="button"
+                className={styles['carousel-arrow']}
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 0}
+                aria-label="上一页"
+              >
+                <OutlineChevronleftIcon />
+              </button>
+              <div className={styles['carousel-dots']}>
+                {employeePages.map((_, pageIndex) => (
+                  <button
+                    type="button"
+                    key={pageIndex}
+                    className={classNames(styles['carousel-dot'], {
+                      [styles['carousel-dot-active']]: pageIndex === currentPage,
+                    })}
+                    onClick={() => goToPage(pageIndex)}
+                    aria-label={`切换到第 ${pageIndex + 1} 页`}
+                    aria-current={pageIndex === currentPage ? 'page' : undefined}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                className={styles['carousel-arrow']}
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === pageCount - 1}
+                aria-label="下一页"
+              >
+                <OutlineChevronrightIcon />
+              </button>
+            </nav>
+          )}
 
           <section className={styles['quick-navigation']} aria-label="快速导航">
             <div className={styles['quick-title']}>

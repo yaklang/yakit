@@ -48,6 +48,7 @@ describe('DigitalEmployeeSelectPage', () => {
     expect(employeeCards[1]).toHaveAttribute('aria-pressed', 'false')
     expect(selectedStateOverlays).toHaveLength(0)
     expect(screen.getAllByText('选择 TA / 进入')).toHaveLength(DIGITAL_EMPLOYEES.length)
+    expect(screen.queryByRole('navigation', { name: '数字员工翻页' })).not.toBeInTheDocument()
 
     DIGITAL_EMPLOYEES.forEach((employee) => {
       expect(screen.getByText(employee.name)).toBeInTheDocument()
@@ -91,6 +92,13 @@ describe('DigitalEmployeeSelectPage', () => {
 
     expect(container.querySelectorAll('[aria-pressed]')).toHaveLength(DIGITAL_EMPLOYEES.length + 1)
     expect(screen.getByText('扩展数字员工')).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: '数字员工翻页' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /切换到第 \d+ 页/ })).toHaveLength(2)
+    expect(screen.getByRole('button', { name: '上一页' })).toBeDisabled()
+
+    fireEvent.click(screen.getByRole('button', { name: '下一页' }))
+    expect(screen.getByRole('button', { name: '切换到第 2 页' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('button', { name: '下一页' })).toBeDisabled()
   })
 
   it('allows the selected employee to enter before Forge resolution completes', () => {

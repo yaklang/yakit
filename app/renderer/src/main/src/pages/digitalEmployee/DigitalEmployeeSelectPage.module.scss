@@ -128,11 +128,107 @@
   letter-spacing: 0.02em;
 }
 
-.employee-grid {
+.employee-carousel {
   flex: 0 0 auto;
+  width: 100%;
+  margin: -4px 0;
+  padding: 4px 0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.employee-page {
+  flex: 0 0 100%;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(4px, 0.7vh, 9px) clamp(8px, 1vw, 18px);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.carousel-controls {
+  flex: 0 0 auto;
+  min-height: clamp(26px, 3.6vh, 34px);
+  margin-top: clamp(4px, 0.7vh, 8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1vw, 16px);
+}
+
+.carousel-arrow {
+  width: clamp(24px, 2vw, 30px);
+  height: clamp(24px, 2vw, 30px);
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #277fda;
+  border: 1px solid rgba(68, 145, 224, 0.26);
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 4px 12px rgba(51, 112, 181, 0.12);
+  transition:
+    color 150ms ease,
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 150ms ease;
+
+  &:hover:not(:disabled) {
+    color: #fff;
+    border-color: #2c8ce9;
+    background: #2c8ce9;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.32;
+  }
+
+  :global(.anticon),
+  svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  background: rgba(78, 137, 200, 0.32);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75);
+  transition:
+    width 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.carousel-dot-active {
+  width: 20px;
+  background: linear-gradient(90deg, #31a9f2, #2977e8);
+  box-shadow: 0 3px 8px rgba(38, 125, 218, 0.27);
 }
 
 .employee-card {
@@ -626,7 +722,7 @@
     text-align: center;
   }
 
-  .employee-grid {
+  .employee-page {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 12px;
   }
@@ -674,10 +770,11 @@
     width: 28px;
   }
 
-  .employee-grid {
+  .employee-page {
     grid-template-columns: 1fr;
-    width: min(100%, 340px);
-    margin: 0 auto;
+    justify-content: center;
+    padding: 0 max(0px, calc((100% - 340px) / 2));
+    box-sizing: border-box;
   }
 
   .quick-list {
