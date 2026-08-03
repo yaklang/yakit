@@ -5,9 +5,7 @@ import {
   DIGITAL_EMPLOYEES,
   DIGITAL_EMPLOYEE_PORTRAITS,
   DigitalEmployeeDefinition,
-  getDigitalEmployeeForgeId,
 } from './config'
-import { findForgeById } from './resolver'
 
 export type DigitalEmployeeResolveStatus = 'idle' | 'loading' | 'ready' | 'missing' | 'error'
 
@@ -65,20 +63,19 @@ const queryAllForges = async () => {
   return [...forgeMap.values()].sort((a, b) => a.Id - b.Id)
 }
 
-const createGeneratedEmployee = (forge: AIForge): DigitalEmployee => {
+const createGeneratedEmployee = (forge: AIForge, order: number): DigitalEmployee => {
   const displayName = forge.ForgeVerboseName?.trim() || forge.ForgeName || `智能体 ${forge.Id}`
   const description = forge.Description?.trim() || `${displayName}智能体`
   return {
     id: `forge-${forge.Id}`,
-    order: forge.Id,
-    forgeId: forge.Id,
+    order,
     name: displayName,
     forgeVerboseName: displayName,
     description,
     cardDescription: description,
     skills: forge.Tag?.length ? forge.Tag : [forge.ForgeType],
-    portrait: DIGITAL_EMPLOYEE_PORTRAITS[(forge.Id - 1) % DIGITAL_EMPLOYEE_PORTRAITS.length],
-    accent: GENERATED_EMPLOYEE_ACCENTS[(forge.Id - 1) % GENERATED_EMPLOYEE_ACCENTS.length],
+    portrait: DIGITAL_EMPLOYEE_PORTRAITS[(order - 1) % DIGITAL_EMPLOYEE_PORTRAITS.length],
+    accent: GENERATED_EMPLOYEE_ACCENTS[(order - 1) % GENERATED_EMPLOYEE_ACCENTS.length],
     forge,
     status: 'ready',
   }
@@ -103,7 +100,7 @@ export interface DigitalEmployeeProviderProps {
 }
 
 export const DigitalEmployeeProvider: React.FC<DigitalEmployeeProviderProps> = ({ enabled, children }) => {
-  const [employees, setEmployees] = useState<DigitalEmployee[]>(createInitialEmployees)
+  const [employees, setEmployees] = useState<DigitalEmployee[]>(() => (enabled ? [] : createInitialEmployees()))
   const [selectedId, setSelectedId] = useState<string | undefined>(DEFAULT_EMPLOYEE_ID)
   const [confirmed, setConfirmed] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -115,37 +112,36 @@ export const DigitalEmployeeProvider: React.FC<DigitalEmployeeProviderProps> = (
     const requestVersion = ++requestVersionRef.current
     setLoading(true)
     setError(undefined)
-    setEmployees((prev) => prev.map((employee) => ({ ...employee, status: 'loading' })))
+    setEmployees([])
 
     let resolved: DigitalEmployee[]
+    let requestFailed = false
     try {
       const forges = await queryAllForges()
-      const configuredForgeIds = new Set(DIGITAL_EMPLOYEES.map(getDigitalEmployeeForgeId))
-      const configuredEmployees = DIGITAL_EMPLOYEES.map((employee): DigitalEmployee => {
-        const forge = findForgeById(forges, getDigitalEmployeeForgeId(employee))
+      resolved = forges.map((forge, index): DigitalEmployee => {
+        const order = index + 1
+        const employeeTemplate = DIGITAL_EMPLOYEES[index]
+        if (!employeeTemplate) return createGeneratedEmployee(forge, order)
         return {
-          ...employee,
+          ...employeeTemplate,
+          order,
           forge,
-          status: forge ? 'ready' : 'missing',
+          status: 'ready',
         }
       })
-      const generatedEmployees = forges
-        .filter((forge) => !configuredForgeIds.has(forge.Id))
-        .map(createGeneratedEmployee)
-      resolved = [...configuredEmployees, ...generatedEmployees]
     } catch (requestError) {
-      resolved = DIGITAL_EMPLOYEES.map((employee) => ({
-        ...employee,
-        status: 'error',
-      }))
+      requestFailed = true
+      resolved = []
     }
 
     if (requestVersion !== requestVersionRef.current) return
     setEmployees(resolved)
     setLoading(false)
 
-    if (resolved.every((employee) => employee.status === 'error')) {
+    if (requestFailed) {
       setError('技能库暂时不可用，请确认引擎已连接后重试')
+    } else if (resolved.length === 0) {
+      setError('智能体广场暂无可用智能体')
     }
   }
 

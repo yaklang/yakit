@@ -103,15 +103,15 @@ describe('DigitalEmployeeSelectPage', () => {
     expect(screen.getByRole('button', { name: '下一页' })).toBeDisabled()
   })
 
-  it('appends every Forge returned beyond the eight configured employees', async () => {
-    const forges = DIGITAL_EMPLOYEES.map((employee) => ({
-      Id: employee.order,
+  it('renders exactly one employee for each Forge returned by the backend', async () => {
+    const forges = DIGITAL_EMPLOYEES.map((employee, index) => ({
+      Id: 101 + index,
       ForgeName: `forge-${employee.order}`,
       ForgeVerboseName: employee.name,
       ForgeType: 'config' as const,
     }))
     forges.push({
-      Id: 9,
+      Id: 109,
       ForgeName: 'ssa_project_scan_check',
       ForgeVerboseName: 'SSA项目检查',
       ForgeType: 'config',
@@ -128,7 +128,7 @@ describe('DigitalEmployeeSelectPage', () => {
         <div>
           <span data-testid="employee-count">{employees.length}</span>
           {employees.map((employee) => (
-            <span key={employee.id} data-portrait={employee.portrait}>
+            <span key={employee.id} data-portrait={employee.portrait} data-forge-id={employee.forge?.Id}>
               {employee.name}
             </span>
           ))}
@@ -143,6 +143,8 @@ describe('DigitalEmployeeSelectPage', () => {
     )
 
     await waitFor(() => expect(screen.getByTestId('employee-count')).toHaveTextContent('9'))
+    expect(screen.getByText(DIGITAL_EMPLOYEES[0].name)).toHaveAttribute('data-forge-id', '101')
+    expect(screen.getByText('SSA项目检查')).toHaveAttribute('data-forge-id', '109')
     expect(screen.getByText('SSA项目检查')).toHaveAttribute('data-portrait', DIGITAL_EMPLOYEES[0].portrait)
     expect(grpcQueryAIForge).toHaveBeenCalledTimes(1)
     expect(grpcQueryAIForge).toHaveBeenCalledWith(

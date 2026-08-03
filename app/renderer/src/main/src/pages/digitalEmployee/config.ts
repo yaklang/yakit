@@ -10,8 +10,6 @@ import incidentResponder from '@/assets/newAssets/senso-agent-08-portrait-hd.png
 export interface DigitalEmployeeDefinition {
   id: string
   order: number
-  /** Forge ID defaults to the card order; set it explicitly if backend IDs diverge later. */
-  forgeId?: number
   name: string
   forgeVerboseName: string
   description: string
@@ -31,10 +29,6 @@ export const DIGITAL_EMPLOYEE_PORTRAITS = [
   digitalTeacher,
   incidentResponder,
 ]
-
-export const getDigitalEmployeeForgeId = (employee: Pick<DigitalEmployeeDefinition, 'order' | 'forgeId'>) => {
-  return employee.forgeId ?? employee.order
-}
 
 export const DIGITAL_EMPLOYEES: DigitalEmployeeDefinition[] = [
   {
