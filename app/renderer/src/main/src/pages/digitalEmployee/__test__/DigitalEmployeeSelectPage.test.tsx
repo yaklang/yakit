@@ -39,15 +39,15 @@ describe('DigitalEmployeeSelectPage', () => {
     const employeeBadgeIcons = container.querySelectorAll('[aria-pressed] > span[aria-hidden="true"] svg')
     const quickNavigationIcons = container.querySelectorAll('section[aria-label="快速导航"] svg')
 
-    expect(employeeCards).toHaveLength(8)
-    expect(employeeBadgeIcons).toHaveLength(8)
+    expect(employeeCards).toHaveLength(DIGITAL_EMPLOYEES.length)
+    expect(employeeBadgeIcons).toHaveLength(DIGITAL_EMPLOYEES.length)
     expect(quickNavigationIcons).toHaveLength(6)
     expect(employeeCards[0].querySelectorAll('img')).toHaveLength(1)
     expect(screen.getByText('当前选择')).toBeInTheDocument()
     expect(employeeCards[0]).toHaveAttribute('aria-pressed', 'true')
     expect(employeeCards[1]).toHaveAttribute('aria-pressed', 'false')
     expect(selectedStateOverlays).toHaveLength(0)
-    expect(screen.getAllByText('选择 TA / 进入')).toHaveLength(8)
+    expect(screen.getAllByText('选择 TA / 进入')).toHaveLength(DIGITAL_EMPLOYEES.length)
 
     DIGITAL_EMPLOYEES.forEach((employee) => {
       expect(screen.getByText(employee.name)).toBeInTheDocument()
@@ -61,6 +61,36 @@ describe('DigitalEmployeeSelectPage', () => {
     expect(confirmButton).toBeEnabled()
     fireEvent.click(confirmButton)
     expect(confirmSelection).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders additional employee cards from context without an eight-card limit', () => {
+    const extraEmployee = {
+      ...DIGITAL_EMPLOYEES[0],
+      id: 'extra-employee',
+      order: DIGITAL_EMPLOYEES.length + 1,
+      name: '扩展数字员工',
+    }
+    const employees = [...DIGITAL_EMPLOYEES, extraEmployee].map((employee) => ({
+      ...employee,
+      status: 'ready' as const,
+    }))
+
+    vi.spyOn(DigitalEmployeeContext, 'useDigitalEmployee').mockReturnValue({
+      employees,
+      selectedEmployee: employees[0],
+      confirmed: false,
+      loading: false,
+      selectionVersion: 0,
+      selectEmployee: vi.fn(),
+      confirmSelection: vi.fn(() => true),
+      switchEmployee: vi.fn(() => true),
+      retry: vi.fn(),
+    })
+
+    const { container } = render(<DigitalEmployeeSelectPage />)
+
+    expect(container.querySelectorAll('[aria-pressed]')).toHaveLength(DIGITAL_EMPLOYEES.length + 1)
+    expect(screen.getByText('扩展数字员工')).toBeInTheDocument()
   })
 
   it('allows the selected employee to enter before Forge resolution completes', () => {

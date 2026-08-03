@@ -18,6 +18,10 @@ export const findForgeByVerboseName = (forges: AIForge[], forgeVerboseName: stri
   return forges.find((forge) => normalizeForgeVerboseName(forge.ForgeVerboseName) === target)
 }
 
+export const findForgeById = (forges: AIForge[], forgeId: number) => {
+  return forges.find((forge) => forge.Id === forgeId)
+}
+
 export const applyForgeNameToStartParams = <T extends AIStartParams>(params: T, forgeName?: string): T => {
   if (!forgeName) return params
   return {

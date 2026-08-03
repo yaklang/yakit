@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
 import { AIForge } from '@/pages/ai-agent/type/forge'
-import { DIGITAL_EMPLOYEES, DigitalEmployeeDefinition } from './config'
-import { findForgeByVerboseName } from './resolver'
+import { DIGITAL_EMPLOYEES, DigitalEmployeeDefinition, getDigitalEmployeeForgeId } from './config'
+import { findForgeById } from './resolver'
 
 export type DigitalEmployeeResolveStatus = 'idle' | 'loading' | 'ready' | 'missing' | 'error'
 
@@ -66,21 +66,22 @@ export const DigitalEmployeeProvider: React.FC<DigitalEmployeeProviderProps> = (
     const resolved = await Promise.all(
       DIGITAL_EMPLOYEES.map(async (employee): Promise<DigitalEmployee> => {
         try {
+          const forgeId = getDigitalEmployeeForgeId(employee)
           const result = await grpcQueryAIForge(
             {
               Pagination: {
                 Page: 1,
-                Limit: 20,
+                Limit: 1,
                 OrderBy: 'updated_at',
                 Order: 'desc',
               },
               Filter: {
-                Keyword: employee.forgeVerboseName,
+                Id: forgeId,
               },
             },
             true,
           )
-          const forge = findForgeByVerboseName(result.Data || [], employee.forgeVerboseName)
+          const forge = findForgeById(result.Data || [], forgeId)
           return {
             ...employee,
             forge,

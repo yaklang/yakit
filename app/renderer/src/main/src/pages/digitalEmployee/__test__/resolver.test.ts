@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { AIForge } from '@/pages/ai-agent/type/forge'
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
+import { getDigitalEmployeeForgeId } from '../config'
 import {
   applyDigitalEmployeeSkillToInputEvent,
   applyForgeNameToStartParams,
+  findForgeById,
   findForgeByVerboseName,
   getDigitalEmployeeDefaultMention,
   normalizeForgeVerboseName,
@@ -12,6 +14,11 @@ import {
 const forge = (item: Partial<AIForge>): AIForge => item as AIForge
 
 describe('digital employee forge resolver', () => {
+  it('uses the card order as Forge ID by default and allows an explicit override', () => {
+    expect(getDigitalEmployeeForgeId({ order: 3 })).toBe(3)
+    expect(getDigitalEmployeeForgeId({ order: 3, forgeId: 19 })).toBe(19)
+  })
+
   it('matches ForgeVerboseName exactly after trimming', () => {
     const forges = [
       forge({ Id: 1, ForgeName: 'threat-analysis', ForgeVerboseName: ' 威胁分析专家 ' }),
@@ -25,6 +32,16 @@ describe('digital employee forge resolver', () => {
     const forges = [forge({ Id: 1, ForgeName: 'threat-analysis-lite', ForgeVerboseName: '威胁分析专家 Lite' })]
 
     expect(findForgeByVerboseName(forges, '威胁分析专家')).toBeUndefined()
+  })
+
+  it('matches the Forge by its configured numeric ID regardless of its current display name', () => {
+    const forges = [
+      forge({ Id: 1, ForgeName: 'web_log_monitor', ForgeVerboseName: '日志监控与分析' }),
+      forge({ Id: 2, ForgeName: 'flow_report', ForgeVerboseName: '流量日志分析生成报告' }),
+    ]
+
+    expect(findForgeById(forges, 1)?.ForgeName).toBe('web_log_monitor')
+    expect(findForgeById(forges, 3)).toBeUndefined()
   })
 
   it('normalizes empty names safely', () => {
