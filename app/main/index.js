@@ -33,6 +33,8 @@ const {
 
 const BLOCKED_CHROMIUM_DEBUG_SWITCHES = ['remote-debugging-port', 'remote-debugging-address', 'remote-debugging-pipe']
 const BLOCKED_NODE_DEBUG_ARG_PREFIXES = ['--inspect', '--inspect-brk', '--inspect-port']
+const MITM_DEBUG_HOOKS_ARGUMENT = '--yakit-mitm-debug-hooks=1'
+const mitmDebugHooksEnabled = !app.isPackaged && (isDev || e2eEnvironment.enabled)
 
 const getForbiddenStartupDebugFlags = () => {
   const detected = []
@@ -246,6 +248,7 @@ function createWindow() {
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      additionalArguments: mitmDebugHooksEnabled ? [MITM_DEBUG_HOOKS_ARGUMENT] : [],
       nodeIntegration: true,
       contextIsolation: false,
       sandbox: true,

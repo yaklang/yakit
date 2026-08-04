@@ -1,5 +1,7 @@
 const { ipcRenderer } = require('electron')
 
+const mitmDebugHooksEnabled = process.argv.includes('--yakit-mitm-debug-hooks=1')
+
 const invoke = (channel, ...args) => ipcRenderer.invoke(channel, ...args)
 const send = (channel, ...args) => ipcRenderer.send(channel, ...args)
 const sendSync = (channel, ...args) => ipcRenderer.sendSync(channel, ...args)
@@ -75,6 +77,7 @@ process.on('loaded', function () {
       getYakitHomeConfig: () => invoke('get-yakit-home-config'),
       setYakitHomeConfig: (key, value) => invoke('set-yakit-home-config', key, value),
       relaunchApp: () => invoke('relaunch-app'),
+      isMITMDebugHooksEnabled: () => mitmDebugHooksEnabled,
     },
     theme: {
       setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),

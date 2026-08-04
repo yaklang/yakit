@@ -83,6 +83,7 @@ import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
 import { debugToPrintLogs } from '@/utils/logCollection'
+import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitHTTPFlow, yakitStream } from '@/services/electronBridge'
@@ -182,6 +183,7 @@ const { ipcRenderer } = window.require('electron')
 
 const HTTP_FLOW_TOTAL_RECONCILE_INTERVAL = 10_000
 const HTTP_FLOW_FIELD_GROUP_REFRESH_INTERVAL = 10_000
+let activeMITMFlowTableInstances = 0
 class StaleHTTPFlowTableQueryError extends Error {
   constructor() {
     super('HTTP flow table query was superseded')
@@ -232,6 +234,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     builtinTagList = [],
   } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'history'])
+
+  useEffect(() => {
+    if (pageType !== 'MITM') return
+
+    // The MITM route is a singleNode page. Keep the observability singleton
+    // honest if that product invariant changes inside one renderer process.
+    activeMITMFlowTableInstances += 1
+    if (activeMITMFlowTableInstances > 1 && areMITMDebugHooksEnabled()) {
+      console.warn(`[MITM] ${activeMITMFlowTableInstances} HTTP flow tables share one observability instance`)
+    }
+    return () => {
+      activeMITMFlowTableInstances = Math.max(0, activeMITMFlowTableInstances - 1)
+    }
+  }, [pageType])
+
   const comBuiltinTagList = useCampare(builtinTagList)
 
   // 导出字段映射配置

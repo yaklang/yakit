@@ -1,4 +1,5 @@
 import type { HTTPFlow, HTTPFlowSystemTiming, TimingNumber, YakQueryHTTPFlowResponse } from './HTTPFlowTable.constants'
+import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import {
   HTTP_FLOW_LIVE_DIRECT_MIN_INTERVAL_MS,
   HTTP_FLOW_LIVE_DIRECT_SUSTAINED_INTERVAL_MS,
@@ -1462,7 +1463,7 @@ declare global {
   }
 }
 
-if (typeof window !== 'undefined') {
+if (areMITMDebugHooksEnabled()) {
   window.__YAKIT_MITM_FLOW_OBSERVABILITY__ = {
     snapshot: () => mitmFlowObservability.snapshot(),
     pipelineSnapshot: () => mitmFlowObservability.pipelineSnapshot(),
@@ -1472,4 +1473,6 @@ if (typeof window !== 'undefined') {
     setSkipLiveExactTotalEnabled: (enabled) => mitmFlowObservability.setSkipLiveExactTotalEnabled(enabled),
     setHTTPFlowLiveStreamMode: (mode) => mitmFlowObservability.setHTTPFlowLiveStreamMode(mode),
   }
+} else if (typeof window !== 'undefined') {
+  delete window.__YAKIT_MITM_FLOW_OBSERVABILITY__
 }

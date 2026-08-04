@@ -685,6 +685,8 @@ interface YakitBridge {
     onSync: (callback: (message: AppSyncMessage) => void) => BridgeCleanup
     getYakitHomeConfig: () => Promise<YakitHomeConfig>
     setYakitHomeConfig: (key: string, value: any) => Promise<{ success: boolean }>
+    /** Synchronous build/runtime gate for MITM diagnostic globals; false in packaged builds. */
+    isMITMDebugHooksEnabled?: () => boolean
   }
   theme: {
     setTheme: (theme: 'light' | 'dark') => Promise<unknown>

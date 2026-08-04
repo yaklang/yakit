@@ -6,6 +6,7 @@ import { JSONParseLog } from '../tool'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineTrashSecondIcon } from '@/assets/icon/outline'
 import { yakitDuplex, yakitStream } from '@/services/electronBridge'
+import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import { setRemoteValue } from '../kv'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import i18n from '@/i18n/i18n'
@@ -329,11 +330,13 @@ declare global {
   }
 }
 
-if (typeof window !== 'undefined') {
+if (areMITMDebugHooksEnabled()) {
   window.__YAKIT_MITM_FLOW_SHADOW__ = {
     setEnabled: setFlowCommittedShadowEnabled,
     isEnabled: isFlowCommittedShadowEnabled,
     setMode: setFlowCommittedMode,
     getMode: getFlowCommittedMode,
   }
+} else if (typeof window !== 'undefined') {
+  delete window.__YAKIT_MITM_FLOW_SHADOW__
 }

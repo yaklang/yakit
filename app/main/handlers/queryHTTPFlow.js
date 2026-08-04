@@ -403,12 +403,7 @@ module.exports = (win, getClient) => {
   })
 
   const handlerHelper = require('./handleStreamWithContext')
-  const streamSubscribeHTTPFlows = new Map()
-  ipcMain.handle('cancel-SubscribeHTTPFlows', handlerHelper.cancelHandler(streamSubscribeHTTPFlows))
-  ipcMain.handle('SubscribeHTTPFlows', (e, params, token) => {
-    const stream = getClient().SubscribeHTTPFlows(params)
-    handlerHelper.registerHandler(win, stream, streamSubscribeHTTPFlows, token)
-  })
+  require('./httpFlowSubscription')(ipcMain, win, getClient)
 
   const streamExportMITMRuleExtractedData = new Map()
   ipcMain.handle(

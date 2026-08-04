@@ -1217,3 +1217,13 @@ heap 模式使用保留符号的 Yak，正式门禁使用 `-s -w` 发布式 Yak�
 ## 64. 第九十轮：HTTPFlow 实时协议主文件单源化（2026-07-31）
 
 前端删除独立 `httpflow_live.proto`，其定义原样合并进唯一入口 `app/protos/grpc.proto`，与后端主 proto 逐字节同步。Electron 仍只加载该主文件；`SubscribeHTTPFlows` RPC、字段号和枚举值不变，不需要 Renderer 调用迁移，也不改变实时摘要的 body-free 契约。
+
+## 65. 第九十一轮：MITM 订阅所有权与诊断入口收口（2026-08-04）
+
+`SubscribeHTTPFlows` 主进程注册表改为 `webContents.id + renderer token` 内部 key，并同时校验可信页面、主窗口 sender、token 字符集/长度以及 `SessionId` 一致性；回传 channel 仍使用原 renderer token，因此 preload、Renderer 和 proto 契约不变。同一渲染进程中的 React 组件不是独立安全主体，但跨窗口取消订阅已被主进程拒绝，现有 40 字符随机 token 继续作为同一 renderer 内的取消能力值。
+
+订阅不再依赖下一条 `data/error/end` 懒清理：主窗口关闭、webContents 销毁、renderer 退出或页面 reload 都会先清空 Map，再逐条 `cancel()`，避免取消同步触发终止事件时误投递；error/end 分支与 data 分支统一检查窗口可用性。参数化测试覆盖四个生命周期入口、同步 cancel/error 竞态、已销毁窗口 error、跨 sender 和非法 token。
+
+两个 MITM 全局诊断入口只在主进程为开发/E2E BrowserWindow 注入显式 capability 时安装，打包窗口不再暴露 observability reset/mode 和 shadow/canary 写入口。MITM 页面仍按 `singleNode` 保持单表；开发/E2E 下若同一 renderer 同时挂载第二张 MITM 表会告警，避免模块级 observability 单例静默串台。proto `SystemTiming` 与 Electron 本地 `YakitMainProcessTiming` 已有独立类型和消费链，本轮保持双字段语义，不做破坏性改名。
+
+定向 Vitest 4 个文件共 36 项通过，Renderer TypeScript 检查通过，定向 ESLint 0 error（表格文件保留 23 条既有 warning），Node 语法检查与 `git diff --check` 通过。本轮不修改后端、proto 或数据库，也不启动高资源 Electron/Go 构建。
