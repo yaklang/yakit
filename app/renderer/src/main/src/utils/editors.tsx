@@ -49,6 +49,7 @@ import { Theme, useTheme } from '@/hook/useTheme'
 import { applyYakitMonacoTheme } from './monacoSpec/theme'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
+import { useEditorShowLineBreaks } from '@/store/editorShowLineBreaks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { newWebFuzzerTab } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { JSONParseLog } from './tool'
@@ -603,7 +604,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [strValue, setStrValue] = useState(originValue)
   const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
   const { fontSize, setFontSize, initFontSize } = useEditorFontSize()
-  const [showLineBreaks, setShowLineBreaks] = useState<boolean>(true)
+  const { showLineBreaks, setShowLineBreaks, initShowLineBreaks } = useEditorShowLineBreaks()
   const [noWordwrap, setNoWordwrap] = useState(false)
   const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
   const editorCardRef = useRef<HTMLDivElement>(null)
@@ -635,6 +636,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
   useEffect(() => {
     initFontSize()
+    initShowLineBreaks()
   }, [])
 
   // 读取上次选择的字体大小/换行符
@@ -690,16 +692,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   useUpdateEffect(() => {
     setShowLineBreaks(props.showLineBreaksState || false)
   }, [props.showLineBreaksState])
-
-  useEffect(() => {
-    getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
-      .then((data) => {
-        setShowLineBreaks(data === 'true')
-      })
-      .catch(() => {
-        setShowLineBreaks(true)
-      })
-  }, [])
 
   /*如何实现 monaco editor 高亮？*/
   // https://microsoft.github.io/monaco-editor/playground.html#interacting-with-the-editor-line-and-inline-decorations

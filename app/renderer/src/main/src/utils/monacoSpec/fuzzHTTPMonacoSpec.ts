@@ -11,7 +11,7 @@ import {
 import { getModelContext } from '@/utils/monacoSpec/yakEditor'
 import IWordAtPosition = editor.IWordAtPosition
 import { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
-import { getAllRows } from '@/components/configNetwork/CustomizeCode'
+import { getAllRows } from '@/components/configNetwork/CustomizeCodeTypes'
 const { ipcRenderer } = window.require('electron')
 
 export const highlightKinds: string[] = [

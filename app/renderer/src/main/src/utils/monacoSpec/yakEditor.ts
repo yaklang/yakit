@@ -16,7 +16,6 @@ import { setupCompletionHint } from './yakCompletionHint'
 import { KeyCode, KeyMod, languages } from 'monaco-editor'
 import CodeAction = languages.CodeAction
 import CodeActionList = languages.CodeActionList
-import { EditorContext } from '@uiw/react-md-editor'
 
 export const YaklangMonacoSpec = 'yak'
 // export const GolangMonacoSpec = "go";
