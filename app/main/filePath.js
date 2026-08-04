@@ -33,15 +33,15 @@ const getVersionEnvVarName = () => {
 
 /**
  * 获取应用配置目录（只存放 config.json）
- * - Windows 打包: exe 所在目录
- * - macOS / Linux / 开发模式: app.getPath('userData')
+ * 使用 ~/.yakit/<app>/，与安装目录解耦，避免重装安装包后工作路径丢失
+ * （旧逻辑：Windows 打包=exe 同级，其他=userData）
  */
 const getAppConfigDir = () => {
   try {
-    if (process.platform === 'win32' && app.isPackaged) {
-      return path.dirname(app.getPath('exe'))
-    }
-    return app.getPath('userData')
+    const appKey = String(app.getName() || 'yakit')
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+    return path.join(os.homedir(), '.yakit', appKey)
   } catch (e) {
     return path.join(os.homedir(), '.yakit')
   }
@@ -60,6 +60,26 @@ const getConfig = () => {
     const dir = path.dirname(configPath)
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
+    }
+    // 从旧位置迁移：userData、Windows exe 同级
+    if (!fs.existsSync(configPath)) {
+      const legacy = []
+      try {
+        legacy.push(path.join(app.getPath('userData'), 'config.json'))
+      } catch (_) {}
+      try {
+        if (process.platform === 'win32' && app.isPackaged) {
+          legacy.push(path.join(path.dirname(app.getPath('exe')), 'config.json'))
+        }
+      } catch (_) {}
+      for (const p of legacy) {
+        try {
+          if (fs.existsSync(p)) {
+            fs.copyFileSync(p, configPath)
+            break
+          }
+        } catch (_) {}
+      }
     }
     if (!fs.existsSync(configPath)) {
       fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf8')
