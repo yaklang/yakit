@@ -346,6 +346,19 @@ class AIChatPersistStore {
       keysReq.onerror = () => reject(keysReq.error)
     })
   }
+
+  /** 清空三表全部持久化数据（全库清删） */
+  async deleteAllPersist(): Promise<void> {
+    const db = await this.open()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+      tx.objectStore(SESSION_RENDER_STORE).clear()
+      tx.objectStore(SESSION_CONTENT_STORE).clear()
+      tx.objectStore(SESSION_REFERENCE_STORE).clear()
+    })
+  }
 }
 
 const aiChatPersistStore = new AIChatPersistStore()

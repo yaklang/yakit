@@ -43,6 +43,16 @@ import {
 
 const { ipcRenderer } = window.require('electron')
 
+/** deleteSessions 入参：按 id / 按 source 列表 / 全库清删（deleteAll） */
+export type DeleteSessionsParams = {
+  /** 有值：只删这些 id */
+  sessionIds?: string[]
+  /** 有值且非 deleteAll：限定这些 source（sessionIds 空时删其下全部） */
+  source?: AISource[]
+  /** true：删除所有 session、所有 source（清库）；忽略 sessionIds / source */
+  deleteAll?: boolean
+}
+
 /** 检查渲染树(element) 是否存在有效数据 */
 const hasSessionRenderTree = (content?: SessionRenderContent): boolean => {
   if (!content) return false
@@ -319,27 +329,26 @@ export class ChatMultiSessionController {
   }
 
   /**
-   * 非空 sessionIds 直接使用指定集合；空数组表示按 source 全删。
-   *
-   * gRPC 的按 source 全删不区分 route / pageId，因此这里也必须遍历反向索引，
-   * 收集所有页面中对应 source 的 session。否则在 B 页全删后只会停止 B，
-   * 同 source 的 A 页会话仍会继续运行。
+   * 解析 deleteSessions 目标 id。
+   * - deleteAll：全部索引中的 session
+   * - sessionIds 非空：用传入集合
+   * - 否则必须带非空 source：这些 source 下全部（跨 route / page）
+   * - 非法（空 id 且无 source 且非 deleteAll）：返回 null
    */
-  private resolveSessionIds(params: {
-    sessionIds?: string[]
-    sources: AISource[]
-    route: YakitRouteType
-    pageId: string
-  }): string[] {
-    const { sessionIds, sources } = params
+  private resolveDeleteSessionIds(params: DeleteSessionsParams): string[] | null {
+    const { sessionIds, source, deleteAll } = params
+    if (deleteAll) return [...this.sessionOwnerMap.keys()]
     if (sessionIds?.length) return [...sessionIds]
-
-    const sourceSet = new Set(sources)
-    const ids: string[] = []
-    for (const [sessionId, owner] of this.sessionOwnerMap) {
-      if (sourceSet.has(owner.source)) ids.push(sessionId)
+    if (source?.length) {
+      const sourceSet = new Set(source)
+      const ids: string[] = []
+      for (const [sessionId, owner] of this.sessionOwnerMap) {
+        if (sourceSet.has(owner.source)) ids.push(sessionId)
+      }
+      return ids
     }
-    return ids
+    console.error('[ChatMultiSessionController] deleteSessions: invalid params', params)
+    return null
   }
 
   /** 该 PageKey 下所有 source 的 session 并集 */
@@ -486,6 +495,9 @@ export class ChatMultiSessionController {
     content: SessionRenderContent,
     grpcOffset?: number,
   ): Promise<unknown> {
+    // 显式删库窗口：禁止再写，避免与 dispose drain / by-source 扫尾竞态
+    if (this.pendingDisposeSessions.get(sessionId) === true) return Promise.resolve()
+
     // 同步计算 offset / source 并闭包捕获，避免 enqueue 后 session 被 teardown 导致取不到
     const offset = grpcOffset ?? this.rawDataPool.get(sessionId)?.grpcOffset ?? 0
     const source = this.resolvePersistSource(sessionId)
@@ -534,6 +546,15 @@ export class ChatMultiSessionController {
   public async persistDeleteBySource(source: AISource) {
     try {
       await aiChatPersistStore.deletePersistBySource(source)
+    } catch {
+      // 持久化失败不打断主流程
+    }
+  }
+
+  /** 清空三表全部持久化数据 */
+  public async persistDeleteAll() {
+    try {
+      await aiChatPersistStore.deleteAllPersist()
     } catch {
       // 持久化失败不打断主流程
     }
@@ -644,6 +665,18 @@ export class ChatMultiSessionController {
     if (!waiters) return
     this.sessionEndWaiters.delete(sessionId)
     waiters.forEach((resolve) => resolve())
+  }
+
+  /** 等待指定 session 的 end / dispose teardown 完成 */
+  private waitSessionEnd(sessionId: string): Promise<void> {
+    return new Promise((resolve) => {
+      let waiters = this.sessionEndWaiters.get(sessionId)
+      if (!waiters) {
+        waiters = new Set()
+        this.sessionEndWaiters.set(sessionId, waiters)
+      }
+      waiters.add(resolve)
+    })
   }
 
   /**
@@ -1464,33 +1497,40 @@ export class ChatMultiSessionController {
   }
 
   /**
-   * 删除内存数据（仅 deleteSessions / onPageUnload 调用）
-   * 1. 标记 pendingDispose + forceClose（cancel，保留 IPC 等 end）
-   * 2. 真实 session-end 或 5s 兜底后，再摘监听并清业务池与归属索引
-   * @param deletePersist 是否同步删除 IDB。页面销毁只卸内存时应为 false，并先 flush 渲染树；显式删会话时为 true。
+   * 停流并卸池（deleteSessions / onPageUnload）
+   * - 仍 ready：pendingDispose + forceClose，等 end/fallback 后 teardown
+   * - 已 end：直接 teardown
+   * - deletePersist=true 时 await drain + 删 IDB，再让 waiters resolve
    */
-  private disposeSessionMemory(sessionId: string, deletePersist = false) {
-    // 已收到 session-end 的会话无需再次 cancel；直接卸池，避免批量删除二次等待 fallback。
+  private async disposeSessionMemory(sessionId: string, deletePersist = false): Promise<void> {
+    // 已在卸池：可升级为删 IDB，并复用同一次 end/teardown
+    if (this.pendingDisposeSessions.has(sessionId)) {
+      if (deletePersist) this.pendingDisposeSessions.set(sessionId, true)
+      await this.waitSessionEnd(sessionId)
+      return
+    }
+
+    // 已收到 session-end：无需 cancel，直接卸池
     if (!this.readyChannels.has(sessionId)) {
-      this.teardownDisposedSession(sessionId, deletePersist)
+      await this.teardownDisposedSession(sessionId, deletePersist)
       return
     }
 
     if (deletePersist) {
-      // 显式删除：取消待写 debounce 即可，无需再刷进 IDB
       this.clearSessionRenderPersistTimer(sessionId)
     } else {
-      // 页面卸载：卸内存前先把渲染树刷进 IDB，保留可恢复数据
       this.flushSessionRender(sessionId)
     }
 
+    const done = this.waitSessionEnd(sessionId)
     // 先标记 pending，再 forceClose：关停窗口内迟到的结构变更不再 arm dirty
     this.pendingDisposeSessions.set(sessionId, deletePersist)
     this.forceCloseSession({ sessionIds: [sessionId] })
+    await done
   }
 
-  /** end / 兜底超时后：摘池与归属索引（可选删 IDB） */
-  private teardownDisposedSession(sessionId: string, deletePersist: boolean) {
+  /** end / 兜底超时后：摘池与归属索引；deletePersist 时 await drain + 删 IDB */
+  private async teardownDisposedSession(sessionId: string, deletePersist: boolean): Promise<void> {
     // 卸池前清 debounce，避免空 ensureSession 后迟到 timer 把 IDB 盖成空树
     this.clearSessionRenderPersistTimer(sessionId)
     this.sessionRestoreLoading.delete(sessionId)
@@ -1513,16 +1553,16 @@ export class ChatMultiSessionController {
     }
 
     if (deletePersist) {
-      // 先排干该 session 所有在飞的 IDB 写（render / content / reference），
-      // 再发 delete 事务，确保 delete 排在所有 put 之后，避免 delete 后迟到的 put 又写回孤儿行。
-      // 内存池已在上文清空，此处只对 IDB 排干；队列本身在写完成 / finally 时自清。
-      Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
-        .then(() => aiChatPersistStore.deleteSessionPersist(sessionId))
-        .catch(() => {})
+      // 先排干该 session 所有在飞的 IDB 写，再 delete，避免 delete 后迟到 put 写回孤儿行
+      try {
+        await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+        await aiChatPersistStore.deleteSessionPersist(sessionId)
+      } catch {
+        // 持久化失败不打断主流程
+      }
+      return
     }
-    // deletePersist=false（页面卸载）时不排干：disposeSessionMemory 已先 flush 渲染树，
-    // 该异步写靠闭包快照完成且 enqueueRenderWrite 的 finally 会自清链，写入正是「保留可恢复数据」所需；
-    // 此处再 drain 只会空等，且无 delete 要对齐顺序，故跳过。
+    // deletePersist=false（页面卸载）时不排干：dispose 已先 flush，异步写靠闭包完成即可
   }
 
   /** 关闭会话的所有定时器 */
@@ -1602,14 +1642,18 @@ export class ChatMultiSessionController {
 
     const pendingDeletePersist = this.pendingDisposeSessions.get(sessionId)
     // dispose 窗口内可能仍有结构/内容变更：卸池前再刷一次树（显式删 IDB 时无需写）
-    // flush 本身不受 pendingDispose 拦截（仅 markSessionRenderDirty 会拦截）
     if (this.storePool.has(sessionId) && pendingDeletePersist !== true) {
       this.flushSessionRender(sessionId)
     }
 
     if (pendingDeletePersist !== undefined) {
       this.pendingDisposeSessions.delete(sessionId)
-      this.teardownDisposedSession(sessionId, pendingDeletePersist)
+      // 等 teardown（含删 IDB 时的 drain）完成再唤醒 dispose waiters / onEnd
+      void this.teardownDisposedSession(sessionId, pendingDeletePersist).finally(() => {
+        this.resolveSessionEndWaiters(sessionId)
+        onEnd?.()
+      })
+      return
     }
 
     this.resolveSessionEndWaiters(sessionId)
@@ -1654,7 +1698,7 @@ export class ChatMultiSessionController {
    * 无内存池的 session：清理索引/监听后删 IDB，不走 forceClose 异步链
    * 写队列是模块级、可晚于内存池存活，删前仍需 drain，避免迟到 put 复活孤儿行
    */
-  private deletePersistOnlySession(sessionId: string) {
+  private async deletePersistOnlySession(sessionId: string): Promise<void> {
     this.clearSessionRenderPersistTimer(sessionId)
     this.pendingDisposeSessions.delete(sessionId)
     this.clearSessionEndFallback(sessionId)
@@ -1672,34 +1716,47 @@ export class ChatMultiSessionController {
       this.sessionOwnerMap.delete(sessionId)
     }
 
-    Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
-      .then(() => aiChatPersistStore.deleteSessionPersist(sessionId))
-      .catch(() => {})
+    try {
+      await Promise.all([this.drainRenderWrites(sessionId), drainSessionContentWrites(sessionId)])
+      await aiChatPersistStore.deleteSessionPersist(sessionId)
+    } catch {
+      // 持久化失败不打断主流程
+    }
   }
 
   /**
-   * 删除指定的 session（必须清除内存数据）
-   * - sessionIds 非空：删集合
-   * - sessionIds 空数组：按 source 全删所有 route / page 下的 session
-   * - 内部会先 forceClose 再卸业务池与双索引，并同步删除该会话 IDB 三表
+   * 关闭并删除 session（停流与卸池融合在 disposeSessionMemory）
+   * - sessionIds 非空：只处理集合
+   * - sessionIds 空 + source[]：这些 source 下全部，再逐 source persistDeleteBySource 扫孤儿
+   * - deleteAll: true：所有 source，再 deleteAllPersist 清库
    * - grpc 删除由上层负责
    */
-  public deleteSessions(params: { sessionIds: string[]; sources: AISource[]; route: YakitRouteType; pageId: string }) {
-    const { sessionIds, sources } = params
-    const isBulkDelete = !sessionIds?.length
-    const ids = this.resolveSessionIds(params)
+  public async deleteSessions(params: DeleteSessionsParams): Promise<void> {
+    const { sessionIds, source, deleteAll } = params
+    const ids = this.resolveDeleteSessionIds(params)
+    if (!ids) return
+
+    const executingIds = new Set(this.filterExecutingSessionIds(ids))
+    const tasks: Promise<void>[] = []
 
     for (const sessionId of ids) {
-      if (this.hasSessionMemory(sessionId)) {
-        this.disposeSessionMemory(sessionId, true)
+      if (executingIds.has(sessionId) || this.hasSessionMemory(sessionId)) {
+        tasks.push(this.disposeSessionMemory(sessionId, true))
       } else {
-        this.deletePersistOnlySession(sessionId)
+        tasks.push(this.deletePersistOnlySession(sessionId))
       }
     }
 
-    if (isBulkDelete) {
-      for (const source of sources) {
-        void this.persistDeleteBySource(source)
+    // 屏障：全部逐 session 删完（含 drain）后再扫尾，避免与 by-source / 清库竞态
+    await Promise.all(tasks)
+
+    if (deleteAll) {
+      await this.persistDeleteAll()
+      return
+    }
+    if (!sessionIds?.length && source?.length) {
+      for (const s of source) {
+        await this.persistDeleteBySource(s)
       }
     }
   }
@@ -1711,7 +1768,7 @@ export class ChatMultiSessionController {
   public onPageUnload(route: YakitRouteType, pageId: string) {
     const ids = this.resolvePageSessionIds(route, pageId)
     for (const sessionId of ids) {
-      this.disposeSessionMemory(sessionId, false)
+      void this.disposeSessionMemory(sessionId, false)
     }
   }
 }

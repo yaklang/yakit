@@ -168,22 +168,11 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     setClearLoading(true)
     try {
       const filter = isGlobalAIAgentHistory ? { DeleteAll: true } : { Filter: { Source: historyQuerySources } }
-      const sessionIds = [
-        ...new Set([
-          ...(await queryTargetSessionIds(isGlobalAIAgentHistory ? undefined : sources)),
-          ...getRouteSessionIds(sources),
-        ]),
-      ]
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
-        deleteSessionsParams: {
-          // 全局历史页删全部来源；否则删当前 tab 对应来源（local=ai, feishu/dingtalk=im）
-          sources,
-          sessionIds,
-          route: currentRouteKey as YakitRouteType,
-          pageId: currentPageId || currentRouteKey,
-        },
+        // 按 source 列表清空；不传 deleteAll，全库清删由其它入口负责
+        deleteSessionsParams: { sessionIds: [], source: sources },
       })
       onNewChat()
       setActiveChat?.(undefined)
@@ -226,12 +215,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
-        deleteSessionsParams: {
-          sources: [source],
-          sessionIds,
-          route: currentRouteKey as YakitRouteType,
-          pageId: currentPageId || currentRouteKey,
-        },
+        deleteSessionsParams: { sessionIds, source: [source] },
       })
       const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
       const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)

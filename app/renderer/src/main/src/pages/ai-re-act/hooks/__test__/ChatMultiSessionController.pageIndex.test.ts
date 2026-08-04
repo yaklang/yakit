@@ -23,6 +23,7 @@ vi.mock('../persist/aiChatPersistStore', () => ({
     getSessionReferences: vi.fn().mockResolvedValue([]),
     deleteSessionPersist: vi.fn().mockResolvedValue(undefined),
     deletePersistBySource: vi.fn().mockResolvedValue(undefined),
+    deleteAllPersist: vi.fn().mockResolvedValue(undefined),
   },
 }))
 vi.mock('../AIAgentLogEmitter', () => ({
@@ -209,16 +210,15 @@ describe('ChatMultiSessionController lifecycle', () => {
     expect(onEnd).toHaveBeenCalled()
   })
 
-  it('A12: deleteSessions by ids', async () => {
-    ctrl.deleteSessions({
+  it('A12: deleteSessions by ids merges stop and dispose', async () => {
+    const done = ctrl.deleteSessions({
       sessionIds: ['s-life'],
-      sources: ['ai'],
-      route: YakitRoute.AI_Agent,
-      pageId: 'page-1',
+      source: ['ai'],
     })
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
-    // dispose 等 session-end / 5s 兜底后再卸 readyChannels
+    // dispose 等 session-end / 5s 兜底后再卸池
     await vi.advanceTimersByTimeAsync(5000)
+    await done
     expect(ctrl.isSessionReady('s-life')).toBe(false)
   })
 
@@ -229,37 +229,59 @@ describe('ChatMultiSessionController lifecycle', () => {
     ;(drainSessionContentWrites as any).mockResolvedValue([])
     ;(aiChatPersistStore.deleteSessionPersist as any).mockResolvedValue(undefined)
 
-    ctrl.deleteSessions({
+    await ctrl.deleteSessions({
       sessionIds: ['orphan-only'],
-      sources: ['ai'],
-      route: YakitRoute.AI_Agent,
-      pageId: 'page-1',
+      source: ['ai'],
     })
     expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', 'orphan-only')
-
-    // 孤儿路径：无 cancel，仅异步删 IDB；多刷几次微任务等 Promise.all.then
-    for (let i = 0; i < 5; i++) await Promise.resolve()
     expect(aiChatPersistStore.deleteSessionPersist).toHaveBeenCalledWith('orphan-only')
+    expect(aiChatPersistStore.deletePersistBySource).not.toHaveBeenCalled()
   })
 
-  it('A25: bulk deleteSessions by sources clears all pages and persistBySource', async () => {
+  it('A25: deleteSessions by source clears all pages then persistBySource', async () => {
     const aiChatPersistStore = (await import('../persist/aiChatPersistStore')).default
     ctrl.handleStartSession(startParams('s-bulk-a', 'page-a'))
     ctrl.handleStartSession(startParams('s-bulk-b', 'page-b'))
 
-    ctrl.deleteSessions({
+    const done = ctrl.deleteSessions({
       sessionIds: [],
-      sources: ['ai'],
-      route: YakitRoute.AI_Agent,
-      pageId: 'page-a',
+      source: ['ai'],
     })
 
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-bulk-a')
     expect(ipcRendererMock.invoke).toHaveBeenCalledWith('cancel-ai-re-act', 's-bulk-b')
-    expect(aiChatPersistStore.deletePersistBySource).toHaveBeenCalledWith('ai')
     await vi.advanceTimersByTimeAsync(5000)
+    await done
+    expect(aiChatPersistStore.deletePersistBySource).toHaveBeenCalledWith('ai')
     expect(ctrl.isSessionReady('s-bulk-a')).toBe(false)
     expect(ctrl.isSessionReady('s-bulk-b')).toBe(false)
+  })
+
+  it('A26: deleteAll clears all sources via deleteAllPersist', async () => {
+    const aiChatPersistStore = (await import('../persist/aiChatPersistStore')).default
+    ctrl.handleStartSession(startParams('s-all-a', 'page-a'))
+    ctrl.handleStartSession({
+      ...startParams('s-all-im', 'page-b'),
+      params: { Params: { Source: 'im', UserQuery: '' } } as any,
+    })
+
+    const done = ctrl.deleteSessions({ deleteAll: true })
+    await vi.advanceTimersByTimeAsync(5000)
+    await done
+
+    expect(ctrl.isSessionReady('s-all-a')).toBe(false)
+    expect(ctrl.isSessionReady('s-all-im')).toBe(false)
+    expect(aiChatPersistStore.deleteAllPersist).toHaveBeenCalled()
+    expect(aiChatPersistStore.deletePersistBySource).not.toHaveBeenCalled()
+  })
+
+  it('A27: empty sessionIds without source or deleteAll is no-op', async () => {
+    const aiChatPersistStore = (await import('../persist/aiChatPersistStore')).default
+    await ctrl.deleteSessions({ sessionIds: [] })
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('cancel-ai-re-act', 's-life')
+    expect(aiChatPersistStore.deletePersistBySource).not.toHaveBeenCalled()
+    expect(aiChatPersistStore.deleteAllPersist).not.toHaveBeenCalled()
+    expect(ctrl.isSessionReady('s-life')).toBe(true)
   })
 })
 
