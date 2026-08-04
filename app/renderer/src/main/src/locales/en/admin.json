@@ -62,6 +62,7 @@
     "licenseUsedTotal": "License (Used/Total)",
     "totalUsers": "Total Users",
     "generateLicense": "Generate License",
+
     "confirmDeleteCompany": "Are you sure to delete this company?",
     "viewLicenseFailed": "Failed to view license: {{error}}",
     "deleteCompanySuccess": "Company deleted successfully",
@@ -93,7 +94,10 @@
     "enterpriseEdition": "Enterprise Edition",
     "portableEdition": "Portable Edition",
     "applicationCode": "Application Code",
-    "inputApplicationCode": "Please enter application code"
+    "inputApplicationCode": "Please enter application code",
+    "distributed": "Distributed",
+    "featureModule": "Feature Module",
+    "selectFeatureModule": "Please select feature module"
   },
   "RoleAdminPage": {
     "roleName": "Role Name",

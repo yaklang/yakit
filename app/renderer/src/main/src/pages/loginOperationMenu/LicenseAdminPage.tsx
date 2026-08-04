@@ -29,6 +29,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import styles from './LicenseAdminPage.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useWatch } from 'antd/lib/form/Form'
 const { Paragraph } = Typography
 interface LicenseAdminRequest {
   keywords: string
@@ -526,7 +527,9 @@ interface LicenseCreatRequest {
   company: string
   license: string
   maxUser: number
-  company_version: string
+  company_version?: string
+  products?: string[]
+  format?: string
 }
 interface CreateLicenseProps {
   company?: API.CompanyLicenseConfigList
@@ -537,6 +540,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
   const { t } = useI18nNamespaces(['admin', 'yakitUi'])
   const { company, onCancel, refresh } = props
   const [form] = Form.useForm()
+  const companyVersion = useWatch<string>('company_version', form)
   const [loading, setLoading] = useState<boolean>(false)
   const [selectLoading, setSelectLoading] = useState<boolean>(true)
   const [pagination, setPagination] = useState({
@@ -610,7 +614,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
 
   const onFinish = useMemoizedFn((values) => {
     setLoading(true)
-    const { id, license, company_version } = values
+    const { id, license, company_version, products } = values
     const selectDate = response.data.filter((item) => item.id === id)[0]
     const { company, maxUser } = selectDate
     let params: LicenseCreatRequest = {
@@ -618,6 +622,11 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
       company,
       maxUser,
       company_version,
+    }
+    if (products) {
+      params.products = products
+      params.format = 'legion-v2'
+      delete params.company_version
     }
     NetWorkApi<LicenseCreatRequest, string>({
       method: 'post',
@@ -698,8 +707,28 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
           <YakitSelect placeholder={t('CreateLicense.selectVersion')} allowClear>
             <YakitSelect.Option value="EnpriTrace">{t('CreateLicense.enterpriseEdition')}</YakitSelect.Option>
             <YakitSelect.Option value="EnpriTraceAgent">{t('CreateLicense.portableEdition')}</YakitSelect.Option>
+            <YakitSelect.Option value="test">{t('CreateLicense.distributed')}</YakitSelect.Option>
           </YakitSelect>
         </Form.Item>
+        {companyVersion === 'test' && (
+          <Form.Item
+            name="products"
+            label={t('CreateLicense.featureModule')}
+            rules={[{ required: true, message: t('YakitForm.requiredField') }]}
+          >
+            <YakitSelect
+              allowClear
+              options={[
+                { label: '主机扫描', value: 'scan_center' },
+                { label: '代码审计', value: 'ssa' },
+                { label: 'HIDS', value: 'hids' },
+                { label: 'AI', value: 'memfit' },
+              ]}
+              mode="tags"
+              placeholder={t('CreateLicense.selectFeatureModule')}
+            />
+          </Form.Item>
+        )}
         <Form.Item
           name="license"
           label={t('CreateLicense.applicationCode')}

@@ -93,7 +93,10 @@
     "enterpriseEdition": "企业版",
     "portableEdition": "便携版",
     "applicationCode": "申请码",
-    "inputApplicationCode": "请输入申请码"
+    "inputApplicationCode": "请输入申请码",
+    "distributed": "分布式",
+    "featureModule": "功能模块",
+    "selectFeatureModule": "请选择功能模块"
   },
   "RoleAdminPage": {
     "roleName": "角色名",

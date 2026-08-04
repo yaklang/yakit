@@ -62,6 +62,7 @@
     "licenseUsedTotal": "License(已使用/總數)",
     "totalUsers": "使用者總數",
     "generateLicense": "生成License",
+
     "confirmDeleteCompany": "確定刪除該企業嗎？",
     "viewLicenseFailed": "檢視license失敗：{{error}}",
     "deleteCompanySuccess": "刪除企業成功",
@@ -93,7 +94,10 @@
     "enterpriseEdition": "企業版",
     "portableEdition": "便攜版",
     "applicationCode": "申請碼",
-    "inputApplicationCode": "請輸入申請碼"
+    "inputApplicationCode": "請輸入申請碼",
+    "distributed": "分布式",
+    "featureModule": "功能模块",
+    "selectFeatureModule": "請選擇功能模块"
   },
   "RoleAdminPage": {
     "roleName": "角色名",
