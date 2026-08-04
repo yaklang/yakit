@@ -316,6 +316,12 @@
     "noYaklangLatestVersion": "未獲取引擎最新版本",
     "updateContentSuccess": "修改更新內容成功"
   },
+  "MoreYaklangVersion": {
+    "standardVersion": "標準版本",
+    "slimVersion": "輕量版本",
+    "slim": "輕量",
+    "slimVersionTip": "輕量版去除了 SSA 編譯、SyntaxFlow 規則掃描、以及非 Yak 語言的 AST/Build，資源佔用更低、回應更快，適合日常工具使用與 Yak 編碼。"
+  },
   "RobotControl": {
     "subTitle": "把外部聊天工具接入 AI Agent 機器人",
     "createRobot": "新建機器人",

@@ -2,6 +2,9 @@
   width: 240px;
   .engine-build-type-header {
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
     :global {
       .ant-radio-group {
         width: 100%;

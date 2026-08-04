@@ -16,7 +16,8 @@
   },
   "CodecRunListHistoryStore": {
     "historyStore": "History Store",
-    "clearHistoryConfirm": "Are you sure you want to clear the history storage?"
+    "clearHistoryConfirm": "Are you sure you want to clear the history storage?",
+    "copySuccess": "Copied as codecflow fuzztag"
   },
   "NewCodecMiddleRunList": {
     "dragHint": "Drag Codec tools from the left list to use them",
