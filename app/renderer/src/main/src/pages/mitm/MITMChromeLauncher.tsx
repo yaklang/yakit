@@ -78,6 +78,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   const [defUserDataDir, setDefUserDataDir] = useState<string>('')
   const [isSaveUserData, setSaveUserData] = useState<boolean>(false)
   const [userDataDir, setUserDataDir] = useState<string>('')
+  const [isWindows, setIsWindows] = useState<boolean>(false)
   const [taskbarIconPreset, setTaskbarIconPreset] = useState<TaskbarIconPreset>('default')
   const [taskbarIconPath, setTaskbarIconPath] = useState<string>('')
 
@@ -126,6 +127,11 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
     ipcRenderer.invoke('getDefaultUserDataDir').then((e: string) => {
       setDefUserDataDir(e)
     })
+
+    ipcRenderer
+      .invoke('GetChromeLauncherPlatform')
+      .then((platform: string) => setIsWindows(platform === 'win32'))
+      .catch(() => setIsWindows(false))
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
@@ -269,7 +275,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
           </Tooltip>
         </Form.Item>
       )}
-      {process.platform === 'win32' && (
+      {isWindows && (
         <Form.Item label={t('MITMChromeLauncher.taskbar_icon')}>
           <YakitSegmented
             value={taskbarIconPreset}

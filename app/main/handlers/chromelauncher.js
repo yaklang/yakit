@@ -132,6 +132,10 @@ module.exports = (win, getClient) => {
     return getMyUserDataDir()
   })
 
+  ipcMain.handle('GetChromeLauncherPlatform', async () => {
+    return process.platform
+  })
+
   ipcMain.handle('LaunchChromeWithParams', async (e, params) => {
     const {
       port,
