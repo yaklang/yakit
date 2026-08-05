@@ -641,6 +641,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
 
   return (
     <div
+      data-testid={pageType === 'MITM' ? 'mitm-flow-table' : undefined}
       className={styles['hTTPFlowRealTimeTableAndEditor']}
       ref={hTTPFlowRealTimeTableAndEditorRef}
       style={wrapperStyle}

@@ -23,6 +23,68 @@ export interface HTTPFlowTableShieldDataSplit {
   shieldHosts: string[]
 }
 
+export const normalizeHTTPFlowTotal = (value: unknown): number => {
+  const total = Number(value)
+  return Number.isSafeInteger(total) && total >= 0 ? total : 0
+}
+
+export interface MITMLogResetSignal {
+  version: string
+  resetAtUnixSeconds?: number
+}
+
+/** Decode the new reset envelope while keeping compatibility with the legacy version-only event. */
+export const parseMITMLogResetSignal = (value: string): MITMLogResetSignal => {
+  try {
+    const parsed = JSON.parse(value)
+    if (parsed && typeof parsed === 'object' && typeof parsed.version === 'string') {
+      const resetAtUnixSeconds = Number(parsed.resetAtUnixSeconds)
+      return {
+        version: parsed.version,
+        resetAtUnixSeconds:
+          Number.isSafeInteger(resetAtUnixSeconds) && resetAtUnixSeconds > 0 ? resetAtUnixSeconds : undefined,
+      }
+    }
+  } catch {}
+  return { version: value }
+}
+
+export const buildHTTPFlowProjectKey = (databaseIdentity: unknown, projectGeneration: unknown): string => {
+  const identity = typeof databaseIdentity === 'string' ? databaseIdentity : ''
+  const generation = Number(projectGeneration)
+  return identity && Number.isSafeInteger(generation) && generation > 0 ? `${identity}:${generation}` : ''
+}
+
+export const shouldClearMITMResetBoundary = (
+  resetAfterId: number,
+  resetProjectKey: string,
+  currentProjectKey: string,
+): boolean =>
+  Number(resetAfterId) > 0 &&
+  resetProjectKey.length > 0 &&
+  currentProjectKey.length > 0 &&
+  resetProjectKey !== currentProjectKey
+
+export const isHTTPFlowTableActive = (inViewport: boolean, backgroundRefresh: boolean, pageType?: string): boolean =>
+  inViewport || (backgroundRefresh && pageType !== 'MITM')
+
+export const shouldUseHTTPFlowMetadataOnlyQuery = (
+  inViewport: boolean,
+  backgroundRefresh: boolean,
+  pageType?: string,
+): boolean => !inViewport && backgroundRefresh && pageType !== 'MITM'
+
+export const shouldRefreshHTTPFlowTableAfterResize = (
+  previousHeight: number | undefined,
+  nextHeight: number,
+  onlyShowFirstNode: boolean | undefined,
+  isTableActive: boolean,
+): boolean => {
+  if (!isTableActive || !Number.isFinite(nextHeight) || nextHeight <= 0) return false
+  if (!previousHeight || previousHeight <= 0) return true
+  return onlyShowFirstNode === true && nextHeight > previousHeight
+}
+
 export const safeParseHTTPFlowTableCache = <T = unknown>(value?: string): T | undefined => {
   if (!value) return undefined
   try {
@@ -176,7 +238,7 @@ export const hasHTTPFlowFilterCriteria = (query: YakQueryHTTPFlowRequest | undef
     if (value === undefined || value === null || value === '') continue
     if (Array.isArray(value) && value.length === 0) continue
     if (typeof value === 'boolean' && value === false) continue
-    if (key === 'SourceType' || key === 'Full' || key === 'WithPayload') continue
+    if (key === 'SourceType' || key === 'Full' || key === 'WithPayload' || key === 'AfterId') continue
     return true
   }
   return false
@@ -371,6 +433,7 @@ const matchHTTPFlowTagsFilter = (flow: HTTPFlow, tagsFilter: string[]) => {
 }
 
 export const filterHTTPFlowsByFavoriteAndTags = (list: HTTPFlow[], tagsFilter: string[], onlyFavorite: boolean) => {
+  if (!onlyFavorite && tagsFilter.length === 0) return list
   return list.filter((flow) => {
     if (onlyFavorite && !isHTTPFlowFavorite(flow)) return false
     return matchHTTPFlowTagsFilter(flow, tagsFilter)
@@ -378,17 +441,21 @@ export const filterHTTPFlowsByFavoriteAndTags = (list: HTTPFlow[], tagsFilter: s
 }
 
 export const getClassNameData = (resData: HTTPFlow[]) => {
-  const newData: HTTPFlow[] = []
-  const length = resData.length
-  for (let index = 0; index < length; index++) {
-    const item: HTTPFlow = resData[index]
-    const className: string | undefined = filterColorTag(item.Tags) || undefined
+  let newData: HTTPFlow[] | undefined
+  for (let index = 0; index < resData.length; index++) {
+    const item = resData[index]
+    const className = filterColorTag(item.Tags) || undefined
+    if (item.cellClassName === className) {
+      newData?.push(item)
+      continue
+    }
+    if (!newData) newData = resData.slice(0, index)
     newData.push({
       ...item,
       cellClassName: className,
     })
   }
-  return newData
+  return newData || resData
 }
 
 export const onConvertBodySizeByUnit = (length: number, unit: 'B' | 'K' | 'M') => {

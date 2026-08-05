@@ -115,6 +115,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         })}
       >
         <Checkbox
+          data-testid="engine-user-agreement"
           className={classNames(
             { [styles['agreement-checkbox']]: !(!agrCheck && checkStatus) },
             {
@@ -167,6 +168,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
           </YakitButton>
 
           <YakitButton
+            data-testid="engine-switch-remote"
             className={styles['btn-style']}
             size="large"
             type="secondary2"
@@ -192,6 +194,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
           </YakitButton>
 
           <YakitButton
+            data-testid="engine-switch-remote"
             className={styles['btn-style']}
             size="large"
             type="secondary2"
@@ -630,7 +633,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
 
   return (
     <YakitSpin spinning={disableYakitLoading} tip={yakitLoadingTip}>
-      <div className={styles['startup-loading-wrapper']}>
+      <div
+        className={styles['startup-loading-wrapper']}
+        data-testid="startup-engine-loading"
+        data-yakit-status={yakitStatus}
+      >
         <div
           className={classNames(styles['log-wrapper'], {
             [styles['log-default-color']]: !logError,

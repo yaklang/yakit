@@ -160,6 +160,13 @@ module.exports = {
       // 单 runtime，双 entry 共用 webpack 引导代码
       config.optimization.runtimeChunk = 'single'
 
+      // Local/WSL Electron E2E builds keep production React semantics but skip
+      // minification, whose terser workers can exceed 10 GiB in this project.
+      // Build metadata prevents comparison with fully minified performance runs.
+      if (process.env.YAKIT_E2E_BOUNDED_BUILD === '1') {
+        config.optimization.minimize = false
+      }
+
       // CRA dev 默认所有 entry 输出到 bundle.js，多 entry 会互相覆盖导致白屏
       if (config.mode === 'development') {
         config.output.filename = 'static/js/[name].bundle.js'

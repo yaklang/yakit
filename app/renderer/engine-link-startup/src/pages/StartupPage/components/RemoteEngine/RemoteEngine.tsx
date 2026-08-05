@@ -131,7 +131,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
   })
 
   return (
-    <div className={styles['remote-engine-wrapper']}>
+    <div className={styles['remote-engine-wrapper']} data-testid="remote-engine-form">
       <YakitSpin spinning={loading}>
         <div className={styles['remote-yaklang-engine-body']}>
           <div className={styles['remote-title']}>{t('RemoteEngine.remote_mode')}</div>
@@ -180,6 +180,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                   style={{ flex: 1 }}
                 >
                   <YakitInput
+                    data-testid="remote-engine-host"
                     className={classNames({
                       [styles['error-border']]: isCheck && !remote.host,
                     })}
@@ -199,6 +200,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                   style={{ flex: 1 }}
                 >
                   <YakitInput
+                    data-testid="remote-engine-port"
                     className={classNames({
                       [styles['error-border']]: isCheck && !remote.port,
                     })}
@@ -291,7 +293,12 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                 </Form.Item>
               )}
               <Form.Item label="">
-                <YakitButton size="large" onClick={submit} className={styles['btn-style']}>
+                <YakitButton
+                  data-testid="remote-engine-connect"
+                  size="large"
+                  onClick={submit}
+                  className={styles['btn-style']}
+                >
                   {t('RemoteEngine.start_connect')}
                 </YakitButton>
               </Form.Item>

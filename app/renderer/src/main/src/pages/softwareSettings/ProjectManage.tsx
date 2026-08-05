@@ -328,7 +328,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         },
         render: (data, index) => {
           return (
-            <div className={classNames(styles['project-table-body-wrapper'], styles['project-name-wrapper'])}>
+            <div
+              className={classNames(styles['project-table-body-wrapper'], styles['project-name-wrapper'])}
+              data-testid="project-open"
+              data-project-name={data.ProjectName}
+            >
               {!data.Type || data.Type === getEnvTypeByProjects() ? (
                 <ProjectDocumentTextSvgIcon className={styles['opt-project-icon']} />
               ) : (
@@ -1142,7 +1146,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   }, [props.projectListRefreshTrigger])
 
   return (
-    <div className={styles['project-manage-wrapper']}>
+    <div className={styles['project-manage-wrapper']} data-testid="project-manage">
       <div className={styles['project-manage-container']}>
         <div className={styles['project-header']}>
           <div className={styles['header-title']}>

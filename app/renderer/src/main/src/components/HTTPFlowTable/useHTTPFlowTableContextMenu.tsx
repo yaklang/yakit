@@ -35,11 +35,40 @@ import {
   toggleHTTPFlowFavoriteBatch,
 } from './HTTPFlowTable.actions'
 import type { HistoryMenuData, HTTPFlow } from './HTTPFlowTable.constants'
+import { hydrateHTTPFlowRequest, hydrateHTTPFlowRequests } from './HTTPFlowTable.packet'
 import { isHTTPFlowFavorite } from './HTTPFlowTable.utils'
 import style from './HTTPFlowTable.module.scss'
 import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
 
 const { ipcRenderer } = window.require('electron')
+
+const REQUEST_PACKET_SINGLE_MENU_KEYS = new Set([
+  'sendToWebFuzzerKey',
+  'sendAndJumpToWebFuzzer',
+  'sendToWebFuzzer',
+  'sendToWSFuzzer',
+  'sendAndJumpToWS',
+  'sendToWS',
+  'copyAsCSRFPoc',
+  'csrfpoc',
+  'auto-submit-csrf-poc',
+  'copyAsYakPoCTemplate',
+  'packetPoCTemplate',
+  'batchTestPoCTemplate',
+  'sendToComparerLeft',
+  'sendToComparerRight',
+])
+
+const REQUEST_PACKET_BATCH_MENU_KEYS = new Set([
+  'sendToWebFuzzerKey',
+  'sendAndJumpToWebFuzzer',
+  'sendToWebFuzzer',
+  'sendToWSFuzzer',
+  'sendAndJumpToWS',
+  'sendToWS',
+])
+
+const REQUEST_PACKET_BATCH_LIMIT = 10
 
 export interface UseHTTPFlowTableContextMenuOptions {
   t: TFunction
@@ -78,7 +107,7 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onShieldRecord: (flow: HTTPFlow) => void
   onShieldURL: (flow: HTTPFlow) => void
   onShieldDomain: (flow: HTTPFlow) => void
-  onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean) => void
+  onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean, rows?: HTTPFlow[]) => void
   onViewAttachmentDataRefresh: (id: number) => void
 }
 
@@ -145,7 +174,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           },
         ],
         onClickBatch: (list, n) => {
-          onBatch((el) => onSendToTab(el, true, downstreamProxyStr, fromMITM), n!, list.length === total)
+          onBatch((el) => onSendToTab(el, true, downstreamProxyStr, fromMITM), n!, list.length === total, list)
         },
         onClickSingle: (v) => onSendToTab(v, true, downstreamProxyStr, fromMITM),
       },
@@ -168,7 +197,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           },
         ],
         onClickBatch: (list, n) => {
-          onBatch((el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request), n!, list.length === total)
+          onBatch((el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request), n!, list.length === total, list)
         },
         onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request),
       },
@@ -719,7 +748,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         width: 180,
         parentTitleClick: true,
         data: rowContextmenu,
-        onClick: ({ key, keyPath }) => {
+        onClick: async ({ key, keyPath }) => {
           if (selectedRowKeys.length > 0) {
             onMultipleClick(key, keyPath)
             return
@@ -747,11 +776,21 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             CalloutColor(rowData, colorItem, data, setData)
             return
           }
+
+          let actionRow = rowData
+          if (REQUEST_PACKET_SINGLE_MENU_KEYS.has(key)) {
+            try {
+              actionRow = await hydrateHTTPFlowRequest(rowData)
+            } catch (error) {
+              yakitNotify('error', `Query HTTPFlow failed: ${error}`)
+              return
+            }
+          }
           switch (key) {
             case 'csrfpoc':
               generateCSRFPocByRequest(
-                rowData.Request,
-                rowData.IsHTTPS,
+                actionRow.Request,
+                actionRow.IsHTTPS,
                 (e) => {
                   setClipboardText(e)
                 },
@@ -760,8 +799,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
               break
             case 'auto-submit-csrf-poc':
               generateCSRFPocByRequest(
-                rowData.Request,
-                rowData.IsHTTPS,
+                actionRow.Request,
+                actionRow.IsHTTPS,
                 (e) => {
                   setClipboardText(e)
                 },
@@ -769,10 +808,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
               )
               break
             case 'packetPoCTemplate':
-              onPocMould(rowData)
+              onPocMould(actionRow)
               break
             case 'batchTestPoCTemplate':
-              onBatchPocMould(rowData)
+              onBatchPocMould(actionRow)
               break
             case 'blockRecord':
               onShieldRecord(rowData)
@@ -794,27 +833,27 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
               break
             case 'sendToComparerLeft':
               setCompareLeft({
-                content: new Buffer(rowData.Request).toString('utf8'),
+                content: new Buffer(actionRow.Request).toString('utf8'),
                 language: 'http',
               })
               break
             case 'sendToComparerRight':
               setCompareRight({
-                content: new Buffer(rowData.Request).toString('utf8'),
+                content: new Buffer(actionRow.Request).toString('utf8'),
                 language: 'http',
               })
               break
             case 'sendAndJumpToWebFuzzer':
-              onSendToTab(rowData, true, downstreamProxyStr, fromMITM)
+              onSendToTab(actionRow, true, downstreamProxyStr, fromMITM)
               break
             case 'sendToWebFuzzer':
-              onSendToTab(rowData, false, downstreamProxyStr, fromMITM)
+              onSendToTab(actionRow, false, downstreamProxyStr, fromMITM)
               break
             case 'sendAndJumpToWS':
-              newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request)
+              newWebsocketFuzzerTab(actionRow.IsHTTPS, actionRow.Request)
               break
             case 'sendToWS':
-              newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
+              newWebsocketFuzzerTab(actionRow.IsHTTPS, actionRow.Request, false)
               break
             case 'copyUrlWithQuery':
               setClipboardText(rowData.Url || '')
@@ -843,7 +882,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             default:
               const currentItem = menuData.find((f) => f.key === key)
               if (!currentItem) return
-              if (currentItem.onClickSingle) currentItem.onClickSingle(rowData)
+              if (currentItem.onClickSingle) currentItem.onClickSingle(actionRow)
               break
           }
         },
@@ -865,7 +904,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       })
   })
 
-  const onMultipleClick = useMemoizedFn((key: string, keyPath: string[]) => {
+  const onMultipleClick = useMemoizedFn(async (key: string, keyPath: string[]) => {
     const batchContextMenu = getBatchContextMenu()
 
     const menuName = keyPath[keyPath.length - 1]
@@ -918,6 +957,20 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       })
       return
     }
+
+    let actionRows = selectedRows
+    const canRunRequestPacketBatch =
+      selectedRows.length > 0 &&
+      selectedRows.length <= REQUEST_PACKET_BATCH_LIMIT &&
+      (!isAllSelect || selectedRows.length === total)
+    if (REQUEST_PACKET_BATCH_MENU_KEYS.has(key) && canRunRequestPacketBatch) {
+      try {
+        actionRows = await hydrateHTTPFlowRequests(selectedRows)
+      } catch (error) {
+        yakitNotify('error', `Query HTTPFlow failed: ${error}`)
+        return
+      }
+    }
     switch (key) {
       case 'deleteRecord':
         onRemoveHttpHistory({ Id: selectedRowKeys.map((id) => +id) })
@@ -947,6 +1000,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           (el) => onSendToTab(el, true, downstreamProxyStr, fromMITM),
           currentItemJumpToFuzzer?.number || 0,
           selectedRowKeys.length === total,
+          actionRows,
         )
 
         break
@@ -957,6 +1011,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           (el) => onSendToTab(el, false, downstreamProxyStr, fromMITM),
           currentItemToFuzzer?.number || 0,
           selectedRowKeys.length === total,
+          actionRows,
         )
         break
       case 'sendAndJumpToWS':
@@ -966,6 +1021,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
           currentItemJumpToWS?.number || 0,
           selectedRowKeys.length === total,
+          actionRows,
         )
 
         break
@@ -976,6 +1032,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request, false),
           currentItemToWS?.number || 0,
           selectedRowKeys.length === total,
+          actionRows,
         )
         break
       case 'copyUrlWithQuery':
@@ -1017,7 +1074,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       default:
         const currentItem = menuData.find((f) => f.onClickBatch && f.key === key)
         if (!currentItem) return
-        if (currentItem.onClickBatch) currentItem.onClickBatch(selectedRows, currentItem.number)
+        if (currentItem.onClickBatch) currentItem.onClickBatch(actionRows, currentItem.number)
         break
     }
     setBatchVisible(false)

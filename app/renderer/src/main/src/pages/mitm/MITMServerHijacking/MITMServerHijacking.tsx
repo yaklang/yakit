@@ -569,8 +569,18 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = React.memo
               </YakitButton>
             </YakitPopover>
           )}
-          <div className={style['mitm-server-quit-icon']}>
-            <QuitIcon onClick={() => stop()} />
+          <div
+            className={style['mitm-server-quit-icon']}
+            data-testid="mitm-stop"
+            role="button"
+            tabIndex={0}
+            aria-label="Stop MITM"
+            onClick={() => stop()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') stop()
+            }}
+          >
+            <QuitIcon />
           </div>
         </div>
       </div>

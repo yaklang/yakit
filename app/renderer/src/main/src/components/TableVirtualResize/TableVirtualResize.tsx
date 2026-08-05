@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, { ReactNode, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   useClickAway,
   useCreation,
@@ -50,12 +50,13 @@ import cloneDeep from 'lodash/cloneDeep'
 import locale from 'antd/es/date-picker/locale/zh_CN'
 import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
-import { parseColorTag } from './utils'
+import { parseColorTag, resetEmptyVirtualTableViewport } from './utils'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import { v4 as uuidv4 } from 'uuid'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { shouldRenderVirtualTableCellForHover } from './TableVirtualResize.memo'
 const { RangePicker } = YakitDatePicker
 
 /**
@@ -258,6 +259,15 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     itemHeight: defItemHeight,
     overscan: overscan,
   })
+
+  // ahooks useVirtualList calculates its range from the existing scrollTop.
+  // Clearing a deeply-scrolled list can therefore leave an invalid negative
+  // wrapper height until another scroll event occurs. Reset both DOM nodes
+  // before paint so an empty table cannot retain a stale row/scrollbar.
+  useLayoutEffect(() => {
+    if (!resetEmptyVirtualTableViewport(data.length, containerRef.current, wrapperRef.current)) return
+    scrollTo(0)
+  }, [data.length, scrollTo])
 
   const checkboxPropsMap = useCreation(() => {
     const map = new Map<React.Key, Partial<YakitProtoCheckboxProps>>()
@@ -1979,10 +1989,14 @@ function areCellRenderPropsEqual(
   if (preProps.selectedRowKeysSet !== nextProps.selectedRowKeysSet) {
     return false
   }
-  const wasHovered = preProps.mouseCellId === preProps.item.data[preProps.renderKey]
-  const isHovered = nextProps.mouseCellId === nextProps.item.data[nextProps.renderKey]
-  // 比较本 cell 是否 hover，而非 mouseCellId 引用变化，避免鼠标移动时全表 cell 重渲染
-  if (wasHovered !== isHovered) {
+  if (
+    shouldRenderVirtualTableCellForHover(
+      preProps.mouseCellId,
+      nextProps.mouseCellId,
+      preProps.item.data[preProps.renderKey],
+      nextProps.item.data[nextProps.renderKey],
+    )
+  ) {
     return false
   }
   if (preProps.item.data !== nextProps.item.data) {

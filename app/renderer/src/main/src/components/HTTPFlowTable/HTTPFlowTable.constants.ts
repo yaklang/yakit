@@ -9,6 +9,7 @@ import { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { DebouncedFunc } from 'lodash'
 import type { HistoryPluginSearchType } from '@/utils/yakQueryHTTPFlow'
 import type { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
+import { MITM_FLOW_TABLE_OVERSCAN as MITM_FLOW_TABLE_OVERSCAN_VALUE } from './HTTPFlowTable.performance'
 
 export interface codecHistoryPluginProps {
   key: string
@@ -50,6 +51,10 @@ export interface HTTPFlow {
   IPAddress?: string
   HtmlTitle?: string
   PathSuffix?: string
+  Host?: string
+  DurationMs?: number
+  NoFixContentLength?: boolean
+  IsReadTooSlowResponse?: boolean
 
   GetParams: FuzzableParams[]
   PostParams: FuzzableParams[]
@@ -162,6 +167,53 @@ export interface YakQueryHTTPFlowResponse {
   Data: HTTPFlow[]
   Total: number
   Pagination: PaginationSchema
+  SystemTiming?: QueryHTTPFlowSystemTiming
+  /** Electron Main 附加的本地 IPC/gRPC 时序，不属于后端 protobuf。 */
+  YakitMainProcessTiming?: YakitMainProcessTiming
+}
+
+export type TimingNumber = number | string
+
+export interface HTTPFlowSystemTiming {
+  Id: TimingNumber
+  RequestHijackAtUnixMs: TimingNumber
+  ResponseMirrorAtUnixMs: TimingNumber
+  FlowBuiltAtUnixMs: TimingNumber
+  PersistEnqueuedAtUnixMs: TimingNumber
+  PersistStartedAtUnixMs: TimingNumber
+  PersistedAtUnixMs: TimingNumber
+  DatabaseChangeDetectedAtUnixMs: TimingNumber
+  ProjectGeneration?: TimingNumber
+}
+
+export interface QueryHTTPFlowSystemTiming {
+  ServerReceivedAtUnixMs: TimingNumber
+  SQLFinishedAtUnixMs: TimingNumber
+  ConversionFinishedAtUnixMs: TimingNumber
+  ResponseReadyAtUnixMs: TimingNumber
+  QueryDurationUs: TimingNumber
+  ConversionDurationUs: TimingNumber
+  CountDurationUs?: TimingNumber
+  DataQueryDurationUs?: TimingNumber
+  CountExecuted?: boolean
+  AsyncWriteQueueDepth: TimingNumber
+  AsyncWriteQueueCapacity: TimingNumber
+  DatabaseIdentity: string
+  ProjectGeneration?: TimingNumber
+  LatestPersistedId: TimingNumber
+  LatestPersistedAtUnixMs: TimingNumber
+  LatestDetectedId: TimingNumber
+  LatestDetectedAtUnixMs: TimingNumber
+  ReturnedFlowCount: TimingNumber
+  SampledFlowCount: TimingNumber
+  FlowTimings: HTTPFlowSystemTiming[]
+}
+
+export interface YakitMainProcessTiming {
+  MainReceivedAtUnixMs: number
+  GRPCStartedAtUnixMs: number
+  GRPCFinishedAtUnixMs: number
+  GRPCElapsedUs: number
 }
 
 export interface HTTPFlowsToOnlineBatchRequest {
@@ -325,6 +377,8 @@ export const HTTP_FLOW_FAVORITE_TAG = 'YAKIT_FAVORITE'
 export const OFFSET_LIMIT = 30
 export const OFFSET_STEP = 100
 export const SHIELD_MAX_LIMIT = 5
+/** ahooks useVirtualList 的原生默认值；5 行等于小号表格 140px 的滚动缓冲。 */
+export const MITM_FLOW_TABLE_OVERSCAN = MITM_FLOW_TABLE_OVERSCAN_VALUE
 /** 表格内存滑窗上限，超出后由 useVirtualTableHook */
 export const HTTP_FLOW_TABLE_MAX_DATA_LENGTH = 1000
 

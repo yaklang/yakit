@@ -85,6 +85,7 @@ import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/pag
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMitmShortcutKeyEvents, MitmShortcutKey } from '@/utils/globalShortcutKey/events/page/mitm'
 import { JSONParseLog } from '@/utils/tool'
+import { applyManualHijackBatch, decorateManualHijackRows } from './manualHijackListModel'
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
   forwardRef((props, ref) => {
@@ -137,6 +138,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       }
     })
     const mitmV2HijackInfoRef = useRef<SingleManualHijackInfoMessage[]>([])
+    const mitmV2HijackIndexRef = useRef<Map<string, number>>(new Map())
+    const displayedHijackByTaskID = useMemo(() => new Map(data.map((item) => [item.TaskID, item])), [data])
 
     const manualHijackInfoRef = useRef<ManualHijackInfoRefProps>({
       onSubmitData: () => {},
@@ -192,17 +195,21 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               arrivalOrder: currentOrderRef.current,
               manualHijackListAction: ManualHijackListAction.Hijack_List_Add,
             }
+            if (!mitmV2HijackIndexRef.current.has(item.TaskID)) {
+              mitmV2HijackIndexRef.current.set(item.TaskID, mitmV2HijackInfoRef.current.length)
+            }
             mitmV2HijackInfoRef.current.push(item)
             addOrder()
           }
           break
         case ManualHijackListAction.Hijack_List_Delete:
-          const deleteIndex = mitmV2HijackInfoRef.current.findIndex((ele) => ele.TaskID === hijackData.TaskID)
+          const deleteIndex = mitmV2HijackIndexRef.current.get(hijackData.TaskID) ?? -1
           const deleteItem: SingleManualHijackInfoMessage = {
             ...hijackData,
             manualHijackListAction: ManualHijackListAction.Hijack_List_Delete,
           }
           if (deleteIndex === -1) {
+            mitmV2HijackIndexRef.current.set(deleteItem.TaskID, mitmV2HijackInfoRef.current.length)
             mitmV2HijackInfoRef.current.push(deleteItem)
           } else {
             mitmV2HijackInfoRef.current.splice(deleteIndex, 1, {
@@ -212,15 +219,16 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           }
           break
         case ManualHijackListAction.Hijack_List_Update:
-          const updateIndex = mitmV2HijackInfoRef.current.findIndex((ele) => ele.TaskID === hijackData.TaskID)
+          const updateIndex = mitmV2HijackIndexRef.current.get(hijackData.TaskID) ?? -1
           if (updateIndex === -1) {
             // 缓存数据中没有数据，直接使用data
-            const updateDataIndex = data.findIndex((ele) => ele.TaskID === hijackData.TaskID)
-            if (updateDataIndex !== -1) {
+            const displayedItem = displayedHijackByTaskID.get(hijackData.TaskID)
+            if (displayedItem) {
+              mitmV2HijackIndexRef.current.set(hijackData.TaskID, mitmV2HijackInfoRef.current.length)
               mitmV2HijackInfoRef.current.push({
                 ...hijackData,
                 manualHijackListAction: ManualHijackListAction.Hijack_List_Update,
-                arrivalOrder: data[updateDataIndex].arrivalOrder,
+                arrivalOrder: displayedItem.arrivalOrder,
               })
             }
           } else {
@@ -235,6 +243,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           break
         case ManualHijackListAction.Hijack_List_Reload:
           mitmV2HijackInfoRef.current = []
+          mitmV2HijackIndexRef.current.clear()
+          stopFlushInterval()
           resetLoading()
           let order = 0
           const newData = value.ManualHijackList.map((ele) => {
@@ -261,66 +271,57 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
     const handleManualHijackList = useMemoizedFn(() => {
       const length = mitmV2HijackInfoRef.current.length
       if (!length) return
-      let newData = [...data]
       let newSelectItem = currentSelectItem
       let newEditorShowIndexShowIndex = editorShowIndex
-      for (let index = 0; index < length; index++) {
-        const item = mitmV2HijackInfoRef.current[index]
-        const taskID = item.TaskID
-        const manualHijackListAction = item.manualHijackListAction
-        switch (manualHijackListAction) {
-          case ManualHijackListAction.Hijack_List_Add:
-            const index = newData.findIndex((ele) => ele.TaskID === taskID)
-            if (index === -1) {
-              setLoading(taskID, false)
-              if (newData.length === 0 && !newSelectItem) {
-                newSelectItem = {
-                  ...item,
-                }
-                newEditorShowIndexShowIndex = 0
-              }
-              newData.push(item)
-              if (item.Status === ManualHijackListStatus.Hijacking_Request && isOnlyLookResponse) {
-                setLoading(taskID, true)
-                // 该状态下默认劫持响应为true时,自动发送劫持响应数据
-                const params: MITMV2HijackedCurrentResponseRequest = {
-                  TaskID: taskID,
-                  SendPacket: true,
-                  Request: item.Request,
-                }
-                grpcMITMV2HijackedCurrentResponse(params)
-              }
+      const { data: mergedData } = applyManualHijackBatch(data, mitmV2HijackInfoRef.current, {
+        onAdd: (item, dataBeforeAdd) => {
+          const taskID = item.TaskID
+          setLoading(taskID, false)
+          if (dataBeforeAdd.length === 0 && !newSelectItem) {
+            newSelectItem = {
+              ...item,
             }
-            break
-          case ManualHijackListAction.Hijack_List_Delete:
-            removeLoading(taskID)
-            newData = newData.filter((ele) => ele.TaskID !== taskID)
-            if (newSelectItem?.TaskID === taskID) {
-              if (newData.length === 1) {
-                newEditorShowIndexShowIndex = 0
-                newSelectItem = newData[0]
-              } else if (newEditorShowIndexShowIndex >= newData.length - 1) {
-                newEditorShowIndexShowIndex = newData.length - 1
-                newSelectItem = newData[newEditorShowIndexShowIndex]
-              } else {
-                newSelectItem = newData[newEditorShowIndexShowIndex]
-              }
+            newEditorShowIndexShowIndex = 0
+          }
+          if (item.Status === ManualHijackListStatus.Hijacking_Request && isOnlyLookResponse) {
+            setLoading(taskID, true)
+            // 该状态下默认劫持响应为true时,自动发送劫持响应数据
+            const params: MITMV2HijackedCurrentResponseRequest = {
+              TaskID: taskID,
+              SendPacket: true,
+              Request: item.Request,
             }
-            break
-          case ManualHijackListAction.Hijack_List_Update:
-            setLoading(taskID, false)
-            if (newSelectItem?.TaskID === taskID) {
-              newSelectItem = {
-                ...item,
-              }
+            grpcMITMV2HijackedCurrentResponse(params)
+          }
+        },
+        onDelete: (item, dataAfterDelete) => {
+          const taskID = item.TaskID
+          removeLoading(taskID)
+          if (newSelectItem?.TaskID === taskID) {
+            if (dataAfterDelete.length === 0) {
+              newEditorShowIndexShowIndex = 0
+              newSelectItem = undefined
+            } else if (dataAfterDelete.length === 1) {
+              newEditorShowIndexShowIndex = 0
+              newSelectItem = dataAfterDelete.at(0)
+            } else if (newEditorShowIndexShowIndex >= dataAfterDelete.length - 1) {
+              newEditorShowIndexShowIndex = dataAfterDelete.length - 1
+              newSelectItem = dataAfterDelete.at(newEditorShowIndexShowIndex)
+            } else {
+              newSelectItem = dataAfterDelete.at(newEditorShowIndexShowIndex)
             }
-            const updateIndex = newData.findIndex((ele) => ele.TaskID === taskID)
-            newData.splice(updateIndex, 1, { ...item, arrivalOrder: newData[updateIndex].arrivalOrder })
-            break
-          default:
-            break
-        }
-      }
+          }
+        },
+        onUpdate: (item, found) => {
+          const taskID = item.TaskID
+          setLoading(taskID, false)
+          if (found && newSelectItem?.TaskID === taskID) {
+            newSelectItem = {
+              ...item,
+            }
+          }
+        },
+      })
       setCurrentSelectItem(newSelectItem)
       setEditorShowIndexShowIndex(newSelectItem ? newEditorShowIndexShowIndex : 0)
       // 性能优化：只对新增/更新的行计算 cellClassName，未变化的行保持原对象引用，
@@ -335,15 +336,10 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           changedTaskIDs.add(item.TaskID)
         }
       }
-      if (changedTaskIDs.size > 0) {
-        newData = newData.map((row) => {
-          if (!changedTaskIDs.has(row.TaskID)) return row
-          const { Tags = [] } = row
-          return { ...row, cellClassName: filterColorTag(Tags.join('|')) }
-        })
-      }
-      setData([...newData])
+      const newData = decorateManualHijackRows(mergedData, filterColorTag, changedTaskIDs)
+      setData(newData)
       mitmV2HijackInfoRef.current = []
+      mitmV2HijackIndexRef.current.clear()
       stopFlushInterval()
     })
 

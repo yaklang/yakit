@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "baseProfile": "standard",
+  "cases": [
+    {
+      "name": "small",
+      "requests": 120,
+      "concurrency": 8,
+      "requestBodyBytes": 0,
+      "responseBodyBytes": 4096
+    },
+    {
+      "name": "request-64k",
+      "requests": 120,
+      "concurrency": 8,
+      "requestBodyBytes": 65536,
+      "responseBodyBytes": 4096
+    },
+    {
+      "name": "request-64k-medium",
+      "requests": 600,
+      "concurrency": 12,
+      "requestBodyBytes": 65536,
+      "responseBodyBytes": 4096
+    },
+    {
+      "name": "response-256k",
+      "requests": 120,
+      "concurrency": 8,
+      "requestBodyBytes": 0,
+      "responseBodyBytes": 262144
+    },
+    {
+      "name": "bidirectional-64k-256k",
+      "requests": 120,
+      "concurrency": 8,
+      "requestBodyBytes": 65536,
+      "responseBodyBytes": 262144
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "baseProfile": "standard",
+  "cases": [
+    {
+      "name": "gzip-response-256k",
+      "requests": 120,
+      "concurrency": 8,
+      "requestBodyBytes": 0,
+      "responseBodyBytes": 262144,
+      "responseContentEncoding": "gzip"
+    }
+  ]
+}

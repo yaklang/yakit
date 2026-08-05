@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "baseProfile": "stress",
+  "harness": {
+    "requireCPURecovery": true,
+    "recoveryTimeoutMs": 30000,
+    "recoveryStableSamples": 10,
+    "pipelineSampleIntervalMs": 500
+  },
+  "cases": [
+    {
+      "name": "slow-consumer-gap-recovery",
+      "requests": 800,
+      "concurrency": 16,
+      "targetRequestsPerSecond": 120,
+      "requestBodyBytes": 0,
+      "responseBodyBytes": 4096,
+      "consumer": {
+        "mode": "scroll-away",
+        "pauseAtTargetPercent": 25,
+        "resumeAtTargetPercent": 75
+      }
+    },
+    {
+      "name": "slow-consumer-bidirectional",
+      "requests": 240,
+      "concurrency": 8,
+      "targetRequestsPerSecond": 30,
+      "requestBodyBytes": 65536,
+      "responseBodyBytes": 262144,
+      "consumer": {
+        "mode": "scroll-away",
+        "pauseAtTargetPercent": 25,
+        "resumeAtTargetPercent": 75
+      }
+    }
+  ]
+}
