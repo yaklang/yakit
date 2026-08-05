@@ -38,6 +38,10 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { loadAdvancedConfig } from './MITMAdvancedConfig'
 import { Trans } from 'react-i18next'
 import { defHost, defPort } from './MITMServerStartForm/MITMServerStartForm'
+import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
+import { CatIcon, SkeletonIcon } from '@/pages/KnowledgeBase/icon/sidebarIcon'
+
+type TaskbarIconPreset = 'default' | 'knowledge-cat' | 'knowledge-skeleton' | 'custom'
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -74,6 +78,8 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   const [defUserDataDir, setDefUserDataDir] = useState<string>('')
   const [isSaveUserData, setSaveUserData] = useState<boolean>(false)
   const [userDataDir, setUserDataDir] = useState<string>('')
+  const [taskbarIconPreset, setTaskbarIconPreset] = useState<TaskbarIconPreset>('default')
+  const [taskbarIconPath, setTaskbarIconPath] = useState<string>('')
 
   const [chromeLauncherParamsVisible, setChromeLauncherParamsVisible] = useState<boolean>(false)
   const chromeLauncherParamsSetRef = useRef<ChromeLauncherParamsSetRefProps>({
@@ -144,13 +150,20 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
       userDataDir?: string
       username?: string
       password?: string
+      taskbarIconPreset?: string
+      taskbarIconPath?: string
       disableCACertPage: boolean
       chromeFlags: ChromeLauncherParams[]
     } = {
       ...params,
       username,
       password,
-      userDataDir,
+      userDataDir: isSaveUserData ? userDataDir : undefined,
+      taskbarIconPreset:
+        taskbarIconPreset === 'knowledge-cat' || taskbarIconPreset === 'knowledge-skeleton'
+          ? taskbarIconPreset
+          : undefined,
+      taskbarIconPath: taskbarIconPreset === 'custom' ? taskbarIconPath : undefined,
       disableCACertPage: props.disableCACertPage,
       chromeFlags: [],
     }
@@ -254,6 +267,61 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
               style={{ position: 'absolute', right: 0, top: 8, cursor: 'pointer' }}
             />
           </Tooltip>
+        </Form.Item>
+      )}
+      {process.platform === 'win32' && (
+        <Form.Item label={t('MITMChromeLauncher.taskbar_icon')}>
+          <YakitSegmented
+            value={taskbarIconPreset}
+            onChange={(value) => setTaskbarIconPreset(value as TaskbarIconPreset)}
+            options={[
+              { label: t('MITMChromeLauncher.taskbar_icon_default'), value: 'default' },
+              {
+                label: (
+                  <Space size={4}>
+                    <CatIcon style={{ fontSize: 16 }} />
+                    {t('MITMChromeLauncher.taskbar_icon_cat')}
+                  </Space>
+                ),
+                value: 'knowledge-cat',
+              },
+              {
+                label: (
+                  <Space size={4}>
+                    <SkeletonIcon style={{ fontSize: 16 }} />
+                    {t('MITMChromeLauncher.taskbar_icon_skeleton')}
+                  </Space>
+                ),
+                value: 'knowledge-skeleton',
+              },
+              { label: t('MITMChromeLauncher.taskbar_icon_custom'), value: 'custom' },
+            ]}
+          />
+          {taskbarIconPreset === 'custom' && (
+            <div style={{ position: 'relative', marginTop: 8 }}>
+              <YakitInput
+                allowClear
+                style={{ width: 'calc(100% - 20px)' }}
+                value={taskbarIconPath}
+                placeholder={t('MITMChromeLauncher.taskbar_icon_placeholder')}
+                onChange={(event) => setTaskbarIconPath(event.target.value)}
+              />
+              <Tooltip title={t('MITMChromeLauncher.select_taskbar_icon')}>
+                <CloudUploadOutlined
+                  onClick={() => {
+                    handleOpenFileSystemDialog({
+                      title: t('MITMChromeLauncher.please_select_icon'),
+                      properties: ['openFile'],
+                      filters: [{ name: 'Windows icon resource', extensions: ['ico', 'exe', 'dll'] }],
+                    }).then((data) => {
+                      if (data.filePaths.length) setTaskbarIconPath(data.filePaths[0])
+                    })
+                  }}
+                  style={{ position: 'absolute', right: 0, top: 8, cursor: 'pointer' }}
+                />
+              </Tooltip>
+            </div>
+          )}
         </Form.Item>
       )}
       <Form.Item

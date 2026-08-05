@@ -19,6 +19,7 @@ bins/scripts/google-chrome-plugin.zip
 *.db
 *.sock
 *.exe
+!bins/yakit-chrome-launcher.exe
 *.exe~
 releases/*
 releases/

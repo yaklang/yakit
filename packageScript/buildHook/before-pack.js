@@ -36,6 +36,15 @@ module.exports = async function (context) {
         to: 'bins/yak.zip',
       },
       {
+        from: 'bins/yakit-chrome-launcher.exe',
+        to: 'bins/yakit-chrome-launcher.exe',
+      },
+      {
+        from: 'bins/chrome-taskbar-icons',
+        to: 'bins/chrome-taskbar-icons',
+        filter: ['*.ico'],
+      },
+      {
         from: 'LICENSE.md',
         to: 'LICENSE.md',
       },
