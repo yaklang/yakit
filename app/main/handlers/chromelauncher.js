@@ -4,6 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const { getYakitHome } = require('../filePath')
 const { launchWindowsChrome } = require('./windowsChromeTaskbar')
+const { getChromeStartingUrl } = require('./windowsChromeTaskbarUtils')
 const getMyUserDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 
 const disableExtensionsExceptStr = (host, port, username, password) => `
@@ -158,7 +159,7 @@ module.exports = (win, getClient) => {
       throw Error(`port: ${port} is invalid or illegal`)
     }
 
-    const startingUrl = disableCACertPage === false ? 'http://mitm' : 'chrome://newtab'
+    const startingUrl = getChromeStartingUrl(disableCACertPage)
     if (process.platform === 'win32') {
       const resolvedChromePath = chromePath || getChromePath()
       const requestedIdentity =

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import taskbarUtils from '../handlers/windowsChromeTaskbarUtils'
 
-const { getTaskbarIconPresetFileName, makeAppUserModelId, normalizeChromeFlags, quoteWindowsArgument } = taskbarUtils
+const {
+  getChromeStartingUrl,
+  getTaskbarIconPresetFileName,
+  makeAppUserModelId,
+  normalizeChromeFlags,
+  quoteWindowsArgument,
+} = taskbarUtils
 
 describe('windowsChromeTaskbarUtils', () => {
   it('quotes Windows arguments using CommandLineToArgvW escaping rules', () => {
@@ -21,9 +27,19 @@ describe('windowsChromeTaskbarUtils', () => {
 
   it('maps only supported built-in taskbar icon presets', () => {
     expect(getTaskbarIconPresetFileName()).toBeNull()
+    expect(getTaskbarIconPresetFileName('knowledge-crab')).toBe('knowledge-crab.ico')
+    expect(getTaskbarIconPresetFileName('knowledge-tiger')).toBe('knowledge-tiger.ico')
     expect(getTaskbarIconPresetFileName('knowledge-cat')).toBe('knowledge-cat.ico')
+    expect(getTaskbarIconPresetFileName('knowledge-octopus')).toBe('knowledge-octopus.ico')
     expect(getTaskbarIconPresetFileName('knowledge-skeleton')).toBe('knowledge-skeleton.ico')
+    expect(getTaskbarIconPresetFileName('knowledge-smiley')).toBe('knowledge-smiley.ico')
     expect(() => getTaskbarIconPresetFileName('../unexpected')).toThrow('Unknown taskbar icon preset')
+  })
+
+  it('opens the MITM certificate page unless it is explicitly disabled', () => {
+    expect(getChromeStartingUrl()).toBe('http://mitm')
+    expect(getChromeStartingUrl(false)).toBe('http://mitm')
+    expect(getChromeStartingUrl(true)).toBe('chrome://newtab')
   })
 
   it('filters profile ownership flags from renderer-provided arguments', () => {
@@ -33,6 +49,8 @@ describe('windowsChromeTaskbarUtils', () => {
         { parameterName: '--host-resolver-rules', variableValues: 'MAP example.test 127.0.0.1' },
         { parameterName: '--user-data-dir=C:\\other' },
         { parameterName: '--profile-directory', variableValues: 'Profile 2' },
+        { parameterName: '--start-minimized' },
+        { parameterName: '--new-window=false' },
         { parameterName: '--disabled', disabled: true },
         { parameterName: 'not-a-switch' },
       ]),

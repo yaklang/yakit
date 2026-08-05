@@ -1,10 +1,14 @@
 const crypto = require('crypto')
 const path = require('path')
 
-const CONTROLLED_FLAGS = ['--user-data-dir', '--profile-directory']
+const CONTROLLED_FLAGS = ['--user-data-dir', '--profile-directory', '--start-minimized', '--new-window']
 const TASKBAR_ICON_PRESET_FILES = Object.freeze({
+  'knowledge-crab': 'knowledge-crab.ico',
+  'knowledge-tiger': 'knowledge-tiger.ico',
   'knowledge-cat': 'knowledge-cat.ico',
+  'knowledge-octopus': 'knowledge-octopus.ico',
   'knowledge-skeleton': 'knowledge-skeleton.ico',
+  'knowledge-smiley': 'knowledge-smiley.ico',
 })
 
 const getTaskbarIconPresetFileName = (preset) => {
@@ -25,6 +29,8 @@ const makeAppUserModelId = (identity) => {
   return `io.yaklang.yakit.chrome.${digest}`
 }
 
+const getChromeStartingUrl = (disableCACertPage) => (disableCACertPage === true ? 'chrome://newtab' : 'http://mitm')
+
 const normalizeChromeFlags = (chromeFlags) => {
   if (!Array.isArray(chromeFlags)) return []
   return chromeFlags
@@ -40,4 +46,10 @@ const normalizeChromeFlags = (chromeFlags) => {
     .filter(Boolean)
 }
 
-module.exports = { getTaskbarIconPresetFileName, makeAppUserModelId, normalizeChromeFlags, quoteWindowsArgument }
+module.exports = {
+  getChromeStartingUrl,
+  getTaskbarIconPresetFileName,
+  makeAppUserModelId,
+  normalizeChromeFlags,
+  quoteWindowsArgument,
+}
