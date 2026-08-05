@@ -536,7 +536,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       loading={false}
                       onSubmit={handleSubmit}
                       defaultMentions={defaultEmployeeMentions}
-                      hidePlan={!!selectedEmployee}
                       inputFooterRight={
                         <div className={styles['extra-footer-right']}>
                           {casualLoading && (

@@ -128,7 +128,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                 ...AIAgentSettingDefault,
                 ...newCache,
                 SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
-                EnablePlan: false,
+                EnablePlan: AIAgentSettingDefault.EnablePlan,
               })
             } catch (error) {}
           })

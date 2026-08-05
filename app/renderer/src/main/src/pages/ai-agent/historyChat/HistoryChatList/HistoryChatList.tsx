@@ -243,7 +243,7 @@ const HistoryChatList: FC<{
       ...old,
       SyncPerceptionTrigger:
         info?.StartParams?.SyncPerceptionTrigger ?? AIAgentSettingDefault.SyncPerceptionTrigger,
-      EnablePlan: info?.StartParams?.EnablePlan ?? false,
+      EnablePlan: info?.StartParams?.EnablePlan ?? AIAgentSettingDefault.EnablePlan,
     }))
     setActiveChat && setActiveChat(info)
   })

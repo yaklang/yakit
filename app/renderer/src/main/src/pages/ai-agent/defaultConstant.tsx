@@ -115,7 +115,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   AICallTokenLimit: 40,
   DisableToolIntervalReview: false,
   SyncPerceptionTrigger: true,
-  EnablePlan: false,
+  EnablePlan: true,
   PlanExecTaskConcurrency: 2,
   EnableDetachedPlan: true,
 }

@@ -288,7 +288,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             setSetting?.((old) => ({
               ...old,
               SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
-              EnablePlan: false,
+              EnablePlan: AIAgentSettingDefault.EnablePlan,
             }))
             setActiveChat?.(undefined)
             setTimeout(() => {

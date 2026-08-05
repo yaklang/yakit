@@ -293,8 +293,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               onSubmit={handleTriageSubmit}
               defaultMentions={defaultEmployeeMentions}
               chatDataStoreKey="aiChatDataStore"
-              footerRightTypes={[]}
-              hidePlan
             />
           </div>
           <div className={styles['content-copy']}>@2026 亚信安全 · AI SenPike 数字员工</div>

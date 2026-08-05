@@ -146,7 +146,7 @@ function createEngineLinkWindow() {
   })
 
   if (!hasPos) engineLinkWin.center()
-  if (isDev) engineLinkWin.loadURL('http://127.0.0.1:5173')
+  if (isDev) engineLinkWin.loadURL(process.env.YAKIT_DEV_ENGINE_LINK_URL || 'http://127.0.0.1:5173')
   else engineLinkWin.loadFile(path.join(__dirname, '../renderer/engine-link-startup/dist/index.html'))
 
   engineLinkWin.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
