@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
@@ -208,7 +208,9 @@ const MCPHistory: React.FC = React.memo(() => {
       onClick={() => openDetail(item)}
     >
       <div className={styles['history-row-title']}>
-        <span title={item.ToolName}>{item.ToolName}</span>
+        <span className={styles['history-row-tool-name']} title={item.ToolName}>
+          {item.ToolName}
+        </span>
         <YakitTag size="small" color={item.Success ? 'success' : 'danger'}>
           {item.Success ? t('MCPHistory.success') : t('MCPHistory.failed')}
         </YakitTag>
@@ -235,18 +237,30 @@ const MCPHistory: React.FC = React.memo(() => {
           noPacketModifier
           noOpenPacketNewWindow
           showDefaultExtra
+          noSetIngEditor
+          extra={<CopyComponents copyText={value === '-' ? '' : value} />}
         />
       </div>
     ),
   )
 
-  const hasResult = hasText(detail?.Result)
-  const hasError = hasText(detail?.ErrorMessage)
-  const showResultPanel = hasResult || hasError
-  const argumentsValue = prettyJSON(detail?.Arguments || '')
-  const resultPanelValue = !detail ? '' : resultTab === 'error' ? detail.ErrorMessage || '-' : prettyJSON(detail.Result)
-  const clientLabel = detail ? getClientLabel(detail, t('MCPHistory.unknownCaller')) : ''
-  const statusFilterLabel = statusFilterOptions.find((item) => item.key === status)?.label || t('MCPHistory.all')
+  const hasResult = useMemo(() => hasText(detail?.Result), [detail?.Result])
+  const hasError = useMemo(() => hasText(detail?.ErrorMessage), [detail?.ErrorMessage])
+  const showResultPanel = useMemo(() => hasResult || hasError, [hasResult, hasError])
+  const argumentsValue = useMemo(() => prettyJSON(detail?.Arguments || ''), [detail?.Arguments])
+  const resultPanelValue = useMemo(() => {
+    if (!detail) return ''
+    if (resultTab === 'error') return detail.ErrorMessage || '-'
+    return prettyJSON(detail.Result)
+  }, [detail, resultTab])
+  const clientLabel = useMemo(
+    () => (detail ? getClientLabel(detail, t('MCPHistory.unknownCaller')) : ''),
+    [detail, i18n.language],
+  )
+  const statusFilterLabel = useMemo(
+    () => statusFilterOptions.find((item) => item.key === status)?.label || t('MCPHistory.all'),
+    [statusFilterOptions, status, i18n.language],
+  )
 
   const resultPanelTitle = useMemo(() => {
     const tabs: { key: ResultTab; label: string }[] = []

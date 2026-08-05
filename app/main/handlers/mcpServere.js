@@ -1,4 +1,5 @@
 const { ipcMain } = require('electron')
+const { assertTrustedAppSender } = require('../security')
 
 module.exports = (win, getClient) => {
   // asyncAddMCPServer wrapper
@@ -14,6 +15,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('AddMCPServer', async (e, params) => {
+    assertTrustedAppSender(e, 'AddMCPServer')
     return await asyncAddMCPServer(params)
   })
 
@@ -30,6 +32,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('DeleteMCPServer', async (e, params) => {
+    assertTrustedAppSender(e, 'DeleteMCPServer')
     return await asyncDeleteMCPServer(params)
   })
 
@@ -46,6 +49,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('UpdateMCPServer', async (e, params) => {
+    assertTrustedAppSender(e, 'UpdateMCPServer')
     return await asyncUpdateMCPServer(params)
   })
 
@@ -62,6 +66,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('GetAllMCPServers', async (e, params) => {
+    assertTrustedAppSender(e, 'GetAllMCPServers')
     return await asyncGetAllMCPServers(params)
   })
 
@@ -78,6 +83,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('GetMCPToolList', async (e, params) => {
+    assertTrustedAppSender(e, 'GetMCPToolList')
     return await asyncGetMCPToolList(params)
   })
 
@@ -94,6 +100,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('SetMCPToolEnabled', async (e, params) => {
+    assertTrustedAppSender(e, 'SetMCPToolEnabled')
     return await asyncSetMCPToolEnabled(params)
   })
 
@@ -109,6 +116,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('QueryMCPToolCallHistory', async (e, params) => {
+    assertTrustedAppSender(e, 'QueryMCPToolCallHistory')
     return await asyncQueryMCPToolCallHistory(params)
   })
 
@@ -124,6 +132,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('GetMCPToolCallHistoryDetail', async (e, params) => {
+    assertTrustedAppSender(e, 'GetMCPToolCallHistoryDetail')
     return await asyncGetMCPToolCallHistoryDetail(params)
   })
 
@@ -139,6 +148,7 @@ module.exports = (win, getClient) => {
     })
   }
   ipcMain.handle('DeleteMCPToolCallHistory', async (e, params) => {
+    assertTrustedAppSender(e, 'DeleteMCPToolCallHistory')
     return await asyncDeleteMCPToolCallHistory(params)
   })
 }

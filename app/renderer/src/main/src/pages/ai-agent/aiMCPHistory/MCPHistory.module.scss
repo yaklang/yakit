@@ -102,6 +102,14 @@
     gap: 8px;
   }
 
+  .history-row-tool-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .history-row-meta {
     display: flex;
     justify-content: space-between;
