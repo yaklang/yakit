@@ -11,6 +11,7 @@ import { isIRify } from '@/utils/envfile'
 import { UseChatIPCStartParams } from '../useContext/AIAgentContext'
 import { AISession } from '../type/aiChat'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { isYaklangScriptDeliveryPath } from '@/pages/yakRunner/utils'
 
 export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
@@ -141,10 +142,29 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
   return { ...data }
 }
 
-const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedResourceInfo | null => {
+const getResourceInfoByMention = (
+  mention: AIMentionCommandParams,
+  options?: GetAIReActRequestParamsOptions,
+): AttachedResourceInfo | null => {
   switch (mention.mentionType) {
     case 'file':
+      if (options?.yaklangScriptDeliveryOnly) {
+        // Reference files stay in :mention[...] user text; do not attach delivery file_path.
+        return null
+      }
+      return {
+        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
+        Value: mention.mentionName,
+      }
     case 'folder':
+      if (options?.yaklangScriptDeliveryOnly) {
+        return {
+          Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
+          Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
+          Value: mention.mentionName,
+        }
+      }
       return {
         Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
         Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
@@ -181,13 +201,19 @@ const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedReso
       return null
   }
 }
+
+export type GetAIReActRequestParamsOptions = {
+  /** Yak Runner write_yaklang_code: reference paths must not become script delivery targets */
+  yaklangScriptDeliveryOnly?: boolean
+}
+
 /** @name 将前端的结构转化为符合定义的结构 */
-export const getAIReActRequestParams = (value: HandleStartParams) => {
+export const getAIReActRequestParams = (value: HandleStartParams, options?: GetAIReActRequestParamsOptions) => {
   const { mentionList = [], imageList = [], httpFlowList = [], codeBlockList = [] } = value
 
   let attachedResourceInfo: AIInputEvent['AttachedResourceInfo'] = []
   for (let item of mentionList) {
-    const addItem = getResourceInfoByMention(item)
+    const addItem = getResourceInfoByMention(item, options)
     if (addItem) {
       attachedResourceInfo = [...attachedResourceInfo, addItem] // 不需要去重，按显示顺序给后端
     }
@@ -237,23 +263,29 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
             Value: JSON.stringify(content),
           },
         ]
-      : [
-          {
-            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
-            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
-            Value: item.rootPath,
-          },
-          {
-            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
-            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
-            Value: item.path,
-          },
-          {
+      : (() => {
+          const blockAttachments: AttachedResourceInfo[] = []
+          if (item.rootPath) {
+            blockAttachments.push({
+              Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
+              Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
+              Value: item.rootPath,
+            })
+          }
+          if (!options?.yaklangScriptDeliveryOnly || isYaklangScriptDeliveryPath(item.path)) {
+            blockAttachments.push({
+              Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
+              Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
+              Value: item.path,
+            })
+          }
+          blockAttachments.push({
             Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content,
             Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content,
             Value: JSON.stringify(content),
-          },
-        ]
+          })
+          return blockAttachments
+        })()
     attachedResourceInfo = [...attachedResourceInfo, ...addItem]
   }
 

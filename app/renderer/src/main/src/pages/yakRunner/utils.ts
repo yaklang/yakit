@@ -1157,6 +1157,11 @@ export const getFileSuffixFromPath = (filePath: string): string => {
   return getFileSuffixFromName(name)
 }
 
+/** write_yaklang_code 交付目标：仅 .yak 脚本路径可成为 editor file_path */
+export const isYaklangScriptDeliveryPath = (filePath?: string | null): boolean => {
+  return getFileSuffixFromPath(filePath || '').toLowerCase() === 'yak'
+}
+
 /**
  * @name 编辑器代码类型判断
  */

@@ -473,7 +473,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const handleSubmitQuery = useMemoizedFn((value: HandleStartParams) => {
     const sessionID = activeChat?.SessionID
     if (store.getState().execute && sessionID) {
-      const { attachedResourceInfo } = getAIReActRequestParams(value)
+      const { attachedResourceInfo } = getAIReActRequestParams(value, {
+        yaklangScriptDeliveryOnly: isHaveYakRunnerPageId,
+      })
       const chatMessage: AIInputEvent = {
         IsFreeInput: true,
         FreeInput: value.qs,
@@ -576,11 +578,22 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         onSendRequest={onSendRequest}
         mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}
         onChatReady={flushPendingMention}
-        externalParameters={externalParameters}
+        externalParameters={{
+          ...externalParameters,
+          yaklangScriptDeliveryOnly: isHaveYakRunnerPageId || externalParameters.yaklangScriptDeliveryOnly,
+        }}
         source={source}
       />
     ),
-    [flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat, source],
+    [
+      flushPendingMention,
+      isHaveYakRunnerPageId,
+      mergeRemoteAIAgentSetting,
+      onSendRequest,
+      onStartRequest,
+      showFreeChat,
+      source,
+    ],
   )
 
   const contextValue = useMemo(
