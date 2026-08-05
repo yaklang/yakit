@@ -1030,7 +1030,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const onMouseDownDragSelection = useMemoizedFn((event: React.MouseEvent<HTMLDivElement>) => {
     if (!enableDragSelection) return
 
-    shortcutFocusRef.current?.focus()
+    // 聚焦真实滚动容器，避免焦点在包装层时滚轮边界落到外层
+    const focusTarget = (containerRef.current || shortcutFocusRef.current) as HTMLElement | null
+    focusTarget?.focus({ preventScroll: true })
     if (!canStartDragSelection(event)) return
 
     const container = containerRef.current
@@ -1598,6 +1600,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
               )}
               <div
                 ref={containerRef}
+                tabIndex={-1}
                 className={classNames(
                   styles['virtual-table-list-container'],
                   {

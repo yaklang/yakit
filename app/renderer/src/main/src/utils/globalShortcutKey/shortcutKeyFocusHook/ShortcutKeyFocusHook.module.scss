@@ -1,4 +1,8 @@
 .shortcut-key-focus-hook {
+  // 聚焦在此非滚动包装时，滚轮边界会落到祖先可滚层；锁住以阻断链式滚动
+  overflow: hidden;
+  overscroll-behavior: none;
+  outline: none;
 }
 
 .shortcut-key-focus-hook-hint {
