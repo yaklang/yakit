@@ -5,6 +5,7 @@ import {
   createHTTPFlowLiveDirectRecoveryGate,
   createHTTPFlowLiveRefreshScheduler,
   createHTTPFlowLiveStreamController,
+  handleHTTPFlowLiveModeTransition,
   HTTP_FLOW_LIVE_PROTOCOL_VERSION,
   httpFlowLiveSummaryToHTTPFlow,
   shouldPreferHTTPFlowLiveRefresh,
@@ -398,6 +399,20 @@ describe('HTTPFlow live direct summaries', () => {
 })
 
 describe('HTTPFlow live direct recovery gate', () => {
+  it('turns a mode switch into a recovery barrier before requesting a query', () => {
+    const calls: string[] = []
+    const pendingRows = handleHTTPFlowLiveModeTransition('canary', 'shadow', 42, {
+      pendingCount: () => 3,
+      cancelPending: () => calls.push('cancel-pending'),
+      cancelRefresh: () => calls.push('cancel-refresh'),
+      requireRecovery: (highWaterId) => calls.push(`recover:${highWaterId}`),
+      requestRefresh: () => calls.push('refresh'),
+    })
+
+    expect(pendingRows).toBe(3)
+    expect(calls).toEqual(['cancel-pending', 'cancel-refresh', 'recover:42', 'refresh'])
+  })
+
   it('keeps direct insertion closed until an exhausted query is visibly committed', () => {
     const changes: Array<{ required: boolean; fallbackHighWaterId: number; catchUpCandidateId: number }> = []
     const gate = createHTTPFlowLiveDirectRecoveryGate({ onChange: (snapshot) => changes.push(snapshot) })

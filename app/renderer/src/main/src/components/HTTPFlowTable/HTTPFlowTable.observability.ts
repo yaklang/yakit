@@ -45,6 +45,7 @@ export type MITMLiveTriggerSource =
   | 'initial'
   | 'manual'
 export type MITMFlowCommittedMode = 'off' | 'shadow' | 'canary'
+export type HTTPFlowLiveStreamModeListener = (mode: MITMFlowCommittedMode, previousMode: MITMFlowCommittedMode) => void
 export type HTTPFlowLiveStreamFault =
   | 'invalid-envelope'
   | 'invalid-event'
@@ -339,6 +340,7 @@ export class MITMFlowObservability {
   private flowCommittedShadowInitialSnapshots = new Map<string, true>()
   private flowCommittedQueryRowsWithoutEvent = new Map<string, true>()
   private httpFlowLiveStreamMode: MITMFlowCommittedMode = 'canary'
+  private httpFlowLiveStreamModeListeners = new Set<HTTPFlowLiveStreamModeListener>()
   private httpFlowLiveStreamStatus: 'idle' | 'active' | 'recovering' | 'unavailable' | 'ended' = 'idle'
   private httpFlowLiveStreamDatabaseIdentity = ''
   private httpFlowLiveStreamProjectGeneration = 0
@@ -408,12 +410,22 @@ export class MITMFlowObservability {
   }
 
   setHTTPFlowLiveStreamMode(mode: MITMFlowCommittedMode) {
+    const previousMode = this.httpFlowLiveStreamMode
+    if (mode === previousMode) return
     this.httpFlowLiveStreamMode = mode
     if (mode === 'off') this.httpFlowLiveStreamStatus = 'idle'
+    this.httpFlowLiveStreamModeListeners.forEach((listener) => listener(mode, previousMode))
   }
 
   getHTTPFlowLiveStreamMode() {
     return this.httpFlowLiveStreamMode
+  }
+
+  onHTTPFlowLiveStreamModeChange(listener: HTTPFlowLiveStreamModeListener) {
+    this.httpFlowLiveStreamModeListeners.add(listener)
+    return () => {
+      this.httpFlowLiveStreamModeListeners.delete(listener)
+    }
   }
 
   recordHTTPFlowLiveStreamSubscription(databaseIdentity: string, projectGeneration: number) {

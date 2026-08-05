@@ -189,6 +189,29 @@ export const createHTTPFlowLiveDirectBatcher = (options: HTTPFlowLiveDirectBatch
   return { enqueue, cancel, pendingCount: () => pending.size }
 }
 
+interface HTTPFlowLiveModeTransitionOptions {
+  pendingCount: () => number
+  cancelPending: () => void
+  cancelRefresh: () => void
+  requireRecovery: (highWaterId: number) => void
+  requestRefresh: () => void
+}
+
+export const handleHTTPFlowLiveModeTransition = (
+  previousMode: MITMFlowCommittedMode,
+  mode: MITMFlowCommittedMode,
+  streamLastSeenId: number,
+  options: HTTPFlowLiveModeTransitionOptions,
+) => {
+  if (mode === previousMode) return 0
+  const pendingRows = options.pendingCount()
+  options.cancelPending()
+  options.cancelRefresh()
+  options.requireRecovery(asSafeNumber(streamLastSeenId))
+  options.requestRefresh()
+  return pendingRows
+}
+
 export interface HTTPFlowLiveDirectRecoverySnapshot {
   required: boolean
   fallbackHighWaterId: number

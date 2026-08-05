@@ -161,6 +161,7 @@ import {
   createHTTPFlowLiveDirectRecoveryGate,
   createHTTPFlowLiveRefreshScheduler,
   createHTTPFlowLiveStreamController,
+  handleHTTPFlowLiveModeTransition,
   httpFlowLiveSummaryToHTTPFlow,
   shouldPreferHTTPFlowLiveRefresh,
 } from './HTTPFlowTable.stream'
@@ -433,6 +434,33 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         },
       }),
     [],
+  )
+
+  useEffect(
+    () =>
+      mitmFlowObservability.onHTTPFlowLiveStreamModeChange((mode, previousMode) => {
+        if (pageType !== 'MITM') return
+        const pendingRows = handleHTTPFlowLiveModeTransition(
+          previousMode,
+          mode,
+          httpFlowLiveStreamController.snapshot().lastSeenId,
+          {
+            pendingCount: httpFlowLiveDirectBatcher.pendingCount,
+            cancelPending: httpFlowLiveDirectBatcher.cancel,
+            cancelRefresh: httpFlowLiveRefreshScheduler.cancel,
+            requireRecovery: httpFlowLiveDirectRecoveryGate.requireRecovery,
+            requestRefresh: () => requestMITMLiveRefreshRef.current('continuation'),
+          },
+        )
+        if (pendingRows > 0) mitmFlowObservability.recordHTTPFlowLiveDirectFallback(pendingRows)
+      }),
+    [
+      httpFlowLiveDirectBatcher,
+      httpFlowLiveDirectRecoveryGate,
+      httpFlowLiveRefreshScheduler,
+      httpFlowLiveStreamController,
+      pageType,
+    ],
   )
   const mitmLiveAdaptiveBatchRef = useRef(createMITMLiveAdaptiveBatchState())
   const slidingClippedRef = useRef(false)
@@ -876,12 +904,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }
   flushHTTPFlowLiveDirectRef.current = (events) => {
+    if (mitmFlowObservability.getHTTPFlowLiveStreamMode() !== 'canary') {
+      const droppedRows = events.length + httpFlowLiveDirectBatcher.pendingCount()
+      httpFlowLiveDirectBatcher.cancel()
+      httpFlowLiveRefreshScheduler.cancel()
+      httpFlowLiveDirectRecoveryGate.requireRecovery(httpFlowLiveStreamController.snapshot().lastSeenId)
+      mitmFlowObservability.recordHTTPFlowLiveDirectFallback(droppedRows)
+      requestMITMLiveRefreshRef.current('continuation')
+      return
+    }
     const rows = events
       .map((event) => httpFlowLiveSummaryToHTTPFlow(event.Flow))
       .filter((flow): flow is HTTPFlow => !!flow)
       .filter((flow) => flow.Id > mitmResetAfterIdRef.current)
       .sort((left, right) => right.Id - left.Id)
-    if (mitmFlowObservability.getHTTPFlowLiveStreamMode() !== 'canary') return
     if (!rows.length) return
     const inserted =
       !httpFlowLiveDirectRecoveryGate.snapshot().required &&

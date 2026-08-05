@@ -346,6 +346,22 @@ describe('MITMFlowObservability', () => {
     })
   })
 
+  it('notifies live-stream mode transitions once and supports cleanup', () => {
+    const observer = new MITMFlowObservability()
+    const transitions: string[] = []
+    const cleanup = observer.onHTTPFlowLiveStreamModeChange((mode, previousMode) => {
+      transitions.push(`${previousMode}->${mode}`)
+    })
+
+    observer.setHTTPFlowLiveStreamMode('canary')
+    observer.setHTTPFlowLiveStreamMode('shadow')
+    observer.setHTTPFlowLiveStreamMode('off')
+    cleanup()
+    observer.setHTTPFlowLiveStreamMode('canary')
+
+    expect(transitions).toEqual(['canary->shadow', 'shadow->off'])
+  })
+
   it('can measure legacy duplex delivery without claiming it scheduled a live query', () => {
     let now = 1_100
     const observer = new MITMFlowObservability(
