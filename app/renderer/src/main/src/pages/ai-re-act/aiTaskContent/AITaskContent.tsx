@@ -21,7 +21,7 @@ interface TabsItemProps extends YakitTabsProps {
 }
 
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
-  const { tabBarExtraContent, emptyNode, hideTaskDetailTabs = false, taskListNode } = props
+  const { tabBarExtraContent, emptyNode, hideTaskDetailTabs = false, taskListNode, fileSystemNode } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
   const {
@@ -32,8 +32,14 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const [scrollToBottom, setScrollToBottom] = useState(false)
   const visibleTabs = hideTaskDetailTabs ? tabs.filter((item) => item.value === 'taskContent') : tabs
   const displayTabs: TabsItemProps[] = taskListNode
-    ? [{ label: '任务清单', value: 'taskList', taskId: 'taskList' }, ...visibleTabs]
-    : visibleTabs
+    ? [
+        { label: '任务清单', value: 'taskList', taskId: 'taskList' },
+        ...visibleTabs,
+        ...(fileSystemNode ? [{ label: 'AITabs.fileSystem', value: 'fileSystem', taskId: 'fileSystem' }] : []),
+      ]
+    : fileSystemNode
+      ? [...visibleTabs, { label: 'AITabs.fileSystem', value: 'fileSystem', taskId: 'fileSystem' }]
+      : visibleTabs
   const visibleActiveKey = displayTabs.some((item) => item.value === activeKey)
     ? activeKey
     : displayTabs[0]?.value || activeKey
@@ -136,7 +142,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[]) => {
     const [label] = node
     const finalLabel = label ?? (typeof tab.label === 'function' ? tab.label() : tab.label)
-    if (tab.value === 'taskContent' || tab.value === 'taskList') {
+    if (tab.value === 'taskContent' || tab.value === 'taskList' || tab.value === 'fileSystem') {
       return <>{finalLabel}</>
     }
 
@@ -159,6 +165,8 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     switch (visibleActiveKey) {
       case 'taskList':
         return taskListNode
+      case 'fileSystem':
+        return fileSystemNode
       case 'taskContent':
         return <AIReActTaskChatContent scrollToBottom={scrollToBottom} onScrollToBottom={onScrollToBottom} />
 
@@ -173,7 +181,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
           />
         )
     }
-  }, [onScrollToBottom, scrollToBottom, taskListNode, visibleActiveKey, visibleTabs])
+  }, [fileSystemNode, onScrollToBottom, scrollToBottom, taskListNode, visibleActiveKey, visibleTabs])
 
   return (
     <div className={styles['chat-content-wrapper']} ref={divRef}>
@@ -196,6 +204,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
             <div
               className={classNames(styles['tab-content'], {
                 [styles['tab-content-employee']]: !!taskListNode,
+                [styles['tab-content-file-system-employee']]: visibleActiveKey === 'fileSystem' && !!fileSystemNode,
               })}
             >
               {tabContent}

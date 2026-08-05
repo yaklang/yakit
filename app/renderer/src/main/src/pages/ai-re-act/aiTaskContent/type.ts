@@ -6,4 +6,5 @@ export interface AITaskContentProps {
   emptyNode: ReactNode
   hideTaskDetailTabs?: boolean
   taskListNode?: ReactNode
+  fileSystemNode?: ReactNode
 }

@@ -371,6 +371,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                     emptyNode={null}
                     hideTaskDetailTabs
                     taskListNode={<DigitalEmployeeTaskProgress />}
+                    fileSystemNode={<AIFileSystemList />}
                   />
                 </div>
               </aside>

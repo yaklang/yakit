@@ -118,6 +118,10 @@
   flex-direction: column;
 }
 
+.tab-content-file-system-employee {
+  overflow: hidden;
+}
+
 .chat-content-wrapper {
   @extend %display-column-center;
   flex: 1;
