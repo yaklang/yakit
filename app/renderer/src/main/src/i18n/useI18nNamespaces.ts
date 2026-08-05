@@ -96,7 +96,7 @@ function bumpLangVersion(lng: string) {
 // 模块级只绑定一次（含 HMR 防护）
 const LANG_REFRESH_BOUND_KEY = '__yakitI18nRefreshBound'
 if (!(i18nInstance as any)[LANG_REFRESH_BOUND_KEY]) {
-  (i18nInstance as any)[LANG_REFRESH_BOUND_KEY] = true
+  ;(i18nInstance as any)[LANG_REFRESH_BOUND_KEY] = true
   lastEmittedLang = i18nInstance.language || lastEmittedLang
   i18nInstance.on('languageChanged', bumpLangVersion)
 }

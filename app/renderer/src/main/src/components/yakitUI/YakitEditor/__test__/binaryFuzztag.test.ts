@@ -156,7 +156,7 @@ beforeEach(() => {
 
 afterEach(() => {
   if (originalRequire) {
-    (window as any).require = originalRequire
+    ;(window as any).require = originalRequire
   } else {
     delete (window as any).require
   }

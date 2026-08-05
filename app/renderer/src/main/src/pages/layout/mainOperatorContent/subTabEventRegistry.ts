@@ -44,7 +44,7 @@ function dispatchActive<K extends keyof SubTabPageEventHandlers>(
 ) {
   const handler = handlersByRouteKey.get(getCurrentPageTabRouteKey())?.[method]
   if (typeof handler === 'function') {
-    (handler as (...a: unknown[]) => void)(...args)
+    ;(handler as (...a: unknown[]) => void)(...args)
   }
 }
 
@@ -55,7 +55,7 @@ function dispatchAllHandlers<K extends keyof SubTabPageEventHandlers>(
   handlersByRouteKey.forEach((handlers) => {
     const handler = handlers[method]
     if (typeof handler === 'function') {
-      (handler as (...a: unknown[]) => void)(...args)
+      ;(handler as (...a: unknown[]) => void)(...args)
     }
   })
 }

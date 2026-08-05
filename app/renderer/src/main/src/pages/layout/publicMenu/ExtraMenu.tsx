@@ -296,7 +296,7 @@ export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
         icon={item.icon}
         className={styles['button-border']}
         onClick={(e) => {
-          (e.currentTarget as HTMLElement)?.blur()
+          ;(e.currentTarget as HTMLElement)?.blur()
           onMenuSelect({ route: item.page! })
         }}
       >
