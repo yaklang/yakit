@@ -11,6 +11,8 @@ import { AIChatMentionProps } from '../components/aiChatMention/type'
 import { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
 import { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 import { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
+import { AIRecommendedSkillSelectProps } from '@/pages/ai-re-act/aiRecommendedSkillSelect/type'
+import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
@@ -27,6 +29,8 @@ export interface AIChatTextareaSubmit {
   /** 编辑器选中的代码块 */
   codeBlockList?: AICodeBlockCommandParams[]
   focusMode?: string
+  /** 启动 ReAct 时由用户直接指定的能力 */
+  enabledCapabilities?: AIEnabledCapability[]
   /** 新建会话得 默认sessionId */
   sessionId?: string
 }
@@ -43,6 +47,7 @@ export enum AIInputInnerFeatureEnum {
 }
 export enum AIInputFooterRightEnum {
   AIFocusMode = 'AIFocusMode',
+  AIRecommendedSkill = 'AIRecommendedSkill',
 }
 export type AIInputInnerFeature = `${AIInputInnerFeatureEnum}`
 export type AIInputFooterRight = `${AIInputFooterRightEnum}`
@@ -54,8 +59,9 @@ interface FooterLeftTypesBase<T extends string, U> {
 type AIReviewRuleSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
 type AIModelSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIModelSelect, AIModelSelectProps>
 type AIFocusModeType = FooterLeftTypesBase<'AIFocusMode', AIFocusModeProps>
+type AIRecommendedSkillType = FooterLeftTypesBase<'AIRecommendedSkill', AIRecommendedSkillSelectProps>
 export type FooterLeftTypesComponentProps = AIReviewRuleSelectType | AIModelSelectType
-export type FooterRightTypesComponentProps = AIFocusModeType
+export type FooterRightTypesComponentProps = AIFocusModeType | AIRecommendedSkillType
 export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   /** 提交按钮的 loading 状态 */

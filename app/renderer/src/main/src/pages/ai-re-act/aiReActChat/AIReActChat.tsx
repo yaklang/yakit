@@ -27,6 +27,7 @@ import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
 import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
+import { mergeEnabledCapabilities } from './mergeEnabledCapabilities'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -140,6 +141,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         PreferSessionCachedConfig: true,
         Source: source,
       }
+      const enabledCapabilities = mergeEnabledCapabilities(request.EnabledCapabilities, value.enabledCapabilities)
+      if (enabledCapabilities.length > 0) request.EnabledCapabilities = enabledCapabilities
 
       const session = getSession(sessionId)
 

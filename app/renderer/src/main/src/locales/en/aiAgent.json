@@ -432,6 +432,10 @@
   "AIFocusMode": {
     "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope"
   },
+  "AIRecommendedSkill": {
+    "title": "Skill",
+    "tooltip": "Select a recommended skill to load when ReAct starts"
+  },
   "HistoryChat": {
     "title": "History Chat",
     "noChatsToClear": "No sessions to clear",

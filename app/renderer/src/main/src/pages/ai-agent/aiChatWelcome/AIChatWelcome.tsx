@@ -9,7 +9,7 @@ import {
 import styles from './AIChatWelcome.module.scss'
 import { AIChatTextarea } from '../template/template'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
-import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
+import { AIChatTextareaRefProps, AIChatTextareaSubmit, AIInputFooterRightEnum } from '../template/type'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -305,6 +305,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     [styles['input-body']]: !isEmptyAIMaterials,
                   })}
                   chatDataStoreKey="aiChatDataStore"
+                  footerRightTypes={[AIInputFooterRightEnum.AIFocusMode, AIInputFooterRightEnum.AIRecommendedSkill]}
                 >
                   {/* svg 定位点1/left */}
                   <div className={styles['line']} ref={lineStartRef} />

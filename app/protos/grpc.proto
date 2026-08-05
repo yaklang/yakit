@@ -1074,6 +1074,10 @@ service Yak {
   rpc SubscribeIMControlState(SubscribeIMControlStateRequest) returns (stream IMControlStateEvent);
   // 热更新 IM 回复配置（转发回复开关 / 回复颗粒度），无需重启 IM Engine。
   rpc UpdateIMControlConfig(UpdateIMControlConfigRequest) returns (UpdateIMControlConfigResponse);
+
+  // 返回产品推荐的内置 ReAct 技能。前端选择后，将 Name/Type 原样写入
+  // StartAIReAct 首条消息的 AIStartParams.EnabledCapabilities 即可预加载技能。
+  rpc GetAIReActRecommendedSkills(Empty) returns (GetAIReActRecommendedSkillsResponse);
 }
 
 // IMBotConfig 描述一个 IM 平台 bot 的配置凭证。
@@ -9695,4 +9699,16 @@ message GetSSAWorkbenchDashboardResponse {
   repeated SSAWorkbenchRiskTypeItem RiskDistribution = 4;
   repeated SSAWorkbenchRuleHitItem TopRuleHits = 5;
   repeated SSAWorkbenchRecentProject RecentProjects = 6;
+}
+
+message AIReActRecommendedSkill {
+  string Name = 1;
+  string Type = 2;
+  // 简体中文（中国大陆）展示名，来自 SKILL.md 的 metadata.display_name_zh-CN。
+  string DisplayNameZhCN = 3;
+  string Description = 4;
+}
+
+message GetAIReActRecommendedSkillsResponse {
+  repeated AIReActRecommendedSkill Data = 1;
 }

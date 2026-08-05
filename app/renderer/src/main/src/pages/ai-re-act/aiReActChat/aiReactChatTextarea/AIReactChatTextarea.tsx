@@ -7,6 +7,7 @@ import omit from 'lodash/omit'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '../../hooks/useCurrentDataBySession'
 import useGetChatDataStoreKey from '../../hooks/useGetChatDataStoreKey'
+import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 
 export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.memo(
   forwardRef((props, ref) => {
@@ -35,6 +36,7 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
         }
         chatDataStoreKey={chatDataStoreKey}
         {...omit(externalParameters, 'rightIcon')}
+        footerRightTypes={[AIInputFooterRightEnum.AIFocusMode, AIInputFooterRightEnum.AIRecommendedSkill]}
       />
     )
   }),

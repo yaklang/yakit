@@ -69,6 +69,8 @@ import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBl
 import AIRunModeSelect from '../aiRunModeSelect/AIRunModeSelect'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
+import { AIRecommendedSkillSelect } from '@/pages/ai-re-act/aiRecommendedSkillSelect/AIRecommendedSkillSelect'
+import type { AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -156,6 +158,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 case AIInputFooterRightEnum.AIFocusMode:
                   node = { type: AIInputFooterRightEnum.AIFocusMode }
                   break
+                case AIInputFooterRightEnum.AIRecommendedSkill:
+                  node = { type: AIInputFooterRightEnum.AIRecommendedSkill }
+                  break
                 default:
                   break
               }
@@ -232,6 +237,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         codeBlockList,
         showQS: qs,
         focusMode,
+        enabledCapabilities: recommendedSkill
+          ? [{ Name: recommendedSkill.Name, Type: recommendedSkill.Type }]
+          : undefined,
         sessionId: aiMilkdownInputRef.current?.getSessionId(),
       }
       onSubmit && onSubmit(value)
@@ -298,6 +306,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       }
     })
     const [focusMode, setFocusMode] = useState<string>()
+    const [recommendedSkill, setRecommendedSkill] = useState<AIReActRecommendedSkill>()
+
+    useEffect(() => {
+      setRecommendedSkill(undefined)
+    }, [chatDataStoreKey])
 
     const onMemfitExtra = useMemoizedFn((value: AIMentionCommandParams) => {
       setFocusMode(value.mentionName)
@@ -350,6 +363,19 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   onChange={setFocusMode}
                   {...item.props}
                   className={classNames(styles['focus-mode-self-adaptive'], item.props?.className)}
+                />
+              ),
+            )
+            break
+          case AIInputFooterRightEnum.AIRecommendedSkill:
+            node.push(
+              item.component || (
+                <AIRecommendedSkillSelect
+                  key={item.type}
+                  value={recommendedSkill}
+                  onChange={setRecommendedSkill}
+                  {...item.props}
+                  disabled={execute || item.props?.disabled}
                 />
               ),
             )

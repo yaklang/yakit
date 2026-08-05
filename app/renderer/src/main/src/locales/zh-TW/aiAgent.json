@@ -432,6 +432,10 @@
   "AIFocusMode": {
     "focusModeTooltip": "複雜場景限定使用框架，限制AI思考範圍"
   },
+  "AIRecommendedSkill": {
+    "title": "技能",
+    "tooltip": "選擇一個推薦技能，啟動 ReAct 時會直接載入該技能"
+  },
   "HistoryChat": {
     "title": "歷史會話",
     "noChatsToClear": "暫無可清除的會話",

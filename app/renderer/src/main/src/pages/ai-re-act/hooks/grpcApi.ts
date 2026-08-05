@@ -182,9 +182,18 @@ export interface AIExecutionStrategy {
   GoalMinIterations?: number
 }
 
-interface AIEnabledCapability {
+export interface AIEnabledCapability {
   Name: string
   Type: string
+}
+
+export interface AIReActRecommendedSkill extends AIEnabledCapability {
+  DisplayNameZhCN: string
+  Description: string
+}
+
+export interface GetAIReActRecommendedSkillsResponse {
+  Data: AIReActRecommendedSkill[]
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */

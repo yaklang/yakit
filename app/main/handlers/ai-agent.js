@@ -36,6 +36,22 @@ module.exports = (win, getClient) => {
   // #region AI-ReAct
   let aiReActTaskPool = new Map()
 
+  const asyncGetAIReActRecommendedSkills = () => {
+    return new Promise((resolve, reject) => {
+      getClient().GetAIReActRecommendedSkills({}, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+
+  ipcMain.handle('GetAIReActRecommendedSkills', async () => {
+    return await asyncGetAIReActRecommendedSkills()
+  })
+
   // aiWriteChainMap 用于让write操作是一个顺序队列执行
   let aiWriteChainMap = new Map()
   // 写操作的错误处理方法，保证写操作失败不会中断后续操作

@@ -1,4 +1,4 @@
-import { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
+import { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import {
   AIAgentGrpcApi,
@@ -6,6 +6,7 @@ import {
   AIEventQueryResponse,
   ExportAILogsRequest,
   ExportAILogsResponse,
+  GetAIReActRecommendedSkillsResponse,
   GetRandomAIMaterialsRequest,
   GetRandomAIMaterialsResponse,
 } from '../ai-re-act/hooks/grpcApi'
@@ -28,6 +29,19 @@ import { JSONParseLog } from '@/utils/tool'
 import type { DeleteAISessionRequest, QueryAISessionRequest, QueryAISessionResponse } from './type/aiChat'
 
 const { ipcRenderer } = window.require('electron')
+
+/** @name 获取可在启动 ReAct 时直接加载的推荐技能 */
+export const grpcGetAIReActRecommendedSkills: APINoRequestFunc<GetAIReActRecommendedSkillsResponse> = (hiddenError) => {
+  return new Promise(async (resolve, reject) => {
+    ipcRenderer
+      .invoke('GetAIReActRecommendedSkills')
+      .then(resolve)
+      .catch((e) => {
+        if (!hiddenError) yakitNotify('error', '查询推荐技能失败:' + e)
+        reject(e)
+      })
+  })
+}
 
 /**
  * @name 查询AI事件
