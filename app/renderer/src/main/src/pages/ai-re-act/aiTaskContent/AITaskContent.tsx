@@ -1,7 +1,7 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { AITaskContentProps } from './type'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { AIAgentTriggerEventInfo, AITabsEnumType } from '@/pages/ai-agent/aiAgentType'
+import { AIAgentTriggerEventInfo } from '@/pages/ai-agent/aiAgentType'
 import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import styles from './AITaskContent.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -21,7 +21,7 @@ interface TabsItemProps extends YakitTabsProps {
 }
 
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
-  const { tabBarExtraContent, emptyNode } = props
+  const { tabBarExtraContent, emptyNode, hideTaskDetailTabs = false, taskListNode } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
   const {
@@ -30,6 +30,13 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const [tabs, setTabs, getTabs] = useGetSetState<TabsItemProps[]>([])
   const [activeKey, setActiveKey] = useState<string>('taskContent')
   const [scrollToBottom, setScrollToBottom] = useState(false)
+  const visibleTabs = hideTaskDetailTabs ? tabs.filter((item) => item.value === 'taskContent') : tabs
+  const displayTabs: TabsItemProps[] = taskListNode
+    ? [{ label: '任务清单', value: 'taskList', taskId: 'taskList' }, ...visibleTabs]
+    : visibleTabs
+  const visibleActiveKey = displayTabs.some((item) => item.value === activeKey)
+    ? activeKey
+    : displayTabs[0]?.value || activeKey
 
   const isSetTaskTabRef = useRef<boolean>(false)
 
@@ -65,6 +72,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     }
   }, [taskChat.elements.length])
   const onActionAITaskContentTab = useMemoizedFn((data: string) => {
+    if (hideTaskDetailTabs) return
     try {
       const info: AIAgentTriggerEventInfo = JSON.parse(data)
       const { type, params } = info
@@ -114,7 +122,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     } catch (error) {}
   })
 
-  const onActiveKey = useMemoizedFn((key: AITabsEnumType) => {
+  const onActiveKey = useMemoizedFn((key: string) => {
     setActiveKey(key)
   })
 
@@ -128,7 +136,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[]) => {
     const [label] = node
     const finalLabel = label ?? (typeof tab.label === 'function' ? tab.label() : tab.label)
-    if (tab.value === 'taskContent') {
+    if (tab.value === 'taskContent' || tab.value === 'taskList') {
       return <>{finalLabel}</>
     }
 
@@ -148,12 +156,14 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     )
   })
   const tabContent = useCreation(() => {
-    switch (activeKey) {
+    switch (visibleActiveKey) {
+      case 'taskList':
+        return taskListNode
       case 'taskContent':
         return <AIReActTaskChatContent scrollToBottom={scrollToBottom} onScrollToBottom={onScrollToBottom} />
 
       default:
-        const taskItem = tabs.find((item) => item.value === activeKey)
+        const taskItem = visibleTabs.find((item) => item.value === visibleActiveKey)
         return (
           <AITaskExecutionDetails
             key={taskItem?.taskId}
@@ -163,24 +173,34 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
           />
         )
     }
-  }, [activeKey, onScrollToBottom, scrollToBottom, tabs])
+  }, [onScrollToBottom, scrollToBottom, taskListNode, visibleActiveKey, visibleTabs])
 
   return (
     <div className={styles['chat-content-wrapper']} ref={divRef}>
-      {!!taskChat?.elements?.length || !!tabs.length ? (
+      {!!taskChat?.elements?.length || !!displayTabs.length ? (
         <YakitSideTab
           key={i18n.language}
           type="horizontal"
-          yakitTabs={tabs}
-          activeKey={activeKey}
-          onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
+          yakitTabs={displayTabs}
+          activeKey={visibleActiveKey}
+          onActiveKey={onActiveKey}
           onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
-          className={styles['ai-task-tab-wrap']}
+          className={classNames(styles['ai-task-tab-wrap'], {
+            [styles['ai-task-tab-wrap-employee']]: !!taskListNode,
+          })}
           btnItemClassName={styles['ai-task-tab-item']}
           t={t}
           tabBarExtraContent={tabBarExtraContent}
         >
-          {activeKey && <div className={classNames(styles['tab-content'])}>{tabContent}</div>}
+          {visibleActiveKey && (
+            <div
+              className={classNames(styles['tab-content'], {
+                [styles['tab-content-employee']]: !!taskListNode,
+              })}
+            >
+              {tabContent}
+            </div>
+          )}
         </YakitSideTab>
       ) : (
         emptyNode

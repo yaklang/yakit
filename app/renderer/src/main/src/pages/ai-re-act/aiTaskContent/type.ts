@@ -4,4 +4,6 @@ import { ReactNode } from 'react'
 export interface AITaskContentProps {
   tabBarExtraContent: YakitSideTabProps['tabBarExtraContent']
   emptyNode: ReactNode
+  hideTaskDetailTabs?: boolean
+  taskListNode?: ReactNode
 }

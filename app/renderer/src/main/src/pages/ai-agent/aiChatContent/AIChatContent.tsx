@@ -45,6 +45,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
 import { applyForgeNameToStartParams } from '@/pages/digitalEmployee/resolver'
 import { DigitalEmployeeTaskProgress } from '@/pages/digitalEmployee/DigitalEmployeeTaskProgress'
+import { AITaskContent } from '@/pages/ai-re-act/aiTaskContent/AITaskContent'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
@@ -55,6 +56,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, requestHistoryState } =
       chatIPCStore.chatIPCData
     const { activeChat } = useAIAgentStore()
+    const hasDeepPlanningContent = !!taskChat.elements.length || !!taskChat.plan?.task_tree?.length
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
 
@@ -319,7 +321,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       return (
         <div className={styles['employee-chat-content']}>
           <AIGlobalLoading loopAnimationMode="sequential" loading={requestHistoryState.initLoading}>
-            <div className={styles['employee-detail-layout']}>
+            <div
+              className={classNames(styles['employee-detail-layout'], {
+                [styles['employee-detail-layout-planning']]: hasDeepPlanningContent,
+              })}
+            >
               <section className={styles['employee-dialog-panel']}>
                 <div className={styles['employee-chat-header']}>
                   <div>
@@ -360,7 +366,12 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                   </span>
                 </div>
                 <div className={styles['employee-task-content']}>
-                  <DigitalEmployeeTaskProgress />
+                  <AITaskContent
+                    tabBarExtraContent={null}
+                    emptyNode={null}
+                    hideTaskDetailTabs
+                    taskListNode={<DigitalEmployeeTaskProgress />}
+                  />
                 </div>
               </aside>
             </div>

@@ -37,6 +37,10 @@
   gap: clamp(8px, 1vw, 16px);
 }
 
+.employee-detail-layout-planning {
+  grid-template-columns: minmax(520px, 1.35fr) minmax(420px, 1fr);
+}
+
 .employee-dialog-panel,
 .employee-task-panel {
   min-width: 0;
@@ -229,6 +233,10 @@
     grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
   }
 
+  .employee-detail-layout-planning {
+    grid-template-columns: minmax(450px, 1.1fr) minmax(360px, 1fr);
+  }
+
   .employee-chat-actions {
     :global(button) {
       padding-inline: 7px;
@@ -236,10 +244,10 @@
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 960px) {
   .employee-detail-layout {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(360px, 1fr) minmax(240px, 42vh);
+    grid-template-rows: minmax(360px, 58vh) minmax(300px, 48vh);
     overflow: auto;
   }
 }
