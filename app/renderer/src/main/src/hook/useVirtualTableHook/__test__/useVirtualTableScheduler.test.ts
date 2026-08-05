@@ -4,8 +4,10 @@ import {
   mergeUniqueVirtualTableRows,
   prependAcceptedVirtualTableServerPushRows,
   resolveVirtualTableServerPushActive,
+  selectVirtualTableAutomaticRefreshReason,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
+  shouldLoadVirtualTableBottom,
   VirtualTableViewportSnapshot,
 } from '../useVirtualTableScheduler'
 
@@ -25,6 +27,17 @@ describe('resolveVirtualTableServerPushActive', () => {
   it('falls back only when both push sources are inactive', () => {
     expect(resolveVirtualTableServerPushActive(false, () => false)).toBe(false)
     expect(resolveVirtualTableServerPushActive(true, () => false)).toBe(true)
+  })
+})
+
+describe('selectVirtualTableAutomaticRefreshReason', () => {
+  it('treats the first activation and parameter changes as ordinary queries', () => {
+    expect(selectVirtualTableAutomaticRefreshReason(false, false)).toBe('query')
+    expect(selectVirtualTableAutomaticRefreshReason(true, true)).toBe('query')
+  })
+
+  it('identifies a cached table becoming visible again', () => {
+    expect(selectVirtualTableAutomaticRefreshReason(true, false)).toBe('visibility')
   })
 })
 
@@ -82,6 +95,20 @@ describe('selectVirtualTableAutoRefreshAction', () => {
     const previous = snapshot({ serverPushActive: false })
     const current = snapshot({ serverPushActive: false, scrollHeight: 1800 })
     expect(selectVirtualTableAutoRefreshAction(previous, current)).toBe('start-poll')
+  })
+})
+
+describe('shouldLoadVirtualTableBottom', () => {
+  it('prefetches a sliding page while ten rows remain', () => {
+    expect(shouldLoadVirtualTableBottom(9120, 600, 10000, true, 28)).toBe(true)
+  })
+
+  it('does not chain another sliding request immediately after clipping', () => {
+    expect(shouldLoadVirtualTableBottom(9000, 600, 10000, true, 28)).toBe(false)
+  })
+
+  it('keeps the legacy ninety-percent trigger for an unbounded table', () => {
+    expect(shouldLoadVirtualTableBottom(8500, 600, 10000, false, 28)).toBe(true)
   })
 })
 

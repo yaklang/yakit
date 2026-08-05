@@ -7,6 +7,42 @@ export interface VirtualTableViewportSnapshot {
 
 export type VirtualTableAutoRefreshAction = 'none' | 'start-poll' | 'stop-poll' | 'refresh-once'
 export const VIRTUAL_TABLE_SCROLL_REFRESH_DELTA = 28
+export const VIRTUAL_TABLE_BOTTOM_PREFETCH_ROWS = 10
+
+export const selectVirtualTableAutomaticRefreshReason = (
+  hasQueriedViewport: boolean,
+  previousInViewport: boolean,
+): 'query' | 'visibility' => (hasQueriedViewport && !previousInViewport ? 'visibility' : 'query')
+
+/**
+ * Sliding tables must wait until the user consumes the page that was just
+ * appended, otherwise clipping can immediately trigger another request. Keep
+ * that guard, but prefetch before the final row so scrolling does not visibly
+ * stall at the boundary.
+ */
+export const shouldLoadVirtualTableBottom = (
+  scrollTop: number | undefined,
+  clientHeight: number | undefined,
+  scrollHeight: number | undefined,
+  isSliding: boolean,
+  rowHeight: number,
+): boolean => {
+  if (
+    !Number.isFinite(scrollTop) ||
+    !Number.isFinite(clientHeight) ||
+    !Number.isFinite(scrollHeight) ||
+    Number(scrollHeight) <= 0
+  ) {
+    return false
+  }
+
+  const visibleBottom = Number(scrollTop) + Number(clientHeight)
+  if (visibleBottom / Number(scrollHeight) <= 0.9) return false
+  if (!isSliding) return true
+
+  const remaining = Math.max(0, Number(scrollHeight) - visibleBottom)
+  return remaining <= rowHeight * VIRTUAL_TABLE_BOTTOM_PREFETCH_ROWS
+}
 
 /**
  * A specialized table can have its own ordered stream in addition to the

@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildHTTPFlowProjectKey,
+  buildHTTPFlowColorTags,
   buildHTTPFlowTableAdvancedQuery,
   buildLegacyHTTPFlowTableFilterConfig,
   buildRuleSummaryList,
   filterHTTPFlowsByFavoriteAndTags,
+  findHTTPFlowSelectionIndex,
   getClassNameData,
   hasActiveHTTPFlowTableFilterConfig,
   isHTTPFlowTableActive,
   mergeRuleSummaryItems,
   normalizeHTTPFlowTotal,
+  patchHTTPFlowTags,
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
   shouldClearMITMResetBoundary,
@@ -114,6 +117,64 @@ describe('getClassNameData', () => {
     expect(result[0]).toBe(unchanged)
     expect(result[1]).not.toBe(changed)
     expect(result[1].cellClassName).toBe('table-cell-bg-red')
+  })
+})
+
+describe('HTTP flow color tags', () => {
+  it('replaces an existing color case-insensitively and preserves ordinary tags', () => {
+    expect(buildHTTPFlowColorTags('manual|yakit_color_red|important', 'blue')).toEqual([
+      'manual',
+      'important',
+      'YAKIT_COLOR_BLUE',
+    ])
+  })
+
+  it('removes only color tags', () => {
+    expect(buildHTTPFlowColorTags('manual|YAKIT_COLOR_GREEN|important')).toEqual(['manual', 'important'])
+  })
+
+  it('patches by database ID without changing rows that share an empty hash', () => {
+    const first = { Id: 1, Hash: '', Tags: '' } as HTTPFlow
+    const second = { Id: 2, Hash: '', Tags: '' } as HTTPFlow
+    const rows = [first, second]
+    const result = patchHTTPFlowTags(rows, [{ Id: 2, Hash: '', Tags: 'YAKIT_COLOR_RED' }])
+
+    expect(result).not.toBe(rows)
+    expect(result[0]).toBe(first)
+    expect(result[1]).toEqual({
+      ...second,
+      Tags: 'YAKIT_COLOR_RED',
+      cellClassName: 'table-cell-bg-red',
+    })
+  })
+
+  it('clears the derived row class when a color is removed', () => {
+    const result = patchHTTPFlowTags(
+      [{ Id: 1, Tags: 'manual|YAKIT_COLOR_RED', cellClassName: 'table-cell-bg-red' } as HTTPFlow],
+      [{ Id: 1, Tags: 'manual' }],
+    )
+
+    expect(result[0].Tags).toBe('manual')
+    expect(result[0].cellClassName).toBeUndefined()
+  })
+})
+
+describe('HTTP flow current-row reconciliation', () => {
+  it('restores the selected row by stable ID and hash after a visibility refresh', () => {
+    const selected = { Id: 7, Hash: 'same-flow' } as HTTPFlow
+    const rows = [
+      { Id: 8, Hash: 'newer' },
+      { Id: 7, Hash: 'same-flow' },
+    ] as HTTPFlow[]
+
+    expect(findHTTPFlowSelectionIndex(rows, selected)).toBe(1)
+  })
+
+  it('rejects an ID collision from a different project', () => {
+    const selected = { Id: 7, Hash: 'old-project' } as HTTPFlow
+    const rows = [{ Id: 7, Hash: 'new-project' }] as HTTPFlow[]
+
+    expect(findHTTPFlowSelectionIndex(rows, selected)).toBe(-1)
   })
 })
 

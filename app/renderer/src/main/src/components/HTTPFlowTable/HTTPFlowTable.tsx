@@ -45,7 +45,7 @@ import { useHttpFlowStore } from '@/store/httpFlow'
 import { OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
-import { ParamsTProps } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import { ParamsTProps, VirtualTableRefreshReason } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
@@ -146,6 +146,8 @@ import {
   getHTTPFlowReqAndResToString,
   getRunTimeIdObj,
   filterHTTPFlowsByFavoriteAndTags,
+  findHTTPFlowSelectionIndex,
+  patchHTTPFlowTags,
 } from './HTTPFlowTable.utils'
 import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
 import {
@@ -274,6 +276,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [suffixList, setSuffixList] = useState<FiltersItemProps[]>([])
   const comSuffixList = useCampare(suffixList)
   const [selected, setSelected, getSelected] = useGetSetState<HTTPFlow>()
+  const selectionReconcilePendingRef = useRef(false)
 
   const { setCompareLeft, setCompareRight } = useHttpFlowStore()
 
@@ -341,8 +344,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [backgroundRefresh, pageType])
   const isTableActive = isHTTPFlowTableActive(inViewport, backgroundRefresh, pageType)
 
-  // 整表重新加载时清空选中（hook 在换筛选、刷新时会调 onFirst）
-  const onFirst = useMemoizedFn(() => {
+  // 整表重新加载时清空选中；缓存页重新可见时保留当前包，待响应后按 ID/Hash 校验。
+  const onFirst = useMemoizedFn((reason: VirtualTableRefreshReason) => {
+    if (reason === 'visibility') {
+      selectionReconcilePendingRef.current = true
+      setUpdateCacheData([])
+      return
+    }
+    selectionReconcilePendingRef.current = false
     setSelectedRowKeys([])
     setSelectedRows([])
     if (!viewAttachIdFirstRef.current) {
@@ -757,9 +766,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       },
     },
   })
-  const updateData = useMemoizedFn(() => {
+  const updateData = useMemoizedFn((reason: VirtualTableRefreshReason = 'manual') => {
     tableQueryEpochRef.current += 1
-    noResetRefreshT()
+    noResetRefreshT(reason)
   })
 
   useEffect(() => {
@@ -777,7 +786,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // Background queries intentionally omit packet bodies. Hydrate the visible
     // viewport once on return; row details remain lazy-loaded afterwards.
     if (becameVisible && isBackgroundRefresh) {
-      updateData()
+      updateData('visibility')
     }
   }, [inViewport, isBackgroundRefresh, updateData])
 
@@ -889,7 +898,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }))
   }, [runTimeId])
 
-  // 兼容原来 setData 写法（收藏、改标签等会原地改表格行） 拷贝避免大量二进制字段
+  // 兼容收藏、改标签等 setData 写法，使用浅更新避免复制大量二进制字段。
   const setData = useMemoizedFn((value: React.SetStateAction<HTTPFlow[]>) => {
     patchTData((prev) => (typeof value === 'function' ? value(prev) : value))
   })
@@ -2755,31 +2764,40 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onSetTableSelectNum && onSetTableSelectNum(isAllSelect ? total : selectedRowKeys?.length)
   }, [total, isAllSelect, selectedRowKeys])
 
-  const realData = useMemo(() => {
-    if (updateCacheData.length) {
-      let findFlag = false
-      const dataMap = new Map(data.map((item) => [+item.Id, item]))
-      updateCacheData.forEach((target, index) => {
-        if (dataMap.has(target.id)) {
-          const targetObject = dataMap.get(target.id)
-          if (targetObject) {
-            targetObject.Tags = target.tags
-            updateCacheData.splice(index, 1)
-            setUpdateCacheData(updateCacheData)
-            findFlag = true
-          }
-        }
-      })
-      if (findFlag) {
-        const newData = getClassNameData(data)
-        setData(newData)
-        return newData
-      }
-      return data
-    } else {
-      return data
+  useEffect(() => {
+    if (!updateCacheData.length || !data.length) return
+    const visibleIds = new Set(data.map((item) => Number(item.Id)))
+    const applicableUpdates = updateCacheData.filter((item) => visibleIds.has(Number(item.id)))
+    if (!applicableUpdates.length) return
+
+    const appliedIds = new Set(applicableUpdates.map((item) => Number(item.id)))
+    patchTData((current) =>
+      patchHTTPFlowTags(
+        current,
+        applicableUpdates.map((item) => ({ Id: item.id, Tags: item.tags })),
+      ),
+    )
+    setUpdateCacheData((current) => current.filter((item) => !appliedIds.has(Number(item.id))))
+  }, [data, patchTData, updateCacheData])
+
+  const realData = data
+
+  useLayoutEffect(() => {
+    if (!selectionReconcilePendingRef.current) return
+    selectionReconcilePendingRef.current = false
+    const current = getSelected()
+    if (!current) return
+
+    const currentIndex = findHTTPFlowSelectionIndex(realData, current)
+    if (currentIndex >= 0) {
+      setCurrentIndex(currentIndex)
+      return
     }
-  }, [updateCacheData, data])
+
+    setCurrentIndex(undefined)
+    setSelected(undefined)
+    setOnlyShowFirstNode?.(true)
+  }, [getSelected, realData, setOnlyShowFirstNode, setSelected])
 
   useThrottleEffect(() => {
     // 当realData长度大于1000时，打印日志

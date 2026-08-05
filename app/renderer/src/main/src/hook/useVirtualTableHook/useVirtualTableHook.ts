@@ -6,6 +6,7 @@ import {
   VirtualPaging,
   DataTProps,
   FilterProps,
+  VirtualTableRefreshReason,
 } from './useVirtualTableHookType'
 import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
@@ -18,8 +19,10 @@ import {
   mergeVirtualTableServerPushRows,
   prependAcceptedVirtualTableServerPushRows,
   resolveVirtualTableServerPushActive,
+  selectVirtualTableAutomaticRefreshReason,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
+  shouldLoadVirtualTableBottom,
   VirtualTableViewportSnapshot,
 } from './useVirtualTableScheduler'
 
@@ -193,6 +196,8 @@ export default function useVirtualTableHook<
   const inViewport = inViewportProp ?? internalInViewport
   // 是否允许更改endLoop
   const isAllowSetEndLoopRef = useRef<boolean>(false)
+  const previousQueryInViewportRef = useRef(inViewport)
+  const hasQueriedViewportRef = useRef(false)
 
   useEffect(() => {
     if (inViewport) return
@@ -203,6 +208,7 @@ export default function useVirtualTableHook<
     notificationRefreshPendingRef.current = false
     setLoading(false)
     setIsLoop(false)
+    previousQueryInViewportRef.current = false
   }, [inViewport])
 
   useEffect(() => {
@@ -516,10 +522,10 @@ export default function useVirtualTableHook<
   })
 
   // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
-  const updateData = useMemoizedFn((showLoading = true) => {
+  const updateData = useMemoizedFn((showLoading = true, reason: VirtualTableRefreshReason = 'manual') => {
     if (!inViewport) return
     if (boxHeightRef.current) {
-      onFirst && onFirst()
+      onFirst?.(reason)
       setOffsetData([])
       if (showLoading) setLoading(true)
       maxIdRef.current = 0
@@ -570,12 +576,6 @@ export default function useVirtualTableHook<
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     const scrollHeight = tableRef.current?.containerRef?.scrollHeight
     // let scrollBottom: number|undefined = undefined
-    let scrollBottomPercent: number | undefined = undefined
-    if (typeof scrollTop === 'number' && typeof clientHeight === 'number' && typeof scrollHeight === 'number') {
-      // scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
-      scrollBottomPercent = Number(((scrollTop + clientHeight) / scrollHeight).toFixed(2))
-    }
-
     // Compatibility polling and push-triggered reconciliation are background
     // work. An empty table must not flash its full loading mask every second.
     if (data.length === 0) {
@@ -589,16 +589,8 @@ export default function useVirtualTableHook<
       setOffsetData([])
     }
     // 滚动条接近触底
-    else if (typeof scrollBottomPercent === 'number' && scrollBottomPercent > 0.9) {
-      //这里判断需要裁剪的列表是否在底部 避免裁剪后 滚动条一直在接近底部
-      if (
-        !isSliding ||
-        (typeof scrollHeight === 'number' &&
-          typeof scrollTop === 'number' &&
-          typeof clientHeight === 'number' &&
-          scrollHeight - scrollTop - clientHeight < ROW_HEIGHT)
-      )
-        updateBottomData()
+    else if (shouldLoadVirtualTableBottom(scrollTop, clientHeight, scrollHeight, isSliding, ROW_HEIGHT)) {
+      updateBottomData()
       setOffsetData([])
     }
     // 滚动条在中间 增量
@@ -675,7 +667,13 @@ export default function useVirtualTableHook<
       if (!inViewport) return
       queryEpochRef.current += 1
       isGrpcRef.current = false
-      updateData()
+      const reason = selectVirtualTableAutomaticRefreshReason(
+        hasQueriedViewportRef.current,
+        previousQueryInViewportRef.current,
+      )
+      previousQueryInViewportRef.current = true
+      hasQueriedViewportRef.current = true
+      updateData(true, reason)
     },
     [params, inViewport],
     {
@@ -702,10 +700,10 @@ export default function useVirtualTableHook<
   })
 
   /** @name 仅刷新新表格 */
-  const noResetRefreshT = useMemoizedFn(() => {
+  const noResetRefreshT = useMemoizedFn((reason: VirtualTableRefreshReason = 'manual') => {
     queryEpochRef.current += 1
     isGrpcRef.current = false
-    updateData()
+    updateData(true, reason)
   })
 
   /** @name 启动表格循环(用于后端通知前端更新时触发) */

@@ -412,6 +412,57 @@ const getHTTPFlowTags = (tags?: string) => {
   return tags ? tags.split('|').filter(Boolean) : []
 }
 
+export interface HTTPFlowTagPatch {
+  Id?: number
+  Hash?: string
+  Tags: string
+}
+
+export const buildHTTPFlowColorTags = (tags: string | undefined, color?: string): string[] => {
+  const nextTags = getHTTPFlowTags(tags).filter((tag) => !/^YAKIT_COLOR_/i.test(tag))
+  if (color) nextTags.push(`YAKIT_COLOR_${color.toUpperCase()}`)
+  return nextTags
+}
+
+/** Patch only the addressed rows and preserve every unaffected row identity. */
+export const patchHTTPFlowTags = (rows: HTTPFlow[], patches: HTTPFlowTagPatch[]): HTTPFlow[] => {
+  if (!rows.length || !patches.length) return rows
+
+  const patchesById = new Map<number, HTTPFlowTagPatch>()
+  const patchesByHash = new Map<string, HTTPFlowTagPatch>()
+  for (const patch of patches) {
+    const id = Number(patch.Id)
+    if (Number.isFinite(id) && id > 0) {
+      patchesById.set(id, patch)
+    } else if (patch.Hash) {
+      patchesByHash.set(patch.Hash, patch)
+    }
+  }
+
+  let changed = false
+  const nextRows = rows.map((row) => {
+    const patch = patchesById.get(Number(row.Id)) || (row.Hash ? patchesByHash.get(row.Hash) : undefined)
+    if (!patch) return row
+    const cellClassName = filterColorTag(patch.Tags) || undefined
+    if (row.Tags === patch.Tags && row.cellClassName === cellClassName) return row
+    changed = true
+    return {
+      ...row,
+      Tags: patch.Tags,
+      cellClassName,
+    }
+  })
+
+  return changed ? nextRows : rows
+}
+
+export const findHTTPFlowSelectionIndex = (rows: HTTPFlow[], selected?: HTTPFlow): number => {
+  if (!selected) return -1
+  return rows.findIndex(
+    (item) => item.Id === selected.Id && (!item.Hash || !selected.Hash || item.Hash === selected.Hash),
+  )
+}
+
 export const isHTTPFlowFavorite = (flow?: HTTPFlow) => {
   return getHTTPFlowTags(flow?.Tags).includes(HTTP_FLOW_FAVORITE_TAG)
 }
