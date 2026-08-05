@@ -3,6 +3,22 @@ const path = require('path')
 
 const TRUSTED_DEV_HOSTS = new Set(['127.0.0.1', 'localhost'])
 const TRUSTED_DEV_PORTS = new Set(['3000', '2800', '5173'])
+
+const addConfiguredDevPort = (configuredUrl) => {
+  if (!configuredUrl) return
+
+  try {
+    const parsed = new URL(configuredUrl)
+    if (!['http:', 'https:'].includes(parsed.protocol)) return
+    if (!TRUSTED_DEV_HOSTS.has(parsed.hostname)) return
+    if (parsed.port) TRUSTED_DEV_PORTS.add(parsed.port)
+  } catch (error) {
+    // Invalid development URLs remain untrusted.
+  }
+}
+
+addConfiguredDevPort(process.env.YAKIT_DEV_RENDERER_URL)
+addConfiguredDevPort(process.env.YAKIT_DEV_ENGINE_LINK_URL)
 const BLOCKED_OPEN_PATH_EXTENSIONS = new Set([
   '.app',
   '.appimage',
