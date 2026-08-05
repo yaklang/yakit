@@ -6,7 +6,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { Tooltip } from 'antd'
 import classNames from 'classnames'
-import { YakitAIAgentPageID } from '../../defaultConstant'
+import { AIAgentSettingDefault, YakitAIAgentPageID } from '../../defaultConstant'
 import { EditChatNameModal } from '../../UtilModals'
 import { AISession } from '../../type/aiChat'
 import { useInfiniteScroll, useMemoizedFn } from 'ahooks'
@@ -241,7 +241,8 @@ const HistoryChatList: FC<{
     // }
     setSetting?.((old) => ({
       ...old,
-      SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,
+      SyncPerceptionTrigger:
+        info?.StartParams?.SyncPerceptionTrigger ?? AIAgentSettingDefault.SyncPerceptionTrigger,
       EnablePlan: info?.StartParams?.EnablePlan ?? false,
     }))
     setActiveChat && setActiveChat(info)

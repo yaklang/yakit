@@ -27,5 +27,6 @@ describe('digital employee task progress', () => {
     expect(formatTaskTimestamp(today / 1000, now)).toBe('14:08')
     expect(formatTaskTimestamp(yesterday, now)).toBe('07-29 09:05')
     expect(formatTaskTimestamp(0, now)).toBe('')
+    expect(formatTaskTimestamp(1, now)).toBe('')
   })
 })

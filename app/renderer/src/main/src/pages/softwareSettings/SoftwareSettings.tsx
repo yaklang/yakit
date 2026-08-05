@@ -20,8 +20,6 @@ import memfitMiniProject from '@/assets/memfit.jpg'
 import {
   SolidIrifyFontLogoIcon,
   SolidIrifyMiniLogoIcon,
-  SolidMemfitFontLogoIcon,
-  SolidMemfitMiniLogoIcon,
 } from '@/assets/icon/colors'
 
 const ProjectManage = React.lazy(() => import('./ProjectManage'))

@@ -8,6 +8,8 @@ export interface DigitalEmployeeTaskProgressSummary {
   total: number
 }
 
+const MIN_VALID_TASK_TIMESTAMP = Date.UTC(2000, 0, 1)
+
 export const getDigitalEmployeeTaskProgress = (todoData?: TodoListCardData): DigitalEmployeeTaskProgressSummary => {
   const items = (todoData?.items || []).filter((item) => item.status !== AIToDoListStatusEnum.Deleted)
   const total = items.length
@@ -26,6 +28,7 @@ export const getDigitalEmployeeTaskProgress = (todoData?: TodoListCardData): Dig
 export const formatTaskTimestamp = (timestamp?: number, now = Date.now()): string => {
   if (!timestamp || timestamp < 0) return ''
   const time = timestamp < 1_000_000_000_000 ? timestamp * 1000 : timestamp
+  if (time < MIN_VALID_TASK_TIMESTAMP) return ''
   const date = new Date(time)
   if (Number.isNaN(date.getTime())) return ''
 

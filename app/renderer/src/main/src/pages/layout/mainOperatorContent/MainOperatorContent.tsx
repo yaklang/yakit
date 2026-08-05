@@ -482,8 +482,7 @@ const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) => {
     return [
       {
         routeKey: routeConvertKey(YakitRoute.AI_Agent, ''),
-        verbose: 'AIAgent',
-        verboseKey: 'YakitRoute.AIAgent',
+        verbose: '数字员工',
         menuName: YakitRouteToPageInfo[YakitRoute.AI_Agent].label,
         route: YakitRoute.AI_Agent,
         singleNode: true,

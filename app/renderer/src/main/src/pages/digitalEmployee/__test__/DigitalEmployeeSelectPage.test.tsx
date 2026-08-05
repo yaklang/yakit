@@ -8,6 +8,7 @@ import { DigitalEmployeeSelectPage } from '../DigitalEmployeeSelectPage'
 import * as DigitalEmployeeContext from '../DigitalEmployeeContext'
 import { DIGITAL_EMPLOYEES } from '../config'
 import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
+import type { AIForge } from '@/pages/ai-agent/type/forge'
 
 describe('DigitalEmployeeSelectPage', () => {
   afterEach(() => {
@@ -107,12 +108,18 @@ describe('DigitalEmployeeSelectPage', () => {
   })
 
   it('renders exactly one employee for each Forge returned by the backend', async () => {
-    const forges = DIGITAL_EMPLOYEES.map((employee, index) => ({
+    const forges: AIForge[] = DIGITAL_EMPLOYEES.map((employee, index) => ({
       Id: 101 + index,
       ForgeName: `forge-${employee.order}`,
       ForgeVerboseName: employee.name,
       ForgeType: 'config' as const,
     }))
+    forges[0] = {
+      ...forges[0],
+      ForgeVerboseName: '后端更新的智能体名称',
+      Description: '后端更新的智能体描述',
+      Tag: ['后端标签一', '后端标签二'],
+    }
     forges.push({
       Id: 109,
       ForgeName: 'ssa_project_scan_check',
@@ -131,7 +138,14 @@ describe('DigitalEmployeeSelectPage', () => {
         <div>
           <span data-testid="employee-count">{employees.length}</span>
           {employees.map((employee) => (
-            <span key={employee.id} data-portrait={employee.portrait} data-forge-id={employee.forge?.Id}>
+            <span
+              key={employee.id}
+              data-employee-id={employee.id}
+              data-portrait={employee.portrait}
+              data-forge-id={employee.forge?.Id}
+              data-description={employee.cardDescription}
+              data-skills={employee.skills.join(',')}
+            >
               {employee.name}
             </span>
           ))}
@@ -146,7 +160,11 @@ describe('DigitalEmployeeSelectPage', () => {
     )
 
     await waitFor(() => expect(screen.getByTestId('employee-count')).toHaveTextContent('9'))
-    expect(screen.getByText(DIGITAL_EMPLOYEES[0].name)).toHaveAttribute('data-forge-id', '101')
+    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-forge-id', '101')
+    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-employee-id', DIGITAL_EMPLOYEES[0].id)
+    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-description', '后端更新的智能体描述')
+    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-skills', '后端标签一,后端标签二')
+    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-portrait', DIGITAL_EMPLOYEES[0].portrait)
     expect(screen.getByText('SSA项目检查')).toHaveAttribute('data-forge-id', '109')
     expect(screen.getByText('SSA项目检查')).toHaveAttribute('data-portrait', DIGITAL_EMPLOYEES[0].portrait)
     expect(grpcQueryAIForge).toHaveBeenCalledTimes(1)

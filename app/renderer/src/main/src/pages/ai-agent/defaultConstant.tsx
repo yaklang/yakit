@@ -114,7 +114,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   TimelineSessionID: '',
   AICallTokenLimit: 40,
   DisableToolIntervalReview: false,
-  SyncPerceptionTrigger: false,
+  SyncPerceptionTrigger: true,
   EnablePlan: false,
   PlanExecTaskConcurrency: 2,
   EnableDetachedPlan: true,

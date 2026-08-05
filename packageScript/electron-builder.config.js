@@ -153,6 +153,7 @@ const configOption = {
     '!buildHooks/**/*',
     '!build/**/*',
     '!backups/**/*',
+    '!release/**/*',
     '!app/renderer/src/**/*',
     // 先排除整个目录（后面的规则可以“打破前面的排除”）
     '!app/renderer/engine-link-startup/**/*',

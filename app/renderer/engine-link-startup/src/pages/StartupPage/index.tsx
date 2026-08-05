@@ -65,7 +65,7 @@ import memfitHasNameLogo from '@/assets/memfitHasName.png'
 import irifyRight from '@/assets/irify-right.png'
 import yakitRight from '@/assets/yakit-right.png'
 import startlogoRight from '@/assets/startlogo.png'
-import { SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon } from '@/assets/colors'
+import { SolidIrifyFontLogoIcon, SolidYakitFontLogoIcon } from '@/assets/colors'
 import { useTheme } from '@/hooks/useTheme'
 import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
@@ -1157,7 +1157,7 @@ export const StartupPage: React.FC = () => {
       if (isEnpriTraceIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isMemfit()) {
-        return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
+        return { type: 'img', src: memfitHasNameLogo, width: 132 }
       } else {
         return { type: 'img', src: theme === 'light' ? yakitEELogo : yakitEEDarkLogo, width: 137, height: 40 }
       }

@@ -217,8 +217,10 @@
 
 .employee-profile {
   position: relative;
-  flex: 0 0 clamp(132px, 14.5vh, 168px);
+  flex: 0 0 auto;
+  height: auto;
   min-height: 132px;
+  box-sizing: border-box;
   padding: 16px clamp(24px, 2.4vw, 42px);
   display: flex;
   align-items: center;
@@ -294,30 +296,42 @@
   position: relative;
   z-index: 1;
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: visible;
+  padding-block: 2px;
 
   p {
+    display: block;
     max-width: min(54vw, 760px);
+    max-height: none;
     margin: 7px 0 11px;
-    overflow: hidden;
+    overflow: visible;
     color: #526b8e;
     font-size: 13px;
     line-height: 19px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 }
 
 .profile-title-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 
   h1 {
+    min-width: 0;
     margin: 0;
     color: #152f59;
     font-size: clamp(22px, 1.65vw, 28px);
     line-height: 32px;
+    overflow-wrap: anywhere;
   }
 
   > span {
@@ -384,7 +398,7 @@
   }
 
   .employee-profile {
-    flex-basis: 116px;
+    flex-basis: auto;
     min-height: 116px;
     padding-inline: 14px;
   }
@@ -396,9 +410,16 @@
 
 @media (max-height: 720px) {
   .employee-profile {
-    flex-basis: 118px;
-    min-height: 118px;
-    padding-block: 10px;
+    flex-basis: auto;
+    // The frameless window header overlays the first 24px of short pages.
+    // Keep the profile content below it and let the section grow with wrapped copy.
+    min-height: 142px;
+    padding-top: 34px;
+    padding-bottom: 10px;
+  }
+
+  .profile-meta {
+    top: 34px;
   }
 
   .profile-portrait {

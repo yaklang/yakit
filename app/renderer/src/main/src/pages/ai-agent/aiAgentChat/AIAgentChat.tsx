@@ -35,7 +35,7 @@ import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalCon
 import { AIForge } from '../type/forge'
 import { AITool } from '../type/aiTool'
 import { AIChatContent } from '../aiChatContent/AIChatContent'
-import { AITabsEnum, ReActChatEventEnum } from '../defaultConstant'
+import { AIAgentSettingDefault, AITabsEnum, ReActChatEventEnum } from '../defaultConstant'
 import { grpcGetAIToolById } from '../aiToolList/utils'
 import { isEqual } from 'lodash'
 import useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
@@ -285,7 +285,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         switch (data.type as ReActChatEventEnum) {
           // 新开聊天对话窗
           case ReActChatEventEnum.NEW_CHAT:
-            setSetting?.((old) => ({ ...old, SyncPerceptionTrigger: false, EnablePlan: false }))
+            setSetting?.((old) => ({
+              ...old,
+              SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
+              EnablePlan: false,
+            }))
             setActiveChat?.(undefined)
             setTimeout(() => {
               setMode('welcome')

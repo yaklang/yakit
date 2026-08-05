@@ -62,8 +62,10 @@ export const DigitalEmployeeTaskProgress: React.FC = React.memo(() => {
           const doing = item.status === AIToDoListStatusEnum.Doing
           const done = item.status === AIToDoListStatusEnum.Done
           const skipped = item.status === AIToDoListStatusEnum.Skipped
-          const updatedAt = item.updated_at || item.created_at
-          const timeText = formatTaskTimestamp(updatedAt)
+          const updatedTimeText = formatTaskTimestamp(item.updated_at)
+          const createdTimeText = formatTaskTimestamp(item.created_at)
+          const timeText = updatedTimeText || createdTimeText
+          const timeLabel = updatedTimeText ? '更新于' : '创建于'
           return (
             <div
               key={item.id}
@@ -81,7 +83,7 @@ export const DigitalEmployeeTaskProgress: React.FC = React.memo(() => {
                 <strong>{item.content}</strong>
                 {!!timeText && (
                   <small>
-                    {item.updated_at ? '更新于' : '创建于'} {timeText}
+                    {timeLabel} {timeText}
                   </small>
                 )}
               </div>

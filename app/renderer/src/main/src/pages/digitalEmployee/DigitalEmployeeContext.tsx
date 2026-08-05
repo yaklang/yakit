@@ -1,11 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
 import { AIForge } from '@/pages/ai-agent/type/forge'
-import {
-  DIGITAL_EMPLOYEES,
-  DIGITAL_EMPLOYEE_PORTRAITS,
-  DigitalEmployeeDefinition,
-} from './config'
+import { DIGITAL_EMPLOYEES, DIGITAL_EMPLOYEE_PORTRAITS, DigitalEmployeeDefinition } from './config'
 
 export type DigitalEmployeeResolveStatus = 'idle' | 'loading' | 'ready' | 'missing' | 'error'
 
@@ -53,7 +49,9 @@ const queryAllForges = async () => {
   const firstPage = await queryForgePage(1)
   const pageCount = Math.ceil(firstPage.Total / FORGE_PAGE_SIZE)
   const remainingPages =
-    pageCount > 1 ? await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) => queryForgePage(index + 2))) : []
+    pageCount > 1
+      ? await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) => queryForgePage(index + 2)))
+      : []
   const forgeMap = new Map<number, AIForge>()
   const responses = [firstPage, ...remainingPages]
   responses.forEach((response) => {
@@ -121,12 +119,13 @@ export const DigitalEmployeeProvider: React.FC<DigitalEmployeeProviderProps> = (
       resolved = forges.map((forge, index): DigitalEmployee => {
         const order = index + 1
         const employeeTemplate = DIGITAL_EMPLOYEES[index]
-        if (!employeeTemplate) return createGeneratedEmployee(forge, order)
+        const forgeEmployee = createGeneratedEmployee(forge, order)
+        if (!employeeTemplate) return forgeEmployee
         return {
-          ...employeeTemplate,
-          order,
-          forge,
-          status: 'ready',
+          ...forgeEmployee,
+          id: employeeTemplate.id,
+          portrait: employeeTemplate.portrait,
+          accent: employeeTemplate.accent,
         }
       })
     } catch (requestError) {

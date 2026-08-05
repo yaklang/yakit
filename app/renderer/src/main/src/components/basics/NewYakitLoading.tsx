@@ -20,7 +20,7 @@ import yakitCE from '@/assets/yakit.jpg'
 import memfitCE from '@/assets/memfit.jpg'
 import styles from './newYakitLoading.module.scss'
 import classNames from 'classnames'
-import { SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon } from '@/assets/icon/colors'
+import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import IRifyPrimaryBg from '../../assets/uiLayout/IRifyPrimaryBg.png'
@@ -168,7 +168,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
         return (
           <div className={styles['yakit-loading-icon-wrapper']}>
             <div className={styles['white-icon']}>
-              <SolidMemfitMiniLogoIcon />
+              <img src={memfitCE} alt="AI SenSo" />
             </div>
           </div>
         )

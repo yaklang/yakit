@@ -459,7 +459,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     setSetting((prev) => ({
       ...prev,
       TimelineSessionID: createActiveChatSessionId(),
-      SyncPerceptionTrigger: false,
+      SyncPerceptionTrigger: AIAgentSettingDefault.SyncPerceptionTrigger,
       EnablePlan: false,
     }))
     aiReActChatRef.current?.setValue('')

@@ -39,6 +39,7 @@ import {
   isEnpriTraceAgent,
   isEnpriTraceIRify,
   isIRify,
+  isMemfit,
   showDevTool,
 } from '@/utils/envfile'
 import { invalidCacheAndUserData } from '@/utils/InvalidCacheAndUserData'
@@ -983,7 +984,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         <div className={styles['state-setting-wrapper']}>
           {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
           {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
-          {!isEnpriTraceAgent() && (
+          {!isEnpriTraceAgent() && !isMemfit() && (
             <UIOpNotice isEngineLink={isEngineLink} isRemoteMode={isRemoteMode} onLogin={() => setLoginShow(true)} />
           )}
           {!showProjectManage && (

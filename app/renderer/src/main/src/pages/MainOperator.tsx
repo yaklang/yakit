@@ -479,6 +479,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   /** 消息中心 相关逻辑 */
   const [messageCenterShow, setMessageCenterShow] = useState<boolean>(false)
   const openAllMessageNotificationFun = useMemoizedFn(() => {
+    if (isMemfit()) return
     setChatShow(false)
     setMessageCenterShow(true)
   })
@@ -713,7 +714,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         </div>
                     )} */}
 
-          {messageCenterShow && <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />}
+          {!isMemfit() && messageCenterShow && (
+            <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />
+          )}
 
           <YakitHint
             getContainer={chartCSDragAreaRef.current || undefined}
