@@ -136,6 +136,8 @@ import type { WebFuzzerType } from './WebFuzzerPage/WebFuzzerPageType'
 import type { AdvancedConfigShowProps } from './fuzzerCacheData'
 import cloneDeep from 'lodash/cloneDeep'
 import { useGlobalHotPatch, useGlobalHotPatchTag } from '@/store/globalHotPatch'
+import { BrowserTransformSelector, type BrowserTransformSelection } from './components/BrowserTransformSelector'
+import { browserTransformRequestFields } from '@/pages/browserExtension/browserTransformContract'
 
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
@@ -385,6 +387,9 @@ export interface FuzzerResponse {
   RandomChunkedData: RandomChunkedResponse[]
   /** 与 http_flows / web_fuzzer_response 对齐的唯一键，下载 body 用它而不是 RuntimeID */
   HiddenIndex?: string
+  WireRequestRaw?: Uint8Array
+  WireResponseRaw?: Uint8Array
+  BrowserTransformProfileId?: string
 }
 export interface RandomChunkedResponse {
   /**@name 当前的 chunked index */
@@ -439,6 +444,67 @@ export const isRequestChunkedData = (chunk?: RandomChunkedResponse): boolean => 
   if (!chunk) return false
   return chunk.Direction === ChunkedDataDirection.REQUEST
 }
+
+const BrowserTransformPacketComparison: React.FC<{ response: FuzzerResponse }> = ({ response }) => {
+  const [direction, setDirection] = useState<'request' | 'response'>('request')
+  const plainPacket = direction === 'request' ? response.RequestRaw : response.ResponseRaw
+  const wirePacket = direction === 'request' ? response.WireRequestRaw : response.WireResponseRaw
+  const columns =
+    direction === 'request'
+      ? [
+          { title: 'Web Fuzzer 明文请求', packet: plainPacket, response: false },
+          { title: '浏览器线上请求', packet: wirePacket, response: false },
+        ]
+      : [
+          { title: '浏览器线上响应', packet: wirePacket, response: true },
+          { title: 'Web Fuzzer 明文响应', packet: plainPacket, response: true },
+        ]
+  return (
+    <div className={styles['browser-transform-comparison']}>
+      <header>
+        <div role="group" aria-label="浏览器转换报文方向">
+          <button className={direction === 'request' ? styles.active : ''} onClick={() => setDirection('request')}>
+            请求转换
+          </button>
+          <button className={direction === 'response' ? styles.active : ''} onClick={() => setDirection('response')}>
+            响应还原
+          </button>
+        </div>
+        <span>{response.BrowserTransformProfileId}</span>
+      </header>
+      <div>
+        {columns.map((column) => (
+          <section key={column.title}>
+            <strong>{column.title}</strong>
+            <div>
+              <NewHTTPPacketEditor
+                originValue={Uint8ArrayToString(column.packet || new Uint8Array())}
+                originalPackage={column.packet || new Uint8Array()}
+                readOnly
+                noMinimap
+                noHeader
+                onlyBasicMenu
+                isResponse={column.response}
+              />
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function showBrowserTransformPackets(response: FuzzerResponse) {
+  showYakitModal({
+    type: 'white',
+    title: '浏览器转换报文',
+    width: 1120,
+    footer: null,
+    centered: true,
+    destroyOnClose: true,
+    content: <BrowserTransformPacketComparison response={response} />,
+  })
+}
 export interface HistoryHTTPFuzzerTask {
   Request: string
   RequestRaw: Uint8Array
@@ -446,6 +512,8 @@ export interface HistoryHTTPFuzzerTask {
   IsHTTPS: boolean
 
   IsGmTLS: boolean
+  BrowserExtensionDeviceId?: string
+  BrowserTransformProfileId?: string
 
   // 展示渲染，一般来说 Verbose > RequestRaw > Request
   Verbose?: string
@@ -466,6 +534,8 @@ export interface FuzzerRequestProps {
   FuzzTagSyncIndex: boolean
   Proxy: string
   ProxyRuleId?: string
+  BrowserExtensionDeviceId?: string
+  BrowserTransformProfileId?: string
   PerRequestTimeoutSeconds: number
   DialTimeoutSeconds: number
   BatchTarget?: Uint8Array
@@ -845,6 +915,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [advancedConfigValue, setAdvancedConfigValue] = useState<AdvancedConfigValueProps>(
     initWebFuzzerPageInfo().advancedConfigValue,
   ) //  在新建页面的时候，就将高级配置的初始值存放在数据中心中，所以页面得高级配置得值可以直接通过页面得id在数据中心中获取
+  const [browserTransformSelection, setBrowserTransformSelection] = useState<BrowserTransformSelection>()
 
   // 高级配置的隐藏/显示
   const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
@@ -1250,6 +1321,15 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           } else {
             requestRef.current = OriginRequest.Request
           }
+          setBrowserTransformSelection(
+            OriginRequest.BrowserExtensionDeviceId && OriginRequest.BrowserTransformProfileId
+              ? {
+                  deviceId: OriginRequest.BrowserExtensionDeviceId,
+                  profileId: OriginRequest.BrowserTransformProfileId,
+                  profileName: '历史浏览器转换配置',
+                }
+              : undefined,
+          )
           onSetFuzzerConfig(OriginRequest)
           setCurrentSelectId(id)
           refreshRequest()
@@ -1351,6 +1431,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       EngineDropPacket: true,
       Proxy: proxyEndpoints,
       ...(ProxyRuleIds ? { ProxyRuleId: ProxyRuleIds } : {}),
+      ...browserTransformRequestFields(browserTransformSelection),
     }
   })
 
@@ -3224,6 +3305,18 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                   />
                   {renderTLSTags}
                   {renderHotPatchTag}
+                  <BrowserTransformSelector value={browserTransformSelection} onChange={setBrowserTransformSelection} />
+                  {httpResponse.BrowserTransformProfileId &&
+                    ((httpResponse.WireRequestRaw?.length || 0) > 0 ||
+                      (httpResponse.WireResponseRaw?.length || 0) > 0) && (
+                      <YakitButton
+                        type="text2"
+                        icon={<OutlineSwitchhorizontalIcon />}
+                        onClick={() => showBrowserTransformPackets(httpResponse)}
+                      >
+                        明文 / 线上
+                      </YakitButton>
+                    )}
                 </div>
                 <div className={styles['fuzzer-heard-right']}>
                   {fuzzerTaskId && (

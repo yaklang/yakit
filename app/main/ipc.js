@@ -309,6 +309,16 @@ module.exports = {
       console.error(e)
     }
 
+    try {
+      require('./handlers/managedBrowserProfiles').registerManagedBrowserProfileHandlers({
+        ipcMain,
+        assertTrustedAppSender,
+      })
+    } catch (e) {
+      console.info('Import managed browser profile launcher failed')
+      console.error(e)
+    }
+
     //代理规则
     require('./handlers/proxyRules')(win, getClient)
 

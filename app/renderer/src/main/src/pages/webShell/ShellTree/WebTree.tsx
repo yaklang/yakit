@@ -17,8 +17,8 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { RefreshIcon } from '@/assets/newIcon'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import styles from '@/components/WebTree/WebTree.module.scss'
-import path from 'path'
 import emiter from '@/utils/eventBus/eventBus'
+import { normalizeRemotePath } from '@/utils/remotePath'
 type TreeNodeType = 'dir' | 'file' | 'query' | 'path'
 
 export interface TreeNode extends DataNode {
@@ -278,9 +278,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
       if (p.endsWith('/') || p.endsWith('\\')) {
         p = p.slice(0, -1)
       }
-      let cleanPath = path.normalize(p)
-      // 清理路径中的查询字符串部分
-      cleanPath = p.split('?')[0] // 获取 '?' 前的部分
+      // 清理路径中的查询字符串部分，并按远端系统的分隔符归一化。
+      const cleanPath = normalizeRemotePath(p.split('?')[0])
 
       // 分割路径，处理盘符
       const parts = cleanPath.includes('/') ? cleanPath.split('/') : cleanPath.split('\\')

@@ -619,6 +619,37 @@ module.exports = (win, getClient) => {
   }
   ipcMain.handle('RequestYakURL', (e, params, token) => asyncRequestYakURL(params, token))
 
+  const streamExecuteBrowserExtensionTaskMap = new Map()
+  ipcMain.handle(
+    'cancel-ExecuteBrowserExtensionTask',
+    handlerHelper.cancelHandler(streamExecuteBrowserExtensionTaskMap),
+  )
+  ipcMain.handle('ExecuteBrowserExtensionTask', (e, params, token) => {
+    const stream = getClient().ExecuteBrowserExtensionTask(params)
+    handlerHelper.registerHandler(win, stream, streamExecuteBrowserExtensionTaskMap, token)
+  })
+
+  const browserTransformAdapterCall = (method, params = {}) => {
+    return new Promise((resolve, reject) => {
+      getClient()[method](params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('StartBrowserTransformAdapter', (e, params) => {
+    return browserTransformAdapterCall('StartBrowserTransformAdapter', params)
+  })
+  ipcMain.handle('GetBrowserTransformAdapterStatus', () => {
+    return browserTransformAdapterCall('GetBrowserTransformAdapterStatus')
+  })
+  ipcMain.handle('StopBrowserTransformAdapter', () => {
+    return browserTransformAdapterCall('StopBrowserTransformAdapter')
+  })
+
   const streamReadFileMap = new Map()
   ipcMain.handle('cancel-ReadFile', handlerHelper.cancelHandler(streamReadFileMap))
   ipcMain.handle('ReadFile', (e, params, token) => {

@@ -702,6 +702,69 @@ declare global {
     Result: string
   }
 
+  type YakitManagedBrowserProfileStatus = 'running' | 'detached' | 'stopped'
+  type YakitManagedBrowserProfileSlot = 'left' | 'right'
+
+  interface YakitManagedBrowserProfile {
+    version: 1
+    id: string
+    slotHint: YakitManagedBrowserProfileSlot
+    name: string
+    status: YakitManagedBrowserProfileStatus
+    userDataDir: string
+    extensionPath: string
+    chromePath: string
+    startingUrl: string
+    createdAt: number
+    updatedAt: number
+    lastStartedAt?: number
+    installationId?: string
+    pid?: number
+  }
+
+  interface YakitManagedBrowserProfileDefaults {
+    version: 1
+    chromePath: string
+    extensionPath: string
+    profileRoot: string
+    maximumProfiles: number
+  }
+
+  interface YakitManagedBrowserProfileCreateInput {
+    slotHint: YakitManagedBrowserProfileSlot
+    name: string
+    extensionPath: string
+    chromePath?: string
+    startingUrl?: string
+  }
+
+  interface YakitBrowserExtensionYakURLRequest {
+    Method: string
+    Url: {
+      Schema: string
+      Location: string
+      Path: string
+      Query: unknown[]
+    }
+    Body?: Uint8Array
+  }
+
+  interface YakitBrowserExtensionTaskRequest {
+    TaskId: string
+    DeviceId: string
+    Schema: string
+    Payload: Uint8Array
+    TimeoutMilliseconds: number
+  }
+
+  interface YakitBrowserTransformAdapterStartRequest {
+    DeviceId: string
+    ProfileId: string
+    Host?: string
+    Port?: number
+    TimeoutMilliseconds?: number
+  }
+
   interface YakitBridge {
     app: {
       generateStartEngine: () => Promise<unknown>
@@ -793,6 +856,23 @@ declare global {
       verifySystemCertificate: (params?: GrpcEmptyRequest) => Promise<VerifySystemCertificateResponse>
       installMITMCertificate: (params?: GrpcEmptyRequest) => Promise<GeneralResponse>
       generateInstallScript: () => Promise<string>
+    }
+    managedBrowser: {
+      defaults: () => Promise<YakitManagedBrowserProfileDefaults>
+      list: () => Promise<YakitManagedBrowserProfile[]>
+      create: (input: YakitManagedBrowserProfileCreateInput) => Promise<YakitManagedBrowserProfile>
+      bind: (id: string, installationId: string) => Promise<YakitManagedBrowserProfile>
+      launch: (id: string, options?: { showExtensionPage?: boolean }) => Promise<YakitManagedBrowserProfile>
+      stop: (id: string) => Promise<YakitManagedBrowserProfile>
+      remove: (id: string) => Promise<{ removed: boolean; id: string }>
+    }
+    browserExtension: {
+      requestYakURL: (params: YakitBrowserExtensionYakURLRequest) => Promise<unknown>
+      executeTask: (params: YakitBrowserExtensionTaskRequest, token: string) => Promise<unknown>
+      cancelTask: (token: string) => Promise<unknown>
+      startTransformAdapter: (params: YakitBrowserTransformAdapterStartRequest) => Promise<unknown>
+      getTransformAdapterStatus: () => Promise<unknown>
+      stopTransformAdapter: () => Promise<unknown>
     }
     window: {
       openChildWindow: (payload: ChildWindowPayload) => void
