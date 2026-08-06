@@ -10,6 +10,8 @@ export const useBuiltinTagList = (enabled = true, inViewport = true) => {
   const refreshBuiltinTags = useMemoizedFn(() => {
     fetchHTTPFlowsFieldGroup(true)
       .then((rsp) => {
+        // Keep zero-count builtins here: this list classifies system metadata
+        // for table rendering and is not the visible History filter list.
         const tags = (rsp.Tags || [])
           .filter(({ Builtin, Value }) => Builtin && Value)
           .map(({ Value }) => ({ label: Value, value: Value }))
@@ -24,6 +26,8 @@ export const useBuiltinTagList = (enabled = true, inViewport = true) => {
     if (!enabled || !inViewport) return
     fetchHTTPFlowsFieldGroup(false)
       .then((rsp) => {
+        // Keep zero-count builtins here: this list classifies system metadata
+        // for table rendering and is not the visible History filter list.
         const tags = (rsp.Tags || [])
           .filter(({ Builtin, Value }) => Builtin && Value)
           .map(({ Value }) => ({ label: Value, value: Value }))

@@ -1,5 +1,4 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { filterColorTag } from '@/components/TableVirtualResize/utils'
 import { loadAdvancedConfig } from '@/pages/mitm/MITMAdvancedConfig'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
 import { SingleManualHijackInfoMessage } from '@/pages/mitm/MITMHacker/utils'
@@ -10,7 +9,7 @@ import { info, yakitFailed, yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { HTTPFlow } from './HTTPFlowTable.constants'
-import { buildFavoriteTags, isHTTPFlowFavorite } from './HTTPFlowTable.utils'
+import { buildFavoriteTags, buildHTTPFlowColorTags, isHTTPFlowFavorite, patchHTTPFlowTags } from './HTTPFlowTable.utils'
 
 const { ipcRenderer } = window.require('electron')
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'history'])
@@ -81,13 +80,12 @@ export const onSendToTab = async (
 export const CalloutColor = (
   flow: HTTPFlow,
   i: { color: string },
-  data: HTTPFlow[],
-  setData: (data: HTTPFlow[]) => void,
+  _data: HTTPFlow[],
+  setData: Dispatch<SetStateAction<HTTPFlow[]>>,
 ) => {
   if (!flow) return
 
-  const existedTags = flow.Tags ? flow.Tags.split('|').filter((tag) => !!tag && !tag.startsWith('YAKIT_COLOR_')) : []
-  existedTags.push(`YAKIT_COLOR_${i.color.toUpperCase()}`)
+  const existedTags = buildHTTPFlowColorTags(flow.Tags, i.color)
 
   ipcRenderer
     .invoke('SetTagForHTTPFlow', {
@@ -97,17 +95,7 @@ export const CalloutColor = (
     })
     .then(() => {
       yakitNotify('success', tOriginal('HTTPFlowTable.setColorSuccess'))
-      const newData: HTTPFlow[] = []
-      const l = data.length
-      for (let index = 0; index < l; index++) {
-        const item = { ...data[index] }
-        if (item.Hash === flow.Hash) {
-          item.Tags = existedTags.join('|')
-          item.cellClassName = filterColorTag(item.Tags) || undefined
-        }
-        newData.push(item)
-      }
-      setData(newData)
+      setData((current) => patchHTTPFlowTags(current, [{ Id: flow.Id, Hash: flow.Hash, Tags: existedTags.join('|') }]))
     })
     .catch((e) => {
       yakitFailed(`${e}`)
@@ -115,10 +103,14 @@ export const CalloutColor = (
 }
 
 /** 移除颜色 */
-export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData: (data: HTTPFlow[]) => void) => {
+export const onRemoveCalloutColor = (
+  flow: HTTPFlow,
+  _data: HTTPFlow[],
+  setData: Dispatch<SetStateAction<HTTPFlow[]>>,
+) => {
   if (!flow) return
 
-  const existedTags = flow.Tags ? flow.Tags.split('|').filter((tag) => !!tag && !tag.startsWith('YAKIT_COLOR_')) : []
+  const existedTags = buildHTTPFlowColorTags(flow.Tags)
 
   ipcRenderer
     .invoke('SetTagForHTTPFlow', {
@@ -128,17 +120,10 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData: 
     })
     .then(() => {
       yakitNotify('success', tOriginal('HTTPFlowTable.removeColorSuccess'))
-      const newData: HTTPFlow[] = []
-      const l = data.length
-      for (let index = 0; index < l; index++) {
-        const item = data[index]
-        if (item.Hash === flow.Hash) {
-          item.cellClassName = ''
-          item.Tags = existedTags.join('|')
-        }
-        newData.push(item)
-      }
-      setData(newData)
+      setData((current) => patchHTTPFlowTags(current, [{ Id: flow.Id, Hash: flow.Hash, Tags: existedTags.join('|') }]))
+    })
+    .catch((e) => {
+      yakitFailed(`${e}`)
     })
 }
 
@@ -197,12 +182,12 @@ export const calloutColorBatch = (params: {
   number: number
   colorItem: { color: string }
   data: HTTPFlow[]
-  setData: (data: HTTPFlow[]) => void
+  setData: Dispatch<SetStateAction<HTTPFlow[]>>
   setSelectedRowKeys: (keys: string[]) => void
   setSelectedRows: (rows: HTTPFlow[]) => void
   t: TFunction
 }) => {
-  const { flowList, number, colorItem, data, setData, setSelectedRowKeys, setSelectedRows, t } = params
+  const { flowList, number, colorItem, setData, setSelectedRowKeys, setSelectedRows, t } = params
   if (flowList.length === 0) {
     yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
     return
@@ -212,8 +197,7 @@ export const calloutColorBatch = (params: {
     return
   }
   const newList = flowList.map((flow) => {
-    const existedTags = flow.Tags ? flow.Tags.split('|').filter((tag) => !!tag && !tag.startsWith('YAKIT_COLOR_')) : []
-    existedTags.push(`YAKIT_COLOR_${colorItem.color.toUpperCase()}`)
+    const existedTags = buildHTTPFlowColorTags(flow.Tags, colorItem.color)
     return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
   })
   ipcRenderer
@@ -221,20 +205,17 @@ export const calloutColorBatch = (params: {
       CheckTags: newList,
     })
     .then(() => {
-      const newData: HTTPFlow[] = []
-      const l = data.length
-      for (let index = 0; index < l; index++) {
-        const item = data[index]
-        const find = newList.find((ele) => ele.Hash === item.Hash)
-        if (find) {
-          item.Tags = (find.Tags || []).join('|')
-          item.cellClassName = filterColorTag(item.Tags) || undefined
-        }
-        newData.push(item)
-      }
-      setData(newData)
+      setData((current) =>
+        patchHTTPFlowTags(
+          current,
+          newList.map((item) => ({ ...item, Tags: item.Tags.join('|') })),
+        ),
+      )
       setSelectedRowKeys([])
       setSelectedRows([])
+    })
+    .catch((e) => {
+      yakitFailed(`${e}`)
     })
 }
 
@@ -242,12 +223,12 @@ export const onRemoveCalloutColorBatch = (params: {
   flowList: HTTPFlow[]
   number: number
   data: HTTPFlow[]
-  setData: (data: HTTPFlow[]) => void
+  setData: Dispatch<SetStateAction<HTTPFlow[]>>
   setSelectedRowKeys: (keys: string[]) => void
   setSelectedRows: (rows: HTTPFlow[]) => void
   t: TFunction
 }) => {
-  const { flowList, number, data, setData, setSelectedRowKeys, setSelectedRows, t } = params
+  const { flowList, number, setData, setSelectedRowKeys, setSelectedRows, t } = params
   if (flowList.length === 0) {
     yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
     return
@@ -257,7 +238,7 @@ export const onRemoveCalloutColorBatch = (params: {
     return
   }
   const newList = flowList.map((flow) => {
-    const existedTags = flow.Tags ? flow.Tags.split('|').filter((tag) => !!tag && !tag.startsWith('YAKIT_COLOR_')) : []
+    const existedTags = buildHTTPFlowColorTags(flow.Tags)
     return { Id: flow.Id, Hash: flow.Hash, Tags: existedTags }
   })
   ipcRenderer
@@ -265,20 +246,17 @@ export const onRemoveCalloutColorBatch = (params: {
       CheckTags: newList,
     })
     .then(() => {
-      const newData: HTTPFlow[] = []
-      const l = data.length
-      for (let index = 0; index < l; index++) {
-        const item = data[index]
-        const find = newList.find((ele) => ele.Hash === item.Hash)
-        if (find) {
-          item.Tags = (find.Tags || []).join('|')
-          item.cellClassName = ''
-        }
-        newData.push(item)
-      }
-      setData(newData)
+      setData((current) =>
+        patchHTTPFlowTags(
+          current,
+          newList.map((item) => ({ ...item, Tags: item.Tags.join('|') })),
+        ),
+      )
       setSelectedRowKeys([])
       setSelectedRows([])
+    })
+    .catch((e) => {
+      yakitFailed(`${e}`)
     })
 }
 

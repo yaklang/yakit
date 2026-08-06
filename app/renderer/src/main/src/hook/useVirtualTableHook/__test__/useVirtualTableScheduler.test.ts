@@ -4,8 +4,12 @@ import {
   mergeUniqueVirtualTableRows,
   prependAcceptedVirtualTableServerPushRows,
   resolveVirtualTableServerPushActive,
+  selectVirtualTableAutomaticRefreshReason,
+  selectVirtualTableViewportFillLimit,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
+  shouldLoadVirtualTableBottom,
+  shouldRestoreVirtualTableViewport,
   VirtualTableViewportSnapshot,
 } from '../useVirtualTableScheduler'
 
@@ -25,6 +29,49 @@ describe('resolveVirtualTableServerPushActive', () => {
   it('falls back only when both push sources are inactive', () => {
     expect(resolveVirtualTableServerPushActive(false, () => false)).toBe(false)
     expect(resolveVirtualTableServerPushActive(true, () => false)).toBe(true)
+  })
+})
+
+describe('selectVirtualTableAutomaticRefreshReason', () => {
+  it('treats the first activation and parameter changes as ordinary queries', () => {
+    expect(selectVirtualTableAutomaticRefreshReason(false, false)).toBe('query')
+    expect(selectVirtualTableAutomaticRefreshReason(true, true)).toBe('query')
+  })
+
+  it('identifies a cached table becoming visible again', () => {
+    expect(selectVirtualTableAutomaticRefreshReason(true, false)).toBe('visibility')
+  })
+})
+
+describe('shouldRestoreVirtualTableViewport', () => {
+  it('preserves a populated scroll window when a cached tab becomes visible', () => {
+    expect(shouldRestoreVirtualTableViewport('visibility', 300, false)).toBe(true)
+  })
+
+  it('uses a full query when the hidden table is empty or its parameters changed', () => {
+    expect(shouldRestoreVirtualTableViewport('visibility', 0, false)).toBe(false)
+    expect(shouldRestoreVirtualTableViewport('visibility', 300, true)).toBe(false)
+    expect(shouldRestoreVirtualTableViewport('query', 300, false)).toBe(false)
+  })
+})
+
+describe('selectVirtualTableViewportFillLimit', () => {
+  it('fills a viewport that grew after the detail pane closed', () => {
+    expect(selectVirtualTableViewportFillLimit(12, 100, 616, 28)).toBe(20)
+  })
+
+  it('does not query when the current window already covers the viewport and prefetch margin', () => {
+    expect(selectVirtualTableViewportFillLimit(32, 100, 616, 28)).toBe(0)
+  })
+
+  it('caps the request at the number of rows that still exist', () => {
+    expect(selectVirtualTableViewportFillLimit(12, 18, 616, 28)).toBe(6)
+  })
+
+  it('ignores invalid or exhausted viewport snapshots', () => {
+    expect(selectVirtualTableViewportFillLimit(12, 12, 616, 28)).toBe(0)
+    expect(selectVirtualTableViewportFillLimit(12, 100, undefined, 28)).toBe(0)
+    expect(selectVirtualTableViewportFillLimit(12, 100, 616, 0)).toBe(0)
   })
 })
 
@@ -82,6 +129,20 @@ describe('selectVirtualTableAutoRefreshAction', () => {
     const previous = snapshot({ serverPushActive: false })
     const current = snapshot({ serverPushActive: false, scrollHeight: 1800 })
     expect(selectVirtualTableAutoRefreshAction(previous, current)).toBe('start-poll')
+  })
+})
+
+describe('shouldLoadVirtualTableBottom', () => {
+  it('prefetches a sliding page while ten rows remain', () => {
+    expect(shouldLoadVirtualTableBottom(9120, 600, 10000, true, 28)).toBe(true)
+  })
+
+  it('does not chain another sliding request immediately after clipping', () => {
+    expect(shouldLoadVirtualTableBottom(9000, 600, 10000, true, 28)).toBe(false)
+  })
+
+  it('keeps the legacy ninety-percent trigger for an unbounded table', () => {
+    expect(shouldLoadVirtualTableBottom(8500, 600, 10000, false, 28)).toBe(true)
   })
 })
 

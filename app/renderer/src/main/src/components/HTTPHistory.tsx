@@ -1,6 +1,6 @@
 import React, { CSSProperties, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import 'react-resizable/css/styles.css'
-import { HistoryTableTitleShow, HTTP_FLOW_FAVORITE_TAG, HTTPFlow, HTTPFlowTable } from './HTTPFlowTable/HTTPFlowTable'
+import { HistoryTableTitleShow, HTTPFlow, HTTPFlowTable } from './HTTPFlowTable/HTTPFlowTable'
 import { fetchHTTPFlowsFieldGroup } from '@/utils/httpFlowFieldGroupCache'
 import {
   useControllableValue,
@@ -87,6 +87,7 @@ import { useCampare } from '@/hook/useCompare/useCompare'
 import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { groupHTTPFlowFieldTags } from './HTTPFlowTable/HTTPFlowTable.utils'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -995,21 +996,9 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     setTagListLoading(true)
     fetchHTTPFlowsFieldGroup(refreshRequest)
       .then((rsp) => {
-        const tags = (rsp.Tags || []).filter(
-          (item) => !!item.Value && item.Value !== HTTP_FLOW_FAVORITE_TAG && (!item.Builtin || !!item.Total),
-        )
-        const toFilterItem = (Value: string) => ({ label: Value, value: Value })
-        let TagList: FiltersItemProps[] = [],
-          builtinTagList: FiltersItemProps[] = []
-        tags.forEach(({ Value, Builtin }) => {
-          if (Builtin) {
-            builtinTagList.push(toFilterItem(Value))
-          } else {
-            TagList.push(toFilterItem(Value))
-          }
-        })
-        setTagList(TagList)
-        setBuiltinTagList(builtinTagList)
+        const { customTags, visibleBuiltinTags } = groupHTTPFlowFieldTags(rsp.Tags)
+        setTagList(customTags)
+        setBuiltinTagList(visibleBuiltinTags)
       })
       .catch((error) => {
         yakitNotify('error', `query HTTP Flows Field Group failed: ${error}`)

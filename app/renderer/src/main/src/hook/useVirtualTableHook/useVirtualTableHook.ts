@@ -6,6 +6,7 @@ import {
   VirtualPaging,
   DataTProps,
   FilterProps,
+  VirtualTableRefreshReason,
 } from './useVirtualTableHookType'
 import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
@@ -18,8 +19,12 @@ import {
   mergeVirtualTableServerPushRows,
   prependAcceptedVirtualTableServerPushRows,
   resolveVirtualTableServerPushActive,
+  selectVirtualTableAutomaticRefreshReason,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
+  selectVirtualTableViewportFillLimit,
+  shouldRestoreVirtualTableViewport,
+  shouldLoadVirtualTableBottom,
   VirtualTableViewportSnapshot,
 } from './useVirtualTableScheduler'
 
@@ -176,6 +181,8 @@ export default function useVirtualTableHook<
   // immediate follow-up instead of being dropped by the single-flight guard.
   const notificationRefreshPendingRef = useRef(false)
   const flushNotificationRefreshRef = useRef<() => void>(() => {})
+  const viewportReconcilePendingRef = useRef(false)
+  const flushViewportReconcileRef = useRef<() => void>(() => {})
   const [total, setTotal] = useState<number>(0)
   // 是否循环接口
   const [isLoop, setIsLoop] = useState<boolean>(preferServerPush ? false : !isServerPushActive())
@@ -193,6 +200,9 @@ export default function useVirtualTableHook<
   const inViewport = inViewportProp ?? internalInViewport
   // 是否允许更改endLoop
   const isAllowSetEndLoopRef = useRef<boolean>(false)
+  const previousQueryInViewportRef = useRef<boolean>(inViewport === true)
+  const hasQueriedViewportRef = useRef(false)
+  const lastAutomaticQueryParamsRef = useRef<ParamsTProps>()
 
   useEffect(() => {
     if (inViewport) return
@@ -201,8 +211,10 @@ export default function useVirtualTableHook<
     queryEpochRef.current += 1
     isGrpcRef.current = false
     notificationRefreshPendingRef.current = false
+    viewportReconcilePendingRef.current = false
     setLoading(false)
     setIsLoop(false)
+    previousQueryInViewportRef.current = false
   }, [inViewport])
 
   useEffect(() => {
@@ -418,6 +430,7 @@ export default function useVirtualTableHook<
           if (requestEpoch !== queryEpochRef.current) return
           setLoading(false)
           isGrpcRef.current = false
+          flushViewportReconcileRef.current()
           flushNotificationRefreshRef.current()
         }, releaseDelay)
       })
@@ -479,9 +492,9 @@ export default function useVirtualTableHook<
   })
 
   // 偏移量更新底部数据
-  const updateBottomData = useMemoizedFn(() => {
+  const updateBottomData = useMemoizedFn((limit = pagination.Limit) => {
     if (isSliding) {
-      const edgePagination = buildEdgePagination('bottom', data, idKey, sortRef.current, pagination.Limit)
+      const edgePagination = buildEdgePagination('bottom', data, idKey, sortRef.current, limit)
       if (!edgePagination) {
         updateData()
         return
@@ -496,7 +509,7 @@ export default function useVirtualTableHook<
     }
     const paginationProps = {
       Page: 1,
-      Limit: pagination.Limit,
+      Limit: limit,
       Order: sortRef.current.order,
       OrderBy: sortRef.current.orderBy || 'Id',
     }
@@ -516,10 +529,10 @@ export default function useVirtualTableHook<
   })
 
   // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
-  const updateData = useMemoizedFn((showLoading = true) => {
+  const updateData = useMemoizedFn((showLoading = true, reason: VirtualTableRefreshReason = 'manual') => {
     if (!inViewport) return
     if (boxHeightRef.current) {
-      onFirst && onFirst()
+      onFirst?.(reason)
       setOffsetData([])
       if (showLoading) setLoading(true)
       maxIdRef.current = 0
@@ -570,12 +583,6 @@ export default function useVirtualTableHook<
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     const scrollHeight = tableRef.current?.containerRef?.scrollHeight
     // let scrollBottom: number|undefined = undefined
-    let scrollBottomPercent: number | undefined = undefined
-    if (typeof scrollTop === 'number' && typeof clientHeight === 'number' && typeof scrollHeight === 'number') {
-      // scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
-      scrollBottomPercent = Number(((scrollTop + clientHeight) / scrollHeight).toFixed(2))
-    }
-
     // Compatibility polling and push-triggered reconciliation are background
     // work. An empty table must not flash its full loading mask every second.
     if (data.length === 0) {
@@ -589,16 +596,8 @@ export default function useVirtualTableHook<
       setOffsetData([])
     }
     // 滚动条接近触底
-    else if (typeof scrollBottomPercent === 'number' && scrollBottomPercent > 0.9) {
-      //这里判断需要裁剪的列表是否在底部 避免裁剪后 滚动条一直在接近底部
-      if (
-        !isSliding ||
-        (typeof scrollHeight === 'number' &&
-          typeof scrollTop === 'number' &&
-          typeof clientHeight === 'number' &&
-          scrollHeight - scrollTop - clientHeight < ROW_HEIGHT)
-      )
-        updateBottomData()
+    else if (shouldLoadVirtualTableBottom(scrollTop, clientHeight, scrollHeight, isSliding, ROW_HEIGHT)) {
+      updateBottomData()
       setOffsetData([])
     }
     // 滚动条在中间 增量
@@ -610,12 +609,38 @@ export default function useVirtualTableHook<
     }
   })
 
+  /** Restore a cached viewport without replacing its rows with the first page. */
+  const restoreViewportT = useMemoizedFn(() => {
+    if (!inViewport) return
+    if (data.length === 0) {
+      updateData(true, 'visibility')
+      return
+    }
+    onFirst?.('visibility')
+    scrollUpdate()
+  })
+
   const flushNotificationRefresh = useMemoizedFn(() => {
     if (!notificationRefreshPendingRef.current || loopPausedRef.current || isGrpcRef.current || !inViewport) return
     notificationRefreshPendingRef.current = false
     scrollUpdate()
   })
   flushNotificationRefreshRef.current = flushNotificationRefresh
+
+  /** Fill a viewport that grew while preserving its current rows and anchor. */
+  const flushViewportReconcile = useMemoizedFn(() => {
+    if (!viewportReconcilePendingRef.current || isGrpcRef.current || !inViewport) return
+    viewportReconcilePendingRef.current = false
+
+    if (data.length === 0) {
+      updateData(false)
+      return
+    }
+
+    const fillLimit = selectVirtualTableViewportFillLimit(data.length, total, boxHeightRef.current, ROW_HEIGHT)
+    if (fillLimit > 0) updateBottomData(fillLimit)
+  })
+  flushViewportReconcileRef.current = flushViewportReconcile
 
   /** Coalesced immediate refresh for invalidation notifications. */
   const notifyT = useMemoizedFn(() => {
@@ -675,7 +700,19 @@ export default function useVirtualTableHook<
       if (!inViewport) return
       queryEpochRef.current += 1
       isGrpcRef.current = false
-      updateData()
+      const paramsChanged = lastAutomaticQueryParamsRef.current !== params
+      const reason = selectVirtualTableAutomaticRefreshReason(
+        hasQueriedViewportRef.current,
+        previousQueryInViewportRef.current,
+      )
+      previousQueryInViewportRef.current = true
+      hasQueriedViewportRef.current = true
+      lastAutomaticQueryParamsRef.current = params
+      if (shouldRestoreVirtualTableViewport(reason, data.length, paramsChanged)) {
+        restoreViewportT()
+        return
+      }
+      updateData(true, reason)
     },
     [params, inViewport],
     {
@@ -702,10 +739,10 @@ export default function useVirtualTableHook<
   })
 
   /** @name 仅刷新新表格 */
-  const noResetRefreshT = useMemoizedFn(() => {
+  const noResetRefreshT = useMemoizedFn((reason: VirtualTableRefreshReason = 'manual') => {
     queryEpochRef.current += 1
     isGrpcRef.current = false
-    updateData()
+    updateData(true, reason)
   })
 
   /** @name 启动表格循环(用于后端通知前端更新时触发) */
@@ -727,6 +764,16 @@ export default function useVirtualTableHook<
     scrollUpdate()
   })
 
+  /**
+   * Reconcile a larger viewport without replacing the current data window.
+   * Keep the request pending when a filter/delete query is still in flight.
+   */
+  const reconcileViewportT = useMemoizedFn(() => {
+    if (!inViewport) return
+    viewportReconcilePendingRef.current = true
+    flushViewportReconcile()
+  })
+
   /** @name 设置表格loading状态 */
   const setTLoad = useMemoizedFn((is: boolean) => {
     setLoading(is)
@@ -740,6 +787,7 @@ export default function useVirtualTableHook<
     queryEpochRef.current += 1
     isGrpcRef.current = false
     notificationRefreshPendingRef.current = false
+    viewportReconcilePendingRef.current = false
     recoverTopIdRef.current = 0
     pendingScrollRef.current = null
     slidingClippedRef.current = false
@@ -850,7 +898,9 @@ export default function useVirtualTableHook<
       stopT,
       refreshT,
       noResetRefreshT,
+      restoreViewportT,
       notifyPushUpdate,
+      reconcileViewportT,
       setTLoad,
       resetTData,
       setTData,

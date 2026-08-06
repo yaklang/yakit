@@ -1,24 +1,28 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildHTTPFlowProjectKey,
+  buildHTTPFlowColorTags,
   buildHTTPFlowTableAdvancedQuery,
   buildLegacyHTTPFlowTableFilterConfig,
   buildRuleSummaryList,
   filterHTTPFlowsByFavoriteAndTags,
+  findHTTPFlowSelectionIndex,
   getClassNameData,
+  groupHTTPFlowFieldTags,
   hasActiveHTTPFlowTableFilterConfig,
   isHTTPFlowTableActive,
   mergeRuleSummaryItems,
   normalizeHTTPFlowTotal,
+  patchHTTPFlowTags,
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
   shouldClearMITMResetBoundary,
-  shouldRefreshHTTPFlowTableAfterResize,
+  selectHTTPFlowTableResizeAction,
   shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
   uniqStrings,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
-import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
+import { HTTP_FLOW_FAVORITE_TAG, type HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 
 describe('normalizeHTTPFlowTotal', () => {
   it('normalizes proto-loader int64 strings before they enter numeric table state', () => {
@@ -30,6 +34,34 @@ describe('normalizeHTTPFlowTotal', () => {
     expect(normalizeHTTPFlowTotal('60858546822155656571112106457874364745564464544564545446568565564678855764')).toBe(0)
     expect(normalizeHTTPFlowTotal('invalid')).toBe(0)
     expect(normalizeHTTPFlowTotal(-1)).toBe(0)
+  })
+})
+
+describe('groupHTTPFlowFieldTags', () => {
+  it('hides zero-count system tags from filters while retaining their classification', () => {
+    expect(
+      groupHTTPFlowFieldTags([
+        { Value: '[手动劫持]', Total: 0, Builtin: true },
+        { Value: '[重发]', Total: 2, Builtin: true },
+        { Value: 'custom', Total: 1, Builtin: false },
+        { Value: 'unused-custom', Total: 0, Builtin: false },
+      ]),
+    ).toEqual({
+      customTags: [{ label: 'custom', value: 'custom' }],
+      visibleBuiltinTags: [{ label: '[重发]', value: '[重发]' }],
+      allBuiltinTags: [
+        { label: '[手动劫持]', value: '[手动劫持]' },
+        { label: '[重发]', value: '[重发]' },
+      ],
+    })
+  })
+
+  it('does not expose the internal favorite marker as a user filter', () => {
+    expect(groupHTTPFlowFieldTags([{ Value: HTTP_FLOW_FAVORITE_TAG, Total: 1, Builtin: false }])).toEqual({
+      customTags: [],
+      visibleBuiltinTags: [],
+      allBuiltinTags: [],
+    })
   })
 })
 
@@ -80,18 +112,18 @@ describe('HTTP flow hidden-table policy', () => {
 
 describe('HTTP flow table layout bootstrap', () => {
   it('bootstraps when the first usable height arrives', () => {
-    expect(shouldRefreshHTTPFlowTableAfterResize(undefined, 640, true, true)).toBe(true)
-    expect(shouldRefreshHTTPFlowTableAfterResize(0, 640, false, true)).toBe(true)
+    expect(selectHTTPFlowTableResizeAction(undefined, 640, true, true)).toBe('bootstrap')
+    expect(selectHTTPFlowTableResizeAction(0, 640, false, true)).toBe('bootstrap')
   })
 
   it('does not bootstrap a hidden table', () => {
-    expect(shouldRefreshHTTPFlowTableAfterResize(undefined, 640, true, false)).toBe(false)
+    expect(selectHTTPFlowTableResizeAction(undefined, 640, true, false)).toBe('none')
   })
 
-  it('keeps the existing grow-only refresh after initialization', () => {
-    expect(shouldRefreshHTTPFlowTableAfterResize(640, 720, true, true)).toBe(true)
-    expect(shouldRefreshHTTPFlowTableAfterResize(640, 720, false, true)).toBe(false)
-    expect(shouldRefreshHTTPFlowTableAfterResize(640, 600, true, true)).toBe(false)
+  it('reconciles instead of resetting after the packet detail is collapsed', () => {
+    expect(selectHTTPFlowTableResizeAction(640, 720, true, true)).toBe('reconcile')
+    expect(selectHTTPFlowTableResizeAction(640, 720, false, true)).toBe('none')
+    expect(selectHTTPFlowTableResizeAction(640, 600, true, true)).toBe('none')
   })
 })
 
@@ -114,6 +146,64 @@ describe('getClassNameData', () => {
     expect(result[0]).toBe(unchanged)
     expect(result[1]).not.toBe(changed)
     expect(result[1].cellClassName).toBe('table-cell-bg-red')
+  })
+})
+
+describe('HTTP flow color tags', () => {
+  it('replaces an existing color case-insensitively and preserves ordinary tags', () => {
+    expect(buildHTTPFlowColorTags('manual|yakit_color_red|important', 'blue')).toEqual([
+      'manual',
+      'important',
+      'YAKIT_COLOR_BLUE',
+    ])
+  })
+
+  it('removes only color tags', () => {
+    expect(buildHTTPFlowColorTags('manual|YAKIT_COLOR_GREEN|important')).toEqual(['manual', 'important'])
+  })
+
+  it('patches by database ID without changing rows that share an empty hash', () => {
+    const first = { Id: 1, Hash: '', Tags: '' } as HTTPFlow
+    const second = { Id: 2, Hash: '', Tags: '' } as HTTPFlow
+    const rows = [first, second]
+    const result = patchHTTPFlowTags(rows, [{ Id: 2, Hash: '', Tags: 'YAKIT_COLOR_RED' }])
+
+    expect(result).not.toBe(rows)
+    expect(result[0]).toBe(first)
+    expect(result[1]).toEqual({
+      ...second,
+      Tags: 'YAKIT_COLOR_RED',
+      cellClassName: 'table-cell-bg-red',
+    })
+  })
+
+  it('clears the derived row class when a color is removed', () => {
+    const result = patchHTTPFlowTags(
+      [{ Id: 1, Tags: 'manual|YAKIT_COLOR_RED', cellClassName: 'table-cell-bg-red' } as HTTPFlow],
+      [{ Id: 1, Tags: 'manual' }],
+    )
+
+    expect(result[0].Tags).toBe('manual')
+    expect(result[0].cellClassName).toBeUndefined()
+  })
+})
+
+describe('HTTP flow current-row reconciliation', () => {
+  it('restores the selected row by stable ID and hash after a visibility refresh', () => {
+    const selected = { Id: 7, Hash: 'same-flow' } as HTTPFlow
+    const rows = [
+      { Id: 8, Hash: 'newer' },
+      { Id: 7, Hash: 'same-flow' },
+    ] as HTTPFlow[]
+
+    expect(findHTTPFlowSelectionIndex(rows, selected)).toBe(1)
+  })
+
+  it('rejects an ID collision from a different project', () => {
+    const selected = { Id: 7, Hash: 'old-project' } as HTTPFlow
+    const rows = [{ Id: 7, Hash: 'new-project' }] as HTTPFlow[]
+
+    expect(findHTTPFlowSelectionIndex(rows, selected)).toBe(-1)
   })
 })
 
