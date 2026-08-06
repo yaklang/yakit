@@ -4,8 +4,6 @@ import { PluginFilterParams, PluginSearchParams } from '@/pages/plugins/baseTemp
 import { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import { PortScanParams } from '@/pages/portscan/PortScanPage'
 import { ScanPortPageInfoProps } from '@/store/pageInfo'
-import { type } from 'os'
-
 export interface NewPortScanProps {
   id: string
 }

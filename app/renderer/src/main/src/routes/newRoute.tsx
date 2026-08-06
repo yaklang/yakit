@@ -198,6 +198,7 @@ const SSACompileHistory = React.lazy(() => import('@/pages/ssaCompileHistory/SSA
 const MCPHistory = React.lazy(() => import('@/pages/ai-agent/aiMCPHistory/MCPHistory'))
 const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
+const BrowserExtension = React.lazy(() => import('@/pages/browserExtension/BrowserExtension'))
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
 const AIForge = React.lazy(() => import('@/pages/aiForge/AIForge'))
 const HTTPHistory = React.lazy(() => import('../components/HTTPHistory').then((m) => ({ default: m.HTTPHistory })))
@@ -414,6 +415,10 @@ export const YakitRouteToPageInfo: Record<
     labelUi: 'YakitRoute.configManagement',
     describeUi: 'YakitRoute.unifiedConfigurationManagementForPayloadProxyAndHotPatch',
   },
+  'browser-extension': {
+    label: '浏览器集成',
+    describe: '管理浏览器插件配对与连接',
+  },
   'ai-memory': { label: '记忆库', labelUi: 'YakitRoute.ai-memory' },
   'ai-tool': { label: '工具库', labelUi: 'YakitRoute.ai-tool' },
   'ai-forge': { label: '技能库', labelUi: 'YakitRoute.ai-forge' },
@@ -437,6 +442,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.YakScript,
   YakitRoute.PayloadManager,
   YakitRoute.ConfigManagement,
+  YakitRoute.BrowserExtension,
   YakitRoute.AccountAdminPage,
   YakitRoute.RoleAdminPage,
   YakitRoute.HoleCollectPage,
@@ -498,6 +504,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.AddYakitScript,
   YakitRoute.PayloadManager,
   YakitRoute.ConfigManagement,
+  YakitRoute.BrowserExtension,
   YakitRoute.Data_Statistics,
   YakitRoute.BatchExecutorPage,
   YakitRoute.Codec,
@@ -543,6 +550,7 @@ export const NoScrollRoutes: YakitRoute[] = [
   YakitRoute.AI_Agent,
   YakitRoute.ShortcutKey,
   YakitRoute.YakRunner_ScanHistory,
+  YakitRoute.BrowserExtension,
 ]
 
 /** 通过版本获取一级tab固定展示tab  */
@@ -885,6 +893,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <NewPayload />
     case YakitRoute.ConfigManagement:
       return <ConfigManagement />
+    case YakitRoute.BrowserExtension:
+      return <BrowserExtension />
     case YakitRoute.AccountAdminPage:
       return <AccountAdminPage />
     case YakitRoute.RoleAdminPage:

@@ -721,6 +721,14 @@ service Yak {
   // YAKURL
   rpc RequestYakURL(RequestYakURLParams) returns (RequestYakURLResponse);
 
+  // Browser extension tasks are routed to one paired browser device.
+  rpc ExecuteBrowserExtensionTask(BrowserExtensionTaskRequest) returns (stream BrowserExtensionTaskEvent);
+  // A loopback-only, token-authenticated adapter lets Burp/Fiddler reuse one
+  // live browser Transform Profile without introducing another JS runtime.
+  rpc StartBrowserTransformAdapter(BrowserTransformAdapterStartRequest) returns (BrowserTransformAdapterStatus);
+  rpc GetBrowserTransformAdapterStatus(Empty) returns (BrowserTransformAdapterStatus);
+  rpc StopBrowserTransformAdapter(Empty) returns (BrowserTransformAdapterStatus);
+
   // 文件IO
   rpc ReadFile(ReadFileRequest) returns (stream ReadFileResponse);
 
@@ -6759,7 +6767,7 @@ message GroupHTTPFuzzerResponse {
   FuzzerResponse Response = 2;
 }
 
-message FuzzerRequest {// last index 68
+message FuzzerRequest {// last index 72
   string Request = 1;
   bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
   repeated FuzzerParamItem Params = 2;
@@ -6773,6 +6781,10 @@ message FuzzerRequest {// last index 68
   bool FuzzTagSyncIndex = 51;
   string Proxy = 6;
   string ProxyRuleId = 70;
+  // Browser Transform Gateway: keep the Web Fuzzer editor in plaintext while
+  // request/response conversion runs in the paired browser page context.
+  string BrowserExtensionDeviceId = 71;
+  string BrowserTransformProfileId = 72;
   double PerRequestTimeoutSeconds = 7;
   double DialTimeoutSeconds = 61;
 
@@ -7024,6 +7036,11 @@ message FuzzerResponse {
   string FixContentType = 60;
   bool IsSetContentTypeOptions = 61;
   repeated RandomChunkedResponse RandomChunkedData = 62;
+  // Present only when Browser Transform Gateway is enabled. RequestRaw and
+  // ResponseRaw are the plaintext packets; these fields preserve the wire view.
+  bytes WireRequestRaw = 64;
+  bytes WireResponseRaw = 65;
+  string BrowserTransformProfileId = 66;
 }
 
 message RandomChunkedResponse{
@@ -9915,4 +9932,54 @@ message DeleteMCPToolCallHistoryRequest {
   bool DeleteFiltered = 3;
   string Keyword = 4;
   string Status = 5;
+}
+
+message BrowserExtensionTaskRequest {
+  string TaskId = 1;
+  string DeviceId = 2;
+  string Schema = 3;
+  bytes Payload = 4;
+  int64 TimeoutMilliseconds = 5;
+}
+
+message BrowserExtensionTaskEvent {
+  string TaskId = 1;
+  string DeviceId = 2;
+  string Type = 3;
+  string Message = 4;
+  bytes Data = 5;
+  int64 Timestamp = 6;
+  uint64 Sequence = 7;
+}
+
+message BrowserTransformAdapterStartRequest {
+  string DeviceId = 1;
+  string ProfileId = 2;
+  string Host = 3;
+  int32 Port = 4;
+  int64 TimeoutMilliseconds = 5;
+}
+
+message BrowserTransformAdapterStatus {
+  bool Running = 1;
+  string Endpoint = 2;
+  string Token = 3;
+  string DeviceId = 4;
+  string ProfileId = 5;
+  string ProfileName = 6;
+  bool RequestEnabled = 7;
+  bool ResponseEnabled = 8;
+  int64 StartedAt = 9;
+  uint64 RequestCount = 10;
+  uint64 FailureCount = 11;
+  int64 LastUsedAt = 12;
+  string LastError = 13;
+  int32 Port = 14;
+  string Host = 15;
+  int64 TimeoutMilliseconds = 16;
+  string ProtocolVersion = 17;
+  repeated string Methods = 18;
+  string UrlPattern = 19;
+  string Origin = 20;
+  uint64 BypassCount = 21;
 }

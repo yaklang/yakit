@@ -5,8 +5,6 @@ import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 import { CacheDataHistoryProps, YakitOptionTypeProps } from '../utils'
 import { BaseSelectRef } from 'rc-select'
 import { BaseOptionType, DefaultOptionType } from 'antd/lib/select'
-import { type } from 'os'
-
 /**
  * @description: YakitSelectProps
  * @augments YakitSelectProps 继承antd的 SelectProps 默认属性

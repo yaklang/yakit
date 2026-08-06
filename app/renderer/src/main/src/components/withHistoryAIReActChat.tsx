@@ -21,7 +21,7 @@ import {
   AISendParams,
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEvent, type AIOutputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
@@ -77,6 +77,7 @@ export interface HistoryAIReActChatSlotOptions {
 export type HistoryAIReActChatSlotRender = (options: HistoryAIReActChatSlotOptions) => React.ReactNode
 
 export type HistoryAIReActFocusModeLoop = NonNullable<AIInputEvent['FocusModeLoop']>
+export type HistoryAIReviewPolicy = 'manual' | 'ai' | 'yolo'
 
 export interface HistoryAIReActChatContextValue {
   renderHistoryAIReActChat: HistoryAIReActChatSlotRender
@@ -84,6 +85,7 @@ export interface HistoryAIReActChatContextValue {
   setShowFreeChat: React.Dispatch<React.SetStateAction<boolean>>
   historyAIReActChatBridge: HistoryAIReActChatBridge
   focusModeLoop: HistoryAIReActFocusModeLoop
+  reviewPolicy: HistoryAIReviewPolicy
 }
 
 const HistoryAIReActChatContext = createContext<HistoryAIReActChatContextValue | null>(null)
@@ -185,6 +187,8 @@ export interface HistoryAIReActChatProviderProps {
   resolveStartExtraParams?: (data: AIHandleStartParams) => AIHandleStartExtraProps
   /** 远程 setting 写入前合并，如知识库保留 TimelineSessionID */
   mergeRemoteAIAgentSetting?: (cache: AIAgentSetting, prev: AIAgentSetting) => AIAgentSetting
+  /** 观察原始 AI 输出事件，用于构建不依赖聊天文案的业务状态 */
+  onAIOutputEvent?: (event: AIOutputEvent, content: string) => void
 }
 
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
@@ -196,6 +200,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   transformInputEvent,
   resolveStartExtraParams,
   mergeRemoteAIAgentSetting,
+  onAIOutputEvent,
 }: HistoryAIReActChatProviderProps) {
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
@@ -318,7 +323,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(pageId, runtimeId, { source: 'auto' })
   })
 
-  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
+  const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId, onAIOutputEvent)
 
   const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
   const casualLoading = useStore(store, (state) => state.casualLoading)
@@ -590,8 +595,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       setShowFreeChat,
       historyAIReActChatBridge,
       focusModeLoop,
+      reviewPolicy: (setting.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy || 'manual') as HistoryAIReviewPolicy,
     }),
-    [renderHistoryAIReActChat, showFreeChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop],
+    [
+      renderHistoryAIReActChat,
+      showFreeChat,
+      setShowFreeChat,
+      historyAIReActChatBridge,
+      focusModeLoop,
+      setting.ReviewPolicy,
+    ],
   )
 
   return (

@@ -2,7 +2,6 @@ import React, { forwardRef, memo, useImperativeHandle, useMemo, useRef, useState
 import { useMemoizedFn } from 'ahooks'
 import { TextareaForImage, PluginImageTextareaProps } from './PluginImageTextareaType'
 import { failed } from '@/utils/notification'
-import { FileItem } from 'fs'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePhotographIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { Input, Upload } from 'antd'

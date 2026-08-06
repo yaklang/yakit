@@ -6,9 +6,15 @@ import { useMemoizedFn } from 'ahooks'
 import type { UseChatIPCStartParams } from '@/pages/ai-agent/useContext/AIAgentContext'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { yakitNotify } from '@/utils/notification'
+import type { AIOutputEvent } from './grpcApi'
+import { Uint8ArrayToString } from '@/utils/str'
 const { ipcRenderer } = window.require('electron')
 
-export function useChatIPC(route: YakitRouteType, pageId: string) {
+export function useChatIPC(
+  route: YakitRouteType,
+  pageId: string,
+  onAIOutputEvent?: (event: AIOutputEvent, content: string) => void,
+) {
   /**
    * isSessionReady 已连则直接返回（不动已有监听）→ 用入参 token 挂监听 → handleStartSession
    * prepare 异步，invoke 晚于本同步栈挂监听，不会丢流；token 不依赖 React 闭包里的 SessionID
@@ -22,7 +28,12 @@ export function useChatIPC(route: YakitRouteType, pageId: string) {
     ipcRenderer.removeAllListeners(`${token}-data`)
     ipcRenderer.removeAllListeners(`${token}-error`)
     ipcRenderer.removeAllListeners(`${token}-end`)
-    ipcRenderer.on(`${token}-data`, (e, res: any) => {
+    ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
+      try {
+        onAIOutputEvent?.(res, Uint8ArrayToString(res.Content) || '')
+      } catch {
+        // 业务观察器不能影响共享 AI 消息流。
+      }
       globalSessionEngine.handleGrpcOutputEvent(token, res)
     })
     ipcRenderer.on(`${token}-error`, (e, res: any) => {

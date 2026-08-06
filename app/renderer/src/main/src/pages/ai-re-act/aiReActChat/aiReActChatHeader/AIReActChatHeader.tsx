@@ -122,7 +122,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
               <AIReActChatHeaderExternalRightIcon rightIcon={externalParameters?.rightIcon} />
             ) : (
               <>
-                {currentCasualTaskID && (
+                {currentCasualTaskID && getSetting().Source === AISourceEnum.aiAgent && (
                   <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
                     任务详情
                   </YakitButton>
@@ -223,6 +223,8 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
         return ['irify']
       case AISourceEnum.yakRunner:
         return ['yakRunner']
+      case AISourceEnum.browserExtension:
+        return ['browserExtension']
       case AISourceEnum.im:
         return ['im']
       case AISourceEnum.history:
