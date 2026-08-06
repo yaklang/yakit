@@ -20,6 +20,7 @@ import {
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { formatTimestamp } from '@/utils/timeUtil'
+import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
 import styles from './MCPHistory.module.scss'
 
 type HistoryStatus = QueryMCPToolCallHistoryRequest['Status']
@@ -228,6 +229,7 @@ const MCPHistory: React.FC = React.memo(() => {
         <NewHTTPPacketEditor
           key={options?.editorKey}
           title={title}
+          titleStyle={{ fontSize: 12 }}
           originValue={value}
           language={options?.language || 'json'}
           readOnly
@@ -268,16 +270,17 @@ const MCPHistory: React.FC = React.memo(() => {
     if (hasError) tabs.push({ key: 'error', label: t('MCPHistory.error') })
     if (tabs.length <= 1) return tabs[0]?.label || t('MCPHistory.result')
     return (
-      <div className={styles['detail-tab-list']}>
+      <div className={classNames(styles['detail-tab-list'])} key={'title-result-tabs'}>
         {tabs.map((item) => (
-          <button
+          <YakitCheckableTag
             key={item.key}
-            type="button"
-            className={resultTab === item.key ? styles['detail-tab-active'] : undefined}
-            onClick={() => setResultTab(item.key)}
+            checked={resultTab === item.key}
+            onChange={(checked) => {
+              if (checked) setResultTab(item.key)
+            }}
           >
             {item.label}
-          </button>
+          </YakitCheckableTag>
         ))}
       </div>
     )
@@ -379,14 +382,15 @@ const MCPHistory: React.FC = React.memo(() => {
               </div>
               <div className={styles['history-actions']}>
                 <YakitButton
-                  type="text2"
+                  type="outline1"
+                  size="small"
                   colors="danger"
                   icon={<OutlineTrashIcon />}
                   title={t('MCPHistory.clearHistoryTitle')}
                   disabled={total === 0 || loading}
                   onClick={onDeleteClick}
                 >
-                  {t('YakitButton.clear')}
+                  {t('YakitButton.delete')}
                 </YakitButton>
                 <YakitButton
                   type="text2"

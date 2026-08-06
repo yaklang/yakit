@@ -178,6 +178,15 @@
     overflow: hidden;
   }
 
+  .detail-tab-list {
+    display: flex;
+    :global {
+      .ant-tag {
+        margin-right: 2px;
+      }
+    }
+  }
+
   .detail-panel {
     display: flex;
     flex-direction: column;
@@ -186,37 +195,5 @@
     min-width: 0;
     min-height: 0;
     overflow: hidden;
-  }
-
-  .detail-tab-list {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-
-    button {
-      position: relative;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: var(--Colors-Use-Neutral-Text-3-Secondary);
-      cursor: pointer;
-      font-size: 12px;
-      line-height: 20px;
-    }
-
-    .detail-tab-active {
-      color: var(--Colors-Use-Main-Primary);
-      font-weight: 600;
-
-      &::after {
-        position: absolute;
-        right: 0;
-        bottom: -8px;
-        left: 0;
-        height: 2px;
-        background: var(--Colors-Use-Main-Primary);
-        content: '';
-      }
-    }
   }
 }
