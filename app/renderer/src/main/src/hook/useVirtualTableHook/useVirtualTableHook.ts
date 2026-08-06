@@ -196,7 +196,7 @@ export default function useVirtualTableHook<
   const inViewport = inViewportProp ?? internalInViewport
   // 是否允许更改endLoop
   const isAllowSetEndLoopRef = useRef<boolean>(false)
-  const previousQueryInViewportRef = useRef(inViewport)
+  const previousQueryInViewportRef = useRef<boolean>(inViewport === true)
   const hasQueriedViewportRef = useRef(false)
 
   useEffect(() => {
