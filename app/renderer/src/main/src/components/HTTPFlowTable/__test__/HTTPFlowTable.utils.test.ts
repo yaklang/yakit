@@ -16,7 +16,7 @@ import {
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
   shouldClearMITMResetBoundary,
-  shouldRefreshHTTPFlowTableAfterResize,
+  selectHTTPFlowTableResizeAction,
   shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
   uniqStrings,
@@ -83,18 +83,18 @@ describe('HTTP flow hidden-table policy', () => {
 
 describe('HTTP flow table layout bootstrap', () => {
   it('bootstraps when the first usable height arrives', () => {
-    expect(shouldRefreshHTTPFlowTableAfterResize(undefined, 640, true, true)).toBe(true)
-    expect(shouldRefreshHTTPFlowTableAfterResize(0, 640, false, true)).toBe(true)
+    expect(selectHTTPFlowTableResizeAction(undefined, 640, true, true)).toBe('bootstrap')
+    expect(selectHTTPFlowTableResizeAction(0, 640, false, true)).toBe('bootstrap')
   })
 
   it('does not bootstrap a hidden table', () => {
-    expect(shouldRefreshHTTPFlowTableAfterResize(undefined, 640, true, false)).toBe(false)
+    expect(selectHTTPFlowTableResizeAction(undefined, 640, true, false)).toBe('none')
   })
 
-  it('keeps the existing grow-only refresh after initialization', () => {
-    expect(shouldRefreshHTTPFlowTableAfterResize(640, 720, true, true)).toBe(true)
-    expect(shouldRefreshHTTPFlowTableAfterResize(640, 720, false, true)).toBe(false)
-    expect(shouldRefreshHTTPFlowTableAfterResize(640, 600, true, true)).toBe(false)
+  it('reconciles instead of resetting after the packet detail is collapsed', () => {
+    expect(selectHTTPFlowTableResizeAction(640, 720, true, true)).toBe('reconcile')
+    expect(selectHTTPFlowTableResizeAction(640, 720, false, true)).toBe('none')
+    expect(selectHTTPFlowTableResizeAction(640, 600, true, true)).toBe('none')
   })
 })
 

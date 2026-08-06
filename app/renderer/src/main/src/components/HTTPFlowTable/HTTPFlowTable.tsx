@@ -103,8 +103,8 @@ import {
   normalizeHTTPFlowTotal,
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
+  selectHTTPFlowTableResizeAction,
   shouldClearMITMResetBoundary,
-  shouldRefreshHTTPFlowTableAfterResize,
   shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
@@ -735,6 +735,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       patchTData,
       pushTData,
       noResetRefreshT,
+      restoreViewportT,
       setP,
       refreshT,
     },
@@ -784,11 +785,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const becameVisible = inViewport && !previousInViewportRef.current
     previousInViewportRef.current = inViewport
     // Background queries intentionally omit packet bodies. Hydrate the visible
-    // viewport once on return; row details remain lazy-loaded afterwards.
+    // viewport once on return without discarding its scroll window.
     if (becameVisible && isBackgroundRefresh) {
-      updateData('visibility')
+      restoreViewportT()
     }
-  }, [inViewport, isBackgroundRefresh, updateData])
+  }, [inViewport, isBackgroundRefresh, restoreViewportT])
 
   // useLayoutEffect runs after React has committed the rows and before paint,
   // which is the closest low-overhead marker for "visible in the table".
@@ -3248,7 +3249,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // stops compatibility polling, so existing rows have no later event that
     // can wake the empty table. The first valid layout is therefore an
     // explicit bootstrap boundary.
-    if (shouldRefreshHTTPFlowTableAfterResize(previousHeight, height, onlyShowFirstNode, isTableActive)) updateData()
+    const action = selectHTTPFlowTableResizeAction(previousHeight, height, onlyShowFirstNode, isTableActive)
+    if (action === 'bootstrap') updateData()
+    if (action === 'reconcile') notifyPushUpdate()
   })
 
   const onFormConfigSaveOk = useMemoizedFn((config: any) => {

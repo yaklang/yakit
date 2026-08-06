@@ -15,6 +15,17 @@ export const selectVirtualTableAutomaticRefreshReason = (
 ): 'query' | 'visibility' => (hasQueriedViewport && !previousInViewport ? 'visibility' : 'query')
 
 /**
+ * A cached table returning to the foreground keeps its existing data window
+ * and scroll anchor. A first load, an empty window, or parameters changed while
+ * hidden still needs a full query.
+ */
+export const shouldRestoreVirtualTableViewport = (
+  reason: 'query' | 'visibility' | 'manual',
+  rowCount: number,
+  paramsChanged: boolean,
+): boolean => reason === 'visibility' && rowCount > 0 && !paramsChanged
+
+/**
  * Sliding tables must wait until the user consumes the page that was just
  * appended, otherwise clipping can immediately trigger another request. Keep
  * that guard, but prefetch before the final row so scrolling does not visibly

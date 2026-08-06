@@ -22,6 +22,7 @@ import {
   selectVirtualTableAutomaticRefreshReason,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
+  shouldRestoreVirtualTableViewport,
   shouldLoadVirtualTableBottom,
   VirtualTableViewportSnapshot,
 } from './useVirtualTableScheduler'
@@ -198,6 +199,7 @@ export default function useVirtualTableHook<
   const isAllowSetEndLoopRef = useRef<boolean>(false)
   const previousQueryInViewportRef = useRef<boolean>(inViewport === true)
   const hasQueriedViewportRef = useRef(false)
+  const lastAutomaticQueryParamsRef = useRef<ParamsTProps>()
 
   useEffect(() => {
     if (inViewport) return
@@ -602,6 +604,17 @@ export default function useVirtualTableHook<
     }
   })
 
+  /** Restore a cached viewport without replacing its rows with the first page. */
+  const restoreViewportT = useMemoizedFn(() => {
+    if (!inViewport) return
+    if (data.length === 0) {
+      updateData(true, 'visibility')
+      return
+    }
+    onFirst?.('visibility')
+    scrollUpdate()
+  })
+
   const flushNotificationRefresh = useMemoizedFn(() => {
     if (!notificationRefreshPendingRef.current || loopPausedRef.current || isGrpcRef.current || !inViewport) return
     notificationRefreshPendingRef.current = false
@@ -667,12 +680,18 @@ export default function useVirtualTableHook<
       if (!inViewport) return
       queryEpochRef.current += 1
       isGrpcRef.current = false
+      const paramsChanged = lastAutomaticQueryParamsRef.current !== params
       const reason = selectVirtualTableAutomaticRefreshReason(
         hasQueriedViewportRef.current,
         previousQueryInViewportRef.current,
       )
       previousQueryInViewportRef.current = true
       hasQueriedViewportRef.current = true
+      lastAutomaticQueryParamsRef.current = params
+      if (shouldRestoreVirtualTableViewport(reason, data.length, paramsChanged)) {
+        restoreViewportT()
+        return
+      }
       updateData(true, reason)
     },
     [params, inViewport],
@@ -848,6 +867,7 @@ export default function useVirtualTableHook<
       stopT,
       refreshT,
       noResetRefreshT,
+      restoreViewportT,
       notifyPushUpdate,
       setTLoad,
       resetTData,

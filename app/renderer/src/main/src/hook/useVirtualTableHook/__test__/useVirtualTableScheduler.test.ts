@@ -8,6 +8,7 @@ import {
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
   shouldLoadVirtualTableBottom,
+  shouldRestoreVirtualTableViewport,
   VirtualTableViewportSnapshot,
 } from '../useVirtualTableScheduler'
 
@@ -38,6 +39,18 @@ describe('selectVirtualTableAutomaticRefreshReason', () => {
 
   it('identifies a cached table becoming visible again', () => {
     expect(selectVirtualTableAutomaticRefreshReason(true, false)).toBe('visibility')
+  })
+})
+
+describe('shouldRestoreVirtualTableViewport', () => {
+  it('preserves a populated scroll window when a cached tab becomes visible', () => {
+    expect(shouldRestoreVirtualTableViewport('visibility', 300, false)).toBe(true)
+  })
+
+  it('uses a full query when the hidden table is empty or its parameters changed', () => {
+    expect(shouldRestoreVirtualTableViewport('visibility', 0, false)).toBe(false)
+    expect(shouldRestoreVirtualTableViewport('visibility', 300, true)).toBe(false)
+    expect(shouldRestoreVirtualTableViewport('query', 300, false)).toBe(false)
   })
 })
 
