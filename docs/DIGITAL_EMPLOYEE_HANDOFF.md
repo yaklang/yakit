@@ -1,4 +1,4 @@
-# AI SenPike 数字员工功能交接
+# AI SenSo 数字员工功能交接
 
 更新时间：2026-07-30
 
@@ -19,13 +19,13 @@
 - 请求层仍有员工技能兜底和去重：即使界面标签初始化异常，员工技能也会随消息发送；相同技能不会重复附加。
 - 自由对话继续沿用原版“前端乐观消息 + 后端出队确认”流程；后端未回传临时输入 UUID 时，前端会按最近一条同文未确认消息完成归并，避免同一次输入显示两条。
 - 右侧“思考与执行”只读取原版 `casualChat.planDetails.todoList`，展示真实任务内容、进度和后端时间戳，不再展示无数据的工具统计、目标或意图卡片。
-- 选择页与员工工作区已经统一使用新生成的透明高清 `AI SenPike` Logo，不再通过白底 JPG 和 `mix-blend-mode` 适配主题。
+- 选择页与员工工作区已经统一使用新生成的透明高清 `AI SenSo` Logo，不再通过白底 JPG 和 `mix-blend-mode` 适配主题。
 - 选择页 8 个员工徽章、6 个快捷导航图标已经从低分辨率截图裁片替换为项目内置 SVG 图标，高分屏与响应式缩放下保持清晰。
 - 左侧员工栏的展开/收起箭头已经替换为标准 SVG chevron，按图标几何盒垂直居中，不再依赖文字字符基线。
 - 选择页选中卡片已从普通蓝边升级为蓝青渐变描边、柔和双层光晕、主题化进入按钮和“当前选择”状态标识；hover 只显示较弱描边，与真正选中态有明确层级。
 - AI Agent 顶部员工信息区已放大到约 132–168px，并同步放大 Logo、头像、标题、描述和技能标签；720px 以下高度会自动回落到紧凑尺寸。
 - 欢迎页已改为“任务引导 + 技能入口”双列、下方宽输入框的紧凑布局；窄屏和低高度会自动回落为单列或 2×2 技能网格。
-- 窗口标题栏、主菜单栏和页面标签栏新增仅 Memfit 生效的 AI SenPike 浅蓝主题，不影响其他 Yakit / IRify 等产品模式和菜单行为。
+- 窗口标题栏、主菜单栏和页面标签栏新增仅 Memfit 生效的 AI SenSo 浅蓝主题，不影响其他 Yakit / IRify 等产品模式和菜单行为。
 
 ## 2. 最重要的业务逻辑
 
@@ -90,7 +90,7 @@
 
 - 素材目录：`app/renderer/src/main/src/assets/newAssets/`
 - 人物使用生成后的高清透明图：`senso-agent-01-portrait-hd.png` 至 `08`。
-- 项目正式 Logo：`ai-senpike-logo-transparent-v2.png`，由现有正确的 AI SenPike 标识生成绿色键控版本后去底得到，尺寸 1920×819、带 Alpha 通道。
+- 项目正式 Logo：`ai-senpike-logo-transparent-v2.png`，由现有正确的 AI SenSo 标识生成绿色键控版本后去底得到，尺寸 1920×819、带 Alpha 通道。
 - 选择页员工徽章和快捷导航图标使用 `assets/icon/outline.tsx` 中的 SVG，不再渲染 `senso-agent-*-badge.png` 和 `senso-quick-nav-*-icon.png` 低分辨率裁片；旧裁片仅作为历史参考保留。
 - 素材用途和尺寸参考：`senso-assets-manifest.json`。
 - 不允许使用整张参考 UI 截图充当页面背景。
@@ -130,7 +130,7 @@
 - 输入框同时显示默认员工标签“首席信息安全官”和额外 Forge 标签“警告降噪分析”，确认原版多标签共存链路正常。
 - 选择页响应式 Grid/Flex 结构与无横向溢出约束已复核；选择页组件测试继续覆盖 8 张员工卡、默认选中、卡片直达和确认按钮。
 - 会话详情页左侧员工栏默认收起；右侧已切换为任务进度与 todo 便签，不再展示空的工具统计、目标和意图卡片。
-- Memfit 专用渲染服务在 2800 编译成功，用户已确认 Electron 恢复为正确的 AI SenPike 页面。
+- Memfit 专用渲染服务在 2800 编译成功，用户已确认 Electron 恢复为正确的 AI SenSo 页面。
 - 本轮热更新日志显示 `webpack compiled with 7 warnings` 且 `No issues found`；7 个 warning 均来自项目原有 lint/依赖提示，没有本轮文件报错。
 - 2026-07-30 末次运行时，持续热更新约 105 分钟的渲染进程发生 Node 堆内存溢出并退出，日志明确为 `JavaScript heap out of memory`；没有发现 `Failed to compile`、`ERROR in`、运行时 `TypeError` 或本轮 SCSS/TS 错误。白屏根因是 2800 服务退出，不是本轮 UI 代码回归。
 - 已使用 `NODE_OPTIONS=--max-old-space-size=8192` 重新启动正确的 `start-render-memfit`，2800 恢复 HTTP 200、webpack 编译成功、类型检查 `No issues found`；随后重新启动 Electron，用户已明确确认页面恢复正常。

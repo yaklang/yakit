@@ -1,4 +1,4 @@
-# AI SenPike 数字员工功能交接
+# AI SenSo 数字员工功能交接
 
 更新时间：2026-08-05（Asia/Shanghai）
 
@@ -41,9 +41,9 @@ Failed to connect to gitee.com port 443 via 127.0.0.1
 
 提交 `76eac64` 已包含此前完成的内容：
 
-- Windows 打包程序使用新的 AI SenPike 应用图标。
+- Windows 打包程序使用新的 AI SenSo 应用图标。
 - macOS ICNS 同步使用新图标资源。
-- 应用内品牌 Logo 已替换为 AI SenSo / AI SenPike 新资源。
+- 应用内品牌 Logo 已替换为 AI SenSo / AI SenSo 新资源。
 - 修复应用图标外围白边。
 - 顶栏 `AIAgent` 改为“数字员工”。
 - 二级固定标签的 `AIAgent` 改为“数字员工”。
@@ -54,7 +54,7 @@ Failed to connect to gitee.com port 443 via 127.0.0.1
 
 最近一次 Windows 安装包：
 
-`release/codex-pack-iconfix-20260804-182157/AI SenPike-1.4.8-0711-windows-amd64.exe`
+`release/codex-pack-iconfix-20260804-182157/AI SenSo-1.4.8-0711-windows-amd64.exe`
 
 SHA-256：
 

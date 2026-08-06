@@ -18,7 +18,7 @@ import {
   OutlineShieldexclamationIcon,
 } from '@/assets/icon/outline'
 import { SolidBadgecheckIcon } from '@/assets/icon/solid'
-import aiSenPikeLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
+import aiSenSoLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeSelectPage.module.scss'
 
@@ -100,7 +100,7 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
     <main className={styles['employee-selection']}>
       <div className={styles['selection-stage']}>
         <header className={styles['brand-header']}>
-          <img src={aiSenPikeLogo} alt="AI SenPike" />
+          <img src={aiSenSoLogo} alt="AI SenSo" />
         </header>
 
         <section className={styles['selection-content']}>

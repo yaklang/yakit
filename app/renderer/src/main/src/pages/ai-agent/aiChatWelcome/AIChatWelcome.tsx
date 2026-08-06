@@ -275,7 +275,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       return (
         <div className={styles['employee-chat-welcome']} ref={welcomeRef}>
           <div className={styles['employee-welcome-copy']}>
-            <span className={styles['employee-welcome-label']}>AI SenPike · {selectedEmployee.name}</span>
+            <span className={styles['employee-welcome-label']}>AI SenSo · {selectedEmployee.name}</span>
             <h2>请告诉我，你想做什么？</h2>
             <p>
               我将调用技能库中的「{selectedEmployee.forge?.ForgeVerboseName || selectedEmployee.name}」协助你完成任务
@@ -295,7 +295,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               chatDataStoreKey="aiChatDataStore"
             />
           </div>
-          <div className={styles['content-copy']}>@2026 亚信安全 · AI SenPike 数字员工</div>
+          <div className={styles['content-copy']}>@2026 亚信安全 · AI SenSo 数字员工</div>
         </div>
       )
     }
@@ -340,7 +340,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                 <img src={memfitLogo} alt="" width={120} />
               </div>
               <div className={styles['input-heard']}>
-                <div className={styles['title']}>信湃 SenPike</div>
+                <div className={styles['title']}>信湃 SenSo</div>
                 <div className={styles['subtitle']}>AI自主渗透与攻防验证系统</div>
               </div>
               <div className={classNames(styles['input-body-wrapper'])}>
@@ -407,7 +407,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               </div>
             )}
           </div>
-          <div className={styles['content-copy']}>@2026亚信安全信湃SenPike-AI自主渗透和攻防验证系统</div>
+          <div className={styles['content-copy']}>@2026亚信安全信湃SenSo-AI自主渗透和攻防验证系统</div>
         </div>
       </div>
     )

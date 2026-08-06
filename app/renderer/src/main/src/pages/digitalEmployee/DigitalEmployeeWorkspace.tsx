@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
 import { OutlineChevronleftIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
-import aiSenPikeLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
+import aiSenSoLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeWorkspace.module.scss'
 
@@ -46,7 +46,7 @@ export const DigitalEmployeeSidebar: React.FC<DigitalEmployeeSidebarProps> = ({
         {!collapsed && (
           <div>
             <span>数字员工切换</span>
-            <small>AI SenPike</small>
+            <small>AI SenSo</small>
           </div>
         )}
         <button
@@ -107,7 +107,7 @@ export const DigitalEmployeeProfile: React.FC = () => {
   return (
     <section className={styles['employee-profile']}>
       <div className={styles['profile-brand-lockup']}>
-        <img src={aiSenPikeLogo} alt="AI SenPike" />
+        <img src={aiSenSoLogo} alt="AI SenSo" />
       </div>
       <span className={styles['profile-divider']} aria-hidden="true" />
       <div className={styles['profile-portrait']}>

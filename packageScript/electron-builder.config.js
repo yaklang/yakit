@@ -77,9 +77,9 @@ switch (platform) {
     break
   case 'memfit':
     appInfoOption = {
-      appId: 'io.yaklang.AI SenPike',
-      extraMetadata: { name: 'AI SenPike' },
-      productName: 'AI SenPike',
+      appId: 'io.yaklang.AI SenSo',
+      extraMetadata: { name: 'AI SenSo' },
+      productName: 'AI SenSo',
       copyright: 'Copyright © 2021 v1ll4n',
     }
     files = ['!app/assets/**/*', 'app/assets/memfit-close.png', 'app/assets/memfitlogo*', ...fixedFile]

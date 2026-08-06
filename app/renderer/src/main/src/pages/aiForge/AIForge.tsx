@@ -248,7 +248,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
           <section className={styles['marketplace-hero']}>
             <div className={styles['hero-glow']} />
             <div className={styles['hero-copy']}>
-              <span className={styles['hero-eyebrow']}>AI SENPIKE · AGENT MARKETPLACE</span>
+              <span className={styles['hero-eyebrow']}>AI SENSO · AGENT MARKETPLACE</span>
               <h1>智能体广场</h1>
               <p>提供各类专业安全运营智能体，助力企业提升安全运营效率</p>
               <span className={styles['hero-note']}>覆盖威胁分析、渗透测试、安全运营与应急响应等专业场景</span>

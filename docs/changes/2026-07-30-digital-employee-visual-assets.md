@@ -5,12 +5,12 @@
 ## 目标
 
 - 修正左侧员工栏展开/收起箭头的垂直位置。
-- 去除 AI SenPike Logo 的白色矩形底，使其自然融入浅蓝主题。
+- 去除 AI SenSo Logo 的白色矩形底，使其自然融入浅蓝主题。
 - 替换选择页人物以外的低分辨率截图裁片，避免高分屏和响应式缩放时发糊。
 
 ## 实现
 
-- 以现有正确的 `AI SenPike` Logo 为参考生成纯绿色键控底高清版本，再通过软边缘、去溢色流程输出 `ai-senpike-logo-transparent-v2.png`；选择页和工作区头部统一引用该透明素材，并移除 `mix-blend-mode` 适配。
+- 以现有正确的 `AI SenSo` Logo 为参考生成纯绿色键控底高清版本，再通过软边缘、去溢色流程输出 `ai-senpike-logo-transparent-v2.png`；选择页和工作区头部统一引用该透明素材，并移除 `mix-blend-mode` 适配。
 - 折叠按钮从文字 `‹` / `›` 改为项目内置 `OutlineChevronleftIcon` / `OutlineChevronrightIcon`，SVG 与包装层固定 16×16、块级显示，由 28×28 Grid 按钮居中。
 - 选择页 8 个员工徽章按员工职责映射到项目内置 Outline SVG，颜色读取现有员工 `accent`。
 - 6 个快捷入口分别改为机器人、安全盾牌、知识书本、拼图、记忆电路脑、数据库 SVG，并增加统一的浅蓝图标容器。

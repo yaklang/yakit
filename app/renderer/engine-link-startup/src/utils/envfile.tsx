@@ -28,7 +28,7 @@ export const getReleaseEditionName = () => {
     case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
       return 'IRify-EnpriTrace'
     case PRODUCT_RELEASE_EDITION.MEMFIT:
-      return '信湃SenPike'
+      return '信湃SenSo'
     default:
       return 'Yakit'
   }
@@ -147,7 +147,7 @@ export const GetConnectPort = () => {
     case 'irify-enterprise':
       return 9015
     case 'memfit':
-      return 9016
+      return 9017
     default:
       return 9011
   }

@@ -1,4 +1,4 @@
-# AI SenPike 数字员工深度规划面板交接
+# AI SenSo 数字员工深度规划面板交接
 
 更新时间：2026-08-05 16:35（Asia/Shanghai）
 
@@ -45,7 +45,7 @@ origin  https://gitee.com/a1543733438/ai-sense.git
 e45dd08 Add employee task list tab and responsive planning layout
 e9d4e67 feat: restore AI agent plan controls
 76eac64 修复logo及其他bug
-519c91a docs: add AI SenPike handover guide
+519c91a docs: add AI SenSo handover guide
 ```
 
 其中：

@@ -9,7 +9,7 @@
     "Files ending in -bg or -frame are blank reusable backgrounds intended for dynamic text and hover states.",
     "Transparent portraits retain source pixels and use a conservative alpha matte; original portrait crops are included as fidelity fallbacks.",
     "The selection page no longer renders the low-resolution badge and quick-nav icon crops; those UI icons now come from the repository SVG icon set.",
-    "ai-senpike-logo-transparent-v2.png is the current generated transparent AI SenPike wordmark used by the selection and workspace headers."
+    "ai-senpike-logo-transparent-v2.png is the current generated transparent AI SenSo wordmark used by the selection and workspace headers."
   ],
   "assets": [
     {

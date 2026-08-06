@@ -1,4 +1,4 @@
-# AI SenPike 数字员工功能交接
+# AI SenSo 数字员工功能交接
 
 更新时间：2026-08-03（Asia/Shanghai）
 
@@ -150,7 +150,7 @@ yarn build-link-render-memfit
 
 安装包：
 
-`release/AI SenPike-1.4.8-0711-windows-amd64.exe`
+`release/AI SenSo-1.4.8-0711-windows-amd64.exe`
 
 - 目标：Windows x64，NSIS
 - 大小：124,304,937 bytes（118.55 MB）
@@ -160,9 +160,9 @@ yarn build-link-render-memfit
 
 同时生成：
 
-- `release/AI SenPike-1.4.8-0711-windows-amd64.exe.blockmap`
+- `release/AI SenSo-1.4.8-0711-windows-amd64.exe.blockmap`
 - `release/711.yml`
-- `release/win-unpacked/AI SenPike.exe`
+- `release/win-unpacked/AI SenSo.exe`
 
 ### 7.2 实际成功命令
 
@@ -209,7 +209,7 @@ $env:YAKIT_DEV_RENDERER_URL='http://127.0.0.1:2800'
 yarn start-electron
 ```
 
-普通 `start-render` 会进入通用 Yakit 页面，不是 AI SenPike。
+普通 `start-render` 会进入通用 Yakit 页面，不是 AI SenSo。
 
 ## 9. 关键文件
 
@@ -240,7 +240,7 @@ yarn start-electron
 
 ## 10. 关键提交
 
-- `b52a3ae`：重做 AI SenPike 智能体广场 UI
+- `b52a3ae`：重做 AI SenSo 智能体广场 UI
 - `127dc46`：首次按 Forge ID 解析数字员工
 - `adc646f`：增加每页 8 张的横向轮播
 - `63fee51`：中间实现，增加后端额外 Forge；其 ID 去重思路已被后续修正

@@ -22,7 +22,7 @@
 - **状态视觉**：顶部只显示任务进度与百分比；完成为绿色对号、执行中为旋转圆环、待执行为灰色静态圆环，不显示步骤序号与可见状态字样
 - **真实信息**：任务辅助信息只使用后端 `updated_at` / `created_at`，兼容秒级和毫秒级时间戳，不构造描述或时间
 - **验证**：TypeScript 检查通过；数字员工与消息回显 4 个测试文件、13 个测试通过
-- **运行入口纠正**：2800 只是开发端口，AI SenPike 必须使用 `yarn start-render-memfit` 注入 `REACT_APP_PLATFORM=memfit`；普通 `start-render` 会显示同仓库的通用 Yakit 界面
+- **运行入口纠正**：2800 只是开发端口，AI SenSo 必须使用 `yarn start-render-memfit` 注入 `REACT_APP_PLATFORM=memfit`；普通 `start-render` 会显示同仓库的通用 Yakit 界面
 
 ## 2026-07-29
 
@@ -67,7 +67,7 @@
 
 ### 启动页右侧背景图更换
 
-- **事项**：将 Memfit / 信湃SenPike 启动页右侧背景从原 webm 视频改为静态图
+- **事项**：将 Memfit / 信湃SenSo 启动页右侧背景从原 webm 视频改为静态图
 - **素材来源**：`app/renderer/src/main/src/assets/newAssets/startlogo.png`
 - **实际引用**：复制到 `app/renderer/engine-link-startup/src/assets/startlogo.png`，供启动页模块引用
 - **改动文件**：

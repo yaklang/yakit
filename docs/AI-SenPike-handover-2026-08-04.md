@@ -1,4 +1,4 @@
-# AI SenPike 数字员工功能交接
+# AI SenSo 数字员工功能交接
 
 更新时间：2026-08-04（Asia/Shanghai）
 
@@ -18,7 +18,7 @@
 ## 2. Git 与工作区状态
 
 - 当前分支：`master`
-- 当前 HEAD：`519c91a docs: add AI SenPike handover guide`
+- 当前 HEAD：`519c91a docs: add AI SenSo handover guide`
 - 远程仓库：`origin = https://gitee.com/a1543733438/ai-sense.git`
 - 当前修改尚未提交、尚未推送。
 
@@ -152,7 +152,7 @@ M packageScript/electron-builder.config.js
 
 最新成功安装包：
 
-`release/codex-pack-20260803-173546/AI SenPike-1.4.8-0711-windows-amd64.exe`
+`release/codex-pack-20260803-173546/AI SenSo-1.4.8-0711-windows-amd64.exe`
 
 - 目标：Windows x64，NSIS
 - 大小：124,277,641 bytes（118.52 MB）
@@ -252,7 +252,7 @@ $env:YAKIT_DEV_RENDERER_URL='http://127.0.0.1:2800'
 yarn start-electron
 ```
 
-普通 `start-render` 会进入通用 Yakit 页面，不是 AI SenPike。
+普通 `start-render` 会进入通用 Yakit 页面，不是 AI SenSo。
 
 ## 10. 关键文件
 
