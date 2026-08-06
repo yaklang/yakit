@@ -124,6 +124,7 @@
     "ai": "AI",
     "ai-repository": "知識庫",
     "ssaCompileHistory": "SSA專案編譯歷史",
+    "mcpHistory": "MCP調用歷史",
     "penetrationRecordDescription": "可記錄滲透過程中的任何內容，便於記錄檢視",
     "ai-memory": "記憶庫",
     "ai-tool": "工具庫",

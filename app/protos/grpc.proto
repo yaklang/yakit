@@ -127,7 +127,7 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
-  // 握手 用于检查前端是否可以连接当前引擎 
+  // 握手 用于检查前端是否可以连接当前引擎
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
@@ -627,13 +627,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -648,7 +648,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
   /*
     ChaosMakerRule: Bas
   */
@@ -1049,6 +1049,9 @@ service Yak {
   rpc GetMCPToolList(GetMCPToolListRequest) returns (GetMCPToolListResponse);
   rpc GetMCPToolDetail(GetMCPToolDetailRequest) returns (MCPClientToolConfig);
   rpc SetMCPToolEnabled(SetMCPToolEnabledRequest) returns (GeneralResponse);
+  rpc QueryMCPToolCallHistory(QueryMCPToolCallHistoryRequest) returns (QueryMCPToolCallHistoryResponse);
+  rpc GetMCPToolCallHistoryDetail(GetMCPToolCallHistoryDetailRequest) returns (MCPToolCallHistory);
+  rpc DeleteMCPToolCallHistory(DeleteMCPToolCallHistoryRequest) returns (Empty);
 
   // RAG Collection Search
   rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
@@ -3843,7 +3846,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend 
+  // this type effect response.ProjectTotal, this type mark kind of frontend
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -7144,7 +7147,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-  
+
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
@@ -7793,7 +7796,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake 
+// handshake
 message HandshakeRequest {
   string Name = 1;
 }
@@ -8467,7 +8470,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory 
+  // compile data only in memory
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -8554,11 +8557,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index 
+  // index
   string RuleName = 3;
-  string ProgramName = 4; 
-  // progress 
-  double Progress = 5; 
+  string ProgramName = 4;
+  // progress
+  double Progress = 5;
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -8618,7 +8621,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"  
+  string SaveKind = 14; // "memory" | "database"
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -8770,9 +8773,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data 
+  repeated SSARisk Data = 1; // new ssa-risk unread data
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count 
+  int64 Total = 3; // total ssa-risk count
   int64 Unread = 4;// total unread ssa-risk count
 }
 
@@ -9860,4 +9863,56 @@ message HTTPFlowLiveEvent {
   int64 FlowBuiltAtUnixMs = 15;
   int64 PersistEnqueuedAtUnixMs = 16;
   int64 PersistStartedAtUnixMs = 17;
+}
+
+message QueryMCPToolCallHistoryRequest {
+  string Keyword = 1;
+  string Status = 2;
+  Paging Pagination = 3;
+}
+
+message MCPToolCallHistory {
+  int64 ID = 1;
+  string ToolName = 2;
+  string Arguments = 3;
+  string Result = 4;
+  bool Success = 5;
+  string ErrorMessage = 6;
+  int64 DurationMillis = 7;
+  string ClientID = 8;
+  string SessionID = 9;
+  int64 CreatedAt = 10;
+  string ClientName = 11;
+  string ClientVersion = 12;
+}
+
+message MCPToolCallHistorySummary {
+  int64 ID = 1;
+  string ToolName = 2;
+  bool Success = 3;
+  string ErrorMessage = 4;
+  int64 DurationMillis = 5;
+  string ClientID = 6;
+  string SessionID = 7;
+  int64 CreatedAt = 8;
+  string ClientName = 9;
+  string ClientVersion = 10;
+}
+
+message QueryMCPToolCallHistoryResponse {
+  repeated MCPToolCallHistorySummary Histories = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message GetMCPToolCallHistoryDetailRequest {
+  int64 ID = 1;
+}
+
+message DeleteMCPToolCallHistoryRequest {
+  repeated int64 IDs = 1;
+  bool DeleteAll = 2;
+  bool DeleteFiltered = 3;
+  string Keyword = 4;
+  string Status = 5;
 }
