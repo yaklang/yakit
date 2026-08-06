@@ -35,6 +35,8 @@ export const getImageStoreKeyByAISource = (source: AISource): ChatDataStoreKey =
       return 'irifyRuleGenPageAiStore'
     case AISourceEnum.yakRunner:
       return 'yakRunnerPageAiStore'
+    case AISourceEnum.browserExtension:
+      return 'browserExtensionAiStore'
     default:
       return 'unknown'
   }

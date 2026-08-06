@@ -29,6 +29,7 @@ import type { MainWinOperatorEventProps } from './events/mainWin'
 import type { RuleManagementEventProps } from './events/ruleManagement'
 import type { SettingsEventProps } from './events/settings'
 import type { YakRunnerAiCodeAuditEventProps } from './events/yakRunnerAiCodeAudit'
+import type { BrowserExtensionEventProps } from './events/browserExtension'
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -85,6 +86,7 @@ type Events = [
   RuleManagementEventProps,
   YakRunnerAiCodeAuditEventProps,
   SettingsEventProps,
+  BrowserExtensionEventProps,
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

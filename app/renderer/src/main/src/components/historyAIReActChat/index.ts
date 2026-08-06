@@ -8,5 +8,6 @@ export {
   type HistoryAIReActChatSlotOptions,
   type HistoryAIReActChatSlotRender,
   type HistoryAIReActFocusModeLoop,
+  type HistoryAIReviewPolicy,
 } from '../withHistoryAIReActChat'
 export { useHistoryAIReActChat } from './context'
