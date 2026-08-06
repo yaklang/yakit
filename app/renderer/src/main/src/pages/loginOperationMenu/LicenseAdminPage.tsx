@@ -528,7 +528,7 @@ interface LicenseCreatRequest {
   license: string
   maxUser: number
   company_version?: string
-  products?: string[]
+  products?: string
   format?: string
 }
 interface CreateLicenseProps {
@@ -624,7 +624,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
       company_version,
     }
     if (products) {
-      params.products = products
+      params.products = products.join(',')
       params.format = 'legion-v2'
       delete params.company_version
     }
