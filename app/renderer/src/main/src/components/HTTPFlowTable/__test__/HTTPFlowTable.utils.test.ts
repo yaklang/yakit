@@ -8,6 +8,7 @@ import {
   filterHTTPFlowsByFavoriteAndTags,
   findHTTPFlowSelectionIndex,
   getClassNameData,
+  groupHTTPFlowFieldTags,
   hasActiveHTTPFlowTableFilterConfig,
   isHTTPFlowTableActive,
   mergeRuleSummaryItems,
@@ -21,7 +22,7 @@ import {
   splitHTTPFlowTableShieldData,
   uniqStrings,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
-import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
+import { HTTP_FLOW_FAVORITE_TAG, type HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 
 describe('normalizeHTTPFlowTotal', () => {
   it('normalizes proto-loader int64 strings before they enter numeric table state', () => {
@@ -33,6 +34,34 @@ describe('normalizeHTTPFlowTotal', () => {
     expect(normalizeHTTPFlowTotal('60858546822155656571112106457874364745564464544564545446568565564678855764')).toBe(0)
     expect(normalizeHTTPFlowTotal('invalid')).toBe(0)
     expect(normalizeHTTPFlowTotal(-1)).toBe(0)
+  })
+})
+
+describe('groupHTTPFlowFieldTags', () => {
+  it('hides zero-count system tags from filters while retaining their classification', () => {
+    expect(
+      groupHTTPFlowFieldTags([
+        { Value: '[手动劫持]', Total: 0, Builtin: true },
+        { Value: '[重发]', Total: 2, Builtin: true },
+        { Value: 'custom', Total: 1, Builtin: false },
+        { Value: 'unused-custom', Total: 0, Builtin: false },
+      ]),
+    ).toEqual({
+      customTags: [{ label: 'custom', value: 'custom' }],
+      visibleBuiltinTags: [{ label: '[重发]', value: '[重发]' }],
+      allBuiltinTags: [
+        { label: '[手动劫持]', value: '[手动劫持]' },
+        { label: '[重发]', value: '[重发]' },
+      ],
+    })
+  })
+
+  it('does not expose the internal favorite marker as a user filter', () => {
+    expect(groupHTTPFlowFieldTags([{ Value: HTTP_FLOW_FAVORITE_TAG, Total: 1, Builtin: false }])).toEqual({
+      customTags: [],
+      visibleBuiltinTags: [],
+      allBuiltinTags: [],
+    })
   })
 })
 

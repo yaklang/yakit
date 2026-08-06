@@ -6,7 +6,37 @@ import type {
   YakQueryHTTPFlowRequest,
 } from '@/utils/yakQueryHTTPFlow'
 import { filterColorTag } from '@/components/TableVirtualResize/utils'
-import { HTTP_FLOW_FAVORITE_TAG, type HTTPFlow } from './HTTPFlowTable.constants'
+import { HTTP_FLOW_FAVORITE_TAG, type HTTPFlow, type TagsCode } from './HTTPFlowTable.constants'
+
+export interface HTTPFlowFieldTagGroups {
+  customTags: FiltersItemProps[]
+  visibleBuiltinTags: FiltersItemProps[]
+  allBuiltinTags: FiltersItemProps[]
+}
+
+/**
+ * The backend returns every builtin tag, including absent tags with Total=0,
+ * so tables can classify and hide system metadata consistently. Filter panels
+ * must expose only tags that occur in the current project.
+ */
+export const groupHTTPFlowFieldTags = (tags: TagsCode[] = []): HTTPFlowFieldTagGroups => {
+  const customTags: FiltersItemProps[] = []
+  const visibleBuiltinTags: FiltersItemProps[] = []
+  const allBuiltinTags: FiltersItemProps[] = []
+
+  tags.forEach(({ Value, Total, Builtin }) => {
+    if (!Value || Value === HTTP_FLOW_FAVORITE_TAG) return
+    const item = { label: Value, value: Value }
+    if (Builtin) {
+      allBuiltinTags.push(item)
+      if (Number(Total) > 0) visibleBuiltinTags.push(item)
+      return
+    }
+    if (Number(Total) > 0) customTags.push(item)
+  })
+
+  return { customTags, visibleBuiltinTags, allBuiltinTags }
+}
 
 export interface HTTPFlowTableLegacyValues {
   filterMode?: string
