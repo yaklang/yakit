@@ -996,11 +996,9 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     setTagListLoading(true)
     fetchHTTPFlowsFieldGroup(refreshRequest)
       .then((rsp) => {
-        const { customTags, visibleBuiltinTags, allBuiltinTags } = groupHTTPFlowFieldTags(rsp.Tags)
+        const { customTags, visibleBuiltinTags } = groupHTTPFlowFieldTags(rsp.Tags)
         setTagList(customTags)
         setBuiltinTagList(visibleBuiltinTags)
-        // Keep zero-count builtin tags for classifying/hiding system metadata
-        // in table rows; only the left filter panel hides them.
       })
       .catch((error) => {
         yakitNotify('error', `query HTTP Flows Field Group failed: ${error}`)
