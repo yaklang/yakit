@@ -195,6 +195,7 @@ const ForgeEditor = React.lazy(() => import('@/pages/aiForge/forgeEditor/ForgeEd
 const AIToolEditor = React.lazy(() => import('@/pages/aiTool/AIToolEditor/AIToolEditor'))
 const YakRunnerScanHistory = React.lazy(() => import('@/pages/yakRunnerScanHistory/YakRunnerScanHistory'))
 const SSACompileHistory = React.lazy(() => import('@/pages/ssaCompileHistory/SSACompileHistory'))
+const MCPHistory = React.lazy(() => import('@/pages/ai-agent/aiMCPHistory/MCPHistory'))
 const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
@@ -407,6 +408,7 @@ export const YakitRouteToPageInfo: Record<
   'add-ai-tool': { label: '新建 Tool', labelUi: 'YakitRoute.createTool' },
   'modify-ai-tool': { label: '编辑 Tool', labelUi: 'YakitRoute.editTool' },
   'ssa-compile-history': { label: 'SSA项目编译历史', labelUi: 'YakitRoute.ssaCompileHistory' },
+  'mcp-history': { label: 'MCP调用历史', labelUi: 'YakitRoute.mcpHistory' },
   'config-management': {
     label: '配置管理',
     labelUi: 'YakitRoute.configManagement',
@@ -472,6 +474,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.AI_Memory,
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
+  YakitRoute.MCP_History,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -529,6 +532,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.AI_Memory,
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
+  YakitRoute.MCP_History,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -937,6 +941,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <YakRunnerScanHistory />
     case YakitRoute.SSA_Compile_History:
       return <SSACompileHistory />
+    case YakitRoute.MCP_History:
+      return <MCPHistory />
     case YakitRoute.Rule_Management:
       return <RuleManagement ruleManagementPageInfo={params?.ruleManagementPageInfo} />
     case YakitRoute.Notepad_Manage:

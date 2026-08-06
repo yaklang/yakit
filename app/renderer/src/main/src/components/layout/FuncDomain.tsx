@@ -632,7 +632,7 @@ const DBCacheManager = () => {
   }
 }
 
-const GetUIOpSettingMenu = () => {
+const GetUIOpSettingMenu = (t: (key: string) => string) => {
   // 便携版
   if (isEnpriTraceAgent()) {
     return [
@@ -731,7 +731,14 @@ const GetUIOpSettingMenu = () => {
           key: 'webshell-manager',
           label: '网站管理',
         },
-        { key: 'mcp', label: 'Yak Mcp' },
+        {
+          key: 'mcp',
+          label: t('GlobalState.mcp'),
+          children: [
+            { key: 'mcp-toggle', label: t('GlobalState.mcpToggle') },
+            { key: 'mcp-history', label: t('GlobalState.mcpHistory') },
+          ],
+        },
         { key: 'ai-agent', label: 'AI Agent' },
         { key: 'ssa-result-diff', label: 'ssa-result-diff' },
         { key: 'ai-repository', label: '知识库' },
@@ -919,8 +926,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         showConfigSystemProxyForm()
         return
       case 'mcp':
+      case 'mcp-toggle':
       case 'configMcp':
         setConfigMcpModalVisible(true)
+        return
+      case 'mcp-history':
+        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.MCP_History }))
         return
       case 'engineVar':
         showConfigYaklangEnvironment()
@@ -1061,7 +1072,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       width={142}
       selectedKeys={[]}
       // triggerSubMenuAction={'click'}
-      data={GetUIOpSettingMenu() as YakitMenuItemProps[]}
+      data={GetUIOpSettingMenu(t) as YakitMenuItemProps[]}
       onClick={({ key }) => menuSelect(key)}
     />
   )
