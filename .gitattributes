@@ -27,4 +27,5 @@
 *.jpg binary
 *.ico binary
 *.zip binary
+*.exe binary
 *.ttf binary

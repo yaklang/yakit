@@ -3,6 +3,8 @@ const { launch, killAll, getChromePath } = require('chrome-launcher')
 const fs = require('fs')
 const path = require('path')
 const { getYakitHome } = require('../filePath')
+const { getChromeStartingUrl, makeTaskbarIconKey } = require('./windowsChromeTaskbarUtils')
+const launchWindowsChrome = process.platform === 'win32' ? require('./windowsChromeTaskbar').launchWindowsChrome : null
 const getMyUserDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 
 const disableExtensionsExceptStr = (host, port, username, password) => `
@@ -121,20 +123,95 @@ module.exports = (win, getClient) => {
   let startNum = 0
   // 启动的状态
   let started = false
+  const windowsInstances = new Map()
+  const windowsLaunching = new Set()
+  const windowsIconsLaunching = new Set()
+  const getActiveTaskbarIconKeys = () => [
+    ...new Set([
+      ...windowsIconsLaunching,
+      ...[...windowsInstances.values()].map((instance) => instance.taskbarIconKey),
+    ]),
+  ]
   ipcMain.handle('IsChromeLaunched', async () => {
-    return started
+    return started || windowsInstances.size > 0 || windowsLaunching.size > 0 || windowsIconsLaunching.size > 0
+  })
+
+  ipcMain.handle('GetChromeLauncherState', async () => {
+    return {
+      running: started || windowsInstances.size > 0 || windowsLaunching.size > 0 || windowsIconsLaunching.size > 0,
+      activeTaskbarIconKeys: getActiveTaskbarIconKeys(),
+    }
   })
 
   ipcMain.handle('getDefaultUserDataDir', async () => {
     return getMyUserDataDir()
   })
 
+  ipcMain.handle('GetChromeLauncherPlatform', async () => {
+    return process.platform
+  })
+
   ipcMain.handle('LaunchChromeWithParams', async (e, params) => {
-    const { port, host, chromePath, userDataDir, username, password, disableCACertPage, chromeFlags } = params
-    const portInt = parseInt(`${port}`)
+    const {
+      port,
+      host,
+      chromePath,
+      userDataDir,
+      username = '',
+      password = '',
+      disableCACertPage,
+      chromeFlags = [],
+      taskbarIconPreset,
+      taskbarIconPath,
+    } = params
+    const portInt = Number(port)
     const hostRaw = `${host}`
-    if (hostRaw === 'undefined' || hostRaw.includes('/') || hostRaw.split(':').length > 1) {
+    if (!hostRaw.trim() || hostRaw === 'undefined' || hostRaw.includes('/') || hostRaw.split(':').length > 1) {
       throw Error(`host: ${hostRaw} is invalid or illegal`)
+    }
+    if (!Number.isInteger(portInt) || portInt < 1 || portInt > 65535) {
+      throw Error(`port: ${port} is invalid or illegal`)
+    }
+
+    const startingUrl = getChromeStartingUrl(disableCACertPage)
+    if (process.platform === 'win32') {
+      const resolvedChromePath = chromePath || getChromePath()
+      const requestedIdentity =
+        typeof userDataDir === 'string' && userDataDir.trim() ? path.resolve(userDataDir).toLowerCase() : null
+      const taskbarIconKey = makeTaskbarIconKey(taskbarIconPreset, taskbarIconPath)
+      if (requestedIdentity && (windowsInstances.has(requestedIdentity) || windowsLaunching.has(requestedIdentity))) {
+        throw Error(`Chrome is already running with user data directory: ${userDataDir}`)
+      }
+      if (getActiveTaskbarIconKeys().includes(taskbarIconKey)) {
+        throw Error(`The selected taskbar icon is already used by a running Chrome instance`)
+      }
+      if (requestedIdentity) windowsLaunching.add(requestedIdentity)
+      windowsIconsLaunching.add(taskbarIconKey)
+      try {
+        const instance = await launchWindowsChrome({
+          chromePath: resolvedChromePath,
+          userDataDir,
+          host: hostRaw,
+          port: portInt,
+          username,
+          password,
+          chromeFlags,
+          taskbarIconPreset,
+          taskbarIconPath,
+          startingUrl,
+        })
+        windowsInstances.set(instance.identity, instance)
+        instance.exitPromise.finally(() => {
+          if (windowsInstances.get(instance.identity) === instance) windowsInstances.delete(instance.identity)
+        })
+        return {
+          taskbarIconKey: instance.taskbarIconKey,
+          activeTaskbarIconKeys: getActiveTaskbarIconKeys(),
+        }
+      } finally {
+        if (requestedIdentity) windowsLaunching.delete(requestedIdentity)
+        windowsIconsLaunching.delete(taskbarIconKey)
+      }
     }
 
     // https://peter.sh/experiments/chromium-command-line-switches/
@@ -142,7 +219,7 @@ module.exports = (win, getClient) => {
     //   --no-system-proxy-config-service ⊗	Do not use system proxy configuration service.
     //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
     let launchOpt = {
-      startingUrl: disableCACertPage === false ? 'http://mitm' : 'chrome://newtab', // 确保在启动时打开 chrome://newtab 页面。
+      startingUrl, // 确保在启动时打开 chrome://newtab 页面。
       logLevel: 'verbose',
       ignoreDefaultFlags: true,
       chromeFlags: [
@@ -253,6 +330,26 @@ module.exports = (win, getClient) => {
   })
 
   ipcMain.handle('StopAllChrome', async (e) => {
+    if (process.platform === 'win32') {
+      const instances = [...windowsInstances.values()]
+      await Promise.all(
+        instances.map(async (instance) => {
+          let timeoutId
+          try {
+            await Promise.race([
+              instance.close(),
+              new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('Timed out waiting for Chrome windows to close')), 2000)
+              }),
+            ])
+            await Promise.race([instance.exitPromise, new Promise((resolve) => setTimeout(resolve, 250))])
+          } finally {
+            if (timeoutId) clearTimeout(timeoutId)
+          }
+        }),
+      )
+      return
+    }
     deleteCreateFile()
     startNum = 0
     started = false

@@ -1,7 +1,13 @@
 import React, { CSSProperties, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Alert, Form, Space, Tooltip, Typography, Modal } from 'antd'
 import { failed, info, yakitNotify } from '../../utils/notification'
-import { CheckOutlined, CloseOutlined, CloudUploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import {
+  CheckOutlined,
+  CloseOutlined,
+  CloudUploadOutlined,
+  ExclamationCircleOutlined,
+  LoadingOutlined,
+} from '@ant-design/icons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -38,6 +44,47 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { loadAdvancedConfig } from './MITMAdvancedConfig'
 import { Trans } from 'react-i18next'
 import { defHost, defPort } from './MITMServerStartForm/MITMServerStartForm'
+import {
+  CatIcon,
+  CrabIcon,
+  OctopusIcon,
+  SkeletonIcon,
+  SmileyFaceIcon,
+  TigerIcon,
+} from '@/pages/KnowledgeBase/icon/sidebarIcon'
+
+type BuiltInTaskbarIconPreset =
+  | 'knowledge-crab'
+  | 'knowledge-tiger'
+  | 'knowledge-cat'
+  | 'knowledge-octopus'
+  | 'knowledge-skeleton'
+  | 'knowledge-smiley'
+type TaskbarIconPreset = 'default' | BuiltInTaskbarIconPreset | 'custom'
+type LaunchMode = 'single' | 'continue' | null
+
+interface ChromeLauncherState {
+  running: boolean
+  activeTaskbarIconKeys: string[]
+}
+
+interface ChromeLaunchResult {
+  taskbarIconKey?: string
+  activeTaskbarIconKeys?: string[]
+}
+
+const TASKBAR_ICON_PRESET_ORDER: Exclude<TaskbarIconPreset, 'custom'>[] = [
+  'default',
+  'knowledge-crab',
+  'knowledge-tiger',
+  'knowledge-cat',
+  'knowledge-octopus',
+  'knowledge-skeleton',
+  'knowledge-smiley',
+]
+
+const getNextAvailableTaskbarIcon = (activeKeys: string[]): TaskbarIconPreset =>
+  TASKBAR_ICON_PRESET_ORDER.find((preset) => !activeKeys.includes(preset)) || 'custom'
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -74,6 +121,13 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   const [defUserDataDir, setDefUserDataDir] = useState<string>('')
   const [isSaveUserData, setSaveUserData] = useState<boolean>(false)
   const [userDataDir, setUserDataDir] = useState<string>('')
+  const [isWindows, setIsWindows] = useState<boolean>(false)
+  const [taskbarIconPreset, setTaskbarIconPreset] = useState<TaskbarIconPreset>('default')
+  const [taskbarIconPath, setTaskbarIconPath] = useState<string>('')
+  const [launching, setLaunching] = useState<boolean>(false)
+  const launchingRef = useRef<boolean>(false)
+  const [launchMode, setLaunchMode] = useState<LaunchMode>(null)
+  const [activeTaskbarIconKeys, setActiveTaskbarIconKeys] = useState<string[]>([])
 
   const [chromeLauncherParamsVisible, setChromeLauncherParamsVisible] = useState<boolean>(false)
   const chromeLauncherParamsSetRef = useRef<ChromeLauncherParamsSetRefProps>({
@@ -86,7 +140,21 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   const [showChormeDropdown, setShowChormeDropdown] = useState<boolean>(false)
   const chromedropdownRef = useRef<HTMLDivElement>(null)
 
+  const refreshChromeLauncherState = useMemoizedFn(async () => {
+    try {
+      const state = (await ipcRenderer.invoke('GetChromeLauncherState')) as ChromeLauncherState
+      const activeKeys = Array.isArray(state?.activeTaskbarIconKeys) ? state.activeTaskbarIconKeys : []
+      setActiveTaskbarIconKeys(activeKeys)
+      setTaskbarIconPreset((current) => {
+        if (current === 'custom' || !activeKeys.includes(current)) return current
+        return getNextAvailableTaskbarIcon(activeKeys)
+      })
+    } catch (error) {}
+  })
+
   useEffect(() => {
+    let disposed = false
+    let chromeStateTimer: ReturnType<typeof setInterval> | undefined
     // 获取连接引擎的地址参数
     ipcRenderer
       .invoke('fetch-yaklang-engine-addr')
@@ -121,77 +189,141 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
       setDefUserDataDir(e)
     })
 
+    ipcRenderer
+      .invoke('GetChromeLauncherPlatform')
+      .then((platform: string) => {
+        if (disposed) return
+        const windows = platform === 'win32'
+        setIsWindows(windows)
+        if (windows) {
+          refreshChromeLauncherState()
+          chromeStateTimer = setInterval(refreshChromeLauncherState, 750)
+        }
+      })
+      .catch(() => {
+        if (!disposed) setIsWindows(false)
+      })
+
     return () => {
+      disposed = true
       document.removeEventListener('mousedown', handleClickOutside)
+      if (chromeStateTimer) clearInterval(chromeStateTimer)
     }
   }, [])
 
   // 启动 chrome 模式
-  const handleStartChromeBefore = useMemoizedFn(() => {
+  const handleStartChromeBefore = useMemoizedFn((keepOpen: boolean) => {
+    if (launchingRef.current) return
+    if (isWindows) {
+      if (taskbarIconPreset === 'custom' && !taskbarIconPath.trim()) {
+        failed(t('MITMChromeLauncher.taskbar_icon_custom_required'))
+        return
+      }
+      if (taskbarIconPreset !== 'custom' && activeTaskbarIconKeys.includes(taskbarIconPreset)) {
+        failed(t('MITMChromeLauncher.taskbar_icon_in_use'))
+        refreshChromeLauncherState()
+        return
+      }
+    }
     if (chormeCheck === 'customSet') {
-      startChrome(false)
+      startChrome(false, keepOpen)
     } else if (chormeCheck === 'defaultSet') {
-      startChrome(true)
+      startChrome(true, keepOpen)
     }
     setRemoteValue(RemoteMitmGV.MitmStartChromeCheck, chormeCheck)
   })
-  const startChrome = useMemoizedFn(async (baseStart: boolean) => {
-    const { proxyUsername: username = '', proxyPassword: password = '' } = await loadAdvancedConfig()
-    let newParams: {
-      host: string
-      port: number
-      chromePath?: string
-      userDataDir?: string
-      username?: string
-      password?: string
-      disableCACertPage: boolean
-      chromeFlags: ChromeLauncherParams[]
-    } = {
-      ...params,
-      username,
-      password,
-      userDataDir,
-      disableCACertPage: props.disableCACertPage,
-      chromeFlags: [],
-    }
+  const startChrome = useMemoizedFn(async (baseStart: boolean, keepOpen: boolean) => {
+    if (launchingRef.current) return
+    const shouldKeepOpen = isWindows && keepOpen
+    launchingRef.current = true
+    setLaunching(true)
+    setLaunchMode(shouldKeepOpen ? 'continue' : 'single')
+    try {
+      const [advancedConfig, res] = await Promise.all([
+        loadAdvancedConfig(),
+        Promise.allSettled([getRemoteValue(RemoteGV.GlobalChromePath), getRemoteValue(RemoteGV.ChromeLauncherParams)]),
+      ])
+      const { proxyUsername: username = '', proxyPassword: password = '' } = advancedConfig
+      let newParams: {
+        host: string
+        port: number
+        chromePath?: string
+        userDataDir?: string
+        username?: string
+        password?: string
+        taskbarIconPreset?: string
+        taskbarIconPath?: string
+        disableCACertPage: boolean
+        chromeFlags: ChromeLauncherParams[]
+      } = {
+        ...params,
+        username,
+        password,
+        userDataDir: isSaveUserData ? userDataDir : undefined,
+        ...(isWindows
+          ? {
+              taskbarIconPreset:
+                taskbarIconPreset !== 'default' && taskbarIconPreset !== 'custom' ? taskbarIconPreset : undefined,
+              taskbarIconPath: taskbarIconPreset === 'custom' ? taskbarIconPath : undefined,
+            }
+          : {}),
+        disableCACertPage: props.disableCACertPage,
+        chromeFlags: [],
+      }
 
-    setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + '')
-    userDataDirRef.current?.onSetRemoteValues(userDataDir)
+      setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + '')
+      userDataDirRef.current?.onSetRemoteValues(userDataDir)
 
-    Promise.allSettled([getRemoteValue(RemoteGV.GlobalChromePath), getRemoteValue(RemoteGV.ChromeLauncherParams)]).then(
-      (res) => {
-        if (res[0].status === 'fulfilled') {
-          const value = res[0].value
-          if (value) {
-            newParams.chromePath = JSONParseLog(value, { page: 'MITMChromeLauncher', fun: 'chromePath' })
-          }
+      if (res[0].status === 'fulfilled') {
+        const value = res[0].value
+        if (value) {
+          newParams.chromePath = JSONParseLog(value, { page: 'MITMChromeLauncher', fun: 'chromePath' })
         }
+      }
 
-        let chromeFlags: ChromeLauncherParams[] = chromeLauncherParamsArr
-        if (res[1].status === 'fulfilled') {
-          const value = res[1].value
-          if (value) {
-            try {
-              chromeFlags = JSONParseLog(value, { page: 'MITMChromeLauncher', fun: 'chromeFlags' })
-            } catch (error) {}
-          }
+      let chromeFlags: ChromeLauncherParams[] = chromeLauncherParamsArr
+      if (res[1].status === 'fulfilled') {
+        const value = res[1].value
+        if (value) {
+          try {
+            chromeFlags = JSONParseLog(value, { page: 'MITMChromeLauncher', fun: 'chromeFlags' })
+          } catch (error) {}
         }
+      }
 
-        if (baseStart) {
-          newParams.chromeFlags = chromeLauncherMinParams
+      newParams.chromeFlags = baseStart
+        ? chromeLauncherMinParams
+        : handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
+      const launchResult = (await ipcRenderer.invoke('LaunchChromeWithParams', newParams)) as ChromeLaunchResult
+      if (isWindows) {
+        const nextActiveKeys = Array.isArray(launchResult?.activeTaskbarIconKeys)
+          ? launchResult.activeTaskbarIconKeys
+          : [
+              ...new Set([
+                ...activeTaskbarIconKeys,
+                launchResult?.taskbarIconKey ||
+                  (taskbarIconPreset === 'custom' ? `custom:${taskbarIconPath.toLowerCase()}` : taskbarIconPreset),
+              ]),
+            ]
+        setActiveTaskbarIconKeys(nextActiveKeys)
+        if (shouldKeepOpen) {
+          if (taskbarIconPreset === 'custom') setTaskbarIconPath('')
+          setTaskbarIconPreset(getNextAvailableTaskbarIcon(nextActiveKeys))
+          info(t('MITMChromeLauncher.multi_launch_success'))
         } else {
-          newParams.chromeFlags = handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
+          props.callback(params.host, params.port)
         }
-        ipcRenderer
-          .invoke('LaunchChromeWithParams', newParams)
-          .then((e) => {
-            props.callback(params.host, params.port)
-          })
-          .catch((e) => {
-            failed(t('MITMChromeLauncher.chrome_launch_failed', { err: e + '' }))
-          })
-      },
-    )
+      } else {
+        props.callback(params.host, params.port)
+      }
+    } catch (error) {
+      failed(t('MITMChromeLauncher.chrome_launch_failed', { err: error + '' }))
+      if (isWindows) refreshChromeLauncherState()
+    } finally {
+      launchingRef.current = false
+      setLaunching(false)
+      setLaunchMode(null)
+    }
   })
 
   return (
@@ -256,6 +388,136 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
           </Tooltip>
         </Form.Item>
       )}
+      {isWindows && (
+        <Form.Item label={t('MITMChromeLauncher.taskbar_icon')}>
+          <div
+            className={classNames(style['taskbar-icon-picker'], { [style['disabled']]: launching })}
+            role="radiogroup"
+            aria-label={t('MITMChromeLauncher.taskbar_icon')}
+            aria-busy={launching}
+          >
+            <button
+              type="button"
+              role="radio"
+              disabled={launching || activeTaskbarIconKeys.includes('default')}
+              title={
+                activeTaskbarIconKeys.includes('default')
+                  ? `${t('MITMChromeLauncher.taskbar_icon_default')} · ${t('MITMChromeLauncher.taskbar_icon_running')}`
+                  : t('MITMChromeLauncher.taskbar_icon_default')
+              }
+              aria-checked={taskbarIconPreset === 'default'}
+              className={classNames(style['taskbar-icon-option'], style['taskbar-icon-option-text'], {
+                [style['active']]: taskbarIconPreset === 'default',
+                [style['used']]: activeTaskbarIconKeys.includes('default'),
+              })}
+              onClick={() => setTaskbarIconPreset('default')}
+            >
+              {t('MITMChromeLauncher.taskbar_icon_default')}
+              {activeTaskbarIconKeys.includes('default') && (
+                <span className={style['taskbar-icon-used-dot']} aria-hidden="true" />
+              )}
+            </button>
+            {[
+              {
+                value: 'knowledge-crab' as BuiltInTaskbarIconPreset,
+                label: t('MITMChromeLauncher.taskbar_icon_crab'),
+                icon: <CrabIcon />,
+              },
+              {
+                value: 'knowledge-tiger' as BuiltInTaskbarIconPreset,
+                label: t('MITMChromeLauncher.taskbar_icon_tiger'),
+                icon: <TigerIcon />,
+              },
+              {
+                value: 'knowledge-cat' as BuiltInTaskbarIconPreset,
+                label: t('MITMChromeLauncher.taskbar_icon_cat'),
+                icon: <CatIcon />,
+              },
+              {
+                value: 'knowledge-octopus' as BuiltInTaskbarIconPreset,
+                label: t('MITMChromeLauncher.taskbar_icon_octopus'),
+                icon: <OctopusIcon />,
+              },
+              {
+                value: 'knowledge-skeleton' as BuiltInTaskbarIconPreset,
+                label: t('MITMChromeLauncher.taskbar_icon_skeleton'),
+                icon: <SkeletonIcon />,
+              },
+              {
+                value: 'knowledge-smiley' as BuiltInTaskbarIconPreset,
+                label: t('MITMChromeLauncher.taskbar_icon_smiley'),
+                icon: <SmileyFaceIcon />,
+              },
+            ].map((item) => {
+              const used = activeTaskbarIconKeys.includes(item.value)
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  role="radio"
+                  disabled={launching || used}
+                  title={used ? `${item.label} · ${t('MITMChromeLauncher.taskbar_icon_running')}` : item.label}
+                  aria-label={item.label}
+                  aria-checked={taskbarIconPreset === item.value}
+                  className={classNames(style['taskbar-icon-option'], {
+                    [style['active']]: taskbarIconPreset === item.value,
+                    [style['used']]: used,
+                  })}
+                  onClick={() => setTaskbarIconPreset(item.value)}
+                >
+                  <span className={style['taskbar-icon-preview']}>{item.icon}</span>
+                  {used && <span className={style['taskbar-icon-used-dot']} aria-hidden="true" />}
+                </button>
+              )
+            })}
+            <button
+              type="button"
+              role="radio"
+              disabled={launching}
+              aria-checked={taskbarIconPreset === 'custom'}
+              className={classNames(style['taskbar-icon-option'], style['taskbar-icon-option-text'], {
+                [style['active']]: taskbarIconPreset === 'custom',
+              })}
+              onClick={() => setTaskbarIconPreset('custom')}
+            >
+              {t('MITMChromeLauncher.taskbar_icon_custom')}
+            </button>
+          </div>
+          {activeTaskbarIconKeys.length > 0 && (
+            <div className={style['taskbar-icon-usage']}>
+              <span className={style['taskbar-icon-usage-dot']} aria-hidden="true" />
+              {t('MITMChromeLauncher.taskbar_icons_running', { count: activeTaskbarIconKeys.length })}
+            </div>
+          )}
+          {taskbarIconPreset === 'custom' && (
+            <div style={{ position: 'relative', marginTop: 8 }}>
+              <YakitInput
+                allowClear
+                disabled={launching}
+                style={{ width: 'calc(100% - 20px)' }}
+                value={taskbarIconPath}
+                placeholder={t('MITMChromeLauncher.taskbar_icon_placeholder')}
+                onChange={(event) => setTaskbarIconPath(event.target.value)}
+              />
+              <Tooltip title={t('MITMChromeLauncher.select_taskbar_icon')}>
+                <CloudUploadOutlined
+                  onClick={() => {
+                    if (launching) return
+                    handleOpenFileSystemDialog({
+                      title: t('MITMChromeLauncher.please_select_icon'),
+                      properties: ['openFile'],
+                      filters: [{ name: 'Windows icon resource', extensions: ['ico', 'exe', 'dll'] }],
+                    }).then((data) => {
+                      if (data.filePaths.length) setTaskbarIconPath(data.filePaths[0])
+                    })
+                  }}
+                  style={{ position: 'absolute', right: 0, top: 8, cursor: 'pointer' }}
+                />
+              </Tooltip>
+            </div>
+          )}
+        </Form.Item>
+      )}
       <Form.Item
         colon={false}
         label={' '}
@@ -298,18 +560,24 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         }
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div className={style['chrome-operation-btn-wrapper']} ref={chromedropdownRef}>
+          <div
+            className={classNames(style['chrome-operation-btn-wrapper'], { [style['disabled']]: launching })}
+            ref={chromedropdownRef}
+          >
             <div
               className={style['operation-btn-left']}
               style={{ borderRadius: '40px 0 0 40px' }}
-              onClick={handleStartChromeBefore}
+              onClick={() => handleStartChromeBefore(false)}
             >
-              {t('MITMChromeLauncher.launch_config_free_chrome')}
+              {launchMode === 'single' && <LoadingOutlined spin className={style['chrome-launching-icon']} />}
+              {launchMode === 'single'
+                ? t('MITMChromeLauncher.preparing_chrome')
+                : t('MITMChromeLauncher.launch_config_free_chrome')}
             </div>
             <div
               className={style['operation-btn-right']}
               style={{ borderRadius: '0 40px 40px 0' }}
-              onClick={() => setShowChormeDropdown(!showChormeDropdown)}
+              onClick={() => !launching && setShowChormeDropdown(!showChormeDropdown)}
             >
               <OutlineChevronupIcon
                 className={classNames(style['title-icon'], {
@@ -341,8 +609,23 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
               ))}
             </div>
           </div>
+          {isWindows && (
+            <Tooltip title={isSaveUserData ? t('MITMChromeLauncher.multi_launch_temporary_only') : undefined}>
+              <span className={style['multi-launch-button-wrapper']}>
+                <YakitButton
+                  type="outline1"
+                  icon={<PlusIcon />}
+                  loading={launchMode === 'continue'}
+                  disabled={launching || isSaveUserData}
+                  onClick={() => handleStartChromeBefore(true)}
+                >
+                  {t('MITMChromeLauncher.launch_and_add_another')}
+                </YakitButton>
+              </span>
+            </Tooltip>
+          )}
           {chormeCheck === 'customSet' && (
-            <YakitButton type="text" onClick={() => setChromeLauncherParamsVisible(true)}>
+            <YakitButton type="text" disabled={launching} onClick={() => setChromeLauncherParamsVisible(true)}>
               {t('MITMChromeLauncher.more_params')}
             </YakitButton>
           )}
@@ -401,11 +684,13 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
   const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const [started, setStarted] = useState(false)
   const [chromeVisible, setChromeVisible] = useState(false)
+  const [closing, setClosing] = useState(false)
+  const closingRef = useRef(false)
 
   useEffect(() => {
     const id = setInterval(() => {
       ipcRenderer.invoke('IsChromeLaunched').then((e) => {
-        setStarted(e)
+        if (!closingRef.current) setStarted(e)
       })
     }, 500)
     return () => {
@@ -421,13 +706,21 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
     // }
   })
   const onCloseChrome = useMemoizedFn(() => {
+    if (closingRef.current) return
+    closingRef.current = true
+    setClosing(true)
     ipcRenderer
       .invoke('StopAllChrome')
       .then(() => {
+        setStarted(false)
         info(t('MITMChromeLauncher.close_all_no_config_chrome_success'))
       })
       .catch((e) => {
         failed(t('MITMChromeLauncher.close_all_chrome_failed') + `: ${e}`)
+      })
+      .finally(() => {
+        closingRef.current = false
+        setClosing(false)
       })
   })
 
@@ -471,7 +764,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
     <>
       {(isStartMITM && (
         <>
-          <YakitButton type="outline2" onClick={() => onSwitch(!started)}>
+          <YakitButton type="outline2" disabled={closing} onClick={() => onSwitch(!started)}>
             {(started && <ChromeSvgIcon />) || (
               <ChromeFrameSvgIcon style={{ height: 16, color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
             )}
@@ -482,6 +775,13 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
             <Tooltip title={t('MITMChromeLauncher.close_all_no_config_chrome')}>
               <YakitButton
                 type="outline2"
+                loading={closing}
+                disabled={closing}
+                aria-label={
+                  closing
+                    ? t('MITMChromeLauncher.closing_no_config_chrome')
+                    : t('MITMChromeLauncher.close_all_no_config_chrome')
+                }
                 onClick={() => {
                   onCloseChrome()
                 }}

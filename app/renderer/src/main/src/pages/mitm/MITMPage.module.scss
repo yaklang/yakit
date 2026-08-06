@@ -356,6 +356,135 @@
   }
 }
 
+.taskbar-icon-picker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 6px;
+  background: var(--Colors-Use-Neutral-Bg);
+
+  &.disabled {
+    opacity: 0.72;
+
+    .taskbar-icon-option:not(.used) {
+      cursor: wait;
+    }
+  }
+}
+
+.taskbar-icon-option {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 3px;
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-2-Primary);
+  cursor: pointer;
+  line-height: 1;
+  vertical-align: top;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    border-color: var(--Colors-Use-Main-Border);
+    background: var(--Colors-Use-Main-Bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--Colors-Use-Main-Primary);
+    outline-offset: 1px;
+  }
+
+  &.active {
+    border-color: var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Main-Bg);
+    box-shadow: inset 0 0 0 1px var(--Colors-Use-Main-Primary);
+  }
+
+  &.used {
+    opacity: 0.46;
+    filter: saturate(0.7);
+  }
+}
+
+.taskbar-icon-option-text {
+  width: auto;
+  min-width: 44px;
+  padding: 0 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.taskbar-icon-preview {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: 3px;
+
+  :global(.anticon),
+  :global(svg) {
+    display: block;
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+.taskbar-icon-used-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--Colors-Use-Basic-Background);
+  border-radius: 50%;
+  background: var(--Colors-Use-Success-Primary);
+  box-shadow: 0 0 0 1px var(--Colors-Use-Basic-Background);
+}
+
+.taskbar-icon-usage {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.taskbar-icon-usage-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--Colors-Use-Success-Primary);
+}
+
+.multi-launch-button-wrapper {
+  display: inline-flex;
+  margin-left: 8px;
+}
+
 .mitm-plugin-query-show {
   display: flex;
   flex-wrap: wrap;
@@ -494,6 +623,20 @@
   display: flex;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   border-radius: 40px;
+  &.disabled {
+    opacity: 0.72;
+    cursor: wait;
+
+    .operation-btn-left,
+    .operation-btn-right {
+      cursor: wait;
+      pointer-events: none;
+    }
+  }
+
+  .chrome-launching-icon {
+    margin-right: 6px;
+  }
   .operation-btn-left {
     display: flex;
     justify-content: center;

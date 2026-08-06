@@ -1,0 +1,71 @@
+import { describe, expect, it } from 'vitest'
+import path from 'path'
+import taskbarUtils from '../handlers/windowsChromeTaskbarUtils'
+
+const {
+  getChromeStartingUrl,
+  getTaskbarIconPresetFileName,
+  makeTaskbarIconKey,
+  makeAppUserModelId,
+  normalizeChromeFlags,
+  quoteWindowsArgument,
+} = taskbarUtils
+
+describe('windowsChromeTaskbarUtils', () => {
+  it('quotes Windows arguments using CommandLineToArgvW escaping rules', () => {
+    expect(quoteWindowsArgument('plain')).toBe('plain')
+    expect(quoteWindowsArgument('C:\\profile with spaces\\')).toBe('"C:\\profile with spaces\\\\"')
+    expect(quoteWindowsArgument('a"b')).toBe('"a\\"b"')
+    expect(quoteWindowsArgument('')).toBe('""')
+  })
+
+  it('creates a stable and bounded AppUserModelID for each profile', () => {
+    const first = makeAppUserModelId('/tmp/profile-a')
+    expect(first).toBe(makeAppUserModelId('/tmp/profile-a'))
+    expect(first).not.toBe(makeAppUserModelId('/tmp/profile-b'))
+    expect(first).toMatch(/^io\.yaklang\.yakit\.chrome\.[a-f0-9]{32}$/u)
+    expect(first.length).toBeLessThanOrEqual(128)
+  })
+
+  it('maps only supported built-in taskbar icon presets', () => {
+    expect(getTaskbarIconPresetFileName()).toBeNull()
+    expect(getTaskbarIconPresetFileName('knowledge-crab')).toBe('knowledge-crab.ico')
+    expect(getTaskbarIconPresetFileName('knowledge-tiger')).toBe('knowledge-tiger.ico')
+    expect(getTaskbarIconPresetFileName('knowledge-cat')).toBe('knowledge-cat.ico')
+    expect(getTaskbarIconPresetFileName('knowledge-octopus')).toBe('knowledge-octopus.ico')
+    expect(getTaskbarIconPresetFileName('knowledge-skeleton')).toBe('knowledge-skeleton.ico')
+    expect(getTaskbarIconPresetFileName('knowledge-smiley')).toBe('knowledge-smiley.ico')
+    expect(() => getTaskbarIconPresetFileName('../unexpected')).toThrow('Unknown taskbar icon preset')
+  })
+
+  it('opens the MITM certificate page unless it is explicitly disabled', () => {
+    expect(getChromeStartingUrl()).toBe('http://mitm')
+    expect(getChromeStartingUrl(false)).toBe('http://mitm')
+    expect(getChromeStartingUrl(true)).toBe('chrome://newtab')
+  })
+
+  it('creates stable taskbar icon occupancy keys', () => {
+    expect(makeTaskbarIconKey()).toBe('default')
+    expect(makeTaskbarIconKey('knowledge-cat')).toBe('knowledge-cat')
+    expect(makeTaskbarIconKey(undefined, '/tmp/custom icon.ico')).toBe(
+      `custom:${path.resolve('/tmp/custom icon.ico').toLowerCase()}`,
+    )
+    expect(() => makeTaskbarIconKey('unknown-preset')).toThrow('Unknown taskbar icon preset')
+  })
+
+  it('filters profile ownership flags from renderer-provided arguments', () => {
+    expect(
+      normalizeChromeFlags([
+        { parameterName: '--ignore-certificate-errors', variableValues: '' },
+        { parameterName: '--host-resolver-rules', variableValues: 'MAP example.test 127.0.0.1' },
+        { parameterName: '--user-data-dir=C:\\other' },
+        { parameterName: '--profile-directory', variableValues: 'Profile 2' },
+        { parameterName: '--start-minimized' },
+        { parameterName: '--new-window=false' },
+        { parameterName: '--disable-background-mode=false' },
+        { parameterName: '--disabled', disabled: true },
+        { parameterName: 'not-a-switch' },
+      ]),
+    ).toEqual(['--ignore-certificate-errors', '--host-resolver-rules=MAP example.test 127.0.0.1'])
+  })
+})
