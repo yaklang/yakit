@@ -1,6 +1,6 @@
 import type { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
-import { getFileSuffixFromPath, normalizeYakRunnerFilePath } from '@/pages/yakRunner/utils'
+import { getFileSuffixFromPath, isYaklangScriptDeliveryPath, normalizeYakRunnerFilePath } from '@/pages/yakRunner/utils'
 import { yakitFailed } from '@/utils/notification'
 
 export const YAK_RUNNER_AI_PAGE_ID = 'yak-runner-main'
@@ -28,6 +28,29 @@ export type YakRunnerCasualCodeReplaceReviewPayload = {
 type YakRunnerCasualCodeReplaceReviewHandler = (payload: YakRunnerCasualCodeReplaceReviewPayload) => void
 
 const pageCasualReplaceReviewHandlers = new Map<string, YakRunnerCasualCodeReplaceReviewHandler>()
+
+/** Keys that carry script delivery targets for write_yaklang_code */
+const YAKLANG_DELIVERY_FILE_PATH_KEYS = new Set<AttachedResourceKeyEnum>([
+  AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
+  AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
+])
+
+function attachedResourcePathValue(item: AttachedResourceInfo): string {
+  const value = item.Value
+  if (typeof value === 'string') return value.trim()
+  if (Array.isArray(value)) return String(value[0] ?? '').trim()
+  return ''
+}
+
+function upsertAttachedResource(list: AttachedResourceInfo[], entry: AttachedResourceInfo): AttachedResourceInfo[] {
+  const idx = list.findIndex((item) => item.Key === entry.Key)
+  if (idx >= 0) {
+    const next = [...list]
+    next[idx] = entry
+    return next
+  }
+  return [...list, entry]
+}
 
 export function resolveYaklangCodeChangePath(change: AIAgentGrpcApi.YaklangCodeChange): string | undefined {
   const path = change.code?.path?.trim()
@@ -146,39 +169,50 @@ export function getYakRunnerPageWorkspaceContext(pageId: string): YakRunnerWorks
 }
 
 /**
- * yaklang writer loop：无选中代码时仍附带工作区上下文
+ * yaklang writer loop：规范化 AttachedResourceInfo 并附带工作区上下文
+ * - @mention / 选区参考文件（.md 等）不得占用 delivery file_path
+ * - 当前打开的 .yak tab 始终作为交付目标（覆盖 mention 先占坑的情况）
  * - 已打开文件夹 → directory_path
- * - 已打开并停留文件 → 再加 file_path
  * - 选中代码块由 codeBlockList 附带 selected/content，此处不重复写入
  */
 export function appendYakRunnerWorkspaceContextToEvent(pageId: string, event: AIInputEvent): AIInputEvent {
   const ctx = getYakRunnerPageWorkspaceContext(pageId)
-  if (!ctx) return event
-
-  const directoryPath = ctx.directoryPath?.trim()
-  const filePath = ctx.filePath?.trim()
-  if (!directoryPath && !filePath) return event
+  const directoryPath = ctx?.directoryPath?.trim()
+  const activeFilePath = ctx?.filePath?.trim()
+  const editorDeliveryPath = activeFilePath && isYaklangScriptDeliveryPath(activeFilePath) ? activeFilePath : undefined
 
   const existing = event.AttachedResourceInfo || []
-  const hasKey = (key: AttachedResourceKeyEnum) => existing.some((item) => item.Key === key)
 
-  const toAppend: AttachedResourceInfo[] = []
-  if (directoryPath && !hasKey(AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID)) {
-    toAppend.push({
+  // Drop non-.yak delivery paths (@mention reports, code blocks from .md tabs, etc.)
+  let next = existing.filter((item) => {
+    if (!YAKLANG_DELIVERY_FILE_PATH_KEYS.has(item.Key as AttachedResourceKeyEnum)) {
+      return true
+    }
+    const path = attachedResourcePathValue(item)
+    if (!path) return true
+    return isYaklangScriptDeliveryPath(path)
+  })
+
+  if (directoryPath) {
+    next = upsertAttachedResource(next, {
       Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
       Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
       Value: directoryPath,
     })
   }
-  if (filePath && !hasKey(AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID)) {
-    toAppend.push({
+
+  if (editorDeliveryPath) {
+    next = upsertAttachedResource(next, {
       Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
       Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
-      Value: filePath,
+      Value: editorDeliveryPath,
     })
   }
-  if (toAppend.length === 0) return event
-  return { ...event, AttachedResourceInfo: [...existing, ...toAppend] }
+
+  if (next.length === existing.length && !directoryPath && !editorDeliveryPath) {
+    return event
+  }
+  return { ...event, AttachedResourceInfo: next }
 }
 
 export type ApplyYaklangCodeChangeOptions = {

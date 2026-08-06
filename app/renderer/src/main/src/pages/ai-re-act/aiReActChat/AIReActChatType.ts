@@ -62,6 +62,8 @@ export interface AIReActChatProps {
     onHttpFlowRemove?: AIChatTextareaProps['onHttpFlowRemove']
     /** 发送问题后回调（如清空 history 表勾选） */
     onAfterSubmit?: () => void
+    /** Yak Runner write_yaklang_code：@mention 参考文件不得占用 delivery file_path */
+    yaklangScriptDeliveryOnly?: boolean
   }
 }
 

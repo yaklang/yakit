@@ -144,7 +144,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       const session = getSession(sessionId)
 
       request.TimelineSessionID = session
-      const { attachedResourceInfo } = getAIReActRequestParams(value)
+      const attachedParamsOptions = externalParameters?.yaklangScriptDeliveryOnly
+        ? { yaklangScriptDeliveryOnly: true as const }
+        : undefined
+      const { attachedResourceInfo } = getAIReActRequestParams(value, attachedParamsOptions)
       // 发送初始化参数
       const aiInputEvent: AIInputEvent = {
         IsStart: true,
@@ -218,7 +221,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const handleSend = useMemoizedFn((data: HandleStartParams) => {
       if (!activeChat?.SessionID) return
       try {
-        const { attachedResourceInfo } = getAIReActRequestParams(data)
+        const attachedParamsOptions = externalParameters?.yaklangScriptDeliveryOnly
+          ? { yaklangScriptDeliveryOnly: true as const }
+          : undefined
+        const { attachedResourceInfo } = getAIReActRequestParams(data, attachedParamsOptions)
         const chatMessage: AIInputEvent = {
           IsFreeInput: true,
           FreeInput: data.qs,
