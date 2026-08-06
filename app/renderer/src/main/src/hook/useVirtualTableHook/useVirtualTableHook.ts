@@ -637,12 +637,7 @@ export default function useVirtualTableHook<
       return
     }
 
-    const fillLimit = selectVirtualTableViewportFillLimit(
-      data.length,
-      total,
-      boxHeightRef.current,
-      ROW_HEIGHT,
-    )
+    const fillLimit = selectVirtualTableViewportFillLimit(data.length, total, boxHeightRef.current, ROW_HEIGHT)
     if (fillLimit > 0) updateBottomData(fillLimit)
   })
   flushViewportReconcileRef.current = flushViewportReconcile
