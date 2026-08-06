@@ -1,10 +1,12 @@
-import type { AISource, AIAgentGrpcApi } from '../grpcApi'
+import type { AIAgentGrpcApi } from '../grpcApi'
 import type { AIChatQSData, SessionRenderContent } from '../aiRender'
+import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 
 /** sessionRender 表一行记录 */
 export interface SessionRenderRecord {
   sessionId: string
-  source: AISource
+  /** 本地索引维度；IM 会话可能为平台区分型（im-Lark / im-DingTalk） */
+  source: DeleteSessionsAISourceType
   content: SessionRenderContent
   /** 与后端事件游标对齐；写树时一并 put */
   grpcOffset?: number

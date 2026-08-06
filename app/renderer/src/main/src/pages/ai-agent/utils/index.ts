@@ -11,6 +11,7 @@ import { isIRify } from '@/utils/envfile'
 import { UseChatIPCStartParams } from '../useContext/AIAgentContext'
 import { AISession } from '../type/aiChat'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from '../historyChat/utils'
 
 export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
@@ -274,6 +275,23 @@ interface ReStartParams {
   activeChat: AISession
   onStart: (params: UseChatIPCStartParams) => void
 }
+
+/** 把 IMSourceMeta.Platform 折算成本地区分型 source（仅写本地 sessionOwnerMap 索引，不进 gRPC）。
+ *  - feishu → im-Lark（飞书）
+ *  - dingtalk → im-DingTalk（钉钉）
+ *  - 非 IM 会话返回 undefined：走 Params.Source 兜底 */
+const resolveLocalSource = (activeChat: AISession): DeleteSessionsAISourceType | undefined => {
+  if (activeChat.Source !== 'im') return undefined
+  switch ((activeChat.IMSourceMeta?.Platform || '').trim().toLowerCase()) {
+    case 'feishu':
+      return DeleteSessionsAISourceEnum.lark
+    case 'dingtalk':
+      return DeleteSessionsAISourceEnum.dingTalk
+    default:
+      return DeleteSessionsAISourceEnum.im
+  }
+}
+
 /** 重启会话 */
 export const onReStart = (props: ReStartParams) => {
   const { setting, activeChat, onStart } = props
@@ -296,6 +314,7 @@ export const onReStart = (props: ReStartParams) => {
     onStart({
       token: activeChat?.SessionID,
       params: aiInputEvent,
+      localSource: resolveLocalSource(activeChat),
     })
   }
 }

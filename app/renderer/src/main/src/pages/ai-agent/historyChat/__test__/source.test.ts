@@ -3,6 +3,7 @@ import type { AISession } from '../../type/aiChat'
 import {
   filterHistorySessionsBySource,
   getHistorySessionIconMeta,
+  getHistorySourceDeleteSessionSource,
   getHistorySourceFilterCounts,
   getHistorySourceQueryPlatform,
   getHistorySourceQuerySources,
@@ -185,5 +186,19 @@ describe('history source filters', () => {
     expect(getHistorySourceQueryPlatform('local')).toEqual([])
     expect(getHistorySourceQueryPlatform('feishu')).toEqual(['feishu'])
     expect(getHistorySourceQueryPlatform('dingtalk')).toEqual(['dingtalk'])
+  })
+})
+
+describe('getHistorySourceDeleteSessionSource', () => {
+  it('maps feishu to the local platform-discriminated source im-Lark', () => {
+    expect(getHistorySourceDeleteSessionSource('feishu')).toBe('im-Lark')
+  })
+
+  it('maps dingtalk to the local platform-discriminated source im-DingTalk', () => {
+    expect(getHistorySourceDeleteSessionSource('dingtalk')).toBe('im-DingTalk')
+  })
+
+  it('falls back to im for the local filter', () => {
+    expect(getHistorySourceDeleteSessionSource('local')).toBe('im')
   })
 })

@@ -30,10 +30,12 @@ import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDa
 import classNames from 'classnames'
 import {
   filterHistorySessionsBySource,
+  getHistorySourceDeleteSessionSource,
   getHistorySourceQueryPlatform,
   getHistorySourceQuerySources,
   type HistorySourceFilter,
 } from './source'
+import type { DeleteSessionsAISourceType } from './utils'
 import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import useDebounce from 'ahooks/lib/useDebounce'
@@ -177,12 +179,16 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     setClearLoading(true)
     try {
       let filter: DeleteAISessionRequest = {}
+      let deleteSessionsSource: DeleteSessionsAISourceType[] = sources
       if (isGlobalAIAgentHistory && historySourceFilter === 'local') {
         // Global AI Agent 侧栏 + local 分组：清空全部来源的会话。
         filter = { DeleteAll: true }
       } else if (isGlobalAIAgentHistory && enableHistorySourceFilter) {
         // Global AI Agent 侧栏 + IM 平台分组：只删该平台，不波及其它来源/平台。
+        // gRPC 仍按 Source=['im'] + Platform 精确删除；
+        // 本地 deleteSessionsParams.source 用平台区分型（im-Lark/im-DingTalk）以精确命中。
         filter = { Filter: { Source: ['im'], Platform: historyQueryPlatform } }
+        deleteSessionsSource = [getHistorySourceDeleteSessionSource(historySourceFilter)]
       } else {
         // 业务页嵌入：按当前分组的 source + platform 删除。
         filter = { Filter: { Source: historyQuerySources, Platform: historyQueryPlatform } }
@@ -191,7 +197,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
         grpcDeleteAISessionParams: filter,
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
         // 按 source 列表清空；不传 deleteAll，全库清删由其它入口负责
-        deleteSessionsParams: { sessionIds: [], source: sources },
+        deleteSessionsParams: { sessionIds: [], source: deleteSessionsSource },
       })
       onNewChat()
       setActiveChat?.(undefined)

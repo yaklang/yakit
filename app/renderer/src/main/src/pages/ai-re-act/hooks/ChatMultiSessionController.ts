@@ -1,7 +1,6 @@
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import {
   AIInputEventSyncTypeEnum,
-  AISource,
   AISourceEnum,
   type AIAgentGrpcApi,
   type AIEventQueryRequest,
@@ -40,6 +39,7 @@ import {
   persistIndependentItem,
   persistToolResultIfTerminal,
 } from './persist/contentPersistHelper'
+import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -48,7 +48,7 @@ export type DeleteSessionsParams = {
   /** 有值：只删这些 id */
   sessionIds?: string[]
   /** 有值且非 deleteAll：限定这些 source（sessionIds 空时删其下全部） */
-  source?: AISource[]
+  source?: DeleteSessionsAISourceType[]
   /** true：删除所有 session、所有 source（清库）；忽略 sessionIds / source */
   deleteAll?: boolean
 }
@@ -185,8 +185,10 @@ type PageKey = string
 interface SessionOwner {
   /** 不可变：注册后锁死 */
   readonly route: YakitRouteType
-  /** 不可变：注册后锁死 */
-  readonly source: AISource
+  /** 不可变：注册后锁死。本地索引维度，可能为平台区分型（im-Lark / im-DingTalk）
+   * 飞书/钉钉历史会话中点击，启动时确认来源
+   */
+  readonly source: DeleteSessionsAISourceType
   /** 可变：始终存当前 page */
   pageId: string
 }
@@ -245,7 +247,7 @@ export class ChatMultiSessionController {
    * 正向索引：按「当前」page 关页 / 全删
    * pageId 换绑后旧 PageKey 不再包含该 session
    */
-  private pageSessionMap = new Map<PageKey, Map<AISource, Set<string>>>()
+  private pageSessionMap = new Map<PageKey, Map<DeleteSessionsAISourceType, Set<string>>>()
   /**
    * 反向索引：按 sessionId O(1) 定位；换绑时只改 pageId 并搬动正向索引
    */
@@ -293,9 +295,9 @@ export class ChatMultiSessionController {
    */
   private registerSessionChannel(
     sessionId: string,
-    owner: { route: YakitRouteType; pageId: string; source?: AIStartParams['Source'] },
+    owner: { route: YakitRouteType; pageId: string; source?: DeleteSessionsAISourceType },
   ) {
-    const source: AISource = owner.source || 'ai'
+    const source: DeleteSessionsAISourceType = owner.source || 'ai'
     const existing = this.sessionOwnerMap.get(sessionId)
 
     if (existing) {
@@ -367,7 +369,7 @@ export class ChatMultiSessionController {
   /**
    * 按 source + route 查询当前索引中的 sessionId 集合（跨该 route 下所有 pageId）
    */
-  public getSessionIdsBySourceAndRoute(source: AISource, route: YakitRouteType): string[] {
+  public getSessionIdsBySourceAndRoute(source: DeleteSessionsAISourceType, route: YakitRouteType): string[] {
     const ids: string[] = []
     for (const [sessionId, owner] of this.sessionOwnerMap) {
       if (owner.source === source && owner.route === route) {
@@ -485,7 +487,7 @@ export class ChatMultiSessionController {
   }
 
   /** 从 sessionOwnerMap 取 source，兜底 'ai' */
-  private resolvePersistSource(sessionId: string): AISource {
+  private resolvePersistSource(sessionId: string): DeleteSessionsAISourceType {
     return this.sessionOwnerMap.get(sessionId)?.source || AISourceEnum.aiAgent
   }
 
@@ -543,7 +545,7 @@ export class ChatMultiSessionController {
   }
 
   /** 按 source 清除该来源下所有 session 的持久化数据 */
-  public async persistDeleteBySource(source: AISource) {
+  public async persistDeleteBySource(source: DeleteSessionsAISourceType) {
     try {
       await aiChatPersistStore.deletePersistBySource(source)
     } catch {
@@ -755,7 +757,7 @@ export class ChatMultiSessionController {
    * @returns 是否真正发起了建连
    */
   public handleStartSession(requestParams: AIChatIPCStartParams, cb?: (sessionId: string) => void): boolean {
-    const { token: sessionId, params, route, pageId } = requestParams
+    const { token: sessionId, params, route, pageId, localSource } = requestParams
     if (this.readyChannels.has(sessionId)) {
       yakitNotify('warning', '会话已经存在，请勿重复建立！')
       return false
@@ -764,7 +766,8 @@ export class ChatMultiSessionController {
     this.registerSessionChannel(sessionId, {
       route,
       pageId,
-      source: params.Params?.Source,
+      // localSource 仅本地索引用（IM 按平台区分 im-Lark/im-DingTalk）；缺省回退 Params.Source
+      source: localSource ?? params.Params?.Source,
     })
 
     const { request, store, rawData, meta } = this.ensureSession(sessionId)

@@ -1,5 +1,7 @@
 import type { AISession } from '../type/aiChat'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from './deleteSource'
 
 const IM_PLATFORM_NAME: Record<string, string> = {
   feishu: '飞书',
@@ -169,6 +171,26 @@ export const getHistorySourceQueryPlatform = (filter: HistorySourceFilter): stri
       return ['dingtalk']
     default:
       return []
+  }
+}
+
+/**
+ * 把历史来源过滤项映射为 deleteSessionsParams.source 用的「平台区分型」source。
+ * - feishu → im-Lark（飞书）
+ * - dingtalk → im-DingTalk（钉钉）
+ * - local → im（兜底；正常不走到，仅类型完备）
+ *
+ * 与 getHistorySourceQueryPlatform 的区别：后者是 gRPC 的 Platform 维度（feishu/dingtalk）；
+ * 本函数是本地 sessionOwnerMap 索引维度（im-Lark/im-DingTalk），用于本地 deleteSessions 精确命中。
+ */
+export const getHistorySourceDeleteSessionSource = (filter: HistorySourceFilter): DeleteSessionsAISourceType => {
+  switch (filter) {
+    case 'feishu':
+      return DeleteSessionsAISourceEnum.lark
+    case 'dingtalk':
+      return DeleteSessionsAISourceEnum.dingTalk
+    default:
+      return AISourceEnum.im
   }
 }
 
