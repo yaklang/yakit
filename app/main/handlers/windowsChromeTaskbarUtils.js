@@ -1,7 +1,13 @@
 const crypto = require('crypto')
 const path = require('path')
 
-const CONTROLLED_FLAGS = ['--user-data-dir', '--profile-directory', '--start-minimized', '--new-window']
+const CONTROLLED_FLAGS = [
+  '--user-data-dir',
+  '--profile-directory',
+  '--start-minimized',
+  '--new-window',
+  '--disable-background-mode',
+]
 const TASKBAR_ICON_PRESET_FILES = Object.freeze({
   'knowledge-crab': 'knowledge-crab.ico',
   'knowledge-tiger': 'knowledge-tiger.ico',
@@ -16,6 +22,15 @@ const getTaskbarIconPresetFileName = (preset) => {
   const fileName = TASKBAR_ICON_PRESET_FILES[preset]
   if (!fileName) throw new Error(`Unknown taskbar icon preset: ${preset}`)
   return fileName
+}
+
+const makeTaskbarIconKey = (preset, customIconPath) => {
+  if (typeof customIconPath === 'string' && customIconPath.trim().length > 0) {
+    return `custom:${path.resolve(customIconPath).toLowerCase()}`
+  }
+  if (!preset) return 'default'
+  getTaskbarIconPresetFileName(preset)
+  return preset
 }
 
 const quoteWindowsArgument = (value) => {
@@ -49,6 +64,7 @@ const normalizeChromeFlags = (chromeFlags) => {
 module.exports = {
   getChromeStartingUrl,
   getTaskbarIconPresetFileName,
+  makeTaskbarIconKey,
   makeAppUserModelId,
   normalizeChromeFlags,
   quoteWindowsArgument,

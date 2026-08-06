@@ -4,7 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const { getYakitHome } = require('../filePath')
 const { launchWindowsChrome } = require('./windowsChromeTaskbar')
-const { getChromeStartingUrl } = require('./windowsChromeTaskbarUtils')
+const { getChromeStartingUrl, makeTaskbarIconKey } = require('./windowsChromeTaskbarUtils')
 const getMyUserDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 
 const disableExtensionsExceptStr = (host, port, username, password) => `
@@ -125,8 +125,22 @@ module.exports = (win, getClient) => {
   let started = false
   const windowsInstances = new Map()
   const windowsLaunching = new Set()
+  const windowsIconsLaunching = new Set()
+  const getActiveTaskbarIconKeys = () => [
+    ...new Set([
+      ...windowsIconsLaunching,
+      ...[...windowsInstances.values()].map((instance) => instance.taskbarIconKey),
+    ]),
+  ]
   ipcMain.handle('IsChromeLaunched', async () => {
-    return started || windowsInstances.size > 0 || windowsLaunching.size > 0
+    return started || windowsInstances.size > 0 || windowsLaunching.size > 0 || windowsIconsLaunching.size > 0
+  })
+
+  ipcMain.handle('GetChromeLauncherState', async () => {
+    return {
+      running: started || windowsInstances.size > 0 || windowsLaunching.size > 0 || windowsIconsLaunching.size > 0,
+      activeTaskbarIconKeys: getActiveTaskbarIconKeys(),
+    }
   })
 
   ipcMain.handle('getDefaultUserDataDir', async () => {
@@ -164,10 +178,15 @@ module.exports = (win, getClient) => {
       const resolvedChromePath = chromePath || getChromePath()
       const requestedIdentity =
         typeof userDataDir === 'string' && userDataDir.trim() ? path.resolve(userDataDir).toLowerCase() : null
+      const taskbarIconKey = makeTaskbarIconKey(taskbarIconPreset, taskbarIconPath)
       if (requestedIdentity && (windowsInstances.has(requestedIdentity) || windowsLaunching.has(requestedIdentity))) {
         throw Error(`Chrome is already running with user data directory: ${userDataDir}`)
       }
+      if (getActiveTaskbarIconKeys().includes(taskbarIconKey)) {
+        throw Error(`The selected taskbar icon is already used by a running Chrome instance`)
+      }
       if (requestedIdentity) windowsLaunching.add(requestedIdentity)
+      windowsIconsLaunching.add(taskbarIconKey)
       try {
         const instance = await launchWindowsChrome({
           chromePath: resolvedChromePath,
@@ -185,9 +204,13 @@ module.exports = (win, getClient) => {
         instance.exitPromise.finally(() => {
           if (windowsInstances.get(instance.identity) === instance) windowsInstances.delete(instance.identity)
         })
-        return ''
+        return {
+          taskbarIconKey: instance.taskbarIconKey,
+          activeTaskbarIconKeys: getActiveTaskbarIconKeys(),
+        }
       } finally {
         if (requestedIdentity) windowsLaunching.delete(requestedIdentity)
+        windowsIconsLaunching.delete(taskbarIconKey)
       }
     }
 
@@ -309,11 +332,21 @@ module.exports = (win, getClient) => {
   ipcMain.handle('StopAllChrome', async (e) => {
     if (process.platform === 'win32') {
       const instances = [...windowsInstances.values()]
-      instances.forEach((instance) => instance.close())
       await Promise.all(
-        instances.map((instance) =>
-          Promise.race([instance.exitPromise, new Promise((resolve) => setTimeout(resolve, 5000))]),
-        ),
+        instances.map(async (instance) => {
+          let timeoutId
+          try {
+            await Promise.race([
+              instance.close(),
+              new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('Timed out waiting for Chrome windows to close')), 2000)
+              }),
+            ])
+            await Promise.race([instance.exitPromise, new Promise((resolve) => setTimeout(resolve, 250))])
+          } finally {
+            if (timeoutId) clearTimeout(timeoutId)
+          }
+        }),
       )
       return
     }

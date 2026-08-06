@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import path from 'path'
 import taskbarUtils from '../handlers/windowsChromeTaskbarUtils'
 
 const {
   getChromeStartingUrl,
   getTaskbarIconPresetFileName,
+  makeTaskbarIconKey,
   makeAppUserModelId,
   normalizeChromeFlags,
   quoteWindowsArgument,
@@ -42,6 +44,15 @@ describe('windowsChromeTaskbarUtils', () => {
     expect(getChromeStartingUrl(true)).toBe('chrome://newtab')
   })
 
+  it('creates stable taskbar icon occupancy keys', () => {
+    expect(makeTaskbarIconKey()).toBe('default')
+    expect(makeTaskbarIconKey('knowledge-cat')).toBe('knowledge-cat')
+    expect(makeTaskbarIconKey(undefined, '/tmp/custom icon.ico')).toBe(
+      `custom:${path.resolve('/tmp/custom icon.ico').toLowerCase()}`,
+    )
+    expect(() => makeTaskbarIconKey('unknown-preset')).toThrow('Unknown taskbar icon preset')
+  })
+
   it('filters profile ownership flags from renderer-provided arguments', () => {
     expect(
       normalizeChromeFlags([
@@ -51,6 +62,7 @@ describe('windowsChromeTaskbarUtils', () => {
         { parameterName: '--profile-directory', variableValues: 'Profile 2' },
         { parameterName: '--start-minimized' },
         { parameterName: '--new-window=false' },
+        { parameterName: '--disable-background-mode=false' },
         { parameterName: '--disabled', disabled: true },
         { parameterName: 'not-a-switch' },
       ]),

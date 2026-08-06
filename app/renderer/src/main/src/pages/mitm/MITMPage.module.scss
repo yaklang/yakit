@@ -370,29 +370,39 @@
 
   &.disabled {
     opacity: 0.72;
+
+    .taskbar-icon-option:not(.used) {
+      cursor: wait;
+    }
   }
 }
 
 .taskbar-icon-option {
   position: relative;
+  box-sizing: border-box;
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
+  margin: 0;
   padding: 3px;
+  appearance: none;
   border: 1px solid transparent;
   border-radius: 4px;
   background: var(--Colors-Use-Basic-Background);
   color: var(--Colors-Use-Neutral-Text-2-Primary);
   cursor: pointer;
+  line-height: 1;
+  vertical-align: top;
   transition:
     border-color 120ms ease,
     background-color 120ms ease,
     box-shadow 120ms ease;
 
   &:disabled {
-    cursor: wait;
+    cursor: not-allowed;
   }
 
   &:not(:disabled):hover {
@@ -407,7 +417,13 @@
 
   &.active {
     border-color: var(--Colors-Use-Main-Primary);
-    box-shadow: 0 0 0 1px var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Main-Bg);
+    box-shadow: inset 0 0 0 1px var(--Colors-Use-Main-Primary);
+  }
+
+  &.used {
+    opacity: 0.46;
+    filter: saturate(0.7);
   }
 }
 
@@ -434,24 +450,39 @@
   }
 }
 
-.taskbar-icon-check {
+.taskbar-icon-used-dot {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--Colors-Use-Basic-Background);
+  border-radius: 50%;
+  background: var(--Colors-Use-Success-Primary);
+  box-shadow: 0 0 0 1px var(--Colors-Use-Basic-Background);
+}
+
+.taskbar-icon-usage {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 13px;
-  height: 13px;
-  border: 2px solid var(--Colors-Use-Basic-Background);
-  border-radius: 50%;
-  background: var(--Colors-Use-Main-Primary);
-  color: var(--Colors-Use-Main-On-Primary);
+  gap: 5px;
+  margin-top: 6px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  line-height: 16px;
+}
 
-  :global(svg) {
-    width: 7px;
-    height: 7px;
-  }
+.taskbar-icon-usage-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--Colors-Use-Success-Primary);
+}
+
+.multi-launch-button-wrapper {
+  display: inline-flex;
+  margin-left: 8px;
 }
 
 .mitm-plugin-query-show {

@@ -7,12 +7,13 @@ const { shell } = require('electron')
 const { getYakitHome, loadExtraFilePath } = require('../filePath')
 const {
   getTaskbarIconPresetFileName,
+  makeTaskbarIconKey,
   makeAppUserModelId,
   normalizeChromeFlags,
   quoteWindowsArgument,
 } = require('./windowsChromeTaskbarUtils')
 
-const HELPER_PROTOCOL_VERSION = 1
+const HELPER_PROTOCOL_VERSION = 2
 const HELPER_FILE_NAME = 'yakit-chrome-launcher.exe'
 const validatedHelpers = new Set()
 const buildProxyExtension = ({ directory, host, port, username, password }) => {
@@ -103,8 +104,13 @@ const launchWithHelper = ({ helperPath, shortcutPath, chromePath, appUserModelId
   let settled = false
   let stderr = ''
   let resolveExit
+  let resolveClosed
+  let closedSettled = false
   const exitPromise = new Promise((resolve) => {
     resolveExit = resolve
+  })
+  const closedPromise = new Promise((resolve) => {
+    resolveClosed = resolve
   })
 
   const readyPromise = new Promise((resolve, reject) => {
@@ -125,10 +131,14 @@ const launchWithHelper = ({ helperPath, shortcutPath, chromePath, appUserModelId
       if (event.event === 'fatal') {
         settleError(new Error(event.message || 'Windows Chrome launcher failed'))
       }
+      if (event.event === 'windows-closed' && !closedSettled) {
+        closedSettled = true
+        resolveClosed(event)
+      }
       if (event.event === 'window-attached' && !attached) {
         attached = true
         settled = true
-        resolve({ pid: event.pid, hwnd: event.hwnd, appUserModelId, child, exitPromise })
+        resolve({ pid: event.pid, hwnd: event.hwnd, appUserModelId, child, exitPromise, closedPromise })
       }
     })
     child.stderr.on('data', (data) => {
@@ -138,6 +148,10 @@ const launchWithHelper = ({ helperPath, shortcutPath, chromePath, appUserModelId
     child.once('exit', (code, signal) => {
       lines.close()
       resolveExit({ code, signal })
+      if (!closedSettled) {
+        closedSettled = true
+        resolveClosed({ event: 'process-exited', confirmed: false, code, signal })
+      }
       if (!attached) {
         settleError(
           new Error(
@@ -182,6 +196,7 @@ const launchWindowsChrome = async (params) => {
       ? loadExtraFilePath(path.join('bins', 'chrome-taskbar-icons', presetFileName))
       : null
   const appUserModelId = makeAppUserModelId(userDataDir)
+  const taskbarIconKey = makeTaskbarIconKey(params.taskbarIconPreset, customIconPath)
 
   if (!fs.existsSync(chromePath)) throw new Error(`Chrome executable was not found: ${chromePath}`)
   if (requestedIconPath && !fs.existsSync(requestedIconPath)) {
@@ -205,6 +220,7 @@ const launchWindowsChrome = async (params) => {
     '--no-default-browser-check',
     '--start-minimized',
     '--new-window',
+    '--disable-background-mode',
     ...normalizeChromeFlags(params.chromeFlags),
   ]
   if (params.username && params.password) {
@@ -236,8 +252,13 @@ const launchWindowsChrome = async (params) => {
   return {
     ...launched,
     identity: path.resolve(userDataDir).toLowerCase(),
+    taskbarIconKey,
     close: () => {
-      if (!launched.child.killed && launched.child.stdin.writable) launched.child.stdin.write('close\n')
+      if (!launched.child.killed && launched.child.stdin.writable) {
+        launched.child.stdin.write('close\n')
+        return launched.closedPromise
+      }
+      return Promise.reject(new Error('Windows Chrome launcher is not available'))
     },
     detach: () => {
       if (!launched.child.killed && launched.child.stdin.writable) launched.child.stdin.write('detach\n')
