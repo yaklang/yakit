@@ -526,7 +526,9 @@ interface LicenseCreatRequest {
   company: string
   license: string
   maxUser: number
-  company_version: string
+  company_version?: string
+  products?: string
+  format?: string
 }
 interface CreateLicenseProps {
   company?: API.CompanyLicenseConfigList
@@ -537,6 +539,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
   const { t } = useI18nNamespaces(['admin', 'yakitUi'])
   const { company, onCancel, refresh } = props
   const [form] = Form.useForm()
+  const companyVersion = Form.useWatch<string>('company_version', form)
   const [loading, setLoading] = useState<boolean>(false)
   const [selectLoading, setSelectLoading] = useState<boolean>(true)
   const [pagination, setPagination] = useState({
@@ -610,7 +613,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
 
   const onFinish = useMemoizedFn((values) => {
     setLoading(true)
-    const { id, license, company_version } = values
+    const { id, license, company_version, products } = values
     const selectDate = response.data.filter((item) => item.id === id)[0]
     const { company, maxUser } = selectDate
     let params: LicenseCreatRequest = {
@@ -618,6 +621,11 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
       company,
       maxUser,
       company_version,
+    }
+    if (company_version === 'Distributed' && Array.isArray(products) && products.length > 0) {
+      params.products = products.join(',')
+      params.format = 'legion-v2'
+      delete params.company_version
     }
     NetWorkApi<LicenseCreatRequest, string>({
       method: 'post',
@@ -698,8 +706,28 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
           <YakitSelect placeholder={t('CreateLicense.selectVersion')} allowClear>
             <YakitSelect.Option value="EnpriTrace">{t('CreateLicense.enterpriseEdition')}</YakitSelect.Option>
             <YakitSelect.Option value="EnpriTraceAgent">{t('CreateLicense.portableEdition')}</YakitSelect.Option>
+            <YakitSelect.Option value="Distributed">{t('CreateLicense.distributed')}</YakitSelect.Option>
           </YakitSelect>
         </Form.Item>
+        {companyVersion === 'Distributed' && (
+          <Form.Item
+            name="products"
+            label={t('CreateLicense.featureModule')}
+            rules={[{ required: true, message: t('YakitForm.requiredField') }]}
+          >
+            <YakitSelect
+              allowClear
+              options={[
+                { label: t('CreateLicense.hostScan'), value: 'scan_center' },
+                { label: t('CreateLicense.codeAudit'), value: 'ssa' },
+                { label: t('CreateLicense.hids'), value: 'hids' },
+                { label: t('CreateLicense.ai'), value: 'memfit' },
+              ]}
+              mode="tags"
+              placeholder={t('CreateLicense.selectFeatureModule')}
+            />
+          </Form.Item>
+        )}
         <Form.Item
           name="license"
           label={t('CreateLicense.applicationCode')}
