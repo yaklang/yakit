@@ -218,7 +218,6 @@ const launchWindowsChrome = async (params) => {
     `--proxy-server=http://${params.host}:${params.port}`,
     '--no-first-run',
     '--no-default-browser-check',
-    '--start-minimized',
     '--new-window',
     '--disable-background-mode',
     ...normalizeChromeFlags(params.chromeFlags),
