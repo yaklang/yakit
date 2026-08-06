@@ -22,6 +22,7 @@ import {
   selectVirtualTableAutomaticRefreshReason,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
+  selectVirtualTableViewportFillLimit,
   shouldRestoreVirtualTableViewport,
   shouldLoadVirtualTableBottom,
   VirtualTableViewportSnapshot,
@@ -180,6 +181,8 @@ export default function useVirtualTableHook<
   // immediate follow-up instead of being dropped by the single-flight guard.
   const notificationRefreshPendingRef = useRef(false)
   const flushNotificationRefreshRef = useRef<() => void>(() => {})
+  const viewportReconcilePendingRef = useRef(false)
+  const flushViewportReconcileRef = useRef<() => void>(() => {})
   const [total, setTotal] = useState<number>(0)
   // 是否循环接口
   const [isLoop, setIsLoop] = useState<boolean>(preferServerPush ? false : !isServerPushActive())
@@ -208,6 +211,7 @@ export default function useVirtualTableHook<
     queryEpochRef.current += 1
     isGrpcRef.current = false
     notificationRefreshPendingRef.current = false
+    viewportReconcilePendingRef.current = false
     setLoading(false)
     setIsLoop(false)
     previousQueryInViewportRef.current = false
@@ -426,6 +430,7 @@ export default function useVirtualTableHook<
           if (requestEpoch !== queryEpochRef.current) return
           setLoading(false)
           isGrpcRef.current = false
+          flushViewportReconcileRef.current()
           flushNotificationRefreshRef.current()
         }, releaseDelay)
       })
@@ -487,9 +492,9 @@ export default function useVirtualTableHook<
   })
 
   // 偏移量更新底部数据
-  const updateBottomData = useMemoizedFn(() => {
+  const updateBottomData = useMemoizedFn((limit = pagination.Limit) => {
     if (isSliding) {
-      const edgePagination = buildEdgePagination('bottom', data, idKey, sortRef.current, pagination.Limit)
+      const edgePagination = buildEdgePagination('bottom', data, idKey, sortRef.current, limit)
       if (!edgePagination) {
         updateData()
         return
@@ -504,7 +509,7 @@ export default function useVirtualTableHook<
     }
     const paginationProps = {
       Page: 1,
-      Limit: pagination.Limit,
+      Limit: limit,
       Order: sortRef.current.order,
       OrderBy: sortRef.current.orderBy || 'Id',
     }
@@ -621,6 +626,26 @@ export default function useVirtualTableHook<
     scrollUpdate()
   })
   flushNotificationRefreshRef.current = flushNotificationRefresh
+
+  /** Fill a viewport that grew while preserving its current rows and anchor. */
+  const flushViewportReconcile = useMemoizedFn(() => {
+    if (!viewportReconcilePendingRef.current || isGrpcRef.current || !inViewport) return
+    viewportReconcilePendingRef.current = false
+
+    if (data.length === 0) {
+      updateData(false)
+      return
+    }
+
+    const fillLimit = selectVirtualTableViewportFillLimit(
+      data.length,
+      total,
+      boxHeightRef.current,
+      ROW_HEIGHT,
+    )
+    if (fillLimit > 0) updateBottomData(fillLimit)
+  })
+  flushViewportReconcileRef.current = flushViewportReconcile
 
   /** Coalesced immediate refresh for invalidation notifications. */
   const notifyT = useMemoizedFn(() => {
@@ -744,6 +769,16 @@ export default function useVirtualTableHook<
     scrollUpdate()
   })
 
+  /**
+   * Reconcile a larger viewport without replacing the current data window.
+   * Keep the request pending when a filter/delete query is still in flight.
+   */
+  const reconcileViewportT = useMemoizedFn(() => {
+    if (!inViewport) return
+    viewportReconcilePendingRef.current = true
+    flushViewportReconcile()
+  })
+
   /** @name 设置表格loading状态 */
   const setTLoad = useMemoizedFn((is: boolean) => {
     setLoading(is)
@@ -757,6 +792,7 @@ export default function useVirtualTableHook<
     queryEpochRef.current += 1
     isGrpcRef.current = false
     notificationRefreshPendingRef.current = false
+    viewportReconcilePendingRef.current = false
     recoverTopIdRef.current = 0
     pendingScrollRef.current = null
     slidingClippedRef.current = false
@@ -869,6 +905,7 @@ export default function useVirtualTableHook<
       noResetRefreshT,
       restoreViewportT,
       notifyPushUpdate,
+      reconcileViewportT,
       setTLoad,
       resetTData,
       setTData,

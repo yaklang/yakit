@@ -9,6 +9,37 @@ export type VirtualTableAutoRefreshAction = 'none' | 'start-poll' | 'stop-poll' 
 export const VIRTUAL_TABLE_SCROLL_REFRESH_DELTA = 28
 export const VIRTUAL_TABLE_BOTTOM_PREFETCH_ROWS = 10
 
+/**
+ * Return the number of older rows needed after a table viewport grows.
+ *
+ * Detail collapse and filter/query transitions can finish using the previous,
+ * smaller viewport height. Keep the existing window and ask only for enough
+ * bottom rows to fill the new viewport plus the normal prefetch margin.
+ */
+export const selectVirtualTableViewportFillLimit = (
+  rowCount: number,
+  total: number,
+  viewportHeight: number | undefined,
+  rowHeight: number,
+  prefetchRows = VIRTUAL_TABLE_BOTTOM_PREFETCH_ROWS,
+): number => {
+  if (
+    !Number.isFinite(rowCount) ||
+    !Number.isFinite(total) ||
+    !Number.isFinite(viewportHeight) ||
+    !Number.isFinite(rowHeight) ||
+    rowCount < 0 ||
+    total <= rowCount ||
+    Number(viewportHeight) <= 0 ||
+    rowHeight <= 0
+  ) {
+    return 0
+  }
+
+  const targetRows = Math.ceil(Number(viewportHeight) / rowHeight) + Math.max(0, Math.floor(prefetchRows))
+  return Math.min(total - rowCount, Math.max(0, targetRows - rowCount))
+}
+
 export const selectVirtualTableAutomaticRefreshReason = (
   hasQueriedViewport: boolean,
   previousInViewport: boolean,

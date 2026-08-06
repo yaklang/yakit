@@ -730,6 +730,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       startT,
       notifyT,
       notifyPushUpdate,
+      reconcileViewportT,
       setTLoad: setLoading,
       resetTData,
       patchTData,
@@ -3251,7 +3252,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // explicit bootstrap boundary.
     const action = selectHTTPFlowTableResizeAction(previousHeight, height, onlyShowFirstNode, isTableActive)
     if (action === 'bootstrap') updateData()
-    if (action === 'reconcile') notifyPushUpdate()
+    if (action === 'reconcile') reconcileViewportT()
   })
 
   const onFormConfigSaveOk = useMemoizedFn((config: any) => {

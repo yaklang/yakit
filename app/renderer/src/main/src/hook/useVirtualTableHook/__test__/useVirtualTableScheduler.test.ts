@@ -5,6 +5,7 @@ import {
   prependAcceptedVirtualTableServerPushRows,
   resolveVirtualTableServerPushActive,
   selectVirtualTableAutomaticRefreshReason,
+  selectVirtualTableViewportFillLimit,
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
   shouldLoadVirtualTableBottom,
@@ -51,6 +52,26 @@ describe('shouldRestoreVirtualTableViewport', () => {
     expect(shouldRestoreVirtualTableViewport('visibility', 0, false)).toBe(false)
     expect(shouldRestoreVirtualTableViewport('visibility', 300, true)).toBe(false)
     expect(shouldRestoreVirtualTableViewport('query', 300, false)).toBe(false)
+  })
+})
+
+describe('selectVirtualTableViewportFillLimit', () => {
+  it('fills a viewport that grew after the detail pane closed', () => {
+    expect(selectVirtualTableViewportFillLimit(12, 100, 616, 28)).toBe(20)
+  })
+
+  it('does not query when the current window already covers the viewport and prefetch margin', () => {
+    expect(selectVirtualTableViewportFillLimit(32, 100, 616, 28)).toBe(0)
+  })
+
+  it('caps the request at the number of rows that still exist', () => {
+    expect(selectVirtualTableViewportFillLimit(12, 18, 616, 28)).toBe(6)
+  })
+
+  it('ignores invalid or exhausted viewport snapshots', () => {
+    expect(selectVirtualTableViewportFillLimit(12, 12, 616, 28)).toBe(0)
+    expect(selectVirtualTableViewportFillLimit(12, 100, undefined, 28)).toBe(0)
+    expect(selectVirtualTableViewportFillLimit(12, 100, 616, 0)).toBe(0)
   })
 })
 
