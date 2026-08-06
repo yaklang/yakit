@@ -1,13 +1,16 @@
-import { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
+import { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import {
   AIAgentGrpcApi,
   AIEventQueryRequest,
   AIEventQueryResponse,
+  AIReActRecommendedSkill,
   ExportAILogsRequest,
   ExportAILogsResponse,
+  GetAIReActRecommendedSkillsResponse,
   GetRandomAIMaterialsRequest,
   GetRandomAIMaterialsResponse,
+  UpdateAIReActRecommendedSkillRequest,
 } from '../ai-re-act/hooks/grpcApi'
 import type {
   AIForge,
@@ -28,6 +31,51 @@ import { JSONParseLog } from '@/utils/tool'
 import type { DeleteAISessionRequest, QueryAISessionRequest, QueryAISessionResponse } from './type/aiChat'
 
 const { ipcRenderer } = window.require('electron')
+
+/** @name 获取前端可直接选择的内置 ReAct Skill。 */
+export const grpcGetAIReActRecommendedSkills: APINoRequestFunc<GetAIReActRecommendedSkillsResponse> = (hiddenError) => {
+  return new Promise(async (resolve, reject) => {
+    ipcRenderer
+      .invoke('GetAIReActRecommendedSkills')
+      .then(resolve)
+      .catch((e) => {
+        if (!hiddenError) yakitNotify('error', '获取推荐 Skill 失败:' + e)
+        reject(e)
+      })
+  })
+}
+
+/** @name 保存推荐 Skill 的可编辑正文。 */
+export const grpcUpdateAIReActRecommendedSkill: APIFunc<
+  UpdateAIReActRecommendedSkillRequest,
+  AIReActRecommendedSkill
+> = (param, hiddenError) => {
+  return new Promise(async (resolve, reject) => {
+    ipcRenderer
+      .invoke('UpdateAIReActRecommendedSkill', param)
+      .then(resolve)
+      .catch((e) => {
+        if (!hiddenError) yakitNotify('error', '保存推荐 Skill 失败:' + e)
+        reject(e)
+      })
+  })
+}
+
+/** @name 恢复推荐 Skill 的内置默认内容。 */
+export const grpcResetAIReActRecommendedSkill: APIFunc<{ Name: string }, AIReActRecommendedSkill> = (
+  param,
+  hiddenError,
+) => {
+  return new Promise(async (resolve, reject) => {
+    ipcRenderer
+      .invoke('ResetAIReActRecommendedSkill', param)
+      .then(resolve)
+      .catch((e) => {
+        if (!hiddenError) yakitNotify('error', '恢复推荐 Skill 失败:' + e)
+        reject(e)
+      })
+  })
+}
 
 /**
  * @name 查询AI事件

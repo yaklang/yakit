@@ -182,7 +182,7 @@ export interface AIExecutionStrategy {
   GoalMinIterations?: number
 }
 
-interface AIEnabledCapability {
+export interface AIEnabledCapability {
   Name: string
   Type: string
 }
@@ -1234,5 +1234,24 @@ export interface ExportAILogsRequest {
 }
 export interface ExportAILogsResponse {
   FilePath: string
+}
+// #endregion
+//#region GetAIReActRecommendedSkills/UpdateAIReActRecommendedSkill/ResetAIReActRecommendedSkill接口
+export interface AIReActRecommendedSkill extends AIEnabledCapability {
+  DisplayNameZhCN: string
+  Description: string
+}
+
+export interface GetAIReActRecommendedSkillsResponse {
+  Data: AIReActRecommendedSkill[]
+}
+
+export interface GetAIReActRecommendedSkillsResponse {
+  Data: AIReActRecommendedSkill[]
+}
+
+export interface UpdateAIReActRecommendedSkillRequest {
+  Name: string
+  Content: string
 }
 // #endregion

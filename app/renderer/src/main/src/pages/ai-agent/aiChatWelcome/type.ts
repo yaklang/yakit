@@ -16,17 +16,6 @@ export interface AIRecommendItem {
   name: string
   description: string
 }
-export interface AIRecommendProps extends Omit<AIRecommendItemProps, 'item'> {
-  title: string
-  data: AIRecommendItem[]
-  onMore: () => void
-}
-
-export interface AIRecommendItemProps {
-  item: AIRecommendItem
-  lineStartDOMRect?: DOMRect
-  onCheckItem: (item: AIRecommendItem) => void
-}
 
 export interface AIMaterialsData {
   type: string

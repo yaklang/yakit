@@ -14,6 +14,7 @@ import { AIInputEvent, AIInputEventSyncTypeEnum, AISourceEnum, AIStartParams } f
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import { mergeAIEnabledCapabilities } from '@/pages/ai-agent/utils/enabledCapabilities'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -132,13 +133,18 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
 
       const source = getSetting().Source ?? AISourceEnum.aiAgent // getSetting保证最新
+      const formattedSetting = formatAIAgentSetting(setting)
       const request: AIStartParams = {
-        ...formatAIAgentSetting(setting),
+        ...formattedSetting,
         UserQuery: qs,
         CoordinatorId: '',
         Sequence: 1,
         PreferSessionCachedConfig: true,
         Source: source,
+        EnabledCapabilities: mergeAIEnabledCapabilities(
+          formattedSetting.EnabledCapabilities,
+          value.enabledCapabilities,
+        ),
       }
 
       const session = getSession(sessionId)

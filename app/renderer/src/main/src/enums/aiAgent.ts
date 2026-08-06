@@ -15,6 +15,8 @@ export enum RemoteAIAgentGV {
   AIAgentReplaceToolNoPrompt = 'ai-agent-replace-tool-no-prompt',
   /** @name ai侧边栏展开收起模式 */
   AIAgentSideShowMode = 'ai-agent-side-show-mode',
+  /** @name AI Agent 新建会话时沿用的推荐 Skill 选择 */
+  AIAgentRecommendedSkills = 'ai-agent-recommended-skills',
   /** @name 记忆库快捷删除 */
   AIMemoryRemove = 'ai-memory-remove',
   /** @name AIModel检测结果中的编辑器的美化 */
