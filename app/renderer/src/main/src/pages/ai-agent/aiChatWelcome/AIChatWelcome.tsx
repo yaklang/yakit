@@ -7,6 +7,7 @@ import type {
   SideSettingButtonProps,
 } from './type'
 import styles from './AIChatWelcome.module.scss'
+import DoomFlameBackground from './DoomFlameBackground'
 import { AIChatTextarea } from '../template/template'
 import { useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
@@ -195,6 +196,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
+        <DoomFlameBackground />
         <div className={styles['open-file-tree-button']} onClick={() => setOpenDrawer(!openDrawer)}>
           {t('AIChatWelcome.expandResources')}
           <YakitButton type="text2" icon={<OutlineOpenIcon />} />
@@ -240,6 +242,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                 ref={aiChatTextareaRef}
                 onSubmit={handleTriageSubmit}
                 chatDataStoreKey="aiChatDataStore"
+                className={styles['ai-text-wrapper']}
               />
             </div>
           </div>
@@ -325,7 +328,6 @@ const AIChatWelcomeSettingCard = memo(
     })
     const getList = useMemoizedFn(() => {
       grpcGetAIReActRecommendedSkills().then((res) => {
-        console.log('Fetched AI ReAct Recommended Skills:', res.Data)
         setList(res.Data)
         if (!!res.Data[0]) setSelect([res.Data[0]]) // 默认选中第一个
       })
