@@ -67,7 +67,7 @@
 
 ### 启动页右侧背景图更换
 
-- **事项**：将 Memfit / 信湃SenSo 启动页右侧背景从原 webm 视频改为静态图
+- **事项**：将 Memfit / 信哨AI SenSo 启动页右侧背景从原 webm 视频改为静态图
 - **素材来源**：`app/renderer/src/main/src/assets/newAssets/startlogo.png`
 - **实际引用**：复制到 `app/renderer/engine-link-startup/src/assets/startlogo.png`，供启动页模块引用
 - **改动文件**：

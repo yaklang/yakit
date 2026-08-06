@@ -340,7 +340,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                 <img src={memfitLogo} alt="" width={120} />
               </div>
               <div className={styles['input-heard']}>
-                <div className={styles['title']}>信湃 SenSo</div>
+                <div className={styles['title']}>信哨AI SenSo</div>
                 <div className={styles['subtitle']}>AI自主渗透与攻防验证系统</div>
               </div>
               <div className={classNames(styles['input-body-wrapper'])}>
@@ -407,7 +407,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
               </div>
             )}
           </div>
-          <div className={styles['content-copy']}>@2026亚信安全信湃SenSo-AI自主渗透和攻防验证系统</div>
+          <div className={styles['content-copy']}>@2026亚信安全信哨AI SenSo-AI自主渗透和攻防验证系统</div>
         </div>
       </div>
     )
