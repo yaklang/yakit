@@ -15,7 +15,6 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
-import { useWatch } from 'antd/lib/form/Form'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { inputHTTPFuzzerHostConfigItem } from '@/pages/fuzzer/HTTPFuzzerHosts'
@@ -63,8 +62,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [form] = Form.useForm()
-    const enableProxyAuth = useWatch<boolean>('enableProxyAuth', form)
-    const overwriteSNI = useWatch('OverwriteSNI', form)
+    const enableProxyAuth = Form.useWatch<boolean>('enableProxyAuth', form)
+    const overwriteSNI = Form.useWatch('OverwriteSNI', form)
     const tableRef = useRef<HTMLDivElement>(null)
 
     const getValue = useMemoizedFn(() => {

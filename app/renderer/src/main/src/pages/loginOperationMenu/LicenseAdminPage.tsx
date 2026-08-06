@@ -29,7 +29,6 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import styles from './LicenseAdminPage.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useWatch } from 'antd/lib/form/Form'
 const { Paragraph } = Typography
 interface LicenseAdminRequest {
   keywords: string
@@ -540,7 +539,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
   const { t } = useI18nNamespaces(['admin', 'yakitUi'])
   const { company, onCancel, refresh } = props
   const [form] = Form.useForm()
-  const companyVersion = useWatch<string>('company_version', form)
+  const companyVersion = Form.useWatch<string>('company_version', form)
   const [loading, setLoading] = useState<boolean>(false)
   const [selectLoading, setSelectLoading] = useState<boolean>(true)
   const [pagination, setPagination] = useState({
