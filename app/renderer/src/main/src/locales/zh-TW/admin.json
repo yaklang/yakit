@@ -30,7 +30,7 @@
   },
   "HoleCollectPage": {
     "title": "標題",
-    "type": "型別",
+    "type": "類型",
     "level": "等級",
     "uploadAccount": "上傳帳號",
     "discoveryTime": "發現時間",
@@ -43,8 +43,8 @@
     "deleteData": "刪除資料",
     "vulnerabilityTitle": "漏洞標題",
     "inputVulnerabilityTitle": "請輸入漏洞標題",
-    "vulnerabilityType": "漏洞型別",
-    "selectVulnerabilityType": "請選擇漏洞型別",
+    "vulnerabilityType": "漏洞類型",
+    "selectVulnerabilityType": "請選擇漏洞類型",
     "inputIp": "請輸入IP",
     "vulnerabilityLevel": "漏洞級別",
     "all": "全部",
@@ -62,7 +62,6 @@
     "licenseUsedTotal": "License(已使用/總數)",
     "totalUsers": "使用者總數",
     "generateLicense": "生成License",
-
     "confirmDeleteCompany": "確定刪除該企業嗎？",
     "viewLicenseFailed": "檢視license失敗：{{error}}",
     "deleteCompanySuccess": "刪除企業成功",
@@ -96,8 +95,12 @@
     "applicationCode": "申請碼",
     "inputApplicationCode": "請輸入申請碼",
     "distributed": "分布式",
-    "featureModule": "功能模块",
-    "selectFeatureModule": "請選擇功能模块"
+    "featureModule": "功能模組",
+    "selectFeatureModule": "請選擇功能模組",
+    "hostScan": "主機掃描",
+    "codeAudit": "程式碼審計",
+    "hids": "HIDS",
+    "ai": "AI"
   },
   "RoleAdminPage": {
     "roleName": "角色名",

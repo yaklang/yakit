@@ -622,7 +622,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
       maxUser,
       company_version,
     }
-    if (products) {
+    if (company_version === 'Distributed' && Array.isArray(products) && products.length > 0) {
       params.products = products.join(',')
       params.format = 'legion-v2'
       delete params.company_version
@@ -706,10 +706,10 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
           <YakitSelect placeholder={t('CreateLicense.selectVersion')} allowClear>
             <YakitSelect.Option value="EnpriTrace">{t('CreateLicense.enterpriseEdition')}</YakitSelect.Option>
             <YakitSelect.Option value="EnpriTraceAgent">{t('CreateLicense.portableEdition')}</YakitSelect.Option>
-            <YakitSelect.Option value="test">{t('CreateLicense.distributed')}</YakitSelect.Option>
+            <YakitSelect.Option value="Distributed">{t('CreateLicense.distributed')}</YakitSelect.Option>
           </YakitSelect>
         </Form.Item>
-        {companyVersion === 'test' && (
+        {companyVersion === 'Distributed' && (
           <Form.Item
             name="products"
             label={t('CreateLicense.featureModule')}
@@ -718,10 +718,10 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
             <YakitSelect
               allowClear
               options={[
-                { label: '主机扫描', value: 'scan_center' },
-                { label: '代码审计', value: 'ssa' },
-                { label: 'HIDS', value: 'hids' },
-                { label: 'AI', value: 'memfit' },
+                { label: t('CreateLicense.hostScan'), value: 'scan_center' },
+                { label: t('CreateLicense.codeAudit'), value: 'ssa' },
+                { label: t('CreateLicense.hids'), value: 'hids' },
+                { label: t('CreateLicense.ai'), value: 'memfit' },
               ]}
               mode="tags"
               placeholder={t('CreateLicense.selectFeatureModule')}

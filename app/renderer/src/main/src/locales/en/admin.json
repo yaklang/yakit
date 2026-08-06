@@ -62,7 +62,6 @@
     "licenseUsedTotal": "License (Used/Total)",
     "totalUsers": "Total Users",
     "generateLicense": "Generate License",
-
     "confirmDeleteCompany": "Are you sure to delete this company?",
     "viewLicenseFailed": "Failed to view license: {{error}}",
     "deleteCompanySuccess": "Company deleted successfully",
@@ -97,7 +96,11 @@
     "inputApplicationCode": "Please enter application code",
     "distributed": "Distributed",
     "featureModule": "Feature Module",
-    "selectFeatureModule": "Please select feature module"
+    "selectFeatureModule": "Please select feature module",
+    "hostScan": "Host Scan",
+    "codeAudit": "Code Audit",
+    "hids": "HIDS",
+    "ai": "AI"
   },
   "RoleAdminPage": {
     "roleName": "Role Name",
