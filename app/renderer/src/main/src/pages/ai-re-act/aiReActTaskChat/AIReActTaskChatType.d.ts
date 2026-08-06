@@ -1,6 +1,5 @@
 import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ReactNode } from 'react'
-import { AIStartParams } from '../hooks/grpcApi'
 import { ChatListRenderType } from '../hooks/aiRender'
 
 export interface AIReActTaskChatProps {
@@ -26,9 +25,18 @@ export interface AIRenderTaskFooterExtraProps {
   onExtraAction: (type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => void
 }
 
-export interface AIGlobalCommandPopoverProps {
+export interface AIInputSettingPopoverProps {
   children?: ReactNode
-  childrenClass?: string
+  visible?: boolean
+  setVisible?: (v: boolean) => void
+}
+export interface AIInputSettingFormProps {
+  SyncPerceptionTrigger: boolean
+  EnablePlan: boolean
+  /** 全局指令 */
+  AIPresetPrompt: string
+  /** 规划提示词 */
+  AIPlanPrompt: string
 }
 
 export interface AIManualAdditionPopoverProps {
@@ -36,37 +44,6 @@ export interface AIManualAdditionPopoverProps {
   visible?: boolean
   setVisible?: (v: boolean) => void
   chatType: AIManualAdditionProps['chatType']
-}
-
-export interface AIInputSettingPopoverProps {
-  children?: ReactNode
-  visible?: boolean
-  setVisible?: (v: boolean) => void
-}
-export interface AIInputSettingFormProps extends Pick<AIStartParams, 'SyncPerceptionTrigger' | 'EnablePlan'> {}
-
-export interface AIGlobalCommandRefProps {
-  value: string
-}
-export interface AIGlobalCommandProps {
-  ref?: React.ForwardedRef<AIGlobalCommandRefProps>
-  onSave: (v: string) => void
-  onCancel: () => void
-}
-
-export interface AIPlanPromptPopoverProps {
-  children?: ReactNode
-  childrenClass?: string
-}
-
-export interface AIPlanPromptRefProps {
-  value: string
-}
-
-export interface AIPlanPromptProps {
-  ref?: React.ForwardedRef<AIPlanPromptRefProps>
-  onSave: (v: string) => void
-  onCancel: () => void
 }
 
 export interface AIManualAdditionProps {

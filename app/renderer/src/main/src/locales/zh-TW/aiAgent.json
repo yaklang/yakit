@@ -485,7 +485,7 @@
     "switchToSource": "切換原始碼模式"
   },
   "AIMilkdownInput": {
-    "placeholder": "請告訴我，你想做什麼...(shift + enter 換行)",
+    "placeholder": "向我提問，@使用技能、工具、檔案和知識庫",
     "selectedHttpFlowSummary": "勾選了 {{count}} 條流量"
   },
   "AITaskQuery": {

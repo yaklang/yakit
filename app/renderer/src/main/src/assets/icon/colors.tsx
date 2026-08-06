@@ -2267,3 +2267,45 @@ const ColorsTaskNodes = () => (
 export const ColorsTaskNodesIcon = (props: Partial<IconProps>) => {
   return <Icon component={ColorsTaskNodes} {...props} />
 }
+
+const ColorsMemfit = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
+    <g clipPath="url(#clip0_44520_3547)">
+      <mask
+        id="mask0_44520_3547"
+        style={{ maskType: 'luminance' }}
+        maskUnits="userSpaceOnUse"
+        x="0"
+        y="0"
+        width="32"
+        height="33"
+      >
+        <path d="M32 0H0V32.0005H32V0Z" fill="white" />
+      </mask>
+      <g mask="url(#mask0_44520_3547)">
+        <path d="M6.49331 14.0987H4V26.7531H6.49331V14.0987Z" fill="#4373BB" />
+        <path d="M28.0001 14.0987H25.5068V26.7531H28.0001V14.0987Z" fill="#4373BB" />
+        <path d="M15.3771 9.73669H12.8838V12.23H15.3771V9.73669Z" fill="#4373BB" />
+        <path d="M19.1164 9.73669H16.623V12.23H19.1164V9.73669Z" fill="#4373BB" />
+        <path
+          d="M23.3071 11.6054V5.24732H17.2452V2.75397H14.7519V5.24732H8.69004V11.6054H6.49219V14.0987H8.95496L14.8442 29.0794H17.1648L23.0422 14.0987H25.5024V11.6054H23.3071ZM20.8138 7.74066V12.9574L19.142 17.216H12.8582L11.1834 12.9555V7.74129L20.8138 7.74066ZM16.0023 25.2141L13.8381 19.7094H18.1634L16.0023 25.2141Z"
+          fill="#4373BB"
+        />
+        <path d="M9.93794 26.7531H6.49219V29.2465H9.93794V26.7531Z" fill="#4373BB" />
+        <path d="M25.5057 26.7531H22.0762V29.2465H25.5057V26.7531Z" fill="#4373BB" />
+      </g>
+    </g>
+    <defs>
+      <clipPath id="clip0_44520_3547">
+        <rect width="32" height="32" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+)
+
+/**
+ * @description Outlin
+ */
+export const ColorsMemfitIcon = (props: Partial<IconProps>) => {
+  return <Icon component={ColorsMemfit} {...props} />
+}

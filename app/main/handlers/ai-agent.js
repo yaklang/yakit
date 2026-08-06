@@ -103,21 +103,6 @@ module.exports = (win, getClient) => {
   // #endregion
 
   // #region ReAct 推荐 Skill
-  const asyncGetAIReActRecommendedSkills = () => {
-    return new Promise((resolve, reject) => {
-      getClient().GetAIReActRecommendedSkills({}, (err, data) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(data)
-      })
-    })
-  }
-
-  ipcMain.handle('GetAIReActRecommendedSkills', async () => {
-    return await asyncGetAIReActRecommendedSkills()
-  })
   const callRecommendedSkillUnary = (method, params) => {
     return new Promise((resolve, reject) => {
       getClient()[method](params, (err, data) => {
