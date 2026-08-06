@@ -3,8 +3,8 @@ const { launch, killAll, getChromePath } = require('chrome-launcher')
 const fs = require('fs')
 const path = require('path')
 const { getYakitHome } = require('../filePath')
-const { launchWindowsChrome } = require('./windowsChromeTaskbar')
 const { getChromeStartingUrl, makeTaskbarIconKey } = require('./windowsChromeTaskbarUtils')
+const launchWindowsChrome = process.platform === 'win32' ? require('./windowsChromeTaskbar').launchWindowsChrome : null
 const getMyUserDataDir = () => path.join(getYakitHome(), 'chrome-profile')
 
 const disableExtensionsExceptStr = (host, port, username, password) => `

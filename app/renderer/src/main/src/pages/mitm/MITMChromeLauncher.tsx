@@ -153,6 +153,8 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   })
 
   useEffect(() => {
+    let disposed = false
+    let chromeStateTimer: ReturnType<typeof setInterval> | undefined
     // 获取连接引擎的地址参数
     ipcRenderer
       .invoke('fetch-yaklang-engine-addr')
@@ -190,31 +192,38 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
     ipcRenderer
       .invoke('GetChromeLauncherPlatform')
       .then((platform: string) => {
+        if (disposed) return
         const windows = platform === 'win32'
         setIsWindows(windows)
-        if (windows) refreshChromeLauncherState()
+        if (windows) {
+          refreshChromeLauncherState()
+          chromeStateTimer = setInterval(refreshChromeLauncherState, 750)
+        }
       })
-      .catch(() => setIsWindows(false))
-
-    const chromeStateTimer = setInterval(refreshChromeLauncherState, 750)
+      .catch(() => {
+        if (!disposed) setIsWindows(false)
+      })
 
     return () => {
+      disposed = true
       document.removeEventListener('mousedown', handleClickOutside)
-      clearInterval(chromeStateTimer)
+      if (chromeStateTimer) clearInterval(chromeStateTimer)
     }
   }, [])
 
   // 启动 chrome 模式
   const handleStartChromeBefore = useMemoizedFn((keepOpen: boolean) => {
     if (launchingRef.current) return
-    if (taskbarIconPreset === 'custom' && !taskbarIconPath.trim()) {
-      failed(t('MITMChromeLauncher.taskbar_icon_custom_required'))
-      return
-    }
-    if (taskbarIconPreset !== 'custom' && activeTaskbarIconKeys.includes(taskbarIconPreset)) {
-      failed(t('MITMChromeLauncher.taskbar_icon_in_use'))
-      refreshChromeLauncherState()
-      return
+    if (isWindows) {
+      if (taskbarIconPreset === 'custom' && !taskbarIconPath.trim()) {
+        failed(t('MITMChromeLauncher.taskbar_icon_custom_required'))
+        return
+      }
+      if (taskbarIconPreset !== 'custom' && activeTaskbarIconKeys.includes(taskbarIconPreset)) {
+        failed(t('MITMChromeLauncher.taskbar_icon_in_use'))
+        refreshChromeLauncherState()
+        return
+      }
     }
     if (chormeCheck === 'customSet') {
       startChrome(false, keepOpen)
@@ -225,9 +234,10 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   })
   const startChrome = useMemoizedFn(async (baseStart: boolean, keepOpen: boolean) => {
     if (launchingRef.current) return
+    const shouldKeepOpen = isWindows && keepOpen
     launchingRef.current = true
     setLaunching(true)
-    setLaunchMode(keepOpen ? 'continue' : 'single')
+    setLaunchMode(shouldKeepOpen ? 'continue' : 'single')
     try {
       const [advancedConfig, res] = await Promise.all([
         loadAdvancedConfig(),
@@ -250,9 +260,13 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         username,
         password,
         userDataDir: isSaveUserData ? userDataDir : undefined,
-        taskbarIconPreset:
-          taskbarIconPreset !== 'default' && taskbarIconPreset !== 'custom' ? taskbarIconPreset : undefined,
-        taskbarIconPath: taskbarIconPreset === 'custom' ? taskbarIconPath : undefined,
+        ...(isWindows
+          ? {
+              taskbarIconPreset:
+                taskbarIconPreset !== 'default' && taskbarIconPreset !== 'custom' ? taskbarIconPreset : undefined,
+              taskbarIconPath: taskbarIconPreset === 'custom' ? taskbarIconPath : undefined,
+            }
+          : {}),
         disableCACertPage: props.disableCACertPage,
         chromeFlags: [],
       }
@@ -281,26 +295,30 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         ? chromeLauncherMinParams
         : handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
       const launchResult = (await ipcRenderer.invoke('LaunchChromeWithParams', newParams)) as ChromeLaunchResult
-      const nextActiveKeys = Array.isArray(launchResult?.activeTaskbarIconKeys)
-        ? launchResult.activeTaskbarIconKeys
-        : [
-            ...new Set([
-              ...activeTaskbarIconKeys,
-              launchResult?.taskbarIconKey ||
-                (taskbarIconPreset === 'custom' ? `custom:${taskbarIconPath.toLowerCase()}` : taskbarIconPreset),
-            ]),
-          ]
-      setActiveTaskbarIconKeys(nextActiveKeys)
-      if (keepOpen) {
-        if (taskbarIconPreset === 'custom') setTaskbarIconPath('')
-        setTaskbarIconPreset(getNextAvailableTaskbarIcon(nextActiveKeys))
-        info(t('MITMChromeLauncher.multi_launch_success'))
+      if (isWindows) {
+        const nextActiveKeys = Array.isArray(launchResult?.activeTaskbarIconKeys)
+          ? launchResult.activeTaskbarIconKeys
+          : [
+              ...new Set([
+                ...activeTaskbarIconKeys,
+                launchResult?.taskbarIconKey ||
+                  (taskbarIconPreset === 'custom' ? `custom:${taskbarIconPath.toLowerCase()}` : taskbarIconPreset),
+              ]),
+            ]
+        setActiveTaskbarIconKeys(nextActiveKeys)
+        if (shouldKeepOpen) {
+          if (taskbarIconPreset === 'custom') setTaskbarIconPath('')
+          setTaskbarIconPreset(getNextAvailableTaskbarIcon(nextActiveKeys))
+          info(t('MITMChromeLauncher.multi_launch_success'))
+        } else {
+          props.callback(params.host, params.port)
+        }
       } else {
         props.callback(params.host, params.port)
       }
     } catch (error) {
       failed(t('MITMChromeLauncher.chrome_launch_failed', { err: error + '' }))
-      refreshChromeLauncherState()
+      if (isWindows) refreshChromeLauncherState()
     } finally {
       launchingRef.current = false
       setLaunching(false)
