@@ -818,6 +818,7 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         { key: 'agent', label: '系统代理' },
         // { key: "engineVar",label: "引擎环境变量" },
         { key: 'config-network', label: '全局配置' },
+        { key: 'browser-extension', label: '浏览器集成' },
         { key: 'setShortcutKey', label: '快捷键设置' },
         { key: 'configMcp', label: 'Yak Mcp配置' },
       ],
@@ -977,6 +978,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'config-network':
         addToTab('**config-network')
+        return
+      case 'browser-extension':
+        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.BrowserExtension }))
         return
       case 'debug-traffic-analize':
         addToTab('**beta-debug-traffic-analize')

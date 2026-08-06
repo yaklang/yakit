@@ -6,8 +6,6 @@ import { useStore } from '@/store'
 import './YakitStorePage.scss'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { setTimeout } from 'timers'
-
 const { ipcRenderer } = window.require('electron')
 
 export interface GetYakScriptByOnlineIDRequest {

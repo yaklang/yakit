@@ -35,6 +35,8 @@ export enum AISourceEnum {
   irify = 'irify',
   /** Yak Runner 代码审计 */
   yakRunner = 'yakRunner',
+  /** 浏览器插件前端加密分析 */
+  browserExtension = 'browserExtension',
   /** IM bot 来源（飞书/钉钉等） */
   im = 'im',
   /** 兼容老数据 */

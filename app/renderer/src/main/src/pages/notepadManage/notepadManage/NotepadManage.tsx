@@ -18,8 +18,6 @@ import { OnlineJudgment } from '@/pages/plugins/onlineJudgment/OnlineJudgment'
 import { useGoEditNotepad } from '../hook/useGoEditNotepad'
 import { failed } from '@/utils/notification'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { error } from 'console'
-
 const NotepadShareModal = React.lazy(() => import('../NotepadShareModal/NotepadShareModal'))
 const NotepadManageOnline = React.lazy(() => import('./notepadManageOnline/NotepadManageOnline'))
 const NotepadManageLocal = React.lazy(() => import('./notepadManageLocal/NotepadManageLocal'))

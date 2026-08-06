@@ -147,6 +147,27 @@ process.on('loaded', function () {
       installMITMCertificate: (params = {}) => invoke('InstallMITMCertificate', params),
       generateInstallScript: () => invoke('generate-install-script'),
     },
+    managedBrowser: {
+      defaults: () => invoke('GetManagedBrowserProfileDefaults'),
+      list: () => invoke('ListManagedBrowserProfiles'),
+      create: (input) => invoke('CreateManagedBrowserProfile', input),
+      bind: (id, installationId) => invoke('BindManagedBrowserProfile', { id, installationId }),
+      launch: (id, options = {}) =>
+        invoke('LaunchManagedBrowserProfile', {
+          id,
+          showExtensionPage: options.showExtensionPage === true,
+        }),
+      stop: (id) => invoke('StopManagedBrowserProfile', { id }),
+      remove: (id) => invoke('RemoveManagedBrowserProfile', { id }),
+    },
+    browserExtension: {
+      requestYakURL: (params) => invoke('RequestYakURL', params),
+      executeTask: (params, token) => invoke('ExecuteBrowserExtensionTask', params, token),
+      cancelTask: (token) => invoke('cancel-ExecuteBrowserExtensionTask', token),
+      startTransformAdapter: (params) => invoke('StartBrowserTransformAdapter', params),
+      getTransformAdapterStatus: () => invoke('GetBrowserTransformAdapterStatus', {}),
+      stopTransformAdapter: () => invoke('StopBrowserTransformAdapter', {}),
+    },
     window: {
       openChildWindow: (payload) => send('open-new-child-window', payload),
       focusChildWindow: () => send('onTop-childWin'),

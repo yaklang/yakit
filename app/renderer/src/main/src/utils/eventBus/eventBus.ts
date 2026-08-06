@@ -28,6 +28,7 @@ import { YakKnowledgeRepositoryEventProps } from './events/aiRepository'
 import { MainWinOperatorEventProps } from './events/mainWin'
 import { RuleManagementEventProps } from './events/ruleManagement'
 import { YakRunnerAiCodeAuditEventProps } from './events/yakRunnerAiCodeAudit'
+import { BrowserExtensionEventProps } from './events/browserExtension'
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -83,6 +84,7 @@ type Events = [
   MainWinOperatorEventProps,
   RuleManagementEventProps,
   YakRunnerAiCodeAuditEventProps,
+  BrowserExtensionEventProps,
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

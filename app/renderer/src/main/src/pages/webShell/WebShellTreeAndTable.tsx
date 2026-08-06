@@ -28,9 +28,9 @@ import { yakitFailed } from '@/utils/notification'
 import { goBack } from '@/pages/webShell/FileManager'
 import { TreeNode, WebTree } from './ShellTree/WebTree'
 import { TreeKey } from '@/components/yakitUI/YakitTree/YakitTree'
-import path from 'path'
 import emiter from '@/utils/eventBus/eventBus'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
+import { normalizeRemotePath } from '@/utils/remotePath'
 
 interface WebShellURLTreeAndTableProp {
   Id: string
@@ -314,7 +314,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
   const [currentPathAllTree, setcurrentPathAllTree] = useState<TreeNode[]>([])
 
   const getYakURL = (): YakURL => {
-    const p = path.normalize(props.CurrentPath)
+    const p = normalizeRemotePath(props.CurrentPath)
     return {
       FromRaw: '',
       Schema: props.shellType,

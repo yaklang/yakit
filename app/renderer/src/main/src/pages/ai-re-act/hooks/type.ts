@@ -96,6 +96,9 @@ export interface UseChatIPCParams {
 
   /** yaklang_code_change 事件的回调 */
   onYaklangCodeChange?: (data: AIAgentGrpcApi.YaklangCodeChange) => void
+
+  /** 原始 AI 输出事件观察器；只用于建立独立于聊天文案的业务状态机 */
+  onAIOutputEvent?: (event: AIOutputEvent, content: string) => void
 }
 
 /** 会话文件系统-pin */
