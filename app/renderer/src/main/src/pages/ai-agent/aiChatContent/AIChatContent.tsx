@@ -32,6 +32,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { AIHorizontalScrollCard } from './aiHorizontalScrollCard/AIHorizontalScrollCard'
+import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
@@ -260,52 +262,60 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         })
       })
     })
-
+    // 当前会话删除状态：删除中时遮罩整个对话区域，阻止用户操作
+    const deleteStatus = useStore(
+      sessionStatusStore,
+      (s) => s.deleteStatuses.get(activeChat?.SessionID || '') ?? SessionDeleteStatus.Idle,
+    )
+    const isSessionDeleting = deleteStatus === SessionDeleteStatus.Deleting
+    const sourceDeleting = useStore(sessionStatusStore, (s) => s.deletingSources.has(activeChat?.Source || ''))
     return (
       <div className={styles['ai-chat-content-wrapper']}>
-        <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
-          <AIHorizontalScrollCard />
-          <div className={styles['ai-chat-tab-wrapper']}>
-            <YakitSideTab
-              key={i18nRefresh}
-              type="horizontal"
-              yakitTabs={yakitTabs}
-              activeKey={activeKey}
-              onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
-              onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
-              className={styles['tab-wrap']}
-              t={t}
-            >
-              <div className={styles['ai-chat-content']}>
-                <YakitResizeBox
-                  firstNode={
-                    activeKey && (
-                      <div
-                        className={classNames(styles['tab-content'], {
-                          [styles['tab-content-right']]: !showFreeChat,
+        <YakitSpin spinning={isSessionDeleting || sourceDeleting}>
+          <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
+            <AIHorizontalScrollCard />
+            <div className={styles['ai-chat-tab-wrapper']}>
+              <YakitSideTab
+                key={i18nRefresh}
+                type="horizontal"
+                yakitTabs={yakitTabs}
+                activeKey={activeKey}
+                onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
+                onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
+                className={styles['tab-wrap']}
+                t={t}
+              >
+                <div className={styles['ai-chat-content']}>
+                  <YakitResizeBox
+                    firstNode={
+                      activeKey && (
+                        <div
+                          className={classNames(styles['tab-content'], {
+                            [styles['tab-content-right']]: !showFreeChat,
+                          })}
+                        >
+                          {tabContent}
+                        </div>
+                      )
+                    }
+                    secondNode={
+                      <AIReActChat
+                        chatContainerHeaderClassName={classNames({
+                          [styles['re-act-chat-container-header']]: !activeKey,
                         })}
-                      >
-                        {tabContent}
-                      </div>
-                    )
-                  }
-                  secondNode={
-                    <AIReActChat
-                      chatContainerHeaderClassName={classNames({
-                        [styles['re-act-chat-container-header']]: !activeKey,
-                      })}
-                      showFreeChat={showFreeChat}
-                      setShowFreeChat={setShowFreeChat}
-                      startRequest={startRequest}
-                      ref={aiReActChatRef}
-                    />
-                  }
-                  {...resizeBoxProps}
-                />
-              </div>
-            </YakitSideTab>
-          </div>
-        </AIGlobalLoading>
+                        showFreeChat={showFreeChat}
+                        setShowFreeChat={setShowFreeChat}
+                        startRequest={startRequest}
+                        ref={aiReActChatRef}
+                      />
+                    }
+                    {...resizeBoxProps}
+                  />
+                </div>
+              </YakitSideTab>
+            </div>
+          </AIGlobalLoading>
+        </YakitSpin>
       </div>
     )
   }),

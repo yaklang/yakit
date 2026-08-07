@@ -5,8 +5,6 @@ import {
 import { grpcDeleteAISession } from '../grpc'
 import { DeleteAISessionRequest } from '../type/aiChat'
 import { globalSessionEngine, type DeleteSessionsParams } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
-// 重新导出本地删除来源枚举/类型，保持既有导入路径（@/.../historyChat/utils）可用。
-// 定义抽离至 deleteSource.ts（零运行时依赖），避免在单元测试中经本文件拉入 ahooks 等重型依赖。
 export { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from './deleteSource'
 
 export interface HandAIHistoryChatRemoveParams {

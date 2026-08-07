@@ -222,20 +222,17 @@ const HistoryChatList: FC<{
         active = getNextActiveChat(sessionList, findIndex)
       }
 
-      setSessions && setSessions(newChats)
-
-      if (activeSessionId === SessionID && active) {
-        handleSetActiveChat(active)
-      }
-
       try {
         const sessionIds = [SessionID]
-        const source = getSetting().Source || 'ai'
         await handAIHistoryChatRemove({
           grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
           handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
-          deleteSessionsParams: { sessionIds, source: [source] },
+          deleteSessionsParams: { sessionIds, source: [] },
         })
+        setSessions && setSessions(newChats)
+        if (activeSessionId === SessionID && active) {
+          handleSetActiveChat(active)
+        }
         resolve()
       } catch (error) {
         setSessions?.(sessionList)
@@ -343,7 +340,6 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
 
   const casualLoading = useStore(store, (state) => state.casualLoading)
   const taskLoading = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
-
   const [delLoading, setDelLoading] = useState<boolean>(false)
   const displayTitle = useCreation(() => {
     return getSessionDisplayTitle(item)
@@ -351,9 +347,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
   const handleDeleteChatItem = useMemoizedFn(async (info: AISession) => {
     setDelLoading(true)
     handleDeleteChat(info).finally(() => {
-      setTimeout(() => {
-        setDelLoading(false)
-      }, 200)
+      setDelLoading(false)
     })
   })
   const loading = useCreation(() => {

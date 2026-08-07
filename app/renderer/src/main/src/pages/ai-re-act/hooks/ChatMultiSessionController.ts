@@ -9,6 +9,7 @@ import {
   type AIStartParams,
 } from './grpcApi'
 import { createChatStore } from './chatStore'
+import { sessionStatusStore, SessionDeleteStatus } from './sessionStatus/sessionStatusStore'
 import { Uint8ArrayToString } from '@/utils/str'
 import {
   AIAgentSettingDefault,
@@ -1738,6 +1739,8 @@ export class ChatMultiSessionController {
     const { sessionIds, source, deleteAll } = params
     const ids = this.resolveDeleteSessionIds(params)
     if (!ids) return
+    // 标记目标会话为 deleting（UI 立即显示 loading + 禁用点击）
+    sessionStatusStore.getState().setSessionsDeleteStatus(ids, SessionDeleteStatus.Deleting)
 
     const executingIds = new Set(this.filterExecutingSessionIds(ids))
     const tasks: Promise<void>[] = []
@@ -1762,6 +1765,8 @@ export class ChatMultiSessionController {
         await this.persistDeleteBySource(s)
       }
     }
+    // 标记 deleted
+    sessionStatusStore.getState().setSessionsDeleteStatus(ids, SessionDeleteStatus.Deleted)
   }
 
   /**

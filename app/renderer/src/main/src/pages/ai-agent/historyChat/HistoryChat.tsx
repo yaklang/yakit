@@ -27,6 +27,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { handAIHistoryChatRemove } from './utils'
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import { sessionStatusStore } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import classNames from 'classnames'
 import {
   filterHistorySessionsBySource,
@@ -177,6 +178,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     }
 
     setClearLoading(true)
+    sessionStatusStore.getState().setSourceDeleting(sources, true)
     try {
       let filter: DeleteAISessionRequest = {}
       let deleteSessionsSource: DeleteSessionsAISourceType[] = sources
@@ -208,6 +210,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     } catch (e) {
       yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
     } finally {
+      sessionStatusStore.getState().setSourceDeleting(sources, false)
       setClearLoading(false)
     }
   })
@@ -247,7 +250,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
-        deleteSessionsParams: { sessionIds, source: [source] },
+        deleteSessionsParams: { sessionIds, source: [] },
       })
       const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
       const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)
