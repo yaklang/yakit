@@ -1,12 +1,12 @@
-import { FileNodeMapProps, FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import type { FileNodeMapProps, FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { FileDefault, FileSuffix, FolderDefault } from '@/pages/yakRunner/FileTree/icon'
 import { getNameByPath, getPathParent, grpcFetchFileTree } from '@/pages/yakRunner/utils'
-import { FileMonitorItemProps, FileMonitorProps, sendDuplexConn } from '@/utils/duplex/duplex'
+import { type FileMonitorItemProps, type FileMonitorProps, sendDuplexConn } from '@/utils/duplex/duplex'
 import emiter from '@/utils/eventBus/eventBus'
 import { StringToUint8Array } from '@/utils/str'
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
-import { MutableRefObject, useEffect, useRef } from 'react'
+import { type MutableRefObject, useEffect, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 // #region useFileTree 相关定义
@@ -160,7 +160,7 @@ function useFileTree(params: UseFileTreeParams) {
       }
       if (!treeData.current.children?.length) return
 
-      function diffNode(parent: FileNodeProps, oldNode: FileNodeProps, newNode: FileNodeProps) {
+      const diffNode = (parent: FileNodeProps, oldNode: FileNodeProps, newNode: FileNodeProps) => {
         if (newNode.path.startsWith(oldNode.path)) {
           if (oldNode.path === newNode.path) {
             parent.children = parent.children?.map((item) => {
@@ -171,7 +171,7 @@ function useFileTree(params: UseFileTreeParams) {
             })
           } else {
             if (!oldNode.children?.length) return
-            for (let item of oldNode.children) {
+            for (const item of oldNode.children) {
               diffNode(oldNode, item, newNode)
             }
           }
@@ -179,7 +179,7 @@ function useFileTree(params: UseFileTreeParams) {
         return
       }
 
-      for (let item of treeData.current.children) {
+      for (const item of treeData.current.children) {
         diffNode(treeData.current, item, newNode)
       }
     } catch (error) {}
@@ -193,14 +193,14 @@ function useFileTree(params: UseFileTreeParams) {
       if (!treeData.current.children?.length) return null
 
       let nodeDetail: FileNodeMapProps | null = null
-      function diffNode(nodeInfo: FileNodeProps, parentPath: string) {
+      const diffNode = (nodeInfo: FileNodeProps, parentPath: string) => {
         if (parentPath.startsWith(nodeInfo.path)) {
           if (nodeInfo.path === parentPath) {
             nodeDetail = cloneDeep(nodeInfo)
             return
           } else {
             if (!nodeInfo.children?.length) return
-            for (let item of nodeInfo.children) {
+            for (const item of nodeInfo.children) {
               diffNode(item, parentPath)
             }
           }
@@ -208,7 +208,7 @@ function useFileTree(params: UseFileTreeParams) {
         return
       }
 
-      for (let item of treeData.current.children) {
+      for (const item of treeData.current.children) {
         diffNode(item, parentPath)
       }
       return nodeDetail
@@ -452,7 +452,7 @@ function useFileTree(params: UseFileTreeParams) {
 
   // 外界触发的调整文件树数据
   const onTriggerUpdateTreeData = useMemoizedFn(async (list: FileMonitorItemProps[]) => {
-    for (let ev of list) {
+    for (const ev of list) {
       const { Op, Path, IsDir, NewPath } = ev
 
       if (IsDir) {
@@ -553,7 +553,7 @@ function useFileTree(params: UseFileTreeParams) {
       } else {
         // 添加子节点信息
         const childs: FileNodeProps[] = []
-        for (let item of res) {
+        for (const item of res) {
           const childNode: FileNodeProps = { ...item, depth: parentNode.depth + 1 }
           if (!item.isFolder) childNode.isLeaf = true
           if (item.isFolder) pendingFolderList.current.push(item.path)
@@ -587,7 +587,7 @@ function useFileTree(params: UseFileTreeParams) {
 
   // 开启轮询获取文件树
   const startPolling = useMemoizedFn(() => {
-    if (!!pollingTimer.current) return
+    if (pollingTimer.current) return
 
     if (pendingFolderList.current.length > 0) {
       const folderPath = pendingFolderList.current.shift()!
@@ -609,7 +609,7 @@ function useFileTree(params: UseFileTreeParams) {
 
   // 停止轮询获取文件树
   const stopPolling = useMemoizedFn(() => {
-    if (!!pollingTimer.current) {
+    if (pollingTimer.current) {
       clearInterval(pollingTimer.current)
       pollingTimer.current = null
     }

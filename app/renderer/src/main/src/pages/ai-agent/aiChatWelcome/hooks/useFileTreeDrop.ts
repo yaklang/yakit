@@ -2,7 +2,7 @@ import { useDrop } from 'ahooks'
 import { useRef, useState } from 'react'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { DragSource } from '@/pages/ai-agent/aiChatWelcome/type'
+import type { DragSource } from '@/pages/ai-agent/aiChatWelcome/type'
 import { fetchIsFolderByPath } from '../utils'
 
 export interface UseFileTreeDropOptions {

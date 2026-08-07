@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { YakitStatusType, YaklangEngineWatchDogCredential } from '../../types'
+import type { YakitStatusType, YaklangEngineWatchDogCredential } from '../../types'
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { yakitNotify } from '@/utils/notification'

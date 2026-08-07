@@ -1,5 +1,5 @@
-import { YakScript } from '../invoker/schema'
-import { EnhancedCustomRouteMenuProps } from './utils'
+import type { YakScript } from '../invoker/schema'
+import type { EnhancedCustomRouteMenuProps } from './utils'
 
 export interface CustomizeMenuProps {
   visible: boolean

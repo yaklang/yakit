@@ -1,7 +1,7 @@
 import React from 'react'
 import { Checkbox, Tooltip } from 'antd'
 import { QuestionCircleOutlined, UserOutlined } from '@ant-design/icons'
-import { YakScript } from '../../pages/invoker/schema'
+import type { YakScript } from '../../pages/invoker/schema'
 import { showModal } from '../../utils/showModal'
 
 import './yakitPlugin.css'

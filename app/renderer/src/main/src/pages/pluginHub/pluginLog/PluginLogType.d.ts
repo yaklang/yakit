@@ -1,8 +1,9 @@
-import React, { ForwardedRef, ReactNode } from 'react'
-import { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
-import { API } from '@/services/swagger/resposeType'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
-import { YakitPluginBaseInfo } from '@/pages/pluginEditor/base'
+import { type ForwardedRef, type ReactNode } from 'react'
+import type React from 'react'
+import { type CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
+import { type API } from '@/services/swagger/resposeType'
+import { type YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import { type YakitPluginBaseInfo } from '@/pages/pluginEditor/base'
 
 /** ---------- 公共定义 ----------  */
 export interface IconProps extends CustomIconComponentProps {

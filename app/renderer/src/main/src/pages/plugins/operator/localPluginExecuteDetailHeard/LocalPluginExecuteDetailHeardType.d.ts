@@ -1,13 +1,14 @@
-import { YakScript } from '@/pages/invoker/schema'
-import { ReactNode } from 'react'
-import { YakParamProps } from '../../pluginsType'
-import { KVPair } from '@/models/kv'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { FormInstance } from 'antd'
-import { ExpandAndRetractExcessiveState } from '../expandAndRetract/ExpandAndRetract'
-import { JsonFormSchemaListWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
+import { type YakScript } from '@/pages/invoker/schema'
+import { type ReactNode } from 'react'
+import { type YakParamProps } from '../../pluginsType'
+import { type KVPair } from '@/models/kv'
+import { type HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import { type HoldGRPCStreamInfo, type StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type FormInstance } from 'antd'
+import { type ExpandAndRetractExcessiveState } from '../expandAndRetract/ExpandAndRetract'
+import { type JsonFormSchemaListWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import type { PluginExecuteCacheConfig } from '@/utils/pluginUsageCache'
+import type { HybridScanPluginConfig } from '@/models/HybridScan'
 export interface PluginExecuteDetailHeardProps {
   token: string
   /**插件 */
@@ -92,7 +93,7 @@ export interface PluginExecuteExtraFormValue extends HTTPRequestBuilderParams {
 }
 /**表单的key value类型 */
 export interface CustomPluginExecuteFormValue {
-  [key: string]: number | string | boolean | string[] | Uint8Array | Buffer | KVPair[] | number[]
+  [key: string]: number | string | boolean | string[] | Uint8Array | KVPair[] | number[]
 }
 
 export interface FormContentItemByTypeProps extends JsonFormSchemaListWrapper {

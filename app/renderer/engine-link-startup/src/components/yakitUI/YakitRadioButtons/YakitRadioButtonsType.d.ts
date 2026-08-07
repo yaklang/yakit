@@ -1,4 +1,4 @@
-import { RadioGroupProps } from 'antd'
+import type { RadioGroupProps } from 'antd'
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 
 /**

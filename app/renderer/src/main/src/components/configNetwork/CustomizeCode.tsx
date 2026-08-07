@@ -1,4 +1,4 @@
-import { FC, useMemo, useRef } from 'react'
+import { type FC, useMemo, useRef } from 'react'
 import { Form } from 'antd'
 import { useForm } from 'antd/es/form/Form'
 import { useRequest, useSafeState } from 'ahooks'
@@ -294,7 +294,6 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
     ) : (
       <></>
     )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detailCustomCodeData])
 
   // 添加 / 编辑 自定义代码片段 func

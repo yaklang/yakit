@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import ShortcutKeyFocusContext, { ShortcutKeyFocusContextDispatcher } from './ShortcutKeyFocusContext'
+import ShortcutKeyFocusContext, { type ShortcutKeyFocusContextDispatcher } from './ShortcutKeyFocusContext'
 
 export default function useFocusDispatcher(): ShortcutKeyFocusContextDispatcher {
   const { dispatcher } = useContext(ShortcutKeyFocusContext)

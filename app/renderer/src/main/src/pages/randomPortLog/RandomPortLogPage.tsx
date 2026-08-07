@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { Col, Divider, Row, Space, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { formatTimestamp } from '../../utils/timeUtil'

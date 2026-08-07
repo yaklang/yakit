@@ -1,8 +1,8 @@
-import React, { ForwardedRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { type ForwardedRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { defTablePage } from './constants'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteMisstatementGV } from '@/enums/misstatement'
 import { Tooltip } from 'antd'
@@ -19,7 +19,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import classNames from 'classnames'
-import { FieldGroup } from '../risks/YakitRiskTable/utils'
+import type { FieldGroup } from '../risks/YakitRiskTable/utils'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import {
   httpAuditHoleGroup,
@@ -32,14 +32,14 @@ import {
   httpRiskFeedBackGroup,
   httpRiskFeedBackTags,
   httpRiskFeedBackType,
-  RiskFeedBackRequest,
+  type RiskFeedBackRequest,
 } from './utils'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { FieldName } from '../risks/RiskTable'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { FieldName } from '../risks/RiskTable'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { SeverityMapTag } from '../risks/YakitRiskTable/YakitRiskTable'
 import { MisstatementAuditRiskDetails, MisstatementRiskDetails } from './MisstatementDetail/MisstatementDetail'
@@ -256,7 +256,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
         render: (text, record, index) => (
           <>
             <div className={styles['table-tag']}>
-              <span>{!!text ? text.replaceAll('|', ',') : '-'}</span>
+              <span>{text ? text.replaceAll('|', ',') : '-'}</span>
             </div>
           </>
         ),
@@ -353,7 +353,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
     queyChangeUpdateData()
   }, [tableQuery])
   const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-    let sort = { ...newSort }
+    const sort = { ...newSort }
     if (sort.order === 'none') {
       sort.order = 'desc'
       sort.orderBy = 'id'
@@ -450,7 +450,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
     }
   })
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -620,7 +620,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
               firstMinSize={160}
               secondMinSize={200}
               isVer={true}
-              lineStyle={{ display: !!currentSelectItem?.id ? '' : 'none' }}
+              lineStyle={{ display: currentSelectItem?.id ? '' : 'none' }}
               lineDirection="bottom"
               secondNodeStyle={{
                 display: !currentSelectItem?.id ? 'none' : '',

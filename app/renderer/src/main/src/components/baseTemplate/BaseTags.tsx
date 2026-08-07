@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react'
-import { Tag, TagProps, Tooltip } from 'antd'
+import { Tag, type TagProps, Tooltip } from 'antd'
 import { useGetState } from 'ahooks'
 
 import './BaseTags.scss'
@@ -35,9 +35,9 @@ export const TagsList: React.FC<TagsListProps> = React.memo((props) => {
       let ellipsisTagsArr: string[] = []
       for (let i = 0; i <= lastItem; i++) {
         // 当前项完整宽度(包含margin)
-        let nowItemWidth = current.children[i].offsetWidth + itemMargin
+        const nowItemWidth = current.children[i].offsetWidth + itemMargin
         // 计算当前项后宽度
-        let nowWidth = countWidth + nowItemWidth
+        const nowWidth = countWidth + nowItemWidth
         // 如不是最后一项,则添加...宽度计算
         if (i < lastItem && nowWidth + ellipsisWidth < boxWidth) {
           countWidth += nowItemWidth

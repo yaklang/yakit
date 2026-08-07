@@ -1,4 +1,4 @@
-import { CheckboxProps } from 'antd'
+import { type CheckboxProps } from 'antd'
 
 /**
  * @description YakitCheckboxPropsProps 的属性

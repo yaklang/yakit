@@ -1,6 +1,5 @@
-import React from 'react'
-import { ExecResult } from '../pages/invoker/schema'
-import { ExecResultLog, ExecResultProgress } from '../pages/invoker/batch/ExecMessageViewer'
+import type { ExecResult } from '../pages/invoker/schema'
+import type { ExecResultLog, ExecResultProgress } from '../pages/invoker/batch/ExecMessageViewer'
 import { JSONParseLog } from '@/utils/tool'
 
 export interface ExecResultMessage {
@@ -33,7 +32,7 @@ export const ExtractExecResultMessageToYakitPort = (msg: ExecResultMessage): Yak
   }
 
   try {
-    let res: YakitPort = JSONParseLog(msg.content.data)
+    const res: YakitPort = JSONParseLog(msg.content.data)
     if (!res.timestamp || res.timestamp <= 0) {
       return { ...res, timestamp: msg.content.timestamp }
     }
@@ -46,7 +45,7 @@ export const ExtractExecResultMessageToYakitPort = (msg: ExecResultMessage): Yak
 export const ExtractExecResultMessage = (data: ExecResult): ExecResultLog | ExecResultProgress | undefined => {
   if (data.IsMessage) {
     try {
-      let obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString())
+      const obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString())
       if (obj.type === 'log') {
         return obj.content as ExecResultLog
       } else if (obj.type === 'progress') {

@@ -1,13 +1,14 @@
-import { Ctx } from '@milkdown/kit/ctx'
+import { type Ctx } from '@milkdown/kit/ctx'
 import { slashFactory, SlashProvider } from '@milkdown/kit/plugin/slash'
 import { useInstance } from '@milkdown/react'
 import { usePluginViewContext } from '@prosemirror-adapter/react'
-import React, { useCallback, useEffect, useRef } from 'react'
+import type React from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn } from 'ahooks'
-import { HttpUploadImgBaseRequest } from '@/apiUtils/http'
-import { InitEditorHooksLocalProps } from '../utils/initEditor'
+import type { HttpUploadImgBaseRequest } from '@/apiUtils/http'
+import type { InitEditorHooksLocalProps } from '../utils/initEditor'
 import {
-  MilkdownMenuType,
+  type MilkdownMenuType,
   MilkdownMenuKeyEnum,
   createMilkdownMenuListByKey,
   baseSlashKey,
@@ -15,8 +16,8 @@ import {
   localCommonSlashKey,
 } from '../constants'
 import styles from './Slash.module.scss'
-import { EditorView } from '@milkdown/kit/prose/view'
-import { EditorState } from '@milkdown/kit/prose/state'
+import { type EditorView } from '@milkdown/kit/prose/view'
+import { type EditorState } from '@milkdown/kit/prose/state'
 import {
   createBlankHeading1,
   createBlankHeading2,
@@ -33,7 +34,7 @@ import {
 } from '../utils/utils'
 import { useStore } from '@/store'
 import type { VirtualElement } from '@floating-ui/dom'
-import { computePosition, flip, offset } from '@floating-ui/dom'
+import { computePosition, flip } from '@floating-ui/dom'
 import { posToDOMRect } from '@milkdown/prose'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -119,7 +120,7 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
         middleware: [flip()],
       }).then(({ x, y }) => {
         if (!ref.current) return
-        let styleObj: { left: null | string; top: null | string } = {
+        const styleObj: { left: null | string; top: null | string } = {
           left: `12px`, // 目前只有空段落才会显示,left为12;
           top: `${y > 0 ? y : 0}px`,
         }
@@ -155,7 +156,7 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
   }
 
   const slashList = useCreation(() => {
-    if (!!localProps?.local) {
+    if (localProps?.local) {
       return {
         [t('MilkdownEditor.slash.base')]: createMilkdownMenuListByKey(t, baseSlashKey),
         [t('MilkdownEditor.slash.common')]: createMilkdownMenuListByKey(t, localCommonSlashKey),
@@ -204,15 +205,17 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
         createBlankHighLight(action, view)
         break
       case MilkdownMenuKeyEnum.File:
-        const { dispatch, state } = view
-        const { tr, selection } = state
-        const { from } = selection
-        dispatch(tr.deleteRange(from - 1, from))
-        uploadFileInMilkdown(action, {
-          type,
-          notepadHash: notepadHash || '',
-          userId: userInfo.user_id || 0,
-        })
+        {
+          const { dispatch, state } = view
+          const { tr, selection } = state
+          const { from } = selection
+          dispatch(tr.deleteRange(from - 1, from))
+          uploadFileInMilkdown(action, {
+            type,
+            notepadHash: notepadHash || '',
+            userId: userInfo.user_id || 0,
+          })
+        }
         break
       default:
         break

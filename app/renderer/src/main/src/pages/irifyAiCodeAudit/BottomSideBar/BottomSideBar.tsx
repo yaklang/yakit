@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react'
-import { BottomSideBarProps } from './BottomSideBarType'
+import type React from 'react'
+import { useMemo } from 'react'
+import type { BottomSideBarProps } from './BottomSideBarType'
 
 import classNames from 'classnames'
 import styles from './BottomSideBar.module.scss'
@@ -20,7 +21,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
   const { activeFile } = useStore()
   const { t } = useI18nNamespaces(['yakRunner'])
   const showSyntaxInfo = useMemo(() => {
-    let data = {
+    const data = {
       hint: 0,
       info: 0,
       warning: 0,
@@ -48,7 +49,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
   }, [activeFile])
 
   const showLocationInfo = useMemo(() => {
-    let data = {
+    const data = {
       lineNumber: 1,
       column: 1,
     }

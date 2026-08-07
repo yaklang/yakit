@@ -1,21 +1,22 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
+import type React from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 import PropTypes from 'prop-types'
 
 import 'xterm/css/xterm.css'
 
 // We are using these as types.
 // eslint-disable-next-line no-unused-vars
-import { Terminal, ITerminalOptions, ITerminalAddon } from '@xterm/xterm'
+import { Terminal, type ITerminalOptions, type ITerminalAddon } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import useListenHeight from '@/pages/pluginHub/hooks/useListenHeight'
 import styles from './YakitXterm.module.scss'
 import classNames from 'classnames'
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
 import { warn } from '@/utils/notification'
-import { YakitMenuItemType } from '../YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '../YakitMenu/YakitMenu'
 import { showByRightContext } from '../YakitMenu/showByRightContext'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
-import { System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
+import { type System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
 import { getClipboardText, setClipboardText } from '@/utils/clipboard'
 import { useXTermOptions } from '@/hook/useXTermOptions/useXTermOptions'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

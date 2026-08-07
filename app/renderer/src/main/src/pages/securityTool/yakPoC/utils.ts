@@ -1,4 +1,4 @@
-import { GroupCount, QueryYakScriptGroupResponse } from '@/pages/invoker/schema'
+import type { GroupCount, QueryYakScriptGroupResponse } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
 
 const { ipcRenderer } = window.require('electron')

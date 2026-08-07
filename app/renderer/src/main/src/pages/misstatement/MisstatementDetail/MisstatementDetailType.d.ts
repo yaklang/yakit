@@ -1,4 +1,6 @@
-import { API } from '@/services/swagger/resposeType'
+import { type API } from '@/services/swagger/resposeType'
+import type { YakURLDataItemProps } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { CollapseProps } from 'antd'
 
 export interface MisstatementDetailsProps<T> {
   className?: string

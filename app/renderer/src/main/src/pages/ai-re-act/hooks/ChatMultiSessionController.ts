@@ -1249,7 +1249,7 @@ export class ChatMultiSessionController {
     try {
       if (!this.readyChannels.has(sessionId)) return
 
-      let ipcContent = Uint8ArrayToString(res.Content) || ''
+      const ipcContent = Uint8ArrayToString(res.Content) || ''
       // console.log('handleGrpcOutputEvent--', sessionId, '\n', res, '\n', ipcContent)
 
       const { store, rawData, request, meta } = this.ensureSession(sessionId)

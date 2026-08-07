@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { RandStrWithLenProp } from './Rand'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import type { RandStrWithLenProp } from './Rand'
 import { Form, Typography } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

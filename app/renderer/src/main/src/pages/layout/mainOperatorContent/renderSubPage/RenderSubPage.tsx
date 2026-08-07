@@ -2,15 +2,15 @@ import { NoPaddingRoute } from '@/routes/newRoute'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useMap, useMemoizedFn } from 'ahooks'
 import styles from './RenderSubPage.module.scss'
-import { RenderFuzzerSequenceProps, RenderSubPageProps } from './RenderSubPageType'
+import type { RenderFuzzerSequenceProps, RenderSubPageProps } from './RenderSubPageType'
 import PageItem from '../PageItem'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
 import { PageLoading } from '@ant-design/pro-layout'
 import { usePageInfo } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { shallow } from 'zustand/shallow'
-import { MultipleNodeInfo } from '../MainOperatorContentType'
-import { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
+import type { MultipleNodeInfo } from '../MainOperatorContentType'
+import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 
 const FuzzerSequenceWrapper = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper'))
 const FuzzerSequence = React.lazy(() => import('@/pages/fuzzer/FuzzerSequence/FuzzerSequence'))

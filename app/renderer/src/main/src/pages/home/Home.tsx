@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState, ReactElement, CSSProperties } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactElement, type CSSProperties } from 'react'
 import classNames from 'classnames'
 import {
   PublicBasicCrawlerIcon,
@@ -65,7 +66,7 @@ import {
 import { SequenceAnimationAemonstration } from '../fuzzer/FuzzerSequence/FuzzerSequence'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
-import { RouteToPageProps } from '../layout/publicMenu/PublicMenu'
+import type { RouteToPageProps } from '../layout/publicMenu/PublicMenu'
 import { usePluginToId } from '@/store/publicMenu'
 import { ResidentPluginName } from '@/routes/newRoute'
 import { Form, Tooltip } from 'antd'
@@ -77,26 +78,26 @@ import { MITMConsts } from '../mitm/MITMConsts'
 import { CacheDropDownGV, RemoteGV } from '@/yakitGV'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { yakitNotify } from '@/utils/notification'
-import { YakitSystem } from '@/yakitGVDefine'
+import type { YakitSystem } from '@/yakitGVDefine'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { ShieldCheckIcon as AllShieldCheckIcon } from '@/components/layout/globalStateIcon'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import numeral from 'numeral'
 import { CloudDownloadIcon } from '@/assets/newIcon'
-import { getEnvTypeByProjects, ProjectDescription } from '../softwareSettings/ProjectManage'
-import { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
-import { FieldName, Fields } from '../risks/RiskTable'
+import { getEnvTypeByProjects, type ProjectDescription } from '../softwareSettings/ProjectManage'
+import type { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { FieldName, Fields } from '../risks/RiskTable'
 import { apiQueryYakScriptTotal } from '../plugins/utils'
 import { YakitGetOnlinePlugin } from '../mitm/MITMServerHijacking/MITMPluginLocalList'
 import { apiQueryPortsBase } from '../assetViewer/PortTable/utils'
-import { QueryPortsRequest } from '../assetViewer/PortAssetPage'
+import type { QueryPortsRequest } from '../assetViewer/PortAssetPage'
 import { getReleaseEditionName, isCommunityYakit, isEnpriTrace, isEnpriTraceAgent } from '@/utils/envfile'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import ReactResizeDetector from 'react-resize-detector'
 import { SolidBorderDocumentTextIcon } from '@/assets/icon/colors'
 import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN } from '../mitm/MITMPage'
-import { PluginHubPageInfoProps } from '@/store/pageInfo'
+import type { PluginHubPageInfoProps } from '@/store/pageInfo'
 import { WebsiteGV } from '@/enums/website'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { toMITMHacker } from '../hacker/httpHacker'
@@ -371,7 +372,7 @@ const Home: React.FC<HomeProp> = (props) => {
     })
 
     getRemoteValue(CacheDropDownGV.MITMDefaultHostHistoryList).then((e) => {
-      if (!!e) {
+      if (e) {
         try {
           const obj = JSON.parse(e) || {}
           form.setFieldsValue({ host: obj.defaultValue })
@@ -384,7 +385,7 @@ const Home: React.FC<HomeProp> = (props) => {
     })
 
     getRemoteValue(RemoteGV.HomeStartScanning).then((e) => {
-      if (!!e) {
+      if (e) {
         setScanningCheck(e)
       } else {
         setScanningCheck('specialVulnerabilityDetection')
@@ -416,7 +417,7 @@ const Home: React.FC<HomeProp> = (props) => {
   useDebounceEffect(
     () => {
       getRemoteValue(CacheDropDownGV.MITMDefaultHostHistoryList).then((e) => {
-        if (!!e) {
+        if (e) {
           try {
             const obj = JSON.parse(e) || {}
             form.setFieldsValue({ host: obj.defaultValue })
@@ -428,7 +429,7 @@ const Home: React.FC<HomeProp> = (props) => {
         }
       })
       getRemoteValue(MITMConsts.MITMDefaultPort).then((e) => {
-        if (!!e) {
+        if (e) {
           form.setFieldsValue({ port: e })
         } else {
           form.setFieldsValue({ port: defPort })

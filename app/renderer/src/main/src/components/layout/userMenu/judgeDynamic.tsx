@@ -1,8 +1,7 @@
-import React from 'react'
 import { Avatar } from 'antd'
 import classNames from 'classnames'
 import styles from '../funcDomain.module.scss'
-import { TFunction } from '@/i18n/useI18nNamespaces'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 
 export const judgeDynamic = (userInfo, avatarColor: string, active: boolean, dynamicConnect: boolean, t: TFunction) => {
   const { companyHeadImg, companyName } = userInfo

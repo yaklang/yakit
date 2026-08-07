@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect } from 'react'
+import React, { type Dispatch, type SetStateAction } from 'react'
 import { type FC } from 'react'
 
 import { useMemoizedFn, useSafeState } from 'ahooks'

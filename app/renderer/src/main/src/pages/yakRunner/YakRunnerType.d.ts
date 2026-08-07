@@ -1,7 +1,6 @@
-import { FileNodeProps } from './FileTree/FileTreeType'
-import { FileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
-import { AuditYakUrlProps } from './AuditCode/AuditCodeType'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type FileDetailInfo, type Selection } from './RunnerTabs/RunnerTabsType'
+import { type AuditYakUrlProps } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
+import { type StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 export interface YakRunnerProps {
   initCode?: YakRunnerCodeProps
 }

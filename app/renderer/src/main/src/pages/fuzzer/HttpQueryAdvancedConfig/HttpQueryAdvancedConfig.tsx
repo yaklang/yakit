@@ -18,9 +18,9 @@ import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { useDeepCompareEffect, useInViewport, useMemoizedFn } from 'ahooks'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { Form, Tooltip, Space, Divider } from 'antd'
-import React, { useState, useRef, useEffect, useMemo, ReactNode } from 'react'
+import React, { useState, useRef, useEffect, useMemo, type ReactNode } from 'react'
 import { inputHTTPFuzzerHostConfigItem } from '../HTTPFuzzerHosts'
-import { HttpQueryAdvancedConfigProps, AdvancedConfigValueProps } from './HttpQueryAdvancedConfigType'
+import type { HttpQueryAdvancedConfigProps, AdvancedConfigValueProps } from './HttpQueryAdvancedConfigType'
 import styles from './HttpQueryAdvancedConfig.module.scss'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import {
@@ -31,25 +31,23 @@ import {
 } from '../MatcherAndExtractionCard/MatcherAndExtractionCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import classNames from 'classnames'
-import {
+import type {
   ExtractorValueProps,
   MatcherActiveKey,
   MatcherValueProps,
   MatchingAndExtraction,
 } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
-import { YakitPopover, YakitPopoverProp } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { YakitPopover, type YakitPopoverProp } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AutoTextarea } from '../components/AutoTextarea/AutoTextarea'
 import 'hint.css'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import emiter from '@/utils/eventBus/eventBus'
-import { maskProxyPassword } from '@/pages/mitm/MITMServerStartForm/MITMServerStartForm'
 import { VariableList } from '@/pages/httpRequestBuilder/HTTPRequestBuilder'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitFormDraggerContent } from '@/components/yakitUI/YakitForm/YakitForm'
 import { OutlineBadgecheckIcon } from '@/assets/icon/outline'
-import { CacheDropDownGV } from '@/yakitGV'
-import { ExtractorsPanel, MatchersPanel, MatchersPanelEditProps, VariablePanel } from './FuzzerConfigPanels'
+import { ExtractorsPanel, MatchersPanel, type MatchersPanelEditProps, VariablePanel } from './FuzzerConfigPanels'
 import {
   matcherTypeList,
   extractorTypeList,
@@ -58,7 +56,7 @@ import {
 } from '../MatcherAndExtractionCard/constants'
 import { defaultAdvancedConfigValue, DefFuzzerConcurrent } from '@/defaultConstants/HTTPFuzzerPage'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useProxy } from '@/hook/useProxy'
@@ -1160,7 +1158,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                           (items) => {
                             // 批量添加
                             const newKeys = items.map(({ Key }) => Key)
-                            let newEtcHosts = [...etcHosts.filter(({ Key }) => !newKeys.includes(Key)), ...items]
+                            const newEtcHosts = [...etcHosts.filter(({ Key }) => !newKeys.includes(Key)), ...items]
                             const v = form.getFieldsValue()
                             onSetValue({
                               ...v,

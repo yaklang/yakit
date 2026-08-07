@@ -1,33 +1,32 @@
-import React, { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
-import { SinglePluginExecutionProps } from './SinglePluginExecutionType'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type { SinglePluginExecutionProps } from './SinglePluginExecutionType'
 import { useCreation, useDebounceEffect, useInViewport, useMemoizedFn } from 'ahooks'
 import { PluginDetailsTab } from '../local/PluginsLocalDetail'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePencilaltIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { apiGetYakScriptByOnlineID, convertLocalPluginsRequestParams } from '../utils'
-import { PluginFilterParams, PluginSearchParams } from '../baseTemplateType'
+import type { PluginFilterParams, PluginSearchParams } from '../baseTemplateType'
 import cloneDeep from 'lodash/cloneDeep'
 import '../plugins.scss'
 import { yakitNotify } from '@/utils/notification'
-import { HybridScanPluginConfig } from '@/models/HybridScan'
+import type { HybridScanPluginConfig } from '@/models/HybridScan'
 import { Tooltip } from 'antd'
 import { PluginLocalListDetails } from '../operator/PluginLocalListDetails/PluginLocalListDetails'
 import { defaultFilter, defaultSearch, pluginTypeToName } from '../builtInData'
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcFetchLocalPluginDetailByID } from '@/pages/pluginHub/utils/grpc'
 import { ModifyYakitPlugin } from '@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin'
-import { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/PluginEditor'
+import type { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/PluginEditor'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
-import classNames from 'classnames'
 import styles from './SinglePluginExecution.module.scss'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { PageNodeItemProps, PluginOpPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, type PluginOpPageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { CustomPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { CustomPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
   // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -167,6 +166,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
       }
 
       if (opType === 'copy') {
+        // ignore
       }
 
       // 关闭编辑插件弹窗

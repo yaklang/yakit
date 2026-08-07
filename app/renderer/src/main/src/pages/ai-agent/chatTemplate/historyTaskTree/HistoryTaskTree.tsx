@@ -1,20 +1,25 @@
 import React, { memo, useRef, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss'
-import {
+import type {
   AIHistoryContinueTaskProps,
   HistoryTaskTreeItemProps,
   HistoryTaskTreeProps,
   SendRecoverParams,
 } from './HistoryTaskTreeType'
 import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { AIAgentGrpcApi, AIInputEvent, AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import {
+  type AIAgentGrpcApi,
+  type AIInputEvent,
+  AIInputEventSyncTypeEnum,
+  AITaskStatus,
+} from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITree } from '../../aiTree/AITree'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { OutlineLoadingIcon, OutlinePlay2Icon, RedoDotIcon } from '@/assets/icon/outline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -71,9 +76,9 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
 
   useUpdateEffect(() => {
     const firstItemId = planHistoryList.records[0]?.coordinator_id || ''
-    if (!!currentCoordinatorId) {
+    if (currentCoordinatorId) {
       setActiveKey(currentCoordinatorId)
-    } else if (!!firstItemId) {
+    } else if (firstItemId) {
       setActiveKey(firstItemId)
     }
   }, [currentCoordinatorId, planHistoryList.records[0]])

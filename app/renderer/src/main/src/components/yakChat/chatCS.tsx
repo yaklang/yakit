@@ -48,7 +48,7 @@ import {
   TrashIcon,
 } from '@/assets/newIcon'
 import { Drawer, Input, Progress, Tooltip } from 'antd'
-import {
+import type {
   CacheChatCSProps,
   ChatCSAnswer,
   ChatCSAnswerProps,
@@ -89,26 +89,25 @@ import {
 } from '@/assets/icon/colors'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import {
-  HybridScanRequest,
-  PluginBatchExecutorTaskProps,
+  type HybridScanRequest,
+  type PluginBatchExecutorTaskProps,
   apiCancelDebugPlugin,
   apiCancelHybridScan,
   apiHybridScan,
   convertHybridScanParams,
 } from '@/pages/plugins/utils'
-import { HybridScanControlAfterRequest } from '@/models/HybridScan'
+import type { HybridScanControlAfterRequest } from '@/models/HybridScan'
 import useHoldBatchGRPCStream from '@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream'
-import { PluginBatchExecuteExtraFormValue } from '@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor'
+import type { PluginBatchExecuteExtraFormValue } from '@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor'
 import cloneDeep from 'lodash/cloneDeep'
-import { PluginSearchParams } from '@/pages/plugins/baseTemplateType'
-import { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { PluginSearchParams } from '@/pages/plugins/baseTemplateType'
+import type { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { QueryYakScriptsResponse, YakScript } from '@/pages/invoker/schema'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { QueryYakScriptsResponse, YakScript } from '@/pages/invoker/schema'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { PluginDetailsListItem } from '@/pages/plugins/baseTemplate'
 import { CheckOutlined, SettingOutlined } from '@ant-design/icons'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
-import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import emiter from '@/utils/eventBus/eventBus'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { defPluginBatchExecuteExtraFormValue } from '@/defaultConstants/PluginBatchExecutor'
@@ -128,7 +127,7 @@ import {
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { JSONParseLog } from '@/utils/tool'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 
@@ -188,7 +187,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
           return
         }
         // 不兼容之前版本 - 筛选掉之前缓存的对话内容(依据:之前版本存在baseType必选项)
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         data.lists = data.lists.filter((item) => !item.baseType)
 
         setHistroy([...data.lists])
@@ -264,7 +263,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
     let willDel: CacheChatCSProps | undefined = undefined
     let time: string = ''
-    for (let item of history) {
+    for (const item of history) {
       if (!time) {
         willDel = { ...item }
         time = item.time
@@ -273,7 +272,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
       }
     }
 
-    if (!!willDel) {
+    if (willDel) {
       onDel(willDel, () => onAddChat())
     }
 
@@ -457,7 +456,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     arr.shift()
 
     let stag: string = ''
-    for (let item of arr) {
+    for (const item of arr) {
       if (chatHistory.length === 4) break
 
       if (item.isMe) {
@@ -476,7 +475,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         // }
       } else {
         const info = item.info as ChatCSMultipleInfoProps
-        for (let el of info.content) {
+        for (const el of info.content) {
           // if (el.type === "bing") {
           stag = el.content
           break
@@ -519,7 +518,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
   const analysisPluginFlowData: (flow: string) => ChatCSPluginAnswerProps | undefined = useMemoizedFn((flow) => {
     const objects: ChatCSPluginProps[] = []
     let answer: ChatCSPluginAnswerProps | undefined = undefined
-    let loadObj: LoadObjProps[] = []
+    const loadObj: LoadObjProps[] = []
     // 获取加载中的字符 使用正则表达式匹配
     const regex = /state:\{([^}]+)\}/g
     let match
@@ -547,7 +546,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         } catch (error) {}
       })
 
-    let resultAll: string[] = []
+    const resultAll: string[] = []
     objects.map((item, index) => {
       const { id = '', role = '', script } = item
       let input: string = ''
@@ -609,10 +608,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             if (!event.target) return
             const { responseText } = event.target
 
-            let answer: ChatCSPluginAnswerProps | undefined = analysisPluginFlowData(responseText)
+            const answer: ChatCSPluginAnswerProps | undefined = analysisPluginFlowData(responseText)
 
             if (answer && answer.script.length !== 0) {
-              let mathYakData = yakData.filter((item) => (answer?.script || []).includes(item.ScriptName))
+              const mathYakData = yakData.filter((item) => (answer?.script || []).includes(item.ScriptName))
               const newContent = JSON.stringify({
                 input: answer.input,
                 data: mathYakData,
@@ -700,7 +699,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
           onDownloadProgress: ({ event }) => {
             if (!event.target) return
             const { responseText } = event.target
-            let answer: ChatCSAnswer | undefined = analysisFlowData(responseText)
+            const answer: ChatCSAnswer | undefined = analysisFlowData(responseText)
             // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
             if (answer && answer.result.length !== 0) {
               if (cs.content === answer.result) return
@@ -735,7 +734,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
   )
   const onSubmit = useMemoizedFn(async (info: ChatInfoProps) => {
     // 缓存的会话历史名称
-    // @ts-ignore
+    // @ts-expect-error 类型定义不完整，需要忽略此行
     const cacheName: string = (info.info?.content || info.info?.input || '临时对话窗').slice(0, 45)
     const group = [...history]
     const filterIndex = group.findIndex((item) => item.token === active)
@@ -836,7 +835,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         await new Promise((resolve, reject) => {
           ipcRenderer.invoke('QueryYakScriptLocalAll').then(async (item: QueryYakScriptsResponse) => {
             // 因后端要求 - 限制只要mitm和端口扫描插件
-            let scripts: ScriptsProps[] = item.Data.filter(
+            const scripts: ScriptsProps[] = item.Data.filter(
               (item) => item.Type === 'port-scan' || item.Type === 'mitm',
             ).map((i) => ({
               script_name: i.ScriptName,
@@ -916,7 +915,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     if (filterIndex === -1) return
 
     const promises: Promise<any>[] = []
-    for (let item of answers.content) {
+    for (const item of answers.content) {
       if (!item.id) continue
       promises.push(generateLikePromise({ uid: item.id, grade: isLike ? 'good' : 'bad' }))
     }
@@ -1032,14 +1031,14 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const chat = data[filterIndex]
     chat.history = chat.history.map((item) => {
       if (item.token === token) {
-        let itemInfo = item.info as ChatCSMultipleInfoProps
-        let content: ChatCSSingleInfoProps[] = itemInfo.content.map((item) => {
+        const itemInfo = item.info as ChatCSMultipleInfoProps
+        const content: ChatCSSingleInfoProps[] = itemInfo.content.map((item) => {
           if (riskState) {
             return { ...item, status, runtimeId, riskState }
           }
           return { ...item, status, runtimeId }
         })
-        let info = {
+        const info = {
           ...item.info,
           content,
         }
@@ -1902,7 +1901,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                     indeterminate={checkedList.length > 0 && checkedList.length !== datsSource.data.length}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        let list = datsSource.data.map((item) => item.ScriptName)
+                        const list = datsSource.data.map((item) => item.ScriptName)
                         setCheckedList(list)
                       } else {
                         setCheckedList([])
@@ -2080,7 +2079,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
   })
   const copyContent = useMemo(() => {
     let content: string = ''
-    for (let item of info.content) {
+    for (const item of info.content) {
       if (item.is_bing) {
         content = `${content}# 搜索引擎增强\n${item.content}\n`
       } else if (item.is_plugin) {
@@ -2435,7 +2434,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
       .then((result) => {
         const { data } = result
         if (data.status) {
-          let list: PromptListProps[] = []
+          const list: PromptListProps[] = []
           const obj = data.data || {}
           const label: PromptLabelProps = {
             Team_all: 0,
@@ -2448,7 +2447,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
           }
           Object.keys(obj).forEach((key) => {
             const item = obj[key]
-            let PromptListItem: PromptListProps = {
+            const PromptListItem: PromptListProps = {
               title: key,
               is_bing: item.is_bing,
               is_plugin: item.is_plugin,
@@ -2693,12 +2692,12 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
 
   const onSubmit = useMemoizedFn(() => {
     if (Object.keys(inputObj).length !== selectItem.templateArr.length) {
-      let arr = selectItem.templateArr.filter((item) => !Object.keys(inputObj).includes(item))
+      const arr = selectItem.templateArr.filter((item) => !Object.keys(inputObj).includes(item))
       yakitNotify('error', `请输入${arr.join()}`)
       return
     }
 
-    let content: string = JSON.parse(JSON.stringify(selectItem.template))
+    const content: string = JSON.parse(JSON.stringify(selectItem.template))
     const replacedStr = content.replace(/\|`([^`]+)`\|/g, (match, key) => {
       return inputObj[key] || match
     })
@@ -2732,7 +2731,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                   className={styles['text-area-wrapper']}
                   placeholder={`请输入${item}`}
                   onChange={(e) => {
-                    if (e.target.value.length === 0 && inputObj.hasOwnProperty(item)) {
+                    if (e.target.value.length === 0 && Object.prototype.hasOwnProperty.call(inputObj, item)) {
                       const newInputObj = JSON.parse(JSON.stringify(inputObj))
                       delete newInputObj[item]
                       setInputObj(newInputObj)
@@ -3096,7 +3095,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
         const token = randomString(10)
         setLoading(true)
         setLoadingToken(token)
-        let obj: PluginAiItem = { info: { content: '' }, isMe: false, time: formatDate(+new Date()), token }
+        const obj: PluginAiItem = { info: { content: '' }, isMe: false, time: formatDate(+new Date()), token }
         AddAIList(obj)
         scrollToPluginAIBottom()
       }

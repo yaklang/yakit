@@ -1,4 +1,5 @@
-import { API } from '@/services/swagger/resposeType'
+import type { ReactNode } from 'react'
+import { type API } from '@/services/swagger/resposeType'
 
 export interface NotepadShareModalProps {
   notepadInfo: API.GetNotepadList

@@ -4,8 +4,8 @@ import { formatTimestamp } from '../../utils/timeUtil'
 import { ReloadOutlined, DeleteOutlined } from '@ant-design/icons'
 import { useMemoizedFn } from 'ahooks'
 import { info } from '../../utils/notification'
-import { PaginationSchema } from '@/pages/invoker/schema'
-import { HistoryHTTPFuzzerTask } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { PaginationSchema } from '@/pages/invoker/schema'
+import type { HistoryHTTPFuzzerTask } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { Uint8ArrayToString } from '@/utils/str'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import { CheckIcon } from '@/assets/newIcon'
@@ -16,7 +16,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { DeleteFuzzerConfigRequest, apiDeleteFuzzerConfig } from '../layout/mainOperatorContent/utils'
+import { type DeleteFuzzerConfigRequest, apiDeleteFuzzerConfig } from '../layout/mainOperatorContent/utils'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -83,7 +83,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
   })
   /**删除 对应的配置缓存历史数据 */
   const deleteFuzzerConfig = useMemoizedFn(() => {
-    let deleteFuzzerConfigRequest: DeleteFuzzerConfigRequest = {
+    const deleteFuzzerConfigRequest: DeleteFuzzerConfigRequest = {
       PageId: [],
       DeleteAll: false,
     }
@@ -276,7 +276,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                             lineHeight: '14px',
                           }}
                         >
-                          {!!i.Host ? i.Host : formatTimestamp(i.CreatedAt)}
+                          {i.Host ? i.Host : formatTimestamp(i.CreatedAt)}
                         </YakitTag>
                       </div>
 

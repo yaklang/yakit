@@ -1,4 +1,4 @@
-import { DrawerProps } from 'antd'
+import { type DrawerProps } from 'antd'
 
 /**
  * @description: YakitDrawerProps

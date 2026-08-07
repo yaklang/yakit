@@ -1,4 +1,4 @@
-import { QueryAIForgeRequest } from '../type/forge'
+import { type QueryAIForgeRequest } from '../type/forge'
 
 export interface ForgeNameProps {
   onSelectChange: (b: boolean) => void

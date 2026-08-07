@@ -1,5 +1,4 @@
-import React from 'react'
-import { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { Alert, Space } from 'antd'
 import { failed } from '@/utils/notification'
 import { CopyableField } from '@/utils/inputUtil'
@@ -20,7 +19,7 @@ export const showResponseViaResponseRaw = (v: Uint8Array, url?: string) => {
 }
 
 const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string, noConfirm?: boolean) => {
-  let params: {
+  const params: {
     HTTPFlowID?: number
     Url?: string
     HTTPResponse?: Uint8Array
@@ -42,12 +41,12 @@ const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string, noConfirm
   ipcRenderer
     .invoke('RegisterFacadesHTTP', params)
     .then((res: { FacadesUrl: string }) => {
-      if (!!noConfirm) {
+      if (noConfirm) {
         openExternalWebsite(res.FacadesUrl)
         return
       }
 
-      let m = showYakitModal({
+      const m = showYakitModal({
         title: (modalT) => modalT('ShowInBrowser.confirmOpenTitle'),
         width: '50%',
         content: (modalT) => (

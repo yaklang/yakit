@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { BottomSideBarProps } from './BottomSideBarType'
+import type React from 'react'
+import { useMemo } from 'react'
+import type { BottomSideBarProps } from './BottomSideBarType'
 import classNames from 'classnames'
 import styles from './BottomSideBar.module.scss'
 import {
@@ -17,7 +18,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
   const { activeFile } = useStore()
 
   const showLocationInfo = useMemo(() => {
-    let data = {
+    const data = {
       lineNumber: 1,
       column: 1,
     }

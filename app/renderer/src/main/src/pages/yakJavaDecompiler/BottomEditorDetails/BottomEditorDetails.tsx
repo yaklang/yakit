@@ -1,12 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import styles from './BottomEditorDetails.module.scss'
 import classNames from 'classnames'
-import { BottomEditorDetailsProps, ShowItemType } from './BottomEditorDetailsType'
+import type { BottomEditorDetailsProps, ShowItemType } from './BottomEditorDetailsType'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import useStore from '../hooks/useStore'
-import emiter from '@/utils/eventBus/eventBus'
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 

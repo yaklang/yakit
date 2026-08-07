@@ -1,5 +1,5 @@
 import Icon from '@ant-design/icons'
-import { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
+import type { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
 const IconNoLoginMessage = () => (
   <svg width="108" height="108" viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g clipPath="url(#clip0_43204_80177)">

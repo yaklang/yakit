@@ -3,11 +3,11 @@
  */
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Form } from 'antd'
-import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
-import { KVPair } from '@/models/kv'
+import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { KVPair } from '@/models/kv'
 import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
-import { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
+import type { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
@@ -18,10 +18,10 @@ import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import styles from './ConfigNetworkPage.module.scss'
 import { isMemfit } from '@/utils/envfile'
-import { FormInstance, FormLayout } from 'antd/lib/form/Form'
+import type { FormInstance, FormLayout } from 'antd/lib/form/Form'
 import { JSONParseLog } from '@/utils/tool'
-import { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -243,7 +243,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
               <YakitSwitch />
             </Form.Item>
           )
-        case 'list':
+        case 'list': {
           if (modelType === 'ai' && item.Name === 'model') {
             // 模型名称
             return (
@@ -291,7 +291,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
             )
           }
 
-          let selectProps: YakitSelectProps = {}
+          const selectProps: YakitSelectProps = {}
           try {
             selectProps.options = item.Extra ? JSONParseLog(item.Extra)?.options : []
           } catch (error) {}
@@ -300,7 +300,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
               <YakitSelect {...selectProps} />
             </Form.Item>
           )
-
+        }
         default:
           return <></>
       }

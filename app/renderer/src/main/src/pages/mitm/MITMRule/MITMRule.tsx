@@ -1,6 +1,6 @@
 import { Divider, Form, Modal, Tooltip } from 'antd'
-import React, { ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import React, { type ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type {
   MITMContentReplacerRule,
   MITMRuleProp,
   RuleExportAndImportButtonProps,
@@ -21,8 +21,8 @@ import {
   TrashIcon,
 } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { useCreation, useDebounceFn, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import { useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import classNames from 'classnames'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { openExternalWebsite } from '@/utils/openWebsite'
@@ -36,7 +36,7 @@ import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { MITMRuleFromModal } from './MITMRuleFromModal'
 import { randomString } from '@/utils/randomUtil'
-import { failed, success, warn, yakitNotify } from '@/utils/notification'
+import { failed, success, warn } from '@/utils/notification'
 import { MITMRuleExport, MITMRuleImport } from './MITMRuleConfigure/MITMRuleConfigure'
 import update from 'immutability-helper'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
@@ -50,14 +50,14 @@ import {
   grpcClientMITMContentReplacerUpdate,
   grpcDisableTrafficGuard,
   grpcMITMContentReplacers,
-  MITMContentReplacersRequest,
-  MITMDisableTrafficGuardRequest,
+  type MITMContentReplacersRequest,
+  type MITMDisableTrafficGuardRequest,
 } from '../MITMHacker/utils'
 import MITMContext from '../Context/MITMContext'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { OutlineCogIcon, OutlineQuestionmarkcircleIcon, OutlineSearchIcon } from '@/assets/icon/outline'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteMitmGV } from '@/enums/mitm'
@@ -258,8 +258,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     }, [menuBodyHeight.firstTabMenuBodyHeight])
 
     const onSortRules = useMemoizedFn((newRule: MITMContentReplacerRule[]) => {
-      let showRules: MITMContentReplacerRule[] = []
-      let banRules: MITMContentReplacerRule[] = []
+      const showRules: MITMContentReplacerRule[] = []
+      const banRules: MITMContentReplacerRule[] = []
       newRule.forEach((item: MITMContentReplacerRule) => {
         if (item.Disabled) {
           banRules.push(item)
@@ -357,8 +357,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       setCurrentItem(mergeRuleStages(rowDate))
     })
     const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
-      let showRules: MITMContentReplacerRule[] = []
-      let banRules: MITMContentReplacerRule[] = []
+      const showRules: MITMContentReplacerRule[] = []
+      const banRules: MITMContentReplacerRule[] = []
       rules.forEach((item: MITMContentReplacerRule) => {
         if (item.Id === rowDate.Id) {
           if (!rowDate.Disabled && rowDate.Id === currentItem?.Id) {

@@ -1,5 +1,4 @@
-import { ReactNode } from 'react'
-import { YakURLResource } from '@/pages/yakURLTree/data'
+import { type YakURLResource } from '@/pages/yakURLTree/data'
 // 文件树的结构只需要path 其详细内容则被存入Map中
 export interface FileTreeListProps {
   /** 文件绝对路径 */

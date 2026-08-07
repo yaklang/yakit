@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { ByCursorMenuItemProps } from '@/utils/showByCursor'
+import type React from 'react'
+import { useState } from 'react'
+import type { ByCursorMenuItemProps } from '@/utils/showByCursor'
 import { Space, Tooltip } from 'antd'
 import { execPacketScan, execPacketScanFromRaw } from '@/pages/packetScanner/PacketScanner'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'

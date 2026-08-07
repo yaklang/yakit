@@ -5,12 +5,12 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
-import { AddLocalModelRequest } from '../../type/aiModel'
+import type { AddLocalModelRequest } from '../../type/aiModel'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { grpcAddLocalModel, grpcUpdateLocalModel } from '../utils'
 import { AILocalModelTypeEnum } from '../../defaultConstant'
-import { AddAIModelProps } from './AddAIModelType'
+import type { AddAIModelProps } from './AddAIModelType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
   const { onCancel, defaultValues } = props
@@ -18,7 +18,7 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
   const [loading, setLoading] = useState<boolean>(false)
   const [form] = Form.useForm<AddLocalModelRequest>()
   useEffect(() => {
-    if (!!defaultValues) {
+    if (defaultValues) {
       form.setFieldsValue({
         Name: defaultValues.Name || '',
         ModelType: defaultValues.ModelType || AILocalModelTypeEnum.AIChat,
@@ -37,7 +37,7 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
   const handleSubmit = useMemoizedFn(() => {
     form.validateFields().then((value: AddLocalModelRequest) => {
       setLoading(true)
-      if (!!defaultValues?.Name) {
+      if (defaultValues?.Name) {
         // 更新
         grpcUpdateLocalModel(value)
           .then(() => {

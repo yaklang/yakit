@@ -4,7 +4,7 @@ import { wrappingInputRule } from '@milkdown/prose/inputrules'
 import { $inputRule } from '@milkdown/kit/utils'
 import { wrapIn } from '@milkdown/kit/prose/commands'
 import directive from 'remark-directive'
-import { Node } from '@milkdown/kit/prose/model'
+import { type Node } from '@milkdown/kit/prose/model'
 
 const alterCustomId = 'alter-custom'
 const alterCustomAttr = $nodeAttr('alter-custom', () => ({ 'data-type': alterCustomId }))

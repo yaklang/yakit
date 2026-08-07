@@ -1,6 +1,6 @@
 import { yakitNotify } from '@/utils/notification'
 import { useEffect } from 'react'
-import { UploadImgType, UploadFileType } from './constants'
+import { type UploadImgType, UploadFileType } from './constants'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')

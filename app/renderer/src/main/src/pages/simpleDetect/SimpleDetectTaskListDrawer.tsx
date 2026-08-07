@@ -4,21 +4,21 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { useControllableValue, useMemoizedFn, useCreation, useDebounceFn } from 'ahooks'
-import React, { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { type ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import {
-  UnfinishedTask,
-  DeleteUnfinishedTaskRequest,
+  type UnfinishedTask,
+  type DeleteUnfinishedTaskRequest,
   apiQuerySimpleDetectUnfinishedTask,
   apiDeleteSimpleDetectUnfinishedTask,
-  QueryUnfinishedTaskRequest,
-  QueryUnfinishedTaskResponse,
+  type QueryUnfinishedTaskRequest,
+  type QueryUnfinishedTaskResponse,
 } from './utils'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { Divider, Progress } from 'antd'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import emiter from '@/utils/eventBus/eventBus'
 import { genDefaultPagination } from '../invoker/schema'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import styles from './SimpleDetectTaskListDrawer.module.scss'
@@ -225,7 +225,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
     }, [visible, isRefresh])
     const onDetails = useMemoizedFn((runtimeId: string) => {
       const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(YakitRoute.SimpleDetect, runtimeId)
-      if (!!current) {
+      if (current) {
         emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: current.pageId }))
         setTimeout(() => {
           // 页面打开的情况下，查看只需要切换二级菜单选中项，不需要重新查询数据
@@ -304,7 +304,7 @@ const SimpleDetectTaskList: React.FC<SimpleDetectTaskListProps> = React.memo(
     })
     const onBatchRemove = useMemoizedFn(() => {
       const filter = isAllSelect ? { ...query.Filter } : {}
-      let removeParams: DeleteUnfinishedTaskRequest = {
+      const removeParams: DeleteUnfinishedTaskRequest = {
         Filter: {
           ...filter,
           RuntimeId: isAllSelect ? [] : selectedRowKeys,

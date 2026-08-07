@@ -3,10 +3,10 @@ import { ChevronDownIcon, ChevronUpIcon, SMViewGridAddIcon } from '@/assets/newI
 import { PublicDefaultPluginIcon } from '@/routes/publicIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useMemoizedFn } from 'ahooks'
-import { EnhancedPublicRouteMenuProps } from './utils'
+import type { EnhancedPublicRouteMenuProps } from './utils'
 import { Avatar, Tooltip } from 'antd'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { RouteToPageProps } from './PublicMenu'
+import type { RouteToPageProps } from './PublicMenu'
 import { LoadingOutlined } from '@ant-design/icons'
 import { CodeGV, RemoteGV } from '@/yakitGV'
 import { yakitNotify } from '@/utils/notification'
@@ -19,7 +19,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { getPluginUsageCache, markPluginRestoreOnOpen } from '@/utils/pluginUsageCache'
 import { FuncSearch } from '@/pages/plugins/funcTemplate'
-import { PluginSearchParams } from '@/pages/plugins/baseTemplateType'
+import type { PluginSearchParams } from '@/pages/plugins/baseTemplateType'
 import {
   apiFetchOnlineList,
   convertLocalPluginsRequestParams,

@@ -3,7 +3,7 @@ import ContextPressurePanel from './ContextPressurePanel'
 import ContextCostPanel from './ContextCostPanel'
 import ContextTokenSummary from './ContextTokenSummary'
 import ContextDetailPopover from './ContextDetailPopover'
-import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from '../AIChatContent.module.scss'
 
 const AIContextToken: FC<{

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { Form, Space } from 'antd'
-import { EncMode, ShellScript, ShellType, WebShellDetail } from '@/pages/webShell/models'
+import { EncMode, ShellScript, ShellType, type WebShellDetail } from '@/pages/webShell/models'
 import { useCreation, useDebounceEffect, useGetState, useMemoizedFn } from 'ahooks'
 import { InputItem } from '@/utils/inputUtil'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import styles from '@/pages/layout/publicMenu/MenuCodec.module.scss'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -11,7 +12,7 @@ import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { failed, success } from '@/utils/notification'
-import { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 
 export interface FromLayoutProps {
@@ -306,7 +307,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
               onChange={(e) => {
                 setHeadersStr(e.target.value)
                 const lines = e.target.value.split('\n')
-                let newHeaders: { [key: string]: string } = {}
+                const newHeaders: { [key: string]: string } = {}
                 lines.forEach((line) => {
                   const [key, ...rest] = line.split(':')
                   newHeaders[key.trim()] = rest.join(':').trim()
@@ -320,7 +321,7 @@ const WebShellFormContent: React.FC<WebShellFormContentProps> = (props) => {
               <CopyComponents
                 className={classNames(styles['copy-icon-style'], { [styles['copy-icon-ban']]: !headersStr })}
                 copyText={headersStr}
-                iconColor={!!headersStr ? '#85899e' : '#ccd2de'}
+                iconColor={headersStr ? '#85899e' : '#ccd2de'}
               />
             </div>
           </div>

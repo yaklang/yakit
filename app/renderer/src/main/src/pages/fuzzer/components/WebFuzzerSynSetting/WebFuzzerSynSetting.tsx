@@ -1,4 +1,4 @@
-import { WebFuzzerSynSettingFormValueProps, WebFuzzerSynSettingProps } from './WebFuzzerSynSettingType'
+import type { WebFuzzerSynSettingFormValueProps, WebFuzzerSynSettingProps } from './WebFuzzerSynSettingType'
 import styles from './WebFuzzerSynSetting.module.scss'
 import React, { useEffect, useState } from 'react'
 import { Checkbox, Form } from 'antd'
@@ -7,13 +7,13 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { PageNodeItemProps, PageProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, type PageProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { yakitNotify } from '@/utils/notification'
-import { AdvancedConfigValueProps } from '../../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import type { AdvancedConfigValueProps } from '../../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { toolDelInvalidKV } from '@/utils/tool'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const rangeList = (t: TFunction) => {
   return [
@@ -118,7 +118,7 @@ const WebFuzzerSynSetting: React.FC<WebFuzzerSynSettingProps> = React.memo((prop
         synValue = getRuleValue(advancedConfigValue)
       }
       /**处理同步范围 */
-      let newWFPageList = wfPageList.pageList.map((item) => {
+      const newWFPageList = wfPageList.pageList.map((item) => {
         if (item.pageParamsInfo.webFuzzerPageInfo && item.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue) {
           const advancedConfigValue = item.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
           if (value.range === 'all') {

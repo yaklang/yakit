@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  DatabaseFirstMenuProps,
-  DatabaseMenuItemProps,
+  type DatabaseFirstMenuProps,
+  type DatabaseMenuItemProps,
   InvalidFirstMenuItem,
   InvalidPageMenuItem,
   PublicCommonPlugins,
-  PublicRouteMenuProps,
+  type PublicRouteMenuProps,
   ResidentPluginName,
   databaseConvertData,
   getPublicRouteMenu,
@@ -25,19 +25,19 @@ import { MenuPlugin } from './MenuPlugin'
 import { yakitNotify } from '@/utils/notification'
 import { useStore } from '@/store'
 import {
-  EnhancedPublicRouteMenuProps,
+  type EnhancedPublicRouteMenuProps,
   keyToRouteInfo,
   publicConvertDatabase,
   publicExchangeProps,
   routeToMenu,
   publicUnionMenus,
   menusConvertKey,
-  DownloadOnlinePluginByScriptNamesResponse,
+  type DownloadOnlinePluginByScriptNamesResponse,
   routeConvertKey,
   routeInfoToKey,
 } from './utils'
 import { CodeGV, RemoteGV } from '@/yakitGV'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
@@ -146,9 +146,9 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
       .then((res: { Data: YakScript[] }) => {
         const { Data } = res
         const info: Record<string, number> = {}
-        for (let item of Data) info[item.ScriptName] = +(item.Id || 0) || 0
+        for (const item of Data) info[item.ScriptName] = +(item.Id || 0) || 0
         const pluginToIds: Record<string, number> = {}
-        for (let name of pluginTool) pluginToIds[name] = info[name] || 0
+        for (const name of pluginTool) pluginToIds[name] = info[name] || 0
         setPluginToId(pluginToIds)
         setNewPluginToId(pluginToIds)
       })
@@ -175,7 +175,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         // 没有考虑过滤系统删除的内定页面，因为public版本的可自定义菜单均为插件
         const database = databaseConvertData(res.Data || [])
         const caches: DatabaseMenuItemProps[] = []
-        for (let item of database) {
+        for (const item of database) {
           // 过滤代码中无效的一级菜单项
           if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
 
@@ -197,11 +197,11 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
               try {
                 filters = (JSONParseLog(val, { page: 'PublicMenu', fun: 'UserDeleteMenu' }) || {})['public'] || []
               } catch (error) {}
-              for (let item of PublicCommonPlugins) {
+              for (const item of PublicCommonPlugins) {
                 if (filters.includes(item.label)) continue
                 const menu: PublicRouteMenuProps = { ...item, children: [] }
                 if (item.children && item.children.length > 0) {
-                  for (let subitem of item.children) {
+                  for (const subitem of item.children) {
                     const menuname =
                       subitem.page === YakitRoute.Plugin_OP ? subitem.yakScripName || subitem.label : subitem.label
                     if (!filters.includes(`${item.label}-${menuname}`)) {
@@ -256,7 +256,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         if (rsp.Data.length > 0) {
           // 整理插件名和插件内容的对应关系
           const pluginToinfo: Record<string, { ScriptName: string; Id: string; HeadImg: string }> = {}
-          for (let item of rsp.Data) pluginToinfo[item.ScriptName] = item
+          for (const item of rsp.Data) pluginToinfo[item.ScriptName] = item
 
           // 更新菜单数据里的id和头像
           menus.forEach((item) => {
@@ -414,7 +414,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
 
     if (data) {
       if (data.route === YakitRoute.Plugin_OP) {
-        if (!!pluginToId[data?.pluginName || '']) data.pluginId = pluginToId[data?.pluginName || '']
+        if (pluginToId[data?.pluginName || '']) data.pluginId = pluginToId[data?.pluginName || '']
         onCheckPlugin(data, 'plugin')
       } else {
         onMenuSelect({ route: data.route })
@@ -434,7 +434,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
   // 收起状态下的菜单组件
   const noExpand = useMemo(() => {
     const plugins: EnhancedPublicRouteMenuProps[] = []
-    for (let item of pluginMenu) {
+    for (const item of pluginMenu) {
       if (item.children && item.children.length > 0) {
         plugins.push({ ...item })
       }

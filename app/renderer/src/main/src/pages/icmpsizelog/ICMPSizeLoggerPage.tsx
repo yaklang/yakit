@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { Col, Divider, Row, Space } from 'antd'
 import { useDebounce, useMemoizedFn } from 'ahooks'
@@ -71,7 +72,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
     }
 
     update()
-    let id = setInterval(update, 4000)
+    const id = setInterval(update, 4000)
     return () => {
       clearInterval(id)
     }

@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 import { Milkdown, MilkdownProvider } from '@milkdown/react'
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
-import useInitEditorHooks, { InitEditorHooksLocalProps } from '@/components/MilkdownEditor/utils/initEditor'
-import { LocalMilkdownProps, MilkdownEditorLocalProps } from './MilkdownEditorLocalType'
+import useInitEditorHooks, { type InitEditorHooksLocalProps } from '@/components/MilkdownEditor/utils/initEditor'
+import type { LocalMilkdownProps, MilkdownEditorLocalProps } from './MilkdownEditorLocalType'
 import { getMarkdown } from '@milkdown/kit/utils'
 import { useCreation } from 'ahooks'
 

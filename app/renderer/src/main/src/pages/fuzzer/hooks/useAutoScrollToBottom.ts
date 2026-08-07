@@ -1,9 +1,9 @@
 import { useRef, useEffect, useMemo } from 'react'
 import { useMemoizedFn, useThrottleEffect, useUpdateEffect } from 'ahooks'
-import { IMonacoEditor } from '@/utils/editors'
-import { IDisposable } from 'monaco-editor'
+import type { IMonacoEditor } from '@/utils/editors'
+import type { IDisposable } from 'monaco-editor'
 import { monaco } from 'react-monaco-editor'
-import { RandomChunkedResponse } from '../HTTPFuzzerPage'
+import type { RandomChunkedResponse } from '../HTTPFuzzerPage'
 import { Uint8ArrayToString } from '@/utils/str'
 
 interface UseChunkAutoScrollToBottomOptions {

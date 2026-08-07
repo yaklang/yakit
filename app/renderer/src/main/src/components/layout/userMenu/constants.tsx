@@ -8,7 +8,7 @@ import {
   OutlineUserRoundCogIcon,
 } from '@/assets/icon/outline'
 import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
-import { UserMenuItemType } from '../../CeUserMenu/CeUserMenu'
+import type { UserMenuItemType } from '../../CeUserMenu/CeUserMenu'
 import type { IMControlBadgeView } from '@/pages/robotControl/status'
 
 /** 随机头像颜色 */
@@ -27,7 +27,7 @@ export const randomAvatarColor = () => {
   ]
 
   const colorArr: string[] = var_color_list.map((it) => vars[it])
-  let color: string = colorArr[Math.round(Math.random() * 7)]
+  const color: string = colorArr[Math.round(Math.random() * 7)]
   return color
 }
 

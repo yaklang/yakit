@@ -1,11 +1,12 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
-import { Form, Input, Button } from 'antd'
+import type React from 'react'
+import { useState } from 'react'
+import { Form } from 'antd'
 import { warn, failed, success } from '@/utils/notification'
-import { useDebounceFn, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
-import { loginOut, refreshToken } from '@/utils/login'
-import { UserInfoProps, yakitDynamicStatus } from '@/store'
+import type { API } from '@/services/swagger/resposeType'
+import { loginOut } from '@/utils/login'
+import { type UserInfoProps, yakitDynamicStatus } from '@/store'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -65,7 +66,7 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
   const judgePass = () => [
     {
       validator: (_, value) => {
-        let re =
+        const re =
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.<>?;:\[\]{}~!@#$%^&*()_+-="])[A-Za-z\d.<>?;:\[\]{}~!@#$%^&*()_+-="]{8,20}/
         if (re.test(value)) {
           return Promise.resolve()

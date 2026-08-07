@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { YakQueryHTTPFlowRequest } from '../utils/yakQueryHTTPFlow'
-import { genDefaultPagination, QueryGeneralResponse } from '../pages/invoker/schema'
-import { HTTPFlow, onExpandHTTPFlow, StatusCodeToColor } from './HTTPFlowTable/HTTPFlowTable'
+import type { YakQueryHTTPFlowRequest } from '../utils/yakQueryHTTPFlow'
+import { genDefaultPagination, type QueryGeneralResponse } from '../pages/invoker/schema'
+import { type HTTPFlow, onExpandHTTPFlow, StatusCodeToColor } from './HTTPFlowTable/HTTPFlowTable'
 // import * as antd from "antd";
 import { Button, Space, Tag, Tooltip } from 'antd'
 import { BaseTable, features, useTablePipeline } from '../alibaba/ali-react-table-dist'
 import { CopyableField } from '../utils/inputUtil'
 import { showDrawer } from '../utils/showModal'
 import ReactResizeDetector from 'react-resize-detector'
-import { useDebounceFn, useInViewport, useThrottleFn } from 'ahooks'
+import { useDebounceFn, useInViewport } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -128,7 +128,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                         type={'link'}
                         size={'small'}
                         onClick={() => {
-                          let m = showDrawer({
+                          const m = showDrawer({
                             width: '80%',
                             content: onExpandHTTPFlow(
                               findHTTPFlowById(i),
@@ -200,7 +200,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                                 type: 'fuzzer',
                                 data: {
                                   isHttps: req.IsHTTPS,
-                                  request: new Buffer(req.Request).toString(),
+                                  request: Buffer.from(req.Request).toString(),
                                 },
                               })
                             }
@@ -213,7 +213,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                         type={'link'}
                         size={'small'}
                         onClick={() => {
-                          let m = showDrawer({
+                          const m = showDrawer({
                             width: '80%',
                             content: onExpandHTTPFlow(
                               findHTTPFlowById(i),

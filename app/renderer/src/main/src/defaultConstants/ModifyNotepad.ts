@@ -1,5 +1,5 @@
-import { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
-import { NoteFilter } from '@/pages/notepadManage/notepadManage/utils'
+import type { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
+import type { NoteFilter } from '@/pages/notepadManage/notepadManage/utils'
 
 export const defaultModifyNotepadPageInfo: ModifyNotepadPageInfoProps = {
   domId: '',

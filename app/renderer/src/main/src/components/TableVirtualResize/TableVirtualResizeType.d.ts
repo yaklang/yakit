@@ -1,8 +1,8 @@
-import { CSSProperties, ReactNode } from 'react'
-import { SearchProps } from 'antd/lib/input'
-import { SelectProps } from 'antd'
-import { YakitInputProps } from '../yakitUI/YakitInput/YakitInputType'
-import { YakitProtoCheckboxProps } from './YakitProtoCheckbox/YakitProtoCheckbox'
+import { type CSSProperties, type ReactNode } from 'react'
+import { type SearchProps } from 'antd/lib/input'
+import { type SelectProps } from 'antd'
+import { type YakitInputProps } from '../yakitUI/YakitInput/YakitInputType'
+import { type YakitProtoCheckboxProps } from './YakitProtoCheckbox/YakitProtoCheckbox'
 
 /**
  * @description:表格的props描述，包裹虚拟表格的父元素需要设置高度
@@ -197,7 +197,7 @@ export interface FilterProps {
 export interface FiltersSelectAllProps {
   isAll: boolean
   textAll?: string
-  valueAll?: strings
+  valueAll?: string
 }
 
 /**

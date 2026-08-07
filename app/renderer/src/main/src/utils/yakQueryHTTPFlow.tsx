@@ -1,4 +1,3 @@
-import React from 'react'
 import { yakitHTTPFlow } from '@/services/electronBridge'
 
 export type HistoryPluginSearchType = 'all' | 'request' | 'response'

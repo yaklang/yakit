@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, MutableRefObject, useMemo } from 'react'
-import {
+import { useEffect, useLayoutEffect, useRef, useState, type MutableRefObject, useMemo } from 'react'
+import type {
   ParamsTProps,
   useVirtualTableHookParams,
   DataResponseProps,
@@ -11,9 +11,10 @@ import {
 import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
 import { serverPushStatus, subscribeServerPushStatus } from '@/utils/duplex/duplex'
-import { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { yakitNotify } from '@/utils/notification'
 import { genDefaultPagination } from '@/pages/invoker/schema'
+import type { VirtualTableViewportSnapshot } from './useVirtualTableScheduler'
 import {
   mergeUniqueVirtualTableRows,
   mergeVirtualTableServerPushRows,
@@ -25,7 +26,6 @@ import {
   selectVirtualTableViewportFillLimit,
   shouldRestoreVirtualTableViewport,
   shouldLoadVirtualTableBottom,
-  VirtualTableViewportSnapshot,
 } from './useVirtualTableScheduler'
 
 const OFFSET_LIMIT = 30

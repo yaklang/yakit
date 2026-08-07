@@ -1,4 +1,4 @@
-import { CodecTypeProps, contextMenuProps } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import type { CodecTypeProps, contextMenuProps } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { create } from 'zustand'
 
 interface StoreProps {

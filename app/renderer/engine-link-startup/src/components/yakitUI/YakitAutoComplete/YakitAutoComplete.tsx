@@ -1,10 +1,10 @@
 import { AutoComplete } from 'antd'
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { YakitAutoCompleteCacheDataHistoryProps, YakitAutoCompleteProps } from './YakitAutoCompleteType'
+import type { YakitAutoCompleteCacheDataHistoryProps, YakitAutoCompleteProps } from './YakitAutoCompleteType'
 import styles from './YakitAutoComplete.module.scss'
 import classNames from 'classnames'
 import { useInViewport, useMemoizedFn } from 'ahooks'
-import { onGetRemoteValuesBase, onSetRemoteValuesBase, YakitOptionTypeProps } from '../../utils'
+import { onGetRemoteValuesBase, onSetRemoteValuesBase, type YakitOptionTypeProps } from '../../utils'
 import { OutlineXIcon } from '@/assets/outline'
 export const defYakitAutoCompleteRef = {
   onGetRemoteValues: () => ({ options: [], defaultValue: '' }),
@@ -81,7 +81,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
           // 主要是删缓存需要
           onSetRemoteValues(initValue)
         } else {
-          // @ts-ignore
+          // @ts-expect-error cacheData.options 类型可能与 setCacheHistoryData 参数不兼容
           setCacheHistoryData({ defaultValue: value, options: newOption })
         }
         //非form表单时,设置value

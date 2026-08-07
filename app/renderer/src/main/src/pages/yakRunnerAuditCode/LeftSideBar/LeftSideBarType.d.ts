@@ -1,3 +1,4 @@
+import type { ShowItemType } from '../BottomEditorDetails/BottomEditorDetailsType'
 export interface LeftSideBarProps {
   fileTreeLoad: boolean
   onOpenEditorDetails: (v: ShowItemType) => void

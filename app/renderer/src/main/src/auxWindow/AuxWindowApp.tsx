@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import type React from 'react'
+import { useEffect } from 'react'
 import styles from './AuxWindowApp.module.scss'
 import EngineConsole from '@/auxWindow/pages/EngineConsole/EngineConsole'
 import AiChatLog from '@/auxWindow/pages/AiChatLog/AiChatLog'

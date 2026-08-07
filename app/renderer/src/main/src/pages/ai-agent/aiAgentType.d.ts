@@ -1,7 +1,7 @@
-import { Dispatch, SetStateAction } from 'react'
-import { AISession } from './type/aiChat'
-import { AITabsEnum } from './defaultConstant'
-import { AIStartParams } from '../ai-re-act/hooks/grpcApi'
+import { type Dispatch, type SetStateAction } from 'react'
+import { type AISession } from './type/aiChat'
+import { type AITabsEnum } from './defaultConstant'
+import { type AIStartParams } from '../ai-re-act/hooks/grpcApi'
 export interface AIAgentProps {
   pageId: string
 }

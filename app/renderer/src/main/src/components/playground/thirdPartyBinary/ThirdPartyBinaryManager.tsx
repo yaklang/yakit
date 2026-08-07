@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -11,16 +12,10 @@ import { Form, Space, Typography, Row, Col, Divider, Progress } from 'antd'
 import { useMemoizedFn, useGetState } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
 import { failed, success, info } from '@/utils/notification'
-import { ExecResult } from '@/pages/invoker/schema'
+import type { ExecResult } from '@/pages/invoker/schema'
 import { Uint8ArrayToString } from '@/utils/str'
 import styles from './ThirdPartyBinaryManager.module.scss'
-import {
-  OutlineDownloadIcon,
-  OutlinePlayIcon,
-  OutlineStopIcon,
-  OutlineTrashIcon,
-  OutlineRefreshIcon,
-} from '@/assets/icon/outline'
+import { OutlineDownloadIcon, OutlinePlayIcon, OutlineTrashIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

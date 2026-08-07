@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { IconSolidAIIcon } from '@/assets/icon/colors'

@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { NotepadExportProps, NotepadImportProps } from './NotepadManageLocalType'
+import type { NotepadExportProps, NotepadImportProps } from './NotepadManageLocalType'
 import { randomString } from '@/utils/randomUtil'
 import { yakitNotify } from '@/utils/notification'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { Progress } from 'antd'
-import { NoteFilter, onOpenLocalFileByPath } from '../utils'
+import { type NoteFilter, onOpenLocalFileByPath } from '../utils'
 import { OutlineExportIcon, OutlineImportIcon } from '@/assets/icon/outline'
 import { useMemoizedFn } from 'ahooks'
 import moment from 'moment'
-import { handleOpenFileSystemDialog, OpenDialogOptions, OpenDialogReturnValue } from '@/utils/fileSystemDialog'
+import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
 
 import styles from './NotepadImportAndExport.module.scss'
 const { ipcRenderer } = window.require('electron')

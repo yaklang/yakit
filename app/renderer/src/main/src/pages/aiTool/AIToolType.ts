@@ -1,4 +1,4 @@
-import { AITool } from '../ai-agent/type/aiTool'
+import type { AITool } from '../ai-agent/type/aiTool'
 
 export interface AIToolProps {
   pageId: string

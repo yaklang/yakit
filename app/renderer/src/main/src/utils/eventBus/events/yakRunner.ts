@@ -1,5 +1,3 @@
-import { LeftSideType } from '@/pages/yakRunner/LeftSideBar/LeftSideBarType'
-
 export type YakRunnerEventProps = {
   onJumpEditorDetail: string
   onOpenBottomDetail: string

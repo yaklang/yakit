@@ -15,7 +15,7 @@ import * as awarenessProtocol from 'y-protocols/awareness'
 import * as math from 'lib0/math'
 import * as url from 'lib0/url'
 import * as env from 'lib0/environment'
-import {
+import type {
   MessageHandlersProps,
   NotepadWsRequest,
   ObservableEvents,
@@ -113,7 +113,7 @@ const setupWS = (provider: WebsocketProvider) => {
       try {
         const bytes = Buffer.from(event.data).toString()
         const data: NotepadWsRequest = JSONParseLog(bytes, { page: 'WebsocketProvider', fun: 'onMessage' })
-        const yjsParams = Buffer.from(data.yjsParams, 'base64')
+        const yjsParams = Buffer.from(data.yjsParams, 'base64') as unknown as Uint8Array
         provider.wsLastMessageReceived = time.getUnixTime()
         const encoder = readMessage(provider, yjsParams, true)
 
@@ -198,7 +198,6 @@ const closeWebsocketConnection = (provider: WebsocketProvider, ws: WebSocket, ev
       // update awareness (all users except local left)
       awarenessProtocol.removeAwarenessStates(
         provider.awareness,
-        //@ts-ignore
         Array.from(provider.awareness.getStates().keys()).filter((client) => client !== provider.doc.clientID),
         provider,
       )
@@ -394,7 +393,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
      * @param {NotepadActionType} docType
      */
     this.getSendData = (sendData) => {
-      if (!this.data) return Buffer.from('')
+      if (!this.data) return Buffer.from('') as unknown as Uint8Array
       const { messageType, token, params, notepadHash } = this.data
       const { buf, docType } = sendData
       try {
@@ -413,9 +412,9 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
         }
         const jsonString = JSON.stringify(value)
         const finalArrayBuffer = Buffer.from(jsonString)
-        return finalArrayBuffer
+        return finalArrayBuffer as unknown as Uint8Array
       } catch (error) {
-        return Buffer.from('')
+        return Buffer.from('') as unknown as Uint8Array
       }
     }
 

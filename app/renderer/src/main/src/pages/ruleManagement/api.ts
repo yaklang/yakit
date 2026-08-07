@@ -1,6 +1,6 @@
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
-import {
+import type {
   CreateSyntaxFlowGroupRequest,
   CreateSyntaxFlowRuleRequest,
   DeleteSyntaxFlowRuleGroupRequest,
@@ -19,7 +19,7 @@ import {
   UpdateSyntaxFlowRuleRequest,
 } from './RuleManagementType'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 
 const { ipcRenderer } = window.require('electron')
 

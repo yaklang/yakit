@@ -1,10 +1,9 @@
-import * as encoding from 'lib0/encoding'
-import * as decoding from 'lib0/decoding'
-import * as awarenessProtocol from 'y-protocols/awareness'
-import { ObservableV2 } from 'lib0/observable'
-import { Doc, Transaction } from 'yjs'
-import { WebsocketProvider } from './WebsocketProvider'
-import { API } from '@/services/swagger/resposeType'
+import type * as encoding from 'lib0/encoding'
+import type * as decoding from 'lib0/decoding'
+import type * as awarenessProtocol from 'y-protocols/awareness'
+import { type Doc, type Transaction } from 'yjs'
+import { type WebsocketProvider } from './WebsocketProvider'
+import { type API } from '@/services/swagger/resposeType'
 
 type WebSocketType = typeof WebSocket
 // 同步文档操作函数接口
@@ -55,7 +54,7 @@ export type WebsocketProviderAwarenessUpdateHandler = (
   origin: any,
 ) => void
 
-export type WebsocketProviderGetSendData = (v: { buf?: Uint8Array; docType: NotepadActionType }) => Buffer
+export type WebsocketProviderGetSendData = (v: { buf?: Uint8Array; docType: NotepadActionType }) => Uint8Array
 
 export type WebsocketProviderExitHandler = () => void
 

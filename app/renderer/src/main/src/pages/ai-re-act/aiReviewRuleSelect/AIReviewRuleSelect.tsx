@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AIChatSelectProps, ReviewRuleSelectProps } from './type'
+import type { AIChatSelectProps, ReviewRuleSelectProps } from './type'
 import styles from './AIReviewRuleSelect.module.scss'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
@@ -10,13 +10,13 @@ import {
   AIAgentSettingDefault,
   AIReviewRuleIconMap,
   AIReviewRuleOptions,
-  AIReviewRuleOptionsType,
+  type AIReviewRuleOptionsType,
 } from '@/pages/ai-agent/defaultConstant'
 import { OutlineSirenIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { FormItemSlider } from '@/pages/ai-agent/AIChatSetting/AIChatSetting'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AIInputEvent, AIInputEventHotPatchTypeEnum, AIStartParams } from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventHotPatchTypeEnum, type AIStartParams } from '../hooks/grpcApi'
 import isEqual from 'lodash/isEqual'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isNil } from 'lodash'
@@ -67,7 +67,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 
   //#region 热更新 Review 规则
   useUpdateEffect(() => {
-    if (!!setting.ReviewPolicy) handHotpatchReviewPolicy(setting.ReviewPolicy)
+    if (setting.ReviewPolicy) handHotpatchReviewPolicy(setting.ReviewPolicy)
   }, [setting.ReviewPolicy])
   /** 热更新 Review 规则 */
   const handHotpatchReviewPolicy = useMemoizedFn((value: AIStartParams['ReviewPolicy']) => {
@@ -85,7 +85,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 
   //#region 热更新 AIReviewRiskControlScore
   useUpdateEffect(() => {
-    if (!!setting.AIReviewRiskControlScore) handHotpatchAIReviewRiskControlScore(setting.AIReviewRiskControlScore)
+    if (setting.AIReviewRiskControlScore) handHotpatchAIReviewRiskControlScore(setting.AIReviewRiskControlScore)
   }, [setting.AIReviewRiskControlScore])
   /** 热更新 AIReviewRiskControlScore */
   const handHotpatchAIReviewRiskControlScore = useMemoizedFn((value: number) => {

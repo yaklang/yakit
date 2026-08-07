@@ -1,5 +1,5 @@
-import React, { ReactElement, useEffect, useReducer, useRef, useState } from 'react'
-import {
+import React, { useEffect, useReducer, useRef, useState } from 'react'
+import type {
   PluginExecuteLogProps,
   PluginGroupByKeyWordItemProps,
   PluginGroupByKeyWordProps,
@@ -14,46 +14,32 @@ import {
 import classNames from 'classnames'
 import styles from './YakPoC.module.scss'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { Divider, Tooltip } from 'antd'
+import { Divider } from 'antd'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   HybridScanExecuteContent,
-  HybridScanExecuteContentRefProps,
+  type HybridScanExecuteContentRefProps,
 } from '@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor'
-import {
-  useControllableValue,
-  useCreation,
-  useDebounceFn,
-  useInViewport,
-  useInterval,
-  useMemoizedFn,
-  useUpdateEffect,
-} from 'ahooks'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { useControllableValue, useCreation, useDebounceFn, useInViewport, useInterval, useMemoizedFn } from 'ahooks'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import {
   ExpandAndRetract,
-  ExpandAndRetractExcessiveState,
+  type ExpandAndRetractExcessiveState,
 } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import {
-  OutlineArrowscollapseIcon,
-  OutlineArrowsexpandIcon,
-  OutlineCloseIcon,
-  OutlineCogIcon,
-  OutlineOpenIcon,
-} from '@/assets/icon/outline'
+import { OutlineCogIcon } from '@/assets/icon/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon } from '@/assets/icon/colors'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { CloudDownloadIcon } from '@/assets/newIcon'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
-import { PageNodeItemProps, PocPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, type PocPageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { GroupCount, QueryYakScriptRequest, SaveYakScriptGroupRequest, YakScript } from '@/pages/invoker/schema'
+import type { GroupCount, QueryYakScriptRequest, SaveYakScriptGroupRequest, YakScript } from '@/pages/invoker/schema'
 import {
-  YakPoCExecutorInputValueProps,
+  type YakPoCExecutorInputValueProps,
   apiFetchDeleteYakScriptGroupLocal,
   apiFetchQueryYakScriptGroupLocal,
   apiFetchSaveYakScriptGroupLocal,
@@ -63,23 +49,23 @@ import {
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { apiFetchQueryYakScriptGroupLocalByPoc } from './utils'
-import { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
+import type { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
 import { initialLocalState, pluginLocalReducer } from '@/pages/plugins/pluginReducer'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { getRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { PluginDetailsListItem } from '@/pages/plugins/baseTemplate'
 import moment from 'moment'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { compareAsc } from '@/pages/yakitStore/viewers/base'
 import { batchPluginType } from '@/defaultConstants/PluginBatchExecutor'
 import { defaultPocPageInfo } from '@/defaultConstants/YakPoC'
-import { HybridScanControlAfterRequest } from '@/models/HybridScan'
+import type { HybridScanControlAfterRequest } from '@/models/HybridScan'
 import { getReleaseEditionName, getRemoteHttpSettingGV } from '@/utils/envfile'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const HybridScanTaskListDrawer = React.lazy(
   () => import('@/pages/plugins/pluginBatchExecutor/HybridScanTaskListDrawer'),
@@ -152,7 +138,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
           .filter((item) => !!item.TemporaryId)
           .map((ele) => ele.Value)
           .join(',')
-        if (!!removeGroup) {
+        if (removeGroup) {
           apiFetchDeleteYakScriptGroupLocal(removeGroup)
         }
       })
@@ -162,7 +148,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
   useEffect(() => {
     // 任务列表点击查看,需要根据后端返回的用户输入模块在页面上复现
     if (!initSelectGroupAll.length) return
-    let groupObj: { selectGroup: string[]; selectGroupListByKeyWord: string[] } = {
+    const groupObj: { selectGroup: string[]; selectGroupListByKeyWord: string[] } = {
       selectGroup: [],
       selectGroupListByKeyWord: [],
     }
@@ -345,7 +331,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
       }
       setLoading(true)
 
-      const params: PluginListPageMeta = !!reset
+      const params: PluginListPageMeta = reset
         ? { page: 1, limit: 20 }
         : {
             page: +response.Pagination.Page + 1,

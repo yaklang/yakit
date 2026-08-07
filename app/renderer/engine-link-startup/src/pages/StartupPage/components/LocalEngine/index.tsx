@@ -1,5 +1,5 @@
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react'
-import { AllowSecretLocalJson, LocalEngineProps } from './LocalEngineType'
+import type { AllowSecretLocalJson, LocalEngineProps } from './LocalEngineType'
 import { useMemoizedFn } from 'ahooks'
 import { debugToPrintLog } from '@/utils/logCollection'
 import {
@@ -192,7 +192,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 debugToPrintLog(`------ 当前软件版本: ${currentYakit.current} ------`)
               }
               if (res2.status === 'fulfilled') {
-                let latest = (res2.value || '') as string
+                const latest = (res2.value || '') as string
                 latestYakit.current = latest.startsWith('v') ? latest.substring(1) : latest
                 debugToPrintLog(`------ 最新软件版本: ${latestYakit.current} ------`)
               }
@@ -247,7 +247,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const buildInVersionPromise = grpcFetchBuildInYakVersion(true)
         const [res1, res2] = await Promise.allSettled([localVersionPromise, buildInVersionPromise])
         if (!res && res2.status === 'fulfilled') {
-          let buildIn = res2.value || ''
+          const buildIn = res2.value || ''
           buildInYak.current = buildIn.startsWith('v') ? buildIn.substring(1) : buildIn
           debugToPrintLog(`------ 内置版本: ${buildInYak.current} ------`)
         }

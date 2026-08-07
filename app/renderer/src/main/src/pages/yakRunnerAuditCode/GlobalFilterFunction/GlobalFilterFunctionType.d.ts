@@ -1,6 +1,4 @@
-import { ReactNode } from 'react'
-import { AuditNodeProps, AuditTreeNodeProps, AuditTreeProps, YakURLKVPair } from '../AuditCode/AuditCodeType'
-import { CodeRangeProps } from '../RightAuditDetail/RightAuditDetail'
+import { type AuditNodeProps, type AuditTreeNodeProps } from '../AuditCode/AuditCodeType'
 
 export interface GlobalFilterFunctionProps {
   projectName?: string

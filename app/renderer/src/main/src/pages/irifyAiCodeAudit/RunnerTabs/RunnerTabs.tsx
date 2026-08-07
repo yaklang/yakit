@@ -1,5 +1,6 @@
-import React, { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type React from 'react'
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type {
   Selection,
   CursorPosition,
   FileDetailInfo,
@@ -42,13 +43,13 @@ import {
 } from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
-import {
+import type {
   AreaInfoProps,
   OpenFileByPathProps,
   TabFileProps,
   YakRunnerHistoryProps,
 } from '../YakRunnerIrifyAiCodeAuditType'
-import { IMonacoEditor } from '@/utils/editors'
+import type { IMonacoEditor } from '@/utils/editors'
 import {
   getCodeByPath,
   getDefaultActiveFile,
@@ -72,27 +73,24 @@ import { Divider, Result } from 'antd'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { v4 as uuidv4 } from 'uuid'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { openABSFileLocated } from '@/utils/openWebsite'
-import { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { getMapFileDetail, removeMapFileDetail, setMapFileDetail } from '../FileTreeMap/FileMap'
 import { getMapFolderDetail, setMapFolderDetail } from '../FileTreeMap/ChildMap'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { FileNodeMapProps } from '../FileTree/FileTreeType'
-import { OpenFolderDragger } from '../RunnerFileTree/RunnerFileTree'
-import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
+import type { FileNodeMapProps } from '../FileTree/FileTreeType'
+import type { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isIRify } from '@/utils/envfile'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { getIrifyAiCodeAuditHistory, requestIrifyAiCodeAuditOnboarding, setIrifyAiCodeAuditHistory } from '../utils'
 import { IrifyAiCodeAuditHistoryItem } from '../IrifyAiCodeAuditHistoryItem'
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { SystemInfo } from '@/constants/hardware'
 import i18n from '@/i18n/i18n'
-import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
-import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 const tYak = i18n.getFixedT(null, 'yakRunner')
 const { ipcRenderer } = window.require('electron')
@@ -160,13 +158,13 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   }, [tabsList])
 
   const onRunYak = useMemoizedFn(async () => {
-    let newActiveFile = onActiveItem
+    const newActiveFile = onActiveItem
     if (newActiveFile && setActiveFile) {
       setRunnerTabsId && setRunnerTabsId(tabsId)
       setActiveFile(newActiveFile)
       // 打开底部
       emiter.emit('onAiCodeAuditOpenBottomDetail', JSON.stringify({ type: 'output' }))
-      let params: RunYakParamsProps = {
+      const params: RunYakParamsProps = {
         Script: newActiveFile.code || '',
         WorkDir: newActiveFile.parent || '',
         ScriptPath: newActiveFile.path,
@@ -205,7 +203,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       item.elements.forEach((itemIn, indexIn) => {
         if (itemIn.id === tabsId) {
           // 筛选出迁移项
-          let newFileDetailInfo: FileDetailInfo[] = []
+          const newFileDetailInfo: FileDetailInfo[] = []
           let activeIndex: number = 0
           itemIn.files.forEach((file, fileIndex) => {
             if (file.path === info.path) {
@@ -263,7 +261,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       item.elements.forEach((itemIn, indexIn) => {
         if (itemIn.id === tabsId) {
           // 筛选出迁移项
-          let newFileDetailInfo: FileDetailInfo[] = []
+          const newFileDetailInfo: FileDetailInfo[] = []
           let activeIndex: number = 0
           itemIn.files.forEach((file, fileIndex) => {
             if (file.isActive) {
@@ -427,7 +425,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
               closeArr = itemIn.files.filter((item) => item.path !== info.path)
 
               // 剩余展示项
-              let onlyArr = itemIn.files
+              const onlyArr = itemIn.files
                 .filter((item) => item.path === info.path)
                 .map((item) => {
                   if (item.path === info.path) {
@@ -601,7 +599,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       },
     ]
     if (splitDirection.length > 0) {
-      let direction: YakitMenuItemType[] = splitDirection.map((item) => {
+      const direction: YakitMenuItemType[] = splitDirection.map((item) => {
         return {
           label: onDirectionToName(item),
           key: item,
@@ -913,7 +911,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
     try {
       // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
       if (document.activeElement !== null) {
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         document.activeElement.blur()
       }
       const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
@@ -1584,9 +1582,9 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
           const result = await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? '' : parentPath)
           // 如若保存路径为文件列表中则需要更新文件树
           if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
-            let arr: FileNodeMapProps[] = await grpcFetchFileTree(parentPath)
+            const arr: FileNodeMapProps[] = await grpcFetchFileTree(parentPath)
             if (arr.length > 0) {
-              let childArr: string[] = []
+              const childArr: string[] = []
               // 文件Map
               arr.forEach((item) => {
                 // 注入文件结构Map

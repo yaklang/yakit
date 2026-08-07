@@ -1,5 +1,4 @@
-import { LocalGVS } from '@/enums/yakitGV'
-import { Theme } from '@/hooks/useTheme'
+import type { Theme } from '@/hooks/useTheme'
 
 export const __PLATFORM__ = import.meta.env.VITE_PLATFORM
 

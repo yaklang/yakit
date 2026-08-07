@@ -1,5 +1,5 @@
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 
 export interface MessageQueryParamsProps {
   page: number

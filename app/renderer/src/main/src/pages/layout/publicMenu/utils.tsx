@@ -1,11 +1,11 @@
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { DatabaseMenuItemProps, PublicRouteMenuProps } from '@/routes/newRoute'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { DatabaseMenuItemProps, PublicRouteMenuProps } from '@/routes/newRoute'
 import { CodeGV } from '@/yakitGV'
-import { RouteToPageProps } from './PublicMenu'
-import { EnhancedPrivateRouteMenuProps } from '../HeardMenu/HeardMenuType'
-import { SendDatabaseFirstMenuProps } from '@/routes/newRouteType'
+import type { RouteToPageProps } from './PublicMenu'
+import type { EnhancedPrivateRouteMenuProps } from '../HeardMenu/HeardMenuType'
+import type { SendDatabaseFirstMenuProps } from '@/routes/newRouteType'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { TFunction } from '@/i18n/useI18nNamespaces'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 
 /** public版本前端增强型菜单项属性(用于前端数据对比和渲染逻辑使用) */
 export interface EnhancedPublicRouteMenuProps extends PublicRouteMenuProps {
@@ -20,7 +20,7 @@ export interface EnhancedPublicRouteMenuProps extends PublicRouteMenuProps {
  */
 export const publicExchangeProps = (menus: PublicRouteMenuProps[]) => {
   const newMenus: EnhancedPublicRouteMenuProps[] = []
-  for (let item of menus) {
+  for (const item of menus) {
     const newItem: EnhancedPublicRouteMenuProps = {
       ...item,
       menuName: item.page === YakitRoute.Plugin_OP ? item.yakScripName || item.label : item.label,
@@ -55,14 +55,14 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
   // 数据库无数据时的逻辑处理
   if (database.length === 0) {
     isUpdate = true
-    for (let item of local) {
+    for (const item of local) {
       const newMenu: EnhancedPublicRouteMenuProps = {
         ...item,
         menuName: item.label,
         children: [],
       }
       if (item.children && item.children.length > 0) {
-        for (let subItem of item.children) {
+        for (const subItem of item.children) {
           if (subItem.page === YakitRoute.Plugin_OP) pluginName.push(subItem.yakScripName || '')
           newMenu.children?.push({
             ...subItem,
@@ -85,7 +85,7 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
 
   // 本地数据转换为一级菜单对应关系对象
   const localToMenus: Record<string, EnhancedPublicRouteMenuProps> = {}
-  for (let item of local) {
+  for (const item of local) {
     let child: EnhancedPublicRouteMenuProps[] = []
     if (item.children && item.children.length > 0)
       child = item.children.map((subitem) => {
@@ -95,7 +95,7 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
   }
 
   // 数据库有数据时的逻辑处理
-  for (let item of database) {
+  for (const item of database) {
     const newMenu: EnhancedPublicRouteMenuProps = {
       page: undefined,
       label: item.label,
@@ -142,7 +142,7 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
   }
 
   // 将本地菜单数据中新增数据进行末尾填充
-  for (let item of Object.values(localToMenus)) newMenus.push(item)
+  for (const item of Object.values(localToMenus)) newMenus.push(item)
 
   return {
     menus: newMenus,
@@ -158,11 +158,11 @@ export const publicUnionMenus = (local: PublicRouteMenuProps[], database: Databa
 const databaseConvertLocal = (local: EnhancedPublicRouteMenuProps[], database: DatabaseMenuItemProps[]) => {
   // 本地数据转换为对应关系对象
   const localToMenus: Record<string, EnhancedPublicRouteMenuProps> = {}
-  for (let item of local) localToMenus[item.label] = item
+  for (const item of local) localToMenus[item.label] = item
 
   const plugins: string[] = []
   const menus: EnhancedPublicRouteMenuProps[] = []
-  for (let item of database) {
+  for (const item of database) {
     if (item.route === YakitRoute.Plugin_OP && !item.pluginId) plugins.push(item.pluginName || item.menuName)
     menus.push({
       page: item.route as YakitRoute,
@@ -176,7 +176,7 @@ const databaseConvertLocal = (local: EnhancedPublicRouteMenuProps[], database: D
   }
 
   // 将本地独有的菜单数据进行最后填充
-  for (let localItem of Object.values(localToMenus)) {
+  for (const localItem of Object.values(localToMenus)) {
     const info: EnhancedPublicRouteMenuProps = {
       ...localItem,
       yakScriptId: 0,
@@ -195,7 +195,7 @@ export const publicConvertDatabase = (data: EnhancedPublicRouteMenuProps[]) => {
   const menus: SendDatabaseFirstMenuProps[] = []
 
   let index = 1
-  for (let item of data) {
+  for (const item of data) {
     const menu: SendDatabaseFirstMenuProps = {
       Group: item.label,
       GroupSort: index,
@@ -206,7 +206,7 @@ export const publicConvertDatabase = (data: EnhancedPublicRouteMenuProps[]) => {
 
     let subIndex = 1
     if (item.children && item.children.length > 0) {
-      for (let subItem of item.children) {
+      for (const subItem of item.children) {
         menu.Items.push({
           Mode: CodeGV.PublicMenuModeValue,
           VerboseSort: subIndex,
@@ -246,7 +246,7 @@ export const routeConvertKey = (route: YakitRoute, pluginName?: string) => {
  */
 export const menusConvertKey = (data: EnhancedPublicRouteMenuProps[] | EnhancedPrivateRouteMenuProps[]) => {
   const names: Map<string, string> = new Map<string, string>()
-  for (let item of data) {
+  for (const item of data) {
     if (item.page) names.set(routeConvertKey(item.page, item.menuName), item.label)
     if (item.children && item.children.length > 0) {
       const subNames = menusConvertKey(item.children)
@@ -264,7 +264,7 @@ export const routeToMenu = (
   parent?: string,
 ) => {
   const menus: YakitMenuItemProps[] = []
-  for (let item of routes) {
+  for (const item of routes) {
     const menuItem: YakitMenuItemProps = {
       label: item.labelUi ? t(item.labelUi) : item.label, // 如果有 labelUi 就翻译
       key: `${routeInfoToKey(item)}${parent ? separator + parent : ''}`,

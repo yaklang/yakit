@@ -1,7 +1,7 @@
 import i18n from '@/i18n/i18n'
-import { IMonacoCodeEditor, IMonacoEditor } from '../../utils/editors'
+import type { IMonacoCodeEditor, IMonacoEditor } from '../../utils/editors'
 import { EncodeTag } from './templates/SingleTag'
-import { IRange } from 'monaco-editor'
+import type { IRange } from 'monaco-editor'
 import './style.css'
 const tOriginal = i18n.getFixedT(null, 'webFuzzer')
 

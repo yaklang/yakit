@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
-import { IProps } from 'xterm-for-react/dist/src/XTerm'
+import type { IProps } from 'xterm-for-react/dist/src/XTerm'
 import { XTerm } from 'xterm-for-react'
 import ReactResizeDetector from 'react-resize-detector'
 import { xtermFit } from '../utils/xtermUtils'

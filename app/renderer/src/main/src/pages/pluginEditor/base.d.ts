@@ -1,5 +1,5 @@
-import { YakParamProps, YakRiskInfoProps } from '../plugins/pluginsType'
-import { TextareaForImage } from './pluginImageTextarea/PluginImageTextareaType'
+import { type YakParamProps, type YakRiskInfoProps } from '../plugins/pluginsType'
+import { type TextareaForImage } from './pluginImageTextarea/PluginImageTextareaType'
 
 /** @name 获取插件信息的关键参数(前端逻辑专属) */
 export interface KeyParamsFetchPluginDetail {

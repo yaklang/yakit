@@ -1,6 +1,6 @@
 import { DatePicker } from 'antd'
-import React from 'react'
-import { YakitDatePickerProps, YakitRangePickerProps } from './YakitDatePickerType'
+import type React from 'react'
+import type { YakitDatePickerProps, YakitRangePickerProps } from './YakitDatePickerType'
 import classNames from 'classnames'
 import styles from './YakitDatePicker.module.scss'
 import { OutlineClockIcon } from '@/assets/icon/outline'

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Checkbox, Divider, Form, Input, InputNumber, Space, Tooltip } from 'antd'
 import { InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem } from '../../utils/inputUtil'
 import { failed, yakitInfo } from '../../utils/notification'
@@ -9,12 +10,12 @@ import { DeleteOutlined, PaperClipOutlined, ReloadOutlined } from '@ant-design/i
 
 import './PortScanPage.css'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
-import { PcapMetadata } from '@/models/Traffic'
-import { GlobalNetworkConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { PcapMetadata } from '@/models/Traffic'
+import type { GlobalNetworkConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { HybridScanPluginConfig } from '@/models/HybridScan'
-import { StartBruteParams } from '../securityTool/newBrute/NewBruteType'
+import type { HybridScanPluginConfig } from '@/models/HybridScan'
+import type { StartBruteParams } from '../securityTool/newBrute/NewBruteType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -109,7 +110,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
 
   useEffect(() => {
     if (!simpleParams) return
-    let bruteParams = {
+    const bruteParams = {
       ...simpleParams,
       Usernames: usernamesValue ? usernamesValue.split(/\n|,/) : [],
       Passwords: passwordsValue ? passwordsValue.split(/\n|,/) : [],
@@ -254,14 +255,14 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                   onChange={(value) => {
                     let res: string = (value || [])
                       .map((i) => {
-                        // @ts-ignore
+                        // @ts-expect-error 类型定义不完整，需要忽略此行
                         return PresetPorts[i] || ''
                       })
                       .join(',')
                     if (value.includes('all')) {
                       res = PresetPorts['all'] || ''
                     }
-                    if (!!res) {
+                    if (res) {
                       setParams({ ...params, Ports: res })
                     }
                     setPortroupValue(value)

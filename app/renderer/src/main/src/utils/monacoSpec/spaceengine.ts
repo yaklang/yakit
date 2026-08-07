@@ -7,9 +7,8 @@ export const isRegisteredLanguage = (languageId: string) => {
 
 monaco.languages.register({ id: 'zoomeye' })
 monaco.languages.registerCompletionItemProvider('zoomeye', {
-  // @ts-ignore
   provideCompletionItems: (model, position) => {
-    let suggestions = [
+    const suggestions = [
       {
         kind: languages.CompletionItemKind.Snippet,
         label: 'device:',
@@ -77,9 +76,9 @@ monaco.languages.registerCompletionItemProvider('zoomeye', {
 
 monaco.languages.register({ id: 'shodan' })
 monaco.languages.registerCompletionItemProvider('shodan', {
-  // @ts-ignore
+  // @ts-expect-error 类型定义不完整，需要忽略此行
   provideCompletionItems: (model, position) => {
-    let suggestions = [
+    const suggestions = [
       {
         label: 'net:',
         kind: monaco.languages.CompletionItemKind.Snippet,
@@ -147,9 +146,9 @@ monaco.languages.registerCompletionItemProvider('shodan', {
 
 monaco.languages.register({ id: 'fofa' })
 monaco.languages.registerCompletionItemProvider('fofa', {
-  // @ts-ignore
+  // @ts-expect-error 类型定义不完整，需要忽略此行
   provideCompletionItems: (model, position) => {
-    let suggestions = [
+    const suggestions = [
       {
         label: 'ip:',
         kind: monaco.languages.CompletionItemKind.Snippet,

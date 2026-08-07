@@ -1,51 +1,54 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
+import type {
   SimpleDetectForm,
   SimpleDetectFormContentProps,
   SimpleDetectProps,
   SimpleDetectValueProps,
 } from './SimpleDetectType'
 import { Checkbox, Form, Progress, Slider } from 'antd'
-import { ExpandAndRetract, ExpandAndRetractExcessiveState } from '../plugins/operator/expandAndRetract/ExpandAndRetract'
+import {
+  ExpandAndRetract,
+  type ExpandAndRetractExcessiveState,
+} from '../plugins/operator/expandAndRetract/ExpandAndRetract'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { failed, warn, yakitNotify } from '@/utils/notification'
-import { RecordPortScanRequest, apiCancelSimpleDetect, apiSimpleDetect } from '../securityTool/newPortScan/utils'
+import { type RecordPortScanRequest, apiCancelSimpleDetect, apiSimpleDetect } from '../securityTool/newPortScan/utils'
 import styles from './SimpleDetect.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import classNames from 'classnames'
 import { PluginExecuteResult } from '../plugins/operator/pluginExecuteResult/PluginExecuteResult'
-import { PortScanExecuteExtraFormValue } from '../securityTool/newPortScan/NewPortScanType'
+import type { PortScanExecuteExtraFormValue } from '../securityTool/newPortScan/NewPortScanType'
 import { defPortScanExecuteExtraFormValue } from '../securityTool/newPortScan/NewPortScan'
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitFormDraggerContentPath } from '@/components/yakitUI/YakitForm/YakitForm'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { useStore } from '@/store'
 import {
-  DownloadOnlinePluginsRequest,
+  type DownloadOnlinePluginsRequest,
   apiDeleteLocalPluginsByWhere,
   apiFetchQueryYakScriptGroupLocal,
   defaultDeleteLocalPluginsByWhereRequest,
 } from '../plugins/utils'
-import { DownloadOnlinePluginAllResProps } from '../yakitStore/YakitStorePage'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import type { DownloadOnlinePluginAllResProps } from '../yakitStore/YakitStorePage'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
-import { SliderMarks } from 'antd/lib/slider'
+import type { SliderMarks } from 'antd/lib/slider'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { GroupCount } from '../invoker/schema'
+import type { GroupCount } from '../invoker/schema'
 import { getLinkPluginConfig } from '../plugins/singlePluginExecution/SinglePluginExecution'
 import { PresetPorts } from '../portscan/schema'
 import { PluginExecuteProgress } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitGetOnlinePlugin } from '../mitm/MITMServerHijacking/MITMPluginLocalList'
-import { SimpleDetectExtraParam } from './SimpleDetectExtraParamsDrawer'
+import type { SimpleDetectExtraParam } from './SimpleDetectExtraParamsDrawer'
 import { convertStartBruteParams } from '../securityTool/newBrute/utils'
 import { OutlineClipboardlistIcon } from '@/assets/icon/outline'
-import { SimpleTabInterface } from '../layout/mainOperatorContent/MainOperatorContent'
-import { CreateReportContentProps, onCreateReportModal } from '../portscan/CreateReport'
+import type { SimpleTabInterface } from '../layout/mainOperatorContent/MainOperatorContent'
+import { type CreateReportContentProps, onCreateReportModal } from '../portscan/CreateReport'
 import { defaultSearch } from '../plugins/builtInData'
 import { defaultBruteExecuteExtraFormValue } from '@/defaultConstants/NewBrute'
 import {
@@ -56,8 +59,8 @@ import {
 } from './utils'
 import { defaultSimpleDetectPageInfo } from '@/defaultConstants/SimpleDetectConstants'
 import { YakitRouteToPageInfo } from '@/routes/newRoute'
-import { StartBruteParams } from '../securityTool/newBrute/NewBruteType'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { StartBruteParams } from '../securityTool/newBrute/NewBruteType'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import('./SimpleDetectExtraParamsDrawer'))
 const SimpleDetectTaskListDrawer = React.lazy(() => import('./SimpleDetectTaskListDrawer'))
@@ -232,7 +235,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
   useEffect(() => {
     // 继续任务 第一次进入该页面，不进行依赖scanDeep的更新逻辑
     // 继续任务开始后，再次点击停止的时候会清除页面中的 runtimeId ，后续可以进行依赖scanDeep的更新逻辑
-    if (!!recoverRuntimeId) return
+    if (recoverRuntimeId) return
     switch (scanDeep) {
       // 快速
       case 3:
@@ -339,7 +342,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         const value = JSON.parse(LastRecord.ExtraInfo)
         const { simpleDetectValue = null } = value
         // simpleDetectValue 存在是新版，可以回显所有的前端页面上显示的数据
-        if (!!simpleDetectValue) {
+        if (simpleDetectValue) {
           const formValue: SimpleDetectForm = {
             Targets: PortScanRequest.Targets,
             ...simpleDetectValue.formValue,
@@ -354,7 +357,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
           simpleDetectValuePropsRef.current.formValue = { ...formValue }
           simpleDetectValuePropsRef.current.extraParamsValue = { ...simpleDetectValue.extraParamsValue }
 
-          let taskNameTimeTarget: string = formValue?.Targets.split(/,|\r?\n/)[0] || t('SimpleDetect.scanTask')
+          const taskNameTimeTarget: string = formValue?.Targets.split(/,|\r?\n/)[0] || t('SimpleDetect.scanTask')
           const taskName = `${formValue.scanType || t('SimpleDetect.basicScan')}-${taskNameTimeTarget}`
           taskNameRef.current = taskName
         }
@@ -418,7 +421,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
       warn(t('SimpleDetect.selectSpecialProject'))
       return
     }
-    let taskNameTimeTarget: string = value?.Targets.split(/,|\r?\n/)[0] || t('SimpleDetect.scanTask')
+    const taskNameTimeTarget: string = value?.Targets.split(/,|\r?\n/)[0] || t('SimpleDetect.scanTask')
     const taskName = `${value.scanType}-${taskNameTimeTarget}`
     taskNameRef.current = taskName
     const pluginGroup = getPluginGroup(value.scanType, value.pluginGroup)
@@ -432,7 +435,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
       },
       true,
     )
-    let portScanRequestParams: PortScanExecuteExtraFormValue = {
+    const portScanRequestParams: PortScanExecuteExtraFormValue = {
       ...extraParamsValue.portScanParam,
       Mode: 'all',
       Proto: ['tcp'],
@@ -493,7 +496,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
   const onStopExecute = useMemoizedFn((e) => {
     e.stopPropagation()
     setStopLoading(true)
-    if (!!recoverRuntimeId) {
+    if (recoverRuntimeId) {
       /**继续任务情况下,停止任务后需要清除当前页面中的runtimeId */
       apiCancelRecoverSimpleDetectTask(recoverTokenRef.current).then(() => {
         setExecuteStatus('paused')
@@ -513,7 +516,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
    */
   const onSaveSimpleDetect = useMemoizedFn(() => {
     return new Promise((resolve, reject) => {
-      const saveTaskId = !!recoverRuntimeId ? recoverRuntimeId : runtimeId
+      const saveTaskId = recoverRuntimeId ? recoverRuntimeId : runtimeId
       if (!startBruteParamsRef.current || !portScanRequestParamsRef.current || !saveTaskId) {
         reject('参数不全')
         return

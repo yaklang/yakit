@@ -1,4 +1,4 @@
-import { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
+import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 
 /**
  * 对比两个知识库数组，判断新增或删除

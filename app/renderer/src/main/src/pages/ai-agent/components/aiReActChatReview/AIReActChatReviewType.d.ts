@@ -1,6 +1,6 @@
-import { AIChatQSData } from '../../../ai-re-act/hooks/aiRender'
-import { AIAgentGrpcApi } from '../../../ai-re-act/hooks/grpcApi'
-import { ChatIPCSendType } from '@/pages/ai-re-act/hooks/type'
+import { type AIChatQSData } from '../../../ai-re-act/hooks/aiRender'
+import { type AIAgentGrpcApi } from '../../../ai-re-act/hooks/grpcApi'
+import { type ChatIPCSendType } from '@/pages/ai-re-act/hooks/type'
 
 export interface AIReActChatReviewProps {
   chatType: ChatIPCSendType

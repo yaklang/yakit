@@ -1,5 +1,5 @@
-import { ChromeLauncherParams } from '@/pages/mitm/MITMChromeLauncher'
-import { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '@/pages/mitm/MITMServerStartForm/MITMFilters'
+import type { ChromeLauncherParams } from '@/pages/mitm/MITMChromeLauncher'
+import type { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '@/pages/mitm/MITMServerStartForm/MITMFilters'
 import { v4 as uuidv4 } from 'uuid'
 import { HotPatchDefaultContent } from '@/defaultConstants/HTTPFuzzerPage'
 

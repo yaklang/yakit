@@ -1,6 +1,6 @@
-import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIChatTextareaSubmit } from '../template/type'
-import { ReactNode } from 'react'
+import type { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIChatTextareaSubmit } from '../template/type'
+import type { ReactNode } from 'react'
 
 export interface AIAgentChatProps {}
 export type AIAgentChatMode = 'welcome' | 're-act'

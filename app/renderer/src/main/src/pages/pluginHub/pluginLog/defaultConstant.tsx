@@ -1,4 +1,4 @@
-import { PluginLogTabInfo, PluginLogTypeToInfoProps } from './PluginLogType'
+import type { PluginLogTabInfo, PluginLogTypeToInfoProps } from './PluginLogType'
 import {
   LogNodeStatusAuditFailedIcon,
   LogNodeStatusCommentIcon,

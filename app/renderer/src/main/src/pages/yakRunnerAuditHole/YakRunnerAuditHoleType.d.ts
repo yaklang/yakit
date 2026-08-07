@@ -1,4 +1,6 @@
-import { SSARisksFilter } from './YakitAuditHoleTable/YakitAuditHoleTableType'
+import { type SSARisksFilter } from './YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { FieldGroup } from '@/pages/risks/YakitRiskTable/utils'
+import type { FieldName } from '@/pages/risks/RiskTable'
 export interface YakRunnerAuditHoleProps {}
 
 export interface HoleQueryProps {
@@ -10,7 +12,7 @@ export interface HoleQueryProps {
 
 export interface ProgramListProps {
   list: FieldGroup[]
-  selectList: FieldGroup[]
+  selectList: string[]
   onSelect: (v: FieldGroup) => void
   onReset: () => void
 }
@@ -22,7 +24,7 @@ export interface ProgramListItemProps {
 }
 
 export interface VulnerabilityLevelProps {
-  selectList: FieldGroup[]
+  selectList: string[]
   data: FieldName[]
   onSelect: (v: string[]) => void
 }

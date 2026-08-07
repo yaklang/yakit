@@ -1,4 +1,4 @@
-import { WebsocketFuzzerPageInfoProps } from '@/store/pageInfo'
+import type { WebsocketFuzzerPageInfoProps } from '@/store/pageInfo'
 import { StringToUint8Array } from '@/utils/str'
 
 export const defaultWebsocketFuzzerPageInfo: WebsocketFuzzerPageInfoProps = {

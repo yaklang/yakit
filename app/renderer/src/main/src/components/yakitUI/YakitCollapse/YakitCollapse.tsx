@@ -1,8 +1,8 @@
 import { Collapse } from 'antd'
-import React, { useState } from 'react'
+import type React from 'react'
 import styles from './YakitCollapse.module.scss'
 import classNames from 'classnames'
-import { YakitCollapseProps, YakitPanelProps } from './YakitCollapseType'
+import type { YakitCollapseProps, YakitPanelProps } from './YakitCollapseType'
 import { SolidChevrondownIcon, SolidChevronrightIcon } from '@/assets/icon/solid'
 
 const { Panel } = Collapse

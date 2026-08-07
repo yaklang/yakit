@@ -1,10 +1,11 @@
-import React, { ReactNode } from 'react'
+import type React from 'react'
+import { type ReactNode } from 'react'
 import { Upload } from 'antd'
 import {
   ItemDraggerInput,
-  ItemDraggerInputProps,
+  type ItemDraggerInputProps,
   ItemDraggerTextArea,
-  ItemDraggerTextAreaProps,
+  type ItemDraggerTextAreaProps,
 } from '../baseTemplate/FormItemUtil'
 
 import './ContentUploadTextArea.css'

@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import styles from './ModifyNotepad.module.scss'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn } from 'ahooks'
-import {
+import type {
   CatalogueTreeNodeProps,
   MilkdownCatalogueProps,
   ModifyNotepadContentProps,
@@ -21,7 +21,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { OnlineJudgment } from '@/pages/plugins/onlineJudgment/OnlineJudgment'
 import { isCommunityEdition } from '@/utils/envfile'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'

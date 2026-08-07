@@ -1,7 +1,7 @@
-import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import i18n from '@/i18n/i18n'
 import { yakitNotify } from '@/utils/notification'
-import { PluginTraceRequest } from './type'
+import type { PluginTraceRequest } from './type'
 const tOriginal = i18n.getFixedT(null, 'mitm')
 
 const { ipcRenderer } = window.require('electron')

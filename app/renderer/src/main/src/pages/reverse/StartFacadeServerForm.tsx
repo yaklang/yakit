@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Form } from 'antd'
 import { InputInteger, InputItem, SwitchItem } from '../../utils/inputUtil'
 

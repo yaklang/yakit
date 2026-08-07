@@ -6,12 +6,12 @@ import React, { useEffect, useMemo, useRef, type FC } from 'react'
 import ReactResizeDetector from 'react-resize-detector'
 import styles from '../knowledgeBase.module.scss'
 
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { apiQueryEntity, apiSearchKnowledgeBaseEntry, transformToGraphData } from '../utils'
 
-import { KnowledgeBaseEntry, SearchKnowledgeBaseEntryRequest } from '../TKnowledgeBase'
+import type { KnowledgeBaseEntry, SearchKnowledgeBaseEntryRequest } from '../TKnowledgeBase'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
+import type { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import { v4 as uuidv4 } from 'uuid'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
@@ -30,7 +30,7 @@ import {
 } from '@/assets/icon/outline'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { GenerateERMDotResponse } from '@/components/playground/entityRepository'
+import type { GenerateERMDotResponse } from '@/components/playground/entityRepository'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { KnowledgeDetailDrawer } from './KnowledgeDetailDrawer'
 import GraphChart from './GraphChart'
@@ -210,7 +210,6 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
         Keyword: query,
       },
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
   useUpdateEffect(() => {
@@ -374,7 +373,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
 
   const ResizeBoxProps = useCreation(() => {
     setSelectedSubERMId('')
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -386,7 +385,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
   }, [selectedRowKeys])
 
   const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-    let sort = { ...newSort }
+    const sort = { ...newSort }
     if (sort.order === 'none') {
       sort.order = 'desc'
       sort.orderBy = 'id'
@@ -526,7 +525,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
         firstMinSize={160}
         secondMinSize={200}
         isVer={true}
-        lineStyle={{ display: !!selectedRowKeys.length ? '' : 'none' }}
+        lineStyle={{ display: selectedRowKeys.length ? '' : 'none' }}
         lineDirection="bottom"
         secondNodeStyle={{
           display: !selectedRowKeys.length ? 'none' : '',

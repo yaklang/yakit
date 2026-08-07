@@ -1,4 +1,4 @@
-import { YakitSideTabProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitSideTabProps } from '@/components/yakitSideTab/YakitSideTabType'
 
 export interface AITaskContentProps {
   tabBarExtraContent: YakitSideTabProps['tabBarExtraContent']

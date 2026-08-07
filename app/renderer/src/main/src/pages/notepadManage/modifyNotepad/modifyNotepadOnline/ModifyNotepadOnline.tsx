@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ModifyNotepadOnlineProps } from './ModifyNotepadOnlineType'
+import type { ModifyNotepadOnlineProps } from './ModifyNotepadOnlineType'
 import { ModifyNotepadContent } from '../ModifyNotepad'
 import styles from './ModifyNotepadOnline.module.scss'
 import { MilkdownEditor, showOnlineErrorNotification } from '@/components/MilkdownEditor/MilkdownEditor'
@@ -10,16 +10,20 @@ import { judgeAvatar } from '@/pages/MainOperator'
 import { AuthorImg, AuthorIcon, FuncFilterPopover } from '@/pages/plugins/funcTemplate'
 import { Divider, Tooltip } from 'antd'
 import moment from 'moment'
-import { ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type ModifyNotepadPageInfoProps, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { failed, yakitNotify } from '@/utils/notification'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { randomAvatarColor } from '@/components/layout/FuncDomain'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { CollabUserInfo } from '@/components/MilkdownEditor/CollabManager'
-import { CollabStatus, EditorMilkdownProps, MilkdownCollabProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { CollabUserInfo } from '@/components/MilkdownEditor/CollabManager'
+import type {
+  CollabStatus,
+  EditorMilkdownProps,
+  MilkdownCollabProps,
+} from '@/components/MilkdownEditor/MilkdownEditorType'
 import { notepadSaveStatus } from '@/components/MilkdownEditor/WebsocketProvider/constants'
 import { notepadRole } from '../../NotepadShareModal/constants'
 import emiter from '@/utils/eventBus/eventBus'
@@ -34,7 +38,7 @@ import {
   onBaseNotepadDown,
   onOpenLocalFileByPath,
 } from '../../notepadManage/utils'
-import { ModifyNotepadContentRefProps } from '../ModifyNotepadType'
+import type { ModifyNotepadContentRefProps } from '../ModifyNotepadType'
 import { useStore } from '@/store'
 import {
   OutlineShareIcon,
@@ -43,7 +47,6 @@ import {
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { DownFilesModal } from '@/components/MilkdownEditor/CustomFile/CustomFile'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -145,7 +148,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
           }, 200),
         )
     } else {
-      let content = pageInfo.content || ''
+      const content = pageInfo.content || ''
       // 新建笔记本并保存
       const params: API.PostNotepadRequest = {
         title: initTabName(),

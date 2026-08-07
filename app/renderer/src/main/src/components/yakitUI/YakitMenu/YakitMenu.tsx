@@ -1,8 +1,8 @@
-import React, { ReactNode, useMemo } from 'react'
+import React, { type ReactNode, useMemo } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { Menu, MenuProps, Tooltip } from 'antd'
-import { ItemType } from 'antd/lib/menu/hooks/useItems'
-import { MenuDividerType } from 'rc-menu/lib/interface'
+import { Menu, type MenuProps, Tooltip } from 'antd'
+import type { ItemType } from 'antd/lib/menu/hooks/useItems'
+import type { MenuDividerType } from 'rc-menu/lib/interface'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 
 import classNames from 'classnames'
@@ -87,7 +87,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
       return itemInfo
     } else {
       const info: YakitMenuItemProps = { ...(data as any) }
-      const hintTitle = !!info.title ? info.title : typeof info.label === 'string' ? info.label : ''
+      const hintTitle = info.title ? info.title : typeof info.label === 'string' ? info.label : ''
 
       if (info.children && info.children.length > 0) {
         const itemInfo: ItemType = {
@@ -121,7 +121,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
               : undefined,
         }
         const arr: ItemType[] = []
-        for (let item of info.children) {
+        for (const item of info.children) {
           arr.push(generateMenuInfo(item))
         }
         itemInfo.children = itemInfo.children.concat(arr)
@@ -161,8 +161,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     }
   })
 
-  let items: ItemType[] = []
-  if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
+  const items: ItemType[] = []
+  if (data.length > 0) for (const item of data) items.push(generateMenuInfo(item))
 
   return (
     <div className={classNames(styles['yakit-menu-div-wrapper'], menuTypeClass, menuSizeClass)}>

@@ -1,4 +1,5 @@
-import React, { memo } from 'react'
+import type React from 'react'
+import { memo } from 'react'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import styles from './PageLoading.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

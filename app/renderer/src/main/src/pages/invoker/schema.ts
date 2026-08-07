@@ -1,5 +1,5 @@
-import { YakitPluginBaseAIInfo } from '../pluginEditor/base'
-import { YakParamProps, YakRiskInfoProps } from '../plugins/pluginsType'
+import type { YakitPluginBaseAIInfo } from '../pluginEditor/base'
+import type { YakParamProps, YakRiskInfoProps } from '../plugins/pluginsType'
 
 export interface ExecHistoryRecord {
   Script: string

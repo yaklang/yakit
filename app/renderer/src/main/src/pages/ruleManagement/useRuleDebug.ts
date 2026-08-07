@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { CodeScanStreamInfo } from '../yakRunnerCodeScan/YakRunnerCodeScan'
+import type { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { CodeScanStreamInfo } from '../yakRunnerCodeScan/YakRunnerCodeScan'
 import { yakitNotify } from '@/utils/notification'
-import {
+import type {
   SyntaxFlowScanExecuteState,
   SyntaxFlowScanRequest,
   SyntaxFlowScanResponse,
@@ -29,9 +29,11 @@ export default function useRuleDebug(params: { token: string; errorCallback?: ()
   })
 
   // logs
-  let messages = useRef<StreamResult.Message[]>([])
+  const messages = useRef<StreamResult.Message[]>([])
   // card
-  let cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(new Map<string, HoldGRPCStreamProps.CacheCard>())
+  const cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
+    new Map<string, HoldGRPCStreamProps.CacheCard>(),
+  )
 
   /** 判断卡片数据是否为无效数据 */
   const checkStreamValidity = useMemoizedFn((stream: StreamResult.Log) => {
@@ -92,7 +94,7 @@ export default function useRuleDebug(params: { token: string; errorCallback?: ()
       if (res) {
         const data = res.ExecResult
 
-        if (!!res.Status) {
+        if (res.Status) {
           switch (res.Status) {
             case 'done':
               executeStatus !== 'finished' && setExecuteStatus('finished')
@@ -115,10 +117,10 @@ export default function useRuleDebug(params: { token: string; errorCallback?: ()
         }
         if (data && data.IsMessage) {
           try {
-            let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
+            const obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
 
             // 进度条
-            let progressObj = obj.content as StreamResult.Progress
+            const progressObj = obj.content as StreamResult.Progress
             if (obj.type === 'progress') {
               setProgress(+progressObj.progress || 0)
               return

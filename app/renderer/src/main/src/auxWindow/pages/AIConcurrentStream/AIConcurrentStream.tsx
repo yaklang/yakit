@@ -1,15 +1,16 @@
-import React, { lazy, memo, startTransition, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { lazy, memo, startTransition, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { yakitAuxWindow } from '@/services/electronBridge'
 import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
 } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
-import { AIChatQSDataTypeEnum, AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum, type AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { fetchConcurrentStreamContents } from './fetchConcurrentStreamContents'
 import styles from './AIConcurrentStream.module.scss'
 import AIConcurrentStreamContent, {
-  AIConcurrentStreamDispatcher,
-  AIConcurrentStreamStore,
+  type AIConcurrentStreamDispatcher,
+  type AIConcurrentStreamStore,
 } from './useContext/AIConcurrentStreamContent'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import { useDebounceFn } from 'ahooks'

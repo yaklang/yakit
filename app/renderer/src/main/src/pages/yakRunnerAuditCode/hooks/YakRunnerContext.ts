@@ -1,8 +1,8 @@
-import { FileTreeListProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import { AuditCodePageInfoProps } from '@/store/pageInfo'
-import { Dispatch, SetStateAction, createContext } from 'react'
-import { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
-import { AreaInfoProps } from '../YakRunnerAuditCodeType'
+import type { FileTreeListProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import type { AuditCodePageInfoProps } from '@/store/pageInfo'
+import { type Dispatch, type SetStateAction, createContext } from 'react'
+import type { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
+import type { AreaInfoProps } from '../YakRunnerAuditCodeType'
 
 export interface YakRunnerContextStore {
   pageInfo?: AuditCodePageInfoProps

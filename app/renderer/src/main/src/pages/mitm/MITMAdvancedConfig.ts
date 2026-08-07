@@ -1,5 +1,5 @@
 import { RemoteMitmGV } from '@/enums/mitm'
-import { KVPair } from '@/models/kv'
+import type { KVPair } from '@/models/kv'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { JSONParseLog } from '@/utils/tool'
 import { RemoteGV } from '@/yakitGV'
@@ -118,7 +118,7 @@ const fieldConfigs: RemoteFieldConfig[] = [
   {
     field: 'DisableWebsocketCompression',
     key: RemoteGV.MITMDisableWebsocketCompression,
-    read: (raw) => (!!raw ? parseBoolean(raw) : true),
+    read: (raw) => (raw ? parseBoolean(raw) : true),
   },
   { field: 'PluginConcurrency', key: RemoteGV.MITMPluginConcurrency, read: (raw) => parseNumber(raw, 20) },
 ]

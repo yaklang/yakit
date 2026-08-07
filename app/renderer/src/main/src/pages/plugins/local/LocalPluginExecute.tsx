@@ -3,10 +3,10 @@ import { randomString } from '@/utils/randomUtil'
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { LocalPluginExecuteDetailHeard } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { PluginExecuteResult } from '../operator/pluginExecuteResult/PluginExecuteResult'
-import { LocalPluginExecuteProps } from './PluginsLocalType'
+import type { LocalPluginExecuteProps } from './PluginsLocalType'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import styles from './PluginsLocalDetail.module.scss'
-import { ExpandAndRetractExcessiveState } from '../operator/expandAndRetract/ExpandAndRetract'
+import type { ExpandAndRetractExcessiveState } from '../operator/expandAndRetract/ExpandAndRetract'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { apiDownloadPluginOther } from '../utils'
 import emiter from '@/utils/eventBus/eventBus'
@@ -14,9 +14,9 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
   getPluginLastExecuteRecord,
-  PluginExecuteCacheConfig,
-  PluginLastExecuteMeta,
-  PluginLastExecuteRecord,
+  type PluginExecuteCacheConfig,
+  type PluginLastExecuteMeta,
+  type PluginLastExecuteRecord,
   recordPluginLastExecute,
   takePluginRestoreOnOpen,
 } from '@/utils/pluginUsageCache'

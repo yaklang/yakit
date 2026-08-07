@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { TypeCallbackExtra, YakitStatusType, YaklangEngineMode, YaklangEngineWatchDogCredential } from '../../types'
+import type {
+  TypeCallbackExtra,
+  YakitStatusType,
+  YaklangEngineMode,
+  YaklangEngineWatchDogCredential,
+} from '../../types'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import classNames from 'classnames'
@@ -82,7 +87,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
       fetchPSList()
       fetchCurrentPort()
 
-      let id = setInterval(() => {
+      const id = setInterval(() => {
         fetchPSList()
         fetchCurrentPort()
       }, 3000)
@@ -179,7 +184,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                             yakitNotify('info', '远程模式，不支持切换引擎')
                             return
                           }
-                          let oldPort = port
+                          const oldPort = port
                           const switchEngine: YaklangEngineWatchDogCredential = {
                             Port: i.port,
                             Host: '127.0.0.1',

@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import { KnowledgeBaseManager } from './KnowledgeBaseManager'
 
 export const KnowledgeBaseDemo: React.FC = () => {

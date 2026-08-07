@@ -1,4 +1,4 @@
-import { CompateData } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { CompateData } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { randomString } from '@/utils/randomUtil'
 import { create } from 'zustand'
 const { ipcRenderer } = window.require('electron')

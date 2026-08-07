@@ -1,13 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import {
-  apiCreateSSARiskDisposals,
-  apiGetSSARiskDisposal,
-  CreateSSARiskDisposalsRequest,
-  SSARiskDisposalData,
-} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
+import { apiGetSSARiskDisposal, type SSARiskDisposalData } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
 import { AuditResultHistory } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
-import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { RightBugAuditResultHeader } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 import styles from './HoleDispose.module.scss'
 import emiter from '@/utils/eventBus/eventBus'

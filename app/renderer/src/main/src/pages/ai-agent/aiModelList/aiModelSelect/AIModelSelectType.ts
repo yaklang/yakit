@@ -1,7 +1,7 @@
-import { ReactNode } from 'react'
-import { AIModelConfig } from '../utils'
-import { AIOnlineModelListProps } from '../AIModelListType'
-import { AIModelTypeEnum } from '../../defaultConstant'
+import type { ReactNode } from 'react'
+import type { AIModelConfig } from '../utils'
+import type { AIOnlineModelListProps } from '../AIModelListType'
+import { type AIModelTypeEnum } from '../../defaultConstant'
 
 export type AISelectType = 'online' | 'local'
 export interface AIModelSelectProps {

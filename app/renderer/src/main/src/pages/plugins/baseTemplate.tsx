@@ -1,5 +1,5 @@
-import React, { ReactNode, memo, useEffect, useImperativeHandle, useMemo, useState } from 'react'
-import {
+import React, { type ReactNode, memo, useEffect, useImperativeHandle, useMemo, useState } from 'react'
+import type {
   CollaboratorInfoProps,
   PluginContributesListItemProps,
   PluginDetailHeaderProps,
@@ -44,19 +44,19 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useDebounceFn, useGetState, useMemoizedFn, useControllableValue, useUpdateEffect } from 'ahooks'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { PluginBaseParamProps, PluginSettingParamProps, YakRiskInfoProps } from './pluginsType'
+import type { PluginBaseParamProps, PluginSettingParamProps, YakRiskInfoProps } from './pluginsType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakEditor } from '@/utils/editors'
-import { CheckboxChangeEvent } from 'antd/lib/checkbox'
+import type { CheckboxChangeEvent } from 'antd/lib/checkbox'
 import { BuiltInTags, RiskLevelToTag } from './editDetails/builtInData'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { aduitStatusToName, pluginTypeToName } from './builtInData'
 import { YakitDiffEditor } from '@/components/yakitUI/YakitDiffEditor/YakitDiffEditor'
 import UnLogin from '@/assets/unLogin.png'
 import YakitLogo from '@/assets/yakitLogo.png'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { PluginSwitchTagToContent, PluginSwitchToTag } from '../pluginEditor/defaultconstants'
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import cloneDeep from 'lodash/cloneDeep'
 import './plugins.scss'
 import styles from './baseTemplate.module.scss'
@@ -86,9 +86,9 @@ export const PluginsLayout: React.FC<PluginsLayoutProps> = memo((props) => {
       <div className={styles['plugins-layout-header']}>
         <div className={styles['header-body']}>
           {titleNode}
-          {!!subTitle ? <div className={styles['subtitle-wrapper']}>{subTitle}</div> : null}
+          {subTitle ? <div className={styles['subtitle-wrapper']}>{subTitle}</div> : null}
         </div>
-        {!!extraHeader ? extraHeader : <div></div>}
+        {extraHeader ? extraHeader : <div></div>}
       </div>
       <div className={styles['plugins-layout-container']}>{children}</div>
     </div>

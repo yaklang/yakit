@@ -16,9 +16,7 @@ vi.mock('../yakRunnerAiCodeApplyBridge', () => ({
   resolveYaklangCodeChangePath: (change: AIAgentGrpcApi.YaklangCodeChange) => change.code?.path,
 }))
 
-// eslint-disable-next-line import/first
 import { yakitFailed } from '@/utils/notification'
-// eslint-disable-next-line import/first
 import {
   applyYaklangCodePatch,
   normalizeYaklangCodeChangeForReview,

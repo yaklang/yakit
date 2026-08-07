@@ -1,4 +1,4 @@
-import { YakRunnerScanHistoryPageInfoProps } from '@/store/pageInfo'
+import type { YakRunnerScanHistoryPageInfoProps } from '@/store/pageInfo'
 
 export const defaultYakRunnerScanHistoryPageInfo: YakRunnerScanHistoryPageInfoProps = {
   Programs: [],

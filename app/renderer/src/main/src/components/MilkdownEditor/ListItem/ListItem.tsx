@@ -1,6 +1,6 @@
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { useNodeViewContext } from '@prosemirror-adapter/react'
-import React from 'react'
+import type React from 'react'
 import styles from './ListItem.module.scss'
 import classNames from 'classnames'
 import { useCreation } from 'ahooks'

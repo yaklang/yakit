@@ -7,7 +7,12 @@ import { info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { MITMAdvancedFilter, MITMFilters, MITMFilterSchema, onFilterEmptyMITMAdvancedFilters } from './MITMFilters'
+import {
+  type MITMAdvancedFilter,
+  MITMFilters,
+  type MITMFilterSchema,
+  onFilterEmptyMITMAdvancedFilters,
+} from './MITMFilters'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import {
   OutlineClockIcon,
@@ -24,13 +29,13 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { defaultMITMAdvancedFilter, defaultMITMFilterData } from '@/defaultConstants/mitm'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
-import { MITMFilterUIProps, convertLocalMITMFilterRequest, convertMITMFilterUI } from './utils'
+import { type MITMFilterUIProps, convertLocalMITMFilterRequest, convertMITMFilterUI } from './utils'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { RemoteMitmGV } from '@/enums/mitm'
 import {
-  MITMHijackSetFilterRequest,
-  MITMSetFilterRequest,
+  type MITMHijackSetFilterRequest,
+  type MITMSetFilterRequest,
   grpcClientMITMfilter,
   grpcMITMGetFilter,
   grpcMITMHijackGetFilter,

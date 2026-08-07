@@ -1,16 +1,16 @@
 import { monaco } from 'react-monaco-editor'
-import { editor, languages, Position } from 'monaco-editor'
-import { CancellationToken } from 'typescript'
+import { type editor, languages, type Position } from 'monaco-editor'
+import type { CancellationToken } from 'typescript'
 import './spaceengine'
 import {
-  FuzzTagSuggestionRequest,
+  type FuzzTagSuggestionRequest,
   getCompletionItemKindByName,
   getSortTextByKindAndLabel,
-  YaklangLanguageSuggestionResponse,
+  type YaklangLanguageSuggestionResponse,
 } from '@/utils/monacoSpec/yakCompletionSchema'
 import { getModelContext } from '@/utils/monacoSpec/yakEditor'
-import IWordAtPosition = editor.IWordAtPosition
-import { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
+type IWordAtPosition = editor.IWordAtPosition
+import type { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
 import { getAllRows } from '@/components/configNetwork/CustomizeCode'
 const { ipcRenderer } = window.require('electron')
 
@@ -163,8 +163,8 @@ export const getWordAtPositionWithSep = (
   if (iWord === null) {
     iWord = { word: '', startColumn: position.column, endColumn: position.column }
   }
-  let word = iWord.word
-  let lastChar = getLastString(model, iWord, position, sep.length)
+  const word = iWord.word
+  const lastChar = getLastString(model, iWord, position, sep.length)
 
   if (lastChar === sep) {
     iWord = { word: sep + word, startColumn: iWord.startColumn - sep.length, endColumn: iWord.endColumn }
@@ -251,14 +251,14 @@ export const newFuzztagCompletionHandlerProvider = (
       } as FuzzTagSuggestionRequest)
       .then((r: YaklangLanguageSuggestionResponse) => {
         if (r.SuggestionMessage.length > 0) {
-          let range = {
+          const range = {
             startLineNumber: position.lineNumber,
             endLineNumber: position.lineNumber,
             startColumn: iWord.startColumn + rangeFix, // fix range , trim {{
             endColumn: iWord.endColumn,
           }
 
-          let suggestions = r.SuggestionMessage.map((i) => {
+          const suggestions = r.SuggestionMessage.map((i) => {
             return {
               insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
               insertText: i.InsertText,
@@ -286,7 +286,6 @@ monaco.languages.register({ id: fuzzHTTPMonacoSpec })
 // Register a completion item provider for the new language
 monaco.languages.registerCompletionItemProvider(fuzzHTTPMonacoSpec, {
   triggerCharacters: ['{'],
-  // @ts-ignore
   provideCompletionItems: (model, position, context, token) => {
     return new Promise(async (resolve, reject) => {
       await newFuzztagCompletionHandlerProvider(model, position, context, token).then((data) => {

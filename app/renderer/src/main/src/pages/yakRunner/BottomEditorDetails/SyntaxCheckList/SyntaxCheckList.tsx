@@ -1,15 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useGetState, useMemoizedFn } from 'ahooks'
-import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type React from 'react'
+import { useMemoizedFn } from 'ahooks'
 import styles from './SyntaxCheckList.module.scss'
-import { failed, success, warn, info } from '@/utils/notification'
 import classNames from 'classnames'
-import useStore from '../../hooks/useStore'
-import { IMonacoEditorMarker } from '@/utils/editorMarkers'
+import type { IMonacoEditorMarker } from '@/utils/editorMarkers'
 import { OutlineDeprecatedIcon } from '@/assets/icon/outline'
 import { SolidExclamationIcon, SolidInformationcircleIcon, SolidXcircleIcon } from '@/assets/icon/solid'
-import { Selection } from '../../RunnerTabs/RunnerTabsType'
+import type { Selection } from '../../RunnerTabs/RunnerTabsType'
 const { ipcRenderer } = window.require('electron')
 export interface SyntaxCheckListProps {
   syntaxCheckData: IMonacoEditorMarker[]

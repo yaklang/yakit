@@ -1,27 +1,33 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './BottomEditorDetails.module.scss'
 import { failed } from '@/utils/notification'
 import classNames from 'classnames'
-import { BottomEditorDetailsProps, JumpToEditorProps, OutputInfoProps, ShowItemType } from './BottomEditorDetailsType'
+import type {
+  BottomEditorDetailsProps,
+  JumpToEditorProps,
+  OutputInfoProps,
+  ShowItemType,
+} from './BottomEditorDetailsType'
 import { HelpInfoList } from '../../yakRunner/CollapseList/CollapseList'
 import { OutlineCogIcon, OutlineExitIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SyntaxCheckList } from '../../yakRunner/BottomEditorDetails/SyntaxCheckList/SyntaxCheckList'
 import useStore from '../hooks/useStore'
 import emiter from '@/utils/eventBus/eventBus'
-import { Selection } from '../RunnerTabs/RunnerTabsType'
-import { ExecResult } from '@/pages/invoker/schema'
-import { writeExecResultXTerm, writeXTerm, xtermClear, xtermFit } from '@/utils/xtermUtils'
+import type { Selection } from '../RunnerTabs/RunnerTabsType'
+import type { ExecResult } from '@/pages/invoker/schema'
+import { writeExecResultXTerm, writeXTerm, xtermClear } from '@/utils/xtermUtils'
 import {
   defaultTerminaFont,
   defaultTerminalFont,
-  DefaultTerminaSettingProps,
+  type DefaultTerminaSettingProps,
   TerminalBox,
   TerminalListBox,
   useTerminalHook,
 } from '../../yakRunner/BottomEditorDetails/TerminalBox/TerminalBox'
-import { System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
+import { type System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { OutlinePlusIcon } from '@/assets/newIcon'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -159,6 +165,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // xtermClear(xtermRef)
     ipcRenderer.on('client-yak-data', async (e: any, data: ExecResult) => {
       if (data.IsMessage) {
+        // ignore
       }
       if (data?.Raw) {
         outputCahceRef.current += Buffer.from(data.Raw).toString('utf8')

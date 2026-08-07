@@ -11,7 +11,7 @@ import {
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { getHTTPFlowExportFields } from '@/components/HTTPFlowTable/HTTPFlowExportFields'
-import { HTTPFlowsFieldGroupResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { HTTPFlowsFieldGroupResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { buildHTTPFlowSuffixOptions, formatHTTPFlowPathSuffix } from '@/components/HTTPFlowTable/HTTPFlowPathSuffix'
 import {
   OutlineChevrondownIcon,
@@ -36,15 +36,15 @@ import {
   buildHTTPFlowQueryTags,
   CalloutColor,
   ColorSearch,
-  ColumnAllInfoItem,
+  type ColumnAllInfoItem,
   contentType,
-  ExportHTTPFlowStreamRequest,
+  type ExportHTTPFlowStreamRequest,
   filterHTTPFlowsByFavoriteAndTags,
   getClassNameData,
   getHTTPFlowReqAndResToString,
   HistorySearch,
   HTTP_FLOW_FAVORITE_TAG,
-  HTTPFlow,
+  type HTTPFlow,
   ImportExportProgress,
   onConvertBodySizeByUnit,
   onExpandHTTPFlow,
@@ -54,10 +54,14 @@ import {
   isHTTPFlowFavorite,
   SourceType,
   toggleHTTPFlowFavorite,
-  YakQueryHTTPFlowResponse,
+  type YakQueryHTTPFlowResponse,
 } from '@/components/HTTPFlowTable/HTTPFlowTable'
-import { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
-import { ColumnsTypeProps, FiltersItemProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import type {
+  ColumnsTypeProps,
+  FiltersItemProps,
+  SortProps,
+} from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
   filterColorTag,
   getSingleColorType,
@@ -84,11 +88,11 @@ import { useBuiltinTagList } from '@/components/HTTPFlowTable/useBuiltinTagList'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { v4 as uuidv4 } from 'uuid'
 import { cloneDeep, isEqual } from 'lodash'
-import { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
+import type { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import {
   getMainOperatorPageBodyContainer,
   getMainOperatorPageBodyContainerOrBody,
@@ -137,7 +141,7 @@ import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { JSONParseLog } from '@/utils/tool'
 import {
   defFilterConfig,
-  FilterConfig,
+  type FilterConfig,
   HTTPFlowTableFormConfiguration,
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
@@ -894,7 +898,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             // 按照 defalutColumnsOrderRef.current 顺序补充新增列
             defalutColumnsOrderRef.current.forEach((key: string, idx: number) => {
               if (!arr2.includes(key)) {
-                let insertIdx = arr2.findIndex((k) => defalutColumnsOrderRef.current.indexOf(k) > idx)
+                const insertIdx = arr2.findIndex((k) => defalutColumnsOrderRef.current.indexOf(k) > idx)
                 if (insertIdx === -1) {
                   arr2.push(key)
                 } else {
@@ -1214,7 +1218,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
               .join(',') || '-'
           if (contentTypeFixed.includes('/')) {
             const contentTypeFixedNew = contentTypeFixed.split('/').pop()
-            if (!!contentTypeFixedNew) {
+            if (contentTypeFixedNew) {
               contentTypeFixed = contentTypeFixedNew
             }
           }
@@ -1252,7 +1256,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           sorter: true,
         },
         render: (text, rowData) => {
-          let timeMs: number = parseInt(text)
+          const timeMs: number = parseInt(text)
           return (
             <div
               className={classNames({
@@ -1345,7 +1349,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 })}
                 onClick={(e) => {
                   e.stopPropagation()
-                  let m = showYakitDrawer({
+                  const m = showYakitDrawer({
                     width: '80%',
                     content: onExpandHTTPFlow(rowData, () => m.destroy(), '', t),
                     bodyStyle: { paddingTop: 5 },
@@ -1689,7 +1693,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
   const contextMenuKeybindingHandle = useMemoizedFn((data) => {
     const menus: any = []
-    for (let item of data) {
+    for (const item of data) {
       /** 处理带快捷键的菜单项 */
       const info = { ...item }
       if (info.children && info.children.length > 0) {
@@ -1830,13 +1834,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
               break
             case '发送到对比器左侧':
               setCompareLeft({
-                content: new Buffer(rowData.Request).toString('utf8'),
+                content: Buffer.from(rowData.Request).toString('utf8'),
                 language: 'http',
               })
               break
             case '发送到对比器右侧':
               setCompareRight({
-                content: new Buffer(rowData.Request).toString('utf8'),
+                content: Buffer.from(rowData.Request).toString('utf8'),
                 language: 'http',
               })
               break
@@ -1846,11 +1850,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             case '导出为HAR':
               onHarExport([rowData.Id])
               break
-            default:
+            default: {
               const currentItem = menuData.find((f) => f.key === key)
               if (!currentItem) return
               if (currentItem.onClickSingle) currentItem.onClickSingle(rowData)
               break
+            }
           }
         },
       },
@@ -1869,17 +1874,19 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     }
 
     switch (key) {
-      case 'sendAndJumpToWebFuzzer':
+      case 'sendAndJumpToWebFuzzer': {
         const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === '发送到 Web Fuzzer')
         if (!currentItemJumpToFuzzer) return
         onBatch((el) => onSendToTab(el, true), currentItemJumpToFuzzer?.number || 0, selectedRowKeys.length === total)
         break
-      case 'sendToWebFuzzer':
+      }
+      case 'sendToWebFuzzer': {
         const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === '发送到 Web Fuzzer')
         if (!currentItemToFuzzer) return
         onBatch((el) => onSendToTab(el, false), currentItemToFuzzer?.number || 0, selectedRowKeys.length === total)
         break
-      case 'sendAndJumpToWS':
+      }
+      case 'sendAndJumpToWS': {
         const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === '发送到 WS Fuzzer')
         if (!currentItemJumpToWS) return
         onBatch(
@@ -1889,7 +1896,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         )
 
         break
-      case 'sendToWS':
+      }
+      case 'sendToWS': {
         const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === '发送到 WS Fuzzer')
         if (!currentItemToWS) return
         onBatch(
@@ -1898,6 +1906,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           selectedRowKeys.length === total,
         )
         break
+      }
       case 'copyUrlWithQuery':
       case 'copyUrlWithoutQuery': {
         const currentItemCopyUrl = menuData.find((f) => f.onClickBatch && f.key === 'copyURL')
@@ -1934,11 +1943,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       case '导出为HAR':
         onHarExport(isAllSelect ? [] : selectedRowKeys.map((id) => Number(id)))
         break
-      default:
+      default: {
         const currentItem = menuData.find((f) => f.onClickBatch && f.key === key)
         if (!currentItem) return
         if (currentItem.onClickBatch) currentItem.onClickBatch(selectedRows, currentItem.number)
         break
+      }
     }
     setBatchVisible(false)
   })
@@ -1966,7 +1976,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   })
 
   useShortcutKeyTrigger('sendAndJump*common', (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
     if (inViewport && !item) {
       if (clickRow) {
         clickRow.IsWebsocket ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request) : onSendToTab(clickRow, true)
@@ -1975,7 +1985,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   })
 
   useShortcutKeyTrigger('send*common', (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
     if (inViewport && !item) {
       if (clickRow) {
         clickRow.IsWebsocket
@@ -1986,13 +1996,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   })
 
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
     if (!inViewport || !clickRow || item) return
     setClipboardText(clickRow.Url || '')
   })
 
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
     if (!inViewport || !clickRow || item) return
     const nextUrl = getUrlWithoutQuery(clickRow.Url)
     if (!nextUrl) {
@@ -2003,25 +2013,25 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   })
 
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
     if (!inViewport || !clickRow || item) return
     clickRow.Url && openExternalWebsite(clickRow.Url)
   })
 
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
     if (!inViewport || !clickRow || item) return
     showResponseViaHTTPFlowID(clickRow)
   })
 
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
     if (!inViewport || !clickRow || item) return
     generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), false)
   })
 
   useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
     if (!inViewport || !clickRow || item) return
     generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), true)
   })
@@ -2073,12 +2083,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         CheckTags: newList,
       })
       .then(() => {
-        let newData: HTTPFlow[] = []
+        const newData: HTTPFlow[] = []
         const l = data.length
         for (let index = 0; index < l; index++) {
           const item = data[index]
           const find = newList.find((ele) => ele.Hash === item.Hash)
-          if (!!find) {
+          if (find) {
             item.Tags = (find.Tags || []).join('|')
             item.cellClassName = filterColorTag(item.Tags) || undefined
           }
@@ -2111,12 +2121,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         CheckTags: newList,
       })
       .then(() => {
-        let newData: HTTPFlow[] = []
+        const newData: HTTPFlow[] = []
         const l = data.length
         for (let index = 0; index < l; index++) {
           const item = data[index]
           const find = newList.find((ele) => ele.Hash === item.Hash)
-          if (!!find) {
+          if (find) {
             item.Tags = (find.Tags || []).join('|')
             item.cellClassName = ''
           }
@@ -2208,7 +2218,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     return jsonData.map((v, index) =>
       filterVal.map((j) => {
         if (['Request', 'Response'].includes(j)) {
-          return new Buffer(v[j]).toString('utf8')
+          return Buffer.from(v[j]).toString('utf8')
         }
         if (j === 'UpdatedAt') {
           return formatTimestamp(v[j])
@@ -2240,9 +2250,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
       const Ids: number[] = list.map((id) => Number(id))
       // 最大请求条数
-      let pageSize = getPageSize
+      const pageSize = getPageSize
       // 需要多少次请求
-      let count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
+      const count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
       const resultArray: number[] = []
       for (let i = 1; i <= count; i++) {
         resultArray.push(i)
@@ -2267,7 +2277,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         })
       })
       Promise.allSettled(promiseList).then((results) => {
-        let rsp: YakQueryHTTPFlowResponse = {
+        const rsp: YakQueryHTTPFlowResponse = {
           Data: [],
           Pagination: { ...pagination, Page: 1, OrderBy: 'id', Order: '' },
           Total: total,

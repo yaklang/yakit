@@ -1,5 +1,5 @@
-import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
-import { Dispatch, ReactNode, SetStateAction } from 'react'
+import type { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import type { Dispatch, ReactNode, SetStateAction } from 'react'
 
 export interface AIGroupStreamCardHeardProps {
   expand: boolean

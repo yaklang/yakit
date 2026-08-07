@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { randomString } from './randomUtil'
 import { info } from './notification'
-import { showModal } from './showModal'
-import { Button, Form, Space } from 'antd'
-import { InputItem, SwitchItem } from './inputUtil'
+import { Form, Space } from 'antd'
 import { AutoCard } from '../components/AutoCard'
 import { useGetState } from 'ahooks'
 import { openABSFileLocated } from './openWebsite'
@@ -135,7 +134,7 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
   const { Config, Data, exportType, destroyModal } = props
   const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitRoute'])
   const [params, setParams] = useState<basicConfig>(
-    !!Config
+    Config
       ? Config
       : {
           CSVOutput: true,

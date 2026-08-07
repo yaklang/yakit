@@ -1,5 +1,4 @@
-import { genDefaultPagination } from '@/pages/invoker/schema'
-import { QueryRisksRequest } from './YakitRiskTableType'
+import type { QueryRisksRequest } from './YakitRiskTableType'
 
 export const defQueryRisksRequest: QueryRisksRequest = {
   Pagination: { Page: 1, Limit: 20, OrderBy: 'id', Order: 'desc' },

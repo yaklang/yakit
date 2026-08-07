@@ -147,7 +147,7 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
   genExecTask({ task: taskTree, level: 1, tasks: execTasks })
   execTasks.shift()
   // 将任务关联的任务名转换成 task_id
-  for (let item of execTasks) {
+  for (const item of execTasks) {
     if (item.depends_on && item.depends_on.length > 0) {
       item.depends_on = item.depends_on
         .map((depend) => {

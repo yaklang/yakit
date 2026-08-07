@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import styles from './BottomEditorDetails.module.scss'
 import classNames from 'classnames'
-import { BottomEditorDetailsProps, ShowItemType } from './BottomEditorDetailsType'
+import type { BottomEditorDetailsProps, ShowItemType } from './BottomEditorDetailsType'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import useStore from '../hooks/useStore'
@@ -13,7 +14,10 @@ import useDispatcher from '../hooks/useDispatcher'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { HoleDispose } from './HoleDispose/HoleDispose'
-import { QuerySSARisksResponse, SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type {
+  QuerySSARisksResponse,
+  SSARisk,
+} from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { RightBugAuditResult } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 import { openSSARiskNewWindow } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'

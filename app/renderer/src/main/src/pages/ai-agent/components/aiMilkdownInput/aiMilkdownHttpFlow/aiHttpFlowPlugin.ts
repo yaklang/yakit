@@ -1,5 +1,5 @@
 import { $command, $nodeSchema, $nodeAttr } from '@milkdown/utils'
-import { Attrs, Node } from '@milkdown/kit/prose/model'
+import { type Attrs, type Node } from '@milkdown/kit/prose/model'
 import { TextSelection } from '@milkdown/kit/prose/state'
 import i18n from '@/i18n/i18n'
 

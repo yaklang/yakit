@@ -1,9 +1,10 @@
-import React, { useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { BinaryFuzztagEntry, bytesToHex } from './binaryFuzztag'
+import { type BinaryFuzztagEntry, bytesToHex } from './binaryFuzztag'
 import { BinaryFuzztagHexEditor } from './BinaryFuzztagHexEditor'
-import { BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
+import type { BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
 import styles from './BinaryFuzztagModal.module.scss'
 
 export interface Base64HexFuzztagModalProps {

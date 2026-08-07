@@ -1,10 +1,10 @@
-import React, { ReactNode, useEffect, useRef, useState, useMemo } from 'react'
+import type React from 'react'
+import { type ReactNode, useRef, useState } from 'react'
 import styles from './VirtualTable.module.scss'
 import classNames from 'classnames'
 import { useVirtualList, useThrottleFn } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
 import { LoadingOutlined } from '@ant-design/icons'
-import { Spin, Popover } from 'antd'
 import { FilterIcon } from '@/assets/newIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
@@ -22,8 +22,8 @@ const VirtualTableTitle: React.FC<VirtualTableTitleProps> = (props) => {
             key={`${item.title}-${index}`}
             style={item?.width ? { width: item.width } : {}}
             className={classNames({
-              [styles['virtual-table-title-flex']]: !!!item.width,
-              [styles['virtual-table-title-item']]: !!!item?.filterProps,
+              [styles['virtual-table-title-flex']]: !item.width,
+              [styles['virtual-table-title-item']]: !item?.filterProps,
               [styles['virtual-table-title-filter']]: !!item?.filterProps,
             })}
           >
@@ -130,7 +130,7 @@ const VirtualTableContent: React.FC<VirtualTableContentProps> = (props) => {
                     key={`${ele.index}-${item.title}`}
                     style={item?.width ? { width: item.width } : {}}
                     className={classNames(styles['virtual-table-content-item'], {
-                      [styles['virtual-table-content-flex']]: !!!item.width,
+                      [styles['virtual-table-content-flex']]: !item.width,
                     })}
                   >
                     {item?.render

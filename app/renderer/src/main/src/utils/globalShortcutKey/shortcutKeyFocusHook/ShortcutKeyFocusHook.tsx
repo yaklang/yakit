@@ -1,8 +1,9 @@
-import React, { ForwardedRef, useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styles from './ShortcutKeyFocusHook.module.scss'
 import ShortcutKeyFocusContext, {
-  ShortcutKeyFocusContextStore,
-  ShortcutKeyFocusContextDispatcher,
+  type ShortcutKeyFocusContextStore,
+  type ShortcutKeyFocusContextDispatcher,
 } from './hooks/ShortcutKeyFocusContext'
 import { v4 as uuidv4 } from 'uuid'
 import { registerShortcutFocusHandle, unregisterShortcutFocusHandle } from '../utils'
@@ -24,7 +25,7 @@ const ShortcutKeyFocusHook: React.FC<ShortcutKeyFocusHookProps> = (props) => {
   const [isHint, setHint] = useState<boolean>(false)
 
   useEffect(() => {
-    let newShortcutIds: string[] = [uuidv4()]
+    const newShortcutIds: string[] = [uuidv4()]
     setShortcutIds(focusId ? focusId : newShortcutIds)
   }, [focusId])
 

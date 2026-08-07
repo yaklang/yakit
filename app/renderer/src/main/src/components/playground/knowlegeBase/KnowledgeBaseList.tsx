@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -6,10 +7,10 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { Form, Space, Divider, message, Pagination } from 'antd'
+import { Form, Space, message, Pagination } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { failed, success } from '@/utils/notification'
-import {
+import type {
   KnowledgeBase,
   KnowledgeBaseListProps,
   KnowledgeBaseFormData,

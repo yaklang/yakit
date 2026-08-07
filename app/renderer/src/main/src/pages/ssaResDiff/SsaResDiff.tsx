@@ -2,20 +2,20 @@ import React, { useEffect, useRef, useState } from 'react'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect } from 'ahooks'
-import { SSARisk } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { SSARisk } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { useCampare } from '@/hook/useCompare/useCompare'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { SeverityMapTag } from '../risks/YakitRiskTable/YakitRiskTable'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitAuditRiskDetails } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
 import { isCellRedSingleColor } from '@/components/TableVirtualResize/utils'
-import { QuerySyntaxFlowScanTaskResponse } from '../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer'
+import type { QuerySyntaxFlowScanTaskResponse } from '../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer'
 import styles from './SsaResDiff.module.scss'
 
 const { ipcRenderer } = window.require('electron')
@@ -147,7 +147,7 @@ const SsaResDiff: React.FC<SsaResDiffProps> = React.memo((props) => {
   }, [ssaDiffRes])
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -212,7 +212,7 @@ const SsaResTableAndDetail: React.FC<SsaResTableAndDetailProps> = React.memo((pr
   const [currentSelectItem, setCurrentSelectItem] = useState<SSARisk>()
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -390,7 +390,7 @@ const SsaResTable: React.FC<SsaResTableProps> = React.memo((props) => {
         render: (text, record, index) => (
           <>
             <div className={styles['table-tag']}>
-              <span>{!!text ? text.replaceAll('|', ',') : '-'}</span>
+              <span>{text ? text.replaceAll('|', ',') : '-'}</span>
             </div>
           </>
         ),

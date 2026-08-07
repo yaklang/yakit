@@ -3,10 +3,10 @@
  */
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Collapse, Form } from 'antd'
-import { KVPair } from '@/models/kv'
+import type { KVPair } from '@/models/kv'
 import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
-import { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
+import type { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
@@ -16,10 +16,10 @@ import { yakitNotify } from '@/utils/notification'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import styles from './ConfigNetworkPage.module.scss'
 import { isMemfit } from '@/utils/envfile'
-import { FormInstance, FormLayout } from 'antd/lib/form/Form'
+import type { FormInstance, FormLayout } from 'antd/lib/form/Form'
 import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
-import { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
 import { AIConfigAPIKeyFormItem } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import {
   AI_API_TYPE_OPTIONS,
@@ -30,15 +30,15 @@ import { grpcGetAIThirdPartyAppConfigTemplate } from '@/pages/ai-agent/aiModelLi
 import { cloneDeep } from 'lodash'
 import { InputHTTPHeaderForm } from '@/pages/mitm/MITMRule/MITMRuleFromModal'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
-import { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
+import type { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
 import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
 import classNames from 'classnames'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 import { EnableThinkingOptions } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
-import {
+import type {
   GetThirdPartyAppConfigTemplateResponse,
   ThirdPartyAppConfigItemTemplate,
 } from './NewThirdPartyApplicationConfig'
@@ -113,7 +113,7 @@ const defaultAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate[
 }
 
 const isShowRequiredApiKey = (typeVal: string) => {
-  let Required = !['aibalance', 'comate'].includes(typeVal)
+  const Required = !['aibalance', 'comate'].includes(typeVal)
   return {
     isRequired: Required,
     data: {
@@ -210,7 +210,7 @@ const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
 ]
 
 const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolean) => {
-  let newData = cloneDeep(optionalAIFormItemsOfAI)
+  const newData = cloneDeep(optionalAIFormItemsOfAI)
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (!isRequired) {
     newData.unshift(data)
@@ -518,7 +518,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               <YakitSwitch disabled={IsOnline} />
             </Form.Item>
           )
-        case 'list':
+        case 'list': {
           if (item.Name === 'model') {
             // 模型名称
             return (
@@ -571,7 +571,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             }
             return <AIConfigAPIKeyFormItem aiType={typeVal} formProps={formProps} />
           }
-          let selectProps: YakitSelectProps = {}
+          const selectProps: YakitSelectProps = {}
           try {
             selectProps.options = item.Extra ? JSONParseLog(item.Extra)?.options : []
           } catch (error) {}
@@ -580,6 +580,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               <YakitSelect {...selectProps} disabled={IsOnline} />
             </Form.Item>
           )
+        }
         default:
           return <></>
       }

@@ -1,4 +1,4 @@
-import {
+import type {
   ConcurrentStreamFramePayload,
   FramePayload,
 } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'

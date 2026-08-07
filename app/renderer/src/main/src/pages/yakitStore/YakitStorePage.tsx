@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef, ReactNode } from 'react'
+import type React from 'react'
+import { useEffect, useState, useRef, type ReactNode } from 'react'
 import { Spin } from 'antd'
-import { QueryYakScriptRequest, QueryYakScriptsResponse, YakScript } from '../invoker/schema'
+import type { QueryYakScriptRequest, QueryYakScriptsResponse, YakScript } from '../invoker/schema'
 import { failed } from '../../utils/notification'
 import { useStore } from '@/store'
 import './YakitStorePage.scss'
@@ -99,7 +100,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     // 列表中第一次上传的时候,本地返回的数据有OnlineId ,但是列表中的上传的那个没有OnlineId
     // 且列表中的本地Id和更新的那个Id不一样
     // 所有以本地ScriptName进行查找 ,ScriptName在本地和线上都是唯一的
-    let index = response.Data.findIndex((ele) => ele.ScriptName === updatePluginRecordLocal.ScriptName)
+    const index = response.Data.findIndex((ele) => ele.ScriptName === updatePluginRecordLocal.ScriptName)
     if (index === -1) return
     response.Data[index] = { ...updatePluginRecordLocal }
     setResponse({

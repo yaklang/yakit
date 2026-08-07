@@ -1,4 +1,4 @@
-import { YakURLResource, YakURL } from '../../yakURLTree/data'
+import { type YakURLResource } from '../../yakURLTree/data'
 export interface YakHelpDocProps {}
 
 export interface DataProps {

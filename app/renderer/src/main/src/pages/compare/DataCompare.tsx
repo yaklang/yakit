@@ -4,7 +4,6 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import { AutoCard } from '../../components/AutoCard'
 import { LineConversionIcon } from '../../assets/icons'
 import styles from './DataCompare.module.scss'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { RemoveIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useHttpFlowStore } from '@/store/httpFlow'
@@ -14,8 +13,7 @@ import { randomString } from '@/utils/randomUtil'
 import { useEditorFontSize, fontSizeOptions } from '@/store/editorFontSize'
 import { useUpdateEffect, useMemoizedFn } from 'ahooks'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { yakitNotify } from '@/utils/notification'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -292,7 +290,7 @@ export const CodeComparison: React.FC<CodeComparisonProps> = React.forwardRef((p
       contextmenu: false,
     })
 
-    if (!!res.info) {
+    if (res.info) {
       const { info } = res
       if (info.type === 1) {
         const { left } = info

@@ -1,13 +1,13 @@
-import React, { FC, memo, useEffect, useMemo, useRef } from 'react'
-import ReactECharts, { EChartsOption } from 'echarts-for-react'
+import React, { type FC, memo, useEffect, useMemo, useRef } from 'react'
+import ReactECharts, { type EChartsOption } from 'echarts-for-react'
 import { useDebounceFn } from 'ahooks'
-import { AIModelTypeEnum, AIModelTypeEnumType } from '../defaultConstant'
+import { AIModelTypeEnum, type AIModelTypeEnumType } from '../defaultConstant'
 import { formatTimestamp } from '@/utils/timeUtil'
 import moment from 'moment'
 import { formatNumberUnits } from '../utils'
-import EChartsReact from 'echarts-for-react'
+import type EChartsReact from 'echarts-for-react'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
-import { AIContextStatsDetail } from '../type/aiChat'
+import type { AIContextStatsDetail } from '../type/aiChat'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
 

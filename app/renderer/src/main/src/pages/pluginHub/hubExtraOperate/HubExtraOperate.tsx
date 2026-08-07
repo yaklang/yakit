@@ -1,4 +1,5 @@
-import React, { ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import {
   OutlineClouddownloadIcon,
@@ -15,9 +16,9 @@ import {
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
 import { CodeScoreModule, FuncFilterPopover } from '@/pages/plugins/funcTemplate'
-import { API } from '@/services/swagger/resposeType'
-import { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { API } from '@/services/swagger/resposeType'
+import type { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { yakitNotify } from '@/utils/notification'
 import { AddPluginMenuContent, HubButton, HubOperateHint, RemovePluginMenuContent } from './funcTemplate'
 import { getRemoteValue } from '@/utils/kv'
@@ -29,23 +30,23 @@ import {
   apiUpdatePluginPrivateMine,
   convertLocalPluginsRequestParams,
 } from '@/pages/plugins/utils'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { useStore } from '@/store'
 import useListenWidth from '../hooks/useListenWidth'
 import {
   PluginLocalExport,
   PluginLocalExportForm,
-  PluginLocalExportFormRefProps,
+  type PluginLocalExportFormRefProps,
 } from '@/pages/plugins/local/PluginLocalExportProps'
 import { DefaultExportRequest, PluginOperateHint } from '../defaultConstant'
 import { NoPromptHint } from '../utilsUI/UtilsTemplate'
-import { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
-import { ExportYakScriptStreamRequest } from '@/pages/plugins/local/PluginsLocalType'
+import type { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
+import type { ExportYakScriptStreamRequest } from '@/pages/plugins/local/PluginsLocalType'
 import { defaultSearch } from '@/pages/plugins/builtInData'
 import cloneDeep from 'lodash/cloneDeep'
 import { PluginUploadModal } from '../pluginUploadModal/PluginUploadModal'
 import { setClipboardText } from '@/utils/clipboard'
-import { PluginSourceType } from '../type'
+import type { PluginSourceType } from '../type'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { Tooltip } from 'antd'
 import { PublicCommonPlugins } from '@/routes/newRoute'
@@ -123,20 +124,20 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             key: 'addMenu',
             label: t('HubExtraOperate.addToMenu'),
             itemIcon: <OutlinePluscircleIcon />,
-            type: !!local ? undefined : 'info',
+            type: local ? undefined : 'info',
           },
           {
             key: 'removeMenu',
             label: t('HubExtraOperate.removeFromMenu'),
             itemIcon: <OutlineMinuscircleIcon />,
-            type: !!local ? undefined : 'info',
+            type: local ? undefined : 'info',
             disabled: isInMenu,
           },
           {
             key: 'export',
             label: t('YakitButton.export'),
             itemIcon: <OutlineExportIcon />,
-            type: !!local ? undefined : 'info',
+            type: local ? undefined : 'info',
           },
         ]
         return [...menus]
@@ -145,7 +146,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       // 非内置插件
       const isAuth = online ? online.isAuthor : false
       let first: YakitMenuItemType[] = []
-      let second: YakitMenuItemType[] = []
+      const second: YakitMenuItemType[] = []
 
       if (isAuth) {
         first.push({
@@ -477,7 +478,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
     const openExportModal = useMemoizedFn(async (names: string[]) => {
       if (exportModal) return
       try {
-        let m = showYakitModal({
+        const m = showYakitModal({
           title: (modalT) => modalT('HubExtraOperate.exportPlugin'),
           width: isRemoteEngine ? 500 : 550,
           closable: true,

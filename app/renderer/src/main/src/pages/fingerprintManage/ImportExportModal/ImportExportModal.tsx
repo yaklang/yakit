@@ -10,7 +10,7 @@ import { randomString } from '@/utils/randomUtil'
 import { useMemoizedFn, useSafeState } from 'ahooks'
 import { Form } from 'antd'
 import { useCampare } from '@/hook/useCompare/useCompare'
-import { YakitFormDraggerProps } from '@/components/yakitUI/YakitForm/YakitFormType'
+import type { YakitFormDraggerProps } from '@/components/yakitUI/YakitForm/YakitFormType'
 import styles from './ImportExportModal.module.scss'
 
 const { ipcRenderer } = window.require('electron')

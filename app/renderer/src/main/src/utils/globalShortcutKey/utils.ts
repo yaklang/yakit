@@ -8,7 +8,7 @@ import {
 } from './keyMaps'
 import { YakitKeyMod } from './keyboard'
 import emiter from '../eventBus/eventBus'
-import { pageEventMaps, ShortcutKeyPageName } from './events/pageMaps'
+import { pageEventMaps, type ShortcutKeyPageName } from './events/pageMaps'
 
 // #region 备用方案，通过正则寻找物理按键的逻辑按键值
 // TODO: 如果后面使用期间，出现键盘事件明显的卡顿，则使用这个区域里的备用方案进行按键映射
@@ -39,7 +39,7 @@ const handleKeyboardToKey = (keyboard: KeyboardEvent): string | null => {
   const keys = Object.keys(KeyboardToKeyTableMaps)
   let hitValue: string | null = null
 
-  for (let el of keys) {
+  for (const el of keys) {
     const keyValue = KeyboardToKeyTableMaps[el]
     if (keyValue.includes(convertCodeValue || code)) {
       hitValue = el
@@ -55,7 +55,7 @@ const handleKeyboardToKey = (keyboard: KeyboardEvent): string | null => {
 export const convertKeyEventToKeyCombination = (event: KeyboardEvent): string[] | null => {
   const { altKey, ctrlKey, metaKey, shiftKey } = event
 
-  let key = handleKeyboardToKey(event)
+  const key = handleKeyboardToKey(event)
 
   if (key) {
     const keys: string[] = []
@@ -136,7 +136,7 @@ export const parseShortcutKeyEvent = (keys: string[]): string | null => {
     if (!pageKeyInfo) return null
     const pageEvents = pageKeyInfo.getEvents()
     const pageEventKeys = Object.keys(pageEvents)
-    for (let item of pageEventKeys) {
+    for (const item of pageEventKeys) {
       const pageKeys = sortKeysCombination(pageEvents[item].keys).join('')
       if (pageKeys === triggerKeys) {
         return item
@@ -148,7 +148,7 @@ export const parseShortcutKeyEvent = (keys: string[]): string | null => {
       if (!globalKeyInfo) return null
       const globalEvents = globalKeyInfo.getEvents()
       const globalEventKeys = Object.keys(globalEvents)
-      for (let item of globalEventKeys) {
+      for (const item of globalEventKeys) {
         const globalKeys = sortKeysCombination(globalEvents[item].keys).join('')
         if (globalKeys === triggerKeys) {
           return item
@@ -161,7 +161,7 @@ export const parseShortcutKeyEvent = (keys: string[]): string | null => {
       if (multipleKeyInfo) {
         const multipleEvents = multipleKeyInfo.getEvents()
         const multipleEventKeys = Object.keys(multipleEvents)
-        for (let item of multipleEventKeys) {
+        for (const item of multipleEventKeys) {
           const multipleKeys = sortKeysCombination(multipleEvents[item].keys).join('')
           if (multipleKeys === triggerKeys) {
             return item

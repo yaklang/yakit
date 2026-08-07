@@ -1,9 +1,9 @@
-import { Paging } from '@/utils/yakQueryHTTPFlow'
-import { QueryGeneralResponse } from '@/pages/invoker/schema'
-import { ReactNode } from 'react'
-import { TableVirtualResizeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
-import { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import { type QueryGeneralResponse } from '@/pages/invoker/schema'
+import { type ReactNode } from 'react'
+import { type TableVirtualResizeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import { type CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
+import { type VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import type { CreateSSARiskDisposalsRequest, SSARiskDisposalData } from './utils'
 export interface SSARisk {
   Id: number
   CreatedAt: number
@@ -53,7 +53,7 @@ export interface YakitAuditHoleTableProps {
   setRiskLoading?: (b: boolean) => void
   renderTitle?: ReactNode
   riskWrapperClassName?: string
-  tableVirtualResizeProps?: TableVirtualResizeProps
+  tableVirtualResizeProps?: TableVirtualResizeProps<any>
   excludeColumnsKey?: string[]
   query: SSARisksFilter
   setQuery?: (v: SSARisksFilter) => void

@@ -1,7 +1,7 @@
-import React from 'react'
+import type React from 'react'
 import { Form } from 'antd'
 import { useGetState } from 'ahooks'
-import { InputInteger, InputItem, SwitchItem } from '@/utils/inputUtil'
+import { InputInteger, InputItem } from '@/utils/inputUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export interface DiagnoseNetworkFormProp {

@@ -1,5 +1,5 @@
-import React from 'react'
-import TreeSelect, { TreeSelectProps } from 'antd/lib/tree-select'
+import type React from 'react'
+import TreeSelect, { type TreeSelectProps } from 'antd/lib/tree-select'
 import classNames from 'classnames'
 import styles from './YakitTreeSelect.module.scss'
 import { OutlineChevrondownIcon } from '@/assets/icon/outline'

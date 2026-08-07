@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { Form, Space } from 'antd'
 import { SelectOne } from '@/utils/inputUtil'
 import { YakEditor } from '@/utils/editors'

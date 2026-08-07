@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  HeardMenuProps,
-  RouteMenuDataItemProps,
-  SubMenuProps,
-  CollapseMenuProp,
+  type HeardMenuProps,
+  type RouteMenuDataItemProps,
+  type SubMenuProps,
+  type CollapseMenuProp,
   privateUnionMenus,
-  EnhancedPrivateRouteMenuProps,
+  type EnhancedPrivateRouteMenuProps,
   privateExchangeProps,
   privateConvertDatabase,
   jsonDataConvertMenus,
@@ -24,7 +24,7 @@ import {
 import ReactResizeDetector from 'react-resize-detector'
 import { useGetState, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { Divider, Dropdown, Tabs, Tooltip } from 'antd'
-import { YakitMenu, YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { YakitMenu, type YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -32,14 +32,14 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { LoadingOutlined } from '@ant-design/icons'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { failed, yakitNotify } from '@/utils/notification'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useStore } from '@/store'
 import { isEnpriTrace, isEnpriTraceAgent, isIRify } from '@/utils/envfile'
 import { CodeGV, RemoteGV } from '@/yakitGV'
 import {
-  DatabaseFirstMenuProps,
-  DatabaseMenuItemProps,
+  type DatabaseFirstMenuProps,
+  type DatabaseMenuItemProps,
   InvalidFirstMenuItem,
   InvalidPageMenuItem,
   PrivateExpertRouteMenu,
@@ -48,9 +48,9 @@ import {
   ResidentPluginName,
   databaseConvertData,
 } from '@/routes/newRoute'
-import { RouteToPageProps } from '../publicMenu/PublicMenu'
+import type { RouteToPageProps } from '../publicMenu/PublicMenu'
 import {
-  DownloadOnlinePluginByScriptNamesResponse,
+  type DownloadOnlinePluginByScriptNamesResponse,
   keyToRouteInfo,
   menusConvertKey,
   routeConvertKey,
@@ -177,9 +177,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
       .then((res: { Data: YakScript[] }) => {
         const { Data } = res
         const info: Record<string, number> = {}
-        for (let item of Data) info[item.ScriptName] = +(item.Id || 0) || 0
+        for (const item of Data) info[item.ScriptName] = +(item.Id || 0) || 0
         const pluginToIds: Record<string, number> = {}
-        for (let name of pluginTool) pluginToIds[name] = info[name] || 0
+        for (const name of pluginTool) pluginToIds[name] = info[name] || 0
         setNewPluginToId(pluginToIds)
       })
       .catch((err) => {})
@@ -213,7 +213,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
 
         // 过滤掉代码中无效菜单项后的用户数据
         const caches: DatabaseMenuItemProps[] = []
-        for (let item of database) {
+        for (const item of database) {
           // 过滤代码中无效的一级菜单项
           if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
 
@@ -235,11 +235,11 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
               try {
                 filters = (JSONParseLog(val, { page: 'HeardMenu', fun: 'UserDeleteMenu' }) || {})[menuMode] || []
               } catch (error) {}
-              for (let item of DefaultMenu) {
+              for (const item of DefaultMenu) {
                 if (filters.includes(item.menuName)) continue
                 const menu: EnhancedPrivateRouteMenuProps = { ...item, children: [] }
                 if (item.children && item.children.length > 0) {
-                  for (let subitem of item.children) {
+                  for (const subitem of item.children) {
                     if (!filters.includes(`${item.menuName}-${subitem.menuName}`)) {
                       menu.children?.push({ ...subitem })
                     }
@@ -261,7 +261,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             } catch (error) {
               allowModify = {}
             }
-            if (!!allowModify[menuMode]) filterLocal = []
+            if (allowModify[menuMode]) filterLocal = []
 
             // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
             const { menus, isUpdate, pluginName } = privateUnionMenus(filterLocal, caches)
@@ -305,7 +305,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         if (rsp.Data.length > 0) {
           // 整理插件名和插件内容的对应关系
           const pluginToinfo: Record<string, { ScriptName: string; Id: string; HeadImg: string }> = {}
-          for (let item of rsp.Data) pluginToinfo[item.ScriptName] = item
+          for (const item of rsp.Data) pluginToinfo[item.ScriptName] = item
 
           // 更新菜单数据里的id
           menus.forEach((item) => {
@@ -500,10 +500,10 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
    */
   const toMove = useMemoizedFn(() => {
     const menuWidth = menuLeftRef.current.clientWidth
-    let childrenList: any[] = menuLeftInnerRef.current.children
+    const childrenList: any[] = menuLeftInnerRef.current.children
     let childWidthAll = 0
     let n = -1
-    let clientWidth: number[] = []
+    const clientWidth: number[] = []
     for (let index = 0; index < childrenList.length; index++) {
       const element = childrenList[index]
       childWidthAll += element.clientWidth

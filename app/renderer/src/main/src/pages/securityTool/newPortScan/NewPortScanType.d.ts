@@ -1,10 +1,9 @@
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { YakScript } from '@/pages/invoker/schema'
-import { PluginFilterParams, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
-import { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
-import { PortScanParams } from '@/pages/portscan/PortScanPage'
-import { ScanPortPageInfoProps } from '@/store/pageInfo'
-import { type } from 'os'
+import { type StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type PluginFilterParams, type PluginSearchParams } from '@/pages/plugins/baseTemplateType'
+import { type ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import { type PortScanParams } from '@/pages/portscan/PortScanPage'
+import { type ScanPortPageInfoProps } from '@/store/pageInfo'
+import type { FormInstance } from 'antd'
 
 export interface NewPortScanProps {
   id: string

@@ -1,10 +1,10 @@
 import React, { memo, useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { OpenedFileProps, OpenFolderDraggerProps, RunnerFileTreeProps } from './RunnerFileTreeType'
+import type { OpenedFileProps, OpenFolderDraggerProps, RunnerFileTreeProps } from './RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
 
-import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
+import type { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
 import { FileDefault, FileSuffix, KeyToIcon } from '../../yakRunner/FileTree/icon'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
@@ -14,8 +14,8 @@ import { FileTree } from '../FileTree/FileTree'
 import classNames from 'classnames'
 import styles from './RunnerFileTree.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
 import {
   getDefaultActiveFile,
   getNameByPath,
@@ -32,7 +32,7 @@ import {
   updateAreaFileInfo,
   updateAreaFileInfoToDelete,
 } from '../../yakRunner/utils'
-import { OpenFileByPathProps, YakRunnerHistoryProps } from '../YakRunnerIrifyAiCodeAuditType'
+import type { OpenFileByPathProps, YakRunnerHistoryProps } from '../YakRunnerIrifyAiCodeAuditType'
 import emiter from '@/utils/eventBus/eventBus'
 import {
   clearMapFileDetail,
@@ -51,13 +51,10 @@ import {
 } from '../FileTreeMap/ChildMap'
 import { v4 as uuidv4 } from 'uuid'
 import cloneDeep from 'lodash/cloneDeep'
-import { failed, success, warn } from '@/utils/notification'
-import { FileMonitorItemProps, FileMonitorProps } from '@/utils/duplex/duplex'
+import { failed, success } from '@/utils/notification'
+import type { FileMonitorItemProps, FileMonitorProps } from '@/utils/duplex/duplex'
 import { Tooltip } from 'antd'
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
-import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
-import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
@@ -114,7 +111,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const initFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
     return data.map((item) => {
       const itemDetail = getMapFileDetail(item.path)
-      let obj: FileNodeProps = { ...itemDetail, depth }
+      const obj: FileNodeProps = { ...itemDetail, depth }
 
       const childArr = getMapFolderDetail(item.path)
       if (itemDetail.isFolder) {
@@ -201,7 +198,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   })
 
   const menuData: YakitMenuItemType[] = useMemo(() => {
-    let newMenu: YakitMenuItemType[] = [
+    const newMenu: YakitMenuItemType[] = [
       {
         key: 'closeFolder',
         label: t('FileTree.closeFolder'),
@@ -377,33 +374,35 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
       if (IsDir) {
         switch (Op) {
           case 'delete':
-            const info = getMapFileDetail(Path)
-            const deleteFileArr = getMapAllFileKey().filter((item) => item.startsWith(info.path))
-            // 删除最外层文件夹
-            if (info.parent === null) {
-              clearMapFileDetail()
-              clearMapFolderDetail()
-              setFileTree && setFileTree([])
-            } else {
-              deleteFileArr.forEach((item) => {
-                removeMapFileDetail(item)
-              })
-              // 移除文件夹下的所有文件夹结构及其父结构下的此项
-              const folderDetail = getMapFolderDetail(info.parent)
-              if (folderDetail.length > 0) {
-                const newFolderDetail = folderDetail.filter((item) => item !== info.path)
-                setMapFolderDetail(info.parent, newFolderDetail)
-              }
+            {
+              const info = getMapFileDetail(Path)
+              const deleteFileArr = getMapAllFileKey().filter((item) => item.startsWith(info.path))
+              // 删除最外层文件夹
+              if (info.parent === null) {
+                clearMapFileDetail()
+                clearMapFolderDetail()
+                setFileTree && setFileTree([])
+              } else {
+                deleteFileArr.forEach((item) => {
+                  removeMapFileDetail(item)
+                })
+                // 移除文件夹下的所有文件夹结构及其父结构下的此项
+                const folderDetail = getMapFolderDetail(info.parent)
+                if (folderDetail.length > 0) {
+                  const newFolderDetail = folderDetail.filter((item) => item !== info.path)
+                  setMapFolderDetail(info.parent, newFolderDetail)
+                }
 
-              const deleteFolderArr = getMapAllFolderKey().filter((item) => item.startsWith(info.path))
-              deleteFolderArr.forEach((item) => {
-                removeMapFolderDetail(item)
-              })
+                const deleteFolderArr = getMapAllFolderKey().filter((item) => item.startsWith(info.path))
+                deleteFolderArr.forEach((item) => {
+                  removeMapFolderDetail(item)
+                })
+              }
+              const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
+              setAreaInfo && setAreaInfo(newAreaInfo)
+              emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ path: info.path }))
+              emiter.emit('onAiCodeAuditRefreshFileTree')
             }
-            const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
-            setAreaInfo && setAreaInfo(newAreaInfo)
-            emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ path: info.path }))
-            emiter.emit('onAiCodeAuditRefreshFileTree')
             break
           case 'create':
             try {
@@ -436,20 +435,22 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
       else {
         switch (Op) {
           case 'delete':
-            const info = getMapFileDetail(Path)
-            if (info.parent) {
-              const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
-              // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
-              if (newFolderDetail.length === 0) {
-                setMapFileDetail(info.parent, { ...getMapFileDetail(info.parent), isLeaf: true })
+            {
+              const info = getMapFileDetail(Path)
+              if (info.parent) {
+                const newFolderDetail = getMapFolderDetail(info.parent).filter((item) => item !== info.path)
+                // 如果删除文件后变为空文件夹 则需更改其父文件夹isLeaf为true(不可展开)
+                if (newFolderDetail.length === 0) {
+                  setMapFileDetail(info.parent, { ...getMapFileDetail(info.parent), isLeaf: true })
+                }
+                setMapFolderDetail(info.parent, newFolderDetail)
               }
-              setMapFolderDetail(info.parent, newFolderDetail)
+              removeMapFileDetail(info.path)
+              const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
+              setAreaInfo && setAreaInfo(newAreaInfo)
+              emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ path: info.path }))
+              emiter.emit('onAiCodeAuditRefreshFileTree')
             }
-            removeMapFileDetail(info.path)
-            const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
-            setAreaInfo && setAreaInfo(newAreaInfo)
-            emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ path: info.path }))
-            emiter.emit('onAiCodeAuditRefreshFileTree')
             break
           case 'create':
             try {

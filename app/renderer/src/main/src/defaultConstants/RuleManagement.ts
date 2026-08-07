@@ -1,4 +1,4 @@
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 
 /** 规则类型渲染 tag */
 export const RuleType: Record<string, { key: string; name: string }> = {

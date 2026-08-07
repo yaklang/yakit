@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type {
   QueryRisksRequest,
   QueryRisksResponse,
   YakitCodeScanRiskDetailsProps,
@@ -11,9 +11,9 @@ import {
 } from './YakitRiskTableType'
 import styles from './YakitRiskTable.module.scss'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { PacketHistory, Risk } from '../schema'
-import { Badge, CollapseProps, Descriptions, Divider, Form, Tooltip, Typography } from 'antd'
-import { YakScript, genDefaultPagination } from '@/pages/invoker/schema'
+import type { PacketHistory, Risk } from '../schema'
+import { Badge, type CollapseProps, Descriptions, Divider, Form, Tooltip, Typography } from 'antd'
+import { type YakScript, genDefaultPagination } from '@/pages/invoker/schema'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -25,7 +25,7 @@ import {
   useInterval,
   useMemoizedFn,
 } from 'ahooks'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
   OutlineChevrondownIcon,
   OutlineChevronleftIcon,
@@ -41,18 +41,18 @@ import {
   OutlineTrashIcon,
   OutlineUploadIcon,
 } from '@/assets/icon/outline'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import cloneDeep from 'lodash/cloneDeep'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
-  DeleteRiskRequest,
-  ExportHtmlProps,
-  FieldGroup,
-  SetTagForRiskRequest,
-  UploadRiskToOnlineRequest,
+  type DeleteRiskRequest,
+  type ExportHtmlProps,
+  type FieldGroup,
+  type SetTagForRiskRequest,
+  type UploadRiskToOnlineRequest,
   apiDeleteRisk,
   apiExportHtml,
   apiNewRiskRead,
@@ -64,8 +64,8 @@ import {
   apiSetTagForRisk,
 } from './utils'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
-import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import { YakitResizeBox, type YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import classNames from 'classnames'
 import {
   IconSolidInfoRiskIcon,
@@ -83,38 +83,38 @@ import { RemoteGV } from '@/yakitGV'
 import { getHtmlEnTemplate, getHtmlTemplate, getHtmlZhTWTemplate } from './htmlTemplate'
 import { yakitNotify } from '@/utils/notification'
 import moment from 'moment'
-import { FieldName } from '../RiskTable'
+import type { FieldName } from '../RiskTable'
 import { defQueryRisksRequest } from './constants'
 import emiter from '@/utils/eventBus/eventBus'
 import { FuncBtn } from '@/pages/plugins/funcTemplate'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { AuditCodePageInfoProps, PluginHubPageInfoProps, RuleManagementPageInfoProps } from '@/store/pageInfo'
+import type { AuditCodePageInfoProps, PluginHubPageInfoProps, RuleManagementPageInfoProps } from '@/store/pageInfo'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import ReactResizeDetector from 'react-resize-detector'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { loadAuditFromYakURLRaw } from '@/pages/yakRunnerAuditCode/utils'
-import { AuditEmiterYakUrlProps, OpenFileByPathProps } from '@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType'
+import type { AuditEmiterYakUrlProps, OpenFileByPathProps } from '@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
 import { YakCodemirror } from '@/components/yakCodemirror/YakCodemirror'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { getRemoteValue } from '@/utils/kv'
 import { NoPromptHint } from '@/pages/pluginHub/utilsUI/UtilsTemplate'
 import { RemoteRiskGV } from '@/enums/risk'
 import { useStore } from '@/store'
 import { minWinSendToChildWin, openRiskNewWindow } from '@/utils/openWebsite'
-import { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
-import { JumpToAuditEditorProps } from '@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType'
-import { Selection } from '@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType'
+import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
+import type { JumpToAuditEditorProps } from '@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType'
+import type { Selection } from '@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType'
 import { getNameByPath } from '@/pages/yakRunner/utils'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
-import { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -439,7 +439,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   })
   /**获取滚动条在顶部的数据 */
   const getIncrementInTop = useMemoizedFn(() => {
-    let params: QueryRisksRequest = {
+    const params: QueryRisksRequest = {
       ...getQuery(),
       Pagination: {
         Limit: 20,
@@ -600,7 +600,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 onOpenSelect(record)
               }}
             >
-              <span>{!!text ? text.replaceAll('|', ',') : '-'}</span>
+              <span>{text ? text.replaceAll('|', ',') : '-'}</span>
               <OutlineChevrondownIcon className={styles['table-tag-icon']} />
             </div>
           </>
@@ -768,7 +768,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const params: SetTagForRiskRequest = {
       Id: info.Id,
       Hash: info.Hash,
-      Tags: !!info.Tags ? info.Tags?.split('|') : [],
+      Tags: info.Tags ? info.Tags?.split('|') : [],
     }
     apiSetTagForRisk(params).then(() => {
       const index = response.Data.findIndex((item) => item.Id === info.Id)
@@ -1011,7 +1011,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     setQuery(cloneDeep(defQueryRisksRequest))
   })
   const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-    let sort = { ...newSort }
+    const sort = { ...newSort }
     if (sort.order === 'none') {
       sort.order = 'desc'
       sort.orderBy = 'id'
@@ -1033,7 +1033,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const getQueryNetwork = useMemoizedFn((network: string, ipList: string[]) => {
     let ip = network
     if (ipList.length > 0) {
-      ip = !!ip ? `${ip},${ipList.join(',')}` : ipList.join(',')
+      ip = ip ? `${ip},${ipList.join(',')}` : ipList.join(',')
     }
     return ip
   })
@@ -1041,13 +1041,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   const getQuery = useMemoizedFn(() => {
     const finalParams: QueryRisksRequest = {
       ...query,
-      RiskType: !!query.RiskTypeList ? query.RiskTypeList.join(',') : '',
-      Severity: !!query.SeverityList ? query.SeverityList.join(',') : '',
-      Tags: !!query.TagList ? query.TagList.join('|') : '',
+      RiskType: query.RiskTypeList ? query.RiskTypeList.join(',') : '',
+      Severity: query.SeverityList ? query.SeverityList.join(',') : '',
+      Tags: query.TagList ? query.TagList.join('|') : '',
       Network: getQueryNetwork(query.Network, query.IPList || []),
       IsRead: type === 'all' ? '' : 'false',
-      AfterCreatedAt: !!query.CreatedAt ? query.CreatedAt[0] : undefined,
-      BeforeCreatedAt: !!query.CreatedAt ? query.CreatedAt[1] : undefined,
+      AfterCreatedAt: query.CreatedAt ? query.CreatedAt[0] : undefined,
+      BeforeCreatedAt: query.CreatedAt ? query.CreatedAt[1] : undefined,
     }
     return finalParams
   })
@@ -1249,7 +1249,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       )
   })
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -1308,7 +1308,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         firstMinSize={160}
         secondMinSize={200}
         isVer={true}
-        lineStyle={{ display: !!currentSelectItem?.Id ? '' : 'none' }}
+        lineStyle={{ display: currentSelectItem?.Id ? '' : 'none' }}
         lineDirection="bottom"
         secondNodeStyle={{
           display: !currentSelectItem?.Id ? 'none' : '',
@@ -1522,7 +1522,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
   const { t, i18n } = useI18nNamespaces(['risk', 'yakitUi'])
   const initSelectTags = useCreation(() => {
     let tagList: { label: string; value: string }[] = []
-    if (!!info?.Tags) {
+    if (info?.Tags) {
       tagList =
         (info?.Tags || '').split('|').map((item) => ({
           label: item,
@@ -1540,7 +1540,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
   const onFinish = useMemoizedFn((value) => {
     onSave({
       ...info,
-      Tags: !!value.TagList ? value.TagList.join('|') : '',
+      Tags: value.TagList ? value.TagList.join('|') : '',
     })
     if (onClose) onClose()
   })
@@ -1789,7 +1789,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
   })
 
   const getOptions = useMemo(() => {
-    let options = [
+    const options = [
       {
         label: t('YakitRiskDetails.vulnerability_details'),
         value: 'detail',
@@ -1803,7 +1803,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
   }, [i18nRefresh])
 
   const extraResizeBoxProps = useCreation(() => {
-    let p: YakitResizeBoxProps = {
+    const p: YakitResizeBoxProps = {
       firstNode: <></>,
       secondNode: <></>,
       firstRatio: '50%',
@@ -1861,7 +1861,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     <Divider type="vertical" style={{ height: 16, margin: '0 8px' }} />
                     <span className={styles['content-heard-body-time']}>
                       {t('YakitRiskDetails.discovery_time_colon')}
-                      {!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : '-'}
+                      {info.CreatedAt ? formatTimestamp(info.CreatedAt) : '-'}
                     </span>
                   </>
                 )}
@@ -1974,7 +1974,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
   const [loading, setLoading] = useState<boolean>(false)
   const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
   const extraResizeBoxProps = useCreation(() => {
-    let p: YakitResizeBoxProps = {
+    const p: YakitResizeBoxProps = {
       firstNode: <></>,
       secondNode: <></>,
       firstRatio: '50%',
@@ -1993,7 +1993,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
   }, [isShowCollapse])
 
   useEffect(() => {
-    const { ResultID, SyntaxFlowVariable, ProgramName } = info
+    const { ResultID, SyntaxFlowVariable, ProgramName } = info as Risk
 
     if (ResultID && SyntaxFlowVariable && ProgramName) {
       const params: AuditEmiterYakUrlProps = {
@@ -2017,9 +2017,9 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
         const ResultID = result.Resources.find((item) => item.ResourceType === 'result_id')?.ResourceName
         if (ResultID === info.ResultID) {
           setLoading(false)
-          let arr: YakURLDataItemProps[] = []
+          const arr: YakURLDataItemProps[] = []
           result.Resources.filter((item) => item.ResourceType === 'value').forEach((item) => {
-            let obj: any = {
+            const obj: any = {
               index: '',
               source: '',
               ResourceName: item.ResourceName,
@@ -2060,7 +2060,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
           </YakitSpin>
         </div>
       }
-      secondNode={<AuditResultDescribe info={info} isScroll={isScroll} />}
+      secondNode={<AuditResultDescribe info={info as SSARisk} isScroll={isScroll} />}
       firstMinSize={200}
       secondMinSize={400}
     />
@@ -2143,7 +2143,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
               <Divider type="vertical" style={{ height: 16, margin: '0 8px' }} />
               <span className={styles['content-heard-body-time']}>
                 {t('YakitCodeScanRiskDetails.discovery_time_colon')}
-                {!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : '-'}
+                {info.CreatedAt ? formatTimestamp(info.CreatedAt) : '-'}
               </span>
             </div>
           </div>
@@ -2198,7 +2198,7 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
   })
 
   const jumpRuleManagementPage = useMemoizedFn(() => {
-    let value = getRule()
+    const value = getRule()
     // 跳转到审计页面的参数
     const params: RuleManagementPageInfoProps = {
       RuleNames: value ? [value] : [],
@@ -2331,7 +2331,7 @@ export const RightBugAuditResultHeader: React.FC<RightBugAuditResultHeaderProps>
             <Divider type="vertical" style={{ height: 16, margin: '0 8px' }} />
             <span className={styles['content-heard-body-time']}>
               {t('RightBugAuditResultHeader.discovery_time_colon')}
-              {!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : '-'}
+              {info.CreatedAt ? formatTimestamp(info.CreatedAt) : '-'}
             </span>
           </div>
         </div>

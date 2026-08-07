@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { useDebounce, useDebounceFn, useMap, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { ActiveProps, OpenedFileProps, RiskTreeProps, RuleTreeProps, RunnerFileTreeProps } from './RunnerFileTreeType'
+import { useDebounceFn, useMap, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import type { ActiveProps, OpenedFileProps, RiskTreeProps, RunnerFileTreeProps } from './RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlinePluscircleIcon,
@@ -16,7 +16,7 @@ import useDispatcher from '../hooks/useDispatcher'
 import classNames from 'classnames'
 import styles from './RunnerFileTree.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
   grpcFetchAuditTree,
   grpcFetchAuditCodeRiskOrRuleList,
@@ -25,7 +25,7 @@ import {
   setAuditCodeAreaFileActive,
   updateAuditCodeAreaFileInfo,
 } from '../utils'
-import { Selection } from '../RunnerTabs/RunnerTabsType'
+import type { Selection } from '../RunnerTabs/RunnerTabsType'
 import emiter from '@/utils/eventBus/eventBus'
 import { getMapFail, getMapFileDetail } from '../FileTreeMap/FileMap'
 import { getMapFolderDetail } from '../FileTreeMap/ChildMap'
@@ -33,28 +33,27 @@ import { Tooltip } from 'antd'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { AfreshAuditModal, AuditHistoryTable } from '../AuditCode/AuditCode'
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { AuditEmiterYakUrlProps, OpenFileByPathProps } from '../YakRunnerAuditCodeType'
+import type { AuditEmiterYakUrlProps, OpenFileByPathProps } from '../YakRunnerAuditCodeType'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
 import { FileTree } from '../FileTree/FileTree'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
-import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
+import type { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
+import type { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
 import { AuditSearchModal } from '../AuditSearchModal/AuditSearch'
-import { CodeRangeProps } from '../RightAuditDetail/RightAuditDetail'
-import { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
-import { YakURLResource } from '@/pages/yakURLTree/data'
+import type { CodeRangeProps } from '../RightAuditDetail/RightAuditDetail'
+import type { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
+import type { YakURLResource } from '@/pages/yakURLTree/data'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
+import type { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import moment from 'moment'
 import { apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { warn } from '@/utils/notification'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -93,7 +92,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   const initFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
     return data.map((item) => {
       const itemDetail = getMapFileDetail(item.path)
-      let obj: FileNodeProps = { ...itemDetail, depth }
+      const obj: FileNodeProps = { ...itemDetail, depth }
 
       const childArr = getMapFolderDetail(item.path)
       if (itemDetail.isFolder) {
@@ -206,7 +205,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   })
 
   const menuData: YakitMenuItemType[] = useMemo(() => {
-    let newMenu: YakitMenuItemType[] = [
+    const newMenu: YakitMenuItemType[] = [
       {
         key: 'codeScan',
         label: t('RunnerFileTree.codeScan'),
@@ -223,7 +222,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     ]
 
     if (aduitList.length > 0) {
-      let children: any = [
+      const children: any = [
         ...aduitList.slice(0, 10).map((item) => ({ key: `aduit-${item.name}`, label: item.name })),
         {
           type: 'divider',
@@ -637,8 +636,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 })
 
 // 目前已打开的文件列表
-export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
-  const {} = props
+export const OpenedFile: React.FC<OpenedFileProps> = memo(() => {
   const { t, i18n } = useI18nNamespaces(['yakRunner'])
   const { areaInfo, activeFile } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
@@ -763,7 +761,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
   const initRiskFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
     return data.map((item) => {
       const itemDetail = getRiskMap(item.path) || getMapFail
-      let obj: FileNodeProps = { ...itemDetail, depth }
+      const obj: FileNodeProps = { ...itemDetail, depth }
       const childArr = getRiskChildMap(item.path) || []
       if (itemDetail.isFolder) {
         const newChild = childArr.map((item) => ({ path: item }))
@@ -814,7 +812,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
           increment,
         })
         const children: FileTreeListProps[] = []
-        let childArr: string[] = []
+        const childArr: string[] = []
         data.forEach((item) => {
           // 注入文件结构Map
           childArr.push(item.path)
@@ -840,7 +838,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
       } else {
         grpcFetchRiskOrRuleTree(path, { program, type, search, task_id, result_id, increment }).then(({ data }) => {
           if (data.length > 0) {
-            let childArr: string[] = []
+            const childArr: string[] = []
             data.forEach((item) => {
               // 注入文件结构Map
               childArr.push(item.path)
@@ -871,7 +869,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
     const variable = data.Extra.find((item) => item.Key === 'variable')?.Value
     const index = data.Extra.find((item) => item.Key === 'index')?.Value
     const result_id = data.Extra.find((item) => item.Key === 'result_id')?.Value
-    let rightParams: AuditEmiterYakUrlProps = {
+    const rightParams: AuditEmiterYakUrlProps = {
       Schema: 'syntaxflow',
       Location: projectName || '',
       Path: `/${variable}/${index}`,

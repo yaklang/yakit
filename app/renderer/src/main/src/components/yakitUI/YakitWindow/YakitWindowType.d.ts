@@ -1,6 +1,6 @@
-import { ResizableProps } from 're-resizable'
-import { CSSProperties } from 'react'
-import { YakitButtonProp } from '../YakitButton/YakitButton'
+import { type ResizableProps } from 're-resizable'
+import type { CSSProperties, ReactNode } from 'react'
+import { type YakitButtonProp } from '../YakitButton/YakitButton'
 
 export interface YakitWindowProps extends Omit<
   YakitWindowContentProps,

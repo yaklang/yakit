@@ -1,7 +1,7 @@
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
-import { DbOperateMessage } from '../layout/mainOperatorContent/utils'
-import {
+import type { DbOperateMessage } from '../layout/mainOperatorContent/utils'
+import type {
   AITool,
   AIToolGenerateMetadataRequest,
   AIToolGenerateMetadataResponse,

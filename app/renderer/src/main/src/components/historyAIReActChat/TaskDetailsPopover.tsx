@@ -1,4 +1,5 @@
-import React, { memo, useMemo, useState } from 'react'
+import type React from 'react'
+import { memo, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 

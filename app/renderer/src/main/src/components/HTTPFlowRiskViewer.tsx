@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { Card, Divider, Space } from 'antd'
 import { LogLevelToCode } from './HTTPFlowTable/HTTPFlowTable'
 import { YakEditor } from '@/utils/editors'

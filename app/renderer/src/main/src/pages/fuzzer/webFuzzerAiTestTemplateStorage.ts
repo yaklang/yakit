@@ -1,6 +1,6 @@
 import {
   DEFAULT_WEB_FUZZER_AI_TEST_TEMPLATES,
-  WebFuzzerAiTestTemplate,
+  type WebFuzzerAiTestTemplate,
 } from '@/defaultConstants/webFuzzerAiTestTemplates'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'

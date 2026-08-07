@@ -1,6 +1,6 @@
-import { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/apiUtils/type'
+import type { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
-import {
+import type {
   AIAgentGrpcApi,
   AIEventQueryRequest,
   AIEventQueryResponse,
@@ -21,9 +21,9 @@ import type {
   QueryAIForgeRequest,
   QueryAIForgeResponse,
 } from './type/forge'
-import { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
-import { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
-import { AIChatQSData, AIChatQSDataTypeEnum } from '../ai-re-act/hooks/aiRender'
+import type { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from '../ai-re-act/hooks/aiRender'
 import { genBaseAIChatData, isToolExecStream } from '../ai-re-act/hooks/utils'
 import { Uint8ArrayToString } from '@/utils/str'
 import { convertNodeIdToVerbose } from '../ai-re-act/hooks/defaultConstant'

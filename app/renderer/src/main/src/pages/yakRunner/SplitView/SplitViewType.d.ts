@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 export interface SplitViewProp {
   /** 不会动态改变，只支持初始设置值 */

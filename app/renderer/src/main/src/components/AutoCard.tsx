@@ -1,5 +1,5 @@
-import React from 'react'
-import { Card, CardProps } from 'antd'
+import type React from 'react'
+import { Card, type CardProps } from 'antd'
 
 import styles from './AutoCard.module.scss'
 

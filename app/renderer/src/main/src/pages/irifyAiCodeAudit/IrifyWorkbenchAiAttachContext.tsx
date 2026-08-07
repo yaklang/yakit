@@ -1,4 +1,5 @@
-import React, { createContext, useContext, MutableRefObject } from 'react'
+import type React from 'react'
+import { createContext, useContext, type MutableRefObject } from 'react'
 import type { AIInputEvent, AttachedResourceInfo } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 

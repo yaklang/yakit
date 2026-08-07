@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
   DragHeaderHeight,
@@ -22,14 +23,14 @@ import {
 import { debugToPrintLog } from '@/utils/logCollection'
 import { LocalGVS } from '@/enums/yakitGV'
 import {
-  IgnoreYakit,
-  LoadingClickExtra,
-  ModalIsTop,
-  System,
-  TypeCallbackExtra,
-  YakitStatusType,
-  YaklangEngineMode,
-  YaklangEngineWatchDogCredential,
+  type IgnoreYakit,
+  type LoadingClickExtra,
+  type ModalIsTop,
+  type System,
+  type TypeCallbackExtra,
+  type YakitStatusType,
+  type YaklangEngineMode,
+  type YaklangEngineWatchDogCredential,
 } from './types'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import useGetSetState from '@/hooks/useGetSetState'
@@ -50,10 +51,10 @@ import {
   isMemfit,
 } from '@/utils/envfile'
 import { RemoteEngine } from './components/RemoteEngine/RemoteEngine'
-import { RemoteLinkInfo } from './components/RemoteEngine/RemoteEngineType'
+import type { RemoteLinkInfo } from './components/RemoteEngine/RemoteEngineType'
 import { StringToUint8Array } from '@/utils/str'
 import { LocalEngine } from './components/LocalEngine'
-import { LocalEngineLinkFuncProps, LocalLinkParams } from './components/LocalEngine/LocalEngineType'
+import type { LocalEngineLinkFuncProps, LocalLinkParams } from './components/LocalEngine/LocalEngineType'
 import { EngineLog } from './components/EngineLog'
 import emiter from '@/utils/eventBus/eventBus'
 import { YaklangEngineWatchDog } from './components/YaklangEngineWatchDog'
@@ -70,7 +71,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { SoftwareBasics } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
 import { useYakitStatus } from '@/hooks/useYakitStatus'
-import { Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './index.module.scss'
 import i18n from '@/i18n/i18n'
 
@@ -312,7 +313,7 @@ export const StartupPage: React.FC = () => {
     // 可能isRemoteEngine状态值没有变
     setTimeout(() => {
       setCheckLog([])
-      if (!!isRemote) {
+      if (isRemote) {
         handleLinkRemoteMode()
       } else {
         handleLinkLocalMode()
@@ -430,8 +431,8 @@ export const StartupPage: React.FC = () => {
       .fetchYaklangVersionList()
       .then((data: string) => {
         const arr = data.split('\n').filter((v) => v)
-        let devPrefix: string[] = []
-        let noPrefix: string[] = []
+        const devPrefix: string[] = []
+        const noPrefix: string[] = []
         arr.forEach((item) => {
           if (item.startsWith('dev')) {
             devPrefix.push(item)
@@ -822,7 +823,7 @@ export const StartupPage: React.FC = () => {
       .listYakGrpc()
       .then(async (res) => {
         // 查找 PID
-        const pidsToKill = !!extraPorts
+        const pidsToKill = extraPorts
           ? res
               .filter((p) => extraPorts.includes(Number(p.port)))
               .map((p) => p.pid)

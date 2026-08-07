@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { Form, FormItemProps } from 'antd'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import { Form, type FormItemProps } from 'antd'
 import { failed } from '../../utils/notification'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

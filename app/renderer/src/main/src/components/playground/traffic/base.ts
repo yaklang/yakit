@@ -1,4 +1,4 @@
-import { TrafficPacket, TrafficSession, TrafficTCPReassembled } from '@/models/Traffic'
+import type { TrafficPacket, TrafficSession, TrafficTCPReassembled } from '@/models/Traffic'
 
 export interface TrafficViewerControlIf {
   realtime?: boolean

@@ -1,5 +1,5 @@
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { YakScript } from '@/pages/invoker/schema'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { YakScript } from '@/pages/invoker/schema'
 
 /** @name chat-cs聊天对话框信息 */
 export interface CacheChatCSProps {

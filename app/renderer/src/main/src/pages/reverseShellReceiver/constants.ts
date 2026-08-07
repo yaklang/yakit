@@ -1,4 +1,4 @@
-import { GenerateReverseShellCommandRequest } from './utils'
+import type { GenerateReverseShellCommandRequest } from './utils'
 
 export const defaultGenerateReverseShellCommand: GenerateReverseShellCommandRequest = {
   System: 'All',

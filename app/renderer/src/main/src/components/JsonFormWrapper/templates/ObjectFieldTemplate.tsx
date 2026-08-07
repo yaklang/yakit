@@ -3,13 +3,13 @@ import isObject from 'lodash/isObject'
 import isNumber from 'lodash/isNumber'
 import isString from 'lodash/isString'
 import {
-  FormContextType,
-  GenericObjectType,
-  ObjectFieldTemplateProps,
-  ObjectFieldTemplatePropertyType,
-  RJSFSchema,
-  StrictRJSFSchema,
-  UiSchema,
+  type FormContextType,
+  type GenericObjectType,
+  type ObjectFieldTemplateProps,
+  type ObjectFieldTemplatePropertyType,
+  type RJSFSchema,
+  type StrictRJSFSchema,
+  type UiSchema,
   canExpand,
   descriptionId,
   getTemplate,
@@ -18,7 +18,7 @@ import {
 } from '@rjsf/utils'
 import Col from 'antd/lib/col'
 import Row from 'antd/lib/row'
-import { ConfigConsumer, ConfigConsumerProps } from 'antd/lib/config-provider/context'
+import { ConfigConsumer, type ConfigConsumerProps } from 'antd/lib/config-provider/context'
 
 const DESCRIPTION_COL_STYLE = {
   paddingBottom: '8px',
@@ -151,7 +151,7 @@ export default function ObjectFieldTemplate<
                       <Col span={24}>
                         <Row gutter={rowGutter}>
                           {Object.keys(ui_row).map((row_item) => {
-                            let element = properties.find((p) => p.name === row_item)
+                            const element = properties.find((p) => p.name === row_item)
                             if (element) {
                               return (
                                 <Col key={element.name} span={ui_row[row_item]}>

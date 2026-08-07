@@ -1,7 +1,8 @@
-import React, { ReactNode } from 'react'
-import { Dropdown, DropDownProps } from 'antd'
+import type React from 'react'
+import { type ReactNode } from 'react'
+import { Dropdown, type DropDownProps } from 'antd'
 import '@ant-design/compatible/assets/index.css'
-import { BaseMenu, BaseMenuProps } from './BaseMenu'
+import { BaseMenu, type BaseMenuProps } from './BaseMenu'
 
 import './DropdownMenu.css'
 
@@ -18,7 +19,6 @@ export interface DropdownMenuProps {
   children?: ReactNode
 }
 export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
-  // @ts-ignore
   const {
     dropdown: { overlay, ...restDropdown } = {},
     menu: { data = [], onClick: onclick, ...restMenu } = {},

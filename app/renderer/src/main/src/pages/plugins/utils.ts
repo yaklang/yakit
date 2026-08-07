@@ -1,40 +1,39 @@
-import { PluginFilterParams, PluginListPageMeta, PluginSearchParams } from './baseTemplateType'
-import { YakitPluginListOnlineResponse } from './online/PluginsOnlineType'
-import { NetWorkApi, requestConfig } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { PluginFilterParams, PluginListPageMeta, PluginSearchParams } from './baseTemplateType'
+import type { YakitPluginListOnlineResponse } from './online/PluginsOnlineType'
+import { NetWorkApi, type requestConfig } from '@/services/fetch'
+import type { API } from '@/services/swagger/resposeType'
 import { info, yakitNotify } from '@/utils/notification'
 import { isCommunityEdition } from '@/utils/envfile'
 import { compareAsc } from '../yakitStore/viewers/base'
 import {
-  GetYakScriptGroupResponse,
-  GetYakScriptTagsAndTypeResponse,
-  GroupCount,
-  QueryYakScriptGroupResponse,
-  QueryYakScriptRequest,
-  QueryYakScriptsResponse,
-  ResetYakScriptGroupRequest,
-  SaveYakScriptGroupRequest,
-  YakScript,
+  type GetYakScriptGroupResponse,
+  type GetYakScriptTagsAndTypeResponse,
+  type GroupCount,
+  type QueryYakScriptGroupResponse,
+  type QueryYakScriptRequest,
+  type QueryYakScriptsResponse,
+  type ResetYakScriptGroupRequest,
+  type SaveYakScriptGroupRequest,
+  type YakScript,
   genDefaultPagination,
 } from '../invoker/schema'
 import emiter from '@/utils/eventBus/eventBus'
 import { toolDelInvalidKV } from '@/utils/tool'
 import { defaultFilter, defaultSearch, pluginTypeToName } from './builtInData'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import {
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type {
   HybridScanControlAfterRequest,
   HybridScanControlRequest,
   HybridScanModeType,
   HybridScanPluginConfig,
 } from '@/models/HybridScan'
 import cloneDeep from 'lodash/cloneDeep'
-import { PluginGroupList } from './local/PluginsLocalType'
-import { HTTPRequestParameters } from '@/types/http-api'
+import type { PluginGroupList } from './local/PluginsLocalType'
 import { defPluginBatchExecuteExtraFormValue } from '@/defaultConstants/PluginBatchExecutor'
-import { KVPair } from '@/models/kv'
-import { YakParamProps } from './pluginsType'
+import type { KVPair } from '@/models/kv'
+import type { YakParamProps } from './pluginsType'
 import { delInvalidPluginExecuteParams } from '../pluginEditor/utils/convert'
-import { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
+import type { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
 import { omit } from 'lodash'
 
 const { ipcRenderer } = window.require('electron')
@@ -1314,7 +1313,7 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
 ) => {
   return new Promise((resolve, reject) => {
     try {
-      let executeParams: HybridScanControlAfterRequest = {
+      const executeParams: HybridScanControlAfterRequest = {
         ...params,
       }
       ipcRenderer
@@ -1324,7 +1323,7 @@ export const apiHybridScan: (params: HybridScanControlAfterRequest, token: strin
             Control: true,
             HybridScanMode: 'new',
             ResumeTaskId: '',
-            HybridScanTaskSource: !!params.HybridScanTaskSource ? params.HybridScanTaskSource : 'pluginBatch',
+            HybridScanTaskSource: params.HybridScanTaskSource ? params.HybridScanTaskSource : 'pluginBatch',
           } as HybridScanControlRequest,
           token,
         )

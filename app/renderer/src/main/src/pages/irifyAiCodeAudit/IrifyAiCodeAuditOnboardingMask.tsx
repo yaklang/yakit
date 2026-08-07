@@ -1,18 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Steps } from 'antd'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { IrifyAiCodeAuditStyle, isIrifyAuditStyleConfirmed, resolveIrifyFocusModeLoop } from './irifyAiCodeAuditStyle'
+import {
+  type IrifyAiCodeAuditStyle,
+  isIrifyAuditStyleConfirmed,
+  resolveIrifyFocusModeLoop,
+} from './irifyAiCodeAuditStyle'
 import { SystemInfo } from '@/constants/hardware'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { warn } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
 import { emitIrifyAiCodeAuditOpenFileTree, getIrifyAiCodeAuditHistory, setIrifyAiCodeAuditHistory } from './utils'
 import { OpenFolderDragger } from './RunnerFileTree/RunnerFileTree'
-import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
+import type { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
 import { IrifyAiCodeAuditHistoryItem } from './IrifyAiCodeAuditHistoryItem'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { resolveIrifyAuditDefaultChatSeed } from './irifyAiCodeAuditConstants'
@@ -144,7 +149,6 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
       onAuditStyleChange(defaultAuditStyle)
     }
     // 仅依赖 defaultAuditStyle 与 visible，不依赖 onAuditStyleChange（受控回调稳定）
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultAuditStyle, visible])
 
   const openLocalFolder = useMemoizedFn(() => {

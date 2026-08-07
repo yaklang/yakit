@@ -1,4 +1,4 @@
-import { TFunction } from '@/i18n/useI18nNamespaces'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 
 export const getHTTPFlowExportFields = (t: TFunction) => {
   return [

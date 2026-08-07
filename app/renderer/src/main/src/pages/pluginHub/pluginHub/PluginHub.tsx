@@ -1,8 +1,9 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { useInViewport, useMemoizedFn } from 'ahooks'
-import { PluginSourceType, PluginToDetailInfo } from '../type'
+import type { PluginSourceType, PluginToDetailInfo } from '../type'
 import { PluginHubList } from '../pluginHubList/PluginHubList'
-import { PluginHubDetail, PluginHubDetailRefProps } from '../pluginHubDetail/PluginHubDetail'
+import { PluginHubDetail, type PluginHubDetailRefProps } from '../pluginHubDetail/PluginHubDetail'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemotePluginGV } from '@/enums/plugin'
@@ -21,8 +22,7 @@ const wrapperId = 'yakit-plugin-hub'
 
 interface PluginHubProps {}
 
-const PluginHub: React.FC<PluginHubProps> = memo((props) => {
-  const {} = props
+const PluginHub: React.FC<PluginHubProps> = memo(() => {
   const [active, setActive] = useState<PluginSourceType>()
 
   const wrapper = useRef<HTMLDivElement>(null)

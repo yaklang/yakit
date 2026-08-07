@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import { useNodeViewContext } from '@prosemirror-adapter/react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'

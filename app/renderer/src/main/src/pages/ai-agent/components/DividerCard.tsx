@@ -1,7 +1,7 @@
 import styles from './DividerCard.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useMemo, type FC } from 'react'
-import { OutlineLoadingIcon, OutlineXcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { OutlineLoadingIcon, OutlineXIcon } from '@/assets/icon/outline'
 import classNames from 'classnames'
 import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from '../aiTree/icon'
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -86,7 +86,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
             </YakitTag>
           </div>,
         ]
-      case AITaskStatus.cancel:
+      case AITaskStatus.cancel: {
         const { error, success } = props
         return [
           <div key="circle" className={styles['node-circle-icon']} />,
@@ -110,6 +110,7 @@ const DividerCard: FC<DividerCardProps> = (props) => {
             <span className={styles['divider-content-text-desc']}>{desc}</span>
           </div>,
         ]
+      }
       default:
         return [null, null]
     }

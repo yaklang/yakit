@@ -1,6 +1,6 @@
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { YakitKeyBoard, YakitKeyMod } from '../../keyboard'
-import { ShortcutKeyEventInfo } from '../pageMaps'
+import type { ShortcutKeyEventInfo } from '../pageMaps'
 import { addScopeShow } from '../global'
 import { JSONParseLog } from '@/utils/tool'
 

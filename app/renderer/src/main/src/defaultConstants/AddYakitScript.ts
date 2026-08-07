@@ -1,5 +1,5 @@
 import { YakitRoute } from '@/enums/yakitRoute'
-import { AddYakitScriptPageInfoProps } from '@/store/pageInfo'
+import type { AddYakitScriptPageInfoProps } from '@/store/pageInfo'
 
 export const defaultAddYakitScriptPageInfo: AddYakitScriptPageInfoProps = {
   pluginType: 'yak',

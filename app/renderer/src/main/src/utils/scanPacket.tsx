@@ -1,4 +1,3 @@
-import React from 'react'
 import { showByCursorMenu } from './showByCursor'
 
 export const scanPacket = (

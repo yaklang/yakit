@@ -28,7 +28,7 @@ export const headingToParagraphCommand = $command(`headingToParagraphCommand`, (
   }
   const parentNode = $from.node($from.depth)
   if (parentNode && parentNode.type.name === state.schema.nodes.heading.name) {
-    let textNode = state.schema.text(parentNode.textContent)
+    const textNode = state.schema.text(parentNode.textContent)
     const node = state.schema.nodes.paragraph.create(
       null,
       textNode, // 使用列表项的内容填充

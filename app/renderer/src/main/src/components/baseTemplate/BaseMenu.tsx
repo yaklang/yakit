@@ -1,5 +1,6 @@
-import React, { ReactNode } from 'react'
-import { Menu, MenuProps } from 'antd'
+import type React from 'react'
+import { type ReactNode } from 'react'
+import { Menu, type MenuProps } from 'antd'
 import '@ant-design/compatible/assets/index.css'
 import { randomString } from '../../utils/randomUtil'
 
@@ -28,7 +29,7 @@ export const BaseMenu: React.FC<BaseMenuProps> = (props) => {
     const menus = data.map((item) => {
       const { key, title, render, icon = <></>, disabled, isDivider = false, dashed } = item
 
-      if (!!isDivider) return <Divider key={randomString(40)} dashed={!!dashed} />
+      if (isDivider) return <Divider key={randomString(40)} dashed={!!dashed} />
 
       if (item.subMenu && item.subMenu.length !== 0) {
         return (

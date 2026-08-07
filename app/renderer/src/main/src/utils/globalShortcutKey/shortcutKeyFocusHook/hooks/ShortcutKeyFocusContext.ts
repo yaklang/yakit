@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, createContext } from 'react'
+import { type Dispatch, type SetStateAction, createContext } from 'react'
 
 export interface ShortcutKeyFocusContextStore {
   shortcutIds: string[] | undefined

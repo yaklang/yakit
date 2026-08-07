@@ -1,7 +1,7 @@
-import { FC, memo, useEffect, useRef, useState } from 'react'
+import { type FC, memo, useEffect, useRef, useState } from 'react'
 
 import { Progress, Tooltip } from 'antd'
-import { useAsyncEffect, useInViewport, useRequest, useSafeState } from 'ahooks'
+import { useInViewport, useRequest, useSafeState } from 'ahooks'
 
 import { CloudDownloadIcon, RemoveIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'

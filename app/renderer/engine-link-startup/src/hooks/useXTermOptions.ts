@@ -1,6 +1,6 @@
 import { getAllYakitColorVars } from '@/utils/theme'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { Theme, useTheme } from './useTheme'
+import { type Theme, useTheme } from './useTheme'
 
 const applyYakitXtermTheme = (terminal, fun) => {
   requestAnimationFrame(() => {

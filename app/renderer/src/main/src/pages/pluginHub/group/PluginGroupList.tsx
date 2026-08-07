@@ -1,4 +1,5 @@
-import React, { useState, ReactNode, useEffect } from 'react'
+import type React from 'react'
+import { useState, type ReactNode, useEffect } from 'react'
 import classNames from 'classnames'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import styles from './PluginGroupList.module.scss'

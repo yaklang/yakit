@@ -11,12 +11,12 @@ import {
   DNSLOG_SECRET,
 } from '../pages/reverse/ReverseServerPage'
 import { failed, info } from './notification'
-import { YakExecutorParam } from '../pages/invoker/YakExecutorParams'
+import type { YakExecutorParam } from '../pages/invoker/YakExecutorParams'
 import useHoldingIPCRStream from '../hook/useHoldingIPCRStream'
 import { randomString } from './randomUtil'
 import { PluginResultUI } from '../pages/yakitStore/viewers/base'
 import { isCommunityEdition } from './envfile'
-import { NetInterface } from '@/models/Traffic'
+import type { NetInterface } from '@/models/Traffic'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -47,7 +47,7 @@ export const ConfigGlobalReverse = React.memo(() => {
 
   useEffect(() => {
     getStatus()
-    let id = setInterval(() => {
+    const id = setInterval(() => {
       getStatus()
     }, 1000)
     return () => {
@@ -111,13 +111,13 @@ export const ConfigGlobalReverse = React.memo(() => {
   // 设置 Bridge
   useEffect(() => {
     getRemoteValue(BRIDGE_ADDR).then((data: string) => {
-      if (!!data) {
+      if (data) {
         setAddr(`${data}`)
       }
     })
 
     getRemoteValue(BRIDGE_SECRET).then((data: string) => {
-      if (!!data) {
+      if (data) {
         setPassword(`${data}`)
       }
     })
@@ -130,12 +130,12 @@ export const ConfigGlobalReverse = React.memo(() => {
         case 'false':
           setInheritBridge(false)
           getRemoteValue(DNSLOG_ADDR).then((data: string) => {
-            if (!!data) {
+            if (data) {
               setDNSLogAddr(`${data}`)
             }
           })
           getRemoteValue(DNSLOG_SECRET).then((data: string) => {
-            if (!!data) {
+            if (data) {
               setDNSLogPassword(`${data}`)
             }
           })

@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { YakitButtonProp } from '../YakitButton/YakitButton'
+import type { ReactNode } from 'react'
+import type { YakitButtonProp } from '../YakitButton/YakitButton'
 
 export interface YakitHintProps extends YakitHintModalTypes {
   /** 是否展示遮罩 */

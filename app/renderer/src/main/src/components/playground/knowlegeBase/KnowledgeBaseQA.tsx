@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react'
+import type React from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -7,7 +8,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { Space, Divider, message, Tag, Collapse } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { failed } from '@/utils/notification'
-import {
+import type {
   KnowledgeBaseQAProps,
   QAMessage,
   QueryKnowledgeBaseByAIRequest,
@@ -64,9 +65,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
         switch (MessageType) {
           case 'message':
             // 累积过程消息，并显示为当前内容
-            // @ts-ignore 扩展字段
             lastMessage.processLog = (lastMessage.processLog || '') + Message + '\n'
-            // @ts-ignore 扩展字段
             lastMessage.content = lastMessage.processLog
             break
 
@@ -111,28 +110,24 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
               lastMessage.entries.push(...toAppend)
             } catch (error) {
               console.error('解析结果数据失败:', error)
-              // @ts-ignore
               lastMessage.processLog =
                 (lastMessage.processLog || '') +
                 `${t('playground.KnowledgeBaseQA.parseResultDataFailed', { data: String(Data) })}\n`
-              // @ts-ignore
+
               lastMessage.content = lastMessage.processLog
             }
             break
 
           case 'ai_summary':
             // AI最终回答：替换可见内容为最终回答，保留过程
-            // @ts-ignore 扩展字段
             lastMessage.finalAnswer = Message
             lastMessage.content = Message
             lastMessage.isStreaming = false
             break
 
           case 'error':
-            // @ts-ignore 扩展字段
             lastMessage.processLog =
               (lastMessage.processLog || '') + `\n**${t('playground.KnowledgeBaseQA.error')}** ` + Message
-            // @ts-ignore 扩展字段
             lastMessage.content = lastMessage.processLog
             lastMessage.isStreaming = false
             break
@@ -167,13 +162,9 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
       timestamp: Date.now(),
       entries: [],
       isStreaming: true,
-      // @ts-ignore 扩展字段
       processLog: '',
-      // @ts-ignore 扩展字段
       finalAnswer: '',
-      // @ts-ignore 扩展字段
       showDetails: false,
-      // @ts-ignore 扩展字段
       showRelated: false,
     }
 
@@ -419,7 +410,6 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
                                   const show = !m.showDetails
                                   return {
                                     ...m,
-                                    // @ts-ignore
                                     showDetails: show,
                                     // 切换显示内容：true 显示过程日志，false 显示最终回答
                                     content: show ? m.processLog || m.content : m.finalAnswer || m.content,
@@ -442,7 +432,6 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
                                     if (m.id !== msg.id) return m
                                     return {
                                       ...m,
-                                      // @ts-ignore
                                       showRelated: !m.showRelated,
                                     }
                                   }),

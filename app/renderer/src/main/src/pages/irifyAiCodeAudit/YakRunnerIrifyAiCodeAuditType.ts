@@ -1,6 +1,6 @@
-import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
-import { FileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+import type { FileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 export interface YakRunnerProps {
   initCode?: YakRunnerCodeProps
 }

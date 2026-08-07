@@ -1,5 +1,5 @@
 import React from 'react'
-import { AICustomCodeProps } from './type'
+import type { AICustomCodeProps } from './type'
 import { useNodeViewContext } from '@prosemirror-adapter/react'
 import styles from './AICustomCode.module.scss'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'

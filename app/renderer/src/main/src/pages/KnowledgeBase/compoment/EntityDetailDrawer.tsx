@@ -1,7 +1,11 @@
-import { Dispatch, FC, SetStateAction, useEffect, useMemo, useRef } from 'react'
+import { type Dispatch, type FC, type SetStateAction, useEffect, useMemo } from 'react'
 import { Divider, Form, Tooltip } from 'antd'
 
-import { Entity, GenerateERMDotResponse, QueryRelationshipResponse } from '@/components/playground/entityRepository'
+import type {
+  Entity,
+  GenerateERMDotResponse,
+  QueryRelationshipResponse,
+} from '@/components/playground/entityRepository'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 
 import styles from '../knowledgeBase.module.scss'
@@ -26,7 +30,7 @@ import { apiSearchKnowledgeBaseEntry, transformToGraphData } from '../utils'
 import GraphChart from './GraphChart'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { GenerateKnowledge } from './GenerateKnowledge'
-import { KnowledgeBaseTableProps } from './KnowledgeBaseTable'
+import type { KnowledgeBaseTableProps } from './KnowledgeBaseTable'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'

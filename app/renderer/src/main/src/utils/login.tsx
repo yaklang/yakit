@@ -1,6 +1,6 @@
-import { UserInfoProps } from '@/store'
+import type { UserInfoProps } from '@/store'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { getLocalValue, getRemoteValue } from './kv'
 import { globalUserLogout, isEnpriTraceAgent, isEnpriTrace, getRemoteHttpSettingGV } from '@/utils/envfile'
 import { NowProjectDescription } from '@/pages/globalVariable'

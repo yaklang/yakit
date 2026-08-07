@@ -1,5 +1,5 @@
-import { SyntaxFlowRuleFilter } from '../ruleManagement/RuleManagementType'
-import { SSARisksFilter } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { SyntaxFlowRuleFilter } from '../ruleManagement/RuleManagementType'
+import type { SSARisksFilter } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 
 export interface IRifyHomeProps {}
 

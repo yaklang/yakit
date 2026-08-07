@@ -1,10 +1,10 @@
-import React, { memo, useEffect, useRef } from 'react'
+import type React from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import YakitXterm, { TERMINAL_KEYBOARD_Map, YakitXtermRefProps } from '@/components/yakitUI/YakitXterm/YakitXterm'
+import YakitXterm, { TERMINAL_KEYBOARD_Map, type YakitXtermRefProps } from '@/components/yakitUI/YakitXterm/YakitXterm'
 import { writeXTerm } from '@/utils/xtermUtils'
 import { yakitNotify } from '@/utils/notification'
-import { System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
-import { Uint8ArrayToString } from '@/utils/str'
+import { type System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
 
 const { ipcRenderer } = window.require('electron')
 export interface ReverseShellTerminalProps {

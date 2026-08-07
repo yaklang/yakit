@@ -1,4 +1,4 @@
-import { YakitRoute } from '@/enums/yakitRoute'
+import { type YakitRoute } from '@/enums/yakitRoute'
 import { usePageInfo } from '@/store/pageInfo'
 
 /** 按需读取当前一级页签 routeKey，避免响应式订阅 currentPageTabRouteKey 引发无关重渲染 */

@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type {
   AuthorImgProps,
   CodeScoreModalProps,
   CodeScoreModuleProps,
@@ -38,20 +38,18 @@ import {
 import {
   OutlineArrowscollapseIcon,
   OutlineCalendarIcon,
-  OutlineClouddownloadIcon,
   OutlineDatabasebackupIcon,
   OutlineDocumentduplicateIcon,
   OutlineDotshorizontalIcon,
   OutlineFilterIcon,
   OutlineOpenIcon,
   OutlineSearchIcon,
-  OutlineThumbupIcon,
   OutlineTrashIcon,
   OutlineViewgridIcon,
   OutlineViewlistIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
-import { SolidCheckIcon, SolidExclamationIcon, SolidThumbupIcon } from '@/assets/icon/solid'
+import { SolidCheckIcon, SolidExclamationIcon } from '@/assets/icon/solid'
 import {
   SolidOfficialpluginIcon,
   SolidYakitPluginIcon,
@@ -73,20 +71,16 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { PluginTestErrorIcon, PluginTestWarningIcon, PluginsGridCheckIcon } from './icon'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitLogo from '@/assets/yakitLogo.png'
-import { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
+import type { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
 import { yakitNotify } from '@/utils/notification'
 import {
-  DownloadOnlinePluginsRequest,
-  PluginStarsRequest,
-  apiDownloadPluginOnline,
   apiFetchGroupStatisticsCheck,
   apiFetchGroupStatisticsLocal,
   apiFetchGroupStatisticsMine,
   apiFetchGroupStatisticsOnline,
-  apiPluginStars,
 } from './utils'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { funcSearchType, pluginTypeToName } from './builtInData'
@@ -219,7 +213,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
 
   const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
   const mediaHandle = useMemoizedFn((e) => {
-    let value = !!e.matches
+    const value = !!e.matches
     if (getIsIcon() === value) return
     setIsIcon(value)
   })
@@ -261,7 +255,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
 
   const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
   const mediaHandle = useMemoizedFn((e) => {
-    let value = !!e.matches
+    const value = !!e.matches
     if (getIsIcon() === value) return
     if (showPopver && !value) setShowPopver(false)
     setIsIcon(value)
@@ -287,7 +281,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
     })
   })
   const onValueChange = useMemoizedFn((e) => {
-    let newSearch: PluginSearchParams = {
+    const newSearch: PluginSearchParams = {
       ...search,
     }
     switch (search.type) {
@@ -400,7 +394,7 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
 
   const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
   const mediaHandle = useMemoizedFn((e) => {
-    let value = !!e.matches
+    const value = !!e.matches
     if (getIsIcon() === value) return
     setIsIcon(value)
   })
@@ -510,7 +504,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
     }
   })
   const onDelAllTag = useMemoizedFn(() => {
-    let newFilters: PluginFilterParams = {}
+    const newFilters: PluginFilterParams = {}
     Object.keys(filters).forEach((key) => {
       newFilters[key] = []
     })
@@ -1432,7 +1426,7 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
   }, [defaultFilter, visible])
   /**需求：详情的搜索会清除tag，插件组因为已经移出到外面，所以插件组不会被清除 */
   const onFinish = useMemoizedFn((value) => {
-    for (let name of excludeFilterName) {
+    for (const name of excludeFilterName) {
       if (has(value, name)) delete value[name]
     }
     onFilter({ ...value, plugin_group: defaultFilter.plugin_group })
@@ -1619,7 +1613,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
 
   // 格式化单条检测结果
   const formatSingleResult = (item: CodeScoreSmokingEvaluateResultProps) => {
-    let errorPosition = getErrorPosition(item)
+    const errorPosition = getErrorPosition(item)
     // 基础内容：Item + Suggestion + 位置（如果有）
     return `${item.Item}\n${item.Suggestion}${errorPosition ? `\n${errorPosition}` : ''}`
   }

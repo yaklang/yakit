@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Space } from 'antd'
-import { IMonacoActionDescriptor, IMonacoCodeEditor } from './editors'
+import type { IMonacoActionDescriptor, IMonacoCodeEditor } from './editors'
 import { monacoEditorClear, monacoEditorReplace, monacoEditorWrite } from '../pages/fuzzer/fuzzerTemplates'
 import { failed } from './notification'
 import { AutoCard } from '../components/AutoCard'
@@ -40,7 +40,7 @@ export type CodecType =
 const editorCodecHandlerFactory = (typeStr: CodecType) => {
   return (e: IMonacoCodeEditor) => {
     try {
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       const text = e.getModel()?.getValueInRange(e.getSelection()) || ''
       execCodec(typeStr, text, false, e)
     } catch (e) {
@@ -52,9 +52,9 @@ const editorCodecHandlerFactory = (typeStr: CodecType) => {
 const editorFullCodecHandlerFactory = (typeStr: CodecType) => {
   return (e: IMonacoCodeEditor) => {
     try {
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       const text = e.getModel()?.getValueInRange(e.getSelection()) || ''
-      if (!!text) {
+      if (text) {
         execCodec(typeStr, text, false, e)
       } else {
         const model = e.getModel()
@@ -84,7 +84,7 @@ export const mutateRequest = (params: MutateHTTPRequestParams, editor?: IMonacoC
   yakitCodec.mutateHttpRequest(params).then((result: MutateHTTPRequestResponse) => {
     if (editor) {
       monacoEditorClear(editor)
-      monacoEditorReplace(editor, new Buffer(result.Result).toString('utf8'))
+      monacoEditorReplace(editor, Buffer.from(result.Result).toString('utf8'))
       return
     }
   })
@@ -95,7 +95,7 @@ const editorMutateHTTPRequestHandlerFactory = (params: MutateHTTPRequestParams) 
     try {
       const model = e.getModel()
       const fullText = model?.getValue()
-      mutateRequest({ ...params, Request: new Buffer(fullText || '') }, e)
+      mutateRequest({ ...params, Request: Buffer.from(fullText || '') }, e)
     } catch (e) {
       failed(`mutate request failed: ${e}`)
     }
@@ -230,7 +230,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                           noMiniMap={true}
                           readOnly={true}
                           noLineNumber={true}
-                          value={new Buffer(i.Origin).toString('utf8')}
+                          value={Buffer.from(i.Origin).toString('utf8')}
                         />
                       </div>
                     ),
@@ -247,7 +247,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
               <YakitEditor
                 noMiniMap={true}
                 type={'html'}
-                value={new Buffer(i.Result).toString('utf8')}
+                value={Buffer.from(i.Result).toString('utf8')}
                 noLineNumber={true}
                 setValue={(s) => {
                   const req = getResult()
@@ -303,7 +303,7 @@ export const execCodec = async (
     .run({ Text: text, Type: typeStr, Params: extraParams })
     .then((result: { Result: string }) => {
       if (replaceEditor) {
-        let m = showYakitModal({
+        const m = showYakitModal({
           width: '50%',
           content: (modalT) => (
             <AutoCard

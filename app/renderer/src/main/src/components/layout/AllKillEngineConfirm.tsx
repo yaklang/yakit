@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { failed, info, warn } from '@/utils/notification'
 import { useGetState, useMemoizedFn } from 'ahooks'
-import { yakProcess } from './PerformanceDisplay'
+import type { yakProcess } from './PerformanceDisplay'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { OutlineLoadingIcon } from '@/assets/icon/outline'
@@ -94,11 +94,11 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
     let killFlag: string = ''
 
     if (otherPS.length > 0) {
-      for (let i of otherPS) {
+      for (const i of otherPS) {
         try {
           killFlag = await yakitEngine.killYakGrpc(i.pid)
         } catch (error) {}
-        if (!!killFlag) {
+        if (killFlag) {
           failed(t('AllKillEngineConfirm.killProcessFailed', { pid: i.pid, port: i.port, error: killFlag }))
           onLoadingToFalse()
           return
@@ -112,7 +112,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
       try {
         killFlag = await yakitEngine.killYakGrpc(currentPS.pid)
       } catch (error) {}
-      if (!!killFlag) {
+      if (killFlag) {
         failed(
           t('AllKillEngineConfirm.killProcessFailed', {
             pid: currentPS.pid,

@@ -1,7 +1,8 @@
 import ReactDOM from 'react-dom'
-import React, { memo, useMemo, useState } from 'react'
+import type React from 'react'
+import { memo, useMemo, useState } from 'react'
 import { HintModal, YakitHintModal } from './YakitHintModal'
-import { YakitHintProps, YakitHintWhiteProps } from './YakitHintType'
+import type { YakitHintProps, YakitHintWhiteProps } from './YakitHintType'
 import { usePrevious } from 'ahooks'
 
 import classNames from 'classnames'
@@ -21,7 +22,7 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
 
   const modals = useMemo(() => {
     if (!!modalsPrevious && modalsPrevious.length > 0) {
-      for (let index in childModal) {
+      for (const index in childModal) {
         /** 判断新数据位置是否超出旧数据长度 */
         const position = +index < modalsPrevious.length
         if (position) {

@@ -1,7 +1,6 @@
-import ReactDOM from 'react-dom'
 import { Card, Menu } from 'antd'
 import './showByCursor.css'
-import React from 'react'
+import type React from 'react'
 import { createRoot } from 'react-dom/client'
 export interface ByCursorContainerProp {
   content: JSX.Element

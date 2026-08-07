@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import useStore from './useStore'
 import useDispatcher from './useDispatcher'
-import { YakRunnerContextDispatcher, YakRunnerContextStore } from './YakRunnerContext'
+import type { YakRunnerContextDispatcher, YakRunnerContextStore } from './YakRunnerContext'
 
 export type YakRunnerStoreRefsCurrent = YakRunnerContextStore & YakRunnerContextDispatcher
 

@@ -1,5 +1,4 @@
-import { Selection } from '../RunnerTabs/RunnerTabsType'
-import { GraphInfoProps } from '../RightAuditDetail/RightAuditDetail.tsx'
+import { type Selection } from '../RunnerTabs/RunnerTabsType'
 export interface BottomEditorDetailsProps {
   showItem?: ShowItemType
   setShowItem: (v: ShowItemType) => void

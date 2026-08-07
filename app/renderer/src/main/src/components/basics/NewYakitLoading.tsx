@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react'
-import { YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
+import type React from 'react'
+import { useMemo } from 'react'
+import type { YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
 import {
   fetchEnv,
   getReleaseEditionName,
@@ -20,7 +21,7 @@ import yakitCE from '@/assets/yakit.jpg'
 import styles from './newYakitLoading.module.scss'
 import classNames from 'classnames'
 import { SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon } from '@/assets/icon/colors'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import IRifyPrimaryBg from '../../assets/uiLayout/IRifyPrimaryBg.png'
 import MemfitAIPrimaryBg from '@/assets/uiLayout/MemfitAIPrimaryBg.png'

@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { FilterMode } from '../HTTPFuzzerPage'
+import { type ReactNode } from 'react'
+import { type FilterMode } from '../HTTPFuzzerPage'
 
 export interface FilterEmptySubMatcherFunctionProps {
   matchers: HTTPResponseMatcher[]

@@ -1,5 +1,6 @@
-import { AIForge } from '@/pages/ai-agent/type/forge'
-import { Dispatch, ForwardedRef, SetStateAction } from 'react'
+import { type AIForge } from '@/pages/ai-agent/type/forge'
+import { type Dispatch, type ForwardedRef, type SetStateAction } from 'react'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 
 export interface ForgeEditorProps {
   isModify?: boolean

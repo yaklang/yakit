@@ -1,5 +1,5 @@
 import React, {
-  ChangeEventHandler,
+  type ChangeEventHandler,
   forwardRef,
   memo,
   useEffect,
@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import {
+import type {
   AIForgeEditorCodeAndParamsProps,
   AIForgeEditorInfoFormProps,
   AIForgeEditorInfoFormRef,
@@ -45,16 +45,16 @@ import {
   DefaultForgeTypeList,
   DefaultForgeYakToCode,
 } from '../defaultConstant'
-import { GetAIToolListRequest } from '@/pages/ai-agent/type/aiTool'
+import type { GetAIToolListRequest } from '@/pages/ai-agent/type/aiTool'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { ExecuteEnterNodeByPluginParams } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { getValueByType, onCodeToInfo, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
 import cloneDeep from 'lodash/cloneDeep'
-import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { yakitNotify } from '@/utils/notification'
@@ -64,9 +64,9 @@ import { useSubscribeClose } from '@/store/tabSubscribe'
 import { AIForgeListDefaultPagination, ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
 import { grpcGetAIToolList } from '@/pages/ai-agent/aiToolList/utils'
 import { QSInputTextarea } from '@/pages/ai-agent/template/template'
-import { TextAreaRef } from 'antd/lib/input/TextArea'
+import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { AIForge } from '@/pages/ai-agent/type/forge'
+import type { AIForge } from '@/pages/ai-agent/type/forge'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
@@ -83,21 +83,21 @@ import {
 } from '@/pages/yakRunner/utils'
 import { randomString } from '@/utils/randomUtil'
 import FileTreeSystemList from '@/pages/ai-agent/components/aiFileSystemList/FileTreeSystemList/FileTreeSystemList'
-import { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { v4 as uuidv4 } from 'uuid'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { setClipboardText } from '@/utils/clipboard'
-import { FileMonitorProps } from '@/utils/duplex/duplex'
+import type { FileMonitorProps } from '@/utils/duplex/duplex'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { FileInfo, FileTreeSystemListRef } from '@/pages/ai-agent/components/aiFileSystemList/type'
+import type { FileInfo, FileTreeSystemListRef } from '@/pages/ai-agent/components/aiFileSystemList/type'
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { getLocalFileName } from '@/components/MilkdownEditor/CustomFile/utils'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react'
 import { placeholderConfig, placeholderPlugin } from '@/components/MilkdownEditor/Placeholder'
-import { Ctx } from '@milkdown/kit/ctx'
-import { defaultValueCtx, Editor, editorViewCtx, editorViewOptionsCtx, rootCtx } from '@milkdown/kit/core'
+import { type Ctx } from '@milkdown/kit/ctx'
+import { defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx } from '@milkdown/kit/core'
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { getMarkdown } from '@milkdown/kit/utils'
 import { commonmark } from '@milkdown/kit/preset/commonmark'
@@ -106,8 +106,6 @@ import { gapCursorPlugin } from '@milkdown/kit/plugin/cursor'
 import { history } from '@milkdown/kit/plugin/history'
 import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
-import { parserCtx } from '@milkdown/core'
-import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 
 import classNames from 'classnames'
 import styles from './ForgeEditor.module.scss'
@@ -285,7 +283,7 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
           const apiFunc = requestData.Id ? grpcUpdateAIForge : grpcCreateAIForge
           apiFunc(requestData)
             .then(async (res) => {
-              let resInfo: AIForge = cloneDeep(requestData)
+              const resInfo: AIForge = cloneDeep(requestData)
               if (!resInfo.Id) {
                 const resID = Number(res?.CreateID) || 0
                 if (resID) resInfo.Id = resID
@@ -455,8 +453,8 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
         emiter.emit(
           'closePage',
           JSON.stringify({
-            route: !!isModify ? YakitRoute.ModifyAIForge : YakitRoute.AddAIForge,
-            source: !!isModify ? getModifyAIForgeSource() : getAddAIForgeSource(),
+            route: isModify ? YakitRoute.ModifyAIForge : YakitRoute.AddAIForge,
+            source: isModify ? getModifyAIForgeSource() : getAddAIForgeSource(),
           }),
         )
       })
@@ -1116,11 +1114,11 @@ const AIForgeEditorCodeAndParams: React.FC<AIForgeEditorCodeAndParamsProps> = me
       let formData: CustomPluginExecuteFormValue = {}
       if (form) formData = (form.getFieldsValue() || {}) as CustomPluginExecuteFormValue
 
-      let defaultValue: CustomPluginExecuteFormValue | undefined = { ...formData }
+      const defaultValue: CustomPluginExecuteFormValue | undefined = { ...formData }
 
       let newFormValue: CustomPluginExecuteFormValue = {}
       params.forEach((ele) => {
-        let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
+        const initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
         const value = getValueByType(initValue, ele.TypeVerbose)
         newFormValue = {
           ...newFormValue,
@@ -1359,7 +1357,7 @@ const AIForgeEditorSkillFiles: React.FC<AIForgeEditorSkillFilesProps> = memo((pr
     try {
       // 先加载当前文件夹
       await treeRef.current?.loadFolder(basePath)
-      let path = await getPathJoin(basePath, `${uuidv4()}-create`)
+      const path = await getPathJoin(basePath, `${uuidv4()}-create`)
       if (!path.length) return
       // 通知新增临时文件夹或文件
       const event: FileMonitorProps = {
@@ -1414,27 +1412,30 @@ const AIForgeEditorSkillFiles: React.FC<AIForgeEditorSkillFilesProps> = memo((pr
       case 'path':
         setClipboardText(treeNode.path)
         break
-      case 'relativePath':
+      case 'relativePath': {
         const relativePath = await getRelativePath(skillPath, treeNode.path)
         setClipboardText(relativePath)
         break
+      }
       case 'delete':
         setShowDelete(true)
         break
       case 'rename':
-        const event: FileMonitorProps = {
-          Id: watchToken.current!,
-          CreateEvents: [],
-          DeleteEvents: [],
-          ChangeEvents: [
-            {
-              Op: 'renameFront',
-              Path: treeNode.path,
-              IsDir: treeNode.isFolder,
-            },
-          ],
+        {
+          const event: FileMonitorProps = {
+            Id: watchToken.current!,
+            CreateEvents: [],
+            DeleteEvents: [],
+            ChangeEvents: [
+              {
+                Op: 'renameFront',
+                Path: treeNode.path,
+                IsDir: treeNode.isFolder,
+              },
+            ],
+          }
+          emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
         }
-        emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
         break
       default:
         break

@@ -1,6 +1,6 @@
-import React from 'react'
+import type React from 'react'
 import { PieChart } from 'bizcharts'
-import { GraphProps } from './base'
+import type { GraphProps } from './base'
 
 export interface PieGraphProps extends GraphProps {
   hideLabel?: boolean

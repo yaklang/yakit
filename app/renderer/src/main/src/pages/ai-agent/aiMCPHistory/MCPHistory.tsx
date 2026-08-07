@@ -11,7 +11,7 @@ import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { OutlineFilterIcon, OutlineRefreshIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { NewHTTPPacketEditor } from '@/utils/editors'
-import { MCPToolCallHistory, MCPToolCallHistorySummary, QueryMCPToolCallHistoryRequest } from '../type/aiMCP'
+import type { MCPToolCallHistory, MCPToolCallHistorySummary, QueryMCPToolCallHistoryRequest } from '../type/aiMCP'
 import {
   grpcDeleteMCPToolCallHistory,
   grpcGetMCPToolCallHistoryDetail,
@@ -112,9 +112,10 @@ const MCPHistory: React.FC = React.memo(() => {
       if (refresh) setListResetFlag((flag) => !flag)
     } catch {
     } finally {
-      if (requestID !== requestIDRef.current) return
-      loadingRef.current = false
-      setLoading(false)
+      if (requestID === requestIDRef.current) {
+        loadingRef.current = false
+        setLoading(false)
+      }
     }
   })
 

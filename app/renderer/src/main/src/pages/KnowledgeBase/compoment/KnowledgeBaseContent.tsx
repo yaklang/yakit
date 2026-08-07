@@ -1,10 +1,11 @@
-import React, { Dispatch, SetStateAction, forwardRef, useImperativeHandle, memo, useEffect, useRef } from 'react'
+import type React from 'react'
+import { type Dispatch, type SetStateAction, forwardRef, useImperativeHandle, memo, useEffect, useRef } from 'react'
 
 import { KnowledgeBaseSidebar } from './KnowledgeBaseSidebar'
 
 import styles from '../knowledgeBase.module.scss'
 import KnowledgeBaseContainer from './KnowledgeBaseContainer'
-import { KnowledgeBaseItem } from '../hooks/useKnowledgeBase'
+import type { KnowledgeBaseItem } from '../hooks/useKnowledgeBase'
 import {
   useAsyncEffect,
   useCreation,
@@ -32,20 +33,20 @@ import { randomString } from '@/utils/randomUtil'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
-import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
-import { CreateKnowledgeBaseData } from '../TKnowledgeBase'
+import type { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
+import type { CreateKnowledgeBaseData } from '../TKnowledgeBase'
 
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import { AIHandleStartParams } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import Joyride, { ACTIONS, CallBackProps, STATUS } from 'react-joyride'
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { AIHandleStartParams } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
+import Joyride, { ACTIONS, type CallBackProps, STATUS } from 'react-joyride'
 import { CustomJoyrideTooltip } from './CustomJoyrideTooltip/CustomJoyrideTooltip'
 import { KnowledgeBaseGV } from '@/yakitGV'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { GuideFooter } from './GuideFooter'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { OutlineMessageCirclePlusIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { InstallPluginModal } from './InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -461,7 +462,7 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
     }, [knowledgeBaseContentViewport, joyrideStep.visible, inViewport])
 
     const ResizeBoxProps = useCreation(() => {
-      let p = {
+      const p = {
         firstRatio: 'calc(100% - 462px)',
         secondRatio: '462px',
       }
@@ -510,10 +511,10 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
 
         <YakitResizeBox
           lineStyle={{
-            backgroundColor: !!showFreeChat ? 'var(--Colors-Use-Neutral-Bg)' : 'none',
-            display: !!showFreeChat ? '' : 'none',
+            backgroundColor: showFreeChat ? 'var(--Colors-Use-Neutral-Bg)' : 'none',
+            display: showFreeChat ? '' : 'none',
           }}
-          secondMinSize={!!showFreeChat ? 300 : 0}
+          secondMinSize={showFreeChat ? 300 : 0}
           style={{ display: 'flex' }}
           lineDirection="left"
           secondNodeStyle={{

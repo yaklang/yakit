@@ -1,4 +1,4 @@
-import { SoftwareVersion } from '@/utils/envfile'
+import type { SoftwareVersion } from '@/utils/envfile'
 
 /** 当前启动yaklang引擎模式 */
 export type YaklangEngineMode = 'local' | 'remote'

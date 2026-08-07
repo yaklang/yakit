@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Table, Column, HeaderCell, Cell, TableProps, ColumnProps } from 'rsuite-table'
+import { Table, Column, HeaderCell, Cell, type TableProps, type ColumnProps } from 'rsuite-table'
 import 'rsuite-table/dist/css/rsuite-table.css'
 import './style.css'
 
@@ -52,7 +52,7 @@ export function TableResizableColumn<T>(props: TableResizableColumnProp<T>) {
             onResize={(columnWidth, dataKey) => {
               setColsWidth({ ...colsWidth, [dataKey || '']: columnWidth })
             }}
-            width={colsWidth.hasOwnProperty(item.dataKey) ? colsWidth[item.dataKey] : item.width}
+            width={Object.prototype.hasOwnProperty.call(colsWidth, item.dataKey) ? colsWidth[item.dataKey] : item.width}
           >
             <HeaderCell>{item.headRender()}</HeaderCell>
             <CellRender dataKey={item.dataKey} render={item.cellRender} />

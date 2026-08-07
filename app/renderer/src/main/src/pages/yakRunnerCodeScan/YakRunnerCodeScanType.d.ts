@@ -1,15 +1,22 @@
-import { Paging } from '@/utils/yakQueryHTTPFlow'
-import { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
-import { ExecResult, YakScript, GroupCount } from '@/pages/invoker/schema'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { CodeScanPageInfoProps } from '@/store/pageInfo'
+import { type Paging } from '@/utils/yakQueryHTTPFlow'
+import { type DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
+import { type ExecResult, type YakScript } from '@/pages/invoker/schema'
+import { type StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type CodeScanPageInfoProps } from '@/store/pageInfo'
 import {
-  SyntaxFlowGroup,
-  SyntaxFlowRule,
-  SyntaxFlowRuleFilter,
-  SyntaxFlowRuleInput,
+  type SyntaxFlowGroup,
+  type SyntaxFlowRule,
+  type SyntaxFlowRuleFilter,
+  type SyntaxFlowRuleInput,
 } from '../ruleManagement/RuleManagementType'
-import { CodeScanExtraParam } from './CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer'
+import { type CodeScanExtraParam } from './CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer'
+import type { QuerySyntaxFlowRuleResponse } from '../ruleManagement/RuleManagementType'
+import type { YakExtraParamProps } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type {
+  SSAProjectCompileConfig,
+  SSAProjectScanConfig,
+  SSAProjectScanRuleConfig,
+} from '@/pages/yakRunnerAuditCode/AuditCode/AuditCodeType'
 
 export interface YakRunnerCodeScanProps {
   pageId: string

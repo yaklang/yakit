@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { API } from '@/services/swagger/resposeType'
+import type React from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { API } from '@/services/swagger/resposeType'
 import styles from '../NewPayload.module.scss'
-import { UserInfoProps, useStore } from '@/store'
+import { type UserInfoProps, useStore } from '@/store'
 import { isEnpriTrace } from '@/utils/envfile'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -24,7 +25,7 @@ import {
 } from '@/assets/icon/solid'
 import classNames from 'classnames'
 import {
-  DataItem,
+  type DataItem,
   DeleteConfirm,
   findFoldersById,
   isIncludeSpecial,
@@ -32,7 +33,7 @@ import {
   UploadOrDownloadByPayloadGrpc,
 } from '../newPayload'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { failed, success, warn } from '@/utils/notification'
@@ -129,7 +130,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
     // 如果删除的包含选中项 则重新选择
     const sourceFolders = findFoldersById(data, id)
     if (sourceFolders && sourceFolders?.node && showType === 'online') {
-      let results = sourceFolders.node.find((item) => item.id === selectItem)
+      const results = sourceFolders.node.find((item) => item.id === selectItem)
       if (results) setContentType(undefined)
     }
   })
@@ -382,7 +383,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
     const selectData = findFoldersById(copyData, id)
     if (selectData) {
       if (selectData.type === 'Folder') {
-        let node =
+        const node =
           selectData.node?.map((item) => {
             if (item.id === id) {
               return { ...item, name: newName }
@@ -409,7 +410,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
   })
   // 获取所有文件名
   const getAllFileName = useMemoizedFn(() => {
-    let name: string[] = []
+    const name: string[] = []
     data.forEach((item) => {
       if (item.type !== 'Folder') {
         name.push(item.name)
@@ -454,7 +455,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
     const selectData = findFoldersById(copyData, id)
     if (selectData) {
       if (selectData.type === 'Folder') {
-        let node = selectData.node?.filter((item) => item.id !== id)
+        const node = selectData.node?.filter((item) => item.id !== id)
         const newData = copyData.map((item) => {
           if (item.id === selectData.id && node) {
             return { ...item, node }
@@ -465,7 +466,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
           return item
         })
         setData(newData)
-        let results = selectData.node?.find((item) => item.id === selectItem)
+        const results = selectData.node?.find((item) => item.id === selectItem)
         if (results && showType === 'online') setContentType(undefined)
       } else {
         const newData = copyData.filter((item) => item.id !== id)
@@ -775,7 +776,7 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
 const onlineNodesToDataFun = (nodes: API.PayloadGroupNode[]) => {
   return nodes.map((item) => {
     const { type, name, nodes } = item
-    let obj = {
+    const obj = {
       ...item,
       id: `${type}-${name}-online`,
     } as DataItem
@@ -829,7 +830,7 @@ export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props)
     setLoading(true)
     apiGetOnlinePayloadGroup()
       .then((res) => {
-        let newData: DataItem[] = onlineNodesToDataFun(res.nodes || []) as DataItem[]
+        const newData: DataItem[] = onlineNodesToDataFun(res.nodes || []) as DataItem[]
         setData(newData)
       })
       .catch((e: any) => {
@@ -859,9 +860,9 @@ export const NewPayloadOnlineList: React.FC<NewPayloadOnlineListProps> = (props)
       if (selectData) {
         if (selectData.type === 'Folder') {
           setFolder(selectData.name)
-          let item = selectData.node?.filter((item) => item.id === selectItem) || []
-          let group: string = item.length > 0 ? item[0].name : ''
-          let type: string = item.length > 0 ? item[0].type : ''
+          const item = selectData.node?.filter((item) => item.id === selectItem) || []
+          const group: string = item.length > 0 ? item[0].name : ''
+          const type: string = item.length > 0 ? item[0].type : ''
           setGroup(group)
           setContentType(type === 'DataBase' ? 'table' : 'editor')
           setShowType('online')

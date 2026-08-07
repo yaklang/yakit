@@ -1,17 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useInterval, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { OutlineLinkoutIcon, OutlineQrcodeIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
-import { RobotLinkInfo } from './RobotBoundPanel'
-import { RobotChannelType } from './RobotControl'
+import type { RobotLinkInfo } from './RobotBoundPanel'
+import type { RobotChannelType } from './RobotControl'
 import { RobotQrCodePlaceholder } from './RobotQrCodePlaceholder'
 import {
   cancelIMOnboarding,
-  IMBotConfigLike,
-  IMPlatform,
+  type IMBotConfigLike,
+  type IMPlatform,
   onIMOnboardingData,
   onIMOnboardingEnd,
   onIMOnboardingError,

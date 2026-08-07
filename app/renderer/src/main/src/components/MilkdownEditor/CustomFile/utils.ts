@@ -1,4 +1,4 @@
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
 

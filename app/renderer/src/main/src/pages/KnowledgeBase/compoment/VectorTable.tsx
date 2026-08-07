@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef, type FC } from 'react'
+import { type Dispatch, type SetStateAction, useEffect, useRef, type FC } from 'react'
 
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
@@ -6,12 +6,12 @@ import { useCreation, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahook
 import ReactResizeDetector from 'react-resize-detector'
 import styles from '../knowledgeBase.module.scss'
 
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { apiListVectorStoreEntries, documentType } from '../utils'
 
-import { ListVectorStoreEntriesRequest, VectorStoreEntry } from '../TKnowledgeBase'
+import type { ListVectorStoreEntriesRequest, VectorStoreEntry } from '../TKnowledgeBase'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
+import type { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { VectorDetailDrawer } from './VectorDetailDrawer'
@@ -81,7 +81,6 @@ const VectorTable: FC<
         CollectionName: knowledgeBaseItems?.KnowledgeBaseName,
       },
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query])
 
   useUpdateEffect(() => {

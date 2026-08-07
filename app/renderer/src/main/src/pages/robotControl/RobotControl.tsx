@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { InputRef } from 'antd'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { InputRef } from 'antd'
 import { useMemoizedFn, useVirtualList } from 'ahooks'
 import classNames from 'classnames'
 import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
@@ -11,7 +12,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { RobotDetailPanel } from './RobotDetailPanel'
-import { RobotLinkInfo } from './RobotBoundPanel'
+import type { RobotLinkInfo } from './RobotBoundPanel'
 import {
   DEFAULT_IM_CONTROL_CONFIG,
   deleteIMBot,

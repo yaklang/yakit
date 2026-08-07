@@ -1,5 +1,5 @@
 import Icon from '@ant-design/icons'
-import { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
+import type { CustomIconComponentProps } from '@ant-design/icons/lib/components/Icon'
 
 const PublicMitm = () => (
   <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">

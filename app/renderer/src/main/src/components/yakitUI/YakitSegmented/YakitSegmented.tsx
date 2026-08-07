@@ -1,6 +1,6 @@
 import { Segmented } from 'antd'
 import React from 'react'
-import { YakitSegmentedProps } from './YakitSegmentedType'
+import type { YakitSegmentedProps } from './YakitSegmentedType'
 import styles from './YakitSegmented.module.scss'
 import classNames from 'classnames'
 
