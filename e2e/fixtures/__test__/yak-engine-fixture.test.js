@@ -2,7 +2,7 @@
 
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { chmod, mkdtemp, mkdir, readdir, rm, stat, utimes, writeFile } from 'node:fs/promises'
+import { chmod, mkdtemp, mkdir, readdir, realpath, rm, stat, utimes, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { promisify } from 'node:util'
@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   buildYakEngine,
   getYakBuildIdentity,
+  parseLegacyYakGRPCReadyLine,
   parseYakGRPCReadyLine,
   parseYakGRPCPProfReadyLine,
   pruneYakEngineBuildCache,
@@ -18,6 +19,7 @@ import {
   resolveYakCPUProfileDurationSeconds,
   resolveYakHeapProfileEnabled,
   resolveYakPProfDiagnostics,
+  resolveGoExecutable,
   resolveYaklangMainDirectory,
   YAK_GRPC_PPROF_READY_PREFIX,
   YAK_GRPC_READY_PREFIX,
@@ -57,6 +59,17 @@ describe('parseYakGRPCReadyLine', () => {
         `${YAK_GRPC_READY_PREFIX}${JSON.stringify({ schemaVersion: 1, address: '0.0.0.0:54321' })}`,
       ),
     ).toThrow(/must listen on 127.0.0.1/)
+  })
+
+  it('supports legacy yak grpc ok output when the runner reserved a concrete port', () => {
+    expect(parseLegacyYakGRPCReadyLine('yak grpc ok', '127.0.0.1:54321')).toEqual({
+      schemaVersion: 1,
+      address: '127.0.0.1:54321',
+      host: '127.0.0.1',
+      port: 54321,
+    })
+    expect(parseLegacyYakGRPCReadyLine('[INFO] yak grpc ok', '127.0.0.1:54321')).toBeUndefined()
+    expect(() => parseLegacyYakGRPCReadyLine('yak grpc ok', '127.0.0.1:0')).toThrow(/reserved loopback address/)
   })
 })
 
@@ -218,7 +231,23 @@ describe('resolveYaklangMainDirectory', () => {
       writeFile(path.join(root, 'common/yak/cmd/yak.go'), 'package main\n'),
     ])
 
-    await expect(resolveYaklangMainDirectory({ repoRoot: process.cwd(), configuredPath: root })).resolves.toBe(root)
+    await expect(resolveYaklangMainDirectory({ repoRoot: process.cwd(), configuredPath: root })).resolves.toBe(
+      await realpath(root),
+    )
+  })
+})
+
+describe('resolveGoExecutable', () => {
+  it('uses the Go binary below an explicit GOROOT instead of a PATH entry from Yarn', () => {
+    const goName = process.platform === 'win32' ? 'go.exe' : 'go'
+    expect(resolveGoExecutable({ GOROOT: path.resolve('/tmp', 'go-toolchain') })).toBe(
+      path.resolve('/tmp', 'go-toolchain', 'bin', goName),
+    )
+    expect(resolveGoExecutable({})).toBe('go')
+  })
+
+  it('rejects a relative GOROOT', () => {
+    expect(() => resolveGoExecutable({ GOROOT: 'relative/go' })).toThrow(/GOROOT must be an absolute path/)
   })
 })
 
