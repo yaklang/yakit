@@ -267,10 +267,30 @@ const welcomeTips = [
   { text: '规划从入口到域控的完整攻击链路' },
 ]
 
+const pickRandomWelcomeTips = (list: typeof welcomeTips) => {
+  const copied = [...list]
+  for (let i = copied.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copied[i], copied[j]] = [copied[j], copied[i]]
+  }
+  const count = 5 + Math.floor(Math.random() * 2)
+  return copied.slice(0, Math.min(count, copied.length))
+}
+
 const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInputValue }) => {
+  const introTipsRef = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(introTipsRef)
+  const [randomWelcomeTips, setRandomWelcomeTips] = useState(() => pickRandomWelcomeTips(welcomeTips))
+
+  useEffect(() => {
+    if (inViewport) {
+      setRandomWelcomeTips(pickRandomWelcomeTips(welcomeTips))
+    }
+  }, [inViewport])
+
   return (
-    <div className={styles['intro-tips']}>
-      {welcomeTips.map((item, index) => {
+    <div className={styles['intro-tips']} ref={introTipsRef}>
+      {randomWelcomeTips.map((item) => {
         return (
           <div
             key={item.text}
@@ -296,9 +316,9 @@ const getIconByName = (name: string) => {
     case 'security-engineering': //'安全领域'
       return <OutlineShieldexclamationIcon className={styles['shield-icon']} />
     case 'pentest-task-design': //"渗透测试"
-      return <OutlineWrenchIcon className={styles['wrench-icon']} />
+      return <OutlileHistoryIcon className={styles['history-icon']} />
     default:
-      return <OutlileHistoryIcon className={styles['default-icon']} />
+      return <OutlineWrenchIcon className={styles['default-icon']} />
   }
 }
 const AIChatWelcomeSettingCard = memo(

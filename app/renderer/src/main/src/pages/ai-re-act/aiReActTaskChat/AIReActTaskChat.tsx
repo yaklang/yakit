@@ -333,7 +333,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           </Form.Item>
           <Form.Item label={t('AIReActTaskChatContent.globalDirective')} name="AIPresetPrompt">
             <YakitInput.TextArea
-              rows={4}
+              rows={2}
               isShowResize={false}
               placeholder={t('AIReActTaskChatContent.globalDirectiveDefault')}
               maxLength={500}
@@ -341,7 +341,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           </Form.Item>
           <Form.Item label={t('AIReActTaskChatContent.planPrompt')} name="AIPlanPrompt">
             <YakitInput.TextArea
-              rows={4}
+              rows={2}
               isShowResize={false}
               placeholder={t('AIReActTaskChatContent.planPromptPlaceholder')}
               maxLength={2000}
