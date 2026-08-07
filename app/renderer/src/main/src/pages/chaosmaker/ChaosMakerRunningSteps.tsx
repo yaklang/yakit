@@ -78,7 +78,10 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
                   <YakitPopconfirm
                     title={'确定要停止当前进程？'}
                     onConfirm={() => {
+                      // cancel 后主进程不再转发 end，需本地收尾
                       ipcRenderer.invoke('cancel-ExecuteChaosMakerRule', token)
+                      setExecuting(false)
+                      setStep(2)
                     }}
                   >
                     <YakitButton type="primary" colors="danger" onClick={() => {}}>

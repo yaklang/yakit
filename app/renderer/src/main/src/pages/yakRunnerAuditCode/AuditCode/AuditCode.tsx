@@ -982,8 +982,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
   })
 
   const onCancelAuditStream = () => {
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setAuditExecuting && setAuditExecuting(false)
+    setInterval(undefined)
   }
 
   // 停止
@@ -1865,8 +1869,12 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
   const onCancelAudit = () => {
     logInfoRef.current = []
     setShowRunAuditModal(false)
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setIsExecuting(false)
+    setVerifyForm(false)
     onCancel()
   }
 
@@ -2184,8 +2192,11 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
 
   const onCancelAudit = () => {
     logInfoRef.current = []
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setIsExecuting(false)
     setNameOrConfig(undefined)
   }
 

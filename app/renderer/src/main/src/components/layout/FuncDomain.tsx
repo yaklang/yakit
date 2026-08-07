@@ -3188,8 +3188,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
       })
   }
   const cancelPerformanceSampling = () => {
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setSampling(false)
   }
   useEffect(() => {
     emiter.on('performanceSampling', handlePerformanceSampling)

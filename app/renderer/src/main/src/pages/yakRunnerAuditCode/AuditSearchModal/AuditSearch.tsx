@@ -297,8 +297,11 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
 
   const onStopExecute = useMemoizedFn(() => {
     keyDownRef.current?.focus()
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setExecuting(false)
   })
 
   const inputRef = useRef<any>(null)
