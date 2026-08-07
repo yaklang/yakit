@@ -11,6 +11,7 @@ import { AIChatMentionProps } from '../components/aiChatMention/type'
 import { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
 import { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 import { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
+import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
@@ -29,6 +30,8 @@ export interface AIChatTextareaSubmit {
   focusMode?: string
   /** 新建会话得 默认sessionId */
   sessionId?: string
+  /** 新建会话时显式预加载的能力，推荐 Skill 使用 Type=skill。 */
+  enabledCapabilities?: AIEnabledCapability[]
 }
 export interface AIChatTextareaRefProps {
   setMention: (v: AIMentionCommandParams) => void

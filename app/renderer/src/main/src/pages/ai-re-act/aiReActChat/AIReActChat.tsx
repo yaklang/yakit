@@ -128,17 +128,19 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
-      const { qs, sessionId } = value
+      const { qs, sessionId, enabledCapabilities } = value
       const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
 
       const source = getSetting().Source ?? AISourceEnum.aiAgent // getSetting保证最新
+      const formattedSetting = formatAIAgentSetting(setting)
       const request: AIStartParams = {
-        ...formatAIAgentSetting(setting),
+        ...formattedSetting,
         UserQuery: qs,
         CoordinatorId: '',
         Sequence: 1,
         PreferSessionCachedConfig: true,
         Source: source,
+        EnabledCapabilities: enabledCapabilities,
       }
 
       const session = getSession(sessionId)
@@ -185,7 +187,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           mentionType: 'focusMode',
           mentionName: params.FocusModeLoop || '',
         })
-
         onStart({
           token: session,
           params,

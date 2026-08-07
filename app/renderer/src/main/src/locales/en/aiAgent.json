@@ -485,7 +485,7 @@
     "switchToSource": "Switch to source mode"
   },
   "AIMilkdownInput": {
-    "placeholder": "Tell me what you want to do... (shift + enter for a new line)",
+    "placeholder": "Ask me anything, @ to use skills, tools, files and knowledge base",
     "selectedHttpFlowSummary": "Selected {{count}} HTTP flows"
   },
   "AITaskQuery": {

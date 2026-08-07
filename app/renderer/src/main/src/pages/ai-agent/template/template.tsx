@@ -21,14 +21,7 @@ import {
 } from './type'
 import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  OutlineArrowupIcon,
-  OutlineAtsymbolIcon,
-  OutlineBrainCircuitIcon,
-  OutlineCodeIcon,
-  OutlineCogIcon,
-  OutlineHandIcon,
-} from '@/assets/icon/outline'
+import { OutlineArrowupIcon, OutlineCogIcon, OutlineHandIcon } from '@/assets/icon/outline'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
@@ -53,16 +46,7 @@ import { AIFocusMode } from '@/pages/ai-re-act/aiFocusMode/AIFocusMode'
 import { isString } from 'lodash'
 import OpenFileDropdown, { OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
-import { insertAtCurrentPosition } from '../components/aiMilkdownInput/customPlugin'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import {
-  AIGlobalCommandPopover,
-  AIInputSettingPopover,
-  AIManualAdditionPopover,
-  AIPlanPromptPopover,
-} from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
+import { AIInputSettingPopover, AIManualAdditionPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
@@ -367,14 +351,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         mentionName: data.path,
       })
     })
-    const onMention = useMemoizedFn(() => {
-      editorMilkdown.current?.action(callCommand<string>(insertAtCurrentPosition.key, '@'))
-    })
-
-    const [aiGlobalConfigData, event] = useAIGlobalConfig()
-
-    const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
-    const updateLoading = useCreation(() => aiGlobalConfigData.updateLoading, [aiGlobalConfigData.updateLoading])
 
     const onSelectImage = useMemoizedFn(() => {
       aiMilkdownInputRef.current?.setImage()
@@ -393,28 +369,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         ref={dropRef}
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
-        <div className={styles['preset-prompt-tags']}>
-          <AIGlobalCommandPopover childrenClass={styles['code-btn-wrapper']}>
-            <YakitSpin spinning={updateLoading} size="small">
-              <YakitTag color="purple" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
-                <OutlineCodeIcon className={styles['code-icon']} />
-                <span className="content-ellipsis">
-                  {aiGlobalConfig.AIPresetPrompt || t('AIReActTaskChatContent.globalDirectiveDefault')}
-                </span>
-              </YakitTag>
-            </YakitSpin>
-          </AIGlobalCommandPopover>
-          <AIPlanPromptPopover childrenClass={styles['code-btn-wrapper']}>
-            <YakitSpin spinning={updateLoading} size="small">
-              <YakitTag color="blue" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
-                <OutlineBrainCircuitIcon className={styles['code-icon']} />
-                <span className="content-ellipsis">
-                  {aiGlobalConfig.AIPlanPrompt || t('AIReActTaskChatContent.planPromptDefault')}
-                </span>
-              </YakitTag>
-            </YakitSpin>
-          </AIPlanPromptPopover>
-        </div>
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
           <AIMilkdownInput
             ref={aiMilkdownInputRef}
@@ -430,13 +384,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
                 <AIRunModeSelect />
-                <YakitButton
-                  type="text2"
-                  radius="50%"
-                  icon={<OutlineAtsymbolIcon />}
-                  onClick={onMention}
-                  className={styles['btn-base']}
-                />
+
                 <OpenFileDropdown cb={onSetFileMention} onSelectImage={onSelectImage}>
                   <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />
                 </OpenFileDropdown>

@@ -11,7 +11,7 @@ textarea.qs-input-textarea {
 }
 // #endregion
 
-// #region QSInputTextarea
+// #region AIChatTextarea
 .ai-chat-textarea {
   width: 100%;
   min-height: 124px;
@@ -21,7 +21,6 @@ textarea.qs-input-textarea {
 
   border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   background: var(--Colors-Use-Neutral-Bg);
-  padding: 2px;
   border-radius: 8px;
   position: relative;
   .btn-base {
@@ -31,10 +30,10 @@ textarea.qs-input-textarea {
     display: flex;
     align-items: center;
     gap: 4px;
-    height: 24px;
+    height: 38px;
     overflow: hidden;
     justify-content: space-between;
-
+    padding: 6px 12px 8px 12px;
     %self-adaptive {
       display: flex;
       overflow: hidden;
@@ -95,10 +94,10 @@ textarea.qs-input-textarea {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
   background: var(--Colors-Use-Basic-Background);
   padding: 8px;
-  border-radius: 6px;
+  border-radius: 8px 8px 0 0;
   min-height: 94px;
   .textarea-textarea {
     max-height: 100px !important;
@@ -111,6 +110,7 @@ textarea.qs-input-textarea {
     align-items: center;
     overflow: hidden;
     height: 28px;
+
     .footer-left {
       display: flex;
       align-items: center;
@@ -133,28 +133,5 @@ textarea.qs-input-textarea {
       }
     }
   }
-}
-.code-btn-wrapper {
-  cursor: pointer;
-  height: 16px;
-  width: fit-content;
-  .code-icon {
-    width: 12px;
-    height: 12px;
-    svg {
-      width: 12px;
-      height: 12px;
-    }
-  }
-  .preset-prompt-tag {
-    overflow: hidden;
-    max-width: 200px;
-  }
-}
-.preset-prompt-tags {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
 }
 // #endregion

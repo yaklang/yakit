@@ -95,8 +95,7 @@
     }
   }
 }
-// #region AIGlobalCommand/AIManualAddition
-.ai-global-command,
+// #region AIManualAddition
 .ai-manual-addition {
   display: flex;
   flex-direction: column;
@@ -130,6 +129,15 @@
 // #endregion
 
 // #region AIInputSettingPopover
+.ai-input-setting-form {
+  width: 320px;
+  .ant-form-item {
+    margin-bottom: 8px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
 .form-info-icon-tooltip {
   padding-bottom: 2px;
 }
