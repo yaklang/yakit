@@ -2,7 +2,7 @@
  * 该文件须在业务组件样式之前加载（antd 放最前，避免覆盖组件样式）
  */
 
-@import 'antd/dist/antd.css';
+/* @import 'antd/dist/antd.css'; */
 
 html,
 body {
