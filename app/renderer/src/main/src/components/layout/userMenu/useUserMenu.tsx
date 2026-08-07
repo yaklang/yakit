@@ -472,7 +472,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
             apiFetchApiKeys(res.ApiKey)
           })
           .catch((err) => {
-            yakitFailed(t('FuncDomain.getApiKeyTokenFailed', { error: err }))
+            // yakitFailed(t('FuncDomain.getApiKeyTokenFailed', { error: err }))
           })
       }
       if (!userInfo.isLogin) {
