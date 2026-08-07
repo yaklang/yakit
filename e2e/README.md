@@ -8,6 +8,7 @@ This directory contains the repeatable Electron automation entrypoints. The runn
 | --- | --- | --- | --- |
 | Shell Smoke | `yarn test:e2e:electron:smoke` | Simulated engine-ready handoff | Fast Electron/Renderer/preload/IPC/window lifecycle regression |
 | Real Engine | `yarn test:e2e:electron:real-engine` | Compiled `yaklang-main` worktree, real gRPC and Echo | Startup UI, Link WatchDog, Main handoff and cross-window engine connectivity |
+| Web Fuzzer MCP | `yarn test:e2e:web-fuzzer-mcp` | Compiled `yaklang-main`, real gRPC, MCP Streamable HTTP and Duplex push | AI-style Web Fuzzer tab/group create, query, update, move and delete reflected in the live UI |
 | MITM V2 Performance | `YAKIT_E2E_MITM_PROFILE=standard yarn test:e2e:electron:mitm-performance` | Real engine plus loopback HTTP target/producer | Correctness, end-to-end latency, CPU/RSS and before/after comparison |
 
 Build both static Renderer artifacts once before running a suite:
@@ -46,6 +47,24 @@ On a local checkout matching the standard `code/ts` + `code/go` layout, the runn
 YAKLANG_MAIN_DIR=/absolute/path/to/yaklang-main \
   yarn test:e2e:electron:real-engine
 ```
+
+The Web Fuzzer MCP suite uses the same source discovery and isolated databases.
+Its agent-like tool calls live in
+`e2e/fixtures/mcp/web-fuzzer-agent-calls.json`; the runner starts MCP through
+Yakit, initializes a real Streamable HTTP session, sends every fixture call,
+and checks the resulting group/tab DOM after each mutation. The fixture currently
+contains 22 calls covering generated IDs, full request settings, group
+add/remove/replace, both group-delete modes, invalid-call atomicity, focus
+semantics, and an MCP server restart:
+
+```bash
+YAKLANG_MAIN_DIR=/absolute/path/to/yaklang-main yarn test:e2e:web-fuzzer-mcp
+```
+
+The command builds both Renderer bundles, runs the E2E preflight checks, starts
+the isolated Yak/Electron/MCP processes, verifies the UI, then shuts everything
+down. Use `test:e2e:electron:web-fuzzer-mcp` only for a shorter rerun after the
+Renderer artifacts have already been built and their metadata is still current.
 
 ## Standard Local Workflow
 

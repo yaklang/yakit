@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { constants, createWriteStream } from 'node:fs'
 import { access, chmod, mkdir, readFile, readdir, realpath, rename, rm, stat } from 'node:fs/promises'
+import net from 'node:net'
 import path from 'node:path'
 import process from 'node:process'
 import readline from 'node:readline'
@@ -232,6 +233,33 @@ export const parseYakGRPCReadyLine = (line) => {
   }
 }
 
+export const parseLegacyYakGRPCReadyLine = (line, address) => {
+  if (String(line).trim() !== 'yak grpc ok') return undefined
+  const addressMatch = /^127\.0\.0\.1:(\d+)$/.exec(address || '')
+  const port = Number(addressMatch?.[1])
+  if (!addressMatch || !Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error(`Legacy Yak gRPC ready fallback requires a reserved loopback address: ${address}`)
+  }
+  return {
+    schemaVersion: 1,
+    address,
+    host: '127.0.0.1',
+    port,
+  }
+}
+
+export const reserveYakLoopbackPort = async () => {
+  const reservation = net.createServer()
+  await new Promise((resolve, reject) => {
+    reservation.once('error', reject)
+    reservation.listen(0, '127.0.0.1', resolve)
+  })
+  const address = reservation.address()
+  await new Promise((resolve, reject) => reservation.close((error) => (error ? reject(error) : resolve())))
+  if (!address || typeof address === 'string') throw new Error('Cannot resolve reserved Yak gRPC loopback port')
+  return address.port
+}
+
 export const parseYakGRPCPProfReadyLine = (line) => {
   const markerAt = String(line).indexOf(YAK_GRPC_PPROF_READY_PREFIX)
   if (markerAt < 0) return undefined
@@ -310,15 +338,25 @@ export const resolveYaklangMainDirectory = async ({ repoRoot, configuredPath }) 
   throw new Error(`Cannot locate yaklang-main (${checked}). Set YAKLANG_MAIN_DIR to its absolute worktree path.`)
 }
 
-export const getYakBuildIdentity = async (sourceDir, signal, { diagnosticSymbols = false } = {}) => {
+export const resolveGoExecutable = (env = process.env) => {
+  const configuredRoot = env.GOROOT
+  if (!configuredRoot) return 'go'
+  if (!path.isAbsolute(configuredRoot)) {
+    throw new Error(`GOROOT must be an absolute path when set: ${configuredRoot}`)
+  }
+  return path.join(configuredRoot, 'bin', process.platform === 'win32' ? 'go.exe' : 'go')
+}
+
+export const getYakBuildIdentity = async (sourceDir, signal, { diagnosticSymbols = false, env = process.env } = {}) => {
+  const goExecutable = resolveGoExecutable(env)
   const [head, status, diff, untrackedFiles, goVersion, goOS, goArch] = await Promise.all([
     runBufferedCommand('git', ['rev-parse', 'HEAD'], { cwd: sourceDir, signal }),
     runBufferedCommand('git', ['status', '--porcelain', '--untracked-files=normal'], { cwd: sourceDir, signal }),
     runBufferedCommand('git', ['diff', '--binary', 'HEAD'], { cwd: sourceDir, signal }),
     runBufferedCommand('git', ['ls-files', '--others', '--exclude-standard', '-z'], { cwd: sourceDir, signal }),
-    runBufferedCommand('go', ['version'], { cwd: sourceDir, signal }),
-    runBufferedCommand('go', ['env', 'GOOS'], { cwd: sourceDir, signal }),
-    runBufferedCommand('go', ['env', 'GOARCH'], { cwd: sourceDir, signal }),
+    runBufferedCommand(goExecutable, ['version'], { cwd: sourceDir, env, signal }),
+    runBufferedCommand(goExecutable, ['env', 'GOOS'], { cwd: sourceDir, env, signal }),
+    runBufferedCommand(goExecutable, ['env', 'GOARCH'], { cwd: sourceDir, env, signal }),
   ])
   const dirty = status.stdout.length > 0
   const stateHash = createHash('sha256').update(head.stdout).update('\0').update(diff.stdout)
@@ -358,7 +396,8 @@ export const buildYakEngine = async ({
   if (requestedFingerprint && diagnosticSymbols) {
     throw new Error('YAKIT_E2E_YAK_BUILD_FINGERPRINT cannot be combined with Yak CPU or heap profiling')
   }
-  const identity = await getYakBuildIdentity(sourceDir, signal, { diagnosticSymbols })
+  const goExecutable = resolveGoExecutable(env)
+  const identity = await getYakBuildIdentity(sourceDir, signal, { diagnosticSymbols, env })
   const selectedFingerprint = requestedFingerprint || identity.fingerprint
   const executableName = process.platform === 'win32' ? 'yak.exe' : 'yak'
   const outputDir = path.join(cacheDir, selectedFingerprint)
@@ -398,7 +437,7 @@ export const buildYakEngine = async ({
     if (!diagnosticSymbols) buildArgs.push('-ldflags', '-s -w')
     buildArgs.push('-o', buildTarget, './common/yak/cmd/yak.go')
     try {
-      await runLoggedCommand('go', buildArgs, {
+      await runLoggedCommand(goExecutable, buildArgs, {
         cwd: sourceDir,
         env: buildEnv,
         logPath: path.join(artifactsDir, 'yak-build.log'),
@@ -498,12 +537,14 @@ export const startYakEngine = async ({ repoRoot, build, yakitHomeDir, artifactsD
   const profileDatabase = path.join(yakitHomeDir, 'e2e-profile.db')
   await mkdir(yakitHomeDir, { recursive: true })
 
+  const grpcPort = await reserveYakLoopbackPort()
+  const grpcAddress = `127.0.0.1:${grpcPort}`
   const args = [
     'grpc',
     '--host',
     '127.0.0.1',
     '--port',
-    '0',
+    String(grpcPort),
     '--home',
     yakitHomeDir,
     '--project-db',
@@ -560,7 +601,7 @@ export const startYakEngine = async ({ repoRoot, build, yakitHomeDir, artifactsD
   const lines = readline.createInterface({ input: child.stdout })
   lines.on('line', (line) => {
     try {
-      const ready = parseYakGRPCReadyLine(line)
+      const ready = parseYakGRPCReadyLine(line) || parseLegacyYakGRPCReadyLine(line, grpcAddress)
       if (ready) resolveGRPCReady(ready)
       if (diagnostics.enabled) {
         const pprofReady = parseYakGRPCPProfReadyLine(line)

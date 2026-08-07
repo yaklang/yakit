@@ -181,6 +181,15 @@ import { type SoftMode, useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { RemoteSoftModeGV } from '@/enums/softMode'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { scheduleIdleTask } from '@/utils/scheduleIdleTask'
+import {
+  applyWebFuzzerTabMutation,
+  countWebFuzzerTabs,
+  filterMissingWebFuzzerNodes,
+  getCustomWebFuzzerGroupColorStyle,
+  getWebFuzzerGroupContrastColor,
+  isCustomWebFuzzerGroupColor,
+  type WebFuzzerPushNode,
+} from './webFuzzerTabPush'
 
 const BatchAddNewGroup = React.lazy(() => import('./BatchAddNewGroup'))
 const BatchEditGroup = React.lazy(() => import('./BatchEditGroup/BatchEditGroup'))
@@ -2829,7 +2838,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   })
 
   // 获取数据库中缓存的web-fuzzer页面信息
-  const fetchFuzzerList = useMemoizedFn(async (cache, add, openFlag = true) => {
+  const fetchFuzzerList = useMemoizedFn(async (cache, add, openFlag = true, preserveIds = false) => {
     try {
       const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
         proxy: [],
@@ -2863,7 +2872,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         routeKey: YakitRoute.HTTPFuzzer,
       }
       let multipleNodeListLength: number = 0
-      const newCache = add ? rebuildMultipleNodeTree(key, cloneDeep(cache)) : cache
+      const newCache = add && !preserveIds ? rebuildMultipleNodeTree(key, cloneDeep(cache)) : cache
       const multipleNodeList: MultipleNodeInfo[] = newCache.filter((ele) => ele.groupId === '0')
       const pLength = multipleNodeList.length
       for (let index = 0; index < pLength; index++) {
@@ -2960,6 +2969,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         singleNode: undefined,
         multipleNode: multipleNodeList,
         multipleLength: multipleNodeListLength,
+        openFlag,
+        selectSubItem: false,
       }
       const oldPageCache = cloneDeep(pageCache)
       const index = oldPageCache.findIndex((ele) => ele.menuName === menuName)
@@ -2969,6 +2980,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (add) {
           oldPageCache[index].multipleNode.push(...multipleNodeList)
           oldPageCache[index].multipleLength = (oldPageCache[index]?.multipleLength || 0) + multipleNodeListLength
+          oldPageCache[index].openFlag = openFlag
+          oldPageCache[index].selectSubItem = false
           if (getSubPageTotal(oldPageCache[index].multipleNode) >= secondaryTabsNum) {
             yakitNotify('info', t('MainOperatorContent.maxTabsReached'))
           }
@@ -3363,21 +3376,85 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         page: 'MainOperatorContent',
         fun: 'onServerPushOpenWebFuzzerTab',
       })
-      const { openFlag = true, data = [] } = payload
-      if (!data.length) return
+      const action = payload.action || 'create'
 
-      const isExistWF = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
+      if (action === 'create') {
+        const { openFlag = true, data = [] } = payload
+        if (!data.length) return
+
+        const isExistWF = getPageCache().findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
+        if (!isExistWF) {
+          await onInitFuzzer(false)
+        }
+
+        const pageList =
+          data.map((ele) =>
+            JSONParseLog(ele.Config, { page: 'MainOperatorContent', fun: 'onServerPushOpenWebFuzzerTab' }),
+          ) || []
+
+        const currentWebFuzzer = getPageCache().find((ele) => ele.route === YakitRoute.HTTPFuzzer)
+        const missingPageList = filterMissingWebFuzzerNodes(
+          currentWebFuzzer?.multipleNode || [],
+          pageList as WebFuzzerPushNode[],
+        )
+        if (missingPageList.length > 0) {
+          await fetchFuzzerList(missingPageList, true, openFlag, true)
+        } else if (!isSecurityExpert && openFlag) {
+          setCurrentTabKey(routeConvertKey(YakitRoute.HTTPFuzzer, ''))
+        }
+        return
+      }
+
+      if (action !== 'update' && action !== 'delete') return
+
+      const openFlag = payload.openFlag ?? false
+      const changedData = payload.changedData || []
+      const deletedPageIds = payload.pageIds || []
+      if (changedData.length === 0 && deletedPageIds.length === 0) return
+
+      const isExistWF = getPageCache().findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
       if (!isExistWF) {
         await onInitFuzzer(false)
       }
 
-      const pageList =
-        data.map((ele) =>
+      const latestPageCache = cloneDeep(getPageCache())
+      const webFuzzerIndex = latestPageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
+      if (webFuzzerIndex === -1) return
+
+      const changedNodes =
+        changedData.map((ele) =>
           JSONParseLog(ele.Config, { page: 'MainOperatorContent', fun: 'onServerPushOpenWebFuzzerTab' }),
         ) || []
+      const currentWebFuzzerPage = latestPageCache[webFuzzerIndex]
+      const currentPageInfo = usePageInfo.getState().pages.get(YakitRoute.HTTPFuzzer)
+      const changedTabIds = changedNodes.filter((node) => !node.id.endsWith('group')).map((node) => node.id)
+      const preferredPageId = openFlag && changedTabIds.length === 1 ? changedTabIds[0] : ''
+      const result = applyWebFuzzerTabMutation(
+        currentWebFuzzerPage.multipleNode || [],
+        currentPageInfo,
+        changedNodes as WebFuzzerPushNode[],
+        deletedPageIds,
+        preferredPageId,
+      )
 
-      if (pageList.length > 0) {
-        await fetchFuzzerList(pageList, true, openFlag)
+      latestPageCache[webFuzzerIndex] = {
+        ...currentWebFuzzerPage,
+        multipleNode: result.multipleNode,
+        multipleLength: countWebFuzzerTabs(result.multipleNode),
+        openFlag,
+        selectSubItem: false,
+      }
+      setPagesData(YakitRoute.HTTPFuzzer, result.page)
+      setPageCache(latestPageCache)
+      emiter.emit('secondMenuTabDataChange', '')
+
+      if (!isSecurityExpert && openFlag) {
+        setCurrentTabKey(routeConvertKey(YakitRoute.HTTPFuzzer, ''))
+      }
+      if (result.selectedPageId) {
+        scheduleIdleTask(() => {
+          emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: result.selectedPageId, forceRefresh: true }))
+        })
       }
     } catch (error) {
       yakitNotify('error', t('MainOperatorContent.openWFFailed', { error: `${error}` }))
@@ -5005,10 +5082,16 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             labelText = `“${groupChildren[0].verbose}”和另外 ${gLength - 1} 个标签页`
           }
         }
+        const isCustomGroupColor = isCustomWebFuzzerGroupColor(groupItem.color)
         const node = {
           label: (
             <div className={styles['right-menu-item']} key={groupItem.id}>
-              <div className={classNames(styles['item-color-block'], `color-bg-${groupItem.color}`)} />
+              <div
+                className={classNames(styles['item-color-block'], {
+                  [`color-bg-${groupItem.color}`]: !isCustomGroupColor,
+                })}
+                style={isCustomGroupColor ? { backgroundColor: groupItem.color } : undefined}
+              />
               <span>{labelText}</span>
             </div>
           ),
@@ -6003,6 +6086,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     [styles['tab-menu-sub-expand']]: isExpand,
                   })}
                   id={`tab-menu-sub-${pageItem.route}`}
+                  data-testid={isWebFuzzerRoute ? 'web-fuzzer-tab-list' : undefined}
                   ref={provided.innerRef}
                   onScroll={onScrollTabMenu}
                 >
@@ -6123,6 +6207,8 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     pageRouteKey,
   } = props
   const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
+  const isCustomCombineColor = useMemo(() => isCustomWebFuzzerGroupColor(combineColor), [combineColor])
+  const customCombineColorStyle = useMemo(() => getCustomWebFuzzerGroupColorStyle(combineColor), [combineColor])
   const [tabStatus, setTabStatus] = useState<ExpandAndRetractExcessiveState>()
   useEffect(() => {
     emiter.on('simpleDetectTabEvent', onSimpleDetectTabEvent)
@@ -6163,13 +6249,21 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
+            data-testid={pageRouteKey === YakitRoute.HTTPFuzzer ? 'web-fuzzer-tab' : undefined}
+            data-page-id={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.id : undefined}
+            data-group-id={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.groupId : undefined}
+            data-tab-name={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.verbose : undefined}
+            data-active={pageRouteKey === YakitRoute.HTTPFuzzer ? String(isActive) : undefined}
+            data-sort={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.sortFieId : undefined}
             style={{
               ...itemStyle,
+              ...customCombineColorStyle,
             }}
             className={classNames(styles['tab-menu-sub-item'], {
               [styles['tab-menu-sub-item-active']]: isActive,
               [styles['tab-menu-sub-item-dragging']]: snapshot.isDragging,
-              [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor,
+              [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor && !isCustomCombineColor,
+              [styles['tab-menu-sub-item-combine-custom-color']]: isCustomCombineColor,
               [styles[`tab-menu-sub-item-${tabStatus}`]]: !!tabStatus,
               [styles[`tab-menu-sub-item-disable-drag`]]: !!isDragDisabled,
             })}
@@ -6259,6 +6353,8 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     pageRouteKey,
   } = props
   const color = useMemo(() => subItem.color || 'purple', [subItem.color])
+  const isCustomColor = useMemo(() => isCustomWebFuzzerGroupColor(color), [color])
+  const customColorStyle = useMemo(() => getCustomWebFuzzerGroupColorStyle(color), [color])
 
   useEffect(() => {
     const element = document.getElementById(subItem.id)
@@ -6300,9 +6396,16 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
           <div
             ref={providedGroup.innerRef}
             {...providedGroup.draggableProps}
-            style={{ ...groupStyle }}
+            data-testid={pageRouteKey === YakitRoute.HTTPFuzzer ? 'web-fuzzer-tab-group' : undefined}
+            data-page-id={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.id : undefined}
+            data-group-name={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.verbose : undefined}
+            data-expanded={pageRouteKey === YakitRoute.HTTPFuzzer ? String(!!subItem.expand) : undefined}
+            data-group-color={pageRouteKey === YakitRoute.HTTPFuzzer ? color : undefined}
+            data-sort={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.sortFieId : undefined}
+            style={{ ...groupStyle, ...customColorStyle }}
             className={classNames(styles['tab-menu-sub-group'], styles['tab-menu-sub-group-hidden'], {
-              [styles[`tab-menu-sub-group-${color}`]]: subItem.expand,
+              [styles[`tab-menu-sub-group-${color}`]]: subItem.expand && !isCustomColor,
+              [styles['tab-menu-sub-group-custom-color']]: subItem.expand && isCustomColor,
               [styles[`tab-menu-sub-group-disable-drag`]]: isDragDisabled,
             })}
           >
@@ -6310,6 +6413,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
               {...providedGroup.dragHandleProps}
               className={classNames(styles['tab-menu-sub-group-name'], styles[`tab-menu-sub-group-name-${color}`], {
                 [styles['tab-menu-sub-group-name-retract']]: !subItem.expand,
+                [styles['tab-menu-sub-group-name-custom-color']]: isCustomColor,
               })}
               onClick={onGroupClick}
               onContextMenu={(e) => onGroupContextMenu(e, index)}
@@ -6318,7 +6422,8 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
               <div
                 className={classNames(
                   styles['tab-menu-sub-group-number'],
-                  styles[`tab-menu-sub-group-number-${color}`],
+                  { [styles[`tab-menu-sub-group-number-${color}`]]: !isCustomColor },
+                  { [styles['tab-menu-sub-group-number-custom-color']]: isCustomColor },
                 )}
                 style={{ display: subItem.expand ? 'none' : 'flex' }}
               >
@@ -6460,6 +6565,14 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
           }}
         />
         <div className={classNames(styles['color-list'])}>
+          {isCustomWebFuzzerGroupColor(group.color) && (
+            <div className={styles['color-list-item']} style={{ backgroundColor: group.color }} title={group.color}>
+              <CheckIcon
+                className={styles['check-icon']}
+                style={{ color: getWebFuzzerGroupContrastColor(group.color || '') }}
+              />
+            </div>
+          )}
           {colorList.map((color) => (
             <div
               className={classNames(styles['color-list-item'], `color-bg-${color}`)}
@@ -6529,12 +6642,16 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
     setGroupItem(subPage[index])
   }, [draggableId])
   const isActive = useMemo(() => item.id === selectSubMenu?.id, [item, selectSubMenu])
+  const isCustomColor = useMemo(() => isCustomWebFuzzerGroupColor(groupItem.color), [groupItem.color])
+  const customColorStyle = useMemo(() => getCustomWebFuzzerGroupColorStyle(groupItem.color), [groupItem.color])
   return (
     <div
+      style={customColorStyle}
       className={classNames(styles['tab-menu-sub-item'], {
         [styles['tab-menu-sub-item-active']]: isActive,
         [styles['tab-menu-sub-item-dragging']]: true,
-        [styles[`tab-menu-sub-item-combine-${groupItem.color}`]]: !!groupItem.color,
+        [styles[`tab-menu-sub-item-combine-${groupItem.color}`]]: !!groupItem.color && !isCustomColor,
+        [styles['tab-menu-sub-item-combine-custom-color']]: isCustomColor,
       })}
     >
       {isActive && (
