@@ -141,21 +141,8 @@
     "preview": "vite preview",
     "test:run": "vitest run",
     "verify-build-artifacts": "node scripts/verify-renderer-build-artifacts.mjs",
-    "electron-render-breachtrace": "env-cmd -e noBrouser,devTool,breachtrace -f ./.env-cmdrc vite --mode breachtrace"
-  },
-  "eslintConfig": {
-    "ignorePatterns": [
-      "src/alibaba/ali-react-table-dist/**"
-    ],
-    "extends": [
-      "eslint:recommended"
-    ],
-    "rules": {
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "off"
-      ]
-    }
+    "electron-render-breachtrace": "env-cmd -e noBrouser,devTool,breachtrace -f ./.env-cmdrc vite --mode breachtrace",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx"
   },
   "browserslist": [
     ">0.2%",
@@ -168,12 +155,16 @@
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.5.2",
     "@types/validator": "^13.15.10",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-react": "^6.0.0",
     "@xterm/xterm": "5.5.0",
     "autoprefixer": "^10.4.20",
     "cross-env": "7.0.3",
     "env-cmd": "^10.1.0",
     "esbuild": "^0.28.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.37.2",
     "jsdom": "^25.0.1",
     "less": "^4.8.1",
     "patch-package": "^8.0.0",
