@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "baseProfile": "stress",
+  "harness": {
+    "requireCPURecovery": true,
+    "recoveryTimeoutMs": 30000,
+    "recoveryStableSamples": 10,
+    "pipelineSampleIntervalMs": 1000
+  },
+  "cases": [
+    {
+      "name": "gzip-response-256k-fixed-rate",
+      "requests": 400,
+      "concurrency": 12,
+      "targetRequestsPerSecond": 100,
+      "requestBodyBytes": 0,
+      "responseBodyBytes": 262144,
+      "responseContentEncoding": "gzip"
+    }
+  ]
+}

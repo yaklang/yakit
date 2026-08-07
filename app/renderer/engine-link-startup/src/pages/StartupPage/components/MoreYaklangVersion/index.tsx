@@ -1,12 +1,14 @@
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import React, { useEffect, useMemo, useState } from 'react'
-import { OutlineSearchIcon } from '@/assets/outline'
+import { OutlineQuestionmarkcircleIcon, OutlineSearchIcon } from '@/assets/outline'
 import { isYakit } from '@/utils/envfile'
 import styles from './MoreYaklangVersion.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { Tooltip } from 'antd'
 
 interface MoreYaklangVersionProps {
   moreYaklangVersionList: string[]
@@ -59,6 +61,9 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
             ]}
             style={{ width: i18n.language === 'en' ? 240 : undefined }}
           />
+          <Tooltip title={t('MoreYaklangVersion.slim_version_tip')}>
+            <YakitButton type="text2" icon={<OutlineQuestionmarkcircleIcon />} size="small" />
+          </Tooltip>
         </div>
       )}
       <div className={styles['search-version-header']}>

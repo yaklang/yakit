@@ -62,3 +62,5 @@ yarn.lock
 .serena/
 .ci-changed-files-list.txt
 pr-ci-changed-files-list.txt
+/reports/mitm-perf/
+/reports/e2e-electron/

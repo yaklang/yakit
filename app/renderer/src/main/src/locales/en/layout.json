@@ -223,6 +223,8 @@
     "chromePathDesc": "If Chrome cannot be started, please configure the Chrome startup path",
     "configured": "Configured",
     "mcp": "Yak Mcp",
+    "mcpToggle": "Start/Stop MCP",
+    "mcpHistory": "View History",
     "mcpDesc": "May affect the use of some features",
     "systemProxy": "System Proxy",
     "statusRefreshInterval": "Status Refresh Interval",
@@ -315,6 +317,12 @@
     "noYakitLatestVersion": "Failed to fetch the latest {{edition}} version",
     "noYaklangLatestVersion": "Failed to fetch the latest engine version",
     "updateContentSuccess": "Update content modified successfully"
+  },
+  "MoreYaklangVersion": {
+    "standardVersion": "Standard Version",
+    "slimVersion": "Slim Version",
+    "slim": "Slim",
+    "slimVersionTip": "The slim build removes SSA compilation, SyntaxFlow rule scanning, and AST/Build for non-Yak languages. It uses fewer resources and responds faster, suitable for daily tooling and Yak coding."
   },
   "RobotControl": {
     "subTitle": "Bring external chat tools and webhooks into AI Agent robots.",
@@ -417,6 +425,29 @@
     "urlFormatError": "Startup address format error, e.g. 127.0.0.1:11432",
     "portRangeError": "Port number must be between 1 and 65535",
     "enableFailed": "Failed to enable MCP: {{error}}"
+  },
+  "MCPHistory": {
+    "title": "MCP Call History",
+    "all": "All",
+    "success": "Success",
+    "failed": "Failed",
+    "unknownCaller": "Unknown caller",
+    "clearTitle": "Clear MCP Call History",
+    "deleteFilteredTitle": "Delete Filtered Results",
+    "clearContent": "This will clear all MCP call history. This action cannot be undone.",
+    "deleteFilteredContent": "This will delete {{total}} MCP call records matching the current filters. This action cannot be undone.",
+    "deleteFiltered": "Delete Filtered",
+    "clearHistoryTitle": "Clear History",
+    "searchPlaceholder": "Search tools, agents, or sessions",
+    "emptyList": "No MCP call records",
+    "emptyDetail": "Select a call record on the left to view details",
+    "caller": "Caller",
+    "callTime": "Call Time",
+    "duration": "Duration",
+    "sessionId": "Session ID",
+    "arguments": "Input Arguments",
+    "result": "Result",
+    "error": "Error"
   },
   "LayoutUtils": {
     "apiSystemConfigFailed": "apiSystemConfig failed: {{error}}",

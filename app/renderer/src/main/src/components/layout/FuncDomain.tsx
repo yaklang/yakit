@@ -59,7 +59,13 @@ import emiter from '@/utils/eventBus/eventBus'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
-import { OutlinePencilaltIcon, OutlineRefreshIcon, OutlineSearchIcon, OutlineWrenchIcon } from '@/assets/icon/outline'
+import {
+  OutlinePencilaltIcon,
+  OutlineQuestionmarkcircleIcon,
+  OutlineRefreshIcon,
+  OutlineSearchIcon,
+  OutlineWrenchIcon,
+} from '@/assets/icon/outline'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
@@ -626,7 +632,7 @@ const DBCacheManager = () => {
   }
 }
 
-const GetUIOpSettingMenu = () => {
+const GetUIOpSettingMenu = (t: (key: string) => string) => {
   // 便携版
   if (isEnpriTraceAgent()) {
     return [
@@ -725,7 +731,14 @@ const GetUIOpSettingMenu = () => {
           key: 'webshell-manager',
           label: '网站管理',
         },
-        { key: 'mcp', label: 'Yak Mcp' },
+        {
+          key: 'mcp',
+          label: t('GlobalState.mcp'),
+          children: [
+            { key: 'mcp-toggle', label: t('GlobalState.mcpToggle') },
+            { key: 'mcp-history', label: t('GlobalState.mcpHistory') },
+          ],
+        },
         { key: 'ai-agent', label: 'AI Agent' },
         { key: 'ssa-result-diff', label: 'ssa-result-diff' },
         { key: 'ai-repository', label: '知识库' },
@@ -913,8 +926,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         showConfigSystemProxyForm()
         return
       case 'mcp':
+      case 'mcp-toggle':
       case 'configMcp':
         setConfigMcpModalVisible(true)
+        return
+      case 'mcp-history':
+        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.MCP_History }))
         return
       case 'engineVar':
         showConfigYaklangEnvironment()
@@ -1055,7 +1072,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       width={142}
       selectedKeys={[]}
       // triggerSubMenuAction={'click'}
-      data={GetUIOpSettingMenu() as YakitMenuItemProps[]}
+      data={GetUIOpSettingMenu(t) as YakitMenuItemProps[]}
       onClick={({ key }) => menuSelect(key)}
     />
   )
@@ -1530,6 +1547,7 @@ interface MoreYaklangVersionProps {
 /** @name 更多Yaklang版本 */
 const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
   const { moreYaklangVersionList, currentBuildType = 'full', onClosePop } = props
+  const { t } = useI18nNamespaces(['layout'])
   const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
   const [searchVersionVal, setSearchVersionVal] = useState<string>('')
   const [searchVersionList, setSearchVersionList] = useState<string[]>([])
@@ -1592,10 +1610,13 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             value={engineBuildType}
             onChange={(e) => setEngineBuildType(e.target.value)}
             options={[
-              { label: '标准版本', value: 'full' },
-              { label: '轻量版本', value: 'slim' },
+              { label: t('MoreYaklangVersion.standardVersion'), value: 'full' },
+              { label: t('MoreYaklangVersion.slimVersion'), value: 'slim' },
             ]}
           />
+          <Tooltip title={t('MoreYaklangVersion.slimVersionTip')}>
+            <YakitButton type="text2" icon={<OutlineQuestionmarkcircleIcon />} size="small" />
+          </Tooltip>
         </div>
       )}
       <div className={styles['search-version-header']}>
@@ -1614,7 +1635,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
                 {v}
                 {showSlimOption && engineBuildType === 'slim' ? (
                   <YakitTag color="warning" size="small">
-                    轻量
+                    {t('MoreYaklangVersion.slim')}
                   </YakitTag>
                 ) : null}
               </div>

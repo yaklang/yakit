@@ -1157,6 +1157,7 @@ const Home: React.FC<HomeProp> = (props) => {
                 <>
                   <div
                     ref={mitmRef}
+                    data-testid="home-open-mitm-v2"
                     className={classNames(styles['mitm-card'], styles['home-card'])}
                     onClick={() => {
                       if (showMitmDropdown) return

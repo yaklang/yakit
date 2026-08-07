@@ -127,7 +127,7 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
-  // 握手 用于检查前端是否可以连接当前引擎 
+  // 握手 用于检查前端是否可以连接当前引擎
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
@@ -627,13 +627,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -648,7 +648,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
   /*
     ChaosMakerRule: Bas
   */
@@ -1049,6 +1049,9 @@ service Yak {
   rpc GetMCPToolList(GetMCPToolListRequest) returns (GetMCPToolListResponse);
   rpc GetMCPToolDetail(GetMCPToolDetailRequest) returns (MCPClientToolConfig);
   rpc SetMCPToolEnabled(SetMCPToolEnabledRequest) returns (GeneralResponse);
+  rpc QueryMCPToolCallHistory(QueryMCPToolCallHistoryRequest) returns (QueryMCPToolCallHistoryResponse);
+  rpc GetMCPToolCallHistoryDetail(GetMCPToolCallHistoryDetailRequest) returns (MCPToolCallHistory);
+  rpc DeleteMCPToolCallHistory(DeleteMCPToolCallHistoryRequest) returns (Empty);
 
   // RAG Collection Search
   rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
@@ -1074,6 +1077,9 @@ service Yak {
   rpc SubscribeIMControlState(SubscribeIMControlStateRequest) returns (stream IMControlStateEvent);
   // 热更新 IM 回复配置（转发回复开关 / 回复颗粒度），无需重启 IM Engine。
   rpc UpdateIMControlConfig(UpdateIMControlConfigRequest) returns (UpdateIMControlConfigResponse);
+
+  // MITM 实时流量摘要。数据库查询仍负责初始化、历史分页和 Gap 恢复。
+  rpc SubscribeHTTPFlows(SubscribeHTTPFlowsRequest) returns (stream HTTPFlowLiveEvent);
 }
 
 // IMBotConfig 描述一个 IM 平台 bot 的配置凭证。
@@ -3840,7 +3846,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend 
+  // this type effect response.ProjectTotal, this type mark kind of frontend
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -7141,13 +7147,24 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-  
+
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
   // 排除包含这些 tag 的流量（用于"仅保留收藏"：删除不带收藏 tag 的流量时，
   // 把收藏 tag 填入此处，筛选出非收藏流量后批量删除）
   repeated string ExcludeTags = 51;
+  // 返回有界的进程内链路诊断数据；不影响查询结果和数据库 schema。
+  bool IncludeSystemTiming = 52;
+  // 列表投影：保留响应元数据，但不在每一行返回原始 Response bytes。
+  // 详情仍通过 GetHTTPFlowById 按需获取完整数据包。
+  bool ExcludeResponseRaw = 53;
+  // 列表投影：保留请求元数据，但不在每一行返回原始 Request bytes。
+  // 需要数据包的交互通过 GetHTTPFlowById 按需获取。
+  bool ExcludeRequestRaw = 54;
+  // 显式跳过精确 Total；用于已有游标的实时增量查询。
+  // Data/Pagination 仍正常返回，但 Total 为 0。初始化、历史与周期校准不得开启。
+  bool SkipTotal = 55;
 }
 
 message HTTPFlowsToOnlineRequest {
@@ -7372,6 +7389,7 @@ message QueryHTTPFlowResponse {
   Paging Pagination = 1;
   repeated HTTPFlow Data = 2;
   int64 Total = 3;
+  QueryHTTPFlowSystemTiming SystemTiming = 4;
 }
 
 message HTTPFlowsFieldGroupRequest {
@@ -7778,7 +7796,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake 
+// handshake
 message HandshakeRequest {
   string Name = 1;
 }
@@ -8452,7 +8470,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory 
+  // compile data only in memory
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -8539,11 +8557,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index 
+  // index
   string RuleName = 3;
-  string ProgramName = 4; 
-  // progress 
-  double Progress = 5; 
+  string ProgramName = 4;
+  // progress
+  double Progress = 5;
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -8603,7 +8621,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"  
+  string SaveKind = 14; // "memory" | "database"
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -8755,9 +8773,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data 
+  repeated SSARisk Data = 1; // new ssa-risk unread data
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count 
+  int64 Total = 3; // total ssa-risk count
   int64 Unread = 4;// total unread ssa-risk count
 }
 
@@ -9695,4 +9713,206 @@ message GetSSAWorkbenchDashboardResponse {
   repeated SSAWorkbenchRiskTypeItem RiskDistribution = 4;
   repeated SSAWorkbenchRuleHitItem TopRuleHits = 5;
   repeated SSAWorkbenchRecentProject RecentProjects = 6;
+}
+
+// MITM 实时流量端到端诊断。定义放在文件末尾，避免新增消息导致已有
+// protobuf message index 大范围重排；字段仅按请求返回，不写入数据库。
+message HTTPFlowSystemTiming {
+  uint64 Id = 1;
+  int64 RequestHijackAtUnixMs = 2;
+  int64 ResponseMirrorAtUnixMs = 3;
+  int64 FlowBuiltAtUnixMs = 4;
+  int64 PersistEnqueuedAtUnixMs = 5;
+  int64 PersistStartedAtUnixMs = 6;
+  int64 PersistedAtUnixMs = 7;
+  int64 DatabaseChangeDetectedAtUnixMs = 8;
+  uint64 ProjectGeneration = 9;
+}
+
+message QueryHTTPFlowSystemTiming {
+  int64 ServerReceivedAtUnixMs = 1;
+  int64 SQLFinishedAtUnixMs = 2;
+  int64 ConversionFinishedAtUnixMs = 3;
+  int64 ResponseReadyAtUnixMs = 4;
+  int64 QueryDurationUs = 5;
+  int64 ConversionDurationUs = 6;
+  int64 AsyncWriteQueueDepth = 7;
+  string DatabaseIdentity = 8;
+  uint64 LatestPersistedId = 9;
+  int64 LatestPersistedAtUnixMs = 10;
+  uint64 LatestDetectedId = 11;
+  int64 LatestDetectedAtUnixMs = 12;
+  int64 ReturnedFlowCount = 13;
+  int64 SampledFlowCount = 14;
+  repeated HTTPFlowSystemTiming FlowTimings = 15;
+  int64 AsyncWriteQueueCapacity = 16;
+  // QueryDurationUs 的细分；只用于显式开启的有界诊断。
+  int64 CountDurationUs = 17;
+  int64 DataQueryDurationUs = 18;
+  bool CountExecuted = 19;
+  uint64 ProjectGeneration = 20;
+}
+
+// MITM HTTPFlow live stream. These body-free messages remain separate from
+// the monolithic HTTPFlow message by construction, while sharing the primary
+// yakgrpc proto source and service definition.
+enum HTTPFlowLiveEventType {
+  HTTP_FLOW_LIVE_EVENT_TYPE_UNSPECIFIED = 0;
+  HTTP_FLOW_LIVE_EVENT_TYPE_COMMITTED = 1;
+  HTTP_FLOW_LIVE_EVENT_TYPE_UPDATED = 2;
+  HTTP_FLOW_LIVE_EVENT_TYPE_DELETED = 3;
+  HTTP_FLOW_LIVE_EVENT_TYPE_GAP = 4;
+  HTTP_FLOW_LIVE_EVENT_TYPE_HEARTBEAT = 5;
+}
+
+enum HTTPFlowLiveGapReason {
+  HTTP_FLOW_LIVE_GAP_REASON_UNSPECIFIED = 0;
+  HTTP_FLOW_LIVE_GAP_REASON_BOOTSTRAP_REQUIRED = 1;
+  HTTP_FLOW_LIVE_GAP_REASON_PROJECT_CHANGED = 2;
+  HTTP_FLOW_LIVE_GAP_REASON_REPLAY_WINDOW_EXCEEDED = 3;
+  HTTP_FLOW_LIVE_GAP_REASON_SLOW_CONSUMER = 4;
+  HTTP_FLOW_LIVE_GAP_REASON_CURSOR_AHEAD = 5;
+  HTTP_FLOW_LIVE_GAP_REASON_UNSUPPORTED_PROTOCOL = 6;
+  HTTP_FLOW_LIVE_GAP_REASON_UNSUPPORTED_FILTER = 7;
+  HTTP_FLOW_LIVE_GAP_REASON_PROJECT_EVICTED = 8;
+}
+
+message HTTPFlowLiveFilter {
+  // v1 accepts an empty value or "mitm". QueryHTTPFlows remains the fallback
+  // for all richer filters.
+  string SourceType = 1;
+}
+
+message SubscribeHTTPFlowsRequest {
+  uint32 ProtocolVersion = 1;
+  uint64 LastSeenSequence = 2;
+  uint64 LastSeenId = 3;
+  uint64 ProjectGeneration = 4;
+  string DatabaseIdentity = 5;
+  string SessionId = 6;
+  HTTPFlowLiveFilter Filter = 7;
+}
+
+message HTTPFlowLiveSummary {
+  uint64 Id = 1;
+  bool IsHTTPS = 2;
+  string Url = 3;
+  string SourceType = 4;
+  string Path = 5;
+  string Method = 6;
+  int64 BodyLength = 7;
+  string BodySizeVerbose = 8;
+  int64 RequestLength = 9;
+  string RequestSizeVerbose = 10;
+  string ContentType = 11;
+  int64 StatusCode = 12;
+  int64 GetParamsTotal = 13;
+  int64 PostParamsTotal = 14;
+  int64 CookieParamsTotal = 15;
+  int64 UpdatedAt = 16;
+  int64 CreatedAt = 17;
+  string Hash = 18;
+  string HostPort = 19;
+  string IPAddress = 20;
+  string HtmlTitle = 21;
+  string Tags = 22;
+  bool NoFixContentLength = 23;
+  bool IsWebsocket = 24;
+  string WebsocketHash = 25;
+  bool IsReadTooSlowResponse = 26;
+  bool IsTooLargeResponse = 27;
+  string TooLargeResponseHeaderFile = 28;
+  string TooLargeResponseBodyFile = 29;
+  int64 DurationMs = 30;
+  string HiddenIndex = 31;
+  string FromPlugin = 32;
+  string Host = 33;
+  string PathSuffix = 34;
+  bool IsTooLargeRequest = 35;
+  string TooLargeRequestHeaderFile = 36;
+  string TooLargeRequestBodyFile = 37;
+  bool IsRequestOversize = 38;
+}
+
+message HTTPFlowLiveGap {
+  HTTPFlowLiveGapReason Reason = 1;
+  uint64 RequestedSequence = 2;
+  uint64 OldestAvailableSequence = 3;
+  uint64 LatestSequence = 4;
+  uint64 HighWaterId = 5;
+}
+
+message HTTPFlowLiveEvent {
+  uint32 ProtocolVersion = 1;
+  HTTPFlowLiveEventType Type = 2;
+  uint64 Sequence = 3;
+  uint64 ProjectGeneration = 4;
+  string DatabaseIdentity = 5;
+  int64 ServerAtUnixMs = 6;
+  int64 CommittedAtUnixMs = 7;
+  uint64 HighWaterId = 8;
+  HTTPFlowLiveSummary Flow = 9;
+  HTTPFlowLiveGap Gap = 10;
+  string SessionId = 11;
+  bool Replayed = 12;
+  // Optional process-local timings let the renderer preserve end-to-end
+  // observability when a body-free summary is rendered without a follow-up
+  // QueryHTTPFlows round trip.
+  int64 RequestHijackAtUnixMs = 13;
+  int64 ResponseMirrorAtUnixMs = 14;
+  int64 FlowBuiltAtUnixMs = 15;
+  int64 PersistEnqueuedAtUnixMs = 16;
+  int64 PersistStartedAtUnixMs = 17;
+}
+
+message QueryMCPToolCallHistoryRequest {
+  string Keyword = 1;
+  string Status = 2;
+  Paging Pagination = 3;
+}
+
+message MCPToolCallHistory {
+  int64 ID = 1;
+  string ToolName = 2;
+  string Arguments = 3;
+  string Result = 4;
+  bool Success = 5;
+  string ErrorMessage = 6;
+  int64 DurationMillis = 7;
+  string ClientID = 8;
+  string SessionID = 9;
+  int64 CreatedAt = 10;
+  string ClientName = 11;
+  string ClientVersion = 12;
+}
+
+message MCPToolCallHistorySummary {
+  int64 ID = 1;
+  string ToolName = 2;
+  bool Success = 3;
+  string ErrorMessage = 4;
+  int64 DurationMillis = 5;
+  string ClientID = 6;
+  string SessionID = 7;
+  int64 CreatedAt = 8;
+  string ClientName = 9;
+  string ClientVersion = 10;
+}
+
+message QueryMCPToolCallHistoryResponse {
+  repeated MCPToolCallHistorySummary Histories = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message GetMCPToolCallHistoryDetailRequest {
+  int64 ID = 1;
+}
+
+message DeleteMCPToolCallHistoryRequest {
+  repeated int64 IDs = 1;
+  bool DeleteAll = 2;
+  bool DeleteFiltered = 3;
+  string Keyword = 4;
+  string Status = 5;
 }

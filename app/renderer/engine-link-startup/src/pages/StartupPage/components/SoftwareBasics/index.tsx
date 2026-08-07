@@ -242,6 +242,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
   return (
     <div
       ref={containerRef}
+      data-testid="startup-software-basics"
       className={styles['softwareBasics']}
       onClick={handleUserInteraction}
       style={{ gap: softLang === 'en' ? 6 : 10 }}
@@ -366,7 +367,12 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
         </div>
       </div>
       <div className={styles['footer-btn']}>
-        <YakitButton disabled={!currentPath} onClick={handleConfirm} style={{ fontSize: 14 }}>
+        <YakitButton
+          data-testid="startup-confirm"
+          disabled={!currentPath}
+          onClick={handleConfirm}
+          style={{ fontSize: 14 }}
+        >
           {t('SoftwareBasics.confirm')} {countdown > 0 ? <>（{countdown}）</> : ''}
         </YakitButton>
         <YakitCheckbox

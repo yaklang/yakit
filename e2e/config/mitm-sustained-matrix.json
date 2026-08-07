@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "baseProfile": "stress",
+  "harness": {
+    "requireCPURecovery": true,
+    "recoveryTimeoutMs": 30000,
+    "recoveryStableSamples": 10,
+    "pipelineSampleIntervalMs": 1000
+  },
+  "cases": [
+    {
+      "name": "sustained-small",
+      "requests": 1000,
+      "concurrency": 16,
+      "requestBodyBytes": 0,
+      "responseBodyBytes": 4096
+    }
+  ]
+}

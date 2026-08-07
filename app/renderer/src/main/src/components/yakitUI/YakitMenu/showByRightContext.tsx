@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom'
 import React, { memo, ReactNode, useEffect, useRef } from 'react'
 import { coordinate } from '@/pages/globalVariable'
+import emiter from '@/utils/eventBus/eventBus'
 import { YakitMenu, YakitMenuProp } from './YakitMenu'
 import styles from './showByRightContext.module.scss'
 
@@ -73,6 +74,8 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
   div.id = ContextMenuId
   div.className = 'popup'
   document.body.appendChild(div)
+  // 与 Drawer/Modal 一致：菜单打开时关闭标题栏拖拽，避免挡住菜单点击
+  emiter.emit('setYakitHeaderDraggable', false)
 
   const destory = () => {
     // if (rightContextRootDiv) {
@@ -82,6 +85,7 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
     if (unmountResult && div.parentNode) {
       div.parentNode.removeChild(div)
     }
+    emiter.emit('setYakitHeaderDraggable', true)
   }
 
   const offsetPosition = (width: number, height: number) => {

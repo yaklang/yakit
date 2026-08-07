@@ -1200,7 +1200,7 @@ export const StartupPage: React.FC = () => {
   }, [theme, i18nRefresh])
 
   return (
-    <div className={styles['startup-wrapper']}>
+    <div className={styles['startup-wrapper']} data-testid="startup-page">
       <div className={styles['startup-header-drap']} style={{ height: DragHeaderHeight }}></div>
       <div className={styles['startup-wrapper-left']}>
         <div className={styles['startup-title']}>
@@ -1237,7 +1237,11 @@ export const StartupPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className={styles['startup-engine-log']} style={{ display: isRemoteEngine ? 'none' : 'block' }}>
+            <div
+              className={styles['startup-engine-log']}
+              data-testid="startup-engine-stage"
+              style={{ display: isRemoteEngine ? 'none' : 'block' }}
+            >
               <EngineLog />
             </div>
             {!isRemoteEngine ? (

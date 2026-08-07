@@ -80,7 +80,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
 }
 
 export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
-  const { className, iconColor } = props
+  const { className, iconColor, copySuccessText } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const [loading, setLoading] = useState<boolean>(false)
   const [isShowSure, setIsShowSure] = useState<boolean>(false)
@@ -97,7 +97,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
           setTimeout(() => {
             setIsShowSure(false)
           }, 2000)
-          success(t('YakitNotification.copySuccess'))
+          success(copySuccessText || t('YakitNotification.copySuccess'))
         }, 1000)
       },
     })

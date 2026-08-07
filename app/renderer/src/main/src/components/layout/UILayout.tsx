@@ -1709,7 +1709,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   className={styles['header-border-yakit-mask']}
                 ></div>
 
-                <div className={classNames(styles['yakit-header-title'])} onDoubleClick={maxScreen}>
+                <div className={classNames(styles['yakit-header-title'], dropClassName)} onDoubleClick={maxScreen}>
                   {getAppTitleName}-{`${EngineModeVerbose(engineMode || 'local', dynamicStatus)}`}
                 </div>
 
@@ -1792,7 +1792,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   className={styles['header-border-yakit-mask']}
                 ></div>
 
-                <div className={classNames(styles['yakit-header-title'])} onDoubleClick={maxScreen}>
+                <div className={classNames(styles['yakit-header-title'], dropClassName)} onDoubleClick={maxScreen}>
                   <>
                     {getAppTitleName}-{`${EngineModeVerbose(engineMode || 'local', dynamicStatus)}`}
                   </>

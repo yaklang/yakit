@@ -93,7 +93,14 @@
     "enterpriseEdition": "Enterprise Edition",
     "portableEdition": "Portable Edition",
     "applicationCode": "Application Code",
-    "inputApplicationCode": "Please enter application code"
+    "inputApplicationCode": "Please enter application code",
+    "distributed": "Distributed",
+    "featureModule": "Feature Module",
+    "selectFeatureModule": "Please select feature module",
+    "hostScan": "Host Scan",
+    "codeAudit": "Code Audit",
+    "hids": "HIDS",
+    "ai": "AI"
   },
   "RoleAdminPage": {
     "roleName": "Role Name",

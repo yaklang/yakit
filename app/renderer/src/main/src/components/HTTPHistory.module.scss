@@ -1,8 +1,12 @@
 @use '../pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect.module.scss';
 
+/** 页内嵌 AI 壳：各业务页共用，须顶层声明以保证定位/高度不依赖 History 左侧祖先 */
 .ai-wrapper {
+  position: relative;
+  width: 100%;
   height: 100%;
 }
+
 .hTTPHistory {
   height: 100%;
 
@@ -25,7 +29,6 @@
       height: 100%;
     }
     .ai-wrapper {
-      height: 100%;
       .history-ai-header {
         margin-left: 8px;
       }

@@ -94,3 +94,22 @@ export const shouldUseParamsIconText3 = (content?: string) => {
   if (!isCellRedSingleColor(content)) return false
   return getSingleColorType(content) !== 'red'
 }
+
+/**
+ * Clear the DOM state retained by a virtual list after its data becomes empty.
+ * Returns true when the caller should also ask the virtual-list hook to
+ * recalculate from index zero.
+ */
+export const resetEmptyVirtualTableViewport = (
+  dataLength: number,
+  container?: HTMLElement | null,
+  wrapper?: HTMLElement | null,
+) => {
+  if (dataLength !== 0) return false
+  if (container) container.scrollTop = 0
+  if (wrapper) {
+    wrapper.style.height = '0px'
+    wrapper.style.marginTop = '0px'
+  }
+  return true
+}

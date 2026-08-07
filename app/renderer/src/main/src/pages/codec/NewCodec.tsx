@@ -925,7 +925,11 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                     e.stopPropagation()
                   }}
                 >
-                  <CopyComponents className={styles['opt-copy-opt']} copyText={item.FlowName} />
+                  <CopyComponents
+                    className={styles['opt-copy-opt']}
+                    copyText={`{{codecflow(${item.FlowName}|{{=[yourcontent]=}})}}`}
+                    copySuccessText={t('CodecRunListHistoryStore.copySuccess')}
+                  />
                 </div>
                 <div
                   className={classNames(styles['opt'], styles['opt-copy'])}

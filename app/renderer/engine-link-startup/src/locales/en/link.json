@@ -257,6 +257,7 @@
   "MoreYaklangVersion": {
     "standard_version": "Standard Version",
     "slim_version": "Slim Version",
-    "slim": "Slim"
+    "slim": "Slim",
+    "slim_version_tip": "The slim build removes SSA compilation, SyntaxFlow rule scanning, and AST/Build for non-Yak languages. It uses fewer resources and responds faster, suitable for daily tooling and Yak coding."
   }
 }

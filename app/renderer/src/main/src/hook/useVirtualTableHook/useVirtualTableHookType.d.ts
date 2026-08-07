@@ -1,6 +1,7 @@
 import React from 'react'
 import { Paging } from '@/utils/yakQueryHTTPFlow'
 import { APIFunc } from '@/apiUtils/type'
+export type VirtualTableRefreshReason = 'query' | 'visibility' | 'manual'
 export type useVirtualTableHookParams<T, DataT, DataKey> = {
   // 表格容器ref
   tableBoxRef: React.MutableRefObject<any>
@@ -13,7 +14,7 @@ export type useVirtualTableHookParams<T, DataT, DataKey> = {
   // 默认请求参数
   defaultParams?: T
   // 第一次请求的回调
-  onFirst?: () => void
+  onFirst?: (reason: VirtualTableRefreshReason) => void
   // 暂无新数据请求停止的回调
   onStop?: () => void
   // 响应数据的预处理方法（用于对响应数据的二次处理）
@@ -28,6 +29,10 @@ export type useVirtualTableHookParams<T, DataT, DataKey> = {
   maxDataLength?: number
   /** 滑窗已裁剪标记 */
   slidingClippedRef?: React.MutableRefObject<boolean>
+  /** 优先等待推送握手，握手不可用或断连时再回退轮询 */
+  preferServerPush?: boolean
+  /** 组件专用推送状态；与全局 Duplex 状态合并判断，避免健康专用流仍触发兼容轮询 */
+  getAdditionalServerPushActive?: () => boolean
 }
 
 export type VirtualPaging = {

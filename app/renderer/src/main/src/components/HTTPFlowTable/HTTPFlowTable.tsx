@@ -1,4 +1,5 @@
-import React, { Ref, useEffect, useMemo, useRef, useState, useContext } from 'react'
+import React, { Ref, useEffect, useLayoutEffect, useMemo, useRef, useState, useContext } from 'react'
+import { unstable_batchedUpdates } from 'react-dom'
 import { Divider, Tooltip, Badge } from 'antd'
 import { YakDeleteHTTPFlowRequest, YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
 import { YakScript } from '../../pages/invoker/schema'
@@ -12,6 +13,7 @@ import {
   useDebounceEffect,
   useDebounceFn,
   useMemoizedFn,
+  useThrottleFn,
   useUpdateEffect,
   useThrottleEffect,
 } from 'ahooks'
@@ -43,7 +45,7 @@ import { useHttpFlowStore } from '@/store/httpFlow'
 import { OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
-import { ParamsTProps } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import { ParamsTProps, VirtualTableRefreshReason } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
@@ -81,8 +83,10 @@ import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
 import { debugToPrintLogs } from '@/utils/logCollection'
+import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import { JSONParseLog } from '@/utils/tool'
+import { yakitHTTPFlow, yakitStream } from '@/services/electronBridge'
 import {
   defFilterConfig,
   FilterConfig,
@@ -90,11 +94,18 @@ import {
   HTTPFlowTableFormConsts,
 } from './HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import {
+  buildHTTPFlowProjectKey,
   buildHTTPFlowTableAdvancedQuery,
   buildLegacyHTTPFlowTableFilterConfig,
   getFullRange,
   hasActiveHTTPFlowTableFilterConfig,
+  isHTTPFlowTableActive,
+  normalizeHTTPFlowTotal,
+  parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
+  selectHTTPFlowTableResizeAction,
+  shouldClearMITMResetBoundary,
+  shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
 import {
@@ -110,6 +121,7 @@ import {
   HTTP_FLOW_TABLE_SHIELD_DATA,
   OFFSET_LIMIT,
   HTTP_FLOW_TABLE_MAX_DATA_LENGTH,
+  MITM_FLOW_TABLE_OVERSCAN,
   OFFSET_STEP,
   defSort,
   type codecHistoryPluginProps,
@@ -134,8 +146,33 @@ import {
   getHTTPFlowReqAndResToString,
   getRunTimeIdObj,
   filterHTTPFlowsByFavoriteAndTags,
+  findHTTPFlowSelectionIndex,
+  patchHTTPFlowTags,
 } from './HTTPFlowTable.utils'
 import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
+import {
+  createMITMLiveAdaptiveBatchState,
+  drainMITMLiveBacklog,
+  MITM_LIVE_CATCH_UP_PAYLOAD_BUDGET_BYTES,
+  selectMITMLiveInitialPageSize,
+  shouldSkipMITMLiveExactTotal,
+  updateMITMLiveAdaptiveBatchState,
+} from './HTTPFlowTable.live'
+import {
+  createHTTPFlowLiveDirectBatcher,
+  createHTTPFlowLiveDirectRecoveryGate,
+  createHTTPFlowLiveRefreshScheduler,
+  createHTTPFlowLiveStreamController,
+  handleHTTPFlowLiveModeTransition,
+  httpFlowLiveSummaryToHTTPFlow,
+  shouldPreferHTTPFlowLiveRefresh,
+} from './HTTPFlowTable.stream'
+import {
+  mitmFlowObservability,
+  type HTTPFlowCommittedSignal,
+  type MITMLiveCycleToken,
+  type MITMLiveTriggerSource,
+} from './HTTPFlowTable.observability'
 
 //导出给其他组件用
 export * from './HTTPFlowTable.constants'
@@ -147,6 +184,15 @@ export * from './components'
 
 const { ipcRenderer } = window.require('electron')
 
+const HTTP_FLOW_TOTAL_RECONCILE_INTERVAL = 10_000
+const HTTP_FLOW_FIELD_GROUP_REFRESH_INTERVAL = 10_000
+let activeMITMFlowTableInstances = 0
+class StaleHTTPFlowTableQueryError extends Error {
+  constructor() {
+    super('HTTP flow table query was superseded')
+    this.name = 'StaleHTTPFlowTableQueryError'
+  }
+}
 // 性能优化：分页空回调提取为模块级常量，避免内联箭头每次渲染创建新引用
 const noopPaginationChange = () => {}
 
@@ -191,6 +237,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     builtinTagList = [],
   } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'history'])
+
+  useEffect(() => {
+    if (pageType !== 'MITM') return
+
+    // The MITM route is a singleNode page. Keep the observability singleton
+    // honest if that product invariant changes inside one renderer process.
+    activeMITMFlowTableInstances += 1
+    if (activeMITMFlowTableInstances > 1 && areMITMDebugHooksEnabled()) {
+      console.warn(`[MITM] ${activeMITMFlowTableInstances} HTTP flow tables share one observability instance`)
+    }
+    return () => {
+      activeMITMFlowTableInstances = Math.max(0, activeMITMFlowTableInstances - 1)
+    }
+  }, [pageType])
+
   const comBuiltinTagList = useCampare(builtinTagList)
 
   // 导出字段映射配置
@@ -215,6 +276,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [suffixList, setSuffixList] = useState<FiltersItemProps[]>([])
   const comSuffixList = useCampare(suffixList)
   const [selected, setSelected, getSelected] = useGetSetState<HTTPFlow>()
+  const selectionReconcilePendingRef = useRef(false)
 
   const { setCompareLeft, setCompareRight } = useHttpFlowStore()
 
@@ -280,9 +342,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const isBackgroundRefresh = useMemo(() => {
     return backgroundRefresh && pageType !== 'MITM'
   }, [backgroundRefresh, pageType])
+  const isTableActive = isHTTPFlowTableActive(inViewport, backgroundRefresh, pageType)
 
-  // 整表重新加载时清空选中（hook 在换筛选、刷新时会调 onFirst）
-  const onFirst = useMemoizedFn(() => {
+  // 整表重新加载时清空选中；缓存页重新可见时保留当前包，待响应后按 ID/Hash 校验。
+  const onFirst = useMemoizedFn((reason: VirtualTableRefreshReason) => {
+    if (reason === 'visibility') {
+      selectionReconcilePendingRef.current = true
+      setUpdateCacheData([])
+      return
+    }
+    selectionReconcilePendingRef.current = false
     setSelectedRowKeys([])
     setSelectedRows([])
     if (!viewAttachIdFirstRef.current) {
@@ -301,9 +370,108 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const [total, setTotal] = useState(0)
   const extraTimerRef = useRef<ReturnType<typeof setInterval>>()
-  const getAddDataByGrpcRef = useRef<(query: YakQueryHTTPFlowRequest) => void>(() => {})
+  const getAddDataByGrpcRef = useRef<(query: YakQueryHTTPFlowRequest, queryEpoch?: number) => void>(() => {})
+  const tableQueryEpochRef = useRef(0)
+  const latestPersistedIdRef = useRef(0)
+  const latestPersistedProjectKeyRef = useRef('')
+  const mitmResetAfterIdRef = useRef(0)
+  const mitmResetProjectKeyRef = useRef('')
+  const previousInViewportRef = useRef(inViewport)
   const offsetDataRef = useRef<HTTPFlow[]>([])
   const updateDataRef = useRef<() => void>(() => {})
+  const requestMITMLiveRefreshRef = useRef<(source: MITMLiveTriggerSource, serverSentAtUnixMs?: number) => void>(
+    () => {},
+  )
+  const flushHTTPFlowLiveRefreshRef = useRef<() => void>(() => {})
+  const flushHTTPFlowLiveDirectRef = useRef<(events: HTTPFlowLiveEvent[]) => void>(() => {})
+  const latestVisibleDataHighWaterRef = useRef(0)
+  const httpFlowLiveDirectRecoveryGate = useCreation(
+    () =>
+      createHTTPFlowLiveDirectRecoveryGate({
+        onChange: (snapshot) =>
+          mitmFlowObservability.recordHTTPFlowLiveDirectRecovery(snapshot.required, snapshot.fallbackHighWaterId),
+      }),
+    [],
+  )
+  const httpFlowLiveDirectBatcher = useCreation(
+    () =>
+      createHTTPFlowLiveDirectBatcher({
+        onFlush: (events) => unstable_batchedUpdates(() => flushHTTPFlowLiveDirectRef.current(events)),
+      }),
+    [],
+  )
+  const httpFlowLiveRefreshScheduler = useCreation(
+    () =>
+      createHTTPFlowLiveRefreshScheduler({
+        onFlush: () => flushHTTPFlowLiveRefreshRef.current(),
+      }),
+    [],
+  )
+  const httpFlowLiveStreamController = useCreation(
+    () =>
+      createHTTPFlowLiveStreamController({
+        transport: {
+          start: (request, token) => yakitHTTPFlow.subscribe(request, token),
+          cancel: (token) => yakitHTTPFlow.cancelSubscribe(token),
+          onData: (token, callback) => yakitStream.onData(token, callback),
+          onError: (token, callback) => yakitStream.onError(token, callback),
+          onEnd: (token, callback) => yakitStream.onEnd(token, callback),
+        },
+        createToken: () => randomString(40),
+        getMode: () => mitmFlowObservability.getHTTPFlowLiveStreamMode(),
+        observer: mitmFlowObservability,
+        onCommitted: (event, mode) => {
+          if (mode !== 'canary') return
+          httpFlowLiveDirectBatcher.enqueue(event)
+        },
+        onGap: () => {
+          httpFlowLiveDirectRecoveryGate.requireRecovery()
+          httpFlowLiveDirectBatcher.cancel()
+          httpFlowLiveRefreshScheduler.cancel()
+          requestMITMLiveRefreshRef.current('continuation')
+        },
+        onUnavailable: () => {
+          httpFlowLiveDirectRecoveryGate.requireRecovery()
+          httpFlowLiveDirectBatcher.cancel()
+          httpFlowLiveRefreshScheduler.cancel()
+          requestMITMLiveRefreshRef.current('continuation')
+        },
+        onReset: () => {
+          httpFlowLiveDirectRecoveryGate.reset()
+          httpFlowLiveDirectBatcher.cancel()
+          httpFlowLiveRefreshScheduler.cancel()
+        },
+      }),
+    [],
+  )
+
+  useEffect(
+    () =>
+      mitmFlowObservability.onHTTPFlowLiveStreamModeChange((mode, previousMode) => {
+        if (pageType !== 'MITM') return
+        const pendingRows = handleHTTPFlowLiveModeTransition(
+          previousMode,
+          mode,
+          httpFlowLiveStreamController.snapshot().lastSeenId,
+          {
+            pendingCount: httpFlowLiveDirectBatcher.pendingCount,
+            cancelPending: httpFlowLiveDirectBatcher.cancel,
+            cancelRefresh: httpFlowLiveRefreshScheduler.cancel,
+            requireRecovery: httpFlowLiveDirectRecoveryGate.requireRecovery,
+            requestRefresh: () => requestMITMLiveRefreshRef.current('continuation'),
+          },
+        )
+        if (pendingRows > 0) mitmFlowObservability.recordHTTPFlowLiveDirectFallback(pendingRows)
+      }),
+    [
+      httpFlowLiveDirectBatcher,
+      httpFlowLiveDirectRecoveryGate,
+      httpFlowLiveRefreshScheduler,
+      httpFlowLiveStreamController,
+      pageType,
+    ],
+  )
+  const mitmLiveAdaptiveBatchRef = useRef(createMITMLiveAdaptiveBatchState())
   const slidingClippedRef = useRef(false)
 
   useEffect(() => {
@@ -311,50 +479,127 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if (extraTimerRef.current) {
         clearInterval(extraTimerRef.current)
       }
+      httpFlowLiveDirectBatcher.cancel()
+      httpFlowLiveDirectRecoveryGate.reset()
+      httpFlowLiveRefreshScheduler.cancel()
+      httpFlowLiveStreamController.stop()
     }
-  }, [])
+  }, [
+    httpFlowLiveDirectBatcher,
+    httpFlowLiveDirectRecoveryGate,
+    httpFlowLiveRefreshScheduler,
+    httpFlowLiveStreamController,
+  ])
 
   // hook 用 Pagination.AfterId，后端 QueryHTTPFlows 要顶层 AfterId，这里做一层转换
-  const apiQueryHTTPFlows = useMemoizedFn(async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
-    const { Pagination, Filter } = hookParams
-    const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
-    // 仅 update（无游标）时更新 total
-    const isUpdateRequest = !AfterId && !BeforeId
-    const query: YakQueryHTTPFlowRequest = {
-      ...Filter,
-      Pagination: { ...paginationFields },
-      ...(AfterId ? { AfterId } : {}),
-      ...(BeforeId ? { BeforeId } : {}),
-    }
-    if (Array.isArray(query.Methods)) {
-      query.Methods = query.Methods.join(',')
-    }
-    if ('bodyLength' in query) {
-      delete query.bodyLength
-    }
-    //插件执行中流量数据必有runTimeId
-    if (pageType === 'Plugin' && !runTimeId) {
+  const apiQueryHTTPFlows = useMemoizedFn(
+    async (
+      hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest },
+      liveCycleToken?: MITMLiveCycleToken,
+      queryEpoch = tableQueryEpochRef.current,
+    ) => {
+      const { Pagination, Filter } = hookParams
+      const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
+      // 仅 update（无游标）时更新 total
+      const isUpdateRequest = !AfterId && !BeforeId
+      const metadataOnlyBackgroundQuery = shouldUseHTTPFlowMetadataOnlyQuery(inViewport, backgroundRefresh, pageType)
+      const query: YakQueryHTTPFlowRequest = {
+        ...Filter,
+        Pagination: { ...paginationFields },
+        ...(AfterId ? { AfterId } : {}),
+        ...(BeforeId ? { BeforeId } : {}),
+        IncludeSystemTiming: pageType === 'MITM' && mitmFlowObservability.isBackendSystemTimingEnabled(),
+        ExcludeResponseRaw: pageType === 'MITM' || metadataOnlyBackgroundQuery,
+        ExcludeRequestRaw: pageType === 'MITM' || metadataOnlyBackgroundQuery,
+        SkipTotal:
+          pageType === 'MITM' &&
+          mitmFlowObservability.isSkipLiveExactTotalEnabled() &&
+          shouldSkipMITMLiveExactTotal(AfterId, BeforeId),
+      }
+      if (Array.isArray(query.Methods)) {
+        query.Methods = query.Methods.join(',')
+      }
+      if ('bodyLength' in query) {
+        delete query.bodyLength
+      }
+      //插件执行中流量数据必有runTimeId
+      if (pageType === 'Plugin' && !runTimeId) {
+        if (isUpdateRequest) {
+          setTotal(0)
+        }
+        return { Data: [], Total: 0, Pagination: paginationFields }
+      }
+      if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
+        const time = await getRemoteValue(MITMConsts.MITMStartTimeStamp)
+        if (time) {
+          query.AfterUpdatedAt = parseInt(time, 10)
+        }
+      }
+      const timingToken =
+        pageType === 'MITM'
+          ? mitmFlowObservability.beginQuery({
+              liveCycleId: liveCycleToken?.id,
+              cursorBefore: Number(AfterId) || 0,
+              requestedRows: Number(paginationFields.Limit) || 0,
+            })
+          : undefined
+      let rsp: YakQueryHTTPFlowResponse
+      try {
+        rsp = (await ipcRenderer.invoke('QueryHTTPFlows', query)) as YakQueryHTTPFlowResponse
+        if (queryEpoch !== tableQueryEpochRef.current) throw new StaleHTTPFlowTableQueryError()
+        rsp.Total = normalizeHTTPFlowTotal(rsp.Total)
+        if (pageType === 'MITM' && inViewport) {
+          const projectKey = buildHTTPFlowProjectKey(
+            rsp.SystemTiming?.DatabaseIdentity,
+            rsp.SystemTiming?.ProjectGeneration,
+          )
+          if (projectKey && projectKey !== latestPersistedProjectKeyRef.current) {
+            const projectChanged = latestPersistedProjectKeyRef.current !== ''
+            latestPersistedProjectKeyRef.current = projectKey
+            latestPersistedIdRef.current = 0
+            if (
+              projectChanged &&
+              shouldClearMITMResetBoundary(mitmResetAfterIdRef.current, mitmResetProjectKeyRef.current, projectKey)
+            ) {
+              // A reset high-water belongs to one project database only. If
+              // the database table is recreated, its generation changes even
+              // though its path stays the same. Remove the old ID boundary and
+              // repeat the bootstrap so lower IDs cannot stay hidden.
+              mitmResetAfterIdRef.current = 0
+              mitmResetProjectKeyRef.current = ''
+              setParams((current) => ({ ...current, AfterId: undefined }))
+              throw new StaleHTTPFlowTableQueryError()
+            }
+          }
+          const latestResponseId = (rsp.Data || []).reduce((latest, flow) => Math.max(latest, Number(flow.Id) || 0), 0)
+          latestPersistedIdRef.current = Math.max(
+            latestPersistedIdRef.current,
+            Number(rsp.SystemTiming?.LatestPersistedId) || 0,
+            latestResponseId,
+          )
+          httpFlowLiveStreamController.observeQuery(rsp, Filter)
+        }
+        if (timingToken) mitmFlowObservability.completeQuery(timingToken, rsp)
+      } catch (error) {
+        if (timingToken) mitmFlowObservability.failQuery(timingToken)
+        throw error
+      }
       if (isUpdateRequest) {
-        setTotal(0)
+        setTotal(rsp.Total)
+        if (extraTimerRef.current) {
+          clearInterval(extraTimerRef.current)
+          extraTimerRef.current = undefined
+        }
+        if (isTableActive) {
+          extraTimerRef.current = setInterval(
+            () => getAddDataByGrpcRef.current(query, queryEpoch),
+            HTTP_FLOW_TOTAL_RECONCILE_INTERVAL,
+          )
+        }
       }
-      return { Data: [], Total: 0, Pagination: paginationFields }
-    }
-    if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
-      const time = await getRemoteValue(MITMConsts.MITMStartTimeStamp)
-      if (time) {
-        query.AfterUpdatedAt = parseInt(time, 10)
-      }
-    }
-    const rsp = (await ipcRenderer.invoke('QueryHTTPFlows', query)) as YakQueryHTTPFlowResponse
-    if (isUpdateRequest) {
-      setTotal(rsp.Total)
-      if (extraTimerRef.current) {
-        clearInterval(extraTimerRef.current)
-      }
-      extraTimerRef.current = setInterval(() => getAddDataByGrpcRef.current(query), 1000)
-    }
-    return rsp
-  })
+      return rsp
+    },
+  )
 
   const isTopLoadRequest = useMemoizedFn((hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
     const { AfterId, BeforeId, Limit } = hookParams.Pagination
@@ -363,8 +608,80 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   // history 页面时，判断倒序情况，并且未加载的数据（减去 offsetData 缓存）超过 200 条时整表刷新 数据裁剪后按照增量来加载
   const grpcQueryHTTPFlows = useMemoizedFn(async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
+    const queryEpoch = tableQueryEpochRef.current
     const { Pagination } = hookParams
     const { AfterId, BeforeId, Order, OrderBy, ...paginationFields } = Pagination
+    if (pageType === 'MITM' && !AfterId && !BeforeId) {
+      mitmLiveAdaptiveBatchRef.current = createMITMLiveAdaptiveBatchState()
+    }
+    if (pageType === 'MITM' && isTopLoadRequest(hookParams)) {
+      const viewportRows = Math.max(1, Number(Pagination.Limit) || OFFSET_LIMIT)
+      const catchUpMode = mitmLiveAdaptiveBatchRef.current.catchingUp
+      const initialPageSize = selectMITMLiveInitialPageSize(viewportRows, mitmLiveAdaptiveBatchRef.current)
+      const liveCycleToken = mitmFlowObservability.beginLiveCycle(Number(AfterId), initialPageSize)
+      try {
+        const result = await drainMITMLiveBacklog<HTTPFlow, YakQueryHTTPFlowResponse>(
+          Number(AfterId),
+          {
+            initialPageSize,
+            ...(catchUpMode
+              ? {
+                  payloadBudgetBytes: MITM_LIVE_CATCH_UP_PAYLOAD_BUDGET_BYTES,
+                  targetPagePayloadBytes: MITM_LIVE_CATCH_UP_PAYLOAD_BUDGET_BYTES,
+                }
+              : {}),
+          },
+          (cursor, limit) =>
+            apiQueryHTTPFlows(
+              {
+                ...hookParams,
+                Pagination: {
+                  ...Pagination,
+                  Page: 1,
+                  Limit: limit,
+                  AfterId: cursor,
+                },
+              },
+              liveCycleToken,
+              queryEpoch,
+            ),
+        )
+        const { data: mergedData, lastResponse } = result
+        mitmLiveAdaptiveBatchRef.current = updateMITMLiveAdaptiveBatchState(mitmLiveAdaptiveBatchRef.current, {
+          rows: mergedData.length,
+          payloadBytes: result.payloadBytes,
+          hasMore: result.hasMore,
+        })
+
+        if (!lastResponse) {
+          const response = await apiQueryHTTPFlows(hookParams, liveCycleToken, queryEpoch)
+          mitmFlowObservability.completeLiveCycle(liveCycleToken, response.Data || [], {
+            hasMore: false,
+            stopReason: 'exhausted',
+          })
+          return response
+        }
+        mitmFlowObservability.completeLiveCycle(liveCycleToken, mergedData, {
+          hasMore: result.hasMore,
+          stopReason: result.stopReason,
+          payloadBytes: result.payloadBytes,
+        })
+        const streamLastSeenId = httpFlowLiveStreamController.snapshot().lastSeenId
+        const recoveryCandidate = httpFlowLiveDirectRecoveryGate.observeQuery(
+          result.cursorAfter,
+          streamLastSeenId,
+          !result.hasMore,
+        )
+        if (recoveryCandidate && mergedData.length === 0) {
+          httpFlowLiveDirectRecoveryGate.commitVisible(latestVisibleDataHighWaterRef.current, streamLastSeenId)
+        }
+        if (result.shouldContinueImmediately) requestMITMLiveRefreshRef.current('continuation')
+        return { ...lastResponse, Data: mergedData }
+      } catch (error) {
+        mitmFlowObservability.failLiveCycle(liveCycleToken)
+        throw error
+      }
+    }
     if (
       !slidingClippedRef.current &&
       !backgroundRefresh &&
@@ -373,28 +690,32 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       Order !== 'asc'
     ) {
       try {
-        const rsp = await apiQueryHTTPFlows({
-          ...hookParams,
-          Pagination: {
-            Page: 1,
-            Limit: 300,
-            Order: 'desc',
-            OrderBy: OrderBy || 'id',
-            AfterId,
+        const rsp = await apiQueryHTTPFlows(
+          {
+            ...hookParams,
+            Pagination: {
+              Page: 1,
+              Limit: 300,
+              Order: 'desc',
+              OrderBy: OrderBy || 'id',
+              AfterId,
+            },
           },
-        })
+          undefined,
+          queryEpoch,
+        )
         if (Number(rsp.Total) - offsetDataRef.current.length > 200) {
           updateDataRef.current()
           return { Data: [], Total: 0, Pagination: paginationFields }
         }
       } catch (error) {}
     }
-    return apiQueryHTTPFlows(hookParams)
+    return apiQueryHTTPFlows(hookParams, undefined, queryEpoch)
   })
 
-  //只有history需要裁剪
+  // 实时 MITM 同样只保留一个内存窗口，完整数据仍在数据库中并可按滚动继续加载。
   const maxDataLength = useMemo(() => {
-    return pageType === 'History' ? HTTP_FLOW_TABLE_MAX_DATA_LENGTH : 0
+    return pageType === 'History' || pageType === 'MITM' ? HTTP_FLOW_TABLE_MAX_DATA_LENGTH : 0
   }, [pageType])
 
   // 表格数据交给 useVirtualTableHook：负责上下滚动加载、中间位置拉新数据（offsetData 红点）
@@ -405,7 +726,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     pagination,
     loading,
     offsetData,
-    { startT, notifyPushUpdate, setTLoad: setLoading, patchTData, noResetRefreshT: updateData, setP, refreshT },
+    {
+      startT,
+      notifyT,
+      notifyPushUpdate,
+      reconcileViewportT,
+      setTLoad: setLoading,
+      resetTData,
+      patchTData,
+      pushTData,
+      noResetRefreshT,
+      restoreViewportT,
+      setP,
+      refreshT,
+    },
   ] = useVirtualTableHook<ParamsTProps & { Filter: YakQueryHTTPFlowRequest }, HTTPFlow, 'Data', 'Id'>({
     tableBoxRef: useRef(null), // props.inViewport 判断可见性，不必再挂一个 ref
     tableRef,
@@ -413,9 +747,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     grpcFun: grpcQueryHTTPFlows,
     onFirst,
     initResDataFun,
-    inViewport: inViewport || isBackgroundRefresh,
+    inViewport: isTableActive,
     maxDataLength,
     slidingClippedRef,
+    preferServerPush: pageType === 'MITM',
+    getAdditionalServerPushActive: () => pageType === 'MITM' && httpFlowLiveStreamController.snapshot().active,
     defaultParams: {
       Filter: {
         SourceType: props.params?.SourceType || 'mitm',
@@ -432,17 +768,86 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       },
     },
   })
+  const updateData = useMemoizedFn((reason: VirtualTableRefreshReason = 'manual') => {
+    tableQueryEpochRef.current += 1
+    noResetRefreshT(reason)
+  })
 
-  // 定时刷新 total，不参与上下滚动加载
-  const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest) => {
+  useEffect(() => {
+    if (!isTableActive) {
+      if (extraTimerRef.current) {
+        clearInterval(extraTimerRef.current)
+        extraTimerRef.current = undefined
+      }
+    }
+  }, [isTableActive])
+
+  useEffect(() => {
+    const becameVisible = inViewport && !previousInViewportRef.current
+    previousInViewportRef.current = inViewport
+    // Background queries intentionally omit packet bodies. Hydrate the visible
+    // viewport once on return without discarding its scroll window.
+    if (becameVisible && isBackgroundRefresh) {
+      restoreViewportT()
+    }
+  }, [inViewport, isBackgroundRefresh, restoreViewportT])
+
+  // useLayoutEffect runs after React has committed the rows and before paint,
+  // which is the closest low-overhead marker for "visible in the table".
+  useLayoutEffect(() => {
+    if (pageType !== 'MITM') return
+    mitmFlowObservability.markVisible(data)
+    latestVisibleDataHighWaterRef.current = data.reduce((highWaterId, flow) => Math.max(highWaterId, flow.Id), 0)
+    const streamLastSeenId = httpFlowLiveStreamController.snapshot().lastSeenId
+    const recovered = httpFlowLiveDirectRecoveryGate.commitVisible(
+      latestVisibleDataHighWaterRef.current,
+      streamLastSeenId,
+    )
+    if (
+      !recovered &&
+      httpFlowLiveDirectRecoveryGate.snapshot().required &&
+      (tableRef.current?.containerRef?.scrollTop ?? Number.POSITIVE_INFINITY) < 10
+    ) {
+      httpFlowLiveRefreshScheduler.request()
+    }
+  }, [
+    data,
+    httpFlowLiveDirectRecoveryGate,
+    httpFlowLiveRefreshScheduler,
+    httpFlowLiveStreamController,
+    pageType,
+    tableRef,
+  ])
+
+  useEffect(() => {
+    if (pageType !== 'MITM' || !inViewport) {
+      httpFlowLiveDirectBatcher.cancel()
+      httpFlowLiveDirectRecoveryGate.reset()
+      httpFlowLiveRefreshScheduler.cancel()
+      httpFlowLiveStreamController.stop()
+    }
+  }, [
+    httpFlowLiveDirectBatcher,
+    httpFlowLiveDirectRecoveryGate,
+    httpFlowLiveRefreshScheduler,
+    httpFlowLiveStreamController,
+    inViewport,
+    pageType,
+  ])
+
+  // Total 只用精确查询定期校准；实时流可能重放或去重，不按批次累加。
+  const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest, queryEpoch = tableQueryEpochRef.current) => {
+    if (queryEpoch !== tableQueryEpochRef.current) return
+    if (!isTableActive) return
     const clientHeight = tableRef.current?.containerRef?.clientHeight
     if (clientHeight === 0) return
     // 性能优化：仅需覆盖 Pagination，无需深拷贝整个 query 对象
     const copyQuery: YakQueryHTTPFlowRequest = {
       ...query,
+      IncludeSystemTiming: false,
       Pagination: {
         Page: 1,
-        Limit: pagination.Limit,
+        Limit: 1,
         Order: 'desc',
         OrderBy: 'Id',
       },
@@ -450,12 +855,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     ipcRenderer
       .invoke('QueryHTTPFlows', copyQuery)
       .then((rsp: YakQueryHTTPFlowResponse) => {
-        const resData = rsp?.Data || []
-        if (resData.length) {
-          setTotal(rsp.Total)
-        }
+        if (queryEpoch !== tableQueryEpochRef.current) return
+        setTotal(normalizeHTTPFlowTotal(rsp.Total))
       })
       .catch(() => {
+        if (queryEpoch !== tableQueryEpochRef.current) return
         if (extraTimerRef.current) {
           clearInterval(extraTimerRef.current)
         }
@@ -469,6 +873,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const params = tableParams.Filter
   const setParams = useMemoizedFn(
     (next: ParamsUpdater | Pick<ParamsTProps, 'Pagination'> | Pick<ParamsTProps, 'Filter'>) => {
+      tableQueryEpochRef.current += 1
       if (typeof next === 'function') {
         setP({ Filter: next(paramsRef.current) } as ParamsTProps & { Filter: YakQueryHTTPFlowRequest })
         return
@@ -495,11 +900,61 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }))
   }, [runTimeId])
 
-  // 兼容原来 setData 写法（收藏、改标签等会原地改表格行） 拷贝避免大量二进制字段
+  // 兼容收藏、改标签等 setData 写法，使用浅更新避免复制大量二进制字段。
   const setData = useMemoizedFn((value: React.SetStateAction<HTTPFlow[]>) => {
     patchTData((prev) => (typeof value === 'function' ? value(prev) : value))
   })
   updateDataRef.current = updateData
+  requestMITMLiveRefreshRef.current = (source, serverSentAtUnixMs) => {
+    mitmFlowObservability.recordLiveTrigger(source, serverSentAtUnixMs)
+    notifyT()
+  }
+  flushHTTPFlowLiveRefreshRef.current = () => {
+    if (pageType === 'MITM' && inViewport && mitmFlowObservability.getHTTPFlowLiveStreamMode() === 'canary') {
+      notifyT()
+    }
+  }
+  flushHTTPFlowLiveDirectRef.current = (events) => {
+    if (mitmFlowObservability.getHTTPFlowLiveStreamMode() !== 'canary') {
+      const droppedRows = events.length + httpFlowLiveDirectBatcher.pendingCount()
+      httpFlowLiveDirectBatcher.cancel()
+      httpFlowLiveRefreshScheduler.cancel()
+      httpFlowLiveDirectRecoveryGate.requireRecovery(httpFlowLiveStreamController.snapshot().lastSeenId)
+      mitmFlowObservability.recordHTTPFlowLiveDirectFallback(droppedRows)
+      requestMITMLiveRefreshRef.current('continuation')
+      return
+    }
+    const rows = events
+      .map((event) => httpFlowLiveSummaryToHTTPFlow(event.Flow))
+      .filter((flow): flow is HTTPFlow => !!flow)
+      .filter((flow) => flow.Id > mitmResetAfterIdRef.current)
+      .sort((left, right) => right.Id - left.Id)
+    if (!rows.length) return
+    const inserted =
+      !httpFlowLiveDirectRecoveryGate.snapshot().required &&
+      rows.length > 0 &&
+      pageType === 'MITM' &&
+      inViewport &&
+      httpFlowLiveStreamController.snapshot().active &&
+      pushTData(rows)
+    if (inserted !== false) {
+      mitmFlowObservability.recordHTTPFlowLiveDirectBatch(inserted, events)
+      return
+    }
+
+    httpFlowLiveDirectRecoveryGate.markFallback(events)
+    mitmFlowObservability.recordHTTPFlowLiveDirectFallback(events.length)
+    const serverSentAtUnixMs = Math.min(
+      ...events
+        .map((event) => Number(event.ServerAtUnixMs))
+        .filter((timestamp) => Number.isFinite(timestamp) && timestamp > 0),
+    )
+    mitmFlowObservability.recordLiveTrigger(
+      'httpflow-live-stream',
+      Number.isFinite(serverSentAtUnixMs) ? serverSentAtUnixMs : undefined,
+    )
+    httpFlowLiveRefreshScheduler.request()
+  }
 
   useEffect(() => {
     if (!viewAttachIdFirstRef.current || !data.length) return
@@ -748,7 +1203,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if (filter['ContentType']) {
         filter['SearchContentType'] = filter['ContentType'].join(',')
       }
-      setP({
+      setParams({
         Filter: {
           ...getParams(),
           ...filter,
@@ -857,17 +1312,43 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const [updateCacheData, setUpdateCacheData] = useState<UpdateCacheData[]>([])
   const pendingTagUpdatesRef = useRef<UpdateCacheData[]>([])
+  const pendingPushServerSentAtUnixMsRef = useRef<number>()
   const pushFlushTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const MITM_PUSH_DEBOUNCE_MS = 300
   const HTTP_FLOW_PUSH_DEBOUNCE_MS = 500
 
+  useEffect(() => {
+    if (isTableActive) return
+    if (pushFlushTimerRef.current) {
+      clearTimeout(pushFlushTimerRef.current)
+      pushFlushTimerRef.current = undefined
+    }
+    pendingTagUpdatesRef.current = []
+    pendingPushServerSentAtUnixMsRef.current = undefined
+  }, [isTableActive])
+
   const flushPushRefresh = useMemoizedFn(() => {
     pushFlushTimerRef.current = undefined
     const pendingTagUpdates = pendingTagUpdatesRef.current
+    pendingTagUpdatesRef.current = []
     if (pendingTagUpdates.length) {
       setUpdateCacheData((prev) => prev.concat(pendingTagUpdates))
-      setWatchRefresh((prev) => !prev)
-      pendingTagUpdatesRef.current = []
+    }
+    const serverSentAtUnixMs = pendingPushServerSentAtUnixMsRef.current
+    pendingPushServerSentAtUnixMsRef.current = undefined
+    if (pageType === 'MITM') {
+      if (
+        shouldPreferHTTPFlowLiveRefresh(
+          pageType,
+          inViewport,
+          mitmFlowObservability.getHTTPFlowLiveStreamMode(),
+          httpFlowLiveStreamController.snapshot(),
+        )
+      ) {
+        return
+      }
+      requestMITMLiveRefreshRef.current('duplex', serverSentAtUnixMs)
+      return
     }
     if (serverPushStatus) {
       notifyPushUpdate()
@@ -886,25 +1367,66 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     )
   })
 
+  const refreshFieldGroups = useThrottleFn(() => setWatchRefresh((prev) => !prev), {
+    wait: HTTP_FLOW_FIELD_GROUP_REFRESH_INTERVAL,
+    leading: true,
+    trailing: true,
+  }).run
+
   const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
+    if (!isTableActive) {
+      return
+    }
     try {
-      const updateData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onRefreshQueryHTTPFlowsFun' })
+      const parsedData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'onRefreshQueryHTTPFlowsFun' })
+      const isEnvelope =
+        parsedData &&
+        typeof parsedData === 'object' &&
+        parsedData.__yakitHTTPFlowRefreshEnvelope === 1 &&
+        'payload' in parsedData
+      const updateData = isEnvelope ? parsedData.payload : parsedData
+      const envelopeTimestamp = Number(isEnvelope ? parsedData.serverSentAtUnixMs : undefined)
+      if (Number.isFinite(envelopeTimestamp) && envelopeTimestamp > 0) {
+        const previousTimestamp = pendingPushServerSentAtUnixMsRef.current
+        pendingPushServerSentAtUnixMsRef.current = previousTimestamp
+          ? Math.min(previousTimestamp, envelopeTimestamp)
+          : envelopeTimestamp
+      }
       if (typeof updateData !== 'string' && updateData.action === 'update') {
         pendingTagUpdatesRef.current.push(updateData)
       }
     } catch (error) {}
+    if (inViewport) refreshFieldGroups()
     schedulePushRefresh()
+  })
+  const onMITMFlowCommitted = useMemoizedFn((data) => {
+    if (pageType !== 'MITM' || !inViewport) return
+    try {
+      const signal = JSONParseLog(data, {
+        page: 'HTTPFlowTable',
+        fun: 'onMITMFlowCommitted',
+      }) as HTTPFlowCommittedSignal
+      const serverSentAtUnixMs = Number(signal.serverSentAtUnixMs)
+      requestMITMLiveRefreshRef.current(
+        'flow-committed',
+        Number.isFinite(serverSentAtUnixMs) && serverSentAtUnixMs > 0 ? serverSentAtUnixMs : undefined,
+      )
+    } catch (error) {}
   })
   useEffect(() => {
     emiter.on('onRefreshQueryHTTPFlows', onRefreshQueryHTTPFlowsFun)
+    emiter.on('onMITMFlowCommitted', onMITMFlowCommitted)
     return () => {
       emiter.off('onRefreshQueryHTTPFlows', onRefreshQueryHTTPFlowsFun)
+      emiter.off('onMITMFlowCommitted', onMITMFlowCommitted)
       if (pushFlushTimerRef.current) {
         clearTimeout(pushFlushTimerRef.current)
         pushFlushTimerRef.current = undefined
       }
+      pendingTagUpdatesRef.current = []
+      pendingPushServerSentAtUnixMsRef.current = undefined
     }
-  }, [])
+  }, [onMITMFlowCommitted, onRefreshQueryHTTPFlowsFun])
 
   useEffect(() => {
     // 获取缓存的后台刷新状态
@@ -942,12 +1464,45 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     } catch (error) {}
   })
 
-  const cleanLogTableData = useMemoizedFn((version) => {
-    if (version !== mitmVersion) return
+  const cleanLogTableData = useMemoizedFn((value: string) => {
+    const signal = parseMITMLogResetSignal(value)
+    if (signal.version !== mitmVersion) return
+    const resetAfterId = Math.max(
+      latestPersistedIdRef.current,
+      httpFlowLiveStreamController.snapshot().lastSeenId,
+      data.reduce((latest, flow) => Math.max(latest, Number(flow.Id) || 0), 0),
+    )
+    tableQueryEpochRef.current += 1
+    mitmResetAfterIdRef.current = resetAfterId
+    mitmResetProjectKeyRef.current = latestPersistedProjectKeyRef.current
+    latestVisibleDataHighWaterRef.current = 0
+    httpFlowLiveDirectBatcher.cancel()
+    httpFlowLiveDirectRecoveryGate.reset()
+    httpFlowLiveRefreshScheduler.cancel()
+    if (extraTimerRef.current) {
+      clearInterval(extraTimerRef.current)
+      extraTimerRef.current = undefined
+    }
+    if (pushFlushTimerRef.current) {
+      clearTimeout(pushFlushTimerRef.current)
+      pushFlushTimerRef.current = undefined
+    }
+    pendingTagUpdatesRef.current = []
+    pendingPushServerSentAtUnixMsRef.current = undefined
+    setUpdateCacheData([])
     setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-    setData([])
+    resetTData()
+    setScrollToIndex(`0_reset_${Date.now()}`)
+    setIsRefresh((current) => !current)
+    setTotal(0)
+    setCurrentIndex(undefined)
+    setSelected(undefined)
+    setSelectedRowKeys([])
+    setSelectedRows([])
+    setIsAllSelect(false)
     setParams((prev) => ({
       ...prev,
+      AfterId: resetAfterId || undefined,
       AfterUpdatedAt: undefined,
       BeforeUpdatedAt: undefined,
     }))
@@ -1263,6 +1818,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         fun: 'onDeleteToUpdateEvent',
       })
       if (sourcePage && pageType && sourcePage !== pageType) {
+        if (!isTableActive) {
+          return
+        }
         updateData()
       }
     } catch (error) {}
@@ -1316,8 +1874,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     },
   )
 
-  const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
-    const length = selectedRows.length
+  const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean, rows?: HTTPFlow[]) => {
+    const batchRows = rows || selectedRows
+    const length = batchRows.length
     if (length <= 0) {
       yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
       return
@@ -1331,7 +1890,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       return
     }
     for (let i = 0; i < length; i++) {
-      const element = selectedRows[i]
+      const element = batchRows[i]
       f(element)
       if (i === length - 1) {
         setSelectedRowKeys([])
@@ -1903,6 +2462,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       SourceType: props.params?.SourceType || 'mitm',
       ...getRunTimeIdObj(runTimeId),
       Full: false,
+      // MITM “清空视图”使用持久高水位隔离本次会话之前的数据。
+      AfterId: params.AfterId,
       // 屏蔽条件和高级筛选里面的参数需要保留
       ExcludeId: params.ExcludeId,
       ExcludeInUrl: params.ExcludeInUrl,
@@ -1920,6 +2481,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return obj
   }, [props.params, pageType, runTimeId, params])
   const resetAllFun = useMemoizedFn((filter: YakQueryHTTPFlowRequest, attachId: number = 0) => {
+    tableQueryEpochRef.current += 1
     refreshT(filter, {
       ...tableParams.Pagination,
       Order: defSort.order,
@@ -2204,31 +2766,40 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onSetTableSelectNum && onSetTableSelectNum(isAllSelect ? total : selectedRowKeys?.length)
   }, [total, isAllSelect, selectedRowKeys])
 
-  const realData = useMemo(() => {
-    if (updateCacheData.length) {
-      let findFlag = false
-      const dataMap = new Map(data.map((item) => [+item.Id, item]))
-      updateCacheData.forEach((target, index) => {
-        if (dataMap.has(target.id)) {
-          const targetObject = dataMap.get(target.id)
-          if (targetObject) {
-            targetObject.Tags = target.tags
-            updateCacheData.splice(index, 1)
-            setUpdateCacheData(updateCacheData)
-            findFlag = true
-          }
-        }
-      })
-      if (findFlag) {
-        const newData = getClassNameData(data)
-        setData(newData)
-        return newData
-      }
-      return data
-    } else {
-      return data
+  useEffect(() => {
+    if (!updateCacheData.length || !data.length) return
+    const visibleIds = new Set(data.map((item) => Number(item.Id)))
+    const applicableUpdates = updateCacheData.filter((item) => visibleIds.has(Number(item.id)))
+    if (!applicableUpdates.length) return
+
+    const appliedIds = new Set(applicableUpdates.map((item) => Number(item.id)))
+    patchTData((current) =>
+      patchHTTPFlowTags(
+        current,
+        applicableUpdates.map((item) => ({ Id: item.id, Tags: item.tags })),
+      ),
+    )
+    setUpdateCacheData((current) => current.filter((item) => !appliedIds.has(Number(item.id))))
+  }, [data, patchTData, updateCacheData])
+
+  const realData = data
+
+  useLayoutEffect(() => {
+    if (!selectionReconcilePendingRef.current) return
+    selectionReconcilePendingRef.current = false
+    const current = getSelected()
+    if (!current) return
+
+    const currentIndex = findHTTPFlowSelectionIndex(realData, current)
+    if (currentIndex >= 0) {
+      setCurrentIndex(currentIndex)
+      return
     }
-  }, [updateCacheData, data])
+
+    setCurrentIndex(undefined)
+    setSelected(undefined)
+    setOnlyShowFirstNode?.(true)
+  }, [getSelected, realData, setOnlyShowFirstNode, setSelected])
 
   useThrottleEffect(() => {
     // 当realData长度大于1000时，打印日志
@@ -2672,15 +3243,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (!width || !height) {
       return
     }
-    if (onlyShowFirstNode) {
-      // 窗口由小变大时 重新拉取数据
-      if (boxHeightRef.current && boxHeightRef.current < height) {
-        boxHeightRef.current = height
-        updateData()
-      } else {
-        boxHeightRef.current = height
-      }
-    }
+    const previousHeight = boxHeightRef.current
+    boxHeightRef.current = height
+    // A freshly mounted History table can run its params effect before the
+    // ResizeDetector has produced a usable height. Shared duplex push then
+    // stops compatibility polling, so existing rows have no later event that
+    // can wake the empty table. The first valid layout is therefore an
+    // explicit bootstrap boundary.
+    const action = selectHTTPFlowTableResizeAction(previousHeight, height, onlyShowFirstNode, isTableActive)
+    if (action === 'bootstrap') updateData()
+    if (action === 'reconcile') reconcileViewportT()
   })
 
   const onFormConfigSaveOk = useMemoizedFn((config: any) => {
@@ -2763,6 +3335,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           isRefresh={isRefresh}
           renderKey="Id"
           data={realData}
+          overscan={pageType === 'MITM' ? MITM_FLOW_TABLE_OVERSCAN : undefined}
           rowSelection={tableRowSelection}
           loading={loading}
           enableDrag={true}

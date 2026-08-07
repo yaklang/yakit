@@ -3,8 +3,14 @@ const isDev = require('electron-is-dev')
 const path = require('path')
 const os = require('os')
 const url = require('url')
-const { registerIPC, registerNewIPC } = require('./ipc')
 const process = require('process')
+const { configureE2EEnvironment } = require('./e2eEnvironment')
+
+// This must run before localCache/filePath are loaded: both can resolve and
+// create files below Electron's userData directory during module startup.
+const e2eEnvironment = configureE2EEnvironment(app)
+
+const { registerIPC, registerNewIPC } = require('./ipc')
 const {
   initExtraLocalCache,
   getExtraLocalCacheValue,
@@ -27,6 +33,8 @@ const {
 
 const BLOCKED_CHROMIUM_DEBUG_SWITCHES = ['remote-debugging-port', 'remote-debugging-address', 'remote-debugging-pipe']
 const BLOCKED_NODE_DEBUG_ARG_PREFIXES = ['--inspect', '--inspect-brk', '--inspect-port']
+const MITM_DEBUG_HOOKS_ARGUMENT = '--yakit-mitm-debug-hooks=1'
+const mitmDebugHooksEnabled = !app.isPackaged && (isDev || e2eEnvironment.enabled)
 
 const getForbiddenStartupDebugFlags = () => {
   const detected = []
@@ -195,8 +203,12 @@ function createEngineLinkWindow() {
   })
 
   engineLinkWin.on('close', (e) => {
-    e.preventDefault()
     state.saveState(engineLinkWin)
+    // WDIO owns the isolated Electron process lifecycle. Let its teardown
+    // close the window directly instead of opening the user-facing dialog.
+    if (e2eEnvironment.enabled) return
+
+    e.preventDefault()
     if (engineLinkWin.isVisible()) {
       engineLinkWin.webContents.send('close-engineLinkWin-renderer')
     }
@@ -236,6 +248,7 @@ function createWindow() {
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      additionalArguments: mitmDebugHooksEnabled ? [MITM_DEBUG_HOOKS_ARGUMENT] : [],
       nodeIntegration: true,
       contextIsolation: false,
       sandbox: true,
@@ -303,11 +316,15 @@ function createWindow() {
   })
 
   win.on('close', (e) => {
-    e.preventDefault()
     const bounds = win.getBounds()
     if (bounds.width >= minWidth && bounds.height >= minHeight) {
       state.saveState(win)
     }
+    // Test runs use a disposable profile and are terminated by the runner.
+    // Product startup and close confirmation remain unchanged outside E2E.
+    if (e2eEnvironment.enabled) return
+
+    e.preventDefault()
     if (win.isVisible()) {
       win.webContents.send('close-windows-renderer')
     }
@@ -601,7 +618,12 @@ function registerGlobalIPC() {
       closeAllLogHandles()
       app.exit()
     }
-    if (getExtraLocalCacheValue(UICloseFlag) !== false && showCloseMessageBox && parentWindow) {
+    if (
+      !e2eEnvironment.enabled &&
+      getExtraLocalCacheValue(UICloseFlag) !== false &&
+      showCloseMessageBox &&
+      parentWindow
+    ) {
       const showIcon = isIRify
         ? '../assets/irify-close.png'
         : isMemfit
