@@ -15,7 +15,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import styles from './HistoryChat.module.scss'
 import { AIAgentTriggerEventInfo } from '../aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
-import { grpcDeleteAISession, grpcQueryAISession } from '../grpc'
+import { grpcDeleteAISession } from '../grpc'
 import { AISession, DeleteAISessionRequest } from '../type/aiChat'
 import { SideSettingButton } from '../aiChatWelcome/AIChatWelcome'
 import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/HistoryChatList'
@@ -43,6 +43,7 @@ import useDebounce from 'ahooks/lib/useDebounce'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -125,7 +126,6 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   const { activeChat } = useAIAgentStore()
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
-  const currentPageId = usePageInfo((state) => state.getCurrentSelectPageId(state.getCurrentPageTabRouteKey()), shallow)
 
   const getPopupContainer = useMemoizedFn(() => getMainOperatorPageBodyContainer() || document.body)
   const popupContainer = embedded ? getPopupContainer : undefined
@@ -148,20 +148,6 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   const [clearLoading, setClearLoading] = useState(false)
 
   const chatDataStoreKey = useGetChatDataStoreKey()
-
-  /** 查询与删除条件匹配的完整历史集合，避免分页列表漏掉待删除 session。 */
-  const queryTargetSessionIds = useMemoizedFn(async (sources?: AISource[], beforeTimestamp?: number) => {
-    const { Data } = await grpcQueryAISession(
-      {
-        Pagination: { Page: 1, Limit: -1, OrderBy: 'last_used_at', Order: 'desc' },
-        Filter: sources?.length ? { Source: sources } : undefined,
-      },
-      true,
-    )
-    return Data.filter((session) => beforeTimestamp === undefined || getChatTimestamp(session) <= beforeTimestamp).map(
-      (session) => session.SessionID,
-    )
-  })
 
   /** 补齐尚未写入历史表、但当前路由内已经运行的会话。 */
   const getRouteSessionIds = useMemoizedFn((sources: AISource[]) => {
@@ -219,14 +205,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     if (clearLoading) return
 
     const beforeTimestamp = Date.now() - days * DAY_MS
-    let sessionIds: string[] = []
-
-    try {
-      sessionIds = await queryTargetSessionIds(historyQuerySources, beforeTimestamp)
-    } catch (e) {
-      yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
-      return
-    }
+    const sessionIds = visibleSessions
+      .filter((session) => getChatTimestamp(session) <= beforeTimestamp)
+      .map((session) => session.SessionID)
 
     if (sessionIds.length === 0) {
       yakitNotify('info', t('HistoryChat.noChatsBeforeDays', { days }))
@@ -234,6 +215,8 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     }
 
     setClearLoading(true)
+    // 按 source 打上批量删除标记，让 AIChatContent 的 sourceDeleting selector 生效
+    sessionStatusStore.getState().setSourceDeleting(historyQuerySources, true)
     try {
       const filter =
         enableHistorySourceFilter && historySourceFilter !== 'local'
@@ -254,7 +237,6 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       })
       const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
       const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)
-
       if (nextChats.length === 0) {
         onNewChat()
         setActiveChat?.(undefined)
@@ -269,6 +251,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     } catch (e) {
       yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
     } finally {
+      sessionStatusStore.getState().setSourceDeleting(historyQuerySources, false)
       setClearLoading(false)
     }
   })
@@ -504,17 +487,19 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       </div>
 
       <div className={styles['content']}>
-        <HistoryChatList
-          search={searchDebounce}
-          sessionList={visibleSessions}
-          aiSource={historyQuerySources}
-          setSessions={dispatcher.setSessions}
-          loadHistoryData={dispatcher.loadHistoryData}
-          getSessions={dispatcher.getSessions}
-          getPopupContainer={popupContainer}
-          overlayClassName={embedded ? embeddedPopconfirmClass : undefined}
-          embedded={embedded}
-        />
+        <YakitSpin spinning={clearLoading}>
+          <HistoryChatList
+            search={searchDebounce}
+            sessionList={visibleSessions}
+            aiSource={historyQuerySources}
+            setSessions={dispatcher.setSessions}
+            loadHistoryData={dispatcher.loadHistoryData}
+            getSessions={dispatcher.getSessions}
+            getPopupContainer={popupContainer}
+            overlayClassName={embedded ? embeddedPopconfirmClass : undefined}
+            embedded={embedded}
+          />
+        </YakitSpin>
       </div>
     </div>
   )

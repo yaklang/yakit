@@ -75,7 +75,10 @@ const useSessionList = (aiSource: AISource[], platform: string[] = []) => {
     historyLoadingRef.current = true
     try {
       const { Data, Total } = await grpcQueryAISession({
-        Pagination: currentPagination,
+        Pagination: {
+          ...currentPagination,
+          Limit: -1,
+        },
         Filter: {
           Source: aiSource,
           Platform: platform,
