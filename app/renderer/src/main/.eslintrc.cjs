@@ -34,10 +34,5 @@ module.exports = {
     'react/display-name': 'off',
     'react/no-unknown-property': ['error', { ignore: ['css'] }],
   },
-  ignorePatterns: [
-    'dist',
-    'node_modules',
-    'scripts',
-    'src/alibaba/ali-react-table-dist/**',
-  ],
+  ignorePatterns: ['dist', 'node_modules', 'scripts', 'src/alibaba/ali-react-table-dist/**'],
 }
