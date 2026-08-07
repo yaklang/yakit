@@ -78,7 +78,9 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
   }, [params.Type])
 
   const cancel = useMemoizedFn(() => {
+    // cancel 后主进程不再转发 end，需本地收尾
     ipcRenderer.invoke('cancel-FetchPortAssetFromSpaceEngine', token)
+    setLoading(false)
   })
 
   return (

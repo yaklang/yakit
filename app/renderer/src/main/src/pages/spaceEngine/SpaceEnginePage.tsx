@@ -143,7 +143,9 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
   const onStopExecute = useMemoizedFn((e) => {
     e.stopPropagation()
     apiCancelFetchPortAssetFromSpaceEngine(tokenRef.current).then(() => {
+      // cancel 后主进程不再转发 end，需本地收尾
       spaceEngineStreamEvent.stop()
+      setExecuteStatus('finished')
       setIsExecuting(false)
     })
   })

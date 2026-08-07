@@ -2424,11 +2424,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
     })
 
     const onCancelAudit = () => {
+      // cancel 后主进程不再转发 end，需本地收尾
       apiCancelDebugPlugin(tokenRef.current)
-      apiCancelDebugPlugin(tokenCompileRef.current).then(() => {
-        setIsExpand(true)
-        setExecuteStatus('finished')
-      })
+      apiCancelDebugPlugin(tokenCompileRef.current)
+      debugPluginStreamEvent.stop()
+      debugCompilePluginStreamEvent.stop()
+      setIsExpand(true)
+      setExecuteStatus('finished')
+      setAuditsExecuting(false)
+      setProgressShow(undefined)
     }
 
     useImperativeHandle(

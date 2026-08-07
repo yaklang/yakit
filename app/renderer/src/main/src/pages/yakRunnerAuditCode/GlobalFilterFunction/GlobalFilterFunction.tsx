@@ -48,8 +48,11 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
   }, [projectName])
 
   const onStopExecute = useMemoizedFn(() => {
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setExecuting(false)
   })
 
   const onInit = useMemoizedFn(() => {

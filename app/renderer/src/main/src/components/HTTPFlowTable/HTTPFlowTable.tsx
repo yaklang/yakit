@@ -1956,7 +1956,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
   })
   const getExcelData = useMemoizedFn((pagination, list: HTTPFlow[]) => {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       debugToPrintLogs({
         page: 'HTTPFlowTable',
         fun: 'getExcelData',
@@ -1971,6 +1971,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         //         ? undefined
         //         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
         OffsetId: undefined,
+      }
+      // 与展示查询 apiQueryHTTPFlows 保持一致：MITM 场景补充本次会话起始时间作为下界，
+      // 否则导出会把数据库中全部历史流量一起导出
+      if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
+        const time = await getRemoteValue(MITMConsts.MITMStartTimeStamp)
+        if (time) {
+          query.AfterUpdatedAt = parseInt(time, 10)
+        }
       }
 
       let exportParams: any = {}

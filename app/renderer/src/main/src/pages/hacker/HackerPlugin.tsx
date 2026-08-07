@@ -130,7 +130,9 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
       })
   })
   const cancelScript = useMemoizedFn(() => {
+    // cancel 后主进程不再转发 end，需本地收尾
     ipcRenderer.invoke('cancel-ExecutePacketYakScript', token)
+    setExecting(false)
   })
 
   useEffect(() => {
