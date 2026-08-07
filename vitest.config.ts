@@ -102,7 +102,7 @@ export default defineConfig({
     // run from repo root
     root: path.resolve(__dirname),
     // run renderer setup to register testing-library matchers
-    setupFiles: ['app/renderer/src/main/src/setupTests.ts'],
+    setupFiles: ['app/renderer/src/main/src/setupVitest.ts'],
     // 单测：仅业务旁 __test__/（与 scripts/ci-select-vitest-tests.js 一致）
     include: [
       'app/renderer/src/main/src/**/__test__/**/*.test.{ts,tsx,js,jsx}',

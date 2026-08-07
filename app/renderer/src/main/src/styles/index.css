@@ -1,13 +1,84 @@
-/* src/styles/index.css */
+/* 全局入口样式：antd + 应用基础 + 通用工具类
+ * 该文件须在业务组件样式之前加载（antd 放最前，避免覆盖组件样式）
+ */
 
-/* Import Tailwind's base styles */
-@tailwind base;
+/* @import 'antd/dist/antd.css'; */
 
-/* Import Tailwind's component styles */
-@tailwind components;
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 
-/* Import Tailwind's utility styles */
-@tailwind utilities;
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-/* 需使用npx tailwindcss -i ./src/styles/index.css -o ./src/styles/output.css --watch进行编译 */
-/* 最后的使用路径app\renderer\src\main\src\pages\assetViewer\reportRenders\markdownRender.scss */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* ---------- 原 yakitUI.scss ---------- */
+
+.yakit-single-line-ellipsis {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.__floater__body .__floater__arrow svg polygon {
+  fill: var(--Colors-Use-Basic-Background);
+  transform: translateX(1px);
+}
+
+/* ---------- 原 yakitLib.scss ---------- */
+
+html {
+  /* 多行内容省略-行数 */
+  --yakit-ellipsis-row: 2;
+}
+
+/* 单行内容省略 */
+.yakit-content-single-ellipsis {
+  white-space: nowrap;
+  word-wrap: normal;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* 多行内容省略；行数可通过变量 --yakit-ellipsis-row 控制 */
+.yakit-content-multiLine-ellipsis {
+  display: -webkit-box;
+  line-clamp: var(--yakit-ellipsis-row);
+  -webkit-line-clamp: var(--yakit-ellipsis-row);
+  -webkit-box-orient: vertical;
+}
+
+/* icon 图标转圈动画 */
+.icon-rotate-animation {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  25% {
+    -webkit-transform: rotate(90deg);
+  }
+  50% {
+    -webkit-transform: rotate(180deg);
+  }
+  75% {
+    -webkit-transform: rotate(270deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}

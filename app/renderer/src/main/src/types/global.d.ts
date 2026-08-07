@@ -1,3 +1,8 @@
+/** Electron 渲染进程里 `<input type="file">` 选中的 File 带本地绝对路径；其它来源的 File 可能没有 */
+interface File {
+  readonly path?: string
+}
+
 declare module 'fs' {
   interface FileItem extends File {
     path: string
@@ -61,7 +66,7 @@ type YakStaticAnalyzeErrorResult = import('@/utils/editorMarkers').YakStaticAnal
 type YakQueryHTTPFlowResponse = import('@/components/HTTPFlowTable/HTTPFlowTable.constants').YakQueryHTTPFlowResponse
 type LayoutSplitUploadResponse = import('@/components/layout/utils').SplitUploadResponse
 type NetInterface = import('@/models/Traffic').NetInterface
-type OnlineProfileProps = import('@/NewApp').OnlineProfileProps
+type OnlineProfileProps = import('@/newApp/NewApp').OnlineProfileProps
 type API = import('@/services/swagger/resposeType').API
 type AxiosResponseProps = import('@/services/fetch').AxiosResponseProps
 type AxiosResponseInfoProps = import('@/services/fetch').AxiosResponseInfoProps

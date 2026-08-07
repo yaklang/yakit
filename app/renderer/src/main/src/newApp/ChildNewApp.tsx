@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import OpenPacketNewWindow from './components/OpenPacketNewWindow/OpenPacketNewWindow'
+import OpenPacketNewWindow from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
 import styles from './ChildNewApp.module.scss'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
-import { coordinate } from './pages/globalVariable'
-import TitleBar from './components/BaseTitleBar'
-import { RightBugAuditResult, YakitRiskDetails } from './pages/risks/YakitRiskTable/YakitRiskTable'
+import { coordinate } from '@/pages/globalVariable'
+import TitleBar from '@/components/BaseTitleBar'
+import { RightBugAuditResult, YakitRiskDetails } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 
 const { ipcRenderer } = window.require('electron')
 

@@ -161,7 +161,7 @@ jobs:
       pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
       pr_ref: ${{ github.event.pull_request.head.ref }}
       workdir: app/renderer/src/main
-      run_command: npx eslint src --ext .js,.jsx,.ts,.tsx
+      run_command: yarn eslint src --ext .js,.jsx,.ts,.tsx
       log_filename: eslint-output.log
       artifact_name: ci-log-eslint-renderer
 
@@ -173,7 +173,7 @@ jobs:
       pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
       pr_ref: ${{ github.event.pull_request.head.ref }}
       workdir: app/renderer/src/main
-      run_command: npx tsc -p tsconfig.json --noEmit
+      run_command: yarn tsc -p tsconfig.json --noEmit
       log_filename: tsc-output.log
       artifact_name: ci-log-tsc-renderer
 
@@ -185,7 +185,7 @@ jobs:
       pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
       pr_ref: ${{ github.event.pull_request.head.ref }}
       workdir: app/renderer/engine-link-startup
-      run_command: npx eslint src --ext .js,.jsx,.ts,.tsx
+      run_command: yarn eslint src --ext .js,.jsx,.ts,.tsx
       log_filename: eslint-engine-link-output.log
       artifact_name: ci-log-eslint-engine-link
 
@@ -197,7 +197,7 @@ jobs:
       pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
       pr_ref: ${{ github.event.pull_request.head.ref }}
       workdir: app/renderer/engine-link-startup
-      run_command: npx tsc -p tsconfig.json --noEmit
+      run_command: yarn tsc -p tsconfig.json --noEmit
       log_filename: tsc-engine-link-output.log
       artifact_name: ci-log-tsc-engine-link
 
