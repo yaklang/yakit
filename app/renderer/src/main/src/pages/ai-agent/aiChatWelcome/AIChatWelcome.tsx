@@ -334,16 +334,11 @@ const AIChatWelcomeSettingCard = memo(
     const onSelect = useMemoizedFn((item: AIReActRecommendedSkill) => {
       // 多选：已存在则取消，否则追加
       setSelect((prev) => {
-        const exist = prev.some((s) => s.Name === item.Name)
-        return exist
-          ? prev.filter((s) => s.Name !== item.Name)
-          : [
-              ...prev,
-              {
-                Name: item.Name,
-                Type: item.Type,
-              },
-            ]
+        const key = `${item.Type}:${item.Name}`
+        const exists = prev.some((s) => `${s.Type}:${s.Name}` === key)
+        return exists
+          ? prev.filter((s) => `${s.Type}:${s.Name}` !== key)
+          : [...prev, { Name: item.Name, Type: item.Type }]
       })
     })
     const getList = useMemoizedFn(() => {
@@ -364,7 +359,7 @@ const AIChatWelcomeSettingCard = memo(
           const displayName = i18n.language?.startsWith('zh') ? item.DisplayNameZhCN || item.Name : item.Name
           return (
             <div
-              key={index}
+              key={`${item.Type}:${item.Name}`}
               className={classNames(styles['card-item'], { [styles['card-item-select']]: isSelect })}
               onClick={() => onSelect(item)}
             >

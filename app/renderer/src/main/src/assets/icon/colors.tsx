@@ -2304,7 +2304,7 @@ const ColorsMemfit = () => (
 )
 
 /**
- * @description Outlin
+ * @description Outline
  */
 export const ColorsMemfitIcon = (props: Partial<IconProps>) => {
   return <Icon component={ColorsMemfit} {...props} />

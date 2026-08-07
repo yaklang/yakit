@@ -1246,10 +1246,6 @@ export interface GetAIReActRecommendedSkillsResponse {
   Data: AIReActRecommendedSkill[]
 }
 
-export interface GetAIReActRecommendedSkillsResponse {
-  Data: AIReActRecommendedSkill[]
-}
-
 export interface UpdateAIReActRecommendedSkillRequest {
   Name: string
   Content: string
