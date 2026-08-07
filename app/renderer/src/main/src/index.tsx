@@ -1,17 +1,15 @@
 import ReactDOM from 'react-dom'
 /** 该样式必须放在APP组件的前面，因为里面有antd样式，放后面会把APP组件内的样式覆盖 */
-import './index.css'
-import NewApp from './NewApp'
+import './styles/index.css'
+import NewApp from './newApp/NewApp'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 // import {createRoot} from "react-dom/client"
-import './yakitUI.scss'
 import './theme/yakit.scss'
-import './yakitLib.scss'
 import './assets/global.scss'
 import './theme/scrollbar.scss'
 import { Suspense, useEffect, useState } from 'react'
-import ChildNewApp from './ChildNewApp'
+import ChildNewApp from './newApp/ChildNewApp'
 import MarkdownPdfPrintPage from './pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage'
 import { GetMainColor } from './utils/envfile'
 import { useTheme } from './hook/useTheme'
@@ -20,7 +18,7 @@ import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 import { setupConcurrentStreamMainBridge } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge'
 import { debugToPrintLogs } from './utils/logCollection'
 
-import { setupMonacoWorkers } from './setupMonacoWorkers'
+import { setupMonacoWorkers } from './utils/monacoSpec/setupMonacoWorkers'
 
 setupMonacoWorkers()
 

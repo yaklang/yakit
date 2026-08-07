@@ -8,7 +8,7 @@ import AuxWindowApp from './AuxWindowApp'
 import { useTheme } from '@/hook/useTheme'
 import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
 import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
-import { setupMonacoWorkers } from '@/setupMonacoWorkers'
+import { setupMonacoWorkers } from '@/utils/monacoSpec/setupMonacoWorkers'
 
 setupMonacoWorkers()
 applyAuxThemeColors(useTheme.getState().theme)
