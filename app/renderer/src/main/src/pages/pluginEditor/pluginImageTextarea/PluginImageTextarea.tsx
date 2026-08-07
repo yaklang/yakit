@@ -2,7 +2,6 @@ import React, { forwardRef, memo, useImperativeHandle, useMemo, useRef, useState
 import { useMemoizedFn } from 'ahooks'
 import { TextareaForImage, PluginImageTextareaProps } from './PluginImageTextareaType'
 import { failed } from '@/utils/notification'
-import { FileItem } from 'fs'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePhotographIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { Input, Upload } from 'antd'
@@ -81,7 +80,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
     }, [imgs])
 
     // 生成图片信息
-    const generateImageInfo = useMemoizedFn((image: FileItem) => {
+    const generateImageInfo = useMemoizedFn((image: File) => {
       if (imgsLength >= maxLength) {
         failed(`最多上传${maxLength}张图片`)
         return
@@ -139,7 +138,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
         if (item.kind === 'file' && item.type.indexOf('image') !== -1) {
           e.preventDefault()
           e.stopPropagation()
-          const image = item.getAsFile() as FileItem
+          const image = item.getAsFile() as File
           generateImageInfo(image)
         }
       }

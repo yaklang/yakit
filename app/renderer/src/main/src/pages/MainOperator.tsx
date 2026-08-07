@@ -155,7 +155,11 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
   })
 
   // 修改头像
-  const setAvatar = useMemoizedFn(async (file) => {
+  const setAvatar = useMemoizedFn(async (file: File) => {
+    if (!file.path) {
+      failed(t('SetUserInfo.avatarUpdateFailed', { error: 'missing file path' }))
+      return
+    }
     await ipcRenderer
       .invoke('http-upload-img-path', { path: file.path, type: 'headImg' })
       .then((res) => {

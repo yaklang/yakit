@@ -170,7 +170,7 @@ export const GetReleaseEdition = () => {
 
 export const fetchEnv = () => {
   try {
-    return process.env['REACT_APP_PLATFORM']
+    return process.env.REACT_APP_PLATFORM
   } catch (e) {
     return ''
   }
@@ -187,7 +187,7 @@ yakitRelease.setEditionRaw(fetchEnv() || '').then(() => {
 
 /** 是否展示开发者工具 */
 export const showDevTool = () => {
-  const devTool = process.env?.REACT_APP_DEVTOOL || ''
+  const devTool = process.env.REACT_APP_DEVTOOL || ''
   return devTool && devTool === 'true'
 }
 

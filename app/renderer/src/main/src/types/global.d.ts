@@ -1,3 +1,8 @@
+/** Electron 渲染进程里 `<input type="file">` 选中的 File 带本地绝对路径；其它来源的 File 可能没有 */
+interface File {
+  readonly path?: string
+}
+
 declare module 'fs' {
   interface FileItem extends File {
     path: string

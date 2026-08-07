@@ -1,5 +1,4 @@
 import ReactDOM from 'react-dom'
-import reportWebVitals from './reportWebVitals'
 /** 该样式必须放在APP组件的前面，因为里面有antd样式，放后面会把APP组件内的样式覆盖 */
 import './index.css'
 import NewApp from './NewApp'
@@ -21,31 +20,9 @@ import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 import { setupConcurrentStreamMainBridge } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge'
 import { debugToPrintLogs } from './utils/logCollection'
 
-const MONACO_WORKER_BASE = 'static/js/monaco'
+import { setupMonacoWorkers } from './setupMonacoWorkers'
 
-window.MonacoEnvironment = {
-  getWorkerUrl: function (moduleId, label) {
-    switch (label) {
-      case 'json':
-        return `${MONACO_WORKER_BASE}/json.worker.js`
-      case 'yaml':
-        return `${MONACO_WORKER_BASE}/yaml.worker.js`
-      case 'java':
-        return `${MONACO_WORKER_BASE}/java.worker.js`
-      case 'go':
-        return `${MONACO_WORKER_BASE}/go.worker.js`
-      case 'html':
-      case 'markdown':
-        return `${MONACO_WORKER_BASE}/html.worker.js`
-      case 'css':
-        return `${MONACO_WORKER_BASE}/css.worker.js`
-      default:
-        // 有代码高亮、查找、代码折叠等基础功能
-        // 但是它不包含各个语言的智能分析、补全、校验等高级功能
-        return `${MONACO_WORKER_BASE}/editor.worker.js`
-    }
-  },
-}
+setupMonacoWorkers()
 
 const getQueryParam = (param) => {
   return new URLSearchParams(window.location.search).get(param)
@@ -135,8 +112,3 @@ ReactDOM.render(
   // </React.StrictMode>,
   document.getElementById('root'),
 )
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals()
