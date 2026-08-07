@@ -52,8 +52,7 @@ function analyzerPlugin(): Plugin | null {
  * 统一替换为空模块（dev / build 同时生效）。CRA 时代靠 webpack tree-shaking 丢弃而未暴露。
  * 注意要同时匹配裸说明符与已解析绝对路径——optimizeDeps chunk 里保存的是后者。
  */
-const ANTD_COMPONENT_STYLE_RE =
-  /(^|[\\/])antd[\\/](es|lib)[\\/][\w-]+[\\/]style([\\/](index\.(less|css)|css(\.js)?))?$/
+const ANTD_COMPONENT_STYLE_RE = /(^|[\\/])antd[\\/](es|lib)[\\/][\w-]+[\\/]style([\\/](index\.(less|css)|css(\.js)?))?$/
 
 function noopAntdComponentStylePlugin(): Plugin {
   return {
