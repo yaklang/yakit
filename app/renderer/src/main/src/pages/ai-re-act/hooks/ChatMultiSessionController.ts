@@ -1758,6 +1758,8 @@ export class ChatMultiSessionController {
 
     if (deleteAll) {
       await this.persistDeleteAll()
+      // 标记 deleted
+      sessionStatusStore.getState().setSessionsDeleteStatus(ids, SessionDeleteStatus.Deleted)
       return
     }
     if (!sessionIds?.length && source?.length) {

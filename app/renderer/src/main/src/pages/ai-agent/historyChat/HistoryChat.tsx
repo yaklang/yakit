@@ -25,7 +25,7 @@ import { type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { JSONParseLog } from '@/utils/tool'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
-import { handAIHistoryChatRemove } from './utils'
+import { DeleteSessionsAISourceEnum, handAIHistoryChatRemove } from './utils'
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { sessionStatusStore } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import classNames from 'classnames'
@@ -56,6 +56,7 @@ const HISTORY_SOURCE_FILTER_OPTIONS: {
 ]
 
 const IM_HISTORY_REFRESH_INTERVAL_MS = 5000
+const ALL_DELETE_SESSION_SOURCES = Object.values(DeleteSessionsAISourceEnum) as DeleteSessionsAISourceType[]
 
 const renderClearConfirm = (
   label: string,
@@ -171,6 +172,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       if (isGlobalAIAgentHistory && historySourceFilter === 'local') {
         // Global AI Agent 侧栏 + local 分组：清空全部来源的会话。
         filter = { DeleteAll: true }
+        deleteSessionsSource = ALL_DELETE_SESSION_SOURCES
       } else if (isGlobalAIAgentHistory && enableHistorySourceFilter) {
         // Global AI Agent 侧栏 + IM 平台分组：只删该平台，不波及其它来源/平台。
         // gRPC 仍按 Source=['im'] + Platform 精确删除；
