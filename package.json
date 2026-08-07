@@ -118,6 +118,8 @@
     "test:e2e:electron": "node scripts/run-electron-e2e.mjs --suite smoke",
     "test:e2e:electron:smoke": "node scripts/run-electron-e2e.mjs --suite smoke",
     "test:e2e:electron:real-engine": "node scripts/run-electron-e2e.mjs --with-yak-engine --suite real-engine",
+    "test:e2e:electron:web-fuzzer-mcp": "node scripts/run-electron-e2e.mjs --with-yak-engine --suite web-fuzzer-mcp",
+    "test:e2e:web-fuzzer-mcp": "run-s test:e2e:build test:e2e:preflight test:e2e:electron:web-fuzzer-mcp",
     "test:e2e:electron:mitm-performance": "node scripts/run-electron-e2e.mjs --with-yak-engine --suite mitm-performance",
     "test:e2e:electron:mitm-matrix": "node scripts/run-electron-mitm-body-matrix.mjs",
     "test:e2e:electron:mitm-matrix:repeat": "node scripts/run-electron-mitm-body-matrix.mjs --repeat 3",

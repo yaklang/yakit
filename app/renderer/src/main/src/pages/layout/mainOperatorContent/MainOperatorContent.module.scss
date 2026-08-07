@@ -43,6 +43,41 @@ $keyColor: map-keys($colors);
   }
 }
 
+.tab-menu-sub-item-combine-custom-color {
+  &::before {
+    content: '';
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    transition: width 0.2s linear;
+    border-top: 2px solid var(--web-fuzzer-group-color) !important;
+  }
+}
+
+.tab-menu-sub-group-custom-color {
+  &::before {
+    content: '';
+    width: calc(100% - 6px) !important;
+    position: absolute;
+    top: 0;
+    left: 4px;
+    z-index: 9;
+    border-top: 2px solid var(--web-fuzzer-group-color);
+  }
+}
+
+.tab-menu-sub-group-name-custom-color {
+  background-color: var(--web-fuzzer-group-color);
+  color: var(--web-fuzzer-group-contrast-color);
+}
+
+.tab-menu-sub-group-number-custom-color {
+  color: var(--web-fuzzer-group-color);
+  background-color: var(--web-fuzzer-group-contrast-color);
+}
+
 .tab-menu-sub-group-hidden {
   &::before {
     content: '';

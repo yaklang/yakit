@@ -25,8 +25,11 @@ export interface FuzzerConfig {
 
 /** Server push payload for web_fuzzer_tab (aligned with backend WebFuzzerTabPush). */
 export interface WebFuzzerTabPush {
+  action?: 'create' | 'update' | 'delete'
   openFlag?: boolean
   data?: FuzzerConfig[]
+  changedData?: FuzzerConfig[]
+  pageIds?: string[]
 }
 
 export interface DbOperateMessage {

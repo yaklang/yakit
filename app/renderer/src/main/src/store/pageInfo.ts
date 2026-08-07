@@ -685,6 +685,7 @@ export const getFuzzerProcessedCacheData = (pageList) => {
         matchers: advancedConfigValue.matchers,
         repeatTimes: advancedConfigValue.repeatTimes,
         concurrent: advancedConfigValue.concurrent,
+        proxy: advancedConfigValue.proxy,
         minDelaySeconds: advancedConfigValue.minDelaySeconds,
         maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
         hotPatchCode: hotPatchCode,
