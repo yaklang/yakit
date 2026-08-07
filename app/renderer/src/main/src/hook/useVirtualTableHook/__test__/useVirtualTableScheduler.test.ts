@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { VirtualTableViewportSnapshot } from '../useVirtualTableScheduler'
 import {
   mergeVirtualTableServerPushRows,
   mergeUniqueVirtualTableRows,
@@ -10,7 +11,6 @@ import {
   selectVirtualTableAutoRefreshAction,
   shouldLoadVirtualTableBottom,
   shouldRestoreVirtualTableViewport,
-  VirtualTableViewportSnapshot,
 } from '../useVirtualTableScheduler'
 
 const snapshot = (overrides: Partial<VirtualTableViewportSnapshot> = {}): VirtualTableViewportSnapshot => ({
