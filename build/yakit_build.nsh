@@ -10,9 +10,10 @@ ${UnStrStr} # Supportable for Uninstall Sections and Functions
 ; 广播 WM_SETTINGCHANGE，通知系统（包括已打开的 cmd/explorer/终端）刷新用户环境变量。
 ; 仅写注册表不广播时，新值只对新启动的进程生效，已打开的终端仍使用启动时的旧快照，
 ; 表现为"系统属性界面里能看到，但 cmd 里查不到/还是旧值"。
+; flags 使用 SMTO_ABORTIFHUNG(0x0002)，避免无响应窗口拖满超时；timeout 缩短为 1000ms。
 !macro BroadcastEnvChange
     Push $0
-    System::Call 'user32::SendMessageTimeout(p ${HWND_BROADCAST}, i ${WM_SETTINGCHANGE}, p 0, t "Environment", i 0, i 5000, *p .r0)'
+    System::Call 'user32::SendMessageTimeout(p ${HWND_BROADCAST}, i ${WM_SETTINGCHANGE}, p 0, t "Environment", i 0x0002, i 1000, *p .r0)'
     Pop $0
 !macroend
 
@@ -265,8 +266,7 @@ FunctionEnd
 !macroend
 
 !macro customInstall
-    DetailPrint "检查安装目录权限..."
-    Call EnsureInstallDirWritable
+    ; 写权限已在 Section Main 中探测，此处不再重复建删临时文件
 
     ; 创建 yakit-projects 文件夹
     DetailPrint "创建yakit-projects文件夹..."
@@ -279,6 +279,7 @@ FunctionEnd
     ; Migrate yakit-projects folder
     ${If} "$PROFILE\yakit-projects" != "$INSTDIR\yakit-projects"
     ${AndIf} ${FileExists} "$PROFILE\yakit-projects"
+        DetailPrint "正在迁移yakit-projects数据..."
         ClearErrors
         ; 旧版本数据可能包含多层目录和隐藏文件，这里必须递归复制，且不要在安装阶段直接删源目录
         nsExec::Exec '"$SYSDIR\cmd.exe" /C xcopy "$PROFILE\yakit-projects" "$INSTDIR\yakit-projects\\" /E /I /H /K /Y /C >nul 2>&1'
@@ -297,7 +298,9 @@ FunctionEnd
     WriteRegStr HKCU "Environment" $ENV_VAR_NAME "$INSTDIR\yakit-projects"
     DetailPrint "已设置环境变量: $ENV_VAR_NAME = $INSTDIR\yakit-projects"
     ; 广播 WM_SETTINGCHANGE，让已运行的进程（explorer/终端等）刷新环境变量
+    DetailPrint "正在刷新环境变量..."
     !insertmacro BroadcastEnvChange
+    DetailPrint "环境变量刷新完成..."
     DetailPrint "正在安装..."
 !macroend
 
