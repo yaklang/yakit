@@ -3,7 +3,9 @@ import type { AISession } from '../../type/aiChat'
 import {
   filterHistorySessionsBySource,
   getHistorySessionIconMeta,
+  getHistorySourceDeleteSessionSource,
   getHistorySourceFilterCounts,
+  getHistorySourceQueryPlatform,
   getHistorySourceQuerySources,
   getSessionDisplayTitle,
 } from '../source'
@@ -178,5 +180,25 @@ describe('history source filters', () => {
     expect(getHistorySourceQuerySources(['ai', 'im', ''], 'local')).toEqual(['ai', ''])
     expect(getHistorySourceQuerySources(['ai', 'im', ''], 'feishu')).toEqual(['im'])
     expect(getHistorySourceQuerySources(['ai'], 'feishu')).toEqual([])
+  })
+
+  it('maps visible history source filters to grpc query platforms', () => {
+    expect(getHistorySourceQueryPlatform('local')).toEqual([])
+    expect(getHistorySourceQueryPlatform('feishu')).toEqual(['feishu'])
+    expect(getHistorySourceQueryPlatform('dingtalk')).toEqual(['dingtalk'])
+  })
+})
+
+describe('getHistorySourceDeleteSessionSource', () => {
+  it('maps feishu to the local platform-discriminated source im-Lark', () => {
+    expect(getHistorySourceDeleteSessionSource('feishu')).toBe('im-Lark')
+  })
+
+  it('maps dingtalk to the local platform-discriminated source im-DingTalk', () => {
+    expect(getHistorySourceDeleteSessionSource('dingtalk')).toBe('im-DingTalk')
+  })
+
+  it('falls back to im for the local filter', () => {
+    expect(getHistorySourceDeleteSessionSource('local')).toBe('im')
   })
 })
