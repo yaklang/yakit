@@ -390,6 +390,45 @@ export interface RandomChunkedResponse {
   TotalDelayTime: number
   /**@name 是否结束 （结束标记事件；Data 可能为空） */
   IsFinal?: boolean
+  /**
+   * 数据方向，用于区分 Data 的语义：
+   *   REQUEST  = 请求分块（随机分块传输，Data 是请求 body 的一个分块）
+   *   RESPONSE = 响应增量（如 SSE，Data 是响应 body 的 delta）
+   * 缺省值（0 / 未设置）兼容旧后端，按 RESPONSE 语义处理。
+   * 前端应按方向分别渲染，避免把请求分块当成响应内容回显。
+   * @see ChunkedDataDirection
+   */
+  Direction?: number
+}
+
+/**
+ * ChunkedDataDirection 与后端 proto 枚举对齐，用于区分 RandomChunkedData 的方向。
+ * - UNSPECIFIED(0)：兼容旧后端，按响应增量处理。
+ * - REQUEST(1)：请求分块，随机分块传输发送的请求 body 分块，应渲染到请求侧。
+ * - RESPONSE(2)：响应增量，如 SSE 流式响应的 body delta，应拼接到响应侧。
+ */
+export enum ChunkedDataDirection {
+  UNSPECIFIED = 0,
+  REQUEST = 1,
+  RESPONSE = 2,
+}
+
+/**
+ * 判断一个 chunk 是否属于响应方向（响应增量）。
+ * 兼容旧后端：未设置 Direction（0/UNSPECIFIED）时默认按响应处理。
+ */
+export const isResponseChunkedData = (chunk?: RandomChunkedResponse): boolean => {
+  if (!chunk) return false
+  const dir = chunk.Direction ?? ChunkedDataDirection.UNSPECIFIED
+  return dir === ChunkedDataDirection.UNSPECIFIED || dir === ChunkedDataDirection.RESPONSE
+}
+
+/**
+ * 判断一个 chunk 是否属于请求方向（请求分块）。
+ */
+export const isRequestChunkedData = (chunk?: RandomChunkedResponse): boolean => {
+  if (!chunk) return false
+  return chunk.Direction === ChunkedDataDirection.REQUEST
 }
 export interface HistoryHTTPFuzzerTask {
   Request: string
@@ -1662,14 +1701,20 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         if (nextChunks.length > 0) {
           const merged = existedChunks.slice()
-          const existedIndexes = new Set<number>(
-            merged.map((c) => Number(c?.Index)).filter((n) => Number.isFinite(n)) as number[],
+          // 去重 key 同时纳入 Direction：请求分块与响应增量可能复用相同的 Index 序列，
+          // 仅按 Index 去重会把响应 chunk 当成请求 chunk 的重复而丢弃。
+          const existedKeys = new Set<string>(
+            merged
+              .map((c) => `${Number(c?.Index)}-${c?.Direction ?? ChunkedDataDirection.UNSPECIFIED}`)
+              .filter((k) => !k.startsWith('NaN-')),
           )
           nextChunks.forEach((c) => {
             const id = Number(c?.Index)
-            if (Number.isFinite(id) && existedIndexes.has(id)) return
+            if (!Number.isFinite(id)) return
+            const key = `${id}-${c?.Direction ?? ChunkedDataDirection.UNSPECIFIED}`
+            if (existedKeys.has(key)) return
             merged.push(c)
-            if (Number.isFinite(id)) existedIndexes.add(id)
+            existedKeys.add(key)
           })
           existed.RandomChunkedData = merged.length > 2048 ? merged.slice(merged.length - 2048) : merged
         }
@@ -4741,11 +4786,17 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
       }
     }, [fuzzerResponse])
 
-    const isStreamingResponse = !!loading && (fuzzerResponse?.RandomChunkedData?.length || 0) > 0
+    // 仅当存在响应方向的 chunk（SSE 等响应增量）时才算流式响应；
+    // 请求分块（Direction=REQUEST）不应触发流式响应展示路径。
+    const isStreamingResponse =
+      !!loading && (fuzzerResponse?.RandomChunkedData || []).filter(isResponseChunkedData).length > 0
 
     const assembledResponsePackage = useCreation(() => {
       const header = fuzzerResponse?.ResponseRaw || new Uint8Array()
-      const chunks = (fuzzerResponse?.RandomChunkedData || []).slice()
+      // 仅拼接响应方向的 chunk（SSE 等响应增量）。请求分块（Direction=REQUEST，
+      // 随机分块传输发送的请求 body）不能拼到响应里，否则会出现「开启分块传输后
+      // 响应回显请求 body」的 bug。缺省 Direction（兼容旧后端）按响应处理。
+      const chunks = (fuzzerResponse?.RandomChunkedData || []).filter(isResponseChunkedData)
       if (chunks.length === 0) return header
 
       const bodyParts = chunks
