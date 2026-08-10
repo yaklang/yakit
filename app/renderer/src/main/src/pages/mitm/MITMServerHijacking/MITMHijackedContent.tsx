@@ -2,7 +2,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
 import { useCreation, useInViewport, useMemoizedFn, useThrottleFn } from 'ahooks'
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { MITMResponse, TraceInfo } from '../MITMPage'
+import type { MITMResponse, TraceInfo } from '../MITMPage'
 import styles from './MITMServerHijacking.module.scss'
 import { MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo } from './MITMManual'
 import { MITMLogHeardExtra } from './MITMLog'
@@ -10,9 +10,9 @@ import ReactResizeDetector from 'react-resize-detector'
 import { useStore } from '@/store/mitmState'
 import { HTTPFlowRealTimeTableAndEditor } from '@/components/HTTPHistory'
 import { useBuiltinTagList } from '@/components/HTTPFlowTable/useBuiltinTagList'
-import { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
+import type { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import emiter from '@/utils/eventBus/eventBus'
-import { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MITMFilters'
+import type { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MITMFilters'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineConfiguredIcon,
@@ -30,11 +30,11 @@ import MITMFiltersModal, { getAdvancedFlag, getMitmHijackFilter } from '../MITMS
 import { Badge, Tooltip } from 'antd'
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
 import {
-  ClientMITMHijackedResponse,
-  MITMContentReplacersRequest,
-  MITMForwardModifiedRequest,
-  MITMForwardModifiedResponseRequest,
-  MITMHijackGetFilterRequest,
+  type ClientMITMHijackedResponse,
+  type MITMContentReplacersRequest,
+  type MITMForwardModifiedRequest,
+  type MITMForwardModifiedResponseRequest,
+  type MITMHijackGetFilterRequest,
   grpcClientMITMHijacked,
   grpcMITMAutoForward,
   grpcMITMCancelHijackedCurrentResponseById,
@@ -49,7 +49,7 @@ import {
   grpcMITMSetFilter,
   isMITMResponse,
 } from '../MITMHacker/utils'
-import { ManualHijackTypeProps, MITMManualRefProps } from '../MITMManual/MITMManualType'
+import type { ManualHijackTypeProps, MITMManualRefProps } from '../MITMManual/MITMManualType'
 import { grpcMITMV2RecoverManualHijack } from '../MITMManual/utils'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -60,9 +60,9 @@ import { RemoteGV } from '@/yakitGV'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { JSONParseLog } from '@/utils/tool'
 import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
-import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { YakitAutoComGroupSearchWithAll } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
-import { StreamUpdateState } from './PluginsOutput/StreamProcessor'
+import type { StreamUpdateState } from './PluginsOutput/StreamProcessor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const MITMManual = React.lazy(() => import('@/pages/mitm/MITMManual/MITMManual'))
@@ -594,7 +594,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     grpcMITMHijackGetFilter()
       .then((res: MITMFilterSchema) => {
         const data = convertMITMFilterUI(res.FilterData || cloneDeep(defaultMITMFilterData))
-        let flag = getMitmHijackFilter(data.baseFilter, data.advancedFilters)
+        const flag = getMitmHijackFilter(data.baseFilter, data.advancedFilters)
         setHijackFilterFlag(flag)
       })
       .catch((err) => {
@@ -638,13 +638,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       }
       if (!isManual) {
         forwardResponse(msg.responseId || 0)
-        if (!!currentPacket) {
+        if (currentPacket) {
           clearCurrentPacket()
         }
       } else {
         setForResponse(true)
         setCurrentPacketInfo({
-          currentPacket: !!msg?.isWebsocket ? Uint8ArrayToString(msg.Payload) : Uint8ArrayToString(msg.response),
+          currentPacket: msg?.isWebsocket ? Uint8ArrayToString(msg.Payload) : Uint8ArrayToString(msg.response),
           currentPacketId: msg.responseId,
           isHttp: msg.isHttps,
           requestPacket: Uint8ArrayToString(msg.request),
@@ -662,7 +662,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       const updateRequest = () => {
         setForResponse(false)
         setCurrentPacketInfo({
-          currentPacket: !!msg?.isWebsocket ? Uint8ArrayToString(msg.Payload) : Uint8ArrayToString(msg.request),
+          currentPacket: msg?.isWebsocket ? Uint8ArrayToString(msg.Payload) : Uint8ArrayToString(msg.request),
           currentPacketId: msg.id,
           isHttp: msg.isHttps,
           requestPacket: Uint8ArrayToString(msg.request),
@@ -684,7 +684,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
           info(t('MITMManual.conditional_hijack_triggered'))
         } else {
           forwardRequest(msg.id)
-          if (!!currentPacket) {
+          if (currentPacket) {
             clearCurrentPacket()
           }
         }
@@ -741,7 +741,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       return
     } else {
       prettifyPacketCode(modifiedPacket).then((res) => {
-        if (!!res) {
+        if (res) {
           setCurrentPacketInfo((prev) => ({ ...prev, currentPacket: Uint8ArrayToString(res as Uint8Array) }))
           setBeautifyTriggerRefresh(flag)
         }
@@ -858,7 +858,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   })
   const getMITMManualIsHijackResponse = useMemoizedFn(() => {
     getRemoteValue(RemoteGV.MITMManualIsOnlyLookResponse).then((res) => {
-      if (!!res) {
+      if (res) {
         setIsOnlyLookResponse(res === 'true')
       }
     })

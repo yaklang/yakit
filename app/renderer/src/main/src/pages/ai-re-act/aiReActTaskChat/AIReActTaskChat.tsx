@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
+import type {
   AIInputSettingFormProps,
   AIInputSettingPopoverProps,
   AIManualAdditionPopoverProps,
@@ -24,9 +24,14 @@ import {
   OutlinePositionIcon,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AIChatQSData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { AIInputEvent, AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
+import {
+  type AIInputEvent,
+  AIInputEventHotPatchTypeEnum,
+  AIInputEventSyncTypeEnum,
+  AITaskStatus,
+} from '../hooks/grpcApi'
 import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
@@ -442,8 +447,8 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
     currentCoordinatorIdRef.current = ''
   })
   const getTypeBySyncID = useMemoizedFn(() => {
-    if (!!syncIdOfAddToContext.current) return '加入上下文'
-    if (!!syncIdOfAddAndReExecute.current) return '加入并重新执行'
+    if (syncIdOfAddToContext.current) return '加入上下文'
+    if (syncIdOfAddAndReExecute.current) return '加入并重新执行'
     return ''
   })
   const onAddToContext = useMemoizedFn((syncID: string) => {

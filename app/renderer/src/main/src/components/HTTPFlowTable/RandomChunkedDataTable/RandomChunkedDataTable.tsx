@@ -1,10 +1,10 @@
 import React from 'react'
-import { RandomChunkedDataTableProps } from './RandomChunkedDataTableType'
+import type { RandomChunkedDataTableProps } from './RandomChunkedDataTableType'
 import styles from './RandomChunkedDataTable.module.scss'
 import { useCreation } from 'ahooks'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { RandomChunkedResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { RandomChunkedResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo((props) => {

@@ -1,7 +1,8 @@
-import React, { useRef } from 'react'
+import type React from 'react'
+import { useRef } from 'react'
 import styles from './LeftSideHoleBar.module.scss'
 import classNames from 'classnames'
-import { LeftSideHoleBarProps } from './LeftSideHoleBarType'
+import type { LeftSideHoleBarProps, LeftSideHoleType } from './LeftSideHoleBarType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useMemoizedFn } from 'ahooks'
 import { YakRunnerAuditHoleTab } from '../YakRunnerAuditHole'
@@ -17,7 +18,7 @@ export const LeftSideHoleBar: React.FC<LeftSideHoleBarProps> = (props) => {
     if (!rendered.current.has(type)) {
       rendered.current.add(type)
     }
-    setActive(type)
+    setActive(type as LeftSideHoleType)
   })
 
   return (

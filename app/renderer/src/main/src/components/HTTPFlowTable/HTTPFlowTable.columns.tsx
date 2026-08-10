@@ -1,11 +1,11 @@
-import React from 'react'
+import type React from 'react'
 import type { DebouncedFunc } from 'lodash'
 import classNames from 'classnames'
 import { CheckCircleIcon, ArrowCircleRightSvgIcon, ChromeFrameSvgIcon } from '@/assets/newIcon'
 import { OutlineSearchIcon, OutlineSelectorIcon, OutlineStarIcon } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
-import { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
-import { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import type { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
   isCellRedSingleColor,
   getSingleColorType,

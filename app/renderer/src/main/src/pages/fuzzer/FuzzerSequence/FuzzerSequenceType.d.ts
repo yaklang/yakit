@@ -1,15 +1,15 @@
-import { WebFuzzerPageInfoProps } from '../../../store/pageInfo'
-import { FuzzerResponse, FuzzerRequestProps } from '../HTTPFuzzerPage'
-import { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
-import {
-  MatcherAndExtractionRefProps,
+import { type WebFuzzerPageInfoProps } from '../../../store/pageInfo'
+import { type FuzzerResponse, type FuzzerRequestProps } from '../HTTPFuzzerPage'
+import { type AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import type {
   MatcherValueProps,
   ExtractorValueProps,
   MatcherActiveKey,
+  MatchingAndExtraction,
 } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
-import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
-import { FuzzerResChartData } from '../FuzzerConcurrentLoad/FuzzerConcurrentLoad'
-import { HTTPFuzzerPageTableDebugPayload } from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
+import { type WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
+import { type FuzzerResChartData } from '../FuzzerConcurrentLoad/FuzzerConcurrentLoad'
+import { type HTTPFuzzerPageTableDebugPayload } from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 /**
  * @description 序列props
  * @property {string} pageId页面节点id

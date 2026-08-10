@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { AIStreamChatContentProps } from './type'
+import type { AIStreamChatContentProps } from './type'
 import { Tooltip } from 'antd'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import styles from './AIStreamChatContent.module.scss'

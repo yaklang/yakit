@@ -1,19 +1,18 @@
-import { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { type ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import {
   ImportAndExportStatusInfo,
-  LogListInfo,
-  SaveProgressStream,
+  type LogListInfo,
+  type SaveProgressStream,
 } from '@/components/YakitUploadModal/YakitUploadModal'
-import { v4 as uuidv4 } from 'uuid'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
-import { ExportYakScriptLocalResponse, ExportYakScriptStreamRequest } from './PluginsLocalType'
+import type { ExportYakScriptStreamRequest } from './PluginsLocalType'
 import { useDebounceEffect } from 'ahooks'
 import { Form } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { ExecResult } from '@/pages/invoker/schema'
-import { ExecResultMessage } from '@/components/yakitLogSchema'
+import type { ExecResult } from '@/pages/invoker/schema'
+import type { ExecResultMessage } from '@/components/yakitLogSchema'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
@@ -56,7 +55,7 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
         }, 200)
 
         ipcRenderer.on('export-yak-script-data', (e, data: ExecResult) => {
-          let obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString(), {
+          const obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString(), {
             page: 'PluginLocalExportProps',
             fun: 'export-yak-script-data',
           })

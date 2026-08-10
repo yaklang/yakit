@@ -1,5 +1,5 @@
-import { TFunction } from '@/i18n/useI18nNamespaces'
-import { HTTPHistoryAnalysisPageInfo } from '@/store/pageInfo'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
+import type { HTTPHistoryAnalysisPageInfo } from '@/store/pageInfo'
 
 export const defaultHTTPHistoryAnalysisPageInfo: HTTPHistoryAnalysisPageInfo = {
   webFuzzer: false,

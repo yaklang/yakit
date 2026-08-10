@@ -1,8 +1,8 @@
-import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { HandleStartParams } from '../aiAgentChat/type'
-import useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
-import { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
+import type { AIReActChatRefProps } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
+import type { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface AIChatWelcomeProps {

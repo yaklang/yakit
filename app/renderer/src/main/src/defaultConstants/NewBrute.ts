@@ -1,5 +1,5 @@
-import { BruteExecuteExtraFormValue, StartBruteParams } from '@/pages/securityTool/newBrute/NewBruteType'
-import { BrutePageInfoProps } from '@/store/pageInfo'
+import type { BruteExecuteExtraFormValue, StartBruteParams } from '@/pages/securityTool/newBrute/NewBruteType'
+import type { BrutePageInfoProps } from '@/store/pageInfo'
 
 export const defaultBruteExecuteExtraFormValue: BruteExecuteExtraFormValue = {
   Concurrent: 50,

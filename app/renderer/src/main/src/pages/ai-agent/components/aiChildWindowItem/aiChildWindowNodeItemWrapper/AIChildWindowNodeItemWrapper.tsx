@@ -13,7 +13,7 @@ import {
 } from '../../aiChatListItemWrapper/aiItemContentWrapper/AIItemContentWrapper'
 import { AIToolDecision } from '../../aiToolDecision/AIToolDecision'
 import AiFailPlanCard from '../../aiFailPlanCard/AiFailPlanCard'
-import { AIChildWindowNodeItemWrapperProps } from './type'
+import type { AIChildWindowNodeItemWrapperProps } from './type'
 
 /**
  * 子窗口版 node item 包装器。
@@ -28,7 +28,7 @@ const AIChildWindowNodeItemWrapper: FC<AIChildWindowNodeItemWrapperProps> = memo
       case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
-        if (!!itemData.data?.selected) {
+        if (itemData.data?.selected) {
           if (
             itemData.type === AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE ||
             itemData.type === AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE
@@ -46,7 +46,7 @@ const AIChildWindowNodeItemWrapper: FC<AIChildWindowNodeItemWrapperProps> = memo
       case AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED:
         return <AIModelErrorPrompt item={itemData} renderNum={renderNum} isChildWindow={true} />
       case AIChatQSDataTypeEnum.STREAM:
-        if (!!itemData.parentGroupToken) {
+        if (itemData.parentGroupToken) {
           return <AIChildWindowGroupStreamNode itemData={itemData} renderNum={renderNum} groupIndex={groupIndex} />
         } else {
           // 组

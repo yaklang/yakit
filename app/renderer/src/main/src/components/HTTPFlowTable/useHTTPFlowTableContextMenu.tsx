@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react'
+import type React from 'react'
+import { useMemo } from 'react'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
-import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import { showResponseViaHTTPFlowID } from '@/components/ShowInBrowser'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { setClipboardText } from '@/utils/clipboard'
@@ -13,12 +13,10 @@ import {
   YakitMultipleShortcutKey,
 } from '@/utils/globalShortcutKey/events/multiple/yakitMultiple'
 import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
-import { debugToPrintLogs } from '@/utils/logCollection'
 import { yakitNotify } from '@/utils/notification'
 import { openExternalWebsite, saveABSFileToOpen } from '@/utils/openWebsite'
 import type { YakDeleteHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
-import type { i18n as I18nInstance } from 'i18next'
 import { generateCSRFPocByRequest } from '@/pages/invoker/fromPacketToYakCode'
 import { GetPacketScanByCursorMenuItem, packetScanDefaultValue } from '@/pages/packetScanner/DefaultPacketScanGroup'
 import { execPacketScan } from '@/pages/packetScanner/PacketScanner'
@@ -154,7 +152,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
   } = options
 
   const menuData = useMemo(() => {
-    let menu: HistoryMenuData[] = [
+    const menu: HistoryMenuData[] = [
       {
         key: 'sendToWebFuzzerKey',
         label: t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
@@ -606,7 +604,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       id: Array<string | number>
       menu: HistoryMenuData[]
     }) => {
-      let menuItemName = keyPath[0]
+      const menuItemName = keyPath[0]
 
       const emitGetPluginEvent = () => {
         emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
@@ -689,7 +687,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
   /** 菜单自定义快捷键渲染处理事件 */
   const contextMenuKeybindingHandle = useMemoizedFn((data) => {
     const menus: any = []
-    for (let item of data) {
+    for (const item of data) {
       /** 处理带快捷键的菜单项 */
       const info = { ...item }
       if (info.children && info.children.length > 0) {
@@ -833,13 +831,13 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
               break
             case 'sendToComparerLeft':
               setCompareLeft({
-                content: new Buffer(actionRow.Request).toString('utf8'),
+                content: Buffer.from(actionRow.Request).toString('utf8'),
                 language: 'http',
               })
               break
             case 'sendToComparerRight':
               setCompareRight({
-                content: new Buffer(actionRow.Request).toString('utf8'),
+                content: Buffer.from(actionRow.Request).toString('utf8'),
                 language: 'http',
               })
               break
@@ -879,11 +877,12 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             case 'exportToHAR':
               onHarExport([rowData.Id])
               break
-            default:
+            default: {
               const currentItem = menuData.find((f) => f.key === key)
               if (!currentItem) return
               if (currentItem.onClickSingle) currentItem.onClickSingle(actionRow)
               break
+            }
           }
         },
       },
@@ -976,24 +975,28 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         onRemoveHttpHistory({ Id: selectedRowKeys.map((id) => +id) })
         break
       case 'deleteURL':
-        const urls = selectedRows.map((ele) => ele.Url)
-        onRemoveHttpHistory({
-          Filter: {
-            IncludeInUrl: urls,
-          },
-        })
+        {
+          const urls = selectedRows.map((ele) => ele.Url)
+          onRemoveHttpHistory({
+            Filter: {
+              IncludeInUrl: urls,
+            },
+          })
+        }
         break
       case 'deleteDomain':
-        const hosts: string[] = selectedRows
-          .map((ele) => ele.HostPort?.split(':')[0])
-          .filter((host): host is string => host !== undefined)
-        onRemoveHttpHistory({
-          Filter: {
-            IncludeInUrl: hosts,
-          },
-        })
+        {
+          const hosts: string[] = selectedRows
+            .map((ele) => ele.HostPort?.split(':')[0])
+            .filter((host): host is string => host !== undefined)
+          onRemoveHttpHistory({
+            Filter: {
+              IncludeInUrl: hosts,
+            },
+          })
+        }
         break
-      case 'sendAndJumpToWebFuzzer':
+      case 'sendAndJumpToWebFuzzer': {
         const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === 'sendToWebFuzzerKey')
         if (!currentItemJumpToFuzzer) return
         onBatch(
@@ -1004,7 +1007,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         )
 
         break
-      case 'sendToWebFuzzer':
+      }
+      case 'sendToWebFuzzer': {
         const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === 'sendToWebFuzzerKey')
         if (!currentItemToFuzzer) return
         onBatch(
@@ -1014,7 +1018,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           actionRows,
         )
         break
-      case 'sendAndJumpToWS':
+      }
+      case 'sendAndJumpToWS': {
         const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === 'sendToWSFuzzer')
         if (!currentItemJumpToWS) return
         onBatch(
@@ -1025,7 +1030,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         )
 
         break
-      case 'sendToWS':
+      }
+      case 'sendToWS': {
         const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === 'sendToWSFuzzer')
         if (!currentItemToWS) return
         onBatch(
@@ -1035,6 +1041,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           actionRows,
         )
         break
+      }
       case 'copyUrlWithQuery':
       case 'copyUrlWithoutQuery': {
         const currentItemCopyUrl = menuData.find((f) => f.onClickBatch && f.key === 'copyUrl')
@@ -1071,11 +1078,12 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       case 'exportToHAR':
         onHarExport(isAllSelect ? [] : selectedRows.map((item) => item.Id))
         break
-      default:
+      default: {
         const currentItem = menuData.find((f) => f.onClickBatch && f.key === key)
         if (!currentItem) return
         if (currentItem.onClickBatch) currentItem.onClickBatch(actionRows, currentItem.number)
         break
+      }
     }
     setBatchVisible(false)
   })

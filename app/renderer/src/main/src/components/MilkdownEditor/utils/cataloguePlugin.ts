@@ -1,6 +1,6 @@
 import { Plugin, PluginKey } from '@milkdown/kit/prose/state'
 import { $prose } from '@milkdown/kit/utils'
-import { MilkdownCatalogueProps } from '@/pages/notepadManage/modifyNotepad/ModifyNotepadType'
+import type { MilkdownCatalogueProps } from '@/pages/notepadManage/modifyNotepad/ModifyNotepadType'
 
 const getHeading = (view) => {
   const { state } = view

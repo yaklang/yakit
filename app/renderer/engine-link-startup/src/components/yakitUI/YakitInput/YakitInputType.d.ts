@@ -1,11 +1,9 @@
-import { InputProps, SelectProps } from 'antd'
-import { SizeType } from 'antd/lib/config-provider/SizeContext'
+import type { InputProps } from 'antd'
 
-import { PasswordProps, SearchProps, TextAreaProps } from 'antd/lib/input'
-import { CSSProperties } from 'react'
+import type { PasswordProps, SearchProps, TextAreaProps } from 'antd/lib/input'
+import type { CSSProperties } from 'react'
 
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
-import { YakitSelectProps } from '../YakitSelect/YakitSelectType'
 
 /**
  * @description YakitInputNumberProps 的属性

@@ -1,7 +1,10 @@
-import React from 'react'
-import { YakitRoute, ComponentParams } from '../../../routes/newRoute'
-import { RouteToPageProps } from '../publicMenu/PublicMenu'
-import { DropResult, ResponderProvided } from '@hello-pangea/dnd'
+import type React from 'react'
+import type { ComponentParams } from '@/routes/newRoute'
+import { type YakitRoute } from '@/enums/yakitRoute'
+import type { SoftMode } from '@/store/softMode'
+import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
+import { type RouteToPageProps } from '../publicMenu/PublicMenu'
+import { type DropResult, type ResponderProvided } from '@hello-pangea/dnd'
 
 /**
  * @name 已打开页面的二级页面数据
@@ -206,7 +209,7 @@ export interface SubTabListProps {
 export interface SubTabsProps {
   softMode: SoftMode
   pageRouteKey: YakitRoute | string
-  ref: ?any
+  ref?: any
   pageItem: PageCache
   // index: number
   onFocusPage: () => void

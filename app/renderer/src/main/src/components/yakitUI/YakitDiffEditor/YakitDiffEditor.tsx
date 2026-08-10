@@ -1,10 +1,11 @@
-import React, { memo, useEffect, useMemo, useRef } from 'react'
-import { YakitDiffEditorProps } from './YakitDiffEditorType'
+import type React from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
+import type { YakitDiffEditorProps } from './YakitDiffEditorType'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import { yakitNotify } from '@/utils/notification'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { useEditorFontSize, fontSizeOptions } from '@/store/editorFontSize'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './YakitDiffEditor.module.scss'
@@ -124,7 +125,7 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
       originalEditable: !leftReadOnly,
       readOnly: rightReadOnly,
       automaticLayout: true,
-      wordWrap: !!noWrap ? 'off' : 'on',
+      wordWrap: noWrap ? 'off' : 'on',
       fontSize: fontSize,
       // 禁用默认右键菜单
       contextmenu: false,
@@ -190,7 +191,7 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
         renderSideBySide,
         originalEditable: !leftReadOnly,
         readOnly: rightReadOnly,
-        wordWrap: !!noWrap ? 'off' : 'on',
+        wordWrap: noWrap ? 'off' : 'on',
         fontSize: fontSize,
       })
     }

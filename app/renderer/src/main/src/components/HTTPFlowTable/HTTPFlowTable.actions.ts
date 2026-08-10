@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { loadAdvancedConfig } from '@/pages/mitm/MITMAdvancedConfig'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
-import { SingleManualHijackInfoMessage } from '@/pages/mitm/MITMHacker/utils'
+import type { SingleManualHijackInfoMessage } from '@/pages/mitm/MITMHacker/utils'
 import { execPacketScanWithNewTab } from '@/pages/packetScanner/PacketScanner'
 import { getRemoteValue } from '@/utils/kv'
 import { debugToPrintLogs } from '@/utils/logCollection'
@@ -66,7 +66,7 @@ export const onSendToTab = async (
         ...params,
         request: (rowData as HTTPFlow).InvalidForUTF8Request
           ? (rowData as HTTPFlow).SafeHTTPRequest!
-          : new Buffer(rowData.Request).toString('utf8'),
+          : Buffer.from(rowData.Request).toString('utf8'),
       },
     })
     .then(() => {

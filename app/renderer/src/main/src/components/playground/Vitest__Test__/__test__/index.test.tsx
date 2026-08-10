@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, waitFor, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { YakitSpinProps } from '@/components/yakitUI/YakitSpin/YakitSpinType'
+import type { YakitSpinProps } from '@/components/yakitUI/YakitSpin/YakitSpinType'
 
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => {
   const React = require('react')

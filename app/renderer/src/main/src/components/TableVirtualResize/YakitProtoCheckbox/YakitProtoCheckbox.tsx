@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import styles from './YakitProtoCheckbox.module.scss'
 import classNames from 'classnames'
-import { useMemoizedFn } from 'ahooks'
 
 export interface YakitProtoCheckboxProps {
   checked?: boolean

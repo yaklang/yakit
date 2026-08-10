@@ -1,8 +1,9 @@
-import React, { memo, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useRef, useState } from 'react'
 import { useDebounce, useMemoizedFn } from 'ahooks'
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
-import { HintModalProps, YakitHintModalProps } from './YakitHintType'
+import type { HintModalProps, YakitHintModalProps } from './YakitHintType'
 import { ShieldExclamationSvgIcon } from '@/assets/newIcon'
 import { YakitButton } from '../YakitButton/YakitButton'
 

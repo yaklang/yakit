@@ -1,4 +1,4 @@
-import { FC, useMemo, useRef, useState } from 'react'
+import { type FC, useMemo, useRef, useState } from 'react'
 
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 
@@ -7,15 +7,15 @@ import { setAIModal } from '@/pages/ai-agent/aiModelList/AIModelList'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import styles from './EditorInfo.module.scss'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { YakitPluginBaseAIInfo } from '../base'
+import type { YakitPluginBaseAIInfo } from '../base'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { failed, yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
-import { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
-import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
+import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { defPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/constants'
-import { EditorBaseInfoProps } from './EditorInfo'
+import type { EditorBaseInfoProps } from './EditorInfo'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { JSONParseLog } from '@/utils/tool'
 
@@ -73,7 +73,7 @@ const AIPluginComponent: FC<AIPluginComponentProps> = ({ getCodeContent, value, 
       const plugin = await grpcFetchLocalPluginDetail({ Name: 'YakScript AI元数据生成' }, false)
       const token = tokenRef.current
 
-      let executeParams: DebugPluginRequest = {
+      const executeParams: DebugPluginRequest = {
         Code: '',
         PluginType: plugin.Type,
         Input: '',

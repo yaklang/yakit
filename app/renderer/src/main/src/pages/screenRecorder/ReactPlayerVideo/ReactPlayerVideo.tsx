@@ -1,5 +1,4 @@
 import { FastForwardIcon, RewindIcon } from '@/assets/newIcon'
-import { Tooltip } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -7,9 +6,7 @@ import {
   Player,
   ControlBar,
   BigPlayButton,
-  PlayToggle, // PlayToggle 播放/暂停按钮 若需禁止加 disabled
-  ReplayControl, // 后退按钮
-  ForwardControl, // 前进按钮
+  PlayToggle, // 前进按钮
   CurrentTimeDisplay,
   TimeDivider,
   PlaybackRateMenuButton, // 倍速播放选项

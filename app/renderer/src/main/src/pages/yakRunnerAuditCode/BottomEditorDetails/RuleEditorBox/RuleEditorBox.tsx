@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react'
+import type React from 'react'
+import { useEffect } from 'react'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import useStore from '../../hooks/useStore'
 import { apiFetchQuerySyntaxFlowResult } from '@/pages/yakRunnerCodeScan/utils'
-import { QuerySyntaxFlowResultResponse } from '@/pages/yakRunnerCodeScan/YakRunnerCodeScanType'
+import type { QuerySyntaxFlowResultResponse } from '@/pages/yakRunnerCodeScan/YakRunnerCodeScanType'
 export interface RuleEditorBoxProps {
   ruleEditor: string
   setRuleEditor: (value: string) => void

@@ -4,9 +4,9 @@ import { YakEditor } from '@/utils/editors'
 import { yakitFailed } from '@/utils/notification'
 import { StringToUint8Array } from '@/utils/str'
 import { Form } from 'antd'
-import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { useImperativeHandle, useRef } from 'react'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { ClientCertificate } from './MITMServerStartForm'
+import type { ClientCertificate } from './MITMServerStartForm'
 import styles from './MITMServerStartForm.module.scss'
 
 interface AddTLSProps {

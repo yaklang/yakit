@@ -5,25 +5,32 @@ import { shallow } from 'zustand/shallow'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ExtractorsPanel, MatchersPanel, MatchersPanelEditProps } from '../HttpQueryAdvancedConfig/FuzzerConfigPanels'
-import { MatchingAndExtraction } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
-import { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import {
+  ExtractorsPanel,
+  MatchersPanel,
+  type MatchersPanelEditProps,
+} from '../HttpQueryAdvancedConfig/FuzzerConfigPanels'
+import type { MatchingAndExtraction } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import type { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { ResponseProps } from './FuzzerSequenceType'
-import { MatcherValueProps, ExtractorValueProps } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import type { ResponseProps } from './FuzzerSequenceType'
+import type { MatcherValueProps, ExtractorValueProps } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
 import { defaultAdvancedConfigValue } from '@/defaultConstants/HTTPFuzzerPage'
-import { HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery } from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
+import {
+  HTTPFuzzerPageTable,
+  type HTTPFuzzerPageTableQuery,
+} from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import { FuzzerConcurrentLoad } from '../FuzzerConcurrentLoad/FuzzerConcurrentLoad'
-import { SecondNodeTitle, SecondNodeExtra, FuzzerShowSuccess } from '../HTTPFuzzerPage'
+import { SecondNodeTitle, SecondNodeExtra, type FuzzerShowSuccess } from '../HTTPFuzzerPage'
 import { emptyFuzzer } from '@/defaultConstants/HTTPFuzzerPage'
 
 import styles from './ConcurrencyAllRes.module.scss'
-import { DebugProps } from './FuzzerPageSetting'
+import type { DebugProps } from './FuzzerPageSetting'
 
 export interface ConcurrencyAllResProps {
   responseInfo?: ResponseProps

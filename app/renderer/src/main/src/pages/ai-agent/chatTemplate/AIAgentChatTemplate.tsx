@@ -1,12 +1,12 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEffect } from 'ahooks'
-import { AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps } from '../aiAgentType'
+import type { AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps } from '../aiAgentType'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { grpcQueryAIToolDetails } from '../grpc'
-import { AIChatQSData, AIChatQSDataTypeEnum, ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIEventQueryRequest, AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { type AIChatQSData, AIChatQSDataTypeEnum, type ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIEventQueryRequest, type AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { taskAnswerToIconMap } from '../defaultConstant'
 import { AIChatListItem } from '../components/aiChatListItem/AIChatListItem'
 import StreamCard from '../components/StreamCard'
@@ -23,7 +23,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import TimelineCard from './TimelineCard/TimelineCard'
 import AIMemoryList from './aiMemoryList/AIMemoryList'
 import TaskLoading from './TaskLoading/TaskLoading'
-import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
+import { YakitResizeBox, type YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -105,7 +105,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   })
 
   const button = useMemo(() => {
-    let options = [
+    const options = [
       { label: t('AIAgentChatTemplate.timeline'), value: AIChatLeft.Timeline },
       { label: t('AIAgentChatTemplate.tasklist'), value: AIChatLeft.TaskTree },
     ]
@@ -121,7 +121,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     )
   }, [activeTab, handleTabChange, i18nRefresh])
   const extraProps = useCreation(() => {
-    let p: Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'> = {}
+    const p: Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'> = {}
     if (!length) {
       p.firstRatio = '100%'
       p.secondRatio = '0%'
@@ -360,7 +360,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                   />
                 )
               }
-              case AIChatQSDataTypeEnum.TOOL_CALL_PARAM:
+              case AIChatQSDataTypeEnum.TOOL_CALL_PARAM: {
                 const { call_tool_id } = data
                 const fileList = execFileRecord.get(call_tool_id)
                 return (
@@ -377,6 +377,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                     fileList={fileList}
                   />
                 )
+              }
               default:
                 return <React.Fragment key={id}></React.Fragment>
             }

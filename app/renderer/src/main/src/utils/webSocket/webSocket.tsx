@@ -1,7 +1,6 @@
 import emiter from '../eventBus/eventBus'
-import { failed } from '@/utils/notification'
 import { Uint8ArrayToString } from '../str'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { JSONParseLog } from '../tool'
 import { yakitSocket } from '@/services/electronBridge'
 

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
+import type {
   DownloadLlamaServerModelPromptProps,
   InstallLlamaServerModelPromptProps,
   InstallLlamaServerProps,
 } from './InstallLlamaServerModelPromptType'
-import { ExecResult } from '@/pages/invoker/schema'
+import type { ExecResult } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 import { useMemoizedFn } from 'ahooks'

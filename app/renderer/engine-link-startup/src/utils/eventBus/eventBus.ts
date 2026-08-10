@@ -1,5 +1,5 @@
 import mitt from 'mitt'
-import { StartupPageEventProps } from './events/startupPageEventProps'
+import type { StartupPageEventProps } from './events/startupPageEventProps'
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -30,7 +30,7 @@ type Events = [StartupPageEventProps]
 type CheckVal = Exchange<ArrContrast<Events>>
 // !!! 该变量声明不能改动
 // 如果编辑器(vscode)对该变量报错，则说明声明的信号有重名情况，请自行检查重名的位置
-let checkVal: CheckVal = true
+const checkVal: CheckVal = true
 
 const emiter = mitt<Joins<Events>>()
 

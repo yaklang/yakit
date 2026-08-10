@@ -1,6 +1,6 @@
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { useCurrentStore, useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { FC, memo, useMemo } from 'react'
+import { type FC, memo, useMemo } from 'react'
 import { useStore } from 'zustand'
 import AINodeItem from '../aiNodeItem/AINodeItem'
 

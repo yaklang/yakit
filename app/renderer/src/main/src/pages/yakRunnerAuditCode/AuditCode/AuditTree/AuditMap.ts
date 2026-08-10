@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { AuditNodeMapProps } from '../AuditCodeType'
-import { YakURLResource } from '@/pages/yakURLTree/data'
+import type { AuditNodeMapProps } from '../AuditCodeType'
 export const auditMap: Map<string, AuditNodeMapProps> = new Map()
 
 export const setMapAuditDetail = (id: string, info: AuditNodeMapProps) => {

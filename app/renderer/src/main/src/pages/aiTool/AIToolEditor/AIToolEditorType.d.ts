@@ -1,6 +1,6 @@
-import { AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
-import { SaveAIToolRequest } from '@/pages/ai-agent/type/aiTool'
-import { ForwardedRef } from 'react'
+import { type AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
+import { type SaveAIToolRequest } from '@/pages/ai-agent/type/aiTool'
+import { type ForwardedRef } from 'react'
 
 export interface AIToolEditorProps {
   pageId: string

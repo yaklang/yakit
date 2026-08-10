@@ -1,4 +1,4 @@
-import { PaginationSchema } from '@/pages/invoker/schema'
+import type { PaginationSchema } from '@/pages/invoker/schema'
 
 export interface AITool {
   Name: string

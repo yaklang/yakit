@@ -1,5 +1,5 @@
-import { Dispatch, SetStateAction, useEffect, useMemo, type FC } from 'react'
-import { KnowledgeBaseTableProps } from './KnowledgeBaseTable'
+import { type Dispatch, type SetStateAction, useEffect, useMemo, type FC } from 'react'
+import type { KnowledgeBaseTableProps } from './KnowledgeBaseTable'
 import { ChevronDownIcon, PlusIcon } from '@/assets/newIcon'
 import { LightningBoltIcon } from '../icon/sidebarIcon'
 
@@ -16,7 +16,7 @@ import {
 
 import styles from '../knowledgeBase.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { tableHeaderGroupOptions } from '../utils'
+import { type tableHeaderGroupOptions } from '../utils'
 import { useMemoizedFn, useSafeState } from 'ahooks'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 
@@ -24,7 +24,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
 import { PluginExecuteDetailDrawer } from './PluginExecuteDetailDrawer'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { CheckboxOptionType, Tooltip } from 'antd'
+import { type CheckboxOptionType, Tooltip } from 'antd'
 import { InstallPluginModal } from './InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
 

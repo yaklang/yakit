@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { ListSelectFilterPopoverProps, YakitVirtualListProps } from './YakitVirtualListType'
+import type { ListSelectFilterPopoverProps, YakitVirtualListProps } from './YakitVirtualListType'
 import styles from './YakitVirtualList.module.scss'
 import {
   useControllableValue,
@@ -15,7 +15,7 @@ import ReactResizeDetector from 'react-resize-detector'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   YakitProtoCheckbox,
-  YakitProtoCheckboxProps,
+  type YakitProtoCheckboxProps,
 } from '@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox'
 import React from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -158,7 +158,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
   const checkboxPropsMap = useCreation(() => {
     const map = new Map<React.Key, Partial<YakitProtoCheckboxProps>>()
     const { getCheckboxProps } = rowSelection || {}
-    if (!!getCheckboxProps) {
+    if (getCheckboxProps) {
       data.forEach((record, index) => {
         const key = record[renderKey]
         const checkboxProps = getCheckboxProps(record) || {}

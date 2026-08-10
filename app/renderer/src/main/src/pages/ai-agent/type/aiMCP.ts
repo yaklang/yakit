@@ -1,6 +1,6 @@
-import { KVPair } from '@/models/kv'
-import { PaginationSchema } from '@/pages/invoker/schema'
-import { AIMCPServerTypeEnum } from '../defaultConstant'
+import type { KVPair } from '@/models/kv'
+import type { PaginationSchema } from '@/pages/invoker/schema'
+import { type AIMCPServerTypeEnum } from '../defaultConstant'
 
 export interface GetAllMCPServersRequest {
   Keyword: string

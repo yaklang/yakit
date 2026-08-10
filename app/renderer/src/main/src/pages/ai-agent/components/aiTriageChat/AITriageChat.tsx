@@ -1,5 +1,5 @@
 import React, { memo, useRef, useState } from 'react'
-import { AITriageChatContentEditProps, AITriageChatContentProps } from './type'
+import type { AITriageChatContentEditProps, AITriageChatContentProps } from './type'
 
 import classNames from 'classnames'
 import styles from './AITriageChat.module.scss'
@@ -9,15 +9,15 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlinePencilaltIcon } from '@/assets/icon/outline'
 import { Tooltip } from 'antd'
-import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { editorViewCtx } from '@milkdown/kit/core'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { TextSelection } from '@milkdown/kit/prose/state'
 import { getMarkdown } from '@milkdown/kit/utils'
 import useAIAgentStore from '../../useContext/useStore'
-import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIChatTextareaSubmit } from '../../template/type'
+import type { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIChatTextareaSubmit } from '../../template/type'
 import { getAIReActRequestParams } from '../../utils'
 import { extractDataWithMilkdown } from '../aiMilkdownInput/utils'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
@@ -41,7 +41,7 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
     return undefined
   }, [renderNum])
   const renderContent = useMemoizedFn(() => {
-    if (!!extraValue?.showQS) {
+    if (extraValue?.showQS) {
       return (
         <>
           <AIMilkdownInput defaultValue={`${extraValue?.showQS}`} readonly={true} chatDataStoreKey={chatDataStoreKey} />
@@ -98,7 +98,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
   const { activeChat } = useAIAgentStore()
   const { onSend } = useAIAgentDispatcher()
   const defaultValue = useCreation(() => {
-    if (!!extraValue?.showQS) {
+    if (extraValue?.showQS) {
       return `${extraValue?.showQS}`
     }
     return content

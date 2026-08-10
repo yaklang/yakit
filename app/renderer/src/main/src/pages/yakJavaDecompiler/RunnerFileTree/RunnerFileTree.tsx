@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { OpenedFileProps, RunnerFileTreeProps } from './RunnerFileTreeType'
+import type { OpenedFileProps, RunnerFileTreeProps } from './RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
 import useStore from '../hooks/useStore'
@@ -8,7 +8,7 @@ import useDispatcher from '../hooks/useDispatcher'
 import classNames from 'classnames'
 import styles from './RunnerFileTree.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
   downloadAsZip,
   getYakJavaDecompilerHistory,
@@ -21,11 +21,11 @@ import { getMapFileDetail } from '../FileTreeMap/FileMap'
 import { getMapFolderDetail } from '../FileTreeMap/ChildMap'
 import { Tooltip } from 'antd'
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { OpenFileByPathProps, YakJavaDecompilerHistoryProps } from '../YakJavaDecompilerType'
+import type { OpenFileByPathProps, YakJavaDecompilerHistoryProps } from '../YakJavaDecompilerType'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
 import { FileTree } from '../FileTree/FileTree'
-import { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
-import { FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
+import type { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
+import type { FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
 import { failed, yakitNotify } from '@/utils/notification'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { randomString } from '@/utils/randomUtil'
@@ -43,7 +43,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   const initFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
     return data.map((item) => {
       const itemDetail = getMapFileDetail(item.path)
-      let obj: FileNodeProps = { ...itemDetail, depth }
+      const obj: FileNodeProps = { ...itemDetail, depth }
 
       const childArr = getMapFolderDetail(item.path)
       if (itemDetail.isFolder) {
@@ -131,7 +131,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   })
 
   const menuData: YakitMenuItemType[] = useMemo(() => {
-    let newMenu: YakitMenuItemType[] = [
+    const newMenu: YakitMenuItemType[] = [
       {
         key: 'close',
         label: '关闭项目',
@@ -339,8 +339,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   )
 })
 
-export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
-  const {} = props
+export const OpenedFile: React.FC<OpenedFileProps> = memo(() => {
   const { areaInfo, activeFile } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
   const titleRender = () => {

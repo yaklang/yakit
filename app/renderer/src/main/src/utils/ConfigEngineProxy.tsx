@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Alert, Button, Form, Space, Tag } from 'antd'
 import { info } from '@/utils/notification'

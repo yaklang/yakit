@@ -1,5 +1,5 @@
 import React from 'react'
-import { YakitAlertProps } from './type'
+import type { YakitAlertProps } from './type'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { Alert } from 'antd'
 import { YakitButton } from '../YakitButton/YakitButton'

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { FuzzerResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import type { FuzzerResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { useDebounceEffect, useGetState, useMap } from 'ahooks'
-import { editor } from 'monaco-editor'
+import { type editor } from 'monaco-editor'
 import { Space } from 'antd'
 import { AutoCard } from '@/components/AutoCard'
 import { failed, info, yakitFailed } from '@/utils/notification'
@@ -113,7 +114,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
     const token = getToken()
     const extractedCache: string[] = []
     let extractedCountLastUpdated = 0
-    let extractedMap = new Map<string, string>()
+    const extractedMap = new Map<string, string>()
     const offData = yakitStream.onData(token, async (data: { Extracted: Uint8Array; Token: string }) => {
       const item = extractedMap.get(data.Token)
       if (item) {

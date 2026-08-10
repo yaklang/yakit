@@ -1,5 +1,6 @@
-import React, { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type React from 'react'
+import { Fragment, memo, useEffect, useMemo, useRef, useState } from 'react'
+import type {
   Selection,
   CursorPosition,
   FileDetailInfo,
@@ -28,7 +29,6 @@ import {
   OutlineSplitScreenIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
-import yakitSSMiniProject from '@/assets/yakitMiniSS.png'
 import { YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon } from '@/pages/yakRunner/icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import {
@@ -38,34 +38,33 @@ import {
   useMemoizedFn,
   useSize,
   useThrottleFn,
-  useUpdate,
   useUpdateEffect,
 } from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
-import { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerAuditCodeType'
-import { IMonacoEditor } from '@/utils/editors'
+import type { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerAuditCodeType'
+import type { IMonacoEditor } from '@/utils/editors'
 import cloneDeep from 'lodash/cloneDeep'
-import { failed, info, warn, success } from '@/utils/notification'
+import { failed, warn, success } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
-import { Divider, Result, Upload } from 'antd'
+import { Result } from 'antd'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { v4 as uuidv4 } from 'uuid'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { openABSFileLocated } from '@/utils/openWebsite'
-import { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { getMapFileDetail, removeMapFileDetail, setMapFileDetail } from '../FileTreeMap/FileMap'
 import { getMapFolderDetail, setMapFolderDetail } from '../FileTreeMap/ChildMap'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { FileNodeMapProps } from '../FileTree/FileTreeType'
-import { Position } from 'monaco-editor'
+import type { FileNodeMapProps } from '../FileTree/FileTreeType'
+import { type Position } from 'monaco-editor'
 import {
   getWordWithPointAtPosition,
-  YaklangLanguageFindResponse,
-  YaklangLanguageSuggestionRequest,
+  type YaklangLanguageFindResponse,
+  type YaklangLanguageSuggestionRequest,
 } from '@/utils/monacoSpec/yakCompletionSchema'
 import { getModelContext } from '@/utils/monacoSpec/yakEditor'
 import {
@@ -80,16 +79,16 @@ import {
   updateAuditCodeAreaFileInfo,
 } from '../utils'
 import { editor as newEditor } from 'monaco-editor'
-import { YakitIMonacoEditor, YakitITextModel } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type { YakitIMonacoEditor, YakitITextModel } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { createRoot } from 'react-dom/client'
-import MonacoEditor, { monaco } from 'react-monaco-editor'
-import { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
+import { monaco } from 'react-monaco-editor'
+import type { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { getMapAllResultKey, getMapResultDetail } from '../RightAuditDetail/ResultMap'
-import { GraphInfoProps, JumpSourceDataProps, onJumpRunnerFile } from '../RightAuditDetail/RightAuditDetail'
+import { type GraphInfoProps, type JumpSourceDataProps, onJumpRunnerFile } from '../RightAuditDetail/RightAuditDetail'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { CountDirectionProps } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
+import type { CountDirectionProps } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
 import { onSetSelectedSearchVal } from '../AuditSearchModal/AuditSearch'
-import { ConvertAuditStaticAnalyzeErrorToMarker, IMonacoEditorMarker } from '@/utils/editorMarkers'
+import { ConvertAuditStaticAnalyzeErrorToMarker, type IMonacoEditorMarker } from '@/utils/editorMarkers'
 import { getPathParent, grpcFetchCreateFile, grpcFetchSaveFile, monacaLanguageType } from '@/pages/yakRunner/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
@@ -158,7 +157,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       item.elements.forEach((itemIn, indexIn) => {
         if (itemIn.id === tabsId) {
           // 筛选出迁移项
-          let newFileDetailInfo: FileDetailInfo[] = []
+          const newFileDetailInfo: FileDetailInfo[] = []
           let activeIndex: number = 0
           itemIn.files.forEach((file, fileIndex) => {
             if (file.path === info.path) {
@@ -216,7 +215,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       item.elements.forEach((itemIn, indexIn) => {
         if (itemIn.id === tabsId) {
           // 筛选出迁移项
-          let newFileDetailInfo: FileDetailInfo[] = []
+          const newFileDetailInfo: FileDetailInfo[] = []
           let activeIndex: number = 0
           itemIn.files.forEach((file, fileIndex) => {
             if (file.isActive) {
@@ -380,7 +379,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
               closeArr = itemIn.files.filter((item) => item.path !== info.path)
 
               // 剩余展示项
-              let onlyArr = itemIn.files
+              const onlyArr = itemIn.files
                 .filter((item) => item.path === info.path)
                 .map((item) => {
                   if (item.path === info.path) {
@@ -554,7 +553,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       // }
     ]
     if (splitDirection.length > 0) {
-      let direction: YakitMenuItemType[] = splitDirection.map((item) => {
+      const direction: YakitMenuItemType[] = splitDirection.map((item) => {
         return {
           label: onDirectionToName(item),
           key: item,
@@ -801,7 +800,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
     try {
       // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
       if (document.activeElement !== null) {
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         document.activeElement.blur()
       }
       const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
@@ -968,8 +967,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
       try {
         if (!editorInfo || !projectName) return
         let newActiveFile = editorInfo
-        let ProgramName = [projectName]
-        let CodeSourceUrl = activeFile?.path ? [activeFile.path] : []
+        const ProgramName = [projectName]
+        const CodeSourceUrl = activeFile?.path ? [activeFile.path] : []
         // 注入漏洞汇总结果
         newActiveFile = await getAuditCodeDefaultActiveFile(newActiveFile, ProgramName, CodeSourceUrl, [runtimeID])
         // 如若文件检查结果出来时 文件已被切走 则不再更新
@@ -1181,7 +1180,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
       const position = { lineNumber, column }
       const visiblePosition = editor.getScrolledVisiblePosition(position)
       // 位置信息
-      let direction: CountDirectionProps = {}
+      const direction: CountDirectionProps = {}
       if (editorContainer && visiblePosition) {
         // editorContainerInfo为编辑器在页面中的位置
         const editorContainerInfo = editorContainer.getBoundingClientRect()
@@ -1550,7 +1549,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
             const { data } = await grpcFetchAuditTree(parentPath)
             arr = data
             if (arr.length > 0) {
-              let childArr: string[] = []
+              const childArr: string[] = []
               // 文件Map
               arr.forEach((item) => {
                 // 注入文件结构Map
@@ -1684,17 +1683,21 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
   const onWidgetClick = useMemoizedFn((type: WidgetClickTypeProps) => {
     switch (type) {
       case 'previous':
-        closeFizzRangeWidget()
-        let previousItem = widgetControl?.previousValue as GraphInfoProps | null
-        if (previousItem) {
-          onJumpRunnerFile(previousItem, source)
+        {
+          closeFizzRangeWidget()
+          const previousItem = widgetControl?.previousValue as GraphInfoProps | null
+          if (previousItem) {
+            onJumpRunnerFile(previousItem, source)
+          }
         }
         break
       case 'next':
-        closeFizzRangeWidget()
-        let nextItem = widgetControl?.nextValue as GraphInfoProps | null
-        if (nextItem) {
-          onJumpRunnerFile(nextItem, source)
+        {
+          closeFizzRangeWidget()
+          const nextItem = widgetControl?.nextValue as GraphInfoProps | null
+          if (nextItem) {
+            onJumpRunnerFile(nextItem, source)
+          }
         }
         break
       default:

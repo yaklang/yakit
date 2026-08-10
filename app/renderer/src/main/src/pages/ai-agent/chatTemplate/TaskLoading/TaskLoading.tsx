@@ -1,5 +1,5 @@
 import Loading from '@/components/Loading/Loading'
-import { FC, memo, useEffect, useRef, useState } from 'react'
+import { type FC, memo, useEffect, useRef, useState } from 'react'
 import styles from './TaskLoading.module.scss'
 import useAISystemStream from '@/pages/ai-re-act/hooks/useAISystemStream'
 import { useAISystemStreamText } from '@/store/aiSystemStream'

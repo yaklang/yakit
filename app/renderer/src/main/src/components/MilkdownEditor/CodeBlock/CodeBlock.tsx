@@ -1,8 +1,9 @@
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { IMonacoEditor } from '@/utils/editors'
+import type { IMonacoEditor } from '@/utils/editors'
 import { useNodeViewContext } from '@prosemirror-adapter/react'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
-import React, { useState, useEffect, useRef } from 'react'
+import type React from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { TextSelection } from '@milkdown/kit/prose/state'
 
 interface CustomCodeComponentProps {
@@ -45,7 +46,7 @@ export const CustomCodeComponent: React.FC<CustomCodeComponentProps> = ({ isCont
         dispatch(tr) // 提交事务更新内容
       } else {
         const updatedContent = state.schema.nodes.paragraph.create()
-        let tr = state.tr.deleteRange(start, end).insert(start, updatedContent)
+        const tr = state.tr.deleteRange(start, end).insert(start, updatedContent)
         const selection = TextSelection.near(tr.doc.resolve(start))
         tr.setSelection(selection)
         dispatch(tr)

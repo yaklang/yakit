@@ -1,4 +1,4 @@
-import { SwitchProps } from 'antd'
+import { type SwitchProps } from 'antd'
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 
 /**

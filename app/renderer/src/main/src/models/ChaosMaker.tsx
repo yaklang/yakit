@@ -1,5 +1,3 @@
-import React from 'react'
-
 export interface ChaosMakerRule {
   Id: number
   RawTrafficBeyondIpPacketBase64: string

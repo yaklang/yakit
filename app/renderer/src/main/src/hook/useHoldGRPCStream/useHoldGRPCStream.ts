@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { info, yakitFailed } from '../../utils/notification'
 import { useMemoizedFn } from 'ahooks'
-import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from './useHoldGRPCStreamType'
+import type { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from './useHoldGRPCStreamType'
 import { DefaultTabs } from './constant'
 import { DEFAULT_LOG_LIMIT, LIMIT_LOG_NUM_NAME } from '@/defaultConstants/HoldGRPCStream'
 import { v4 as uuidv4 } from 'uuid'
@@ -14,7 +14,7 @@ import { yakitStream } from '@/services/electronBridge'
 export const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>) => {
   const cardArr: HoldGRPCStreamProps.InfoCard[] = []
   maps.forEach((value) => {
-    let item: HoldGRPCStreamProps.InfoCard = {
+    const item: HoldGRPCStreamProps.InfoCard = {
       Id: value.Id,
       Data: value.Data,
       Timestamp: value.Timestamp,
@@ -23,8 +23,8 @@ export const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>
     cardArr.push(item)
   })
   cardArr.sort((a, b) => a.Id.localeCompare(b.Id))
-  let cardObj: { [key: string]: HoldGRPCStreamProps.InfoCards } = {}
-  for (let el of cardArr) {
+  const cardObj: { [key: string]: HoldGRPCStreamProps.InfoCards } = {}
+  for (const el of cardArr) {
     if (el.Tag) {
       if (cardObj[el.Tag]) {
         cardObj[el.Tag].info.push(el)
@@ -119,9 +119,11 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   // runtime-id
   const runTimeId = useRef<{ cache: string; sent: string }>({ cache: '', sent: '' })
   // progress
-  let progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
+  const progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
   // card
-  let cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(new Map<string, HoldGRPCStreamProps.CacheCard>())
+  const cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
+    new Map<string, HoldGRPCStreamProps.CacheCard>(),
+  )
 
   // 前置tabs
   const topTabs = useRef<HoldGRPCStreamProps.InfoTab[]>([])
@@ -137,11 +139,11 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   // tabInfo-text
   const tabsText = useRef<Map<string, string>>(new Map<string, string>())
   // risks
-  let riskMessages = useRef<StreamResult.Risk[]>([])
+  const riskMessages = useRef<StreamResult.Risk[]>([])
   // logs
-  let messages = useRef<StreamResult.Message[]>([])
+  const messages = useRef<StreamResult.Message[]>([])
   // ruleData
-  let ruleData = useRef<StreamResult.RuleData[]>([])
+  const ruleData = useRef<StreamResult.RuleData[]>([])
 
   /** 自定义tab页放前面还是后面 */
   const placeTab = useMemoizedFn((isHead: boolean, info: HoldGRPCStreamProps.InfoTab) => {
@@ -160,7 +162,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   useEffect(() => {
     const offData = yakitStream.onData(token, async (data: StreamResult.BaseProsp) => {
       // run-time-id
-      if (!!data?.RuntimeID) {
+      if (data?.RuntimeID) {
         runTimeId.current.cache = data.RuntimeID
       }
       // 规则数据
@@ -172,7 +174,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
       if (isMessage) {
         try {
           const messageArr = data.Message || data.ExecResult?.Message
-          let obj: StreamResult.Message = JSONParseLog(Buffer.from(messageArr).toString(), {
+          const obj: StreamResult.Message = JSONParseLog(Buffer.from(messageArr).toString(), {
             page: 'useHoldGRPCStream',
           })
           // progress 进度条
@@ -221,13 +223,14 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
 
               let tabInfo: HoldGRPCStreamProps.InfoTab = { tabName: '', type: '' }
               switch (info.feature) {
-                case 'website-trees':
+                case 'website-trees': {
                   const website = info.params as StreamResult.WebSite
                   // tabInfo = {tabName: "网站树结构", type: "website"}
                   // placeTab(!!info.at_head, tabInfo)
                   tabWebsite.current = website
                   break
-                case 'fixed-table':
+                }
+                case 'fixed-table': {
                   const table = info.params as StreamResult.Table
                   tabInfo = { tabName: table.table_name, type: 'table' }
 
@@ -237,6 +240,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                     pushLogs(obj)
                     break
                   }
+
                   tabTable.current.set(table.table_name, {
                     name: table.table_name,
                     columns: table.columns.map((item) => {
@@ -245,7 +249,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                     data: new Map<string, any[]>(),
                   } as HoldGRPCStreamProps.CacheTable)
                   break
-                case 'text':
+                }
+                case 'text': {
                   const text = info.params as StreamResult.Text
                   tabInfo = { tabName: text.tab_name, type: 'text' }
 
@@ -256,7 +261,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                   }
                   tabsText.current.set(text.tab_name, '')
                   break
-
+                }
                 default:
                   pushLogs(obj)
                   break

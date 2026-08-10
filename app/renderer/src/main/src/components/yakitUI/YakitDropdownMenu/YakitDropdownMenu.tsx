@@ -1,7 +1,7 @@
-import { Dropdown, DropdownProps } from 'antd'
+import { Dropdown, type DropdownProps } from 'antd'
 import classNames from 'classnames'
-import { memo, ReactNode, useMemo } from 'react'
-import { YakitMenu, YakitMenuProp } from '../YakitMenu/YakitMenu'
+import { memo, type ReactNode, useMemo } from 'react'
+import { YakitMenu, type YakitMenuProp } from '../YakitMenu/YakitMenu'
 import styles from './YakitDropdownMenu.module.scss'
 
 /** 可能准备写成基础组件 */

@@ -1,6 +1,7 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import {
+import type {
   FilterLibRuleKind,
   FilterRuleKind,
   LocalRuleGroupListPropsRefProps,
@@ -23,7 +24,6 @@ import {
   OutlineClouddownloadIcon,
   OutlineClouduploadIcon,
   OutlineExportIcon,
-  OutlineEyeIcon,
   OutlineImportIcon,
   OutlinePencilaltIcon,
   OutlinePlusIcon,
@@ -33,7 +33,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import cloneDeep from 'lodash/cloneDeep'
 import { genDefaultPagination } from '../invoker/schema'
 import {
@@ -45,7 +45,7 @@ import {
   httpFetchOnlineRuleList,
 } from './api'
 import { RuleLanguageList, RuleType, RuleTypeList } from '@/defaultConstants/RuleManagement'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
@@ -57,12 +57,14 @@ import { RefreshIcon } from '@/assets/newIcon'
 import { IRifyApplySyntaxFlowRuleUpdate } from '../mitm/MITMServerHijacking/MITMPluginLocalList'
 import { useStore } from '@/store'
 import { randomString } from '@/utils/randomUtil'
-import { RuleManagementPageInfoProps } from '@/store/pageInfo'
+import type { RuleManagementPageInfoProps } from '@/store/pageInfo'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { isCommunityIRify, isEnpriTraceIRify } from '@/utils/envfile'
-import ImportExportModal, { ImportExportModalExtra } from '../fingerprintManage/ImportExportModal/ImportExportModal'
+import ImportExportModal, {
+  type ImportExportModalExtra,
+} from '../fingerprintManage/ImportExportModal/ImportExportModal'
 import { YakitRoute } from '@/enums/yakitRoute'
 const DefaultPaging: Paging = { Page: 1, Limit: 20, OrderBy: 'updated_at', Order: 'desc' }
 const DefaultOnlinePaging: API.Pagination = { page: 1, limit: 20, order_by: 'updated_at', order: 'desc' }
@@ -74,8 +76,8 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
   const [pageInfo, setPageInfo] = useState<RuleManagementPageInfoProps | undefined>(ruleManagementPageInfo)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const userInfo = useStore((s) => s.userInfo)
-  const localRuleGroupListRef = useRef<LocalRuleGroupListPropsRefProps>()
-  const onlineRuleGroupListRef = useRef<OnlineRuleGroupListPropsRefProps>()
+  const localRuleGroupListRef = useRef<LocalRuleGroupListPropsRefProps | null>(null)
+  const onlineRuleGroupListRef = useRef<OnlineRuleGroupListPropsRefProps | null>(null)
 
   /** ---------- 搜索/获取表格数据 Start ---------- */
   const initLoading = useRef<boolean>(false)

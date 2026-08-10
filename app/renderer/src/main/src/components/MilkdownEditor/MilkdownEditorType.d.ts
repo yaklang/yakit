@@ -1,14 +1,8 @@
-import { Editor } from '@milkdown/kit/core'
-import { MilkdownPlugin } from '@milkdown/kit/ctx'
-import { React, ReactNode } from 'react'
-import { CollabManager, CollabUserInfo } from './CollabManager'
-import { CloseEvent } from 'ws'
-import { YakitRoute } from '@/enums/yakitRoute'
-import {
-  NotepadActionType,
-  NotepadSaveStatusType,
-  WSConnectedStatusType,
-} from './WebsocketProvider/WebsocketProviderType'
+import { type Editor } from '@milkdown/kit/core'
+import { type MilkdownPlugin } from '@milkdown/kit/ctx'
+import { type CollabUserInfo } from './CollabManager'
+import { type YakitRoute } from '@/enums/yakitRoute'
+import { type NotepadSaveStatusType, type WSConnectedStatusType } from './WebsocketProvider/WebsocketProviderType'
 
 export type EditorMilkdownProps = Editor
 

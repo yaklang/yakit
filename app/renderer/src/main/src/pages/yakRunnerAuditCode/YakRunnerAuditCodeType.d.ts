@@ -1,7 +1,7 @@
-import { AuditYakUrlProps } from './AuditCode/AuditCodeType'
-import { FileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { AuditCodePageInfoProps } from '@/store/pageInfo'
+import { type AuditYakUrlProps } from './AuditCode/AuditCodeType'
+import { type FileDetailInfo, type Selection } from './RunnerTabs/RunnerTabsType'
+import { type StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type AuditCodePageInfoProps } from '@/store/pageInfo'
 export interface YakRunnerAuditCodeProps {
   auditCodePageInfo?: AuditCodePageInfoProps
 }

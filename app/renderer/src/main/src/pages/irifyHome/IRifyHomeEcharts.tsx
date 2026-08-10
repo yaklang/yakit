@@ -2,7 +2,7 @@ import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { useMemo } from 'react'
 import type { EChartsOption } from 'echarts'
 import ReactECharts from 'echarts-for-react'
-import { FieldName } from '../risks/RiskTable'
+import type { FieldName } from '../risks/RiskTable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const RISK_DISTRIBUTION_COLOR_KEYS = [
@@ -101,7 +101,7 @@ const RiskDistributionChart: React.FC<{
     const subTextColor = colors['--Colors-Use-Neutral-Text-4-Help-text']
     const bgHoverColor = colors['--Colors-Use-Neutral-Bg-Hover']
 
-    let option = {
+    const option = {
       color: distributionColors,
       tooltip: {
         trigger: 'item',

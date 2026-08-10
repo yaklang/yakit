@@ -1,5 +1,5 @@
-import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
+import React, { forwardRef, type ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
 import { OutlineArrowrightIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { useCountDown, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { SolidAnnotationIcon, SolidVariableIcon } from '@/assets/icon/solid'
@@ -14,17 +14,22 @@ import { genExecTasks } from '../../../ai-re-act/hooks/utils'
 import { reviewListToTrees } from '@/pages/ai-agent/utils'
 import { grpcGetAIForge } from '@/pages/ai-agent/grpc'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { ExecuteEnterNodeByPluginParams } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType } from '@/pages/plugins/editDetails/utils'
-import { AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIInputEvent, AITaskStatus } from '../../../ai-re-act/hooks/grpcApi'
+import {
+  type AIAgentGrpcApi,
+  AIInputEventSyncTypeEnum,
+  type AIInputEvent,
+  AITaskStatus,
+} from '../../../ai-re-act/hooks/grpcApi'
 
 import classNames from 'classnames'
 import styles from './AIReActChatReview.module.scss'
 import { OutlineHandleColorsIcon, ColorsOutlineWarpIcon } from '@/assets/icon/colors'
-import { AIChatQSDataTypeEnum, AIReviewType, AITaskInfoProps } from '../../../ai-re-act/hooks/aiRender'
-import { AIForge } from '@/pages/ai-agent/type/forge'
+import { AIChatQSDataTypeEnum, type AIReviewType, type AITaskInfoProps } from '../../../ai-re-act/hooks/aiRender'
+import type { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
@@ -59,19 +64,22 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     pendingDetachedPlanSubmitRef.current = false
     switch (info.type) {
       case 'plan_review_require':
-      case 'detached_plan_require':
+      case 'detached_plan_require': {
         const data = info.data as AIAgentGrpcApi.PlanReviewRequire
         const list = genExecTasks(data.plans.root_task)
         initReviewTreesRef.current = [...list]
         setReviewTrees(list)
         setCurrentPlansId(data.plans_id)
         break
+      }
       case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
-        const { options } = info.data
-        if (options && options.length > 0) {
-          const value = options[0].prompt || options[0].prompt_title
-          setRequireQS(value ? `${value}:` : '')
-          setAIOptionsSelect(value)
+        {
+          const { options } = info.data
+          if (options && options.length > 0) {
+            const value = options[0].prompt || options[0].prompt_title
+            setRequireQS(value ? `${value}:` : '')
+            setAIOptionsSelect(value)
+          }
         }
         break
       default:
@@ -87,9 +95,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     if (!execute) return
     switch (info.type) {
       case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
-        const data = info.data
-        if (!!data?.aiReview?.seconds) {
-          setTargetDate(Date.now() + data.aiReview.seconds * 1000)
+        {
+          const data = info.data
+          if (data?.aiReview?.seconds) {
+            setTargetDate(Date.now() + data.aiReview.seconds * 1000)
+          }
         }
         break
       default:
@@ -98,7 +108,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   }, [renderNum, execute])
   //#endregion
   const reviewTitle = useCreation(() => {
-    const subTitle = !!countdown ? (
+    const subTitle = countdown ? (
       <>
         <span className={styles['ai-countdown']}>{Math.round(countdown / 1000)}s</span>
         <span>{t('AIReActChatReview.autoExecuteSuffix')}</span>
@@ -135,7 +145,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const { tool, tool_description, reason, params } = info.data as AIAgentGrpcApi.ToolUseReviewRequire
     let paramsValue = '-'
     try {
-      paramsValue = !!params ? JSON.stringify(params, null, 2) : '-'
+      paramsValue = params ? JSON.stringify(params, null, 2) : '-'
     } catch (error) {}
 
     return (
@@ -217,7 +227,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   }, [renderNum, i18nRefresh])
   const planReview = useCreation(() => {
     if (reviewTrees.length > 0) {
-      const list = !!reviewTreeOption ? reviewTrees : initReviewTreesRef.current
+      const list = reviewTreeOption ? reviewTrees : initReviewTreesRef.current
       return (
         <AIPlanReviewTree
           defaultList={initReviewTreesRef.current}
@@ -420,7 +430,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   })
   /**智能应用用户自己修改ai得提交 */
   const handleSubmitForge = useMemoizedFn(() => {
-    if (!!forgeOption) {
+    if (forgeOption) {
       forgeReviewFormRef.current
         .validateFields()
         .then((value) => {
@@ -507,7 +517,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const footerNode = useCreation(() => {
     const renderFooterRightExtra = () => {
       // forge和play不会同时存在
-      if (!!reviewTreeOption) {
+      if (reviewTreeOption) {
         return (
           <>
             <YakitButton type="outline2" onClick={() => setReviewTreeOption(undefined)}>
@@ -519,7 +529,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
           </>
         )
       }
-      if (!!forgeOption) {
+      if (forgeOption) {
         return (
           <>
             <YakitButton type="outline2" onClick={() => setForgeOption(undefined)}>
@@ -577,31 +587,32 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     switch (info.type) {
       case 'tool_use_review_require':
       case 'exec_aiforge_review_require':
-        /**NOTE 定义问题 */
-        const toolReviewData = info.data as AIAgentGrpcApi.ToolUseReviewRequire
-        if (!!toolReviewData.aiReview) {
-          const { interactive_id, score, level } = toolReviewData.aiReview
-          node = (
-            <>
-              {!!interactive_id && !score && !countdown && <div>{t('AIReActChatReview.evaluating')}</div>}
-              {!!score && (
-                <div>
-                  AI&nbsp;&nbsp;{t('AIReActChatReview.aiRiskScore')}&nbsp;&nbsp;
-                  <span
-                    className={classNames(styles['ai-countdown'], {
-                      [styles['ai-score-low']]: level === 'low',
-                      [styles['ai-score-middle']]: level === 'middle',
-                      [styles['ai-score-high']]: level === 'high',
-                    })}
-                  >
-                    {toolReviewData.aiReview.score || 0}
-                  </span>
-                </div>
-              )}
-            </>
-          )
+        {
+          /**NOTE 定义问题 */
+          const toolReviewData = info.data as AIAgentGrpcApi.ToolUseReviewRequire
+          if (toolReviewData.aiReview) {
+            const { interactive_id, score, level } = toolReviewData.aiReview
+            node = (
+              <>
+                {!!interactive_id && !score && !countdown && <div>{t('AIReActChatReview.evaluating')}</div>}
+                {!!score && (
+                  <div>
+                    AI&nbsp;&nbsp;{t('AIReActChatReview.aiRiskScore')}&nbsp;&nbsp;
+                    <span
+                      className={classNames(styles['ai-countdown'], {
+                        [styles['ai-score-low']]: level === 'low',
+                        [styles['ai-score-middle']]: level === 'middle',
+                        [styles['ai-score-high']]: level === 'high',
+                      })}
+                    >
+                      {toolReviewData.aiReview.score || 0}
+                    </span>
+                  </div>
+                )}
+              </>
+            )
+          }
         }
-
         break
 
       default:

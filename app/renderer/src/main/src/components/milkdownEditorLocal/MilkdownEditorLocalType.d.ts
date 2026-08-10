@@ -1,4 +1,4 @@
-import { CustomMilkdownProps } from '../MilkdownEditor/MilkdownEditorType'
+import { type CustomMilkdownProps } from '../MilkdownEditor/MilkdownEditorType'
 
 export interface MilkdownEditorLocalProps extends LocalMilkdownProps {}
 

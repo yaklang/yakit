@@ -4,7 +4,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useNetwork, useMemoizedFn } from 'ahooks'
 import React, { forwardRef, useState, useImperativeHandle, useEffect, useMemo } from 'react'
-import { OnlineJudgmentProps, OnlineResponseStatusProps } from './OnlineJudgmentType'
+import type { OnlineJudgmentProps, OnlineResponseStatusProps } from './OnlineJudgmentType'
 
 import { yakitNotify } from '@/utils/notification'
 

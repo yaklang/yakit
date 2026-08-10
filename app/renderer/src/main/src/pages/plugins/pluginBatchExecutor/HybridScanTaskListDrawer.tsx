@@ -1,16 +1,16 @@
 import { useControllableValue, useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
-import React, { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { type ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import styles from './PluginBatchExecutor.module.scss'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { HybridScanModeType, HybridScanTask, HybridScanTaskSourceType } from '@/models/HybridScan'
+import type { HybridScanModeType, HybridScanTask, HybridScanTaskSourceType } from '@/models/HybridScan'
 import {
-  DeleteHybridScanTaskRequest,
-  QueryHybridScanTaskRequest,
-  QueryHybridScanTaskResponse,
+  type DeleteHybridScanTaskRequest,
+  type QueryHybridScanTaskRequest,
+  type QueryHybridScanTaskResponse,
   apiDeleteHybridScanTask,
   apiQueryHybridScanTask,
 } from './utils'
@@ -20,7 +20,7 @@ import { Divider, Tooltip } from 'antd'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import { SolidCheckCircleIcon, SolidPlayIcon, SolidXcircleIcon } from '@/assets/icon/solid'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { yakitNotify } from '@/utils/notification'
@@ -124,7 +124,7 @@ const HybridScanTaskList: React.FC<HybridScanTaskListProps> = React.memo(
     const [params, setParams] = useState<QueryHybridScanTaskRequest>({
       Pagination: genDefaultPagination(20, 1),
       Filter: {
-        HybridScanTaskSource: !!hybridScanTaskSource ? [hybridScanTaskSource] : [],
+        HybridScanTaskSource: hybridScanTaskSource ? [hybridScanTaskSource] : [],
       },
     })
     const [loading, setLoading] = useState<boolean>(false)
@@ -367,7 +367,7 @@ const HybridScanTaskList: React.FC<HybridScanTaskListProps> = React.memo(
           Filter: {
             ...oldParams.Filter,
             ...filter,
-            Status: !!filter.StatusType ? [filter.StatusType] : [],
+            Status: filter.StatusType ? [filter.StatusType] : [],
           },
         }))
         setTimeout(() => {

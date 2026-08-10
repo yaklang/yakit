@@ -1,4 +1,4 @@
-import { PaginationSchema } from '@/pages/invoker/schema'
+import type { PaginationSchema } from '@/pages/invoker/schema'
 
 /** forge 详情数据字段 */
 export interface AIForge {

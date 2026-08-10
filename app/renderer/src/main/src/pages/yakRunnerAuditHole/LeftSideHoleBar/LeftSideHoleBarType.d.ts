@@ -1,8 +1,8 @@
 export interface LeftSideHoleBarProps {
   isUnShow: boolean
-  setIsUnShow: (v: show) => void
-  active: LeftSideType
-  setActive: (v: LeftSideType) => void
+  setIsUnShow: (v: boolean) => void
+  active: LeftSideHoleType
+  setActive: (v: LeftSideHoleType) => void
   statisticNode: React.ReactNode
   documentCollectDom: React.ReactNode
 }

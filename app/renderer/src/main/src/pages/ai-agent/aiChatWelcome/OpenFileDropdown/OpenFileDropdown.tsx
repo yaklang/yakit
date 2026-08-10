@@ -1,6 +1,6 @@
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { handleOpenFileSystemDialog, OpenDialogOptions } from '@/utils/fileSystemDialog'
-import { FC, ReactNode, useMemo } from 'react'
+import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
+import { type FC, type ReactNode, useMemo } from 'react'
 
 export interface OpenFileDropdownItem {
   path: string
@@ -44,7 +44,7 @@ const OpenFileDropdown: FC<OpenFileDropdownProps> = ({ children, cb, onSelectIma
             onSelectImage()
             break
 
-          default:
+          default: {
             const isFolder = key === 'open-folder'
             openFileOrFolder(isFolder ? ['openDirectory'] : ['openFile'])
               .then((path) => {
@@ -56,6 +56,7 @@ const OpenFileDropdown: FC<OpenFileDropdownProps> = ({ children, cb, onSelectIma
               })
               .catch(() => {})
             break
+          }
         }
       },
     }

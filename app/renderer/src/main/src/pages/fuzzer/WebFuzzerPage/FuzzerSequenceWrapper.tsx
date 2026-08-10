@@ -1,5 +1,5 @@
 import React from 'react'
-import { FuzzerSequenceWrapperProps, WebFuzzerType } from './WebFuzzerPageType'
+import type { FuzzerSequenceWrapperProps, WebFuzzerType } from './WebFuzzerPageType'
 import styles from './WebFuzzerPage.module.scss'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'

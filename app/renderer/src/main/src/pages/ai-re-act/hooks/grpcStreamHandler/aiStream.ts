@@ -101,7 +101,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
       requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
-    let toolResult = rawData.contents.get(CallToolID)
+    const toolResult = rawData.contents.get(CallToolID)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
       requestInfo.pushLog({
         level: 'error',
@@ -302,7 +302,7 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   // 历史数据-(系统信息|推理信息)数据，不处理
   if (res.IsSync && (res.IsSystem || res.IsReason)) return
 
-  let ipcContent = Uint8ArrayToString(res.Content) || ''
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { event_writer_id, node_id, is_reason, is_system } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
   if (!event_writer_id) {
     requestInfo.pushLog({ level: 'error', message: `stream-finished数据, event_writer_id 为空` })

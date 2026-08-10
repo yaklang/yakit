@@ -1,6 +1,6 @@
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
 

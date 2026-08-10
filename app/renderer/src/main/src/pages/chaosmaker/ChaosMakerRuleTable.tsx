@@ -1,22 +1,23 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { Space, Tag } from 'antd'
 import YakitTabs from '@/components/yakitUI/YakitTabs/YakitTabs'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { ChaosMakerRuleGroup } from '@/pages/chaosmaker/ChaosMaker'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ChaosMakerRuleGroup } from '@/pages/chaosmaker/ChaosMaker'
 import { useMemoizedFn } from 'ahooks'
 import {
   genDefaultPagination,
-  PaginationSchema,
-  QueryGeneralRequest,
-  QueryGeneralResponse,
+  type PaginationSchema,
+  type QueryGeneralRequest,
+  type QueryGeneralResponse,
 } from '@/pages/invoker/schema'
 import { AutoCard } from '@/components/AutoCard'
 import { showDrawer } from '@/utils/showModal'
-import { ChaosMakerOperators, ExecuteChaosMakerRuleRequest } from '@/pages/chaosmaker/ChaosMakerOperators'
+import { ChaosMakerOperators, type ExecuteChaosMakerRuleRequest } from '@/pages/chaosmaker/ChaosMakerOperators'
 import { failed } from '@/utils/notification'
 import { ChaosMakerRunningSteps } from '@/pages/chaosmaker/ChaosMakerRunningSteps'
-import { ChaosMakerRule } from '@/models/ChaosMaker'
+import type { ChaosMakerRule } from '@/models/ChaosMaker'
 
 export interface ChaosMakerRuleTableProp {
   groups?: ChaosMakerRuleGroup[]

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type {
   YakitRiskSelectTagProps,
   YakitAuditHoleTableProps,
   YakURLDataItemProps,
@@ -15,13 +15,12 @@ import { Badge, Divider, Form, Input, Tooltip } from 'antd'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useControllableValue, useCreation, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
   OutlineChevrondownIcon,
   OutlineEyeIcon,
   OutlineExportIcon,
   OutlineImportIcon,
-  OutlineOpenIcon,
   OutlineRefreshIcon,
   OutlineSearchIcon,
   OutlineTerminalIcon,
@@ -29,15 +28,15 @@ import {
   OutlineUploadIcon,
   OutlineBotIcon,
 } from '@/assets/icon/outline'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
-  GroupTableColumnRequest,
-  SSARiskFeedbackToOnlineRequest,
-  CreateSSARiskDisposalsRequest,
+  type GroupTableColumnRequest,
+  type SSARiskFeedbackToOnlineRequest,
+  type CreateSSARiskDisposalsRequest,
   apiDeleteSSARisks,
   apiGroupTableColumn,
   apiNewRiskRead,
@@ -45,18 +44,17 @@ import {
   apiSSARiskFeedbackToOnline,
   apiCreateSSARiskDisposals,
   apiGetSSARiskDisposal,
-  GetSSARiskDisposalResponse,
-  SSARiskDisposalData,
+  type SSARiskDisposalData,
   apiDeleteSSARiskDisposals,
-  ExportSSARiskRequest,
-  ImportSSARiskRequest,
+  type ExportSSARiskRequest,
+  type ImportSSARiskRequest,
   apiExportSSARisk,
   apiImportSSARisk,
   openAIForge,
 } from './utils'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
-import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import classNames from 'classnames'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -68,10 +66,9 @@ import { ImportAndExportStatusInfo } from '@/components/YakitUploadModal/YakitUp
 import { randomString } from '@/utils/randomUtil'
 import { FuncBtn } from '@/pages/plugins/funcTemplate'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { AuditCodePageInfoProps } from '@/store/pageInfo'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { AuditCodePageInfoProps } from '@/store/pageInfo'
 import ReactResizeDetector from 'react-resize-detector'
-import { FieldName } from '@/pages/risks/RiskTable'
 import {
   IconSolidDefaultRiskIcon,
   IconSolidHighRiskIcon,
@@ -82,8 +79,8 @@ import {
 } from '@/pages/risks/icon'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
 import { AuditResultCollapse, AuditResultDescribe, SeverityMapTag } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
-import { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
-import { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
+import type { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { getRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
 import { NoPromptHint } from '@/pages/pluginHub/utilsUI/UtilsTemplate'
@@ -92,11 +89,9 @@ import { useStore } from '@/store'
 import { PopoverArrowIcon } from '@/pages/pluginHub/pluginLog/PluginLogOpt'
 import { LogNodeStatusModifyIcon } from '@/assets/icon/colors'
 import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
-import { TextAreaRef } from 'antd/lib/input/TextArea'
+import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import importExportStyles from '@/pages/fingerprintManage/ImportExportModal/ImportExportModal.module.scss'
-import { grpcGetAIForge } from '@/pages/ai-agent/grpc'
-import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 
 const { ipcRenderer } = window.require('electron')
@@ -174,6 +169,11 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       initResDataFun,
       onFirst,
     })
+
+  const restTableVirtualResizeProps = useMemo(() => {
+    const { isRefresh, renderKey, data, columns, ...rest } = tableVirtualResizeProps || {}
+    return rest
+  }, [tableVirtualResizeProps])
 
   const [showType, setShowType] = useState<'detail' | 'code' | 'history'>('detail')
 
@@ -376,7 +376,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 onOpenSelect(record)
               }}
             >
-              <span>{!!text ? getLabelByValue(text) : '-'}</span>
+              <span>{text ? getLabelByValue(text) : '-'}</span>
               <OutlineChevrondownIcon className={styles['table-tag-icon']} />
             </div>
           </>
@@ -749,7 +749,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         if (params.RiskIds.includes(item.Id)) {
           return {
             ...item,
-            LatestDisposalStatus: !!params.Status ? params.Status : 'not_set',
+            LatestDisposalStatus: params.Status ? params.Status : 'not_set',
           }
         }
         return item
@@ -761,7 +761,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     })
   })
   const onRemoveSingle = useMemoizedFn((id) => {
-    let removeQuery: DeleteSSARisksRequest = {
+    const removeQuery: DeleteSSARisksRequest = {
       Filter: {
         ID: [id],
       },
@@ -774,7 +774,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
   /**批量删除后，重置查询条件刷新 */
   const onRemove = useMemoizedFn(() => {
     const { RuntimeID } = query
-    let removeQuery: DeleteSSARisksRequest = {
+    const removeQuery: DeleteSSARisksRequest = {
       Filter: {
         RuntimeID,
         ...tableParams.Filter,
@@ -805,18 +805,19 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       case 'noResetRefresh':
         debugVirtualTableEvent.noResetRefreshT()
         break
-      case 'resetRefresh':
+      case 'resetRefresh': {
         const { RuntimeID } = query
         setQuery && setQuery({})
         debugVirtualTableEvent.refreshT({ RuntimeID })
         break
+      }
       default:
         break
     }
   })
 
   const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-    let sort = { ...newSort }
+    const sort = { ...newSort }
     if (sort.order === 'none') {
       sort.order = 'desc'
       sort.orderBy = 'id'
@@ -924,7 +925,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
   })
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -962,7 +963,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       if (item.Id === info.Id) {
         return {
           ...item,
-          LatestDisposalStatus: !!status ? status : 'not_set',
+          LatestDisposalStatus: status ? status : 'not_set',
         }
       }
       return item
@@ -999,7 +1000,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         firstMinSize={160}
         secondMinSize={200}
         isVer={true}
-        lineStyle={{ display: !!currentSelectItem?.Id ? '' : 'none' }}
+        lineStyle={{ display: currentSelectItem?.Id ? '' : 'none' }}
         lineDirection="bottom"
         secondNodeStyle={{
           display: !currentSelectItem?.Id ? 'none' : '',
@@ -1168,13 +1169,14 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
               total: tableTotal,
               limit: pagination.Limit,
               page: pagination.Page,
+              onChange: (page, limit) => onTableChange(page, limit, { order: 'desc', orderBy: 'id' }, {}),
             }}
             columns={columns}
             onSetCurrentRow={onSetCurrentRow}
             enableDrag={true}
             useUpAndDown
             onChange={onTableChange}
-            {...(tableVirtualResizeProps || {})}
+            {...(restTableVirtualResizeProps || {})}
           />
         }
         secondNode={
@@ -1388,7 +1390,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
   }, [info])
 
   const getOptions = useMemo(() => {
-    let options = [
+    const options = [
       {
         label: t('YakitAuditHoleTable.riskDetails'),
         value: 'detail',
@@ -1547,7 +1549,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
               </span>
               <Divider type="vertical" style={{ height: 16, margin: '0 8px' }} />
               <span className={styles['content-heard-body-time']}>
-                {t('YakitAuditHoleTable.foundTime', { time: !!info.CreatedAt ? formatTimestamp(info.CreatedAt) : '-' })}
+                {t('YakitAuditHoleTable.foundTime', { time: info.CreatedAt ? formatTimestamp(info.CreatedAt) : '-' })}
               </span>
             </div>
           </div>

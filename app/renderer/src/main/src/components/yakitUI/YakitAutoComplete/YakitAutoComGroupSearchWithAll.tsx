@@ -1,6 +1,6 @@
 import { AutoComplete } from 'antd'
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import type {
   YakitAutoCompleteCacheDataHistoryProps,
   YakitAutoCompleteProps,
   YakitAutoCompleteRefProps,
@@ -8,7 +8,7 @@ import {
 import styles from './YakitAutoComplete.module.scss'
 import classNames from 'classnames'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
-import { YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase } from '../utils'
+import { type YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase } from '../utils'
 import { OutlineXIcon } from '@/assets/icon/outline'
 
 export const defYakitAutoCompleteRef = {
@@ -79,6 +79,7 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
       cacheHistoryDataKey,
       cacheHistoryListLength = 10,
       isCacheDefaultValue = true,
+      ref: _ref,
       initValue = '',
       wrapperStyle,
       isInit = true,
@@ -101,7 +102,6 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
     })
     useEffect(() => {
       inViewport && onGetRemoteValues(isInit)
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initValue, inViewport, isInit])
 
     useImperativeHandle(
@@ -255,7 +255,6 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
           options: allRowOptions,
         },
       ]
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       groupSearchWithAll,
       cacheHistoryData.options,

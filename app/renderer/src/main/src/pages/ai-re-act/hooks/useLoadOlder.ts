@@ -160,7 +160,6 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
       const tokens = [...rawData.contents.keys()]
       globalSessionEngine.removeContentsFromMemory(sessionId, tokens)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId])
 
   /** 取当前 chatType 的 elements */

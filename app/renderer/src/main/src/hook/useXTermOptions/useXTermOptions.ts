@@ -1,4 +1,4 @@
-import { Theme, useTheme } from '../useTheme'
+import { useTheme } from '../useTheme'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
 import { defaultTerminalOptions } from '@/components/yakitUI/YakitXterm/YakitXterm'

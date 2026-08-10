@@ -1,11 +1,11 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
-import { ExecResultLog, ExecResultMessage, ExecResultProgress } from '../pages/invoker/batch/ExecMessageViewer'
-import { ExecResult } from '../pages/invoker/schema'
-import { StatusCardInfoProps, StatusCardProps } from '../pages/yakitStore/viewers/base'
+import { useState, useRef, useEffect } from 'react'
+import type { ExecResultLog, ExecResultMessage, ExecResultProgress } from '../pages/invoker/batch/ExecMessageViewer'
+import type { ExecResult } from '../pages/invoker/schema'
+import type { StatusCardInfoProps, StatusCardProps } from '../pages/yakitStore/viewers/base'
 import { writeExecResultXTerm } from '../utils/xtermUtils'
-import { failed, info, yakitInfo } from '../utils/notification'
+import { failed, info } from '../utils/notification'
 import { useGetState } from 'ahooks'
-import { Risk } from '@/pages/risks/schema'
+import type { Risk } from '@/pages/risks/schema'
 import { isEnpriTraceAgent } from '@/utils/envfile'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitStream } from '@/services/electronBridge'
@@ -45,18 +45,18 @@ export default function useHoldingIPCRStream(
   })
   const [xtermRef, setXtermRef, getXtermRef] = useGetState<any>(null)
 
-  let messages = useRef<ExecResultMessage[]>([])
-  let featureMessages = useRef<ExecResultMessage[]>([])
-  let featureTypes = useRef<ExecResultMessage[]>([])
-  let riskMessages = useRef<Risk[]>([])
-  let processKVPair = useRef<Map<string, number>>(new Map<string, number>())
-  let statusKVPair = useRef<Map<string, CacheStatusCardProps>>(new Map<string, CacheStatusCardProps>())
+  const messages = useRef<ExecResultMessage[]>([])
+  const featureMessages = useRef<ExecResultMessage[]>([])
+  const featureTypes = useRef<ExecResultMessage[]>([])
+  const riskMessages = useRef<Risk[]>([])
+  const processKVPair = useRef<Map<string, number>>(new Map<string, number>())
+  const statusKVPair = useRef<Map<string, CacheStatusCardProps>>(new Map<string, CacheStatusCardProps>())
 
   useEffect(() => {
     const syncResults = () => {
-      let results = messages.current.filter((i) => i.type === 'log').map((i) => i.content as ExecResultLog)
+      const results = messages.current.filter((i) => i.type === 'log').map((i) => i.content as ExecResultLog)
 
-      let featureResults = featureMessages.current
+      const featureResults = featureMessages.current
         .filter((i) => i.type === 'log')
         .map((i) => i.content as ExecResultLog)
         .filter((i) => i.data !== 'null')
@@ -66,7 +66,7 @@ export default function useHoldingIPCRStream(
         .map((i) => i.content as ExecResultLog)
         .filter((i) => i.data !== 'null')
 
-      let riskResults = riskMessages.current.filter((i) => !!i)
+      const riskResults = riskMessages.current.filter((i) => !!i)
 
       const featureTypeFilter = featureTypeResults.map((item) => item.data)
       featureTypeResults = featureTypeResults.filter((item, index) => featureTypeFilter.indexOf(item.data) === index)
@@ -85,7 +85,7 @@ export default function useHoldingIPCRStream(
         statusCards.push(item)
       })
       statusCards.sort((a, b) => a.Id.localeCompare(b.Id))
-      for (let item of statusCards) {
+      for (const item of statusCards) {
         if (item.Tag) {
           if (cacheStatusKVPair[item.Tag]) {
             cacheStatusKVPair[item.Tag].info.push(item)
@@ -130,7 +130,7 @@ export default function useHoldingIPCRStream(
 
       if (data.IsMessage) {
         try {
-          let obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString(), {
+          const obj: ExecResultMessage = JSONParseLog(Buffer.from(data.Message).toString(), {
             page: 'useHoldingIPCRStream',
           })
 

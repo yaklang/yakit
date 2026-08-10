@@ -1,8 +1,8 @@
-import { AITool } from '../../type/aiTool'
-import { AIForge } from '../../type/forge'
-import { AIMentionTabsEnum, iconMap } from '../../defaultConstant'
-import { AIMentionCommandParams } from '../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
+import type { AITool } from '../../type/aiTool'
+import type { AIForge } from '../../type/forge'
+import { type AIMentionTabsEnum, type iconMap } from '../../defaultConstant'
+import type { AIMentionCommandParams } from '../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 
 export type AIMentionTypeItem = AIMentionCommandParams['mentionType']
 export type iconMapType = keyof typeof iconMap

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { AIToolListItemProps, AIToolListProps, ToolQueryType } from './AIToolListType'
+import type { AIToolListItemProps, AIToolListProps, ToolQueryType } from './AIToolListType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { grpcDeleteAITool, grpcGetAIToolList, grpcToggleAIToolFavorite } from './utils'
@@ -21,17 +21,17 @@ import styles from './AIToolList.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { AITool, GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest } from '../type/aiTool'
+import type { AITool, GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest } from '../type/aiTool'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { setClipboardText } from '@/utils/clipboard'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ReActChatEventEnum, tagColors } from '../defaultConstant'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { yakitNotify } from '@/utils/notification'
-import { AIToolEditorPageInfoProps } from '@/store/pageInfo'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { AIToolEditorPageInfoProps } from '@/store/pageInfo'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
 
@@ -153,7 +153,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
       const newPage = +res.Pagination.Page
       const length = newPage === 1 ? res.Tools.length : res.Tools.length + response.Tools.length
       setHasMore(length < +res.Total)
-      let newRes: GetAIToolListResponse = {
+      const newRes: GetAIToolListResponse = {
         Tools: newPage === 1 ? res?.Tools : [...response.Tools, ...(res?.Tools || [])],
         Pagination: res?.Pagination || {
           ...genDefaultPagination(20),

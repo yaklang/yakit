@@ -1,26 +1,26 @@
-import { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { subscribeWithSelector, persist, StorageValue } from 'zustand/middleware'
+import { subscribeWithSelector, persist, type StorageValue } from 'zustand/middleware'
 import debounce from 'lodash/debounce'
-import { AdvancedConfigShowProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { AdvancedConfigShowProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { yakitNotify } from '@/utils/notification'
 import { setRemoteProjectValue } from '@/utils/kv'
 import cloneDeep from 'lodash/cloneDeep'
 import { createWithEqualityFn } from 'zustand/traditional'
-import { HybridScanControlAfterRequest, HybridScanModeType } from '@/models/HybridScan'
+import type { HybridScanControlAfterRequest, HybridScanModeType } from '@/models/HybridScan'
 import { defaultAdvancedConfigValue, defaultPostTemplate } from '@/defaultConstants/HTTPFuzzerPage'
-import { HTTPResponseMatcher } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType'
-import { PluginSourceType } from '@/pages/pluginHub/type'
+import type { HTTPResponseMatcher } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import type { PluginSourceType } from '@/pages/pluginHub/type'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
-import { SyntaxFlowScanModeType } from '@/pages/yakRunnerCodeScan/YakRunnerCodeScanType'
-import { ConcurrencyAdvancedConfigValue } from '@/pages/fuzzer/FuzzerSequence/FuzzerPageConcurrency'
-import { FilterLibRuleKind } from '@/pages/ruleManagement/RuleManagementType'
+import type { SyntaxFlowScanModeType } from '@/pages/yakRunnerCodeScan/YakRunnerCodeScanType'
+import type { ConcurrencyAdvancedConfigValue } from '@/pages/fuzzer/FuzzerSequence/FuzzerPageConcurrency'
+import type { FilterLibRuleKind } from '@/pages/ruleManagement/RuleManagementType'
 import { JSONParseLog } from '@/utils/tool'
-import { configManagementTabType } from '.'
-import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
+import type { configManagementTabType } from '.'
+import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
 import i18n from '@/i18n/i18n'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 const tOriginal = i18n.getFixedT(null, 'store')
 
 /**
@@ -466,7 +466,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
         updatePagesDataCacheById: (key, value) => {
           const { pages } = get()
           const current: PageProps = pages.get(key) || cloneDeep(defPage)
-          let updateIndex: number = current.pageList.findIndex((ele) => ele.pageId === value.pageId)
+          const updateIndex: number = current.pageList.findIndex((ele) => ele.pageId === value.pageId)
           if (updateIndex !== -1) {
             current.pageList[updateIndex] = {
               ...value,

@@ -1,22 +1,19 @@
 import { monaco } from 'react-monaco-editor'
 import {
   newYaklangCompletionHandlerProvider,
-  yaklangCompletionHandlerProvider,
   getCompletions,
   getGlobalCompletions,
-  Range,
-  SuggestionDescription,
-  YaklangLanguageSuggestionRequest,
-  YaklangLanguageSuggestionResponse,
+  type Range,
+  type YaklangLanguageSuggestionRequest,
+  type YaklangLanguageSuggestionResponse,
   getWordWithPointAtPosition,
-  YaklangLanguageFindResponse,
+  type YaklangLanguageFindResponse,
   maybeAutoTriggerCallbackOnParen,
 } from './yakCompletionSchema'
 import { setupCompletionHint } from './yakCompletionHint'
-import { KeyCode, KeyMod, languages } from 'monaco-editor'
-import CodeAction = languages.CodeAction
-import CodeActionList = languages.CodeActionList
-import { EditorContext } from '@uiw/react-md-editor'
+import { KeyCode, KeyMod, type languages } from 'monaco-editor'
+type CodeAction = languages.CodeAction
+type CodeActionList = languages.CodeActionList
 
 export const YaklangMonacoSpec = 'yak'
 // export const GolangMonacoSpec = "go";
@@ -25,8 +22,8 @@ export const YAK_FORMATTER_COMMAND_ID = 'yak-formatter'
 
 const { ipcRenderer } = window.require('electron')
 const { CompletionItemKind } = monaco.languages
-var modelToEditorMap = new Map<monaco.editor.ITextModel, monaco.editor.ICodeEditor>()
-var editorToSignatureHelpRangeMap = new Map<monaco.editor.ICodeEditor, monaco.Range>()
+const modelToEditorMap = new Map<monaco.editor.ITextModel, monaco.editor.ICodeEditor>()
+const editorToSignatureHelpRangeMap = new Map<monaco.editor.ICodeEditor, monaco.Range>()
 
 const editorContextMap = new Map<monaco.editor.ICodeEditor, Map<string, string>>()
 
@@ -481,7 +478,7 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
           }
           if (position.column < model.getLineMaxColumn(position.lineNumber)) {
             // get next character
-            let nextValue = model.getValueInRange({
+            const nextValue = model.getValueInRange({
               startLineNumber: position.lineNumber,
               startColumn: position.column,
               endLineNumber: position.lineNumber,
@@ -496,7 +493,7 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
                 if (item.kind === CompletionItemKind.Snippet) {
                   return item
                 }
-                let index = item.insertText.indexOf('(')
+                const index = item.insertText.indexOf('(')
                 if (index !== -1) {
                   item.insertText = item.insertText.slice(0, index)
                 }
@@ -787,8 +784,8 @@ monaco.languages.registerSignatureHelpProvider(YaklangMonacoSpec, {
                 })
               }
               if (editor) {
-                let nowPosition = editor.getPosition()!
-                let beforeText = model.getValueInRange({
+                const nowPosition = editor.getPosition()!
+                const beforeText = model.getValueInRange({
                   startLineNumber: rng.startLineNumber,
                   startColumn: rng.startColumn,
                   endLineNumber: nowPosition.lineNumber,
@@ -932,7 +929,7 @@ monaco.languages.registerDefinitionProvider(YaklangMonacoSpec, {
   ): languages.ProviderResult<languages.Definition> {
     return new Promise(async (resolve, reject) => {
       const iWord = getWordWithPointAtPosition(model, position)
-      let desc = ''
+      const desc = ''
       const type = getModelContext(model, 'plugin') || 'yak'
       await ipcRenderer
         .invoke('YaklangLanguageFind', {
@@ -980,7 +977,7 @@ monaco.languages.registerReferenceProvider(YaklangMonacoSpec, {
   ): languages.ProviderResult<languages.Location[]> {
     return new Promise(async (resolve, reject) => {
       const iWord = getWordWithPointAtPosition(model, position)
-      let desc = ''
+      const desc = ''
       const type = getModelContext(model, 'plugin') || 'yak'
       await ipcRenderer
         .invoke('YaklangLanguageFind', {

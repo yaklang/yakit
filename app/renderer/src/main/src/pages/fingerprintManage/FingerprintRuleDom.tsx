@@ -1,6 +1,6 @@
-import React from 'react'
+import type React from 'react'
 import styles from './FingerprintManage.module.scss'
-import { SafeMarkdown, StreamMarkdown } from '../assetViewer/reportRenders/markdownRender'
+import { StreamMarkdown } from '../assetViewer/reportRenders/markdownRender'
 
 interface FingerprintRuleDomProp {}
 export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {

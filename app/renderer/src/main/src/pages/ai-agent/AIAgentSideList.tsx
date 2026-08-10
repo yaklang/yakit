@@ -1,7 +1,7 @@
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { type ReactNode, useEffect, useState } from 'react'
 import { useControllableValue, useMemoizedFn } from 'ahooks'
 import { AiAgentTabList, AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from './defaultConstant'
-import { AIAgentSideListProps, AIAgentTriggerEventInfo } from './aiAgentType'
+import type { AIAgentSideListProps, AIAgentTriggerEventInfo } from './aiAgentType'
 import emiter from '@/utils/eventBus/eventBus'
 
 import classNames from 'classnames'

@@ -1,5 +1,5 @@
-import React from 'react'
-import { API } from '@/services/swagger/resposeType'
+import type React from 'react'
+import { type API } from '@/services/swagger/resposeType'
 export type useVirtualTableHookParams<T, DataT, DataKey> = {
   // 表格容器ref
   tableBoxRef: React.MutableRefObject<any>

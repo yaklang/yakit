@@ -1,4 +1,5 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
@@ -7,9 +8,9 @@ import { QuestionMarkCircleIcon, RefreshIcon } from '@/assets/newIcon'
 import { Pagination, Space, Tooltip } from 'antd'
 import { OutlineClipboardlistIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse } from '../invoker/schema'
+import { genDefaultPagination, type QueryGeneralRequest, type QueryGeneralResponse } from '../invoker/schema'
 import { yakitNotify } from '@/utils/notification'
-import { Report } from './models'
+import type { Report } from './models'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { SelectIcon } from '@/assets/icons'
@@ -27,7 +28,7 @@ import {
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { yakitDialog } from '@/services/electronBridge'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { ReportItem } from './reportRenders/schema'
+import type { ReportItem } from './reportRenders/schema'
 import html2canvas from 'html2canvas'
 import { saveAs } from 'file-saver'
 import htmlDocx from 'html-docx-js/dist/html-docx'
@@ -314,7 +315,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 >
                   <Tooltip title={t('ReportViewerPage.selectToDelete')}>
                     <SelectIcon
-                      // @ts-ignore
+                      // @ts-expect-error 类型定义不完整，需要忽略此行
                       className={classNames(styles['icon-select'], {
                         [styles['icon-select-active']]: selectedRowKeys.includes(item.Id),
                       })}
@@ -517,7 +518,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       (data) => {
         if (data.filePaths.length) {
           setDownloadLoading(true)
-          let absolutePath = data.filePaths[0].replace(/\\/g, '\\')
+          const absolutePath = data.filePaths[0].replace(/\\/g, '\\')
           ipcRenderer
             .invoke('DownloadHtmlReport', {
               JsonRaw: report.JsonRaw,
@@ -566,7 +567,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       isEchartsToImg.current = false
       const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
       const promises = Array.from(echartsElements).map(async (element) => {
-        const echartType = (element as HTMLElement).getAttribute('echart-type')
+        const echartType = (element as HTMLElement).getAttribute('data-echart-type')
         const options = getEchartsHtml2CanvasOptions(echartType)
         const canvas = await html2canvas(element as HTMLElement, options)
         return canvas.toDataURL('image/jpeg')
@@ -822,11 +823,11 @@ const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
         if (newData.type === 'report-cover') {
           return <div style={{ height: 0 }}></div>
         } else if (newData.type === 'bar-graph') {
-          let color = newData?.color
-          let name = (newData?.data || []).map((item) => item.name)
-          let value = (newData?.data || []).map((item) => item.value)
-          let title = newData?.title
-          let obj = { name, value, color, title }
+          const color = newData?.color
+          const name = (newData?.data || []).map((item) => item.name)
+          const value = (newData?.data || []).map((item) => item.value)
+          const title = newData?.title
+          const obj = { name, value, color, title }
           return <VerticalOptionBar content={obj} />
         } else if (newData.type === 'pie-graph') {
           return <HollowPie data={newData.data} title={newData.title} />
@@ -853,9 +854,10 @@ const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                 return <EchartsOption content={content} />
               case 'year-cve':
                 return <StackedVerticalBar content={content} />
-              case 'card':
+              case 'card': {
                 const dataTitle = content?.name_verbose || content?.name || ''
                 return <EchartsCard dataTitle={dataTitle} dataSource={data} />
+              }
               case 'fix-array-list':
                 return <FoldRuleCard content={content} />
               case 'risk-list':

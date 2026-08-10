@@ -6,16 +6,16 @@ import { useEffect, useMemo, useRef, type FC } from 'react'
 import ReactResizeDetector from 'react-resize-detector'
 import styles from '../knowledgeBase.module.scss'
 
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { apiQueryEntity, transformToGraphData } from '../utils'
 
-import { QueryEntityRequest } from '../TKnowledgeBase'
+import type { QueryEntityRequest } from '../TKnowledgeBase'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
+import type { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import { v4 as uuidv4 } from 'uuid'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { Divider, Tooltip } from 'antd'
-import { Entity, GenerateERMDotResponse } from '@/components/playground/entityRepository'
+import type { Entity, GenerateERMDotResponse } from '@/components/playground/entityRepository'
 import { failed } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -334,7 +334,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
 
   const ResizeBoxProps = useCreation(() => {
     setSelectedSubERMId('')
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -346,7 +346,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
   }, [selectedRowKeys])
 
   const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-    let sort = { ...newSort }
+    const sort = { ...newSort }
     if (sort.order === 'none') {
       sort.order = 'desc'
       sort.orderBy = 'id'
@@ -500,7 +500,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
         firstMinSize={160}
         secondMinSize={200}
         isVer={true}
-        lineStyle={{ display: !!selectedRowKeys.length ? '' : 'none' }}
+        lineStyle={{ display: selectedRowKeys.length ? '' : 'none' }}
         lineDirection="bottom"
         secondNodeStyle={{
           display: !selectedRowKeys.length ? 'none' : '',

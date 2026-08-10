@@ -1,9 +1,9 @@
-import React, { ReactNode, useMemo, useState } from 'react'
+import React, { type ReactNode, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { Menu, MenuProps, Tooltip } from 'antd'
-import { ItemType } from 'antd/lib/menu/hooks/useItems'
+import { Menu, type MenuProps, Tooltip } from 'antd'
+import type { ItemType } from 'antd/lib/menu/hooks/useItems'
 import { ChevronRightIcon } from '@/assets/newIcon'
-import { MenuDividerType } from 'rc-menu/lib/interface'
+import type { MenuDividerType } from 'rc-menu/lib/interface'
 
 import classNames from 'classnames'
 import styles from '@/components/yakitUI/YakitMenu/yakitMenu.module.scss'
@@ -67,7 +67,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
       return itemInfo
     } else {
       const info = { ...(data as any as EditorMenuItemProps) }
-      const hintTitle = !!info.title ? info.title : typeof info.label === 'string' ? info.label : ''
+      const hintTitle = info.title ? info.title : typeof info.label === 'string' ? info.label : ''
 
       if (info.children && info.children.length > 0) {
         const itemInfo: ItemType = {
@@ -97,7 +97,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
               : undefined,
         }
         const arr: ItemType[] = []
-        for (let item of info.children) {
+        for (const item of info.children) {
           arr.push(generateMenuInfo(item))
         }
         itemInfo.children = itemInfo.children.concat(arr)
@@ -126,8 +126,8 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
     }
   })
 
-  let items: ItemType[] = []
-  if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
+  const items: ItemType[] = []
+  if (data.length > 0) for (const item of data) items.push(generateMenuInfo(item))
 
   return (
     <div className={classNames(styles['yakit-menu-div-wrapper'], menuTypeClass, menuSizeClass)}>

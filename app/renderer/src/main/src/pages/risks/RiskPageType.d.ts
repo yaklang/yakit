@@ -1,6 +1,6 @@
-import { FieldName } from './RiskTable'
-import { QueryRisksRequest } from './YakitRiskTable/YakitRiskTableType'
-import { FieldGroup } from './YakitRiskTable/utils'
+import { type FieldName } from './RiskTable'
+import { type QueryRisksRequest } from './YakitRiskTable/YakitRiskTableType'
+import { type FieldGroup } from './YakitRiskTable/utils'
 
 export interface RiskPageProp {}
 export interface RiskQueryProps {

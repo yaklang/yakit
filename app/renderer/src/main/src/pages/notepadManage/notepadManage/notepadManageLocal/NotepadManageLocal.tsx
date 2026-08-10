@@ -1,11 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { NotepadLocalActionProps, NotepadManageLocalListProps, NotepadManageLocalProps } from './NotepadManageLocalType'
+import type {
+  NotepadLocalActionProps,
+  NotepadManageLocalListProps,
+  NotepadManageLocalProps,
+} from './NotepadManageLocalType'
 import {
-  DeleteNoteRequest,
-  Note,
-  NoteFilter,
-  QueryNoteRequest,
-  QueryNoteResponse,
+  type DeleteNoteRequest,
+  type Note,
+  type NoteFilter,
+  type QueryNoteRequest,
+  type QueryNoteResponse,
   grpcDeleteNote,
   grpcQueryNote,
   grpcQueryNoteById,
@@ -34,12 +38,12 @@ import { Divider } from 'antd'
 import { timeMap } from '../NotepadManage'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitVirtualList } from '@/components/yakitUI/YakitVirtualList/YakitVirtualList'
-import { VirtualListColumns } from '@/components/yakitUI/YakitVirtualList/YakitVirtualListType'
+import type { VirtualListColumns } from '@/components/yakitUI/YakitVirtualList/YakitVirtualListType'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { NotepadExport, NotepadImport } from './NotepadImportAndExport'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useGoEditNotepad } from '../../hook/useGoEditNotepad'
 import { getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
@@ -272,7 +276,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
         if (!res.Data) res.Data = []
         const length = +res.Pagination.Page === 1 ? res.Data.length : res.Data.length + response.Data.length
         setHasMore(length < +res.Total)
-        let newRes: QueryNoteResponse = {
+        const newRes: QueryNoteResponse = {
           Data: +res?.Pagination.Page === 1 ? res?.Data : [...response.Data, ...(res?.Data || [])],
           Pagination: res?.Pagination || {
             ...genDefaultPagination(20),
@@ -304,7 +308,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
   ).run
 
   const onBatchRemove = useMemoizedFn(() => {
-    let removeParams: DeleteNoteRequest = {
+    const removeParams: DeleteNoteRequest = {
       Filter: actionFilter,
     }
 

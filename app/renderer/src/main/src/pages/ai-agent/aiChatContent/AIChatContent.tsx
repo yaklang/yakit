@@ -1,12 +1,12 @@
-import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { AIAgentTabPayload, AIChatContentProps } from './type'
+import React, { forwardRef, type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type { AIAgentTabPayload, AIChatContentProps } from './type'
 import styles from './AIChatContent.module.scss'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { AITabs, AITabsEnum } from '../defaultConstant'
-import { AITabsEnumType } from '../aiAgentType'
-import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { AITabsEnumType } from '../aiAgentType'
+import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { AIReActChat } from '@/pages/ai-re-act/aiReActChat/AIReActChat'
 import { AIFileSystemList } from '../components/aiFileSystemList/AIFileSystemList'
 import {
@@ -21,7 +21,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 // import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import useAIAgentStore from '../useContext/useStore'
 import { useAIChatResizeBox } from './hooks/useAIChatResizeBox'
-import {
+import type {
   AIHandleStartParams,
   AIHandleStartResProps,
   AIReActChatRefProps,
@@ -128,7 +128,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     }, [runTimeId])
 
     const yakitTabs = useCreation(() => {
-      let tab: YakitSideTabProps['yakitTabs'] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
+      const tab: YakitSideTabProps['yakitTabs'] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
 
       if (httpTabShow || !!RelatedRuntimeIDs.length) {
         tab.push(AITabs[AITabsEnum.HTTP])
@@ -196,8 +196,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     const tabContent = useMemo(() => {
       if (!activeKey) return null
-      const runTimeIds = [...new Set(!!runTimeId ? [runTimeId] : rawData.httpRunTimeIDs.concat(RelatedRuntimeIDs))]
-      const riskRunTimeIds = [...new Set(!!runTimeId ? [runTimeId] : rawData.riskRunTimeIDs.concat(RelatedRuntimeIDs))]
+      const runTimeIds = [...new Set(runTimeId ? [runTimeId] : rawData.httpRunTimeIDs.concat(RelatedRuntimeIDs))]
+      const riskRunTimeIds = [...new Set(runTimeId ? [runTimeId] : rawData.riskRunTimeIDs.concat(RelatedRuntimeIDs))]
       switch (activeKey) {
         case AITabsEnum.Task_Content:
           return (
@@ -210,7 +210,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         case AITabsEnum.File_System:
           return <AIFileSystemList onFilePreviewChange={setHasFilePreview} />
         case AITabsEnum.Risk:
-          return !!riskRunTimeIds.length ? (
+          return riskRunTimeIds.length ? (
             <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />
           ) : (
             <>
@@ -218,7 +218,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             </>
           )
         case AITabsEnum.HTTP:
-          return !!runTimeIds.length ? (
+          return runTimeIds.length ? (
             <PluginExecuteHttpFlow filterTagDom={filterTagDom} runtimeId={runTimeIds.join(',')} website={true} />
           ) : (
             <>

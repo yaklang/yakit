@@ -1,5 +1,5 @@
-import { APIFunc } from '@/apiUtils/type'
-import {
+import type { APIFunc } from '@/apiUtils/type'
+import type {
   AIMemoryEntity,
   AIMemorySearchParams,
   CountAIMemoryEntityTagsRequest,
@@ -12,7 +12,7 @@ import {
   QueryAIMemoryEntityResponse,
 } from './type'
 import { yakitNotify } from '@/utils/notification'
-import { DbOperateMessage } from '../layout/mainOperatorContent/utils'
+import type { DbOperateMessage } from '../layout/mainOperatorContent/utils'
 const { ipcRenderer } = window.require('electron')
 
 /**@name 创建AI记忆库数据 */

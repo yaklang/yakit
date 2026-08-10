@@ -2,7 +2,7 @@
  * @description ai 全局命令
  */
 
-import { AIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
+import type { AIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
 import { defaultAIGlobalConfig } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { createWithEqualityFn } from 'zustand/traditional'

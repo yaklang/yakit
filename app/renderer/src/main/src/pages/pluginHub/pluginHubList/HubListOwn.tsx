@@ -1,18 +1,19 @@
-import React, { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
+import type React from 'react'
+import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport } from 'ahooks'
 import { OutlineTrashIcon, OutlineRefreshIcon, OutlineClouddownloadIcon, OutlinePlusIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { RemotePluginGV } from '@/enums/plugin'
-import { PluginSearchParams, PluginListPageMeta, PluginFilterParams } from '@/pages/plugins/baseTemplateType'
+import type { PluginSearchParams, PluginListPageMeta, PluginFilterParams } from '@/pages/plugins/baseTemplateType'
 import { defaultSearch } from '@/pages/plugins/builtInData'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { pluginOnlineReducer, initialOnlineState } from '@/pages/plugins/pluginReducer'
 import {
-  PluginsQueryProps,
+  type PluginsQueryProps,
   convertPluginsRequestParams,
   apiFetchGroupStatisticsMine,
-  DownloadOnlinePluginsRequest,
+  type DownloadOnlinePluginsRequest,
   convertDownloadOnlinePluginBatchRequestParams,
   apiDownloadPluginMine,
   apiDeletePluginMine,
@@ -37,8 +38,8 @@ import {
 import { useStore } from '@/store'
 import { OnlineJudgment } from '@/pages/plugins/onlineJudgment/OnlineJudgment'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { HubListBaseProps } from '../type'
-import { API } from '@/services/swagger/resposeType'
+import type { HubListBaseProps } from '../type'
+import type { API } from '@/services/swagger/resposeType'
 import { SolidPluscircleIcon } from '@/assets/icon/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -164,7 +165,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
       }
       setLoading(true)
 
-      const params: PluginListPageMeta = !!reset
+      const params: PluginListPageMeta = reset
         ? { page: 1, limit: 20 }
         : {
             page: response.pagemeta.page + 1,
@@ -560,7 +561,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
   })
   // 单个删除
   const handleSingeDel = useMemoizedFn((info: YakitPluginOnlineDetail) => {
-    let request: API.PluginsWhereDeleteRequest = {
+    const request: API.PluginsWhereDeleteRequest = {
       uuid: [info.uuid],
     }
     apiDeletePluginMine(request)

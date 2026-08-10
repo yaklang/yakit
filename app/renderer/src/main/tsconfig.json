@@ -16,7 +16,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "verbatimModuleSyntax": true
   },
   "include": ["src", "types"],
   "exclude": ["./env-cmdrc"],

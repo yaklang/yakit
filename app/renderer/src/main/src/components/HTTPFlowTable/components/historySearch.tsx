@@ -5,7 +5,7 @@ import { OutlineQuestionmarkcircleIcon, OutlineSearchIcon } from '@/assets/icon/
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
-import { HistoryPluginSearchType } from '@/utils/yakQueryHTTPFlow'
+import type { HistoryPluginSearchType } from '@/utils/yakQueryHTTPFlow'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { getReleaseEditionName } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

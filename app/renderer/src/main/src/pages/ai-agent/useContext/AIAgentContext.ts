@@ -1,9 +1,9 @@
-import { Dispatch, SetStateAction, createContext } from 'react'
-import { AIAgentSetting } from '../aiAgentType'
-import { AISession } from '../type/aiChat'
-import { AIChatIPCStartParams, AIChatSendParams } from '@/pages/ai-re-act/hooks/type'
+import { type Dispatch, type SetStateAction, createContext } from 'react'
+import type { AIAgentSetting } from '../aiAgentType'
+import type { AISession } from '../type/aiChat'
+import type { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentSettingDefault } from '../defaultConstant'
-import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
+import type { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 
 export interface AIAgentContextStore {
   /** 全局配置 */

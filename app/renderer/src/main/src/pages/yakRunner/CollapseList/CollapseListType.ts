@@ -1,6 +1,6 @@
-import { CollapseProps } from 'antd'
-import { ReactNode } from 'react'
-import { Selection } from '../RunnerTabs/RunnerTabsType'
+import type { CollapseProps } from 'antd'
+import type { ReactNode } from 'react'
+import type { Selection } from '../RunnerTabs/RunnerTabsType'
 
 export interface CollapseListProp<T> {
   /**

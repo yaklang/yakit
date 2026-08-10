@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type {
   HorizontalScrollCardItemInfoSingleProps,
   HorizontalScrollCardProps,
   HorizontalScrollCardScrollProps,

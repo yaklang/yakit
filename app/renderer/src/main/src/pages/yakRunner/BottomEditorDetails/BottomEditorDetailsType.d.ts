@@ -1,4 +1,4 @@
-import { Selection } from '../RunnerTabs/RunnerTabsType'
+import { type Selection } from '../RunnerTabs/RunnerTabsType'
 export interface BottomEditorDetailsProps {
   showItem?: ShowItemType
   setShowItem: (v: ShowItemType) => void

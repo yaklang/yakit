@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { useEffect, useMemo, useState } from 'react'
-import { DownloadingState } from '../../types'
+import type { DownloadingState } from '../../types'
 import { safeFormatDownloadProcessState } from '../../utils'
 import { getReleaseEditionName } from '@/utils/envfile'
 import { yakitNotify } from '@/utils/notification'
@@ -58,7 +58,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
 
   /** 下载 */
   const handleDownload = useMemoizedFn(() => {
-    let version = latest.startsWith('v') ? latest.substring(1) : latest
+    const version = latest.startsWith('v') ? latest.substring(1) : latest
     setStatus('install')
     grpcDownloadYakit(version, true)
       .then(() => {

@@ -1,15 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Divider, Empty, Progress, Space, Table, Tag } from 'antd'
-import { defQueryCVERequest, QueryCVERequest } from '@/pages/cve/CVEViewer'
+import { Divider, Progress } from 'antd'
+import { defQueryCVERequest, type QueryCVERequest } from '@/pages/cve/CVEViewer'
 import { useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
-import { ExecResult, genDefaultPagination, PaginationSchema, QueryGeneralResponse } from '@/pages/invoker/schema'
+import {
+  type ExecResult,
+  genDefaultPagination,
+  type PaginationSchema,
+  type QueryGeneralResponse,
+} from '@/pages/invoker/schema'
 import { ResizeBox } from '@/components/ResizeBox'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { CVEDetail, CVEDetailEx, CWEDetail } from '@/pages/cve/models'
+import type { CVEDetail, CVEDetailEx, CWEDetail } from '@/pages/cve/models'
 import { CVEInspect } from '@/pages/cve/CVEInspect'
 import styles from './CVETable.module.scss'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
 import {
@@ -29,10 +34,10 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { openExternalWebsite } from '@/utils/openWebsite'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { formatDate, formatTimestamp } from '@/utils/timeUtil'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { setRemoteValue } from '@/utils/kv'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { CacheDropDownGV } from '@/yakitGV'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface CVETableProp {

@@ -1,8 +1,9 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { useDebounceFn, useInViewport, useMemoizedFn, useVirtualList } from 'ahooks'
-import { InputRef } from 'antd'
+import type { InputRef } from 'antd'
 import { OutlinePencilaltIcon, OutlinePluscircleIcon, OutlineTrashIcon } from '@/assets/icon/outline'
-import { PluginEnvInfo, PluginEnvVariablesProps } from './PluginEnvVariablesType'
+import type { PluginEnvInfo, PluginEnvVariablesProps } from './PluginEnvVariablesType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -14,7 +15,7 @@ import {
   grpcFetchPluginEnvVariables,
   grpcSetPluginEnvVariables,
 } from '../utils/grpc'
-import { KVPair } from '@/models/kv'
+import type { KVPair } from '@/models/kv'
 import { failed, yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

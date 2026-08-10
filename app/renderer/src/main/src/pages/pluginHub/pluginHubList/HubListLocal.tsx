@@ -1,4 +1,5 @@
-import React, { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
+import type React from 'react'
+import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport, useDebounceEffect } from 'ahooks'
 import {
   OutlineClouduploadIcon,
@@ -11,16 +12,16 @@ import {
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { PluginSearchParams, PluginListPageMeta, PluginFilterParams } from '@/pages/plugins/baseTemplateType'
+import type { PluginSearchParams, PluginListPageMeta, PluginFilterParams } from '@/pages/plugins/baseTemplateType'
 import { defaultFilter, defaultSearch } from '@/pages/plugins/builtInData'
 import { pluginLocalReducer, initialLocalState } from '@/pages/plugins/pluginReducer'
 import {
   apiFetchGroupStatisticsLocal,
   convertLocalPluginsRequestParams,
   apiQueryYakScript,
-  DeleteYakScriptRequestByIdsProps,
+  type DeleteYakScriptRequestByIdsProps,
   apiDeleteYakScriptByIds,
-  DeleteLocalPluginsByWhereRequestProps,
+  type DeleteLocalPluginsByWhereRequestProps,
   convertDeleteLocalPluginsByWhereRequestParams,
   apiDeleteLocalPluginsByWhere,
   apiQueryYakScriptTotal,
@@ -43,14 +44,14 @@ import {
 } from './funcTemplate'
 import { useStore } from '@/store'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { HubListBaseProps } from '../type'
-import { API } from '@/services/swagger/resposeType'
+import type { HubListBaseProps } from '../type'
+import type { API } from '@/services/swagger/resposeType'
 import { SolidChevrondownIcon, SolidPluscircleIcon } from '@/assets/icon/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FilterPopoverBtn, FuncFilterPopover } from '@/pages/plugins/funcTemplate'
-import { ExportYakScriptStreamRequest, PluginGroupList } from '@/pages/plugins/local/PluginsLocalType'
-import { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
+import type { ExportYakScriptStreamRequest, PluginGroupList } from '@/pages/plugins/local/PluginsLocalType'
+import type { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { NoPromptHint } from '../utilsUI/UtilsTemplate'
@@ -61,24 +62,24 @@ import { PluginLocalUpload } from '@/pages/plugins/local/PluginLocalUpload'
 import {
   PluginLocalExport,
   PluginLocalExportForm,
-  PluginLocalExportFormRefProps,
+  type PluginLocalExportFormRefProps,
 } from '@/pages/plugins/local/PluginLocalExportProps'
 import { DefaultExportRequest, DefaultLocalPlugin, PluginOperateHint } from '../defaultConstant'
 import useGetSetState from '../hooks/useGetSetState'
 import {
   PluginGroup,
   TagsAndGroupRender,
-  YakFilterRemoteObj,
+  type YakFilterRemoteObj,
 } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import { Tooltip } from 'antd'
 import { ModifyYakitPlugin } from '@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin'
-import { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/PluginEditor'
+import type { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/PluginEditor'
 import { grpcFetchLocalPluginDetail, grpcQueryYakScriptSkipUpdate, grpcSetYakScriptSkipUpdate } from '../utils/grpc'
-import { KeyParamsFetchPluginDetail } from '@/pages/pluginEditor/base'
+import type { KeyParamsFetchPluginDetail } from '@/pages/pluginEditor/base'
 import { PluginUploadModal } from '../pluginUploadModal/PluginUploadModal'
 import { PluginGroupDrawer } from '../group/PluginGroupDrawer'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { UpdateGroupList, UpdateGroupListItem } from '../group/UpdateGroupList'
+import { UpdateGroupList, type UpdateGroupListItem } from '../group/UpdateGroupList'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { ListDelGroupConfirmPop } from '../group/PluginOperationGroupList'
 import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript'
@@ -238,7 +239,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
       }
       setLoading(true)
 
-      const params: PluginListPageMeta = !!reset
+      const params: PluginListPageMeta = reset
         ? { page: 1, limit: 20 }
         : {
             page: +response.Pagination.Page + 1 || 1,
@@ -387,14 +388,14 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
     try {
       if (allChecked) {
-        let request: DeleteLocalPluginsByWhereRequestProps = convertDeleteLocalPluginsByWhereRequestParams(
+        const request: DeleteLocalPluginsByWhereRequestProps = convertDeleteLocalPluginsByWhereRequestParams(
           { ...getFilters() },
           { ...getSearch() },
         )
         await apiDeleteLocalPluginsByWhere(request)
       }
       if (!allChecked && selectedNum > 0) {
-        let request: DeleteYakScriptRequestByIdsProps = { Ids: selectList.map((item) => item.Id) }
+        const request: DeleteYakScriptRequestByIdsProps = { Ids: selectList.map((item) => item.Id) }
         await apiDeleteYakScriptByIds(request)
       }
     } catch (error) {}
@@ -425,7 +426,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
   })
   // 单个删除
   const handleSingeDel = useMemoizedFn((info: YakScript) => {
-    let request: DeleteYakScriptRequestByIdsProps = {
+    const request: DeleteYakScriptRequestByIdsProps = {
       Ids: [info.Id],
     }
     apiDeleteYakScriptByIds(request)
@@ -505,7 +506,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
       yakitNotify('error', t('HubListLocal.uploadLoginLater'))
       return
     }
-    if (!!uploadPlugin.current) {
+    if (uploadPlugin.current) {
       yakitNotify('error', t('HubListLocal.uploadBusy'))
       return
     }
@@ -563,7 +564,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
   const openExportModal = useMemoizedFn(async (names: string[]) => {
     if (exportModal) return
     try {
-      let m = showYakitModal({
+      const m = showYakitModal({
         title: (modalT) => modalT('HubListLocal.exportPlugin'),
         width: isRemoteEngine ? 500 : 550,
         closable: true,
@@ -766,7 +767,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         groupName: name,
         checked: true,
       }))
-      let copyAllGroup = [...res.AllGroup]
+      const copyAllGroup = [...res.AllGroup]
       const newAllGroup = copyAllGroup.map((name) => ({
         groupName: name,
         checked: false,
@@ -786,8 +787,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 旧
     const originCheckedGroup = groupList.filter((item) => item.checked).map((item) => item.groupName)
 
-    let saveGroup: string[] = []
-    let removeGroup: string[] = []
+    const saveGroup: string[] = []
+    const removeGroup: string[] = []
     checkedGroup.forEach((groupName: string) => {
       saveGroup.push(groupName)
     })

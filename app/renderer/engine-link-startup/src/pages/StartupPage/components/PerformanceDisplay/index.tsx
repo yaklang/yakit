@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { YaklangEngineMode } from '../../types'
+import type { YaklangEngineMode } from '../../types'
 import { Sparklines, SparklinesCurve } from 'react-sparklines'
 import { UIEngineList } from '../UIEngineList'
 import { yakitPerf } from '@/utils/electronBridge'

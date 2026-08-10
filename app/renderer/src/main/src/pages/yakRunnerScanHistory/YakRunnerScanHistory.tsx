@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   useControllableValue,
   useCreation,
@@ -10,18 +11,18 @@ import {
 } from 'ahooks'
 import { failed, success, yakitNotify } from '@/utils/notification'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
+import type {
   QuerySyntaxFlowScanTaskRequest,
   QuerySyntaxFlowScanTaskResponse,
   SyntaxFlowScanTask,
 } from '../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer'
 import {
-  AuditCodePageInfoProps,
-  PageNodeItemProps,
+  type AuditCodePageInfoProps,
+  type PageNodeItemProps,
   usePageInfo,
-  YakRunnerScanHistoryPageInfoProps,
+  type YakRunnerScanHistoryPageInfoProps,
 } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -33,7 +34,7 @@ import styles from './YakRunnerScanHistory.module.scss'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { genDefaultPagination, QueryGeneralResponse } from '../invoker/schema'
+import { genDefaultPagination, type QueryGeneralResponse } from '../invoker/schema'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { Tooltip } from 'antd'
 import {
@@ -41,14 +42,13 @@ import {
   OutlineChevrondownIcon,
   OutlineChevronrightIcon,
   OutlineRefreshIcon,
-  OutlineReloadScanIcon,
   OutlineScanIcon,
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import type { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { CheckboxChangeEvent } from 'antd/lib/checkbox'
+import type { CheckboxChangeEvent } from 'antd/lib/checkbox'
 import { apiQuerySSAPrograms } from './utils'
 import { getGroupNamesTotal } from '../yakRunnerCodeScan/utils'
 import { JSONParseLog } from '@/utils/tool'
@@ -225,7 +225,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
   })
 
   const exportReport = useMemoizedFn((record: SyntaxFlowScanTask) => {
-    let reportName = !!query.Filter?.Programs?.length
+    let reportName = query.Filter?.Programs?.length
       ? `${query.Filter?.Programs[0]}-${t('YakRunnerScanHistory.ssaReport')}`
       : undefined
     const m = showYakitModal({
@@ -357,7 +357,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                 e.stopPropagation()
                 const params: AuditCodePageInfoProps = {
                   Schema: 'syntaxflow',
-                  Location: !!query.Filter?.Programs?.length ? query.Filter?.Programs[0] : '',
+                  Location: query.Filter?.Programs?.length ? query.Filter?.Programs[0] : '',
                   Path: `/`,
                   leftTabActive: 'file',
                   runtimeId: record.TaskId,
@@ -392,7 +392,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
   )
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '380px',
     }
     return p

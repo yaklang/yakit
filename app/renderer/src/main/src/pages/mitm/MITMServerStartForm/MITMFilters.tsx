@@ -13,17 +13,17 @@ import {
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlineTrashIcon } from '@/assets/icon/outline'
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { defaultMITMBaseFilter, defaultMITMAdvancedFilter } from '@/defaultConstants/mitm'
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { FilterType } from './MITMFiltersModal'
+import type { FilterType } from './MITMFiltersModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { PencilAltIcon } from '@/assets/newIcon'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
 
 const { YakitPanel } = YakitCollapse
@@ -325,7 +325,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
           {t('MITMAdvancedFilters.addAdvancedConfig')}
         </YakitButton>
       </div>
-      {!!filterData.length ? (
+      {filterData.length ? (
         <YakitCollapse
           activeKey={activeKey}
           onChange={(key) => setActiveKey(key)}

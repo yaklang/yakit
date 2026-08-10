@@ -1,12 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { MacUIOp } from './MacUIOp'
-import { PerformanceDisplay, yakProcess } from './PerformanceDisplay'
+import { PerformanceDisplay, type yakProcess } from './PerformanceDisplay'
 import { FuncDomain } from './FuncDomain'
 import { TemporaryProjectPop, WinUIOp } from './WinUIOp'
 import { GlobalState } from './GlobalState'
 import { YakitGlobalHost } from './YakitGlobalHost'
-import {
+import type {
   EngineWatchDogCallbackType,
   YakitSettingCallbackType,
   YakitStatusType,
@@ -17,8 +18,8 @@ import { failed, info, warn, yakitFailed, yakitNotify } from '@/utils/notificati
 import { LocalGV, RemoteGV } from '@/yakitGV'
 import { EngineModeVerbose } from '../basics/YakitLoading'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
-import { getLocalValue, getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
-import { YaklangEngineWatchDog, YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
+import { getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
+import { YaklangEngineWatchDog, type YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
 import { StringToUint8Array } from '@/utils/str'
 import {
   GetConnectPort,
@@ -26,7 +27,6 @@ import {
   isCommunityYakit,
   isEnpriTraceAgent,
   isEnterpriseEdition,
-  isIRify,
   isMemfit,
 } from '@/utils/envfile'
 import { AllKillEngineConfirm } from './AllKillEngineConfirm'
@@ -34,32 +34,32 @@ import { SoftwareSettings } from '@/pages/softwareSettings/SoftwareSettings'
 import { StopIcon } from '@/assets/newIcon'
 import EnterpriseJudgeLogin from '@/pages/EnterpriseJudgeLogin'
 import {
-  ExportProjectProps,
+  type ExportProjectProps,
   getEnvTypeByProjects,
   NewProjectAndFolder,
-  ProjectDescription,
-  ProjectIOProgress,
-  ProjectParamsProp,
+  type ProjectDescription,
+  type ProjectIOProgress,
+  type ProjectParamsProp,
   TransferProject,
 } from '@/pages/softwareSettings/ProjectManage'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useScreenRecorder } from '@/store/screenRecorder'
-import { ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicControl'
+import { type ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicControl'
 import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import emiter from '@/utils/eventBus/eventBus'
-import { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
+import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 import { DownloadYakit } from './update/DownloadYakit'
 import { DownloadYaklang } from './update/DownloadYaklang'
 import { HelpDoc } from './HelpDoc/HelpDoc'
 import { SolidCheckCircleIcon, SolidHomeIcon } from '@/assets/icon/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
-import { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
+import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
-import { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
+import type { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
 import NewThirdPartyApplicationConfig from '../configNetwork/NewThirdPartyApplicationConfig'
 import { usePerformanceSampling } from '@/store/performanceSampling'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
@@ -72,7 +72,13 @@ import { grpcFetchLatestYakVersion, grpcFetchYakInstallResult } from '@/apiUtils
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { handleFetchArchitecture, handleFetchIsDev, SystemInfo } from '@/constants/hardware'
-import { apiSplitUpload, ExportProjectRequest, grpcExportProject, grpcGetProjects, SplitUploadRequest } from './utils'
+import {
+  apiSplitUpload,
+  type ExportProjectRequest,
+  grpcExportProject,
+  grpcGetProjects,
+  type SplitUploadRequest,
+} from './utils'
 import moment from 'moment'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
@@ -82,11 +88,10 @@ import classNames from 'classnames'
 import styles from './uiLayout.module.scss'
 import { JSONParseLog } from '@/utils/tool'
 import { closeDuplexConn, startupDuplexConn } from '@/utils/duplex/duplex'
-import { LocalGVS } from '@/enums/localGlobal'
-import { SoftMode, useSoftMode } from '@/store/softMode'
+import { type SoftMode, useSoftMode } from '@/store/softMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useSyncYakMcpStream } from '@/store/yakMcpStream'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import {
   yakitAI,
   yakitApp,
@@ -99,12 +104,12 @@ import {
   yakitUILayout,
   yakitWindowControls,
 } from '@/services/electronBridge'
-import {
+import type {
   CustomPluginExecuteFormValue,
   YakExtraParamProps,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { PluginHasParamsModal } from '../pluginHasParamsDrawer/PluginHasParamsDrawer'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
@@ -293,7 +298,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     let filePath = ''
     let hasError = false
     const offData = yakitStream.onData(token, (data: ProjectIOProgress) => {
-      if (!!data.TargetPath) {
+      if (data.TargetPath) {
         filePath = data.TargetPath.replace(/\\/g, '\\')
       }
     })
@@ -604,7 +609,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         // yakit-ui进入项目管理
         changeYakitMode('soft')
         return
-      case 'encryptionProject':
+      case 'encryptionProject': {
         // 加密导出
         if (!currentProject || !currentProject.Id) {
           failed(t('UILayout.cannotExportProject'))
@@ -618,7 +623,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
         setProjectModalInfo({ visible: true, isNew: false, isExport: true, project: encryption })
         return
-      case 'plaintextProject':
+      }
+      case 'plaintextProject': {
         // 明文导出
         if (!currentProject || !currentProject.Id) {
           failed(t('UILayout.cannotExportProject'))
@@ -640,6 +646,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           },
         })
         return
+      }
 
       default:
         break
@@ -1125,7 +1132,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   // 项目名字
   const projectName = useMemo(() => {
     if (showProjectManage) return ''
-    if (!!currentProject?.ProjectName) {
+    if (currentProject?.ProjectName) {
       if (currentProject.ProjectName.length > 10) return `${currentProject.ProjectName.slice(0, 10)}...`
       else return currentProject.ProjectName
     }
@@ -1254,7 +1261,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     if (cache?.length) {
       cache.forEach((item) => {
-        if (initFormValue.hasOwnProperty(item.Key)) {
+        if (Object.prototype.hasOwnProperty.call(initFormValue, item.Key)) {
           initFormValue[item.Key] = item.Value
         }
       })
@@ -1327,7 +1334,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           if (res.Ok) {
             addNewPluginTab(codecParams)
           } else {
-            let m = showYakitModal({
+            const m = showYakitModal({
               title: (modalT) => modalT('UILayout.addThirdPartyApp'),
               width: 600,
               footer: null,

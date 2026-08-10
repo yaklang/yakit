@@ -1,4 +1,5 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -7,7 +8,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { UISettingSvgIcon } from '@/components/layout/icons'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { PageNodeItemProps, usePageInfo, WebsocketFuzzerPageInfoProps } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo, type WebsocketFuzzerPageInfoProps } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { useInViewport, useMemoizedFn, useThrottleFn, useVirtualList } from 'ahooks'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -522,7 +523,7 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
         >
           <div className={styles['websocketClientOperator-card-body']}>
             <YakitSpin spinning={loading}>
-              {!!wsFlowList.length ? (
+              {wsFlowList.length ? (
                 <div ref={containerRef} className={styles['websocketFlow-list-container']}>
                   <div ref={wrapperRef} className={styles['websocketFlow-list-wrapper']}>
                     {list.map((item) => (

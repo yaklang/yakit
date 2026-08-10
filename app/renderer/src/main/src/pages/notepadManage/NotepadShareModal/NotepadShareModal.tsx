@@ -1,4 +1,4 @@
-import React, { ReactNode, useRef, useState } from 'react'
+import React, { type ReactNode, useRef, useState } from 'react'
 import styles from './NotepadShareModal.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -13,18 +13,18 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
 import { apiGetUserSearch, apiSetNotepadPermission } from './utils'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { yakitNotify } from '@/utils/notification'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import classNames from 'classnames'
 import { useStore } from '@/store'
 import { judgeAvatar } from '@/pages/MainOperator'
 import { randomAvatarColor } from '@/components/layout/FuncDomain'
 import { apiGetNotepadDetail } from '../notepadManage/utils'
-import {
+import type {
   NotepadShareModalProps,
   NotepadPermissionType,
   SelectUserProps,
@@ -123,12 +123,13 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
             setCollaborators(collaborators.filter((ele) => ele.user_id !== item.user_id))
             break
 
-          default:
+          default: {
             const newList: NotepadCollaboratorInfoProps[] = collaborators.map((ele) =>
               ele.user_id === item.user_id ? { ...ele, role: key } : ele,
             )
             setCollaborators(newList)
             break
+          }
         }
       })
       .finally(() =>

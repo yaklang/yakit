@@ -1,4 +1,5 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Avatar, Timeline } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import styles from './HTTPFuzzerEditorMenu.module.scss'
@@ -18,22 +19,22 @@ import {
   IconOutlinePencilAltIcon,
   TrashIcon,
 } from '@/assets/newIcon'
-import { DragDropContext, Droppable, Draggable, DraggingStyle } from '@hello-pangea/dnd'
-import { AutoDecodeResult, execAutoDecode } from '@/utils/encodec'
+import { DragDropContext, Droppable, Draggable, type DraggingStyle } from '@hello-pangea/dnd'
+import { type AutoDecodeResult, execAutoDecode } from '@/utils/encodec'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { QueryFuzzerLabelResponseProps } from './StringFuzzer'
+import type { QueryFuzzerLabelResponseProps } from './StringFuzzer'
 import { setRemoteValue } from '@/utils/kv'
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
 import { SolidTerminalIcon } from '@/assets/icon/solid'
 import { queryYakScriptList } from '../yakitStore/network'
-import { YakScript } from '../invoker/schema'
+import type { YakScript } from '../invoker/schema'
 import { IconSolidAIIcon } from '@/assets/icon/colors'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { defaultLabel } from '@/defaultConstants/HTTPFuzzerPage'
 import { PluginSwitchToTag } from '../pluginEditor/defaultconstants'
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { YakParamProps } from '../plugins/pluginsType'
+import type { YakParamProps } from '../plugins/pluginsType'
 const { ipcRenderer } = window.require('electron')
 
 export interface CountDirectionProps {
@@ -66,7 +67,7 @@ export interface SmartDecodeAnchorRect {
 // isGroupShow插入标签是否相邻其他元素
 const directionStyle = (editorInfo, isOtherGroup = false, isGroupShow = false) => {
   const { direction, top = 0, left = 0, bottom = 0, right = 0 } = editorInfo || {}
-  let obj: any = {}
+  const obj: any = {}
   if (direction) {
     if (direction.y === 'bottom') {
       obj.bottom = '32px'
@@ -216,11 +217,11 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
 
   useEffect(() => {
     if (right - left < 720) {
-      let width: number = Math.floor((right - left) / 2)
+      const width: number = Math.floor((right - left) / 2)
       setMenuWidth(width)
     }
 
-    let height: number = Math.floor((bottom - top) / 2 - 30)
+    const height: number = Math.floor((bottom - top) / 2 - 30)
     setMenuHeight(height)
 
     getData()
@@ -780,7 +781,7 @@ interface DecodeCopyReplaceProps {
 export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
   const { item, index, isShowBorder, isReadOnly, replace } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
-  const itemStr: string = new Buffer(item.Result).toString('utf8')
+  const itemStr: string = Buffer.from(item.Result).toString('utf8')
   return (
     <div className={styles['decode-copy-replace']}>
       <div
@@ -844,8 +845,8 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
       ipcRenderer.invoke('AutoDecode', { Data: rangeValue }).then((e: { Results: AutoDecodeResult[] }) => {
         // console.log("Results", e.Results)
         const { Results } = e
-        let successArr: AutoDecodeResult[] = []
-        let failArr: AutoDecodeResult[] = []
+        const successArr: AutoDecodeResult[] = []
+        const failArr: AutoDecodeResult[] = []
         Results.map((item) => {
           if (item.Type === 'No') {
             failArr.push(item)
@@ -1022,11 +1023,11 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
   const [menuHeight, setMenuHeight] = useState<number>()
   useEffect(() => {
     if (right - left < 720) {
-      let width: number = Math.floor((right - left) / 2)
+      const width: number = Math.floor((right - left) / 2)
       setMenuWidth(width)
     }
 
-    let height: number = Math.floor((bottom - top) / 2 - 30)
+    const height: number = Math.floor((bottom - top) / 2 - 30)
     setMenuHeight(height)
   }, [])
   const [segmentedType, setSegmentedType] = useState<'encode' | 'decodeLabel'>()
@@ -1212,11 +1213,11 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
 
   useEffect(() => {
     if (right - left < 720) {
-      let width: number = Math.floor((right - left) / 2)
+      const width: number = Math.floor((right - left) / 2)
       setMenuWidth(width)
     }
 
-    let height: number = Math.floor((bottom - top) / 2 - 30)
+    const height: number = Math.floor((bottom - top) / 2 - 30)
     setMenuHeight(height)
   }, [])
   return (

@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useLayoutEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useLayoutEffect, useRef, useState } from 'react'
 import * as echarts from 'echarts'
-import { EChartsOption } from 'echarts'
+import type { EChartsOption } from 'echarts'
 import styles from './EchartsInit.module.scss'
 import classNames from 'classnames'
 import { useSize } from 'ahooks'
@@ -107,8 +108,8 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
       if (complexity_group && complexity_group.length > 0) {
         option.xAxis.axisLabel.interval = 0
         const allTitle = complexity_group.split(',')
-        let cacheTitle: string[] = []
-        let cacheValue: { value: number }[] = []
+        const cacheTitle: string[] = []
+        const cacheValue: { value: number }[] = []
 
         allTitle.forEach((item) => {
           if (title.includes(item)) {
@@ -155,7 +156,7 @@ export const VerticalOptionBar: React.FC<VerticalOptionBarProps> = (props) => {
   }, [size?.width, theme, content]) // theme 变化时会重新渲染
 
   return (
-    <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" echart-type="vertical-bar">
+    <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" data-echart-type="vertical-bar">
       <div className={classNames(styles['echart-item'], styles['echart-item-vertical-bar'])} ref={chartRef}></div>
     </div>
   )
@@ -272,11 +273,11 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
 
     // 处理数据
     const { data } = content
-    let CRITICAL: (number | null)[] = []
-    let MEDIUM: (number | null)[] = []
-    let HIGH: (number | null)[] = []
-    let LOW: (number | null)[] = []
-    let xAxisData = data.map((item) => {
+    const CRITICAL: (number | null)[] = []
+    const MEDIUM: (number | null)[] = []
+    const HIGH: (number | null)[] = []
+    const LOW: (number | null)[] = []
+    const xAxisData = data.map((item) => {
       const list = item.data || []
       let critical = null
       let medium = null
@@ -321,7 +322,7 @@ export const StackedVerticalBar: React.FC<VerticalOptionBarProps> = (props) => {
   }, [size?.width, theme, content])
 
   return (
-    <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" echart-type="stacked-vertical-bar">
+    <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" data-echart-type="stacked-vertical-bar">
       <div
         className={classNames(styles['echart-item'], styles['echart-item-stacked-vertical-bar'])}
         ref={chartRef}
@@ -467,7 +468,7 @@ export const HollowPie: React.FC<HollowPieProps> = (props) => {
       className={classNames(styles['echarts-box'], styles['echarts-box-hollow-pie'])}
       ref={ref}
       data-type="echarts-box"
-      echart-type="hollow-pie"
+      data-echart-type="hollow-pie"
     >
       <div className={classNames(styles['echart-item'], styles['echart-item-hollow-pie'])} ref={chartRef}></div>
     </div>
@@ -528,13 +529,13 @@ export const MultiPie: React.FC<MultiPieProps> = (props) => {
     series: [],
   })
   useEffect(() => {
-    let series: any[] = []
+    const series: any[] = []
     if (Array.isArray(data)) {
       data.map((item, index) => {
         let symbolSize = 0
         let height = 0
-        let numOrder = 7.3
-        let numOrder1 = 6.6
+        const numOrder = 7.3
+        const numOrder1 = 6.6
         let color = ''
         let x = 0
         let y = 0
@@ -622,7 +623,6 @@ export const MultiPie: React.FC<MultiPieProps> = (props) => {
     }
     optionRef.current.series = series
     optionRef.current.title.text = name_verbose || name
-    // @ts-ignore
     const myChart = echarts.init(chartRef.current)
     myChart.setOption(optionRef.current)
     return () => {
@@ -630,7 +630,7 @@ export const MultiPie: React.FC<MultiPieProps> = (props) => {
     }
   }, [size?.width])
   return (
-    <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" echart-type="multi-pie">
+    <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" data-echart-type="multi-pie">
       <div className={classNames(styles['echart-item'], styles['echart-item-multi-pie'])} ref={chartRef}></div>
     </div>
   )
@@ -794,7 +794,7 @@ export const NightingleRose: React.FC<NightingleRoseProps> = (props) => {
   return (
     <>
       {Array.isArray(data) && (
-        <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" echart-type="nightingle-rose">
+        <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" data-echart-type="nightingle-rose">
           <div
             className={classNames(styles['echart-item'], styles['echart-item-nightingle-rose'])}
             ref={chartRef}
@@ -833,10 +833,9 @@ export const EchartsOption: React.FC<EchartsOptionProps> = (props) => {
   const chartRef = useRef(null)
   const optionRef = useRef<EChartsOption>(option)
   useEffect(() => {
-    // @ts-ignore
     const myChart = echarts.init(chartRef.current)
     try {
-      let setOption = cloneDeep(optionRef.current) as any
+      const setOption = cloneDeep(optionRef.current) as any
       if (name === 'nightingale-rose') {
         setOption.series[0].label.formatter = (params) => {
           return params.name + '\n' + (params.data.realPercent || 0.0).toFixed(2) + '%'
@@ -851,7 +850,7 @@ export const EchartsOption: React.FC<EchartsOptionProps> = (props) => {
           let total = 0
           params.forEach(function (item) {
             if (item.value > 0) {
-              let count = Math.round(item.value * item.data.realTotal)
+              const count = Math.round(item.value * item.data.realTotal)
               total += count
               result +=
                 item.marker + ' ' + item.seriesName + ': ' + count + ' (' + (item.value * 100).toFixed(1) + '%)<br/>'
@@ -891,7 +890,7 @@ export const EchartsOption: React.FC<EchartsOptionProps> = (props) => {
   }, [name])
 
   return (
-    <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" echart-type={echartType}>
+    <div className={styles['echarts-box']} ref={ref} data-type="echarts-box" data-echart-type={echartType}>
       <div className={classNames(styles['echart-item'], styles[chartStyle])} ref={chartRef}></div>
     </div>
   )

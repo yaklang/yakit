@@ -1,21 +1,21 @@
-import React, { ForwardedRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, { type ForwardedRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import { Form, Space, Tooltip } from 'antd'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
-import {
+import type {
   CustomPluginExecuteFormValue,
   YakExtraParamProps,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { Resizable } from 're-resizable'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { getJsonSchemaListResult } from '../JsonFormWrapper/JsonFormWrapper'
 import { failed } from '@/utils/notification'
 import { ExecuteEnterNodeByPluginParams } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
 import { useMemoizedFn } from 'ahooks'
-import { YakitDrawerProps } from '../yakitUI/YakitDrawer/YakitDrawerType'
+import type { YakitDrawerProps } from '../yakitUI/YakitDrawer/YakitDrawerType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { OutlineChevronupIcon } from '@/assets/icon/outline'
@@ -233,7 +233,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
   useEffect(() => {
     if (visible) {
       getRemoteValue(PluginHasParamsModalExecCheck).then((e) => {
-        if (!!e) {
+        if (e) {
           setExecCheck(e)
         } else {
           setExecCheck('execute_and_save')
@@ -390,7 +390,7 @@ const PluginHasParamsForm = React.forwardRef((props: PluginHasParamsFormProps, r
               const errorMessages = result.jsonSchemaError
                 .filter((item) => item.error && Array.isArray(item.error))
                 .flatMap((item) =>
-                  // @ts-ignore
+                  // @ts-expect-error 类型定义不完整，需要忽略此行
                   item.error.map((err) => ({
                     label: item.label || '未命名配置',
                     message: err.message || '未知错误',

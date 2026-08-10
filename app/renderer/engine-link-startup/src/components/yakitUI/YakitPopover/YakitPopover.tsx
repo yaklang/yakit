@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Popover, PopoverProps } from 'antd'
+import { Popover, type PopoverProps } from 'antd'
 
 import classNames from 'classnames'
 import styles from './yakitPopover.module.scss'

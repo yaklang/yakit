@@ -1,4 +1,4 @@
-import { Note } from '@/pages/notepadManage/notepadManage/utils'
+import type { Note } from '@/pages/notepadManage/notepadManage/utils'
 import moment from 'moment'
 
 export const defaultNote: Note = {

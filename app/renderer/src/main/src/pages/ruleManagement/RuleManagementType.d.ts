@@ -1,7 +1,10 @@
-import { Paging } from '@/utils/yakQueryHTTPFlow'
-import { SyntaxFlowResult } from '../yakRunnerCodeScan/YakRunnerCodeScanType'
-import { UserInfoProps } from '@/store'
-import { RuleManagementPageInfoProps } from '@/store/pageInfo'
+import type { ForwardedRef } from 'react'
+import { type Paging } from '@/utils/yakQueryHTTPFlow'
+import { type SyntaxFlowResult } from '../yakRunnerCodeScan/YakRunnerCodeScanType'
+import { type UserInfoProps } from '@/store'
+import { type RuleManagementPageInfoProps } from '@/store/pageInfo'
+
+type getContainerFunc = () => HTMLElement
 
 export interface RuleManagementProps {
   ruleManagementPageInfo?: RuleManagementPageInfoProps

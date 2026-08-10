@@ -1,7 +1,7 @@
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { useMemoizedFn } from 'ahooks'
 import { Form } from 'antd'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import styles from './CodeScanExtraParamsDrawer.module.scss'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'

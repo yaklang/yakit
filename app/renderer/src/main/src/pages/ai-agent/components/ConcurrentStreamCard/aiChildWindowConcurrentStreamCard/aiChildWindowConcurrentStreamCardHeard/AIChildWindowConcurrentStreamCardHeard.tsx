@@ -1,4 +1,4 @@
-import { FC, memo, useMemo } from 'react'
+import { type FC, memo, useMemo } from 'react'
 import type { AIChildWindowConcurrentStreamCardHeardProps } from './type'
 import styles from './AIChildWindowConcurrentStreamCardHeard.module.scss'
 import { OutlineRefreshIcon } from '@/assets/icon/outline'

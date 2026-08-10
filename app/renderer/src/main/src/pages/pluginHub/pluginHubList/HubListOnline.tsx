@@ -1,22 +1,23 @@
-import React, { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
+import type React from 'react'
+import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport, useRequest } from 'ahooks'
 import { OutlineClouddownloadIcon, OutlineClouduploadIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import {
+import type {
   PluginSearchParams,
   PluginListPageMeta,
   PluginFilterParams,
   PluginSource,
 } from '@/pages/plugins/baseTemplateType'
 import { defaultSearch } from '@/pages/plugins/builtInData'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { pluginOnlineReducer, initialOnlineState } from '@/pages/plugins/pluginReducer'
 import {
-  PluginsQueryProps,
+  type PluginsQueryProps,
   convertPluginsRequestParams,
   convertLocalPluginsRequestParams,
-  DownloadOnlinePluginsRequest,
+  type DownloadOnlinePluginsRequest,
   convertDownloadOnlinePluginBatchRequestParams,
   apiDownloadPluginOnline,
   apiFetchOnlineList,
@@ -41,15 +42,15 @@ import {
 import { useStore } from '@/store'
 import { OnlineJudgment } from '@/pages/plugins/onlineJudgment/OnlineJudgment'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { HubListBaseProps } from '../type'
-import { API } from '@/services/swagger/resposeType'
+import type { HubListBaseProps } from '../type'
+import type { API } from '@/services/swagger/resposeType'
 import { SolidPluscircleIcon } from '@/assets/icon/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import {
   PluginGroup,
   TagsAndGroupRender,
-  YakFilterRemoteObj,
+  type YakFilterRemoteObj,
   YakitGetOnlinePlugin,
 } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import { isCommunityEdition } from '@/utils/envfile'
@@ -229,7 +230,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
       }
       setLoading(true)
 
-      const params: PluginListPageMeta = !!reset
+      const params: PluginListPageMeta = reset
         ? { page: 1, limit: 20, order_by: 'updated_at' }
         : {
             page: response.pagemeta.page + 1,

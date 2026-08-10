@@ -1,6 +1,6 @@
 import { TableCellToColorTag } from '@/components/TableVirtualResize/utils'
-import { HTTPResponseExtractor, HTTPResponseMatcher } from './MatcherAndExtractionCardType'
-import { TFunction } from '@/i18n/useI18nNamespaces'
+import type { HTTPResponseExtractor, HTTPResponseMatcher } from './MatcherAndExtractionCardType'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 
 /**@name 过滤器模式 */
 export const filterModeOptions = (t: TFunction) => {

@@ -1,8 +1,8 @@
-import { RefObject } from 'react'
-import { AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIForge } from '../type/forge'
-import { AITool } from '../type/aiTool'
-import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { RefObject } from 'react'
+import type { AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIForge } from '../type/forge'
+import type { AITool } from '../type/aiTool'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 export interface AIForgeInfoOptProps {
   info: AIForge

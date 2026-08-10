@@ -4,28 +4,27 @@ import emiter from '@/utils/eventBus/eventBus'
 import ChromeLauncherButton from '@/pages/mitm/MITMChromeLauncher'
 import { info, yakitNotify } from '@/utils/notification'
 import { useCreation, useMemoizedFn, useSize } from 'ahooks'
-import { MITMServer, TipPart } from '@/pages/mitm/MITMPage'
+import { MITMServer, type TipPart } from '@/pages/mitm/MITMPage'
 import style from './MITMServerHijacking.module.scss'
 import { QuitIcon } from '@/assets/newIcon'
 import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { setRemoteValue } from '@/utils/kv'
 import { MITMConsts } from '../MITMConsts'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { defHost, defPort, maskProxyPassword } from '../MITMServerStartForm/MITMServerStartForm'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
-import { RemoteGV } from '@/yakitGV'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import {
-  MITMEnablePluginModeRequest,
-  MITMFilterWebsocketRequest,
-  MITMHotPortRequest,
-  MITMSetDownstreamProxyRequest,
+  type MITMEnablePluginModeRequest,
+  type MITMFilterWebsocketRequest,
+  type MITMHotPortRequest,
+  type MITMSetDownstreamProxyRequest,
   grpcMITMEnablePluginMode,
   grpcMITMFilterWebsocket,
   grpcMITMHotPort,
@@ -34,27 +33,27 @@ import {
   grpcMITMSetDisableSystemProxy,
   grpcMITMStopCall,
   grpcMITMRemoveHook,
-  MITMRemoveHookRequest,
+  type MITMRemoveHookRequest,
 } from '../MITMHacker/utils'
 import { convertMITMFilterUI } from '../MITMServerStartForm/utils'
 import { getMitmHijackFilter } from '../MITMServerStartForm/MITMFiltersModal'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useStore } from '@/store/mitmState'
 import { useProxy } from '@/hook/useProxy'
 import { debugToPrintLogs } from '@/utils/logCollection'
-import { OutlineCheckIcon, OutlineChevrondownIcon, OutlineChevronupIcon } from '@/assets/icon/outline'
+import { OutlineChevrondownIcon, OutlineChevronupIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useGlobalHotPatchTag, useGlobalHotPatch } from '@/store/globalHotPatch'
-import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
-import { StreamUpdateState } from './PluginsOutput/StreamProcessor'
+import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
+import type { StreamUpdateState } from './PluginsOutput/StreamProcessor'
 import { loadAdvancedConfig, updateAdvancedConfig } from '../MITMAdvancedConfig'
 import { cloneDeep } from 'lodash'
-import { apiGetSystemProxy, GetSystemProxyResult } from '@/utils/ConfigSystemProxy'
+import { apiGetSystemProxy, type GetSystemProxyResult } from '@/utils/ConfigSystemProxy'
 
 type MITMStatus = 'hijacking' | 'hijacked' | 'idle'
 const { Text } = Typography

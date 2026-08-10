@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import {
+import type {
   AIChatMentionListRefProps,
   AIChatMentionProps,
   AIMentionSelectItemProps,
@@ -22,11 +22,17 @@ import {
   useSafeState,
 } from 'ahooks'
 import { AIMentionTabsEnum, AIForgeListDefaultPagination, AIMentionTabs } from '../../defaultConstant'
-import { RollingLoadList, RollingLoadListRef } from '@/components/RollingLoadList/RollingLoadList'
-import { AIFocus, AIForge, QueryAIFocusResponse, QueryAIForgeRequest, QueryAIForgeResponse } from '../../type/forge'
+import { RollingLoadList, type RollingLoadListRef } from '@/components/RollingLoadList/RollingLoadList'
+import type {
+  AIFocus,
+  AIForge,
+  QueryAIFocusResponse,
+  QueryAIForgeRequest,
+  QueryAIForgeResponse,
+} from '../../type/forge'
 import { grpcQueryAIFocus, grpcQueryAIForge } from '../../grpc'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AITool, GetAIToolListRequest, GetAIToolListResponse } from '../../type/aiTool'
+import type { AITool, GetAIToolListRequest, GetAIToolListResponse } from '../../type/aiTool'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { grpcGetAIToolList } from '../../aiToolList/utils'
 import { failed } from '@/utils/notification'
@@ -35,9 +41,9 @@ import classNames from 'classnames'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useCustomFolder } from '../aiFileSystemList/store/useCustomFolder'
 import FileTreeSystemList from '../aiFileSystemList/FileTreeSystemList/FileTreeSystemList'
-import { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import { KnowledgeBaseItem, useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
-import { InputRef } from 'antd'
+import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import { type KnowledgeBaseItem, useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
+import type { InputRef } from 'antd'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { mentionWidth } from '../aiMilkdownInput/aiMilkdownMention/AIMilkdownMention'
 
@@ -398,7 +404,7 @@ const ForgeNameListOfMention: React.FC<ForgeNameListOfMentionProps> = React.memo
         const newPage = +res.Pagination.Page
         const length = newPage === 1 ? res.Data.length : res.Data.length + response.Data.length
         setHasMore(length < +res.Total)
-        let newRes: QueryAIForgeResponse = {
+        const newRes: QueryAIForgeResponse = {
           Data: newPage === 1 ? res?.Data : [...response.Data, ...(res?.Data || [])],
           Pagination: res?.Pagination || {
             ...AIForgeListDefaultPagination,
@@ -528,7 +534,7 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
         const newPage = +res.Pagination.Page
         const length = newPage === 1 ? res.Tools.length : res.Tools.length + response.Tools.length
         setHasMore(length < +res.Total)
-        let newRes: GetAIToolListResponse = {
+        const newRes: GetAIToolListResponse = {
           Tools: newPage === 1 ? res?.Tools : [...response.Tools, ...(res?.Tools || [])],
           Pagination: res?.Pagination || {
             ...genDefaultPagination(20),
@@ -814,7 +820,7 @@ const FocusModeOfMention: React.FC<FocusModeOfMentionProps> = React.memo(
       setSpinning(true)
       try {
         const res = await grpcQueryAIFocus()
-        let newRes: QueryAIFocusResponse = {
+        const newRes: QueryAIFocusResponse = {
           Data: (res?.Data || []).filter((it) => it?.Name?.toLowerCase().includes(keyWord.toLowerCase())),
         }
         setResponse(newRes)

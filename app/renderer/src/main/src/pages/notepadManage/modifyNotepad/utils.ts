@@ -1,5 +1,4 @@
-import type { DataNode } from 'antd/es/tree'
-import { MilkdownCatalogueProps } from './ModifyNotepadType'
+import type { MilkdownCatalogueProps } from './ModifyNotepadType'
 
 // 构建树形结构
 export const buildTOCTree = (headings) => {

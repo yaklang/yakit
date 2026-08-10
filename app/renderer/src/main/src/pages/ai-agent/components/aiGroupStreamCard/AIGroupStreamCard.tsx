@@ -1,4 +1,8 @@
-import { AIChatQSDataTypeEnum, ChatReferenceMaterialPayload, ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import {
+  AIChatQSDataTypeEnum,
+  type ChatReferenceMaterialPayload,
+  type ChatStream,
+} from '@/pages/ai-re-act/hooks/aiRender'
 import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo, memo } from 'react'
 import styles from './AIGroupStreamCard.module.scss'
 import classNames from 'classnames'
@@ -6,7 +10,7 @@ import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCreation from 'ahooks/lib/useCreation'
 import { useStore } from 'zustand'
-import { AIGroupStreamCardHeardWrapperProps, AIGroupStreamCardListWrapperProps } from './type'
+import type { AIGroupStreamCardHeardWrapperProps, AIGroupStreamCardListWrapperProps } from './type'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import AIGroupStreamCardHeard from './aiGroupStreamCardHeard/AIGroupStreamCardHeard'
 import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList'
@@ -159,10 +163,10 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
     const lastItem = rawData.contents.get(lastToken)
     if (!lastItem) return false
     switch (lastItem.type) {
-      case AIChatQSDataTypeEnum.STREAM:
+      case AIChatQSDataTypeEnum.STREAM: {
         const contentLength = lastItem.data?.content?.length || 0
         return contentLength > STREAM_MASK_THRESHOLD
-
+      }
       default:
         return false
     }

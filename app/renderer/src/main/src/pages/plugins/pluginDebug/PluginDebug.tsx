@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { PluginDebugBodyProps, PluginDebugProps } from './PluginDebugType'
+import type { PluginDebugBodyProps, PluginDebugProps } from './PluginDebugType'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -9,7 +9,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { GetPluginLanguage, pluginTypeToName } from '../builtInData'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitDiffEditor } from '@/components/yakitUI/YakitDiffEditor/YakitDiffEditor'
 import { CodeScoreModal } from '../funcTemplate'
@@ -26,16 +26,16 @@ import {
   PluginExecuteProgress,
   PluginFixFormParams,
 } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { YakParamProps } from '../pluginsType'
+import type { YakParamProps } from '../pluginsType'
 import {
   ExtraParamsNodeByType,
   FixExtraParamsNode,
 } from '../operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
-import { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
-import { CustomPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { CustomPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { ParamsToGroupByGroupName, getValueByType, getYakExecutorParam, onCodeToInfo } from '../editDetails/utils'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import { DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin } from '../utils'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import { type DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin } from '../utils'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { defPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/constants'
 import cloneDeep from 'lodash/cloneDeep'
@@ -266,7 +266,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
 
     let newFormValue: CustomPluginExecuteFormValue = {}
     params.forEach((ele) => {
-      let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
+      const initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
       const value = getValueByType(initValue, ele.TypeVerbose)
       newFormValue = {
         ...newFormValue,
@@ -287,7 +287,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
             isExecuting={isExecuting}
           />
         )
-      case 'codec':
+      case 'codec': {
         const codecItem: YakParamProps = {
           Field: 'Input',
           FieldVerbose: 'Input',
@@ -299,6 +299,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
         return (
           <OutputFormComponentsByType key="Input-Input" item={codecItem} codeType="plaintext" disabled={isExecuting} />
         )
+      }
       case 'mitm':
         return (
           <>

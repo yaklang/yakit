@@ -1,8 +1,9 @@
-import { YakitFormDraggerProps } from '@/components/yakitUI/YakitForm/YakitFormType'
-import { YakitInputProps } from '@/components/yakitUI/YakitInput/YakitInputType'
-import { YakitInputNumberProps } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
-import { TextAreaProps } from 'antd/lib/input'
-import { CSSProperties, ReactNode } from 'react'
+import { type YakitFormDraggerProps } from '@/components/yakitUI/YakitForm/YakitFormType'
+import { type YakitInputProps } from '@/components/yakitUI/YakitInput/YakitInputType'
+import { type YakitInputNumberProps } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
+import { type TextAreaProps } from 'antd/lib/input'
+import { type CSSProperties, type ReactNode } from 'react'
+import type { LiteralUnion } from 'antd/lib/_util/type'
 
 interface ItemProps {
   label?: string | ReactNode

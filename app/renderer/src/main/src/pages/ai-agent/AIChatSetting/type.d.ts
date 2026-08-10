@@ -1,5 +1,4 @@
-import { SliderSingleProps } from 'antd'
-import { AIAgentSetting } from '../aiAgentType'
+import { type SliderSingleProps } from 'antd'
 
 export interface AIChatSettingProps {}
 export type FormItemSliderProps = SliderSingleProps

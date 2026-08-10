@@ -1,6 +1,6 @@
-import { TFunction } from '@/i18n/useI18nNamespaces'
-import { HTTPFlow } from '../HTTPFlowTable'
-import { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
+import type { HTTPFlow } from '../HTTPFlowTable'
+import type { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { HTTPFlowDetail } from '@/components/HTTPFlowDetail'
 

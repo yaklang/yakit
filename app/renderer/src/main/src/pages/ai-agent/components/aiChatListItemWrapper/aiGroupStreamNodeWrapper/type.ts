@@ -1,4 +1,4 @@
-import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface AIGroupStreamNodeWrapperProps {
   itemData: ChatStream

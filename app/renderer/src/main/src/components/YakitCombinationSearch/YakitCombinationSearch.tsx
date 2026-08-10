@@ -1,10 +1,10 @@
-import { Input, InputRef } from 'antd'
-import React, { useState } from 'react'
+import { Input } from 'antd'
+import type React from 'react'
+import { useState } from 'react'
 import styles from './YakitCombinationSearch.module.scss'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
-import { SearchIcon } from '@/assets/newIcon'
-import { YakitCombinationSearchProps } from './YakitCombinationSearchType'
+import type { YakitCombinationSearchProps } from './YakitCombinationSearchType'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 
@@ -112,7 +112,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
               disabled={item[optDisabled]}
               record={item}
             >
-              {!!selectModuleTypeProps.renderOpt
+              {selectModuleTypeProps.renderOpt
                 ? selectModuleTypeProps.renderOpt(item)
                 : item[optText]
                   ? item[optText]

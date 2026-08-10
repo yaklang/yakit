@@ -1,10 +1,10 @@
-import React from 'react'
+import type React from 'react'
 import classNames from 'classnames'
 import { OutlineAIIcon, OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
 import { PublicAIAuditCodeIcon } from '@/routes/publicIcon'
-import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
+import type { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
 import styles from './IrifyAiCodeAuditHistoryItem.module.scss'
 
 export interface IrifyAiCodeAuditHistoryItemProps {

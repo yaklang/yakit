@@ -1,14 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { Button, Form } from 'antd'
+import type React from 'react'
+import { useRef, useState } from 'react'
+import { Form } from 'antd'
 import { failed, info } from '../../utils/notification'
-import { InputItem, SelectOne } from '../../utils/inputUtil'
+import { InputItem } from '../../utils/inputUtil'
 import { StringToUint8Array } from '@/utils/str'
 import { CacheDropDownGV } from '@/yakitGV'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
@@ -187,7 +188,7 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
 }
 
 export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: ModeProps) => {
-  let m = showYakitModal({
+  const m = showYakitModal({
     title: tOriginal('InsertTextToFuzzTag.selectFileInsert'),
     width: '800px',
     content: (
@@ -206,7 +207,7 @@ export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: Mo
 }
 
 export const insertTemporaryFileFuzzTag = (onInsert: (i: string) => any) => {
-  let m = showYakitModal({
+  const m = showYakitModal({
     title: tOriginal('InsertTextToFuzzTag.copyYouWantDictionary'),
     width: '40%',
     content: (

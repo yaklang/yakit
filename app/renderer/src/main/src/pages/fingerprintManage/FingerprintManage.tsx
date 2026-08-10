@@ -1,4 +1,5 @@
-import React, { ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -21,12 +22,12 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { SolidFolderopenIcon } from '@/assets/icon/solid'
 import { yakitNotify } from '@/utils/notification'
 import { cloneDeep } from 'lodash'
-import { Divider, Form, InputRef, Table, Tooltip } from 'antd'
+import { Divider, Form, type InputRef, Table, Tooltip } from 'antd'
 import {
-  BatchUpdateFingerprintToGroupRequest,
-  FingerprintFilter,
-  FingerprintGroup,
-  FingerprintRule,
+  type BatchUpdateFingerprintToGroupRequest,
+  type FingerprintFilter,
+  type FingerprintGroup,
+  type FingerprintRule,
   grpcCreateFingerprint,
   grpcCreateLocalFingerprintGroup,
   grpcDeleteFingerprint,
@@ -38,13 +39,13 @@ import {
   grpcUpdateFingerprintToGroup,
   grpcUpdateLocalFingerprintGroup,
   httpDownloadFingerprint,
-  QueryFingerprintRequest,
-  QueryFingerprintResponse,
+  type QueryFingerprintRequest,
+  type QueryFingerprintResponse,
 } from './api'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { genDefaultPagination } from '../invoker/schema'
-import { EditingObjProps } from '../payloadManager/PayloadLocalTable'
+import type { EditingObjProps } from '../payloadManager/PayloadLocalTable'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
@@ -52,7 +53,10 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
-import ImportExportModal, { ExportImportProgress, ImportExportModalExtra } from './ImportExportModal/ImportExportModal'
+import ImportExportModal, {
+  type ExportImportProgress,
+  type ImportExportModalExtra,
+} from './ImportExportModal/ImportExportModal'
 import { randomString } from '@/utils/randomUtil'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { FingerprintRuleDom } from './FingerprintRuleDom'
@@ -830,7 +834,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
       title: '操作',
       dataIndex: 'operation',
       width: 88,
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       render: (_, record: FingerprintRule) => {
         return (
           <div className={styles['table-operation']}>
@@ -1112,7 +1116,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
               type="text"
               style={{ padding: 0 }}
               onClick={() => {
-                let m = showYakitModal({
+                const m = showYakitModal({
                   title: '指纹规则',
                   width: '75%',
                   closable: true,
@@ -1150,7 +1154,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
           bordered
           size="small"
           dataSource={data.Data}
-          // @ts-ignore
+          // @ts-expect-error 类型定义不完整，需要忽略此行
           columns={columns as ColumnTypes}
           pagination={{
             showQuickJumper: true,

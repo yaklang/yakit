@@ -1,7 +1,7 @@
-import React, { memo, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, { memo, type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualList } from 'ahooks'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { QueryGeneralRequest } from '../invoker/schema'
+import type { QueryGeneralRequest } from '../invoker/schema'
 import { failed, info, yakitFailed, warn, success } from '@/utils/notification'
 import {
   ChevronDownIcon,
@@ -31,14 +31,14 @@ import {
 import ReactResizeDetector from 'react-resize-detector'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { Cascader, Divider, Dropdown, DropdownProps, Form, Progress, Tooltip, Upload } from 'antd'
-import { YakitMenu, YakitMenuProp } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { Cascader, Divider, Dropdown, type DropdownProps, Form, Progress, Tooltip, Upload } from 'antd'
+import { YakitMenu, type YakitMenuProp } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { YaklangEngineMode } from '@/yakitGVDefine'
+import type { YaklangEngineMode } from '@/yakitGVDefine'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
@@ -58,7 +58,7 @@ import { AutoTextarea } from '../fuzzer/components/AutoTextarea/AutoTextarea'
 import { isCommunityEdition, isEnpriTrace, isIRify } from '@/utils/envfile'
 import { setClipboardText } from '@/utils/clipboard'
 import { useEeSystemConfig, useStore } from '@/store'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
@@ -157,7 +157,7 @@ const typeFilter: FilterInfoProps[] = [
 
 /** 项目名过滤项对应展示内容 */
 const typeToName: { [key: string]: string } = {}
-for (let item of typeFilter) typeToName[item.key] = item.label
+for (const item of typeFilter) typeToName[item.key] = item.label
 
 /** 时间过滤项 */
 const timeFilter: FilterInfoProps[] = [
@@ -166,12 +166,12 @@ const timeFilter: FilterInfoProps[] = [
 ]
 /** 时间过滤项对应展示内容 */
 export const timeToName: { [key: string]: string } = {}
-for (let item of timeFilter) timeToName[item.key] = item.label
+for (const item of timeFilter) timeToName[item.key] = item.label
 
 /** 企业版web配置过滤 */
 const judgeProjectConfig = (eeSystemConfig: API.SystemConfigList[]) => {
   if (isEnpriTrace()) {
-    let config: { key: string; name: string }[] = []
+    const config: { key: string; name: string }[] = []
     eeSystemConfig.forEach((item) => {
       if (item.configName === 'projectConfig' && item.content) {
         try {
@@ -492,7 +492,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         },
       },
     ]
-    let arr = judgeProjectConfig(eeSystemConfig)
+    const arr = judgeProjectConfig(eeSystemConfig)
     arr.forEach((item) => {
       if (item.key === 'ExternalProjectCode' || item.key === 'ExternalModule') {
         header = header.map((itemIn) => {
@@ -656,7 +656,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }
     if (page) setParams({ ...param, Pagination: { ...param.Pagination, Page: page } })
 
-    // @ts-ignore
+    // @ts-expect-error 类型定义不完整，需要忽略此行
     if (param.Type === 'all') delete param.Type
     if (param.ProjectName) param.Type = getEnvTypeByProjects()
     // 查当前文件夹下的所有内容，应该用当前的父节点（也就是文件夹id）来获取所有的
@@ -880,8 +880,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   const onModalSubmit = useMemoizedFn(
     (type: string, value: ProjectFolderInfoProps | ExportProjectProps | ImportProjectProps) => {
       switch (type) {
-        case 'isNewProject':
-          let projectInfo: ProjectFolderInfoProps = { ...(value as any) }
+        case 'isNewProject': {
+          const projectInfo: ProjectFolderInfoProps = { ...(value as any) }
           const newProject: ProjectParamsProps = {
             ProjectName: projectInfo.ProjectName,
             Description: projectInfo.Description || '',
@@ -935,119 +935,121 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               })
           }
           return
+        }
         case 'isNewFolder':
-          let folderInfo: ProjectFolderInfoProps = { ...(value as any) }
-          const newFolder: ProjectParamsProps = {
-            ProjectName: folderInfo.ProjectName,
-            Description: folderInfo.Description || '',
-            FolderId: folderInfo.FolderId ? +folderInfo.FolderId : 0,
-            ChildFolderId: folderInfo.ChildFolderId ? +folderInfo.ChildFolderId : 0,
-            Type: 'file',
-          }
-          if (newFolder.ProjectName === folderInfo.oldName) {
-            if (folderInfo.Id) {
-              newFolder.Id = +folderInfo.Id
-              ipcRenderer
-                .invoke('UpdateProject', newFolder)
-                .then((res) => {
-                  success(t('ProjectManage.editFolderSuccess'))
-                  setModalInfo({ visible: false })
-                  setParams({ ...params, Pagination: { ...params.Pagination, Page: 1 } })
-                  setTimeout(() => update(), 300)
-                })
-                .catch((e) => {
-                  failed(t('ProjectManage.editFolderFailed') + `: ${e}`)
-                })
-                .finally(() => {
-                  setTimeout(() => {
-                    setModalLoading(false)
-                  }, 300)
-                })
+          {
+            const folderInfo: ProjectFolderInfoProps = { ...(value as any) }
+            const newFolder: ProjectParamsProps = {
+              ProjectName: folderInfo.ProjectName,
+              Description: folderInfo.Description || '',
+              FolderId: folderInfo.FolderId ? +folderInfo.FolderId : 0,
+              ChildFolderId: folderInfo.ChildFolderId ? +folderInfo.ChildFolderId : 0,
+              Type: 'file',
+            }
+            if (newFolder.ProjectName === folderInfo.oldName) {
+              if (folderInfo.Id) {
+                newFolder.Id = +folderInfo.Id
+                ipcRenderer
+                  .invoke('UpdateProject', newFolder)
+                  .then((res) => {
+                    success(t('ProjectManage.editFolderSuccess'))
+                    setModalInfo({ visible: false })
+                    setParams({ ...params, Pagination: { ...params.Pagination, Page: 1 } })
+                    setTimeout(() => update(), 300)
+                  })
+                  .catch((e) => {
+                    failed(t('ProjectManage.editFolderFailed') + `: ${e}`)
+                  })
+                  .finally(() => {
+                    setTimeout(() => {
+                      setModalLoading(false)
+                    }, 300)
+                  })
+              } else {
+                ipcRenderer
+                  .invoke('NewProject', newFolder)
+                  .then(() => {
+                    success(t('ProjectManage.createFolderSuccess'))
+                    setModalInfo({ visible: false })
+                    setParams({ ...params, Pagination: { ...params.Pagination, Page: 1 } })
+                    setTimeout(() => update(), 300)
+                  })
+                  .catch((e) => {
+                    failed(t('ProjectManage.createFolderFailed') + `: ${e}`)
+                  })
+                  .finally(() => {
+                    setTimeout(() => {
+                      setModalLoading(false)
+                    }, 300)
+                  })
+              }
             } else {
               ipcRenderer
-                .invoke('NewProject', newFolder)
-                .then(() => {
-                  success(t('ProjectManage.createFolderSuccess'))
-                  setModalInfo({ visible: false })
-                  setParams({ ...params, Pagination: { ...params.Pagination, Page: 1 } })
-                  setTimeout(() => update(), 300)
+                .invoke('IsProjectNameValid', newFolder)
+                .then((e) => {
+                  if (folderInfo.Id) {
+                    newFolder.Id = +folderInfo.Id
+                    ipcRenderer
+                      .invoke('UpdateProject', newFolder)
+                      .then((res) => {
+                        success(t('ProjectManage.editFolderSuccess'))
+                        setModalInfo({ visible: false })
+                        setParams({ ...params, Pagination: { ...params.Pagination, Page: 1 } })
+                        setTimeout(() => update(), 300)
+                      })
+                      .catch((e) => {
+                        failed(t('ProjectManage.editFolderFailed') + `: ${e}`)
+                      })
+                      .finally(() => {
+                        setTimeout(() => {
+                          setModalLoading(false)
+                        }, 300)
+                      })
+                  } else {
+                    ipcRenderer
+                      .invoke('NewProject', newFolder)
+                      .then(({ Id, ProjectName }: { Id: number; ProjectName: string }) => {
+                        success(t('ProjectManage.createFolderSuccess'))
+                        setModalInfo({ visible: false })
+                        if (folderInfo.parent) {
+                          setFiles([
+                            { ...folderInfo.parent },
+                            { ...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName },
+                          ])
+                          setParams({
+                            Type: 'all',
+                            FolderId: +folderInfo.parent.Id,
+                            ChildFolderId: +Id,
+                            Pagination: { ...params.Pagination, Page: 1 },
+                          })
+                        } else {
+                          setFiles([{ ...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName }])
+                          setParams({
+                            Type: 'all',
+                            FolderId: +Id,
+                            Pagination: { ...params.Pagination, Page: 1 },
+                          })
+                        }
+                        setTimeout(() => update(), 300)
+                      })
+                      .catch((e) => {
+                        failed(t('ProjectManage.createFolderFailed') + `: ${e}`)
+                      })
+                      .finally(() => {
+                        setTimeout(() => {
+                          setModalLoading(false)
+                        }, 300)
+                      })
+                  }
                 })
                 .catch((e) => {
-                  failed(t('ProjectManage.createFolderFailed') + `: ${e}`)
-                })
-                .finally(() => {
+                  failed(`${folderInfo.Id ? '编辑' : '创建新'}文件夹失败，文件夹名校验不通过：${e}`)
                   setTimeout(() => {
                     setModalLoading(false)
                   }, 300)
                 })
             }
-          } else {
-            ipcRenderer
-              .invoke('IsProjectNameValid', newFolder)
-              .then((e) => {
-                if (folderInfo.Id) {
-                  newFolder.Id = +folderInfo.Id
-                  ipcRenderer
-                    .invoke('UpdateProject', newFolder)
-                    .then((res) => {
-                      success(t('ProjectManage.editFolderSuccess'))
-                      setModalInfo({ visible: false })
-                      setParams({ ...params, Pagination: { ...params.Pagination, Page: 1 } })
-                      setTimeout(() => update(), 300)
-                    })
-                    .catch((e) => {
-                      failed(t('ProjectManage.editFolderFailed') + `: ${e}`)
-                    })
-                    .finally(() => {
-                      setTimeout(() => {
-                        setModalLoading(false)
-                      }, 300)
-                    })
-                } else {
-                  ipcRenderer
-                    .invoke('NewProject', newFolder)
-                    .then(({ Id, ProjectName }: { Id: number; ProjectName: string }) => {
-                      success(t('ProjectManage.createFolderSuccess'))
-                      setModalInfo({ visible: false })
-                      if (folderInfo.parent) {
-                        setFiles([
-                          { ...folderInfo.parent },
-                          { ...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName },
-                        ])
-                        setParams({
-                          Type: 'all',
-                          FolderId: +folderInfo.parent.Id,
-                          ChildFolderId: +Id,
-                          Pagination: { ...params.Pagination, Page: 1 },
-                        })
-                      } else {
-                        setFiles([{ ...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName }])
-                        setParams({
-                          Type: 'all',
-                          FolderId: +Id,
-                          Pagination: { ...params.Pagination, Page: 1 },
-                        })
-                      }
-                      setTimeout(() => update(), 300)
-                    })
-                    .catch((e) => {
-                      failed(t('ProjectManage.createFolderFailed') + `: ${e}`)
-                    })
-                    .finally(() => {
-                      setTimeout(() => {
-                        setModalLoading(false)
-                      }, 300)
-                    })
-                }
-              })
-              .catch((e) => {
-                failed(`${folderInfo.Id ? '编辑' : '创建新'}文件夹失败，文件夹名校验不通过：${e}`)
-                setTimeout(() => {
-                  setModalLoading(false)
-                }, 300)
-              })
           }
-
           return
         case 'isImport':
           setModalInfo({ visible: false })
@@ -1765,6 +1767,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
               Description: firstDescribe,
             })
           } else {
+            // ignore
           }
         } catch (error) {}
       }
@@ -1789,12 +1792,10 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
     if (visible && isImport && parentNode) {
       if (parentNode.Id) {
         const data: ImportProjectProps = { ProjectFilePath: '' }
-        // @ts-ignore
         if (+parentNode.FolderId === 0) {
           data.FolderId = +parentNode.Id
         } else {
           data.FolderId = +parentNode.FolderId
-          // @ts-ignore
           if (+parentNode.ChildFolderId === 0) {
             data.FolderId = +parentNode.Id
           } else {
@@ -1893,12 +1894,10 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       const data = { ...info }
       if (parentNode && !data.Id) {
         data.parent = { ...parentNode }
-        // @ts-ignore
         if (+parentNode.FolderId === 0) {
           data.FolderId = +parentNode.Id
         } else {
           data.FolderId = +parentNode.FolderId
-          // @ts-ignore
           if (+parentNode.ChildFolderId === 0) {
             data.FolderId = +parentNode.Id
           } else {
@@ -2124,7 +2123,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             {!isFolder && !parentNode && (
               <Form.Item
                 label={
-                  !!project ? (
+                  project ? (
                     <div className={styles['form-item-cascader']}>
                       <div>{`${t('NewProjectAndFolder.belongToFolder')} :`}</div>
                       {dropShow && <div className={styles['hint-style']}>{cascaderValue.join('/')}</div>}
@@ -2489,13 +2488,13 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
     }
 
     ipcRenderer.on(`${token}-data`, async (e, data: ProjectIOProgress) => {
-      if (!!data.Verbose) {
+      if (data.Verbose) {
         infos.push(data.Verbose)
       }
       if (data.Percent > 0) {
         setPercent(data.Percent * 100)
       }
-      if (!!data.TargetPath) {
+      if (data.TargetPath) {
         pathRef.current = data.TargetPath
       }
     })

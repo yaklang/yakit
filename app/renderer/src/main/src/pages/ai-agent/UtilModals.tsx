@@ -1,7 +1,8 @@
-import React, { memo, useEffect, useState } from 'react'
+import type React from 'react'
+import { memo, useEffect, useState } from 'react'
 import { Form } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { EditChatNameModalProps } from './aiAgentType'
+import type { EditChatNameModalProps } from './aiAgentType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 

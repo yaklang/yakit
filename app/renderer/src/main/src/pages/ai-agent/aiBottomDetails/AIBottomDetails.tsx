@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './AIBottomDetails.module.scss'
 import classNames from 'classnames'
@@ -10,7 +11,7 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import {
   defaultTerminaFont,
   defaultTerminalFont,
-  DefaultTerminaSettingProps,
+  type DefaultTerminaSettingProps,
   TerminalBox,
   TerminalListBox,
   useTerminalHook,

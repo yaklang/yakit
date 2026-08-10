@@ -1,4 +1,4 @@
-import { FC, memo } from 'react'
+import { type FC, memo } from 'react'
 import type { AIGroupStreamNodeWrapperProps } from './type'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'

@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Space, Table, Tag } from 'antd'
 import {
-  ExecHistoryRecord,
+  type ExecHistoryRecord,
   genDefaultPagination,
-  QueryGeneralRequest,
-  QueryGeneralResponse,
-  YakScript,
+  type QueryGeneralRequest,
+  type QueryGeneralResponse,
+  type YakScript,
 } from '../invoker/schema'
 import { failed } from '../../utils/notification'
 import { formatTimestamp } from '../../utils/timeUtil'

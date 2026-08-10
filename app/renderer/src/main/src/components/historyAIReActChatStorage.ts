@@ -1,6 +1,6 @@
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
-import { AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 
 const DEFAULT_HISTORY_AI_REVIEW_POLICY: NonNullable<AIStartParams['ReviewPolicy']> =

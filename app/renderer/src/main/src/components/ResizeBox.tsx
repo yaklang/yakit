@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ResizeLine } from './ResizeLine'
-import { useDebounce, useDebounceFn, useMemoizedFn, useThrottleFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
 
 import './ResizeBox.css'
@@ -48,9 +48,9 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
   const maskRef = useRef(null)
   const [bodyWidth, setBodyWidth] = useState<number>(0)
   const [bodyHeight, setBodyHeight] = useState<number>(0)
-  let firstRenderRef = useRef<boolean>(true)
-  let perBodyWidth = useRef<number>()
-  let perBodyHeight = useRef<number>()
+  const firstRenderRef = useRef<boolean>(true)
+  const perBodyWidth = useRef<number>()
+  const perBodyHeight = useRef<number>()
 
   const moveSize = useMemoizedFn((size: number) => {
     if (!firstRef || !firstRef.current) return

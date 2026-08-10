@@ -1,4 +1,4 @@
-import { AIForge } from '../ai-agent/type/forge'
+import type { AIForge } from '../ai-agent/type/forge'
 
 export interface AIForgeProps {
   pageId: string

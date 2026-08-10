@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { throttle } from 'lodash-es'
-import { IMonacoEditor } from '@/utils/editors'
+import type { IMonacoEditor } from '@/utils/editors'
 
 function getSelectionByteCount(editor: IMonacoEditor): number {
   const selection = editor.getSelection()

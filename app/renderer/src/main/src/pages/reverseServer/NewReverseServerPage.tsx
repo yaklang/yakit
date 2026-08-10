@@ -1,22 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react'
+import type React from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Form, Divider, PageHeader, Typography, Row, Col } from 'antd'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { randomString } from '../../utils/randomUtil'
 import { failed, warn, info } from '../../utils/notification'
-import { ExecResultLog } from '../invoker/batch/ExecMessageViewer'
+import type { ExecResultLog } from '../invoker/batch/ExecMessageViewer'
 import { ExtractExecResultMessage } from '../../components/yakitLogSchema'
-import { ReverseNotification, ReverseTable } from './ReverseTable'
+import { type ReverseNotification, ReverseTable } from './ReverseTable'
 import {
   convertRequest,
-  ParamsRefProps,
+  type ParamsRefProps,
   PayloadCode,
   PayloadForm,
-  YsoGeneraterRequest,
+  type YsoGeneraterRequest,
 } from '../payloadGenerater/NewJavaPayloadPage'
 import { getRemoteValue } from '@/utils/kv'
 
 import './reverseServerPage.scss'
-import { NetInterface } from '@/models/Traffic'
+import type { NetInterface } from '@/models/Traffic'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -55,7 +56,7 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
   const [remoteIp, setRemoteIp] = useState<string>('')
 
   const startFacadeServer = useMemoizedFn((params: SettingReverseParamsInfo, remoteIp: string) => {
-    let startFacadeParams: FacadesRequest = {
+    const startFacadeParams: FacadesRequest = {
       ...params,
       GenerateClassParams: { Gadget: '', Class: '', Options: [] },
       Token: token,
@@ -134,7 +135,7 @@ export const SettingReverseServer: React.FC<SettingReverseServerProp> = (props) 
 
     setLoading(true)
     getRemoteValue(BRIDGE_ADDR).then((addr: string) => {
-      if (!!addr) {
+      if (addr) {
         initParams.BridgeParam.Addr = addr
         getRemoteValue(BRIDGE_SECRET)
           .then((secret: string) => {

@@ -1,9 +1,10 @@
-import React, { ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
-import { PluginStarsRequest, apiFetchOnlinePluginInfo, apiPluginStars } from '@/pages/plugins/utils'
-import { API } from '@/services/swagger/resposeType'
-import { YakScript } from '@/pages/invoker/schema'
+import { type PluginStarsRequest, apiFetchOnlinePluginInfo, apiPluginStars } from '@/pages/plugins/utils'
+import type { API } from '@/services/swagger/resposeType'
+import type { YakScript } from '@/pages/invoker/schema'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -17,13 +18,13 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { yakitNotify } from '@/utils/notification'
 import { Tooltip } from 'antd'
 import { SolidPluscircleIcon, SolidThumbupIcon } from '@/assets/icon/solid'
-import { HubExtraOperate, HubExtraOperateRef } from '../hubExtraOperate/HubExtraOperate'
+import { HubExtraOperate, type HubExtraOperateRef } from '../hubExtraOperate/HubExtraOperate'
 import { v4 as uuidv4 } from 'uuid'
 import { grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail } from '../utils/grpc'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { PluginSourceType, PluginToDetailInfo } from '../type'
+import type { PluginSourceType, PluginToDetailInfo } from '../type'
 import { thousandthConversion } from '@/pages/plugins/pluginReducer'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { PluginDetailAvailableTab, PluginOperateHint } from '../defaultConstant'
 import emiter from '@/utils/eventBus/eventBus'
 import { getRemoteValue } from '@/utils/kv'
@@ -31,13 +32,13 @@ import { useStore } from '@/store'
 import { HubDetailHeader } from '../hubExtraOperate/funcTemplate'
 import { FooterExtraBtn } from '../pluginHubList/funcTemplate'
 import { LocalPluginExecute } from '@/pages/plugins/local/LocalPluginExecute'
-import { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/PluginEditor'
+import type { ModifyPluginCallback } from '@/pages/pluginEditor/pluginEditor/PluginEditor'
 import { ModifyYakitPlugin } from '@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin'
 import { RemotePluginGV } from '@/enums/plugin'
 import { NoPromptHint } from '../utilsUI/UtilsTemplate'
 import { PluginLog } from '../pluginLog/PluginLog'
 import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript'
-import { PluginLogRefProps } from '../pluginLog/PluginLogType'
+import type { PluginLogRefProps } from '../pluginLog/PluginLogType'
 import { PluginEnvVariables } from '../pluginEnvVariables/PluginEnvVariables'
 import { getRemoteHttpSettingGV } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -319,7 +320,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
 
           if (onlineTab || localTab) {
             if (!banUpdateActiveTab) {
-              let tab = localTab ? 'exectue' : onlineTab ? 'online' : ''
+              const tab = localTab ? 'exectue' : onlineTab ? 'online' : ''
 
               // 获取主动跳转路由数组
               const multiTab = autoOpenDetailTab ? autoOpenDetailTab.split('/') : []
@@ -459,7 +460,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const info = localPlugin ? { name: localPlugin.ScriptName, id: `${localPlugin.Id}` } : undefined
         setLocalPlugin(undefined)
         if (PluginDetailAvailableTab.local.includes(activeKey)) {
-          if (!!onlinePlugin) onTabChange('online')
+          if (onlinePlugin) onTabChange('online')
           else onError(true, false, t('PluginHubDetail.selectPluginDetail'))
         }
         try {
@@ -471,7 +472,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const info = onlinePlugin ? { name: onlinePlugin.script_name, uuid: onlinePlugin.uuid } : undefined
         setOnlinePlugin(undefined)
         if (PluginDetailAvailableTab.online.includes(activeKey)) {
-          if (!!localPlugin) onTabChange('exectue')
+          if (localPlugin) onTabChange('exectue')
           else onError(true, false, t('PluginHubDetail.selectPluginDetail'))
         }
         try {
@@ -611,6 +612,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
           }
         }
         if (opType === 'copy') {
+          // ignore
         }
 
         // 关闭编辑插件弹窗
@@ -733,7 +735,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
               renderTabBar={bar}
             >
               <TabPane tab={t('PluginHubDetail.online')} key="online" disabled={!hasOnline}>
-                {!!onlinePlugin ? (
+                {onlinePlugin ? (
                   <div className={styles['tab-pane-wrapper']}>
                     <HubDetailHeader
                       pluginName={onlinePlugin?.script_name || '-'}
@@ -771,7 +773,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 <div className={styles['tab-pane-exectue']}>
                   {!loading ? (
                     <>
-                      {!!localPlugin ? (
+                      {localPlugin ? (
                         <LocalPluginExecute
                           plugin={localPlugin}
                           headExtraNode={extraNode}
@@ -793,7 +795,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 </div>
               </TabPane>
               <TabPane tab={t('PluginHubDetail.local')} key="local" disabled={!hasLocal}>
-                {!!localPlugin ? (
+                {localPlugin ? (
                   <div className={styles['tab-pane-wrapper']}>
                     <HubDetailHeader
                       pluginName={localPlugin?.ScriptName || '-'}
@@ -857,7 +859,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
               </TabPane>
 
               <TabPane tab={t('PluginHubDetail.setting')} key="setting" disabled={!hasLocal}>
-                {!!localPlugin ? (
+                {localPlugin ? (
                   <div className={styles['tab-pane-wrapper']}>
                     <HubDetailHeader
                       pluginName={localPlugin?.ScriptName || '-'}

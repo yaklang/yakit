@@ -1,4 +1,4 @@
-import { FiltersItemProps } from '../TableVirtualResize/TableVirtualResizeType'
+import type { FiltersItemProps } from '../TableVirtualResize/TableVirtualResizeType'
 
 type TagsCodeLike = {
   Value?: string

@@ -1,5 +1,4 @@
-import React from 'react'
-import { KVPair } from '@/models/kv'
+import type { KVPair } from '@/models/kv'
 
 export interface TrafficSession {
   Id: number

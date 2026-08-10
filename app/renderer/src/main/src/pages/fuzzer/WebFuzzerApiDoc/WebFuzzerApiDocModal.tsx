@@ -2,10 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 import styles from './WebFuzzerApiDoc.module.scss'
 import {
-  ApiDocInfo,
-  ApiDocOperationDetail,
-  ApiDocOperationParameter,
-  ApiDocOperationSummary,
+  type ApiDocInfo,
+  type ApiDocOperationDetail,
+  type ApiDocOperationParameter,
+  type ApiDocOperationSummary,
   getApiMethodTagStyle,
   getExtra,
   openApiRequest,

@@ -1,6 +1,6 @@
-import React from 'react'
+import type React from 'react'
 import { Axis, Legend, Chart, Coord, Geom, Tooltip } from 'bizcharts'
-import { GraphProps } from './base'
+import type { GraphProps } from './base'
 
 export const BarGraph: React.FC<GraphProps> = (g) => {
   const color = g.color || []

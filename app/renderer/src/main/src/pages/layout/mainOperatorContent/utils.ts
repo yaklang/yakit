@@ -1,6 +1,6 @@
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 
 const { ipcRenderer } = window.require('electron')
 

@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import styles from './DataStatistics.module.scss'
 import { failed, yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
@@ -12,21 +13,21 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import numeral from 'numeral'
-import moment, { Moment } from 'moment'
+import moment, { type Moment } from 'moment'
 import 'moment/locale/zh-cn'
 import locale from 'antd/es/date-picker/locale/zh_CN'
-import { RangePickerProps } from 'antd/lib/date-picker'
+import type { RangePickerProps } from 'antd/lib/date-picker'
 import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import { message } from 'antd'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { defSort } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { IPTable, UserTable } from './UserTable/UserTable'
-import { IPTableRefProps, UserTableRefProps } from './UserTable/UserTableType'
+import type { IPTableRefProps, UserTableRefProps } from './UserTable/UserTableType'
 import { isEnpriTrace } from '@/utils/envfile'
 import { useTheme } from '@/hook/useTheme'
 const { RangePicker } = YakitDatePicker
@@ -168,8 +169,8 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
     })
       .then((res: API.TouristActiveResponse) => {
         if (res.data) {
-          let XData: string[] = []
-          let YData: number[] = []
+          const XData: string[] = []
+          const YData: number[] = []
           res.data.forEach((item) => {
             XData.push(item.searchTime)
             YData.push(item.count)
@@ -334,8 +335,8 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
     })
       .then((res: API.TouristIncrResponse) => {
         if (res.data) {
-          let XData: string[] = []
-          let YData: number[] = []
+          const XData: string[] = []
+          const YData: number[] = []
           res.data.forEach((item) => {
             XData.push(item.searchTime)
             YData.push(item.count)
@@ -363,8 +364,8 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
     })
       .then((res: API.TouristIncrResponse) => {
         if (res.data) {
-          let XData: string[] = []
-          let YData: string[] = []
+          const XData: string[] = []
+          const YData: string[] = []
           res.data.forEach((item) => {
             XData.push(item.searchTime)
             YData.push(minutesToHours(item.count))
@@ -840,11 +841,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const getPageSize = 20000
     const includeField = []
     // 最大请求条数
-    let pageSize = 30
+    const pageSize = 30
     // 总共的条数
     const total = activeTab === 'ip' ? ipTableRef.current?.getTotal() : userTableRef.current?.getTotal()
     // 需要多少次请求
-    let count = Math.ceil((total || 0) / getPageSize)
+    const count = Math.ceil((total || 0) / getPageSize)
     const resultArray: number[] = []
     for (let i = 1; i <= count; i++) {
       resultArray.push(i)
@@ -899,7 +900,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
               onClick={() => {
                 const page = item.page
                 // 最大请求条数
-                let exportParams = {
+                const exportParams = {
                   ...params,
                   includeField,
                   exportType: 'xml',
@@ -1217,7 +1218,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                             } else {
                               secondDate = moment(secondDate).endOf('day')
                             }
-                            let time = {
+                            const time = {
                               startTime: moment(firstDate).unix(),
                               endTime: moment(secondDate).unix(),
                             }

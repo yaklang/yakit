@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef, ReactNode, useMemo, forwardRef, useImperativeHandle } from 'react'
+import type React from 'react'
+import { useEffect, useState, useRef, type ReactNode, useMemo, forwardRef, useImperativeHandle } from 'react'
 import ReactResizeDetector from 'react-resize-detector'
 import { useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList } from 'ahooks'
 import { LoadingOutlined } from '@ant-design/icons'
@@ -64,9 +65,9 @@ function RollingLoadListInner<T>(props: RollingLoadListProps<T>, ref: React.Forw
   const [computeOriginalList, setComputeOriginalList] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
-  let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
-  let preLength = useRef<number>(0)
-  let preData = useRef<any>([])
+  const indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
+  const preLength = useRef<number>(0)
+  const preData = useRef<any>([])
   useImperativeHandle(
     ref,
     () => ({
@@ -81,7 +82,7 @@ function RollingLoadListInner<T>(props: RollingLoadListProps<T>, ref: React.Forw
     preData.current = []
     setComputeOriginalList(!computeOriginalList)
   })
-  let originalList = useMemo(() => {
+  const originalList = useMemo(() => {
     if (!col) return []
     if (data.length < preLength.current) {
       resetPre()

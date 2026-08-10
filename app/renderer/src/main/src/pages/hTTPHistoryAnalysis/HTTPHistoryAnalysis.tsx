@@ -1,4 +1,4 @@
-import React, { ReactNode, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import React, { type ReactNode, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import {
   useCreation,
@@ -30,21 +30,20 @@ import {
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem } from '../fuzzer/HTTPFuzzerHotPatch'
+import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '../fuzzer/HTTPFuzzerHotPatch'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { footerTabs, HotPatchDefaultContent } from '@/defaultConstants/hTTPHistoryAnalysis'
 import { AnalyzeHotPatchTempDefault } from '@/defaultConstants/mitm'
-import { MITMContentReplacerRule, MITMRulePropRef } from '../mitm/MITMRule/MITMRuleType'
+import type { MITMContentReplacerRule, MITMRulePropRef } from '../mitm/MITMRule/MITMRuleType'
 import { yakitNotify } from '@/utils/notification'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import { useStore } from '@/store/mitmState'
-import { ExpandAndRetractExcessiveState } from '../plugins/operator/expandAndRetract/ExpandAndRetract'
+import type { ExpandAndRetractExcessiveState } from '../plugins/operator/expandAndRetract/ExpandAndRetract'
 import { PluginExecuteProgress } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { HorizontalScrollCard } from '../plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { MITMConsts } from '../mitm/MITMConsts'
-import { HTTPFlow, ImportExportProgress } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import { type HTTPFlow, ImportExportProgress } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { useCampare } from '@/hook/useCompare/useCompare'
@@ -56,14 +55,14 @@ import {
 } from '@/utils/openWebsite'
 import { parseStatusCodes, sorterFunction } from '../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import emiter from '@/utils/eventBus/eventBus'
-import { HTTPHistoryAnalysisPageInfo, PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type HTTPHistoryAnalysisPageInfo, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
 import { shallow } from 'zustand/shallow'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
-import { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import { type IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
+import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import { Uint8ArrayToString } from '@/utils/str'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -89,7 +88,7 @@ import {
   MatcherItem,
   onFilterEmptySubMatcher,
 } from '../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard'
-import {
+import type {
   FilterEmptySubMatcherFunctionProps,
   HTTPResponseMatcher,
   MatcherActiveKey,
@@ -100,7 +99,7 @@ import {
   matcherTypeList,
 } from '../fuzzer/MatcherAndExtractionCard/constants'
 import { Divider, Tooltip } from 'antd'
-import { YakitPopover, YakitPopoverProp } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { YakitPopover, type YakitPopoverProp } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { getAction, ByteCountTag } from '../fuzzer/HTTPFuzzerPage'
 import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
 import { HTTPFlowDetailMini } from '@/components/HTTPFlowDetail'
@@ -443,7 +442,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     })
   }, [])
   const ResizeBoxProps = useCreation(() => {
-    let p = cloneDeep(lastRatio)
+    const p = cloneDeep(lastRatio)
 
     if (fullScreenFirstNode) {
       p.secondRatio = '0%'
@@ -702,7 +701,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
           ? matchersList.map((ele) => ({
               ...ele,
               Action: getAction(ele.filterMode),
-              HitColor: !!getAction(ele.filterMode) ? '' : ele.HitColor, // 只有仅匹配才传颜色
+              HitColor: getAction(ele.filterMode) ? '' : ele.HitColor, // 只有仅匹配才传颜色
             }))
           : [],
     }

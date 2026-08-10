@@ -1,5 +1,5 @@
-import React from 'react'
-import { ReportItem, ReportJsonKindData } from './schema'
+import type React from 'react'
+import type { ReportItem } from './schema'
 import { SafeMarkdown } from './markdownRender'
 import { YakEditor } from '../../../utils/editors'
 import { AutoCard } from '../../../components/AutoCard'
@@ -65,11 +65,11 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
         if (newData.type === 'report-cover') {
           return <div style={{ height: 0 }}></div>
         } else if (newData.type === 'bar-graph') {
-          let color = newData?.color
-          let name = (newData?.data || []).map((item) => item.name)
-          let value = (newData?.data || []).map((item) => item.value)
-          let title = newData?.title
-          let obj = { name, value, color, title }
+          const color = newData?.color
+          const name = (newData?.data || []).map((item) => item.name)
+          const value = (newData?.data || []).map((item) => item.value)
+          const title = newData?.title
+          const obj = { name, value, color, title }
           return <VerticalOptionBar content={obj} />
         } else if (newData.type === 'pie-graph') {
           return <HollowPie data={newData.data} title={newData.title} />
@@ -93,9 +93,10 @@ export const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
                 return <VerticalOptionBar content={content} />
               case 'year-cve':
                 return <StackedVerticalBar content={content} />
-              case 'card':
+              case 'card': {
                 const dataTitle = content?.name_verbose || content?.name || ''
                 return <EchartsCard dataTitle={dataTitle} dataSource={data} />
+              }
               case 'fix-array-list':
                 return <FoldRuleCard content={content} />
               case 'risk-list':

@@ -1,4 +1,5 @@
-import React, { memo } from 'react'
+import type React from 'react'
+import { memo } from 'react'
 import { Progress } from 'antd'
 import styles from './YakitUploadModal.module.scss'
 import { SolidDocumentdownloadIcon } from '@/assets/icon/solid'

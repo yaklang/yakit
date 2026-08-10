@@ -1,6 +1,6 @@
 import { useNodeViewContext } from '@prosemirror-adapter/react'
 import styles from './MilkdownHr.module.scss'
-import React from 'react'
+import type React from 'react'
 
 export const MilkdownHr: React.FC = () => {
   const { contentRef } = useNodeViewContext()

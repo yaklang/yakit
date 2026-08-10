@@ -1,5 +1,4 @@
-import { SpinProps } from 'antd'
-import { SizeType } from 'antd/lib/config-provider/SizeContext'
+import type { SpinProps } from 'antd'
 
 /**
  * @description YakitAutoCompleteProps 的属性

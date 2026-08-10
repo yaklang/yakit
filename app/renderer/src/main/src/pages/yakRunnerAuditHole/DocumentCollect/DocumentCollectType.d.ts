@@ -1,6 +1,6 @@
 import type { DataNode } from 'antd/es/tree'
-import { EventDataNode } from 'antd/lib/tree'
-import { SSARisksFilter } from '../YakitAuditHoleTable/YakitAuditHoleTableType'
+import { type SSARisksFilter } from '../YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { YakURLResource } from '@/pages/yakURLTree/data'
 
 export interface DocumentCollectProps {
   query: SSARisksFilter

@@ -1,22 +1,20 @@
-import React, { useMemo, useState } from 'react'
+import type React from 'react'
+import { useMemo, useState } from 'react'
 import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons'
-import { CopyableField } from '../../utils/inputUtil'
 import { useCreation, useDebounce, useDebounceFn, useGetState, useMemoizedFn } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
 
 import './reverseTable.scss'
-import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { FiltersItemProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitCopyText } from '@/components/yakitUI/YakitCopyText/YakitCopyText'
 import { Uint8ArrayToString } from '@/utils/str'
-import { isEmptyObject } from '@/utils/tool'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const DefaultType = (t: TFunction): { label: string; value: string }[] => [
   { value: 'rmi', label: t('ReverseTable.rmiConnection') },
@@ -69,7 +67,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
   const [selectRow, setSelectRow] = useState<ReverseNotification>()
   const [width, setWidth] = useState<number>(1000)
 
-  let newData: ReverseNotification[] = useMemo(() => {
+  const newData: ReverseNotification[] = useMemo(() => {
     // setLoading(true)
     let lists = [...data]
     if (hasToken) lists = lists.filter((item) => !!item.token)
@@ -108,7 +106,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
   ).run
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }
@@ -196,7 +194,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                           <YakitButton
                             type="text"
                             className="extra-opt"
-                            icon={!!isExtra ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+                            icon={isExtra ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                             onClick={() => {
                               if (onExtra) onExtra()
                             }}

@@ -1,5 +1,5 @@
 import { SystemInfo } from '@/constants/hardware'
-import { YakitKeyBoard, YakitKeyMod } from './keyboard'
+import { type YakitKeyBoard, YakitKeyMod } from './keyboard'
 
 export const keyToSameUIMaps: Partial<Record<YakitKeyBoard, string>> = {
   Enter: '↵',

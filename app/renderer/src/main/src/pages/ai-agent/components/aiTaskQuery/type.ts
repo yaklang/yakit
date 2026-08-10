@@ -1,4 +1,4 @@
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface AITaskQueryProps {}
 

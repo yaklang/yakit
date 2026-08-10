@@ -1,5 +1,5 @@
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import {
+import React, { type ReactNode, useEffect, useRef, useState } from 'react'
+import type {
   AIMCPListItemProps,
   AIMCPListProps,
   AIMCPProps,
@@ -8,7 +8,7 @@ import {
   AIMCPToolListProps,
 } from './type'
 import styles from './AIMCP.module.scss'
-import {
+import type {
   GetAllMCPServersRequest,
   GetAllMCPServersResponse,
   MCPServer,
@@ -38,7 +38,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import classNames from 'classnames'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -277,7 +277,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
       const newPage = +res.Pagination.Page
       const length = newPage === 1 ? res.MCPServers.length : res.MCPServers.length + response.MCPServers.length
       setHasMore(length < +res.Total)
-      let newRes: GetAllMCPServersResponse = {
+      const newRes: GetAllMCPServersResponse = {
         MCPServers: newPage === 1 ? res?.MCPServers : [...response.MCPServers, ...(res?.MCPServers || [])],
         Pagination: res?.Pagination || {
           ...genDefaultPagination(20),
@@ -510,7 +510,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
     }
   }, [item.Type, item.URL, item.Command, i18nRefresh])
   const localModelMenu: YakitMenuItemType[] = useCreation(() => {
-    let menu: YakitMenuItemType[] = [
+    const menu: YakitMenuItemType[] = [
       {
         key: 'edit',
         label: t('YakitButton.edit'),
@@ -531,7 +531,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         <div className={styles['ai-mcp-heard-left']}>
           <div className={styles['ai-mcp-heard-left-name']}>{item.Name}</div>
           {infoByType.typeNode}
-          {!!item.ErrorMsg ? (
+          {item.ErrorMsg ? (
             <Tooltip title={item.ErrorMsg}>
               <YakitTag size="small" color="danger" fullRadius>
                 {t('AIMCP.toolFetchFailed')}

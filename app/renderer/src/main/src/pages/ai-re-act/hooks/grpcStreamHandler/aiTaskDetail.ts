@@ -57,7 +57,7 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
       dynamic: [],
     },
   }
-  if (!!fixed?.tools) {
+  if (fixed?.tools) {
     for (const item of fixed.tools) {
       switch (item.category) {
         case 'tool':
@@ -78,14 +78,14 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
   // if (!!fixed?.mcp_servers) {
   //   itemData.mcpServices.fixed = fixed.mcp_servers
   // }
-  if (!!fixed?.forges) {
+  if (fixed?.forges) {
     itemData.forges.fixed = fixed.forges
   }
-  if (!!fixed?.skills) {
+  if (fixed?.skills) {
     itemData.skills.fixed = fixed.skills
   }
 
-  if (!!dynamic?.tools) {
+  if (dynamic?.tools) {
     for (const item of dynamic.tools) {
       switch (item.category) {
         case 'tool':
@@ -102,10 +102,10 @@ const handleCapabilityInventory: AIMessageHandler = (requestInfo) => {
       }
     }
   }
-  if (!!dynamic?.skills) {
+  if (dynamic?.skills) {
     itemData.skills.dynamic = dynamic.skills
   }
-  if (!!dynamic?.forges) {
+  if (dynamic?.forges) {
     itemData.forges.dynamic = dynamic.forges
   }
 

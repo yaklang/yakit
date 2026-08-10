@@ -1,4 +1,4 @@
-import { SetStateAction } from 'react'
+import type { SetStateAction } from 'react'
 import type { AIChatData } from '../type/aiChat'
 import type { AIChatQSData, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIModelTypeEnum } from '../defaultConstant'
@@ -162,7 +162,7 @@ export class ChatDataStore {
     const result = { ...prev }
 
     for (const key in updateData) {
-      if (updateData.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(updateData, key)) {
         const updateValue = updateData[key]
 
         if (getExactType(updateValue) === 'Object' && !!updateValue) {

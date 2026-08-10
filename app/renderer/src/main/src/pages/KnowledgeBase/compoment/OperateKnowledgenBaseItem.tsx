@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useEffect } from 'react'
+import { type Dispatch, type FC, type SetStateAction, useEffect } from 'react'
 
 import { SolidDotsverticalIcon } from '@/assets/icon/solid'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -6,7 +6,7 @@ import { knowledgeTypeOptions, manageMenuList } from '../utils'
 import { useRequest, useSafeState, useUpdateEffect } from 'ahooks'
 
 import styles from '../knowledgeBase.module.scss'
-import { KnowledgeBaseItem, useKnowledgeBase } from '../hooks/useKnowledgeBase'
+import { type KnowledgeBaseItem, useKnowledgeBase } from '../hooks/useKnowledgeBase'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { failed, success } from '@/utils/notification'
 
@@ -15,8 +15,8 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { Form } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { TKnowledgeBaseSidebarProps } from './KnowledgeBaseSidebar'
-import useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
+import type { TKnowledgeBaseSidebarProps } from './KnowledgeBaseSidebar'
+import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
 import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 

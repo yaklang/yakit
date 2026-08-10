@@ -1,4 +1,4 @@
-import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIChatQSData, type AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { memo, type FC } from 'react'
 import ChatCard from '../ChatCard'
 import styles from './AiFailPlanCard.module.scss'

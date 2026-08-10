@@ -1,6 +1,6 @@
-import { Cascader, CascaderProps } from 'antd'
+import { Cascader, type CascaderProps } from 'antd'
 import styles from './YakitCascader.module.scss'
-import { BaseOptionType, DefaultOptionType } from 'antd/lib/cascader'
+import type { BaseOptionType, DefaultOptionType } from 'antd/lib/cascader'
 
 type YakitCascaderProps<OptionType> = CascaderProps<OptionType> & {}
 const YakitCascader = <OptionType extends DefaultOptionType | BaseOptionType = DefaultOptionType>(

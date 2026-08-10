@@ -1,10 +1,14 @@
 import { AutoComplete } from 'antd'
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { YakitAutoCompleteCacheDataHistoryProps, YakitAutoCompleteProps } from './YakitAutoCompleteType'
+import type {
+  YakitAutoCompleteCacheDataHistoryProps,
+  YakitAutoCompleteProps,
+  YakitAutoCompleteRefProps,
+} from './YakitAutoCompleteType'
 import styles from './YakitAutoComplete.module.scss'
 import classNames from 'classnames'
 import { useInViewport, useMemoizedFn } from 'ahooks'
-import { YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase } from '../utils'
+import { type YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase } from '../utils'
 import { OutlineXIcon } from '@/assets/icon/outline'
 export const defYakitAutoCompleteRef = {
   onGetRemoteValues: () => ({ options: [], defaultValue: '' }),
@@ -18,14 +22,14 @@ export const defYakitAutoCompleteRef = {
  * @param {string} cacheHistoryDataKey 用来缓存/获取历史数据的setRemoteValue/getRemoteValue,默认缓存 options 和 defaultValue
  * @param {number} cacheHistoryListLength 缓存的历史记录list长度
  */
-export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forwardRef((props, ref) => {
+export const YakitAutoComplete = React.forwardRef<YakitAutoCompleteRefProps, YakitAutoCompleteProps>((props, ref) => {
   const {
     size,
     className,
     cacheHistoryDataKey,
     cacheHistoryListLength = 10,
     isCacheDefaultValue = true,
-    // ref: autoRef = null,
+    ref: _ref,
     initValue = '',
     wrapperStyle,
     isInit = true,
@@ -178,3 +182,5 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
     </div>
   )
 })
+
+YakitAutoComplete.displayName = 'YakitAutoComplete'

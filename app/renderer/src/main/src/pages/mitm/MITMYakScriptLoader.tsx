@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Card, Col, Row, Statistic, Tooltip } from 'antd'
-import { YakExecutorParam } from '../invoker/YakExecutorParams'
-import { StatusCardProps } from '../yakitStore/viewers/base'
-import { YakScript } from '../invoker/schema'
+import type { YakExecutorParam } from '../invoker/YakExecutorParams'
+import type { StatusCardProps } from '../yakitStore/viewers/base'
+import type { YakScript } from '../invoker/schema'
 import { failed } from '../../utils/notification'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import style from './MITMYakScriptLoader.module.scss'
@@ -11,8 +11,8 @@ import { PluginLocalInfoIcon } from '../customizeMenu/CustomizeMenu'
 import classNames from 'classnames'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { grpcFetchLocalPluginDetail } from '../pluginHub/utils/grpc'
-import { YakParamProps } from '../plugins/pluginsType'
-import {
+import type { YakParamProps } from '../plugins/pluginsType'
+import type {
   CustomPluginExecuteFormValue,
   YakExtraParamProps,
 } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
@@ -28,20 +28,20 @@ import {
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { SolidDotsverticalIcon, SolidLightningboltIcon } from '@/assets/icon/solid'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakEditor } from '@/utils/editors'
-import { MitmStatus } from './MITMPage'
+import type { MitmStatus } from './MITMPage'
 import { AuthorImg } from '../plugins/funcTemplate'
 import YakitLogo from '@/assets/yakitLogo.png'
 import UnLogin from '@/assets/unLogin.png'
 import { pluginTypeToName } from '../plugins/builtInData'
 import MITMContext from './Context/MITMContext'
-import { grpcMITMClearPluginCache, grpcMITMRemoveHook, MITMRemoveHookRequest } from './MITMHacker/utils'
+import { grpcMITMClearPluginCache, grpcMITMRemoveHook, type MITMRemoveHookRequest } from './MITMHacker/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { debugToPrintLogs } from '@/utils/logCollection'
-import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { ManualHijackTypeProps } from './MITMManual/MITMManualType'
+import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { ManualHijackTypeProps } from './MITMManual/MITMManualType'
 import { cloneDeep } from 'lodash'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
@@ -112,7 +112,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
           const arr: YakExecutorParam[] =
             JSONParseLog(res, { page: 'MITMYakScriptLoader', fun: 'mitm_has_params' }) || []
           arr.forEach((item) => {
-            if (initFormValue.hasOwnProperty(item.Key)) {
+            if (Object.prototype.hasOwnProperty.call(initFormValue, item.Key)) {
               initFormValue[item.Key] = item.Value
             }
           })
@@ -341,7 +341,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     return (
       <AuthorImg
         src={HeadImg || UnLogin}
-        builtInIcon={!!OnlineOfficial ? 'official' : undefined}
+        builtInIcon={OnlineOfficial ? 'official' : undefined}
         wrapperClassName={style['plugin-local-headImg']}
       />
     )

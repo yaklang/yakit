@@ -1,20 +1,21 @@
-import React, { ReactNode, useEffect, useState } from 'react'
-import { Button, Input, Radio, Avatar, Spin } from 'antd'
+import type React from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
+import { Button, Input, Radio, Avatar } from 'antd'
 import locale from 'antd/es/date-picker/locale/zh_CN'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { useDebounceFn, useGetState } from 'ahooks'
 import moment from 'moment'
 import { failed, warn } from '@/utils/notification'
 import { NetWorkApi } from '@/services/fetch'
-import { PaginationSchema } from '@/pages/invoker/schema'
+import type { PaginationSchema } from '@/pages/invoker/schema'
 import { ControlMyselfIcon, ControlOtherIcon } from '@/assets/icons'
 import styles from './DynamicControl.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ContentUploadInput } from '@/components/functionTemplate/ContentUploadTextArea'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { VirtualTable } from './VirtualTable'
-import { VirtualColumns } from './VirtualTable'
-import { DynamicStatusProps, useStore, yakitDynamicStatus } from '@/store'
+import type { VirtualColumns } from './VirtualTable'
+import { type DynamicStatusProps, useStore, yakitDynamicStatus } from '@/store'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { getReleaseEditionName, getRemoteHttpSettingGV } from '@/utils/envfile'
@@ -103,7 +104,7 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
   }
 
   const run = () => {
-    /* 
+    /*
             受控端步骤
             1.通过/remote/tunnel获取ip与password
         */
@@ -135,7 +136,7 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
                   const { auth, id, note, port, host } = data[0]
                   const { pubpem, secret } = JSON.parse(auth)
                   setRemoteValue('REMOTE_OPERATION_ID', id)
-                  let resultObj = {
+                  const resultObj = {
                     id,
                     note,
                     port,
@@ -247,7 +248,7 @@ export const ControlOther: React.FC<ControlOtherProps> = (props) => {
           getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) return
             const value = JSON.parse(setting)
-            let url = value.BaseUrl
+            const url = value.BaseUrl
             // 切换到自动远程连接
             runControl(JSON.stringify(resultObj), url)
           })
@@ -281,7 +282,7 @@ export const ControlOther: React.FC<ControlOtherProps> = (props) => {
               let Targets = res
               // 处理Excel格式文件
               if (f.type !== 'text/plain') {
-                let str = JSON.stringify(res)
+                const str = JSON.stringify(res)
                 Targets = str.replace(/(\[|\]|\{|\}|\")/g, '')
               }
               setTextAreaValue(Targets)
@@ -444,7 +445,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
       })
         .then((res) => {
           if (Array.isArray(res?.data)) {
-            setData([...data, ...res?.data])
+            setData([...data, ...res.data])
           }
           setPagination({ ...pagination, Limit: res.pagemeta.limit, Page: res.pagemeta.page })
           setTotal(res.pagemeta.total)
@@ -658,6 +659,7 @@ export const remoteOperation = (status: boolean, dynamicStatus: DynamicStatusPro
     })
       .then((data) => {
         if (data.ok) {
+          // ignore
         }
       })
       .catch((err) => {
@@ -677,8 +679,8 @@ export const unReadable = (resultObj: ResultObjProps) => {
 /** 数据内容可读 */
 export const readable = (v: string) => {
   try {
-    let arr = v.split(',')
-    let obj: ResultObjProps = {
+    const arr = v.split(',')
+    const obj: ResultObjProps = {
       id: arr[0],
       note: arr[1],
       port: parseInt(arr[2]),

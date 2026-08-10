@@ -1,4 +1,4 @@
-import { GraphInfoProps } from './RightAuditDetail'
+import type { GraphInfoProps } from './RightAuditDetail'
 
 // Map审计结果详情列表
 export const resultMap: Map<string, GraphInfoProps[]> = new Map()

@@ -1,6 +1,6 @@
-import { HybridScanTask, HybridScanTaskSourceType } from '@/models/HybridScan'
+import type { HybridScanTask, HybridScanTaskSourceType } from '@/models/HybridScan'
 import { yakitNotify } from '@/utils/notification'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 const { ipcRenderer } = window.require('electron')
 
 interface HybridScanTaskFilter {

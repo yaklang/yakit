@@ -1,4 +1,4 @@
-import { OutlineCameraIcon, OutlineLightbulbIcon, OutlinePaperclipIcon } from '@/assets/icon/outline'
+import { OutlineLightbulbIcon, OutlinePaperclipIcon } from '@/assets/icon/outline'
 import {
   IconHeading1,
   IconHeading2,
@@ -11,8 +11,8 @@ import {
   IconFlipVertical,
   IconType,
 } from './icon/icon'
-import { ReactNode } from 'react'
-import { TFunction } from '@/i18n/useI18nNamespaces'
+import type { ReactNode } from 'react'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 
 export interface MilkdownBaseUtilProps {
   key: string

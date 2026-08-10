@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 export interface YakitTimeLineListProps<T> {
   ref?: React.ForwardedRef<YakitTimeLineListRefProps>
   loading?: boolean

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Button, ButtonProps } from 'antd'
+import { Button, type ButtonProps } from 'antd'
 
 import styles from './yakitButton.module.scss'
 import classNames from 'classnames'

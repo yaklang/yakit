@@ -4,7 +4,7 @@ import { failed, warn, yakitFailed } from './utils/notification'
 import { getRemoteValue, setRemoteValue } from './utils/kv'
 import { useDebounceFn, useInterval, useMemoizedFn } from 'ahooks'
 import { NetWorkApi } from './services/fetch'
-import { API } from './services/swagger/resposeType'
+import type { API } from './services/swagger/resposeType'
 import { useGoogleChromePluginPath, useStore, yakitDynamicStatus } from './store'
 import { refreshToken } from './utils/login'
 import UILayout from './components/layout/UILayout'
@@ -232,7 +232,7 @@ function NewApp() {
 
   const { runNodeList, clearRunNodeList } = useRunNodeStore()
   const handleKillAllRunNode = async () => {
-    let promises: (() => Promise<any>)[] = []
+    const promises: (() => Promise<any>)[] = []
     Array.from(runNodeList).forEach(([key, pid]) => {
       promises.push(() => yakitApp.killRunNode(Number(pid)))
     })

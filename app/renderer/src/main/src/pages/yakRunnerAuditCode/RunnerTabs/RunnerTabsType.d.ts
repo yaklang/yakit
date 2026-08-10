@@ -1,7 +1,7 @@
-import { ReactNode } from 'react'
-import { CodeScoreSmokingEvaluateResponseProps } from '@/pages/plugins/funcTemplateType'
-import { IMonacoEditorMarker } from '@/utils/editorMarkers'
-import { SSARisk } from '../../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import { type ReactNode } from 'react'
+import { type SSARisk } from '../../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { AuditEmiterYakUrlProps } from '../YakRunnerAuditCodeType'
+import type { GraphInfoProps } from '../RightAuditDetail/RightAuditDetail'
 export interface CursorPosition {
   lineNumber: number // 当前行号
   column: number // 当前字符位置

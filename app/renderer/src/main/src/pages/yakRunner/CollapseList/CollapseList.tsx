@@ -1,5 +1,6 @@
-import React, { ReactElement, memo, useEffect, useMemo, useState } from 'react'
-import { CollapseListProp, DefinitionListProps, HelpInfoListProps } from './CollapseListType'
+import type React from 'react'
+import { type ReactElement, memo, useEffect, useMemo, useState } from 'react'
+import type { CollapseListProp, DefinitionListProps, HelpInfoListProps } from './CollapseListType'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { Collapse, Tooltip } from 'antd'
 
@@ -8,14 +9,14 @@ import styles from './CollapseList.module.scss'
 import useStore from '../hooks/useStore'
 import { useMemoizedFn } from 'ahooks'
 import {
-  Range,
-  YaklangLanguageFindResponse,
-  YaklangLanguageSuggestionRequest,
+  type Range,
+  type YaklangLanguageFindResponse,
+  type YaklangLanguageSuggestionRequest,
   getWordWithPointAtPosition,
 } from '@/utils/monacoSpec/yakCompletionSchema'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { IMonacoEditor } from '@/utils/editors'
+import type { IMonacoEditor } from '@/utils/editors'
 import { getModelContext } from '@/utils/monacoSpec/yakEditor'
 import { monaco } from 'react-monaco-editor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -280,7 +281,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
   }, [activeFile?.position])
 
   const getList = useMemo(() => {
-    let list: { key: string; value: ReactElement }[] = []
+    const list: { key: string; value: ReactElement }[] = []
     if (definitionList.length > 0) {
       list.push({ key: 'Definition', value: <>Definition</> })
     }

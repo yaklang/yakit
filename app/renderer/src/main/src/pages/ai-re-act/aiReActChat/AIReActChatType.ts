@@ -1,9 +1,9 @@
-import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
-import { AIChatQSData } from '../hooks/aiRender'
-import { AIInputEvent } from '../hooks/grpcApi'
-import React from 'react'
-import { AIChatTextareaProps, AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
-import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import type { AIChatQSData } from '../hooks/aiRender'
+import type { AIInputEvent } from '../hooks/grpcApi'
+import type React from 'react'
+import type { AIChatTextareaProps, AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
+import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export type DataDetailsButtonProps = Omit<YakitButtonProp, 'icon' | 'children'>
 

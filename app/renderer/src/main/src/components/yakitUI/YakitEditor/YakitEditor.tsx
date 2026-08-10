@@ -2,7 +2,6 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 import {
   useDebounceFn,
   useGetState,
-  useKeyPress,
   useMemoizedFn,
   useThrottleFn,
   useUpdateEffect,
@@ -17,7 +16,7 @@ import '@/utils/monacoSpec/fuzzHTTPMonacoSpec'
 import '@/utils/monacoSpec/yakEditor'
 import '@/utils/monacoSpec/html'
 
-import {
+import type {
   YakitIMonacoEditor,
   YakitEditorProps,
   YakitITextModel,
@@ -28,10 +27,10 @@ import {
   OperationRecordRes,
 } from './YakitEditorType'
 import { showByRightContext } from '../YakitMenu/showByRightContext'
-import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
+import { ConvertYakStaticAnalyzeErrorToMarker, type YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
 import { StringToUint8Array } from '@/utils/str'
 import { baseMenuLists, extraMenuLists } from './contextMenus'
-import { EditorMenu, EditorMenuItemDividerProps, EditorMenuItemProps, EditorMenuItemType } from './EditorMenu'
+import { type EditorMenuItemDividerProps, type EditorMenuItemProps, type EditorMenuItemType } from './EditorMenu'
 import cloneDeep from 'lodash/cloneDeep'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 
@@ -39,23 +38,22 @@ import classNames from 'classnames'
 import styles from './YakitEditor.module.scss'
 import './StaticYakitEditor.scss'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { failed } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { v4 as uuidv4 } from 'uuid'
 import { editor as newEditor } from 'monaco-editor'
-import IModelDecoration = newEditor.IModelDecoration
 import {
-  CountDirectionProps,
-  EditorDetailInfoProps,
+  type CountDirectionProps,
+  type EditorDetailInfoProps,
   HTTPFuzzerClickEditorMenu,
   HTTPFuzzerRangeEditorMenu,
   HTTPFuzzerRangeReadOnlyEditorMenu,
-  SmartDecodeAnchorRect,
+  type SmartDecodeAnchorRect,
   SmartDecodeFloatPanel,
   snapshotRect,
 } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
-import { QueryFuzzerLabelResponseProps } from '@/pages/fuzzer/StringFuzzer'
+import type { QueryFuzzerLabelResponseProps } from '@/pages/fuzzer/StringFuzzer'
 import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from '@/pages/fuzzer/InsertFileFuzzTag'
 import { monacoEditorWrite } from '@/pages/fuzzer/fuzzerTemplates'
 import { onInsertYakFuzzer, showDictsAndSelect } from '@/pages/fuzzer/HTTPFuzzerPage'
@@ -64,10 +62,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { GetPluginLanguage } from '@/pages/plugins/builtInData'
 import { createRoot } from 'react-dom/client'
 import { setEditorContext, YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
-import { YakitRoute } from '@/enums/yakitRoute'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { useStore } from '@/store/editorState'
 import { CloudDownloadIcon } from '@/assets/newIcon'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
@@ -93,12 +88,12 @@ import { applyYakitMonacoTheme } from '@/utils/monacoSpec/theme'
 import { useTheme } from '@/hook/useTheme'
 import { keepSearchNameMapStore, useKeepSearchNameMap } from '@/store/keepSearchName'
 import type { IEvent } from 'monaco-editor'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
 import { editorActionBarStore, useShowActionBar } from '@/store/editorActionBar'
 import { JSONParseLog } from '@/utils/tool'
 import {
-  BinaryFuzztagEntry,
+  type BinaryFuzztagEntry,
   buildChipLabel,
   collapseBinaryFuzztag,
   decodeBinaryTag,
@@ -108,9 +103,10 @@ import {
   registerBinaryFoldEntries,
   unregisterBinaryFoldEntries,
 } from './binaryFuzztag'
-import { BinaryFuzztagHexModal, BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
+import { BinaryFuzztagHexModal, type BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
 import { Base64HexFuzztagModal } from './Base64HexFuzztagModal'
 import { showYakitModal } from '../YakitModal/YakitModalConfirm'
+type IModelDecoration = newEditor.IModelDecoration
 
 // 二进制 Fuzztag 折叠侧表的内存上限：累积保留历史项以支持占位被破坏后再补回的恢复，
 // 用上限淘汰最旧项防止长会话内存膨胀
@@ -494,8 +490,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   // 菜单数组去重
   const menuReduce = useMemoizedFn((array: any[]) => {
-    let newArr: any[] = []
-    let arr: string[] = []
+    const newArr: any[] = []
+    const arr: string[] = []
     array.forEach((item) => {
       if (!arr.includes(item.key)) {
         arr.push(item.key)
@@ -587,9 +583,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const keyToRun: Record<string, string[]> = {}
     const allMenu = { ...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu }
-    for (let key in allMenu) {
+    for (const key in allMenu) {
       const keys: string[] = []
-      for (let item of allMenu[key].menu) {
+      for (const item of allMenu[key].menu) {
         if ((item as EditorMenuItemProps)?.key) keys.push((item as EditorMenuItemProps)?.key)
       }
       keyToRun[key] = keys
@@ -606,7 +602,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       let executeFunc = false
       const menuName = keyPath[keyPath.length - 1]
       const menuItemName = keyPath[0]
-      for (let name in keyToOnRunRef.current) {
+      for (const name in keyToOnRunRef.current) {
         const allMenu = { ...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu }
         if (
           keyToOnRunRef.current[name].includes('customcontextmenu') &&
@@ -618,7 +614,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           let params: YakParamProps[] | undefined
           let isExec: boolean | undefined = undefined
           try {
-            // @ts-ignore
+            // @ts-expect-error 类型定义不完整，需要忽略此行
             allMenu[name].menu[0]?.children.map((item, index) => {
               // 点击一级菜单
               if (menuItemName === 'customcontextmenu' && index === 0) {
@@ -671,10 +667,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           break
         } else if (keyToOnRunRef.current[name].includes('http') && menuName === 'http') {
           // 获取是否为自定义HTTP数据包变形标记
-          let key: string = menuItemName
+          const key: string = menuItemName
           let data: boolean | undefined = undefined
           try {
-            // @ts-ignore
+            // @ts-expect-error 类型定义不完整，需要忽略此行
             allMenu[name].menu[0]?.children.map((item, index) => {
               // 点击一级菜单
               if (menuItemName === 'http' && index === 0) {
@@ -730,7 +726,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       getRemoteValue(editorOperationRecord).then((data) => {
         try {
           if (!data) return
-          let obj: OperationRecordRes = JSONParseLog(data, { page: 'YakitEditor' })
+          const obj: OperationRecordRes = JSONParseLog(data, { page: 'YakitEditor' })
           if (typeof obj?.showBreak === 'boolean') {
             setShowBreak(obj?.showBreak)
           }
@@ -744,13 +740,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     if (editorOperationRecord) {
       getRemoteValue(editorOperationRecord).then((data) => {
         if (!data) {
-          let obj: OperationRecord = {
+          const obj: OperationRecord = {
             [type]: value,
           }
           setRemoteValue(editorOperationRecord, JSON.stringify(obj))
         } else {
           try {
-            let obj: OperationRecord = JSONParseLog(data, { page: 'YakitEditor', fun: 'onOperationRecord' })
+            const obj: OperationRecord = JSONParseLog(data, { page: 'YakitEditor', fun: 'onOperationRecord' })
             obj[type] = value
             setRemoteValue(editorOperationRecord, JSON.stringify(obj))
           } catch (error) {}
@@ -821,7 +817,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   /** 菜单自定义快捷键渲染处理事件 */
   const contextMenuKeybindingHandle = useMemoizedFn((parentKey: string, data: EditorMenuItemType[]) => {
     const menus: EditorMenuItemType[] = []
-    for (let item of data) {
+    for (const item of data) {
       /** 屏蔽菜单分割线选项 */
       if (typeof (data as any as EditorMenuItemDividerProps)['type'] !== 'undefined') {
         const info: EditorMenuItemDividerProps = { type: 'divider' }
@@ -872,7 +868,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             const keysContent = convertKeyboardToUIKey(keyArr)
             // 记录自定义快捷键映射按键的回调事件
             if (keysContent) {
-              let sortKeys = sortKeysCombination(keyArr)
+              const sortKeys = sortKeysCombination(keyArr)
               keyBindingRef.current[sortKeys.join('-')] = parentKey ? [info.key, parentKey] : [info.key]
             }
 
@@ -947,14 +943,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
     if (menuType.length > 0) {
       const types = Array.from(new Set(menuType))
-      for (let key of types) {
+      for (const key of types) {
         const obj = { ...extraMenuListsObj[key].menu[0] }
         rightContextMenu.current = rightContextMenu.current.concat([{ type: 'divider' }, obj])
       }
     }
     // 缓存需要排序的自定义菜单
     let sortContextMenu: OtherMenuListProps[] = []
-    for (let menus in contextMenu) {
+    for (const menus in contextMenu) {
       /* 需要排序项 */
       if (typeof contextMenu[menus].order === 'number') {
         sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[])
@@ -1025,12 +1021,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     /** 随机上下文ID */
     const randomStr = randomString(10)
     /** 对于需要自定义命令的快捷键生成对应的上下文ID */
-    let yakitEditor = editor.createContextKey(randomStr, false)
-    // @ts-ignore
+    const yakitEditor = editor.createContextKey(randomStr, false)
+    // @ts-expect-error 类型定义不完整，需要忽略此行
     yakitEditor.set(true)
     /* limited paste by interval */
     let lastPasteTime = 0
-    let pasteLimitInterval = 80
+    const pasteLimitInterval = 80
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV,
       () => {
@@ -1277,9 +1273,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           }
         })()
 
-        function highLightRange(item) {
+        const highLightRange = (item) => {
           const { startOffset = 0, highlightLength = 0, startLineNumber, startColumn, endLineNumber, endColumn } = item
-          let range = {
+          const range = {
             startLineNumber: 0,
             startColumn: 0,
             endLineNumber: 0,
@@ -1733,7 +1729,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       return (item as EditorMenuItemProps)?.key === 'http-show-break'
     })
     if (flag.length > 0 && type === 'http') {
-      for (let item of rightContextMenu.current) {
+      for (const item of rightContextMenu.current) {
         const info = item as EditorMenuItemProps
         if (info?.key === 'http-show-break')
           info.label = getShowBreak() ? t('YakitEditor.hideLineBreaks') : t('YakitEditor.showLineBreaks')
@@ -1743,7 +1739,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   useEffect(() => {
     if (!isShowSelectRangeMenu) return
-    for (let item of rightContextMenu.current) {
+    for (const item of rightContextMenu.current) {
       const info = item as EditorMenuItemProps
       if (info?.key === 'toggle-action-bar') {
         info.label = getShowActionBar() ? t('YakitEditor.hideActionBar') : t('YakitEditor.showActionBar')
@@ -1753,7 +1749,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   useEffect(() => {
     if (!foldBinaryCapable || type !== 'http') return
-    for (let item of rightContextMenu.current) {
+    for (const item of rightContextMenu.current) {
       const info = item as EditorMenuItemProps
       if (info?.key === 'toggle-fold-binary') {
         info.label = getFoldBinaryOpen() ? t('YakitEditor.hideBinaryComponent') : t('YakitEditor.showBinaryComponent')
@@ -1765,7 +1761,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     showByRightContext({
       width: 180,
       parentTitleClick: true,
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       data: [...rightContextMenu.current],
       onClick: ({ key, keyPath }) => {
         menuItemHandle(key, keyPath)
@@ -2012,7 +2008,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             let newSelectedText: string = selectedText
                             if (Array.isArray(Data) && Data.length > 0) {
                               // 选中项是否存在于标签中
-                              let isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
+                              const isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
                               if (isHave) {
                                 newSelectedText = selectedText.replace(/{{|}}/g, '')
                               }
@@ -2161,7 +2157,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     })
 
     editor.onMouseUp((e) => {
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       const { leftButton, rightButton, posx, posy, editorPos } = e.event
       // 获取编辑器所处x，y轴,并获取其长宽
       const { x, y } = editorPos
@@ -2169,7 +2165,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       const editorWidth = editorPos.width
 
       // 计算焦点的坐标位置
-      let a: any = editor.getPosition()
+      const a: any = editor.getPosition()
       const position = editor.getScrolledVisiblePosition(a)
       if (position) {
         // 获取焦点在编辑器中所处位置，height为每行所占高度（随字体大小改变）
@@ -2198,7 +2194,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             // 行高
             // const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
 
-            let countDirection: CountDirectionProps = {}
+            const countDirection: CountDirectionProps = {}
             if (isTopHalf) {
               // 鼠标位于编辑器上半部分
               countDirection.y = 'top'
@@ -2400,7 +2396,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                   if (isActiveYakEditor) {
                     const keys = convertKeyEventToKeyCombination(e.browserEvent)
                     if (keys) {
-                      let sortKeys = sortKeysCombination(keys)
+                      const sortKeys = sortKeysCombination(keys)
                       const keyToMenu = keyBindingRef.current[sortKeys.join('-')]
                       if (!keyToMenu) return
                       menuItemHandle(keyToMenu[0], keyToMenu)

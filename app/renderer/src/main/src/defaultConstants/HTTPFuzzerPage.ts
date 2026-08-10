@@ -3,10 +3,10 @@
  * @author luoluo
  */
 
-import { LabelDataProps } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
-import { AdvancedConfigShowProps, FuzzerResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
-import { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
-import { WebFuzzerPageInfoProps } from '@/store/pageInfo'
+import type { LabelDataProps } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
+import type { AdvancedConfigShowProps, FuzzerResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import type { WebFuzzerPageInfoProps } from '@/store/pageInfo'
 import cloneDeep from 'lodash/cloneDeep'
 
 export const defaultPostTemplate = `POST / HTTP/1.1

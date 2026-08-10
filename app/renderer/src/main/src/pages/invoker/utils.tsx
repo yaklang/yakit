@@ -1,6 +1,9 @@
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
-import { ReactNode } from 'react'
-import { FileActionEnum, PluginExecuteLogFile } from '../plugins/operator/pluginExecuteResult/PluginExecuteResultType.d'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { ReactNode } from 'react'
+import {
+  FileActionEnum,
+  type PluginExecuteLogFile,
+} from '../plugins/operator/pluginExecuteResult/PluginExecuteResultType.d'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 
 /**
@@ -45,35 +48,39 @@ export const getFileActionStatus = (
   let color: YakitTagColor = 'white'
   try {
     switch (action) {
-      case FileActionEnum.Read_Action:
+      case FileActionEnum.Read_Action: {
         const read = { ...action_message } as PluginExecuteLogFile.ReadFileActionMessage
         const readContent = read.content || ''
         actionText = '读取'
         message = `${read.offset}-${read.offset + read.length} ${read.unit}`
         content = readContent.length > 200 ? readContent.substring(0, 200) + '...' : readContent
         break
-      case FileActionEnum.Write_Action:
+      }
+      case FileActionEnum.Write_Action: {
         const write = { ...action_message } as PluginExecuteLogFile.WriteFileActionMessage
         const writeContent = write.content || ''
         actionText = '修改内容'
         message = `修改方式:${write.mode}`
         content = writeContent.length > 200 ? writeContent.substring(0, 200) + '...' : writeContent
         break
-      case FileActionEnum.Create_Action:
+      }
+      case FileActionEnum.Create_Action: {
         const create = { ...action_message } as PluginExecuteLogFile.CreateFileActionMessage
         actionText = '创建'
         color = 'success'
         message = `创建${create.isDir ? '文件夹' : '文件'}`
         content = '暂无可预览内容'
         break
-      case FileActionEnum.Delete_Action:
+      }
+      case FileActionEnum.Delete_Action: {
         const remove = { ...action_message } as PluginExecuteLogFile.DELETEFileActionMessage
         actionText = '删除'
         color = 'danger'
         message = `删除${remove.isDir ? '文件夹' : '文件'}`
         content = `${remove.isDir ? '文件夹' : '文件'}已被删除,无法展示预览内容`
         break
-      case FileActionEnum.Status_Action:
+      }
+      case FileActionEnum.Status_Action: {
         const status = { ...action_message } as PluginExecuteLogFile.STATUSFileActionMessage
         actionText = '查看元信息'
         content = (
@@ -83,7 +90,8 @@ export const getFileActionStatus = (
           </div>
         )
         break
-      case FileActionEnum.Chmod_Action:
+      }
+      case FileActionEnum.Chmod_Action: {
         const chmod = { ...action_message } as PluginExecuteLogFile.CHMODFileActionMessage
         actionText = '修改权限'
         const mode = modeToPermissions(chmod.chmodMode)
@@ -97,12 +105,14 @@ export const getFileActionStatus = (
           </>
         )
         break
-      case FileActionEnum.Find_Action:
+      }
+      case FileActionEnum.Find_Action: {
         const find = { ...action_message } as PluginExecuteLogFile.FINDFileActionMessage
         actionText = '查找'
         message = `通过${find.mode}查找到${find.content.length}个满足条件${find.condition}的文件`
         content = '暂无可预览内容'
         break
+      }
       default:
         break
     }

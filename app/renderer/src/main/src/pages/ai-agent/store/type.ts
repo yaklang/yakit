@@ -1,5 +1,5 @@
 import type { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
-import type { Domain, StoreName } from './constants'
+import type { Domain, StoreName, SESSION_METADATA_STORE } from './constants'
 
 export type { StoreName }
 
@@ -51,7 +51,7 @@ export interface GetDialogueContentsByPidParams {
 }
 
 export interface ClearStoreParams {
-  storeName: StoreName | typeof import('./constants').SESSION_METADATA_STORE
+  storeName: StoreName | typeof SESSION_METADATA_STORE
 }
 
 export interface DeleteSessionParams {

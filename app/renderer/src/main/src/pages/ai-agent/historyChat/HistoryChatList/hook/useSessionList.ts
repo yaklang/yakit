@@ -1,6 +1,6 @@
 import { grpcQueryAISession } from '@/pages/ai-agent/grpc'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
-import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { cloneDeep } from 'lodash'

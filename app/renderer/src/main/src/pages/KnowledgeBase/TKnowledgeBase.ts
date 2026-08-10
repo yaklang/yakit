@@ -1,6 +1,6 @@
 import type { GetKnowledgeBaseResponse, KnowledgeBase } from '@/components/playground/knowlegeBase'
-import { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
-import { QueryGeneralResponseProps } from '../invoker/schema'
+import type { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import type { QueryGeneralResponseProps } from '../invoker/schema'
 interface KnowledgeBaseFile {
   path: string
   fileType: string

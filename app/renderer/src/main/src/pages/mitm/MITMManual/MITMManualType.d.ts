@@ -1,7 +1,6 @@
-import { ManualHijackType, PackageType } from '@/defaultConstants/mitmV2'
-import { ManualHijackListStatusType, SingleManualHijackInfoMessage } from '../MITMHacker/utils'
-import { TraceInfo } from '../MITMPage'
-import { RenderTypeOptionVal } from '@/utils/editors'
+import { type ManualHijackType, type PackageType } from '@/defaultConstants/mitmV2'
+import { type SingleManualHijackInfoMessage } from '../MITMHacker/utils'
+import { type TraceInfo } from '../MITMPage'
 
 export interface MITMManualRefProps {
   onBatchDiscardData: () => void

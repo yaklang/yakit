@@ -1,4 +1,4 @@
-import { Note, NoteContent, NoteFilter } from '../utils'
+import { type Note, type NoteFilter } from '../utils'
 
 export interface NotepadManageLocalListProps {}
 export interface NotepadManageLocalProps {}

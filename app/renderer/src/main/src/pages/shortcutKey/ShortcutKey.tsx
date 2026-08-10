@@ -1,23 +1,28 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { useMemoizedFn, useUpdateEffect } from 'ahooks'
+import type React from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { useMemoizedFn } from 'ahooks'
 import { YakitRouteToPageInfo } from '@/routes/newRoute'
-import { pageEventMaps, ShortcutKeyEventInfo, ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
+import {
+  pageEventMaps,
+  type ShortcutKeyEventInfo,
+  type ShortcutKeyPageName,
+} from '@/utils/globalShortcutKey/events/pageMaps'
 import { convertKeyboardToUIKey, setIsActiveShortcutKeyPage } from '@/utils/globalShortcutKey/utils'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import cloneDeep from 'lodash/cloneDeep'
-import { ShortcutKeyListProps, ShortcutKeyProps } from './type'
+import type { ShortcutKeyListProps, ShortcutKeyProps } from './type'
 
 import classNames from 'classnames'
 import styles from './ShortcutKey.module.scss'
 import { isConflictToYakEditor } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { Spin } from 'antd'
 import { GetReleaseEdition } from '@/utils/envfile'
-import { GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
+import { type GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { failed } from '@/utils/notification'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const getShortcutPageName = (page, t: TFunction) => {
   if (page === 'global') {
@@ -110,7 +115,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
         } else if (result[1] === YakitKeyBoard.Enter) {
           handleCallbackKeyShow(true)
         } else {
-          let info = isConflictToYakEditor(result[1].split('|') as YakitKeyBoard[])
+          const info = isConflictToYakEditor(result[1].split('|') as YakitKeyBoard[])
           setWarnInfo(info)
           setInputKeys(result[1].split('|') as YakitKeyBoard[])
         }

@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type {
+  HoldGRPCStreamInfo,
+  HoldGRPCStreamProps,
+  StreamResult,
+} from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { DefaultTabs } from '@/hook/useHoldGRPCStream/constant'
 import { yakitFailed, info } from '@/utils/notification'
 

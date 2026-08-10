@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { Form, Space } from 'antd'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import { Form } from 'antd'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ChaosMakerRuleGroup } from '@/pages/chaosmaker/ChaosMaker'
+import type { ChaosMakerRuleGroup } from '@/pages/chaosmaker/ChaosMaker'
 import { showModal } from '@/utils/showModal'
 import { InputInteger, InputItem } from '@/utils/inputUtil'
 import { failed, info } from '@/utils/notification'
 import { debugYakitModal, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { useMemoizedFn } from 'ahooks'
-import { showByContextMenu } from '@/components/functionTemplate/showByContext'
 import { showByCursorMenu } from '@/utils/showByCursor'
 
 const { ipcRenderer } = window.require('electron')

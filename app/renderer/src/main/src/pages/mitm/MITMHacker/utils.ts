@@ -1,16 +1,16 @@
-import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import i18n from '@/i18n/i18n'
-import { ExecResult, YakScriptHooks } from '@/pages/invoker/schema'
+import type { ExecResult, YakScriptHooks } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
-import { ClientCertificate } from '../MITMServerStartForm/MITMServerStartForm'
-import { ExtraMITMServerProps, MITMResponse, TraceInfo } from '../MITMPage'
+import type { ClientCertificate } from '../MITMServerStartForm/MITMServerStartForm'
+import type { ExtraMITMServerProps, MITMResponse, TraceInfo } from '../MITMPage'
 import { omit } from 'lodash'
 import { buildMitmExtraV2 } from '../MITMAdvancedConfig'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
-import { MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MITMFilters'
-import { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MITMFilters'
+import type { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import { MITMVersion } from '../Context/MITMContext'
-import { ManualHijackListAction, ManualHijackListStatus } from '@/defaultConstants/mitmV2'
+import { type ManualHijackListAction, type ManualHijackListStatus } from '@/defaultConstants/mitmV2'
 const tOriginal = i18n.getFixedT(null, 'mitm')
 
 const { ipcRenderer } = window.require('electron')
@@ -177,15 +177,16 @@ export const grpcMITMStartCall: APIFunc<MITMStartCallRequest, null> = (params, h
     const { version } = params
 
     switch (version) {
-      case MITMVersion.V2:
+      case MITMVersion.V2: {
         const paramsV2 = convertMITMStartCallV2(params)
         grpcMITMStartCallV2(paramsV2, hiddenError).then(resolve).catch(reject)
         break
-
-      default:
+      }
+      default: {
         const paramsV1 = convertMITMStartCallV1(params)
         grpcMITMStartCallV1(paramsV1, hiddenError).then(resolve).catch(reject)
         break
+      }
     }
   })
 }
@@ -547,7 +548,7 @@ export const grpcMITMEnablePluginMode: APIFunc<MITMEnablePluginModeRequest, null
 }
 export interface MITMForwardModifiedRequest {
   id: number
-  request: Buffer
+  request: Uint8Array
   Tags: string[]
   autoForwardValue: boolean
 }
@@ -565,7 +566,7 @@ export const grpcMITMForwardModifiedRequest: APIFunc<MITMForwardModifiedRequest,
   })
 }
 export interface MITMForwardModifiedResponseRequest {
-  response: Buffer
+  response: Uint8Array
   responseId: number
 }
 /** MITM转发 - HTTP响应 */

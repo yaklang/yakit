@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { SolidCollectionPluginIcon, SolidSparklesPluginIcon, SolidYakitPluginIcon } from '@/assets/icon/colors'
-import { AIForge } from '../ai-agent/type/forge'
+import type { AIForge } from '../ai-agent/type/forge'
 
 /** @name forge-类型 */
 export const DefaultForgeTypeList: { key: AIForge['ForgeType']; name: string; icon: ReactNode; color: string }[] = [

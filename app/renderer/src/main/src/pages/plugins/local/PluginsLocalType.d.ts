@@ -1,6 +1,8 @@
-import { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
-import { API } from '@/services/swagger/resposeType'
-import { ReactNode } from 'react'
+import { type QueryYakScriptRequest, type YakScript } from '@/pages/invoker/schema'
+import { type API } from '@/services/swagger/resposeType'
+import { type ReactNode } from 'react'
+import type { HybridScanPluginConfig } from '@/models/HybridScan'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 export interface LocalPluginExecuteProps {
   plugin: YakScript

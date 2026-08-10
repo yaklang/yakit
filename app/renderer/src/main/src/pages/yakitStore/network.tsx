@@ -1,5 +1,9 @@
-import React from 'react'
-import { genDefaultPagination, QueryYakScriptRequest, QueryYakScriptsResponse, YakScript } from '../invoker/schema'
+import {
+  genDefaultPagination,
+  type QueryYakScriptRequest,
+  type QueryYakScriptsResponse,
+  type YakScript,
+} from '../invoker/schema'
 import { failed } from '../../utils/notification'
 
 const { ipcRenderer } = window.require('electron')

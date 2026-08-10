@@ -1,4 +1,4 @@
-import { HoldGRPCStreamProps } from './useHoldGRPCStreamType'
+import type { HoldGRPCStreamProps } from './useHoldGRPCStreamType'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['yakitRoute', 'plugin'])
 

@@ -1,4 +1,4 @@
-import { Ctx } from '@milkdown/kit/ctx'
+import { type Ctx } from '@milkdown/kit/ctx'
 import { tooltipFactory, TooltipProvider } from '@milkdown/kit/plugin/tooltip'
 import {
   createCodeBlockCommand,
@@ -13,7 +13,7 @@ import {
 } from '@milkdown/kit/preset/commonmark'
 import { useInstance } from '@milkdown/react'
 import { usePluginViewContext } from '@prosemirror-adapter/react'
-import { ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { callCommand } from '@milkdown/kit/utils'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn } from 'ahooks'
 import { IconBold, IconCode2, IconItalic, IconStrikethrough, IconType, IconUnderline } from '../icon/icon'
@@ -28,7 +28,13 @@ import { underlineCommand } from '../utils/underline'
 import { commentCommand } from '../utils/commentPlugin'
 import { setWrapInBlockType } from '../utils/utils'
 import { Tooltip } from 'antd'
-import { MilkdownBaseUtilProps, MilkdownMenu, MilkdownMenuKeyEnum, tooltipKey, TooltipListProps } from '../constants'
+import {
+  type MilkdownBaseUtilProps,
+  MilkdownMenu,
+  MilkdownMenuKeyEnum,
+  tooltipKey,
+  type TooltipListProps,
+} from '../constants'
 import { convertToListBullet, listToParagraphCommand } from '../utils/listPlugin'
 import { headingToParagraphCommand, listToHeadingCommand } from '../utils/headingPlugin'
 import { listToCodeCommand } from '../utils/codePlugin'
@@ -36,7 +42,7 @@ import { fileCustomSchema } from '../utils/uploadPlugin'
 import type { EditorView } from '@milkdown/prose/view'
 import { TextSelection, type EditorState } from '@milkdown/kit/prose/state'
 import type { VirtualElement } from '@floating-ui/dom'
-import { computePosition, flip, offset } from '@floating-ui/dom'
+import { computePosition, flip } from '@floating-ui/dom'
 import { posToDOMRect } from '@milkdown/prose'
 import { mentionCustomSchema } from '../utils/mentionPlugin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

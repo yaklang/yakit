@@ -1,8 +1,8 @@
 import React, { useImperativeHandle, useMemo, useState } from 'react'
-import { IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
+import { type IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
 import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from '../InsertFileFuzzTag'
 import { monacoEditorWrite } from '../fuzzerTemplates'
-import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { copyAsUrl, ByteCountTag, showDictsAndSelect } from '../HTTPFuzzerPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { setRemoteValue } from '@/utils/kv'
@@ -76,7 +76,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       [reqEditor],
     )
     const hotPatchTrigger = useMemoizedFn(() => {
-      let m = showYakitModal({
+      const m = showYakitModal({
         title: null,
         width: '80%',
         footer: null,

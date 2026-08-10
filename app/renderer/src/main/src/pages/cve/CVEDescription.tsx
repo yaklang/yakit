@@ -1,11 +1,11 @@
-import { Descriptions, List, Tabs } from 'antd'
-import { CVEDetail, CWEDetail } from '@/pages/cve/models'
+import { Descriptions, Tabs } from 'antd'
+import type { CVEDetail, CWEDetail } from '@/pages/cve/models'
 import classNames from 'classnames'
 import '../main.scss'
 import styles from './CVETable.module.scss'
 import { useCreation } from 'ahooks'
 import moment from 'moment'
-import React, { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 const { ipcRenderer } = window.require('electron')
 const { TabPane } = Tabs
 

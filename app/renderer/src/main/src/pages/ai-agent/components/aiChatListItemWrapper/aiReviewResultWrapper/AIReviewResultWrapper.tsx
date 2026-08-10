@@ -1,4 +1,4 @@
-import { FC, memo } from 'react'
+import { type FC, memo } from 'react'
 import type { AIReviewResultWrapperProps } from './type'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'

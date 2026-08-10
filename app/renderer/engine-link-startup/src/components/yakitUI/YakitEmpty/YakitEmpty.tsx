@@ -1,6 +1,7 @@
 import { Empty } from 'antd'
-import React, { useMemo } from 'react'
-import { YakitEmptyProps } from './YakitEmptyType'
+import type React from 'react'
+import { useMemo } from 'react'
+import type { YakitEmptyProps } from './YakitEmptyType'
 import classNames from 'classnames'
 import styles from './YakitEmpty.module.scss'
 
@@ -31,8 +32,8 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
         return theme === 'dark' ? IrifyDarkEmptyPng : IrifyEmptyPng
       case 'memfit':
         return theme === 'dark' ? MemfitDarkEmptyPng : MemfitEmptyPng
-      case 'enterprise':
-      case 'simple-enterprise':
+      // case 'enterprise':
+      // case 'simple-enterprise':
 
       default:
         return theme === 'dark' ? YakitDarkEmptyPng : YakitEmptyPng

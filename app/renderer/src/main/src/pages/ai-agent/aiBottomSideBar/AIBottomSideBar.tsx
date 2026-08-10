@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import styles from './AIBottomSideBar.module.scss'
 import classNames from 'classnames'
 import { OutlineCodeIcon } from '@/assets/icon/outline'

@@ -1,5 +1,5 @@
 import React, { forwardRef, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import type {
   CurrentPacketInfoProps,
   ManualHijackInfoProps,
   ManualHijackInfoRefProps,
@@ -11,11 +11,11 @@ import {
 } from './MITMManualType'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import {
-  ClientMITMHijackedResponse,
+  type ClientMITMHijackedResponse,
   grpcClientMITMHijacked,
   isMITMV2Response,
-  MITMV2Response,
-  SingleManualHijackInfoMessage,
+  type MITMV2Response,
+  type SingleManualHijackInfoMessage,
 } from '../MITMHacker/utils'
 import {
   useControllableValue,
@@ -26,7 +26,7 @@ import {
   useMemoizedFn,
   useUpdateEffect,
 } from 'ahooks'
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
   ManualHijackListAction,
   ManualHijackListStatus,
@@ -35,31 +35,30 @@ import {
 } from '@/defaultConstants/mitmV2'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { availableColors, onSendToTab } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { filterColorTag } from '@/components/TableVirtualResize/utils'
 import classNames from 'classnames'
 import styles from './MITMManual.module.scss'
-import { SystemInfo } from '@/constants/hardware'
 import {
   grpcMITMSetColor,
   grpcMITMV2Drop,
   grpcMITMV2Forward,
   grpcMITMV2HijackedCurrentResponse,
-  MITMV2SubmitPayloadDataRequest,
+  type MITMV2SubmitPayloadDataRequest,
   grpcMITMV2SubmitRequestData,
   grpcMITMV2SubmitResponseData,
-  MITMSetColorRequest,
-  MITMV2DropRequest,
-  MITMV2SubmitRequestDataRequest,
-  MITMV2SubmitRequestDataResponseRequest,
+  type MITMSetColorRequest,
+  type MITMV2DropRequest,
+  type MITMV2SubmitRequestDataRequest,
+  type MITMV2SubmitRequestDataResponseRequest,
   grpcMITMV2SubmitPayloadData,
-  MITMV2HijackedCurrentResponseRequest,
+  type MITMV2HijackedCurrentResponseRequest,
 } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
-import { NewHTTPPacketEditor, RenderTypeOptionVal } from '@/utils/editors'
-import { EditorMenuItemType } from '@/components/yakitUI/YakitEditor/EditorMenu'
+import { NewHTTPPacketEditor } from '@/utils/editors'
+import type { EditorMenuItemType } from '@/components/yakitUI/YakitEditor/EditorMenu'
 import { openPacketNewWindow } from '@/utils/openWebsite'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -80,7 +79,6 @@ import {
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { formatPacketRender, prettifyPacketCode, prettifyPacketRender } from '@/utils/prettifyPacket'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
-import { YakitKeyBoard, YakitKeyMod } from '@/utils/globalShortcutKey/keyboard'
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMitmShortcutKeyEvents, MitmShortcutKey } from '@/utils/globalShortcutKey/events/page/mitm'
@@ -189,7 +187,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       const hijackData = value.ManualHijackList[0]
       switch (value.ManualHijackListAction) {
         case ManualHijackListAction.Hijack_List_Add: // 新增的需要考虑到达顺序/arrivalOrder
-          if (!!hijackData) {
+          if (hijackData) {
             const item: SingleManualHijackInfoMessage = {
               ...hijackData,
               arrivalOrder: currentOrderRef.current,
@@ -203,62 +201,60 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           }
           break
         case ManualHijackListAction.Hijack_List_Delete:
-          const deleteIndex = mitmV2HijackIndexRef.current.get(hijackData.TaskID) ?? -1
-          const deleteItem: SingleManualHijackInfoMessage = {
-            ...hijackData,
-            manualHijackListAction: ManualHijackListAction.Hijack_List_Delete,
-          }
-          if (deleteIndex === -1) {
-            mitmV2HijackIndexRef.current.set(deleteItem.TaskID, mitmV2HijackInfoRef.current.length)
-            mitmV2HijackInfoRef.current.push(deleteItem)
-          } else {
-            mitmV2HijackInfoRef.current.splice(deleteIndex, 1, {
-              ...deleteItem,
-              arrivalOrder: mitmV2HijackInfoRef.current[deleteIndex].arrivalOrder,
-            })
+          {
+            const deleteIndex = mitmV2HijackIndexRef.current.get(hijackData.TaskID) ?? -1
+            const deleteItem: SingleManualHijackInfoMessage = {
+              ...hijackData,
+              manualHijackListAction: ManualHijackListAction.Hijack_List_Delete,
+            }
+            if (deleteIndex === -1) {
+              mitmV2HijackIndexRef.current.set(deleteItem.TaskID, mitmV2HijackInfoRef.current.length)
+              mitmV2HijackInfoRef.current.push(deleteItem)
+            } else {
+              mitmV2HijackInfoRef.current.splice(deleteIndex, 1, {
+                ...deleteItem,
+                arrivalOrder: mitmV2HijackInfoRef.current[deleteIndex].arrivalOrder,
+              })
+            }
           }
           break
         case ManualHijackListAction.Hijack_List_Update:
-          const updateIndex = mitmV2HijackIndexRef.current.get(hijackData.TaskID) ?? -1
-          if (updateIndex === -1) {
-            // 缓存数据中没有数据，直接使用data
-            const displayedItem = displayedHijackByTaskID.get(hijackData.TaskID)
-            if (displayedItem) {
-              mitmV2HijackIndexRef.current.set(hijackData.TaskID, mitmV2HijackInfoRef.current.length)
-              mitmV2HijackInfoRef.current.push({
-                ...hijackData,
-                manualHijackListAction: ManualHijackListAction.Hijack_List_Update,
-                arrivalOrder: displayedItem.arrivalOrder,
-              })
+          {
+            const updateIndex = mitmV2HijackIndexRef.current.get(hijackData.TaskID) ?? -1
+            if (updateIndex === -1) {
+              // 缓存数据中没有数据，直接使用data
+              const displayedItem = displayedHijackByTaskID.get(hijackData.TaskID)
+              if (displayedItem) {
+                mitmV2HijackIndexRef.current.set(hijackData.TaskID, mitmV2HijackInfoRef.current.length)
+                mitmV2HijackInfoRef.current.push({
+                  ...hijackData,
+                  manualHijackListAction: ManualHijackListAction.Hijack_List_Update,
+                  arrivalOrder: displayedItem.arrivalOrder,
+                })
+              }
             }
-          } else {
-            // 缓存数据中有add数据或者Update，以缓存数据中的manualHijackListAction为准
-            mitmV2HijackInfoRef.current.splice(updateIndex, 1, {
-              ...hijackData,
-              manualHijackListAction: mitmV2HijackInfoRef.current[updateIndex].manualHijackListAction,
-              arrivalOrder: mitmV2HijackInfoRef.current[updateIndex].arrivalOrder,
-            })
           }
-
           break
         case ManualHijackListAction.Hijack_List_Reload:
-          mitmV2HijackInfoRef.current = []
-          mitmV2HijackIndexRef.current.clear()
-          stopFlushInterval()
-          resetLoading()
-          let order = 0
-          const newData = value.ManualHijackList.map((ele) => {
-            order += 1
-            return {
-              ...ele,
-              arrivalOrder: order,
-            }
-          })
-          setOrder(order + 1)
-          setCurrentSelectItem(undefined)
-          setEditorShowIndexShowIndex(0)
-          setData(newData)
-          setIsRefresh(!isRefresh)
+          {
+            mitmV2HijackInfoRef.current = []
+            mitmV2HijackIndexRef.current.clear()
+            stopFlushInterval()
+            resetLoading()
+            let order = 0
+            const newData = value.ManualHijackList.map((ele) => {
+              order += 1
+              return {
+                ...ele,
+                arrivalOrder: order,
+              }
+            })
+            setOrder(order + 1)
+            setCurrentSelectItem(undefined)
+            setEditorShowIndexShowIndex(0)
+            setData(newData)
+            setIsRefresh(!isRefresh)
+          }
           break
         default:
           break
@@ -452,14 +448,14 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
     const mitmV2ManualTableRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(mitmV2ManualTableRef)
     useShortcutKeyTrigger('sendAndJump*common', (focus) => {
-      let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+      const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
       if (inViewport && !item) {
         onSendToTab(getCurrentSelectItem(), true, downstreamProxyStr, true)
       }
     })
 
     useShortcutKeyTrigger('send*common', (focus) => {
-      let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+      const item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
       if (inViewport && !item) {
         onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr, true)
       }
@@ -482,7 +478,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         onSetCurrentRow(rowData)
       }
 
-      let menu = getMitmManualContextMenu(rowData)
+      const menu = getMitmManualContextMenu(rowData)
 
       showByRightContext({
         width: 180,
@@ -675,7 +671,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       })
     }, [])
     const ResizeBoxProps = useCreation(() => {
-      let p = cloneDeep(lastRatioRef.current)
+      const p = cloneDeep(lastRatioRef.current)
       if (onlyShowFirstNode) {
         p.firstRatio = '100%'
         p.secondRatio = '0%'
@@ -730,7 +726,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
     })
     /**原封不动转发 */
     const onForwardData = useMemoizedFn((item: SingleManualHijackInfoMessage) => {
-      if (!!getLoading(item.TaskID)) return
+      if (getLoading(item.TaskID)) return
       switch (item.Status) {
         case ManualHijackListStatus.Hijacking_Request:
         case ManualHijackListStatus.Hijacking_Response:
@@ -898,7 +894,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
       if (isOnlyLookResponse) setType('response')
     }, [isOnlyLookResponse])
     const onSetRequest = useMemoizedFn((info: SingleManualHijackInfoMessage) => {
-      const currentRequestPacket = !!info?.IsWebsocket
+      const currentRequestPacket = info?.IsWebsocket
         ? Uint8ArrayToString(info.Payload)
         : Uint8ArrayToString(info.Request)
       setModifiedRequestPacket(currentRequestPacket)
@@ -917,7 +913,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
       })
     })
     const onSetResponse = useMemoizedFn((info: SingleManualHijackInfoMessage) => {
-      const currentResponsePacket = !!info?.IsWebsocket
+      const currentResponsePacket = info?.IsWebsocket
         ? Uint8ArrayToString(info.Payload)
         : Uint8ArrayToString(info.Response)
       setModifiedResponsePacket(currentResponsePacket)
@@ -1063,7 +1059,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
       // setRemoteValue(RemoteGV.MITMManualHijackResponseEditorBeautify, value ? value : "")
     })
     const ResizeBoxProps = useCreation(() => {
-      let p = {
+      const p = {
         firstRatio: '50%',
         secondRatio: '50%',
       }
@@ -1368,7 +1364,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       return
     } else {
       prettifyPacketCode(modifiedPacket).then((res) => {
-        if (!!res) {
+        if (res) {
           setModifiedPacket(Uint8ArrayToString(res as Uint8Array))
           setRefreshTrigger((prev) => !prev)
         }
@@ -1376,7 +1372,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     }
   })
   const onSetRenderHTML = useMemoizedFn(async () => {
-    let renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacket))
+    const renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacket))
     setRenderHtml(
       <iframe srcDoc={renderValue as string} style={{ width: '100%', height: '100%', border: 'none' }} sandbox="" />,
     )

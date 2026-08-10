@@ -1,15 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react'
+import type React from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popover, Checkbox } from 'antd'
-import { AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest } from '../../../components/WebsiteTree'
+import { type AntDTreeData, ConvertWebsiteForestToTreeData, type WebsiteForest } from '../../../components/WebsiteTree'
 import { HTTPFlowMiniTable } from '../../../components/HTTPFlowMiniTable'
-import { genDefaultPagination, QueryGeneralResponse } from '../../invoker/schema'
-import { ReloadOutlined, SearchOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons'
+import { genDefaultPagination, type QueryGeneralResponse } from '../../invoker/schema'
+import { ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { InputItem, SwitchItem } from '../../../utils/inputUtil'
 import { showByContextMenu } from '../../../components/functionTemplate/showByContext'
-import { HTTPFlow } from '../../../components/HTTPFlowTable/HTTPFlowTable'
+import type { HTTPFlow } from '../../../components/HTTPFlowTable/HTTPFlowTable'
 import { failed, warn } from '../../../utils/notification'
 import style from './WebsiteTree.module.scss'
-import { useGetState, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import { ExportExcel } from '../../../components/DataExport/DataExport'
 import { ChevronDownIcon } from '@/assets/newIcon'
 import './WebsiteTreeStyle.css'
@@ -50,8 +51,8 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
 
   useEffect(() => {
     if (checkedAll) {
-      let pathArr: string[] = []
-      let delUrlArr: string[] = []
+      const pathArr: string[] = []
+      const delUrlArr: string[] = []
       treeData.map((node) => {
         const delUrlStr = fetchDelUrl(node, '')
         pathArr.push(delUrlStr)
@@ -70,14 +71,14 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
         if (item.children.length > 0) {
           item.children = setTreeCheckable(item.children, true)
         }
-        //@ts-ignore
+        //@ts-expect-error 类型定义不完整，需要忽略此行
         item.checkable = true
         return item
       } else {
         if (item.children.length > 0) {
           item.children = setTreeCheckable(item.children, true)
         }
-        //@ts-ignore
+        //@ts-expect-error 类型定义不完整，需要忽略此行
         item.checkable = false
         return item
       }
@@ -101,7 +102,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
   }
 
   const fetchDelUrl = (node: AntDTreeData, url: string): string => {
-    if (!!node.parent) {
+    if (node.parent) {
       const str = `${node.title[0] === '/' ? '' : '/'}${node.title}${url}`
       return fetchDelUrl(node.parent, str)
     } else {
@@ -346,11 +347,11 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                   className="ellipsis-tree"
                   checkable
                   onCheck={(checkedKeys, info) => {
-                    // @ts-ignore
+                    // @ts-expect-error 类型定义不完整，需要忽略此行
                     setSelectedKeys(checkedKeys)
 
                     const { children, key, parent, title, urls } = info.node
-                    let node = {
+                    const node = {
                       children,
                       key,
                       parent,
@@ -396,11 +397,11 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                     if (!node) {
                       return
                     }
-                    let path = [node.title]
+                    const path = [node.title]
                     setisDelKey(path[0])
 
                     let parent = node.parent
-                    while (!!parent) {
+                    while (parent) {
                       path.unshift(!parent.parent ? parent.title + '/' : parent.title)
                       parent = parent.parent
                     }
@@ -411,7 +412,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                   autoExpandParent={true}
                   defaultExpandAll={true}
                   onRightClick={({ event, node }) => {
-                    let data = [
+                    const data = [
                       { key: 'bug-test', title: '发送到漏洞检测' },
                       { key: 'scan-port', title: '发送到端口扫描' },
                       { key: 'brute', title: '发送到爆破' },
@@ -426,7 +427,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                           delReord(node)
                           return
                         }
-                        let str: string[] = []
+                        const str: string[] = []
                         fetchUrl(node, str)
                         const param = {
                           SearchURL: str,

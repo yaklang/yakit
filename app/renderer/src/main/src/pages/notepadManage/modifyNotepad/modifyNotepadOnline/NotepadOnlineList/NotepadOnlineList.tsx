@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { NotepadOnlineListProps } from './NotepadOnlineListType'
+import type { NotepadOnlineListProps } from './NotepadOnlineListType'
 import styles from './NotepadOnlineList.module.scss'
 import { defYakitAutoCompleteRef, YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
-import { API } from '@/services/swagger/resposeType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { API } from '@/services/swagger/resposeType'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { useStore } from '@/store'
-import { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
+import type { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
 import {
   apiGetNotepadDetail,
   apiGetNotepadList,
   convertGetNotepadRequest,
-  GetNotepadRequestProps,
+  type GetNotepadRequestProps,
 } from '@/pages/notepadManage/notepadManage/utils'
 import classNames from 'classnames'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -74,7 +74,7 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
       const newPage = +res.pagemeta.page
       const length = newPage === 1 ? res.data.length : res.data.length + response.data.length
       setHasMore(length < +res.pagemeta.total)
-      let newRes: API.GetNotepadResponse = {
+      const newRes: API.GetNotepadResponse = {
         data: newPage === 1 ? res?.data : [...response.data, ...(res?.data || [])],
         pagemeta: res.pagemeta || {
           limit: 20,

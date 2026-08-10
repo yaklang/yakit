@@ -35,7 +35,7 @@ function HijackRunner({
   })
 
   useEffect(() => {
-    let ExecParams = [
+    const ExecParams = [
       { Key: 'name', Value: deviceName },
       { Key: 'pName', Value: task.pName },
     ]
@@ -57,20 +57,20 @@ function HijackRunner({
       try {
         const processesNum = hijackProcess.streamInfo.cardState.filter((item) => item.tag === '监控劫持进程数')?.[0]
           ?.info?.[0]?.Data
-        let cache: Partial<HijackTask> = {}
+        const cache: Partial<HijackTask> = {}
         if (typeof processesNum === 'string' && task.processesNum !== processesNum) {
           cache.processesNum = processesNum
         }
         const logState = hijackProcess.streamInfo.logState
         if (logState.length > 0) {
-          let data = logState?.[0].data
+          const data = logState?.[0].data
           if (typeof data === 'string' && data.startsWith('start watch process') && task.loading) {
             cache.loading = false
           }
           if (!task.pid) {
-            let newPids = logState
+            const newPids = logState
               .map((log) => {
-                let { data } = log
+                const { data } = log
                 if (typeof data === 'string' && data.startsWith('start watch process')) {
                   const match = data.match(/\d+/)
                   const pid = match ? Number(match[0]) : null

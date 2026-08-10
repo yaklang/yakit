@@ -1,6 +1,6 @@
 import classNames from 'classnames'
 import React, { useState } from 'react'
-import { YakitCheckableTagProps } from './YakitTagType'
+import type { YakitCheckableTagProps } from './YakitTagType'
 import styles from './YakitTag.module.scss'
 import { Tag } from 'antd'
 

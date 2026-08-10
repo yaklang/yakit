@@ -1,8 +1,9 @@
-import React, { memo, useEffect, useRef } from 'react'
+import type React from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useInViewport, useMemoizedFn } from 'ahooks'
-import { PluginEditor, PluginEditorRefProps } from '../pluginEditor/PluginEditor'
+import { PluginEditor, type PluginEditorRefProps } from '../pluginEditor/PluginEditor'
 import { shallow } from 'zustand/shallow'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript'
 import { YakitRoute } from '@/enums/yakitRoute'
 
@@ -14,9 +15,7 @@ import { getStorageYakitMultipleShortcutKeyEvents } from '@/utils/globalShortcut
 
 interface AddYakitPluginProps {}
 
-export const AddYakitPlugin: React.FC<AddYakitPluginProps> = memo((props) => {
-  const {} = props
-
+export const AddYakitPlugin: React.FC<AddYakitPluginProps> = memo(() => {
   const editorRef = useRef<PluginEditorRefProps>(null)
 
   const { queryPagesDataById } = usePageInfo(

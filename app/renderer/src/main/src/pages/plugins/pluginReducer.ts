@@ -1,5 +1,5 @@
-import { YakitPluginListOnlineResponse, YakitPluginOnlineDetail } from './online/PluginsOnlineType'
-import { QueryYakScriptsResponse, YakScript } from '../invoker/schema'
+import type { YakitPluginListOnlineResponse, YakitPluginOnlineDetail } from './online/PluginsOnlineType'
+import type { QueryYakScriptsResponse, YakScript } from '../invoker/schema'
 import cloneDeep from 'lodash/cloneDeep'
 
 // ----------------------- 线上
@@ -110,10 +110,10 @@ export const pluginOnlineReducer = (
       } else {
         return state
       }
-    case 'unLikeAndLike':
+    case 'unLikeAndLike': {
       const indexLike = state.data.findIndex((ele) => ele.uuid === item?.uuid)
       if (item && indexLike !== -1) {
-        let newLikeItem = state.data[indexLike]
+        const newLikeItem = state.data[indexLike]
         if (newLikeItem.is_stars) {
           newLikeItem.is_stars = false
           newLikeItem.stars = newLikeItem.stars - 1 > 0 ? newLikeItem.stars - 1 : 0
@@ -133,10 +133,11 @@ export const pluginOnlineReducer = (
       } else {
         return state
       }
-    case 'download':
+    }
+    case 'download': {
       const indexDownload = state.data.findIndex((ele) => ele.uuid === item?.uuid)
       if (item && indexDownload !== -1) {
-        let newDownloadItem = state.data[indexDownload]
+        const newDownloadItem = state.data[indexDownload]
         newDownloadItem.downloaded_total = newDownloadItem.downloaded_total + 1
         newDownloadItem.downloadedTotalString = thousandthConversion(newDownloadItem.downloaded_total)
         state.data[indexDownload] = {
@@ -148,7 +149,7 @@ export const pluginOnlineReducer = (
         }
       }
       return state
-
+    }
     case 'clear':
       return {
         ...cloneDeep(initialOnlineState),

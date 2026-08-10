@@ -1,7 +1,5 @@
-import { LocalGVS } from '@/enums/localGlobal'
 import { yakitApp } from '@/services/electronBridge'
 import { isCommunityYakit } from '@/utils/envfile'
-import { setLocalValue } from '@/utils/kv'
 import { create } from 'zustand'
 
 export enum YakitModeEnum {

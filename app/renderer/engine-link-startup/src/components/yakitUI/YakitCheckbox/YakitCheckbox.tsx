@@ -1,6 +1,6 @@
 import { Checkbox } from 'antd'
-import React from 'react'
-import { YakitCheckboxProps } from './YakitCheckboxType'
+import type React from 'react'
+import type { YakitCheckboxProps } from './YakitCheckboxType'
 import styles from './YakitCheckbox.module.scss'
 import classNames from 'classnames'
 import './yakitCheckBoxAnimation.scss'

@@ -1,5 +1,7 @@
-import { ComponentParams } from '@/routes/newRoute'
-import { YakitRoute } from '@/enums/yakitRoute'
+import { type ComponentParams } from '@/routes/newRoute'
+import { type YakitRoute } from '@/enums/yakitRoute'
+import type { MultipleNodeInfo } from '../MainOperatorContentType'
+import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 
 /**
  * @description 页面渲染

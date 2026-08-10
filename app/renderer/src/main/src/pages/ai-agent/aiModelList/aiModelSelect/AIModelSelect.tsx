@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
+import type {
   AIModelEditContentItemProps,
   AIModelEditContentProps,
   AIModelItemProps,
@@ -12,9 +12,9 @@ import {
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import {
-  AIGlobalConfig,
-  AIModelConfig,
-  AIModelTypeFileName,
+  type AIGlobalConfig,
+  type AIModelConfig,
+  type AIModelTypeFileName,
   getModelName,
   grpcListAiModel,
   isForcedSetAIModal,
@@ -23,10 +23,10 @@ import {
 } from '../utils'
 import styles from './AIModelSelect.module.scss'
 import classNames from 'classnames'
-import { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
+import type { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
 import {
   AIAgentTabListEnum,
-  AIModelPolicyEnum,
+  type AIModelPolicyEnum,
   AIModelTypeEnum,
   AIModelTypeInterFileNameEnum,
   AIOnlineModelIconMap,
@@ -52,11 +52,11 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContainer'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { createPortal } from 'react-dom'
 import { getEnableThinkingOpt, parseEnableThinkingOptValue } from '../aiModelForm/AIModelForm'
-import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {
@@ -193,7 +193,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 
   const renderContent = useMemoizedFn(() => {
     switch (aiType) {
-      case 'online':
+      case 'online': {
         const modelName = getModelName(selectIntelligentItem?.ModelName)
         return (
           <>
@@ -234,6 +234,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             </YakitSelect.Option>
           </>
         )
+      }
       // TODO -
       // case "local":
       //     return (
@@ -526,7 +527,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       list: data?.list || [],
     })
     setLoading(true)
-    if (!!data) {
+    if (data) {
       setTimeout(() => {
         modelNameListMapRef.current.set(index, {
           loading: false,
@@ -541,7 +542,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   /** 强制刷新 */
   const onRefreshModelNameList = useDebounceFn(
     useMemoizedFn((item: AIModelConfig, index: number) => {
-      let params = {
+      const params = {
         Type: item?.Provider.Type,
         api_key: item?.Provider.APIKey,
         domain: item?.Provider.Domain,
@@ -721,7 +722,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
 
   useEffect(() => {
     const modelNameItem = modelNameListMapRef.get(index)
-    if (!!modelNameItem) {
+    if (modelNameItem) {
       setModelNameData(modelNameItem)
     }
   }, [isRefreshModelNameList])
@@ -729,7 +730,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
     if (!item) return
     let newItemProvider = cloneDeep(item.Provider)
     switch (filed) {
-      case 'EnableThinkingOpt':
+      case 'EnableThinkingOpt': {
         const enableThinkingOpt = parseEnableThinkingOptValue(v)
         if (enableThinkingOpt !== undefined) {
           newItemProvider.EnableThinkingOpt = enableThinkingOpt
@@ -737,6 +738,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
           newItemProvider = omit(newItemProvider, ['EnableThinkingOpt'])
         }
         break
+      }
       default:
         break
     }
@@ -750,7 +752,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
   })
   const onEditChange = useMemoizedFn((v: string, filed: keyof AIModelConfig) => {
     if (!item) return
-    let newItem: Pick<AIModelConfig, 'ModelName'> = {
+    const newItem: Pick<AIModelConfig, 'ModelName'> = {
       ModelName: '',
     }
     switch (filed) {

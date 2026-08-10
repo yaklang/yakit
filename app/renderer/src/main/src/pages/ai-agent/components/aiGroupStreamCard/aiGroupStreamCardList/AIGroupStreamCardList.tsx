@@ -2,7 +2,7 @@ import { useClickAway, useThrottleFn } from 'ahooks'
 import classNames from 'classnames'
 import { memo, useRef, useState, useEffect } from 'react'
 import StaticChatContent from '../../aiChatListItem/StaticChatContent/StaticChatContent'
-import { AIGroupStreamCardListProps } from '../type'
+import type { AIGroupStreamCardListProps } from '../type'
 import styles from './AIGroupStreamCardList.module.scss'
 
 const BOTTOM_THRESHOLD = 10
@@ -78,7 +78,7 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
         }}
       >
         {childrenTokens.map((token, index) =>
-          !!rendItem ? rendItem(token, index) : <StaticChatContent key={token} token={token} groupIndex={index} />,
+          rendItem ? rendItem(token, index) : <StaticChatContent key={token} token={token} groupIndex={index} />,
         )}
       </div>
     </div>

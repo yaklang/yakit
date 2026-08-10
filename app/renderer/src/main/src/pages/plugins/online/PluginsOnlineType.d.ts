@@ -1,4 +1,4 @@
-import { API } from '@/services/swagger/resposeType'
+import { type API } from '@/services/swagger/resposeType'
 
 export interface YakitPluginOnlineDetail extends API.PluginsDetail {
   /**1.2k */

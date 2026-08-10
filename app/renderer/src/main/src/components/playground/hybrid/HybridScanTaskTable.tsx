@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { Risk } from '@/pages/risks/schema'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { DemoVirtualTable } from '@/demoComponents/virtualTable/VirtualTable'
-import {
+import type {
   HybridScanActiveTask,
   HybridScanControlRequest,
   HybridScanResponse,
@@ -45,7 +44,7 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
     ipcRenderer.on(`${token}-data`, async (e, data: HybridScanResponse) => {
       setStatus(data)
 
-      if (!!data?.UpdateActiveTask) {
+      if (data?.UpdateActiveTask) {
         if (data.UpdateActiveTask.Operator === 'remove') {
           setActiveTasks(
             getActiveTasks().filter((v) => {

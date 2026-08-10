@@ -1,8 +1,9 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react'
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
+import type React from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
+import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
 import MonacoEditor from 'react-monaco-editor'
 import ReactResizeDetector from 'react-resize-detector'
-import { Theme, useTheme } from '@/hooks/useTheme'
+import { type Theme, useTheme } from '@/hooks/useTheme'
 import { applyYakitMonacoTheme } from '@/utils/theme'
 
 export interface EditorProp {

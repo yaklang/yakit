@@ -1,7 +1,9 @@
-import React, { CSSProperties, ReactNode, useMemo } from 'react'
-import { Modal, ModalProps } from 'antd'
+import { type CSSProperties, type ReactNode } from 'react'
+import type React from 'react'
+import { useMemo } from 'react'
+import { Modal, type ModalProps } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { YakitButton, YakitButtonProp } from '../YakitButton/YakitButton'
+import { YakitButton, type YakitButtonProp } from '../YakitButton/YakitButton'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -110,7 +112,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
               <YakitButton
                 type="text"
                 size={size === 'large' ? 'large' : 'middle'}
-                icon={!!closeIcon ? closeIcon : <OutlineXIcon />}
+                icon={closeIcon ? closeIcon : <OutlineXIcon />}
                 onClick={onCancelX}
               />
             )}
@@ -123,7 +125,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
 
         {footer === null ? null : (
           <div style={footerStyle || undefined} className={styles['footer-body']}>
-            {!!footer ? (
+            {footer ? (
               footer
             ) : (
               <>

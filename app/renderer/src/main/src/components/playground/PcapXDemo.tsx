@@ -1,18 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { Form, Select, Space } from 'antd'
-import { CopyableField, ManyMultiSelectForString, OneLine, SelectOne } from '@/utils/inputUtil'
-import { PcapMetadata, TrafficPacket } from '@/models/Traffic'
+import { Form, Space } from 'antd'
+import type { PcapMetadata } from '@/models/Traffic'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'
 import { failed, info } from '@/utils/notification'
 import { useMemoizedFn } from 'ahooks'
-import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { PacketListDemo } from '@/components/playground/PacketListDemo'
-import { debugYakitModal, debugYakitModalAny } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { DemoItemSelectMultiForString } from '@/demoComponents/itemSelect/ItemSelect'
-import { YakEditor } from '@/utils/editors'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface PcapXDemoProp {}
@@ -36,7 +33,7 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
   useEffect(() => {
     ipcRenderer.invoke('GetPcapMetadata', {}).then((data: PcapMetadata) => {
       setPcapMeta(data)
-      if (!!data?.DefaultPublicNetInterface) {
+      if (data?.DefaultPublicNetInterface) {
         setFirstRequest({ ...firstRequest, NetInterfaceList: [data.DefaultPublicNetInterface.Name] })
       }
     })

@@ -498,7 +498,7 @@ $keyColor: map-keys($tagColor);
       .option {
         display: flex;
         flex: 1;
-        justify-content: end;
+        justify-content: flex-end;
       }
     }
     .header-operate {
@@ -603,7 +603,7 @@ $keyColor: map-keys($tagColor);
       display: flex;
       align-items: center;
       gap: 8px;
-      justify-content: end;
+      justify-content: flex-end;
     }
   }
   .footer-textarea:hover {

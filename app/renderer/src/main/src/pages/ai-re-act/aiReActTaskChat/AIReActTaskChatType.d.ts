@@ -1,6 +1,6 @@
-import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ReactNode } from 'react'
-import { ChatListRenderType } from '../hooks/aiRender'
+import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+import type { ReactNode } from 'react'
+import type { ChatListRenderType } from '../hooks/aiRender'
 
 export interface AIReActTaskChatProps {
   setShowFreeChat: (show: boolean) => void

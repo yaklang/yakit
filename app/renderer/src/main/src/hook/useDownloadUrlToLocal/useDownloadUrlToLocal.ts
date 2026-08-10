@@ -1,7 +1,7 @@
 import { safeFormatDownloadProcessState } from '@/components/layout/utils'
 import { yakitNotify } from '@/utils/notification'
-import { DownloadingState } from '@/yakitGVDefine'
-import { useEffect, useRef } from 'react'
+import type { DownloadingState } from '@/yakitGVDefine'
+import { useEffect } from 'react'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')

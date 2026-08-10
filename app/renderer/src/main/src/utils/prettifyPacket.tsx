@@ -1,7 +1,6 @@
-import React from 'react'
-import { IMonacoCodeEditor, YakEditor } from '@/utils/editors'
+import { type IMonacoCodeEditor, YakEditor } from '@/utils/editors'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
-import { failed, yakitFailed, yakitNotify } from '@/utils/notification'
+import { failed, yakitNotify } from '@/utils/notification'
 import prettier from 'prettier/standalone'
 import babelParser from 'prettier/plugins/babel'
 import htmlParser from 'prettier/plugins/html'
@@ -286,7 +285,6 @@ const formatPacket = (packet: string, onFormatted: (packet: Uint8Array, body: st
 
 export const prettifyPacket = (e: IMonacoCodeEditor) => {
   try {
-    // @ts-ignore
     const text = e.getModel()?.getValue() || ''
     formatPacket(text, (packet, body) => {
       debugYakitModalAny(

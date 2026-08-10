@@ -1,5 +1,7 @@
-import { YakitInputSearchProps } from '../yakitUI/YakitInput/YakitInputType'
-import { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
+import { type YakitInputSearchProps } from '../yakitUI/YakitInput/YakitInputType'
+import { type YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
+import type { InputProps } from 'antd'
+import type { ReactNode } from 'react'
 interface OptionProps {
   label: string
   value: string | number

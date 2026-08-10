@@ -2,11 +2,10 @@
  * @description 记录录屏
  */
 
-import { SequenceProps } from '@/pages/fuzzer/FuzzerSequence/FuzzerSequenceType'
+import type { SequenceProps } from '@/pages/fuzzer/FuzzerSequence/FuzzerSequenceType'
 import { setRemoteProjectValue } from '@/utils/kv'
 import { subscribeWithSelector, persist, createJSONStorage } from 'zustand/middleware'
 import debounce from 'lodash/debounce'
-import { RemoteGV } from '@/yakitGV'
 import { yakitNotify } from '@/utils/notification'
 import { createWithEqualityFn } from 'zustand/traditional'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
@@ -94,7 +93,7 @@ export const useFuzzerSequence = createWithEqualityFn<FuzzerSequenceProps>()(
         },
         addFuzzerSequenceCacheData: (groupId, values) => {
           let allCacheList = get().fuzzerSequenceCacheData
-          let index = allCacheList.findIndex((ele) => ele.groupId === groupId)
+          const index = allCacheList.findIndex((ele) => ele.groupId === groupId)
           if (index === -1) {
             allCacheList = [
               ...allCacheList,
@@ -111,7 +110,7 @@ export const useFuzzerSequence = createWithEqualityFn<FuzzerSequenceProps>()(
         },
         updateFuzzerSequenceCacheData: (groupId, cacheList) => {
           const allCacheList = get().fuzzerSequenceCacheData
-          let index = allCacheList.findIndex((ele) => ele.groupId === groupId)
+          const index = allCacheList.findIndex((ele) => ele.groupId === groupId)
           if (index !== -1) {
             allCacheList[index].cacheData = [...cacheList]
             set({

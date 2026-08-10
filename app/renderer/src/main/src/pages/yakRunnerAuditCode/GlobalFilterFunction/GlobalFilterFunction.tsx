@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { GlobalFilterFunctionProps, GlobalFilterFunctionTreeProps } from './GlobalFilterFunctionType.d'
+import type { GlobalFilterFunctionProps, GlobalFilterFunctionTreeProps } from './GlobalFilterFunctionType.d'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import styles from './GlobalFilterFunction.module.scss'
 import { useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
@@ -8,10 +8,10 @@ import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { randomString } from '@/utils/randomUtil'
 import { Progress, Tree } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { AuditNodeDetailProps, AuditNodeProps, AuditYakUrlProps } from '../AuditCode/AuditCodeType'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { AuditNodeDetailProps, AuditNodeProps, AuditYakUrlProps } from '../AuditCode/AuditCodeType'
 import { loadAuditFromYakURLRaw, onJumpByCodeRange } from '../utils'
 import { AuditTreeNode, getDetailFun } from '../AuditCode/AuditCode'
 import emiter from '@/utils/eventBus/eventBus'
@@ -111,7 +111,7 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
     try {
       const list: AuditNodeProps[] = []
       startLog.forEach((item) => {
-        if (!!item.data) {
+        if (item.data) {
           const jsonData = JSON.parse(item.data)
           if (!!jsonData && jsonData['规则结果ID'] && jsonData['规则名称']) {
             list.push({
@@ -215,12 +215,15 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
                 children:
                   +result.Page === 1
                     ? childData
-                    : [...(item.children || []).filter((ele) => ele.id !== loadId), ...childData],
+                    : [
+                        ...(item.children || []).filter((ele) => (ele as unknown as AuditNodeProps).id !== loadId),
+                        ...childData,
+                      ],
               }
             }
             return item
           })
-          setData(newList)
+          setData(newList as AuditNodeProps[])
         }
         setTimeout(() => {
           resolve()

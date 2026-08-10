@@ -9,7 +9,7 @@ import {
   isMemfit,
 } from '@/utils/envfile'
 import { success, failed } from '@/utils/notification'
-import { YakitSystem, DownloadingState } from '@/yakitGVDefine'
+import type { YakitSystem, DownloadingState } from '@/yakitGVDefine'
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import { useDebounce, useGetState, useMemoizedFn } from 'ahooks'
@@ -75,7 +75,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                   },
                   speed: 0,
                   percent: 100,
-                  // @ts-ignore
+                  // @ts-expect-error 类型定义不完整，需要忽略此行
                   size: getDownloadProgress().size,
                 })
               }
@@ -117,7 +117,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                   },
                   speed: 0,
                   percent: 100,
-                  // @ts-ignore
+                  // @ts-expect-error 类型定义不完整，需要忽略此行
                   size: getDownloadProgress().size,
                 })
                 yakitShell.openYakitPath()

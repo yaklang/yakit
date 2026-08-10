@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { API } from '@/services/swagger/resposeType'
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { API } from '@/services/swagger/resposeType'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import moment from 'moment'
-import { Form, Space, Tooltip, TreeSelectProps } from 'antd'
+import { Form, Space, Tooltip, type TreeSelectProps } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { useCampare } from '@/hook/useCompare/useCompare'
@@ -13,7 +14,7 @@ import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtual
 import { PencilAltIcon, QuestionMarkCircleIcon, TrashIcon } from '@/assets/newIcon'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { DefaultOptionType } from 'antd/es/select'
+import type { DefaultOptionType } from 'antd/es/select'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitTreeSelect } from '@/components/yakitUI/YakitTreeSelect/YakitTreeSelect'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -94,7 +95,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
       fixed: 'right',
       width: 65,
       render: (_, record: API.RoleList) =>
-        !!record.builtIn ? (
+        record.builtIn ? (
           <></>
         ) : (
           <Space>
@@ -375,7 +376,7 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
         },
       })
         .then((res: API.NewRoleRequest) => {
-          let { name, plugin, pluginType = '' } = res
+          const { name, plugin, pluginType = '' } = res
           const pluginArr = (plugin || []).map((item) => ({ label: item.script_name, value: item.id }))
           const pluginTypeArr: string[] = pluginType.split(',').filter((item) => item.length > 0)
           const value = {
@@ -403,9 +404,9 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
   const onFinish = useMemoizedFn((values) => {
     const { name, treeSelect } = values
     setLoading(true)
-    let pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
-    let pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
-    let params: API.NewRoleRequest = {
+    const pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
+    const pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
+    const params: API.NewRoleRequest = {
       name,
       pluginType: pluginTypeArr.join(','),
       pluginIds: pluginIdsArr.join(','),

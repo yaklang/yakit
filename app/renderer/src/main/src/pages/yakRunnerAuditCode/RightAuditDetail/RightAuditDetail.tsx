@@ -1,16 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState, WheelEvent } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState, type WheelEvent } from 'react'
 import classNames from 'classnames'
 import styles from './RightAuditDetail.module.scss'
-import { useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect } from 'ahooks'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { StringToUint8Array } from '@/utils/str'
 import { loadAuditFromYakURLRaw } from '../utils'
-import {
-  OutlineCollectionIcon,
-  OutlineHandIcon,
-  OutlineXIcon,
-  OutlineZoominIcon,
-  OutlineZoomoutIcon,
-} from '@/assets/icon/outline'
+import { OutlineCollectionIcon, OutlineXIcon, OutlineZoominIcon, OutlineZoomoutIcon } from '@/assets/icon/outline'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
@@ -20,12 +15,12 @@ import emiter from '@/utils/eventBus/eventBus'
 import { QuestionMarkCircleIcon } from '@/assets/newIcon'
 import { clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail } from './GraphInfoMap'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
-import { AuditEmiterYakUrlProps, OpenFileByPathProps } from '../YakRunnerAuditCodeType'
+import type { AuditEmiterYakUrlProps, OpenFileByPathProps } from '../YakRunnerAuditCodeType'
 import { v4 as uuidv4 } from 'uuid'
-import { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
+import type { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { YakCodemirror } from '@/components/yakCodemirror/YakCodemirror'
 import { clearMapResultDetail, getMapResultDetail, setMapResultDetail } from './ResultMap'
-import { Selection } from '../RunnerTabs/RunnerTabsType'
+import type { Selection } from '../RunnerTabs/RunnerTabsType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { getNameByPath } from '@/pages/yakRunner/utils'
 import { JSONParseLog } from '@/utils/tool'
@@ -223,8 +218,8 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
     if (graphLine) {
       clearMapResultDetail()
       newData = graphLine.map((item, index) => {
-        let title = `路径${index + 1}`
-        let children = getChildren(item)
+        const title = `路径${index + 1}`
+        const children = getChildren(item)
         // 将第一项默认值给入
         if (index === 0 && children.length > 0) {
           firstSource.current = {
@@ -662,7 +657,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
           }
           if (item.Key === 'graph_info') {
             try {
-              let graph_info: GraphInfoProps[] = JSONParseLog(item.Value, {
+              const graph_info: GraphInfoProps[] = JSONParseLog(item.Value, {
                 page: 'RightAuditDetail',
                 fun: 'graph_info',
               })
@@ -679,7 +674,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
           }
           if (item.Key === 'graph_line') {
             try {
-              let graph_info: string[][] = JSONParseLog(item.Value, { page: 'RightAuditDetail', fun: 'graph_line' })
+              const graph_info: string[][] = JSONParseLog(item.Value, { page: 'RightAuditDetail', fun: 'graph_line' })
 
               // 当数量小于等于10条时默认第一级展开
               if (graph_info.length > 0 && graph_info.length <= 10) {

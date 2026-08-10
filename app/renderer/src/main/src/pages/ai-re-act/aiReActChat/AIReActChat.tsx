@@ -1,20 +1,20 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 import styles from './AIReActChat.module.scss'
-import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
+import type { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import type { AIReActChatContentsRef } from '../aiReActChatContents/AIReActChatContentsType'
-import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
+import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
 import { useControllableValue, useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import classNames from 'classnames'
 import { ChevrondownButton } from './AIReActComponent'
-import { AIInputEvent, AIInputEventSyncTypeEnum, AISourceEnum, AIStartParams } from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventSyncTypeEnum, AISourceEnum, type AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
-import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
-import { AISession } from '@/pages/ai-agent/type/aiChat'
+import type { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
@@ -68,7 +68,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
     }, [])
     useEffect(() => {
-      if (!!activeChat?.SessionID) {
+      if (activeChat?.SessionID) {
         // 关键词: flushSync warning, Milkdown ReactRenderer, prosemirror-adapter flushSync
         // setEditorValue 内部会 view.dispatch(tr), 经 ProseMirror updateState -> updatePluginViews
         // 触发 @prosemirror-adapter/react 的 ReactRenderer.update, 内部会 flushSync 重新渲染 portal.
@@ -196,7 +196,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           },
         })
       }
-      if (!!startRequest) {
+      if (startRequest) {
         startRequest({
           params: aiInputEvent,
         })
@@ -238,7 +238,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           })
           emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: activeChat.SessionID }))
         }
-        if (!!sendRequest) {
+        if (sendRequest) {
           sendRequest?.({ params: chatMessage })
             .then((res) => {
               const { params } = res

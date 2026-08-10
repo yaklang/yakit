@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useCreation, useGetState, useMemoizedFn, useSize } from 'ahooks'
+import type React from 'react'
+import { useMemo, useRef } from 'react'
+import { useSize } from 'ahooks'
 import styles from './LeftSideBar.module.scss'
 import classNames from 'classnames'
 
-import { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
+import type { LeftSideBarProps } from './LeftSideBarType'
 import { RunnerFileTree } from '../RunnerFileTree/RunnerFileTree'
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {

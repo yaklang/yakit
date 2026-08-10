@@ -1,7 +1,7 @@
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Space, Table, Tag, Form, Typography, Descriptions, Tooltip, Menu } from 'antd'
-import { Risk } from './schema'
-import { genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse } from '../invoker/schema'
+import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { Button, Space, Table, Tag, Form, Typography, Descriptions, Tooltip } from 'antd'
+import type { Risk } from './schema'
+import { genDefaultPagination, type QueryGeneralRequest, type QueryGeneralResponse } from '../invoker/schema'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { formatTimestamp } from '../../utils/timeUtil'
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons'
@@ -58,9 +58,9 @@ export interface FieldNameSelectItem {
 }
 
 const mergeFieldNames = (f: Fields) => {
-  let m = new Map<string, FieldNameSelectItem>()
+  const m = new Map<string, FieldNameSelectItem>()
   ;(f.Values || []).forEach((v) => {
-    let i = m.get(v.Verbose)
+    const i = m.get(v.Verbose)
     if (!i) {
       m.set(v.Verbose, { Total: v.Total, Verbose: v.Verbose, Names: [v.Name] })
       return
@@ -70,7 +70,7 @@ const mergeFieldNames = (f: Fields) => {
       i.Names.sort()
     }
   })
-  let items: FieldNameSelectItem[] = []
+  const items: FieldNameSelectItem[] = []
   m.forEach((value) => {
     items.push(value)
   })
@@ -443,7 +443,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
               size="small"
               type={'link'}
               onClick={() => {
-                let m = showModal({
+                const m = showModal({
                   width: '80%',
                   title: '详情',
                   content: (
@@ -586,10 +586,11 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
           onChange={(pagination, filters, sorter, extra) => {
             const action = extra.action
             switch (action) {
-              case 'paginate':
+              case 'paginate': {
                 const current = pagination.current
                 update(+page === current ? 1 : current, pagination.pageSize)
                 return
+              }
               case 'filter':
                 update()
                 return
@@ -710,12 +711,11 @@ export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (pr
           e.preventDefault()
 
           if (setSelectedKeys) {
-            // @ts-ignore
+            // @ts-expect-error 类型定义不完整，需要忽略此行
             if (params[props.filterName]) {
               const obj = {}
               obj[props.filterName] = params ? params[props.filterName] : ''
-              // @ts-ignore
-              setSelectedKeys([obj])
+              setSelectedKeys([obj as any])
             } else {
               setSelectedKeys([])
             }
@@ -728,12 +728,11 @@ export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (pr
         <InputItem
           style={{ marginBottom: 4 }}
           label={props.label}
-          // @ts-ignore
+          // @ts-expect-error 类型定义不完整，需要忽略此行
           value={params[props.filterName]}
           setValue={(e) => {
             if (params && setParams) {
               const newParams = { ...params }
-              // @ts-ignore
               newParams[props.filterName] = e
               setParams(newParams)
             }
@@ -750,7 +749,6 @@ export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (pr
                 setSelectedKeys && setSelectedKeys([])
                 if (params && setParams) {
                   const newParams = { ...params }
-                  // @ts-ignore
                   newParams[props.filterName] = ''
                   setParams(newParams)
                   setTimeout(() => {
@@ -950,7 +948,7 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
               {isShowTime && (
                 <div>
                   最近更新时间
-                  <span className="subtitle-font">{!!info.UpdatedAt ? formatTimestamp(info.UpdatedAt) : '-'}</span>
+                  <span className="subtitle-font">{info.UpdatedAt ? formatTimestamp(info.UpdatedAt) : '-'}</span>
                 </div>
               )}
             </div>

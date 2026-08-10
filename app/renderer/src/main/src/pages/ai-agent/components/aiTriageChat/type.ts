@@ -1,6 +1,6 @@
-import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
-import { AINodeItemProps } from '../aiChatListItem/aiNodeItem/type'
-import { ChatDataStoreKey } from '../../store/ChatDataStore'
+import { type AIChatQSData, type AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AINodeItemProps } from '../aiChatListItem/aiNodeItem/type'
+import type { ChatDataStoreKey } from '../../store/ChatDataStore'
 
 export interface AITriageChatContentProps {
   isAnswer?: boolean

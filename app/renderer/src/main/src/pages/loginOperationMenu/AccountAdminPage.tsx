@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -7,7 +8,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import YakitTree from '@/components/yakitUI/YakitTree/YakitTree'
 import ReactResizeDetector from 'react-resize-detector'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
 import {
   OutlineChevronrightIcon,
@@ -24,14 +25,12 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { Avatar, Form, Tooltip } from 'antd'
 import { useControllableValue, useCreation, useDebounceFn, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import moment from 'moment'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { unReadable } from '../dynamicControl/DynamicControl'
-import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { DefaultOptionType } from 'antd/lib/cascader'
 import styles from './AccountAdminPage.module.scss'
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -485,9 +484,9 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
   const updateTreeReduceCount = (list: DataSourceProps[], treeCountObj: TreeReduceCount): DataSourceProps[] => {
     const { obj, reduce } = treeCountObj
     return list.map((node) => {
-      if (obj.hasOwnProperty(node.key)) {
-        let newUserNum = reduce ? (node?.userNum || 0) - obj[node.key] : (node?.userNum || 0) + obj[node.key]
-        let userNum = newUserNum > 0 ? newUserNum : 0
+      if (Object.prototype.hasOwnProperty.call(obj, node.key)) {
+        const newUserNum = reduce ? (node?.userNum || 0) - obj[node.key] : (node?.userNum || 0) + obj[node.key]
+        const userNum = newUserNum > 0 ? newUserNum : 0
         return {
           ...node,
           userNum,
@@ -600,7 +599,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                             size="small"
                             defaultValue={title}
                             onBlur={(e) => {
-                              if (!!e.target.value.length) {
+                              if (e.target.value.length) {
                                 if (e.target.value !== title) {
                                   resetName(e.target.value, key, pid)
                                 }
@@ -1043,7 +1042,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
         if (Array.isArray(data) && data.length > 0) {
           const { auth, id, note, port, host } = data[0]
           const { pubpem, secret } = JSON.parse(auth)
-          let resultObj = {
+          const resultObj = {
             id,
             note,
             port,
@@ -1311,7 +1310,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             const { user_name, department_parent_id, department_id, role_id, role_name, nickName } = res.data
             const department = department_parent_id ? [department_parent_id, department_id] : [department_id]
             getDepartmentData(department_parent_id)
-            let obj: any = {
+            const obj: any = {
               user_name,
             }
             if (department_id) {
@@ -1372,7 +1371,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             label: item.name,
             value: item.id,
           }))
-          let newArr = data.map((item) => {
+          const newArr = data.map((item) => {
             if (item.value === id) {
               return {
                 ...item,
@@ -1403,7 +1402,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
       params: paginationProps,
     })
       .then((res) => {
-        let data = res.data || []
+        const data = res.data || []
         if (data.length > 0) {
           setRolePagination((v) => ({ ...v, page: paginationProps.page }))
         }

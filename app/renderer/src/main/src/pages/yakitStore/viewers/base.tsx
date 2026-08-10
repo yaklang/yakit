@@ -1,31 +1,26 @@
-import React, { useEffect, useRef, useState, useMemo, CSSProperties } from 'react'
-import { YakScript } from '../../invoker/schema'
-import { Card, Col, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag, Divider } from 'antd'
-import { HTTPFlow, HTTPFlowTable, LogLevelToCode } from '../../../components/HTTPFlowTable/HTTPFlowTable'
+import React, { useEffect, useRef, useState, useMemo } from 'react'
+import type { YakScript } from '../../invoker/schema'
+import { Card, Col, Progress, Row, Space, Statistic, Timeline, Tooltip, Tag, Divider } from 'antd'
+import { LogLevelToCode } from '../../../components/HTTPFlowTable/HTTPFlowTable'
 import { YakitLogFormatter } from '../../invoker/YakitLogFormatter'
-import { ExecResultLog, ExecResultProgress } from '../../invoker/batch/ExecMessageViewer'
+import type { ExecResultLog, ExecResultProgress } from '../../invoker/batch/ExecMessageViewer'
 import { randomString } from '../../../utils/randomUtil'
 import { WebsiteTreeViewer } from './WebsiteTree'
 import { formatDate } from '../../../utils/timeUtil'
 import { xtermFit } from '../../../utils/xtermUtils'
-import { yakitFailed, yakitNotify } from '../../../utils/notification'
+import { yakitFailed } from '../../../utils/notification'
 import { AutoCard } from '../../../components/AutoCard'
 import './base.scss'
 import { ExportExcel } from '../../../components/DataExport/DataExport'
-import { useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useGetState, useCreation } from 'ahooks'
-import { Risk } from '@/pages/risks/schema'
+import { useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useGetState } from 'ahooks'
+import type { Risk } from '@/pages/risks/schema'
 import { RiskDetails } from '@/pages/risks/RiskTable'
 import { YakitCVXterm } from '@/components/yakitUI/YakitCVXterm/YakitCVXterm'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { sorterFunction } from '@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import { EngineConsole } from '@/components/baseConsole/BaseConsole'
 import { isEnpriTrace } from '@/utils/envfile'
-import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { HTTPFlowDetailRequestAndResponse } from '@/components/HTTPFlowDetail'
-import { Uint8ArrayToString } from '@/utils/str'
-import { v4 as uuidv4 } from 'uuid'
-import { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import moment from 'moment'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
@@ -190,7 +185,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
     if (props.onXtermRef) props.onXtermRef(xtermRef)
   }, [xtermRef])
 
-  let progressBars: { id: string; node: React.ReactNode }[] = []
+  const progressBars: { id: string; node: React.ReactNode }[] = []
   progress.forEach((v) => {
     progressBars.push({
       id: v.id,
@@ -219,7 +214,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
     })
     .map((i) => {
       try {
-        let res = JSON.parse(i.data) as { feature: string; params: any; key: string }
+        const res = JSON.parse(i.data) as { feature: string; params: any; key: string }
         if (!res.key) {
           res.key = randomString(50)
         }
@@ -242,7 +237,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
 
   const newStatusCards = useMemo(() => {
     if (isEnpriTrace()) {
-      let newStatusCards = statusCards.filter((item) =>
+      const newStatusCards = statusCards.filter((item) =>
         ['加载插件', '漏洞/风险', '开放端口数/已扫主机数', '存活主机数/扫描主机数', 'SYN 扫描'].includes(item.tag),
       )
       return newStatusCards

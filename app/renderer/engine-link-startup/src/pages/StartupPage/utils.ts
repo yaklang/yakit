@@ -1,4 +1,4 @@
-import { Architecture, DownloadingState, System, SystemInfoProps, YaklangEngineMode } from './types'
+import type { Architecture, DownloadingState, System, SystemInfoProps, YaklangEngineMode } from './types'
 import { yakitEngine, yakitSystem } from '@/utils/electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['link'])

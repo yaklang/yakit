@@ -1,17 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { BottomSideBarProps } from './BottomSideBarType'
+import type React from 'react'
+import { useMemo } from 'react'
+import type { BottomSideBarProps } from './BottomSideBarType'
 
 import classNames from 'classnames'
 import styles from './BottomSideBar.module.scss'
-import {
-  OutlineAnnotationIcon,
-  OutlineCodeIcon,
-  OutlineDeprecatedIcon,
-  OutlineExclamationIcon,
-  OutlineInformationcircleIcon,
-  OutlineStethoscopeIcon,
-  OutlineXcircleIcon,
-} from '@/assets/icon/outline'
+
 import useStore from '../hooks/useStore'
 
 const { ipcRenderer } = window.require('electron')
@@ -20,7 +13,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
   const { onOpenEditorDetails } = props
   const { activeFile } = useStore()
   const showSyntaxInfo = useMemo(() => {
-    let data = {
+    const data = {
       hint: 0,
       info: 0,
       warning: 0,
@@ -48,7 +41,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
   }, [activeFile])
 
   const showLocationInfo = useMemo(() => {
-    let data = {
+    const data = {
       lineNumber: 1,
       column: 1,
     }

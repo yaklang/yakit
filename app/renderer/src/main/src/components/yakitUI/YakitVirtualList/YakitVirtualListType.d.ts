@@ -1,7 +1,9 @@
-import { ReactNode } from 'react'
-import { FiltersItemProps, RowSelectionProps } from '../../../components/TableVirtualResize/TableVirtualResizeType'
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
-import { YakitPopoverProp } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { type ReactNode } from 'react'
+import {
+  type FiltersItemProps,
+  type RowSelectionProps,
+} from '../../../components/TableVirtualResize/TableVirtualResizeType'
+import { type YakitPopoverProp } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
 export interface YakitVirtualListProps<T> {
   columns: VirtualListColumns<T>[]

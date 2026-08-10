@@ -1,7 +1,7 @@
-import React from 'react'
+import type React from 'react'
 import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
 import { YakitEllipsis } from '@/components/basics/YakitEllipsis'
-import { RobotChannelType } from './RobotControl'
+import type { RobotChannelType } from './RobotControl'
 import styles from './RobotControl.module.scss'
 
 export interface RobotLinkInfo {

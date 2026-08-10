@@ -1,25 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Button,
-  Space,
-  Table,
-  Tag,
-  Form,
-  Typography,
-  Descriptions,
-  Tooltip,
-  Menu,
-  Card,
-  Tabs,
-  Input,
-  Select,
-} from 'antd'
-import {
-  genDefaultPagination,
-  PaginationSchema,
-  QueryGeneralRequest,
-  QueryGeneralResponse,
-} from '../../../pages/invoker/schema'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Button, Space, Table, Tag, Form, Typography, Card, Tabs, Input } from 'antd'
+import { genDefaultPagination, type PaginationSchema, type QueryGeneralRequest } from '../../../pages/invoker/schema'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import {
   ReloadOutlined,
@@ -31,14 +13,8 @@ import {
   CodeOutlined,
 } from '@ant-design/icons'
 import { failed } from '../../../utils/notification'
-import { showModal } from '../../../utils/showModal'
-import { InputItem } from '../../../utils/inputUtil'
-import { ExportExcel } from '../../DataExport/DataExport'
-import { onRemoveToolFC } from '../../../utils/deleteTool'
-import { showByContextMenu } from '../../functionTemplate/showByContext'
 import styles from './EntityRepository.module.scss'
 import { instance } from '@viz-js/viz'
-import { a } from '@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm'
 
 const { ipcRenderer } = window.require('electron')
 const { Paragraph, Title } = Typography

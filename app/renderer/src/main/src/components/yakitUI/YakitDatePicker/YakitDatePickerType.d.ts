@@ -1,4 +1,5 @@
-import { CSSProperties } from 'react'
+import { type CSSProperties } from 'react'
+import type { DatePickerProps, RangePickerProps } from 'antd'
 
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 

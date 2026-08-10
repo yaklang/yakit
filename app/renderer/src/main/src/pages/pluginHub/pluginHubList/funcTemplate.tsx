@@ -1,14 +1,14 @@
-import React, { ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react'
+import React, { type ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useInViewport, useMemoizedFn, useSize, useThrottleFn, useVirtualList } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { PluginFilterParams, PluginListTabs, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
+import type { PluginFilterParams, PluginListTabs, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
 import { AuthorIcon, AuthorImg, CodeScoreModule, FuncFilterPopover, FuncSearch } from '@/pages/plugins/funcTemplate'
-import { TagShowOpt } from '@/pages/plugins/funcTemplateType'
+import type { TagShowOpt } from '@/pages/plugins/funcTemplateType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { Tooltip } from 'antd'
@@ -35,23 +35,23 @@ import { pluginTypeToName } from '@/pages/plugins/builtInData'
 import { PluginsGridCheckIcon } from '@/pages/plugins/icon'
 import { onPluginTagsToName } from '@/pages/plugins/baseTemplate'
 import { formatDate } from '@/utils/timeUtil'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { yakitNotify } from '@/utils/notification'
 import {
-  PluginStarsRequest,
-  PluginsRecycleRequest,
+  type PluginStarsRequest,
+  type PluginsRecycleRequest,
   apiPluginStars,
   apiReductionRecyclePlugin,
   apiUpdatePluginPrivateMine,
 } from '@/pages/plugins/utils'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { useStore } from '@/store'
-import { RollingLoadList, RollingLoadListProps } from '@/components/RollingLoadList/RollingLoadList'
+import { RollingLoadList, type RollingLoadListProps } from '@/components/RollingLoadList/RollingLoadList'
 import { YakEditor } from '@/utils/editors'
-import { CheckboxChangeEvent } from 'antd/lib/checkbox'
+import type { CheckboxChangeEvent } from 'antd/lib/checkbox'
 import { SolidClouduploadIcon, SolidThumbupIcon } from '@/assets/icon/solid'
-import { YakScript } from '@/pages/invoker/schema'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakScript } from '@/pages/invoker/schema'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { PluginUpload } from '@/pages/plugins/local/PluginLocalUpload'
 import { setClipboardText } from '@/utils/clipboard'
@@ -261,7 +261,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
     }
   })
   const onDelAllTag = useMemoizedFn(() => {
-    let newFilters: PluginFilterParams = {}
+    const newFilters: PluginFilterParams = {}
     Object.keys(filters).forEach((key) => {
       newFilters[key] = []
     })
@@ -1278,7 +1278,7 @@ export const RecycleOptFooterExtra: React.FC<RecycleOptFooterExtraProps> = memo(
     }
 
     setRestoreLoading(true)
-    let request: PluginsRecycleRequest = {
+    const request: PluginsRecycleRequest = {
       uuid: [info.uuid],
     }
     apiReductionRecyclePlugin(request)
@@ -1379,7 +1379,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
   })
 
   const menus = useMemo(() => {
-    if (!!info.IsCorePlugin) {
+    if (info.IsCorePlugin) {
       return [
         {
           key: 'export',

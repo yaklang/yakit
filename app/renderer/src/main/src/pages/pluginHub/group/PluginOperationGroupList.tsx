@@ -1,6 +1,6 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { SolidFolderopenIcon } from '@/assets/icon/solid'
-import { PluginGroupList, GroupListItem } from './PluginGroupList'
+import { PluginGroupList, type GroupListItem } from './PluginGroupList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -12,17 +12,17 @@ import {
   apiFetchQueryYakScriptGroupOnline,
   apiFetchRenameYakScriptGroupLocal,
   apiFetchRenameYakScriptGroupOnline,
-  PluginGroupDel,
-  PluginGroupRename,
+  type PluginGroupDel,
+  type PluginGroupRename,
 } from '../../plugins/utils'
-import { GroupCount } from '@/pages/invoker/schema'
+import type { GroupCount } from '@/pages/invoker/schema'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { CloudDownloadIcon } from '@/assets/newIcon'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import styles from './PluginOperationGroupList.module.scss'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { isEnpriTraceAgent } from '@/utils/envfile'
 
 export interface PluginOperationGroupListRefProps {

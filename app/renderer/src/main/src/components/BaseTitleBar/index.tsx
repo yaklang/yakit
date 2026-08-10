@@ -1,4 +1,4 @@
-import { type FC, useState, useEffect, MouseEvent, ReactNode, useCallback } from 'react'
+import { type FC, useState, useEffect, type MouseEvent, type ReactNode, useCallback } from 'react'
 import {
   MacUIOpCloseSvgIcon,
   MacUIOpMaxSvgIcon,

@@ -1,5 +1,5 @@
-import { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
-import { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
+import { type HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 
 type ItemProps = Omit<HorizontalScrollCardItemInfoSingleProps, 'tag' | 'item' | 'compact'>
 export interface HorizontalScrollCardProps {

@@ -1,10 +1,10 @@
-import React from 'react'
+import type React from 'react'
 import { MITMPage } from '../mitm/MITMPage'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
-import MITMContext, { MITMContextStore, MITMVersion } from '../mitm/Context/MITMContext'
+import MITMContext, { type MITMContextStore, MITMVersion } from '../mitm/Context/MITMContext'
 import { useCreation } from 'ahooks'
-import { MITMHackerPageInfoProps } from '@/store/pageInfo'
+import type { MITMHackerPageInfoProps } from '@/store/pageInfo'
 
 export interface HTTPHackerProp {}
 
