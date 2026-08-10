@@ -21,7 +21,7 @@ Yakit 是一个 Electron 桌面应用，由三部分组成：
 
 ## 前置要求
 
-- Node.js（建议使用项目约定的版本，参见 `.nvmrc` 或团队约定）
+- Node.js（版本以团队约定为准，仓库暂未提供 `.nvmrc`）
 - Yarn（本项目使用 `yarn` 作为包管理器，根目录已提供 `yarn.lock`）
 - macOS（Apple Silicon / M 芯片）如遇到原生依赖编译失败，可参考 `ELECTRON_GUIDE.md` 执行：
   ```bash
@@ -46,59 +46,75 @@ yarn install-link-render
 # 等价于：cd app/renderer/engine-link-startup && yarn install
 ```
 
-> 主渲染端依赖了 `patch-package`，其 `postinstall` 脚本会在 `yarn install` 后自动执行补丁，请勿跳过。
 
 ## 启动开发环境
 
-### 方式一：一键启动（推荐）
+> 开发模式下 Electron 主进程会分别加载主窗口 `http://127.0.0.1:3000` 与引擎链接窗口 `http://127.0.0.1:5173`，因此**两个渲染端都必须先成功启动**，再启动 Electron，否则对应窗口会白屏。
 
-根目录提供了 `dev` 脚本，它会启动主渲染端并等待 `3000` 端口就绪后启动 Electron：
+### 启动前依赖检查（重要）
 
-```bash
-yarn dev
-# 等价于：concurrently -k "yarn start-render" "wait-on tcp:3000 && yarn start-electron"
-```
-
-> 注意：`yarn dev` 只等待了主渲染端的 `3000` 端口，**未等待 Link 渲染端的 `5173`**。
-> 若引擎链接窗口出现白屏，请改用「方式二」手动启动，或先用 `yarn start-link-render` 单独拉起 Link 渲染端。
-
-### 方式二：手动分步启动（最稳妥）
-
-按以下顺序执行，每一步成功后再进行下一步：
+启动项目前，先检查本地依赖是否与仓库一致（尤其是 `git pull` 之后，别人可能新增或升级了依赖）：
 
 ```bash
-# 1. 启动主渲染端（监听 3000）
-yarn start-render
-
-# 2. 启动 Link 渲染端（监听 5173）
-yarn start-link-render
-
-# 3. 两个渲染端都就绪后，启动 Electron 主进程
-yarn start-electron
+yarn check-deps
 ```
 
-也可以用 `concurrently` 同时启动两个渲染端：
+- 若提示「未安装依赖」：按提示先完成上文「依赖安装」三步曲。
+- 若提示「依赖可能有更新」：向用户确认是否重新安装对应子项目的依赖（`yarn install` / `yarn install-render` / `yarn install-link-render`）。
+- 若提示「依赖一致」：可直接进入启动步骤。
+
+### 启动步骤
+
+先同时启动两个渲染端（:3000 主渲染端 + :5173 Link 渲染端）：
 
 ```bash
 yarn start-renders
 # 等价于：concurrently "yarn start-render" "yarn start-link-render"
 ```
 
-待两个端口（`3000` 与 `5173`）均可访问后，再执行 `yarn start-electron`。
+待两个端口（`3000` 与 `5173`）均可访问后，再启动 Electron 主进程：
+
+```bash
+yarn start-electron
+```
 
 ## 多版本/多平台变体
 
-项目通过 `--mode` / `env-cmd` 环境切换支持多个发行版本（默认 / enterprise / simpleEE / irify / irifyEnterprise / memfit）。
-开发时如无特殊需求，使用默认模式即可；如需启动企业版等变体，可参考根 `package.json` 中的对应脚本：
+> 依赖安装步骤与版本无关，请先按上文「依赖安装」完成；版本差异只体现在下面的启动 / 构建 / 打包命令上。
+
+项目通过 `--mode` / `env-cmd` 环境切换支持多个发行版本。开发时如无特殊需求，使用默认模式即可。
+
+版本由渲染端注入的 env 决定（主渲染端 `REACT_APP_PLATFORM`、Link 渲染端 `VITE_PLATFORM`），**Electron 主进程不区分版本**，它只加载当前已运行的渲染端地址。
+
+| 版本（脚本后缀） | 产品名 | 性质 | 本地引擎端口 | 同时启动两渲染端 | 构建两渲染端 | 对应平台打包 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 默认 | Yakit | 社区版 CE | `9011` | `yarn start-renders` | `yarn build-renders` | `pack-mac` / `pack-win` / `pack-linux` |
+| `-enterprise` | EnpriTrace | 企业版 EE | `9012` | `yarn start-renders-enterprise` | `yarn build-renders-enterprise` | `pack-*-ee` |
+| `-simple-enterprise` | EnpriTraceAgent | 便携 / 简易企业版 SE | `9013` | `yarn start-renders-simple-enterprise` | `yarn build-renders-simple-enterprise` | `pack-*-se` |
+| `-irify` | IRify | IRify 社区版 | `9014` | `yarn start-renders-irify` | `yarn build-renders-irify` | `pack-*-irify` |
+| `-irify-enterprise` | IRifyEnpriTrace | IRify 企业版 | `9015` | `yarn start-renders-irify-enterprise` | `yarn build-renders-irify-enterprise` | `pack-*-irify-ee` |
+| `-memfit` | Memfit AI | AI Agent 精简版 | `9016` | `yarn start-renders-memfit` | `yarn build-renders-memfit` | `pack-*-memfit` |
+
+> 也可以只启动单个渲染端：主渲染端用 `yarn start-render-<后缀>`，Link 渲染端用 `yarn start-link-render-<后缀>`（默认版本无后缀）。
+
+### 启动某个版本（非默认版本无一键 dev）
 
 ```bash
-yarn start-renders-enterprise        # 同时启动两个渲染端（企业版）
-yarn start-render-irify              # 仅启动主渲染端（irify 版）
-yarn start-link-render-memfit        # 仅启动 Link 渲染端（memfit 版）
-# ... 以此类推
+# 1. 同时启动该版本的两个渲染端（:3000 主渲染端 + :5173 Link 渲染端）
+yarn start-renders-enterprise        # 以企业版为例，其它版本见上表
+
+# 2. 两个端口（3000 与 5173）均可访问后，启动 Electron 主进程
+yarn start-electron
 ```
 
-启动 Electron 时无需指定版本，它会加载当前已运行的渲染端地址。
+### 各版本功能差异（概要）
+
+- **默认 / Yakit**：完整社区版基线，所有功能开放。
+- **enterprise / EnpriTrace**：企业版，使用企业 token、企业远端配置、独立的企业数据库 `company-default-yakit.db`。
+- **simpleEE / EnpriTraceAgent**：便携 / 简易企业版，隶属企业系（`isEnterpriseOrSimpleEdition()` 为 true）。
+- **irify / IRify**：IRify 社区版，紫色主题，含 `irifyHome`、`irifyAiCodeAudit`（AI 代码审计）等专属页面。
+- **irifyEnterprise / IRifyEnpriTrace**：IRify 的企业版分支。
+- **memfit / Memfit AI**：面向 AI Agent 的精简版，菜单与界面元素最多精简（大量 `!isMemfit()` 守卫）。
 
 ## 构建渲染端产物
 
@@ -116,7 +132,6 @@ yarn pack-mac
 ## 常见问题排查
 
 - **窗口白屏 / `ERR_CONNECTION_REFUSED`**：对应渲染端未启动。确认 `3000` 与 `5173` 端口均在监听后再启动 Electron。
-- **`yarn dev` 启动后引擎链接窗口白屏**：`dev` 脚本未等待 `5173`，请先用 `yarn start-link-render` 拉起 Link 渲染端。
 - **M1 芯片原生依赖编译失败**：执行 `brew install pkg-config pixman cairo pango`。
 - **Electron 下载慢 / 失败**：`source ./electron.env` 后重试。
 - **端口被占用**：确认没有残留的 vite / react-scripts / electron 进程，必要时 `lsof -i :3000` / `lsof -i :5173` 排查。
@@ -130,15 +145,26 @@ yarn pack-mac
 
 ## 关键脚本速查
 
+**公共命令（与版本无关）**：
+
 | 命令 | 作用 |
 | --- | --- |
 | `yarn install` | 安装根目录依赖 |
 | `yarn install-render` | 安装主渲染端依赖 |
 | `yarn install-link-render` | 安装 Link 渲染端依赖 |
-| `yarn start-render` | 启动主渲染端（:3000） |
-| `yarn start-link-render` | 启动 Link 渲染端（:5173） |
-| `yarn start-renders` | 同时启动两个渲染端 |
-| `yarn start-electron` | 启动 Electron 主进程 |
-| `yarn dev` | 一键启动（主渲染端 + Electron） |
-| `yarn build-renders` | 构建两个渲染端产物 |
-| `yarn pack-mac` / `pack-win` / `pack-linux` | 对应平台打包 |
+| `yarn start-electron` | 启动 Electron 主进程（不区分版本） |
+| `yarn check-deps` | 检查本地依赖是否与仓库一致（启动前执行） |
+
+**各版本启动 / 构建 / 打包**（默认版本无后缀；后缀取值见「多版本/多平台变体」表）：
+
+| 命令模式 | 作用 |
+| --- | --- |
+| `yarn start-renders[-<后缀>]` | 同时启动两个渲染端（:3000 + :5173） |
+| `yarn start-render[-<后缀>]` | 仅启动主渲染端（:3000） |
+| `yarn start-link-render[-<后缀>]` | 仅启动 Link 渲染端（:5173） |
+| `yarn build-renders[-<后缀>]` | 构建两个渲染端静态产物 |
+| `yarn build-render[-<后缀>]` | 仅构建主渲染端 |
+| `yarn build-link-render[-<后缀>]` | 仅构建 Link 渲染端 |
+| `yarn pack-mac[-<后缀>]` / `pack-win[-<后缀>]` / `pack-linux[-<后缀>]` | 对应平台打包 |
+
+> 版本后缀对照：默认（无） / `-enterprise`（EE，打包为 `pack-*-ee`）/ `-simple-enterprise`（SE，`pack-*-se`）/ `-irify`（`pack-*-irify`）/ `-irify-enterprise`（`pack-*-irify-ee`）/ `-memfit`（`pack-*-memfit`）。
