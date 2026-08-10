@@ -70,7 +70,16 @@ yarn check-deps
 
 ### 启动步骤
 
-> 若用户未指定启动哪个版本，**使用 `AskUserQuestion` 工具弹选项框**让用户选择版本（默认 Yakit / enterprise / simple-enterprise / irify / irify-enterprise / memfit，见「多版本/多平台变体」表），不要默认替用户决定。
+> 若用户未指定启动哪个版本，**使用 `AskUserQuestion` 工具弹选项框**让用户选择版本，不要默认替用户决定。
+>
+> ⚠️ `AskUserQuestion` 每个问题最多只能放 4 个选项（外加自动提供的「Other」自定义输入），而项目共有 6 个版本（见「多版本/多平台变体」表），无法一次性全部展示。采用**分层弹框**策略：
+>
+> 1. **第一层弹框**：选项只放 4 个主版本——`Yakit`（默认）、`enterprise`（企业版）、`irify`（IRify 社区版）、`memfit`（AI 精简版）。question 文本中完整列出全部 6 个版本名，提示 `simple-enterprise` 与 `irify-enterprise` 会根据后续选择追问。
+> 2. **第二层弹框（按需追问）**：
+>    - 若用户在第一层选了 `enterprise`，再弹一次选项框，让用户在 `enterprise`（企业版 EE）与 `simple-enterprise`（便携 / 简易企业版 SE）之间二选一。
+>    - 若用户在第一层选了 `irify`，再弹一次选项框，让用户在 `irify`（IRify 社区版）与 `irify-enterprise`（IRify 企业版）之间二选一。
+>    - 若用户选了 `Yakit` 或 `memfit`，无需追问，直接确定。
+> 3. 这样既不超出工具单次 4 选项上限，又能覆盖全部 6 个版本，且用户全程点选、无需手动输入「Other」。
 
 先同时启动两个渲染端（:3000 主渲染端 + :5173 Link 渲染端）：
 
