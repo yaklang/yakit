@@ -68,11 +68,11 @@ const globalShortcutKeyEvents: EventsType = {
   },
   switchSubPageNext: {
     name: 'ShortcutKey.switchSubPageNext',
-    keys: [YakitKeyMod.Control, YakitKeyBoard.Tab],
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.RightArrow],
   },
   switchSubPagePrev: {
     name: 'ShortcutKey.switchSubPagePrev',
-    keys: [YakitKeyMod.Control, YakitKeyMod.Shift, YakitKeyBoard.Tab],
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.LeftArrow],
   },
   // 公共组件快捷键
   'sendAndJump*common': {
