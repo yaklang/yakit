@@ -98,6 +98,14 @@ import { Trans } from 'react-i18next'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { setClipboardText } from '@/utils/clipboard'
+import { StringToUint8Array } from '@/utils/str'
+import type { YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
+import {
+  canFetchStaticAnalyzeCopy,
+  findStaticAnalyzeCopyForSmokingItem,
+  formatSmokingEvaluateResultFallback,
+  isStaticCodeDetectionItem,
+} from '@/utils/staticAnalyzeCopy'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1541,9 +1549,59 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
 
   const [loading, setLoading] = useState<boolean>(true)
   const [response, setResponse] = useState<CodeScoreSmokingEvaluateResponseProps>()
+  const staticAnalyzeCopyCacheRef = useRef<{
+    code: string
+    type: string
+    results: YakStaticAnalyzeErrorResult[]
+  } | null>(null)
 
   const fetchStartState = useMemoizedFn(() => {
     return isStart
+  })
+
+  const fetchStaticAnalyzeCopyData = useMemoizedFn(async () => {
+    if (!canFetchStaticAnalyzeCopy(type) || !code) {
+      return null
+    }
+    const cached = staticAnalyzeCopyCacheRef.current
+    if (cached?.code === code && cached?.type === type) {
+      return cached
+    }
+    try {
+      const rsp: StaticAnalyzeErrorResponse = await ipcRenderer.invoke('StaticAnalyzeError', {
+        Code: StringToUint8Array(code),
+        PluginType: type,
+      })
+      const data = {
+        code,
+        type,
+        results: rsp?.Result || [],
+      }
+      staticAnalyzeCopyCacheRef.current = data
+      return data
+    } catch {
+      return null
+    }
+  })
+
+  const resolveSingleCopyText = useMemoizedFn(async (item: CodeScoreSmokingEvaluateResultProps): Promise<string> => {
+    if (isStaticCodeDetectionItem(item) && canFetchStaticAnalyzeCopy(type)) {
+      const analyzeData = await fetchStaticAnalyzeCopyData()
+      const matched = findStaticAnalyzeCopyForSmokingItem(item, analyzeData?.results)
+      if (matched) {
+        return matched
+      }
+    }
+    return formatSmokingEvaluateResultFallback(item)
+  })
+
+  const resolveAllCopyText = useMemoizedFn(async (): Promise<string> => {
+    const results = response?.Results || []
+    if (results.length === 0) {
+      return ''
+    }
+    const parts = await Promise.all(results.map((item) => resolveSingleCopyText(item)))
+    return parts.filter(Boolean).join('\n\n')
   })
 
   /**
@@ -1592,6 +1650,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
       setLoading(false)
       setResponse(undefined)
       setIsSpecial(false)
+      staticAnalyzeCopyCacheRef.current = null
     }
   }, [isStart])
 
@@ -1611,19 +1670,21 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
     return ''
   }
 
-  // 格式化单条检测结果
-  const formatSingleResult = (item: CodeScoreSmokingEvaluateResultProps) => {
-    const errorPosition = getErrorPosition(item)
-    // 基础内容：Item + Suggestion + 位置（如果有）
-    return `${item.Item}\n${item.Suggestion}${errorPosition ? `\n${errorPosition}` : ''}`
-  }
+  // 复制单条
+  const handleCopySingle = useMemoizedFn(async (item: CodeScoreSmokingEvaluateResultProps) => {
+    const text = await resolveSingleCopyText(item)
+    if (text) {
+      setClipboardText(text)
+    }
+  })
 
-  // 一键复制所有
-  const handleCopyAll = () => {
-    if (!response?.Results || response.Results.length === 0) return
-    const allText = response.Results.map((item) => formatSingleResult(item)).join('\n\n')
-    setClipboardText(allText)
-  }
+  // 一键复制全部
+  const handleCopyAll = useMemoizedFn(async () => {
+    const allText = await resolveAllCopyText()
+    if (allText) {
+      setClipboardText(allText)
+    }
+  })
 
   return (
     <div className={styles['code-score-modal']}>
@@ -1693,8 +1754,9 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                         <YakitButton
                           icon={<OutlineDocumentduplicateIcon />}
                           type="text"
+                          title={t('CodeScoreModule.copy_error')}
                           onClick={() => {
-                            setClipboardText(formatSingleResult(item))
+                            handleCopySingle(item)
                           }}
                         />
                       </div>
@@ -1711,8 +1773,13 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
             {
               <div className={styles['opt-results-wrap']}>
                 {!!(response?.Results || []).length && (
-                  <YakitButton type="text" onClick={handleCopyAll} className={styles['copy-btn']}>
-                    一键复制
+                  <YakitButton
+                    type="text"
+                    onClick={handleCopyAll}
+                    className={styles['copy-btn']}
+                    title={t('CodeScoreModule.copy_all_errors')}
+                  >
+                    {t('CodeScoreModule.copy_all_errors')}
                   </YakitButton>
                 )}
                 {response && (+response?.Score || 0) < 60 && (

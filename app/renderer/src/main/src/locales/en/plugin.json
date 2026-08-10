@@ -47,7 +47,9 @@
     "unable_to_judge_manual_review": "(Unable to judge, manual review required?)",
     "upload_failed_fix_and_retry": "(Upload failed, please fix and retry)",
     "manual_review": "Manual Review",
-    "detection_expected_duration": "Generally, the detection will complete within <duration>10-20s</duration>"
+    "detection_expected_duration": "Generally, the detection will complete within <duration>10-20s</duration>",
+    "copy_error": "Copy error details (with fix suggestions for AI)",
+    "copy_all_errors": "Copy all errors"
   },
   "PluginExecuteLog": {
     "plugin_log": "Plugin Log",

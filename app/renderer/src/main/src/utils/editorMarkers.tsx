@@ -17,6 +17,7 @@ export interface IMonacoEditorMarker {
 
 export interface YakStaticAnalyzeErrorResult {
   Message: Uint8Array
+  /** Rich copy text from engine (hints + code context); not used for editor markers. */
   RawMessage: Uint8Array
   Severity: 'Error' | 'Warning' | 'Info' | 'Hint' | string
   StartLineNumber: number
@@ -38,7 +39,8 @@ function getMarkerSeverity(name: string): MarkerSeverity {
 
 export const ConvertYakStaticAnalyzeErrorToMarker = (i: YakStaticAnalyzeErrorResult): IMonacoEditorMarker => {
   return {
-    message: i.Message.length > 0 ? Uint8ArrayToString(i.Message) : Uint8ArrayToString(i.RawMessage),
+    // Message is the short diagnostic; RawMessage is reserved for rich copy text.
+    message: Uint8ArrayToString(i.Message || new Uint8Array()),
     severity: getMarkerSeverity(i.Severity),
     startLineNumber: parseInt(`${i.StartLineNumber}`),
     startColumn: parseInt(`${i.StartColumn}`),

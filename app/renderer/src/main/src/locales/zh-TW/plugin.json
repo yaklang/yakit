@@ -47,7 +47,9 @@
     "unable_to_judge_manual_review": "（無法判斷，是否需要轉人工稽覈）",
     "upload_failed_fix_and_retry": "（上傳失敗，請修復後再上傳）",
     "manual_review": "轉人工稽覈",
-    "detection_expected_duration": "一般來說，檢測將會在 <duration>10-20s</duration> 內結束"
+    "detection_expected_duration": "一般來說，檢測將會在 <duration>10-20s</duration> 內結束",
+    "copy_error": "複製錯誤資訊（含修改建議，便於貼上給 AI 修復）",
+    "copy_all_errors": "一鍵複製全部錯誤"
   },
   "PluginExecuteLog": {
     "plugin_log": "外掛日誌",

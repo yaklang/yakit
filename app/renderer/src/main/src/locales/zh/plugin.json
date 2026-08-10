@@ -47,7 +47,9 @@
     "unable_to_judge_manual_review": "（无法判断，是否需要转人工审核）",
     "upload_failed_fix_and_retry": "（上传失败，请修复后再上传）",
     "manual_review": "转人工审核",
-    "detection_expected_duration": "一般来说，检测将会在 <duration>10-20s</duration> 内结束"
+    "detection_expected_duration": "一般来说，检测将会在 <duration>10-20s</duration> 内结束",
+    "copy_error": "复制错误信息（含修改建议，便于粘贴给 AI 修复）",
+    "copy_all_errors": "一键复制全部错误"
   },
   "PluginExecuteLog": {
     "plugin_log": "插件日志",
