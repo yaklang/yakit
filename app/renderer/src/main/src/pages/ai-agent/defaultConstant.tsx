@@ -336,6 +336,8 @@ export const iconMap = {
 
 export enum AttachedResourceTypeEnum {
   CONTEXT_PROVIDER_TYPE_FILE = 'file',
+  /** Yak Runner 可写脚本交付目标；与 Type=file 只读参考附加区分 */
+  CONTEXT_PROVIDER_TYPE_CODE = 'code',
   CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE = 'knowledge_base',
   CONTEXT_PROVIDER_TYPE_AITOOL = 'aitool',
   CONTEXT_PROVIDER_TYPE_AIFORGE = 'aiforge',
