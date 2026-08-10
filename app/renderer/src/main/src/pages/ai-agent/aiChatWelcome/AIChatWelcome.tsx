@@ -9,7 +9,7 @@ import type {
 import styles from './AIChatWelcome.module.scss'
 import DoomFlameBackground from './DoomFlameBackground'
 import { AIChatTextarea } from '../template/template'
-import { useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -21,6 +21,7 @@ import {
   OutlineExportIcon,
   OutlineImportIcon,
   OutlineOpenIcon,
+  OutlinePencilaltIcon,
   OutlinePinIcon,
   OutlinePinOffIcon,
   OutlinePluscircleIcon,
@@ -44,7 +45,15 @@ import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/Knowled
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
 import { ColorsChatIcon, ColorsMemfitIcon, ColorsPreViewMDIcon } from '@/assets/icon/colors'
-import { grpcGetAIReActRecommendedSkills } from '../grpc'
+import {
+  grpcGetAIReActRecommendedSkills,
+  grpcUpdateAIReActRecommendedSkill,
+  grpcResetAIReActRecommendedSkill,
+} from '../grpc'
+import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
+import { yakitNotify } from '@/utils/notification'
 
 enum AIChatWelcomeTabKeyEnum {
   Knowledge = 'knowledge',
@@ -344,7 +353,7 @@ const AIChatWelcomeSettingCard = memo(
     const getList = useMemoizedFn(() => {
       grpcGetAIReActRecommendedSkills().then((res) => {
         setList(res.Data)
-        if (!!res.Data[0]) setSelect([res.Data[0]]) // 默认选中第一个
+        if (res.Data[0] && select.length === 0) setSelect([res.Data[0]]) // 默认选中第一个
       })
     })
     useImperativeHandle(ref, () => {
@@ -352,6 +361,50 @@ const AIChatWelcomeSettingCard = memo(
         getSelect: () => select,
       }
     }, [select])
+    // #region 编辑推荐 Skill
+    const [editVisible, setEditVisible] = useState<boolean>(false)
+    const [editContent, setEditContent] = useState<string>('')
+    const [editLoading, setEditLoading] = useState<boolean>(false)
+    // 用 ref 存当前编辑项，避免触发多余渲染
+    const editItemRef = useRef<AIReActRecommendedSkill | null>(null)
+
+    const onEdit = useMemoizedFn((e: React.MouseEvent, item: AIReActRecommendedSkill) => {
+      e.stopPropagation()
+      editItemRef.current = item
+      setEditContent(item.Content)
+      setEditVisible(true)
+    })
+    const handleSave = useMemoizedFn(() => {
+      const item = editItemRef.current
+      if (!item) return
+      setEditLoading(true)
+      grpcUpdateAIReActRecommendedSkill({ Name: item.Name, Content: editContent })
+        .then(() => {
+          yakitNotify('success', '保存成功')
+          setEditVisible(false)
+          getList()
+        })
+        .catch(() => {})
+        .finally(() => setEditLoading(false))
+    })
+    const handleReset = useMemoizedFn(() => {
+      const item = editItemRef.current
+      if (!item) return
+      grpcResetAIReActRecommendedSkill({ Name: item.Name })
+        .then((res) => {
+          setEditContent(res.Content)
+          yakitNotify('success', '已恢复默认内容')
+        })
+        .catch(() => {})
+    })
+    const title = useCreation(() => {
+      return editItemRef.current
+        ? i18n.language?.startsWith('zh')
+          ? editItemRef.current.DisplayNameZhCN || editItemRef.current.Name
+          : editItemRef.current.Name
+        : ''
+    }, [editVisible, i18n.language])
+    // #endregion
     return (
       <div className={styles['card-list']} ref={listRef}>
         {list.map((item, index) => {
@@ -367,9 +420,31 @@ const AIChatWelcomeSettingCard = memo(
               <div className={styles['card-content']}>
                 <div>{displayName}</div>
               </div>
+              <OutlinePencilaltIcon onClick={(e) => onEdit(e, item)} className={styles['pencilalt-icon']} />
             </div>
           )
         })}
+        <YakitModal
+          visible={editVisible}
+          title={title}
+          width={700}
+          maskClosable={false}
+          centered
+          confirmLoading={editLoading}
+          onOk={handleSave}
+          onCancel={() => setEditVisible(false)}
+          getContainer={getMainOperatorPageBodyContainerOrBody()}
+          footerExtra={
+            <YakitButton type="outline2" onClick={handleReset}>
+              恢复默认
+            </YakitButton>
+          }
+          destroyOnClose
+        >
+          <div className={styles['edit-skill-modal']}>
+            <YakitEditor type="markdown" value={editContent} setValue={setEditContent} noMiniMap noLineNumber />
+          </div>
+        </YakitModal>
       </div>
     )
   }),

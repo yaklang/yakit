@@ -225,6 +225,8 @@
   gap: 4px;
   margin: 0 16px;
   justify-content: flex-start;
+  overflow: auto hidden;
+
   .card-item {
     @extend %display-flex-center;
     flex-shrink: 0;
@@ -241,6 +243,17 @@
     font-weight: 500;
     line-height: 16px; /* 133.333% */
     letter-spacing: 0.5px;
+
+    transition: all 0.2s;
+    &:hover {
+      .pencilalt-icon {
+        width: 16px;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
+      }
+    }
 
     .card-content {
       @extend %display-column-center;
@@ -261,9 +274,29 @@
     .default-icon {
       @extend %icon;
     }
+    .pencilalt-icon {
+      @extend %icon;
+      width: 0;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        width 0.2s,
+        margin-left 0.2s,
+        opacity 0.2s,
+        visibility 0s linear 0.2s;
+      &:hover {
+        color: var(--Colors-Use-Main-Hover);
+      }
+    }
   }
   .card-item-select {
     color: var(--Colors-Use-Main-Primary);
     background-color: var(--Colors-Use-Main-Focus);
   }
+}
+
+.edit-skill-modal {
+  height: 40vh;
 }
