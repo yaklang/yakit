@@ -4035,7 +4035,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo(
         setType(addType)
       }, 200)
     })
-    /**快捷关闭或者新增 */
+    /**快捷关闭或者新增或切换二级tab页 */
     const onKeyDown = useMemoizedFn((e, subItem: MultipleNodeInfo) => {
       const keys = convertKeyEventToKeyCombination(e)
       if (!keys) return
@@ -4044,6 +4044,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo(
       const event = getGlobalShortcutKeyEvents()
       const closeEvent = sortKeysCombination(event.removePage.keys).join('')
       const openEvent = sortKeysCombination(event.addSubPage.keys).join('')
+      const switchNextEvent = sortKeysCombination(event.switchSubPageNext.keys).join('')
+      const switchPrevEvent = sortKeysCombination(event.switchSubPagePrev.keys).join('')
       // 快捷键关闭
       if (triggerKeys === closeEvent) {
         e.preventDefault()
@@ -4057,6 +4059,27 @@ const SubTabList: React.FC<SubTabListProps> = React.memo(
         e.preventDefault()
         e.stopPropagation()
         subTabsRef.current?.onAddSubPage()
+        return
+      }
+      // 快捷键切换二级tab页（下一个/上一个循环切换）
+      const isSwitchNext = triggerKeys === switchNextEvent
+      const isSwitchPrev = triggerKeys === switchPrevEvent
+      if (isSwitchNext || isSwitchPrev) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (flatSubPage.length === 0) return
+        const currentIndex = flatSubPage.findIndex((ele) => ele.id === subItem.id)
+        let nextIndex = 0
+        if (currentIndex !== -1) {
+          nextIndex = isSwitchNext
+            ? currentIndex >= flatSubPage.length - 1
+              ? 0
+              : currentIndex + 1
+            : currentIndex <= 0
+              ? flatSubPage.length - 1
+              : currentIndex - 1
+        }
+        setSelectSubMenu({ ...flatSubPage[nextIndex] })
         return
       }
     })
