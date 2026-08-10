@@ -1,6 +1,5 @@
+import type React from 'react'
 import { monaco } from 'react-monaco-editor'
-import { editor as newEditor } from 'monaco-editor'
-import IModelDecoration = newEditor.IModelDecoration
 import { type BinaryFuzztagEntry, buildChipLabel, findPlaceholderOffsets } from '../binaryFuzztag'
 import type { YakitIModelDecoration, YakitIMonacoEditor, HighLightText } from '../YakitEditorType'
 import type { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
@@ -238,7 +237,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
             afterContentClassName: 'unicode-decode',
             after: { content: decoded, inlineClassName: 'unicode-decode-after' },
           },
-        } as IModelDecoration)
+        } as YakitIModelDecoration)
       }
     })()
   }
@@ -275,7 +274,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
               inlineClassName: 'unicode-decode-after',
             },
           },
-        } as IModelDecoration)
+        } as YakitIModelDecoration)
       }
     }
   })()
@@ -303,7 +302,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
 
   function highLightRange(item) {
     const { startOffset = 0, highlightLength = 0, startLineNumber, startColumn, endLineNumber, endColumn } = item
-    let range = {
+    const range = {
       startLineNumber: 0,
       startColumn: 0,
       endLineNumber: 0,
@@ -351,7 +350,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
           className: highLightClass ? highLightClass : 'hight-light-default-bg-color',
           hoverMessage: [{ value: item.hoverVal, isTrusted: true }],
         },
-      } as IModelDecoration)
+      } as YakitIModelDecoration)
     })
 
     const highLightFindArr = typeof highLightFind === 'function' ? highLightFind() : highLightFind
@@ -375,7 +374,7 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
           className: highLightFindClass ? highLightFindClass : 'hight-light-find-default-bg-color',
           hoverMessage: [{ value: '', isTrusted: true }],
         },
-      } as IModelDecoration)
+      } as YakitIModelDecoration)
     })
   })()
 

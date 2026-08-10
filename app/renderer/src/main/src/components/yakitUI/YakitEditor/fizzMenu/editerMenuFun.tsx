@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { monaco } from 'react-monaco-editor'
 import { editor as newEditor } from 'monaco-editor'
@@ -208,7 +208,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
                         let newSelectedText: string = selectedText
                         if (Array.isArray(Data) && Data.length > 0) {
                           // 选中项是否存在于标签中
-                          let isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
+                          const isHave: boolean = Data.map((item) => item.Label).includes(selectedText)
                           if (isHave) {
                             newSelectedText = selectedText.replace(/{{|}}/g, '')
                           }
@@ -337,13 +337,13 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
   })
 
   editor.onMouseUp((e) => {
-    // @ts-ignore
+    // @ts-expect-error 类型定义不完整，需要忽略此行
     const { leftButton, rightButton, posy, editorPos } = e.event
     // 获取编辑器所处x，y轴,并获取其长宽
     const { x, y } = editorPos
 
     // 计算焦点的坐标位置
-    let a: monaco.Position | null = editor.getPosition()
+    const a: monaco.Position | null = editor.getPosition()
     if (!a) return
     const position = editor.getScrolledVisiblePosition(a)
     if (position) {
@@ -373,7 +373,7 @@ export const editerMenuFun = (params: EditerMenuFunParams) => {
           // 行高
           // const lineHeight = editor.getOption(monaco.editor.EditorOption.lineHeight)
 
-          let countDirection: CountDirectionProps = {}
+          const countDirection: CountDirectionProps = {}
           if (isTopHalf) {
             // 鼠标位于编辑器上半部分
             countDirection.y = 'top'

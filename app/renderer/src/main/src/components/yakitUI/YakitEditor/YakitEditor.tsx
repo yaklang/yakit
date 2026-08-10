@@ -90,8 +90,8 @@ import { generateDecorations as generateDecorationsFn } from './decorations/gene
 import { editerMenuFun } from './fizzMenu/editerMenuFun'
 import { menuReduce, sortMenuFun, contextMenuKeybindingHandle } from './menus/menuHelpers'
 import {
-  EditorDetailInfoProps,
-  SmartDecodeAnchorRect,
+  type EditorDetailInfoProps,
+  type SmartDecodeAnchorRect,
   SmartDecodeFloatPanel,
   snapshotRect,
 } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'

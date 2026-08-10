@@ -1,5 +1,5 @@
-import React from 'react'
-import { monaco } from 'react-monaco-editor'
+import type React from 'react'
+import type { monaco } from 'react-monaco-editor'
 import { fontSizeOptions } from '@/store/editorFontSize'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { TFunction } from '@/i18n/useI18nNamespaces'

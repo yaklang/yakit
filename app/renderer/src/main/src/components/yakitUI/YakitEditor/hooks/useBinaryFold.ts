@@ -1,7 +1,7 @@
-import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from 'react'
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useRef } from 'react'
 import { useGetState, useMemoizedFn } from 'ahooks'
-import { monaco } from 'react-monaco-editor'
-import { BinaryFuzztagEntry, collapseBinaryFuzztag, expandBinaryFuzztag } from '../binaryFuzztag'
+import type { monaco } from 'react-monaco-editor'
+import { type BinaryFuzztagEntry, collapseBinaryFuzztag, expandBinaryFuzztag } from '../binaryFuzztag'
 import { MAX_BINARY_FOLD_ENTRIES } from '../constants'
 
 export interface UseBinaryFoldParams {
