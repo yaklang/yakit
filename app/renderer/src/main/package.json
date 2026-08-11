@@ -146,7 +146,6 @@
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject",
     "analyzer": "cross-env REACT_APP_ANALYZER=true react-app-rewired build",
-    "postinstall": "patch-package",
     "release-render": "node scripts/release-render.js"
   },
   "browserslist": [
@@ -163,7 +162,6 @@
     "eslint-plugin-react-hooks": "7.1.1",
     "mini-css-extract-plugin": "^2.7.6",
     "node-polyfill-webpack-plugin": "^3.0.0",
-    "patch-package": "^8.0.0",
     "postcss-normalize": "^10.0.1",
     "progress-bar-webpack-plugin": "^2.1.0",
     "sass": "^1.54.8",
