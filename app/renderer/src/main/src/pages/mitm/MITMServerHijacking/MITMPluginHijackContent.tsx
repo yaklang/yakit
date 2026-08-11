@@ -913,7 +913,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
             <PluginGroup
               selectGroup={selectGroup}
               setSelectGroup={setSelectGroup}
-              excludeType={['yak', 'codec', 'lua', 'nuclei']}
+              excludeType={['yak', 'codec', 'nuclei', 'context-menu']}
               wrapperClassName={styles['plugin-group']}
               pluginListQuery={pluginListQuery}
               total={total}

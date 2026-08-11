@@ -1,0 +1,78 @@
+.execution {
+  min-height: 360px;
+  background: var(--Colors-Use-Basic-Background);
+}
+
+// 头部右侧操作区（执行/停止 + 进度条 + 刷新 + 编辑），对齐 LocalPluginExecuteDetailHeard 的布局
+.plugin-head-executing {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+// 参数表单区：对齐 LocalPluginExecuteDetailHeard 的 plugin-execute-form-wrapper（grid 1fr→0fr 动画收起）
+.execution-form-wrapper {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: all 0.3s ease;
+  padding: 24px 12px 0;
+
+  :global {
+    .ant-form {
+      overflow: hidden;
+    }
+  }
+}
+
+// 收起参数（含执行中自动收起）
+.execution-form-wrapper-hidden {
+  grid-template-rows: 0fr;
+  padding-top: 0;
+}
+
+.execution-form-operate {
+  display: flex;
+  align-items: center;
+
+  .execution-form-operate-start {
+    margin-right: 8px;
+  }
+}
+
+.packet-confirm-wraper {
+  display: flex;
+  justify-content: space-between;
+}
+
+.packet-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  strong {
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  span {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 11px;
+    line-height: 16px;
+  }
+}
+
+.execution-empty {
+  padding: 72px 20px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  text-align: center;
+}

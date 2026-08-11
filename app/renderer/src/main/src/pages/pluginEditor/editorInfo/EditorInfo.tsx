@@ -606,27 +606,6 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                   })}
                 </>
               )}
-              {/* codec 插件专用 ↓↓↓ */}
-              {type === 'codec' && (
-                <>
-                  {CodecTypePluginSwitchs.map((item) => {
-                    const check = tags.findIndex((tag) => {
-                      return handleFilterTag(tag, item)
-                    })
-                    return (
-                      <div key={item} className={styles['switch-wrapper']}>
-                        <YakitSwitch
-                          checked={check !== -1}
-                          onChange={(check) => {
-                            handleSwitchToTags(check, item)
-                          }}
-                        />
-                        {PluginSwitchTagToContent[item] || t('EditorInfo.invalidItem')}
-                      </div>
-                    )
-                  })}
-                </>
-              )}
 
               <Form.Item name="YakitPluginAIBaseInfo" noStyle>
                 <AIPluginComponent getCodeContent={getCodeContent} />
@@ -740,24 +719,12 @@ export const PluginTypeSelect: React.FC<YakitSelectProps> = memo((props) => {
     >
       {DefaultTypeList.map((item, index) => {
         return (
-          <YakitSelect.Option key={item.key} disabled={item.key === 'lua'}>
+          <YakitSelect.Option key={item.key}>
             <div key={item.key} className={styles['plugin-type-select-option']}>
               <div className={styles['header-icon']}>{item.icon}</div>
               <div className={styles['type-content']}>
-                <div
-                  className={classNames(styles['name-style'], {
-                    [styles['disable-color']]: item.key === 'lua',
-                  })}
-                >
-                  {item.name}
-                </div>
-                <div
-                  className={classNames(styles['description-style'], {
-                    [styles['disable-color']]: item.key === 'lua',
-                  })}
-                >
-                  {item.description}
-                </div>
+                <div className={classNames(styles['name-style'])}>{item.name}</div>
+                <div className={classNames(styles['description-style'])}>{item.description}</div>
               </div>
             </div>
           </YakitSelect.Option>

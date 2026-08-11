@@ -65,7 +65,7 @@ export interface SuggestionDescription {
 }
 export interface YaklangLanguageSuggestionRequest {
   InspectType: 'completion' | 'hover' | 'signature' | 'definition' | 'reference'
-  YakScriptType: 'yak' | 'mitm' | 'port-scan' | 'codec' | 'syntaxflow' | 'fuzztag'
+  YakScriptType: 'yak' | 'mitm' | 'port-scan' | 'codec' | 'syntaxflow' | 'fuzztag' | 'context-menu'
   YakScriptCode: string
   Range: Range
 }

@@ -11,7 +11,6 @@ import React, {
 } from 'react'
 import { Divider, Tooltip, Badge } from 'antd'
 import type { YakDeleteHTTPFlowRequest, YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
-import type { YakScript } from '../../pages/invoker/schema'
 import type { HTTPFlowDetailProp } from '../HTTPFlowDetail'
 import { yakitNotify, yakitFailed } from '../../utils/notification'
 import style from './HTTPFlowTable.module.scss'
@@ -59,10 +58,10 @@ import { SolidStarIcon } from '@/assets/icon/solid'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
 import type { ParamsTProps, VirtualTableRefreshReason } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { useCampare } from '@/hook/useCompare/useCompare'
-import { queryYakScriptList } from '@/pages/yakitStore/network'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { PluginSwitchToTag } from '@/pages/pluginEditor/defaultconstants'
+import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
+import { getSceneTabActions } from '@/pages/manageRightClickPlugins/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import { setClipboardText } from '@/utils/clipboard'
 import { RemoteHistoryGV } from '@/enums/history'
@@ -162,7 +161,7 @@ import {
   findHTTPFlowSelectionIndex,
   patchHTTPFlowTags,
 } from './HTTPFlowTable.utils'
-import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
+import { PLUGIN_PREFIX, PLUGIN_RIGHT_MAG } from '../yakitUI/YakitEditor/YakitEditor'
 import {
   createMITMLiveAdaptiveBatchState,
   drainMITMLiveBacklog,
@@ -1163,9 +1162,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
 
   useEffect(() => {
-    emiter.on('onRefPluginCodecMenu', onRefreshPluginCodecMenu)
+    emiter.on('refreshContextMenuActions', onRefreshPluginCodecMenu)
     return () => {
-      emiter.off('onRefPluginCodecMenu', onRefreshPluginCodecMenu)
+      emiter.off('refreshContextMenuActions', onRefreshPluginCodecMenu)
     }
   }, [])
 
@@ -2266,70 +2265,65 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     openPacketNewWindow(getPacketNewWindow(r))
   })
 
-  // 插件扩展(单选)
+  // 右键插件(单选)
   const [codecSingleHistoryPlugin, setCodecSingleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
-  const searchCodecSingleHistoryPlugin = useMemoizedFn((): any => {
-    queryYakScriptList(
-      'codec',
-      (i: YakScript[], total) => {
-        if (!total || total === 0) {
-          return
-        }
-        setCodecSingleHistoryPlugin(
-          i.map((script) => {
-            const isAiPlugin: boolean = script.Tags.includes('AI工具')
-            return {
-              key: script.ScriptName,
-              label: script.ScriptName,
-              params: script.Params,
-              isAiPlugin,
-            }
-          }),
-        )
-      },
-      undefined,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      [PluginSwitchToTag.PluginCodecSingleHistorySwitch],
-    )
+  const searchCodecSingleHistoryPlugin = useMemoizedFn(() => {
+    getSceneTabActions(ManageRightClickPluginsTabKey.PluginExtensionSingle).then(({ list }) => {
+      setCodecSingleHistoryPlugin(
+        list.map((action) => {
+          return {
+            key: action.PluginName,
+            label: action.PluginName,
+            params: action.Params || [],
+            isAiPlugin: !!action.IsAIPlugin,
+            executionType: action.ExecutionType,
+            action,
+          }
+        }),
+      )
+    })
   })
 
-  // 插件扩展(多选)
+  // 右键插件(多选)
   const [codecMultipleHistoryPlugin, setCodecMultipleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
-  const searchCodecMultipleHistoryPlugin = useMemoizedFn((): any => {
-    queryYakScriptList(
-      'codec',
-      (i: YakScript[], total) => {
-        if (!total || total === 0) {
-          return
-        }
-        setCodecMultipleHistoryPlugin(
-          i.map((script) => {
-            const isAiPlugin: boolean = script.Tags.includes('AI工具')
-            return {
-              key: script.ScriptName,
-              label: script.ScriptName,
-              params: script.Params,
-              isAiPlugin,
-            }
-          }),
-        )
-      },
-      undefined,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      [PluginSwitchToTag.PluginCodecMultipleHistorySwitch],
-    )
+  /** 多选 tab 是否已被用户自定义过（含清空） */
+  const searchCodecMultipleHistoryPlugin = useMemoizedFn(() => {
+    getSceneTabActions(ManageRightClickPluginsTabKey.PluginExtensionMultiple).then(({ list }) => {
+      setCodecMultipleHistoryPlugin(
+        list.map((action) => {
+          return {
+            key: action.PluginName,
+            label: action.PluginName,
+            params: action.Params || [],
+            isAiPlugin: !!action.IsAIPlugin,
+            executionType: action.ExecutionType,
+            action,
+          }
+        }),
+      )
+    })
+  })
+
+  const getManageRightClickPluginsMenuItem = useMemoizedFn(() => {
+    return {
+      key:
+        PLUGIN_RIGHT_MAG +
+        (selectedRowKeys.length > 1
+          ? ManageRightClickPluginsTabKey.PluginExtensionMultiple
+          : ManageRightClickPluginsTabKey.PluginExtensionSingle),
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <OutlineCogIcon />
+          {t('YakitEditor.manageRightClickPlugins')}
+        </div>
+      ),
+      params: [],
+      isAiPlugin: false,
+    }
   })
 
   const addIconLabel = useMemoizedFn((data: codecHistoryPluginProps[]) => {
-    return data.map((item) => {
+    const items = data.map((item) => {
       const baseItem = {
         ...item,
         key: `${PLUGIN_PREFIX}${item.key}`,
@@ -2365,37 +2359,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
       return baseItem
     })
+
+    items.push(getManageRightClickPluginsMenuItem())
+
+    return items
   })
   const getCodecHistoryPlugin = useMemoizedFn(() => {
-    if (selectedRowKeys.length > 1) {
-      return codecMultipleHistoryPlugin.length > 0
-        ? addIconLabel(codecMultipleHistoryPlugin)
-        : [
-            {
-              key: 'Get*plug-in',
-              label: (
-                <>
-                  <CloudDownloadIcon style={{ marginRight: 4 }} />
-                  {t('HTTPFlowTable.getPlugin')}
-                </>
-              ),
-            },
-          ]
-    } else {
-      return codecSingleHistoryPlugin.length > 0
-        ? addIconLabel(codecSingleHistoryPlugin)
-        : [
-            {
-              key: 'Get*plug-in',
-              label: (
-                <>
-                  <CloudDownloadIcon style={{ marginRight: 4 }} />
-                  {t('HTTPFlowTable.getPlugin')}
-                </>
-              ),
-            },
-          ]
+    const isMultiple = selectedRowKeys.length > 1
+    const plugins = isMultiple ? codecMultipleHistoryPlugin : codecSingleHistoryPlugin
+
+    if (plugins.length > 0) {
+      return addIconLabel(plugins)
     }
+
+    return [getManageRightClickPluginsMenuItem()]
   })
 
   const [editTagsVisible, setEditTagsVisible] = useState<boolean>(false)
@@ -2705,6 +2682,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setCompareRight,
     getUrlWithoutQuery,
     getCodecHistoryPlugin,
+    pageType,
     codecMultipleHistoryPluginCom,
     codecSingleHistoryPluginCom,
     selectedRowKeysCom,

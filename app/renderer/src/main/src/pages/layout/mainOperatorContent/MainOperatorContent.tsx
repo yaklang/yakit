@@ -30,6 +30,7 @@ import {
   getDefaultFixedTabs,
   LogOutCloseRoutes,
   getDefaultFixedTabsNoSinglPageRoute,
+  isIndependentTabRoute,
 } from '@/routes/newRoute'
 import {
   isEnpriTraceAgent,
@@ -277,9 +278,9 @@ const generateTabIdentity = (key: string, index?: number) => {
   return { time, tabId }
 }
 
-/** 计算 Plugin_OP 下一个 Tab 序号（取已有 Tab 最大编号 + 1） */
+/** 计算 Plugin_OP / ContextMenuResult 下一个 Tab 序号（取已有 Tab 最大编号 + 1） */
 const getPluginOpNextTabIndex = (pages: PageCache[], pluginName: string) => {
-  const samePluginPages = pages.filter((item) => item.route === YakitRoute.Plugin_OP && item.menuName === pluginName)
+  const samePluginPages = pages.filter((item) => isIndependentTabRoute(item.route) && item.menuName === pluginName)
   if (samePluginPages.length === 0) return 1
   let max = 0
   samePluginPages.forEach((item) => {
@@ -955,6 +956,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.Plugin_OP:
         addPluginOp(params)
         break
+      case YakitRoute.ManageRightClickPlugins:
+        addManageRightClickPlugins(params)
+        break
+      case YakitRoute.ContextMenuResult:
+        addContextMenuResult(params)
+        break
       default:
         break
     }
@@ -1292,6 +1299,27 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       {
         pageParams: {
           pluginOpPageInfo: { ...data },
+        },
+      },
+    )
+  })
+  const addManageRightClickPlugins = useMemoizedFn((data) => {
+    openMenuPage(
+      { route: YakitRoute.ManageRightClickPlugins },
+      {
+        pageParams: {
+          manageRightClickPluginsPageInfo: { ...data },
+        },
+      },
+    )
+  })
+  const addContextMenuResult = useMemoizedFn((data) => {
+    if (!data?.executionID) return
+    openMenuPage(
+      { route: YakitRoute.ContextMenuResult, pluginName: data.pluginName || '右键插件结果' },
+      {
+        pageParams: {
+          contextMenuResultPageInfo: { ...data },
         },
       },
     )
@@ -1975,10 +2003,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       if (currentPage) {
         const info: OnlyPageCache = {
           route: currentPage.route,
-          menuName:
-            currentPage.route === YakitRoute.Plugin_OP
-              ? currentPage.menuName
-              : YakitRouteToPageInfo[currentPage.route]?.label || '',
+          menuName: isIndependentTabRoute(currentPage.route)
+            ? currentPage.menuName
+            : YakitRouteToPageInfo[currentPage.route]?.label || '',
           pluginId: currentPage.pluginId,
           pluginName: currentPage.pluginName,
           routeKey: currentPage.routeKey,
@@ -2022,11 +2049,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       }
       const selectSubItem = openFlag ? true : nodeParams?.selectSubItem
       // 菜单在代码内的名字
-      const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ''
+      const menuName = isIndependentTabRoute(route) ? pluginName : YakitRouteToPageInfo[route]?.label || ''
       if (!menuName) return
 
-      // Plugin_OP：每次打开新增一级 Tab，名称 {pluginName}-N 递增
-      if (route === YakitRoute.Plugin_OP) {
+      // Plugin_OP / ContextMenuResult：每次打开新增一级 Tab，名称 {pluginName}-N 递增
+      if (isIndependentTabRoute(route)) {
         const baseKey = routeConvertKey(route, pluginName)
         const nextIndex = getPluginOpNextTabIndex(pageCache, menuName)
         const verbose = `${pluginName}-${nextIndex}`
@@ -2220,6 +2247,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         break
       case YakitRoute.Plugin_OP:
         onSetPluginOp(singleUpdateNode, 1)
+        break
+      case YakitRoute.ContextMenuResult:
+        onSetContextMenuResult(singleUpdateNode, 1)
+        break
+      case YakitRoute.ManageRightClickPlugins:
+        onSetManageRightClickPlugins(singleUpdateNode, 1)
         break
       default:
         break
@@ -2417,6 +2450,45 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     addPagesDataCache(YakitRoute.Plugin_OP, newPageNode)
   })
 
+  const onSetContextMenuResult = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+    const newPageNode: PageNodeItemProps = {
+      id: `${randomString(8)}-${order}`,
+      routeKey: YakitRoute.ContextMenuResult,
+      pageGroupId: node.groupId,
+      pageId: node.id,
+      pageName: node.verbose,
+      pageParamsInfo: {
+        contextMenuResultPageInfo: node.pageParams?.contextMenuResultPageInfo
+          ? { ...node.pageParams.contextMenuResultPageInfo }
+          : undefined,
+      },
+      sortFieId: order,
+    }
+    addPagesDataCache(YakitRoute.ContextMenuResult, newPageNode)
+  })
+
+  const onSetManageRightClickPlugins = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+    const newPageNode: PageNodeItemProps = {
+      id: `${randomString(8)}-${order}`,
+      routeKey: YakitRoute.ManageRightClickPlugins,
+      pageGroupId: node.groupId,
+      pageId: node.id,
+      pageName: node.verbose,
+      pageParamsInfo: {
+        manageRightClickPluginsPageInfo: node.pageParams?.manageRightClickPluginsPageInfo
+          ? { ...node.pageParams.manageRightClickPluginsPageInfo }
+          : undefined,
+      },
+      sortFieId: order,
+    }
+    const pageNodeInfo: PageProps = {
+      ...cloneDeep(defPage),
+      pageList: [newPageNode],
+      routeKey: YakitRoute.ManageRightClickPlugins,
+    }
+    setPagesData(YakitRoute.ManageRightClickPlugins, pageNodeInfo)
+  })
+
   const onSetYakAIAgent = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
     const newPageNode: PageNodeItemProps = {
       id: `${randomString(8)}-${order}`,
@@ -2602,7 +2674,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const removeMenuPage = useMemoizedFn((data: OnlyPageCache, assignPage?: OnlyPageCache) => {
     // 获取需要关闭页面的索引
     const index = pageCache.findIndex((item) => {
-      if (data.route === YakitRoute.Plugin_OP) {
+      if (isIndependentTabRoute(data.route)) {
         return item.routeKey === data.routeKey
       } else {
         return item.route === data.route
@@ -2615,7 +2687,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 如果有指定关闭后展示的页面，执行该逻辑
     if (assignPage) {
       activeIndex = pageCache.findIndex((item) => {
-        if (assignPage.route === YakitRoute.Plugin_OP) {
+        if (isIndependentTabRoute(assignPage.route)) {
           return item.routeKey === assignPage.routeKey
         } else {
           return item.route === assignPage.route
@@ -2639,7 +2711,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     setPageCache(
       getPageCache().filter((i) => {
-        if (data.route === YakitRoute.Plugin_OP) {
+        if (isIndependentTabRoute(data.route)) {
           return i.routeKey !== data.routeKey
         } else {
           return !(i.route === data.route)
@@ -2648,9 +2720,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
     removeSubscribeClose(data.route)
     // 关闭一级页面时,清除缓存
-    if (data.route === YakitRoute.Plugin_OP) {
+    if (isIndependentTabRoute(data.route)) {
       if (data.routeKey) {
-        removePagesDataCacheById(YakitRoute.Plugin_OP, data.routeKey)
+        removePagesDataCacheById(data.route, data.routeKey)
       }
     } else {
       clearDataByRoute(data.route)
@@ -2708,7 +2780,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       extraOpenMenuPage({ route: YakitRoute.SimpleDetect })
       // 简易企业版判断本地插件数-导入弹窗
       const newParams = {
-        Type: 'yak,mitm,codec,packet-hack,port-scan',
+        Type: 'yak,mitm,codec,context-menu,packet-hack,port-scan',
         Keyword: '',
         Pagination: { Limit: 20, Order: 'desc', Page: 1, OrderBy: 'updated_at' },
         UserId: 0,

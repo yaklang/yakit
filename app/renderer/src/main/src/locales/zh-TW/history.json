@@ -59,7 +59,7 @@
       "sendOnly": "僅傳送",
       "sendToWSFuzzer": "傳送到 WS Fuzzer",
       "packetScan": "資料包掃描",
-      "pluginExtension": "外掛擴充套件",
+      "pluginExtension": "右鍵外掛",
       "aiPlugin": "AI外掛",
       "copyURL": "複製 URL",
       "downloadResponseBody": "下載 Response Body",

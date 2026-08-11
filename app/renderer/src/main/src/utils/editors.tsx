@@ -27,6 +27,7 @@ type ITextModel = editor.ITextModel
 import { YAK_FORMATTER_COMMAND_ID, setEditorContext } from '@/utils/monacoSpec/yakEditor'
 type IModelDecoration = editor.IModelDecoration
 import type {
+  ContextMenuPacketEditorConfig,
   HighLightText,
   OperationRecordRes,
   OtherMenuListProps,
@@ -567,6 +568,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   onClickUrlWithoutQueryMenu?: () => void
   onClickOpenBrowserMenu?: () => void
   onClickOpenPacketNewWindowMenu?: () => void
+  /** 右键插件数据包上下文；未传时仍会按当前编辑器的 Request/Response 角色执行 */
+  contextMenuPacket?: ContextMenuPacketEditorConfig
 
   fixContentType?: string
   originalContentType?: string
@@ -1226,6 +1229,13 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
                     foldBinaryFuzztag={props.foldBinaryFuzztag}
                     onFoldBinaryFuzztagChange={props.onFoldBinaryFuzztagChange}
+                    contextMenuPacket={{
+                      role: isResponse ? 'response' : 'request',
+                      httpFlowId: props.downbodyParams?.Id,
+                      httpsState: props.defaultHttps === undefined ? undefined : props.defaultHttps ? 'https' : 'http',
+                      source: props.fromMITM ? 'MITM' : 'http-packet-editor',
+                      ...props.contextMenuPacket,
+                    }}
                     {...props.extraEditorProps}
                   />
                 )}

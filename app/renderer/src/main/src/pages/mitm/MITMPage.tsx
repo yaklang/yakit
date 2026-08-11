@@ -982,7 +982,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
               <PluginGroup
                 selectGroup={selectGroup}
                 setSelectGroup={setSelectGroup}
-                excludeType={['yak', 'codec', 'lua', 'nuclei']}
+                excludeType={['yak', 'codec', 'nuclei', 'context-menu']}
                 isMITMParamPlugins={2}
                 pluginListQuery={pluginListQuery}
                 total={total}

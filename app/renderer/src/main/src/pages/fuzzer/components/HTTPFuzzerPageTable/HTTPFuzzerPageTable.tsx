@@ -990,6 +990,22 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
       return (value && Uint8ArrayToString(value)) || ''
     }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
 
+    const contextMenuPacket = useMemo(() => {
+      let peerValue: string = ''
+      if (currentSelectShowType === 'response') {
+        if (currentSelectItem?.RequestRaw) {
+          peerValue = Uint8ArrayToString(currentSelectItem?.RequestRaw)
+        }
+      } else {
+        if (currentSelectItem?.ResponseRaw) {
+          peerValue = Uint8ArrayToString(currentSelectItem?.ResponseRaw)
+        }
+      }
+      return {
+        peerValue: peerValue,
+      }
+    }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
+
     const copyUrl = useMemoizedFn(() => {
       if (currentSelectItem?.RequestRaw) {
         copyAsUrl(
@@ -1140,7 +1156,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   </div>
                 }
                 defaultHttps={currentSelectItem?.IsHTTPS}
-                isResponse={true}
+                isResponse={currentSelectShowType === 'response'}
+                contextMenuPacket={contextMenuPacket}
                 readOnly={true}
                 loading={codeLoading}
                 // noHeader={true}

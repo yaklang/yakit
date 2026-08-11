@@ -1090,7 +1090,6 @@ export const apiDebugPlugin: (request: {
       }
       switch (params.PluginType) {
         case 'yak':
-        case 'lua':
           executeParams = {
             ...executeParams,
             Input: '',
@@ -1098,6 +1097,7 @@ export const apiDebugPlugin: (request: {
           break
         case 'mitm':
         case 'codec':
+        case 'context-menu':
           executeParams.ExecParams = delInvalidPluginExecuteParams(executeParams.ExecParams, pluginCustomParams)
           break
         case 'port-scan':

@@ -6,6 +6,7 @@ import type { FiltersItemProps, SortProps } from '@/components/TableVirtualResiz
 import type { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
 import type { OptionProps } from '@/components/YakitCombinationSearch/YakitCombinationSearchType'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { ContextMenuAction } from '@/pages/manageRightClickPlugins/types'
 import type { DebouncedFunc } from 'lodash'
 import type { HistoryPluginSearchType } from '@/utils/yakQueryHTTPFlow'
 import type { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
@@ -16,6 +17,9 @@ export interface codecHistoryPluginProps {
   label: string
   params: YakParamProps[]
   isAiPlugin: boolean
+  /** 动作执行链路，context-menu 为新流式执行 */
+  executionType?: ContextMenuAction['ExecutionType']
+  action?: ContextMenuAction
 }
 
 export interface HTTPHeaderItem {
@@ -279,6 +283,9 @@ export interface HistoryMenuData {
   onClickBatch?: (flows: HTTPFlow[], n?: number) => void
   params?: YakParamProps[]
   isAiPlugin?: boolean
+  /** 动作执行链路，context-menu 为新流式执行 */
+  executionType?: ContextMenuAction['ExecutionType']
+  action?: ContextMenuAction
 }
 
 export interface ColumnAllInfoItem {

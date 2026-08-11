@@ -110,6 +110,10 @@ interface PageParamsInfoProps {
   pluginOpPageInfo?: PluginOpPageInfoProps
   /** Codec 编解码页面 */
   codecPageInfo?: CodecPageInfoProps
+  /** 管理右键插件页面 */
+  manageRightClickPluginsPageInfo?: manageRightClickPluginsPageInfoProps
+  /** 右键插件执行结果页面 */
+  contextMenuResultPageInfo?: contextMenuResultPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -355,6 +359,16 @@ export interface PluginOpPageInfoProps {
   autoExecute: boolean
   noHTTPRequestTemplate: boolean
 }
+
+export interface manageRightClickPluginsPageInfoProps {
+  tab: string
+}
+
+export interface contextMenuResultPageInfoProps {
+  executionID: string
+  pluginName: string
+}
+
 interface PageInfoStoreProps {
   pages: Map<string, PageProps>
 

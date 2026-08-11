@@ -121,6 +121,11 @@ import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 const PluginHasParamsModal = lazy(() =>
   import('../pluginHasParamsDrawer/PluginHasParamsDrawer').then((m) => ({ default: m.PluginHasParamsModal })),
 )
+const ContextMenuExecutionHost = lazy(() =>
+  import('@/pages/manageRightClickPlugins/ContextMenuExecutionHost').then((m) => ({
+    default: m.ContextMenuExecutionHost,
+  })),
+)
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 
@@ -1248,7 +1253,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   }, [])
   /** ---------- 切换引擎时的逻辑 End ---------- */
 
-  // #region 插件扩展/ai插件
+  // #region 旧的codec右键插件/ai插件
   const openFuzzerModalVarRef = useRef<OpenFuzzerModal>()
   const [hasParamsOpen, setHasParamsOpen] = useState<boolean>(false)
   const paramsValueRef = useRef<{
@@ -2056,7 +2061,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           }}
           onFinish={() => {
             // 此处通知刷新各类基于codec插件菜单
-            emiter.emit('onRefPluginCodecMenu')
+            emiter.emit('refreshContextMenuActions')
           }}
           getContainer={codecPluginContainerRef.current}
         />
@@ -2072,6 +2077,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           onOkParamsModal={onOkParamsDrawer}
           {...paramsValueRef.current}
         />
+      </Suspense>
+
+      {/* 右键插件(context-menu)执行宿主：参数弹窗 + 执行结果分发 */}
+      <Suspense fallback={null}>
+        <ContextMenuExecutionHost />
       </Suspense>
     </div>
   )

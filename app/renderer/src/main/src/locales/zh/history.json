@@ -59,7 +59,7 @@
       "sendOnly": "仅发送",
       "sendToWSFuzzer": "发送到 WS Fuzzer",
       "packetScan": "数据包扫描",
-      "pluginExtension": "插件扩展",
+      "pluginExtension": "右键插件",
       "aiPlugin": "AI插件",
       "copyURL": "复制 URL",
       "downloadResponseBody": "下载 Response Body",

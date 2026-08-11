@@ -36,7 +36,11 @@ import type { HistoryMenuData, HTTPFlow } from './HTTPFlowTable.constants'
 import { hydrateHTTPFlowRequest, hydrateHTTPFlowRequests } from './HTTPFlowTable.packet'
 import { isHTTPFlowFavorite } from './HTTPFlowTable.utils'
 import style from './HTTPFlowTable.module.scss'
-import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
+import { PLUGIN_PREFIX, PLUGIN_RIGHT_MAG } from '../yakitUI/YakitEditor/YakitEditor'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { runContextMenuAction } from '@/pages/manageRightClickPlugins/ContextMenuExecutionHost'
+import { checkContextMenuVersion } from '@/pages/manageRightClickPlugins/utils'
+import { ContextMenuExecutionType, type ContextMenuHttpsState } from '@/pages/manageRightClickPlugins/types'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -90,6 +94,7 @@ export interface UseHTTPFlowTableContextMenuOptions {
   setCompareRight: (value: { content: string; language: string }) => void
   getUrlWithoutQuery: (url?: string) => string
   getCodecHistoryPlugin: () => HistoryMenuData[]
+  pageType?: string
   codecMultipleHistoryPluginCom: unknown
   codecSingleHistoryPluginCom: unknown
   selectedRowKeysCom: unknown
@@ -132,6 +137,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     setCompareRight,
     getUrlWithoutQuery,
     getCodecHistoryPlugin,
+    pageType,
     codecMultipleHistoryPluginCom,
     codecSingleHistoryPluginCom,
     selectedRowKeysCom,
@@ -591,26 +597,56 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     total,
   ])
 
-  // 插件扩展处理
+  // 右键插件处理
   const onPluginExtensionHandle = useMemoizedFn(
     ({
       key,
       keyPath,
       id,
+      rows,
       menu,
     }: {
       key: string
       keyPath: string[]
       id: Array<string | number>
+      rows: HTTPFlow[]
       menu: HistoryMenuData[]
     }) => {
       const menuItemName = keyPath[0]
 
-      const emitGetPluginEvent = () => {
-        emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
-      }
-
       const emitPluginEvent = (child: HistoryMenuData, isExec: boolean, scriptName: string) => {
+        // 与 feat 对齐的防御性闸门：空选/超 200 条不发执行
+        if (!rows.length) {
+          yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+          return
+        }
+        if (rows.length > 200) {
+          yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: 200 }))
+          return
+        }
+        // context-menu 类型走新流式执行接口，legacy-codec-* 保持原 codec 执行链路
+        if (child.executionType === ContextMenuExecutionType.ContextMenu && child.action) {
+          const action = child.action
+          const httpsValues = new Set(rows.map((item) => !!item.IsHTTPS))
+          let httpsState: ContextMenuHttpsState = 'unknown'
+          if (httpsValues.size > 1) httpsState = 'mixed'
+          else if (httpsValues.size === 1) httpsState = httpsValues.has(true) ? 'https' : 'http'
+
+          runContextMenuAction({
+            action,
+            configureParams: !isExec,
+            request: {
+              Source: pageType || 'History',
+              Trigger: 'context-menu',
+              HttpsState: httpsState,
+              HTTPFlowIDs: id.map((item) => Number(item)),
+              HasRequest: false,
+              HasResponse: false,
+              PacketRevision: '',
+            },
+          })
+          return
+        }
         emiter.emit(
           'onOpenFuzzerModal',
           JSON.stringify({
@@ -625,9 +661,14 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
       const getScriptName = (childKey: string) => childKey.replace(PLUGIN_PREFIX, '')
 
-      // ----- 点击获取插件 -----
-      if (key === 'Get*plug-in') {
-        emitGetPluginEvent()
+      // ----- 右键插件管理 -----
+      if (key.startsWith(PLUGIN_RIGHT_MAG)) {
+        // 跳转前校验引擎版本，版本不足则拦截并提示
+        checkContextMenuVersion().then((versionValid) => {
+          if (!versionValid) return
+          const tab = key.split('_')[1]
+          emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }))
+        })
         return
       }
 
@@ -643,18 +684,13 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           // 点击一级菜单
           if (menuItemName === 'pluginExtension') {
             // 执行第一个子项 —— 有三级则执行第二个子项
-            // if (child.key === 'Get*plug-in') {
-            //   // 当子项为获取插件
-            //   emitGetPluginEvent()
-            // } else {
-            //   // 全选状态检查
-            //   if (isAllSelect) {
-            //     yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
-            //     return
-            //   }
-            //   // 当子为插件时
-            //   emitPluginEvent(child, true, getScriptName(child.key))
+            // 全选状态检查
+            // if (isAllSelect) {
+            //   yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
+            //   return
             // }
+            // // 当子为插件时
+            // emitPluginEvent(child, true, getScriptName(child.key))
             return
           }
 
@@ -754,7 +790,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
           const menuName = keyPath[keyPath.length - 1]
           if (menuName.startsWith('pluginExtension')) {
-            onPluginExtensionHandle({ key, keyPath, id: [rowData.Id], menu: rowContextmenu })
+            onPluginExtensionHandle({ key, keyPath, id: [rowData.Id], rows: [rowData], menu: rowContextmenu })
             return
           }
 
@@ -908,7 +944,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
     const menuName = keyPath[keyPath.length - 1]
     if (menuName.startsWith('pluginExtension')) {
-      onPluginExtensionHandle({ key, keyPath, id: selectedRowKeys, menu: batchContextMenu })
+      onPluginExtensionHandle({ key, keyPath, id: selectedRowKeys, rows: selectedRows, menu: batchContextMenu })
       setSelectedRowKeys([])
       setSelectedRows([])
       return

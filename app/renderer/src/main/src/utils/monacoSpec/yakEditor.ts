@@ -66,7 +66,7 @@ export interface YaklangInformation {
 }
 
 interface YaklangInspectInformationRequest {
-  YakScriptType: 'yak' | 'mitm' | 'port-scan' | 'codec'
+  YakScriptType: 'yak' | 'mitm' | 'port-scan' | 'codec' | 'context-menu'
   YakScriptCode: string
   Range: Range
 }

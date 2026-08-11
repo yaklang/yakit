@@ -280,6 +280,7 @@ module.exports = {
     require('./handlers/httpFuzzer')(win, getClient)
     require('./handlers/httpAnalyzer')(win, getClient)
     require('./handlers/codec')(win, getClient)
+    require('./handlers/contextMenu')(win, getClient)
     require('./handlers/yakLocal').register(win, getClient)
     require('./handlers/openWebsiteByChrome')(win, getClient)
     require('./handlers/manageYakScript')(win, getClient)

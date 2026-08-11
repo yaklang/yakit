@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import type {
+  ContextMenuPacketEditorConfig,
   OtherMenuListProps,
   YakitEditorExtraRightMenuType,
   YakitEditorProps,
@@ -62,6 +63,8 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, 'menuType'> {
   onClickOpenBrowserMenu?: () => void
   onClickOpenPacketNewWindowMenu?: () => void
   fromMITM?: boolean // 是否来自 MITM 页面
+  /** 右键插件数据包上下文；透传给 YakitEditor */
+  contextMenuPacket?: ContextMenuPacketEditorConfig
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
