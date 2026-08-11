@@ -107,6 +107,7 @@ const AIRunModeSelect: React.FC = memo(() => {
     () => setting?.Strategy?.GoalMinIterations ?? 0,
     [setting?.Strategy?.GoalMinIterations],
   )
+  const maxSubAgents = useCreation(() => setting?.Strategy?.MaxSubAgents ?? 0, [setting?.Strategy?.MaxSubAgents])
   const [modeVisible, setModeVisible] = useState<boolean>(false)
   const onSetStrategy = useDebounceFn(
     useMemoizedFn((next: AIExecutionStrategy) => {
@@ -241,6 +242,28 @@ const AIRunModeSelect: React.FC = memo(() => {
               )
             })}
           </div>
+          {enableMultiAgent && (
+            <>
+              <div className={styles['mode-panel-divider']} />
+              <div className={styles['mode-goal-iter']}>
+                <span className={styles['mode-goal-iter-label']}>子 Agent 数量</span>
+                <Tooltip title="<=0 时由服务端使用默认值 3；最大 20">
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <YakitInputNumber
+                      type="horizontal"
+                      size="small"
+                      min={0}
+                      max={20}
+                      disabled={execute}
+                      value={maxSubAgents}
+                      onChange={(v) => onSetStrategy({ MaxSubAgents: (v as number) ?? 0 })}
+                      className={styles['mode-goal-iter-input']}
+                    />
+                  </div>
+                </Tooltip>
+              </div>
+            </>
+          )}
           {enableGoalMode && (
             <>
               <div className={styles['mode-panel-divider']} />

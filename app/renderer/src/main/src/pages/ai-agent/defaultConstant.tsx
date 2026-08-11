@@ -121,6 +121,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableMultiAgent: false,
     EnableGoalMode: false,
     GoalMinIterations: 0,
+    MaxSubAgents: 0,
   },
   Source: AISourceEnum.aiAgent,
 }

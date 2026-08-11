@@ -451,6 +451,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         EnableMultiAgent: false,
         EnableGoalMode: false,
         GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+        MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
       },
     }))
     aiReActChatRef.current?.setValue('')

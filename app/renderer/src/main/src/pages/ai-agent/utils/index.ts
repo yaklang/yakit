@@ -112,6 +112,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
       EnableMultiAgent: setting.Strategy?.EnableMultiAgent ?? AIAgentSettingDefault.Strategy?.EnableMultiAgent,
       EnableGoalMode: setting.Strategy?.EnableGoalMode ?? AIAgentSettingDefault.Strategy?.EnableGoalMode,
       GoalMinIterations: setting.Strategy?.GoalMinIterations ?? AIAgentSettingDefault.Strategy?.GoalMinIterations,
+      MaxSubAgents: setting.Strategy?.MaxSubAgents ?? AIAgentSettingDefault.Strategy?.MaxSubAgents,
     }
 
     if (setting?.AllowPlanUserInteract) {

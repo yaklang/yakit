@@ -148,6 +148,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                   EnableMultiAgent: false,
                   EnableGoalMode: false,
                   GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+                  MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
                 },
                 Source: AISourceEnum.aiAgent,
               })

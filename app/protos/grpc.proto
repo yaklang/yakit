@@ -2311,6 +2311,10 @@ message AIExecutionStrategy {
 
   // Goal 模式下允许 finish 的最小迭代次数。<=0 时由服务端使用默认值。
   int64 GoalMinIterations = 3;
+
+  // Multi 模式下单次 dispatch 允许的子 Agent 数量（当前会话取值）。
+  // <=0 时由服务端使用默认值 3；超过 AbsoluteMaxSubAgents(20) 时由服务端钳制。
+  int64 MaxSubAgents = 4;
 }
 
 message AITaskFilter {
