@@ -47,7 +47,6 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { has } from 'lodash'
 import { AITaskContent } from '../aiTaskContent/AITaskContent'
-import { useTaskChatExtraAction } from './useTaskChatExtraAction'
 import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
@@ -148,12 +147,10 @@ export default AIReActTaskChat
 export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
   const { scrollToBottom, onScrollToBottom } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { onExtraAction } = useTaskChatExtraAction()
 
   const store = useCurrentStore()
   const streams = useStore(store, (state) => state.taskChat.elements)
   const execute = useStore(store, (state) => state.execute)
-  const taskId = useStore(store, (state) => state.taskStatus.taskID)
   const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
 
   return (
@@ -178,8 +175,6 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
               </YakitButton>
             </AIManualAdditionPopover>
           )}
-
-          {execute && !!taskId && <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />}
           <YakitButton
             type="outline2"
             icon={<OutlinePositionIcon />}

@@ -156,6 +156,8 @@ const AIReActSubAgentTask: React.FC<AIReActSubAgentTaskProps> = React.memo((prop
     const list: string[] = []
     const elements = store.getState().casualChat?.elements || []
     for (const item of elements) {
+      // casualChat.elements 已合并 task 类型数据，子 agent 列表只展示 reAct 类型的并发任务
+      if (item.chatType !== 'reAct') continue
       const kind = getKind(item.token)
       if (kind !== 'task') continue
       const itemContent = rawData.contents.get(item.token)

@@ -9,12 +9,8 @@ import { useInViewport, useMemoizedFn } from 'ahooks'
 import { OutlineXIcon } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
-import { AIReActTaskChatContent } from '../aiReActTaskChat/AIReActTaskChat'
-import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatReviewBar'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 
-import { useEnsureTaskPlanLocate } from './hooks/useEnsureTaskPlanLocate'
-import { useStore } from 'zustand'
 import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 
 interface TabsItemProps extends YakitTabsProps {
@@ -22,29 +18,17 @@ interface TabsItemProps extends YakitTabsProps {
   goal?: string
 }
 
-const TASK_CONTENT_KEY = 'taskContent'
-
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
   const { tabBarExtraContent, onTabsChange } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
   const store = useCurrentStore()
-  const taskChat = useStore(store, (state) => state.taskChat)
 
   const [tabs, setTabs, getTabs] = useGetSetState<TabsItemProps[]>([])
-  const [activeKey, setActiveKey] = useState<string>('taskContent')
-  const [scrollToBottom, setScrollToBottom] = useState(false)
-  /** 任务规划关闭后用 display:none 保留，不销毁 */
-  const [taskPlanMounted, setTaskPlanMounted] = useState(false)
-
-  const isSetTaskTabRef = useRef<boolean>(false)
+  const [activeKey, setActiveKey] = useState<string>('')
 
   const divRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(divRef)
-
-  const onScrollToBottom = useMemoizedFn(() => {
-    setScrollToBottom((v) => !v)
-  })
 
   useEffect(() => {
     onTabsChange?.(tabs.length)
@@ -58,57 +42,6 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       }
     }
   }, [inViewport])
-
-  const ensurePlanTab = useMemoizedFn(() => {
-    const inTabs = getTabs().some((item) => item.value === TASK_CONTENT_KEY)
-    if (inTabs) return
-    setTabs((prv) => {
-      if (prv.some((item) => item.value === TASK_CONTENT_KEY)) return prv
-      return [
-        {
-          label: '深度规划',
-          value: TASK_CONTENT_KEY,
-          taskId: TASK_CONTENT_KEY,
-        },
-        ...prv,
-      ]
-    })
-    setTaskPlanMounted(true)
-    isSetTaskTabRef.current = true
-  })
-
-  useEnsureTaskPlanLocate({
-    taskContentKey: TASK_CONTENT_KEY,
-    activeKey,
-    taskPlanMounted,
-    tabsLength: tabs.length,
-    hasPlanContent: !!taskChat.elements.length,
-    getTabs,
-    ensurePlanTab,
-    setActiveKey,
-  })
-
-  useEffect(() => {
-    if (!isSetTaskTabRef.current && taskChat.elements.length) {
-      setTabs((prv) => [
-        {
-          label: '深度规划',
-          value: TASK_CONTENT_KEY,
-          taskId: TASK_CONTENT_KEY,
-        },
-        ...prv,
-      ])
-      setTaskPlanMounted(true)
-      isSetTaskTabRef.current = true
-      // 当前 active 无效时（如关掉详情后）自动选中任务规划
-      const tabsNow = getTabs()
-      setActiveKey((prev) => (tabsNow.some((item) => item.value === prev) ? prev : TASK_CONTENT_KEY))
-    } else if (!taskChat.elements.length) {
-      setTabs((prv) => prv.filter((item) => item.value !== TASK_CONTENT_KEY))
-      setTaskPlanMounted(false)
-      isSetTaskTabRef.current = false
-    }
-  }, [taskChat.elements.length])
 
   const onActionAITaskContentTab = useMemoizedFn((data: string) => {
     try {
@@ -173,11 +106,6 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     }
     const nextTabs = currentTabs.filter((item) => item.value !== key)
     setTabs(() => nextTabs)
-    // 任务规划：仅从 tab 栏移除，组件保留；其它 tab 关闭即销毁（不再渲染）
-    if (key === TASK_CONTENT_KEY && nextTabs.length === 0) {
-      // tab 栏空了会卸掉 SideTab，无法再靠 display:none 保留
-      setTaskPlanMounted(false)
-    }
   })
 
   const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[]) => {
@@ -200,7 +128,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     )
   })
 
-  const activeTaskItem = tabs.find((item) => item.value === activeKey && item.value !== TASK_CONTENT_KEY)
+  const activeTaskItem = tabs.find((item) => item.value === activeKey)
 
   return (
     <div className={styles['chat-content-wrapper']} ref={divRef}>
@@ -218,16 +146,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
           tabBarExtraContent={tabBarExtraContent}
         >
           <div className={styles['tab-content']}>
-            {/* 任务规划：关闭后仍挂载，用 display:none 隐藏 */}
-            {taskPlanMounted && (
-              <div
-                className={styles['tab-pane']}
-                style={{ display: activeKey === TASK_CONTENT_KEY ? undefined : 'none' }}
-              >
-                <AIReActTaskChatContent scrollToBottom={scrollToBottom} onScrollToBottom={onScrollToBottom} />
-              </div>
-            )}
-            {/* 其它 tab：只渲染当前激活的，关掉即销毁 */}
+            {/* 任务执行详情 tab：只渲染当前激活的，关掉即销毁 */}
             {activeTaskItem && (
               <div className={styles['tab-pane']}>
                 <AITaskExecutionDetails
@@ -241,8 +160,6 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
           </div>
         </YakitSideTab>
       )}
-
-      <AIReActTaskChatReviewBar setScrollToBottom={setScrollToBottom} />
     </div>
   )
 })

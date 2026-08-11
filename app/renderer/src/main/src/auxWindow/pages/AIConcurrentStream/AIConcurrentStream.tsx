@@ -5,7 +5,7 @@ import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
 } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
-import { AIChatQSDataTypeEnum, type AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { fetchConcurrentStreamContents } from './fetchConcurrentStreamContents'
 import styles from './AIConcurrentStream.module.scss'
 import AIConcurrentStreamContent, {
@@ -105,13 +105,13 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
     getRawDataDebounced(frame)
   })
 
-  const isTaskDefaultGroup = useMemo(() => {
-    if (!frame) return false
-    // 优先用 frame 随身携带的 rootType，无需等待 rawData 拉取完成
-    if (frame.rootType != null) return frame.rootType === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
-    const root = rawDataRef.current.get(frame.token)
-    return root?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
-  }, [frame, contentVersion])
+  // const isTaskDefaultGroup = useMemo(() => {
+  //   if (!frame) return false
+  //   // 优先用 frame 随身携带的 rootType，无需等待 rawData 拉取完成
+  //   if (frame.rootType != null) return frame.rootType === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
+  //   const root = rawDataRef.current.get(frame.token)
+  //   return root?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
+  // }, [frame, contentVersion])
 
   // 刷新：通过 IPC 通知主窗口重新构建并推送最新 frame（含最新 rawData）
   const requestRefresh = useMemoizedFn(() => {
@@ -145,11 +145,12 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
         <div className={styles.divider} />
         <div className={styles.wrapper}>
           <Suspense fallback={<ConcurrentStreamSkeleton variant="card" />}>
-            {isTaskDefaultGroup ? (
+            {/* {isTaskDefaultGroup ? (
               <AIChildWindowTaskDefaultGroupCard token={frame.token} />
             ) : (
               <AIChildWindowConcurrentStreamCard token={frame.token} />
-            )}
+            )} */}
+            <AIChildWindowConcurrentStreamCard token={frame.token} />
           </Suspense>
         </div>
       </div>

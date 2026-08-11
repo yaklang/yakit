@@ -42,7 +42,6 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     const store = useCurrentStore()
     const rawData = useCurrentRawData()
-    const taskChatElementLength = useStore(store, (state) => state.taskChat.elements.length)
     const execFileRecord = useStore(store, (state) => state.execFileRecord)
     const grpcFolders = useStore(store, (state) => state.grpcFolders)
 
@@ -57,8 +56,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
 
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
-    const [timeLine, setTimeLine] = useState<boolean>(true)
-    /** 任务规划是否有 tab（无则自由对话变大） */
+    const [timeLine, setTimeLine] = useState<boolean>(true) //侧边栏展开收起
+    /** 任务规划 tabs 是否有内容（无则自由对话变大） */
     const [hasTaskTabs, setHasTaskTabs] = useState(false)
     /** 文件系统是否有文件预览（无则自由对话变大） */
     const [hasFilePreview, setHasFilePreview] = useState(false)
@@ -140,7 +139,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         tab.push(AITabs[AITabsEnum.Operation_Log])
       }
       return tab
-    }, [httpTabShow, riskTabUpdate, execFileRecord.size, taskChatElementLength])
+    }, [httpTabShow, riskTabUpdate, execFileRecord.size])
 
     const [showHot, setShowHot] = useState(false)
     const prevRef = useRef<{

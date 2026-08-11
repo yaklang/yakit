@@ -224,7 +224,7 @@ const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: n
     }
   }
   appendFromElements(content.casualElements || [])
-  appendFromElements(content.taskElements || [])
+  // taskElements 已合并到 casualElements（dispatchStreamingNode 统一写入 casualChat.elements），不再单独收集
   return [...tokenSet]
 }
 // #endregion

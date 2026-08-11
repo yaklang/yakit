@@ -141,8 +141,9 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.items = content.items || {}
           state.groups = content.groups || {}
           state.tasks = content.tasks || {}
-          state.casualChat.elements = content.casualElements || []
-          state.taskChat.elements = content.taskElements || []
+          // 任务规划数据已合并到自由对话列表：直接用 casualElements（dispatchStreamingNode 已按后端顺序写入）
+          state.casualChat.elements = [...(content.casualElements || [])]
+          state.taskChat.elements = []
         }),
 
       updateTaskLoadingStatus: (partial) =>
@@ -182,7 +183,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           const isHistory = node.isHistory ?? false
           const direction = isHistory ? 'prepend' : 'append'
           const elementRef = { kind: node.kind, token: node.token, chatType, isHistory }
-          const targetElements = chatType === 'reAct' ? state.casualChat.elements : state.taskChat.elements
+          // 任务规划数据合并到自由对话列表，保留 chatType 字段
+          const targetElements = state.casualChat.elements
 
           // 注册实体（group 由连续 stream item 碰撞自动生成，不支持手动注册）
           if (node.kind === 'item' && !state.items[node.token]) {
@@ -289,20 +291,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
             return
           }
 
-          const lastEl = state.taskChat.elements.at(-1)
-          if (
-            direction === 'append' &&
-            chatType === 'task' &&
-            node.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP &&
-            lastEl?.kind === 'task' &&
-            state.tasks[lastEl.token]?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
-          ) {
-            // 任务规划最新一个元素，一定是默认任务组，所以别的元素需要往前插入
-            state.taskChat.elements.splice(state.taskChat.elements.length - 1, 0, elementRef)
-          } else {
-            if (direction === 'append') targetElements.push(elementRef)
-            else targetElements.unshift(elementRef)
-          }
+          if (direction === 'append') targetElements.push(elementRef)
+          else targetElements.unshift(elementRef)
         })
         onRenderStructureChange?.()
       },
@@ -328,8 +318,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
           deleted = true
           const removeChatElement = (targetToken: string) => {
-            const target = chatType === 'reAct' ? state.casualChat : state.taskChat
-            target.elements = target.elements.filter((item) => item.token !== targetToken)
+            // 任务规划数据已合并到自由对话列表，统一从 casualChat 删除
+            state.casualChat.elements = state.casualChat.elements.filter((item) => item.token !== targetToken)
           }
 
           const removeFromChildrenTokens = (
@@ -404,13 +394,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.items[newToken].renderNum += 1
           delete state.items[oldToken]
 
-          // 同步 casualChat.elements 中的 token 引用
+          // 同步 casualChat.elements 中的 token 引用（任务规划数据已合并）
           for (const el of state.casualChat.elements) {
-            if (el.token === oldToken) el.token = newToken
-          }
-
-          // 同步 taskChat.elements 中的 token 引用
-          for (const el of state.taskChat.elements) {
             if (el.token === oldToken) el.token = newToken
           }
 

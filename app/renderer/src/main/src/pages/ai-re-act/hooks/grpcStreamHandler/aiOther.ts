@@ -88,20 +88,6 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
   })
   // 重置当前任务树详情
   store.getState().updatePlanTree(cloneDeep(DefaultCurrentExecTaskTree))
-  // 生成任务规划里的默认任务聚合组
-  const taskID = `${taskStatus.taskID}-default`
-  const chatData: AIChatQSData = {
-    ...genBaseAIChatData(res),
-    id: taskID,
-    chatType: 'task',
-    type: AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP,
-  } as AIChatQSData
-  rawData.contents.set(chatData.id, chatData)
-  persistIndependentItem(requestInfo.sessionId, chatData)
-  store.getState().dispatchStreamingNode({
-    chatType: 'task',
-    node: { token: chatData.id, kind: 'task', type: chatData.type },
-  })
 }
 const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
   const { res, store, rawData, meta } = requestInfo

@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 
 import styles from './AIReActChat.module.scss'
 import type { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
@@ -26,6 +26,7 @@ import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
 import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
+import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatReviewBar'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
@@ -293,6 +294,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const aiReActChatContentsRef = useRef<AIReActChatContentsRef>(null)
+    const [scrollToBottom, setScrollToBottom] = useState(false)
 
     return (
       <>
@@ -318,7 +320,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
               />
               <AIToDoListWrapper />
-              <AIReActChatContents ref={aiReActChatContentsRef} />
+              <AIReActChatContents ref={aiReActChatContentsRef} scrollToBottom={scrollToBottom} />
+              <AIReActTaskChatReviewBar setScrollToBottom={setScrollToBottom} />
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>

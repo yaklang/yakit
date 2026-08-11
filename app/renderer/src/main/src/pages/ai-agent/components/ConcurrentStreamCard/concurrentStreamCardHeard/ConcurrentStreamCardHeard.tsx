@@ -63,7 +63,10 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
     <div className={styles['chat-card-title']} onClick={onClickTitle}>
       <div className={styles['chat-card-title-left']}>
         {presentation.icon && <div className={styles['chat-card-title-icon']}>{presentation.icon}</div>}
-        <div className={styles['chat-card-title-text']}>{titleText}</div>
+        <div className={styles['chat-card-title-text']}>
+          {titleText}
+          {rowData?.chatType}
+        </div>
         <div className={styles['chat-card-title-extra']}>{modalInfo && <ModalInfo {...modalInfo} />}</div>
       </div>
       <div className={styles['chat-card-title-more']}>
