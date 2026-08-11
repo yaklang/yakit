@@ -42,7 +42,8 @@ const includesExpectedNodes = (actual, expected) => {
     if (expectedGroup.name !== undefined && actualGroup.name !== expectedGroup.name) return false
     if (expectedGroup.expanded !== undefined && actualGroup.expanded !== expectedGroup.expanded) return false
     if (expectedGroup.color !== undefined && actualGroup.color !== expectedGroup.color) return false
-    if (expectedGroup.renderedColor !== undefined && actualGroup.renderedColor !== expectedGroup.renderedColor) return false
+    if (expectedGroup.renderedColor !== undefined && actualGroup.renderedColor !== expectedGroup.renderedColor)
+      return false
     if (expectedGroup.sort !== undefined && actualGroup.sort !== expectedGroup.sort) return false
   }
   for (const expectedTab of expected.tabs || []) {
