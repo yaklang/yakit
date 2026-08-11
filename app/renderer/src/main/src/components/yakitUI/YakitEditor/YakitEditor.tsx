@@ -106,6 +106,13 @@ import {
 import { BinaryFuzztagHexModal, type BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
 import { Base64HexFuzztagModal } from './Base64HexFuzztagModal'
 import { showYakitModal } from '../YakitModal/YakitModalConfirm'
+import {
+  getOrderedRightClickYakScripts,
+  getOrderedRightClickYakScriptsWithMeta,
+} from '@/pages/manageRightClickPlugins/utils'
+import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
+import { OutlineCogIcon } from '@/assets/icon/outline'
+import { YakitRoute } from '@/enums/yakitRoute'
 type IModelDecoration = newEditor.IModelDecoration
 
 // 二进制 Fuzztag 折叠侧表的内存上限：累积保留历史项以支持占位被破坏后再补回的恢复，
@@ -193,6 +200,7 @@ function openFind(editor: YakitIMonacoEditor, keyword: string) {
   }
 }
 export const PLUGIN_PREFIX = 'pluginExtension_'
+export const PLUGIN_RIGHT_MAG = 'manageRightClickPlugins_'
 export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const {
     forceRenderMenu = false,
@@ -408,42 +416,27 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   // 自定义HTTP数据包变形处理
   const { customHTTPMutatePlugin, contextMenuPlugin, setCustomHTTPMutatePlugin, setContextMenuPlugin } = useStore()
   const searchCodecCustomHTTPMutatePlugin = useMemoizedFn(() => {
-    queryYakScriptList(
-      'codec',
-      (i: YakScript[], total) => {
-        if (!total || total === 0) {
-          return
-        }
-        setCustomHTTPMutatePlugin(
-          i.map((script) => {
-            return {
-              key: script.ScriptName,
-              verbose: 'CODEC 社区插件: ' + script.ScriptName,
-              isYakScript: true,
-            } as CodecTypeProps
-          }),
-        )
-      },
-      undefined,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      [PluginSwitchToTag.PluginCodecHttpSwitch],
-    )
+    getOrderedRightClickYakScripts(ManageRightClickPluginsTabKey.PacketMutate).then((list) => {
+      setCustomHTTPMutatePlugin(
+        list.map((script) => {
+          return {
+            key: script.ScriptName,
+            verbose: 'CODEC 社区插件: ' + script.ScriptName,
+            isYakScript: true,
+          } as CodecTypeProps
+        }),
+      )
+    })
   })
 
   // 插件扩展
+  const [contextMenuPluginFromCustom, setContextMenuPluginFromCustom] = useState(false)
   const searchCodecCustomContextMenuPlugin = useMemoizedFn(() => {
-    queryYakScriptList(
-      'codec',
-      (i: YakScript[], total) => {
-        if (!total || total === 0) {
-          return
-        }
+    getOrderedRightClickYakScriptsWithMeta(ManageRightClickPluginsTabKey.PacketContextMenu).then(
+      ({ list, fromCustom }) => {
+        setContextMenuPluginFromCustom(fromCustom)
         setContextMenuPlugin(
-          i.map((script) => {
+          list.map((script) => {
             const isAiPlugin: boolean = script.Tags.includes('AI工具')
             return {
               key: script.ScriptName,
@@ -454,13 +447,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           }),
         )
       },
-      undefined,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      [PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch],
     )
   })
 
@@ -488,19 +474,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   }, [])
 
-  // 菜单数组去重
-  const menuReduce = useMemoizedFn((array: any[]) => {
-    const newArr: any[] = []
-    const arr: string[] = []
-    array.forEach((item) => {
-      if (!arr.includes(item.key)) {
-        arr.push(item.key)
-        newArr.push(item)
-      }
-    })
-    return newArr
-  })
-
   /**
    * 整理右键菜单的对应关系
    * 菜单组的key值对应的组内菜单项的key值数组
@@ -508,11 +481,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const extraMenuListsObj = useMemo(() => extraMenuLists(t), [i18nRefresh])
   const baseMenuListsObj = useMemo(() => baseMenuLists(t), [i18nRefresh])
   useEffect(() => {
-    // 往菜单组中注入codec插件
     try {
       const httpMenu = extraMenuListsObj['http'].menu[0] as EditorMenuItemProps
-      const newHttpChildren = menuReduce([
-        ...(httpMenu?.children || []),
+      const httpManageKey = PLUGIN_RIGHT_MAG + ManageRightClickPluginsTabKey.PacketMutate
+      // 过滤掉已被注入的动态项，保留默认HTTP项
+      const httpDefaultChildren = (httpMenu?.children || []).filter(
+        (child) => !((child as EditorMenuItemProps).isCustom || (child as EditorMenuItemProps).key === httpManageKey),
+      )
+      const newHttpChildren = [
+        ...httpDefaultChildren,
         ...customHTTPMutatePlugin.map((item) => {
           return {
             key: item.key,
@@ -521,7 +498,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             isCustom: true,
           } as EditorMenuItemProps
         }),
-      ])
+        {
+          key: httpManageKey,
+          label: (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <OutlineCogIcon />
+              {t('YakitEditor.manageRightClickPlugins')}
+            </div>
+          ),
+        },
+      ]
       // 自定义HTTP数据包变形
       ;(extraMenuListsObj['http'].menu[0] as EditorMenuItemProps).children = newHttpChildren
 
@@ -562,21 +548,33 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
         return baseItem
       })
+      const manageContextMenuItem = {
+        key: PLUGIN_RIGHT_MAG + ManageRightClickPluginsTabKey.PacketContextMenu,
+        label: (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <OutlineCogIcon />
+            {t('YakitEditor.manageRightClickPlugins')}
+          </div>
+        ),
+      } as EditorMenuItemProps
+      newCustomContextMenu.push(manageContextMenuItem)
       ;(extraMenuListsObj['customcontextmenu'].menu[0] as EditorMenuItemProps).children =
-        newCustomContextMenu.length > 0
+        contextMenuPlugin.length > 0
           ? newCustomContextMenu
-          : [
-              {
-                key: 'Get*plug-in',
-                label: (
-                  <>
-                    <CloudDownloadIcon style={{ marginRight: 4 }} />
-                    {t('YakitEditor.getPlugin')}
-                  </>
-                ),
-                isGetPlugin: true,
-              } as EditorMenuItemProps,
-            ]
+          : contextMenuPluginFromCustom
+            ? [manageContextMenuItem]
+            : [
+                {
+                  key: 'Get*plug-in',
+                  label: (
+                    <>
+                      <CloudDownloadIcon style={{ marginRight: 4 }} />
+                      {t('YakitEditor.getPlugin')}
+                    </>
+                  ),
+                  isGetPlugin: true,
+                } as EditorMenuItemProps,
+              ]
     } catch (e) {
       failed(`get custom plugin failed: ${e}`)
     }
@@ -592,7 +590,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
 
     keyToOnRunRef.current = { ...keyToRun }
-  }, [contextMenu, customHTTPMutatePlugin, contextMenuPlugin, extraMenuListsObj, baseMenuListsObj])
+  }, [
+    contextMenu,
+    customHTTPMutatePlugin,
+    contextMenuPlugin,
+    contextMenuPluginFromCustom,
+    extraMenuListsObj,
+    baseMenuListsObj,
+  ])
 
   /** 菜单功能点击处理事件 */
   const { run: menuItemHandle } = useDebounceFn(
@@ -633,12 +638,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 // }
                 return
               }
-
               // 点击二级菜单
               if (item.key === menuItemName) {
                 if (item.isGetPlugin) {
                   // 当子项为获取插件
                   data = 'isGetPlugin'
+                } else if (item.key.startsWith(PLUGIN_RIGHT_MAG)) {
+                  // 当子项为管理右键插件
+                  const tab = item.key.split('_')[1]
+                  emiter.emit(
+                    'openPage',
+                    JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }),
+                  )
                 } else {
                   // 当子为插件时
                   key = item.key.slice(PLUGIN_PREFIX.length)
@@ -666,6 +677,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           onRightContextMenu(menuItemName)
           break
         } else if (keyToOnRunRef.current[name].includes('http') && menuName === 'http') {
+          // 管理右键插件
+          if (menuItemName.startsWith(PLUGIN_RIGHT_MAG)) {
+            const tab = menuItemName.split('_')[1]
+            emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }))
+            executeFunc = true
+            onRightContextMenu(menuItemName)
+            break
+          }
           // 获取是否为自定义HTTP数据包变形标记
           const key: string = menuItemName
           let data: boolean | undefined = undefined

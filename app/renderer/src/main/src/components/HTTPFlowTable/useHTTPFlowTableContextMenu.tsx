@@ -36,7 +36,8 @@ import type { HistoryMenuData, HTTPFlow } from './HTTPFlowTable.constants'
 import { hydrateHTTPFlowRequest, hydrateHTTPFlowRequests } from './HTTPFlowTable.packet'
 import { isHTTPFlowFavorite } from './HTTPFlowTable.utils'
 import style from './HTTPFlowTable.module.scss'
-import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
+import { PLUGIN_PREFIX, PLUGIN_RIGHT_MAG } from '../yakitUI/YakitEditor/YakitEditor'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -628,6 +629,13 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       // ----- 点击获取插件 -----
       if (key === 'Get*plug-in') {
         emitGetPluginEvent()
+        return
+      }
+
+      // ----- 右键插件管理 -----
+      if (key.startsWith(PLUGIN_RIGHT_MAG)) {
+        const tab = key.split('_')[1]
+        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }))
         return
       }
 

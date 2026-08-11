@@ -1,0 +1,18 @@
+{
+  "ManageRightClickPlugins": {
+    "editRightClickPlugins": "編輯右鍵外掛",
+    "pluginExtensionSingle": "外掛擴展（單選）",
+    "pluginExtensionMultiple": "外掛擴展（多選）",
+    "packetContextMenu": "資料包右鍵",
+    "packetMutate": "資料包變形",
+    "addedPluginsCount": "已新增外掛 {{count}} / {{UpperLimit}}",
+    "clearConfirm": "確定清空目前已新增外掛嗎？",
+    "noPluginAdded": "暫未新增外掛",
+    "addPluginHint": "可從右側拖曳或點擊新增外掛",
+    "rightClickPlugins": "右鍵外掛",
+    "rightHelp": "可拖曳或點擊「新增」將外掛放入中間列表",
+    "maxAddLimit": "最多新增 {{UpperLimit}} 個外掛",
+    "updatePluginTagFailed": "更新外掛標籤失敗: {{error}}",
+    "added": "已新增"
+  }
+}

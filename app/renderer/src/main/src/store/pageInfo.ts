@@ -107,6 +107,8 @@ interface PageParamsInfoProps {
   }
   /** 插件执行页（Plugin_OP） */
   pluginOpPageInfo?: PluginOpPageInfoProps
+  /** 管理右键插件页面 */
+  manageRightClickPluginsPageInfo?: manageRightClickPluginsPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -342,6 +344,10 @@ export interface PluginOpPageInfoProps {
   PluginType: string
   autoExecute: boolean
   noHTTPRequestTemplate: boolean
+}
+
+export interface manageRightClickPluginsPageInfoProps {
+  tab: string
 }
 interface PageInfoStoreProps {
   pages: Map<string, PageProps>

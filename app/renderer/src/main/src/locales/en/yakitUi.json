@@ -324,6 +324,7 @@
     "getPlugin": "Get Plugin",
     "executePlugin": "Execute Plugin",
     "modifyParameters": "Modify Parameters",
+    "manageRightClickPlugins": "Manage Right-Click Plugins",
     "cut": "Cut",
     "copy": "Copy",
     "paste": "Paste",

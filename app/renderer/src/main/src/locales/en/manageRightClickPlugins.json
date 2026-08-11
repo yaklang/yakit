@@ -1,0 +1,18 @@
+{
+  "ManageRightClickPlugins": {
+    "editRightClickPlugins": "Edit Right-Click Plugins",
+    "pluginExtensionSingle": "Plugin Extension (Single)",
+    "pluginExtensionMultiple": "Plugin Extension (Multiple)",
+    "packetContextMenu": "Packet Context Menu",
+    "packetMutate": "Packet Mutate",
+    "addedPluginsCount": "Added {{count}} / {{UpperLimit}}",
+    "clearConfirm": "Clear all added plugins for the current tab?",
+    "noPluginAdded": "No plugins added",
+    "addPluginHint": "Drag from the right or click Add to include plugins",
+    "rightClickPlugins": "Right-Click Plugins",
+    "rightHelp": "Drag or click Add to place plugins into the middle list",
+    "maxAddLimit": "You can add up to {{UpperLimit}} plugins",
+    "updatePluginTagFailed": "Failed to update plugin tag: {{error}}",
+    "added": "Added"
+  }
+}

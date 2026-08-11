@@ -324,6 +324,7 @@
     "getPlugin": "获取插件",
     "executePlugin": "执行插件",
     "modifyParameters": "修改参数",
+    "manageRightClickPlugins": "管理右键插件",
     "cut": "剪切",
     "copy": "复制",
     "paste": "粘贴",

@@ -24,4 +24,7 @@ export enum RemotePluginGV {
   LocalExecuteExtraPath = 'local-execute-extra-path',
   /**@name 插件批量执行模块,额外参数中,[proxy]的缓存字段 */
   LocalBatchExecuteExtraProxy = 'local-batch-execute-extra-proxy',
+
+  /** @name 右键插件各分组自定义顺序 */
+  RightClickPluginsOrder = 'right-click-plugins-order',
 }

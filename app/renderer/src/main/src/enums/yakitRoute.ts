@@ -132,6 +132,8 @@ export enum YakitRoute {
   AI_Forge = 'ai-forge',
   /** Yak MCP 调用历史 */
   MCP_History = 'mcp-history',
+  /** 右键插件管理 */
+  ManageRightClickPlugins = 'manage-right-click-plugins',
 }
 
 export type YakitRouteType = `${YakitRoute}`

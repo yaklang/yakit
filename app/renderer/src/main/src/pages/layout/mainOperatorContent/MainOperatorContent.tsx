@@ -957,6 +957,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.Plugin_OP:
         addPluginOp(params)
         break
+      case YakitRoute.ManageRightClickPlugins:
+        addManageRightClickPlugins(params)
+        break
       default:
         break
     }
@@ -1294,6 +1297,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       {
         pageParams: {
           pluginOpPageInfo: { ...data },
+        },
+      },
+    )
+  })
+  const addManageRightClickPlugins = useMemoizedFn((data) => {
+    openMenuPage(
+      { route: YakitRoute.ManageRightClickPlugins },
+      {
+        pageParams: {
+          manageRightClickPluginsPageInfo: { ...data },
         },
       },
     )
@@ -2192,6 +2205,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.Plugin_OP:
         onSetPluginOp(singleUpdateNode, 1)
         break
+      case YakitRoute.ManageRightClickPlugins:
+        onSetManageRightClickPlugins(singleUpdateNode, 1)
+        break
       default:
         break
     }
@@ -2383,6 +2399,28 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       sortFieId: order,
     }
     addPagesDataCache(YakitRoute.Plugin_OP, newPageNode)
+  })
+
+  const onSetManageRightClickPlugins = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+    const newPageNode: PageNodeItemProps = {
+      id: `${randomString(8)}-${order}`,
+      routeKey: YakitRoute.ManageRightClickPlugins,
+      pageGroupId: node.groupId,
+      pageId: node.id,
+      pageName: node.verbose,
+      pageParamsInfo: {
+        manageRightClickPluginsPageInfo: node.pageParams?.manageRightClickPluginsPageInfo
+          ? { ...node.pageParams.manageRightClickPluginsPageInfo }
+          : undefined,
+      },
+      sortFieId: order,
+    }
+    const pageNodeInfo: PageProps = {
+      ...cloneDeep(defPage),
+      pageList: [newPageNode],
+      routeKey: YakitRoute.ManageRightClickPlugins,
+    }
+    setPagesData(YakitRoute.ManageRightClickPlugins, pageNodeInfo)
   })
 
   const onSetYakAIAgent = useMemoizedFn((node: MultipleNodeInfo, order: number) => {

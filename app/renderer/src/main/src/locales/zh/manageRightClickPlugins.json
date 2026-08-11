@@ -1,0 +1,18 @@
+{
+  "ManageRightClickPlugins": {
+    "editRightClickPlugins": "编辑右键插件",
+    "pluginExtensionSingle": "插件扩展（单选）",
+    "pluginExtensionMultiple": "插件扩展（多选）",
+    "packetContextMenu": "数据包右键",
+    "packetMutate": "数据包变形",
+    "addedPluginsCount": "已添加插件 {{count}} / {{UpperLimit}}",
+    "clearConfirm": "确定清空当前已添加插件吗？",
+    "noPluginAdded": "暂未添加插件",
+    "addPluginHint": "可从右侧拖拽或点击添加插件",
+    "rightClickPlugins": "右键插件",
+    "rightHelp": "可拖拽或点击「添加」将插件放入中间列表",
+    "maxAddLimit": "最多添加 {{UpperLimit}} 个插件",
+    "updatePluginTagFailed": "更新插件标签失败: {{error}}",
+    "added": "已添加"
+  }
+}

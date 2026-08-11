@@ -146,6 +146,7 @@ import type {
   AuditHoleInfoProps,
   AIRepositoryProps,
   PluginOpPageInfoProps,
+  manageRightClickPluginsPageInfoProps,
 } from '@/store/pageInfo'
 import { SpaceEnginePage } from '@/pages/spaceEngine/SpaceEnginePage'
 import { SinglePluginExecution } from '@/pages/plugins/singlePluginExecution/SinglePluginExecution'
@@ -204,6 +205,7 @@ const HTTPHistoryAnalysis = React.lazy(() =>
   import('@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis').then((m) => ({ default: m.HTTPHistoryAnalysis })),
 )
 const HTTPFuzzerPage = React.lazy(() => import('@/pages/fuzzer/HTTPFuzzerPage'))
+const ManageRightClickPlugins = React.lazy(() => import('@/pages/manageRightClickPlugins/ManageRightClickPlugins'))
 
 /**
  * @description 页面路由对应的页面信息
@@ -416,6 +418,7 @@ export const YakitRouteToPageInfo: Record<
   'ai-memory': { label: '记忆库', labelUi: 'YakitRoute.ai-memory' },
   'ai-tool': { label: '工具库', labelUi: 'YakitRoute.ai-tool' },
   'ai-forge': { label: '技能库', labelUi: 'YakitRoute.ai-forge' },
+  'manage-right-click-plugins': { label: '右键插件设置', labelUi: 'YakitRoute.manageRightClickPlugins' },
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -474,6 +477,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
+  YakitRoute.ManageRightClickPlugins,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -532,6 +536,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
+  YakitRoute.ManageRightClickPlugins,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -542,6 +547,7 @@ export const NoScrollRoutes: YakitRoute[] = [
   YakitRoute.AI_Agent,
   YakitRoute.ShortcutKey,
   YakitRoute.YakRunner_ScanHistory,
+  YakitRoute.ManageRightClickPlugins,
 ]
 
 /** 通过版本获取一级tab固定展示tab  */
@@ -703,6 +709,9 @@ export interface ComponentParams {
 
   /** 插件执行页（Plugin_OP）初始参数 */
   pluginOpPageInfo?: PluginOpPageInfoProps
+
+  /** 管理右键插件页面 */
+  manageRightClickPluginsPageInfo?: manageRightClickPluginsPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
   return function WithPage(props) {
@@ -979,6 +988,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <AITool pageId={params?.id || ''} />
     case YakitRoute.AI_Forge:
       return <AIForge pageId={params?.id || ''} />
+    case YakitRoute.ManageRightClickPlugins:
+      return <ManageRightClickPlugins />
     default:
       return <div />
   }
