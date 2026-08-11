@@ -69,6 +69,12 @@ export default function useMcpStream(props: useMcpHooks) {
     streamCleanupRef.current = []
   })
 
+  const handEnd = useMemoizedFn(() => {
+    setMcpServerUrl('')
+    setMcpCurrent({ Status: 'stopped', Message: t('McpHook.serviceStopped'), ServerUrl: '' })
+    yakitNotify('info', `[StartMcpServer] finished`)
+  })
+
   // token 变更时手动重建 stream 订阅，替代 state + effect 驱动
   const setupMcpStream = useMemoizedFn((token: string) => {
     cleanupMcpStream()
@@ -91,11 +97,7 @@ export default function useMcpStream(props: useMcpHooks) {
       yakitNotify('success', t('McpHook.MCPStopped'))
     })
 
-    const offEnd = yakitStream.onEnd(token, () => {
-      setMcpServerUrl('')
-      setMcpCurrent({ Status: 'stopped', Message: t('McpHook.serviceStopped'), ServerUrl: '' })
-      yakitNotify('info', `[StartMcpServer] finished`)
-    })
+    const offEnd = yakitStream.onEnd(token, handEnd)
 
     streamCleanupRef.current = [offData, offError, offEnd]
   })
@@ -153,6 +155,7 @@ export default function useMcpStream(props: useMcpHooks) {
 
   const onCancel = useMemoizedFn(() => {
     yakitStream.cancel('StartMcpServer', mcpTokenRef.current)
+    handEnd()
   })
 
   const onSetMcpUrl = useMemoizedFn((url: string) => {
