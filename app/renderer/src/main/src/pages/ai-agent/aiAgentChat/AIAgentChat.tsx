@@ -21,7 +21,7 @@ import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalCon
 import type { AIForge } from '../type/forge'
 import type { AITool } from '../type/aiTool'
 import { AIChatContent } from '../aiChatContent/AIChatContent'
-import { AITabsEnum, ReActChatEventEnum } from '../defaultConstant'
+import { AIAgentSettingDefault, AITabsEnum, ReActChatEventEnum } from '../defaultConstant'
 import { grpcGetAIToolById } from '../aiToolList/utils'
 import { isEqual } from 'lodash'
 import useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
@@ -108,49 +108,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         setReplaceToolNoPrompt(replace)
       })
       .catch(() => {})
-    // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
-    const onEvents = (res: string) => {
-      try {
-        const data = JSON.parse(res) as AIAgentTriggerEventInfo
-        if (!data.type) return
-        switch (data.type as ReActChatEventEnum) {
-          // 新开聊天对话窗
-          case ReActChatEventEnum.NEW_CHAT:
-            setSetting?.((old) => ({
-              ...old,
-              SyncPerceptionTrigger: false,
-              EnablePlan: false,
-              Strategy: { EnableMultiAgent: false, EnableGoalMode: false, GoalMinIterations: 0 },
-            }))
-            setActiveChat?.(undefined)
-            setMode('welcome')
-            // setTimeout(() => {
-            //   setMode('welcome')
-            // }, 100)
-            break
-          // 替换当前使用的 forge 模板
-          case ReActChatEventEnum.OPEN_FORGE_FORM: {
-            const { value: forgeValue } = data.params || {}
-            handleClearActiveTool()
-            handleTriggerExecForge(forgeValue, data.useForge)
-            break
-            // 替换当前使用的 ai tool
-          }
-          case ReActChatEventEnum.USE_AI_TOOL: {
-            const { value: toolValue } = data.params || {}
-            handleClearActiveForge()
-            handleAITool(toolValue)
-            break
-          }
-          default:
-            break
-        }
-      } catch (error) {}
-    }
-    emiter.on('onReActChatEvent', onEvents)
-    return () => {
-      emiter.off('onReActChatEvent', onEvents)
-    }
   }, [])
 
   //#region 使用 AI-Forge 模板/Tool 相关逻辑
@@ -172,6 +129,58 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const replaceForgeNoPromptCache = useRef(false)
   // 储存 replaceToolNoPrompt 存放到缓存里值，阻止多次设置重复值
   const replaceToolNoPromptCache = useRef(false)
+
+  useEffect(() => {
+    if (!inViewPort) return
+    // ai-re-act 页面左侧侧边栏向 chatUI 发送的事件
+    emiter.on('onReActChatEvent', onEvents)
+    return () => {
+      emiter.off('onReActChatEvent', onEvents)
+    }
+  }, [inViewPort])
+
+  const onEvents = useMemoizedFn((res) => {
+    try {
+      const data = JSON.parse(res) as AIAgentTriggerEventInfo
+      if (!data.type) return
+      switch (data.type as ReActChatEventEnum) {
+        // 新开聊天对话窗
+        case ReActChatEventEnum.NEW_CHAT:
+          setSetting?.((old) => ({
+            ...old,
+            SyncPerceptionTrigger: false,
+            EnablePlan: false,
+            Strategy: {
+              EnableMultiAgent: false,
+              EnableGoalMode: false,
+              GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+            },
+          }))
+          setActiveChat?.(undefined)
+          setMode('welcome')
+          break
+        // 替换当前使用的 forge 模板
+        case ReActChatEventEnum.OPEN_FORGE_FORM:
+          {
+            const { value: forgeValue } = data.params || {}
+            handleClearActiveTool()
+            handleTriggerExecForge(forgeValue, data.useForge)
+          }
+          break
+        // 替换当前使用的 ai tool
+        case ReActChatEventEnum.USE_AI_TOOL:
+          {
+            const { value: toolValue } = data.params || {}
+            handleClearActiveForge()
+            handleAITool(toolValue)
+          }
+          break
+
+        default:
+          break
+      }
+    } catch (error) {}
+  })
 
   /** 从别的元素上触发使用 forge 模板的功能 */
   const handleTriggerExecForge = useMemoizedFn((forge: AIForge, useForge?: boolean) => {

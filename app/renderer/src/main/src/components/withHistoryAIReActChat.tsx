@@ -447,6 +447,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       TimelineSessionID: createActiveChatSessionId(),
       SyncPerceptionTrigger: false,
       EnablePlan: false,
+      Strategy: {
+        EnableMultiAgent: false,
+        EnableGoalMode: false,
+        GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+      },
     }))
     aiReActChatRef.current?.setValue('')
   })
