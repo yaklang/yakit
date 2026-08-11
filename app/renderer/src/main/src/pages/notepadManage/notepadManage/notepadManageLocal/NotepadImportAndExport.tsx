@@ -168,18 +168,17 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
       if (filePaths.length > 0) {
         const selectedPath = filePaths[0]
         const fileName = `笔记本-${moment().valueOf()}.zip`
-        // 回退方案：根据平台使用适当的路径分隔符
-        const separator = process.platform === 'win32' ? '\\' : '/'
-        targetPathRef.current = selectedPath + separator + fileName
-
-        const exportParams: ExportNoteRequest = {
-          TargetPath: targetPathRef.current,
-          Filter: filter,
-        }
-        setVisible(true)
         ipcRenderer
-          .invoke('ExportNote', exportParams, taskToken)
-          .then(() => {})
+          .invoke('pathJoin', { dir: selectedPath, file: fileName })
+          .then((currentPath: string) => {
+            targetPathRef.current = currentPath
+            const exportParams: ExportNoteRequest = {
+              TargetPath: currentPath,
+              Filter: filter,
+            }
+            setVisible(true)
+            return ipcRenderer.invoke('ExportNote', exportParams, taskToken)
+          })
           .catch((e) => {
             yakitNotify('error', `导出失败:${e}`)
           })

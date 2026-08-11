@@ -667,7 +667,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             setNoWordwrap(obj?.noWordWrap)
           }
         } catch (error) {
-          fail(error + '')
+          console.error(error)
         }
       })
     }

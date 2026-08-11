@@ -1156,7 +1156,6 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     showUploadList={false}
                     beforeUpload={(f) => {
                       const file_name = f.name
-                      // @ts-expect-error 类型定义不完整，需要忽略此行
                       const path: string = f?.path || ''
                       if (path.length > 0) {
                         setChromePath(path)

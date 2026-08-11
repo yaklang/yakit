@@ -85,6 +85,7 @@ export default defineConfig({
     },
   ],
   resolve: {
+    dedupe: ['vitest'],
     alias: {
       '@renderer': path.resolve(__dirname, 'app/renderer/src/main/src'),
       '@engne': path.resolve(__dirname, 'app/renderer/engine-link-startup/src'),
@@ -102,7 +103,7 @@ export default defineConfig({
     // run from repo root
     root: path.resolve(__dirname),
     // run renderer setup to register testing-library matchers
-    setupFiles: ['app/renderer/src/main/src/setupTests.ts'],
+    setupFiles: ['app/renderer/src/main/src/setupVitest.ts'],
     // 单测：仅业务旁 __test__/（与 scripts/ci-select-vitest-tests.js 一致）
     include: [
       'app/renderer/src/main/src/**/__test__/**/*.test.{ts,tsx,js,jsx}',
@@ -115,7 +116,7 @@ export default defineConfig({
       'e2e/**/__test__/**/*.spec.{ts,js,mjs}',
     ],
     // keep JUnit reporter and default reporter
-    reporters: [['junit', { outputFile: 'reports/junit.xml' }] as unknown as any, 'default'],
+    reporters: [['junit', { outputFile: 'reports/junit.xml' }], 'default'],
     coverage: {
       provider: 'v8',
       reporter: ['lcov', 'text'],

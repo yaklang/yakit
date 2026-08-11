@@ -1792,7 +1792,6 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
     if (file) {
       setLoading(true)
       ipcRenderer
-        // @ts-expect-error 类型定义不完整，需要忽略此行
         .invoke('upload-group-data', { path: file.path })
         .then((res) => {
           if (res.code === 200 && !isCancelRef.current) {

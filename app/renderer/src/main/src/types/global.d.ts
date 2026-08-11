@@ -21,7 +21,7 @@ import type * as Grpc from '@/apiUtils/grpc'
 import type * as EditorMarkers from '@/utils/editorMarkers'
 import type * as HTTPFlowTableConstants from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
 import type * as TrafficModels from '@/models/Traffic'
-import type * as NewApp from '@/NewApp'
+import type * as NewApp from '@/newApp/NewApp'
 import type * as SwaggerResponseType from '@/services/swagger/resposeType'
 
 declare module 'react' {
@@ -40,6 +40,11 @@ declare module 'fs' {
 }
 
 declare global {
+  /** Electron 渲染进程里 `<input type="file">` 选中的 File 带本地绝对路径；其它来源的 File 可能没有 */
+  interface File {
+    readonly path?: string
+  }
+
   type DownloadingState = YakitGVDefine.DownloadingState
   type YaklangEngineMode = YakitGVDefine.YaklangEngineMode
   type YakitStatusType = YakitGVDefine.YakitStatusType

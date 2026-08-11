@@ -351,7 +351,6 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                     maxCount={1}
                     showUploadList={false}
                     beforeUpload={(f) => {
-                      // @ts-expect-error 类型定义不完整，需要忽略此行
                       const path: string = f?.path || ''
                       if (path.length > 0) {
                         onImport(path)

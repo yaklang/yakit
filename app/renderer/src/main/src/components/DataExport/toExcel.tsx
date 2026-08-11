@@ -3,7 +3,8 @@ import { yakitNotify } from '@/utils/notification'
 import { saveAs } from 'file-saver'
 import moment from 'moment'
 import * as XLSX from 'xlsx'
-import * as XLSXStyle from 'xlsx-style'
+import * as XLSXStyle from 'xlsx-js-style'
+import type { BookType } from 'xlsx'
 import i18n from '@/i18n/i18n'
 
 const tOriginal = i18n.getFixedT(null, 'components')
@@ -65,7 +66,7 @@ interface ExcelJsonProps {
   data: Array<string[]>
   filename: string
   autoWidth: boolean
-  bookType: string
+  bookType: BookType
   optsSingleCellSetting?: CellSetting
   optsUnifiedCellSetting?: any
 }

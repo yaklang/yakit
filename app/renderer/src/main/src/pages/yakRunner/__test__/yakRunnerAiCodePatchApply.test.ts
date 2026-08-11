@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 
-const getCodeMock = vi.fn<[], string | null>(() => null)
+const getCodeMock = vi.fn((): string | null => null)
 
 vi.mock('@/utils/notification', () => ({
   yakitFailed: vi.fn(),

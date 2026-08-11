@@ -21,7 +21,7 @@ const Vitest__Test__: FC<VitestTestProps> = (props) => {
             if (!data) return
           } catch (error) {
             setTypeLoading(false)
-            fail(error + '')
+            console.error(error)
           }
         })
         .finally(() => {
