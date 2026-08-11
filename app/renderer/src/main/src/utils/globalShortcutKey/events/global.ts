@@ -34,6 +34,10 @@ export enum GlobalShortcutKey {
   RemovePage = 'removePage',
   /** 新增二级页面 */
   AddSubPage = 'addSubPage',
+  /** 切换到下一个二级页面 */
+  SwitchSubPageNext = 'switchSubPageNext',
+  /** 切换到上一个二级页面 */
+  SwitchSubPagePrev = 'switchSubPagePrev',
 
   /** --- 公共组件快捷键 --- */
   /** 发送并跳转 */
@@ -61,6 +65,14 @@ const globalShortcutKeyEvents: EventsType = {
   addSubPage: {
     name: 'ShortcutKey.addSubPage',
     keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_T],
+  },
+  switchSubPageNext: {
+    name: 'ShortcutKey.switchSubPageNext',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.RightArrow],
+  },
+  switchSubPagePrev: {
+    name: 'ShortcutKey.switchSubPagePrev',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.LeftArrow],
   },
   // 公共组件快捷键
   'sendAndJump*common': {

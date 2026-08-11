@@ -172,6 +172,8 @@
     "screenshot": "截图",
     "closeCurrentPage": "关闭当前页面",
     "addSubPage": "新增二级页面",
+    "switchSubPageNext": "切换到下一个二级页面",
+    "switchSubPagePrev": "切换到上一个二级页面",
     "sendAndJump": "发送并跳转",
     "sendOnly": "仅发送",
     "tableVirtualUp": "Table表格向上选",
