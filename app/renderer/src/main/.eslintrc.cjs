@@ -37,7 +37,7 @@ module.exports = {
     '@typescript-eslint/ban-ts-comment': 'warn',
     'react/prop-types': 'off',
     'react/display-name': 'off',
-    'react/no-unknown-property': ['error', { ignore: ['css', 'pId'] }],
+    'react/no-unknown-property': ['error', { ignore: ['css', 'pid'] }],
     'react-hooks/rules-of-hooks': 'error', // 强制执行 React Hooks 的规则。
     'react-hooks/exhaustive-deps': 'off', // 依赖数组是否完整
 

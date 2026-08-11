@@ -26,7 +26,7 @@ import type * as SwaggerResponseType from '@/services/swagger/resposeType'
 
 declare module 'react' {
   interface SVGAttributes<T> {
-    pId?: string | number
+    pid?: string | number
   }
 }
 
