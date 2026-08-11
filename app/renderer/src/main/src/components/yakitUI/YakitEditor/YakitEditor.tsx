@@ -1205,7 +1205,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                   className: 'unicode-decode',
                   hoverMessage: { value: decoded },
                   afterContentClassName: 'unicode-decode',
-                  after: { content: decoded, inlineClassName: 'unicode-decode-after' },
+                  after: {
+                    content: decoded,
+                    inlineClassName: 'unicode-decode-after',
+                    inlineClassNameAffectsLetterSpacing: true,
+                  },
                 },
               } as IModelDecoration)
             }
@@ -1245,6 +1249,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         ? t('YakitEditor.emptyContentTypeAutoDetected')
                         : originalContentTypeFun(),
                     inlineClassName: 'unicode-decode-after',
+                    inlineClassNameAffectsLetterSpacing: true,
                   },
                 },
               } as IModelDecoration)
@@ -1253,6 +1258,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         })()
         ;(() => {
           // all
+          // 未开启换行符显示时跳过生成：角标即使透明仍占 margin/padding 宽度，
+          // 且每输入一个字符会让后续所有 match.index 偏移、装饰全量重建，导致光标抖动
+          if (!getShowBreak()) return
           const keywordRegExp = /\r?\n/g
           let match
           let count = 0
@@ -1262,7 +1270,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             const className: 'crlf' | 'lf' = match[0] === '\r\n' ? 'crlf' : 'lf'
             const end = model.getPositionAt(match.index + match[0].length)
             dec.push({
-              id: 'keyword' + match.index,
+              // 用行号作 id：在行内编辑不改变行号，deltaDecorations 仅更新受影响行，避免全量重建抖动
+              id: 'keyword-' + start.lineNumber,
               ownerId: 2,
               range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
               options: { beforeContentClassName: className },
@@ -2381,9 +2390,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const model = editor.getModel()
                 if (model) {
                   yakStaticAnalyze.run(editor, model)
-                  model.onDidChangeContent(() => {
-                    yakStaticAnalyze.run(editor, model)
-                  })
+                  // 仅 Yak / SyntaxFlow 语言需要静态分析；其它类型（如 markdown/http）每次输入都触发 setModelMarkers([]) 属无谓开销
+                  if (language === YaklangMonacoSpec || language === SyntaxFlowMonacoSpec) {
+                    model.onDidChangeContent(() => {
+                      yakStaticAnalyze.run(editor, model)
+                    })
+                  }
                 }
               }
 
