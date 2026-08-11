@@ -3044,8 +3044,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       destroyTooltipOnHide={true}
                       onVisibleChange={setHistorySelectorOpen}
                       content={
-                        historySelectorOpen ? (
-                          <div style={{ width: 400 }}>
+                        <div style={{ width: 400 }}>
+                          {historySelectorOpen && (
                             <React.Suspense fallback={null}>
                               <HTTPFuzzerHistorySelector
                                 currentSelectId={currentSelectId}
@@ -3061,8 +3061,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 fuzzerTabIndex={props.id}
                               />
                             </React.Suspense>
-                          </div>
-                        ) : null
+                          )}
+                        </div>
                       }
                     >
                       <YakitButton type="text" icon={<ClockIcon />} style={{ padding: '4px 0px' }}>
