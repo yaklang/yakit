@@ -1,6 +1,6 @@
 import type React from 'react'
 import { type API } from '@/services/swagger/resposeType'
-export type useVirtualTableHookParams<T, DataT, DataKey> = {
+export type useVirtualTableHookParams<T, DataT, DataKey extends string> = {
   // 表格容器ref
   tableBoxRef: React.MutableRefObject<any>
   // 表格ref
@@ -38,13 +38,14 @@ export interface FilterProps {
   [key: string]: any
 }
 
-// 定义一个接口，包含 Pagination 属性
-export interface ParamsTProps<T = {}> extends VirtualPaging, T {
-  // 是否在接口请求前控制轮询
-  startLoop?: boolean
-  // 是否在接口请求结束后控制轮询
-  endLoop?: boolean
-}
+// 定义一个类型，包含 Pagination 属性
+export type ParamsTProps<T extends object = {}> = VirtualPaging &
+  T & {
+    // 是否在接口请求前控制轮询
+    startLoop?: boolean
+    // 是否在接口请求结束后控制轮询
+    endLoop?: boolean
+  }
 
 export type DataResponseProps<T, K extends string = 'data'> = {
   pagemeta: API.PageMeta

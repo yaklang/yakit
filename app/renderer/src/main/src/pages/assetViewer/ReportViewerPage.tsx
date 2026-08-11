@@ -31,7 +31,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import type { ReportItem } from './reportRenders/schema'
 import html2canvas from 'html2canvas'
 import { saveAs } from 'file-saver'
-import htmlDocx from 'html-docx-js/dist/html-docx'
+import { asBlob } from 'html-docx-js-typescript'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -591,7 +591,12 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       .replace(/<th(.*?)>/g, '<th$1 style="width: 10%">')
       .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, '')
 
-    saveAs(htmlDocx.asBlob(wordStr), `${report.Title}.doc`)
+    const wordBlob = await asBlob(wordStr)
+    // 浏览器环境 asBlob 返回 Blob；类型声明含 Node Buffer 分支
+    if (!(wordBlob instanceof Blob)) {
+      throw new Error('asBlob did not return a Blob in browser')
+    }
+    saveAs(wordBlob, `${report.Title}.doc`)
   }
 
   const downloadWord = useMemoizedFn(async () => {

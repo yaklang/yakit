@@ -10,7 +10,7 @@ Yakit 是一个 Electron 桌面应用，由三部分组成：
 | 模块 | 路径 | 说明 | 开发端口 |
 | --- | --- | --- | --- |
 | Electron 主进程 | `app/main/` | 入口 `app/main/index.js`，承载窗口、IPC、gRPC 通信等 | - |
-| 主渲染端 | `app/renderer/src/main/` | 基于 CRA（react-app-rewired）的主界面渲染端 | `3000` |
+| 主渲染端 | `app/renderer/src/main/` | 基于 Vite 8（MPA：main/aux）的主界面渲染端 | `3000` |
 | Link 渲染端 | `app/renderer/engine-link-startup/` | 基于 Vite 的引擎链接启动页渲染端 | `5173` |
 
 > 主进程在开发模式下会分别加载：
@@ -37,7 +37,7 @@ Yakit 是一个 Electron 桌面应用，由三部分组成：
 # 1. 根目录（Electron 主进程相关依赖，含 electron、electron-builder、concurrently、wait-on 等）
 yarn install
 
-# 2. 主渲染端（CRA）
+# 2. 主渲染端（Vite 8）
 yarn install-render
 # 等价于：cd app/renderer/src/main && yarn install
 
@@ -180,7 +180,7 @@ yarn pack-mac
 - **启动 / 编译报错（模块找不到、API 报错、语法报错等）**：优先 `yarn check-deps` 排查依赖是否一致；结合上述盲区判断是否需要重装依赖。
 - **M1 芯片原生依赖编译失败**：执行 `brew install pkg-config pixman cairo pango`。
 - **Electron 下载慢 / 失败**：`source ./electron.env` 后重试。
-- **端口被占用**：确认没有残留的 vite / react-scripts / electron 进程，必要时 `lsof -i :3000` / `lsof -i :5173` 排查。
+- **端口被占用**：确认没有残留的 vite / electron 进程，必要时 `lsof -i :3000` / `lsof -i :5173` 排查。
 
 ## 代码规范
 

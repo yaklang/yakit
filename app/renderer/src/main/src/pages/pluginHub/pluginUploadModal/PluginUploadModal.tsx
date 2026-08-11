@@ -18,7 +18,7 @@ import { grpcDownloadOnlinePlugin } from '../utils/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { pluginConvertLocalToOnline } from '@/pages/pluginEditor/utils/convert'
-import type { FileItem } from 'fs'
+import { PluginImageTextarea } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea'
 import type { PluginImageTextareaRefProps } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
 import { httpDeleteOSSResource, httpUploadFile } from '@/apiUtils/http'
 
@@ -546,7 +546,7 @@ export const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = mem
   const [uploadLoading, setUploadLoading] = useState<boolean>(false)
   const [fileName, setFileName] = useState<string>('')
   const fileUrl = useRef<string>('')
-  const uploadFile = useMemoizedFn((file: FileItem) => {
+  const uploadFile = useMemoizedFn((file: File) => {
     if (uploadLoading) return
     if (file.size > 5 * 1024 * 1024) {
       failed('压缩包大小不能超过5MB')
@@ -554,6 +554,10 @@ export const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = mem
     }
 
     let uploadUrl: string = '' // 有值代表上传成功
+    if (!file.path) {
+      failed('无法获取本地文件路径')
+      return
+    }
     setUploadLoading(true)
     httpUploadFile({ path: file.path, name: file.name })
       .then((res) => {

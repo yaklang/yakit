@@ -3,7 +3,7 @@ import { type APIFunc } from '@/apiUtils/type'
 import type { PaginationSchema } from '@/pages/invoker/schema'
 export type VirtualTableRefreshReason = 'query' | 'visibility' | 'manual'
 
-export type useVirtualTableHookParams<T, DataT, DataKey> = {
+export type useVirtualTableHookParams<T, DataT, DataKey extends string> = {
   // 表格容器ref
   tableBoxRef: React.MutableRefObject<any>
   // 表格ref

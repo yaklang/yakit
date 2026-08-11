@@ -1,6 +1,6 @@
 import React from 'react'
 import { render, waitFor, screen } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { YakitSpinProps } from '@/components/yakitUI/YakitSpin/YakitSpinType'
 
 vi.mock('@/components/yakitUI/YakitSpin/YakitSpin', () => {
