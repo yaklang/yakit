@@ -61,7 +61,7 @@ const handleToolCallStart: AIMessageHandler = (requestInfo) => {
     data: toolResult,
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
+      planID: store.getState().currentChatStatus.questionID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),

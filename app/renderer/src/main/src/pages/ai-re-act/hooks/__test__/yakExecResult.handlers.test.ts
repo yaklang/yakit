@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { aiYakExecResultDataHandlers } from '../grpcStreamHandler/yakExecResult'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
+import { AITaskStatus } from '../grpcApi'
 
 describe('yakExecResult handlers', () => {
   beforeEach(() => {
@@ -19,9 +20,13 @@ describe('yakExecResult handlers', () => {
       ),
       chatType: 'reAct',
     })
-    req.store.getState().updateState({ currentCasualTaskID: 'q1' })
+    req.store.getState().updateCurrentChatStatus({
+      questionID: 'q1',
+      status: AITaskStatus.inProgress,
+      coordinatorId: '',
+    })
     aiYakExecResultDataHandlers.status(req)
-    expect(req.store.getState().casualTitle).toBe('working')
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('working')
   })
 
   it('D10: status updates plan title for task', () => {
@@ -34,7 +39,7 @@ describe('yakExecResult handlers', () => {
       chatType: 'task',
     })
     aiYakExecResultDataHandlers.status(req)
-    expect(req.store.getState().taskStatus.plan).toBe('planning')
+    expect(req.store.getState().currentLoadingTitle.planTitle).toBe('planning')
   })
 
   it('D10: yak_exec_result registered', () => {

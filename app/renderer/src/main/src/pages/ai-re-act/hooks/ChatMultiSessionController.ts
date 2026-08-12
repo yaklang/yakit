@@ -2,6 +2,7 @@ import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type
 import {
   AIInputEventSyncTypeEnum,
   AISourceEnum,
+  AITaskStatus,
   type AIAgentGrpcApi,
   type AIEventQueryRequest,
   type AIInputEvent,
@@ -18,7 +19,12 @@ import {
   AttachedResourceTypeEnum,
 } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultMemoryList, DefaultTaskPlanEndGate, DefaultTaskPlanStatus } from './defaultConstant'
+import {
+  DefaultAgentChatStatus,
+  DefaultAgentLoadingTitle,
+  DefaultMemoryList,
+  DefaultTaskPlanEndGate,
+} from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams, AIFileSystemPin } from './type'
@@ -764,9 +770,16 @@ export class ChatMultiSessionController {
 
     // 恢复态：遮罩防止 hydrate / recovery 期间误点（UI 订阅 store.initLoading）
     if (userQuery) {
-      store.getState().updateState({ execute: true, casualTitle: '发送问题，开启会话...' })
+      store.getState().updateState({
+        execute: true,
+        currentLoadingTitle: { casualTitle: '会话初始化中...', planTitle: '', taskTitle: '' },
+      })
     } else {
-      store.getState().updateState({ execute: true, initLoading: true, casualTitle: '加载会话中...' })
+      store.getState().updateState({
+        execute: true,
+        initLoading: true,
+        currentLoadingTitle: { casualTitle: '获取历史数据中...', planTitle: '', taskTitle: '' },
+      })
       this.sessionRestoreLoading.add(sessionId)
     }
 
@@ -858,14 +871,15 @@ export class ChatMultiSessionController {
       }
 
       if (params.IsFreeInput) {
-        const { casualLoading, currentCasualTaskID, taskStatus } = store.getState()
-        // 如果自由对话引起了任务规划，那么自由对话其实是空闲状态
-        const isCasualIdle =
-          casualLoading && currentCasualTaskID && taskStatus.taskID && currentCasualTaskID === taskStatus.taskID
+        const { currentChatStatus } = store.getState()
+        // 如果问题的状态不是进行中，则属于空闲状态
+        const isCasualIdle = currentChatStatus.status !== AITaskStatus.inProgress
 
-        if (!casualLoading || isCasualIdle) {
+        if (isCasualIdle) {
           // 自由对话没有问题进行中时，才改变loading的title
-          store.getState().updateState({ casualTitle: '等待回复中...' })
+          store
+            .getState()
+            .updateState({ currentLoadingTitle: { casualTitle: '等待AI回复...', planTitle: '', taskTitle: '' } })
 
           const chatID = uuidv4()
           const AttachedResourceInfos = params.AttachedResourceInfo || []
@@ -1136,7 +1150,10 @@ export class ChatMultiSessionController {
     }, 5000)
 
     // 如果任务规划运行态有数据，则置空
-    store.getState().updateState({ taskStatus: cloneDeep(DefaultTaskPlanStatus) })
+    store.getState().updateState({
+      currentChatStatus: cloneDeep(DefaultAgentChatStatus),
+      currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
+    })
 
     // 拉取 timeline 历史（首批）+ 文件系统历史（全量），不阻塞建连主流程
     void this.loadTimelineHistory(sessionId)
@@ -1245,7 +1262,7 @@ export class ChatMultiSessionController {
         if (meta.createChatQuestion) {
           this.requestMessage(sessionId, meta.createChatQuestion)
           meta.createChatQuestion = undefined
-          store.getState().updateState({ casualTitle: '等待回复中...' })
+          store.getState().updateCurrentLoadingTitle({ casualTitle: '等待AI回复...' })
 
           // 因为有用户问题发送，所以注册 获取问题队列轮询器
           if (meta.queuePollingTimer) clearInterval(meta.queuePollingTimer)
@@ -1374,7 +1391,7 @@ export class ChatMultiSessionController {
         handleFunc({
           sessionId,
           res,
-          chatType: store.getState().taskStatus.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
+          chatType: store.getState().currentChatStatus.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
           store,
           rawData,
           request,
@@ -1571,11 +1588,9 @@ export class ChatMultiSessionController {
       this.closeSessionTimers(meta)
       // 任务规划结束后的相关逻辑
       handleTaskPlanEnd({ ...data, sessionId }, true)
-      store.getState().updateState({
-        execute: false,
-        casualLoading: false,
-        casualTitle: '会话已停止',
-      })
+      store.getState().updateState({ execute: false })
+      store.getState().updateCurrentChatStatus({ status: AITaskStatus.error })
+      store.getState().updateCurrentLoadingTitle({ casualTitle: '会话已关闭' })
       this.readyChannels.delete(sessionId)
 
       onEnd = meta.onEnd
@@ -1622,7 +1637,8 @@ export class ChatMultiSessionController {
       ipcRenderer.invoke('cancel-ai-re-act', session).catch(() => {})
       const store = this.storePool.get(session)
       if (store) {
-        store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话关闭中...' })
+        store.getState().updateState({ execute: false })
+        store.getState().updateCurrentLoadingTitle({ casualTitle: '会话正在关闭...' })
       }
       if (meta) this.closeSessionTimers(meta)
     }

@@ -56,7 +56,7 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
 }
 
 /**
- * end_plan_and_execution & react_task_status_changed 终态齐套后，才把 pendingStatus 落到 taskStatus.status
+ * end_plan_and_execution & react_task_status_changed 终态齐套后，才把 pendingStatus 落到 currentChatStatus.status
  * 任一未到则保持 processing（等待中）
  */
 export const trySettleTaskPlanEnd = (
@@ -65,7 +65,7 @@ export const trySettleTaskPlanEnd = (
 ) => {
   const gate = meta.taskPlanEndGate
   if (!gate.endReceived || !gate.pendingStatus) return
-  store.getState().updateTaskLoadingStatus({ status: gate.pendingStatus })
+  store.getState().updateCurrentChatStatus({ status: gate.pendingStatus })
   store.getState().updateState({ cancelTaskLoading: false })
   meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
 }
@@ -100,7 +100,7 @@ export const handleTaskPlanEnd: (
   store.getState().updatePlanTree(newPlanTree)
 
   // end 只清展示文案，保留 taskID / coordinatorId / status（status 由 settle 写）
-  store.getState().updateTaskLoadingStatus({ plan: '已结束', task: '已结束' })
+  store.getState().updateCurrentLoadingTitle({ planTitle: '已结束', taskTitle: '已结束' })
   if (isChatEnd) {
     meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
   } else {

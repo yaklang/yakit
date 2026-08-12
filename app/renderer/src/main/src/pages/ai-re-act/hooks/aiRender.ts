@@ -472,19 +472,24 @@ export type AIChatQSData =
 // #endregion
 
 // #region 状态机定义及其相关字段的定义
-/** 任务规划运行态：展示文案 + 当前活动任务身份/状态（是否在跑只看 status） */
-export interface TaskPlanStatus {
-  plan: string
-  task: string
-  /** 当前任务规划的 re_act_task_id，'' 表示无活动任务规划 */
-  taskID: string
-  /**
-   * 当前任务规划状态，AITaskStatus.created 表示无；
-   * processing 表示执行中或等待 end∧change 齐套；终态表示已结束
-   */
-  status: AITaskStatusType
-  /** 当前任务规划的 coordinatorId，'' 表示无 */
+/** 会话里当前的问题ID、coordinatorId和状态 */
+export interface AgentChatStatus {
+  /** 问题的ID */
+  questionID: string
+  /** 问题进入异步任务的coordinatorId */
   coordinatorId: string
+  /** 问题的状态 */
+  status: AITaskStatusType
+}
+
+/** 问题执行中时的loading-title内容 */
+export interface AgentLoadingTitle {
+  /** 自由对话的loading-title内容 */
+  casualTitle: string
+  /** 任务规划的loading-title内容 */
+  planTitle: string
+  /** 任务的loading-title内容 */
+  taskTitle: string
 }
 
 /** 当前正在执行的任务树 */
@@ -547,18 +552,15 @@ export interface ChatStoreState {
   riskTabUpdate: number
 
   // #region 会话列表相关数据
-  /** 当前自由对话问题的re_act_task_id */
-  currentCasualTaskID: string
-  /** 自由对话的loading 显示的文案 */
-  casualTitle: string
-  /** 自由对话的是否进行中 */
-  casualLoading: boolean
+  /** 当前问题的状态和ID信息 */
+  currentChatStatus: AgentChatStatus
+  /** 当前会话的loading-title内容 */
+  currentLoadingTitle: AgentLoadingTitle
+
   /** 场景状态(仅供自由对话[reAct])使用 */
   focusMode: string
   /** UI是否显示中间的任务规划列表 */
   showPlanList: boolean
-  /** 任务规划运行态（展示文案 + 当前活动任务；是否在跑看 status） */
-  taskStatus: TaskPlanStatus
 
   /** 当前正在等待用户操作的review数据 */
   currentReviewDetail: { token: string; renderNum: number }
@@ -666,7 +668,8 @@ export interface ChatStoreState {
    */
   hydrateRenderTree: (content: SessionRenderContent) => void
 
-  updateTaskLoadingStatus: (status: Partial<TaskPlanStatus>) => void
+  updateCurrentChatStatus: (status: Partial<AgentChatStatus>) => void
+  updateCurrentLoadingTitle: (status: Partial<AgentLoadingTitle>) => void
 
   /** 更新自由对话列表的todoList，真实数据存放在内存池中 */
   updateCasualTodoList: () => void

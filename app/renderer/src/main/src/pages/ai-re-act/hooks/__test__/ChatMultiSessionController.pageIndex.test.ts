@@ -211,7 +211,8 @@ describe('ChatMultiSessionController lifecycle', () => {
     store.getState().updateState({ execute: true })
     ctrl.handleSessionEnd('s-life')
     expect(store.getState().execute).toBe(false)
-    expect(store.getState().casualTitle).toBe('会话已停止')
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('会话已关闭')
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.error)
     expect(ctrl.isSessionReady('s-life')).toBe(false)
   })
 
@@ -385,18 +386,17 @@ describe('ChatMultiSessionController restore / renderPersist / collect', () => {
     expect(aiChatPersistStore.setSessionRender).toHaveBeenCalled()
   })
 
-  it('A10b: session end with processing taskStatus', () => {
+  it('A10b: session end with processing currentChatStatus', () => {
     const { store } = ctrl.ensureSession('s-rp')
     store.getState().updateState({
-      taskStatus: {
-        plan: 'p',
-        task: 't',
-        taskID: 't1',
+      currentChatStatus: {
+        questionID: 't1',
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
     })
     ctrl.handleSessionEnd('s-rp')
     expect(store.getState().execute).toBe(false)
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.error)
   })
 })

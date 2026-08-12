@@ -5,7 +5,6 @@ import type {
   AIStreamOutput,
   ChatListRenderType,
   ReActChatRenderItem,
-  TaskPlanStatus,
 } from './aiRender'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '@/pages/ai-agent/store/constants'
@@ -132,7 +131,19 @@ export interface UseChatIPCState {
   memoryList: AIAgentGrpcApi.MemoryEntryList
 
   /** 任务规划运行态（loading 文案 + 当前活动任务） */
-  taskStatus: TaskPlanStatus
+  taskStatus: {
+    plan: string
+    task: string
+    /** 当前任务规划的 re_act_task_id，'' 表示无活动任务规划 */
+    taskID: string
+    /**
+     * 当前任务规划状态，AITaskStatus.created 表示无；
+     * processing 表示执行中或等待 end∧change 齐套；终态表示已结束
+     */
+    status: AITaskStatusType
+    /** 当前任务规划的 coordinatorId，'' 表示无 */
+    coordinatorId: string
+  }
   /** 自由对话的loading 显示的文案 */
   casualTitle: string
   /** 自由对话的是否进行中 */

@@ -40,7 +40,7 @@ const genStreamGroupData = (
       },
       TaskId: generateTaskNodeDataID({
         chatType,
-        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
+        planID: store.getState().currentChatStatus.questionID,
         taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),
@@ -126,7 +126,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
       },
       TaskId: generateTaskNodeDataID({
         chatType,
-        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
+        planID: store.getState().currentChatStatus.questionID,
         taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),
@@ -166,7 +166,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
     },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
+      planID: store.getState().currentChatStatus.questionID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -481,7 +481,7 @@ const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
     //   reference: [refToken],
     //   TaskId: generateTaskNodeDataID({
     //     chatType,
-    //     planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : meta.currentTaskPlanID?.taskID,
+    //     planID: store.getState().currentChatStatus.questionID,
     //     taskID: res.TaskId,
     //     isExist: (key) => rawData.contents.has(key),
     //   }),

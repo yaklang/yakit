@@ -207,7 +207,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       SyncID: randomString(8),
     }
     onSend({ token: sessionId, type: 'task', params: info })
-    store.getState().updateTaskLoadingStatus({ taskID: '', status: AITaskStatus.created, coordinatorId: '' })
+    // store.getState().updateCurrentChatStatus({ questionID: '', status: AITaskStatus.created, coordinatorId: '' })
 
     sendRecoverParamsRef.current = undefined
   })

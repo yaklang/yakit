@@ -1,21 +1,25 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createChatStore } from '../chatStore'
-import { DefaultTaskPlanStatus, DefaultCurrentExecTaskTree } from '../defaultConstant'
+import { DefaultAgentChatStatus, DefaultAgentLoadingTitle, DefaultCurrentExecTaskTree } from '../defaultConstant'
+import { AITaskStatus } from '../grpcApi'
 
 describe('chatStore basics', () => {
-  it('C1: initial state and updateState / updateTaskLoadingStatus', () => {
+  it('C1: initial state and updateCurrentChatStatus / updateCurrentLoadingTitle', () => {
     const store = createChatStore()
     expect(store.getState().execute).toBe(false)
-    expect(store.getState().taskStatus).toEqual(DefaultTaskPlanStatus)
+    expect(store.getState().currentChatStatus).toEqual(DefaultAgentChatStatus)
+    expect(store.getState().currentLoadingTitle).toEqual(DefaultAgentLoadingTitle)
     expect(store.getState().currentReviewDetail).toEqual({ token: '', renderNum: 0 })
 
-    store.getState().updateState({ execute: true, casualTitle: 'hi' })
+    store.getState().updateState({ execute: true })
+    store.getState().updateCurrentLoadingTitle({ casualTitle: 'hi' })
     expect(store.getState().execute).toBe(true)
-    expect(store.getState().casualTitle).toBe('hi')
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('hi')
 
-    store.getState().updateTaskLoadingStatus({ plan: 'p', status: 'processing' })
-    expect(store.getState().taskStatus.plan).toBe('p')
-    expect(store.getState().taskStatus.status).toBe('processing')
+    store.getState().updateCurrentLoadingTitle({ planTitle: 'p' })
+    store.getState().updateCurrentChatStatus({ status: AITaskStatus.inProgress })
+    expect(store.getState().currentLoadingTitle.planTitle).toBe('p')
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.inProgress)
   })
 
   it('C2: hydrateRenderTree', () => {

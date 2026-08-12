@@ -123,7 +123,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
     data: { ...cloneDeep(data) },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
+      planID: store.getState().currentChatStatus.questionID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -174,7 +174,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
     data: cloneDeep(data),
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
+      planID: store.getState().currentChatStatus.questionID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -210,7 +210,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
     data: { ...cloneDeep(data) },
     TaskId: generateTaskNodeDataID({
       chatType,
-      planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
+      planID: store.getState().currentChatStatus.questionID,
       taskID: res.TaskId,
       isExist: (key) => rawData.contents.has(key),
     }),
@@ -340,7 +340,7 @@ const handleDetachedPlanReview: AIMessageHandler = (requestInfo) => {
       data: { ...cloneDeep(data) },
       TaskId: generateTaskNodeDataID({
         chatType: chatType,
-        planID: chatType === 'reAct' ? store.getState().currentCasualTaskID : store.getState().taskStatus.taskID,
+        planID: store.getState().currentChatStatus.questionID,
         taskID: res.TaskId,
         isExist: (key) => rawData.contents.has(key),
       }),

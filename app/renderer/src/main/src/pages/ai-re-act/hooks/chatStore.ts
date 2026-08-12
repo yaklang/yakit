@@ -4,14 +4,17 @@ import { immer } from 'zustand/middleware/immer'
 import { enableMapSet } from 'immer'
 import cloneDeep from 'lodash/cloneDeep'
 import {
+  DefaultAgentChatStatus,
+  DefaultAgentLoadingTitle,
   DefaultAIQuestionQueues,
   DefaultCurrentExecTaskTree,
   DefaultPlanHistoryList,
-  DefaultTaskPlanStatus,
 } from './defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
+
 // state 里有 Map（execFileRecord），Immer 操作 Map/Set 前必须加载 MapSet 插件
 enableMapSet()
+
 export type CreateChatStoreOptions = {
   /** 渲染树结构变更时回调（dispatch / delete / replaceItemToken），用于 dirty debounce 落库 */
   onRenderStructureChange?: () => void
@@ -43,12 +46,10 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       riskTabShow: false,
       riskTabUpdate: 0,
 
-      currentCasualTaskID: '',
-      casualTitle: '',
-      casualLoading: false,
+      currentChatStatus: cloneDeep(DefaultAgentChatStatus),
+      currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
       focusMode: '',
       showPlanList: false,
-      taskStatus: cloneDeep(DefaultTaskPlanStatus),
 
       currentReviewDetail: { token: '', renderNum: 0 },
       currentPlanReviewExtraUpdate: 0,
@@ -145,9 +146,13 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.taskChat.elements = []
         }),
 
-      updateTaskLoadingStatus: (partial) =>
+      updateCurrentChatStatus: (partial) =>
         set((state) => {
-          Object.assign(state.taskStatus, partial)
+          Object.assign(state.currentChatStatus, partial)
+        }),
+      updateCurrentLoadingTitle: (partial) =>
+        set((state) => {
+          Object.assign(state.currentLoadingTitle, partial)
         }),
 
       updateCasualTodoList: () => {

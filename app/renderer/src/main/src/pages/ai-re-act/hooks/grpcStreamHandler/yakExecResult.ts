@@ -14,17 +14,17 @@ const handleStatus: AIMessageHandler = (request) => {
   if (data.key === 're-act-loading-status-key') {
     if (chatType === 'task') {
       // 任务规划-loading展示标题
-      store.getState().updateTaskLoadingStatus({ task: data.value || '加载中...' })
+      store.getState().updateCurrentLoadingTitle({ taskTitle: data.value || '加载中...' })
     } else {
       // 只展示自由对话问题的相关title
-      if (res.TaskId !== store.getState().currentCasualTaskID) return
+      if (res.TaskId !== store.getState().currentChatStatus.questionID) return
       // 自由对话-loading展示标题
-      store.getState().updateState({ casualTitle: data.value })
+      store.getState().updateCurrentLoadingTitle({ casualTitle: data.value })
     }
   } else if (data.key === 'plan-executing-loading-status-key') {
     if (chatType === 'task') {
       // 任务规划-loading展示标题
-      store.getState().updateTaskLoadingStatus({ plan: data.value || '加载中...' })
+      store.getState().updateCurrentLoadingTitle({ planTitle: data.value || '加载中...' })
     }
   } else {
     const originData = meta.cardKVPair.get(data.key)
