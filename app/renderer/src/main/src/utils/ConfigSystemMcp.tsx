@@ -22,6 +22,7 @@ import { genDefaultPagination } from '@/pages/invoker/schema'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { grpcGetMCPToolList, grpcSetMCPToolEnabled } from '@/pages/ai-agent/aiMCP/utils'
+import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { yakitNotify } from './notification'
@@ -49,6 +50,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     mcp: { mcpStreamInfo, mcpStreamEvent },
   } = props
   const { t, i18nRefresh } = useI18nNamespaces(['utils', 'yakitUi'])
+  const { getLabelByParams } = useAINodeLabel()
 
   // MCP 是否已启用
   const enableMcp = useMemo(() => {
@@ -233,7 +235,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       {
         title: t('ConfigSystemMcp.tool_source'),
         dataKey: 'Source',
-        width: 110,
+        width: 100,
         render: (text: MCPToolSource) => <YakitTag>{getSourceLabel(text)}</YakitTag>,
         filterProps: {
           filterKey: 'Source',
@@ -246,7 +248,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       {
         title: t('ConfigSystemMcp.tool_name'),
         dataKey: 'ToolName',
-        width: 540,
+        width: 220,
         ellipsis: true,
         render: (text, record) => (
           <YakitPopover
@@ -254,10 +256,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
             content={<AIMCPToolDetailPopover item={record} />}
             overlayStyle={{ maxWidth: 440 }}
           >
-            <div className={styles['tool-name-wrap']}>
-              <div className={styles['tool-name']}>{text}</div>
-              <div className={styles['tool-description']}>{record.Description}</div>
-            </div>
+            <div className={styles['tool-name']}>{text}</div>
           </YakitPopover>
         ),
         filterProps: {
@@ -267,12 +266,28 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         },
       },
       {
+        title: t('ConfigSystemMcp.tool_description'),
+        dataKey: 'DescriptionI18n',
+        ellipsis: true,
+        render: (_text, record: MCPToolConfig) => {
+          const description = record.DescriptionI18n
+            ? getLabelByParams(record.DescriptionI18n)
+            : record.Description || ''
+          return (
+            <div className={styles['tool-description-cell']} title={description}>
+              {description}
+            </div>
+          )
+        },
+      },
+      {
         title: t('ConfigSystemMcp.enable_tool'),
         dataKey: 'Enable',
+        width: 90,
         render: (text, record) => <YakitSwitch checked={text} onChange={(v) => handleToggle(v, record)} />,
       },
     ]
-  }, [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, i18nRefresh])
+  }, [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, getLabelByParams, i18nRefresh])
 
   const queyChangeUpdateData = useDebounceFn(
     () => {
@@ -444,7 +459,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
   return (
     <YakitModal
       visible={true}
-      width={800}
+      width={960}
       title={'Yak Mcp'}
       footer={null}
       closable={true}
@@ -612,11 +627,13 @@ interface AIMCPToolDetailPopoverProps {
 const AIMCPToolDetailPopover: React.FC<AIMCPToolDetailPopoverProps> = React.memo((props) => {
   const { item } = props
   const { t } = useI18nNamespaces(['utils'])
+  const { getLabelByParams } = useAINodeLabel()
+  const description = item.DescriptionI18n ? getLabelByParams(item.DescriptionI18n) : item.Description || ''
 
   return (
     <div className={styles['mcp-tool-detail-popover']}>
       <div className={styles['detail-title']}>{item.ToolName}</div>
-      <div className={styles['detail-description']}>{item.Description}</div>
+      <div className={styles['detail-description']}>{description}</div>
       {item.Params && item.Params.length > 0 && (
         <div className={styles['param-section']}>
           <div className={styles['param-section-title']}>{t('ConfigSystemMcp.parameters_title')}</div>

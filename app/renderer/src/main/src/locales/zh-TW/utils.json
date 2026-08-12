@@ -81,6 +81,7 @@
   "ConfigSystemMcp": {
     "startAddress": "啟動地址：",
     "tool_name": "工具名稱",
+    "tool_description": "描述",
     "enable_tool": "開啟工具",
     "detailed_config": "詳細配置",
     "stdio_remote_disabled_tip": "STDIO 需要在本機直接啟動 Yak 引擎進程，遠端連線模式下無法使用",

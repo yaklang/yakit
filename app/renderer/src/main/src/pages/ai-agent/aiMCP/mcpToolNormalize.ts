@@ -1,3 +1,4 @@
+import type { AIOutputI18n } from '@/pages/ai-re-act/hooks/grpcApi'
 import type {
   GetMCPToolListResponse,
   MCPServer,
@@ -31,8 +32,28 @@ export const normalizeMCPToolParams = (params: unknown): MCPServerToolParamInfo[
   return params.map(normalizeMCPToolParam).filter((item): item is MCPServerToolParamInfo => item !== null)
 }
 
+/** Normalize engine ypb.I18n into AIOutputI18n (same shape as NodeIdVerbose). */
+export const normalizeMCPToolDescriptionI18n = (raw: unknown, fallbackDescription = ''): AIOutputI18n | undefined => {
+  const fallback = String(fallbackDescription || '').trim()
+  if (raw && typeof raw === 'object') {
+    const record = raw as Record<string, unknown>
+    const zh = String(record.Zh ?? record.zh ?? '').trim()
+    const en = String(record.En ?? record.en ?? '').trim()
+    if (zh || en) {
+      return {
+        Zh: zh || en || fallback,
+        En: en || zh || fallback,
+      }
+    }
+  }
+  if (!fallback) return undefined
+  return { Zh: fallback, En: fallback }
+}
+
 export const normalizeMCPToolConfig = (tool: MCPToolConfig): MCPToolConfig => ({
   ...tool,
+  Description: String(tool.Description || ''),
+  DescriptionI18n: normalizeMCPToolDescriptionI18n(tool.DescriptionI18n, tool.Description),
   Params: normalizeMCPToolParams(tool.Params),
 })
 

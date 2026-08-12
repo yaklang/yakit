@@ -127,7 +127,7 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
-  // 握手 用于检查前端是否可以连接当前引擎
+  // 握手 用于检查前端是否可以连接当前引擎 
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
@@ -627,13 +627,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -648,7 +648,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
   /*
     ChaosMakerRule: Bas
   */
@@ -1080,6 +1080,7 @@ service Yak {
 
   // MITM 实时流量摘要。数据库查询仍负责初始化、历史分页和 Gap 恢复。
   rpc SubscribeHTTPFlows(SubscribeHTTPFlowsRequest) returns (stream HTTPFlowLiveEvent);
+
   // 返回产品推荐的内置 ReAct 技能。前端选择后，将 Name/Type 原样写入
   // StartAIReAct 首条消息的 AIStartParams.EnabledCapabilities 即可预加载技能。
   rpc GetAIReActRecommendedSkills(Empty) returns (GetAIReActRecommendedSkillsResponse);
@@ -1423,8 +1424,9 @@ message MCPClientToolConfig {
   string Source = 3;
   string ServerName = 4;
   bool Enable = 5;
-  string Description = 6;
+  string Description = 6; // English; used by AI / MCP protocol
   repeated MCPServerToolParamInfo Params = 7;
+  I18n DescriptionI18n = 8; // UI bilingual description (Zh/En); Zh falls back to En when empty
 }
 
 message GetMCPToolListRequest {
@@ -3813,7 +3815,7 @@ message ImportProjectRequest {
   string Password = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
-  string Type = 6; // "project"(yakit) | "ssa_project"(irify)
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message IsPrivilegedForNetRawResponse {
@@ -3859,7 +3861,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -3905,18 +3907,18 @@ message SetCurrentProjectRequest {
 }
 
 message GetCurrentProjectExRequest {
-  string Type = 1; // "project"(yakit) | "ssa_project"(irify)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 
 message DeleteProjectRequest {
   int64 Id = 1;
   bool IsDeleteLocal = 2;
-  string Type = 3; // "project"(yakit) | "ssa_project"(irify)
+  string Type = 3;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message GetDefaultProjectExRequest {
-  string Type = 1; // "project"(yakit) | "ssa_project"(irify)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message QueryProjectDetailRequest {
@@ -3925,7 +3927,7 @@ message QueryProjectDetailRequest {
 
 
 message GetTemporaryProjectExRequest{
-  string Type = 1; // "project"(yakit) | "ssa_project"(irify)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 
@@ -4211,7 +4213,7 @@ message YaklangInspectInformationRequest {
 }
 
 message YaklangLanguageSuggestionRequest {
-  string InspectType = 1; // completion(补全) / hover(提示) / signature(签名) / definition(找定义) / reference(找引用)
+  string InspectType = 1;// completion(补全) / hover(提示) / signature(签名) / definition(找定义) / reference(找引用)
 
   // {
   // from source code : support all InspectType
@@ -4327,15 +4329,15 @@ message StaticAnalyzeErrorResponse {
 message SavePayloadProgress {
   double Progress = 1; // 进度
 
-  int64 HandledBytes = 2; // old
-  string HandledBytesVerbose = 3; // old
-  int64 TotalBytes = 4; // old
-  string TotalBytesVerbose = 5; // old
-  double CostDuration = 6; // old
+  int64 HandledBytes = 2;          // old
+  string HandledBytesVerbose = 3;          // old
+  int64 TotalBytes = 4;          // old
+  string TotalBytesVerbose = 5;          // old
+  double CostDuration = 6;          // old
 
   string CostDurationVerbose = 7; // 耗时
-  string Speed = 8; // 速度
-  string RestDurationVerbose = 9; // 剩余时间
+  string Speed = 8;// 速度
+  string RestDurationVerbose = 9;// 剩余时间
   string Message = 10;
 }
 
@@ -4772,7 +4774,7 @@ message GenerateYakCodeByPacketResponse {
 message QueryReportRequest {
   int64 Id = 1;
   string Hash = 2;
-  string Type = 3; // "project"(yakit) | "ssa_project"(irify)
+  string Type = 3;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message DeleteReportRequest {
@@ -4781,7 +4783,7 @@ message DeleteReportRequest {
   QueryReportsRequest Filter = 3;
   repeated int64 IDs = 4;
   bool DeleteAll = 5;
-  string Type = 6; // "project"(yakit) | "ssa_project"(irify)
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message QueryReportsResponse {
@@ -4796,7 +4798,7 @@ message QueryReportsRequest {
   string From = 3;
   string Keyword = 4;
   string Title = 5;
-  string Type = 6; // "project"(yakit) | "ssa_project"(irify)
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message Report {
@@ -5077,7 +5079,7 @@ message ShellGenerate{
   EncMode EncMode = 1;
   ShellScript Script = 2;
   string Pass = 3;
-  bool Confuse = 4; //是否混淆
+  bool Confuse = 4;  //是否混淆
   bool IsSession = 5;
 }
 
@@ -6079,7 +6081,7 @@ message SavePayloadRequest {
 
 message UpdatePayloadRequest {
   // old
-  string Group = 1; // old
+  string Group = 1;   // old
   string OldGroup = 2; // old
 
   // new, please use this
@@ -6609,13 +6611,13 @@ message SavePluginExecutionHistoryRequest {
   string Source = 5; // plugin-op | plugin-hub
   string Input = 6;
   // 以下均为 JSON 序列化后的字符串，后端透传不解析
-  string ExecParams = 7; // []*KVPair
+  string ExecParams = 7;          // []*KVPair
   string FormValue = 8;
   string ExtraParamsValue = 9;
   string HTTPRequestTemplate = 10;
   string LinkPluginConfig = 11;
-  string StreamInfo = 12; // HoldGRPCStreamInfo 快照
-  string ResultStatus = 13; // finished | stopped
+  string StreamInfo = 12;         // HoldGRPCStreamInfo 快照
+  string ResultStatus = 13;       // finished | stopped
   string RuntimeId = 14;
   string HeadImg = 15;
 }
@@ -6774,7 +6776,7 @@ message GroupHTTPFuzzerResponse {
 
 message FuzzerRequest {// last index 68
   string Request = 1;
-  bytes RequestRaw = 16; // 这里是因为麻将块儿的问题，还是需要处理一下类型
+  bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
   repeated FuzzerParamItem Params = 2;
   int64 Concurrent = 3;
   bool IsHTTPS = 4;
@@ -7160,7 +7162,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-
+  
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
@@ -7376,12 +7378,12 @@ message HTTPFlow {
 
 // MultipartFileInfo 描述一个落盘的 multipart 文件 part 元数据。
 message MultipartFileInfo {
-  int32 PartIndex = 1; // part 在 multipart 中的解析顺序索引，对应 GetHTTPFlowBodyByIdRequest.PartIndex
-  string FieldName = 2; // Content-Disposition: name
-  string Filename = 3; // Content-Disposition: filename（原始文件名）
+  int32 PartIndex = 1;    // part 在 multipart 中的解析顺序索引，对应 GetHTTPFlowBodyByIdRequest.PartIndex
+  string FieldName = 2;   // Content-Disposition: name
+  string Filename = 3;    // Content-Disposition: filename（原始文件名）
   string ContentType = 4; // 该 part 的 Content-Type
-  int64 Size = 5; // 该 part 内容字节数
-  string FilePath = 6; // 该 part 落盘文件的绝对路径，前端可直接 openABSFileLocated 打开
+  int64 Size = 5;         // 该 part 内容字节数
+  string FilePath = 6;    // 该 part 落盘文件的绝对路径，前端可直接 openABSFileLocated 打开
 }
 
 message FuzzableParam {
@@ -7527,7 +7529,7 @@ message MITMRequest {
   bool getCurrentHook = 30;
 
   // 移除插件
-  bool removeHook = 31; // 当这个为 true 的时候，将会
+  bool removeHook = 31;  // 当这个为 true 的时候，将会
   RemoveHookParams removeHookParams = 32;
 
   // 设置自动转发
@@ -7604,7 +7606,7 @@ message MITMRequest {
 message FilterDataItem {
   string MatcherType = 1;
   repeated string Group = 2;
-  string RuleName = 3; // 规则名称，用于前端展示
+  string RuleName = 3;  // 规则名称，用于前端展示
 }
 
 message MITMFilterData {
@@ -7809,7 +7811,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake
+// handshake 
 message HandshakeRequest {
   string Name = 1;
 }
@@ -8250,7 +8252,7 @@ message SyntaxFlowRuleFilter {
   bool includeLibraryRule = 8; // default false // 废弃
   // for infinite list
   int64 FromId = 9; // 废弃
-  int64  UntilId = 10; // 废弃
+  int64  UntilId = 10;  // 废弃
   int64 AfterId = 11;
   int64 BeforeId = 12;
   string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
@@ -8386,14 +8388,14 @@ message DeleteSyntaxFlowRuleRequest{
 message CheckSyntaxFlowRuleUpdateRequest{}
 
 message CheckSyntaxFlowRuleUpdateResponse {
-  bool NeedUpdate = 1; // 是否需要更新
-  string State = 2; // 更新状态，没有规则"empty",规则需要更新"to_update"
+  bool NeedUpdate = 1;  // 是否需要更新
+  string State = 2;  // 更新状态，没有规则"empty",规则需要更新"to_update"
 }
 message ApplySyntaxFlowRuleUpdateRequest {}
 
 message ApplySyntaxFlowRuleUpdateResponse {
-  double Percent = 1; // 更新进度百分比
-  string Message = 2; // 更新状态信息
+  double Percent = 1;  // 更新进度百分比
+  string Message = 2;  // 更新状态信息
 }
 
 message SyntaxFlowRuleGroupFilter {
@@ -8473,7 +8475,7 @@ message SyntaxFlowScanRequest{
   SyntaxFlowRuleFilter Filter = 2; // 用于指定扫描的规则
   repeated string ProgramName = 3; // 用于指定扫描的程序
   // 恢复扫描任务
-  string ResumeTaskId = 5; // 恢复任务ID
+  string ResumeTaskId = 5;         // 恢复任务ID
 
   // 其他参数
   bool IgnoreLanguage = 4; // 是否忽略语言 默认为false 将会只运行和当前项目语言一致的规则，最后运行的规则可能会比当前选中的规则少一些。
@@ -8483,7 +8485,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory
+  // compile data only in memory 
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -8570,11 +8572,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index
+  // index 
   string RuleName = 3;
-  string ProgramName = 4;
-  // progress
-  double Progress = 5;
+  string ProgramName = 4; 
+  // progress 
+  double Progress = 5; 
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -8595,7 +8597,7 @@ message SyntaxFlowResultFilter {
   int64 AfterID = 7;
   int64 BeforeID = 8;
 
-  repeated string Severity = 9; //  "info", "low", "middle", "critical", "high"
+  repeated string Severity = 9;  //  "info", "low", "middle", "critical", "high"
   repeated string Kind = 10 ; //   "query" | "debug" | "scan"
 }
 
@@ -8634,12 +8636,12 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"
+  string SaveKind = 14; // "memory" | "database"  
 }
 
 message DeleteSyntaxFlowResultRequest{
-  bool DeleteContainRisk = 1; //  是否删除带风险的结果
-  bool DeleteAll = 2; // DeleteAll 的保护
+  bool DeleteContainRisk = 1;  //  是否删除带风险的结果
+  bool DeleteAll = 2;  // DeleteAll 的保护
   SyntaxFlowResultFilter Filter = 3;
 }
 
@@ -8764,7 +8766,7 @@ message SSARisksFilter {
   repeated string FunctionName = 14;
   int64 BeforeCreatedAt = 15;
   int64 AfterCreatedAt = 16;
-  repeated string LatestDisposalStatus = 17; // not_set | is_issue | not_issue | suspicious
+  repeated string LatestDisposalStatus = 17;  // not_set | is_issue | not_issue | suspicious
   SSARiskDiffRequest SSARiskDiffRequest = 18;
   // 增量查询
   bool Incremental = 19;
@@ -8786,10 +8788,10 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count
-  int64 Unread = 4; // total unread ssa-risk count
+  int64 Total = 3; // total ssa-risk count 
+  int64 Unread = 4;// total unread ssa-risk count
 }
 
 message DeleteSSARisksRequest {
@@ -8852,7 +8854,7 @@ message SSARiskDisposalData{
   string Comment = 5;
 
   int64 RiskId = 6;
-  string TaskName = 7; // 任务名称，追踪处置来自哪次扫描任务
+  string TaskName = 7;         // 任务名称，追踪处置来自哪次扫描任务
 }
 
 message SSARiskDisposalsFilter {
@@ -8995,12 +8997,12 @@ message GetHotPatchTemplateTagsResponse {
 // v2+: 放开限制后，Items 的顺序即执行顺序（从前到后）。
 message GlobalHotPatchTemplateRef {
   string Name = 1;
-  string Type = 2; // Should be "global" (HotPatchTemplate.Type)
-  bool Enabled = 3; // Future: per-item enable/disable
+  string Type = 2;   // Should be "global" (HotPatchTemplate.Type)
+  bool Enabled = 3;  // Future: per-item enable/disable
 }
 
 message GlobalHotPatchConfig {
-  bool Enabled = 1; // Global switch
+  bool Enabled = 1;  // Global switch
   int64 Version = 2; // Monotonic version for optimistic concurrency
   repeated GlobalHotPatchTemplateRef Items = 3; // Ordered execution pipeline
 }
@@ -9417,8 +9419,8 @@ message MITMV2Request{
   // 1. 自动模式（默认）：OverwriteSNI=false，根据 Host 自动推断
   // 2. 强制模式：OverwriteSNI=true, SNI="custom.domain.com"，使用指定值
   // 3. 清空模式：OverwriteSNI=true, SNI=""，不发送 SNI
-  string SNI = 51; // SNI 值
-  bool OverwriteSNI = 52; // 是否覆盖自动推断的 SNI
+  string SNI = 51;           // SNI 值
+  bool OverwriteSNI = 52;    // 是否覆盖自动推断的 SNI
   repeated KVPair SNIMapping = 53; // SNI 映射表，支持 glob 通配符
 
   // Additional ports for the MITM listener to bind simultaneously.
@@ -9552,15 +9554,15 @@ message PluginTraceStats {
 
 // SSA Report Messages
 message GenerateSSAReportRequest {
-  string TaskID = 1; // SSA扫描TaskID
-  string ReportName = 2; // 报告名称
-  SSARisksFilter Filter = 3; // 风险过滤器，用于筛选要生成报告的Risk
+  string TaskID = 1;     // SSA扫描TaskID
+  string ReportName = 2;    // 报告名称
+  SSARisksFilter Filter = 3;  // 风险过滤器，用于筛选要生成报告的Risk
 }
 
 message GenerateSSAReportResponse {
-  bool Success = 1; // 是否成功
-  string Message = 2; // 消息
-  string ReportData = 3; // 报告数据（当格式不是yakit时）
+  bool Success = 1;         // 是否成功
+  string Message = 2;       // 消息
+  string ReportData = 3;    // 报告数据（当格式不是yakit时）
 }
 
 // SSA Project Messages
@@ -9664,8 +9666,8 @@ message QuerySSAProjectResponse {
 message MigrateSSAProjectRequest{}
 
 message MigrateSSAProjectResponse{
-  double Percent = 1; // 更新进度百分比
-  string Message = 2; // 更新状态信息
+  double Percent = 1;  // 更新进度百分比
+  string Message = 2;  // 更新状态信息
 }
 
 // SSA/irify 代码审计工作台仪表盘
