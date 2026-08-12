@@ -26,6 +26,7 @@ export {
   normalizeMCPToolConfig,
   normalizeMCPToolParam,
   normalizeMCPToolParams,
+  resolveMCPToolDescriptionLabel,
 } from './mcpToolNormalize'
 
 export const grpcGetAllMCPServers: APIFunc<GetAllMCPServersRequest, GetAllMCPServersResponse> = (

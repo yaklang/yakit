@@ -79,6 +79,7 @@
     "modalTitle": "配置引擎掃描代理"
   },
   "ConfigSystemMcp": {
+    "modal_title": "Yak MCP",
     "startAddress": "啟動地址：",
     "tool_name": "工具名稱",
     "tool_description": "描述",

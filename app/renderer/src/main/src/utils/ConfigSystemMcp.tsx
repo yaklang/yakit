@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type { FC } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -21,7 +22,7 @@ import {
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { grpcGetMCPToolList, grpcSetMCPToolEnabled } from '@/pages/ai-agent/aiMCP/utils'
+import { grpcGetMCPToolList, grpcSetMCPToolEnabled, resolveMCPToolDescriptionLabel } from '@/pages/ai-agent/aiMCP/utils'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -44,7 +45,7 @@ interface ConfigMcpModalProps {
   onClose: () => void
   mcp: mcpStreamHooks
 }
-export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
+export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
   const {
     onClose,
     mcp: { mcpStreamInfo, mcpStreamEvent },
@@ -219,6 +220,10 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     }
   })
 
+  const resolveToolDescription = useMemoizedFn((record: MCPToolConfig) =>
+    resolveMCPToolDescriptionLabel(record, getLabelByParams),
+  )
+
   const columns: ColumnsTypeProps[] = useMemo(() => {
     const sourceFilterOptions: { value: MCPToolSource; label: string }[] = []
     if (enableLegacyMcpTools) {
@@ -270,9 +275,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         dataKey: 'DescriptionI18n',
         ellipsis: true,
         render: (_text, record: MCPToolConfig) => {
-          const description = record.DescriptionI18n
-            ? getLabelByParams(record.DescriptionI18n)
-            : record.Description || ''
+          const description = resolveToolDescription(record)
           return (
             <div className={styles['tool-description-cell']} title={description}>
               {description}
@@ -287,7 +290,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         render: (text, record) => <YakitSwitch checked={text} onChange={(v) => handleToggle(v, record)} />,
       },
     ]
-  }, [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, getLabelByParams, i18nRefresh])
+  }, [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, resolveToolDescription, i18nRefresh])
 
   const queyChangeUpdateData = useDebounceFn(
     () => {
@@ -460,7 +463,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     <YakitModal
       visible={true}
       width={960}
-      title={'Yak Mcp'}
+      title={t('ConfigSystemMcp.modal_title')}
       footer={null}
       closable={true}
       onCloseX={onCloseModal}
@@ -624,11 +627,14 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
 interface AIMCPToolDetailPopoverProps {
   item: MCPToolConfig
 }
-const AIMCPToolDetailPopover: React.FC<AIMCPToolDetailPopoverProps> = React.memo((props) => {
+const AIMCPToolDetailPopover: FC<AIMCPToolDetailPopoverProps> = (props) => {
   const { item } = props
-  const { t } = useI18nNamespaces(['utils'])
+  const { t, i18nRefresh } = useI18nNamespaces(['utils'])
   const { getLabelByParams } = useAINodeLabel()
-  const description = item.DescriptionI18n ? getLabelByParams(item.DescriptionI18n) : item.Description || ''
+  const description = useMemo(
+    () => resolveMCPToolDescriptionLabel(item, getLabelByParams),
+    [item, getLabelByParams, i18nRefresh],
+  )
 
   return (
     <div className={styles['mcp-tool-detail-popover']}>
@@ -656,4 +662,4 @@ const AIMCPToolDetailPopover: React.FC<AIMCPToolDetailPopoverProps> = React.memo
       )}
     </div>
   )
-})
+}

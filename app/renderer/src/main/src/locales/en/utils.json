@@ -79,6 +79,7 @@
     "modalTitle": "Configure engine scan proxy"
   },
   "ConfigSystemMcp": {
+    "modal_title": "Yak MCP",
     "startAddress": "Start address:",
     "tool_name": "Tool Name",
     "tool_description": "Description",

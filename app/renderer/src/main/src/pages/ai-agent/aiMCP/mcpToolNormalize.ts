@@ -32,6 +32,10 @@ export const normalizeMCPToolParams = (params: unknown): MCPServerToolParamInfo[
   return params.map(normalizeMCPToolParam).filter((item): item is MCPServerToolParamInfo => item !== null)
 }
 
+/** Pick DescriptionI18n from grpc payload (supports legacy/alternate casings). */
+export const pickMCPToolDescriptionI18nRaw = (tool: Record<string, unknown>): unknown =>
+  tool.DescriptionI18n ?? tool.DescriptionI18N ?? tool.descriptionI18n ?? tool.descriptionI18N
+
 /** Normalize engine ypb.I18n into AIOutputI18n (same shape as NodeIdVerbose). */
 export const normalizeMCPToolDescriptionI18n = (raw: unknown, fallbackDescription = ''): AIOutputI18n | undefined => {
   const fallback = String(fallbackDescription || '').trim()
@@ -50,12 +54,28 @@ export const normalizeMCPToolDescriptionI18n = (raw: unknown, fallbackDescriptio
   return { Zh: fallback, En: fallback }
 }
 
-export const normalizeMCPToolConfig = (tool: MCPToolConfig): MCPToolConfig => ({
-  ...tool,
-  Description: String(tool.Description || ''),
-  DescriptionI18n: normalizeMCPToolDescriptionI18n(tool.DescriptionI18n, tool.Description),
-  Params: normalizeMCPToolParams(tool.Params),
-})
+/** Resolve locale-aware UI label for MCP tool description. */
+export const resolveMCPToolDescriptionLabel = (
+  tool: Pick<MCPToolConfig, 'Description' | 'DescriptionI18n'>,
+  getLabelByParams: (value: AIOutputI18n) => string,
+): string => {
+  if (tool.DescriptionI18n) {
+    const label = getLabelByParams(tool.DescriptionI18n).trim()
+    if (label) return label
+  }
+  return String(tool.Description || '').trim()
+}
+
+export const normalizeMCPToolConfig = (tool: MCPToolConfig): MCPToolConfig => {
+  const raw = tool as MCPToolConfig & Record<string, unknown>
+  const description = String(tool.Description ?? raw.description ?? '')
+  return {
+    ...tool,
+    Description: description,
+    DescriptionI18n: normalizeMCPToolDescriptionI18n(pickMCPToolDescriptionI18nRaw(raw), description),
+    Params: normalizeMCPToolParams(tool.Params),
+  }
+}
 
 export const normalizeGetMCPToolListResponse = (res: GetMCPToolListResponse): GetMCPToolListResponse => ({
   ...res,
