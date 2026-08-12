@@ -8,12 +8,16 @@ const skills: AIReActRecommendedSkill[] = [
     Type: 'skill',
     DisplayNameZhCN: '安全领域',
     Description: 'general security',
+    Content: '',
+    IsModified: false,
   },
   {
     Name: 'pentest-task-design',
     Type: 'skill',
     DisplayNameZhCN: '渗透测试',
     Description: 'pentest',
+    Content: '',
+    IsModified: false,
   },
 ]
 

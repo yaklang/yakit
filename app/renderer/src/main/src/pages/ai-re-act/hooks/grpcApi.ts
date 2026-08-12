@@ -1240,6 +1240,10 @@ export interface ExportAILogsResponse {
 export interface AIReActRecommendedSkill extends AIEnabledCapability {
   DisplayNameZhCN: string
   Description: string
+  /** 当前生效的 Markdown 正文（不含 YAML frontmatter），可由用户编辑 */
+  Content: string
+  /** 当前正文是否与内置默认正文不同 */
+  IsModified: boolean
 }
 
 export interface GetAIReActRecommendedSkillsResponse {

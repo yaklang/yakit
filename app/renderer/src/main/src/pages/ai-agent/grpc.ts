@@ -34,7 +34,7 @@ const { ipcRenderer } = window.require('electron')
 
 /** @name 获取前端可直接选择的内置 ReAct Skill。 */
 export const grpcGetAIReActRecommendedSkills: APINoRequestFunc<GetAIReActRecommendedSkillsResponse> = (hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('GetAIReActRecommendedSkills')
       .then(resolve)
@@ -50,7 +50,7 @@ export const grpcUpdateAIReActRecommendedSkill: APIFunc<
   UpdateAIReActRecommendedSkillRequest,
   AIReActRecommendedSkill
 > = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('UpdateAIReActRecommendedSkill', param)
       .then(resolve)
@@ -66,7 +66,7 @@ export const grpcResetAIReActRecommendedSkill: APIFunc<{ Name: string }, AIReAct
   param,
   hiddenError,
 ) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('ResetAIReActRecommendedSkill', param)
       .then(resolve)
@@ -82,7 +82,7 @@ export const grpcResetAIReActRecommendedSkill: APIFunc<{ Name: string }, AIReAct
  * - 查执行工具的 call_tool 和 tool_stdout
  */
 export const grpcQueryAIEvent: APIFunc<AIEventQueryRequest, AIEventQueryResponse> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('QueryAIEvent', param)
       .then(resolve)
@@ -98,7 +98,7 @@ export const grpcQueryAIEvent: APIFunc<AIEventQueryRequest, AIEventQueryResponse
  * - 查执行工具的 call_tool 和 tool_stdout
  */
 export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     grpcQueryAIEvent(param)
       .then((res: AIEventQueryResponse) => {
         const { Events } = res
@@ -183,7 +183,7 @@ export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]
 // #region AI-Forge 相关 grpc 接口
 /** @name 创建 AI-Forge */
 export const grpcCreateAIForge: APIFunc<AIForge, { CreateID: number }> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('CreateAIForge', param)
       .then(resolve)
@@ -195,7 +195,7 @@ export const grpcCreateAIForge: APIFunc<AIForge, { CreateID: number }> = (param,
 }
 /** @name 编辑 AI-Forge */
 export const grpcUpdateAIForge: APIFunc<AIForge, undefined> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('UpdateAIForge', param)
       .then(resolve)
@@ -207,7 +207,7 @@ export const grpcUpdateAIForge: APIFunc<AIForge, undefined> = (param, hiddenErro
 }
 /** @name 删除 AI-Forge */
 export const grpcDeleteAIForge: APIFunc<AIForgeFilter, undefined> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('DeleteAIForge', param)
       .then(resolve)
@@ -219,7 +219,7 @@ export const grpcDeleteAIForge: APIFunc<AIForgeFilter, undefined> = (param, hidd
 }
 /** @name 查询 AI-Forge 列表 */
 export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('QueryAIForge', param)
       .then(resolve)
@@ -231,7 +231,7 @@ export const grpcQueryAIForge: APIFunc<QueryAIForgeRequest, QueryAIForgeResponse
 }
 /** @name 查询 AI-Forge 单个详情 */
 export const grpcGetAIForge: APIFunc<GetAIForgeRequest, AIForge> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('GetAIForge', param)
       .then(resolve)
@@ -247,7 +247,7 @@ export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFl
   param,
   hiddenError,
 ) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('QueryHTTPFlows', param)
       .then(resolve)
@@ -260,7 +260,7 @@ export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFl
 
 /** @name 生成temp文件夹下路径 */
 export const GenerateTempFilePath: APIFunc<string, string> = async (fileName, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('GenerateTempFilePath', fileName)
       .then(resolve)
@@ -276,7 +276,7 @@ export const grpcGetRandomAIMaterials: APIFunc<GetRandomAIMaterialsRequest, GetR
   param,
   hiddenError,
 ) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('GetRandomAIMaterials', param)
       .then(resolve)
@@ -288,7 +288,7 @@ export const grpcGetRandomAIMaterials: APIFunc<GetRandomAIMaterialsRequest, GetR
 }
 
 export const grpcExportAILogs: APIFunc<ExportAILogsRequest, ExportAILogsResponse> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('ExportAILogs', param)
       .then(resolve)
@@ -300,7 +300,7 @@ export const grpcExportAILogs: APIFunc<ExportAILogsRequest, ExportAILogsResponse
 }
 
 export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocusResponse> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('QueryAIFocus', param)
       .then(resolve)
@@ -312,7 +312,7 @@ export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocus
 }
 
 export const grpcQueryAISession: APIFunc<QueryAISessionRequest, QueryAISessionResponse> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('QueryAISession', param)
       .then(resolve)
@@ -324,7 +324,7 @@ export const grpcQueryAISession: APIFunc<QueryAISessionRequest, QueryAISessionRe
 }
 
 export const grpcDeleteAISession: APIFunc<DeleteAISessionRequest, undefined> = (param, hiddenError) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('DeleteAISession', param)
       .then(resolve)
@@ -339,7 +339,7 @@ export const grpcUpdateAISessionTitle: APIFunc<{ SessionID: string; Title: strin
   param,
   hiddenError,
 ) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     ipcRenderer
       .invoke('UpdateAISessionTitle', param)
       .then(resolve)
