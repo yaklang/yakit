@@ -242,48 +242,44 @@ const AIRunModeSelect: React.FC = memo(() => {
               )
             })}
           </div>
+
+          {(enableMultiAgent || enableGoalMode) && <div className={styles['mode-panel-divider']} />}
           {enableMultiAgent && (
-            <>
-              <div className={styles['mode-panel-divider']} />
-              <div className={styles['mode-goal-iter']}>
-                <span className={styles['mode-goal-iter-label']}>子 Agent 数量</span>
-                <Tooltip title="<=0 时由服务端使用默认值 3；最大 20">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <YakitInputNumber
-                      type="horizontal"
-                      size="small"
-                      min={0}
-                      max={20}
-                      disabled={execute}
-                      value={maxSubAgents}
-                      onChange={(v) => onSetStrategy({ MaxSubAgents: (v as number) ?? 0 })}
-                      className={styles['mode-goal-iter-input']}
-                    />
-                  </div>
-                </Tooltip>
-              </div>
-            </>
+            <div className={styles['mode-goal-iter']}>
+              <span className={styles['mode-goal-iter-label']}>子 Agent 数量</span>
+              <Tooltip title="<=0 时由服务端使用默认值 3；最大 20">
+                <div onClick={(e) => e.stopPropagation()}>
+                  <YakitInputNumber
+                    type="horizontal"
+                    size="small"
+                    min={0}
+                    max={20}
+                    disabled={execute}
+                    value={maxSubAgents}
+                    onChange={(v) => onSetStrategy({ MaxSubAgents: (v as number) ?? 0 })}
+                    className={styles['mode-goal-iter-input']}
+                  />
+                </div>
+              </Tooltip>
+            </div>
           )}
           {enableGoalMode && (
-            <>
-              <div className={styles['mode-panel-divider']} />
-              <div className={styles['mode-goal-iter']}>
-                <span className={styles['mode-goal-iter-label']}>最小迭代次数</span>
-                <Tooltip title="<=0 时由服务端使用默认值">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <YakitInputNumber
-                      type="horizontal"
-                      size="small"
-                      min={0}
-                      disabled={execute}
-                      value={goalMinIterations}
-                      onChange={(v) => onSetStrategy({ GoalMinIterations: (v as number) ?? 0 })}
-                      className={styles['mode-goal-iter-input']}
-                    />
-                  </div>
-                </Tooltip>
-              </div>
-            </>
+            <div className={styles['mode-goal-iter']}>
+              <span className={styles['mode-goal-iter-label']}>最小迭代次数</span>
+              <Tooltip title="<=0 时由服务端使用默认值">
+                <div onClick={(e) => e.stopPropagation()}>
+                  <YakitInputNumber
+                    type="horizontal"
+                    size="small"
+                    min={0}
+                    disabled={execute}
+                    value={goalMinIterations}
+                    onChange={(v) => onSetStrategy({ GoalMinIterations: (v as number) ?? 0 })}
+                    className={styles['mode-goal-iter-input']}
+                  />
+                </div>
+              </Tooltip>
+            </div>
           )}
         </div>
       }
