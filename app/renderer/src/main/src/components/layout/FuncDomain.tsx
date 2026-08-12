@@ -2470,6 +2470,10 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   /** 定时器 */
   const timeRef = useRef<any>(null)
+  /** 风险详情弹窗（保证同时只存在一个） */
+  const riskDetailModalRef = useRef<{ destroy: () => void } | null>(null)
+  /** 打开详情中，防止同一次/连续点击叠多个弹窗 */
+  const isOpeningDetailRef = useRef(false)
 
   /** 查询最新的风险数据 */
   const update = useMemoizedFn(() => {
@@ -2568,6 +2572,10 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   /** 单条点击阅读 */
   const singleRead = useMemoizedFn((info: LatestRiskInfo) => {
+    if (isOpeningDetailRef.current) return
+    isOpeningDetailRef.current = true
+    setShow(false)
+
     yakitRisk
       .setInfoRead({ AfterId: fetchNode.current, Ids: [info.Id] })
       .then(() => {
@@ -2588,6 +2596,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       .query({ Id: info.Id })
       .then((res: Risk) => {
         if (!res) return
+        riskDetailModalRef.current?.destroy()
         const m = showYakitModal({
           width: '80%',
           title: '详情',
@@ -2603,9 +2612,18 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
           onOk: () => {
             m.destroy()
           },
+          modalAfterClose: () => {
+            if (riskDetailModalRef.current === m) {
+              riskDetailModalRef.current = null
+            }
+          },
         })
+        riskDetailModalRef.current = m
       })
       .catch(() => {})
+      .finally(() => {
+        isOpeningDetailRef.current = false
+      })
   })
   /** 全部已读 */
   const allRead = useMemoizedFn(() => {
@@ -2712,6 +2730,10 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   /** 定时器 */
   const timeRef = useRef<any>(null)
+  /** 风险详情弹窗（保证同时只存在一个） */
+  const riskDetailModalRef = useRef<{ destroy: () => void } | null>(null)
+  /** 打开详情中，防止同一次/连续点击叠多个弹窗 */
+  const isOpeningDetailRef = useRef(false)
 
   /** 查询最新的风险数据 */
   const update = useMemoizedFn(() => {
@@ -2806,6 +2828,9 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   /** 单条点击阅读 */
   const singleRead = useMemoizedFn((info: SSARisk) => {
+    if (isOpeningDetailRef.current) return
+    isOpeningDetailRef.current = true
+    setShow(false)
     apiNewRiskRead({ ID: [info.Id] }).then(() => {
       const newUnread = risks.Unread - 1 > 0 ? risks.Unread - 1 : 0
       const newRiskTotal = risks.NewRiskTotal - 1 > 0 ? risks.NewRiskTotal - 1 : 0
@@ -2824,19 +2849,29 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       Filter: {
         ID: [info.Id],
       },
-    }).then((res) => {
-      if (!res || res.Data.length === 0) return
-      setShow(false)
-      const m = showModal({
-        width: '80%',
-        title: '详情',
-        content: (
-          <div style={{ overflow: 'auto', maxHeight: '70vh' }}>
-            <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
-          </div>
-        ),
-      })
     })
+      .then((res) => {
+        if (!res || res.Data.length === 0) return
+        riskDetailModalRef.current?.destroy()
+        const m = showModal({
+          width: '80%',
+          title: '详情',
+          content: (
+            <div style={{ overflow: 'auto', maxHeight: '70vh' }}>
+              <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
+            </div>
+          ),
+          modalAfterClose: () => {
+            if (riskDetailModalRef.current === m) {
+              riskDetailModalRef.current = null
+            }
+          },
+        })
+        riskDetailModalRef.current = m
+      })
+      .finally(() => {
+        isOpeningDetailRef.current = false
+      })
   })
   /** 全部已读 */
   const allRead = useMemoizedFn(() => {
