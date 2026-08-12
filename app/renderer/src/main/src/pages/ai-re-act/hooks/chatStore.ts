@@ -50,8 +50,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       showPlanList: false,
       taskStatus: cloneDeep(DefaultTaskPlanStatus),
 
-      currentCasualReview: [],
-      currentPlanReviewToken: { token: '', renderNum: 0 },
+      currentReviewDetail: { token: '', renderNum: 0 },
       currentPlanReviewExtraUpdate: 0,
 
       items: {},
@@ -149,15 +148,6 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       updateTaskLoadingStatus: (partial) =>
         set((state) => {
           Object.assign(state.taskStatus, partial)
-        }),
-
-      updateCasualReview: (id: string, status: 'add' | 'remove') =>
-        set((state) => {
-          if (status === 'add' && !state.currentCasualReview.includes(id)) {
-            state.currentCasualReview.push(id)
-          } else if (status === 'remove' && state.currentCasualReview.includes(id)) {
-            state.currentCasualReview = state.currentCasualReview.filter((item) => item !== id)
-          }
         }),
 
       updateCasualTodoList: () => {

@@ -163,7 +163,6 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     notifyMessageTimer: null,
     currentTaskPlanActiveNode: new Set(),
     taskPlanEndGate: cloneDeep(DefaultTaskPlanEndGate),
-    historyReviewReleaseID: {},
     currentPlanReviewExtraId: '',
     planReviewExtraData: new Map(),
     toolStderrStreamData: new Map(),
@@ -931,7 +930,7 @@ export class ChatMultiSessionController {
       switch (type) {
         case 'casual':
           if (params.IsInteractiveMessage && params.InteractiveId) {
-            const isExist = store.getState().currentCasualReview.includes(params.InteractiveId)
+            const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
@@ -943,25 +942,15 @@ export class ChatMultiSessionController {
                 // 非执行任务组的tool_review，并且review模式不是yolo，才能展示到UI上供用户主动操作
                 // 用户操作后，review结果不会展示到UI上，所以需要删除该review的所有数据
                 rawData.contents.delete(review.id)
-                store.getState().updateCasualReview(review.id, 'remove')
-                store.getState().deleteElementNode({
-                  chatType: 'reAct',
-                  token: review.id,
-                  kind: 'item',
-                  taskID: review.TaskId || undefined,
-                  onDelContent: (mapKey) => {
-                    rawData.contents.delete(mapKey)
-                  },
-                })
+                store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break
               case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
               case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
-                // review操作后正常展示在UI上
+                // review操作后移除review数据
                 review.data.selected = params.InteractiveJSONInput
                 review.data.optionValue = optionValue
-                store.getState().updateCasualReview(params.InteractiveId, 'remove')
-                store.getState().incrementNodeVersion(review.id, 'item')
-                persistIndependentItem(token, review)
+                rawData.contents.delete(review.id)
+                store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break
               default:
                 break
@@ -970,14 +959,14 @@ export class ChatMultiSessionController {
           break
         case 'task':
           if (params.IsInteractiveMessage && params.InteractiveId) {
-            const isExist = store.getState().currentPlanReviewToken.token === params.InteractiveId
+            const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
               return
             }
 
-            store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
+            store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
             switch (review.type) {
               case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
               case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
@@ -986,24 +975,16 @@ export class ChatMultiSessionController {
                 console.error(`未知错误[handleSendMessage]: ${JSON.stringify(payload)}`)
                 break
               case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
-                // review操作后正常展示在UI上
+                // review操作后移除review数据
                 review.data.selected = params.InteractiveJSONInput
                 review.data.optionValue = optionValue
-                persistIndependentItem(token, review)
-                store.getState().dispatchStreamingNode({
-                  chatType: 'task',
-                  parentTaskId: review.TaskId,
-                  node: {
-                    token: review.id,
-                    kind: 'item',
-                    type: review.type,
-                  },
-                })
+                rawData.contents.delete(review.id)
+                store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break
               case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
                 review.data.selected = params.InteractiveJSONInput
                 review.data.optionValue = optionValue
-                persistIndependentItem(token, review)
+
                 if (optionValue === 'continue') {
                   const tasks = review.data
                   const plans = genExecTasks(tasks.plans.root_task)
@@ -1012,15 +993,8 @@ export class ChatMultiSessionController {
                     root_task_name: tasks.plans.root_task.name,
                   })
                 }
-                store.getState().dispatchStreamingNode({
-                  chatType: 'task',
-                  parentTaskId: review.TaskId,
-                  node: {
-                    token: review.id,
-                    kind: 'item',
-                    type: review.type,
-                  },
-                })
+                rawData.contents.delete(review.id)
+                store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break
               default:
                 break
@@ -1458,34 +1432,11 @@ export class ChatMultiSessionController {
       return
     }
 
-    if (reviewDetail.chatType === 'reAct') {
-      rawData.contents.delete(reviewToken)
-      if (
-        reviewDetail.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE &&
-        store.getState().currentPlanReviewToken.token === reviewDetail.id
-      ) {
-        // 该类型在任务规划的review弹窗显示，需要清空当前任务规划的review
-        store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
-      } else {
-        store.getState().updateCasualReview(reviewToken, 'remove')
-        store.getState().deleteElementNode({
-          chatType: 'reAct',
-          token: reviewDetail.id,
-          kind: 'item',
-          taskID: reviewDetail.TaskId || undefined,
-          onDelContent: (mapKey) => {
-            rawData.contents.delete(mapKey)
-          },
-        })
-      }
-    } else if (reviewDetail.chatType === 'task') {
-      const currentReview = store.getState().currentPlanReviewToken
-      if (!currentReview.token || currentReview.token !== reviewDetail.id) return
+    const currentReview = store.getState().currentReviewDetail
+    if (!currentReview.token || currentReview.token !== reviewDetail.id) return
 
-      // 不用调用deleteElementNode，因为能触发这个方法的地方，说明review还没有进入list列表中
-      rawData.contents.delete(currentReview.token)
-      store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
-    }
+    rawData.contents.delete(currentReview.token)
+    store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
   }
 
   /** 更新某一个指定的工具卡片内容(AIChatQSDataTypeEnum.TOOL_RESULT) */

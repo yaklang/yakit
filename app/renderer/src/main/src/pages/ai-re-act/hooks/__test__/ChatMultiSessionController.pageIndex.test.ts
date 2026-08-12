@@ -164,8 +164,21 @@ describe('ChatMultiSessionController session api / dispatch', () => {
       chatType: 'reAct',
       data: {},
     } as any)
-    store.getState().updateCasualReview('rev-1', 'add')
+    rawData.contents.set('rev-stale', {
+      id: 'rev-stale',
+      type: 'tool_use_review_require',
+      chatType: 'reAct',
+      data: {},
+    } as any)
+    store.getState().updateState({ currentReviewDetail: { token: 'rev-1', renderNum: 0 } })
+    // token 不匹配时不应清空当前 review
+    ctrl.closeChatReview('s-api', 'rev-stale')
+    expect(rawData.contents.get('rev-stale')).toBeTruthy()
+    expect(store.getState().currentReviewDetail.token).toBe('rev-1')
+
     ctrl.closeChatReview('s-api', 'rev-1')
+    expect(rawData.contents.get('rev-1')).toBeUndefined()
+    expect(store.getState().currentReviewDetail.token).toBe('')
 
     rawData.contents.set('tool-1', {
       id: 'tool-1',

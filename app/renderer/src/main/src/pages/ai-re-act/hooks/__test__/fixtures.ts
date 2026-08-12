@@ -92,7 +92,6 @@ export const createTestMeta = (): AIAgentChatMetaData => ({
   notifyMessageTimer: null,
   currentTaskPlanActiveNode: new Set(),
   taskPlanEndGate: cloneDeep(DefaultTaskPlanEndGate),
-  historyReviewReleaseID: {},
   currentPlanReviewExtraId: '',
   planReviewExtraData: new Map(),
   toolStderrStreamData: new Map(),

@@ -261,9 +261,6 @@ export interface AIAgentChatMetaData {
     pendingStatus?: 'completed' | 'aborted' | 'skipped'
   }
 
-  /** 历史数据: review_release先出现的历史review数据的id-release */
-  historyReviewReleaseID: Record<string, AIAgentGrpcApi.ReviewRelease>
-
   /** 当前plan_review对应的扩展数据ID */
   currentPlanReviewExtraId: string
   /** 当前plan_review的异步详细数据 */

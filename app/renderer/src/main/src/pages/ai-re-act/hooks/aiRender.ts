@@ -560,16 +560,9 @@ export interface ChatStoreState {
   /** 任务规划运行态（展示文案 + 当前活动任务；是否在跑看 status） */
   taskStatus: TaskPlanStatus
 
-  /**
-   * 自由对话的当前review(未操作)
-   * 通过token去rawData中contents里取数据，token是唯一的
-   */
-  currentCasualReview: string[]
-  /**
-   * 任务规划当前显示的review数据
-   * 通过token去rawData中contents里取数据，token是唯一的
-   */
-  currentPlanReviewToken: { token: string; renderNum: number }
+  /** 当前正在等待用户操作的review数据 */
+  currentReviewDetail: { token: string; renderNum: number }
+
   /**
    * 当前review是plan时，异步数据的更新版本
    * aiChat.d.ts AIAgentChatMetaData planReviewExtraData
@@ -657,7 +650,6 @@ export interface ChatStoreState {
         | 'httpTabUpdate'
         | 'riskTabShow'
         | 'riskTabUpdate'
-        | 'currentCasualReview'
         | 'currentPlanReviewExtraUpdate'
         | 'items'
         | 'groups'
@@ -675,9 +667,6 @@ export interface ChatStoreState {
   hydrateRenderTree: (content: SessionRenderContent) => void
 
   updateTaskLoadingStatus: (status: Partial<TaskPlanStatus>) => void
-
-  /** 正在等待用户操作的reviewId列表 */
-  updateCasualReview: (id: string, status: 'add' | 'remove') => void
 
   /** 更新自由对话列表的todoList，真实数据存放在内存池中 */
   updateCasualTodoList: () => void

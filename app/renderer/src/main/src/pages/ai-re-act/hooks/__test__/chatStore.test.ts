@@ -7,6 +7,7 @@ describe('chatStore basics', () => {
     const store = createChatStore()
     expect(store.getState().execute).toBe(false)
     expect(store.getState().taskStatus).toEqual(DefaultTaskPlanStatus)
+    expect(store.getState().currentReviewDetail).toEqual({ token: '', renderNum: 0 })
 
     store.getState().updateState({ execute: true, casualTitle: 'hi' })
     expect(store.getState().execute).toBe(true)
@@ -30,15 +31,15 @@ describe('chatStore basics', () => {
     expect(store.getState().casualChat.elements).toHaveLength(1)
   })
 
-  it('C6: updatePlanTree / updateCasualReview / folders / timeline / http / risk', () => {
+  it('C6: updatePlanTree / currentReviewDetail / folders / timeline / http / risk', () => {
     const store = createChatStore()
     store.getState().updatePlanTree({ root_task_name: 'r', task_tree: [] })
     expect(store.getState().taskChat.plan.root_task_name).toBe('r')
 
-    store.getState().updateCasualReview('rev-1', 'add')
-    expect(store.getState().currentCasualReview).toContain('rev-1')
-    store.getState().updateCasualReview('rev-1', 'remove')
-    expect(store.getState().currentCasualReview).not.toContain('rev-1')
+    store.getState().updateState({ currentReviewDetail: { token: 'rev-1', renderNum: 0 } })
+    expect(store.getState().currentReviewDetail.token).toBe('rev-1')
+    store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
+    expect(store.getState().currentReviewDetail.token).toBe('')
 
     store.getState().updateFolders({ path: '/a', isFolder: true })
     store.getState().updateFolders({ path: '/a', isFolder: true })
