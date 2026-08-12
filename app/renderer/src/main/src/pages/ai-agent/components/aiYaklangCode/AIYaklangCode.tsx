@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react'
+import { useCreation, useInterval, useMemoizedFn } from 'ahooks'
 import { WebFuzzerAiStoreCardRightHeader } from '@/pages/ai-agent/components/WebFuzzerAiStoreCardRightHeader'
 import type { AIYaklangCodeProps } from './type'
 import ChatCard from '../ChatCard'
@@ -7,7 +8,6 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import type { YakitIMonacoEditor } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import ModalInfo from '../ModelInfo'
 import styles from './AIYaklangCode.module.scss'
-import { useCreation, useMemoizedFn, useThrottleEffect } from 'ahooks'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import { monaco as monacoApi } from 'react-monaco-editor'
 import useAIAgentStore from '../../useContext/useStore'
@@ -15,6 +15,8 @@ import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitMonacoDiffInline } from '@/components/yakitUI/YakitMonacoDiffInline/YakitMonacoDiffInline'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 
 const CODE_BLOCK_MAX_HEIGHT = 200
 
@@ -37,28 +39,46 @@ const parsePatchToDiff = (block: string): { original: string; incoming: string }
   return { original: original.join('\n'), incoming: incoming.join('\n') }
 }
 
-export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) => {
-  const { content: defContent, nodeLabel, modalInfo, contentType, referenceNode } = props
+const readStreamContent = (rawData: ReturnType<typeof useCurrentRawData>, streamId: string | undefined): string => {
+  if (streamId) {
+    const item = rawData.contents.get(streamId)
+    if (item?.type === AIChatQSDataTypeEnum.STREAM) {
+      return item.data.content ?? ''
+    }
+  }
+  return ''
+}
 
-  const [content, setContent] = useState(defContent)
+export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) => {
+  const { content: defContent, nodeLabel, modalInfo, contentType, referenceNode, streaming, autoApplyStreamId } = props
+
+  const rawData = useCurrentRawData()
   const codeContainerRef = useRef<HTMLDivElement>(null)
-  useThrottleEffect(
+  const [streamedContent, setStreamedContent] = useState('')
+  const isLiveStreaming = streaming === true
+
+  // 流式正文在 rawData 里原地累加，React 感知不到；轮询取最新并 setState 驱动渲染
+  useInterval(
     () => {
-      setContent(defContent)
+      const next = readStreamContent(rawData, autoApplyStreamId)
+      setStreamedContent((prev) => (prev === next ? prev : next))
     },
-    [defContent],
-    { wait: 500 },
+    autoApplyStreamId ? 200 : undefined,
   )
-  const type = useCreation(() => {
-    return contentType.split('/')?.[1] || 'plaintext'
-  }, [contentType])
+
+  const content = autoApplyStreamId ? streamedContent : defContent
+
+  const type = useCreation(() => contentType.split('/')?.[1] || 'plaintext', [contentType])
 
   const diffLanguage = useCreation(() => (type === 'yaklang' ? 'yak' : type), [type])
-  // 仅当 content 以 `*** Begin Patch` 开头时，才以 YakitMonacoDiffInline 只读展示
-  const isPatch = useCreation(() => defContent.trimStart().startsWith('*** Begin Patch'), [defContent])
+  // 结束后再挂 Diff；流式中途不解析 patch
+  const isPatch = useCreation(
+    () => !isLiveStreaming && content.trimStart().startsWith('*** Begin Patch'),
+    [isLiveStreaming, content],
+  )
   const { original: patchOriginal, incoming: patchIncoming } = useCreation(
-    () => (isPatch ? parsePatchToDiff(defContent) : { original: '', incoming: '' }),
-    [isPatch, defContent],
+    () => (isPatch ? parsePatchToDiff(content) : { original: '', incoming: '' }),
+    [isPatch, content],
   )
 
   const bindContentHeightEditor = useMemoizedFn((editor: YakitIMonacoEditor) => {
@@ -101,6 +121,10 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
   })
 
   const renderCode = useMemoizedFn(() => {
+    if (isLiveStreaming) {
+      return <pre className={styles['ai-yaklang-code-stream-pre']}>{content || ' '}</pre>
+    }
+
     switch (type) {
       case 'http-request':
         return (
