@@ -276,10 +276,11 @@ export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
         ellipsis: true,
         render: (_text, record: MCPToolConfig) => {
           const description = resolveToolDescription(record)
+          if (!description) return '-'
           return (
-            <div className={styles['tool-description-cell']} title={description}>
-              {description}
-            </div>
+            <Tooltip title={description} overlayStyle={{ maxWidth: 480 }}>
+              <div className={styles['tool-description-cell']}>{description}</div>
+            </Tooltip>
           )
         },
       },

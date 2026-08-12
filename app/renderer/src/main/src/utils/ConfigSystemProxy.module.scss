@@ -216,14 +216,21 @@
       .tool-name {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-weight: 500;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .tool-description-cell {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
-        line-height: 18px;
-        white-space: normal;
-        word-break: break-word;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .filter-icon {
