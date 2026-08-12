@@ -1,19 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Select, Form, Space, Divider, Row, Col } from 'antd'
 import { useCreation, useDebounceFn, useGetState, useMemoizedFn } from 'ahooks'
 import { failed, warn } from '../../utils/notification'
 import { formatTimestamp } from '../../utils/timeUtil'
 import { getReleaseEditionName } from '@/utils/envfile'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { ReloadOutlined } from '@ant-design/icons'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { DnslogMenuToPage } from '../layout/publicMenu/MenuDNSLog'
+import type { DnslogMenuToPage } from '../layout/publicMenu/MenuDNSLog'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
@@ -136,7 +137,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
   // 打开单条数据
   const openDetailsItem = useMemoizedFn(() => {
     if (openDetails.current) {
-      for (let item of getRecords()) {
+      for (const item of getRecords()) {
         if (item.RemoteAddr === openDetails.current.RemoteAddr && item.Timestamp === openDetails.current.Timestamp) {
           setExpandRows(item.Index !== undefined ? [`${item.Index}`] : [])
           break
@@ -247,7 +248,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
       .invoke('QuerySupportedDnsLogPlatforms', {})
       .then((rsp) => {
         if (rsp && rsp.Platforms) {
-          let newArr: string[] = ['内置', ...rsp.Platforms]
+          const newArr: string[] = ['内置', ...rsp.Platforms]
           setPlatforms(newArr)
           getRemoteValue(DNS_LOG_PAGE_UPDATE_TOKEN_CACHE).then((data) => {
             if (!data) {
@@ -323,7 +324,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
       if (!data) return
       else {
         try {
-          let obj = JSON.parse(data)
+          const obj = JSON.parse(data)
           setAutoQuery(obj.autoQuery)
         } catch (error) {}
       }
@@ -417,7 +418,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
   ).run
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
     }

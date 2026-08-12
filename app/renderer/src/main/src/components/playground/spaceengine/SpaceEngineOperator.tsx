@@ -1,9 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakEditor } from '@/utils/editors'
 import { Alert, Form, Space } from 'antd'
-import { getDefaultSpaceEngineStartParams, SpaceEngineStartParams, SpaceEngineStatus } from '@/models/SpaceEngine'
+import {
+  getDefaultSpaceEngineStartParams,
+  type SpaceEngineStartParams,
+  type SpaceEngineStatus,
+} from '@/models/SpaceEngine'
 import { isRegisteredLanguage } from '@/utils/monacoSpec/spaceengine'
 import { DemoItemSwitch } from '@/demoComponents/itemSwitch/ItemSwitch'
 import { InputInteger } from '@/utils/inputUtil'
@@ -78,7 +83,9 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
   }, [params.Type])
 
   const cancel = useMemoizedFn(() => {
+    // cancel 后主进程不再转发 end，需本地收尾
     ipcRenderer.invoke('cancel-FetchPortAssetFromSpaceEngine', token)
+    setLoading(false)
   })
 
   return (

@@ -3,7 +3,7 @@ import { $prose } from '@milkdown/kit/utils'
 import { fileCustomId } from './uploadPlugin'
 import { createSlice } from '@milkdown/kit/ctx'
 import moment from 'moment'
-import { DeleteOSSFileItem } from '../MilkdownEditorType'
+import type { DeleteOSSFileItem } from '../MilkdownEditorType'
 import { ReplaceStep } from '@milkdown/kit/prose/transform'
 
 export const getFileNameByUrl = (url) => {

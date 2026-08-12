@@ -1,12 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useCreation, useGetState, useMemoizedFn, useSize } from 'ahooks'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCreation, useMemoizedFn, useSize } from 'ahooks'
 import styles from './LeftSideBar.module.scss'
 import classNames from 'classnames'
 import { AuditCode } from '../AuditCode/AuditCode'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { RunnerFileTree } from '../RunnerFileTree/RunnerFileTree'
 import useStore from '../hooks/useStore'
-import { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
+import type { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
   const { fileTreeLoad, onOpenEditorDetails, isUnShow, setUnShow, active, setActive } = props
@@ -30,7 +31,7 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
   })
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '50%',
       secondRatio: '50%',
       firstMinSize: 250,

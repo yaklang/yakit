@@ -1,7 +1,7 @@
 import { yakitNotify } from '@/utils/notification'
-import { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/utils/api'
+import type { APIFunc, APINoRequestFunc, APIOptionalFunc } from '@/utils/api'
 import { yakitApp, yakitEngine, yakitShell } from '@/utils/electronBridge'
-import {
+import type {
   AllowSecretLocalExecResult,
   CheckAllowSecretLocal,
   ExecResult,
@@ -10,7 +10,7 @@ import {
   ReclaimDatabaseSpace,
   WriteEngineKeyToYakitProjects,
 } from './components/LocalEngine/LocalEngineType'
-import { StartLocalEngine } from './types'
+import type { StartLocalEngine } from './types'
 import { randomString } from '@/utils/randomUtil'
 import { getReleaseEditionName, isEnterpriseEdition, isIRify, isMemfit } from '@/utils/envfile'
 import i18n from '@/i18n/i18n'

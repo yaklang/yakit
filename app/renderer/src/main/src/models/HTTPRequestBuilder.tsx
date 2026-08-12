@@ -1,10 +1,10 @@
-import { KVPair } from '@/models/kv'
+import type { KVPair } from '@/models/kv'
 
 export interface HTTPRequestBuilderParams {
   IsHttps: boolean
 
   IsRawHTTPRequest: boolean
-  RawHTTPRequest: Uint8Array | Buffer
+  RawHTTPRequest: Uint8Array
 
   Method: string
   Input?: string

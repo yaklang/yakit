@@ -1,4 +1,4 @@
-import { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { useState } from 'react'
 import { useCustomFolder } from '../../components/aiFileSystemList/store/useCustomFolder'
 import FileTreeSystemListWrapper from '../../components/aiFileSystemList/FileTreeSystemListWrapper/FileTreeSystemListWrapper'

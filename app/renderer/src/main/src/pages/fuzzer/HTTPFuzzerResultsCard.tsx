@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { Card, Radio, Space } from 'antd'
-import { FuzzerResponse } from './HTTPFuzzerPage'
-import { SelectOne } from '../../utils/inputUtil'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import type { FuzzerResponse } from './HTTPFuzzerPage'
 import { FuzzerResponseTableEx } from './FuzzerResponseTable'
 import { AutoCard } from '../../components/AutoCard'
 

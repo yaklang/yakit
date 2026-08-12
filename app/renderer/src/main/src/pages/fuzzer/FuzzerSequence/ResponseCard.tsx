@@ -1,11 +1,14 @@
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useMap, useSize } from 'ahooks'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { SecondNodeTitle, SecondNodeExtra, FuzzerResponse, FuzzerShowSuccess } from '../HTTPFuzzerPage'
-import { ResponseCardProps } from './FuzzerSequenceType'
+import { SecondNodeTitle, SecondNodeExtra, type FuzzerResponse, type FuzzerShowSuccess } from '../HTTPFuzzerPage'
+import type { ResponseCardProps } from './FuzzerSequenceType'
 import styles from './FuzzerSequence.module.scss'
 import { Divider } from 'antd'
-import { HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery } from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
+import {
+  HTTPFuzzerPageTable,
+  type HTTPFuzzerPageTableQuery,
+} from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 import { OutlineReplyIcon } from '@/assets/icon/outline'
 import { emptyFuzzer } from '@/defaultConstants/HTTPFuzzerPage'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

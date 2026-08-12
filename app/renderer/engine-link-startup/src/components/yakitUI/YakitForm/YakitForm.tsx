@@ -1,13 +1,13 @@
 import { Spin, Divider } from 'antd'
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import styles from './YakitForm.module.scss'
 import classNames from 'classnames'
 import { YakitInput } from '../YakitInput/YakitInput'
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { handleOpenFileSystemDialog, OpenDialogOptions } from '@/utils/fileSystemDialog'
-import { FileDraggerProps, YakitDraggerProps } from './YakitFormType'
+import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
+import type { FileDraggerProps, YakitDraggerProps } from './YakitFormType'
 import { YakitAutoComplete } from '../YakitAutoComplete/YakitAutoComplete'
 import { yakitFileSystem } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -326,7 +326,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     if (multiple !== false) {
       properties.push('multiSelections')
     }
-    let option: OpenDialogOptions = {
+    const option: OpenDialogOptions = {
       title: t('YakitFormDragger.selectFolder'),
       properties,
     }
@@ -353,7 +353,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     if (multiple !== false) {
       properties.push('multiSelections')
     }
-    let option: OpenDialogOptions = {
+    const option: OpenDialogOptions = {
       title: t('YakitFormDragger.selectFile'),
       properties,
     }
@@ -394,8 +394,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
   /**拖拽文件夹后的路径回显文本处理 */
   const afterFolderDrop = useMemoizedFn((e) => {
     const { files = [] } = e.dataTransfer
-    let paths: string[] = []
-    let isNoFit: string[] = []
+    const paths: string[] = []
+    const isNoFit: string[] = []
     const filesLength = files.length
     if (multiple === false && filesLength > 1) {
       yakitNotify('error', t('YakitFormDragger.multiSelectNotSupported'))
@@ -419,8 +419,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
   /**拖拽文件后的处理 */
   const afterFileDrop = useMemoizedFn((e) => {
     const { files = [] } = e.dataTransfer
-    let paths: string[] = []
-    let isNoFit: string[] = []
+    const paths: string[] = []
+    const isNoFit: string[] = []
     const filesLength = files.length
     if (multiple === false && filesLength > 1) {
       yakitNotify('error', t('YakitFormDragger.multiSelectNotSupported'))
@@ -447,7 +447,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
   /**拖拽文件/文件夹的路径回显 */
   const afterAllDrop = useMemoizedFn((e) => {
     const { files = [] } = e.dataTransfer
-    let paths: string[] = []
+    const paths: string[] = []
     const filesLength = files.length
     if (multiple === false && filesLength > 1) {
       yakitNotify('error', t('YakitFormDragger.multiSelectNotSupported'))

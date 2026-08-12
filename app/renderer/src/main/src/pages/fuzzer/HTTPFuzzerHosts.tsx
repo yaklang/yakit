@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react'
+import type React from 'react'
+import { useMemo, useState } from 'react'
 import { Form, Space } from 'antd'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'

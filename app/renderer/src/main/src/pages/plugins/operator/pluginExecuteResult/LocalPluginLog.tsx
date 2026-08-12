@@ -1,10 +1,9 @@
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { EditorLogShow, FileLogShowDataProps, YakitLogFormatter } from '@/pages/invoker/YakitLogFormatter'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { EditorLogShow, type FileLogShowDataProps, YakitLogFormatter } from '@/pages/invoker/YakitLogFormatter'
 import { Timeline } from 'antd'
-import React, { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 import styles from './LocalPluginLog.module.scss'
-import { useCreation, useMemoizedFn } from 'ahooks'
-import moment from 'moment'
+import { useMemoizedFn } from 'ahooks'
 import {
   LogNodeStatusCodeIcon,
   LogNodeStatusEchartsIcon,
@@ -20,7 +19,7 @@ import {
 } from '@/assets/icon/colors'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { renderFileTypeIcon } from '@/components/MilkdownEditor/CustomFile/CustomFile'
-import { PluginExecuteLogFile } from './PluginExecuteResultType'
+import type { PluginExecuteLogFile } from './PluginExecuteResultType'
 import { isPluginExecuteLogFileItem } from '@/pages/invoker/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'

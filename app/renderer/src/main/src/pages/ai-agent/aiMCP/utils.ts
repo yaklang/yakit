@@ -1,12 +1,11 @@
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
-import {
+import type {
   AddMCPServerRequest,
   DeleteMCPToolCallHistoryRequest,
   DeleteMCPServerRequest,
   GetAllMCPServersRequest,
   GetAllMCPServersResponse,
-  GetMCPToolDetailRequest,
   GetMCPToolCallHistoryDetailRequest,
   GetMCPToolListRequest,
   GetMCPToolListResponse,
@@ -17,7 +16,7 @@ import {
   SetMCPToolEnabledRequest,
   UpdateMCPServerRequest,
 } from '../type/aiMCP'
-import { GeneralResponse } from '../type/aiModel'
+import type { GeneralResponse } from '../type/aiModel'
 import { normalizeGetMCPToolListResponse, normalizeMCPServer } from './mcpToolNormalize'
 
 const { ipcRenderer } = window.require('electron')

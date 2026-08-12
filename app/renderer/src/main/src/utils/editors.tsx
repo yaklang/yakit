@@ -1,6 +1,6 @@
-import React, { ReactElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { type ReactElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import MonacoEditor, { monaco } from 'react-monaco-editor'
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 // yak register
 import './monacoSpec/theme'
 import './monacoSpec/fuzzHTTPMonacoSpec'
@@ -8,7 +8,7 @@ import './monacoSpec/yakEditor'
 import './monacoSpec/html'
 import { Card, Form, Tooltip } from 'antd'
 import { EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled } from '@ant-design/icons'
-import { HTTPFlowBodyByIdRequest, HTTPPacketFuzzable } from '../components/HTTPHistory'
+import type { HTTPFlowBodyByIdRequest, HTTPPacketFuzzable } from '../components/HTTPHistory'
 import ReactResizeDetector from 'react-resize-detector'
 
 import { useControllableValue, useDebounceFn, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
@@ -17,12 +17,12 @@ import { StringToUint8Array, Uint8ArrayToString } from './str'
 import { packetTextToRawBytes, rawBytesToPacketText } from '@/components/yakitUI/YakitEditor/binaryFuzztag'
 import { BinaryFuzztagHexEditor } from '@/components/yakitUI/YakitEditor/BinaryFuzztagHexEditor'
 import { getRemoteValue } from '@/utils/kv'
-import { editor, IPosition, IRange } from 'monaco-editor'
-import { ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
-import ITextModel = editor.ITextModel
+import { type editor, type IPosition, type IRange } from 'monaco-editor'
+import { ConvertYakStaticAnalyzeErrorToMarker, type YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
+type ITextModel = editor.ITextModel
 import { YAK_FORMATTER_COMMAND_ID, setEditorContext } from '@/utils/monacoSpec/yakEditor'
-import IModelDecoration = editor.IModelDecoration
-import {
+type IModelDecoration = editor.IModelDecoration
+import type {
   HighLightText,
   OperationRecordRes,
   OtherMenuListProps,
@@ -42,10 +42,10 @@ import { DataCompareModal } from '@/pages/compare/DataCompare'
 import emiter from './eventBus/eventBus'
 import { v4 as uuidv4 } from 'uuid'
 import { GetPluginLanguage } from '@/pages/plugins/builtInData'
-import { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
+import type { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { Theme, useTheme } from '@/hook/useTheme'
+import { type Theme, useTheme } from '@/hook/useTheme'
 import { applyYakitMonacoTheme } from './monacoSpec/theme'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
@@ -389,7 +389,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             >
               <MonacoEditor
                 theme={props.theme || 'kurior'}
-                value={props.bytes ? new Buffer((props.valueBytes || []) as Uint8Array).toString() : props.value}
+                value={props.bytes ? Buffer.from((props.valueBytes || []) as Uint8Array).toString() : props.value}
                 onChange={props.setValue}
                 language={language || 'http'}
                 height={100}
@@ -659,7 +659,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
       getRemoteValue(editorOperationRecord).then((data) => {
         try {
           if (!data) return
-          let obj: OperationRecordRes = JSONParseLog(data, { page: 'editors' })
+          const obj: OperationRecordRes = JSONParseLog(data, { page: 'editors' })
           if (typeof obj?.showBreak === 'boolean') {
             setShowLineBreaks(obj?.showBreak)
           }
@@ -667,7 +667,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             setNoWordwrap(obj?.noWordWrap)
           }
         } catch (error) {
-          fail(error + '')
+          console.error(error)
         }
       })
     }
@@ -826,7 +826,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     try {
       const model = monacoEditor.getModel()
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       const range: IRange = model.findNextMatch(
         props.defaultSearchKeyword,
         { lineNumber: 0, column: 0 } as IPosition,
@@ -940,7 +940,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         return
       }
       setRenderHTML(undefined)
-      let beautifyValue = await prettifyPacketCode(originValue)
+      const beautifyValue = await prettifyPacketCode(originValue)
       setShowValue(Uint8ArrayToString(beautifyValue as Uint8Array))
     }),
     {
@@ -953,7 +953,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         setType(undefined)
         return
       }
-      let renderValue = await prettifyPacketRender(originalPackage || StringToUint8Array(originValue))
+      const renderValue = await prettifyPacketRender(originalPackage || StringToUint8Array(originValue))
       setRenderHTML(
         <iframe srcDoc={renderValue as string} style={{ width: '100%', height: '100%', border: 'none' }} sandbox="" />,
       )
@@ -1035,7 +1035,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
           !props.noHeader && (
             <div style={{ display: 'flex', gap: 2, ...(props.titleStyle || {}) }}>
               {!props.noTitle &&
-                (!!props.title ? (
+                (props.title ? (
                   props.title
                 ) : (
                   <span style={{ fontSize: 12 }}>{isResponse ? 'Response' : 'Request'}</span>

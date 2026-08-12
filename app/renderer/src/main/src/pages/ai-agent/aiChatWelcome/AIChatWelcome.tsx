@@ -1,62 +1,50 @@
-import React, { forwardRef, useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import React, { type FC, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type {
+  AIChatWelcomeIntroTipsProps,
   AIChatWelcomeProps,
-  AIMaterialsData,
-  AIRecommendItemProps,
-  AIRecommendProps,
+  AIChatWelcomeSettingCardProps,
+  AIChatWelcomeSettingCardRef,
   SideSettingButtonProps,
 } from './type'
 import styles from './AIChatWelcome.module.scss'
+import DoomFlameBackground from './DoomFlameBackground'
 import { AIChatTextarea } from '../template/template'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
-import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
+import { useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
+import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineArrowrightIcon,
+  OutlileHistoryIcon,
+  OutlineChatIcon,
+  OutlineCheckIcon,
   OutlineCloseIcon,
   OutlineExportIcon,
   OutlineImportIcon,
-  OutlineInformationcircleIcon,
   OutlineOpenIcon,
   OutlinePinIcon,
   OutlinePinOffIcon,
   OutlinePluscircleIcon,
-  OutlineRefreshIcon,
+  OutlineShieldexclamationIcon,
+  OutlineWrenchIcon,
 } from '@/assets/icon/outline'
-import { AIDownAngleLeftIcon, AIDownAngleRightIcon, AIUpAngleLeftIcon, AIUpAngleRightIcon } from './icon'
 import { Tooltip } from 'antd'
-import ReactResizeDetector from 'react-resize-detector'
 import emiter from '@/utils/eventBus/eventBus'
-import { YakitRoute } from '@/enums/yakitRoute'
-import { randomString } from '@/utils/randomUtil'
-import classNames from 'classnames'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import FileTreeList from './FileTreeList/FileTreeList'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import KnowledgeSidebarList, { KnowledgeModalRef } from './KnowledgeSidebarList/KnowledgeSidebarList'
+import KnowledgeSidebarList, { type KnowledgeModalRef } from './KnowledgeSidebarList/KnowledgeSidebarList'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import Tabs from './Tabs/Tabs'
-import ForgeName, { ForgeNameRef } from '../forgeName/ForgeName'
+import ForgeName, { type ForgeNameRef } from '../forgeName/ForgeName'
 import AIToolList, { handleAddAITool } from '../aiToolList/AIToolList'
 import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
 import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
-import useGetAIMaterialsData, { getAIRecommendIconByType } from '@/pages/ai-re-act/hooks/useGetAIMaterialsData'
-import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-
-const randomAIMaterialsDataIsEmpty = (randObj) => {
-  try {
-    return (
-      randObj.tools.data.length === 0 && randObj.forges.data.length === 0 && randObj.knowledgeBases.data.length === 0
-    )
-  } catch (error) {
-    return true
-  }
-}
+import classNames from 'classnames'
+import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
+import { ColorsChatIcon, ColorsMemfitIcon, ColorsPreViewMDIcon } from '@/assets/icon/colors'
+import { grpcGetAIReActRecommendedSkills } from '../grpc'
 
 enum AIChatWelcomeTabKeyEnum {
   Knowledge = 'knowledge',
@@ -83,24 +71,16 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       }
     }, [])
 
-    const [{ randomAIMaterials, randomAIMaterialsData, loadingAIMaterials }, { onRefresh }] = useGetAIMaterialsData()
     // #region 问题相关逻辑
 
-    const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
+    const settingCardRef = useRef<AIChatWelcomeSettingCardRef>(null)
+
     // 控制下拉菜单
     const [openDrawer, setOpenDrawer] = useState<boolean>(true)
     const [tabActiveKey, setTabActiveKey] = useState<AIChatWelcomeTabKeyEnum>(AIChatWelcomeTabKeyEnum.Knowledge)
 
-    const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
-    const [inViewPort = true] = useInViewport(welcomeRef)
     const welcomeSize = useSize(welcomeRef)
-
-    useUpdateEffect(() => {
-      if (inViewPort) {
-        onRefresh()
-      }
-    }, [inViewPort])
 
     useUpdateEffect(() => {
       if (welcomeSize?.width && welcomeSize?.width < 1430) {
@@ -108,53 +88,17 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       }
     }, [welcomeSize?.width])
 
-    const onSetQuestion = useMemoizedFn((value: string) => {
-      aiChatTextareaRef.current?.setValue(value ?? '')
-    })
-
-    const resizeUpdate = useMemoizedFn(() => {
-      if (!lineStartRef.current) return
-      const lineStartRect = lineStartRef.current.getBoundingClientRect()
-      setLineStartDOMRect(lineStartRect) // 确定初始定位点位置
-    })
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
-      onTriageSubmit(value)
-      onSetQuestion('')
-    })
-    const onMore = useMemoizedFn((item: string) => {
-      switch (item) {
-        case '技能':
-          setTabActiveKey(AIChatWelcomeTabKeyEnum.Skills)
-          setOpenDrawer(true)
-          break
-        case '知识库':
-          emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_REPOSITORY }))
-          break
-        case '工具':
-          setTabActiveKey(AIChatWelcomeTabKeyEnum.Tools)
-          setOpenDrawer(true)
-          break
-        default:
-          break
-      }
+      // 通过 ref 主动拉取选中的推荐场景（支持多选），附加到 enabledCapabilities 传出
+      const select = settingCardRef.current?.getSelect() || []
+      onTriageSubmit({
+        ...value,
+        enabledCapabilities: select,
+      })
     })
     const handleTabChange = useMemoizedFn((key: string) => {
       setTabActiveKey(key as AIChatWelcomeTabKeyEnum)
     })
-
-    const onCheckItem = useMemoizedFn(
-      (item: AIRecommendItemProps['item'], mentionType: AIMentionCommandParams['mentionType']) => {
-        aiChatTextareaRef.current?.setMention({
-          mentionId: randomString(8),
-          mentionType: mentionType,
-          mentionName: item.name,
-        })
-      },
-    )
-
-    const isEmptyAIMaterials = useCreation(() => {
-      return randomAIMaterialsDataIsEmpty(randomAIMaterialsData)
-    }, [randomAIMaterials])
 
     const [isSelectForgeName, setIsSelectForgeName] = useState<boolean>(false)
     const knowledgeSidebarListRef = useRef<KnowledgeModalRef>(null)
@@ -247,8 +191,12 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       ]
     }, [api, streams, installPlug, i18nRefresh, isSelectForgeName])
 
+    const onSetInputValue = useMemoizedFn((v: string) => {
+      aiChatTextareaRef.current?.setValue(v)
+    })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
+        <DoomFlameBackground />
         <div className={styles['open-file-tree-button']} onClick={() => setOpenDrawer(!openDrawer)}>
           {t('AIChatWelcome.expandResources')}
           <YakitButton type="text2" icon={<OutlineOpenIcon />} />
@@ -280,76 +228,23 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             sashClassName={styles['split-view-line']}
           />
         </YakitDrawer>
-        <div className={styles['content']}>
-          <div className={styles['content-absolute']}>
-            <div className={styles['input-wrapper']}>
-              <div className={styles['input-heard']}>
-                <div className={styles['title']}>Memfit AI Agent</div>
-                <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
-              </div>
-              <div className={classNames(styles['input-body-wrapper'])}>
-                <ReactResizeDetector
-                  onResize={(_, height) => {
-                    if (!height) return
-                    resizeUpdate()
-                  }}
-                  handleWidth={false}
-                  handleHeight={true}
-                  refreshMode={'debounce'}
-                  refreshRate={50}
-                />
-                <AIChatTextarea
-                  ref={aiChatTextareaRef}
-                  onSubmit={handleTriageSubmit}
-                  className={classNames({
-                    [styles['input-body']]: !isEmptyAIMaterials,
-                  })}
-                  chatDataStoreKey="aiChatDataStore"
-                >
-                  {/* svg 定位点1/left */}
-                  <div className={styles['line']} ref={lineStartRef} />
-                </AIChatTextarea>
-              </div>
+        <div className={styles['input-wrapper']}>
+          <div className={styles['input-heard']}>
+            <ColorsMemfitIcon className={styles['memfit-icon']} />
+            <div className={styles['title']}>Memfit AI Agent</div>
+            <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
+          </div>
+          <div className={styles['input-body-wrapper']}>
+            <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} />
+            <div className={styles['input-panel']}>
+              <AIChatWelcomeSettingCard ref={settingCardRef} />
+              <AIChatTextarea
+                ref={aiChatTextareaRef}
+                onSubmit={handleTriageSubmit}
+                chatDataStoreKey="aiChatDataStore"
+                className={styles['ai-text-wrapper']}
+              />
             </div>
-            {!isEmptyAIMaterials && (
-              <div className={styles['recommend-wrapper']}>
-                <AIDownAngleLeftIcon className={styles['recommend-down-left']} />
-                <AIDownAngleRightIcon className={styles['recommend-down-right']} />
-                <AIUpAngleLeftIcon className={styles['recommend-up-left']} />
-                <AIUpAngleRightIcon className={styles['recommend-up-right']} />
-                <div className={styles['recommend-heard']}>
-                  <div className={styles['title']}>{t('AIChatWelcome.homeRecommend')}</div>
-                  <YakitButton
-                    icon={<OutlineRefreshIcon />}
-                    size="small"
-                    type="text"
-                    className={styles['line2-btn']}
-                    onClick={onRefresh}
-                  >
-                    {t('AIChatWelcome.refresh')}
-                  </YakitButton>
-                </div>
-                <YakitSpin spinning={loadingAIMaterials}>
-                  <div className={styles['recommend-body']}>
-                    {Object.keys(randomAIMaterialsData).map((key) => {
-                      const aiItem: AIMaterialsData = randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
-                      return aiItem.data.length > 0 ? (
-                        <AIRecommend
-                          key={aiItem.type}
-                          title={aiItem.type}
-                          data={aiItem.data}
-                          lineStartDOMRect={lineStartDOMRect}
-                          onMore={() => onMore(aiItem.type)}
-                          onCheckItem={(v) => onCheckItem(v, aiItem.mentionType)}
-                        />
-                      ) : (
-                        <React.Fragment key={aiItem.type}></React.Fragment>
-                      )
-                    })}
-                  </div>
-                </YakitSpin>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -358,6 +253,127 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 )
 
 export default AIChatWelcome
+
+const welcomeTips = [
+  { text: '收集目标 example.com 的开放端口与服务指纹信息' },
+  { text: '枚举 target.com 的子域名并整理有效 Web 资产' },
+  { text: '对当前目标执行常见漏洞扫描' },
+  { text: '对当前目标执行 SQL 注入测试并验证利用点' },
+  { text: '解读这份扫描报告，标记高危项并给出复现思路' },
+  { text: '审计这段代码，识别 SQL 注入、XSS 等常见 Web 漏洞' },
+  { text: '审计当前代码库中硬编码密钥、Token 等敏感信息泄露' },
+  { text: '识别目标登录入口，分析可尝试的认证绕过或弱口令风险' },
+  { text: '验证目标是否存在未授权访问、越权访问' },
+  { text: '规划从入口到域控的完整攻击链路' },
+]
+
+const pickRandomWelcomeTips = (list: typeof welcomeTips) => {
+  const copied = [...list]
+  for (let i = copied.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copied[i], copied[j]] = [copied[j], copied[i]]
+  }
+  const count = 5 + Math.floor(Math.random() * 2)
+  return copied.slice(0, Math.min(count, copied.length))
+}
+
+const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInputValue }) => {
+  const introTipsRef = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(introTipsRef)
+  const [randomWelcomeTips, setRandomWelcomeTips] = useState(() => pickRandomWelcomeTips(welcomeTips))
+
+  useEffect(() => {
+    if (inViewport) {
+      setRandomWelcomeTips(pickRandomWelcomeTips(welcomeTips))
+    }
+  }, [inViewport])
+
+  return (
+    <div className={styles['intro-tips']} ref={introTipsRef}>
+      {randomWelcomeTips.map((item) => {
+        return (
+          <div
+            key={item.text}
+            className={classNames(styles['intro-tip-item'])}
+            onClick={() => onSetInputValue(item.text)}
+          >
+            <div className={styles['intro-tip-content']}>
+              <OutlineChatIcon className={styles['intro-tip-icon']} />
+              <ColorsChatIcon className={styles['intro-tip-color-icon']} />
+              <span className={styles['intro-tip-text']}>{item.text}</span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+})
+
+const getIconByName = (name: string) => {
+  switch (name) {
+    case 'code-review': //'代码审计'
+      return <ColorsPreViewMDIcon className={styles['code-icon']} />
+    case 'security-engineering': //'安全领域'
+      return <OutlineShieldexclamationIcon className={styles['shield-icon']} />
+    case 'pentest-task-design': //"渗透测试"
+      return <OutlileHistoryIcon className={styles['history-icon']} />
+    default:
+      return <OutlineWrenchIcon className={styles['default-icon']} />
+  }
+}
+const AIChatWelcomeSettingCard = memo(
+  forwardRef<AIChatWelcomeSettingCardRef, AIChatWelcomeSettingCardProps>((props, ref) => {
+    const [list, setList] = useState<AIReActRecommendedSkill[]>([])
+    const [select, setSelect] = useState<AIEnabledCapability[]>([])
+    const listRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(listRef)
+    const { i18n } = useI18nNamespaces([])
+    useEffect(() => {
+      if (inViewport) getList()
+    }, [inViewport])
+    const onSelect = useMemoizedFn((item: AIReActRecommendedSkill) => {
+      // 多选：已存在则取消，否则追加
+      setSelect((prev) => {
+        const key = `${item.Type}:${item.Name}`
+        const exists = prev.some((s) => `${s.Type}:${s.Name}` === key)
+        return exists
+          ? prev.filter((s) => `${s.Type}:${s.Name}` !== key)
+          : [...prev, { Name: item.Name, Type: item.Type }]
+      })
+    })
+    const getList = useMemoizedFn(() => {
+      grpcGetAIReActRecommendedSkills().then((res) => {
+        setList(res.Data)
+        if (!!res.Data[0]) setSelect([res.Data[0]]) // 默认选中第一个
+      })
+    })
+    useImperativeHandle(ref, () => {
+      return {
+        getSelect: () => select,
+      }
+    }, [select])
+    return (
+      <div className={styles['card-list']} ref={listRef}>
+        {list.map((item, index) => {
+          const isSelect = select.some((s) => s.Name === item.Name)
+          const displayName = i18n.language?.startsWith('zh') ? item.DisplayNameZhCN || item.Name : item.Name
+          return (
+            <div
+              key={`${item.Type}:${item.Name}`}
+              className={classNames(styles['card-item'], { [styles['card-item-select']]: isSelect })}
+              onClick={() => onSelect(item)}
+            >
+              {isSelect ? <OutlineCheckIcon className={styles['select-icon']} /> : getIconByName(item.Name)}
+              <div className={styles['card-content']}>
+                <div>{displayName}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }),
+)
 
 export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -391,165 +407,5 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
         {...props}
       />
     </Tooltip>
-  )
-})
-
-const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['yakitUi'])
-  const { title, data, lineStartDOMRect, onMore, onCheckItem } = props
-  const icons = useCreation(() => {
-    return getAIRecommendIconByType(title)
-  }, [title])
-  return (
-    <div className={styles['recommend-list-wrapper']}>
-      <AIDownAngleLeftIcon className={styles['down-left']} />
-      <AIDownAngleRightIcon className={styles['down-right']} />
-      <AIUpAngleLeftIcon className={styles['up-left']} />
-      <AIUpAngleRightIcon className={styles['up-right']} />
-      <div className={styles['recommend-list-heard']}>
-        <div className={styles['title']}>
-          <div className={styles['icon']}>{icons.icon}</div>
-          <div className={styles['hover-icon']}>{icons.hoverIcon}</div>
-          {title}
-        </div>
-        <YakitButton className={styles['more-btn']} type="text" size="small" onClick={onMore}>
-          {t('YakitButton.more')}
-          <OutlineArrowrightIcon />
-        </YakitButton>
-      </div>
-      <div className={styles['recommend-list']}>
-        {data.map((item, index) => (
-          <AIRecommendItem
-            key={index} //不需要缓存，每次刷新重新渲染
-            item={item}
-            lineStartDOMRect={lineStartDOMRect}
-            onCheckItem={onCheckItem}
-          />
-        ))}
-      </div>
-    </div>
-  )
-})
-
-const AIRecommendItem: React.FC<AIRecommendItemProps> = React.memo((props) => {
-  const { item, lineStartDOMRect, onCheckItem } = props
-  const [svgBox, setSvgBox] = useState({ width: 0, height: 0, isUp: true })
-  const dotRef = useRef<HTMLDivElement>(null)
-  const colorLineIconId = useId()
-
-  useEffect(() => {
-    const linePointLeft = lineStartDOMRect
-    const linePointRight = dotRef.current?.getBoundingClientRect()
-    if (!linePointLeft || !linePointRight) return
-    const isUp = (linePointRight.y || 0) < (linePointLeft.y || 0)
-    const svgWidth = Math.abs(linePointRight.left - linePointLeft.right) - 4
-    const svgHeight = isUp
-      ? Math.abs(linePointRight.top - linePointLeft.bottom)
-      : Math.abs(linePointRight.top - linePointLeft.bottom) + 3
-
-    setSvgBox({ width: svgWidth, height: svgHeight, isUp })
-  }, [lineStartDOMRect])
-  const generatePath = useMemoizedFn(() => {
-    const height = svgBox.height
-    const width = svgBox.width
-    const curvature = 0.8
-
-    if (svgBox.isUp) {
-      const startX = -2
-      const startY = height
-      const endX = width
-      const endY = 0
-
-      const control1X = width * curvature
-      const control1Y = height
-
-      const control2X = width * (1 - curvature)
-      const control2Y = 0
-
-      return `M ${startX} ${startY}
-                C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${endX} ${endY}`
-    } else {
-      const startX = 0
-      const startY = 0
-      const endX = width
-      const endY = height
-
-      // 控制点1：向右下方弯曲
-      const control1X = width * curvature
-      const control1Y = 0
-
-      // 控制点2：向左下方弯曲（形成S形）
-      const control2X = width * (1 - curvature)
-      const control2Y = height
-
-      return `M ${startX} ${startY}
-                    C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${endX} ${endY}`
-    }
-  })
-  const svgStyle = useCreation(() => {
-    return {
-      top: svgBox.isUp ? `calc(50%)` : undefined,
-      bottom: svgBox.isUp ? undefined : `calc(50% - 3px)`,
-      left: `calc(${-svgBox.width}px + -16px)`,
-    }
-  }, [svgBox.isUp, svgBox.width])
-
-  const colorLineIcon = useCreation(() => {
-    return (
-      <svg
-        width={svgBox.width}
-        height={svgBox.height}
-        style={svgStyle}
-        viewBox={`0 0 ${svgBox.width} ${svgBox.height}`}
-        xmlns="http://www.w3.org/2000/svg"
-        className={styles['color-line-svg']}
-      >
-        <path d={generatePath()} stroke={`url(#${colorLineIconId})`} strokeLinecap="round" />
-        <defs>
-          <linearGradient
-            id={colorLineIconId}
-            x1="0.5"
-            y1="0.5"
-            x2="64.6787"
-            y2="8.55444"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="#DC5CDF" />
-            <stop offset="0.639423" stopColor="#8862F8" />
-            <stop offset="1" stopColor="#4493FF" />
-          </linearGradient>
-        </defs>
-      </svg>
-    )
-  }, [svgBox.width, svgBox.height, svgStyle])
-  const lineIcon = useCreation(() => {
-    return (
-      <svg
-        width={svgBox.width}
-        height={svgBox.height}
-        style={svgStyle}
-        viewBox={`0 0 ${svgBox.width} ${svgBox.height}`}
-        xmlns="http://www.w3.org/2000/svg"
-        className={styles['line-svg']}
-      >
-        <path d={generatePath()} stroke="var(--Colors-Use-Neutral-Border)" strokeLinecap="round" />
-      </svg>
-    )
-  }, [svgBox.width, svgBox.height, svgStyle])
-  return (
-    <div className={styles['recommend-list-item']} onClick={() => onCheckItem(item)}>
-      <div className={styles['line-container']} onClick={(e) => e.stopPropagation()}>
-        {lineIcon}
-        {colorLineIcon}
-      </div>
-      <div className={styles['line-dot']} onClick={(e) => e.stopPropagation()}>
-        {/* svg 定位点2/right */}
-        <div className={styles['line-end']} ref={dotRef} />
-      </div>
-      <span className={styles['text']}>{item.name}</span>
-      <Tooltip title={item.description}>
-        <OutlineInformationcircleIcon className={styles['info-icon']} />
-      </Tooltip>
-    </div>
   )
 })

@@ -3,14 +3,14 @@ import { failed, info } from '../../utils/notification'
 import { useMemoizedFn } from 'ahooks'
 import { convertCardInfo } from '../useHoldGRPCStream/useHoldGRPCStream'
 import { DefaultTabs } from '../useHoldGRPCStream/constant'
-import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from '../useHoldGRPCStream/useHoldGRPCStreamType'
-import {
+import type { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from '../useHoldGRPCStream/useHoldGRPCStreamType'
+import type {
   BatchHoldGRPCStreamInfo,
   HoldBatchGRPCStreamParams,
   PluginBatchExecutorResult,
   TaskStatus,
 } from './useHoldBatchGRPCStreamType'
-import { HybridScanActiveTask, HybridScanControlAfterRequest } from '@/models/HybridScan'
+import type { HybridScanActiveTask, HybridScanControlAfterRequest } from '@/models/HybridScan'
 import omit from 'lodash/omit'
 import isEqual from 'lodash/isEqual'
 import { DEFAULT_LOG_LIMIT, LIMIT_LOG_NUM_NAME } from '@/defaultConstants/HoldGRPCStream'
@@ -73,9 +73,11 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
     sent: null,
   })
   // progress
-  let progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
+  const progressKVPair = useRef<Map<string, number>>(new Map<string, number>())
   // card
-  let cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(new Map<string, HoldGRPCStreamProps.CacheCard>())
+  const cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
+    new Map<string, HoldGRPCStreamProps.CacheCard>(),
+  )
   // tabInfo-table
   const tabTable = useRef<Map<string, HoldGRPCStreamProps.CacheTable>>(
     new Map<string, HoldGRPCStreamProps.CacheTable>(),
@@ -83,11 +85,11 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
   // tabInfo-text
   const tabsText = useRef<Map<string, string>>(new Map<string, string>())
   // risks
-  let riskMessages = useRef<StreamResult.Risk[]>([])
+  const riskMessages = useRef<StreamResult.Risk[]>([])
   // logs
-  let messages = useRef<StreamResult.Message[]>([])
+  const messages = useRef<StreamResult.Message[]>([])
   /**plugin log */
-  let pluginLog = useRef<StreamResult.PluginExecuteLog[]>([])
+  const pluginLog = useRef<StreamResult.PluginExecuteLog[]>([])
 
   /** 放入日志队列 */
   const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
@@ -112,10 +114,10 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
   useEffect(() => {
     const processDataId = 'main'
     const offData = yakitStream.onData(token, async (res: PluginBatchExecutorResult) => {
-      if (!!res.HybridScanConfig) {
+      if (res.HybridScanConfig) {
         inputValueRef.current.cache = omit(res.HybridScanConfig, ['Control', 'HybridScanMode', 'ResumeTaskId'])
       }
-      if (!!res.Status) {
+      if (res.Status) {
         taskStatus.current.cache = res.Status
       }
       const data = res.ExecResult
@@ -124,17 +126,17 @@ export default function useHoldBatchGRPCStream(params: HoldBatchGRPCStreamParams
 
       progressKVPair.current.set(processDataId, Math.max(progressKVPair.current.get(processDataId) || 0, progress))
 
-      if (!!res.UpdateActiveTask) {
+      if (res.UpdateActiveTask) {
         onHandleActiveTask(res.UpdateActiveTask)
       }
       if (!data) return
       // run-time-id
-      if (!!data?.RuntimeID) {
+      if (data?.RuntimeID) {
         runTimeId.current.cache = data.RuntimeID
       }
       if (data.IsMessage) {
         try {
-          let obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {
+          const obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {
             page: 'useHoldBatchGRPCStream',
           })
           const logData = obj.content as StreamResult.Log

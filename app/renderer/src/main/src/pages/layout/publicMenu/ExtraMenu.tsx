@@ -1,13 +1,13 @@
 import React, { useMemo, useRef, useState } from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitButton, YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { onImportShare } from '@/pages/fuzzer/components/ShareImport'
 import { useMemoizedFn } from 'ahooks'
-import { RouteToPageProps } from './PublicMenu'
+import type { RouteToPageProps } from './PublicMenu'
 import { OutlineChevrondownIcon, OutlineChevronupIcon, OutlineSaveIcon } from '@/assets/icon/outline'
-import { ImportLocalPlugin, LoadPluginMode } from '@/pages/mitm/MITMPage'
+import { ImportLocalPlugin, type LoadPluginMode } from '@/pages/mitm/MITMPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { Form } from 'antd'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
@@ -19,7 +19,7 @@ import styles from './ExtraMenu.module.scss'
 import { isMemfit, isYakit } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
-import { ExtraMenuItem, getExtraMenu } from '@/routes/newRoute'
+import { type ExtraMenuItem, getExtraMenu } from '@/routes/newRoute'
 import { useSoftMode } from '@/store/softMode'
 import { ManagementTab } from '@/components/managementTab'
 
@@ -55,68 +55,70 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
         setImportMenuShow(false)
         return
       case 'import-history-har':
-        form.setFieldsValue({ historyharPath: '' })
+        {
+          form.setFieldsValue({ historyharPath: '' })
 
-        const m = showYakitModal({
-          title: (modalT) => modalT('Layout.ExtraMenu.importHARHistoryData'),
-          width: 600,
-          content: (modalT) => (
-            <div style={{ padding: 15 }}>
-              <Form form={form}>
-                <YakitFormDragger
-                  multiple={false}
-                  isShowPathNumber={false}
-                  accept=".har"
-                  help={t('YakitFormDragger.dragFileHereOr', { fileType: 'HAR' })}
-                  selectType="file"
-                  formItemProps={{
-                    name: 'historyharPath',
-                    label: t('YakitFormDragger.fileDataPath', { fileType: 'HAR' }),
-                    labelCol: { span: 8 },
-                    wrapperCol: { span: 17 },
-                  }}
-                />
-              </Form>
-              <div style={{ width: '100%', textAlign: 'right' }}>
-                <YakitButton
-                  type="primary"
-                  onClick={() => {
-                    const formValue = form.getFieldsValue()
-                    if (!formValue.historyharPath) {
-                      yakitNotify('error', t('YakitFormDragger.enterFilePath', { fileType: 'HAR' }))
-                      return
-                    }
-                    if (!formValue.historyharPath.endsWith('.har')) {
-                      yakitNotify('error', t('YakitFormDragger.filesOnly', { fileType: '.har' }))
-                      return
-                    }
-                    m.destroy()
-                    const token = randomString(40)
-                    importHistoryharTokenRef.current = token
-                    ipcRenderer
-                      .invoke(
-                        'ImportHTTPFlowStream',
-                        {
-                          InputPath: formValue.historyharPath,
-                        },
-                        token,
-                      )
-                      .then(() => {
-                        setPercentVisible(true)
-                      })
-                      .catch((error) => {
-                        yakitNotify('error', `[ImportHTTPFlowStream] error: ${error}`)
-                      })
-                  }}
-                >
-                  {modalT('YakitButton.import')}
-                </YakitButton>
+          const m = showYakitModal({
+            title: (modalT) => modalT('Layout.ExtraMenu.importHARHistoryData'),
+            width: 600,
+            content: (modalT) => (
+              <div style={{ padding: 15 }}>
+                <Form form={form}>
+                  <YakitFormDragger
+                    multiple={false}
+                    isShowPathNumber={false}
+                    accept=".har"
+                    help={t('YakitFormDragger.dragFileHereOr', { fileType: 'HAR' })}
+                    selectType="file"
+                    formItemProps={{
+                      name: 'historyharPath',
+                      label: t('YakitFormDragger.fileDataPath', { fileType: 'HAR' }),
+                      labelCol: { span: 8 },
+                      wrapperCol: { span: 17 },
+                    }}
+                  />
+                </Form>
+                <div style={{ width: '100%', textAlign: 'right' }}>
+                  <YakitButton
+                    type="primary"
+                    onClick={() => {
+                      const formValue = form.getFieldsValue()
+                      if (!formValue.historyharPath) {
+                        yakitNotify('error', t('YakitFormDragger.enterFilePath', { fileType: 'HAR' }))
+                        return
+                      }
+                      if (!formValue.historyharPath.endsWith('.har')) {
+                        yakitNotify('error', t('YakitFormDragger.filesOnly', { fileType: '.har' }))
+                        return
+                      }
+                      m.destroy()
+                      const token = randomString(40)
+                      importHistoryharTokenRef.current = token
+                      ipcRenderer
+                        .invoke(
+                          'ImportHTTPFlowStream',
+                          {
+                            InputPath: formValue.historyharPath,
+                          },
+                          token,
+                        )
+                        .then(() => {
+                          setPercentVisible(true)
+                        })
+                        .catch((error) => {
+                          yakitNotify('error', `[ImportHTTPFlowStream] error: ${error}`)
+                        })
+                    }}
+                  >
+                    {modalT('YakitButton.import')}
+                  </YakitButton>
+                </div>
               </div>
-            </div>
-          ),
-          footer: null,
-        })
-        setImportMenuShow(false)
+            ),
+            footer: null,
+          })
+          setImportMenuShow(false)
+        }
         return
 
       default:

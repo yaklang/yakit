@@ -1,6 +1,6 @@
-import React, { ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react'
+import React, { type ReactNode, memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { YakitButtonProp, YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { type YakitButtonProp, YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { Form, Tooltip } from 'antd'
@@ -9,12 +9,12 @@ import { RemotePluginGV } from '@/enums/plugin'
 import { RemoteMenuGV } from '@/enums/menu'
 import { isCommunityEdition } from '@/utils/envfile'
 import { yakitNotify } from '@/utils/notification'
-import { YakScript } from '@/pages/invoker/schema'
-import { DatabaseFirstMenuProps } from '@/routes/newRoute'
+import type { YakScript } from '@/pages/invoker/schema'
+import type { DatabaseFirstMenuProps } from '@/routes/newRoute'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { CollaboratorInfoProps } from '@/pages/plugins/baseTemplateType'
+import type { CollaboratorInfoProps } from '@/pages/plugins/baseTemplateType'
 import { PluginContributesListItem, onPluginTagsToName } from '@/pages/plugins/baseTemplate'
 import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
 import { pluginTypeToName } from '@/pages/plugins/builtInData'
@@ -137,7 +137,7 @@ export const RemovePluginMenuContent: React.FC<RemovePluginMenuContentProps> = m
     }
 
     try {
-      let mode = await getRemoteValue(RemoteMenuGV.PatternMenu)
+      const mode = await getRemoteValue(RemoteMenuGV.PatternMenu)
       menuMode.current = mode || 'expert'
     } catch (error) {}
     ipcRenderer

@@ -1,11 +1,10 @@
 import React, { memo, useEffect, useMemo, useRef, useState, startTransition } from 'react'
-import { useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
-import { FileTreeNodeProps, FileTreeProps, FileNodeProps, FileNodeMapProps } from './FileTreeType'
-import { SystemInfo } from '@/constants/hardware'
+import { useMemoizedFn, useSize } from 'ahooks'
+import type { FileTreeNodeProps, FileTreeProps, FileNodeProps } from './FileTreeType'
 import { Tree } from 'antd'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { FolderDefault, FolderDefaultExpanded, KeyToIcon } from './icon'
 import { LoadingOutlined } from '@ant-design/icons'
 
@@ -43,9 +42,9 @@ import {
 import { failed, success, warn } from '@/utils/notification'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import cloneDeep from 'lodash/cloneDeep'
-import { OpenFileByPathProps } from '../YakRunnerType'
+import type { OpenFileByPathProps } from '../YakRunnerType'
 import { setClipboardText } from '@/utils/clipboard'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const FolderMenu: (t: TFunction) => YakitMenuItemProps[] = (t) => {
   return [
@@ -565,7 +564,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
     if (value.length > 0 && info.parent) {
       try {
         let fileName = value
-        let lastDotIndex = value.lastIndexOf('.')
+        const lastDotIndex = value.lastIndexOf('.')
         // 文件路径中没有点号，即没有后缀
         if (lastDotIndex === -1 && !info.isFolder) {
           // let ext = value.substring(lastDotIndex);

@@ -1,5 +1,4 @@
-import React from 'react'
-import { RequestYakURLResponse, YakURL } from '@/pages/yakURLTree/data'
+import type { RequestYakURLResponse, YakURL } from '@/pages/yakURLTree/data'
 import { yakitFailed } from '@/utils/notification'
 
 const { ipcRenderer } = window.require('electron')

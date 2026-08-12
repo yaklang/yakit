@@ -1,5 +1,6 @@
-import React, { CSSProperties, memo, useEffect, useMemo, useRef, useState } from 'react'
-import { YakitCollapseTextProps } from './YakitCollapseTextType'
+import type React from 'react'
+import { type CSSProperties, memo, useEffect, useMemo, useRef, useState } from 'react'
+import type { YakitCollapseTextProps } from './YakitCollapseTextType'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import styles from './YakitCollapseText.module.scss'

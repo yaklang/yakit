@@ -1,5 +1,5 @@
 import { imageBlockSchema } from '@milkdown/kit/component/image-block'
-import { Attrs } from '@milkdown/kit/prose/model'
+import type { Attrs } from '@milkdown/kit/prose/model'
 import { $command } from '@milkdown/kit/utils'
 
 // 创建一个命令，用于插入 imageBlock

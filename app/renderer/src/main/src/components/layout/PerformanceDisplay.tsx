@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { failed, info, success, yakitNotify } from '@/utils/notification'
-import { YaklangEngineMode } from '@/yakitGVDefine'
+import type { YaklangEngineMode } from '@/yakitGVDefine'
 import { LoadingOutlined } from '@ant-design/icons'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { Sparklines, SparklinesCurve } from 'react-sparklines'
@@ -8,7 +8,7 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { CheckedSvgIcon, GooglePhotosLogoSvgIcon } from './icons'
-import { YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
+import type { YaklangEngineWatchDogCredential } from '@/components/layout/YaklangEngineWatchDog'
 import { useRunNodeStore } from '@/store/runNode'
 import emiter from '@/utils/eventBus/eventBus'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
@@ -181,7 +181,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
       fetchPSList()
       fetchCurrentPort()
 
-      let id = setInterval(() => {
+      const id = setInterval(() => {
         fetchPSList()
         fetchCurrentPort()
       }, 3000)
@@ -284,7 +284,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                       <YakitPopconfirm
                         title={<>{t('PerformanceDisplay.switchEngineConfirm')}</>}
                         onConfirm={async () => {
-                          let oldPort = port
+                          const oldPort = port
                           if (+i.port !== oldPort) {
                             await delTemporaryProject()
                           }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import useMcpStream, { localMcpDefalutUrl, mcpStreamHooks } from '@/components/layout/hooks/useMcp/useMcp'
+import useMcpStream, { localMcpDefalutUrl, type mcpStreamHooks } from '@/components/layout/hooks/useMcp/useMcp'
 import { bindExternalStoreHook, createExternalStore } from '@/utils/createExternalStore'
 
 const defaultMcpStreamState: mcpStreamHooks = {

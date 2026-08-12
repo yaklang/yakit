@@ -1,11 +1,6 @@
-import {
-  HybridScanControlAfterRequest,
-  HybridScanInputTarget,
-  HybridScanPluginConfig,
-  HybridScanResponse,
-} from '../../models/HybridScan'
-import { HoldGRPCStreamParams } from '../useHoldGRPCStream/useHoldGRPCStream'
-import { HoldGRPCStreamInfo, StreamResult } from '../useHoldGRPCStream/useHoldGRPCStreamType'
+import { type HybridScanControlAfterRequest, type HybridScanResponse } from '../../models/HybridScan'
+import { type HoldGRPCStreamParams } from '../useHoldGRPCStream/useHoldGRPCStream'
+import { type HoldGRPCStreamInfo, type StreamResult } from '../useHoldGRPCStream/useHoldGRPCStreamType'
 
 export type TaskStatus = 'executing' | 'paused' | 'done' | 'error' | 'default'
 export interface HoldBatchGRPCStreamParams extends HoldGRPCStreamParams {

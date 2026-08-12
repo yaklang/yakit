@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { PEMExampleProps, RemoteEngineProps, RemoteLinkInfo, YakitAuthInfo } from './RemoteEngineType'
+import type { PEMExampleProps, RemoteEngineProps, RemoteLinkInfo, YakitAuthInfo } from './RemoteEngineType'
 import React, { useEffect, useState } from 'react'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { LocalGVS } from '@/enums/yakitGV'

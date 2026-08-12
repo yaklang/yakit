@@ -1,6 +1,6 @@
 import { Empty } from 'antd'
-import React from 'react'
-import { YakitEmptyProps } from './YakitEmptyType'
+import type React from 'react'
+import type { YakitEmptyProps } from './YakitEmptyType'
 import classNames from 'classnames'
 import styles from './YakitEmpty.module.scss'
 

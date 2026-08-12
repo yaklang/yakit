@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { NotepadLocalListProps } from './NotepadLocalListType'
+import type { NotepadLocalListProps } from './NotepadLocalListType'
 import styles from './NotepadLocalList.module.scss'
 import { defYakitAutoCompleteRef, YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import {
   grpcQueryNote,
   grpcQueryNoteById,
   grpcDeleteNote,
-  Note,
-  NoteFilter,
-  QueryNoteResponse,
+  type Note,
+  type NoteFilter,
+  type QueryNoteResponse,
 } from '@/pages/notepadManage/notepadManage/utils'
 import { defaultNoteFilter } from '@/defaultConstants/ModifyNotepad'
 import { genDefaultPagination } from '@/pages/invoker/schema'

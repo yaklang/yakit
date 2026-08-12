@@ -1,17 +1,16 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
-import YakitTree, { TreeKey } from '@/components/yakitUI/YakitTree/YakitTree'
+import React, { useEffect, useRef, useState } from 'react'
+import YakitTree, { type TreeKey } from '@/components/yakitUI/YakitTree/YakitTree'
 import type { DataNode } from 'antd/es/tree'
 import { useGetState, useInViewport, useMemoizedFn } from 'ahooks'
 import {
-  OutlineChevrondownIcon,
   OutlineDocumentIcon,
   OutlineFolderremoveIcon,
   OutlineLink2Icon,
   OutlineVariableIcon,
 } from '@/assets/icon/outline'
-import { loadFromYakURLRaw, requestYakURLList } from '../yakURLTree/netif'
+import { requestYakURLList } from '../yakURLTree/netif'
 import { yakitFailed } from '@/utils/notification'
-import { YakURL, YakURLResource } from '../yakURLTree/data'
+import type { YakURL, YakURLResource } from '../yakURLTree/data'
 import { SolidFolderIcon, SolidFolderaddIcon, SolidFolderopenIcon } from '@/assets/icon/solid'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -186,7 +185,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
 
   // 树节点第一层组装树
   const assembleFirstTreeNode = (arr) => {
-    let newArr = arr.map((item: YakURLResource, index: number) => {
+    const newArr = arr.map((item: YakURLResource, index: number) => {
       const idObj = {
         website: item.VerboseName,
         behinder: item.Path,
@@ -221,7 +220,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
   useEffect(() => {
     const buildTree = (parts, tree, currentPath = '') => {
       if (parts.length === 0) return
-      let part = parts.shift()
+      const part = parts.shift()
       let node = tree.find((n) => n.title === part)
       currentPath += (currentPath ? '/' : '') + part // 更新路径
       const item: YakURLResource = {
@@ -274,7 +273,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     // 初始化根节点
     const val = searchYakURL.Query.filter((i) => i.Key === 'path')[0].Value
 
-    let tree: TreeNode[] = []
+    const tree: TreeNode[] = []
     ;[val!].forEach((p) => {
       if (p.endsWith('/') || p.endsWith('\\')) {
         p = p.slice(0, -1)
@@ -284,7 +283,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
       cleanPath = p.split('?')[0] // 获取 '?' 前的部分
 
       // 分割路径，处理盘符
-      let parts = cleanPath.includes('/') ? cleanPath.split('/') : cleanPath.split('\\')
+      const parts = cleanPath.includes('/') ? cleanPath.split('/') : cleanPath.split('\\')
       // 单独处理盘符
       if (parts[0].length === 2 && parts[0][1] === ':') {
         parts[0] += '/' // 将盘符与后面的路径分隔符合并

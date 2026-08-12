@@ -1,33 +1,24 @@
-import { YakURLTree, YakURLTreeProp } from '@/pages/yakURLTree/YakURLTree'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ResizeBox } from '@/components/ResizeBox'
 import cveStyles from '@/pages/cve/CVETable.module.scss'
 import { ChevronLeftIcon, RefreshIcon, TrashIcon } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { RequestYakURLResponse, YakURL, YakURLResource } from '@/pages/yakURLTree/data'
+import type { RequestYakURLResponse, YakURL, YakURLResource } from '@/pages/yakURLTree/data'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { genDefaultPagination, PaginationSchema } from '@/pages/invoker/schema'
-import { Button, Divider, Form, Space, Tooltip } from 'antd'
+import { genDefaultPagination, type PaginationSchema } from '@/pages/invoker/schema'
+import { Button, Divider, Space, Tooltip } from 'antd'
 import { FileOutlined, FolderOpenOutlined } from '@ant-design/icons'
-import { InputItem } from '@/utils/inputUtil'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ShellType, WebShellDetail } from '@/pages/webShell/models'
-import mitmStyles from '@/pages/mitm/MITMServerHijacking/MITMServerHijacking.module.scss'
-import { YakitMenu, YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { showModal } from '@/utils/showModal'
-import { WebShellCreatorForm } from '@/pages/webShell/WebShellComp'
-import { deleteWebShell, featurePing } from '@/pages/webShell/WebShellManager'
+import { type ShellType } from '@/pages/webShell/models'
+import { type YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { loadFromYakURLRaw, requestYakURLList } from './yakURLTree/netif'
-import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { requestYakURLList } from './yakURLTree/netif'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { yakitFailed } from '@/utils/notification'
-import { goBack } from '@/pages/webShell/FileManager'
-import { TreeNode, WebTree } from './ShellTree/WebTree'
-import { TreeKey } from '@/components/yakitUI/YakitTree/YakitTree'
+import { type TreeNode, WebTree } from './ShellTree/WebTree'
 import path from 'path'
 import emiter from '@/utils/eventBus/eventBus'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
@@ -262,11 +253,12 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
   const fileMenuSelect = useMemoizedFn((key: string) => {
     if (!selected) return
     switch (key) {
-      case 'file-curd-open':
+      case 'file-curd-open': {
         const url = selected.data!.Url
         setYakUrl(url)
         showFile(url)
         break
+      }
       case 'file-curd-edit':
       // updateFile(selected.data!.Url, setLoading)
     }
@@ -367,7 +359,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
               setLoading(false)
               if (Array.isArray(nodes)) {
                 // const url = nodes[0]?.data?.Url as YakURL
-                // @ts-ignore
+                // @ts-expect-error 类型定义不完整，需要忽略此行
                 const data: YakURLResource[] = (nodes || []).map((item) => item.data)
                 // requestYakURLList({url}, (rsp) => {
                 //     console.log("rsp ", rsp)

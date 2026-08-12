@@ -1,27 +1,26 @@
-import React, { memo, ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { CodeScoreModule } from '@/pages/plugins/funcTemplate'
-import { Radio, Upload } from 'antd'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import { Radio } from 'antd'
+import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { apiFetchOnlinePluginInfo } from '@/pages/plugins/utils'
-import { YakScript } from '@/pages/invoker/schema'
+import type { YakScript } from '@/pages/invoker/schema'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import YakitSteps from '@/pages/plugins/local/YakitSteps/YakitSteps'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { httpUploadPluginToOnline } from '../utils/http'
 import { grpcDownloadOnlinePlugin } from '../utils/grpc'
 import { failed, yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
-import { pluginConvertLocalToOnline, pluginSupplementConvertToJSON } from '@/pages/pluginEditor/utils/convert'
-import { FileItem } from 'fs'
+import { pluginConvertLocalToOnline } from '@/pages/pluginEditor/utils/convert'
 import { PluginImageTextarea } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea'
-import { PluginImageTextareaRefProps } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
+import type { PluginImageTextareaRefProps } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
 import { httpDeleteOSSResource, httpUploadFile } from '@/apiUtils/http'
-import { OutlineLoadingIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 
 import classNames from 'classnames'
 import '../../plugins/plugins.scss'
@@ -52,7 +51,7 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
       setIsError(true)
       return
     }
-    if (!!info.IsCorePlugin) {
+    if (info.IsCorePlugin) {
       errorInfo.current = '内置插件不支持上传'
       setIsError(true)
       return
@@ -547,7 +546,7 @@ export const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = mem
   const [uploadLoading, setUploadLoading] = useState<boolean>(false)
   const [fileName, setFileName] = useState<string>('')
   const fileUrl = useRef<string>('')
-  const uploadFile = useMemoizedFn((file: FileItem) => {
+  const uploadFile = useMemoizedFn((file: File) => {
     if (uploadLoading) return
     if (file.size > 5 * 1024 * 1024) {
       failed('压缩包大小不能超过5MB')
@@ -555,6 +554,10 @@ export const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = mem
     }
 
     let uploadUrl: string = '' // 有值代表上传成功
+    if (!file.path) {
+      failed('无法获取本地文件路径')
+      return
+    }
     setUploadLoading(true)
     httpUploadFile({ path: file.path, name: file.name })
       .then((res) => {
@@ -574,7 +577,7 @@ export const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = mem
 
   const [delArr, setDelArr] = useState<string[]>([])
   const deleteFile = useMemoizedFn((url?: string) => {
-    let isReplace: boolean = !!url // 删除还是替换
+    const isReplace: boolean = !!url // 删除还是替换
     const delUrl = url || fileUrl.current
 
     if (!delUrl) return

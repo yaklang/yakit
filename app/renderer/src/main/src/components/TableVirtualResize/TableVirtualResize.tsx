@@ -1,4 +1,12 @@
-import React, { ReactNode, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  type ReactNode,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import {
   useClickAway,
   useCreation,
@@ -14,7 +22,7 @@ import {
   useInViewport,
 } from 'ahooks'
 import classNames from 'classnames'
-import {
+import type {
   ColumnsTypeProps,
   FiltersItemProps,
   RowSelectionProps,
@@ -25,7 +33,7 @@ import {
 } from './TableVirtualResizeType'
 import ReactResizeDetector from 'react-resize-detector'
 import styles from './TableVirtualResize.module.scss'
-import { Divider, Popover, RadioChangeEvent, Tooltip } from 'antd'
+import { Divider, Popover, type RadioChangeEvent, Tooltip } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   FilterIcon,
@@ -36,15 +44,13 @@ import {
   DragSortIcon,
   CheckIcon,
 } from '@/assets/newIcon'
-import { useHotkeys } from 'react-hotkeys-hook'
-import moment, { Moment } from 'moment'
+import moment, { type Moment } from 'moment'
 // import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
-import { useDrag, useDrop, DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
+import { useDrag, useDrop } from 'react-dnd'
 import type { Identifier, XYCoord } from 'dnd-core'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
-import { YakitProtoCheckbox, YakitProtoCheckboxProps } from './YakitProtoCheckbox/YakitProtoCheckbox'
+import { YakitProtoCheckbox, type YakitProtoCheckboxProps } from './YakitProtoCheckbox/YakitProtoCheckbox'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import cloneDeep from 'lodash/cloneDeep'
 import locale from 'antd/es/date-picker/locale/zh_CN'
@@ -272,7 +278,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const checkboxPropsMap = useCreation(() => {
     const map = new Map<React.Key, Partial<YakitProtoCheckboxProps>>()
     const { getCheckboxProps } = rowSelection || {}
-    if (!!getCheckboxProps) {
+    if (getCheckboxProps) {
       data.forEach((record, index) => {
         const key = record[renderKey]
         const checkboxProps = getCheckboxProps(record) || {}
@@ -607,7 +613,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       columnsAllWidth = 0
       total = 0
     }
-    let w = (width - columnsAllWidth) / (cLength - total || 1)
+    const w = (width - columnsAllWidth) / (cLength - total || 1)
     const cw = w - scrollBarWidth / (cLength - total || 1)
 
     const newColumns = getColumns().map((ele, index) => {
@@ -2207,7 +2213,7 @@ const CellRender = React.memo((props: CellRenderProps) => {
       })}
       style={columnsItem.customStyle && item.data['cellStyle']}
       onClick={(e) => {
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         if (e.target.nodeName === 'INPUT') return
         onRowClick()
       }}
@@ -2390,7 +2396,7 @@ const CellRenderDrop = React.memo((props: CellRenderDropProps) => {
       })}
       style={columnsItem.customStyle && item.data['cellStyle']}
       onClick={(e) => {
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         if (e.target.nodeName === 'INPUT') return
         onRowClick()
       }}

@@ -1,6 +1,6 @@
-import { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActChatContentsType'
-import { AIReActChatProps } from '../AIReActChatType'
-import React from 'react'
+import type { AIReActChatContentsRef } from '../../aiReActChatContents/AIReActChatContentsType'
+import type { AIReActChatProps } from '../AIReActChatType'
+import type React from 'react'
 
 export interface AIReActChatHeaderProps {
   title?: React.ReactNode

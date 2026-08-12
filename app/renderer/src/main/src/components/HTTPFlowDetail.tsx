@@ -1,12 +1,21 @@
-import React, { useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback, FC } from 'react'
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+  type ReactNode,
+  type ReactElement,
+  useCallback,
+  type FC,
+} from 'react'
 import { Button, Card, Col, Descriptions, PageHeader, Row, Space, Tooltip } from 'antd'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons'
-import { HTTPFlow } from './HTTPFlowTable/HTTPFlowTable'
-import { IMonacoEditor, NewHTTPCard, NewHTTPPacketEditor, RenderTypeOptionVal } from '../utils/editors'
+import type { HTTPFlow } from './HTTPFlowTable/HTTPFlowTable'
+import { type IMonacoEditor, NewHTTPCard, NewHTTPPacketEditor, type RenderTypeOptionVal } from '../utils/editors'
 import { failed, yakitNotify } from '../utils/notification'
 import { FuzzableParamList } from './FuzzableParamList'
-import { FuzzerResponse, RandomChunkedResponse } from '../pages/fuzzer/HTTPFuzzerPage'
-import { HTTPHistorySourcePageType, HTTPPacketFuzzable } from './HTTPHistory'
+import type { FuzzerResponse, RandomChunkedResponse } from '../pages/fuzzer/HTTPFuzzerPage'
+import type { HTTPHistorySourcePageType, HTTPPacketFuzzable } from './HTTPHistory'
 import { Buffer } from 'buffer'
 import { Uint8ArrayToString } from '@/utils/str'
 import { HTTPFlowForWebsocketViewer, WebSocketEditor } from '@/pages/websocket/HTTPFlowForWebsocketViewer'
@@ -15,11 +24,11 @@ import { WebsocketFrameHistory } from '@/pages/websocket/WebsocketFrameHistory'
 import styles from './hTTPFlowDetail.module.scss'
 import { useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
-  ExtractedDataFilter,
-  HTTPFlowExtractedData,
+  type ExtractedDataFilter,
+  type HTTPFlowExtractedData,
   HTTPFlowExtractedDataTable,
-  HTTPFlowExtractedDataTableRefProps,
-  QueryMITMRuleExtractedDataRequest,
+  type HTTPFlowExtractedDataTableRefProps,
+  type QueryMITMRuleExtractedDataRequest,
 } from '@/components/HTTPFlowExtractedDataTable'
 import { ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon } from '@/assets/newIcon'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
@@ -36,7 +45,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { OutlineCloseIcon, OutlineLog2Icon, OutlineOpenIcon } from '@/assets/icon/outline'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { RemoteGV } from '@/yakitGV'
-import { QueryGeneralResponse } from '@/pages/invoker/schema'
+import type { QueryGeneralResponse } from '@/pages/invoker/schema'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { SolidCheckIcon } from '@/assets/icon/solid'
 import { YakitCopyText } from './yakitUI/YakitCopyText/YakitCopyText'
@@ -44,15 +53,15 @@ import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import PluginTabs from './businessUI/PluginTabs/PluginTabs'
 import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { asynSettingState } from '@/utils/optimizeRender'
-import { HighLightText } from './yakitUI/YakitEditor/YakitEditorType'
+import type { HighLightText } from './yakitUI/YakitEditor/YakitEditorType'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { useSelectionByteCount } from './yakitUI/YakitEditor/useSelectionByteCount'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { JSONParseLog } from '@/utils/tool'
 import { HTTPFlowCodec } from '@/utils/encodec'
-import { YakitMenu, YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu'
+import { YakitMenu, type YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu'
 const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
 
@@ -253,12 +262,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
           if (type === 'response' && flow?.Response) {
             if (key === 'code-compare-left') {
               setCompareLeft({
-                content: new Buffer(flow?.Response).toString('utf8'),
+                content: Buffer.from(flow?.Response).toString('utf8'),
                 language: 'http',
               })
             } else {
               setCompareRight({
-                content: new Buffer(flow?.Response).toString('utf8'),
+                content: Buffer.from(flow?.Response).toString('utf8'),
                 language: 'http',
               })
               props.onClose?.()
@@ -269,12 +278,12 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
           if (type === 'request' && flow?.Request) {
             if (key === 'code-compare-left') {
               setCompareLeft({
-                content: new Buffer(flow?.Request).toString('utf8'),
+                content: Buffer.from(flow?.Request).toString('utf8'),
                 language: 'http',
               })
             } else {
               setCompareRight({
-                content: new Buffer(flow?.Request).toString('utf8'),
+                content: Buffer.from(flow?.Request).toString('utf8'),
                 language: 'http',
               })
               props.onClose?.()
@@ -835,7 +844,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         }
 
         if (existedExtraInfos.length > 0) {
-          let newExistedInfoType: HTTPFlowInfoType[] = [...existedExtraInfos, 'codec']
+          const newExistedInfoType: HTTPFlowInfoType[] = [...existedExtraInfos, 'codec']
           setInfoType(newExistedInfoType[0])
           setExistedInfoType(newExistedInfoType)
         } else {
@@ -919,7 +928,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
   const contentTypeFixed = useMemo(() => {
     if (!flow?.ContentType) return ''
     // 先过滤掉 charset
-    let arr = extractTagsAndTypes(flow.ContentType, ';', 'charset')
+    const arr = extractTagsAndTypes(flow.ContentType, ';', 'charset')
     // 只取主类型最后的部分（如 text/html -> html）
     let type = arr.length > 0 ? arr[0] : '-'
     if (type.includes('/')) {
@@ -1342,12 +1351,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
           if (type === 'response' && flow?.Response) {
             if (key === 'code-compare-left') {
               setCompareLeft({
-                content: new Buffer(flow?.Response).toString('utf8'),
+                content: Buffer.from(flow?.Response).toString('utf8'),
                 language: 'http',
               })
             } else {
               setCompareRight({
-                content: new Buffer(flow?.Response).toString('utf8'),
+                content: Buffer.from(flow?.Response).toString('utf8'),
                 language: 'http',
               })
               props.onClose?.()
@@ -1358,12 +1367,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
           if (type === 'request' && flow?.Request) {
             if (key === 'code-compare-left') {
               setCompareLeft({
-                content: new Buffer(flow?.Request).toString('utf8'),
+                content: Buffer.from(flow?.Request).toString('utf8'),
                 language: 'http',
               })
             } else {
               setCompareRight({
-                content: new Buffer(flow?.Request).toString('utf8'),
+                content: Buffer.from(flow?.Request).toString('utf8'),
                 language: 'http',
               })
               props.onClose?.()
@@ -1530,7 +1539,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   const handleJumpWebTree = useMemoizedFn(() => {
     if (flow?.Url) {
       try {
-        let url = new URL(flow.Url)
+        const url = new URL(flow.Url)
         emiter.emit('onHistoryJumpWebTree', JSON.stringify({ host: url.host }))
       } catch (error) {
         return ''
@@ -1555,7 +1564,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     } else {
       if (!getReqTypeOptionVal()) {
         getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
-          if (!!res) {
+          if (res) {
             setReqTypeOptionVal(res)
           } else {
             setReqTypeOptionVal(undefined)
@@ -1570,7 +1579,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     } else {
       if (!getResTypeOptionVal()) {
         getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
-          if (!!res) {
+          if (res) {
             setResTypeOptionVal(res)
           } else {
             setResTypeOptionVal(undefined)
@@ -1595,7 +1604,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   }
 
   const secondNodeReqExtraBtn = () => {
-    let extraBtn: ReactElement[] = []
+    const extraBtn: ReactElement[] = []
     if (flow?.IsTooLargeRequest) {
       // 超大 multipart 请求的 body 已骨架化（只剩占位符），「查看 Body」无意义，
       // 用每个落盘文件 part 的一项「查看 <filename>」替换，点击直接打开本地 part 文件，
@@ -1663,7 +1672,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   }
 
   const secondNodeResExtraBtn = () => {
-    let extraBtn: ReactElement[] = []
+    const extraBtn: ReactElement[] = []
     if (flow?.IsTooLargeResponse) {
       extraBtn.push(
         <YakitDropdownMenu
@@ -1791,7 +1800,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             keepSearchName={`${pageType}-request`}
             isShowBeautifyRender={!flow?.IsTooLargeRequest}
             title={(() => {
-              let titleEle: ReactNode[] = []
+              const titleEle: ReactNode[] = []
               if (isShowBeforeData && beforeResValue.length > 0) {
                 titleEle.push(
                   <div className={classNames(styles['type-options-checkable-tag'])} key="type-options-checkable-tag">
@@ -1867,7 +1876,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
               ...sendCodeCompareMenuItem('request'),
             }}
             // 这个为了解决不可见字符的问题
-            defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
+            defaultPacket={flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
             extra={
               <>
                 {flow.InvalidForUTF8Request ? (

@@ -147,10 +147,11 @@ Steps:
      yarn install-render
      ```
 
-3. Start development (starts React renderer and Electron)
+3. Start development (start both renderers, then Electron)
 
      ```bash
-     yarn dev
+     yarn start-renders   # starts both renderers (:3000 + :5173)
+     yarn start-electron  # after both ports are ready
      ```
 
 Useful scripts (from package.json):

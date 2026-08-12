@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { ShellType, WebShellDetail } from '@/pages/webShell/models'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { type ShellType, type WebShellDetail } from '@/pages/webShell/models'
 import { WebShellURLTreeAndTable } from '@/pages/webShell/WebShellTreeAndTable'
 import YakitTabs from '@/components/yakitUI/YakitTabs/YakitTabs'
-import { CVXterm } from '@/components/CVXterm'
 import { TERMINAL_INPUT_KEY, YakitCVXterm } from '@/components/yakitUI/YakitCVXterm/YakitCVXterm'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { failed } from '@/utils/notification'
-import { writeXTerm, xtermClear, xtermFit } from '@/utils/xtermUtils'
-import { loadFromYakURLRaw, requestYakURLList } from './yakURLTree/netif'
+import { writeXTerm, xtermFit } from '@/utils/xtermUtils'
+import { requestYakURLList } from './yakURLTree/netif'
 import ReactResizeDetector from 'react-resize-detector'
 import path from 'path'
-import { YakURL } from '@/pages/yakURLTree/data'
+import type { YakURL } from '@/pages/yakURLTree/data'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 
 interface MsgProps {
@@ -74,7 +74,7 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
         try {
           setShellType(ShellType)
           if (ShellType === 'Behinder') {
-            let obj: { status: string; msg: MsgProps } = JSON.parse(new Buffer(r.Data, 'utf8').toString())
+            const obj: { status: string; msg: MsgProps } = JSON.parse(Buffer.from(r.Data, 'utf8').toString())
             const { status, msg } = obj
             if (status === 'success') {
               setDefaultPath(msg.currentPath)
@@ -96,7 +96,7 @@ ${msg.currentPath}`
               setBehinderBaseInfo(resultString)
             }
           } else {
-            let obj = JSON.parse(new Buffer(r.Data, 'utf8').toString())
+            const obj = JSON.parse(Buffer.from(r.Data, 'utf8').toString())
             setDefaultPath(obj.CurrentDir)
             const helloMsg = `OS: ${obj.OS}        
 ${obj.CurrentDir}`

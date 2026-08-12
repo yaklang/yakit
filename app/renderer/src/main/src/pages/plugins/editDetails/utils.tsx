@@ -1,12 +1,12 @@
-import { CodeToInfoRequestProps, CodeToInfoResponseProps, PluginDataProps, YakParamProps } from '../pluginsType'
-import { API } from '@/services/swagger/resposeType'
+import type { CodeToInfoRequestProps, CodeToInfoResponseProps, PluginDataProps, YakParamProps } from '../pluginsType'
+import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
 import { toolDelInvalidKV } from '@/utils/tool'
-import { YakExtraParamProps } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { YakExtraParamProps } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { Uint8ArrayToString } from '@/utils/str'
 import { pluginParamsConvertLocalToOnline, riskDetailConvertLocalToOnline } from '@/pages/pluginEditor/utils/convert'
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -17,7 +17,6 @@ const { ipcRenderer } = window.require('electron')
  * @param modify 提交修改插件编辑信息
  */
 export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: PluginDataProps) => {
-  // @ts-ignore
   const request: API.PluginsRequest = {
     ...info,
     tags: undefined,
@@ -27,7 +26,7 @@ export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: Plug
     request.tags = (info.tags || '').split(',') || []
   } catch (error) {}
 
-  if (!!modify) {
+  if (modify) {
     // 更新可编辑配置的内容
     request.script_name = modify.ScriptName
     request.type = modify.Type
@@ -62,10 +61,10 @@ export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: Plug
  * @returns 返回处理好分组后的数据
  */
 export const ParamsToGroupByGroupName = (arr: YakParamProps[]): YakExtraParamProps[] => {
-  let map = {}
-  let paramsGroupList: YakExtraParamProps[] = []
-  for (var i = 0; i < arr.length; i++) {
-    var ai = arr[i]
+  const map = {}
+  const paramsGroupList: YakExtraParamProps[] = []
+  for (let i = 0; i < arr.length; i++) {
+    const ai = arr[i]
     if (!map[ai.Group || 'default']) {
       paramsGroupList.push({
         group: ai.Group || 'default',
@@ -73,8 +72,8 @@ export const ParamsToGroupByGroupName = (arr: YakParamProps[]): YakExtraParamPro
       })
       map[ai.Group || 'default'] = ai
     } else {
-      for (var j = 0; j < paramsGroupList.length; j++) {
-        var dj = paramsGroupList[j]
+      for (let j = 0; j < paramsGroupList.length; j++) {
+        const dj = paramsGroupList[j]
         if (dj.group === (ai.Group || 'default')) {
           dj.data.push(ai)
           break

@@ -101,7 +101,7 @@ const handleSummarySectionsSummary = (
   sections: AIAgentGrpcApi.AIContextSections[],
   summaryMap: Map<string, string>,
 ) => {
-  for (let item of sections) {
+  for (const item of sections) {
     summaryMap.set(item.key, item.summary || '')
     delete item.summary
     if (item.children) handleSummarySectionsSummary(item.children, summaryMap)

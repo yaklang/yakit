@@ -4,7 +4,7 @@ import React, { useEffect } from 'react'
 import { Form } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 
-import { WebFuzzerAiTestTemplate } from '@/defaultConstants/webFuzzerAiTestTemplates'
+import type { WebFuzzerAiTestTemplate } from '@/defaultConstants/webFuzzerAiTestTemplates'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

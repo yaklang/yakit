@@ -1,5 +1,5 @@
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { type AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface AIPlanReviewTreeProps {
   defaultList: AITaskInfoProps[]

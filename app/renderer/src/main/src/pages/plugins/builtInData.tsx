@@ -6,12 +6,12 @@ import {
   SolidDocumentSearchPluginIcon,
   SolidCollectionPluginIcon,
 } from '@/assets/icon/colors'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { CodecPluginTemplate } from '../invoker/data/CodecPluginTemplate'
 import { MITMPluginTemplate, PortScanPluginTemplate } from '../pluginDebugger/defaultData'
 import { SolidFlagIcon, SolidBadgecheckIcon, SolidBanIcon, SolidCircleIcon } from '@/assets/icon/solid'
-import { TypeSelectOpt } from './funcTemplateType'
-import { PluginFilterParams, PluginListPageMeta, PluginSearchParams } from './baseTemplateType'
+import type { TypeSelectOpt } from './funcTemplateType'
+import type { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
 
 export function GetPluginLanguage(type: string): string {
   return pluginTypeToName[type]?.language || type

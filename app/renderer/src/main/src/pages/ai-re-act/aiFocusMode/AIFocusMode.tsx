@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AIFocusModeProps } from './type'
+import type { AIFocusModeProps } from './type'
 import { OutlineMicroscopeIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { AIChatSelect } from '../aiReviewRuleSelect/AIReviewRuleSelect'
-import { AIInputEvent } from '../hooks/grpcApi'
+import type { AIInputEvent } from '../hooks/grpcApi'
 import styles from './AIFocusMode.module.scss'
 import { grpcQueryAIFocus } from '@/pages/ai-agent/grpc'
-import { AIFocus } from '@/pages/ai-agent/type/forge'
+import type { AIFocus } from '@/pages/ai-agent/type/forge'
 
 import { Tooltip } from 'antd'
-import { DefaultOptionType } from 'antd/lib/select'
+import type { DefaultOptionType } from 'antd/lib/select'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 type FocusModeListType = DefaultOptionType & {

@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { Button, PageHeader } from 'antd'
-import { YakScript } from '../invoker/schema'
+import type { YakScript } from '../invoker/schema'
 import MDEditor from '@uiw/react-md-editor'
 import { success } from '../../utils/notification'
 

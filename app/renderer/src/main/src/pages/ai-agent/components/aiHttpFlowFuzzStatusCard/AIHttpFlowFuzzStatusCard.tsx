@@ -1,4 +1,5 @@
-import React, { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

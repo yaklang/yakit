@@ -172,6 +172,8 @@
     "screenshot": "Screenshot",
     "closeCurrentPage": "Close current page",
     "addSubPage": "Add sub page",
+    "switchSubPageNext": "Switch to next sub page",
+    "switchSubPagePrev": "Switch to previous sub page",
     "sendAndJump": "Send and jump",
     "sendOnly": "Send only",
     "tableVirtualUp": "Table select up",

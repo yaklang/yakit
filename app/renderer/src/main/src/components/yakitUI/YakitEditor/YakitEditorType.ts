@@ -1,10 +1,10 @@
-import { ReactElement } from 'react'
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
-import { EditorMenuItemType } from './EditorMenu'
-import { EditorDetailInfoProps } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
-import { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
+import type { ReactElement } from 'react'
+import type * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
+import type { EditorMenuItemType } from './EditorMenu'
+import type { EditorDetailInfoProps } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
+import type { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
 import { type Theme } from '@/hook/useTheme'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection

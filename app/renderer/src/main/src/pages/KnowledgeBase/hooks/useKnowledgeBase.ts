@@ -3,7 +3,7 @@
  */
 import { create } from 'zustand'
 import { mergeKnowledgeBaseData } from '../utils'
-import { CreateKnowledgeBaseData } from '../TKnowledgeBase'
+import type { CreateKnowledgeBaseData } from '../TKnowledgeBase'
 
 export type KnowledgeBaseItem = CreateKnowledgeBaseData & { ID: string }
 

@@ -1,12 +1,12 @@
-import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { AIAgentTabPayload, AIChatContentProps } from './type'
+import React, { forwardRef, type ReactNode, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type { AIAgentTabPayload, AIChatContentProps } from './type'
 import styles from './AIChatContent.module.scss'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { AITabs, AITabsEnum } from '../defaultConstant'
-import { AITabsEnumType } from '../aiAgentType'
-import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { AITabsEnumType } from '../aiAgentType'
+import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { AIReActChat } from '@/pages/ai-re-act/aiReActChat/AIReActChat'
 import { AIFileSystemList } from '../components/aiFileSystemList/AIFileSystemList'
 import {
@@ -21,7 +21,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 // import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import useAIAgentStore from '../useContext/useStore'
 import { useAIChatResizeBox } from './hooks/useAIChatResizeBox'
-import {
+import type {
   AIHandleStartParams,
   AIHandleStartResProps,
   AIReActChatRefProps,
@@ -32,6 +32,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import { AIHorizontalScrollCard } from './aiHorizontalScrollCard/AIHorizontalScrollCard'
+import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
@@ -126,7 +128,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     }, [runTimeId])
 
     const yakitTabs = useCreation(() => {
-      let tab: YakitSideTabProps['yakitTabs'] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
+      const tab: YakitSideTabProps['yakitTabs'] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
 
       if (httpTabShow || !!RelatedRuntimeIDs.length) {
         tab.push(AITabs[AITabsEnum.HTTP])
@@ -194,8 +196,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     const tabContent = useMemo(() => {
       if (!activeKey) return null
-      const runTimeIds = [...new Set(!!runTimeId ? [runTimeId] : rawData.httpRunTimeIDs.concat(RelatedRuntimeIDs))]
-      const riskRunTimeIds = [...new Set(!!runTimeId ? [runTimeId] : rawData.riskRunTimeIDs.concat(RelatedRuntimeIDs))]
+      const runTimeIds = [...new Set(runTimeId ? [runTimeId] : rawData.httpRunTimeIDs.concat(RelatedRuntimeIDs))]
+      const riskRunTimeIds = [...new Set(runTimeId ? [runTimeId] : rawData.riskRunTimeIDs.concat(RelatedRuntimeIDs))]
       switch (activeKey) {
         case AITabsEnum.Task_Content:
           return (
@@ -208,7 +210,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         case AITabsEnum.File_System:
           return <AIFileSystemList onFilePreviewChange={setHasFilePreview} />
         case AITabsEnum.Risk:
-          return !!riskRunTimeIds.length ? (
+          return riskRunTimeIds.length ? (
             <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />
           ) : (
             <>
@@ -216,7 +218,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             </>
           )
         case AITabsEnum.HTTP:
-          return !!runTimeIds.length ? (
+          return runTimeIds.length ? (
             <PluginExecuteHttpFlow filterTagDom={filterTagDom} runtimeId={runTimeIds.join(',')} website={true} />
           ) : (
             <>
@@ -260,52 +262,60 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         })
       })
     })
-
+    // 当前会话删除状态：删除中时遮罩整个对话区域，阻止用户操作
+    const deleteStatus = useStore(
+      sessionStatusStore,
+      (s) => s.deleteStatuses.get(activeChat?.SessionID || '') ?? SessionDeleteStatus.Idle,
+    )
+    const isSessionDeleting = deleteStatus === SessionDeleteStatus.Deleting
+    const sourceDeleting = useStore(sessionStatusStore, (s) => s.deletingSources.has(activeChat?.Source || ''))
     return (
       <div className={styles['ai-chat-content-wrapper']}>
-        <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
-          <AIHorizontalScrollCard />
-          <div className={styles['ai-chat-tab-wrapper']}>
-            <YakitSideTab
-              key={i18nRefresh}
-              type="horizontal"
-              yakitTabs={yakitTabs}
-              activeKey={activeKey}
-              onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
-              onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
-              className={styles['tab-wrap']}
-              t={t}
-            >
-              <div className={styles['ai-chat-content']}>
-                <YakitResizeBox
-                  firstNode={
-                    activeKey && (
-                      <div
-                        className={classNames(styles['tab-content'], {
-                          [styles['tab-content-right']]: !showFreeChat,
+        <YakitSpin spinning={isSessionDeleting || sourceDeleting}>
+          <AIGlobalLoading loopAnimationMode="sequential" loading={initLoading}>
+            <AIHorizontalScrollCard />
+            <div className={styles['ai-chat-tab-wrapper']}>
+              <YakitSideTab
+                key={i18nRefresh}
+                type="horizontal"
+                yakitTabs={yakitTabs}
+                activeKey={activeKey}
+                onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
+                onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
+                className={styles['tab-wrap']}
+                t={t}
+              >
+                <div className={styles['ai-chat-content']}>
+                  <YakitResizeBox
+                    firstNode={
+                      activeKey && (
+                        <div
+                          className={classNames(styles['tab-content'], {
+                            [styles['tab-content-right']]: !showFreeChat,
+                          })}
+                        >
+                          {tabContent}
+                        </div>
+                      )
+                    }
+                    secondNode={
+                      <AIReActChat
+                        chatContainerHeaderClassName={classNames({
+                          [styles['re-act-chat-container-header']]: !activeKey,
                         })}
-                      >
-                        {tabContent}
-                      </div>
-                    )
-                  }
-                  secondNode={
-                    <AIReActChat
-                      chatContainerHeaderClassName={classNames({
-                        [styles['re-act-chat-container-header']]: !activeKey,
-                      })}
-                      showFreeChat={showFreeChat}
-                      setShowFreeChat={setShowFreeChat}
-                      startRequest={startRequest}
-                      ref={aiReActChatRef}
-                    />
-                  }
-                  {...resizeBoxProps}
-                />
-              </div>
-            </YakitSideTab>
-          </div>
-        </AIGlobalLoading>
+                        showFreeChat={showFreeChat}
+                        setShowFreeChat={setShowFreeChat}
+                        startRequest={startRequest}
+                        ref={aiReActChatRef}
+                      />
+                    }
+                    {...resizeBoxProps}
+                  />
+                </div>
+              </YakitSideTab>
+            </div>
+          </AIGlobalLoading>
+        </YakitSpin>
       </div>
     )
   }),

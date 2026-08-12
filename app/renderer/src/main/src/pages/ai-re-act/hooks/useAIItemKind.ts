@@ -1,6 +1,6 @@
 import { useMemoizedFn } from 'ahooks'
 import { useCurrentStore } from './useCurrentDataBySession'
-import { ReActChatItemMeta, ReActChatGroupMeta, ReActChatTaskMeta } from './aiRender'
+import type { ReActChatItemMeta, ReActChatGroupMeta, ReActChatTaskMeta } from './aiRender'
 
 function useAIItemKind() {
   const store = useCurrentStore()

@@ -1,7 +1,7 @@
 import { randomString } from '@/utils/randomUtil'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useState } from 'react'
-import { deleteAIImageByNode, DeleteAIImageByNodeRequest } from '../utils'
+import { deleteAIImageByNode, type DeleteAIImageByNodeRequest } from '../utils'
 const { ipcRenderer } = window.require('electron')
 
 interface UseDeleteAIImageByNodeParams {

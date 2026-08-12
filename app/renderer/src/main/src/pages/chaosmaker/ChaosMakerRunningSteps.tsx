@@ -1,14 +1,14 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { Empty, Form, Space, Steps } from 'antd'
 import { randomString } from '@/utils/randomUtil'
-import { ExecuteChaosMakerRuleRequest } from '@/pages/chaosmaker/ChaosMakerOperators'
+import type { ExecuteChaosMakerRuleRequest } from '@/pages/chaosmaker/ChaosMakerOperators'
 import { InputInteger, SelectOne } from '@/utils/inputUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import './ChaosMakerRunningSteps.scss'
 import useHoldingIPCRStream from '@/hook/useHoldingIPCRStream'
 import { AutoCard } from '@/components/AutoCard'
-import { PluginResultUI, StatusCardProps } from '@/pages/yakitStore/viewers/base'
-import { StatisticCard } from '@ant-design/pro-card'
+import { PluginResultUI, type StatusCardProps } from '@/pages/yakitStore/viewers/base'
 import { StatusCardViewer } from '@/pages/mitm/MITMYakScriptLoader'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 
@@ -78,7 +78,10 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
                   <YakitPopconfirm
                     title={'确定要停止当前进程？'}
                     onConfirm={() => {
+                      // cancel 后主进程不再转发 end，需本地收尾
                       ipcRenderer.invoke('cancel-ExecuteChaosMakerRule', token)
+                      setExecuting(false)
+                      setStep(2)
                     }}
                   >
                     <YakitButton type="primary" colors="danger" onClick={() => {}}>

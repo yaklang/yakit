@@ -1,15 +1,15 @@
 import React, { forwardRef, useEffect, useReducer, useRef, useState } from 'react'
-import { PluginLocalListDetailsProps } from './PluginLocalListDetailsType'
+import type { PluginLocalListDetailsProps } from './PluginLocalListDetailsType'
 import {
   PluginGroup,
   TagsAndGroupRender,
-  YakFilterRemoteObj,
+  type YakFilterRemoteObj,
 } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import { PluginDetails, PluginDetailsListItem } from '../../baseTemplate'
 import { useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
-import { PluginFilterParams, PluginListPageMeta, PluginSearchParams } from '../../baseTemplateType'
-import { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
+import type { PluginFilterParams, PluginListPageMeta, PluginSearchParams } from '../../baseTemplateType'
+import type { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
 import { initialLocalState, pluginLocalReducer } from '../../pluginReducer'
 import { apiQueryYakScript, convertLocalPluginsRequestParams } from '../../utils'
 import { convertGroupParam } from '../../local/PluginsLocalDetail'
@@ -132,7 +132,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
           isLoadingRef.current = true
         }
         setLoading(true)
-        const params: PluginListPageMeta = !!reset
+        const params: PluginListPageMeta = reset
           ? { page: 1, limit: 20 }
           : {
               page: +response.Pagination.Page + 1,

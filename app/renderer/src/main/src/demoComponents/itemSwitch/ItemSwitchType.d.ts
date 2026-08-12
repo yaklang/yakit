@@ -1,5 +1,5 @@
-import { YakitSwitchProps } from '@/components/yakitUI/YakitSwitch/YakitSwitchType'
-import { CSSProperties, ReactNode } from 'react'
+import { type YakitSwitchProps } from '@/components/yakitUI/YakitSwitch/YakitSwitchType'
+import { type CSSProperties, type ReactNode } from 'react'
 
 interface ItemProps {
   label?: string | ReactNode

@@ -1,32 +1,31 @@
 import { useRef, useEffect, Suspense, lazy, useState } from 'react'
-// by types
-import { failed, warn, yakitFailed } from './utils/notification'
-import { getRemoteValue, setRemoteValue } from './utils/kv'
+import { failed, warn, yakitFailed } from '@/utils/notification'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { useDebounceFn, useInterval, useMemoizedFn } from 'ahooks'
-import { NetWorkApi } from './services/fetch'
-import { API } from './services/swagger/resposeType'
-import { useGoogleChromePluginPath, useStore, yakitDynamicStatus } from './store'
-import { refreshToken } from './utils/login'
-import UILayout from './components/layout/UILayout'
+import { NetWorkApi } from '@/services/fetch'
+import type { API } from '@/services/swagger/resposeType'
+import { useGoogleChromePluginPath, useStore, yakitDynamicStatus } from '@/store'
+import { refreshToken } from '@/utils/login'
+import UILayout from '@/components/layout/UILayout'
 import { getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify, isMemfit } from '@/utils/envfile'
-import { RemoteGV } from './yakitGV'
-import { coordinate, setChartsColorList } from './pages/globalVariable'
-import { remoteOperation } from './pages/dynamicControl/DynamicControl'
-import { useTemporaryProjectStore } from './store/temporaryProject'
-import { useRunNodeStore } from './store/runNode'
-import { handleFetchSystemInfo } from './constants/hardware'
-import { closeWebSocket, startWebSocket } from './utils/webSocket/webSocket'
-import { startShortcutKeyMonitor, stopShortcutKeyMonitor } from './utils/globalShortcutKey/utils'
-import { getStorageGlobalShortcutKeyEvents } from './utils/globalShortcutKey/events/global'
-import { useUploadInfoByEnpriTrace } from './components/layout/utils'
-import emiter from './utils/eventBus/eventBus'
-import { JSONParseLog } from './utils/tool'
-import { debugToPrintLogs } from './utils/logCollection'
-import { yakitApp, yakitProfile, yakitSocket } from './services/electronBridge'
-import { useI18nNamespaces } from './i18n/useI18nNamespaces'
+import { RemoteGV } from '@/yakitGV'
+import { coordinate, setChartsColorList } from '@/pages/globalVariable'
+import { remoteOperation } from '@/pages/dynamicControl/DynamicControl'
+import { useTemporaryProjectStore } from '@/store/temporaryProject'
+import { useRunNodeStore } from '@/store/runNode'
+import { handleFetchSystemInfo } from '@/constants/hardware'
+import { closeWebSocket, startWebSocket } from '@/utils/webSocket/webSocket'
+import { startShortcutKeyMonitor, stopShortcutKeyMonitor } from '@/utils/globalShortcutKey/utils'
+import { getStorageGlobalShortcutKeyEvents } from '@/utils/globalShortcutKey/events/global'
+import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
+import emiter from '@/utils/eventBus/eventBus'
+import { JSONParseLog } from '@/utils/tool'
+import { debugToPrintLogs } from '@/utils/logCollection'
+import { yakitApp, yakitProfile, yakitSocket } from '@/services/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /** 部分页面懒加载 */
-const Main = lazy(() => import('./pages/MainOperator'))
+const Main = lazy(() => import('@/pages/MainOperator'))
 
 export interface OnlineProfileProps {
   BaseUrl: string
@@ -232,7 +231,7 @@ function NewApp() {
 
   const { runNodeList, clearRunNodeList } = useRunNodeStore()
   const handleKillAllRunNode = async () => {
-    let promises: (() => Promise<any>)[] = []
+    const promises: (() => Promise<any>)[] = []
     Array.from(runNodeList).forEach(([key, pid]) => {
       promises.push(() => yakitApp.killRunNode(Number(pid)))
     })

@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -10,13 +11,13 @@ import {
   OutlineNotebookIcon,
   OutlineAIIcon,
 } from '@/assets/icon/outline'
-import {
+import type {
   GetSSAWorkbenchDashboardRequest,
   GetSSAWorkbenchDashboardResponse,
   IRifyHomeProps,
   SSAWorkbenchRiskLevelItem,
 } from './IRifyHomeType'
-import { FieldName } from '../risks/RiskTable'
+import type { FieldName } from '../risks/RiskTable'
 import styles from './IRifyHome.module.scss'
 import {
   PublicAIAuditCodeIcon,
@@ -42,7 +43,7 @@ import { yakitProject } from '@/services/electronBridge'
 import { yakitFailed } from '@/utils/notification'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
+import type { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
 
 const RISK_STAT_CONFIG = [
   {

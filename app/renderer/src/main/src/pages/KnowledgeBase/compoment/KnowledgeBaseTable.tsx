@@ -1,13 +1,13 @@
-import { Dispatch, FC, SetStateAction, useEffect, useMemo } from 'react'
+import { type Dispatch, type FC, type SetStateAction, useEffect, useMemo } from 'react'
 import { KnowledgeBaseTableHeader } from './KnowledgeBaseTableHeader'
-import { IconProps, PlusIcon } from '@/assets/newIcon'
+import { type IconProps, PlusIcon } from '@/assets/newIcon'
 
 import styles from '../knowledgeBase.module.scss'
-import useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
+import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
 
-import { KnowledgeBaseItem } from '../hooks/useKnowledgeBase'
+import type { KnowledgeBaseItem } from '../hooks/useKnowledgeBase'
 import { KnowledgeTable } from './KnowledgeTable'
-import { useRequest, useSafeState, useUpdateEffect } from 'ahooks'
+import { useRequest, useSafeState } from 'ahooks'
 import {
   apiListVectorStoreEntries,
   apiQueryEntity,
@@ -278,7 +278,6 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
       default:
         break
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableProps, knowledgeBaseItems, streams, query, linkId, selectList, allCheck])
 
   return (

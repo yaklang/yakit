@@ -1,5 +1,5 @@
-import React from 'react'
-import { Spin, SpinProps } from 'antd'
+import type React from 'react'
+import { Spin, type SpinProps } from 'antd'
 
 import './AutoSpin.css'
 

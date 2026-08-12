@@ -1,8 +1,8 @@
-import { RollingLoadListProps } from '@/components/RollingLoadList/RollingLoadList'
-import { FilterPanelGroupItem } from '@/components/businessUI/FilterPanel/FilterPanelType'
-import { ReactNode } from 'react'
-import { PluginBaseParamProps, PluginSettingParamProps } from './pluginsType'
-import { API } from '@/services/swagger/resposeType'
+import type { RollingLoadListProps } from '@/components/RollingLoadList/RollingLoadList'
+import type { FilterPanelGroupItem } from '@/components/businessUI/FilterPanel/FilterPanelType'
+import type { ReactNode } from 'react'
+import type { PluginBaseParamProps, PluginSettingParamProps } from './pluginsType'
+import type { API } from '@/services/swagger/resposeType'
 
 export interface PluginsLayoutProps {
   /** 页面id */

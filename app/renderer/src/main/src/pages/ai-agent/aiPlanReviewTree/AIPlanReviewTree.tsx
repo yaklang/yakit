@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import {
+import type {
   AIPlanReviewTreeArrowLineProps,
   AIPlanReviewTreeItemProps,
   AIPlanReviewTreeLineProps,
@@ -14,7 +14,7 @@ import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePlussmIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { GetAIToolListRequest, GetAIToolListResponse } from '../type/aiTool'
+import type { GetAIToolListRequest, GetAIToolListResponse } from '../type/aiTool'
 import { yakitNotify } from '@/utils/notification'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -23,8 +23,8 @@ import { genDefaultPagination } from '@/pages/invoker/schema'
 import { grpcGetAIToolList } from '../aiToolList/utils'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { generateTaskChatExecution } from '../defaultConstant'
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { findPlanTaskSubtreeEnd, getPlanTaskLevel } from '@/pages/ai-agent/utils'
 import { randomString } from '@/utils/randomUtil'
 

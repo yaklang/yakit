@@ -1,12 +1,11 @@
-import { ReactNode } from 'react'
-import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitMenuProp } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { DropDownProps, TooltipProps } from 'antd'
-import { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
-import { YakitPluginOnlineDetail } from './online/PluginsOnlineType'
-import { OnlinePluginAppAction } from './pluginReducer'
-import { API } from '@/services/swagger/resposeType'
-import { YakitCombinationSearchProps } from '@/components/YakitCombinationSearch/YakitCombinationSearchType'
+import type { ReactNode } from 'react'
+import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+import type { YakitMenuProp } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { DropDownProps, TooltipProps } from 'antd'
+import type { PluginFilterParams, PluginSearchParams } from './baseTemplateType'
+import type { YakitPluginOnlineDetail } from './online/PluginsOnlineType'
+import type { API } from '@/services/swagger/resposeType'
+import type { YakitCombinationSearchProps } from '@/components/YakitCombinationSearch/YakitCombinationSearchType'
 
 export interface TypeSelectOpt {
   /** 唯一标识符 */

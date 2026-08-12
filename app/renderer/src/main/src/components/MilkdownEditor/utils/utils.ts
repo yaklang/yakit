@@ -1,5 +1,5 @@
 import { yakitNotify } from '@/utils/notification'
-import { Ctx } from '@milkdown/kit/ctx'
+import { type Ctx } from '@milkdown/kit/ctx'
 import {
   blockquoteSchema,
   bulletListSchema,
@@ -10,14 +10,14 @@ import {
   orderedListSchema,
   paragraphSchema,
 } from '@milkdown/kit/preset/commonmark'
-import { NodeType, Attrs } from '@milkdown/kit/prose/model'
-import { Command, Transaction } from '@milkdown/kit/prose/state'
+import { type NodeType, type Attrs } from '@milkdown/kit/prose/model'
+import { type Command, type Transaction } from '@milkdown/kit/prose/state'
 import { findWrapping } from '@milkdown/kit/prose/transform'
-import { EditorView } from '@milkdown/kit/prose/view'
+import { type EditorView } from '@milkdown/kit/prose/view'
 import { alterCustomSchema } from './alertPlugin'
 import { getLocalFileLinkInfo } from '../CustomFile/utils'
 import { ImgMaxSize } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea'
-import { HttpUploadImgBaseRequest, httpUploadImgPath } from '@/apiUtils/http'
+import { type HttpUploadImgBaseRequest, httpUploadImgPath } from '@/apiUtils/http'
 import { $prose, callCommand } from '@milkdown/kit/utils'
 import { insertImageBlockCommand } from './imageBlock'
 import { fileCommand } from './uploadPlugin'

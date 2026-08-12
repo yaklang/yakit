@@ -1,15 +1,15 @@
-import React, { forwardRef, memo, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { forwardRef, memo, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { TextareaForImage, PluginImageTextareaProps } from './PluginImageTextareaType'
+import type { TextareaForImage, PluginImageTextareaProps } from './PluginImageTextareaType'
 import { failed } from '@/utils/notification'
-import { FileItem } from 'fs'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePhotographIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { Input, Upload } from 'antd'
 import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
 import cloneDeep from 'lodash/cloneDeep'
 import { httpDeleteOSSResource, httpUploadImgBase64 } from '@/apiUtils/http'
-import { TextAreaRef } from 'antd/lib/input/TextArea'
+import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import { ImagePreviewList } from '@/pages/pluginHub/utilsUI/UtilsTemplate'
 
 import classNames from 'classnames'
@@ -81,7 +81,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
     }, [imgs])
 
     // 生成图片信息
-    const generateImageInfo = useMemoizedFn((image: FileItem) => {
+    const generateImageInfo = useMemoizedFn((image: File) => {
       if (imgsLength >= maxLength) {
         failed(`最多上传${maxLength}张图片`)
         return
@@ -109,7 +109,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
           }, 100)
           return
         }
-        let base64 = e.target.result || ''
+        const base64 = e.target.result || ''
         const img = new Image()
         img.onload = () => {
           const { width, height } = img
@@ -139,7 +139,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
         if (item.kind === 'file' && item.type.indexOf('image') !== -1) {
           e.preventDefault()
           e.stopPropagation()
-          const image = item.getAsFile() as FileItem
+          const image = item.getAsFile() as File
           generateImageInfo(image)
         }
       }
@@ -271,7 +271,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
             {type === 'comment' && (
               <YakitButton loading={loading} disabled={contentLength === 0 && imgsLength === 0} onClick={onReply}>
                 <SolidPaperairplaneIcon />
-                {!!quotation ? '回复' : '发布评论'}
+                {quotation ? '回复' : '发布评论'}
               </YakitButton>
             )}
           </div>

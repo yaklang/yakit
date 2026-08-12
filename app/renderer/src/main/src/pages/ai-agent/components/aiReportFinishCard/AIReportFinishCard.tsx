@@ -1,4 +1,5 @@
-import React, { memo, useState } from 'react'
+import type React from 'react'
+import { memo, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -56,7 +57,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
   const handleDownloadReport = useMemoizedFn(async () => {
     try {
       if (!reportPath || isChildWindow) return
-      let code = await getCodeByPath(reportPath)
+      const code = await getCodeByPath(reportPath)
       if (!code) {
         yakitNotify('error', t('AIReportFinishCard.reportContentEmpty'))
         return

@@ -1,11 +1,11 @@
-import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ReactNode } from 'react'
-import { PortAsset } from '../models'
-import { QueryPortsRequest } from '../PortAssetPage'
+import { type YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+import { type ReactNode } from 'react'
+import { type PortAsset } from '../models'
+import { type QueryPortsRequest } from '../PortAssetPage'
 
 export interface PortTableRefProps {
   /**内置的删除方法 */
-  onRemove: () => Promise
+  onRemove: () => Promise<void>
 }
 export interface PortTableProps {
   ref?: React.ForwardedRef<PortTableRefProps>

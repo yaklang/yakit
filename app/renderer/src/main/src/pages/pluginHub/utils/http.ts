@@ -1,7 +1,7 @@
-import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
-import { HTTPRequestParameters } from '@/types/http-api'
+import type { API } from '@/services/swagger/resposeType'
+import type { HTTPRequestParameters } from '@/types/http-api'
 import { yakitNotify } from '@/utils/notification'
 
 const { ipcRenderer } = window.require('electron')

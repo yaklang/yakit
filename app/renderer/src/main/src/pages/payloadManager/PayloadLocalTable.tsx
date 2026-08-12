@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import styles from './PayloadLocalTable.module.scss'
-import { failed, success, warn, info } from '@/utils/notification'
+import { failed, success, warn } from '@/utils/notification'
 import classNames from 'classnames'
-import { Divider, Form, Space, Table, Tooltip } from 'antd'
+import { Divider, Form, Table, Tooltip } from 'antd'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
@@ -16,7 +17,7 @@ import {
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { PaginationSchema, QueryGeneralRequest, QueryGeneralResponse } from '../invoker/schema'
+import type { PaginationSchema, QueryGeneralRequest, QueryGeneralResponse } from '../invoker/schema'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { setClipboardText } from '@/utils/clipboard'
@@ -93,7 +94,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
 // 判断是否为大于等于0的数字
 const judgeNum = (num) => {
   try {
-    let newNum: number = parseInt(num)
+    const newNum: number = parseInt(num)
     return typeof newNum === 'number' && newNum >= 0
   } catch (error) {
     return false
@@ -394,7 +395,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
       title: t('YakitTable.action'),
       dataIndex: 'operation',
       width: 132,
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       render: (_, record: Payload) => {
         return (
           <div className={styles['table-operation']}>
@@ -666,7 +667,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
         bordered
         dataSource={response?.Data}
         // tableLayout="fixed"
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         columns={onlyInsert ? InsertColumns : (columns as ColumnTypes)}
         pagination={{
           showQuickJumper: true,

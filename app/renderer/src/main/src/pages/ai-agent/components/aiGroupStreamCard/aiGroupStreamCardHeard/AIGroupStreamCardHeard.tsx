@@ -4,7 +4,7 @@ import { Tooltip } from 'antd'
 import classNames from 'classnames'
 import { memo } from 'react'
 import { useTypedStream } from '../../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
-import { AIGroupStreamCardHeardProps } from '../type'
+import type { AIGroupStreamCardHeardProps } from '../type'
 import styles from './AIGroupStreamCardHeard.module.scss'
 import useCreation from 'ahooks/lib/useCreation'
 

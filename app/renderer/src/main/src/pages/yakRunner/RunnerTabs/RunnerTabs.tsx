@@ -1,5 +1,6 @@
-import React, { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type React from 'react'
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type {
   Selection,
   CursorPosition,
   FileDetailInfo,
@@ -29,7 +30,7 @@ import {
   OutlineXIcon,
 } from '@/assets/icon/outline'
 import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
-import { YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
+import { YakRunnerNewFileIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import {
   useCreation,
@@ -42,19 +43,17 @@ import {
 } from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
-import { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerType'
-import { IMonacoEditor } from '@/utils/editors'
+import type { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerType'
+import type { IMonacoEditor } from '@/utils/editors'
 import {
   getCodeByPath,
   getDefaultActiveFile,
   getOpenFileInfo,
-  getPathParent,
   getYakRunnerHistory,
   grpcFetchRenameFileTree,
   grpcFetchSaveFile,
   isResetActiveFile,
   judgeAreaExistFilePath,
-  monacaLanguageType,
   removeYakRunnerAreaFileInfo,
   isSameYakRunnerFilePath,
   saveYakRunnerUnsavedFile,
@@ -68,19 +67,18 @@ import { Divider, Result } from 'antd'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { v4 as uuidv4 } from 'uuid'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { openABSFileLocated } from '@/utils/openWebsite'
-import { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { getMapFileDetail, removeMapFileDetail, setMapFileDetail } from '../FileTreeMap/FileMap'
 import { getMapFolderDetail, setMapFolderDetail } from '../FileTreeMap/ChildMap'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { FileNodeMapProps } from '../FileTree/FileTreeType'
 import { openFolder } from '../RunnerFileTree/RunnerFileTree'
-import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
+import type { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import type { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
 
@@ -146,13 +144,13 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   }, [tabsList])
 
   const onRunYak = useMemoizedFn(async () => {
-    let newActiveFile = onActiveItem
+    const newActiveFile = onActiveItem
     if (newActiveFile && setActiveFile) {
       setRunnerTabsId && setRunnerTabsId(tabsId)
       setActiveFile(newActiveFile)
       // 打开底部
       emiter.emit('onOpenBottomDetail', JSON.stringify({ type: 'output' }))
-      let params: RunYakParamsProps = {
+      const params: RunYakParamsProps = {
         Script: newActiveFile.code || '',
         WorkDir: newActiveFile.parent || '',
         ScriptPath: newActiveFile.path,
@@ -191,7 +189,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       item.elements.forEach((itemIn, indexIn) => {
         if (itemIn.id === tabsId) {
           // 筛选出迁移项
-          let newFileDetailInfo: FileDetailInfo[] = []
+          const newFileDetailInfo: FileDetailInfo[] = []
           let activeIndex: number = 0
           itemIn.files.forEach((file, fileIndex) => {
             if (file.path === info.path) {
@@ -249,7 +247,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       item.elements.forEach((itemIn, indexIn) => {
         if (itemIn.id === tabsId) {
           // 筛选出迁移项
-          let newFileDetailInfo: FileDetailInfo[] = []
+          const newFileDetailInfo: FileDetailInfo[] = []
           let activeIndex: number = 0
           itemIn.files.forEach((file, fileIndex) => {
             if (file.isActive) {
@@ -413,7 +411,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
               closeArr = itemIn.files.filter((item) => item.path !== info.path)
 
               // 剩余展示项
-              let onlyArr = itemIn.files
+              const onlyArr = itemIn.files
                 .filter((item) => item.path === info.path)
                 .map((item) => {
                   if (item.path === info.path) {
@@ -587,7 +585,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       },
     ]
     if (splitDirection.length > 0) {
-      let direction: YakitMenuItemType[] = splitDirection.map((item) => {
+      const direction: YakitMenuItemType[] = splitDirection.map((item) => {
         return {
           label: onDirectionToName(item),
           key: item,
@@ -889,7 +887,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
     try {
       // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
       if (document.activeElement !== null) {
-        // @ts-ignore
+        // @ts-expect-error 类型定义不完整，需要忽略此行
         document.activeElement.blur()
       }
       const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)

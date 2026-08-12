@@ -1,11 +1,11 @@
 import { failed, yakitNotify } from '@/utils/notification'
 import { openABSFileLocated } from '@/utils/openWebsite'
-import { RequestYakURLResponse } from '../yakURLTree/data'
-import { FileNodeMapProps, FileNodeProps } from './FileTree/FileTreeType'
+import type { RequestYakURLResponse } from '../yakURLTree/data'
+import type { FileNodeMapProps, FileNodeProps } from './FileTree/FileTreeType'
 import { FileDefault, FileSuffix, FolderDefault } from '../yakRunner/FileTree/icon'
-import { AreaInfoProps, TabFileProps, YakJavaDecompilerHistoryProps } from './YakJavaDecompilerType'
+import type { AreaInfoProps, TabFileProps, YakJavaDecompilerHistoryProps } from './YakJavaDecompilerType'
 import cloneDeep from 'lodash/cloneDeep'
-import { FileDetailInfo, OptionalFileDetailInfo } from './RunnerTabs/RunnerTabsType'
+import type { FileDetailInfo, OptionalFileDetailInfo } from './RunnerTabs/RunnerTabsType'
 import { v4 as uuidv4 } from 'uuid'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
@@ -243,7 +243,7 @@ export const updateJavaDecompilerAreaFileInfo = (
 export const removeJavaDecompilerAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo) => {
   const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
   let newActiveFile: FileDetailInfo | undefined = undefined
-  let activeFileArr: FileDetailInfo[] = []
+  const activeFileArr: FileDetailInfo[] = []
   newAreaInfo.forEach((item, idx) => {
     item.elements.forEach((itemIn, idxin) => {
       itemIn.files.forEach((file, fileIndex) => {
@@ -275,7 +275,7 @@ export const removeJavaDecompilerAreaFileInfo = (areaInfo: AreaInfoProps[], info
     })
   })
   if (!newActiveFile && activeFileArr.length > 0) {
-    let delIndex = activeFileArr.findIndex((item) => item.path === info.path)
+    const delIndex = activeFileArr.findIndex((item) => item.path === info.path)
     if (delIndex > -1) {
       newActiveFile = activeFileArr[delIndex - 1 < 0 ? 0 : delIndex - 1]
     }
@@ -329,7 +329,7 @@ export const addJavaDecompilerAreaFileInfo = (
   activeFile?: FileDetailInfo,
 ) => {
   let newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-  let newActiveFile: FileDetailInfo = info
+  const newActiveFile: FileDetailInfo = info
   try {
     // 如若存在激活项则向激活项后添加新增项并重新指定激活项目
     if (newAreaInfo.length > 0 && activeFile) {

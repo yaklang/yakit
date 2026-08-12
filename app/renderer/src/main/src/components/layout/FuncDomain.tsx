@@ -14,19 +14,19 @@ import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import { ConfigPrivateDomain } from '../ConfigPrivateDomain/ConfigPrivateDomain'
 import { ConfigGlobalReverse } from '@/utils/basic'
-import { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
+import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigSystemProxyForm } from '@/utils/ConfigSystemProxy'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
 import { useConfigManagementTab, useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
-import { genDefaultPagination, QueryGeneralResponse } from '@/pages/invoker/schema'
-import { Risk } from '@/pages/risks/schema'
+import { genDefaultPagination, type QueryGeneralResponse } from '@/pages/invoker/schema'
+import type { Risk } from '@/pages/risks/schema'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
-import { YakitMenu, YakitMenuItemProps } from '../yakitUI/YakitMenu/YakitMenu'
+import { YakitMenu, type YakitMenuItemProps } from '../yakitUI/YakitMenu/YakitMenu'
 import {
   getCurrentVersionSource,
-  VersionSource,
+  type VersionSource,
   getReleaseEditionName,
   isCommunityEdition,
   isCommunityYakit,
@@ -45,7 +45,7 @@ import { GithubSvgIcon, TerminalIcon } from '@/assets/newIcon'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { addToTab } from '@/pages/MainTabs'
 import { DatabaseUpdateModal } from '@/pages/cve/CVETable'
 import { LoadingOutlined } from '@ant-design/icons'
@@ -67,10 +67,10 @@ import {
   OutlineWrenchIcon,
 } from '@/assets/icon/outline'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
-import { DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
-import { PerformanceSamplingLog, usePerformanceSampling } from '@/store/performanceSampling'
+import { type PerformanceSamplingLog, usePerformanceSampling } from '@/store/performanceSampling'
 import {
   isShowCodeScanDetail,
   YakitCodeScanRiskDetails,
@@ -81,11 +81,11 @@ import {
   ExecuteEnterNodeByPluginParams,
   PluginExecuteProgress,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
-import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, getYakExecutorParam } from '@/pages/plugins/editDetails/utils'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
   grpcFetchIntranetYakitVersion,
@@ -109,7 +109,7 @@ import {
 import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { randomString } from '@/utils/randomUtil'
-import { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import {
@@ -117,13 +117,13 @@ import {
   apiQueryNewSSARisks,
   apiQuerySSARisks,
 } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
-import {
+import type {
   QueryNewSSARisksResponse,
   SSARisk,
 } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { YakitAuditRiskDetails } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
-import { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
-import { mcpStreamHooks } from './hooks/useMcp/useMcp'
+import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
+import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
 import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
@@ -362,9 +362,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         menu={{
                           data: userMenu.map((item) => {
                             const obj = cloneDeep(item)
-                            // @ts-ignore
+                            // @ts-expect-error 类型定义不完整，需要忽略此行
                             if (obj?.label && typeof obj.label === 'string') {
-                              // @ts-ignore
+                              // @ts-expect-error 类型定义不完整，需要忽略此行
                               obj.label = t(obj.label)
                             }
                             return obj
@@ -886,7 +886,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         setDataBaseUpdateVisible(true)
         setIsDiffUpdate(true)
         return
-      case 'store':
+      case 'store': {
         if (dynamicStatus.isDynamicStatus) {
           warn(t('UIOpSetting.remoteModeCannotModify'))
           return
@@ -901,6 +901,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           content: <ConfigPrivateDomain onClose={() => m.destroy()} />,
         })
         return m
+      }
       case 'proxy-management':
         setConfigManagementActiveTab('proxy')
         emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.ConfigManagement }))
@@ -1896,8 +1897,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       .fetchYaklangVersionList()
       .then((data: string) => {
         const arr = data.split('\n').filter((v) => v)
-        let devPrefix: string[] = []
-        let noPrefix: string[] = []
+        const devPrefix: string[] = []
+        const noPrefix: string[] = []
         arr.forEach((item) => {
           if (item.startsWith('dev')) {
             devPrefix.push(item)
@@ -2540,7 +2541,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   const onRefRisksRead = useMemoizedFn((res) => {
     try {
       const value = JSONParseLog(res, { page: 'FuncDomain', fun: 'onRefRisksRead' })
-      if (!!value.isAllRead) {
+      if (value.isAllRead) {
         // 全部已读
         setRisks({
           ...risks,
@@ -2548,7 +2549,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
           NewRiskTotal: 0,
           Data: risks.Data.map((item) => ({ ...item, IsRead: true })),
         })
-      } else if (!!value.Id) {
+      } else if (value.Id) {
         // 单条已读
         const newRiskTotal = risks.NewRiskTotal - 1
         const newUnread = risks.Unread - 1
@@ -2641,7 +2642,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
           <div className={styles['risk-info']}>
             {risks.Data.map((item) => {
               const type = RiskType[item.Verbose]
-              if (!!type) {
+              if (type) {
                 return (
                   <div className={styles['risk-info-opt']} key={item.Id} onClick={() => singleRead(item)}>
                     <div className={classNames(styles['opt-icon-style'], styles[`opt-${type}-icon`])}>
@@ -2778,7 +2779,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   const onRefRisksRead = useMemoizedFn((res) => {
     try {
       const value = JSONParseLog(res, { page: 'FuncDomain', fun: 'onRefRisksRead-IRify' })
-      if (!!value.isAllRead) {
+      if (value.isAllRead) {
         // 全部已读
         setRisks({
           ...risks,
@@ -2786,7 +2787,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
           NewRiskTotal: 0,
           Data: risks.Data.map((item) => ({ ...item, IsRead: true })),
         })
-      } else if (!!value.Id) {
+      } else if (value.Id) {
         // 单条已读
         const newRiskTotal = risks.NewRiskTotal - 1
         const newUnread = risks.Unread - 1
@@ -2826,7 +2827,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     }).then((res) => {
       if (!res || res.Data.length === 0) return
       setShow(false)
-      let m = showModal({
+      const m = showModal({
         width: '80%',
         title: '详情',
         content: (
@@ -2869,7 +2870,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
           <div className={styles['risk-info']}>
             {risks.Data.map((item) => {
               const title = Object.keys(RiskType).filter((key) => RiskType[key] === item.Severity)?.[0]
-              if (!!title) {
+              if (title) {
                 return (
                   <div className={styles['risk-info-opt']} key={item.Id} onClick={() => singleRead(item)}>
                     <div className={classNames(styles['opt-icon-style'], styles[`opt-${item.Severity}-icon`])}>
@@ -3127,7 +3128,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
             [ele.Field]: value,
           }
         })
-        let m = showYakitModal({
+        const m = showYakitModal({
           title: '性能采样',
           width: 400,
           closable: true,
@@ -3188,8 +3189,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
       })
   }
   const cancelPerformanceSampling = () => {
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setSampling(false)
   }
   useEffect(() => {
     emiter.on('performanceSampling', handlePerformanceSampling)

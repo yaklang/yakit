@@ -1,10 +1,10 @@
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useGetState, useMemoizedFn } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { failed, info, yakitFailed, yakitNotify } from '@/utils/notification'
 import { ExclamationIcon } from '@/assets/newIcon'
-import { YakitSystem } from '@/yakitGVDefine'
+import type { YakitSystem } from '@/yakitGVDefine'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import {
@@ -21,7 +21,7 @@ import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { Tooltip, Row, Col } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import { isEnpriTraceAgent, isIRify } from '@/utils/envfile'
-import { QueryYakScriptsResponse } from '@/pages/invoker/schema'
+import type { QueryYakScriptsResponse } from '@/pages/invoker/schema'
 import {
   IRifyApplySyntaxFlowRuleUpdate,
   YakitGetOnlinePlugin,
@@ -33,7 +33,7 @@ import styles from './globalState.module.scss'
 import { useRunNodeStore } from '@/store/runNode'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
-import { mcpStreamHooks } from './hooks/useMcp/useMcp'
+import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
 import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
 import emiter from '@/utils/eventBus/eventBus'
 import { serverPushStatus } from '@/utils/duplex/duplex'
@@ -125,7 +125,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 break
               case 'false':
                 getRemoteValue(RemoteGV.GlobalDNSLogAddr).then((dnslogAddr: string) => {
-                  if (!!dnslogAddr) {
+                  if (dnslogAddr) {
                     getRemoteValue(RemoteGV.GlobalDNSLogSecret).then((secret: string) => {
                       yakitReverse
                         .setYakBridgeLogServer({
@@ -757,7 +757,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
   })
   // 处理全部节点删除
   const handleKillAllRunNode = async () => {
-    let promises: (() => Promise<any>)[] = []
+    const promises: (() => Promise<any>)[] = []
     Array.from(runNodeList).forEach(([key, pid]) => {
       promises.push(() => yakitApp.killRunNode(Number(pid)))
     })

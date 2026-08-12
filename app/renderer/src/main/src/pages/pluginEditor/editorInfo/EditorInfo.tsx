@@ -1,11 +1,12 @@
-import React, { ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useMemoizedFn, usePrevious, useUpdateEffect } from 'ahooks'
 import { OutlineCloseIcon, OutlineIdentificationIcon, OutlineTagIcon } from '@/assets/icon/outline'
 import { Form, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { DefaultTypeList } from '@/pages/plugins/builtInData'
 import cloneDeep from 'lodash/cloneDeep'
 import {
@@ -14,12 +15,12 @@ import {
   PluginSwitchTagToContent,
   YakTypePluginSwitchs,
 } from '../defaultconstants'
-import { YakitPluginBaseInfo } from '../base'
+import type { YakitPluginBaseInfo } from '../base'
 import { failed, yakitNotify } from '@/utils/notification'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { getTempExampleList, TempExampleHelp, TempExampleInfo } from './TempExampleHelp'
+import { getTempExampleList, TempExampleHelp, type TempExampleInfo } from './TempExampleHelp'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { Qadocument, qaDocumentLableList } from './Qadocument'
 
@@ -30,8 +31,8 @@ import { AIPluginComponent } from './AIPluginComponent'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
-import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
-import { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
+import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { defPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/constants'
@@ -378,7 +379,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         const plugin = await grpcFetchLocalPluginDetail({ Name: 'YakScript AI元数据生成' }, false)
         const token = tokenRef.current
 
-        let executeParams: DebugPluginRequest = {
+        const executeParams: DebugPluginRequest = {
           Code: '',
           PluginType: plugin.Type,
           Input: '',

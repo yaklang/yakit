@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { AIAgentSetting } from './aiAgentType'
+import type { ReactNode } from 'react'
+import type { AIAgentSetting } from './aiAgentType'
 import {
   OutlineChipIcon,
   OutlineCogIcon,
@@ -14,9 +14,9 @@ import {
   OutlineEarOffIcon,
   OutlineAIIcon,
 } from '@/assets/icon/outline'
-import { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
-import { genDefaultPagination, PaginationSchema } from '../invoker/schema'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import { genDefaultPagination, type PaginationSchema } from '../invoker/schema'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import {
   ChatGLMIcon,
   ComateIcon,
@@ -30,8 +30,9 @@ import {
   TongyiIcon,
   MemfitIcon,
 } from './aiModelList/icon'
-import { UseChatIPCState } from '../ai-re-act/hooks/type'
-import { AIAgentGrpcApi, AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
+import type { UseChatIPCState } from '../ai-re-act/hooks/type'
+import type { AIAgentGrpcApi } from '../ai-re-act/hooks/grpcApi'
+import { AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
 import {
   SolidCursorclickIcon,
   SolidHashtagIcon,
@@ -39,16 +40,16 @@ import {
   SolidLightningboltIcon,
   SolidToolIcon,
 } from '@/assets/icon/solid'
-import { MCPServerType } from './type/aiMCP'
+import type { MCPServerType } from './type/aiMCP'
 import {
   DefaultCurrentExecTaskTree,
   DefaultMemoryList,
   DefaultPlanHistoryList,
 } from '../ai-re-act/hooks/defaultConstant'
 import { ColorsAIIcon } from '@/assets/icon/colors'
-import { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
+import type { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
 import { cloneDeep } from 'lodash'
-import { ExportAIForgeRequest } from './forgeName/type'
+import type { ExportAIForgeRequest } from './forgeName/type'
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = 'yakit-ai-agent'
@@ -135,7 +136,7 @@ export const MCPTransportTypeList: { value: MCPServerType; label: string }[] = [
  * @description 生成的信息内不存在subtasks字段值
  */
 export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAgentGrpcApi.PlanTask = (info) => {
-  let data: AIAgentGrpcApi.PlanTask = {
+  const data: AIAgentGrpcApi.PlanTask = {
     task_id: '',
     name: '',
     goal: '',
@@ -149,7 +150,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
     fail_tool_call_count: 0,
     summary: '',
   }
-  if (!!info) {
+  if (info) {
     data.task_id = info.task_id || ''
     data.name = info.name || ''
     data.goal = info.goal || ''

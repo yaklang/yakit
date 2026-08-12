@@ -1,11 +1,12 @@
-import React, { memo, useEffect, useMemo, useRef } from 'react'
-import { FC } from 'react'
+import type React from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
+import type { FC } from 'react'
 
 import { AIReActChat } from '@/pages/ai-re-act/aiReActChat/AIReActChat'
 import classNames from 'classnames'
 import styles from './HTTPHistory.module.scss'
 
-import {
+import type {
   AIHandleStartParams,
   AIHandleStartResProps,
   AIReActChatProps,
@@ -16,13 +17,13 @@ import {
 import { getAIModelAvailableInfo, isForcedSetAIModal } from '@/pages/ai-agent/aiModelList/utils'
 import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useSafeState, useUpdateEffect } from 'ahooks'
 import { apiGetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
-import { defaultParams, GlobalNetworkConfig } from './configNetwork/ConfigNetworkPage'
+import { defaultParams, type GlobalNetworkConfig } from './configNetwork/ConfigNetworkPage'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { getRemoteValue } from '@/utils/kv'
 import { AIModelForm } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
-import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { loadHistoryAIEmbeddedReviewPolicy, setHistoryAIReviewPolicy } from './historyAIReActChatStorage'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'

@@ -1,7 +1,4 @@
 import { monaco } from 'react-monaco-editor'
-import { getWordWithPointAtPosition } from './yakCompletionSchema'
-import { RegexpInput } from '@/pages/mitm/MITMRule/MITMRuleFromModal'
-import Operation from 'antd/lib/transfer/operation'
 import { newSyntaxflowCompletionHandlerProvider } from './syntaxflowLanguage'
 
 export const SyntaxFlowMonacoSpec = 'syntaxflow'

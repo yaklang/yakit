@@ -3,9 +3,8 @@ import { Form, Progress, Tooltip } from 'antd'
 import { useControllableValue, useCreation, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import styles from './PluginTunHijack.module.scss'
 import { failed, info, success, warn, yakitNotify } from '@/utils/notification'
-import {
+import type {
   ConnectionInfo,
-  ConnectionInfoItemProps,
   HijackProcessInfoModalProps,
   HijackTableDataProps,
   PluginTunHijackProps,
@@ -28,18 +27,16 @@ import {
 } from '@/assets/icon/outline'
 import { QuitIcon } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import usePluginTunHijack, { tunSessionStateDefault } from './usePluginTunHijack'
 import { useStore } from '@/store/mitmState'
-import { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { randomString } from '@/utils/randomUtil'
 import classNames from 'classnames'
-import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
-import { HijackRunnerPool, HijackTask } from './HijackRunner'
+import { HijackRunnerPool, type HijackTask } from './HijackRunner'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import { v4 as uuidv4 } from 'uuid'
@@ -48,8 +45,8 @@ import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResul
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
-import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
 const CONNECTIVITY_CHECK_PLUGIN_NAME = 'TUN 劫持联通性检测'
@@ -863,13 +860,16 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
             })
             break
           case 'refresh_connections':
-            let Connections = data?.Connections
-            if (Connections && Connections.length > 0) {
-              setHijackProcessInfo(data.Connections)
-            } else {
-              warn(t('PluginTunHijack.noNetworkConnection'))
+            {
+              const Connections = data?.Connections
+              if (Connections && Connections.length > 0) {
+                setHijackProcessInfo(data.Connections)
+              } else {
+                warn(t('PluginTunHijack.noNetworkConnection'))
+              }
             }
             break
+
           default:
             break
         }
@@ -1063,7 +1063,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
       dataKey: 'Domain',
       width: 200,
       render: (data?: string[]) => {
-        let newData = data?.filter((d) => d && d.length > 0)
+        const newData = data?.filter((d) => d && d.length > 0)
         const text = (newData || []).join(', ')
         return newData && newData.length > 0 ? (
           <Tooltip title={text}>

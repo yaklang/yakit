@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash'
-import {
+import type {
   FilterDataItem,
   FilterMatcherType,
   MITMAdvancedFilter,
@@ -36,7 +36,7 @@ const specialFiledList = ['IncludeSuffix', 'ExcludeSuffix', 'ExcludeMIME']
 
 export const convertLocalMITMFilterRequest = (query: MITMFilterUIProps): MITMFilterData => {
   const { baseFilter, advancedFilters } = query
-  let data: MITMFilterData = cloneDeep(defaultMITMFilterData)
+  const data: MITMFilterData = cloneDeep(defaultMITMFilterData)
   /**baseFilter */
   Object.entries(baseFilter).forEach(([key, value]) => {
     const field: keyof MITMFilterData = getMITMField(key)
@@ -111,7 +111,7 @@ const getMITMField = (filed) => {
 }
 /**后端接口数据结构转为前端结构，页面显示 */
 export const convertMITMFilterUI = (FilterData: MITMFilterData): MITMFilterUIProps => {
-  let data: MITMFilterUIProps = {
+  const data: MITMFilterUIProps = {
     baseFilter: {
       includeHostname: [],
       excludeHostname: [],

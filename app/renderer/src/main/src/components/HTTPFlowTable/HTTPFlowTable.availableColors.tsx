@@ -1,4 +1,3 @@
-import React from 'react'
 import classNames from 'classnames'
 import { TableCellToColorTag } from '@/components/TableVirtualResize/utils'
 import style from './HTTPFlowTable.module.scss'

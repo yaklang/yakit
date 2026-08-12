@@ -1,6 +1,7 @@
-import { Input, InputRef } from 'antd'
-import React, { forwardRef, useState } from 'react'
-import {
+import { Input, type InputRef } from 'antd'
+import type React from 'react'
+import { forwardRef, useState } from 'react'
+import type {
   YakitInputSearchProps,
   YakitInputProps,
   InternalTextAreaProps,
@@ -10,7 +11,7 @@ import styles from './YakitInput.module.scss'
 import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { ResizerIcon } from '@/assets/newIcon'
-import { TextAreaRef } from 'antd/lib/input/TextArea'
+import { type TextAreaRef } from 'antd/lib/input/TextArea'
 import { SolidCloseCircleIcon } from '@/assets/colors'
 
 /**
@@ -34,7 +35,7 @@ const InternalInput: React.FC<YakitInputProps & React.RefAttributes<InputRef>> =
         style={{ ...(wrapperStyle || {}) }}
       >
         <Input
-          allowClear={!!allowClear ? { clearIcon: <SolidCloseCircleIcon style={{ display: 'flex' }} /> } : undefined}
+          allowClear={allowClear ? { clearIcon: <SolidCloseCircleIcon style={{ display: 'flex' }} /> } : undefined}
           spellCheck={false}
           {...restProps}
           ref={ref}
@@ -83,7 +84,7 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
         style={{ ...(wrapperStyle || {}) }}
       >
         <Input.Search
-          allowClear={!!allowClear ? { clearIcon: <SolidCloseCircleIcon style={{ display: 'flex' }} /> } : undefined}
+          allowClear={allowClear ? { clearIcon: <SolidCloseCircleIcon style={{ display: 'flex' }} /> } : undefined}
           enterButton
           spellCheck={false}
           {...restProps}
@@ -143,7 +144,7 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps & React.RefAttr
         style={{ ...(wrapperStyle || {}) }}
       >
         <Input.Password
-          allowClear={!!allowClear ? { clearIcon: <SolidCloseCircleIcon style={{ display: 'flex' }} /> } : undefined}
+          allowClear={allowClear ? { clearIcon: <SolidCloseCircleIcon style={{ display: 'flex' }} /> } : undefined}
           spellCheck={false}
           {...restProps}
           ref={ref}

@@ -1,5 +1,5 @@
-import { SegmentedProps } from 'antd'
-import { SizeType } from 'antd/lib/config-provider/SizeContext'
+import { type SegmentedProps } from 'antd'
+import { type SizeType } from 'antd/lib/config-provider/SizeContext'
 
 /**
  * @description: 分段器 Props

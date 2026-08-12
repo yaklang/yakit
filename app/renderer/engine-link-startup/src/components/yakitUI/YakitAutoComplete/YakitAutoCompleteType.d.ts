@@ -1,8 +1,7 @@
-import { AutoCompleteProps } from 'antd'
-import { SizeType } from 'antd/lib/config-provider/SizeContext'
-import { CacheDataHistoryProps } from '../../utils'
-import { BaseSelectRef } from 'rc-select'
-import { CSSProperties, ReactNode } from 'react'
+import type { AutoCompleteProps } from 'antd'
+import type { CacheDataHistoryProps } from '../../utils'
+import type { BaseSelectRef } from 'rc-select'
+import type { CSSProperties, ReactNode } from 'react'
 
 /**
  * @description YakitAutoCompleteProps 的属性

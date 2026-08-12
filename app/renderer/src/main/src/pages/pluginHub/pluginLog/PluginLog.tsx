@@ -1,18 +1,19 @@
-import React, { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { PluginLogProps, PluginLogType } from './PluginLogType'
+import type React from 'react'
+import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type { PluginLogProps, PluginLogType } from './PluginLogType'
 import { PluginLogTabBars } from './defaultConstant'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
 import { PluginLogList } from './PluginLogList'
 import { PluginImageTextarea } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea'
-import {
+import type {
   ImageTextareaData,
   PluginImageTextareaRefProps,
   QuotationInfoProps,
 } from '@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType'
 import { pluginSupplementConvertToJSON, pluginSupplementJSONConvertToData } from '@/pages/pluginEditor/utils/convert'
 import { httpFetchPluginLogsAllTotal, httpPublishComment } from '../utils/http'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { useStore } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import { UnLoginSvgIcon } from '@/components/layout/icons'
@@ -82,7 +83,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo(
         .then((res) => {
           const { data = [] } = res
           const totals: Record<string, number> = {}
-          for (let item of data) {
+          for (const item of data) {
             totals[item.tabName] = item.count
           }
           setTabTotal({ ...totals })

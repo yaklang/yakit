@@ -1,6 +1,15 @@
-import React, { CSSProperties, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import 'react-resizable/css/styles.css'
-import { HistoryTableTitleShow, HTTPFlow, HTTPFlowTable } from './HTTPFlowTable/HTTPFlowTable'
+import { type HistoryTableTitleShow, type HTTPFlow, HTTPFlowTable } from './HTTPFlowTable/HTTPFlowTable'
 import { fetchHTTPFlowsFieldGroup } from '@/utils/httpFlowFieldGroupCache'
 import {
   useControllableValue,
@@ -11,7 +20,7 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import { useStore } from '@/store/mitmState'
-import { MitmExtractAggregateFlowFilterRow, YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
+import type { MitmExtractAggregateFlowFilterRow, YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import { YakitResizeBox } from './yakitUI/YakitResizeBox/YakitResizeBox'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { v4 as uuidv4 } from 'uuid'
@@ -75,13 +84,13 @@ import { RemoteGV } from '@/yakitGV'
 import { cloneDeep } from 'lodash'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitSideTab } from './yakitSideTab/YakitSideTab'
-import { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
 import { JSONParseLog } from '@/utils/tool'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from './historyAIReActChat'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
-import { FiltersItemProps } from './TableVirtualResize/TableVirtualResizeType'
+import type { FiltersItemProps } from './TableVirtualResize/TableVirtualResizeType'
 import { HTTPFlowRuleDataFilter } from './HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
@@ -184,7 +193,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   )
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '20%',
       secondRatio: '80%',
     }
@@ -616,7 +625,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     })
   }, [])
   const ResizeBoxProps = useCreation(() => {
-    let p = cloneDeep(lastRatioRef.current)
+    const p = cloneDeep(lastRatioRef.current)
     if (onlyShowFirstNode) {
       p.firstRatio = '100%'
       p.secondRatio = '0%'
@@ -943,6 +952,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     if (curProcessRef.current.length) {
       if (refreshProcessFlag) {
         if (searchProcessValRef.current) {
+          // ignore
         } else {
           resetTableAndEditorShow && resetTableAndEditorShow(true, false)
           refreshProcess()

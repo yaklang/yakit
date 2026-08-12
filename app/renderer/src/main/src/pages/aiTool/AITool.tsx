@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AIToolPageItemProps, AIToolProps } from './AIToolType'
+import type { AIToolPageItemProps, AIToolProps } from './AIToolType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 
 import { HubGridList, HubGridOpt } from '../pluginHub/pluginHubList/funcTemplate'
@@ -20,17 +20,17 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { Divider } from 'antd'
-import { GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest } from '../ai-agent/type/aiTool'
+import type { GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest } from '../ai-agent/type/aiTool'
 import { genDefaultPagination } from '../invoker/schema'
 import { grpcDeleteAITool, grpcGetAIToolList, grpcToggleAIToolFavorite } from '../ai-agent/aiToolList/utils'
-import { ToolQueryType } from '../ai-agent/aiToolList/AIToolListType'
+import type { ToolQueryType } from '../ai-agent/aiToolList/AIToolListType'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { handleAddAITool, handleModifyAITool, toolMenu, toolTypeOptions } from '../ai-agent/aiToolList/AIToolList'
 import { SolidStarIcon } from '@/assets/icon/solid'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
@@ -109,7 +109,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
       const newPage = +res.Pagination.Page
       const length = newPage === 1 ? res.Tools.length : res.Tools.length + response.Tools.length
       hasMore.current = length < +res.Total
-      let newRes: GetAIToolListResponse = {
+      const newRes: GetAIToolListResponse = {
         Tools: newPage === 1 ? res?.Tools : [...response.Tools, ...(res?.Tools || [])],
         Pagination: res?.Pagination || {
           ...genDefaultPagination(20),

@@ -1,6 +1,6 @@
 import { Switch } from 'antd'
-import React from 'react'
-import { YakitSwitchProps } from './YakitSwitchType'
+import type React from 'react'
+import type { YakitSwitchProps } from './YakitSwitchType'
 import styles from './YakitSwitch.module.scss'
 import classNames from 'classnames'
 import './yakitSwitchAnimation.scss'

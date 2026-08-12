@@ -1,4 +1,10 @@
-import { GetMCPToolListResponse, MCPServer, MCPServerTool, MCPServerToolParamInfo, MCPToolConfig } from '../type/aiMCP'
+import type {
+  GetMCPToolListResponse,
+  MCPServer,
+  MCPServerTool,
+  MCPServerToolParamInfo,
+  MCPToolConfig,
+} from '../type/aiMCP'
 
 const normalizeRequired = (value: unknown): boolean => {
   if (typeof value === 'boolean') return value

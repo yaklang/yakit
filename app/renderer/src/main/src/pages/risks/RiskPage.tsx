@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { FieldName } from './RiskTable'
-import {
+import type { FieldName } from './RiskTable'
+import type {
   IPListItemProps,
   IPListProps,
   RiskPageProp,
@@ -17,19 +17,18 @@ import classNames from 'classnames'
 import { VulnerabilityLevelPie } from './VulnerabilityLevelPie/VulnerabilityLevelPie'
 import { VulnerabilityTypePie } from './VulnerabilityTypePie/VulnerabilityTypePie'
 import { YakitRiskTable } from './YakitRiskTable/YakitRiskTable'
-import { QueryRisksRequest } from './YakitRiskTable/YakitRiskTableType'
+import type { QueryRisksRequest } from './YakitRiskTable/YakitRiskTableType'
 import { defQueryRisksRequest } from './YakitRiskTable/constants'
-import cloneDeep from 'lodash/cloneDeep'
-import { FieldGroup, apiRiskFieldGroup } from './YakitRiskTable/utils'
-import { VulnerabilityLevelPieRefProps } from './VulnerabilityLevelPie/VulnerabilityLevelPieType'
-import { VulnerabilityTypePieRefProps } from './VulnerabilityTypePie/VulnerabilityTypePieType'
+import { type FieldGroup, apiRiskFieldGroup } from './YakitRiskTable/utils'
+import type { VulnerabilityLevelPieRefProps } from './VulnerabilityLevelPie/VulnerabilityLevelPieType'
+import type { VulnerabilityTypePieRefProps } from './VulnerabilityTypePie/VulnerabilityTypePieType'
 import { OutlineCloseIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { shallow } from 'zustand/shallow'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { defaultRiskPageInfo } from '@/defaultConstants/RiskPage'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

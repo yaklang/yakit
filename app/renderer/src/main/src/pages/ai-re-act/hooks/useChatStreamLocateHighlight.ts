@@ -114,7 +114,6 @@ const useChatStreamLocateHighlight = ({ scrollToIndex, listRootRef }: UseChatStr
       cleanupHighlightWatcher()
       clearHighlight()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /** 按数组下标滚动并高亮 */

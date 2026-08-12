@@ -170,7 +170,7 @@
 
       .exec-form-item {
         display: flex;
-        align-items: start;
+        align-items: flex-start;
         margin-bottom: 16px;
 
         gap: 8px;
@@ -178,7 +178,7 @@
         .exec-form-item-label {
           display: flex;
           align-items: center;
-          justify-content: end;
+          justify-content: flex-end;
           min-width: 150px;
           text-align: right;
 

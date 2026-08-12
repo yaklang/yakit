@@ -1,7 +1,5 @@
-import { CSSProperties, ReactNode } from 'react'
-import ReactDOM from 'react-dom'
 import { coordinate } from '../../pages/globalVariable'
-import { BaseMenu, BaseMenuProps } from '../baseTemplate/BaseMenu'
+import { BaseMenu, type BaseMenuProps } from '../baseTemplate/BaseMenu'
 import { createRoot } from 'react-dom/client'
 import './showByContext.css'
 

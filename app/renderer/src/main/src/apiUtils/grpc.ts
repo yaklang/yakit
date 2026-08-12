@@ -1,8 +1,8 @@
 import { yakitNotify } from '@/utils/notification'
-import { APIFunc, APINoRequestFunc, APIOptionalFunc } from './type'
+import type { APIFunc, APINoRequestFunc, APIOptionalFunc } from './type'
 import { fetchEnv, getReleaseEditionName } from '@/utils/envfile'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { yakitEngine } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'apiUtils')

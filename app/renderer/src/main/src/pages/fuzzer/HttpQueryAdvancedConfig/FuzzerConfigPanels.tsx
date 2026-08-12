@@ -5,7 +5,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Divider, Form } from 'antd'
 import { HollowLightningBoltIcon } from '@/assets/newIcon'
-import {
+import type {
   FilterEmptySubMatcherFunctionProps,
   HTTPResponseMatcher,
   MatchingAndExtraction,
@@ -13,7 +13,7 @@ import {
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { ExtractionResultsContent, onFilterEmptySubMatcher } from '../MatcherAndExtractionCard/MatcherAndExtractionCard'
 import { ExtractorsList, MatchersList } from './HttpQueryAdvancedConfig'
-import { AdvancedConfigValueProps } from './HttpQueryAdvancedConfigType'
+import type { AdvancedConfigValueProps } from './HttpQueryAdvancedConfigType'
 import { StringToUint8Array } from '@/utils/str'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { yakitFailed, yakitNotify } from '@/utils/notification'

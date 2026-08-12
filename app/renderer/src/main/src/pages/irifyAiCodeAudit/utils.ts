@@ -1,11 +1,11 @@
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
-import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
+import type { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
+import type { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
 import emiter from '@/utils/eventBus/eventBus'
 import { failed } from '@/utils/notification'
 import i18n from '@/i18n/i18n'
-import { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
-import { AreaInfoProps } from './YakRunnerIrifyAiCodeAuditType'
+import type { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
+import type { AreaInfoProps } from './YakRunnerIrifyAiCodeAuditType'
 
 const tOriginal = i18n.getFixedT(null, 'yakRunner')
 

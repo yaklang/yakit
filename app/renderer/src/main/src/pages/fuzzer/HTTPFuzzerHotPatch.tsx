@@ -11,7 +11,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import styles from './HTTPFuzzerHotPatch.module.scss'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
-import { yakitFailed, yakitNotify } from '@/utils/notification'
+import { yakitNotify } from '@/utils/notification'
 import {
   OutlineChevrondownIcon,
   OutlineChevronrightIcon,
@@ -36,21 +36,20 @@ import {
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { shallow } from 'zustand/shallow'
-import { PageNodeItemProps, usePageInfo, WebFuzzerPageInfoProps } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { cloneDeep } from 'lodash'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import classNames from 'classnames'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
-import { DbOperateMessage } from '../layout/mainOperatorContent/utils'
+import type { DbOperateMessage } from '../layout/mainOperatorContent/utils'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { useStore } from '@/store'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
-import { PluginListPageMeta } from '../plugins/baseTemplateType'
+import type { API } from '@/services/swagger/resposeType'
+import type { PluginListPageMeta } from '../plugins/baseTemplateType'
 import { isEnpriTrace } from '@/utils/envfile'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
@@ -155,7 +154,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
   const [params, setParams, getParams] = useGetState({
     Template: `{{yak(handle|{{params(test)}})}}`,
     HotPatchCode: props.initialHotPatchCode,
-    HotPatchCodeWithParamGetter: !!props.initialHotPatchCodeWithParamGetter
+    HotPatchCodeWithParamGetter: props.initialHotPatchCodeWithParamGetter
       ? props.initialHotPatchCodeWithParamGetter
       : HotPatchParamsGetterDefault,
     TimeoutSeconds: 20,
@@ -173,7 +172,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
 
   useEffect(() => {
     getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
-      if (!!e) {
+      if (e) {
         setParams({ ...params, Template: e })
       }
     })
@@ -193,7 +192,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
       initWebFuzzerPageInfo().hotPatchCode !== params.HotPatchCode ||
       initHotPatchCodeOpen.current !== hotPatchCodeOpen
     ) {
-      let m = YakitModalConfirm({
+      const m = YakitModalConfirm({
         width: 420,
         type: 'white',
         onCancelText: (modalT) => modalT('YakitButton.cancel'),
@@ -280,7 +279,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
           ipcRenderer
             .invoke('StringFuzzer', { ...params }, tokenRef.current)
             .then((response: { Results: Uint8Array[] }) => {
-              const data: string[] = (response.Results || []).map((buf) => new Buffer(buf).toString('utf8'))
+              const data: string[] = (response.Results || []).map((buf) => Buffer.from(buf).toString('utf8'))
               showYakitDrawer({
                 title: 'HotPatch Tag Result',
                 width: '45%',
@@ -596,7 +595,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
     if (visible) {
       setCode(hotPatchCode)
       getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
-        if (!!e) {
+        if (e) {
           setTemplate(`${e}`)
         }
       })
@@ -718,7 +717,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
         tokenRef.current,
       )
       .then((response: { Results: Uint8Array[] }) => {
-        const data: string[] = (response.Results || []).map((buf) => new Buffer(buf).toString('utf8'))
+        const data: string[] = (response.Results || []).map((buf) => Buffer.from(buf).toString('utf8'))
         showYakitDrawer({
           title: 'HotPatch Tag Result',
           width: '45%',

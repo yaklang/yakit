@@ -3,7 +3,7 @@ import {
   useMemo,
   useRef,
   useState,
-  CSSProperties,
+  type CSSProperties,
   useLayoutEffect,
   useEffect,
   forwardRef,
@@ -11,12 +11,11 @@ import {
 } from 'react'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitSpin } from '../YakitSpin/YakitSpin'
-import {
+import type {
   YakitTimeLineListProps,
   YakitVirtualListPositionProps,
   YakitVirtualListProps,
 } from './NewYakitTimeLineListType'
-import { YakitTimeLineItemIcon } from './icon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import styles from './NewYakitTimeLineList.module.scss'
@@ -158,10 +157,10 @@ export const NewYakitTimeLineList: <T>(props: YakitTimeLineListProps<T>) => any 
         // 获取节点的索引
         const { attributes } = node || {}
         if (!attributes) return
-        for (let el of attributes) {
+        for (const el of attributes) {
           if (el.name.indexOf('data-yakit-time-line-item-key') > -1) {
             try {
-              let strs = el.value.split('-')
+              const strs = el.value.split('-')
               key = +strs[strs.length - 1] === 0 ? 0 : +strs[strs.length - 1] || -1
               // 供下面设置真实position使用
               if (viewFirst === -1 && key !== -1) viewFirst = key

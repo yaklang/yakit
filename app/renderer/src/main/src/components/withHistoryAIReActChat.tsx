@@ -1,18 +1,19 @@
-import React, { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
+import type React from 'react'
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useCreation, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
 import { clone, cloneDeep } from 'lodash'
 
 import AIAgentContext, {
-  AIAgentContextDispatcher,
-  AIAgentContextStore,
+  type AIAgentContextDispatcher,
+  type AIAgentContextStore,
 } from '@/pages/ai-agent/useContext/AIAgentContext'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { createActiveChatSessionId, getAIReActRequestParams, onReStart } from '@/pages/ai-agent/utils'
-import { AISession } from '@/pages/ai-agent/type/aiChat'
-import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
-import {
+import type { AISession } from '@/pages/ai-agent/type/aiChat'
+import type { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import type {
   AIHandleStartExtraProps,
   AIHandleStartParams,
   AIHandleStartResProps,
@@ -21,7 +22,7 @@ import {
   AISendParams,
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
@@ -49,6 +50,8 @@ import { HistroryAIReActChat } from './HistroryAIReActChat'
 import { useChatIPC } from '@/pages/ai-re-act/hooks/useChatIPC'
 import { useStore } from 'zustand'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { sessionStatusStore, SessionDeleteStatus } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
@@ -322,6 +325,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
   const casualLoading = useStore(store, (state) => state.casualLoading)
+
+  // 当前会话删除状态：删除中时遮罩整个对话区域，阻止用户操作
+  const deleteStatus = useStore(
+    sessionStatusStore,
+    (state) => state.deleteStatuses.get(activeChat?.SessionID || '') ?? SessionDeleteStatus.Idle,
+  )
+  const isSessionDeleting = deleteStatus === SessionDeleteStatus.Deleting
   useEffect(() => {
     if (!isHaveWebFuzzerPageId && !isHaveYakRunnerPageId) {
       casualLoadingRef.current = false
@@ -437,6 +447,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       TimelineSessionID: createActiveChatSessionId(),
       SyncPerceptionTrigger: false,
       EnablePlan: false,
+      Strategy: {
+        EnableMultiAgent: false,
+        EnableGoalMode: false,
+        GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+      },
     }))
     aiReActChatRef.current?.setValue('')
   })
@@ -566,21 +581,31 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const renderHistoryAIReActChat = useCallback(
     ({ className, externalParameters, title }: HistoryAIReActChatSlotOptions) => (
-      <HistroryAIReActChat
-        className={className}
-        title={title}
-        showFreeChat={showFreeChat}
-        setShowFreeChat={setShowFreeChat}
-        aiReActChatRef={aiReActChatRef}
-        onStartRequest={onStartRequest}
-        onSendRequest={onSendRequest}
-        mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}
-        onChatReady={flushPendingMention}
-        externalParameters={externalParameters}
-        source={source}
-      />
+      <YakitSpin spinning={isSessionDeleting}>
+        <HistroryAIReActChat
+          className={className}
+          title={title}
+          showFreeChat={showFreeChat}
+          setShowFreeChat={setShowFreeChat}
+          aiReActChatRef={aiReActChatRef}
+          onStartRequest={onStartRequest}
+          onSendRequest={onSendRequest}
+          mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}
+          onChatReady={flushPendingMention}
+          externalParameters={externalParameters}
+          source={source}
+        />
+      </YakitSpin>
     ),
-    [flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat, source],
+    [
+      flushPendingMention,
+      isSessionDeleting,
+      mergeRemoteAIAgentSetting,
+      onSendRequest,
+      onStartRequest,
+      showFreeChat,
+      source,
+    ],
   )
 
   const contextValue = useMemo(

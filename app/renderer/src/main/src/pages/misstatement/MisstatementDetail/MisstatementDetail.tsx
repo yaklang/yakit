@@ -1,7 +1,7 @@
 import { YakCodemirror } from '@/components/yakCodemirror/YakCodemirror'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
+import { YakitResizeBox, type YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import {
@@ -14,8 +14,8 @@ import {
 } from '@/pages/risks/icon'
 import { SeverityMapTag } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
-import { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
-import { YakURLDataItemProps } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
+import type { YakURLDataItemProps } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { useCreation, useMemoizedFn } from 'ahooks'
@@ -23,13 +23,13 @@ import { Descriptions, Divider, Tooltip } from 'antd'
 import classNames from 'classnames'
 import React, { useEffect, useRef } from 'react'
 import { useState } from 'react'
-import {
+import type {
   MisstatementAuditResultCollapseProps,
   MisstatementAuditResultDescribeProps,
   MisstatementDetailsProps,
 } from './MisstatementDetailType'
 import styles from './MisstatementDetail.module.scss'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { openPacketNewWindow } from '@/utils/openWebsite'
 
 export const MisstatementRiskDetails = <T extends API.RiskFeedBackData>(props: MisstatementDetailsProps<T>) => {
@@ -143,7 +143,7 @@ export const MisstatementRiskDetails = <T extends API.RiskFeedBackData>(props: M
     return atob(info?.response || '')
   })
   const extraResizeBoxProps = useCreation(() => {
-    let p: YakitResizeBoxProps = {
+    const p: YakitResizeBoxProps = {
       firstNode: <></>,
       secondNode: <></>,
       firstRatio: '50%',
@@ -207,7 +207,7 @@ export const MisstatementRiskDetails = <T extends API.RiskFeedBackData>(props: M
                 </span>
                 <Divider type="vertical" style={{ height: 16, margin: '0 8px' }} />
                 <span className={styles['content-heard-body-time']}>
-                  发现时间:{!!info.riskCreatedAt ? formatTimestamp(info.riskCreatedAt) : '-'}
+                  发现时间:{info.riskCreatedAt ? formatTimestamp(info.riskCreatedAt) : '-'}
                 </span>
                 {!isShowCode && (
                   <>
@@ -303,7 +303,7 @@ export const MisstatementAuditRiskDetails = <T extends API.SSARiskResponseData>(
   })
 
   const extraResizeBoxProps = useCreation(() => {
-    let p: YakitResizeBoxProps = {
+    const p: YakitResizeBoxProps = {
       firstNode: <></>,
       secondNode: <></>,
       firstRatio: '50%',
@@ -387,7 +387,7 @@ export const MisstatementAuditRiskDetails = <T extends API.SSARiskResponseData>(
               <span className={styles['description-port']}>所属项目:{info.programName || '-'}</span>
               <Divider type="vertical" style={{ height: 16, margin: '0 8px' }} />
               <span className={styles['content-heard-body-time']}>
-                发现时间:{!!info.ssaRiskCreatedAt ? formatTimestamp(info.ssaRiskCreatedAt) : '-'}
+                发现时间:{info.ssaRiskCreatedAt ? formatTimestamp(info.ssaRiskCreatedAt) : '-'}
               </span>
             </div>
           </div>

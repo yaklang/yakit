@@ -9,7 +9,7 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useInViewport, useUpdateEffect } from 'ahooks'
 import { FilterIcon } from '@/assets/newIcon'
-import { HTTPFuzzerPageTableQuery } from './HTTPFuzzerPageTable'
+import type { HTTPFuzzerPageTableQuery } from './HTTPFuzzerPageTable'
 
 interface ExtractedFilterProps {
   onSearch: (data: Record<string, string | boolean>) => void

@@ -1,16 +1,16 @@
-import React, { ForwardedRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { type ForwardedRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import classNames from 'classnames'
 import styles from './MITMServerStartForm.module.scss'
-import { ClientCertificate } from './MITMServerStartForm'
+import type { ClientCertificate } from './MITMServerStartForm'
 import { useMemoizedFn } from 'ahooks'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { yakitFailed } from '@/utils/notification'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Divider, Form, Modal, Space, Upload } from 'antd'
+import { Divider, Form, Modal } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { ExportIcon, OutlinePlusIcon, PlusCircleIcon, RemoveIcon, SaveIcon, TrashIcon } from '@/assets/newIcon'
+import { ExportIcon, PlusCircleIcon, RemoveIcon, TrashIcon } from '@/assets/newIcon'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -21,15 +21,14 @@ import { inputHTTPFuzzerHostConfigItem } from '@/pages/fuzzer/HTTPFuzzerHosts'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { cloneDeep, isEqual } from 'lodash'
 import {
-  AdvancedConfigurationFromValue,
+  type AdvancedConfigurationFromValue,
   createDefaultAdvancedConfig,
   loadAdvancedConfig,
   saveAdvancedConfig,
 } from '../MITMAdvancedConfig'
-import { KVPair } from '@/models/kv'
+import type { KVPair } from '@/models/kv'
 
 const MITMAddTLS = React.lazy(() => import('./MITMAddTLS'))
 const MITMFiltersModal = React.lazy(() => import('./MITMFiltersModal'))
@@ -278,7 +277,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     // 批量添加
                     (items) => {
                       const newKeys = items.map(({ Key }) => Key)
-                      let newEtcHosts = [...etcHosts.filter(({ Key }) => !newKeys.includes(Key)), ...items]
+                      const newEtcHosts = [...etcHosts.filter(({ Key }) => !newKeys.includes(Key)), ...items]
                       setEtcHosts(newEtcHosts)
                     },
                   )

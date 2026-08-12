@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react'
+import type React from 'react'
+import { useMemo } from 'react'
 import { YakitResizeBox } from '../yakitUI/YakitResizeBox/YakitResizeBox'
 import { NewHTTPPacketEditor } from '@/utils/editors'
-import { HTTPFlowDetailMini, HTTPFlowDetailProp } from '../HTTPFlowDetail'
+import { HTTPFlowDetailMini, type HTTPFlowDetailProp } from '../HTTPFlowDetail'
 export interface OpenPacketNewWindowItem {
   showParentPacketCom?: {
     components: string

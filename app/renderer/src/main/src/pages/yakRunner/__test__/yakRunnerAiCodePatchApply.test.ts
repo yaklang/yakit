@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 
-const getCodeMock = vi.fn<[], string | null>(() => null)
+const getCodeMock = vi.fn((): string | null => null)
 
 vi.mock('@/utils/notification', () => ({
   yakitFailed: vi.fn(),
@@ -16,9 +16,7 @@ vi.mock('../yakRunnerAiCodeApplyBridge', () => ({
   resolveYaklangCodeChangePath: (change: AIAgentGrpcApi.YaklangCodeChange) => change.code?.path,
 }))
 
-// eslint-disable-next-line import/first
 import { yakitFailed } from '@/utils/notification'
-// eslint-disable-next-line import/first
 import {
   applyYaklangCodePatch,
   normalizeYaklangCodeChangeForReview,

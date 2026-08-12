@@ -1,5 +1,5 @@
-import React, { ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type {
   ExtractorValueProps,
   HTTPResponseExtractor,
   HTTPResponseMatcher,
@@ -70,7 +70,7 @@ import { useMenuHeight } from '@/store/menuHeight'
 import { TableCellToColorTag } from '@/components/TableVirtualResize/utils'
 import { openPacketNewWindow } from '@/utils/openWebsite'
 import { useCampare } from '@/hook/useCompare/useCompare'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
 import i18n from '@/i18n/i18n'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
@@ -281,7 +281,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         if (_.isEqual(matcherValue, data.matcher) && _.isEqual(extractorValue, data.extractor)) {
           resolve(data)
         } else {
-          let m = YakitModalConfirm({
+          const m = YakitModalConfirm({
             width: 420,
             type: 'white',
             onCancelText: (modalT) => modalT('YakitButton.do_not_apply'),
@@ -409,7 +409,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
       let isDuplicateName = false
       const names = list.map((e) => e.Name)
       const nameLength = names.length
-      let newNames: string[] = []
+      const newNames: string[] = []
       for (let index = 0; index < nameLength; index++) {
         const namesElement = names[index]
         const n = newNames.findIndex((n) => n === namesElement)
@@ -475,7 +475,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         onClose()
         return
       } else {
-        let m = YakitModalConfirm({
+        const m = YakitModalConfirm({
           width: 420,
           type: 'white',
           onCancelText: (modalT) => modalT('YakitButton.doNotSave'),
@@ -635,7 +635,7 @@ const isMatcherEmpty = (matchersList) => {
 export const onFilterEmptySubMatcher = (param: FilterEmptySubMatcherFunctionProps) => {
   const { matchers, index, subIndex } = param
   const matchersCopy = cloneDeep(matchers)
-  let newMatchers: HTTPResponseMatcher[] = []
+  const newMatchers: HTTPResponseMatcher[] = []
   matchersCopy.forEach((m, n) => {
     if (n === index) {
       m.SubMatchers = m.SubMatchers.filter((_, s) => s !== subIndex)
@@ -1434,7 +1434,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
           <span className={styles['hit-color']}>{t('ColorSelect.hit_color')}</span>
           <div className={styles['color-list']}>
             {colors(t).map((colorItem) => {
-              let colorClassName = getColorClassName(colorItem.color)
+              const colorClassName = getColorClassName(colorItem.color)
               return (
                 <div
                   className={classNames(styles['color-list-item'], {

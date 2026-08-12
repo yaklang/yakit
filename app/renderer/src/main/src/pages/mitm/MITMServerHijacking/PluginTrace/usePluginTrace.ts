@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { PluginExecutionTrace, PluginTraceParams, PluginTraceStats } from './type'
+import type { PluginExecutionTrace, PluginTraceParams, PluginTraceStats } from './type'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
@@ -70,7 +70,7 @@ function usePluginTrace(params: PluginTraceParams) {
 
     ipcRenderer.on('mitm-plugin-trace-update', (event, data) => {
       if (data.Traces.length > 0) {
-        let newTraces = tracesRef.current.slice()
+        const newTraces = tracesRef.current.slice()
         data.Traces.forEach((trace: PluginExecutionTrace) => {
           const index = newTraces.findIndex((t) => t.TraceID === trace.TraceID)
 

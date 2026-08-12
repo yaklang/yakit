@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useLayoutEffect } from 'react'
+import type React from 'react'
+import { useEffect, useState, useLayoutEffect } from 'react'
 import { Modal } from 'antd'
 import { ExclamationCircleOutlined, GithubOutlined, RightOutlined, WechatOutlined } from '@ant-design/icons'
 import { failed } from '@/utils/notification'

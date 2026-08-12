@@ -1,13 +1,13 @@
 import {
-  DatabaseMenuItemProps,
+  type DatabaseMenuItemProps,
   PrivateAllMenus,
-  PrivateRouteMenuProps,
+  type PrivateRouteMenuProps,
   getFixedPluginDescribe,
   getFixedPluginHoverIcon,
   getFixedPluginIcon,
 } from '@/routes/newRoute'
-import { RouteToPageProps } from '../publicMenu/PublicMenu'
-import { SendDatabaseFirstMenuProps } from '@/routes/newRouteType'
+import type { RouteToPageProps } from '../publicMenu/PublicMenu'
+import type { SendDatabaseFirstMenuProps } from '@/routes/newRouteType'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface NotepadMenuProps {
@@ -76,7 +76,7 @@ export interface EnhancedPrivateRouteMenuProps extends PrivateRouteMenuProps {
 // 将菜单属性 PrivateRouteMenuProps 转换为 EnhancedPrivateRouteMenuProps
 export const privateExchangeProps = (menus: PrivateRouteMenuProps[]) => {
   const newMenus: EnhancedPrivateRouteMenuProps[] = []
-  for (let item of menus) {
+  for (const item of menus) {
     const newItem: EnhancedPrivateRouteMenuProps = {
       ...item,
       menuName: item.label,
@@ -84,7 +84,7 @@ export const privateExchangeProps = (menus: PrivateRouteMenuProps[]) => {
     }
 
     if (item.children && item.children.length > 0) {
-      for (let subItem of item.children) {
+      for (const subItem of item.children) {
         newItem?.children?.push({
           ...subItem,
           menuName: subItem.page === YakitRoute.Plugin_OP ? subItem.yakScripName || subItem.label : subItem.label,
@@ -120,14 +120,14 @@ export const privateUnionMenus = (local: EnhancedPrivateRouteMenuProps[], databa
   // 数据库无数据时的逻辑处理
   if (database.length === 0) {
     isUpdate = true
-    for (let item of local) {
+    for (const item of local) {
       const newMenu: EnhancedPrivateRouteMenuProps = {
         ...item,
         menuName: item.label,
         children: [],
       }
       if (item.children && item.children.length > 0) {
-        for (let subItem of item.children) {
+        for (const subItem of item.children) {
           // 因为用户侧无数据，前端数据默认都为未下载插件
           if (subItem.page === YakitRoute.Plugin_OP) pluginName.push(subItem.yakScripName || '')
           newMenu.children?.push({
@@ -151,7 +151,7 @@ export const privateUnionMenus = (local: EnhancedPrivateRouteMenuProps[], databa
 
   // 本地数据转换为一级菜单对应关系对象
   const localToMenus: Record<string, EnhancedPrivateRouteMenuProps> = {}
-  for (let item of local) {
+  for (const item of local) {
     let child: EnhancedPrivateRouteMenuProps[] = []
     if (item.children && item.children.length > 0)
       child = item.children.map((item) => {
@@ -161,7 +161,7 @@ export const privateUnionMenus = (local: EnhancedPrivateRouteMenuProps[], databa
   }
 
   // 数据库有数据时的逻辑处理
-  for (let item of database) {
+  for (const item of database) {
     const newMenu: EnhancedPrivateRouteMenuProps = {
       page: undefined,
       label: item.label,
@@ -209,7 +209,7 @@ export const privateUnionMenus = (local: EnhancedPrivateRouteMenuProps[], databa
   }
 
   // 将本地菜单数据中新增数据进行末尾填充
-  for (let item of Object.values(localToMenus)) newMenus.push(item)
+  for (const item of Object.values(localToMenus)) newMenus.push(item)
 
   return {
     menus: newMenus,
@@ -227,11 +227,11 @@ export const privateUnionMenus = (local: EnhancedPrivateRouteMenuProps[], databa
 const databaseConvertLocal = (local: EnhancedPrivateRouteMenuProps[], database: DatabaseMenuItemProps[]) => {
   // 本地数据转换为对应关系对象
   const localToMenus: Record<string, EnhancedPrivateRouteMenuProps> = {}
-  for (let item of local) localToMenus[item.menuName] = item
+  for (const item of local) localToMenus[item.menuName] = item
 
   const plugins: string[] = []
   const menus: EnhancedPrivateRouteMenuProps[] = []
-  for (let item of database) {
+  for (const item of database) {
     if (item.route && item.route !== YakitRoute.Plugin_OP) {
       const info: EnhancedPrivateRouteMenuProps = {
         ...PrivateAllMenus[item.route],
@@ -262,7 +262,7 @@ const databaseConvertLocal = (local: EnhancedPrivateRouteMenuProps[], database: 
   }
 
   // 将本地独有的菜单数据进行最后填充
-  for (let localItem of Object.values(localToMenus)) {
+  for (const localItem of Object.values(localToMenus)) {
     const info: EnhancedPrivateRouteMenuProps = {
       ...localItem,
       yakScriptId: 0,
@@ -278,7 +278,7 @@ export const privateConvertDatabase = (data: EnhancedPrivateRouteMenuProps[], mo
   const menus: SendDatabaseFirstMenuProps[] = []
 
   let index = 1
-  for (let item of data) {
+  for (const item of data) {
     const menu: SendDatabaseFirstMenuProps = {
       Group: item.label,
       GroupSort: index,
@@ -289,7 +289,7 @@ export const privateConvertDatabase = (data: EnhancedPrivateRouteMenuProps[], mo
 
     let subIndex = 1
     if (item.children && item.children.length > 0) {
-      for (let subItem of item.children) {
+      for (const subItem of item.children) {
         menu.Items.push({
           Mode: mode,
           VerboseSort: subIndex,
@@ -324,7 +324,7 @@ export const jsonDataConvertMenus = (data: DatabaseMenuItemProps[]) => {
   // 记录是否有无法转换的数据(数据处理结果:自动抛弃)
   let isError: boolean = false
 
-  for (let item of data) {
+  for (const item of data) {
     // 缺失关键数据,无法转换
     if (!item.label || !item.menuName) {
       isError = true
@@ -338,7 +338,7 @@ export const jsonDataConvertMenus = (data: DatabaseMenuItemProps[]) => {
       children: [],
     }
     if (item.children && item.children.length > 0) {
-      for (let subItem of item.children) {
+      for (const subItem of item.children) {
         // 缺失关键数据,无法转换
         if (!subItem.route || !subItem.label || !subItem.menuName) {
           isError = true
@@ -416,7 +416,7 @@ export interface CacheMenuItemProps {
 export const unionMenus = (local: EnhancedPrivateRouteMenuProps[], cache: CacheMenuItemProps[]) => {
   // 将本地菜单数据转换换成对应关系
   const localMenuInfo: Record<string, EnhancedPrivateRouteMenuProps> = {}
-  for (let item of local) localMenuInfo[item.menuName] = item
+  for (const item of local) localMenuInfo[item.menuName] = item
 
   // 本地是否有新增菜单项
   let isUpdate: boolean = false
@@ -424,7 +424,7 @@ export const unionMenus = (local: EnhancedPrivateRouteMenuProps[], cache: CacheM
   let updatePlugin: string[] = []
 
   const newMenus: EnhancedPrivateRouteMenuProps[] = []
-  for (let item of cache) {
+  for (const item of cache) {
     const newMenuItem: EnhancedPrivateRouteMenuProps = {
       page: undefined,
       label: item.label,
@@ -488,7 +488,7 @@ export const unionMenus = (local: EnhancedPrivateRouteMenuProps[], cache: CacheM
   }
 
   // 将本地菜单数据中新增数据进行末尾填充
-  for (let item of Object.values(localMenuInfo)) newMenus.push(item)
+  for (const item of Object.values(localMenuInfo)) newMenus.push(item)
 
   return { menus: newMenus, isUpdate, updatePlugin }
 }
@@ -499,7 +499,7 @@ export const unionMenus = (local: EnhancedPrivateRouteMenuProps[], cache: CacheM
 const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRouteMenuProps[]) => {
   const localMenuInfo: Record<string, EnhancedPrivateRouteMenuProps> = {}
   if (local.length > 0) {
-    for (let item of local) {
+    for (const item of local) {
       if (item.page === YakitRoute.Plugin_OP) localMenuInfo[item.yakScripName || item.label] = item
       else localMenuInfo[item.menuName] = item
     }
@@ -507,10 +507,10 @@ const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRo
 
   const downloadPlugin: string[] = []
   const menus: EnhancedPrivateRouteMenuProps[] = []
-  for (let item of cache) {
+  for (const item of cache) {
     if (item.route !== YakitRoute.Plugin_OP) {
       // 排除数据库和本地共有的菜单项
-      if (!!localMenuInfo[item.menuName]) delete localMenuInfo[item.menuName]
+      if (localMenuInfo[item.menuName]) delete localMenuInfo[item.menuName]
 
       const info: EnhancedPrivateRouteMenuProps = {
         ...PrivateAllMenus[item.route],
@@ -525,7 +525,7 @@ const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRo
       // 记录未下载的插件菜单
       if ((+item.pluginId || 0) === 0) downloadPlugin.push(item.pluginName)
       // 排除数据库和本地共有的菜单项
-      if (!!localMenuInfo[item.pluginName]) delete localMenuInfo[item.pluginName]
+      if (localMenuInfo[item.pluginName]) delete localMenuInfo[item.pluginName]
 
       if (PrivateAllMenus[item.pluginName]) {
         const info: EnhancedPrivateRouteMenuProps = {
@@ -555,7 +555,7 @@ const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRo
   }
 
   // 将本地独有的菜单数据进行最后填充
-  for (let localItem of Object.values(localMenuInfo)) {
+  for (const localItem of Object.values(localMenuInfo)) {
     const info: EnhancedPrivateRouteMenuProps = {
       ...localItem,
       yakScriptId: 0,
@@ -570,7 +570,7 @@ const cacheConvertLocal = (cache: CacheMenuItemProps[], local: EnhancedPrivateRo
 // 将菜单属性 PrivateRouteMenuProps 转换为 EnhancedPrivateRouteMenuProps
 export const exchangeMenuProp = (menus: PrivateRouteMenuProps[]) => {
   const newMenus: EnhancedPrivateRouteMenuProps[] = []
-  for (let item of menus) {
+  for (const item of menus) {
     const newItem: EnhancedPrivateRouteMenuProps = {
       ...item,
       menuName: item.label,
@@ -578,7 +578,7 @@ export const exchangeMenuProp = (menus: PrivateRouteMenuProps[]) => {
     }
 
     if (item.children && item.children.length > 0) {
-      for (let subItem of item.children) {
+      for (const subItem of item.children) {
         newItem?.children?.push({
           ...subItem,
           menuName: subItem.page === YakitRoute.Plugin_OP ? subItem.yakScripName || subItem.label : subItem.label,

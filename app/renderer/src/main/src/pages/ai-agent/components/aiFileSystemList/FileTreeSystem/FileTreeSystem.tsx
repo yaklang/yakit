@@ -1,5 +1,5 @@
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import FilePreview from '../FilePreview/FilePreview'
 import FileTreeSystemListWrapper from '../FileTreeSystemListWrapper/FileTreeSystemListWrapper'

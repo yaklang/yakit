@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Form, notification } from 'antd'
 import { failed, info, success, yakitFailed, yakitNotify } from '../../utils/notification'
-import { MITMFilterSchema } from './MITMServerStartForm/MITMFilters'
-import { QueryYakScriptRequest } from '../invoker/schema'
-import { YakExecutorParam } from '../invoker/YakExecutorParams'
+import type { MITMFilterSchema } from './MITMServerStartForm/MITMFilters'
+import type { QueryYakScriptRequest } from '../invoker/schema'
+import type { YakExecutorParam } from '../invoker/YakExecutorParams'
 import style from './MITMPage.module.scss'
 import {
   useCreation,
@@ -15,24 +15,18 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import type { MITMStatus } from './MITMServerHijacking/MITMHijackedContent'
-import type {
-  MITMPluginLocalList as _MITMPluginLocalListType,
-  PluginGroup as _PluginGroupType,
-  PluginSearch as _PluginSearchType,
-  YakFilterRemoteObj,
-  YakModuleListHeard as _YakModuleListHeardType,
-} from './MITMServerHijacking/MITMPluginLocalList'
+import type { YakFilterRemoteObj } from './MITMServerHijacking/MITMPluginLocalList'
 import { Uint8ArrayToString } from '@/utils/str'
-import { MITMContentReplacerRule } from './MITMRule/MITMRuleType'
+import type { MITMContentReplacerRule } from './MITMRule/MITMRuleType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { loadNucleiPoCFromLocal, loadYakitPluginCode } from '../yakitStore/YakitStorePage'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
-import { StartExecYakCodeModal, YakScriptParam } from '@/utils/basic'
+import { StartExecYakCodeModal, type YakScriptParam } from '@/utils/basic'
 import {
-  ClientCertificate,
+  type ClientCertificate,
   defHost,
   defPort,
   maskProxyPassword,
@@ -48,13 +42,12 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { MITMConsts } from './MITMConsts'
 import { onSetRemoteValuesBase } from '@/components/yakitUI/utils'
 import { CacheDropDownGV, RemoteGV } from '@/yakitGV'
-import classNames from 'classnames'
 import { useStore } from '@/store/mitmState'
 import MITMContext from './Context/MITMContext'
 import {
-  MITMExecScriptByIdRequest,
-  MITMRemoveHookRequest,
-  MITMStartCallRequest,
+  type MITMExecScriptByIdRequest,
+  type MITMRemoveHookRequest,
+  type MITMStartCallRequest,
   grpcClientMITMError,
   grpcClientMITMMessage,
   grpcClientMITMNotification,
@@ -66,21 +59,21 @@ import {
   grpcMITMStartCall,
   grpcMITMStopCall,
 } from './MITMHacker/utils'
-import { KVPair } from '@/models/kv'
+import type { KVPair } from '@/models/kv'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from '@/utils/globalShortcutKey/utils'
 import { ShortcutKeyPage } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getStorageMitmShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/mitm'
 import { JSONParseLog } from '@/utils/tool'
-import { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { ManualHijackTypeProps } from './MITMManual/MITMManualType'
+import type { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { ManualHijackTypeProps } from './MITMManual/MITMManualType'
 import { LIMIT_LOG_NUM_NAME } from '@/defaultConstants/HoldGRPCStream'
 import {
   StreamProcessorManager,
-  StreamUpdateState,
+  type StreamUpdateState,
   useStreamProcessorManager,
 } from './MITMServerHijacking/PluginsOutput/StreamProcessor'
 import { RemoteMitmGV } from '@/enums/mitm'
@@ -1132,7 +1125,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
   })
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
+    const p = {
       firstRatio: '25%',
       secondRatio: '50%',
     }
@@ -1291,7 +1284,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
 
   const getRenderByLoadMode = useMemoizedFn((type: string) => {
     switch (type) {
-      case 'giturl':
+      case 'giturl': {
         const labelColSpan = i18n.language === 'en' ? 5 : 3
         const wrapperColSpan = i18n.language === 'en' ? 19 : 21
         return (
@@ -1328,6 +1321,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
             </Form.Item>
           </>
         )
+      }
       case 'local':
         return (
           <>

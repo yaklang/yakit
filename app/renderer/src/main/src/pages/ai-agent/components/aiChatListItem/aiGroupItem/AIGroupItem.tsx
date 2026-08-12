@@ -1,5 +1,5 @@
 import React from 'react'
-import { AIGroupItemProps } from './type'
+import type { AIGroupItemProps } from './type'
 import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'

@@ -1,5 +1,5 @@
-import { ScriptsProps } from '@/components/yakChat/chatCS'
-import axios, { AxiosProgressEvent, GenericAbortSignal, type AxiosResponse } from 'axios'
+import type { ScriptsProps } from '@/components/yakChat/chatCS'
+import axios, { type AxiosProgressEvent, type GenericAbortSignal, type AxiosResponse } from 'axios'
 
 const service = axios.create({
   // baseURL: "https://u91298-91ae-7b4e898b.neimeng.seetacloud.com:6443/"

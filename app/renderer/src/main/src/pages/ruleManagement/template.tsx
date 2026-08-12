@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import type {
   EditRuleDrawerProps,
   QuerySyntaxFlowRuleGroupRequest,
   LocalRuleGroupListProps,
@@ -50,7 +50,7 @@ import {
   SolidFolderopenIcon,
   SolidReplyIcon,
 } from '@/assets/icon/solid'
-import { Descriptions, Form, InputRef, Modal, Progress, Tooltip } from 'antd'
+import { Descriptions, Form, type InputRef, Modal, Progress, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -83,23 +83,24 @@ import { DefaultRuleContent, DefaultRuleGroupFilterPageMeta, RuleLanguageList } 
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { genDefaultPagination } from '../invoker/schema'
-import { AuditNodeMapProps, AuditNodeProps, AuditYakUrlProps } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
+import type { AuditNodeMapProps, AuditNodeProps, AuditYakUrlProps } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
+import type { FileNodeProps } from '../yakRunnerAuditCode/FileTree/FileTreeType'
 import { randomString } from '@/utils/randomUtil'
 import { PluginExecuteResult } from '../plugins/operator/pluginExecuteResult/PluginExecuteResult'
 import useRuleDebug from './useRuleDebug'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { PluginExecuteProgress } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { SyntaxFlowResult } from '../yakRunnerCodeScan/YakRunnerCodeScanType'
+import type { HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { SyntaxFlowResult } from '../yakRunnerCodeScan/YakRunnerCodeScanType'
 import { AuditTree } from '../yakRunnerAuditCode/AuditCode/AuditCode'
 import { loadAuditFromYakURLRaw } from '../yakRunnerAuditCode/utils'
 import { v4 as uuidv4 } from 'uuid'
-import { AuditEmiterYakUrlProps } from '../yakRunnerAuditCode/YakRunnerAuditCodeType'
+import type { AuditEmiterYakUrlProps } from '../yakRunnerAuditCode/YakRunnerAuditCodeType'
 import { RightAuditDetail } from '../yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
 import { RightBugAuditResult, SeverityMapTag } from '../risks/YakitRiskTable/YakitRiskTable'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import Login from '../Login'
 import { isEnpriTraceIRify } from '@/utils/envfile'
 
@@ -107,7 +108,7 @@ import classNames from 'classnames'
 import styles from './RuleManagement.module.scss'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { CodeScoreModal } from '../plugins/funcTemplate'
-import { QuerySSARisksResponse, SSARisk } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { QuerySSARisksResponse, SSARisk } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { apiQuerySSAPrograms } from '../yakRunnerScanHistory/utils'
 import { MilkdownEditorLocal } from '@/components/milkdownEditorLocal/MilkdownEditorLocal'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
@@ -1669,11 +1670,11 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
   const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {
     return ids.map((id) => {
       const itemDetail = getMapAuditDetail(id)
-      let obj: AuditNodeProps = { ...itemDetail, depth }
+      const obj: AuditNodeProps = { ...itemDetail, depth }
       const childArr = getMapAuditChildDetail(id)
 
       if (itemDetail.ResourceType === 'variable' || itemDetail.ResourceType === AuditCodeDetailTopId) {
-        obj.children = initAuditTree(childArr, depth + 1)
+        obj.children = initAuditTree(childArr, depth + 1) as unknown as FileNodeProps[]
         // 数量为0时不展开 message除外
         if (parseInt(obj.Size + '') === 0 && itemDetail.ResourceType !== AuditCodeDetailTopId) {
           obj.isLeaf = true
@@ -1736,8 +1737,8 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
       const result = await loadAuditFromYakURLRaw(params)
 
       if (result && result.Resources.length > 0) {
-        let messageIds: string[] = []
-        let variableIds: string[] = []
+        const messageIds: string[] = []
+        const variableIds: string[] = []
         // 构造树结构
         result.Resources.filter((item) => item.VerboseType !== 'result_id').forEach((item, index) => {
           const { ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra } = item
@@ -1770,7 +1771,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
             })
           }
         })
-        let topIds: string[] = []
+        const topIds: string[] = []
         if (messageIds.length > 0) {
           topIds.push(AuditCodeDetailTopId)
           setAuditMap(AuditCodeDetailTopId, {
@@ -1822,7 +1823,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
         }
         const result = await loadAuditFromYakURLRaw(params, undefined, 1, 30)
         if (result) {
-          let variableIds: string[] = []
+          const variableIds: string[] = []
           result.Resources.filter((item) => item.VerboseType !== 'result_id').forEach((item, index) => {
             const { ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra } = item
             let value: string = `${index}`
@@ -1842,7 +1843,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
               Extra,
             })
           })
-          let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
+          const isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
           // 如若请求数据未全部拿完 则显示加载更多
           if (!isEnd) {
             const newId = `${id}/load`
@@ -1886,7 +1887,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
       // 每次拿30条
       const result = await loadAuditFromYakURLRaw(params, undefined, page, 30)
       if (result) {
-        let variableIds: string[] = []
+        const variableIds: string[] = []
         result.Resources.filter((item) => item.VerboseType !== 'result_id').forEach((item, index) => {
           const { ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra } = item
           let value: string = `${index}`
@@ -1906,7 +1907,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
             Extra,
           })
         })
-        let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
+        const isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
         // 如若请求数据未全部拿完 则显示加载更多
         const newId = `${path}/load`
         if (!isEnd) {

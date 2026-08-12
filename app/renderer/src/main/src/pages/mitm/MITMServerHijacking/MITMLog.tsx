@@ -1,13 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import emiter from '@/utils/eventBus/eventBus'
 import styles from './MITMServerHijacking.module.scss'
-import {
-  contentType,
-  HistorySearch,
-  HTTPFlowShield,
-  ShieldData,
-  SourceType,
-} from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { HistorySearch, HTTPFlowShield, type ShieldData, SourceType } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { useCreation, useDebounceFn, useMemoizedFn, useSize } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -18,7 +12,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { OutlineCheckIcon, OutlineRefreshIcon, OutlineSearchIcon, OutlineTerminalIcon } from '@/assets/icon/outline'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { iconProcessMap, ProcessItem } from '@/components/HTTPHistory'
+import { iconProcessMap, type ProcessItem } from '@/components/HTTPHistory'
 import classNames from 'classnames'
 import { SolidCheckIcon } from '@/assets/icon/solid'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
@@ -30,7 +24,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import {
   defFilterConfig,
-  FilterConfig,
+  type FilterConfig,
   HTTPFlowTableFormConfiguration,
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import { RemoteHistoryGV } from '@/enums/history'

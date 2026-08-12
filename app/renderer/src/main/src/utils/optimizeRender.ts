@@ -1,4 +1,4 @@
-import { SetStateAction } from 'react'
+import type { SetStateAction } from 'react'
 
 /**
  * @name 对于超大内容字符串的拆分定时赋值
@@ -16,7 +16,7 @@ export function asynSettingState(value: string, setValue: React.Dispatch<SetStat
   const content = strs[number]
   setValue(content)
   number += 1
-  let timer = setInterval(() => {
+  const timer = setInterval(() => {
     if (number === strs.length) {
       clearInterval(timer)
       return

@@ -1,5 +1,5 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
-import YakitTree, { TreeKey } from '../yakitUI/YakitTree/YakitTree'
+import YakitTree, { type TreeKey } from '../yakitUI/YakitTree/YakitTree'
 import type { DataNode } from 'antd/es/tree'
 import { useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import {
@@ -10,7 +10,7 @@ import {
 } from '@/assets/icon/outline'
 import { requestYakURLList } from '@/pages/yakURLTree/netif'
 import { yakitFailed } from '@/utils/notification'
-import { YakURL, YakURLResource } from '@/pages/yakURLTree/data'
+import type { YakURL, YakURLResource } from '@/pages/yakURLTree/data'
 import { SolidFolderIcon, SolidFolderaddIcon, SolidFolderopenIcon } from '@/assets/icon/solid'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'

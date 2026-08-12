@@ -1,4 +1,4 @@
-import React from 'react'
+import type React from 'react'
 import styles from './RobotControl.module.scss'
 
 export interface RobotQrCodePlaceholderProps {

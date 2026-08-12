@@ -7,7 +7,7 @@ import { AIChatListItem } from '../../aiChatListItem/AIChatListItem'
 import type { ConcurrentStreamContentItemProps } from './type'
 import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useAIItemKind from '@/pages/ai-re-act/hooks/useAIItemKind'
-import { ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
 
 const PAGE_SIZE = 20
 

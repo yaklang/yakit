@@ -78,10 +78,10 @@ const AIChildWindowGroupStreamCardHeardWrapper: FC<AIChildWindowGroupStreamCardH
     const lastItem = rawData.get(lastToken)
     if (!lastItem) return false
     switch (lastItem.type) {
-      case AIChatQSDataTypeEnum.STREAM:
+      case AIChatQSDataTypeEnum.STREAM: {
         const contentLength = lastItem.data?.content?.length || 0
         return contentLength > STREAM_MASK_THRESHOLD
-
+      }
       default:
         return false
     }

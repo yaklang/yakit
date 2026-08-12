@@ -1,5 +1,6 @@
-import type { AISource, AIAgentGrpcApi } from '../grpcApi'
+import type { AIAgentGrpcApi } from '../grpcApi'
 import type { AIChatQSData, SessionRenderContent } from '../aiRender'
+import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 import {
   DB_NAME,
   DB_VERSION,
@@ -79,7 +80,7 @@ class AIChatPersistStore {
   /** 写入/覆盖会话渲染快照（content + grpcOffset 同写） */
   async setSessionRender(
     sessionId: string,
-    source: AISource,
+    source: DeleteSessionsAISourceType,
     content: SessionRenderContent,
     grpcOffset: number,
   ): Promise<void> {
@@ -95,7 +96,10 @@ class AIChatPersistStore {
   }
 
   /** 读取会话渲染整行（含 grpcOffset） */
-  async getSessionRender(sessionId: string, source: AISource): Promise<SessionRenderRecord | undefined> {
+  async getSessionRender(
+    sessionId: string,
+    source: DeleteSessionsAISourceType,
+  ): Promise<SessionRenderRecord | undefined> {
     const db = await this.open()
     return new Promise((resolve, reject) => {
       const tx = db.transaction(SESSION_RENDER_STORE, 'readonly')
@@ -305,7 +309,7 @@ class AIChatPersistStore {
    * - 用 sessionRender.bySource 索引直接取该 source 的主键列表（不必全表扫）
    * - 删渲染行后，再按 sessionId 清 sessionContent / sessionReference
    */
-  async deletePersistBySource(source: AISource): Promise<void> {
+  async deletePersistBySource(source: DeleteSessionsAISourceType): Promise<void> {
     const db = await this.open()
     return new Promise((resolve, reject) => {
       const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
@@ -319,7 +323,7 @@ class AIChatPersistStore {
       // 等价 SQL: SELECT primaryKey FROM sessionRender WHERE source = ?
       const keysReq = sourceIndex.getAllKeys(IDBKeyRange.only(source))
       keysReq.onsuccess = () => {
-        const keys = keysReq.result as Array<[string, AISource]>
+        const keys = keysReq.result as Array<[string, DeleteSessionsAISourceType]>
         const sessionIds = new Set<string>()
 
         for (const key of keys) {
@@ -344,6 +348,19 @@ class AIChatPersistStore {
         }
       }
       keysReq.onerror = () => reject(keysReq.error)
+    })
+  }
+
+  /** 清空三表全部持久化数据（全库清删） */
+  async deleteAllPersist(): Promise<void> {
+    const db = await this.open()
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+      tx.objectStore(SESSION_RENDER_STORE).clear()
+      tx.objectStore(SESSION_CONTENT_STORE).clear()
+      tx.objectStore(SESSION_REFERENCE_STORE).clear()
     })
   }
 }

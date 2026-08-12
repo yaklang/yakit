@@ -1,18 +1,19 @@
-import React, { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
+import type React from 'react'
+import { memo, useRef, useMemo, useState, useReducer, useEffect } from 'react'
 import { useMemoizedFn, useDebounceFn, useInViewport, useUpdateEffect } from 'ahooks'
 import { OutlineTrashIcon, OutlineDatabasebackupIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { RemotePluginGV } from '@/enums/plugin'
-import { PluginSearchParams, PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
+import type { PluginSearchParams, PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
 import { defaultSearch } from '@/pages/plugins/builtInData'
-import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
+import type { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { pluginOnlineReducer, initialOnlineState } from '@/pages/plugins/pluginReducer'
 import {
-  PluginsQueryProps,
+  type PluginsQueryProps,
   convertPluginsRequestParams,
   apiFetchRecycleList,
-  PluginsRecycleRequest,
+  type PluginsRecycleRequest,
   apiRemoveRecyclePlugin,
   apiReductionRecyclePlugin,
 } from '@/pages/plugins/utils'
@@ -36,8 +37,7 @@ import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 
 interface HubListRecycleProps {}
 /** @name 插件回收站 */
-export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
-  const {} = props
+export const HubListRecycle: React.FC<HubListRecycleProps> = memo(() => {
   const { t } = useI18nNamespaces(['pluginHub', 'yakitUi'])
   const emptyImageTarget = useEmptyImage('search')
 
@@ -127,7 +127,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
       }
       setLoading(true)
 
-      const params: PluginListPageMeta = !!reset
+      const params: PluginListPageMeta = reset
         ? { page: 1, limit: 20 }
         : {
             page: response.pagemeta.page + 1,
@@ -278,7 +278,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
     setBatchDelLoading(true)
 
     try {
-      let request: PluginsRecycleRequest = handleBatchRequest()
+      const request: PluginsRecycleRequest = handleBatchRequest()
       await apiRemoveRecyclePlugin(request)
     } catch (error) {}
     setTimeout(() => {
@@ -307,7 +307,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
   })
   // 单个删除
   const handleSingeDel = useMemoizedFn((info: YakitPluginOnlineDetail) => {
-    let request: PluginsRecycleRequest = {
+    const request: PluginsRecycleRequest = {
       uuid: [info.uuid],
     }
     apiRemoveRecyclePlugin(request)
@@ -334,7 +334,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
     setBatchRestoreLoading(true)
 
     try {
-      let request: PluginsRecycleRequest = handleBatchRequest()
+      const request: PluginsRecycleRequest = handleBatchRequest()
       await apiReductionRecyclePlugin(request)
     } catch (error) {}
     setTimeout(() => {

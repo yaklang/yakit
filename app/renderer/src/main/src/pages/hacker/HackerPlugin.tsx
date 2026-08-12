@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons'
 import { useGetState, useMemoizedFn, useVirtualList } from 'ahooks'
 import { queryYakScriptList } from '../yakitStore/network'
-import { YakScript } from '../invoker/schema'
+import type { YakScript } from '../invoker/schema'
 import { AutoCard } from '../../components/AutoCard'
 import { PluginResultUI } from '../yakitStore/viewers/base'
 import useHoldingIPCRStream from '../../hook/useHoldingIPCRStream'
@@ -120,7 +120,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
       IsHttps: props.isHTTPS,
       Request: props.request,
     }
-    if (!!props.response) params.Response = props.response
+    if (props.response) params.Response = props.response
     ipcRenderer
       .invoke('ExecutePacketYakScript', params, token)
       .then(() => {})
@@ -130,7 +130,9 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
       })
   })
   const cancelScript = useMemoizedFn(() => {
+    // cancel 后主进程不再转发 end，需本地收尾
     ipcRenderer.invoke('cancel-ExecutePacketYakScript', token)
+    setExecting(false)
   })
 
   useEffect(() => {
@@ -258,7 +260,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                   </div>
                 }
               >
-                <Button size={'small'} type={!!keyword ? 'primary' : 'link'} icon={<SearchOutlined />} />
+                <Button size={'small'} type={keyword ? 'primary' : 'link'} icon={<SearchOutlined />} />
               </Popover>
               {execting ? (
                 <Button

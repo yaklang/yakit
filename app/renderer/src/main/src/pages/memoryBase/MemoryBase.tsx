@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
+import type {
   MemoryBaseProps,
   AITextareaProps,
   MemoryQueryProps,
@@ -25,7 +25,7 @@ import {
   OutlineTrashIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
-import { Badge, Divider, RadioChangeEvent, Slider, Tooltip } from 'antd'
+import { Badge, Divider, type RadioChangeEvent, Slider, Tooltip } from 'antd'
 import { OutlineSparklesColorsIcon } from '@/assets/icon/colors'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -39,14 +39,13 @@ import {
   useDebounceFn,
   useInViewport,
   useMemoizedFn,
-  useSelections,
 } from 'ahooks'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { AIMemoryContent } from '../ai-agent/chatTemplate/aiMemoryList/AIMemoryList'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
-import { YakitCombinationSearchProps } from '@/components/YakitCombinationSearch/YakitCombinationSearchType'
+import type { YakitCombinationSearchProps } from '@/components/YakitCombinationSearch/YakitCombinationSearchType'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
 import { genDefaultPagination } from '../invoker/schema'
 import {
@@ -56,21 +55,21 @@ import {
   grpcQueryAIMemoryEntity,
 } from './utils'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentGrpcApi } from '../ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi } from '../ai-re-act/hooks/grpcApi'
 import { LoadingOutlined } from '@ant-design/icons'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { batchRefreshMenuData } from '../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { TagsCode } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { TagsCode } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { cloneDeep } from 'lodash'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { yakitNotify } from '@/utils/notification'
 import { NoPromptHint } from '../pluginHub/utilsUI/UtilsTemplate'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
-import { ParamsTProps } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
+import type { ParamsTProps } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { YakitPanel } = YakitCollapse
@@ -201,7 +200,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
   /**开启实时数据刷新 */
   const onStartInterval = useMemoizedFn(() => {
     const filter: AIMemoryEntityFilter = getAIMemoryEntityFilter({ query: queryParams, search })
-    if (!!filter.SemanticQuery) return
+    if (filter.SemanticQuery) return
     debugVirtualTableEvent.startT()
   })
   const onFirst = useMemoizedFn(() => {
@@ -307,7 +306,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     let filterParams: AIMemoryEntityFilter = {}
     if (allCheck) {
       const query = getAIMemoryEntityFilter({ query: queryParams, search })
-      if (!!query.SemanticQuery) {
+      if (query.SemanticQuery) {
         filterParams = {
           MemoryID: selectList.map((ele) => ele.MemoryID),
         }
@@ -333,7 +332,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
       })
   })
   const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-    let sort = { ...newSort }
+    const sort = { ...newSort }
     if (sort.order === 'none') {
       sort.order = 'desc'
       sort.orderBy = 'id'
@@ -391,7 +390,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     }
   })
   const currentSelectItem: AIAgentGrpcApi.MemoryEntry | null = useCreation(() => {
-    if (!!currentItem) {
+    if (currentItem) {
       const item: AIAgentGrpcApi.MemoryEntry = {
         id: `${currentItem.Id}`,
         created_at: '',
@@ -483,7 +482,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     }
   }, [search])
   const onValueChange = useMemoizedFn((e) => {
-    let newSearch: AIMemorySearchParams = {
+    const newSearch: AIMemorySearchParams = {
       ...search,
     }
     switch (search.type) {
@@ -507,14 +506,14 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
       const newParams: ParamsTProps = {
         Pagination: {
           ...tableParams.Pagination,
-          FixedLimit: !!filter.SemanticQuery ? 200 : undefined,
+          FixedLimit: filter.SemanticQuery ? 200 : undefined,
         },
         Filter: {
           ...tableParams.Filter,
           ...filter,
         },
       }
-      if (!!filter.SemanticQuery) {
+      if (filter.SemanticQuery) {
         // debugVirtualTableEvent.stopT()
         //ai 搜索限制200条
         debugVirtualTableEvent.setP({ ...newParams, startLoop: false })

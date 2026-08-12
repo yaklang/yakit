@@ -1,4 +1,4 @@
-import { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { useEffect, useMemo, useState, type FC } from 'react'
 import styles from './FilePreview.module.scss'

@@ -1,9 +1,12 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
+import React, { type ReactNode, useEffect, useRef, useState } from 'react'
 import styles from './SpaceEnginePage.module.scss'
 import { OutlineInformationcircleIcon, OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
-import { ExpandAndRetract, ExpandAndRetractExcessiveState } from '../plugins/operator/expandAndRetract/ExpandAndRetract'
+import {
+  ExpandAndRetract,
+  type ExpandAndRetractExcessiveState,
+} from '../plugins/operator/expandAndRetract/ExpandAndRetract'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRouteToPageInfo } from '@/routes/newRoute'
 import emiter from '@/utils/eventBus/eventBus'
@@ -11,7 +14,7 @@ import { Form } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import {
-  GetSpaceEngineStatusProps,
+  type GetSpaceEngineStatusProps,
   apiCancelFetchPortAssetFromSpaceEngine,
   apiFetchPortAssetFromSpaceEngine,
   apiGetGlobalNetworkConfig,
@@ -22,16 +25,20 @@ import {
 } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import {
-  GlobalNetworkConfig,
-  ThirdPartyApplicationConfig,
+  type GlobalNetworkConfig,
+  type ThirdPartyApplicationConfig,
   defaultParams,
 } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { OutputFormComponentsByType } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { YakParamProps } from '../plugins/pluginsType'
+import type { YakParamProps } from '../plugins/pluginsType'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { SpaceEngineStartParams, SpaceEngineStatus, getDefaultSpaceEngineStartParams } from '@/models/SpaceEngine'
+import {
+  type SpaceEngineStartParams,
+  type SpaceEngineStatus,
+  getDefaultSpaceEngineStartParams,
+} from '@/models/SpaceEngine'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { randomString } from '@/utils/randomUtil'
 import classNames from 'classnames'
@@ -143,7 +150,9 @@ export const SpaceEnginePage: React.FC<SpaceEnginePageProps> = React.memo((props
   const onStopExecute = useMemoizedFn((e) => {
     e.stopPropagation()
     apiCancelFetchPortAssetFromSpaceEngine(tokenRef.current).then(() => {
+      // cancel 后主进程不再转发 end，需本地收尾
       spaceEngineStreamEvent.stop()
+      setExecuteStatus('finished')
       setIsExecuting(false)
     })
   })
@@ -271,7 +280,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
       extraParams[item.Key] = item.Value
     })
 
-    let m = showYakitModal({
+    const m = showYakitModal({
       title: (modalT) => modalT('SpaceEngineFormContent.addThirdPartyApp'),
       width: 600,
       closable: true,
@@ -302,15 +311,17 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                 apiGetSpaceEngineAccountStatus(editItem).then((value) => {
                   switch (value.Status) {
                     case 'normal':
-                      const params = {
-                        ...globalNetworkConfig,
-                        AppConfigs: updatedValue?.AppConfigs,
-                        AiApiPriority: updatedValue?.AiApiPriority,
+                      {
+                        const params = {
+                          ...globalNetworkConfig,
+                          AppConfigs: updatedValue?.AppConfigs,
+                          AiApiPriority: updatedValue?.AiApiPriority,
+                        }
+                        apiSetGlobalNetworkConfig(params).then(() => {
+                          onGetGlobalNetworkConfig()
+                          m.destroy()
+                        })
                       }
-                      apiSetGlobalNetworkConfig(params).then(() => {
-                        onGetGlobalNetworkConfig()
-                        m.destroy()
-                      })
                       break
                     default:
                       yakitNotify('error', t('SpaceEngineFormContent.setEngineFailed') + value.Info || value.Status)

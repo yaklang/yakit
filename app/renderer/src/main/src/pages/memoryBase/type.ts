@@ -1,6 +1,6 @@
-import { TagsCode } from '@/components/HTTPFlowTable/HTTPFlowTable'
-import { QSInputTextareaProps } from '../ai-agent/template/type'
-import { PaginationSchema } from '../invoker/schema'
+import type { TagsCode } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import type { QSInputTextareaProps } from '../ai-agent/template/type'
+import type { PaginationSchema } from '../invoker/schema'
 
 export type RateModeType = 'must_aware' | 'action_tips' | 'reliability_warning' | 'connection_links' | 'none'
 export interface MemoryBaseProps {

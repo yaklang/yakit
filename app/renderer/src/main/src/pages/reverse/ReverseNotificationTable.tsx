@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Form, Space, Table, Tag } from 'antd'
-import { ReverseNotification } from './ReverseServerPage'
+import type { ReverseNotification } from './ReverseServerPage'
 import { CopyableField, ManyMultiSelectForString, SwitchItem } from '../../utils/inputUtil'
 import { AutoSpin } from '../../components/AutoSpin'
 
@@ -19,7 +19,7 @@ export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps
       logs = logs.filter((i) => !!i.token)
     }
 
-    if (!!type) {
+    if (type) {
       const types = type.split(',')
       logs = logs.filter((i) => types.includes(i.type))
     }

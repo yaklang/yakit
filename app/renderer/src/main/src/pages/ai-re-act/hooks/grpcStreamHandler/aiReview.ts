@@ -464,33 +464,35 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
   // 实时数据
   switch (reviewDetail.type) {
     case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
-      if (noTaskReview) return
+      {
+        if (noTaskReview) return
 
-      reviewDetail.data.selected = JSON.stringify(data.params)
-      reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
-      persistIndependentItem(requestInfo.sessionId, reviewDetail)
-      // 清空plan-review的异步拓展信息
-      meta.currentPlanReviewExtraId = ''
-      meta.planReviewExtraData.clear()
-      // 生成执行的任务树并更新到UI上
-      const tasks = reviewDetail.data
-      const plans = genExecTasks(tasks.plans.root_task)
-      store.getState().updatePlanTree({
-        task_tree: cloneDeep(plans),
-        root_task_name: tasks.plans.root_task.name,
-      })
-      // 将操作记录渲染到列表上
-      store.getState().dispatchStreamingNode({
-        chatType: chatType,
-        parentTaskId: reviewDetail.TaskId,
-        node: {
-          token: reviewDetail.id,
-          kind: 'item',
-          type: reviewDetail.type,
-        },
-      })
-      // 关闭review的弹窗
-      if (chatType === 'task') store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
+        reviewDetail.data.selected = JSON.stringify(data.params)
+        reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
+        persistIndependentItem(requestInfo.sessionId, reviewDetail)
+        // 清空plan-review的异步拓展信息
+        meta.currentPlanReviewExtraId = ''
+        meta.planReviewExtraData.clear()
+        // 生成执行的任务树并更新到UI上
+        const tasks = reviewDetail.data
+        const plans = genExecTasks(tasks.plans.root_task)
+        store.getState().updatePlanTree({
+          task_tree: cloneDeep(plans),
+          root_task_name: tasks.plans.root_task.name,
+        })
+        // 将操作记录渲染到列表上
+        store.getState().dispatchStreamingNode({
+          chatType: chatType,
+          parentTaskId: reviewDetail.TaskId,
+          node: {
+            token: reviewDetail.id,
+            kind: 'item',
+            type: reviewDetail.type,
+          },
+        })
+        // 关闭review的弹窗
+        if (chatType === 'task') store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
+      }
       break
     case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
       if (chatType === 'reAct') {

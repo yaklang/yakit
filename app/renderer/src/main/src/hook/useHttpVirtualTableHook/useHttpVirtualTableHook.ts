@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import {
+import type {
   ParamsTProps,
   useVirtualTableHookParams,
   DataResponseProps,
@@ -9,9 +9,9 @@ import {
 } from './useHttpVirtualTableHookType'
 import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
-import { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { yakitNotify } from '@/utils/notification'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 
 const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
@@ -325,7 +325,7 @@ export default function useHttpVirtualTableHook<
   // 滚动条监听
   useEffect(() => {
     let sTop, cHeight, sHeight
-    let id = setInterval(() => {
+    const id = setInterval(() => {
       const scrollTop = tableRef.current?.containerRef?.scrollTop
       const clientHeight = tableRef.current?.containerRef?.clientHeight
       const scrollHeight = tableRef.current?.containerRef?.scrollHeight

@@ -1,6 +1,6 @@
 import { grpcQueryAISession } from '@/pages/ai-agent/grpc'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
-import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { cloneDeep } from 'lodash'
@@ -34,7 +34,7 @@ const mergeUniqueChats = (prev: AISession[], next: AISession[]) => {
   return uniqueNext.length ? [...prev, ...uniqueNext] : prev
 }
 
-const useSessionList = (aiSource: AISource[]) => {
+const useSessionList = (aiSource: AISource[], platform: string[] = []) => {
   const [_, setPagination, getPagination] = useGetSetState(cloneDeep(initialHistoryPagination))
   const [sessions, setSessions, getSessions] = useGetSetState<AISession[]>([])
   const historyLoadingRef = useRef(false)
@@ -48,6 +48,7 @@ const useSessionList = (aiSource: AISource[]) => {
         Filter: {
           Source: aiSource,
           SessionID: [sessionId],
+          Platform: platform,
         },
       })
       setSessions((prev) => {
@@ -74,9 +75,13 @@ const useSessionList = (aiSource: AISource[]) => {
     historyLoadingRef.current = true
     try {
       const { Data, Total } = await grpcQueryAISession({
-        Pagination: currentPagination,
+        Pagination: {
+          ...currentPagination,
+          Limit: -1,
+        },
         Filter: {
           Source: aiSource,
+          Platform: platform,
         },
       })
       if (isRefresh) {

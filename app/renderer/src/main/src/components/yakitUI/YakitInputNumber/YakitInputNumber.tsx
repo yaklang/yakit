@@ -1,10 +1,11 @@
 import { InputNumber } from 'antd'
-import React, { useEffect, useRef, useState } from 'react'
-import { ValueType, YakitInputNumberHorizontalProps, YakitInputNumberProps } from './YakitInputNumberType'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ValueType, YakitInputNumberHorizontalProps, YakitInputNumberProps } from './YakitInputNumberType'
 import styles from './YakitInputNumber.module.scss'
 import classNames from 'classnames'
 import { ChevronLeftIcon, ChevronRightIcon } from '@/assets/newIcon'
-import { useMemoizedFn, useMutationObserver } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import { getReleaseEditionName } from '@/utils/envfile'
 
 /**

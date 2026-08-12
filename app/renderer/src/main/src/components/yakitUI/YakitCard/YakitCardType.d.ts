@@ -1,4 +1,4 @@
-import React, { CSSProperties, ReactNode } from 'react'
+import { type CSSProperties, type ReactNode } from 'react'
 
 /**
  * @description Csrd

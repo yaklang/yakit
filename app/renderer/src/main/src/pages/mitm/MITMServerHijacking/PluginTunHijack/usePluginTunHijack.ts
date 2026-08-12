@@ -1,16 +1,15 @@
 import { useCreation, useMemoizedFn, useSafeState } from 'ahooks'
-import {
+import type {
   OptionalDebugPluginRequest,
   pluginTunHijackActionsProps,
   PluginTunHijackParams,
   PluginTunHijackStateProps,
   TunSessionStateProps,
 } from './PluginTunHijackType'
-import { useEffect, useRef } from 'react'
-import { yakitNotify } from '@/utils/notification'
-import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
+import { useRef } from 'react'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
 import { randomString } from '@/utils/randomUtil'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 
 // 会话级（Session-level）的状态，用于存储当前活动 TUN 设备的信息
@@ -24,6 +23,8 @@ export const tunSessionStateDefault: TunSessionStateProps = {
 const usePluginTunHijack = (params: PluginTunHijackParams) => {
   const { PluginName, onError, onEnd, setRuntimeId } = params
   const tokenRef = useRef<string>(randomString(40))
+  /** 主动取消时主进程不会再转发 end，需本地收尾；并避免与自然 onEnd 重复清理 */
+  const isManualCancelRef = useRef<boolean>(false)
 
   /** 是否在执行中 */
   const [isExecuting, setIsExecuting] = useSafeState<boolean>(false)
@@ -33,6 +34,10 @@ const usePluginTunHijack = (params: PluginTunHijackParams) => {
     token: tokenRef.current,
     onEnd: () => {
       debugPluginStreamEvent.stop()
+      if (isManualCancelRef.current) {
+        isManualCancelRef.current = false
+        return
+      }
       onEnd?.()
       setIsExecuting(false)
     },
@@ -54,6 +59,7 @@ const usePluginTunHijack = (params: PluginTunHijackParams) => {
       ...newParams,
       PluginName,
     }
+    isManualCancelRef.current = false
     apiDebugPlugin({
       params,
       token: tokenRef.current,
@@ -65,8 +71,13 @@ const usePluginTunHijack = (params: PluginTunHijackParams) => {
   })
 
   const cancelPluginTunHijackById = useMemoizedFn(() => {
+    // cancel 后主进程不再转发 ${token}-end，需在此完成本地收尾
+    isManualCancelRef.current = true
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setIsExecuting(false)
+    onEnd?.()
   })
 
   const state = useCreation(() => ({ isExecuting, streamInfo }) as PluginTunHijackStateProps, [isExecuting, streamInfo])

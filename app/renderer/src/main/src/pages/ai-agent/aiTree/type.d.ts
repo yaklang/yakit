@@ -1,4 +1,3 @@
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 export interface AITreeProps {
   tasks: AITaskInfoProps[]

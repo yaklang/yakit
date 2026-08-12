@@ -1,5 +1,5 @@
-import { FC, forwardRef, ReactNode, useMemo, useState } from 'react'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { type FC, forwardRef, type ReactNode, useMemo, useState } from 'react'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import styles from './OperationLog.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlineChevrondownIcon, OutlineClockIcon } from '@/assets/icon/outline'
@@ -8,11 +8,11 @@ import classNames from 'classnames'
 import { formatTime } from '@/utils/timeUtil'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { FileLogShowDataProps } from '@/pages/invoker/YakitLogFormatter'
+import type { FileLogShowDataProps } from '@/pages/invoker/YakitLogFormatter'
 import moment from 'moment'
 import { useMemoizedFn } from 'ahooks'
-import { PluginExecuteLogFile } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
-import { ItemProps, ListProps, Virtuoso } from 'react-virtuoso'
+import type { PluginExecuteLogFile } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResultType'
+import { type ItemProps, type ListProps, Virtuoso } from 'react-virtuoso'
 
 interface OperationLogProps {
   loading: boolean

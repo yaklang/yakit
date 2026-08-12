@@ -1,10 +1,10 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
-import { Avatar, Layout, Modal, Upload } from 'antd'
+import React, { type ReactNode, useEffect, useRef, useState } from 'react'
+import { Avatar, Layout, Upload } from 'antd'
 import { CameraOutlined } from '@ant-design/icons'
 import { failed, success, yakitFailed } from '../utils/notification'
 import {
-  CompletionTotal,
-  MethodSuggestion,
+  type CompletionTotal,
+  type MethodSuggestion,
   setYaklangBuildInMethodCompletion,
   setYaklangCompletions,
 } from '../utils/monacoSpec/yakCompletionSchema'
@@ -14,17 +14,16 @@ import { AutoSpin } from '../components/AutoSpin'
 import { addToTab } from './MainTabs'
 import Login from './Login'
 import SetPassword from './SetPassword'
-import { useEeSystemConfig, UserInfoProps, useStore, yakitDynamicStatus } from '@/store'
-import { SimpleQueryYakScriptSchema } from './invoker/batch/QueryYakScriptParam'
+import { useEeSystemConfig, type UserInfoProps, useStore, yakitDynamicStatus } from '@/store'
+import type { SimpleQueryYakScriptSchema } from './invoker/batch/QueryYakScriptParam'
 import { refreshToken } from '@/utils/login'
 import { getLocalValue, getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
 import { NetWorkApi } from '@/services/fetch'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import {
   globalUserLogin,
   isCommunityEdition,
   isCommunityIRify,
-  isCommunityYakit,
   isEnpriTrace,
   isEnpriTraceAgent,
   isEnterpriseOrSimpleEdition,
@@ -38,12 +37,11 @@ import CustomizeMenu from './customizeMenu/CustomizeMenu'
 import { ControlOperation } from '@/pages/dynamicControl/DynamicControl'
 import { YakitHintModal } from '@/components/yakitUI/YakitHint/YakitHintModal'
 import { useScreenRecorder } from '@/store/screenRecorder'
-import PublicMenu, { RouteToPageProps } from './layout/publicMenu/PublicMenu'
-import { YakitRoute } from '@/enums/yakitRoute'
+import PublicMenu, { type RouteToPageProps } from './layout/publicMenu/PublicMenu'
+import { type YakitRoute } from '@/enums/yakitRoute'
 import { YakChatCS } from '@/components/yakChat/chatCS'
-import yakitCattle from '../assets/yakitCattle.png'
 import { MainOperatorContent } from './layout/mainOperatorContent/MainOperatorContent'
-import { MultipleNodeInfo } from './layout/mainOperatorContent/MainOperatorContentType'
+import type { MultipleNodeInfo } from './layout/mainOperatorContent/MainOperatorContentType'
 import { WaterMark } from '@ant-design/pro-layout'
 import emiter from '@/utils/eventBus/eventBus'
 import { httpDeleteOSSResource } from '@/apiUtils/http'
@@ -155,11 +153,15 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
   })
 
   // 修改头像
-  const setAvatar = useMemoizedFn(async (file) => {
+  const setAvatar = useMemoizedFn(async (file: File) => {
+    if (!file.path) {
+      failed(t('SetUserInfo.avatarUpdateFailed', { error: 'missing file path' }))
+      return
+    }
     await ipcRenderer
       .invoke('http-upload-img-path', { path: file.path, type: 'headImg' })
       .then((res) => {
-        let imgUrl: string = res.data
+        const imgUrl: string = res.data
         NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({
           method: 'post',
           url: 'urm/up/userinfo',
@@ -174,7 +176,7 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
                 ...userInfo,
                 companyHeadImg: imgUrl,
               })
-              let imgName = imgUrl.split('/').reverse()[0]
+              const imgName = imgUrl.split('/').reverse()[0]
               deleteAvatar(imgName)
             }
           })
@@ -366,7 +368,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
       ipcRenderer.invoke('alive-dynamic-control-status').then((is: boolean) => {
         if (is) {
           getRemoteValue('REMOTE_OPERATION_ID').then((tunnel) => {
-            if (!!tunnel) {
+            if (tunnel) {
               NetWorkApi<any, API.RemoteStatusResponse>({
                 method: 'get',
                 url: 'remote/status',

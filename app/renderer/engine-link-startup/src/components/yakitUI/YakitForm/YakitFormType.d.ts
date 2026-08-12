@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
-import { InputProps } from 'antd'
+import type { InputProps } from 'antd'
 
 /**拖拽属性 */
 export interface FileDraggerProps {

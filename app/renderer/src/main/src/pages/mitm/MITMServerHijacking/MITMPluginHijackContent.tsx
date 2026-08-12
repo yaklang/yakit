@@ -5,20 +5,20 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { HotPatchTemplate } from '@/pages/invoker/data/MITMPluginTamplate'
-import { YakScript, YakScriptHooks } from '@/pages/invoker/schema'
-import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { YakScript, YakScriptHooks } from '@/pages/invoker/schema'
+import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
 import { useCreation, useDebounceEffect, useInViewport, useMap, useMemoizedFn } from 'ahooks'
-import React, { ReactElement, useEffect, useRef, useState, useContext, useMemo } from 'react'
+import React, { useEffect, useRef, useState, useContext, useMemo } from 'react'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
-import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MitmStatus } from '../MITMPage'
+import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, type MitmStatus } from '../MITMPage'
 import { MITMYakScriptLoader } from '../MITMYakScriptLoader'
 import {
   MITMPluginLocalList,
   PluginGroup,
   PluginSearch,
-  YakFilterRemoteObj,
+  type YakFilterRemoteObj,
   YakModuleListHeard,
 } from './MITMPluginLocalList'
 import { enableMITMPluginMode } from './MITMServerHijacking'
@@ -29,7 +29,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import emiter from '@/utils/eventBus/eventBus'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem } from '@/pages/fuzzer/HTTPFuzzerHotPatch'
+import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '@/pages/fuzzer/HTTPFuzzerHotPatch'
 import { cloneDeep } from 'lodash'
 import { MITMHotPatchTempDefault } from '@/defaultConstants/mitm'
 import { SolidPlayIcon, SolidStopIcon } from '@/assets/icon/solid'
@@ -47,25 +47,25 @@ import {
   grpcMITMExecScriptContent,
   grpcMITMGetCurrentHook,
   grpcMITMRemoveHook,
-  MITMExecScriptContentRequest,
-  MITMRemoveHookRequest,
+  type MITMExecScriptContentRequest,
+  type MITMRemoveHookRequest,
 } from '../MITMHacker/utils'
 import { Tooltip } from 'antd'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import usePluginTrace from './PluginTrace/usePluginTrace'
-import { PluginTraceRefProps } from './PluginTrace/type'
+import type { PluginTraceRefProps } from './PluginTrace/type'
 import { pluginTraceRefFunDef } from './PluginTrace/PluginTrace'
 import { PluginTunHijack, PluginTunHijackDef } from './PluginTunHijack/PluginTunHijack'
-import { PluginTunHijackRefProps } from './PluginTunHijack/PluginTunHijackType'
+import type { PluginTunHijackRefProps } from './PluginTunHijack/PluginTunHijackType'
 import usePluginTunHijack, { tunSessionStateDefault } from './PluginTunHijack/usePluginTunHijack'
 import { useStore } from '@/store/mitmState'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
+import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const PluginTrace = React.lazy(() => import('./PluginTrace/PluginTrace'))
 
@@ -322,7 +322,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, allCheckList.length ? 'true' : '')
         onSetLoadedPluginLen(allCheckList.length)
         // 返回的hooks里面是真正加载成功的插件，既有带参插件又有不带参插件，通过本地缓存中带参数的插件参数值是否存在，存在则表示有参数的勾选插件，否则表示无参数的勾选插件
-        let promises_1: (() => Promise<any>)[] = []
+        const promises_1: (() => Promise<any>)[] = []
         allCheckList.forEach((scriptName) => {
           promises_1.push(() => getRemoteValue('mitm_has_params_' + scriptName))
         })
@@ -356,7 +356,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   const hooksKeyRef = useRef<string>('')
   const hooksItemCacheRef = useRef<YakScript[]>([])
   const hooksItem: YakScript[] = useCreation(() => {
-    let tmpItem: YakScript[] = []
+    const tmpItem: YakScript[] = []
     const keys: string[] = []
     hooks.forEach((value, key) => {
       keys.push(key)

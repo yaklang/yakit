@@ -1,5 +1,6 @@
-import { TagProps } from 'antd'
-import { CheckableTagProps } from 'antd/lib/tag'
+import type { ReactNode } from 'react'
+import { type TagProps } from 'antd'
+import { type CheckableTagProps } from 'antd/lib/tag'
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 
 /**

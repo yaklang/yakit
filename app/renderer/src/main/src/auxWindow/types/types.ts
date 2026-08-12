@@ -1,4 +1,5 @@
-import { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
+import type { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
+import type * as AuxWindowTypes from '@/auxWindow/types/types'
 
 export interface AuxWindowCreateOptions {
   route: string
@@ -28,8 +29,8 @@ export interface AuxWindowPushPayload {
 }
 
 declare global {
-  type AuxWindowInitPayload = import('@/auxWindow/types/types').AuxWindowInitPayload
-  type AuxWindowPushPayload = import('@/auxWindow/types/types').AuxWindowPushPayload
+  type AuxWindowInitPayload = AuxWindowTypes.AuxWindowInitPayload
+  type AuxWindowPushPayload = AuxWindowTypes.AuxWindowPushPayload
 }
 
 export {}

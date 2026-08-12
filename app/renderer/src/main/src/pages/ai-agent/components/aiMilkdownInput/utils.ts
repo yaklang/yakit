@@ -1,10 +1,10 @@
-import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
+import type { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
-import { AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
-import { AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
-import { AICodeBlockCommandParams, aiCodeBlockCustomId } from './aiCodeBlock/aiCustomCodeBlockPlugin'
+import { type AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
+import { type AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { type AICodeBlockCommandParams, aiCodeBlockCustomId } from './aiCodeBlock/aiCustomCodeBlockPlugin'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
-import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 
 /**md编辑器中匹配出提及相关数据/纯文本 */
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {

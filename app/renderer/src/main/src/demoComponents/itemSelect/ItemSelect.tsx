@@ -1,6 +1,7 @@
-import React, { memo, useMemo } from 'react'
+import type React from 'react'
+import { memo, useMemo } from 'react'
 import { Form } from 'antd'
-import { ItemSelectMultiForStringProps, ItemSelectOneProps } from './ItemSelectType'
+import type { ItemSelectMultiForStringProps, ItemSelectOneProps } from './ItemSelectType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 
 const { Item } = Form

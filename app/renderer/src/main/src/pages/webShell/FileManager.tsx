@@ -1,11 +1,8 @@
-import { YakURL } from '@/pages/yakURLTree/data'
-import { yakitFailed } from '@/utils/notification'
+import type { YakURL } from '@/pages/yakURLTree/data'
 import { requestYakURLList } from './yakURLTree/netif'
 import { showModal } from '@/utils/showModal'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { Divider } from 'antd'
-import { TreeNode } from '@/components/WebTree/WebTree'
+import type { TreeNode } from '@/components/WebTree/WebTree'
 
 const { ipcRenderer } = window.require('electron')
 

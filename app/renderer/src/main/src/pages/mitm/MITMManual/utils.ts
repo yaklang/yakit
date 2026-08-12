@@ -1,6 +1,5 @@
-import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import type { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
 import i18n from '@/i18n/i18n'
-import { defaultSingleManualHijack } from '@/defaultConstants/mitmV2'
 import { yakitNotify } from '@/utils/notification'
 const tOriginal = i18n.getFixedT(null, 'mitm')
 

@@ -1,9 +1,8 @@
-import { ReactNode } from 'react'
-import { PluginDetailsProps, PluginFilterParams, PluginSearchParams } from '../../baseTemplateType'
-import { YakScript } from '@/pages/invoker/schema'
-import { API } from '@/services/swagger/resposeType'
+import { type ReactNode } from 'react'
+import { type PluginDetailsProps, type PluginFilterParams, type PluginSearchParams } from '../../baseTemplateType'
+import { type API } from '@/services/swagger/resposeType'
 
-interface PluginLocalDetailsProps extends Omit<PluginDetailsProps, 'hidden', 'setHidden'> {}
+export interface PluginLocalDetailsProps extends Omit<PluginDetailsProps<any>, 'hidden' | 'setHidden'> {}
 export interface PluginLocalListDetailsProps {
   ref?: React.MutableRefObject<PluginLocalListDetailsRefProps | undefined>
   /**刷新插件列表 */

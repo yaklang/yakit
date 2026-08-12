@@ -1,9 +1,10 @@
-import { Paging } from '@/utils/yakQueryHTTPFlow'
-import { Risk } from '../schema'
-import { QueryGeneralResponse } from '@/pages/invoker/schema'
-import { ReactNode } from 'react'
-import { TableVirtualResizeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
+import { type Paging } from '@/utils/yakQueryHTTPFlow'
+import { type Risk } from '../schema'
+import { type QueryGeneralResponse } from '@/pages/invoker/schema'
+import { type ReactNode } from 'react'
+import { type TableVirtualResizeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import { type CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
+import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 // import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 export interface YakitRiskTableProps {
   setRiskLoading: (b: boolean) => void

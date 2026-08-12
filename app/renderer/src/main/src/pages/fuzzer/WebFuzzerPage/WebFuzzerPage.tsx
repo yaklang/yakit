@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { WebFuzzerPageProps, WebFuzzerType } from './WebFuzzerPageType'
+import type { WebFuzzerPageProps, WebFuzzerType } from './WebFuzzerPageType'
 import styles from './WebFuzzerPage.module.scss'
 import {
   OutlineAdjustmentsIcon,
@@ -13,17 +13,17 @@ import {
 import classNames from 'classnames'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import emiter from '@/utils/eventBus/eventBus'
 import { getRemoteValue } from '@/utils/kv'
-import { AdvancedConfigShowProps } from '../HTTPFuzzerPage'
+import type { AdvancedConfigShowProps } from '../HTTPFuzzerPage'
 
 import cloneDeep from 'lodash/cloneDeep'
 import { defaultWebFuzzerPageInfo, defaultAdvancedConfigShow } from '@/defaultConstants/HTTPFuzzerPage'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
 import { JSONParseLog } from '@/utils/tool'
 const { ipcRenderer } = window.require('electron')

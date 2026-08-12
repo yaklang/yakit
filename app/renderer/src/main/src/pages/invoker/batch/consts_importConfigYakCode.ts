@@ -1,4 +1,4 @@
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 
 export namespace ImportMenuConfig {
   export const Params: YakParamProps[] = [

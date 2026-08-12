@@ -1,5 +1,5 @@
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { TooltipRenderProps } from 'react-joyride'
+import type { TooltipRenderProps } from 'react-joyride'
 import styles from './custom-joyride-tooltip.module.scss'
 import { YakitCloseSvgIcon } from '@/components/basics/icon'
 

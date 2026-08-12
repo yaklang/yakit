@@ -1,4 +1,4 @@
-import { IconProps } from '@/assets/newIcon'
+import type { IconProps } from '@/assets/newIcon'
 import Icon from '@ant-design/icons'
 
 /**

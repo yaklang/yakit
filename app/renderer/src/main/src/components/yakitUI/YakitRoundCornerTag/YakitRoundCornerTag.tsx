@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react'
-import { YakitRoundCornerTagProps } from './YakitRoundCornerTagType'
+import type React from 'react'
+import { useMemo } from 'react'
+import type { YakitRoundCornerTagProps } from './YakitRoundCornerTagType'
 import classNames from 'classnames'
 import styles from './YakitRoundCornerTag.module.scss'
 

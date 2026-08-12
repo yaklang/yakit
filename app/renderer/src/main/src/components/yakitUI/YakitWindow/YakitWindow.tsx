@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom'
-import React, { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import {
+import type React from 'react'
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type {
   YakitWindowContentProps,
   WindowPositionOPProps,
   WindowPositionType,
@@ -297,7 +298,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
     const targetRect = draggleRef.current?.getBoundingClientRect()
     if (!targetRect) return
 
-    let containerTop = dockSideTop > 37 ? dockSideTop : 37
+    const containerTop = dockSideTop > 37 ? dockSideTop : 37
     setBounds({
       left: -targetRect.left + uiData.x,
       right: clientWidth - (targetRect.right - uiData.x),

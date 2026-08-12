@@ -1,5 +1,3 @@
-import { ReactNode } from 'react'
-import { PluginSourceType } from './type'
 import {
   OutlineAdjustmentsIcon,
   OutlineLocalPluginIcon,
@@ -7,12 +5,12 @@ import {
   OutlineOwnPluginIcon,
   OutlineTrashSecondIcon,
 } from '@/assets/icon/outline'
-import { YakScript } from '../invoker/schema'
-import { YakitPluginOnlineDetail } from '../plugins/online/PluginsOnlineType'
-import { ExportYakScriptStreamRequest } from '../plugins/local/PluginsLocalType'
+import type { YakScript } from '../invoker/schema'
+import type { YakitPluginOnlineDetail } from '../plugins/online/PluginsOnlineType'
+import type { ExportYakScriptStreamRequest } from '../plugins/local/PluginsLocalType'
 import { defaultFilter, defaultSearch } from '../plugins/builtInData'
 import { convertLocalPluginsRequestParams } from '../plugins/utils'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 
 export const HubSideBarList: YakitTabsProps[] = [
   {

@@ -1,11 +1,11 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
-import { FileTreeNodeProps, FileTreeProps, FileNodeProps, FileNodeMapProps } from './FileTreeType'
+import { useInViewport, useMemoizedFn, useSize } from 'ahooks'
+import type { FileTreeNodeProps, FileTreeProps, FileNodeProps } from './FileTreeType'
 import { SystemInfo } from '@/constants/hardware'
 import { Tree } from 'antd'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { FolderDefault, FolderDefaultExpanded, KeyToIcon } from '../../yakRunner/FileTree/icon'
 import { LoadingOutlined } from '@ant-design/icons'
 
@@ -42,8 +42,9 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
   }, [])
 
   useEffect(() => {
-    let system = SystemInfo.system
+    const system = SystemInfo.system
     if (!system) {
+      // ignore
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {

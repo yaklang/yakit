@@ -1,5 +1,5 @@
-import React, { ReactNode } from 'react'
-import { GithubOutlined, QqOutlined, WechatOutlined, SearchOutlined } from '@ant-design/icons'
+import { type ReactNode } from 'react'
+import { GithubOutlined, QqOutlined, WechatOutlined } from '@ant-design/icons'
 import './OnlineUserItem.scss'
 
 const PlatformIcon: { [key: string]: ReactNode } = {

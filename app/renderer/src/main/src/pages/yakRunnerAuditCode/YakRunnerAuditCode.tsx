@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
+import type React from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type {
   AreaInfoProps,
   AuditCodeStatusInfoProps,
   AuditEmiterYakUrlProps,
@@ -24,7 +25,7 @@ import styles from './YakRunnerAuditCode.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import emiter from '@/utils/eventBus/eventBus'
 import { failed, yakitNotify } from '@/utils/notification'
-import YakRunnerContext, { YakRunnerContextDispatcher, YakRunnerContextStore } from './hooks/YakRunnerContext'
+import YakRunnerContext, { type YakRunnerContextDispatcher, type YakRunnerContextStore } from './hooks/YakRunnerContext'
 import { clearMapAuditChildDetail } from './AuditCode/AuditTree/ChildMap'
 import { clearMapAuditDetail } from './AuditCode/AuditTree/AuditMap'
 import { clearMapFileDetail, getMapAllFileKey, getMapFileDetail, setMapFileDetail } from './FileTreeMap/FileMap'
@@ -37,22 +38,22 @@ import {
 import { FileDefault, FileSuffix, FolderDefault } from '../yakRunner/FileTree/icon'
 import moment from 'moment'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { CodeRangeProps, JumpSourceDataProps, RightAuditDetail } from './RightAuditDetail/RightAuditDetail'
+import { type CodeRangeProps, type JumpSourceDataProps, RightAuditDetail } from './RightAuditDetail/RightAuditDetail'
 import classNames from 'classnames'
-import { DragDropContext, DropResult, ResponderProvided } from '@hello-pangea/dnd'
+import { DragDropContext, type DropResult, type ResponderProvided } from '@hello-pangea/dnd'
 import cloneDeep from 'lodash/cloneDeep'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
 import { BottomEditorDetails } from './BottomEditorDetails/BottomEditorDetails'
-import { JumpToAuditEditorProps, ShowItemType } from './BottomEditorDetails/BottomEditorDetailsType'
+import type { JumpToAuditEditorProps, ShowItemType } from './BottomEditorDetails/BottomEditorDetailsType'
 import { AuditCodeWelcomePage, RunnerTabs } from './RunnerTabs/RunnerTabs'
 import { BottomSideBar } from './BottomSideBar/BottomSideBar'
 import { SolidDocumentdownloadIcon } from '@/assets/icon/solid'
-import { AuditCodePageInfoProps } from '@/store/pageInfo'
-import { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
-import { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
+import type { AuditCodePageInfoProps } from '@/store/pageInfo'
+import type { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
+import type { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { Selection } from './RunnerTabs/RunnerTabsType'
-import { LeftSideType } from './LeftSideBar/LeftSideBarType'
+import type { Selection } from './RunnerTabs/RunnerTabsType'
+import type { LeftSideType } from './LeftSideBar/LeftSideBarType'
 import { LeftSideBar } from './LeftSideBar/LeftSideBar'
 import { onSetSelectedSearchVal } from './AuditSearchModal/AuditSearch'
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from '@/utils/globalShortcutKey/utils'
@@ -169,7 +170,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
           setMapFileDetail(rootPath, node)
           const children: FileTreeListProps[] = []
 
-          let childArr: string[] = []
+          const childArr: string[] = []
           list.forEach((item) => {
             // 注入文件结构Map
             childArr.push(item.path)
@@ -245,7 +246,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     handleFetchFileList(path, (value) => {
       isFetchRef.current = false
       if (value.length > 0) {
-        let childArr: string[] = []
+        const childArr: string[] = []
         // 文件Map
         value.forEach((item) => {
           // 注入文件结构Map
@@ -296,7 +297,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
   useEffect(() => {
     loadIndexRef.current = 0
     clearMap()
-    let id = setInterval(() => {
+    const id = setInterval(() => {
       if (!loadFileLoopRef.current) return
       loadFileMap()
     }, 100)
@@ -460,7 +461,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
   const onDragStart = useMemoizedFn(() => {
     // 切换时应移除编辑器焦点(原因：拖拽会导致monaca焦点无法主动失焦)
     if (document.activeElement !== null) {
-      // @ts-ignore
+      // @ts-expect-error 类型定义不完整，需要忽略此行
       document.activeElement.blur()
     }
   })
@@ -508,7 +509,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
               const [ele] = newAreaInfo[index].elements[indexIn].files.splice(source.index, 1)
               element = ele
 
-              let filesLength = newAreaInfo[index].elements[indexIn].files.length
+              const filesLength = newAreaInfo[index].elements[indexIn].files.length
               // 校验是否仅有一项 移除后是否为空 为空则删除此大项
               if (filesLength === 0) {
                 if (item.elements.length > 1) {
@@ -622,7 +623,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
       } else {
         handleFetchFileList(path, (value) => {
           if (value.length > 0) {
-            let childArr: string[] = []
+            const childArr: string[] = []
             value.forEach((item) => {
               // 注入文件结构Map
               childArr.push(item.path)

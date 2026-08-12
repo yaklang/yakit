@@ -2,7 +2,7 @@ import has from 'lodash/has'
 
 export const isEqualObject = (obj1: object, obj2: object) => {
   // 判断两个变量是否为对象类型
-  let isObj = toString.call(obj1) === '[object Object]' && toString.call(obj2) === '[object Object]'
+  const isObj = toString.call(obj1) === '[object Object]' && toString.call(obj2) === '[object Object]'
   if (!isObj) {
     return false
   }
@@ -16,8 +16,8 @@ export const isEqualObject = (obj1: object, obj2: object) => {
   for (const key in obj1) {
     // 判断两个对象的键是否相等
     if (has(obj2, key)) {
-      let obj1Type = toString.call(obj1[key])
-      let obj2Type = toString.call(obj2[key])
+      const obj1Type = toString.call(obj1[key])
+      const obj2Type = toString.call(obj2[key])
       // 如果值是对象，则递归
       if (obj1Type === '[object Object]' || obj2Type === '[object Object]') {
         if (!isEqualObject(obj1[key], obj2[key])) {

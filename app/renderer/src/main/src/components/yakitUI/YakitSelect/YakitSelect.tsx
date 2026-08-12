@@ -1,6 +1,6 @@
 import { Select } from 'antd'
 import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import type {
   YakitBaseSelectRef,
   YakitDefaultOptionType,
   YakitSelectCacheDataHistoryProps,
@@ -8,11 +8,16 @@ import {
 } from './YakitSelectType'
 import styles from './YakitSelect.module.scss'
 import classNames from 'classnames'
-import { BaseOptionType } from 'antd/lib/select'
+import type { BaseOptionType } from 'antd/lib/select'
 import { YakitTag } from '../YakitTag/YakitTag'
 import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
-import { CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase } from '../utils'
+import {
+  type CacheDataHistoryProps,
+  type YakitOptionTypeProps,
+  onGetRemoteValuesBase,
+  onSetRemoteValuesBase,
+} from '../utils'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
 import { OutlineCheckIcon, OutlineXIcon } from '@/assets/icon/outline'
@@ -76,11 +81,12 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     if (!cacheHistoryDataKey) return
     if (props.mode === 'tags') {
       // tag模式 一般情况下 label和value是一样的
-      const cacheHistoryDataValues: string[] = cacheHistoryData.options.map((ele) => ele.value)
+      const cacheHistoryDataValues: string[] = (cacheHistoryData.options || []).map((ele) => ele.value)
       const addValue = newValue.filter((ele) => !cacheHistoryDataValues.includes(ele))
-      const newOption = [...addValue.map((item) => ({ value: item, label: item })), ...cacheHistoryData.options].filter(
-        (_, index) => index < cacheHistoryListLength,
-      )
+      const newOption = [
+        ...addValue.map((item) => ({ value: item, label: item })),
+        ...(cacheHistoryData.options || []),
+      ].filter((_, index) => index < cacheHistoryListLength)
       const cacheHistory: CacheDataHistoryProps = {
         defaultValue: newValue.join(','),
         options: newOption,
@@ -120,12 +126,12 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     if (!cacheHistoryDataKey) return
     onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
       const value = cacheData.defaultValue ? cacheData.defaultValue.split(',') : []
-      let newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options, !!cacheData.firstUse)
+      const newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options, !!cacheData.firstUse)
       //非form表单时,设置value
       if (isCacheDefaultValue) {
         if (props.onChange) props.onChange(value, newOption)
       }
-      setCacheHistoryData({ defaultValue: value, options: newOption as unknown as YakitOptionTypeProps })
+      setCacheHistoryData({ defaultValue: value, options: newOption as YakitOptionTypeProps[] })
     })
   })
   const getNewOption = useMemoizedFn((options, firstUse: boolean) => {
@@ -144,7 +150,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     e.stopPropagation()
     if (cacheHistoryDataKey) {
       if (props.mode === 'tags') {
-        const newHistoryList = cacheHistoryData.options.filter((i) => i.value !== item.value)
+        const newHistoryList = (cacheHistoryData.options || []).filter((i) => i.value !== item.value)
         const cacheData = {
           options: newHistoryList,
           defaultValue: isCacheDefaultValue ? cacheHistoryData.defaultValue.join(',') : '',
@@ -239,7 +245,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
 
   let extraProps: { defaultValue?: string[]; options?: YakitDefaultOptionType[] } = {}
   if (!props.children) {
-    const renderNewOptions = [...cacheHistoryData.options]
+    const renderNewOptions = [...(cacheHistoryData.options || [])]
     // 此处是由于属性menuItemSelectedIcon被设置为<></>, 勾是在label中处理的，当手动输入选项值后，点击选项，处理没有勾显示的问题
     if (supportDelCache && Array.isArray(props.value)) {
       props.value.forEach((value) => {

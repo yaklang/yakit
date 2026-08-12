@@ -1,5 +1,5 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type {
   AILocalModelListItemPromptHintProps,
   AILocalModelListItemProps,
   AILocalModelListProps,
@@ -19,11 +19,11 @@ import {
 import styles from './AIModelList.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { useCreation, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { YakitRadioButtonsProps } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType'
+import type { YakitRadioButtonsProps } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtonsType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
-  AIGlobalConfig,
-  AIModelConfig,
+  type AIGlobalConfig,
+  type AIModelConfig,
   getModelName,
   grpcAIConfigHealthCheck,
   grpcCancelStartLocalModel,
@@ -36,7 +36,7 @@ import {
   grpcStopLocalModel,
 } from './utils'
 import { resetForcedAIModalFlag } from './utils'
-import { LocalModelConfig } from '../type/aiModel'
+import type { LocalModelConfig } from '../type/aiModel'
 import { Divider, Form, Tooltip } from 'antd'
 import { yakitNotify } from '@/utils/notification'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -69,13 +69,13 @@ import {
   InstallLlamaServerModelPrompt,
 } from './installLlamaServerModelPrompt/InstallLlamaServerModelPrompt'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
   AILocalModelTypeEnum,
   AIModelPolicyEnum,
   AIModelPolicyOptions,
   AIModelTypeEnum,
-  AIModelTypeEnumType,
+  type AIModelTypeEnumType,
   AIModelTypeInterFileNameEnum,
   AIOnlineModelIconMap,
 } from '../defaultConstant'
@@ -83,26 +83,23 @@ import { randomString } from '@/utils/randomUtil'
 import { AIStartModelForm } from './aiStartModelForm/AIStartModelForm'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AddAIModel } from './addAIModel/AddAIModel'
-import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import classNames from 'classnames'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import emiter from '@/utils/eventBus/eventBus'
-import {
-  getMainOperatorPageBodyContainer,
-  getMainOperatorPageBodyContainerOrBody,
-} from '@/utils/getMainOperatorPageBodyContainer'
+import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import {
   AIModelCheckResult,
   AIModelForm,
   buildAIConfigHealthCheckConfig,
   getModelTypeByFileName,
 } from './aiModelForm/AIModelForm'
-import { AIModelFormProps } from './aiModelForm/AIModelFormType'
+import type { AIModelFormProps } from './aiModelForm/AIModelFormType'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
@@ -114,7 +111,7 @@ export const setAIModal = (params: {
   t: TFunction
 }) => {
   const { modelType, item, onSuccess, mountContainer, t } = params
-  let m = showYakitModal({
+  const m = showYakitModal({
     title: (modalT) => modalT('AIModelList.addThirdPartyApp'),
     width: 600,
     footer: null,

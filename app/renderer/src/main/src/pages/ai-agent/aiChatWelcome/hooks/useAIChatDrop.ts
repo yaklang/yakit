@@ -1,7 +1,7 @@
 import { useDrop, useMemoizedFn } from 'ahooks'
-import { DragEvent, useRef, useState } from 'react'
+import { type DragEvent, useRef, useState } from 'react'
 import { handleOnFiles } from '../utils'
-import { FileToChatQuestionList } from '../../template/type'
+import type { FileToChatQuestionList } from '../../template/type'
 
 export const TREE_DRAG_KEY = 'application/x-file-chat-path'
 

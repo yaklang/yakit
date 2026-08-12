@@ -1,9 +1,9 @@
 import { type FC, memo, useEffect, useMemo, useReducer } from 'react'
 
 import KnowledgeBaseTable from './KnowledgeBaseTable'
-import { KnowledgeBaseItem, useKnowledgeBase } from '../hooks/useKnowledgeBase'
+import { type KnowledgeBaseItem, useKnowledgeBase } from '../hooks/useKnowledgeBase'
 import { LightningBoltIcon } from '../icon/sidebarIcon'
-import useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
+import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
 
 import { targetIcon } from '../utils'
 import { renderFileTypeIcon } from '@/components/MilkdownEditor/CustomFile/CustomFile'
@@ -172,7 +172,6 @@ const KnowledgeBaseContainer: FC<
   const targetEditKnowledgeBase = useMemo(() => {
     const result = knowledgeBases.find((it) => it.ID === knowledgeBaseID)
     return result as KnowledgeBaseItem
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [knowledgeBaseID])
 
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { NotepadOnlineProps } from './NotepadManageOnlineType'
+import type { NotepadOnlineProps } from './NotepadManageOnlineType'
 import { useStore } from '@/store'
 import {
   OutlineChevronupIcon,
@@ -17,18 +17,18 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitVirtualList } from '@/components/yakitUI/YakitVirtualList/YakitVirtualList'
-import { VirtualListColumns } from '@/components/yakitUI/YakitVirtualList/YakitVirtualListType'
-import { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
+import type { VirtualListColumns } from '@/components/yakitUI/YakitVirtualList/YakitVirtualListType'
+import type { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
 import { FuncSearch } from '@/pages/plugins/funcTemplate'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { useInViewport, useCreation, useMemoizedFn, useDebounceFn } from 'ahooks'
 import { Divider } from 'antd'
 import { NotepadAction, timeMap } from '../NotepadManage'
 import {
-  SaveDialogResponse,
-  SearchParamsProps,
+  type SaveDialogResponse,
+  type SearchParamsProps,
   apiGetNotepadList,
-  GetNotepadRequestProps,
+  type GetNotepadRequestProps,
   convertGetNotepadRequest,
   apiDeleteNotepadDetail,
   onBaseNotepadDown,
@@ -210,7 +210,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
         if (!res.data) res.data = []
         const length = +res.pagemeta.page === 1 ? res.data.length : res.data.length + response.data.length
         setHasMore(length < +res.pagemeta.total)
-        let newRes: API.GetNotepadResponse = {
+        const newRes: API.GetNotepadResponse = {
           data: +res?.pagemeta.page === 1 ? res?.data : [...response.data, ...(res?.data || [])],
           pagemeta: res?.pagemeta || {
             limit: 20,

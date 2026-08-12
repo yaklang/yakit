@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { ArtColumn, BaseTable, features, useTablePipeline } from '../../alibaba/ali-react-table-dist'
-import { analyzeFuzzerResponse, FuzzerResponse } from './HTTPFuzzerPage'
+import { type ArtColumn, BaseTable, features, useTablePipeline } from '../../alibaba/ali-react-table-dist'
+import { analyzeFuzzerResponse, type FuzzerResponse } from './HTTPFuzzerPage'
 import { formatTimestamp } from '../../utils/timeUtil'
 import * as antd from 'antd'
 import { StatusCodeToColor } from '../../components/HTTPFlowTable/HTTPFlowTable'

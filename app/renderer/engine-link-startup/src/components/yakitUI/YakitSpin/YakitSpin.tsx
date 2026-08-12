@@ -1,6 +1,6 @@
 import { Spin } from 'antd'
-import React from 'react'
-import { YakitSpinProps } from './YakitSpinType'
+import type React from 'react'
+import type { YakitSpinProps } from './YakitSpinType'
 import styles from './YakitSpin.module.scss'
 import classNames from 'classnames'
 

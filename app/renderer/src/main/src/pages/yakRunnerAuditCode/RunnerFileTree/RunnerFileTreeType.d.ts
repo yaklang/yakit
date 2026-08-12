@@ -1,3 +1,4 @@
+import type { FileNodeProps } from '../FileTree/FileTreeType'
 export interface RunnerFileTreeProps {
   fileTreeLoad: boolean
   boxHeight: number

@@ -1,10 +1,9 @@
-import { YakitAutoCompleteProps } from './../YakitAutoComplete/YakitAutoCompleteType.d'
-import { FormItemProps, InputProps } from 'antd'
-import { DraggerProps } from 'antd/lib/upload'
+import { type YakitAutoCompleteProps } from './../YakitAutoComplete/YakitAutoCompleteType.d'
+import { type FormItemProps, type InputProps } from 'antd'
+import { type DraggerProps } from 'antd/lib/upload'
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
-import { InternalTextAreaProps } from '../YakitInput/YakitInputType'
-import { ReactNode } from 'react'
-import { OpenDialogOptions } from '@/utils/fileSystemDialog'
+import { type InternalTextAreaProps } from '../YakitInput/YakitInputType'
+import { type ReactNode } from 'react'
 
 type YakitDragger = Omit<DraggerProps, 'beforeUpload' | 'onChange'>
 
@@ -30,8 +29,8 @@ export interface YakitDraggerProps extends FileDraggerProps {
   setContent?: (s: string) => void
   uploadFileText?: string
   uploadFolderText?: string
-  help?: ReactDOM
-  showExtraHelp?: ReactDOM
+  help?: ReactNode
+  showExtraHelp?: ReactNode
   showDefHelp?: boolean
   showUploadBtn?: boolean
   /**回显的文本值 */
@@ -73,7 +72,7 @@ export interface YakitDraggerContentProps extends Omit<
   value?: string
   /**@description 回显的文本回调事件*/
   onChange?: (s: string) => void
-  help?: ReactDOM
+  help?: ReactNode
   showDefHelp?: boolean
   // InputProps?: InputProps
   // /** 展示组件 input|textarea */

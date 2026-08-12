@@ -1,4 +1,4 @@
-import { PocPageInfoProps } from '@/store/pageInfo'
+import type { PocPageInfoProps } from '@/store/pageInfo'
 
 export const defaultPocPageInfo: PocPageInfoProps = {
   selectGroup: [],

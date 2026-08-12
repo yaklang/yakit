@@ -1,5 +1,4 @@
-import { v4 as uuidv4 } from 'uuid'
-import { GraphInfoProps } from './RightAuditDetail'
+import type { GraphInfoProps } from './RightAuditDetail'
 export const GraphInfoMap: Map<string, GraphInfoProps> = new Map()
 
 export const setMapGraphInfoDetail = (nodeId: string, info: GraphInfoProps) => {

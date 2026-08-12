@@ -1,10 +1,10 @@
 import { YakitRoute } from '@/enums/yakitRoute'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import React, { useEffect, useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import cloneDeep from 'lodash/cloneDeep'
-import { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import type { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { Form } from 'antd'
 import styles from './FuzzerPageSetting.module.scss'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -14,10 +14,10 @@ import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import {
   ExtractorsPanel,
   MatchersPanel,
-  MatchersPanelEditProps,
+  type MatchersPanelEditProps,
   VariablePanel,
 } from '../HttpQueryAdvancedConfig/FuzzerConfigPanels'
-import { MatchingAndExtraction } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import type { MatchingAndExtraction } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
 import { defaultWebFuzzerPageInfo } from '@/defaultConstants/HTTPFuzzerPage'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

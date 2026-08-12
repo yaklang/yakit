@@ -1,5 +1,5 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type {
   CodeScaMainExecuteContentProps,
   CodeScanAuditExecuteFormProps,
   CodeScanAuditExecuteRefProps,
@@ -36,7 +36,7 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import styles from './YakRunnerCodeScan.module.scss'
-import { failed, warn, info, yakitNotify, success } from '@/utils/notification'
+import { failed, warn, info, yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -51,10 +51,10 @@ import {
 import { defYakitAutoCompleteRef, YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { RemoteGV } from '@/yakitGV'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { genDefaultPagination, QueryGeneralResponse, YakScript } from '../invoker/schema'
+import { genDefaultPagination, type QueryGeneralResponse, type YakScript } from '../invoker/schema'
 import { ExpandAndRetract } from '../plugins/operator/expandAndRetract/ExpandAndRetract'
 import {
   FormContentItemByType,
@@ -62,28 +62,36 @@ import {
 } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { randomString } from '@/utils/randomUtil'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { grpcFetchAuditTree } from '../yakRunnerAuditCode/utils'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { apiCancelSyntaxFlowScan, apiSyntaxFlowScan, CodeScanComplianceMode, getGroupNamesTotal } from './utils'
+import { apiCancelSyntaxFlowScan, apiSyntaxFlowScan, type CodeScanComplianceMode, getGroupNamesTotal } from './utils'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { AuditCodePageInfoProps, CodeScanPageInfoProps, PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import {
+  type AuditCodePageInfoProps,
+  type CodeScanPageInfoProps,
+  type PageNodeItemProps,
+  usePageInfo,
+} from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { defaultCodeScanPageInfo } from '@/defaultConstants/CodeScan'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import useHoldGRPCStream, { convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
-import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type {
+  HoldGRPCStreamInfo,
+  HoldGRPCStreamProps,
+  StreamResult,
+} from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { PluginExecuteResult } from '../plugins/operator/pluginExecuteResult/PluginExecuteResult'
 import { v4 as uuidv4 } from 'uuid'
 import { grpcFetchLocalPluginDetail } from '../pluginHub/utils/grpc'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { ExtraParamsNodeByType } from '../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
 import { getValueByType, getYakExecutorParam, ParamsToGroupByGroupName } from '../plugins/editDetails/utils'
-import { apiCancelDebugPlugin, apiDebugPlugin, DebugPluginRequest } from '../plugins/utils'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import { apiCancelDebugPlugin, apiDebugPlugin, type DebugPluginRequest } from '../plugins/utils'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import { CodeScanTaskListDrawer } from './CodeScanTaskListDrawer/CodeScanTaskListDrawer'
 import emiter from '@/utils/eventBus/eventBus'
 import { grpcFetchLocalRuleGroupList, grpcFetchLocalRuleList } from '../ruleManagement/api'
-import {
+import type {
   QuerySyntaxFlowRuleRequest,
   QuerySyntaxFlowRuleResponse,
   SyntaxFlowGroup,
@@ -91,21 +99,23 @@ import {
 } from '../ruleManagement/RuleManagementType'
 import cloneDeep from 'lodash/cloneDeep'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
-import { FormExtraSettingProps } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { FormExtraSettingProps } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { DefaultRuleGroupFilterPageMeta } from '@/defaultConstants/RuleManagement'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { RuleDebugAuditDetail } from '../ruleManagement/template'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { CreateReportContentProps, onCreateReportModal } from '../portscan/CreateReport'
-import CodeScanExtraParamsDrawer, { CodeScanExtraParam } from './CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer'
-import { YakParamProps } from '../plugins/pluginsType'
+import { type CreateReportContentProps, onCreateReportModal } from '../portscan/CreateReport'
+import CodeScanExtraParamsDrawer, {
+  type CodeScanExtraParam,
+} from './CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer'
+import type { YakParamProps } from '../plugins/pluginsType'
 import moment from 'moment'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { ChevronDownIcon, ChevronUpIcon, FolderOpenIcon } from '@/assets/newIcon'
-import { SSAProjectResponse } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
-import { QuerySSAProgramRequest } from '../yakRunnerScanHistory/YakRunnerScanHistory'
+import type { SSAProjectResponse } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
+import type { QuerySSAProgramRequest } from '../yakRunnerScanHistory/YakRunnerScanHistory'
 import { apiQuerySSAPrograms } from '../yakRunnerScanHistory/utils'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { AfreshAuditModal } from '../yakRunnerAuditCode/AuditCode/AuditCode'
@@ -113,7 +123,7 @@ import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRul
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useProxy } from '@/hook/useProxy'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import type { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { getJsonSchemaListResult } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import { JSONParseLog } from '@/utils/tool'
@@ -841,7 +851,7 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
         isLoadingRef.current = true
       }
       setLoading(true)
-      const params: Paging = !!reset
+      const params: Paging = reset
         ? { Page: 1, Limit: 20 }
         : {
             Page: +response.Pagination.Page + 1,
@@ -912,7 +922,7 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
         data={response.Rule}
         loadMoreData={onUpdateList}
         renderRow={(info: SyntaxFlowRule, i: number) => {
-          let check = allCheck || selectedRules.some((rule) => rule.Hash === info.Hash)
+          const check = allCheck || selectedRules.some((rule) => rule.Hash === info.Hash)
           return <FlowRuleDetailsListItem data={info} check={check} onCheck={onCheck} />
         }}
         page={response.Pagination.Page}
@@ -1096,7 +1106,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
           item.Data = (item as any)?.Projects || []
           if (item.Data.length > 0) {
-            let projectId: number[] = []
+            const projectId: number[] = []
             const list = item.Data.map((item) => {
               const { ProjectName, ID, Language, JSONStringConfig } = item
               if (pageInfo.projectId === ID) {
@@ -1584,7 +1594,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
     })
 
     // logs
-    let messages = useRef<StreamResult.Message[]>([])
+    const messages = useRef<StreamResult.Message[]>([])
 
     /** 放入日志队列 */
     const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
@@ -1600,7 +1610,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
     })
 
     // card
-    let cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
+    const cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
       new Map<string, HoldGRPCStreamProps.CacheCard>(),
     )
 
@@ -1656,7 +1666,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
       const route = YakitRoute.YakRunner_Code_Scan
       const currentItem: PageNodeItemProps | undefined = queryPagesDataById(route, pageId)
       if (!currentItem) return
-      let newCurrentItem: PageNodeItemProps = {
+      const newCurrentItem: PageNodeItemProps = {
         ...currentItem,
         pageParamsInfo: {
           codeScanPageInfo: {
@@ -1699,7 +1709,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
           if (!!res?.ActiveTask && res.ActiveTask.length > 0) {
             setActiveTask(res.ActiveTask)
           }
-          if (!!res.Status) {
+          if (res.Status) {
             switch (res.Status) {
               case 'done':
                 setExecuteStatus('finished')
@@ -1729,11 +1739,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
           }
           if (data && data.IsMessage) {
             try {
-              let obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {
+              const obj: StreamResult.Message = JSONParseLog(Buffer.from(data.Message).toString(), {
                 page: 'yakRunnerCodeScan',
                 fun: 'streamInfo',
               })
-              let progressObj = obj.content as StreamResult.Progress
+              const progressObj = obj.content as StreamResult.Progress
               if (obj.type === 'progress') {
                 setProgressShow({
                   type: 'old',
@@ -2052,9 +2062,9 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
     const onSelectProject = useMemoizedFn(async (item: number) => {
       try {
-        let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
+        const selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
 
-        let language = auditCodeList.find((itemIn) => itemIn.value === item)?.Language
+        const language = auditCodeList.find((itemIn) => itemIn.value === item)?.Language
         if (language) {
           selectGroup.push(language)
           selectGroup.push('general')
@@ -2308,17 +2318,17 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
       // 表单内数据
       let formData = {}
       if (form) formData = form.getFieldsValue() || {}
-      let defaultValue = { ...formData }
+      const defaultValue = { ...formData }
       let newFormValue = {}
       arr.forEach((ele) => {
-        let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
-        let value = getValueByType(initValue, ele.TypeVerbose)
+        const initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
+        const value = getValueByType(initValue, ele.TypeVerbose)
         newFormValue = {
           ...newFormValue,
           [ele.Field]: value,
         }
       })
-      let fieldsValue = { ...cloneDeep(defaultValue || {}), ...newFormValue }
+      const fieldsValue = { ...cloneDeep(defaultValue || {}), ...newFormValue }
       // compile-immediately 特例处理（应后端要求）
       if ((plugin?.Params || []).filter((item) => item.Field === 'compile-immediately').length > 0) {
         fieldsValue['compile-immediately'] = true
@@ -2424,11 +2434,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
     })
 
     const onCancelAudit = () => {
+      // cancel 后主进程不再转发 end，需本地收尾
       apiCancelDebugPlugin(tokenRef.current)
-      apiCancelDebugPlugin(tokenCompileRef.current).then(() => {
-        setIsExpand(true)
-        setExecuteStatus('finished')
-      })
+      apiCancelDebugPlugin(tokenCompileRef.current)
+      debugPluginStreamEvent.stop()
+      debugCompilePluginStreamEvent.stop()
+      setIsExpand(true)
+      setExecuteStatus('finished')
+      setAuditsExecuting(false)
+      setProgressShow(undefined)
     }
 
     useImperativeHandle(
@@ -2518,7 +2532,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         }, 300)
       }
 
-      let newLog = streamCompileInfo.logState.slice(0, 100).map((item) => ({
+      const newLog = streamCompileInfo.logState.slice(0, 100).map((item) => ({
         type: 'log',
         content: item,
       }))

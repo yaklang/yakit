@@ -1,4 +1,4 @@
-import { NotepadRoleProps } from './NotepadShareModalType'
+import type { NotepadRoleProps } from './NotepadShareModalType'
 
 export const notepadRole: NotepadRoleProps = {
   adminPermission: 'admin',

@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 import Table from 'rc-table'
-import { TrafficSession } from '@/models/Traffic'
+import type { TrafficSession } from '@/models/Traffic'
 import { useMemoizedFn } from 'ahooks'
-import { QueryGeneralResponse } from '@/pages/invoker/schema'
+import type { QueryGeneralResponse } from '@/pages/invoker/schema'
 import styles from './TrafficSessionTable.module.css'
 
 export interface TrafficDemoProp {}

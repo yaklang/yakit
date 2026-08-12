@@ -8,16 +8,16 @@ import { useMemoizedFn, useGetState } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { useStore } from '@/store'
 import yakitImg from '@/assets/yakit.jpg'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '../yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { InformationCircleIcon } from '@/assets/newIcon'
 import { CacheDropDownGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
-import { YakitAutoCompleteRefProps } from '../yakitUI/YakitAutoComplete/YakitAutoCompleteType'
-import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace } from '@/utils/envfile'
-import { apiSystemConfig, useUploadInfoByEnpriTrace } from '../layout/utils'
+import type { YakitAutoCompleteRefProps } from '../yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV } from '@/utils/envfile'
+import { useUploadInfoByEnpriTrace } from '../layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -245,7 +245,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   const judgePass = () => [
     {
       validator: (_, value) => {
-        let re =
+        const re =
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[.<>?;:\[\]{}~!@#$%^&*()_+-="])[A-Za-z\d.<>?;:\[\]{}~!@#$%^&*()_+-="]{8,20}/
         if (re.test(value)) {
           return Promise.resolve()
@@ -259,7 +259,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   const judgeUrl = () => [
     {
       validator: (_, value) => {
-        let re = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
+        const re = /http(s)?:\/\/([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?/
         if (/\s/.test(value)) {
           return Promise.reject(t('ConfigPrivateDomain.privateDomainHasSpace'))
         } else if (re.test(value)) {

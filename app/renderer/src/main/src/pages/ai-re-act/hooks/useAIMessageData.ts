@@ -12,7 +12,7 @@ import type {
   UseAIMessageDataState,
 } from './type'
 import { yakitNotify } from '@/utils/notification'
-import { AIAgentGrpcApi, AIEventQueryRequest } from './grpcApi'
+import type { AIAgentGrpcApi, AIEventQueryRequest } from './grpcApi'
 import type { PaginationSchema } from '@/pages/invoker/schema'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
@@ -99,6 +99,7 @@ const useAIMessageData = ({
     } catch (err) {
       yakitNotify('error', err instanceof Error ? err.message : '未知错误')
     } finally {
+      // eslint-disable-next-line no-unsafe-finally
       if (isInitGrpc.current) return
       setInitLoading(false)
     }
@@ -301,7 +302,7 @@ const useAIMessageData = ({
 
       updateBeforeID('timelineID', Number(Events[Events.length - 1].ID))
       const timelineItems: AIAgentGrpcApi.TimelineItem[] = Events.map((item) => {
-        let ipcContent = Uint8ArrayToString(item.Content) || ''
+        const ipcContent = Uint8ArrayToString(item.Content) || ''
         return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
       }).reverse()
       hasMoreTimeline.current = Events.length === request.Pagination?.Limit!
@@ -331,7 +332,7 @@ const useAIMessageData = ({
       if (Total === 0) return
 
       const files: AIFileSystemPin[] = Events.map((item) => {
-        let ipcContent = Uint8ArrayToString(item.Content) || ''
+        const ipcContent = Uint8ArrayToString(item.Content) || ''
         const { path } = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
         return { path, isFolder: item.Type === 'filesystem_pin_directory' }
       })

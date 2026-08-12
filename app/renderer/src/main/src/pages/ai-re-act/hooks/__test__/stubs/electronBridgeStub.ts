@@ -1,4 +1,7 @@
-/** Vitest stub: avoid requiring real window.yakitBridge at module load */
+/**
+ * Vitest stub：避免模块加载时访问真实 window.yakitBridge。
+ * vitest.config.mts 将 @/services/electronBridge 指到本文件。
+ */
 const noop = () => undefined
 const asyncNoop = async () => undefined
 
@@ -29,7 +32,9 @@ export const yakitLogs = {
   openEngineLog: noop,
   openRenderLog: noop,
   openPrintLog: noop,
-  printLog: noop,
+  debugPrintLog: noop,
+  onLiveEngineStdio: () => noop,
+  onLiveEngineLog: () => noop,
 }
 export const yakitEditorTools = makeNs()
 export const yakitPerf = makeNs()
@@ -47,3 +52,10 @@ export const yakitPlugin = makeNs()
 export const yakitScript = makeNs()
 export const yakitMcp = makeNs()
 export const yakitDuplex = makeNs()
+export const yakitSocket = makeNs()
+export const yakitStream = makeNs()
+export const yakitUILayout = makeNs()
+export const yakitProject = makeNs()
+export const yakitCodec = makeNs()
+export const yakitFileSystem = makeNs()
+export const yakitAI = makeNs()

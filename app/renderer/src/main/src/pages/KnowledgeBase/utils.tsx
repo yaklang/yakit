@@ -1,7 +1,7 @@
 import { grpcFetchLocalPluginDetail } from '../pluginHub/utils/grpc'
 import { defPluginExecuteFormValue } from '../plugins/operator/localPluginExecuteDetailHeard/constants'
-import { apiDebugPlugin, DebugPluginRequest } from '../plugins/utils'
-import {
+import { apiDebugPlugin, type DebugPluginRequest } from '../plugins/utils'
+import type {
   ListVectorStoreEntriesRequest,
   QueryEntityRequest,
   QueryEntityResponse,
@@ -10,9 +10,9 @@ import {
   TClearKnowledgeResponse,
   TResultAllTableTotal,
   VectorStoreEntryResponse,
-  type KnowledgeBaseFile,
+  KnowledgeBaseFile,
 } from './TKnowledgeBase'
-import { KnowledgeBaseItem } from './hooks/useKnowledgeBase'
+import type { KnowledgeBaseItem } from './hooks/useKnowledgeBase'
 import { yakitNotify } from '@/utils/notification'
 
 import {
@@ -37,17 +37,17 @@ import {
   DiamondIcon,
   RobotIcon,
 } from './icon/sidebarIcon'
-import { YakitSideTabProps } from '../../components/yakitSideTab/YakitSideTabType'
-import { API } from '@/services/swagger/resposeType'
+import type { YakitSideTabProps } from '../../components/yakitSideTab/YakitSideTabType'
+import type { API } from '@/services/swagger/resposeType'
 import { NetWorkApi } from '@/services/fetch'
 import { OutlineBookOpenTextIcon, OutlineChipIcon, OutlinePuzzleIcon } from '@/assets/icon/outline'
 import knowledgeJoyrideFirst from '@/pages/KnowledgeBase/images/knowledge-joyride-first.mp4'
 import knowledgeJoyrideLast from '@/pages/KnowledgeBase/images/knowledge-joyride-last.mp4'
 import joyrideFirstStepImg from '@/pages/KnowledgeBase/images/joyride-first-step.png'
 import knowledgeJoyrideThree from '@/pages/KnowledgeBase/images/knowledge-joyride-three.mp4'
-import { Step } from 'react-joyride'
+import type { Step } from 'react-joyride'
 import styles from './knowledgeBase.module.scss'
-import { RuleObject } from 'antd/lib/form'
+import type { RuleObject } from 'antd/lib/form'
 
 const { ipcRenderer } = window.require('electron')
 

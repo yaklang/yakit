@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo, useImperativeHandle, Suspense } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useImperativeHandle } from 'react'
 import { Layout, Form, Tooltip } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
-import {
+import type {
   MainOperatorContentProps,
   OnlyPageCache,
   PageCache,
@@ -26,7 +26,7 @@ import {
   YakitRouteToPageInfo,
   SingletonPageRoute,
   NoPaddingRoute,
-  ComponentParams,
+  type ComponentParams,
   getDefaultFixedTabs,
   LogOutCloseRoutes,
   getDefaultFixedTabsNoSinglPageRoute,
@@ -43,36 +43,28 @@ import {
   isCommunityYakit,
   isEnpriTrace,
 } from '@/utils/envfile'
-import {
-  useCreation,
-  useDebounceFn,
-  useGetState,
-  useLongPress,
-  useMemoizedFn,
-  useThrottleFn,
-  useUpdateEffect,
-} from 'ahooks'
+import { useCreation, useGetState, useLongPress, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import {
   DragDropContext,
   Droppable,
   Draggable,
-  DragUpdate,
-  ResponderProvided,
-  DragStart,
-  BeforeCapture,
-  DropResult,
+  type DragUpdate,
+  type ResponderProvided,
+  type DragStart,
+  type BeforeCapture,
+  type DropResult,
 } from '@hello-pangea/dnd'
 import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
 import { CheckIcon, RemoveIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
-import { RouteToPageProps } from '../publicMenu/PublicMenu'
-import { SubscribeCloseType, YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
+import type { RouteToPageProps } from '../publicMenu/PublicMenu'
+import { type SubscribeCloseType, type YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
 import { YakitModalConfirm, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { defaultUserInfo } from '@/pages/MainOperator'
 import { useStore } from '@/store'
 import { getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue } from '@/utils/kv'
-import { GroupCount, QueryYakScriptsResponse } from '@/pages/invoker/schema'
+import type { GroupCount, QueryYakScriptsResponse } from '@/pages/invoker/schema'
 import { DownloadAllPlugin } from '@/pages/simpleDetect/SimpleDetect'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -82,10 +74,10 @@ import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightCo
 import ReactResizeDetector from 'react-resize-detector'
 import { compareAsc } from '@/pages/yakitStore/viewers/base'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { YakitMenu, YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { YakitMenu, type YakitMenuItemProps, type YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
   OutlineChevrondoubleleftIcon,
   OutlineChevrondoublerightIcon,
@@ -95,8 +87,8 @@ import {
   OutlineStoreIcon,
 } from '@/assets/icon/outline'
 
-import { FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData } from '@/pages/fuzzer/HTTPFuzzerPage'
-import { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import { type FuzzerCacheDataProps, type ShareValueProps, getFuzzerCacheData } from '@/pages/fuzzer/HTTPFuzzerPage'
+import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
 import {
   initSubTabGlobalListeners,
@@ -104,37 +96,37 @@ import {
   unregisterSubTabPageHandlers,
 } from './subTabEventRegistry'
 import { isPageRouteActive } from '@/utils/getMainOperatorPageBodyContainer'
-import { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
-import { FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
+import type { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
+import { type FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
 import emiter from '@/utils/eventBus/eventBus'
 import { shallow } from 'zustand/shallow'
 import { RemoteGV } from '@/yakitGV'
 import {
-  AddYakitScriptPageInfoProps,
-  AuditCodePageInfoProps,
-  CodeScanPageInfoProps,
-  HTTPHackerPageInfoProps,
-  MITMHackerPageInfoProps,
-  HTTPHistoryAnalysisPageInfo,
-  ModifyNotepadPageInfoProps,
-  PageNodeItemProps,
-  PageProps,
-  PluginHubPageInfoProps,
-  RiskPageInfoProps,
+  type AddYakitScriptPageInfoProps,
+  type AuditCodePageInfoProps,
+  type CodeScanPageInfoProps,
+  type HTTPHackerPageInfoProps,
+  type MITMHackerPageInfoProps,
+  type HTTPHistoryAnalysisPageInfo,
+  type ModifyNotepadPageInfoProps,
+  type PageNodeItemProps,
+  type PageProps,
+  type PluginHubPageInfoProps,
+  type RiskPageInfoProps,
   defPage,
   getFuzzerProcessedCacheData,
   saveFuzzerCache,
   usePageInfo,
-  AIForgeEditorPageInfoProps,
-  AIToolEditorPageInfoProps,
-  YakRunnerScanHistoryPageInfoProps,
-  RuleManagementPageInfoProps,
-  AuditHoleInfoProps,
+  type AIForgeEditorPageInfoProps,
+  type AIToolEditorPageInfoProps,
+  type YakRunnerScanHistoryPageInfoProps,
+  type RuleManagementPageInfoProps,
+  type AuditHoleInfoProps,
 } from '@/store/pageInfo'
 import cloneDeep from 'lodash/cloneDeep'
 import { onToManageGroup } from '@/pages/securityTool/yakPoC/YakPoC'
 import { apiFetchQueryYakScriptGroupLocal } from '@/pages/plugins/utils'
-import { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import {
   DefFuzzerTableMaxData,
   defaultAdvancedConfigShow,
@@ -153,27 +145,27 @@ import { defaultSimpleDetectPageInfo } from '@/defaultConstants/SimpleDetectCons
 import { YakitRoute } from '@/enums/yakitRoute'
 import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript'
 import { useMenuHeight } from '@/store/menuHeight'
-import { HybridScanInputTarget } from '@/models/HybridScan'
+import type { HybridScanInputTarget } from '@/models/HybridScan'
 import { defaultWebsocketFuzzerPageInfo } from '@/defaultConstants/WebsocketFuzzer'
-import { DuplicateTabContent, RecoveryModel, RestoreTabContent } from './TabRenameModalContent'
+import { DuplicateTabContent, type RecoveryModel, RestoreTabContent } from './TabRenameModalContent'
 import {
-  FuzzerConfig,
-  QueryFuzzerConfigRequest,
-  SaveFuzzerConfigRequest,
-  WebFuzzerTabPush,
+  type FuzzerConfig,
+  type QueryFuzzerConfigRequest,
+  type SaveFuzzerConfigRequest,
+  type WebFuzzerTabPush,
   apiQueryFuzzerConfig,
   apiSaveFuzzerConfig,
 } from './utils'
 import { defaultCodeScanPageInfo } from '@/defaultConstants/CodeScan'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { defaultModifyNotepadPageInfo } from '@/defaultConstants/ModifyNotepad'
-import { APIFunc } from '@/apiUtils/type'
+import type { APIFunc } from '@/apiUtils/type'
 import { getHotPatchCodeInfo } from '@/pages/fuzzer/HTTPFuzzerHotPatch'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import { defaultHTTPHistoryAnalysisPageInfo } from '@/defaultConstants/hTTPHistoryAnalysis'
-import { BatchAddNewGroupFormItem } from './BatchAddNewGroup'
+import type { BatchAddNewGroupFormItem } from './BatchAddNewGroup'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
-import { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
+import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getGlobalShortcutKeyEvents } from '@/utils/globalShortcutKey/events/global'
 import {
   convertKeyEventToKeyCombination,
@@ -182,10 +174,10 @@ import {
 } from '@/utils/globalShortcutKey/utils'
 import { keepSearchNameMapStore } from '@/store/keepSearchName'
 import { useHttpFlowStore } from '@/store/httpFlow'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
-import { SoftMode, useSoftMode, YakitModeEnum } from '@/store/softMode'
+import { type SoftMode, useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { RemoteSoftModeGV } from '@/enums/softMode'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { scheduleIdleTask } from '@/utils/scheduleIdleTask'
@@ -843,7 +835,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   }, [])
 
   const menuOpenPage = useMemoizedFn((res: string) => {
-    // @ts-ignore
+    // @ts-expect-error 类型定义不完整，需要忽略此行
     let data: RouteToPageProps = {}
     try {
       data = JSONParseLog(res || '{}', { page: 'MainOperatorContent', fun: 'menuOpenPage' })
@@ -868,7 +860,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   }, [])
   const onOpenPage = useMemoizedFn((res: string) => {
-    // @ts-ignore
+    // @ts-expect-error 类型定义不完整，需要忽略此行
     let data: { route: YakitRoute; params: any } = {}
     try {
       data = JSONParseLog(res || '{}', { page: 'MainOperatorContent', fun: 'onOpenPage' })
@@ -945,15 +937,17 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         addShortcutKey(params)
         break
       case YakitRoute.AddAIForge:
-      case YakitRoute.ModifyAIForge:
+      case YakitRoute.ModifyAIForge: {
         const isModifyAIForge = route === YakitRoute.ModifyAIForge
         modifyAIForge(params, isModifyAIForge)
         break
+      }
       case YakitRoute.AddAITool:
-      case YakitRoute.ModifyAITool:
+      case YakitRoute.ModifyAITool: {
         const isModifyAITool = route === YakitRoute.ModifyAITool
         modifyAITool(params, isModifyAITool)
         break
+      }
       case YakitRoute.DB_Report:
         dbReport()
         break
@@ -1500,13 +1494,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const { route, source } = data
     switch (route) {
       case YakitRoute.AddYakitScript:
-        // 判断页面是由谁触发打开的
-        const addTargetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
-        let addNext: YakitRoute | undefined = undefined
-        if (addTargetCache?.pageParamsInfo && addTargetCache.pageParamsInfo?.addYakitScriptPageInfo) {
-          addNext = addTargetCache.pageParamsInfo.addYakitScriptPageInfo?.source
+        {
+          // 判断页面是由谁触发打开的
+          const addTargetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
+          let addNext: YakitRoute | undefined = undefined
+          if (addTargetCache?.pageParamsInfo && addTargetCache.pageParamsInfo?.addYakitScriptPageInfo) {
+            addNext = addTargetCache.pageParamsInfo.addYakitScriptPageInfo?.source
+          }
+          removeMenuPage({ route: route, menuName: '' }, addNext ? { route: addNext, menuName: '' } : undefined)
         }
-        removeMenuPage({ route: route, menuName: '' }, addNext ? { route: addNext, menuName: '' } : undefined)
         break
       case YakitRoute.AddAIForge:
       case YakitRoute.ModifyAIForge:
@@ -1658,7 +1654,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       let newIsHttps = !!isHttps
       let newRequest = request || defaultPostTemplate
       // 有分享内容，数据以分享内容为准
-      if (res.hasOwnProperty('shareContent')) {
+      if (Object.prototype.hasOwnProperty.call(res, 'shareContent')) {
         const shareContent: ShareValueProps = JSONParseLog(res.shareContent, {
           page: 'MainOperatorContent',
           fun: 'addFuzzer',
@@ -1668,7 +1664,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
         newAdvancedConfigValue = shareContent.advancedConfiguration
         newAdvancedConfigShow = shareContent.advancedConfigShow
-        if (shareContent.hasOwnProperty('advancedConfig')) {
+        if (Object.prototype.hasOwnProperty.call(shareContent, 'advancedConfig')) {
           // 兼容只有【配置】的时候的高级配置显隐,低版本分享给高版本
           newAdvancedConfigShow = {
             ...defaultAdvancedConfigShow,
@@ -1686,7 +1682,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
       }
       // 来自于MITM
-      if (res.hasOwnProperty('MITMData')) {
+      if (Object.prototype.hasOwnProperty.call(res, 'MITMData')) {
         const { enableGMTLS, randomJA3, noSystemProxy } = JSONParseLog(res.MITMData)
         if (enableGMTLS) {
           newAdvancedConfigValue.isGmTLS = true
@@ -1936,7 +1932,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const isModalVisibleRef = useRef<boolean>(false)
   useShortcutKeyTrigger('removePage', (focus) => {
     if (focus) {
-      let item = focus.find((i) => i.startsWith(currentTabKey))
+      const item = focus.find((i) => i.startsWith(currentTabKey))
       if (item) {
         // 在此处进行关闭二级页面
         emiter.emit('onRemoveSecondPageByFocus', item)
@@ -1995,7 +1991,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       if (nodeParams?.openFlag !== undefined) {
         openFlag = nodeParams?.openFlag
       }
-      let selectSubItem = openFlag ? true : nodeParams?.selectSubItem
+      const selectSubItem = openFlag ? true : nodeParams?.selectSubItem
       // 菜单在代码内的名字
       const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ''
       if (!menuName) return
@@ -2096,7 +2092,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       } else {
         // 多开页面
         const key = routeConvertKey(route, pluginName)
-        let tabName = routeKeyToLabel.get(key) || menuName
+        const tabName = routeKeyToLabel.get(key) || menuName
 
         const { time, tabId } = generateTabIdentity(key)
 
@@ -2261,7 +2257,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
       sortFieId: order,
     }
-    let pageNodeInfo: PageProps = {
+    const pageNodeInfo: PageProps = {
       ...cloneDeep(defPage),
       pageList: [newPageNode],
       routeKey: YakitRoute.AddYakitScript,
@@ -2282,7 +2278,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
       sortFieId: order,
     }
-    let pageNodeInfo: PageProps = {
+    const pageNodeInfo: PageProps = {
       ...cloneDeep(defPage),
       pageList: [newPageNode],
       routeKey: YakitRoute.ModifyAIForge,
@@ -2301,7 +2297,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
       sortFieId: order,
     }
-    let pageNodeInfo: PageProps = {
+    const pageNodeInfo: PageProps = {
       ...cloneDeep(defPage),
       pageList: [newPageNode],
       routeKey: YakitRoute.AddAIForge,
@@ -2322,7 +2318,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
       sortFieId: order,
     }
-    let pageNodeInfo: PageProps = {
+    const pageNodeInfo: PageProps = {
       ...cloneDeep(defPage),
       pageList: [newPageNode],
       routeKey: YakitRoute.ModifyAITool,
@@ -2342,7 +2338,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
       sortFieId: order,
     }
-    let pageNodeInfo: PageProps = {
+    const pageNodeInfo: PageProps = {
       ...cloneDeep(defPage),
       pageList: [newPageNode],
       routeKey: YakitRoute.AddAITool,
@@ -2366,7 +2362,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
       sortFieId: order,
     }
-    let pageNodeInfo: PageProps = {
+    const pageNodeInfo: PageProps = {
       ...cloneDeep(defPage),
       pageList: [newPageNode],
       routeKey: YakitRoute.YakRunner_ScanHistory,
@@ -2405,7 +2401,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
       sortFieId: order,
     }
-    let pageNodeInfo: PageProps = {
+    const pageNodeInfo: PageProps = {
       ...cloneDeep(defPage),
       pageList: [newPageNode],
       routeKey: YakitRoute.AI_Agent,
@@ -2514,32 +2510,36 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.Codec:
       case YakitRoute.AddAIForge:
       case YakitRoute.ModifyAIForge:
-        const modalProps = getSubscribeClose(data.route)
-        if (modalProps) {
-          judgeDataIsFuncOrSettingForConfirm(
-            modalProps['close'],
-            (setting) => {
-              onModalSecondaryConfirm(setting, isModalVisibleRef, data.route)
-            },
-            () => {
-              removeMenuPage(data)
-            },
-          )
+        {
+          const modalProps = getSubscribeClose(data.route)
+          if (modalProps) {
+            judgeDataIsFuncOrSettingForConfirm(
+              modalProps['close'],
+              (setting) => {
+                onModalSecondaryConfirm(setting, isModalVisibleRef, data.route)
+              },
+              () => {
+                removeMenuPage(data)
+              },
+            )
+          }
         }
         break
       case YakitRoute.AddAITool:
       case YakitRoute.ModifyAITool:
-        const toolModalProps = getSubscribeClose(data.route)
-        if (toolModalProps) {
-          judgeDataIsFuncOrSettingForConfirm(
-            toolModalProps['close'],
-            (setting) => {
-              onModalSecondaryConfirm(setting, isModalVisibleRef)
-            },
-            () => {
-              removeMenuPage(data)
-            },
-          )
+        {
+          const toolModalProps = getSubscribeClose(data.route)
+          if (toolModalProps) {
+            judgeDataIsFuncOrSettingForConfirm(
+              toolModalProps['close'],
+              (setting) => {
+                onModalSecondaryConfirm(setting, isModalVisibleRef)
+              },
+              () => {
+                removeMenuPage(data)
+              },
+            )
+          }
         }
         break
       case YakitRoute.YakScript:
@@ -2663,7 +2663,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   useEffect(() => {
     const { isLogin } = userInfo
     if (!isLogin) {
-      for (let item of LogOutCloseRoutes) {
+      for (const item of LogOutCloseRoutes) {
         removeMenuPage({ route: item, menuName: '' })
       }
     }
@@ -2857,7 +2857,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ''
       const key = routeConvertKey(YakitRoute.HTTPFuzzer, '')
       const tabName = routeKeyToLabel.get(key) || menuName
-      let pageNodeInfo: PageProps = {
+      const pageNodeInfo: PageProps = {
         ...cloneDeep(defPage),
         currentSelectPageId: getCurrentSelectPageId(YakitRoute.HTTPFuzzer) || '',
         routeKey: YakitRoute.HTTPFuzzer,
@@ -3082,7 +3082,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         pageList.push(pageListItem)
 
         const oldPageList = pages.get(YakitRoute.HTTPFuzzer)?.pageList
-        let pageNodeInfo: PageProps = {
+        const pageNodeInfo: PageProps = {
           ...cloneDeep(defPage),
           pageList: oldPageList || [],
           routeKey: YakitRoute.HTTPFuzzer,
@@ -3200,7 +3200,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       },
       sortFieId: order,
     }
-    let pageNodeInfo: PageProps = {
+    const pageNodeInfo: PageProps = {
       ...cloneDeep(defPage),
       pageList: [newPageNode],
       routeKey: YakitRoute.MITMHacker,
@@ -3300,22 +3300,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   /**从历史记录中恢复数据 */
   const [recoveryModel, setRecoveryModel] = useState<RecoveryModel>('coverage')
   const [secondaryTabsNum, setSecondaryTabsNum] = useState<number>(100)
-  const onRestoreHistory = useMemoizedFn((routeKey: YakitRoute) => {
+  const onRestoreHistory = useMemoizedFn((routeKey: YakitRoute | string) => {
     switch (routeKey) {
       case YakitRoute.HTTPFuzzer:
-        setRecoveryModel('coverage')
-        const m = showYakitModal({
-          title: (modalT) => modalT('MainOperatorContent.restoreTab'),
-          footer: null,
-          content: (
-            <RestoreTabContent
-              setSecondaryTabsNum={setSecondaryTabsNum}
-              setRecoveryModel={setRecoveryModel}
-              onClose={() => m.destroy()}
-              onRestore={onRestoreHTTPFuzzer}
-            />
-          ),
-        })
+        {
+          setRecoveryModel('coverage')
+          const m = showYakitModal({
+            title: (modalT) => modalT('MainOperatorContent.restoreTab'),
+            footer: null,
+            content: (
+              <RestoreTabContent
+                setSecondaryTabsNum={setSecondaryTabsNum}
+                setRecoveryModel={setRecoveryModel}
+                onClose={() => m.destroy()}
+                onRestore={onRestoreHTTPFuzzer}
+              />
+            ),
+          })
+        }
         break
 
       default:
@@ -3334,7 +3336,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             await fetchFuzzerList(pageList, recoveryModel === 'new')
             // FuzzerSequence
             const resSequence = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCacheHistoryList)
-            if (!!resSequence) {
+            if (resSequence) {
               const listSequence = JSONParseLog(resSequence, {
                 page: 'MainOperatorContent',
                 fun: 'onRestoreHTTPFuzzer',
@@ -3390,7 +3392,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   }, [])
 
   /**保存历史记录 */
-  const onSaveHistory = useMemoizedFn((routeKey: YakitRoute) => {
+  const onSaveHistory = useMemoizedFn((routeKey: YakitRoute | string) => {
     switch (routeKey) {
       case YakitRoute.HTTPFuzzer:
         onSaveHTTPFuzzer()
@@ -4033,7 +4035,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo(
         setType(addType)
       }, 200)
     })
-    /**快捷关闭或者新增 */
+    /**快捷关闭或者新增或切换二级tab页 */
     const onKeyDown = useMemoizedFn((e, subItem: MultipleNodeInfo) => {
       const keys = convertKeyEventToKeyCombination(e)
       if (!keys) return
@@ -4042,6 +4044,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo(
       const event = getGlobalShortcutKeyEvents()
       const closeEvent = sortKeysCombination(event.removePage.keys).join('')
       const openEvent = sortKeysCombination(event.addSubPage.keys).join('')
+      const switchNextEvent = sortKeysCombination(event.switchSubPageNext.keys).join('')
+      const switchPrevEvent = sortKeysCombination(event.switchSubPagePrev.keys).join('')
       // 快捷键关闭
       if (triggerKeys === closeEvent) {
         e.preventDefault()
@@ -4055,6 +4059,27 @@ const SubTabList: React.FC<SubTabListProps> = React.memo(
         e.preventDefault()
         e.stopPropagation()
         subTabsRef.current?.onAddSubPage()
+        return
+      }
+      // 快捷键切换二级tab页（下一个/上一个循环切换）
+      const isSwitchNext = triggerKeys === switchNextEvent
+      const isSwitchPrev = triggerKeys === switchPrevEvent
+      if (isSwitchNext || isSwitchPrev) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (flatSubPage.length === 0) return
+        const currentIndex = flatSubPage.findIndex((ele) => ele.id === subItem.id)
+        let nextIndex = 0
+        if (currentIndex !== -1) {
+          nextIndex = isSwitchNext
+            ? currentIndex >= flatSubPage.length - 1
+              ? 0
+              : currentIndex + 1
+            : currentIndex <= 0
+              ? flatSubPage.length - 1
+              : currentIndex - 1
+        }
+        setSelectSubMenu({ ...flatSubPage[nextIndex] })
         return
       }
     })
@@ -5019,14 +5044,14 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       }
 
       // 固定页面支持多开页面需要移除关闭标签选项
-      if (getDefaultFixedTabsNoSinglPageRoute(softMode).includes(pageRouteKey) && subPage.length === 1) {
+      if (getDefaultFixedTabsNoSinglPageRoute(softMode).includes(pageRouteKey as YakitRoute) && subPage.length === 1) {
         if (groupList.length === 0 && index === 0) {
-          // @ts-ignore
+          // @ts-expect-error 类型定义不完整，需要忽略此行
           menuData = menuData.filter((item) => item.key !== 'remove')
         } else if (groupList.length === 1) {
           const len = groupList[0].groupChildren?.length || 0
           if (len === 1) {
-            // @ts-ignore
+            // @ts-expect-error 类型定义不完整，需要忽略此行
             menuData = menuData.filter((item) => item.key !== 'remove')
           }
         }
@@ -5091,7 +5116,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
               name={item.verbose}
               onOk={(val) => {
                 onRenameAndUpdatePageNameAndSendEmiter({
-                  route: pageRouteKey,
+                  route: pageRouteKey as YakitRoute,
                   updateItem: {
                     ...item,
                     verbose: val,
@@ -5763,7 +5788,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
           if (currentGroupList && currentGroupItem) {
             const newPageList = currentGroupList.map((ele, index) => ({ ...ele, sortFieId: index + 1 }))
-            let pageNodeInfo: PageProps = {
+            const pageNodeInfo: PageProps = {
               ...cloneDeep(defPage),
               pageList: [...newPageList, { ...currentGroupItem, sortFieId: 1 }],
               routeKey: pageRouteKey,
@@ -5834,7 +5859,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       if (index === -1) return
       subPage[index] = { ...groupItem }
       onUpdatePageCache([...subPage])
-      let currentGroup: PageNodeItemProps | undefined = queryPagesDataById(pageRouteKey, groupItem.id)
+      const currentGroup: PageNodeItemProps | undefined = queryPagesDataById(pageRouteKey, groupItem.id)
       if (currentGroup) {
         const newCurrentGroup = {
           ...currentGroup,
@@ -5905,8 +5930,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         // 组的key绑定的groupId，id只会在页面的节点上
         const data = `[data-rfd-draggable-id="${selectSubMenu.id}"]`
         const selectElement = document.querySelector(data)
-        const position = !!selectElement?.getClientRects().length ? selectElement?.getClientRects()[0] : null
-        if (!!position) {
+        const position = selectElement?.getClientRects().length ? selectElement?.getClientRects()[0] : null
+        if (position) {
           tabMenuSubRef.current.scrollLeft = position.left - 60
         }
       }, 20)
@@ -6114,7 +6139,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
   })
 
   const unShowRemove = useMemo(() => {
-    if (getDefaultFixedTabsNoSinglPageRoute(softMode).includes(pageRouteKey)) {
+    if (getDefaultFixedTabsNoSinglPageRoute(softMode).includes(pageRouteKey as YakitRoute)) {
       if (subPageLen === 1) {
         if (groupChildrenLen === 0) {
           return index === 0
@@ -6236,7 +6261,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
   const color = useMemo(() => subItem.color || 'purple', [subItem.color])
 
   useEffect(() => {
-    let element = document.getElementById(subItem.id)
+    const element = document.getElementById(subItem.id)
     if (!element) return
     if (subItem.expand && (!element.style.width || element.style.width === '0px')) {
       element.style.width = `${subItem.childrenWidth}px`
@@ -6497,9 +6522,9 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
   useEffect(() => {
     const { index, subIndex } = getPageItemById(subPage, draggableId)
     if (subIndex === -1) return
-    let groupChildrenList = subPage[index].groupChildren || []
+    const groupChildrenList = subPage[index].groupChildren || []
     if (groupChildrenList.length === 0) return
-    let item: MultipleNodeInfo = groupChildrenList[subIndex]
+    const item: MultipleNodeInfo = groupChildrenList[subIndex]
     setItem(item)
     setGroupItem(subPage[index])
   }, [draggableId])
@@ -6564,7 +6589,7 @@ const onModalSecondaryConfirm = (
   route?: YakitRoute,
 ) => {
   if (visibleRef) visibleRef.current = true
-  let m = YakitModalConfirm({
+  const m = YakitModalConfirm({
     width: 420,
     type: 'white',
     onCancelText: '不保存',

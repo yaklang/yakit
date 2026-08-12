@@ -82,7 +82,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
   }
 
   const handleKillAllRunNode = async () => {
-    let promises: (() => Promise<any>)[] = []
+    const promises: (() => Promise<any>)[] = []
     Array.from(runNodeList).forEach(([key, pid]) => {
       promises.push(() => yakitApp.killRunNode(Number(pid)))
     })

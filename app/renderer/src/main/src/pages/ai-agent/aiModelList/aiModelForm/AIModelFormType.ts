@@ -1,8 +1,8 @@
-import { ThirdPartyApplicationConfigProp } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
-import { AIModelConfig, AIModelTypeFileName, AIConfigHealthCheckResponse } from '../utils'
-import { AIModelTypeEnumType } from '../../defaultConstant'
-import { FormItemProps } from 'antd'
-import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { ThirdPartyApplicationConfigProp } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
+import type { AIModelConfig, AIModelTypeFileName, AIConfigHealthCheckResponse } from '../utils'
+import type { AIModelTypeEnumType } from '../../defaultConstant'
+import type { FormItemProps } from 'antd'
+import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 
 export interface AIModelFormProps {
   item?: AIModelConfig

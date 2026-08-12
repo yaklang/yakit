@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Form } from 'antd'
-import { InputInteger, InputItem } from '@/utils/inputUtil'
-import { failed, info } from '@/utils/notification'
-import { ExecResult } from '@/pages/invoker/schema'
+import { InputInteger } from '@/utils/inputUtil'
+import { info } from '@/utils/notification'
 
 export interface PacketScanFormProp {
   token: string

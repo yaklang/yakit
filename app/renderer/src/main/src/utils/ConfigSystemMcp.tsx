@@ -7,19 +7,19 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlineFilterIcon, OutlineRefreshIcon, OutlineSearchIcon } from '@/assets/icon/outline'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { SystemInfo } from '@/constants/hardware'
-import { localMcpDefalutUrl, mcpStreamHooks, remoteMcpDefalutUrl } from '@/components/layout/hooks/useMcp/useMcp'
+import { localMcpDefalutUrl, type mcpStreamHooks, remoteMcpDefalutUrl } from '@/components/layout/hooks/useMcp/useMcp'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
-  GetMCPToolListRequest,
-  GetMCPToolListResponse,
+  type GetMCPToolListRequest,
+  type GetMCPToolListResponse,
   isMCPTierActive,
-  MCPTierVisibility,
-  MCPToolConfig,
-  MCPToolSource,
+  type MCPTierVisibility,
+  type MCPToolConfig,
+  type MCPToolSource,
   resolveMCPToolListSourceFilter,
 } from '@/pages/ai-agent/type/aiMCP'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { grpcGetMCPToolList, grpcSetMCPToolEnabled } from '@/pages/ai-agent/aiMCP/utils'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'

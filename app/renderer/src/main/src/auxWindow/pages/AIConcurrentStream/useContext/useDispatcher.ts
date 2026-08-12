@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import AIConcurrentStreamValue, { AIConcurrentStreamDispatcher } from './AIConcurrentStreamContent'
+import AIConcurrentStreamValue, { type AIConcurrentStreamDispatcher } from './AIConcurrentStreamContent'
 
 export default function useAIConcurrentStreamDispatcher(): AIConcurrentStreamDispatcher {
   const { dispatcher } = useContext(AIConcurrentStreamValue)

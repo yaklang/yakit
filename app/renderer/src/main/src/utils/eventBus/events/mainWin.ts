@@ -1,4 +1,4 @@
-import { YakitSettingCallbackType, YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
+import type { YakitSettingCallbackType, YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
 
 export type MainWinOperatorEventProps = {
   /**销毁主窗口antd ui */

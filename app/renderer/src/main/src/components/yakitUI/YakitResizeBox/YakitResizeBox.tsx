@@ -275,9 +275,9 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
   const maskRef = useRef<HTMLDivElement>(null)
   const [bodyWidth, setBodyWidth] = useState<number>(0)
   const [bodyHeight, setBodyHeight] = useState<number>(0)
-  let firstRenderRef = useRef<boolean>(true)
-  let perBodyWidth = useRef<number>()
-  let perBodyHeight = useRef<number>()
+  const firstRenderRef = useRef<boolean>(true)
+  const perBodyWidth = useRef<number>()
+  const perBodyHeight = useRef<number>()
 
   // 拖拽时移动 缓存
   const dragFirstSize = useRef<number>()

@@ -4,7 +4,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon, QuitIcon, RefreshIcon } from '@/assets/newIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN, SendMenuDnslogProps } from '@/pages/dnslog/DNSLogPage'
+import { type DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN, type SendMenuDnslogProps } from '@/pages/dnslog/DNSLogPage'
 import { yakitNotify } from '@/utils/notification'
 import { formatTime } from '@/utils/timeUtil'
 import { useGetState, useMemoizedFn } from 'ahooks'
@@ -14,7 +14,6 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import classNames from 'classnames'
 import styles from './MenuDNSLog.module.scss'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { RemoteGV } from '@/yakitGV'
 import { LoadingOutlined } from '@ant-design/icons'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -122,7 +121,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
   const [tokenLoading, setTokenLoading] = useState<boolean>(false)
 
   const updateToken = (params?: UpdateTokenParams) => {
-    let paramsObj: any = {
+    const paramsObj: any = {
       Addr: '',
     }
     if (params) {
@@ -190,7 +189,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         // 默认内置
         updateToken()
       } else {
-        let obj = JSONParseLog(data, { page: 'MenuDNSLog', fun: 'DNS_LOG_PAGE_UPDATE_TOKEN' })
+        const obj = JSONParseLog(data, { page: 'MenuDNSLog', fun: 'DNS_LOG_PAGE_UPDATE_TOKEN' })
         // 内置
         if (obj.type === 'builtIn') {
           updateToken(obj)
@@ -354,11 +353,11 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
       />
 
       <div className={styles['dnslog-generate-host']}>
-        <div className={!!domain ? styles['generated-wrapper'] : styles['generate-wrapper']}>
+        <div className={domain ? styles['generated-wrapper'] : styles['generate-wrapper']}>
           <div className={styles['title-style']}>
             {t('Layout.MenuDNSLog.useCallbackService', { v1: getReleaseEditionName(), v2: t('YakitRoute.DNSLog') })}
           </div>
-          {!!domain ? (
+          {domain ? (
             <YakitButton key={'close'} danger size="small" icon={<QuitIcon />} onClick={reset}>
               {t('YakitButton.close')}
             </YakitButton>
@@ -384,7 +383,7 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
       <div className={styles['dnslog-arrow-right-wrapper']}>
         <div className={styles['dnslog-arrow-right-body']}>
           <div className={styles['title-style']}>
-            {!!domain ? (
+            {domain ? (
               <>
                 {loading ? (
                   <>

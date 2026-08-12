@@ -1,14 +1,14 @@
 import {
-  DatabaseMenuItemProps,
+  type DatabaseMenuItemProps,
   PrivateExpertRouteMenu,
-  PrivateRouteMenuProps,
+  type PrivateRouteMenuProps,
   PrivateScanRouteMenu,
   PublicCommonPlugins,
-  PublicRouteMenuProps,
+  type PublicRouteMenuProps,
 } from '@/routes/newRoute'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { SendDatabaseFirstMenuProps } from '@/routes/newRouteType'
-import { ReactNode } from 'react'
+import type { SendDatabaseFirstMenuProps } from '@/routes/newRouteType'
+import type { ReactNode } from 'react'
 
 /** @name 编辑菜单-增强型菜单(主要适配public和private两个版本的所有属性) */
 export interface EnhancedCustomRouteMenuProps {
@@ -33,7 +33,7 @@ export interface EnhancedCustomRouteMenuProps {
 /** @name 前端菜单数据转换为JSON数据 */
 export const menusConvertJsonData = (data: EnhancedCustomRouteMenuProps[]) => {
   const menus: DatabaseMenuItemProps[] = []
-  for (let item of data) {
+  for (const item of data) {
     const menu: DatabaseMenuItemProps = {
       route: undefined,
       label: item.label,
@@ -43,7 +43,7 @@ export const menusConvertJsonData = (data: EnhancedCustomRouteMenuProps[]) => {
       children: [],
     }
     if (item.children && item.children.length > 0) {
-      for (let subItem of item.children) {
+      for (const subItem of item.children) {
         const subMenu: DatabaseMenuItemProps = {
           route: subItem.page,
           label: subItem.label,
@@ -78,20 +78,20 @@ const filterMenus = (menus: SendDatabaseFirstMenuProps[], local: PublicRouteMenu
   const filterNames: string[] = []
   const userMenuName: Record<string, string[] | undefined> = {}
   // 整理用户菜单：一级菜单下的二级菜单名合集
-  for (let item of menus) {
+  for (const item of menus) {
     userMenuName[item.GroupLabel] = (item.Items || []).map((item) => item.VerboseLabel)
     userMenuName[item.GroupLabel] =
       userMenuName[item.GroupLabel]?.length === 0 ? undefined : userMenuName[item.GroupLabel]
   }
   // 代码内定菜单进行过滤
-  for (let item of local) {
+  for (const item of local) {
     if (!userMenuName[item.label]) {
       filterNames.push(item.label)
       continue
     }
     if (item.children && item.children.length > 0) {
       const names = userMenuName[item.label] || []
-      for (let subItem of item.children) {
+      for (const subItem of item.children) {
         // 菜单项唯一名
         const menuname = subItem.page === YakitRoute.Plugin_OP ? subItem.yakScripName || subItem.label : subItem.label
         if (!names.includes(menuname)) filterNames.push(`${item.label}-${menuname}`)

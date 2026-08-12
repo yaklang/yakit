@@ -1,4 +1,4 @@
-import { MultipleNodeInfo } from '@/pages/layout/mainOperatorContent/MainOperatorContentType'
+import type { MultipleNodeInfo } from '@/pages/layout/mainOperatorContent/MainOperatorContentType'
 
 export type MainOperatorEventProps = {
   /** 远程打开一个页面 */

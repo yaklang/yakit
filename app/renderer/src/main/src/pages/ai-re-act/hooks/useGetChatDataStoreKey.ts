@@ -1,4 +1,4 @@
-import { ChatDataStoreKey } from '@/pages/ai-agent/store/ChatDataStore'
+import type { ChatDataStoreKey } from '@/pages/ai-agent/store/ChatDataStore'
 import { AISourceEnum, type AISource } from './grpcApi'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { useCreation } from 'ahooks'

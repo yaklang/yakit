@@ -3,7 +3,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ChevronDownIcon, SwitchHorizontalIcon, ChevronUpIcon } from '@/assets/newIcon'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useMemoizedFn } from 'ahooks'
@@ -88,7 +88,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
   const [answer, setAnswer] = useState<string>('')
 
   const exchangeValue = useMemoizedFn(() => {
-    let value = question
+    const value = question
     setQuestion(answer)
     setAnswer(value)
   })
@@ -230,7 +230,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           <CopyComponents
             className={classNames(styles['copy-icon-style'], { [styles['copy-icon-ban']]: !question })}
             copyText={question}
-            iconColor={!!question ? 'var(--Colors-Use-Neutral-Text-3-Secondary)' : 'var(--Colors-Use-Neutral-Disable)'}
+            iconColor={question ? 'var(--Colors-Use-Neutral-Text-3-Secondary)' : 'var(--Colors-Use-Neutral-Disable)'}
           />
         </div>
       </div>
@@ -252,7 +252,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           <CopyComponents
             className={classNames(styles['copy-icon-style'], { [styles['copy-icon-ban']]: !answer })}
             copyText={answer}
-            iconColor={!!answer ? 'var(--Colors-Use-Neutral-Text-3-Secondary)' : 'var(--Colors-Use-Neutral-Disable)'}
+            iconColor={answer ? 'var(--Colors-Use-Neutral-Text-3-Secondary)' : 'var(--Colors-Use-Neutral-Disable)'}
           />
         </div>
       </div>

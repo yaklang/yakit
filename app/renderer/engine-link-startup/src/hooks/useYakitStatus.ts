@@ -1,7 +1,7 @@
 import type { MutableRefObject } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import useGetSetState from './useGetSetState'
-import { YakitStatusType } from '@/pages/StartupPage/types'
+import type { YakitStatusType } from '@/pages/StartupPage/types'
 
 export const useYakitStatus = (breakHandleRef: MutableRefObject<boolean>) => {
   const [yakitStatus, setYakitStatus, getYakitStatus] = useGetSetState<YakitStatusType>('init')

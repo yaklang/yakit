@@ -8,7 +8,7 @@ import { Tooltip } from 'antd'
 import classNames from 'classnames'
 import { YakitAIAgentPageID } from '../../defaultConstant'
 import { EditChatNameModal } from '../../UtilModals'
-import { AISession } from '../../type/aiChat'
+import type { AISession } from '../../type/aiChat'
 import { useCreation, useInfiniteScroll, useMemoizedFn } from 'ahooks'
 import { grpcUpdateAISessionTitle } from '../../grpc'
 import useAIAgentStore from '../../useContext/useStore'
@@ -21,11 +21,8 @@ import { AITaskStatus, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
 import { handAIHistoryChatRemove } from '../utils'
 import useGetChatDataStoreKey, { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
-import type { YakitRouteType } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
-import { HistoryChatListItemProps } from './type'
+import type { HistoryChatListItemProps } from './type'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { useStore } from 'zustand'
 import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
@@ -135,8 +132,6 @@ const HistoryChatList: FC<{
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { activeChat } = useAIAgentStore()
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
-  const currentPageId = usePageInfo((state) => state.getCurrentSelectPageId(state.getCurrentPageTabRouteKey()), shallow)
   const listRef = useRef<HTMLDivElement | null>(null)
   const chatTotalRef = useRef(0)
   const editInfo = useRef<AISession>()
@@ -227,25 +222,17 @@ const HistoryChatList: FC<{
         active = getNextActiveChat(sessionList, findIndex)
       }
 
-      setSessions && setSessions(newChats)
-
-      if (activeSessionId === SessionID && active) {
-        handleSetActiveChat(active)
-      }
-
       try {
         const sessionIds = [SessionID]
-        const source = getSetting().Source || 'ai'
         await handAIHistoryChatRemove({
           grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
           handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
-          deleteSessionsParams: {
-            sources: [source],
-            sessionIds,
-            route: currentRouteKey as YakitRouteType,
-            pageId: currentPageId || currentRouteKey,
-          },
+          deleteSessionsParams: { sessionIds, source: [] },
         })
+        setSessions && setSessions(newChats)
+        if (activeSessionId === SessionID && active) {
+          handleSetActiveChat(active)
+        }
         resolve()
       } catch (error) {
         setSessions?.(sessionList)
@@ -278,12 +265,12 @@ const HistoryChatList: FC<{
       return
     }
     const activeExecute = globalSessionEngine?.getSessionExecute(info.SessionID)
-    if (!!activeExecute) {
+    if (activeExecute) {
       yakitNotify('info', '会话正在执行中')
       return
     }
     const currentExecute = globalSessionEngine?.getSessionExecute(activeSessionId)
-    if (!!currentExecute) {
+    if (currentExecute) {
       setCloseLoading(true)
       onClose([activeSessionId], () => {
         onSetChat(info)
@@ -353,7 +340,6 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
 
   const casualLoading = useStore(store, (state) => state.casualLoading)
   const taskLoading = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
-
   const [delLoading, setDelLoading] = useState<boolean>(false)
   const displayTitle = useCreation(() => {
     return getSessionDisplayTitle(item)
@@ -361,9 +347,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
   const handleDeleteChatItem = useMemoizedFn(async (info: AISession) => {
     setDelLoading(true)
     handleDeleteChat(info).finally(() => {
-      setTimeout(() => {
-        setDelLoading(false)
-      }, 200)
+      setDelLoading(false)
     })
   })
   const loading = useCreation(() => {

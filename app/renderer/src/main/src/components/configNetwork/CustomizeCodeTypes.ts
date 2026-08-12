@@ -1,6 +1,5 @@
-import { Theme } from '@/hook/useTheme'
-import { FormInstance } from 'antd'
-import { languages } from 'monaco-editor'
+import type { Theme } from '@/hook/useTheme'
+import type { FormInstance } from 'antd'
 
 // 自定义代码片段 tag props
 type TCodeCustomizeTagProps = {

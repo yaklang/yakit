@@ -1,21 +1,21 @@
-import { FC, memo, ReactNode, useEffect, useRef, useState } from 'react'
+import { type FC, memo, type ReactNode, useEffect, useRef, useState } from 'react'
 import ChatCard from './ChatCard'
 import styles from './ToolInvokerCard.module.scss'
 import classNames from 'classnames'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { grpcQueryAIToolDetails } from '../grpc'
 import {
-  AIChatQSData,
+  type AIChatQSData,
   AIChatQSDataTypeEnum,
-  AIToolResult,
-  AIYakExecFileRecord,
-  ChatToolResult,
+  type AIToolResult,
+  type AIYakExecFileRecord,
+  type ChatToolResult,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
-import { AIAgentGrpcApi, AIEventQueryRequest, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIEventQueryRequest, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { isToolStdoutStream } from '@/pages/ai-re-act/hooks/utils'
 import {
   OutlineArrownarrowrightIcon,
@@ -105,7 +105,7 @@ const ToolLoadingCard: React.FC<Omit<ToolInvokerCardProps, 'fileList'>> = memo((
       titleIcon={<OutlineWrenchIcon1 />}
       titleText={nodeLabel || data.toolName}
       titleExtra={
-        !!reason ? (
+        reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
             {reason}
           </span>
@@ -206,7 +206,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
         </div>
       }
       titleExtra={
-        !!reason ? (
+        reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
             {reason}
           </span>
@@ -327,7 +327,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   }
 
   const getResultDetails = useMemoizedFn((list: AIChatQSData[]) => {
-    let desc: string[] = []
+    const desc: string[] = []
     list.forEach((ele) => {
       const { type, data } = ele
       switch (type) {
@@ -399,7 +399,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
         </div>
       }
       titleExtra={
-        !!reason ? (
+        reason ? (
           <span className={styles['tool-invoker-card-reason']} title={reason}>
             {reason}
           </span>

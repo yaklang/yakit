@@ -6,11 +6,11 @@ import type { AIForge } from '@/pages/ai-agent/type/forge'
 import type { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
 import type { AITaskInfoProps } from './aiRender'
 
-import {
+import type {
   AIToDoListStatusEnumType,
   AttachedResourceKeyEnum,
   AttachedResourceTypeEnum,
-  type AIModelTypeEnumType,
+  AIModelTypeEnumType,
 } from '@/pages/ai-agent/defaultConstant'
 
 // #region 双工接口请求和响应结构
@@ -182,7 +182,7 @@ export interface AIExecutionStrategy {
   GoalMinIterations?: number
 }
 
-interface AIEnabledCapability {
+export interface AIEnabledCapability {
   Name: string
   Type: string
 }
@@ -1234,5 +1234,20 @@ export interface ExportAILogsRequest {
 }
 export interface ExportAILogsResponse {
   FilePath: string
+}
+// #endregion
+//#region GetAIReActRecommendedSkills/UpdateAIReActRecommendedSkill/ResetAIReActRecommendedSkill接口
+export interface AIReActRecommendedSkill extends AIEnabledCapability {
+  DisplayNameZhCN: string
+  Description: string
+}
+
+export interface GetAIReActRecommendedSkillsResponse {
+  Data: AIReActRecommendedSkill[]
+}
+
+export interface UpdateAIReActRecommendedSkillRequest {
+  Name: string
+  Content: string
 }
 // #endregion

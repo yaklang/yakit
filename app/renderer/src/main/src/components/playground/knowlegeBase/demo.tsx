@@ -1,6 +1,5 @@
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ReactECharts from 'echarts-for-react'
-import { Children } from 'react'
 
 const GraphDemo = () => {
   const { t } = useI18nNamespaces(['components'])

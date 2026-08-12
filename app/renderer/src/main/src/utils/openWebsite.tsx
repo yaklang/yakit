@@ -1,6 +1,6 @@
-import React from 'react'
+import type React from 'react'
 import { success, yakitFailed, yakitNotify } from './notification'
-import { OpenPacketNewWindowItem } from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
+import type { OpenPacketNewWindowItem } from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
 import { childWindowHash } from '@/pages/layout/mainOperatorContent/MainOperatorContent'
 import {
   changeClickEngineConsoleFlag,
@@ -8,8 +8,8 @@ import {
   engineConsoleWindowHash,
 } from '@/components/layout/hooks/useEngineConsole/useEngineConsole'
 import i18n from '@/i18n/i18n'
-import { Risk } from '@/pages/risks/schema'
-import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { Risk } from '@/pages/risks/schema'
+import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import type { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
 import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
 const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])

@@ -1,43 +1,29 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  useDebounceEffect,
-  useDebounceFn,
-  useGetState,
-  useInViewport,
-  useMemoizedFn,
-  useThrottleFn,
-  useUpdateEffect,
-} from 'ahooks'
+import type React from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { useDebounceEffect, useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './AuditSearchModal.module.scss'
-import { failed, success, warn, info, yakitNotify } from '@/utils/notification'
-import classNames from 'classnames'
-import { AuditSearchProps, ExtraSettingDataProps, ExtraSettingProps } from './AuditSearchModalType'
+import { warn } from '@/utils/notification'
+import type { AuditSearchProps, ExtraSettingDataProps, ExtraSettingProps } from './AuditSearchModalType'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { RemoteGV } from '@/yakitGV'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { YakitHintWhite } from '@/components/yakitUI/YakitHint/YakitHint'
 import YakitTabs from '@/components/yakitUI/YakitTabs/YakitTabs'
-import emiter from '@/utils/eventBus/eventBus'
-import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import { Progress } from 'antd'
-import { AuditDetailItemProps, AuditYakUrlProps } from '../AuditCode/AuditCodeType'
+import type { AuditDetailItemProps, AuditYakUrlProps } from '../AuditCode/AuditCodeType'
 import { loadAuditFromYakURLRaw, onJumpByCodeRange } from '../utils'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { AuditNodeSearchItem } from '../AuditCode/AuditCode'
 import { YakRiskCodemirror } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
-import { CodeRangeProps } from '../RightAuditDetail/RightAuditDetail'
-import { OpenFileByPathProps } from '../YakRunnerAuditCodeType'
-import { Selection } from '../RunnerTabs/RunnerTabsType'
-import { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
+import type { CodeRangeProps } from '../RightAuditDetail/RightAuditDetail'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
-import { KVPair } from '@/models/kv'
+import type { KVPair } from '@/models/kv'
 import { JSONParseLog } from '@/utils/tool'
 
 let selectedSearchVal: string = ''
@@ -117,7 +103,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             }
           },
         )
-        let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
+        const isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
         const newAuditDetail = page === 1 ? initAuditDetail : auditDetail.concat(initAuditDetail)
         if (isEnd) {
           setHasMore(false)
@@ -163,7 +149,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
       warn('请等待上一次搜索结束')
       return
     }
-    let requestParamsExecParams: KVPair[] = [
+    const requestParamsExecParams: KVPair[] = [
       {
         Key: 'progName',
         Value: projectName || '',
@@ -206,7 +192,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
       try {
         const newPlugin = await grpcFetchLocalPluginDetail({ Name: 'SyntaxFlow Searcher' }, true)
         const ExtraSetting = newPlugin?.Params.find((item) => item.Field === 'kind')?.ExtraSetting || ''
-        let obj = JSONParseLog(ExtraSetting, { page: 'AuditSearch', fun: 'handleFetchParams' }) as ExtraSettingProps
+        const obj = JSONParseLog(ExtraSetting, { page: 'AuditSearch', fun: 'handleFetchParams' }) as ExtraSettingProps
         setExtraSettingData(obj.data)
       } catch (error) {}
     }),
@@ -241,12 +227,12 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     if (activeInfo) {
       const cureentIndex = auditDetail.findIndex((item) => item.id === activeInfo.id)
       if (type === 'next') {
-        let nextIndex = cureentIndex + 1 > auditDetail.length - 1 ? cureentIndex : cureentIndex + 1
+        const nextIndex = cureentIndex + 1 > auditDetail.length - 1 ? cureentIndex : cureentIndex + 1
         setActiveInfo(auditDetail[nextIndex])
         setScrollToNumber(nextIndex)
       }
       if (type === 'last') {
-        let lastIndex = cureentIndex - 1 < 0 ? cureentIndex : cureentIndex - 1
+        const lastIndex = cureentIndex - 1 < 0 ? cureentIndex : cureentIndex - 1
         setActiveInfo(auditDetail[lastIndex])
         setScrollToNumber(lastIndex)
       }
@@ -297,8 +283,11 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
 
   const onStopExecute = useMemoizedFn(() => {
     keyDownRef.current?.focus()
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setExecuting(false)
   })
 
   const inputRef = useRef<any>(null)

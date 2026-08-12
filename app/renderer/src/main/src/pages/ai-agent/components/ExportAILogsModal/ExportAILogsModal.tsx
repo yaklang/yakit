@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 

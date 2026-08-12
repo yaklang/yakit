@@ -1,4 +1,4 @@
-import { MilkdownPlugin } from '@milkdown/kit/ctx'
+import type { MilkdownPlugin } from '@milkdown/kit/ctx'
 import type { EditorView } from '@milkdown/prose/view'
 import { Plugin, PluginKey } from 'prosemirror-state'
 import { $prose } from '@milkdown/kit/utils'

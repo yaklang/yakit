@@ -4,7 +4,6 @@ import emiter from '../eventBus/eventBus'
 import { Uint8ArrayToString } from '../str'
 import { JSONParseLog } from '../tool'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineTrashSecondIcon } from '@/assets/icon/outline'
 import { yakitDuplex, yakitStream } from '@/services/electronBridge'
 import { areMITMDebugHooksEnabled } from '@/utils/mitmDebugHooks'
 import { setRemoteValue } from '../kv'
@@ -18,7 +17,7 @@ import {
 import { createMITMFlowCommittedRefreshScheduler } from '@/components/HTTPFlowTable/HTTPFlowTable.committed'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
-let id = randomString(40)
+const id = randomString(40)
 let duplexListeners: Array<() => void> = []
 let duplexStarted = false
 let flowCommittedMode: MITMFlowCommittedMode = 'shadow'
@@ -147,7 +146,7 @@ export const startupDuplexConn = () => {
     // compatibility engines whose first observable frame is not `global`.
     updateServerPushStatus(true)
     try {
-      const resultData: Buffer = data.Data
+      const resultData: Uint8Array = data.Data
       const obj = JSONParseLog(Uint8ArrayToString(resultData), { page: 'duplex', fun: 'startupDuplexConn' })
       switch (data.MessageType) {
         // 当前引擎支持推送数据库更新(如若不支持则依然使用轮询请求)
@@ -189,11 +188,12 @@ export const startupDuplexConn = () => {
           emiter.emit('onRefreshQueryNewRisk')
           break
         // 文件树结构监控
-        case 'file_monitor':
+        case 'file_monitor': {
           const event: FileMonitorProps = obj
           emiter.emit('onRefreshYakRunnerFileTree', JSON.stringify(event))
           break
-        // 代码扫描-审计结果表
+          // 代码扫描-审计结果表
+        }
         case 'syntaxflow_result':
           emiter.emit('onRefreshCodeScanResult', JSON.stringify(obj))
           break
@@ -302,7 +302,7 @@ export const startupDuplexConn = () => {
 }
 
 export interface DuplexConnectionProps {
-  Data: Buffer
+  Data: Uint8Array
   MessageType: string
   Timestamp: number
 }

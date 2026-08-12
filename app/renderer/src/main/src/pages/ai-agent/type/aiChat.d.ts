@@ -3,7 +3,7 @@ import type { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-
 import type { PlanItemDetailsData, SessionRenderContent } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
-import { PaginationSchema } from '@/pages/invoker/schema'
+import { type PaginationSchema } from '@/pages/invoker/schema'
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {
@@ -142,6 +142,10 @@ export interface DeleteAISessionFilter {
    * 删除来源于该来源的数据
    */
   Source?: AISource[]
+  /**
+   * 按 IM 平台删除（feishu / dingtalk），仅当 Source 含 im 时有意义
+   */
+  Platform?: string[]
 }
 
 export interface DeleteAISessionRequest {
@@ -162,6 +166,10 @@ export interface QueryAISessionRequest {
     SessionID?: string[]
     Keyword?: string
     Source?: AISource[]
+    /**
+     * 按 IM 平台筛选（feishu / dingtalk），仅当 Source 含 im 时有意义
+     */
+    Platform?: string[]
   }
 }
 export interface AIAgentChatData {

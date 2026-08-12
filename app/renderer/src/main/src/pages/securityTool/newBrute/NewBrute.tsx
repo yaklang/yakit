@@ -1,5 +1,5 @@
-import React, { useState, useEffect, Key, useRef, forwardRef, useImperativeHandle } from 'react'
-import {
+import React, { useState, useEffect, type Key, useRef, forwardRef, useImperativeHandle } from 'react'
+import type {
   BruteExecuteContentProps,
   BruteExecuteContentRefProps,
   BruteExecuteExtraFormValue,
@@ -11,13 +11,13 @@ import {
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import { apiCancelStartBrute, apiGetAvailableBruteTypes, apiStartBrute, convertStartBruteParams } from './utils'
 import YakitTree from '@/components/yakitUI/YakitTree/YakitTree'
-import { DataNode } from 'antd/lib/tree'
+import type { DataNode } from 'antd/lib/tree'
 import styles from './NewBrute.module.scss'
 import {
   ExpandAndRetract,
-  ExpandAndRetractExcessiveState,
+  type ExpandAndRetractExcessiveState,
 } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -29,7 +29,7 @@ import { randomString } from '@/utils/randomUtil'
 import cloneDeep from 'lodash/cloneDeep'
 import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
 import { YakitFormDraggerContentPath } from '@/components/yakitUI/YakitForm/YakitForm'
-import { BrutePageInfoProps, PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { type BrutePageInfoProps, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { defaultBruteExecuteExtraFormValue, defaultBrutePageInfo } from '@/defaultConstants/NewBrute'

@@ -64,7 +64,6 @@ const AuxXterm = forwardRef<AuxXtermRef, AuxXtermProps>(({ options = {}, customK
       terminalRef.current = null
       fitRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return <div className={styles['aux-xterm']} ref={divRef} />

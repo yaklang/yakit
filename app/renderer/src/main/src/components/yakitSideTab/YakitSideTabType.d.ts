@@ -1,4 +1,5 @@
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 export interface YakitSideTabProps extends Pick<YakitTabsItemProps, 'onTabPaneRender' | 'barHint' | 't'> {
   yakitTabs: YakitTabsProps[]
   setYakitTabs?: (v: YakitTabsProps[]) => void

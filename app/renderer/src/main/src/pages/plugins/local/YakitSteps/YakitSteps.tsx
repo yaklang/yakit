@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { YakitStepProps, YakitStepsProps } from './YakitStepsType'
+import type { YakitStepProps, YakitStepsProps } from './YakitStepsType'
 import styles from './YakitSteps.module.scss'
 import { Steps } from 'antd'
 

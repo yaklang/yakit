@@ -1,4 +1,4 @@
-import { ExecResult } from '../pages/invoker/schema'
+import type { ExecResult } from '../pages/invoker/schema'
 
 export const writeXTerm = (xterm: any, data: string) => {
   if (xterm && xterm?.current) {

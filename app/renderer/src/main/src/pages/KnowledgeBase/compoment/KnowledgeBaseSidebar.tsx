@@ -1,4 +1,4 @@
-import React, { Dispatch, ReactNode, SetStateAction, useEffect, useRef, useState, type FC } from 'react'
+import React, { type Dispatch, type ReactNode, type SetStateAction, useEffect, useRef, useState, type FC } from 'react'
 import { useAsyncEffect, useMemoizedFn, useRequest, useSafeState } from 'ahooks'
 
 import {
@@ -20,7 +20,7 @@ import {
   insertModaOptions,
   KnowledgeTabList,
   KnowledgeTabListEnum,
-  OnlieRageLatestResponse,
+  type OnlieRageLatestResponse,
   prioritizeProcessingItems,
   targetIcon,
   exclude,
@@ -31,14 +31,14 @@ import { SolidLightningBoltIcon, SolidOutlineSearchIcon } from '@/assets/icon/so
 import { AddKnowledgenBaseDropdownMenu } from './AddKnowledgenBaseDropdownMenu'
 import { OperateKnowledgenBaseItem } from './OperateKnowledgenBaseItem'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
+import type useMultipleHoldGRPCStream from '../hooks/useMultipleHoldGRPCStream'
 
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import { Divider, Tooltip } from 'antd'
 import { YakitLogoSvgIcon, YakitSpinLogoSvgIcon } from '../icon/sidebarIcon'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
-import { CreateKnowledgeBaseData, TClearKnowledgeResponse } from '../TKnowledgeBase'
+import type { CreateKnowledgeBaseData, TClearKnowledgeResponse } from '../TKnowledgeBase'
 
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { CloudDownloadIcon } from '@/assets/newIcon'
@@ -208,7 +208,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
     const processed = prioritizeProcessingItems(result)
     setKnowledgeBase(processed)
     // setKnowledgeBaseID(processed?.[0]?.ID ?? "")
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [knowledgeBases, addMode])
 
   const clearAllExecutorRef = useRef<((token: string) => Promise<void>) | null>(null)
@@ -446,7 +445,6 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
   // 首次加载时拉取线上知识库和本地快照
   useEffect(() => {
     fetchAndSetOnlineRagList()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useAsyncEffect(async () => {

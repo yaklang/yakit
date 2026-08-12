@@ -4,16 +4,16 @@ import { Progress, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import styles from './WebFuzzerApiDoc.module.scss'
 import { OutlineBookopenIcon, OutlineClockIcon, OutlineUploadIcon } from '@/assets/icon/outline'
-import { YakURLResource } from '@/pages/yakURLTree/data'
+import type { YakURLResource } from '@/pages/yakURLTree/data'
 import {
-  ApiDocInfo,
-  ApiDocOperationSummary,
+  type ApiDocInfo,
+  type ApiDocOperationSummary,
   cancelOpenApiRequest,
   getApiMethodTagStyle,
   getExtra,
   isOpenApiRequestCanceled,
   openApiRequest,
-  OpenAPIParseProgress,
+  type OpenAPIParseProgress,
   toNumber,
 } from './apiDoc'
 import { WebFuzzerApiDocHistory } from './WebFuzzerApiDocHistory'

@@ -1,7 +1,6 @@
-import { memo, useEffect, useMemo, useRef } from 'react'
-import { VirtualTableProps } from './VirtualTableType'
+import { memo, useEffect, useRef } from 'react'
+import type { VirtualTableProps } from './VirtualTableType'
 import { useGetState, useMemoizedFn, useThrottleFn, useVirtualList } from 'ahooks'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 import '../demoStyle.scss'
 
@@ -64,10 +63,10 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
     setTimeout(() => {
       onScrollY(!isTopLoadMore)
     }, 50)
-    const info = !!isTopLoadMore ? data[0] : data[data.length - 1]
+    const info = isTopLoadMore ? data[0] : data[data.length - 1]
     loadMore(info)
       .then((res) => {
-        const list = !!isTopLoadMore ? res.data.concat(getData()) : getData().concat(res.data)
+        const list = isTopLoadMore ? res.data.concat(getData()) : getData().concat(res.data)
         setData([...list])
       })
       .catch(() => {})
@@ -124,7 +123,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
       if (isStop) return
 
       isBreakRef.current = false
-      if (!!timeRef.current) return
+      if (timeRef.current) return
       timeRef.current = setInterval(fetchList, wait)
     } else {
       clearTime()
@@ -140,7 +139,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
 
         const { scrollTop, clientHeight, scrollHeight } = fetchListHeight()
 
-        if (!!isTopLoadMore) {
+        if (isTopLoadMore) {
           setTime(!(scrollTop > 40))
         } else {
           const scrollBottom = scrollHeight - scrollTop - clientHeight
@@ -198,7 +197,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
                         className="col-wrapper"
                       >
                         <div className="content-body yakit-single-line-ellipsis">
-                          {!!colRender ? colRender(data) : data[key] || '-'}
+                          {colRender ? colRender(data) : data[key] || '-'}
                         </div>
                       </div>
                     )

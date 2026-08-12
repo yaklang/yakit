@@ -13,7 +13,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ClockIcon } from '@/assets/newIcon'
 import { OutlineLandPlotIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { AIReActChatHeaderExternalRightIconProps, AIReActChatHeaderProps, AIReActSubAgentTaskProps } from './type'
+import type { AIReActChatHeaderExternalRightIconProps, AIReActChatHeaderProps, AIReActSubAgentTaskProps } from './type'
 import { ChevronleftButton } from '../AIReActComponent'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -21,7 +21,7 @@ import useCreation from 'ahooks/lib/useCreation'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import { AISource, AISourceEnum } from '../../hooks/grpcApi'
+import { type AISource, AISourceEnum } from '../../hooks/grpcApi'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { SolidChatIcon } from '@/assets/icon/solid'
 import useAIItemKind from '../../hooks/useAIItemKind'
@@ -118,7 +118,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
         {isShowRetract && (
           <>
             <AIReActSubAgentTask scrollToItemIndex={scrollToItemIndex} />
-            {!!externalParameters?.rightIcon ? (
+            {externalParameters?.rightIcon ? (
               <AIReActChatHeaderExternalRightIcon rightIcon={externalParameters?.rightIcon} />
             ) : (
               <>
@@ -232,7 +232,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
     }
   }, [setting?.Source])
 
-  return !!rightIcon ? (
+  return rightIcon ? (
     <>
       {currentCasualTaskID && rightIcon.taskDetails && <TaskDetailsPopover />}
       {rightIcon.dataDetails && (

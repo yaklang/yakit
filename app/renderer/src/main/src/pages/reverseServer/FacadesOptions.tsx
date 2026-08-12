@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import type React from 'react'
+import { useState, useEffect } from 'react'
 import { Form, Button } from 'antd'
-import { InputInteger, InputItem, SwitchItem, InputStringOrJsonItem } from '../../utils/inputUtil'
-import { useGetState, useMemoizedFn } from 'ahooks'
-import { getRemoteValue, setRemoteValue } from '../../utils/kv'
-import { NetInterface } from '@/models/Traffic'
+import { InputInteger, InputItem, SwitchItem } from '../../utils/inputUtil'
+import { getRemoteValue } from '../../utils/kv'
+import type { NetInterface } from '@/models/Traffic'
 const { ipcRenderer } = window.require('electron')
 export const BRIDGE_ADDR = 'yak-bridge-addr'
 export const BRIDGE_SECRET = 'yak-bridge-secret'
@@ -32,7 +32,7 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
   useEffect(() => {
     getRemoteValue(BRIDGE_ADDR)
       .then((data: string) => {
-        if (!!data) {
+        if (data) {
           params.BridgeParam.Addr = data
           setParams(params)
           getRemoteValue(BRIDGE_SECRET).then((data: string) => {

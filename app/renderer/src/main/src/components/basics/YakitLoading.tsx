@@ -1,5 +1,5 @@
-import { YaklangEngineMode } from '@/yakitGVDefine'
-import { DynamicStatusProps } from '@/store'
+import type { YaklangEngineMode } from '@/yakitGVDefine'
+import type { DynamicStatusProps } from '@/store'
 
 export const EngineModeVerbose = (m: YaklangEngineMode, n?: DynamicStatusProps) => {
   if (n && n.isDynamicStatus) {

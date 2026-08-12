@@ -1,6 +1,6 @@
 import { notification } from 'antd'
-import { ArgsProps } from 'antd/lib/notification'
-import React, { ReactNode } from 'react'
+import type { ArgsProps } from 'antd/lib/notification'
+import type React from 'react'
 import { CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon } from '@/assets/newIcon'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 
@@ -59,7 +59,7 @@ export const yakitNotify = (
   }
 
   const copyBtn = (copyStr) => (
-    <div style={{ display: 'flex', justifyContent: 'end' }}>
+    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
       <CopyComponents copyText={copyStr} />
     </div>
   )

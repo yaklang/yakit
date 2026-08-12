@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
-import {
+import type {
   AIBrowserProcessesProps,
   AITaskDetailsAddListItem,
   AITaskDetailsAddPopoverProps,
@@ -18,31 +18,40 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIToDoListItem } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
 import { useCreation, useInterval, useMemoizedFn, useSelections } from 'ahooks'
-import { ForgesAndSkillsDynamicItem, PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
+import type {
+  ForgesAndSkillsDynamicItem,
+  PlanItemDetailsData,
+  TodoListCardData,
+} from '@/pages/ai-re-act/hooks/aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { genDefaultPagination, PaginationSchema, QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
-import { AIForge, QueryAIForgeRequest } from '../../type/forge'
+import {
+  genDefaultPagination,
+  type PaginationSchema,
+  type QueryYakScriptRequest,
+  type YakScript,
+} from '@/pages/invoker/schema'
+import type { AIForge, QueryAIForgeRequest } from '../../type/forge'
 import { grpcQueryAIForge } from '../../grpc'
-import { AITool, GetAIToolListRequest } from '../../type/aiTool'
+import type { AITool, GetAIToolListRequest } from '../../type/aiTool'
 import { grpcGetAIToolList } from '../../aiToolList/utils'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
-  AIAgentGrpcApi,
-  AIInputEvent,
+  type AIAgentGrpcApi,
+  type AIInputEvent,
   AIInputEventHotPatchTypeEnum,
   AIInputEventSyncTypeEnum,
-  AIStartParams,
+  type AIStartParams,
 } from '@/pages/ai-re-act/hooks/grpcApi'
 import { apiQueryYakScript } from '@/pages/plugins/utils'
 import { grpcGetAllMCPServers } from '../../aiMCP/utils'
-import { GetAllMCPServersRequest, MCPServerTool } from '../../type/aiMCP'
+import type { GetAllMCPServersRequest, MCPServerTool } from '../../type/aiMCP'
 import {
   HorizontalScrollCardItemInfoMultiple,
   HorizontalScrollCardItemInfoSingle,
@@ -156,7 +165,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   }, [planItemDetailsData?.todoList?.items])
 
   const forgeFixedList = useCreation(() => {
-    let forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
+    const forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
       planItemDetailsData?.skills.fixed.concat(planItemDetailsData?.forges.fixed || []) || []
     return forgeFixed
   }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
@@ -169,7 +178,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         skill_load_state: '',
       })) || []
     const skills: ForgesAndSkillsDynamicItem[] = planItemDetailsData?.skills?.dynamic.map((ele) => ele) || []
-    let forgeDynamic: ForgesAndSkillsDynamicItem[] = skills.concat(forge) || []
+    const forgeDynamic: ForgesAndSkillsDynamicItem[] = skills.concat(forge) || []
     return forgeDynamic
   }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
 
@@ -290,7 +299,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
               <span className={styles['title']}>待办任务</span>
               {!!total && todoListCardData && <AIToDoListDetail todoData={todoListCardData} />}
             </div>
-            {!!total ? (
+            {total ? (
               <>
                 {/* 状态统计区块 */}
                 <AITaskStatisticsStatus list={todoData.progressNumber} />
@@ -885,7 +894,7 @@ const AITaskExecutionDetailsCard: React.FC<AITaskExecutionDetailsCardProps> = Re
     <div className={classNames(styles['card'], className)}>
       <div className={styles['card-title']}>{title}</div>
       <div className={styles['card-content']}>
-        {!!content ? content : <span className={styles['empty-text']}>暂无信息...</span>}
+        {content ? content : <span className={styles['empty-text']}>暂无信息...</span>}
       </div>
     </div>
   )

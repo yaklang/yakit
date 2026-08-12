@@ -5,9 +5,10 @@ import { useMemoizedFn } from 'ahooks'
 import { Radio, Progress } from 'antd'
 import { randomString } from '@/utils/randomUtil'
 import { failed, yakitNotify } from '@/utils/notification'
-import { YakScript } from '@/pages/invoker/schema'
-import { CodeScoreModule } from '../funcTemplate'
-import usePluginUploadHooks, { SaveYakScriptToOnlineRequest, SaveYakScriptToOnlineResponse } from '../pluginUploadHooks'
+import usePluginUploadHooks, {
+  type SaveYakScriptToOnlineRequest,
+  type SaveYakScriptToOnlineResponse,
+} from '../pluginUploadHooks'
 import { PluginUploadSupplement } from '@/pages/pluginHub/pluginUploadModal/PluginUploadModal'
 
 import classNames from 'classnames'

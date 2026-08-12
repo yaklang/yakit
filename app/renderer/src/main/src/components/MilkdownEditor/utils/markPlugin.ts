@@ -1,4 +1,4 @@
-import { $markAttr, $markSchema, $nodeSchema, $nodeAttr } from '@milkdown/kit/utils'
+import { $markAttr, $markSchema } from '@milkdown/kit/utils'
 import { v4 as uuidv4 } from 'uuid'
 
 const markId = 'mark-height-text'

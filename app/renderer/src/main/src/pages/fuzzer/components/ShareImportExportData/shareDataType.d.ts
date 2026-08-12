@@ -1,4 +1,4 @@
-import { FuzzerRequestProps } from '../../HTTPFuzzerPage'
+import { type FuzzerRequestProps } from '../../HTTPFuzzerPage'
 
 export interface ShareDataProps {
   module: string // 新建tab类型

@@ -1,9 +1,9 @@
-import { editor, IRange, languages, Position } from 'monaco-editor'
-import { CancellationToken } from 'typescript'
+import { type editor, type IRange, languages, type Position } from 'monaco-editor'
+import type { CancellationToken } from 'typescript'
 import { monaco } from 'react-monaco-editor'
 import { getModelContext } from './yakEditor'
 import { getAllRows } from '@/components/configNetwork/CustomizeCode'
-import { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
+import type { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
 import { highlightKinds } from './fuzzHTTPMonacoSpec'
 
 const { ipcRenderer } = window.require('electron')
@@ -386,7 +386,7 @@ const loadMethodFromCaller = (caller: string, prefix: string, range: IRange): la
 
   const items: languages.CompletionItem[] = []
   const pushCompletion = (i: MethodSuggestion, desc: MethodSuggestionItem) => {
-    const labelDef = !!desc.DefinitionVerbose ? `${desc.DefinitionVerbose}` : `${desc.InsertText}`
+    const labelDef = desc.DefinitionVerbose ? `${desc.DefinitionVerbose}` : `${desc.InsertText}`
     items.push({
       insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
       insertText: desc.InsertText,
@@ -459,7 +459,7 @@ export const yaklangCompletionHandlerProvider = (
   /*
    * 设置补全: 库补全
    * */
-  let items: languages.CompletionItem[] = []
+  const items: languages.CompletionItem[] = []
   const libCompletions = completions.libCompletions || []
   for (let i = 0; i < libCompletions.length; i++) {
     const currentLib = libCompletions[i]
@@ -530,12 +530,12 @@ export const yaklangCompletionHandlerProvider = (
             return
           }
 
-          if (!!included.get(i)) {
+          if (included.get(i)) {
             return
           } else {
             included.set(i, true)
           }
-          if (!!completions.libToFieldCompletions[i]) {
+          if (completions.libToFieldCompletions[i]) {
             completions.libToFieldCompletions[i].map((comp) => {
               if (comp.isMethod) {
                 const k = comp.methodsCompletionVerbose
@@ -656,7 +656,7 @@ export const newYaklangCompletionHandlerProvider = (
       } as YaklangLanguageSuggestionRequest)
       .then((r: YaklangLanguageSuggestionResponse) => {
         if (r.SuggestionMessage.length > 0) {
-          let range = {
+          const range = {
             startLineNumber: position.lineNumber,
             endLineNumber: position.lineNumber,
             startColumn: iWord.startColumn,
@@ -671,7 +671,7 @@ export const newYaklangCompletionHandlerProvider = (
             range.startColumn = range.startColumn + index + 1
           }
           const targetSuggestions = r.SuggestionMessage?.concat(transformCustomCode)
-          let suggestions = targetSuggestions.map((i) => {
+          const suggestions = targetSuggestions.map((i) => {
             // 后端仅在「回调实参位置」下发 Kind==='Snippet' 的回调函数字面量补全
             // (如 poc.saveHandler(func(rsp){})，见 grpc_language_suggestion.go)。
             // 这类补全在当前上下文里最相关，给它最高排序并预选 func 声明式，方便直接 Tab 展开。
@@ -710,8 +710,8 @@ export const getWordWithPointAtPosition = (
   if (iWord === null) {
     iWord = { word: '', startColumn: position.column, endColumn: position.column }
   }
-  let word = iWord.word
-  let lastChar = model.getValueInRange({
+  const word = iWord.word
+  const lastChar = model.getValueInRange({
     startLineNumber: position.lineNumber,
     endLineNumber: position.lineNumber,
     startColumn: iWord.startColumn - 1,
@@ -719,7 +719,7 @@ export const getWordWithPointAtPosition = (
   })
   if (lastChar === '.') {
     // 尝试往前找一个单词
-    let lastWord = model.getWordAtPosition(new monaco.Position(position.lineNumber, iWord.startColumn - 2))
+    const lastWord = model.getWordAtPosition(new monaco.Position(position.lineNumber, iWord.startColumn - 2))
     if (lastWord !== null) {
       iWord = { word: lastWord.word + '.' + word, startColumn: lastWord.startColumn, endColumn: iWord.endColumn }
     } else {

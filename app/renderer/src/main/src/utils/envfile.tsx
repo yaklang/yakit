@@ -2,7 +2,7 @@ import { info } from '@/utils/notification'
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { RemotePrivateDomainGV } from '@/enums/privateDomain'
-import { Theme } from '@/hook/useTheme'
+import type { Theme } from '@/hook/useTheme'
 import { yakitRelease } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'utils')
@@ -170,7 +170,7 @@ export const GetReleaseEdition = () => {
 
 export const fetchEnv = () => {
   try {
-    return process.env['REACT_APP_PLATFORM']
+    return process.env.REACT_APP_PLATFORM
   } catch (e) {
     return ''
   }
@@ -187,7 +187,7 @@ yakitRelease.setEditionRaw(fetchEnv() || '').then(() => {
 
 /** 是否展示开发者工具 */
 export const showDevTool = () => {
-  const devTool = process.env?.REACT_APP_DEVTOOL || ''
+  const devTool = process.env.REACT_APP_DEVTOOL || ''
   return devTool && devTool === 'true'
 }
 

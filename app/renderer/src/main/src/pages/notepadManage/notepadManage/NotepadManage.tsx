@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { NotepadActionProps, NotepadManageProps } from './NotepadManageType'
+import type { NotepadActionProps, NotepadManageProps } from './NotepadManageType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineClouddownloadIcon,
@@ -8,7 +8,7 @@ import {
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
 import { Divider } from 'antd'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { useMemoizedFn } from 'ahooks'
 import { apiDeleteNotepadDetail, apiGetNotepadDetail, onBaseNotepadDown } from './utils'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -17,8 +17,7 @@ import { isCommunityEdition } from '@/utils/envfile'
 import { OnlineJudgment } from '@/pages/plugins/onlineJudgment/OnlineJudgment'
 import { useGoEditNotepad } from '../hook/useGoEditNotepad'
 import { failed } from '@/utils/notification'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { error } from 'console'
+import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const NotepadShareModal = React.lazy(() => import('../NotepadShareModal/NotepadShareModal'))
 const NotepadManageOnline = React.lazy(() => import('./notepadManageOnline/NotepadManageOnline'))

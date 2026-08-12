@@ -1,5 +1,5 @@
-import { GraphData } from '@/pages/graph/base'
-import { EChartsOption } from '@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType'
+import type { GraphData } from '@/pages/graph/base'
+import type { EChartsOption } from '@/pages/risks/VulnerabilityLevelPie/VulnerabilityLevelPieType'
 import React, { useEffect, useRef } from 'react'
 import * as echarts from 'echarts'
 import 'echarts-wordcloud'

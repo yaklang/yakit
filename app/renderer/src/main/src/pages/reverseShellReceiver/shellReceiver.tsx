@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Divider, Form, Result, Tooltip } from 'antd'
 import { useControllableValue, useCreation, useDebounceFn, useInterval, useMemoizedFn, useVirtualList } from 'ahooks'
 import styles from './shellReceiver.module.scss'
@@ -15,20 +16,20 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { RemoteGV } from '@/yakitGV'
-import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
+import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import {
-  CmdType,
-  GenerateReverseShellCommandRequest,
-  GenerateReverseShellCommandResponse,
-  GetReverseShellProgramListRequest,
-  SystemType,
+  type CmdType,
+  type GenerateReverseShellCommandRequest,
+  type GenerateReverseShellCommandResponse,
+  type GetReverseShellProgramListRequest,
+  type SystemType,
   apiCancelListeningPort,
   apiGenerateReverseShellCommand,
   apiGetReverseShellProgramList,
 } from './utils'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { defaultGenerateReverseShellCommand } from './constants'
-import { ReverseShellTerminal, XTermSizeProps } from './ReverseShellTerminal/ReverseShellTerminal'
+import { ReverseShellTerminal, type XTermSizeProps } from './ReverseShellTerminal/ReverseShellTerminal'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { OutlineCogIcon } from '@/assets/icon/outline'

@@ -6,7 +6,7 @@ import { Progress } from 'antd'
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import { yakitNotify } from '@/utils/notification'
-import { DownloadingState, ModalIsTop, System } from '../../types'
+import type { DownloadingState, ModalIsTop, System } from '../../types'
 import {
   grpcCancelDownloadYakEngineVersion,
   grpcClearLocalYaklangVersionCache,
@@ -93,7 +93,6 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
           },
           speed: 0,
           percent: 100,
-          // @ts-ignore
           size: getDownloadProgress().size,
         })
 

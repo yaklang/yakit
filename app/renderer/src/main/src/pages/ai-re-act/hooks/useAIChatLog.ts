@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { AIChatLogData, AIChatLogToStream, UseAIChatLogEvents } from './type'
+import type { AIChatLogData, AIChatLogToStream, UseAIChatLogEvents } from './type'
 import { formatTimestamp } from '@/utils/timeUtil'
 import cloneDeep from 'lodash/cloneDeep'
 
@@ -24,7 +24,7 @@ function useAIChatLog() {
     if (info.type === 'stream') {
       const { EventUUID, content } = info.data
       const stream = streamInfo.current.get(EventUUID)
-      if (!!stream) {
+      if (stream) {
         stream.data.content += content
         streamInfo.current.set(EventUUID, cloneDeep(stream))
       } else {

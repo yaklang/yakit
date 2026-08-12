@@ -56,7 +56,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
     if (!terminal) return ''
 
     const buffer = terminal.buffer.active
-    let result: string[] = []
+    const result: string[] = []
     let currentLine = ''
 
     for (let i = 0; i < buffer.length; i++) {

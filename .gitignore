@@ -64,3 +64,5 @@ yarn.lock
 pr-ci-changed-files-list.txt
 /reports/mitm-perf/
 /reports/e2e-electron/
+/reports/junit.xml
+*.tsbuildinfo

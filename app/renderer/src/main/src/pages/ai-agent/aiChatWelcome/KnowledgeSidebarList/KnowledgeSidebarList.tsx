@@ -1,8 +1,8 @@
-import { forwardRef, Ref, useEffect, useImperativeHandle, useRef } from 'react'
+import { forwardRef, type Ref, useEffect, useImperativeHandle, useRef } from 'react'
 
 import { useAsyncEffect, useDebounceEffect, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
 
-import useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
+import type useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
 import {
   BuildingKnowledgeBase,
   BuildingKnowledgeBaseEntry,
@@ -15,14 +15,14 @@ import { OperateKnowledgenBaseItem } from '@/pages/KnowledgeBase/compoment/Opera
 
 import classNames from 'classnames'
 import styles from './knowledgeSidebarList.module.scss'
-import { KnowledgeBaseItem, useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
+import { type KnowledgeBaseItem, useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
 import { failed } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { PluginExecuteDetailDrawer } from '@/pages/KnowledgeBase/compoment/PluginExecuteDetailDrawer'
-import { KnowledgeBaseTableHeaderProps } from '@/pages/KnowledgeBase/compoment/KnowledgeBaseTableHeader'
+import type { KnowledgeBaseTableHeaderProps } from '@/pages/KnowledgeBase/compoment/KnowledgeBaseTableHeader'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import type { AIMentionCommandParams } from '../../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { KnowledgeBaseFormModal } from '@/pages/KnowledgeBase/compoment/KnowledgeBaseFormModal'
 import { ImportModal } from '@/pages/KnowledgeBase/compoment/ImportModal'
 import { Form } from 'antd'
@@ -73,7 +73,6 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
 
   useEffect(() => {
     setKnowledgeBase(knowledgeBases)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [knowledgeBases])
 
   const buildingRef = useRef<Set<string>>(new Set())
@@ -184,7 +183,6 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
 
   useEffect(() => {
     setKnowledgeBase(processed())
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [knowledgeBases, addMode])
 
   const onViewBuildProcess = useMemoizedFn((e, streamToken, type) => {
@@ -265,7 +263,6 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
         failed(error + '')
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inViewport])
 
   return (

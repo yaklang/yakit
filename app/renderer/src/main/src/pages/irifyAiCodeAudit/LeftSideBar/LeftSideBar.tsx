@@ -1,6 +1,7 @@
-import React, { useRef } from 'react'
+import type React from 'react'
+import { useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
+import type { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
 import { RunnerFileTree } from '../RunnerFileTree/RunnerFileTree'
 
 import classNames from 'classnames'

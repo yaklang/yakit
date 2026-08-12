@@ -1,9 +1,9 @@
 import { useEditor } from '@milkdown/react'
 import { block, blockConfig } from '@milkdown/plugin-block' // 引入block插件
-import { Ctx } from '@milkdown/kit/ctx'
+import { type Ctx } from '@milkdown/kit/ctx'
 import { BlockView } from '../Block/Block'
 import { useNodeViewFactory, usePluginViewFactory } from '@prosemirror-adapter/react'
-import { CustomMilkdownProps, MilkdownCollabProps } from '../MilkdownEditorType'
+import type { CustomMilkdownProps, MilkdownCollabProps } from '../MilkdownEditorType'
 import { placeholderConfig, placeholderPlugin } from '../Placeholder'
 import { fileCustomSchema, uploadCustomPlugin } from './uploadPlugin'
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload'
@@ -26,7 +26,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { $view } from '@milkdown/kit/utils'
 import { CustomFile } from '../CustomFile/CustomFile'
 import { getBase64 } from '../MilkdownEditor'
-import { Node } from '@milkdown/kit/prose/model'
+import { type Node } from '@milkdown/kit/prose/model'
 import { imageBlockComponent, imageBlockConfig } from '@milkdown/kit/component/image-block'
 import { imageInlineComponent, inlineImageConfig } from '@milkdown/kit/component/image-inline'
 import { html } from 'atomico'
@@ -49,7 +49,6 @@ import { trailing } from '@milkdown/kit/plugin/trailing'
 import { collab } from '@milkdown/plugin-collab'
 import { tableBlock } from '@milkdown/kit/component/table-block'
 import { markCustomPlugin } from './markPlugin'
-import { jumpToLinePlugin, jumpToLinePluginKey } from './jumpLine'
 import { editorViewCtx } from '@milkdown/core'
 import { TextSelection } from '@milkdown/kit/prose/state'
 import type { EditorView } from '@milkdown/prose/view'
@@ -321,7 +320,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
           }),
         ),
         (ctx: Ctx) => () => {
-          if (!!collabParams?.enableCollab) {
+          if (collabParams?.enableCollab) {
             ctx.set(mentionFactory.key, {
               view: pluginViewFactory({
                 component: () => <MentionListView notepadHash={collabParams?.milkdownHash} />,

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 export interface ColumnProps<T> {
   /** 展示字段名 */

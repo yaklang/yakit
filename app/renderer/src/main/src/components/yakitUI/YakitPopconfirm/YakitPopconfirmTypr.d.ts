@@ -1,4 +1,4 @@
-import { PopconfirmProps } from 'antd'
+import { type PopconfirmProps } from 'antd'
 
 export interface YakitPopconfirmProp extends Omit<PopconfirmProps, 'title'> {
   title: React.ReactNode

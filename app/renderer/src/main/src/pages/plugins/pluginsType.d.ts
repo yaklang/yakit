@@ -1,7 +1,6 @@
-import { API } from '@/services/swagger/resposeType'
-import { GRPCRange } from './funcTemplateType'
-import { YaklangInformation } from '@/utils/monacoSpec/yakEditor'
-import { YakitPluginBaseAIInfo } from '../pluginEditor/base'
+import { type GRPCRange } from './funcTemplateType'
+import { type YaklangInformation } from '@/utils/monacoSpec/yakEditor'
+import { type YakitPluginBaseAIInfo } from '../pluginEditor/base'
 
 /** ---------- 前端插件数据结构定义 Start ---------- */
 /** 插件基础信息 */

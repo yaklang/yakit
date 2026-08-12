@@ -1,20 +1,21 @@
-import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { OutlineIdentificationIcon, OutlinePuzzleIcon, OutlineTagIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { SolidBanIcon } from '@/assets/icon/solid'
-import {
+import type {
   PluginBaseInfoFormProps,
   PluginBaseInfoFormRefProps,
   PluginLogCodeDiffProps,
   PluginLogMergeDetailProps,
 } from './PluginLogType'
-import { API } from '@/services/swagger/resposeType'
+import type { API } from '@/services/swagger/resposeType'
 import { Form } from 'antd'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { YakitDiffEditor } from '@/components/yakitUI/YakitDiffEditor/YakitDiffEditor'
 import { yakitNotify } from '@/utils/notification'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -22,10 +23,10 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { pluginConvertMergeToUIs } from '@/pages/pluginEditor/utils/convert'
 import { httpFetchMergePluginDetail, httpMergePluginOperate } from '@/pages/pluginHub/utils/http'
-import { YakitPluginBaseInfo } from '@/pages/pluginEditor/base'
+import type { YakitPluginBaseInfo } from '@/pages/pluginEditor/base'
 import { CodeScoreModule } from '@/pages/plugins/funcTemplate'
 import { GetPluginLanguage, pluginTypeToName } from '@/pages/plugins/builtInData'
-import { PluginDataProps } from '@/pages/plugins/pluginsType'
+import type { PluginDataProps } from '@/pages/plugins/pluginsType'
 import { convertRemoteToRemoteInfo, onCodeToInfo } from '@/pages/plugins/editDetails/utils'
 import { PluginDebugBody } from '@/pages/plugins/pluginDebug/PluginDebug'
 import { PluginTypeSelect } from '@/pages/pluginEditor/editorInfo/EditorInfo'

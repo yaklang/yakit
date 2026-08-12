@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import {
+import type {
   HybridScanActiveTask,
   HybridScanControlRequest,
   HybridScanInputTarget,
@@ -8,13 +8,13 @@ import {
   HybridScanResponse,
   HybridScanStatisticResponse,
 } from '@/models/HybridScan'
-import { ExecResult, genDefaultPagination } from '@/pages/invoker/schema'
+import { genDefaultPagination } from '@/pages/invoker/schema'
 import { Divider, Space, Tag } from 'antd'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'
 import { failed, info } from '@/utils/notification'
-import { useCookieState, useGetState, useMap } from 'ahooks'
+import { useGetState } from 'ahooks'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -69,7 +69,7 @@ export const HybridScanDemo: React.FC<HybridScanDemoProp> = (props) => {
     ipcRenderer.on(`${token}-data`, async (e, data: HybridScanResponse) => {
       setStatus(data)
 
-      if (!!data?.UpdateActiveTask) {
+      if (data?.UpdateActiveTask) {
         if (data.UpdateActiveTask.Operator === 'remove') {
           setActiveTasks(
             getActiveTasks().filter((v) => {

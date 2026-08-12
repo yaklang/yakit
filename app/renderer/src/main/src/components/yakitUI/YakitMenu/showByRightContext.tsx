@@ -1,8 +1,8 @@
 import ReactDOM from 'react-dom'
-import React, { memo, ReactNode, useEffect, useRef } from 'react'
+import React, { memo, type ReactNode, useEffect, useRef } from 'react'
 import { coordinate } from '@/pages/globalVariable'
 import emiter from '@/utils/eventBus/eventBus'
-import { YakitMenu, YakitMenuProp } from './YakitMenu'
+import { YakitMenu, type YakitMenuProp } from './YakitMenu'
 import styles from './showByRightContext.module.scss'
 
 const roundDown = (value: number) => {

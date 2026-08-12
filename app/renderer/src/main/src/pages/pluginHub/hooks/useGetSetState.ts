@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useRef, useState } from 'react'
+import { type Dispatch, type SetStateAction, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { cloneDeep } from 'lodash'
 

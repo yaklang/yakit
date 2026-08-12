@@ -1,9 +1,13 @@
-import { YakURLResource } from '@/pages/yakURLTree/data'
-import { AuditEmiterYakUrlProps } from '../YakRunnerAuditCodeType'
-import { ShowItemType } from '../BottomEditorDetails/BottomEditorDetailsType'
-import { SyntaxFlowRuleFilter } from '@/pages/ruleManagement/RuleManagementType'
-import { DbOperateMessage } from '../../layout/mainOperatorContent/utils'
-import { ReactNode } from 'react'
+import { type ShowItemType } from '../BottomEditorDetails/BottomEditorDetailsType'
+import { type SyntaxFlowRuleFilter } from '@/pages/ruleManagement/RuleManagementType'
+import { type DbOperateMessage } from '../../layout/mainOperatorContent/utils'
+import { type ReactNode } from 'react'
+import type { FileNodeProps } from '../FileTree/FileTreeType'
+import type { DebugPluginRequest } from '@/pages/plugins/utils'
+import type { FormInstance } from 'antd'
+import type { SSAProgram } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
+import type { RJSFSchema } from '@rjsf/utils'
+import type { QuerySyntaxFlowResultRequest } from '@/pages/yakRunnerCodeScan/YakRunnerCodeScanType'
 export interface YakURLKVPair {
   Key: string
   Value: string
@@ -183,17 +187,17 @@ export interface DeleteSSAProjectRequest {
   DeleteAllProject?: boolean
 }
 
-interface SSAProjectScanRuleConfig {
+export interface SSAProjectScanRuleConfig {
   RuleFilter: SyntaxFlowRuleFilter
 }
 
-interface SSAProjectScanConfig {
+export interface SSAProjectScanConfig {
   Concurrency: number
   Memory: boolean
   IgnoreLanguage: boolean
 }
 
-interface SSAProjectCompileConfig {
+export interface SSAProjectCompileConfig {
   StrictMode: boolean
   PeepholeSize: number
   ExcludeFiles: string[]

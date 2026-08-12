@@ -1,5 +1,5 @@
-import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
-import { AIGlobalConfig } from '../aiModelList/utils'
+import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import type { AIGlobalConfig } from '../aiModelList/utils'
 
 export interface GeneralResponse {
   Ok: boolean

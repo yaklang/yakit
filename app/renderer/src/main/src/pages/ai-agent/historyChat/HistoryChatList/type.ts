@@ -1,4 +1,4 @@
-import { AISession } from '../../type/aiChat'
+import type { AISession } from '../../type/aiChat'
 
 export interface HistoryChatListItemProps {
   item: AISession

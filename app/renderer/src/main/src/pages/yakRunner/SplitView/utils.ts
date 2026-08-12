@@ -1,5 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep'
-import { SplitViewPositionProp } from './SplitViewType'
+import type { SplitViewPositionProp } from './SplitViewType'
 
 interface GenerateKnownSplitSizeParams {
   isVertical: boolean
@@ -41,11 +41,11 @@ export const generateKnownSplitSize: (params: GenerateKnownSplitSizeParams) => S
       }
     })
 
-    let totalFixedSize = fixedSizes.reduce((sum, size) => sum + size, 0)
-    let totalSeparatorWidth = (length - 1) * 1 // 分隔符总宽度
+    const totalFixedSize = fixedSizes.reduce((sum, size) => sum + size, 0)
+    const totalSeparatorWidth = (length - 1) * 1 // 分隔符总宽度
 
     // 检查固定尺寸是否合理
-    let remainingSpace = wrapperLong - totalFixedSize - totalSeparatorWidth
+    const remainingSpace = wrapperLong - totalFixedSize - totalSeparatorWidth
     if (remainingSpace > 0 && autoIndexes.length > 0) {
       // 自适应区域平分剩余空间
       const autoSize = remainingSpace / autoIndexes.length
@@ -152,7 +152,7 @@ export const resizedSplitSize: (params: ResizedSplitSizeParams) => SplitViewPosi
 
   if (isOver) {
     let offset = 0
-    for (let el of ps) {
+    for (const el of ps) {
       if (isVertical) {
         el.height = minLong
         el.top = offset
@@ -251,7 +251,7 @@ export const offsetSplitPosition: (params: OffsetSplitPositionParams) => SplitVi
     if (isleft) {
       const unChange = positions.slice(index + 2)
       const changeView = positions[index + 1]
-      let compress = positions.slice(0, index + 1).reverse()
+      const compress = positions.slice(0, index + 1).reverse()
 
       // 计算允许的最大偏移量
       const maxOffset = compress.reduce((prev, current) => prev + current[longKey], 0) - compress.length * minLong
@@ -261,7 +261,7 @@ export const offsetSplitPosition: (params: OffsetSplitPositionParams) => SplitVi
       changeView[positionKey] -= absOffset
 
       let remainingOffset = absOffset
-      for (let view of compress) {
+      for (const view of compress) {
         // 偏移量是否超过最小值
         const noMin = view[longKey] - remainingOffset >= minLong
         if (noMin) {
@@ -288,7 +288,7 @@ export const offsetSplitPosition: (params: OffsetSplitPositionParams) => SplitVi
       changeView[longKey] += absOffset
 
       let remainingOffset = absOffset
-      for (let view of compress) {
+      for (const view of compress) {
         // 偏移量是否超过最小值
         const noMin = view[longKey] - remainingOffset >= minLong
         if (noMin) {

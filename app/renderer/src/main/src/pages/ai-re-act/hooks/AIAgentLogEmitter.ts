@@ -1,4 +1,4 @@
-import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { formatTimestamp } from '@/utils/timeUtil'
 
 export class AIAgentLogEmitter {

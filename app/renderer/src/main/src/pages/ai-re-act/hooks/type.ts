@@ -13,8 +13,9 @@ import type { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AISource, AIStartPara
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { ChatMultiSessionController } from './ChatMultiSessionController'
+import type { ChatMultiSessionController } from './ChatMultiSessionController'
 import type { YakitRouteType } from '@/enums/yakitRoute'
+import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 
 // #region 公共 hooks 事件
 export interface UseHookBaseParams {
@@ -161,6 +162,12 @@ export interface AIChatIPCStartParams {
   route: YakitRouteType
   /** 会话初始归属 pageId（后续可 rebind） */
   pageId: string
+  /**
+   * 本地 sessionOwnerMap 索引用 source；仅本地使用，不透传 gRPC。
+   * IM 会话按平台区分：feishu→im-Lark / dingtalk→im-DingTalk；
+   * 其它场景省略，走 params.Params?.Source 兜底。
+   */
+  localSource?: DeleteSessionsAISourceType
 }
 
 /** 执行流途中发送消息的参数 */

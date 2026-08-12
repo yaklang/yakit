@@ -1,5 +1,5 @@
 import React, { forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import {
+import type {
   AfreshAuditModalProps,
   AuditCodeProps,
   AuditHistoryListProps,
@@ -21,14 +21,15 @@ import {
   DeleteSSAProjectRequest,
   SSAProjectResponseDetail,
 } from './AuditCodeType'
+import type { FileNodeProps } from '../FileTree/FileTreeType'
 import classNames from 'classnames'
 import styles from './AuditCode.module.scss'
-import { genDefaultPagination, QueryGeneralResponse, YakScript } from '@/pages/invoker/schema'
+import { genDefaultPagination, type QueryGeneralResponse, type YakScript } from '@/pages/invoker/schema'
 import { Divider, Form, Progress, Slider, Tooltip, Tree } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
 import { FormContentItemByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { getValueByType, getYakExecutorParam, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
 import {
   useControllableValue,
@@ -43,12 +44,12 @@ import {
 } from 'ahooks'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import { apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { failed, success, warn, yakitFailed, yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
-import { FormExtraSettingProps } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { FormExtraSettingProps } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import useStore from '../hooks/useStore'
 import { loadAuditFromYakURLRaw } from '../utils'
 import {
@@ -79,17 +80,17 @@ import {
   SolidPluscircleIcon,
   SolidXcircleIcon,
 } from '@/assets/icon/solid'
-import { AuditCodeStreamData, AuditEmiterYakUrlProps, OpenFileByPathProps } from '../YakRunnerAuditCodeType'
+import type { AuditCodeStreamData, AuditEmiterYakUrlProps, OpenFileByPathProps } from '../YakRunnerAuditCodeType'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { CodeRangeProps } from '../RightAuditDetail/RightAuditDetail'
+import type { CodeRangeProps } from '../RightAuditDetail/RightAuditDetail'
 import { YakitRoute } from '@/enums/yakitRoute'
 import {
   apiDeleteQuerySyntaxFlowResult,
   apiFetchQuerySyntaxFlowResult,
   getGroupNamesTotal,
 } from '@/pages/yakRunnerCodeScan/utils'
-import {
+import type {
   CreateSSAProjectResponse,
   DeleteSyntaxFlowResultRequest,
   DeleteSyntaxFlowResultResponse,
@@ -100,15 +101,15 @@ import {
 } from '@/pages/yakRunnerCodeScan/YakRunnerCodeScanType'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { AuditCodeStatusInfo } from '../YakRunnerAuditCode'
-import { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
+import type { HoldGRPCStreamInfo, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { JumpToAuditEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { YakitVirtualList } from '@/components/yakitUI/YakitVirtualList/YakitVirtualList'
-import { VirtualListColumns } from '@/components/yakitUI/YakitVirtualList/YakitVirtualListType'
+import type { VirtualListColumns } from '@/components/yakitUI/YakitVirtualList/YakitVirtualListType'
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { PluginExecuteLog } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
 import useDispatcher from '../hooks/useDispatcher'
-import { Paging } from '@/utils/yakQueryHTTPFlow'
+import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { setClipboardText } from '@/utils/clipboard'
@@ -120,17 +121,17 @@ import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitD
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
-import { Selection } from '../RunnerTabs/RunnerTabsType'
+import type { Selection } from '../RunnerTabs/RunnerTabsType'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { FileDefault, FileSuffix, KeyToIcon } from '../../yakRunner/FileTree/icon'
 import { RiskTree } from '../RunnerFileTree/RunnerFileTree'
 import { getNameByPath } from '@/pages/yakRunner/utils'
 import cloneDeep from 'lodash/cloneDeep'
-import { RJSFSchema } from '@rjsf/utils'
+import type { RJSFSchema } from '@rjsf/utils'
 import { TrashIcon } from '@/assets/newIcon'
 import { IRifyUpdateProjectManagerModal } from '@/pages/YakRunnerProjectManager/YakRunnerProjectManager'
-import { SSAProgram } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
-import { AuditCodePageInfoProps } from '@/store/pageInfo'
+import type { SSAProgram } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
+import type { AuditCodePageInfoProps } from '@/store/pageInfo'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -550,11 +551,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
   const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {
     return ids.map((id) => {
       const itemDetail = getMapAuditDetail(id)
-      let obj: AuditNodeProps = { ...itemDetail, depth, query: runQueryRef.current }
+      const obj: AuditNodeProps = { ...itemDetail, depth, query: runQueryRef.current }
       const childArr = getMapAuditChildDetail(id)
 
       if (itemDetail.ResourceType === 'variable' || itemDetail.ResourceType === TopId) {
-        obj.children = initAuditTree(childArr, depth + 1)
+        obj.children = initAuditTree(childArr, depth + 1) as unknown as FileNodeProps[]
         // 数量为0时不展开 message除外
         if (parseInt(obj.Size + '') === 0 && itemDetail.ResourceType !== TopId) {
           obj.isLeaf = true
@@ -613,7 +614,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             Location: projectName || '',
             Path: path,
           }
-          const body: Buffer = StringToUint8Array(lastValue.current)
+          const body: Uint8Array = StringToUint8Array(lastValue.current)
           if (pageInfo) {
             const { Variable, Value, ...rest } = pageInfo
             params = {
@@ -626,7 +627,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
           // 每次拿30条
           const result = await loadAuditFromYakURLRaw(params, body, 1, 30)
           if (result) {
-            let variableIds: string[] = []
+            const variableIds: string[] = []
             result.Resources.filter((item) => item.VerboseType !== 'result_id').forEach((item, index) => {
               const { ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra } = item
               let value: string = `${index}`
@@ -646,7 +647,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 Extra,
               })
             })
-            let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
+            const isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
             // 如若请求数据未全部拿完 则显示加载更多
             if (!isEnd) {
               const newId = `${id}/load`
@@ -699,7 +700,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
           Location: projectName || '',
           Path: path,
         }
-        const body: Buffer = StringToUint8Array(lastValue.current)
+        const body: Uint8Array = StringToUint8Array(lastValue.current)
         if (pageInfo) {
           const { Variable, Value, ...rest } = pageInfo
           params = {
@@ -712,7 +713,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         // 每次拿30条
         const result = await loadAuditFromYakURLRaw(params, body, page, 30)
         if (result) {
-          let variableIds: string[] = []
+          const variableIds: string[] = []
           result.Resources.filter((item) => item.VerboseType !== 'result_id').forEach((item, index) => {
             const { ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra } = item
             let value: string = `${index}`
@@ -732,7 +733,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
               Extra,
             })
           })
-          let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
+          const isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === 'result_id')
           // 如若请求数据未全部拿完 则显示加载更多
           const newId = `${path}/load`
           if (!isEnd) {
@@ -796,7 +797,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
           Location: projectName || '',
           Path: path,
         }
-        const body: Buffer = StringToUint8Array(textArea)
+        const body: Uint8Array = StringToUint8Array(textArea)
         lastValue.current = textArea
         if (pageInfo) {
           const { Variable, Value, ...rest } = pageInfo
@@ -818,8 +819,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         const result = await loadAuditFromYakURLRaw(params, body)
 
         if (result && result.Resources.length > 0) {
-          let messageIds: string[] = []
-          let variableIds: string[] = []
+          const messageIds: string[] = []
+          const variableIds: string[] = []
           // 构造树结构
           result.Resources.filter((item) => item.VerboseType !== 'result_id').forEach((item, index) => {
             const { ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra } = item
@@ -852,7 +853,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
               })
             }
           })
-          let topIds: string[] = []
+          const topIds: string[] = []
           if (messageIds.length > 0) {
             topIds.push(TopId)
             setMapAuditDetail(TopId, {
@@ -873,7 +874,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
         // 获取ID并展示
         if (params.Query) {
-          let showId = params.Query.find((item) => item.Key === 'result_id')?.Value
+          const showId = params.Query.find((item) => item.Key === 'result_id')?.Value
           showId && setResultId(showId)
         }
         setLoading(false)
@@ -982,8 +983,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
   })
 
   const onCancelAuditStream = () => {
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setAuditExecuting && setAuditExecuting(false)
+    setInterval(undefined)
   }
 
   // 停止
@@ -1297,13 +1302,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
           // console.log("finalParams---",finalParams,res);
           const resData = res?.Results || []
           if (resData.length > 0) {
-            setQuery((prevQuery) => ({
-              ...prevQuery,
-              Pagination: {
-                ...prevQuery.Pagination,
-                Page: +res.Pagination.Page,
-              },
-            }))
+            setQuery({ ...query, Pagination: { ...query.Pagination, Page: +res.Pagination.Page } })
           }
           const d = isInit ? res.Results : (response?.Results || []).concat(res.Results)
           const isMore = res.Results.length < res.Pagination.Limit || d.length === response.Total
@@ -1532,17 +1531,17 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     // 表单内数据
     let formData = {}
     if (form) formData = form.getFieldsValue() || {}
-    let defaultValue = { ...formData }
+    const defaultValue = { ...formData }
     let newFormValue = {}
     arr.forEach((ele) => {
-      let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
-      let value = getValueByType(initValue, ele.TypeVerbose)
+      const initValue = formData[ele.Field] || ele.Value || ele.DefaultValue
+      const value = getValueByType(initValue, ele.TypeVerbose)
       newFormValue = {
         ...newFormValue,
         [ele.Field]: value,
       }
     })
-    let fieldsValue = { ...cloneDeep(defaultValue || {}), ...newFormValue }
+    const fieldsValue = { ...cloneDeep(defaultValue || {}), ...newFormValue }
     // compile-immediately 特例处理（应后端要求）
     if ((plugin?.Params || []).filter((item) => item.Field === 'compile-immediately').length > 0) {
       fieldsValue['compile-immediately'] = true
@@ -1865,8 +1864,12 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
   const onCancelAudit = () => {
     logInfoRef.current = []
     setShowRunAuditModal(false)
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setIsExecuting(false)
+    setVerifyForm(false)
     onCancel()
   }
 
@@ -2145,11 +2148,11 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
   useEffect(() => {
     // 初次打开时带参执行
     if (nameOrConfig) {
-      let paramsUIConfig = JSONParseLog(nameOrConfig, {
+      const paramsUIConfig = JSONParseLog(nameOrConfig, {
         page: 'AfreshAuditModal',
         fun: 'useEffect',
       })
-      if (!!paramsUIConfig?.CodeSource?.local_file) {
+      if (paramsUIConfig?.CodeSource?.local_file) {
         pathRef.current = paramsUIConfig?.CodeSource?.local_file || ''
       }
 
@@ -2184,8 +2187,11 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
 
   const onCancelAudit = () => {
     logInfoRef.current = []
+    // cancel 后主进程不再转发 end，需本地收尾
     debugPluginStreamEvent.cancel()
+    debugPluginStreamEvent.stop()
     debugPluginStreamEvent.reset()
+    setIsExecuting(false)
     setNameOrConfig(undefined)
   }
 
@@ -2487,7 +2493,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         const newPlugin = await grpcFetchLocalPluginDetail({ Name: 'SSA 项目更新' }, true)
         newPlugin.Params.forEach((item) => {
           if (item.Field === 'config_data') {
-            let schema = JSONParseLog(item?.JsonSchema || '{}', { page: 'AuditCode', fun: 'handleFetchJSONSchema' })
+            const schema = JSONParseLog(item?.JsonSchema || '{}', { page: 'AuditCode', fun: 'handleFetchJSONSchema' })
             // let uiSchema = JSONParseLog(item?.UISchema || "{}")
             setSchema(schema)
           }
@@ -2868,21 +2874,23 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                   onClick: ({ key }) => {
                     switch (key) {
                       case 'edit':
-                        const m = showYakitModal({
-                          title: (modalT) => modalT('AuditCode.editProject'),
-                          width: 600,
-                          type: 'white',
-                          footer: null,
-                          centered: true,
-                          content: (
-                            <ProjectManagerEditForm
-                              record={record}
-                              setData={setData}
-                              onClose={() => m.destroy()}
-                              schema={schema}
-                            />
-                          ),
-                        })
+                        {
+                          const m = showYakitModal({
+                            title: (modalT) => modalT('AuditCode.editProject'),
+                            width: 600,
+                            type: 'white',
+                            footer: null,
+                            centered: true,
+                            content: (
+                              <ProjectManagerEditForm
+                                record={record}
+                                setData={setData}
+                                onClose={() => m.destroy()}
+                                schema={schema}
+                              />
+                            ),
+                          })
+                        }
                         break
                       case 'delete':
                         setDeleteParams({

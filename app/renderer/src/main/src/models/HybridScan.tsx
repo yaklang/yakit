@@ -1,5 +1,5 @@
-import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-import { ExecResult, QueryYakScriptRequest } from '@/pages/invoker/schema'
+import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
+import type { ExecResult, QueryYakScriptRequest } from '@/pages/invoker/schema'
 
 export type HybridScanModeType = 'new' | 'resume' | 'pause' | 'status'
 export type HybridScanTaskSourceType = 'pluginBatch' | 'yakPoc'
