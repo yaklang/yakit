@@ -194,7 +194,10 @@
     "content": "Content",
     "chunkLength": "Chunk Length",
     "singleDurationMs": "Single Duration (ms)",
-    "totalDurationMs": "Total Duration (ms)"
+    "totalDurationMs": "Total Duration (ms)",
+    "direction": "Direction",
+    "directionRequest": "Request",
+    "directionResponse": "Response"
   },
   "FuzzerResponseToHTTPFlowDetail": {
     "analyzeParameterFailed": "Failed to analyze parameter:"

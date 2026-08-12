@@ -194,7 +194,10 @@
     "content": "内容",
     "chunkLength": "分块长度",
     "singleDurationMs": "单个耗时（ms）",
-    "totalDurationMs": "总耗时（ms）"
+    "totalDurationMs": "总耗时（ms）",
+    "direction": "方向",
+    "directionRequest": "请求",
+    "directionResponse": "响应"
   },
   "FuzzerResponseToHTTPFlowDetail": {
     "analyzeParameterFailed": "分析参数失败："

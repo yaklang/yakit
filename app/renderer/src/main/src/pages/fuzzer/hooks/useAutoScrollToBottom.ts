@@ -4,6 +4,7 @@ import type { IMonacoEditor } from '@/utils/editors'
 import type { IDisposable } from 'monaco-editor'
 import { monaco } from 'react-monaco-editor'
 import type { RandomChunkedResponse } from '../HTTPFuzzerPage'
+import { isResponseChunkedData } from '../HTTPFuzzerPage'
 import { Uint8ArrayToString } from '@/utils/str'
 
 interface UseChunkAutoScrollToBottomOptions {
@@ -36,6 +37,10 @@ export const useChunkAutoScrollToBottom = (
   options: UseChunkAutoScrollToBottomOptions,
 ): UseChunkAutoScrollToBottomReturn => {
   const { chunkedData, id, onEditorMount } = options
+  // 仅保留响应方向的 chunk（SSE 等响应增量）。请求分块（Direction=REQUEST，
+  // 随机分块传输发送的请求 body）不应被追加到响应编辑器，否则会出现
+  // 「开启分块传输后响应回显请求 body」的 bug。缺省 Direction 按响应处理（兼容旧后端）。
+  const responseChunks = useMemo(() => (chunkedData || []).filter(isResponseChunkedData), [chunkedData])
   // 编辑器引用
   const editorRef = useRef<IMonacoEditor>()
   // 用户是否手动滚动过
@@ -45,10 +50,10 @@ export const useChunkAutoScrollToBottom = (
 
   // 流是否加载中
   const isStreamLoad = useMemo(() => {
-    if (chunkedData.length === 0) return true
-    const lastChunk = chunkedData[chunkedData.length - 1]
+    if (responseChunks.length === 0) return true
+    const lastChunk = responseChunks[responseChunks.length - 1]
     return !lastChunk.IsFinal
-  }, [chunkedData])
+  }, [responseChunks])
 
   // 滚动到底部
   const scrollToBottom = useMemoizedFn(() => {
@@ -56,7 +61,7 @@ export const useChunkAutoScrollToBottom = (
     if (!editor) return
     const model = editor.getModel()
     if (!model) return
-    if (chunkedData.length === 0) return
+    if (responseChunks.length === 0) return
     const lineCount = model.getLineCount()
     editor.revealLine(lineCount)
   })
@@ -164,20 +169,23 @@ export const useChunkAutoScrollToBottom = (
   // chunkedData 变化时，追加内容
   useThrottleEffect(
     () => {
-      if (!editorRef.current || chunkedData.length === 0) return
+      if (!editorRef.current || responseChunks.length === 0) return
       // 初次加载时，记录位置并加载内容
       if (!addStreamIndexRef.current) {
-        addStreamIndexRef.current = chunkedData.length
-        addStreamContentRef.current = chunkedData
+        addStreamIndexRef.current = responseChunks.length
+        addStreamContentRef.current = responseChunks
       }
       // 后续加载时，追加内容
       else {
-        if (chunkedData.length <= addStreamIndexRef.current) return
-        addStreamContentRef.current = [...addStreamContentRef.current, ...chunkedData.slice(addStreamIndexRef.current)]
-        addStreamIndexRef.current = chunkedData.length
+        if (responseChunks.length <= addStreamIndexRef.current) return
+        addStreamContentRef.current = [
+          ...addStreamContentRef.current,
+          ...responseChunks.slice(addStreamIndexRef.current),
+        ]
+        addStreamIndexRef.current = responseChunks.length
       }
     },
-    [chunkedData],
+    [responseChunks],
     {
       wait: 500,
     },
@@ -203,8 +211,8 @@ export const useChunkAutoScrollToBottom = (
 
   // id 变化时，重新加载增量数据
   useUpdateEffect(() => {
-    addStreamIndexRef.current = chunkedData.length
-    addStreamContentRef.current = chunkedData
+    addStreamIndexRef.current = responseChunks.length
+    addStreamContentRef.current = responseChunks
     // 延迟执行，等待编辑器内容更新完成
     setTimeout(() => {
       scrollToBottom()

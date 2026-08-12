@@ -7046,6 +7046,18 @@ message RandomChunkedResponse{
   int64 CurrentChunkedDelayTime = 4; // 当前的 chunked 延迟时间
   int64 TotalDelayTime = 5; // 总的发送耗时
   bool IsFinal = 6; // 是否结束（结束标记事件；Data 可能为空）
+  // 数据方向，用于区分 Data 的语义：
+  //   REQUEST  = 请求分块（随机分块传输，Data 是请求 body 的一个分块）
+  //   RESPONSE = 响应增量（如 SSE，Data 是响应 body 的 delta）
+  // 前端应按方向分别渲染，避免把请求分块当成响应内容回显。
+  // 缺省值 UNSPECIFIED 兼容旧版本，按 RESPONSE 语义处理。
+  ChunkedDataDirection Direction = 7;
+}
+
+enum ChunkedDataDirection {
+  CHUNKED_DATA_DIRECTION_UNSPECIFIED = 0;
+  CHUNKED_DATA_DIRECTION_REQUEST = 1;   // 请求分块：随机分块传输发送的请求 body 分块
+  CHUNKED_DATA_DIRECTION_RESPONSE = 2;  // 响应增量：如 SSE 流式响应的 body delta
 }
 
 message RedirectHTTPFlow {

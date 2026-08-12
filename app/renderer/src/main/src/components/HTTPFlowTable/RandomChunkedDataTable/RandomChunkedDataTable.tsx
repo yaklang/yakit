@@ -4,6 +4,7 @@ import styles from './RandomChunkedDataTable.module.scss'
 import { useCreation } from 'ahooks'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { RandomChunkedResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { isRequestChunkedData } from '@/pages/fuzzer/HTTPFuzzerPage'
 import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -16,6 +17,20 @@ const RandomChunkedDataTable: React.FC<RandomChunkedDataTableProps> = React.memo
         title: 'ID',
         dataKey: 'Index',
         width: 100,
+      },
+      {
+        title: t('RandomChunkedDataTable.direction'),
+        dataKey: 'Direction',
+        width: 120,
+        render: (_text, record) => {
+          // 区分请求分块 / 响应增量；缺省（兼容旧后端）按响应处理。
+          const isReq = isRequestChunkedData(record as RandomChunkedResponse)
+          return (
+            <span>
+              {isReq ? t('RandomChunkedDataTable.directionRequest') : t('RandomChunkedDataTable.directionResponse')}
+            </span>
+          )
+        },
       },
       {
         title: t('RandomChunkedDataTable.content'),
