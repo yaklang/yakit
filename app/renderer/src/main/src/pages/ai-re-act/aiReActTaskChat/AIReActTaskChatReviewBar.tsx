@@ -22,11 +22,7 @@ const renderReviewFooterExtra = (onExtraAction: ReturnType<typeof useTaskChatExt
   )
 }
 
-export const AIReActTaskChatReviewBar: FC<{
-  setScrollToBottom: (v: boolean) => void
-}> = memo(({ setScrollToBottom }) => {
+export const AIReActTaskChatReviewBar: FC = memo(() => {
   const { onExtraAction } = useTaskChatExtraAction()
-  return (
-    <AIReActTaskChatReview setScrollToBottom={setScrollToBottom} footerExtra={renderReviewFooterExtra(onExtraAction)} />
-  )
+  return <AIReActTaskChatReview footerExtra={renderReviewFooterExtra(onExtraAction)} />
 })

@@ -151,14 +151,14 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
   const store = useCurrentStore()
   const streams = useStore(store, (state) => state.taskChat.elements)
   const execute = useStore(store, (state) => state.execute)
-  const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
+  const currentReviewDetail = useStore(store, (state) => state.currentReviewDetail)
 
   return (
     <>
       <div className={styles['tab-content']}>
         <AIAgentChatStream scrollToBottom={scrollToBottom} />
       </div>
-      {!currentPlanReviewToken.token && streams.length > 0 && (
+      {!currentReviewDetail.token && streams.length > 0 && (
         <div className={styles['footer']}>
           {execute && (
             <AIManualAdditionPopover chatType="task">

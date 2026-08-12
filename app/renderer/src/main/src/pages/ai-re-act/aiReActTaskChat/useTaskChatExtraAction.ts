@@ -20,11 +20,12 @@ export const useTaskChatExtraAction = () => {
   const rawData = useCurrentRawData()
   const execute = useStore(store, (state) => state.execute)
 
-  const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
+  const currentReviewDetailRenderNum = useStore(store, (state) => state.currentReviewDetail?.renderNum)
+  const currentReviewDetailToken = useStore(store, (state) => state.currentReviewDetail?.token)
 
   const reviewInfo = useCreation(() => {
-    return rawData.contents.get(currentPlanReviewToken.token)
-  }, [currentPlanReviewToken.renderNum])
+    return rawData.contents.get(currentReviewDetailToken)
+  }, [currentReviewDetailToken, currentReviewDetailRenderNum])
 
   /**
    * 停止任务后会返回结束标识，然后清空review id

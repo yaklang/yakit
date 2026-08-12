@@ -24,7 +24,7 @@ import { useCurrentStore, useCurrentRawData } from '../hooks/useCurrentDataBySes
 import { useStore } from 'zustand'
 import useCreation from 'ahooks/lib/useCreation'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
-import { useMount, useUpdateEffect } from 'ahooks'
+import { useDebounceFn, useMount } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
@@ -33,6 +33,7 @@ import { Code } from '@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStrea
 import { AITaskStatus } from '../hooks/grpcApi'
 import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
+import { OutlinePositionIcon } from '@/assets/icon/outline'
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   const { stream, aiMarkdownProps, listItemIndex, sessionId } = props
@@ -110,7 +111,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 const TYPE = 'reAct'
 
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
-  forwardRef(({ scrollToBottom }, ref) => {
+  forwardRef((props, ref) => {
     const listRootRef = useRef<HTMLDivElement>(null)
     const { activeChat } = useAIAgentStore()
 
@@ -140,10 +141,18 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       isPrependingRef,
     })
 
-    // review 展开/收起时滚动到底部（与 AIAgentChatStream 的 scrollToBottom 逻辑对齐）
-    useUpdateEffect(() => {
-      scrollToIndex('LAST')
-    }, [scrollToBottom])
+    // 是否已滚动到底部：ref 供 hook 内部判断，state 触发重渲染控制置底按钮显隐
+    const [isAtBottom, setIsAtBottom] = useState(true)
+    const handleAtBottomStateChange = useMemoizedFn((flag: boolean) => {
+      setIsAtBottomRef(flag)
+      setIsAtBottom(flag)
+    })
+    const onScrollToBottom = useDebounceFn(
+      () => {
+        scrollToIndex('LAST')
+      },
+      { wait: 200, leading: true },
+    ).run
 
     const { locateToIndex } = useChatStreamLocateHighlight({
       // Virtuoso scrollToIndex 接受绝对 index，定位下标需加 firstItemIndex 偏移
@@ -250,7 +259,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           ref={virtuosoRef}
           scrollerRef={setScrollerRef}
           defaultItemHeight={26}
-          atBottomStateChange={setIsAtBottomRef}
+          atBottomStateChange={handleAtBottomStateChange}
           data={casualChatElements}
           totalListHeightChanged={handleTotalListHeightChanged}
           itemContent={renderItem}
@@ -264,6 +273,18 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           rangeChanged={onRangeChange}
           className={styles['re-act-contents-list']}
         />
+        {chatLength > 0 && !isAtBottom && (
+          <div className={styles['scroll-to-bottom-wrapper']}>
+            <YakitButton
+              type="outline2"
+              icon={<OutlinePositionIcon />}
+              radius="50%"
+              onClick={onScrollToBottom}
+              className={styles['position-button']}
+              size="large"
+            />
+          </div>
+        )}
       </div>
     )
   }),

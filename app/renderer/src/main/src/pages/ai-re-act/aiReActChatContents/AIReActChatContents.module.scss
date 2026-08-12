@@ -5,6 +5,7 @@
   justify-content: center;
   padding-left: 4px;
   flex: 1;
+  position: relative;
   .re-act-contents-list {
     display: flex;
     flex-direction: column;
@@ -50,6 +51,17 @@
     font-size: 12px;
     font-weight: bold;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+  .scroll-to-bottom-wrapper {
+    position: absolute;
+    bottom: 8px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    .position-button {
+      pointer-events: auto;
+    }
   }
 }
 .ai-reference-node {

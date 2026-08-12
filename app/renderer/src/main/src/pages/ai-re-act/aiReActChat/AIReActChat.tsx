@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 import styles from './AIReActChat.module.scss'
 import type { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
@@ -294,7 +294,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const aiReActChatContentsRef = useRef<AIReActChatContentsRef>(null)
-    const [scrollToBottom, setScrollToBottom] = useState(false)
 
     return (
       <>
@@ -320,8 +319,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
               />
               <AIToDoListWrapper />
-              <AIReActChatContents ref={aiReActChatContentsRef} scrollToBottom={scrollToBottom} />
-              <AIReActTaskChatReviewBar setScrollToBottom={setScrollToBottom} />
+              <AIReActChatContents ref={aiReActChatContentsRef} />
+              <AIReActTaskChatReviewBar />
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>

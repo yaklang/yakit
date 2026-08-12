@@ -3,8 +3,6 @@ import type { ChatStream } from '../hooks/aiRender'
 
 export interface AIReActChatContentsPProps {
   ref: ForwardedRef<AIReActChatContentsRef>
-  /** review 展开/收起时触发滚动到底部（与 AIAgentChatStream 的 scrollToBottom 对齐） */
-  scrollToBottom?: boolean
 }
 
 export interface AIReActChatContentsRef {

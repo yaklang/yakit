@@ -567,14 +567,13 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const meta = useCurrentMeta()
-  const currentPlanReviewTokenRenderNum = useStore(store, (state) => state.currentPlanReviewToken?.renderNum)
-  const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken?.token)
+  const currentReviewDetailRenderNum = useStore(store, (state) => state.currentReviewDetail?.renderNum)
+  const currentReviewDetailToken = useStore(store, (state) => state.currentReviewDetail?.token)
   const currentPlanReviewExtraUpdate = useStore(store, (state) => state.currentPlanReviewExtraUpdate)
 
   const reviewInfo = useCreation(() => {
-    const currentPlanReviewToken = store.getState().currentPlanReviewToken
-    return rawData.contents.get(currentPlanReviewToken?.token)
-  }, [currentPlanReviewToken, currentPlanReviewTokenRenderNum])
+    return rawData.contents.get(currentReviewDetailToken)
+  }, [currentReviewDetailToken, currentReviewDetailRenderNum])
 
   const planReviewTreeKeywordsMap = useCreation(() => {
     return meta.planReviewExtraData
@@ -613,7 +612,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
             renderFooterExtra={renderFooter}
             expand={expand}
             className={styles['review-body']}
-            renderNum={currentPlanReviewTokenRenderNum}
+            renderNum={currentReviewDetailRenderNum}
           />
         </div>
       </div>
