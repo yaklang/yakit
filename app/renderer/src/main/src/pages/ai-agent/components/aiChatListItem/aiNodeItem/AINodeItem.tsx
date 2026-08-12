@@ -5,8 +5,6 @@ import {
   AITriageChatContentWrapper,
   AIThought,
 } from '../../aiChatListItemWrapper/aiItemContentWrapper/AIItemContentWrapper'
-import { AIReActChatReview } from '../../aiReActChatReview/AIReActChatReview'
-import styles from './AINodeItem.module.scss'
 import { AIManualIntervention } from '../../aiManualIntervention/AIManualIntervention'
 import { AIToolDecision } from '../../aiToolDecision/AIToolDecision'
 import { AIHttpFlowFuzzStatusCard } from '../../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'
@@ -18,7 +16,6 @@ import AiFailPlanCard from '../../aiFailPlanCard/AiFailPlanCard'
 import { AIModelErrorPrompt } from '../aiModelErrorPrompt/AIModelErrorPrompt'
 import AIStreamCardWrapper from '../../aiChatListItemWrapper/aiStreamCardWrapper/aiStreamCardWrapper'
 import AIToolInvokerCardWrapper from '../../aiChatListItemWrapper/aiToolInvokerCardWrapper/AIToolInvokerCardWrapper'
-import AIReviewResultWrapper from '../../aiChatListItemWrapper/aiReviewResultWrapper/AIReviewResultWrapper'
 import AIGroupStreamNodeWrapper from '../../aiChatListItemWrapper/aiGroupStreamNodeWrapper/AIGroupStreamNodeWrapper'
 
 const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
@@ -35,30 +32,6 @@ const AINodeItem: React.FC<AINodeItemProps> = React.memo((props) => {
     case AIChatQSDataTypeEnum.TOOL_RESULT:
       return <AIToolInvokerCardWrapper itemData={itemData} renderNum={renderNum} />
 
-    case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
-    case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
-    case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
-    case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
-    case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
-      if (itemData.data?.selected) {
-        if (
-          itemData.type === AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE ||
-          itemData.type === AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE
-        )
-          return null
-        return <AIReviewResultWrapper itemData={itemData} renderNum={renderNum} />
-      } else {
-        return (
-          <AIReActChatReview
-            chatType="casual"
-            isEmbedded={true}
-            expand={true}
-            className={styles['review-wrapper']}
-            info={itemData}
-            renderNum={renderNum}
-          />
-        )
-      }
     case AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION:
       return <AIManualIntervention info={itemData} renderNum={renderNum} />
 
