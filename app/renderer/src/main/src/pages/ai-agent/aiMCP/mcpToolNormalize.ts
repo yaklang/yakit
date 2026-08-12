@@ -32,26 +32,14 @@ export const normalizeMCPToolParams = (params: unknown): MCPServerToolParamInfo[
   return params.map(normalizeMCPToolParam).filter((item): item is MCPServerToolParamInfo => item !== null)
 }
 
-/** Pick DescriptionI18n from grpc payload (supports legacy/alternate casings). */
-export const pickMCPToolDescriptionI18nRaw = (tool: Record<string, unknown>): unknown =>
-  tool.DescriptionI18n ?? tool.DescriptionI18N ?? tool.descriptionI18n ?? tool.descriptionI18N
-
 /** Normalize engine ypb.I18n into AIOutputI18n (same shape as NodeIdVerbose). */
-export const normalizeMCPToolDescriptionI18n = (raw: unknown, fallbackDescription = ''): AIOutputI18n | undefined => {
-  const fallback = String(fallbackDescription || '').trim()
-  if (raw && typeof raw === 'object') {
-    const record = raw as Record<string, unknown>
-    const zh = String(record.Zh ?? record.zh ?? '').trim()
-    const en = String(record.En ?? record.en ?? '').trim()
-    if (zh || en) {
-      return {
-        Zh: zh || en || fallback,
-        En: en || zh || fallback,
-      }
-    }
-  }
-  if (!fallback) return undefined
-  return { Zh: fallback, En: fallback }
+const normalizeAIOutputI18n = (raw: unknown): AIOutputI18n | undefined => {
+  if (!raw || typeof raw !== 'object') return undefined
+  const record = raw as Record<string, unknown>
+  const zh = String(record.Zh ?? record.zh ?? '').trim()
+  const en = String(record.En ?? record.en ?? '').trim()
+  if (!zh && !en) return undefined
+  return { Zh: zh || en, En: en || zh }
 }
 
 /** Resolve locale-aware UI label for MCP tool description. */
@@ -72,7 +60,7 @@ export const normalizeMCPToolConfig = (tool: MCPToolConfig): MCPToolConfig => {
   return {
     ...tool,
     Description: description,
-    DescriptionI18n: normalizeMCPToolDescriptionI18n(pickMCPToolDescriptionI18nRaw(raw), description),
+    DescriptionI18n: normalizeAIOutputI18n(tool.DescriptionI18n ?? raw.DescriptionI18n),
     Params: normalizeMCPToolParams(tool.Params),
   }
 }
