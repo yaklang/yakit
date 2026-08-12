@@ -38,6 +38,8 @@ export interface YakitMonacoDiffInlineProps {
   hunks: YakitMonacoDiffInlineHunk[]
   onDecision: (hunkIndex: number, v: 'accept' | 'reject') => void
   language?: string
+  /** 隐藏 original（修改前）侧的行号，只保留 modified（修改后）行号 */
+  hideOriginalLineNumbers?: boolean
 }
 
 function pickLabels(): {
@@ -88,7 +90,7 @@ type DiffWidgetHost = {
  * 提供「撤销 / 保留」逐块决策。文案可由调用方注入。
  */
 export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(props: YakitMonacoDiffInlineProps) {
-  const { reuseKey, original, incoming, hunks, onDecision, language = 'http' } = props
+  const { reuseKey, original, incoming, hunks, onDecision, language = 'http', hideOriginalLineNumbers = false } = props
 
   const { i18n } = useI18nNamespaces([])
   const lng = i18n.language
@@ -135,6 +137,9 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
       contextmenu: false,
     })
     diffEditorRef.current = diffEditor
+    if (hideOriginalLineNumbers) {
+      diffEditor.getOriginalEditor().updateOptions({ lineNumbers: 'off' })
+    }
 
     const originalModel = monaco.editor.createModel(original, language)
     const modifiedModel = monaco.editor.createModel(incoming, language)
@@ -404,7 +409,7 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
       modifiedModel.dispose()
       diffEditorRef.current = null
     }
-  }, [reuseKey, language])
+  }, [reuseKey, language, hideOriginalLineNumbers])
 
   useUpdateEffect(() => {
     const diffEditor = diffEditorRef.current

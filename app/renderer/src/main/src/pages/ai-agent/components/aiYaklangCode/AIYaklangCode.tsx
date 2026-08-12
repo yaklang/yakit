@@ -54,19 +54,21 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
 
   const rawData = useCurrentRawData()
   const codeContainerRef = useRef<HTMLDivElement>(null)
-  const [streamedContent, setStreamedContent] = useState('')
+  const [streamedContent, setStreamedContent] = useState(() => defContent)
   const isLiveStreaming = streaming === true
-
-  // 流式正文在 rawData 里原地累加，React 感知不到；轮询取最新并 setState 驱动渲染
+  // 流式正文在 rawData 里原地累加，React 感知不到；仅在流式进行中轮询取最新驱动渲染。
+  // 结束后（含虚拟列表重挂载的历史卡片）直接用 defContent——它是 renderNum 触发的最终快照，
+  // 不依赖 rawData 是否仍在内存，也不会被轮询到的残缺/陈旧数据覆盖
   useInterval(
     () => {
       const next = readStreamContent(rawData, autoApplyStreamId)
+      if (!next) return
       setStreamedContent((prev) => (prev === next ? prev : next))
     },
-    autoApplyStreamId ? 200 : undefined,
+    isLiveStreaming && autoApplyStreamId ? 200 : undefined,
   )
 
-  const content = autoApplyStreamId ? streamedContent : defContent
+  const content = autoApplyStreamId && isLiveStreaming ? streamedContent : defContent
 
   const type = useCreation(() => contentType.split('/')?.[1] || 'plaintext', [contentType])
 
@@ -150,6 +152,7 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
                 hunks={[]}
                 onDecision={() => {}}
                 language={diffLanguage}
+                hideOriginalLineNumbers
               />
             </div>
           )
