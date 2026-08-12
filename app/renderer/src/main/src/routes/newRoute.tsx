@@ -1557,6 +1557,12 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
         icon: <SolidCodecIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Codec],
       },
+      {
+        page: YakitRoute.Modify_Notepad,
+        icon: <SolidClipboardlistIcon />,
+        i18n: false,
+        label: getNotepadNameByEditionMulLang(),
+      },
     ]
   }
 
