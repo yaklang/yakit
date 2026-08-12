@@ -1,7 +1,7 @@
 import cloneDeep from 'lodash/cloneDeep'
 import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
-import { DefaultMemoryList, DefaultPlanItemDetailsData, DefaultTaskPlanEndGate } from '../defaultConstant'
+import { DefaultMemoryList, DefaultTaskPlanEndGate } from '../defaultConstant'
 import { createChatStore } from '../chatStore'
 import type { AIMessageHandlerParams } from '../type'
 import type { AIOutputEvent, AIStartParams } from '../grpcApi'
@@ -69,13 +69,7 @@ export const createTestRawData = (): AIAgentChatData => {
       },
       contextSections: { summary: new Map(), sections: [] },
     },
-    casualChat: {
-      planDetails: DefaultPlanItemDetailsData,
-      planDetailsMap: new Map(),
-    },
-    taskChat: {
-      planDetailsMap: new Map(),
-    },
+    taskDetailsMap: new Map(),
     contents: new Map(),
   }
   return cloneDeep(defaultData)

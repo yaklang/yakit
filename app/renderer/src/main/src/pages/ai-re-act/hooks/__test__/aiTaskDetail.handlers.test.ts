@@ -19,15 +19,47 @@ describe('aiTaskDetail handlers', () => {
     }
   })
 
-  it('D8: current_task_todo_list_update bumps todoListUpdate', () => {
+  it('D8: current_task_todo_list_update bumps todoListUpdate and populates taskDetailsMap (reAct)', () => {
+    const taskId = 'task-detail-1'
     const req = makeHandlerRequest({
-      res: makeGrpcJsonRes('current_task_todo_list_update', {
-        items: [{ id: '1', status: AIToDoListStatusEnum.Pending, scope_task_id: '' }],
-      }),
+      res: makeGrpcJsonRes(
+        'current_task_todo_list_update',
+        {
+          items: [{ id: '1', status: AIToDoListStatusEnum.Pending, scope_task_id: '' }],
+          task_id: taskId,
+        },
+        { NodeId: 'current_task_todo_list', TaskId: taskId },
+      ),
+      chatType: 'reAct',
     })
     const before = req.store.getState().casualChat.todoListUpdate
-    expect(() => aiTaskDetailDataHandlers.current_task_todo_list_update(req)).not.toThrow()
-    // may or may not bump depending on payload shape; ensure callable
-    expect(req.store.getState().casualChat.todoListUpdate).toBeGreaterThanOrEqual(before)
+    aiTaskDetailDataHandlers.current_task_todo_list_update(req)
+    // reAct 分支应触发 updateCasualTodoList
+    expect(req.store.getState().casualChat.todoListUpdate).toBeGreaterThan(before)
+    // taskDetailsMap 应写入对应 taskId 的条目
+    const detail = req.rawData.taskDetailsMap.get(taskId)
+    expect(detail).toBeDefined()
+    expect(detail!.todoList.items.length).toBeGreaterThan(0)
+  })
+
+  it('D8: current_task_todo_list_update with task chatType does not bump todoListUpdate but still writes taskDetailsMap', () => {
+    const taskId = 'task-detail-2'
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'current_task_todo_list_update',
+        {
+          items: [{ id: '1', status: AIToDoListStatusEnum.Pending, scope_task_id: '' }],
+          task_id: taskId,
+        },
+        { NodeId: 'current_task_todo_list', TaskId: taskId },
+      ),
+      chatType: 'task',
+    })
+    const before = req.store.getState().casualChat.todoListUpdate
+    aiTaskDetailDataHandlers.current_task_todo_list_update(req)
+    // task 分支不应触发 updateCasualTodoList
+    expect(req.store.getState().casualChat.todoListUpdate).toBe(before)
+    // 但 taskDetailsMap 仍应写入
+    expect(req.rawData.taskDetailsMap.get(taskId)).toBeDefined()
   })
 })

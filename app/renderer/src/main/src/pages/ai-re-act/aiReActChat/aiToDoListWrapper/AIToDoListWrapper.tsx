@@ -20,16 +20,16 @@ export const AIToDoListWrapper: React.FC<AIToDoListWrapperProps> = React.memo((p
   const todoData: TodoListCardData = useCreation(() => {
     if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
     try {
-      return rawData.casualChat.planDetails?.todoList || cloneDeep(DefaultTodoListCardData)
+      return rawData.taskDetailsMap.get(currentCasualTaskID)?.todoList || cloneDeep(DefaultTodoListCardData)
     } catch (error) {
       return cloneDeep(DefaultTodoListCardData)
     }
-  }, [todoListUpdate, activeChat?.SessionID])
+  }, [todoListUpdate, activeChat?.SessionID, currentCasualTaskID])
 
   const reActTaskId: string = useCreation(() => {
     if (!activeChat?.SessionID) return ''
-    return rawData.casualChat.planDetails?.taskId ?? ''
-  }, [todoListUpdate, activeChat?.SessionID])
+    return rawData.taskDetailsMap.get(currentCasualTaskID)?.taskId ?? ''
+  }, [todoListUpdate, activeChat?.SessionID, currentCasualTaskID])
 
   return (
     <>

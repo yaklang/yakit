@@ -575,7 +575,7 @@ export interface ChatStoreState {
 
   casualChat: {
     elements: SessionRenderContent['casualElements']
-    /** aiChat.d.ts AIAgentChatData casualChat['planDetails'] */
+    /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
     todoListUpdate: number
   }
   taskChat: {

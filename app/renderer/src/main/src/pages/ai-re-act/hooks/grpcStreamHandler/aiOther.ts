@@ -57,7 +57,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
   if (res.IsSync) return
 
   // 清空任务规划的todo-list数据
-  rawData.taskChat.planDetailsMap.clear()
+  rawData.taskDetailsMap.clear()
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
@@ -199,7 +199,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
   // 实时数据里，记录用户问题的状态和专注模式信息
   if (!res.IsSync) {
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
-    rawData.casualChat.planDetails = cloneDeep(DefaultPlanItemDetailsData)
+    rawData.taskDetailsMap.set(res.TaskId || data.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
     store.getState().updateCasualTodoList()
     store.getState().updateState({
       currentCasualTaskID: res.TaskId || data.react_task_id,
@@ -472,10 +472,8 @@ const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
 
   rawData.contents.set(chatData.id, chatData)
   persistIndependentItem(requestInfo.sessionId, chatData)
-  // planDetailsMap / 子任务收集仍按后端子任务 ID（res.TaskId）索引
-  if (rawData.casualChat.planDetailsMap.has(info.react_task_id)) {
-    rawData.casualChat.planDetailsMap.set(info.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
-  }
+  // taskDetailsMap 按 react_task_id 初始化主任务详情条目
+  rawData.taskDetailsMap.set(info.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
   store.getState().dispatchStreamingNode({
     chatType: 'reAct',
     node: {

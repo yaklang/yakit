@@ -60,7 +60,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 import { AIToDoListDetail } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoListDetail'
-import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -68,7 +68,6 @@ import { randomString } from '@/utils/randomUtil'
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
   const rawData = useCurrentRawData()
-  const store = useCurrentStore()
 
   const [planItemDetailsData, setPlanItemDetailsData] = useState<PlanItemDetailsData>()
   const perPlanItemDetailsDataUUIdRef = useRef<string>('')
@@ -85,19 +84,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   })
   const getData = useMemoizedFn(() => {
     if (!taskId) return
-    let itemData: PlanItemDetailsData | undefined
-    const subTaskData = rawData.casualChat.planDetailsMap.get(taskId)
-    if (subTaskData) {
-      itemData = subTaskData
-    } else {
-      const mainPlanDetails = rawData.casualChat.planDetails
-      const currentCasualTaskId = store.getState().currentCasualTaskID
-      if (mainPlanDetails.taskId === taskId || currentCasualTaskId === taskId) {
-        itemData = mainPlanDetails
-      } else {
-        itemData = rawData.taskChat.planDetailsMap.get(taskId)
-      }
-    }
+    const itemData = rawData.taskDetailsMap.get(taskId)
     if (!itemData) return
     if (perPlanItemDetailsDataUUIdRef.current === itemData.uuid) return
     perPlanItemDetailsDataUUIdRef.current = itemData.uuid

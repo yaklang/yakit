@@ -58,16 +58,12 @@ export interface AIChatData {
   casualChat: Omit<UseChatIPCState['casualChat'], 'toolListRenderNumber'> & {
     /** 会话内每条信息的详情 */
     contents: Map<string, AIChatQSData>
-    /** react 任务对应的详情数据 */
-    planDetails: PlanItemDetailsData
-    /** 自由会话啊的子任务对应的详情数据 */
-    planDetailsMap: Map<string, PlanItemDetailsData>
   }
   taskChat: UseChatIPCState['taskChat'] & {
     contents: Map<string, AIChatQSData>
-    /** 任务列表的子任务对应的详情数据 */
-    planDetailsMap: Map<string, PlanItemDetailsData>
   }
+  /** 任务详情数据（不区分 chatType，按 taskId 索引） */
+  taskDetailsMap: Map<string, PlanItemDetailsData>
   grpcFolders: UseChatIPCState['grpcFolders']
   reActTimelines: UseChatIPCState['reActTimelines']
 }
@@ -216,17 +212,8 @@ export interface AIAgentChatData {
     /** 上下文成分 */
     contextSections: AIContextSectionsDetail
   }
-  /** 自由对话(ReAct)会话 */
-  casualChat: {
-    /** react 任务对应的详情数据 */
-    planDetails: PlanItemDetailsData
-    /** 自由会话啊的子任务对应的详情数据 */
-    planDetailsMap: Map<string, PlanItemDetailsData>
-  }
-  taskChat: {
-    /** 任务列表的子任务对应的详情数据 */
-    planDetailsMap: Map<string, PlanItemDetailsData>
-  }
+  /** 任务详情数据（不区分 chatType，按 taskId 索引） */
+  taskDetailsMap: Map<string, PlanItemDetailsData>
   /** 会话内每条信息的详情 */
   contents: Map<string, AIChatQSData>
 }

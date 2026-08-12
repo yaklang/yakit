@@ -18,12 +18,7 @@ import {
   AttachedResourceTypeEnum,
 } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import {
-  DefaultMemoryList,
-  DefaultPlanItemDetailsData,
-  DefaultTaskPlanEndGate,
-  DefaultTaskPlanStatus,
-} from './defaultConstant'
+import { DefaultMemoryList, DefaultTaskPlanEndGate, DefaultTaskPlanStatus } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams, AIFileSystemPin } from './type'
@@ -139,13 +134,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
       contextSections: { summary: new Map(), sections: [] },
     },
 
-    casualChat: {
-      planDetails: DefaultPlanItemDetailsData,
-      planDetailsMap: new Map(),
-    },
-    taskChat: {
-      planDetailsMap: new Map(),
-    },
+    taskDetailsMap: new Map(),
     contents: new Map(),
   }
   return cloneDeep(defaultData)
