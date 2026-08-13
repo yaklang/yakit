@@ -235,9 +235,12 @@ export const debugYakitModalAny = (y: any) => {
   })
 }
 
-interface ShowModalV2Props extends Omit<ShowModalProps, 'title' | 'content'> {
+interface ShowModalV2Props extends Omit<ShowModalProps, 'title' | 'content' | 'onOkText'> {
   title?: ModalI18nNode
   content?: ModalI18nNode
+  onOkText?: ModalI18nNode
+  onCancelText?: ModalI18nNode
+  showConfirmLoading?: boolean
 }
 
 export const showYakitModal = (props: ShowModalV2Props) => {

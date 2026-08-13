@@ -139,7 +139,7 @@
     "i18n:check": "node scripts/locale-parity.js",
     "link-i18n:check": "cd app/renderer/engine-link-startup && yarn i18n:check",
     "ci:eslint": "cd app/renderer/src/main && yarn eslint src --ext .js,.jsx,.ts,.tsx",
-    "ci:tsc": "cd app/renderer/src/main && yarn tsc -p tsconfig.json --noEmit",
+    "ci:tsc": "cd app/renderer/src/main && yarn type-check",
     "ci:media-size": "node scripts/check-media-size.js",
     "prepare": "husky"
   },

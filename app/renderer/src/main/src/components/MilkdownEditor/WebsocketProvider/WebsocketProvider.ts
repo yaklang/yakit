@@ -393,7 +393,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
      * @param {NotepadActionType} docType
      */
     this.getSendData = (sendData) => {
-      if (!this.data) return Buffer.from('') as unknown as Uint8Array
+      if (!this.data) return new Uint8Array()
       const { messageType, token, params, notepadHash } = this.data
       const { buf, docType } = sendData
       try {
@@ -411,10 +411,9 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
           token,
         }
         const jsonString = JSON.stringify(value)
-        const finalArrayBuffer = Buffer.from(jsonString)
-        return finalArrayBuffer as unknown as Uint8Array
+        return Uint8Array.from(Buffer.from(jsonString))
       } catch (error) {
-        return Buffer.from('') as unknown as Uint8Array
+        return new Uint8Array()
       }
     }
 

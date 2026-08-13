@@ -95,7 +95,6 @@
     "remark-directive": "^3.0.0",
     "rsuite-table": "^5.2.1",
     "streamdown": "^2.1.0",
-    "typescript": "^5.1.6",
     "uuid": "^9.0.0",
     "validator": "^13.15.23",
     "video-react": "^0.16.0",
@@ -143,6 +142,7 @@
     "test:run": "vitest run",
     "verify-build-artifacts": "node scripts/verify-renderer-build-artifacts.mjs",
     "electron-render-breachtrace": "env-cmd -e noBrouser,devTool,breachtrace -f ./.env-cmdrc vite --mode breachtrace",
+    "type-check": "tsc -b",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx"
   },
   "browserslist": [
@@ -172,6 +172,7 @@
     "postcss": "^8.4.49",
     "rollup-plugin-visualizer": "^5.14.0",
     "sass": "1.93.2",
+    "typescript": "6.0.3",
     "vite": "8.2.0",
     "vite-plugin-node-polyfills": "^0.28.0",
     "vitest": "4.1.10"

@@ -1,19 +1,19 @@
 ---
 name: TypeScript 6 Upgrade
-overview: 先升 Link 到 typescript@~6.0.3（含 tsconfig 弃用清理）；主端 TS 与两端 ESLint 9 稍后。不上 TS 7。
+overview: Link 已升至 typescript 6.0.3（三文件 + tsc -b）。正在升主端 typescript@~6.0.3；两端 ESLint 9 稍后。不上 TS 7。
 todos:
   - id: link-tsconfig-cleanup
-    content: Link 清理 TS6 弃用项；tsconfig.json 保持为 app 类型检查入口
+    content: Link 对齐 Vite 模板三文件 + tsc -b
     status: completed
   - id: link-upgrade-typescript-6
-    content: Link typescript@~6.0.3；跑 tsc 并修类型
+    content: Link typescript@6.0.3；跑 tsc -b 通过
     status: completed
   - id: tsconfig-cleanup
-    content: （稍后）主端清理 TS6 弃用项
-    status: pending
+    content: 主端对齐 Vite 模板三文件 + tsc -b
+    status: completed
   - id: upgrade-typescript-6
-    content: （稍后）主端 typescript@~6.0.3，迁到 devDependencies，修类型
-    status: pending
+    content: 主端 typescript@6.0.3，迁到 devDependencies，修类型
+    status: completed
   - id: migrate-eslint-9-flat
     content: ESLint 9 flat + typescript-eslint@8；规则与现有 .eslintrc.cjs 逐条对齐；根目录共享 base + 两端薄包装
     status: pending
@@ -63,7 +63,7 @@ GitHub Actions（[pull-request-test.yml](.github/workflows/pull-request-test.yml
 - ESLint：**9.x flat config** + 统一包 `typescript-eslint@8`（替换 `@typescript-eslint/parser` + `eslint-plugin`）。规则严重程度以现有 `.eslintrc.cjs` 为准逐条迁移，**不用** `tseslint.configs.recommended`（会明显严于现状、打爆 CI）。
 - 根目录共享 [eslint.config.base.js](eslint.config.base.js) 工厂，两端只留薄包装。Link 有 `"type": "module"`，包装必须是 **`eslint.config.cjs`**（或 `.mjs` + ESM），不能写 `eslint.config.js` + `require`。
 - Link 对齐 Vite 官方模板：根 `tsconfig.json` 为 `files: []` + `references`；页面用 `tsconfig.app.json`，Vite 配置用 `tsconfig.node.json`。类型检查必须用 **`tsc -b`**（`yarn type-check`），禁止再对根配置跑 `tsc -p tsconfig.json --noEmit`（会空转）。CI 的 Link tsc job 已改为 `yarn type-check`。
-- 主端仍用现有单份 `tsconfig.json` + `tsc -p`，本阶段不改。
+- 主端同样对齐 Vite 模板：根 `tsconfig.json` 为 `files: []` + `references`；`tsconfig.app.json` 检查 `src/`；`tsconfig.node.json` 检查 `vite.config.mts`。类型检查用 `tsc -b`（`yarn type-check`）。
 - `strict`、不启 `erasableSyntaxOnly`、不升 React / antd / monaco。不改 `src/alibaba/ali-react-table-dist`（已 exclude，自带 TS ~4.2）。
 - 主端 `import type { CancellationToken } from 'typescript'`（如 `yakCompletionSchema.ts`）已确认是 **type-only**，迁到 `devDependencies` 不影响运行时。
 
