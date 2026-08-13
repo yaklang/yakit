@@ -927,9 +927,6 @@ declare global {
       onYakVersion: (callback: (version: string) => void) => BridgeCleanup
       onDownloadYakEngineProgress: (callback: (payload: DownloadingState) => void) => BridgeCleanup
       onDownloadYakitProgress: (callback: (payload: DownloadingState) => void) => BridgeCleanup
-      getApiKeyByOnline: (params: { Token: string }) => Promise<{
-        ApiKey: string
-      }>
     }
     upload: {
       splitUpload: (payload: SplitUploadPayload) => Promise<SplitUploadResponse>

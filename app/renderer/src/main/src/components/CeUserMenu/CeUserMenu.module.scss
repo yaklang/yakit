@@ -93,39 +93,34 @@
 .ce-user-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 8px 0px;
+  align-items: stretch;
+  padding: 8px 4px;
   gap: 8px;
-  border-radius: 4px;
-  transition: background-color 0.15s ease;
 }
 
-.ce-user-info-clickable {
-  cursor: pointer;
-  &:hover {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-    .ce-user-info-progress-track {
-      background: var(--Colors-Use-Basic-Background);
-    }
-  }
-}
 .ce-user-info-avatar-wrapper {
   display: flex;
-  padding: 0;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
   align-self: stretch;
+  padding: 0 8px;
+  overflow: hidden;
 }
+
 .ce-user-info-name-wrapper {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  gap: 2px;
 }
 
 .ce-user-info-name {
+  width: 100%;
+  text-align: left;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 14px;
   font-style: normal;
@@ -134,7 +129,17 @@
   letter-spacing: 0.1px;
 }
 
-.ce-user-info-email {
+.ce-user-info-apikey-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.ce-user-info-apikey {
+  flex: 1;
+  min-width: 0;
   color: var(--Colors-Use-Neutral-Text-4-Help-text);
   font-size: 12px;
   font-style: normal;
@@ -143,22 +148,93 @@
   letter-spacing: 0.5px;
 }
 
+.ce-user-info-apikey-copy {
+  flex-shrink: 0;
+  width: 20px !important;
+  height: 20px !important;
+  padding: 0 !important;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+
+  :global(svg) {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .ce-user-info-token {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
   display: flex;
-  padding: 0 8px;
+  padding: 8px;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 4px;
   align-self: stretch;
+  border-radius: 4px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  background: var(--Colors-Use-Neutral-Bg);
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.ce-user-info-balance-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ce-user-info-balance {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+.ce-user-info-balance-value {
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+.ce-user-info-recharge {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--Colors-Use-Main-Primary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--Colors-Use-Main-Hover);
+  }
+}
+
+.ce-user-info-progress-box {
+  display: flex;
+  padding: 2px;
+  align-items: center;
+  gap: 1px;
+  align-self: stretch;
+  border-radius: 4px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Basic-Background);
 }
 
 .ce-user-info-progress-track {
   width: 100%;
   height: 6px;
   border-radius: 2px;
-  background: var(--Colors-Use-Neutral-Border);
   overflow: hidden;
-  margin: 4px 0px;
+  background-color: var(--Colors-Use-Neutral-Border);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath d='M-1 5L5 -1' stroke='%23fff' stroke-width='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 4px 4px;
 }
 
 .ce-user-info-progress-fill {
@@ -173,12 +249,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 12px;
   line-height: 16px;
 }
 
-.ce-user-info-token-label {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
+.ce-user-info-token-label,
+.ce-user-info-token-value,
+.ce-user-info-token-percent {
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -188,20 +267,4 @@
 
 .ce-user-info-token-percent {
   margin-left: 4px;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 16px;
-  letter-spacing: 0.5px;
-}
-
-.ce-user-info-token-value {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  text-align: center;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 16px;
-  letter-spacing: 0.5px;
 }
