@@ -423,7 +423,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
           label={t('LicenseAdminPage.companyName')}
           rules={[{ required: true, message: t('YakitForm.requiredField') }]}
         >
-          <YakitInput placeholder={t('LicenseForm.inputCompanyName')} allowClear disabled={!!editInfo} />
+          <YakitInput placeholder={t('LicenseForm.inputCompanyName')} allowClear={!editInfo} disabled={!!editInfo} />
         </Form.Item>
         <Form.Item
           name="maxActivationNum"

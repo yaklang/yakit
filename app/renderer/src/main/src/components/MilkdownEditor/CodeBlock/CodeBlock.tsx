@@ -10,10 +10,15 @@ interface CustomCodeComponentProps {
   // 是否控制编辑器类型
   isControlEditorType?: boolean
 }
+
+const CODE_BLOCK_MIN_HEIGHT = 200
+const CODE_BLOCK_MAX_HEIGHT = 1000
+
 export const CustomCodeComponent: React.FC<CustomCodeComponentProps> = ({ isControlEditorType = true }) => {
   const { node, view, getPos, contentRef } = useNodeViewContext()
   // 编辑器实例
   const [editor, setEditor] = useState<IMonacoEditor>()
+  const [codeBlockHeight, setCodeBlockHeight] = useState<number>(CODE_BLOCK_MIN_HEIGHT)
 
   const codeRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(codeRef)
@@ -30,6 +35,32 @@ export const CustomCodeComponent: React.FC<CustomCodeComponentProps> = ({ isCont
   const readonly = useCreation(() => {
     return !view.editable
   }, [view.editable])
+
+  useEffect(() => {
+    if (!editor) return
+
+    let frameId: number | null = null
+
+    const updateCodeBlockHeight = () => {
+      if (frameId !== null) return
+
+      frameId = requestAnimationFrame(() => {
+        frameId = null
+        const nextHeight = Math.min(CODE_BLOCK_MAX_HEIGHT, Math.max(CODE_BLOCK_MIN_HEIGHT, editor.getContentHeight()))
+        setCodeBlockHeight((height) => (height === nextHeight ? height : nextHeight))
+      })
+    }
+
+    updateCodeBlockHeight()
+    const disposable = editor.onDidContentSizeChange(updateCodeBlockHeight)
+
+    return () => {
+      disposable.dispose()
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId)
+      }
+    }
+  }, [editor])
 
   const updateEditorContent = useMemoizedFn((newContent) => {
     try {
@@ -55,7 +86,7 @@ export const CustomCodeComponent: React.FC<CustomCodeComponentProps> = ({ isCont
     } catch (error) {}
   })
   return (
-    <div className="milkdown-code" style={{ height: 200, marginBottom: 20 }} ref={codeRef}>
+    <div className="milkdown-code" style={{ height: codeBlockHeight, marginBottom: 20 }} ref={codeRef}>
       {/* <div style={{display: "none"}} ref={contentRef}></div> */}
       <YakitEditor
         type={isControlEditorType ? 'yak' : undefined}
