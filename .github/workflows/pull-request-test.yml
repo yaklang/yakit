@@ -197,7 +197,7 @@ jobs:
       pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
       pr_ref: ${{ github.event.pull_request.head.ref }}
       workdir: app/renderer/engine-link-startup
-      run_command: yarn tsc -p tsconfig.json --noEmit
+      run_command: yarn type-check
       log_filename: tsc-engine-link-output.log
       artifact_name: ci-log-tsc-engine-link
 

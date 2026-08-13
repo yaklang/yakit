@@ -1,107 +1,181 @@
 ---
 name: TypeScript 6 Upgrade
-overview: 主渲染端先等他人完成 CRA→Vite，再两边统一升到 TypeScript 6.0.3。Link 已是 Vite，可先独立升级或与主端 Vite 落地后一起做；不再在 CRA 上做 TS 中转升级。
+overview: 先升 Link 到 typescript@~6.0.3（含 tsconfig 弃用清理）；主端 TS 与两端 ESLint 9 稍后。不上 TS 7。
 todos:
-  - id: wait-cra-vite
-    content: 等待主渲染端 CRA→Vite 合并落地；期间本计划不改主端 package.json/tsconfig
+  - id: link-tsconfig-cleanup
+    content: Link 清理 TS6 弃用项；tsconfig.json 保持为 app 类型检查入口
+    status: completed
+  - id: link-upgrade-typescript-6
+    content: Link typescript@~6.0.3；跑 tsc 并修类型
+    status: completed
+  - id: tsconfig-cleanup
+    content: （稍后）主端清理 TS6 弃用项
     status: pending
-  - id: link-ts6-optional
-    content: （可选并行）Link 已是 Vite：可先升 typescript~6.0.3 + eslint-ts 8.x 并清理 tsconfig 弃用项
+  - id: upgrade-typescript-6
+    content: （稍后）主端 typescript@~6.0.3，迁到 devDependencies，修类型
     status: pending
-  - id: stage-main-after-vite
-    content: 主端 Vite 落地后：typescript~6.0.3 + eslint-ts 8.x + 清理 tsconfig（对齐 Link）
+  - id: migrate-eslint-9-flat
+    content: ESLint 9 flat + typescript-eslint@8；规则与现有 .eslintrc.cjs 逐条对齐；根目录共享 base + 两端薄包装
     status: pending
-  - id: stage-unify-verify
-    content: 两边统一验收：dev/build、tsc --noEmit、eslint；收紧 types；确认无 ignoreDeprecations
+  - id: sync-ci-and-scripts
+    content: 同步 GitHub Actions 与根 ci:*：ESLint 9 去掉 --ext；Link/主端补 type-check / lint 脚本
+    status: pending
+  - id: verify-and-close
+    content: 验收 yarn ci:tsc、yarn ci:eslint、yarn build-renders；确认无 ignoreDeprecations；记录 diff 与错误数
     status: pending
 isProject: false
 ---
 
-# TypeScript 6 升级执行计划（修订：先 Vite 后 TS）
+# TypeScript 6 升级执行计划
+
+## 仓库现状（2026-08-13 核对）
+
+本分支 `feat/upgrade-typescript` 目前只有计划文档，**升级代码尚未合入**。此前本地试跑过一轮，改动已丢弃；本计划吸收那次踩坑，不把任何 todo 标成已完成。
+
+| 项 | 主渲染端 `app/renderer/src/main` | Link `engine-link-startup` |
+|---|---|---|
+| 构建 | Vite 8.2.0 | Vite 8.2.0 |
+| `typescript` | `^5.1.6`（仍在 **dependencies**） | `~5.9.3`（devDependencies） |
+| ESLint | `^8.57.0` + `@typescript-eslint/*@^7.18.0`，`.eslintrc.cjs` | 同左 |
+| 类型检查入口 | `tsc -p tsconfig.json --noEmit`（仅 CI；`build` 不跑 tsc） | `tsc --noEmit && vite build`（build 与 CI 都跑） |
+| `moduleResolution` | 已是 `bundler` | app 已是 `bundler`；`tsconfig.node.json` 仍是 **`node`（弃用）** |
+| `paths` / `baseUrl` | `paths.json` 已是 `"@/*": ["./src/*"]`，无 `baseUrl` | 仍有 `baseUrl: "."` + `"@/*": ["src/*"]` |
+| `downlevelIteration` | 仍为 `true`（TS6 设了就会弃用报错） | 根配置与 `tsconfig.app.json` 均为 `true` |
+| `strict` | `true`（显式） | `false`（显式，保持） |
+
+GitHub Actions（[pull-request-test.yml](.github/workflows/pull-request-test.yml)）**已经覆盖两端** tsc/eslint，不是「只查主端」：
+
+- 主端 / Link：`yarn eslint src --ext .js,.jsx,.ts,.tsx`
+- 主端 / Link：`yarn tsc -p tsconfig.json --noEmit`
+
+根目录 `ci:tsc` / `ci:eslint` 目前只跑主端，属于本地便捷脚本，与 CI 不完全一致。
+
+主端仍停在 5.1.6，不再做 5.1→5.9 中转；直跳 6.0.3，预留修类型时间。
 
 ## 结论
 
-**是的：主渲染端应先完成 CRA→Vite，再升级 TypeScript。**
-
-原因：
-
-- CRA（`react-scripts@5.0.1`）对 TS 的 peer 仍停在 `^3 || ^4`，自带旧 `fork-ts-checker` / `@typescript-eslint@5`，在 CRA 上硬升 TS 6 成本高、收益低
-- 与他人并行的 CRA→Vite 会大量改动同一批文件（`package.json`、`tsconfig`、eslint、构建脚本），先升 TS 再迁 Vite 容易双倍冲突与返工
-- Vite 落地后主端与 Link 同构：`tsc --noEmit` 做类型检查、esbuild 转译，升 TS 6 路径与 Link 一致，不再需要 CRA resolutions 兜底
+执行顺序改为 **先 Link、后主端**。Link 已是 TS 5.9，升 6.0.3 跨度小，用来验证 tsconfig 弃用清理与 CI 入口是否站得住；主端仍停 5.1.6，本阶段不改。
 
 ## 已锁定决策
 
-- 目标版本：两边统一到 `typescript@~6.0.3`，不上 TS 7 作为主依赖
-- **主端 TS 升级排在 CRA→Vite 之后**；本计划不在 CRA 上做 5.1→5.9 中转
-- 弃用项直接改掉，不长期依赖 `"ignoreDeprecations": "6.0"`
-- 两边 `@typescript-eslint/*` 升到 **8.x**
-- 不升级 React / antd / monaco（除非 Vite 迁移本身需要）
+- 目标：两边 `typescript@~6.0.3`。 **不上 TS 7**：`typescript-eslint@8` 的 peer 是 `typescript >=4.8.4 <6.1.0`，上 7 会装不上或运行期崩。
+- 弃用项直接改掉，禁止长期 `"ignoreDeprecations": "6.0"`。
+- ESLint：**9.x flat config** + 统一包 `typescript-eslint@8`（替换 `@typescript-eslint/parser` + `eslint-plugin`）。规则严重程度以现有 `.eslintrc.cjs` 为准逐条迁移，**不用** `tseslint.configs.recommended`（会明显严于现状、打爆 CI）。
+- 根目录共享 [eslint.config.base.js](eslint.config.base.js) 工厂，两端只留薄包装。Link 有 `"type": "module"`，包装必须是 **`eslint.config.cjs`**（或 `.mjs` + ESM），不能写 `eslint.config.js` + `require`。
+- Link 对齐 Vite 官方模板：根 `tsconfig.json` 为 `files: []` + `references`；页面用 `tsconfig.app.json`，Vite 配置用 `tsconfig.node.json`。类型检查必须用 **`tsc -b`**（`yarn type-check`），禁止再对根配置跑 `tsc -p tsconfig.json --noEmit`（会空转）。CI 的 Link tsc job 已改为 `yarn type-check`。
+- 主端仍用现有单份 `tsconfig.json` + `tsc -p`，本阶段不改。
+- `strict`、不启 `erasableSyntaxOnly`、不升 React / antd / monaco。不改 `src/alibaba/ali-react-table-dist`（已 exclude，自带 TS ~4.2）。
+- 主端 `import type { CancellationToken } from 'typescript'`（如 `yakCompletionSchema.ts`）已确认是 **type-only**，迁到 `devDependencies` 不影响运行时。
 
-## 前置依赖
+## 阶段 1：tsconfig 弃用清理（先于升 TS）
 
-- 他人负责的 **主渲染端 CRA→Vite** 合并到可开发/可构建状态
-- 对接约定：Vite 迁移尽量把主端 TS 停在合理的 5.x（建议直接对齐 Link 的 `~5.9.3`），避免迁完仍停在 5.1.6
-
-## 阶段 A（可选并行）：仅升级 Link
-
-Link 已是 Vite（[engine-link-startup/package.json](app/renderer/engine-link-startup/package.json)），不阻塞主端迁移，可先做：
-
-1. `typescript` → `~6.0.3`
-2. `@typescript-eslint/parser` / `eslint-plugin` → `^8.x`
-3. 清理 tsconfig 弃用项（见下表）
-4. 验收：`yarn build`（含 `tsc --noEmit`）+ eslint
-
-若希望两边一次对齐、减少版本分叉，可跳过本阶段，等主端 Vite 后再一起升。
-
-## 阶段 B：主端 Vite 落地后升级 TS 6
-
-主端已无 `react-scripts` 后执行：
-
-1. `typescript` → `~6.0.3`（若 Vite 迁移已带到 5.9，则直接 5.9→6）
-2. 显式依赖 `@typescript-eslint/*@8.x`（不再覆盖 CRA 传递依赖）
-3. 按同一套规则清理 tsconfig
-4. 验收：主端 Vite dev + 常用 build；eslint 正常
-
-### tsconfig 弃用清理（两边统一规则）
+TS6 里只要**写了** `downlevelIteration` / `baseUrl` / `moduleResolution: "node"` 就会弃用报错。先清配置，再升编译器。
 
 | 项 | 执行 |
 |---|---|
-| `baseUrl` + `paths` | 删 `baseUrl`；`paths` 改带前缀，如 `"@/*": ["./src/*"]` |
-| `moduleResolution: "node"` | app → `bundler`；Node/Vite 配置用 tsconfig → `nodenext` |
-| `downlevelIteration` | 删除 |
-| `types` 默认变 `[]` | 按需显式列出（如 `node` / 测试相关）；禁止长期 `["*"]` |
-| `strict` | 保持各项目现有显式值 |
+| `baseUrl` + `paths` | 删 `baseUrl`；`paths` 带 `./` 前缀。主端 `paths.json` 已合规，不动 |
+| `moduleResolution: "node"` | app 保持/设为 `bundler`；`tsconfig.node.json` → `module`/`moduleResolution`: `nodenext` |
+| `downlevelIteration` | **整键删除**（设 `false` 也会报） |
+| `module` | app 改为 `preserve`（与已有 `moduleResolution: "bundler"` 是 TS6 推荐组合） |
+| `types` 默认变 `[]` | 禁止 `["*"]`。按报错再显式加：Link node 配置已有 `["node"]`；app 若 Node 全局消失再加 `node`（`vite/client` 已有 `vite-env.d.ts` 的 triple-slash） |
+| `noUncheckedSideEffectImports` | TS6 **默认 true**。仓库有 `import 'moment/locale/zh-cn'` 这类 side-effect import，会报 TS2882。本轮显式设 **`false`**，不改业务 import |
+| `strict` | 保持现有显式值 |
 
-涉及文件（主端以 Vite 迁移后的实际路径为准）：
+**Link 三件套（对齐 Vite 官方模板）：**
 
-- 主端：`package.json`、`tsconfig*.json`、路径别名相关配置、`.eslintrc.cjs`
-- Link：[tsconfig.json](app/renderer/engine-link-startup/tsconfig.json)、[tsconfig.app.json](app/renderer/engine-link-startup/tsconfig.app.json)、[tsconfig.node.json](app/renderer/engine-link-startup/tsconfig.node.json)
+- [tsconfig.json](app/renderer/engine-link-startup/tsconfig.json)：`files: []` + `references`，只做调度。
+- [tsconfig.app.json](app/renderer/engine-link-startup/tsconfig.app.json)：检查 `src/`。
+- [tsconfig.node.json](app/renderer/engine-link-startup/tsconfig.node.json)：检查 `vite.config.ts`；`module: nodenext`。
+- 命令：`yarn type-check` → `tsc -b`；CI 同步为 `yarn type-check`。
 
-## 阶段 C：统一验收与收尾
+**主端：** [tsconfig.json](app/renderer/src/main/tsconfig.json) 删 `downlevelIteration`，`module` → `preserve`；继续 `extends: ./paths.json`。`vite.config.mts` 不在 `include` 里，本轮不必为它单开 node tsconfig。
 
-1. 两边 `typescript` 均为 6.0.x；eslint-ts 均为 8.x
-2. 无 `ignoreDeprecations`；`types` 已收紧
-3. 简短记录：依赖/tsconfig diff、错误数前后、可合并结论
+## 阶段 2：升级 TypeScript 6.0.3
 
-## 明确不做
+1. 两端 `typescript` → `~6.0.3`；主端从 `dependencies` 挪到 `devDependencies`。
+2. `yarn install`（各自子项目，Yarn 1 classic，三套 `node_modules` 独立）。
+3. 跑 tsc，按报错修类型。**主端 5.1.6 → 6.0.3 跨度大于 Link**，错误面以主端为准单独记。
 
-- 在 CRA 上先做 TS 5.9 / TS 6（避免与 Vite 迁移抢同一批文件）
-- TypeScript 7 作为默认主依赖
-- 本计划范围内再发起一轮 CRA→Vite（交给正在进行的工作）
+此前试跑已见、本轮预留的修补：
 
-## 执行顺序
+- `Buffer` / `Uint8Array` 在 TS6 下不再互相赋值（如 `WebsocketProvider`）
+- 部分 antd/Modal props 推导变严（如 `ShowModalV2Props`）
+- `types: []` 导致 `NodeJS.*` / `Buffer` 全局消失 → 按需加 `"types": ["node"]`
+
+只修升级直接暴露的类型错误，不做顺便重构。
+
+## 阶段 3：ESLint 9 flat + typescript-eslint 8
+
+现有 `.eslintrc.cjs` 偏松（`plugin:@typescript-eslint/eslint-recommended`，大量规则 off/warn）。迁移原则：**parity，不借机收紧**。
+
+依赖（渲染端子包 + 根目录共享工厂所需）：
+
+- `eslint@^9`
+- `typescript-eslint@^8`（取代 parser/plugin 分包）
+- `@eslint/js`、`globals`（ESLint 9 去掉 `env`，必须显式 globals）
+- 现有 `eslint-plugin-react`、`eslint-plugin-react-hooks@7.x` 可留
+
+配置形态：
+
+- 根 [eslint.config.base.js](eslint.config.base.js)：CJS 工厂 `createConfig({ extraIgnores })`，`require` 从**根** `node_modules` 解析，因此 `@eslint/js` / `typescript-eslint` / `globals` 等要进**根** `package.json`。
+- 主端 `eslint.config.cjs`：薄包装（主端无 `"type": "module"`）。
+- Link `eslint.config.cjs`：薄包装（避免 `.js` 被当成 ESM）。
+- 删除两端 `.eslintrc.cjs`。
+
+规则对齐要点（不要用 full recommended）：
+
+- 用 `js.configs.recommended` + `tseslint.configs.base` + `tseslint.configs.eslintRecommended` + `react.configs.flat['jsx-runtime']`。
+- 把现有 rules 块搬过去，包括已关闭的 `react-hooks` v7 Compiler 规则。
+- ESLint 9 recommended **新增**的 `no-constant-binary-expression`：现状不是 error，本轮 **off**，保持迁移前后 parity。
+- `react/no-unknown-property`：主端 SVG 用 `pId`，部分资源用 `p-id`，共享配置 **两者都 ignore**（只留 `p-id` 会炸主端）。
+- `exhaustive-deps` / `no-useless-escape`：两端旧值不一致。共享后统一为更松的一边（`exhaustive-deps: off`、`no-useless-escape: off`），避免借机把 Link 收紧成 CI 噪音。
+- 主端额外 ignore：`src/alibaba/ali-react-table-dist/**`。
+
+## 阶段 4：同步脚本与 CI（漏改会静默空转或直接挂）
+
+ESLint 9 **删除 `--ext`**。当前 CI / 脚本都带 `--ext`，不改必挂。
+
+必须改：
+
+- [.github/workflows/pull-request-test.yml](.github/workflows/pull-request-test.yml) 里 4 个 job 的 `run_command`（主端/Link 的 eslint 与 tsc）
+- 根 `ci:eslint` / `ci:tsc`：与 CI 对齐，**覆盖两端**（`run-s` 已有）
+- 主端 `lint`；Link 补 `lint` + `type-check`
+- Link 各 `build-*`：继续「先类型检查再 vite build」，改为 `yarn type-check && vite build`（`type-check` = `tsc -p tsconfig.json --noEmit`，与 CI 同一入口）
+
+tsc 命令在阶段 1 的策略下可以仍是 `yarn tsc -p tsconfig.json --noEmit`。若有人改回 solution-style，必须把 CI 改成 `yarn type-check` 并保证不是空项目。
+
+## 阶段 5：统一验收
+
+1. 两端 `typescript` 均为 6.0.x；eslint 9 + typescript-eslint 8。
+2. 无 `ignoreDeprecations`；`types` 未使用 `["*"]`。
+3. 必跑：`yarn ci:tsc`、`yarn ci:eslint`、`yarn build-renders`。dev（`yarn start-renders`）建议抽测，不阻塞合入。
+4. 简短记录：依赖/tsconfig/eslint diff、tsc 错误数前后、可合并结论。
 
 ```mermaid
 flowchart TD
-  waitVite[Wait_main_CRA_to_Vite]
-  optLink[Optional_Link_TS6_now]
-  mainTS[Main_TS6_after_Vite]
-  unify[Unify_verify_both]
-  waitVite --> mainTS --> unify
-  optLink -.-> unify
+  cleanup[tsconfig_cleanup]
+  ts6[typescript_6_0_3]
+  types[fix_TS6_type_errors]
+  eslint[eslint9_flat_shared_base]
+  ci[sync_CI_drop_ext]
+  verify[ci_tsc_eslint_build]
+  cleanup --> ts6 --> types --> eslint --> ci --> verify
 ```
 
-## 协作建议
+## 明确不做
 
-- 与 Vite 迁移负责人同步：主端迁完后的目标 TS 建议为 `~5.9.3`，eslint-ts 可暂留或一并到 8（若对方愿意）
-- 本计划在 `wait-cra-vite` 完成前，**不改动主端**依赖与 tsconfig，避免 merge 冲突
+- 本阶段改主端 TS / 升 ESLint（下一阶段再做）
+- TypeScript 7 作为默认主依赖
+- 借升级收紧 `strict` / 开启 `erasableSyntaxOnly` / 上 `tseslint.configs.recommended`
+- 升级 React / antd / monaco
+- 改 `ali-react-table-dist`
+- 把 Link 根 tsconfig 改成空 `files` + `references` 却继续用 `tsc -p`（会造成类型检查空转；必须用 `tsc -b`）
+
+## 风险与回退
+
+| 风险 | 处理 |
+|---|---|
+| 主端 5.1→6.0 类型错误面大 | 只修升级暴露的错误；若爆炸再评估是否临时 `ignoreDeprecations`（不作为合入态） |
+| ESLint 9 规则变严 | 以旧 `.eslintrc.cjs` 为准；新规则默认 off |
+| 共享 ESLint 解析不到包 | 工厂放根目录，共享依赖进根 `package.json`；子包仍保留 `eslint` / `typescript-eslint` 以便 `yarn eslint` |
+| CI 仍带 `--ext` 或仍打旧 tsconfig | 阶段 4 与代码同一 PR，禁止拆开 |
