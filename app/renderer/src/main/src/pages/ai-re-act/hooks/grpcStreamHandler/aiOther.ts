@@ -192,6 +192,8 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
+  // 只有reason='normal'时，才是执行问题的出队行为，别的情况不属于执行问题的出队行为，不处理
+  if (data.reason !== 'normal') return
 
   // 实时数据里，记录用户问题的状态和专注模式信息
   if (!res.IsSync) {
