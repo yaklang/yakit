@@ -180,6 +180,8 @@ export interface AIExecutionStrategy {
   EnableGoalMode?: boolean
   /** Goal 模式下允许 finish 的最小迭代次数，<=0 由服务端默认 */
   GoalMinIterations?: number
+  /** Multi 模式下单次 dispatch 子 Agent 数量，<=0 由服务端默认；服务端硬上限 20 */
+  MaxSubAgents?: number
 }
 
 export interface AIEnabledCapability {

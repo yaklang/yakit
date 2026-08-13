@@ -154,6 +154,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
               EnableMultiAgent: false,
               EnableGoalMode: false,
               GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+              MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
             },
           }))
           setActiveChat?.(undefined)
