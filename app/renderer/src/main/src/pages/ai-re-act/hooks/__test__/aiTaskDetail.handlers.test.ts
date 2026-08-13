@@ -25,7 +25,10 @@ describe('aiTaskDetail handlers', () => {
       res: makeGrpcJsonRes(
         'current_task_todo_list_update',
         {
-          items: [{ id: '1', status: AIToDoListStatusEnum.Pending, scope_task_id: '' }],
+          items: [
+            { id: '1', status: AIToDoListStatusEnum.Pending, scope_task_id: taskId },
+            { id: '2', status: AIToDoListStatusEnum.Pending, scope_task_id: '' },
+          ],
           task_id: taskId,
         },
         { NodeId: 'current_task_todo_list', TaskId: taskId },
