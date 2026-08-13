@@ -32,6 +32,7 @@ import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { formatAIAgentSetting, onReStart } from '../../utils'
 import { DefaultPlanHistoryList } from '@/pages/ai-re-act/hooks/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
+import emiter from '@/utils/eventBus/eventBus'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const store = useCurrentStore()
@@ -192,7 +193,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       SyncID: randomString(8),
     }
     onSend({ token: sessionId, type: 'task', params: info })
-
+    emiter.emit('changeAITaskQueryShow', 'true')
     sendRecoverParamsRef.current = undefined
   })
   const onRecover = useMemoizedFn(() => {
