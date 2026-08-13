@@ -120,7 +120,6 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const chatLength = useStore(store, (state) => state.casualChat.elements.length)
     const casualTitle = useStore(store, (state) => state.currentLoadingTitle.casualTitle)
     const planTitle = useStore(store, (state) => state.currentLoadingTitle.planTitle)
-    const taskTitle = useStore(store, (state) => state.currentLoadingTitle.taskTitle)
     const execute = useStore(store, (state) => state.execute)
     // 任务规划运行态：进入任务规划后底部 loading 从 planTitle/taskTitle 取值
     const taskCoordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId)
@@ -207,9 +206,8 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 
     const Footer = useCallback(() => {
       if (!execute) return chatLength ? <div className={styles['end']}>当前会话已停止</div> : null
-      // 任务规划进行中时从 planTitle/taskTitle 取值，否则从 casualTitle 取值
+      // 任务规划进行中时从 planTitle 取值，否则从 casualTitle 取值
       const mainTitle = isTaskPlanning ? planTitle : casualTitle
-      const subTitle = isTaskPlanning ? taskTitle : ''
       if (!mainTitle) return <div className={styles['end']}>当前会话已结束</div>
       return (
         <div className={styles['footer-loading']}>
@@ -218,14 +216,9 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
               <ScrollText text={mainTitle as string} />
             </div>
           </Loading>
-          {!!subTitle && (
-            <div className={styles['footer-loading-subtitle']}>
-              <ScrollText text={subTitle as string} />
-            </div>
-          )}
         </div>
       )
-    }, [casualTitle, planTitle, taskTitle, execute, chatLength, isTaskPlanning])
+    }, [casualTitle, planTitle, execute, chatLength, isTaskPlanning])
     const Header = useCallback(
       () =>
         grpcLoadMoreLoading ? (
