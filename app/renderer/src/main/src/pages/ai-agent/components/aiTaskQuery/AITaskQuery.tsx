@@ -176,6 +176,11 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
     <div key={item.id} className={styles['task-query-list-item']}>
       <div className={styles['item-left']}>
         <OutlineChatIcon className={styles['chat-icon']} />
+        {item.is_recovery && (
+          <YakitTag color="info" size="small" fullRadius className={styles['recovery-tag']}>
+            恢复任务
+          </YakitTag>
+        )}
         <span className="content-ellipsis" title={item.user_input}>
           {item.user_input}
         </span>

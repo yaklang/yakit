@@ -118,13 +118,6 @@
     gap: 8px;
     padding-top: 4px;
   }
-  .add-and-re-execute-btn {
-    :global {
-      .ant-btn > .ant-btn-loading-icon {
-        width: auto !important;
-      }
-    }
-  }
 }
 // #endregion
 

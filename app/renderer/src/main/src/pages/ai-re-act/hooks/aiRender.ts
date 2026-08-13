@@ -600,9 +600,7 @@ export interface ChatStoreState {
   grpcLoadMoreLoading: boolean
 
   /** 用户主动取消问题的loading状态(自由对话) */
-  cancelCasualLoading: boolean
-  /** 用户主动取消问题的loading状态(任务规划) */
-  cancelTaskLoading: boolean
+  cancelChatLoading: boolean
 
   /**
    * TODO - 有问题，需要调整 请求历史数据相关State

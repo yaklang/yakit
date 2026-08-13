@@ -59,7 +59,7 @@ describe('aiOther task plan gate', () => {
         planTitle: '加载中...',
         taskTitle: '加载中...',
       },
-      cancelTaskLoading: true,
+      cancelChatLoading: true,
     })
 
     aiOtherDataHandlers.end_plan_and_execution(req)
@@ -77,7 +77,7 @@ describe('aiOther task plan gate', () => {
     }
     aiOtherDataHandlers.react_task_status_changed(changeReq)
     expect(req.store.getState().currentChatStatus.status).toBe('completed')
-    expect(req.store.getState().cancelTaskLoading).toBe(false)
+    expect(req.store.getState().cancelChatLoading).toBe(false)
     expect(req.meta.taskPlanEndGate).toEqual(DefaultTaskPlanEndGate)
   })
 
@@ -126,13 +126,13 @@ describe('aiOther task plan gate', () => {
         coordinatorId: '',
       },
       focusMode: 'focus',
-      cancelCasualLoading: true,
+      cancelChatLoading: true,
     })
 
     aiOtherDataHandlers.react_task_status_changed(req)
     expect(req.store.getState().currentChatStatus.status).toBe('completed')
     expect(req.store.getState().focusMode).toBe('')
-    expect(req.store.getState().cancelCasualLoading).toBe(false)
+    expect(req.store.getState().cancelChatLoading).toBe(false)
     expect(req.meta.taskPlanEndGate.pendingStatus).toBeUndefined()
   })
 

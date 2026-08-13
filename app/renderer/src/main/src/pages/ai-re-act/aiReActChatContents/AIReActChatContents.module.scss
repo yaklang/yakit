@@ -51,10 +51,13 @@
     font-size: 12px;
     font-weight: bold;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    max-width: 784px;
+    margin: 0 auto;
   }
   .footer-loading {
     max-width: 784px;
     margin: 0 auto;
+    padding-bottom: 24px;
     .footer-loading-title {
       width: 100%;
       display: flex;

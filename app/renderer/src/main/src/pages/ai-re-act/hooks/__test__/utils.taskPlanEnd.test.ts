@@ -18,12 +18,12 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
-      cancelTaskLoading: true,
+      cancelChatLoading: true,
     })
     meta.taskPlanEndGate = { endReceived: false, pendingStatus: 'completed' }
     trySettleTaskPlanEnd(store, meta)
     expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.inProgress)
-    expect(store.getState().cancelTaskLoading).toBe(true)
+    expect(store.getState().cancelChatLoading).toBe(true)
     expect(meta.taskPlanEndGate.pendingStatus).toBe('completed')
   })
 
@@ -49,12 +49,12 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
-      cancelTaskLoading: true,
+      cancelChatLoading: true,
     })
     meta.taskPlanEndGate = { endReceived: true, pendingStatus: 'completed' }
     trySettleTaskPlanEnd(store, meta)
     expect(store.getState().currentChatStatus.status).toBe('completed')
-    expect(store.getState().cancelTaskLoading).toBe(false)
+    expect(store.getState().cancelChatLoading).toBe(false)
     expect(meta.taskPlanEndGate).toEqual(DefaultTaskPlanEndGate)
   })
 

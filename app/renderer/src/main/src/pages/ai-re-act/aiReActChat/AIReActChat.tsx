@@ -282,7 +282,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       if (!store.getState().execute || !currentCasualTaskID) return
 
       store.getState().updateState({
-        cancelCasualLoading: true,
+        cancelChatLoading: true,
       })
       const info: AIInputEvent = {
         IsSyncMessage: true,

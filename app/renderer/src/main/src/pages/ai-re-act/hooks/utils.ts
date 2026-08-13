@@ -66,7 +66,7 @@ export const trySettleTaskPlanEnd = (
   const gate = meta.taskPlanEndGate
   if (!gate.endReceived || !gate.pendingStatus) return
   store.getState().updateCurrentChatStatus({ status: gate.pendingStatus })
-  store.getState().updateState({ cancelTaskLoading: false })
+  store.getState().updateState({ cancelChatLoading: false })
   meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
 }
 

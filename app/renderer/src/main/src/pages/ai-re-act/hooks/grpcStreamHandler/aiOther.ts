@@ -75,7 +75,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
   // 初始化任务规划运行态数据和部分UI状态
   store.getState().updateState({
     showPlanList: true,
-    cancelTaskLoading: false,
+    cancelChatLoading: false,
     currentChatStatus: {
       questionID: startInfo['re-act_task'],
       status: AITaskStatus.inProgress,
@@ -83,8 +83,6 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
     },
   })
   store.getState().updateCurrentLoadingTitle({ planTitle: '加载中...', taskTitle: '加载中...' })
-  // 重置当前任务树详情
-  store.getState().updatePlanTree(cloneDeep(DefaultCurrentExecTaskTree))
 }
 const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
   const { res, store, rawData, meta } = requestInfo
@@ -213,6 +211,10 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
       },
       focusMode: data.focus_mode ? data.focus_mode : '',
     })
+    // 重置当前任务树详情
+    store.getState().updatePlanTree(cloneDeep(DefaultCurrentExecTaskTree))
+    // 刷新历史任务树
+    sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   }
 
   // 用户问题的UI回显
@@ -359,7 +361,7 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
       } else {
         // 该问题对话不存在异步任务
         store.getState().updateCurrentChatStatus({ status: info.react_task_now_status })
-        store.getState().updateState({ focusMode: '', cancelCasualLoading: false })
+        store.getState().updateState({ focusMode: '', cancelChatLoading: false })
       }
     }
   }

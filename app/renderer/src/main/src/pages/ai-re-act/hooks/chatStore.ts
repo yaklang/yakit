@@ -74,8 +74,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       initLoading: false,
       grpcLoadMoreLoading: false,
 
-      cancelCasualLoading: false,
-      cancelTaskLoading: false,
+      cancelChatLoading: false,
       requestHistoryState: {
         initLoading: false,
         casualLoadMoreLoading: false,

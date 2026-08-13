@@ -290,7 +290,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     if (taskStatusRunning && taskId) {
       pendingDetachedPlanSubmitRef.current = true
       store.getState().updateState({
-        cancelTaskLoading: true,
+        cancelChatLoading: true,
       })
       const params: AIInputEvent = {
         IsSyncMessage: true,
