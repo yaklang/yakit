@@ -38,7 +38,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const planHistoryList = useStore(store, (state) => state.planHistoryList ?? cloneDeep(DefaultPlanHistoryList))
   const taskTree = useStore(store, (state) => state.taskChat.plan.task_tree ?? [])
   const taskName = useStore(store, (state) => state.taskChat.plan.root_task_name ?? '')
-  const coordinatorId = useStore(store, (state) => state.taskStatus.coordinatorId ?? '')
+  const coordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId ?? '')
 
   const currentTaskItem = useCreation(() => {
     const item: AIAgentGrpcApi.PlanHistory = {
@@ -150,7 +150,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
-  const isExecuting = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
+  const isExecuting = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
   const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
   const execute = useStore(store, (state) => state.execute)
 
@@ -174,13 +174,13 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
    * TODO - 现在的版本中，任务中断后状态不一定是error
    */
   const isShow = useMemoizedFn(() => {
-    const taskStatus = store.getState().taskStatus
-    const currentCoordinatorId = taskStatus?.coordinatorId || ''
+    const currentChatStatus = store.getState().currentChatStatus
+    const currentCoordinatorId = currentChatStatus?.coordinatorId || ''
 
     let show = true
     if (!execute) return true
     if (coordinatorId === currentCoordinatorId) {
-      show = taskStatus?.status !== AITaskStatus.inProgress
+      show = currentChatStatus?.status !== AITaskStatus.inProgress
     }
     // 如果当前有任务正在等待被恢复
     if (sendRecoverParamsRef.current) {
@@ -212,8 +212,8 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
     sendRecoverParamsRef.current = undefined
   })
   const onRecover = useMemoizedFn(() => {
-    const taskStatus = store.getState().taskStatus
-    const currentTaskId = taskStatus.taskID
+    const currentChatStatus = store.getState().currentChatStatus
+    const currentTaskId = currentChatStatus.questionID
 
     if (!coordinatorId) return
     sendRecoverParamsRef.current = {
@@ -223,7 +223,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
     store.getState().updateState({
       cancelTaskLoading: true,
     })
-    if (taskStatus.status === AITaskStatus.inProgress && currentTaskId) {
+    if (currentChatStatus.status === AITaskStatus.inProgress && currentTaskId) {
       // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
       const info: AIInputEvent = {
         IsSyncMessage: true,

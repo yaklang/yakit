@@ -44,7 +44,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
   // 内部订阅 Store 数据
   const store = useCurrentStore()
   const focusMode = useStore(store, (state) => state.focusMode)
-  const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
+  const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
   const sessionRef = useRef<string | undefined>(undefined)
 
@@ -58,7 +58,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
     if (!activeChat?.Title || !activeChat?.SessionID) return
     if (sessionRef.current !== activeChat.SessionID) return
     emitTaskContentTab('update', activeChat.Title)
-  }, [activeChat?.Title, activeChat?.SessionID, currentCasualTaskID])
+  }, [activeChat?.Title, activeChat?.SessionID, currentChatStatusQuestionID])
 
   const defaultTaskTabLabel = useCreation(() => {
     return typeof title === 'string' ? title : '自由对话'
@@ -66,7 +66,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
 
   const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
     const sessionId = activeChat?.SessionID
-    const taskId = currentCasualTaskID
+    const taskId = currentChatStatusQuestionID
     if (!taskId || !sessionId) return false
     if (getSetting()?.Source !== 'ai') return false
     emiter.emit(
@@ -86,15 +86,15 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
 
   const syncCasualTaskTab = useMemoizedFn(() => {
     const sessionId = activeChat?.SessionID
-    if (!currentCasualTaskID || !sessionId) return
+    if (!currentChatStatusQuestionID || !sessionId) return
     if (getSetting().Source !== AISourceEnum.aiAgent) return false
     emitTaskContentTab('add')
     sessionRef.current = sessionId
   })
 
   const onDetails = useMemoizedFn(() => {
-    if (!currentCasualTaskID) {
-      yakitNotify('error', 'currentCasualTaskID不存在')
+    if (!currentChatStatusQuestionID) {
+      yakitNotify('error', 'currentChatStatus.questionID不存在')
       return
     }
     if (getSetting().Source !== AISourceEnum.aiAgent) {
@@ -122,7 +122,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
               <AIReActChatHeaderExternalRightIcon rightIcon={externalParameters?.rightIcon} />
             ) : (
               <>
-                {currentCasualTaskID && (
+                {currentChatStatusQuestionID && (
                   <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
                     任务详情
                   </YakitButton>
@@ -209,7 +209,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
   const { rightIcon } = props
 
   const store = useCurrentStore()
-  const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
+  const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
   const { setting } = useAIAgentStore()
 
@@ -236,7 +236,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
 
   return rightIcon ? (
     <>
-      {currentCasualTaskID && rightIcon.taskDetails && <TaskDetailsPopover />}
+      {currentChatStatusQuestionID && rightIcon.taskDetails && <TaskDetailsPopover />}
       {rightIcon.dataDetails && (
         <AIContextToken iconOnly buttonProps={rightIcon.dataDetails === true ? undefined : rightIcon.dataDetails} />
       )}

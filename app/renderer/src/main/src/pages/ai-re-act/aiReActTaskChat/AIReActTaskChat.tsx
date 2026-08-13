@@ -144,6 +144,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 
 export default AIReActTaskChat
 
+/**@deprecated */
 export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
   const { scrollToBottom, onScrollToBottom } = props
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -366,7 +367,7 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
   const sessionId = useCurrentSessionId()
   const meta = useCurrentMeta()
   const store = useCurrentStore()
-  const taskStatus = useStore(store, (state) => state.taskStatus)
+  const currentChatStatus = useStore(store, (state) => state.currentChatStatus)
   const execute = useStore(store, (state) => state.execute)
   const syncIDUpdate = useStore(store, (state) => state.syncIDUpdate)
 
@@ -377,10 +378,10 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
   const syncIdOfAddAndReExecute = useRef<string>('')
 
   useUpdateEffect(() => {
-    if (taskStatus.status !== AITaskStatus.inProgress && currentCoordinatorIdRef.current) {
+    if (currentChatStatus.status !== AITaskStatus.inProgress && currentCoordinatorIdRef.current) {
       onSendRecover(currentCoordinatorIdRef.current)
     }
-  }, [taskStatus.status])
+  }, [currentChatStatus.status])
 
   useEffect(() => {
     if (
@@ -408,8 +409,8 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
     // 加入上下文后，停止任务再恢复任务
     syncIdOfAddAndReExecute.current = randomString(8)
     onAddToContext(syncIdOfAddAndReExecute.current)
-    const taskId = taskStatus.taskID
-    const coordinatorId = taskStatus.coordinatorId
+    const taskId = currentChatStatus.questionID
+    const coordinatorId = currentChatStatus.coordinatorId
     if (!coordinatorId) return
     currentCoordinatorIdRef.current = coordinatorId
 
@@ -417,7 +418,7 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
       cancelTaskLoading: true,
     })
 
-    if (taskStatus.status === AITaskStatus.inProgress && taskId) {
+    if (currentChatStatus.status === AITaskStatus.inProgress && taskId) {
       // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
       const info: AIInputEvent = {
         IsSyncMessage: true,
@@ -523,7 +524,7 @@ export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = R
   const store = useCurrentStore()
 
   const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
-  const status = useStore(store, (state) => state.taskStatus.status)
+  const status = useStore(store, (state) => state.currentChatStatus.status)
   const renderBtn = useMemoizedFn(() => {
     switch (status) {
       case AITaskStatus.inProgress:

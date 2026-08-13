@@ -15,7 +15,7 @@ import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
 import type { ReActChatRenderElement, ChatReferenceMaterialPayload } from '../hooks/aiRender'
 import Loading from '@/components/Loading/Loading'
-import { ScrollText, default as TaskLoading } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
+import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -118,11 +118,13 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const store = useCurrentStore()
     const casualChatElements = useStore(store, (state) => state.casualChat.elements)
     const chatLength = useStore(store, (state) => state.casualChat.elements.length)
-    const casualTitle = useStore(store, (state) => state.casualTitle)
+    const casualTitle = useStore(store, (state) => state.currentLoadingTitle.casualTitle)
+    const planTitle = useStore(store, (state) => state.currentLoadingTitle.planTitle)
+    const taskTitle = useStore(store, (state) => state.currentLoadingTitle.taskTitle)
     const execute = useStore(store, (state) => state.execute)
-    // 任务规划运行态：进入任务规划后底部用 TaskLoading 展示
-    const taskCoordinatorId = useStore(store, (state) => state.taskStatus.coordinatorId)
-    const taskStatus = useStore(store, (state) => state.taskStatus.status)
+    // 任务规划运行态：进入任务规划后底部 loading 从 planTitle/taskTitle 取值
+    const taskCoordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId)
+    const taskStatus = useStore(store, (state) => state.currentChatStatus.status)
     const isTaskPlanning = !!taskCoordinatorId && taskStatus === AITaskStatus.inProgress
     // 向上加载历史（recovery_history）的在途状态，给 Header 转圈提示
     const grpcLoadMoreLoading = useStore(store, (state) => state.grpcLoadMoreLoading)
@@ -204,36 +206,26 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     )
 
     const Footer = useCallback(() => {
-      // 进入任务规划后，用任务规划的 loading + title
-      if (isTaskPlanning) {
-        return (
-          <div style={{ maxWidth: '784px', margin: '0 auto' }}>
-            <TaskLoading />
-          </div>
-        )
-      }
-      // 未进入任务规划，用自由对话的 loading + title
-      return execute ? (
-        <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
-          {casualTitle ? (
-            <Loading
-              size={14}
-              style={{
-                marginTop: 8,
-              }}
-            >
-              <div className="text-ellipsis" style={{ fontWeight: 400, display: 'flex', alignItems: 'center' }}>
-                <ScrollText text={casualTitle as string} />
-              </div>
-            </Loading>
-          ) : (
-            <div className={styles['end']}>当前会话已结束</div>
+      if (!execute) return chatLength ? <div className={styles['end']}>当前会话已停止</div> : null
+      // 任务规划进行中时从 planTitle/taskTitle 取值，否则从 casualTitle 取值
+      const mainTitle = isTaskPlanning ? planTitle : casualTitle
+      const subTitle = isTaskPlanning ? taskTitle : ''
+      if (!mainTitle) return <div className={styles['end']}>当前会话已结束</div>
+      return (
+        <div className={styles['footer-loading']}>
+          <Loading size={14} style={{ marginTop: 8 }}>
+            <div className={styles['footer-loading-title']}>
+              <ScrollText text={mainTitle as string} />
+            </div>
+          </Loading>
+          {!!subTitle && (
+            <div className={styles['footer-loading-subtitle']}>
+              <ScrollText text={subTitle as string} />
+            </div>
           )}
         </div>
-      ) : chatLength ? (
-        <div className={styles['end']}>当前会话已停止</div>
-      ) : null
-    }, [casualTitle, execute, chatLength, isTaskPlanning])
+      )
+    }, [casualTitle, planTitle, taskTitle, execute, chatLength, isTaskPlanning])
     const Header = useCallback(
       () =>
         grpcLoadMoreLoading ? (

@@ -14,26 +14,26 @@ export const AIToDoListWrapper: React.FC<AIToDoListWrapperProps> = React.memo((p
   const { activeChat } = useAIAgentStore()
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
-  const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
+  const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
   const todoListUpdate = useStore(store, (state) => state.casualChat?.todoListUpdate)
 
   const todoData: TodoListCardData = useCreation(() => {
     if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
     try {
-      return rawData.taskDetailsMap.get(currentCasualTaskID)?.todoList || cloneDeep(DefaultTodoListCardData)
+      return rawData.taskDetailsMap.get(currentChatStatusQuestionID)?.todoList || cloneDeep(DefaultTodoListCardData)
     } catch (error) {
       return cloneDeep(DefaultTodoListCardData)
     }
-  }, [todoListUpdate, activeChat?.SessionID, currentCasualTaskID])
+  }, [todoListUpdate, activeChat?.SessionID, currentChatStatusQuestionID])
 
   const reActTaskId: string = useCreation(() => {
     if (!activeChat?.SessionID) return ''
-    return rawData.taskDetailsMap.get(currentCasualTaskID)?.taskId ?? ''
-  }, [todoListUpdate, activeChat?.SessionID, currentCasualTaskID])
+    return rawData.taskDetailsMap.get(currentChatStatusQuestionID)?.taskId ?? ''
+  }, [todoListUpdate, activeChat?.SessionID, currentChatStatusQuestionID])
 
   return (
     <>
-      {reActTaskId === currentCasualTaskID && todoData?.items?.length > 0 && (
+      {reActTaskId === currentChatStatusQuestionID && todoData?.items?.length > 0 && (
         <div className={styles['todoList-wrapper']}>
           <AIToDoList className={styles['to-do-list']} todoData={todoData} />
         </div>

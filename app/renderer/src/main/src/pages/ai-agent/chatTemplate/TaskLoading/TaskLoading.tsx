@@ -42,17 +42,17 @@ export const ScrollText: FC<{ text?: string }> = ({ text = '' }) => {
     </div>
   )
 }
-
+/**@deprecated */
 const TaskLoading: FC<{
   className?: string
 }> = ({ className }) => {
   const store = useCurrentStore()
-  const task = useStore(store, (state) => state.taskStatus.task)
-  const isRunning = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
-  const plan = useStore(store, (state) => state.taskStatus.plan)
+  const planTitle = useStore(store, (state) => state.currentLoadingTitle.planTitle)
+  const taskTitle = useStore(store, (state) => state.currentLoadingTitle.taskTitle)
+  const isRunning = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
   const systemStream = useAISystemStreamText()
   const { displayValue, mode } = useAISystemStream({
-    value: task,
+    value: taskTitle,
     systemStream,
   })
   return (
@@ -65,7 +65,7 @@ const TaskLoading: FC<{
               marginTop: 8,
             }}
           >
-            <div className={styles['plan-text']}>{plan}</div>
+            <div className={styles['plan-text']}>{planTitle}</div>
           </Loading>
           <div className={styles['task-text']}>
             {mode === 'value' ? displayValue : <ScrollText text={displayValue as string} />}

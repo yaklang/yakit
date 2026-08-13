@@ -52,6 +52,23 @@
     font-weight: bold;
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
+  .footer-loading {
+    max-width: 784px;
+    margin: 0 auto;
+    .footer-loading-title {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+    .footer-loading-subtitle {
+      width: 100%;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      padding-left: 16px;
+    }
+  }
   .scroll-to-bottom-wrapper {
     position: absolute;
     bottom: 8px;

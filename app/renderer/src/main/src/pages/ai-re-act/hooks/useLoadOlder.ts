@@ -45,12 +45,10 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
     chatType === 'reAct' ? s.casualChat.elements.length : s.taskChat.elements.length,
   )
   /**
-   * 消息处理中（自由对话 casualLoading / 任务规划 taskStatus.status=processing）。
+   * 消息处理中（currentChatStatus.status=processing）。
    * 处理中禁止 gRPC 向上加载，避免与流式写入并发导致后端表死锁（IDB hydrate 不受影响）。
    */
-  const processing = useStore(store, (s) =>
-    chatType === 'reAct' ? s.casualLoading : s.taskStatus.status === AITaskStatus.inProgress,
-  )
+  const processing = useStore(store, (s) => s.currentChatStatus.status === AITaskStatus.inProgress)
 
   /** 上次 startIndex（数组下标），用于判断滚动方向 */
   const lastStartIndexRef = useRef(-1)
