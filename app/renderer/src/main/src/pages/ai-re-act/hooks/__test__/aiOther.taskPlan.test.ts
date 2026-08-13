@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { aiOtherDataHandlers } from '../grpcStreamHandler/aiOther'
-import { AITaskStatus } from '../grpcApi'
-import { DefaultTaskPlanEndGate } from '../defaultConstant'
+import { AIInputEventSyncTypeEnum, AITaskStatus } from '../grpcApi'
+import { DefaultCurrentExecTaskTree, DefaultTaskPlanEndGate } from '../defaultConstant'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
+import { AIChatQSDataTypeEnum } from '../aiRender'
 
 vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
@@ -40,7 +41,25 @@ describe('aiOther task plan gate', () => {
       planTitle: '加载中...',
       taskTitle: '加载中...',
     })
-    expect(sendRequest).toHaveBeenCalled()
+    expect(req.store.getState().cancelChatLoading).toBe(false)
+    expect(sendRequest).toHaveBeenCalledWith({
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+    })
+    expect(sendRequest).toHaveBeenCalledWith({
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN,
+    })
+  })
+
+  it('D2: start does not reset current plan tree', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('start_plan_and_execution', startPayload),
+      chatType: 'reAct',
+    })
+    req.store.getState().updatePlanTree({ root_task_name: 'keep', task_tree: [] })
+    aiOtherDataHandlers.start_plan_and_execution(req)
+    expect(req.store.getState().taskChat.plan.root_task_name).toBe('keep')
   })
 
   it('D2: end then change settles', () => {
@@ -134,6 +153,74 @@ describe('aiOther task plan gate', () => {
     expect(req.store.getState().focusMode).toBe('')
     expect(req.store.getState().cancelChatLoading).toBe(false)
     expect(req.meta.taskPlanEndGate.pendingStatus).toBeUndefined()
+  })
+
+  it('D2: dequeue reason=normal updates chat status and refreshes plan list', () => {
+    const sendRequest = vi.fn()
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          reason: 'normal',
+          react_task_id: 'q-normal',
+          react_task_input: 'hello',
+          focus_mode: 'focus-a',
+          react_task_user_input_uuid: '',
+          queue_len: 1,
+        },
+        { NodeId: 'react_task_dequeue', TaskId: 'q-normal' },
+      ),
+      chatType: 'reAct',
+      sendRequest,
+    })
+    req.store.getState().updatePlanTree({ root_task_name: 'old-plan', task_tree: [] })
+
+    aiOtherDataHandlers.react_task_dequeue(req)
+
+    expect(req.store.getState().currentChatStatus).toMatchObject({
+      questionID: 'q-normal',
+      coordinatorId: '',
+      status: AITaskStatus.inProgress,
+    })
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('问题执行中...')
+    expect(req.store.getState().focusMode).toBe('focus-a')
+    expect(req.store.getState().taskChat.plan).toEqual(DefaultCurrentExecTaskTree)
+    expect(req.rawData.taskDetailsMap.has('q-normal')).toBe(true)
+    expect(req.rawData.contents.get('q-normal')?.type).toBe(AIChatQSDataTypeEnum.QUESTION)
+    expect(sendRequest).toHaveBeenCalledWith({
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+    })
+    expect(sendRequest).toHaveBeenCalledWith({
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+    })
+  })
+
+  it('D2: dequeue ignores non-normal reason', () => {
+    const sendRequest = vi.fn()
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          reason: 'cancel',
+          react_task_id: 'q-cancel',
+          react_task_input: 'skip',
+          focus_mode: '',
+          react_task_user_input_uuid: '',
+          queue_len: 0,
+        },
+        { NodeId: 'react_task_dequeue', TaskId: 'q-cancel' },
+      ),
+      chatType: 'reAct',
+      sendRequest,
+    })
+
+    aiOtherDataHandlers.react_task_dequeue(req)
+
+    expect(req.store.getState().currentChatStatus.questionID).toBe('')
+    expect(req.rawData.contents.get('q-cancel')).toBeUndefined()
+    expect(sendRequest).not.toHaveBeenCalled()
   })
 
   it('D2: plan updates task tree when chatType=task', () => {

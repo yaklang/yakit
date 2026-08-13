@@ -357,9 +357,11 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
         meta.taskPlanEndGate.pendingStatus = info.react_task_now_status as NonNullable<
           AIAgentChatMetaData['taskPlanEndGate']['pendingStatus']
         >
+        console.log('task-changed', meta.taskPlanEndGate)
         trySettleTaskPlanEnd(store, meta)
       } else {
         // 该问题对话不存在异步任务
+        console.log('casual-end', meta.taskPlanEndGate)
         store.getState().updateCurrentChatStatus({ status: info.react_task_now_status })
         store.getState().updateState({ focusMode: '', cancelChatLoading: false })
       }

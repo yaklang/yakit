@@ -10,6 +10,7 @@ describe('chatStore basics', () => {
     expect(store.getState().currentChatStatus).toEqual(DefaultAgentChatStatus)
     expect(store.getState().currentLoadingTitle).toEqual(DefaultAgentLoadingTitle)
     expect(store.getState().currentReviewDetail).toEqual({ token: '', renderNum: 0 })
+    expect(store.getState().cancelChatLoading).toBe(false)
 
     store.getState().updateState({ execute: true })
     store.getState().updateCurrentLoadingTitle({ casualTitle: 'hi' })

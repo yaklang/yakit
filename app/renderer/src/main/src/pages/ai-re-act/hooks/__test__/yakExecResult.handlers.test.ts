@@ -29,6 +29,19 @@ describe('yakExecResult handlers', () => {
     expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('working')
   })
 
+  it('D10: status updates taskTitle for task loading key', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { key: 're-act-loading-status-key', value: 'running-task' },
+        { NodeId: 'status' },
+      ),
+      chatType: 'task',
+    })
+    aiYakExecResultDataHandlers.status(req)
+    expect(req.store.getState().currentLoadingTitle.taskTitle).toBe('running-task')
+  })
+
   it('D10: status updates plan title for task', () => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(

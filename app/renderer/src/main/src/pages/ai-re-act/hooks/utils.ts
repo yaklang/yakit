@@ -104,6 +104,7 @@ export const handleTaskPlanEnd: (
   if (isChatEnd) {
     meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
   } else {
+    console.log('task-end', meta.taskPlanEndGate)
     meta.taskPlanEndGate.endReceived = true
     trySettleTaskPlanEnd(store, meta)
   }
