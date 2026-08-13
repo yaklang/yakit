@@ -433,11 +433,39 @@ export declare namespace API {
     /**
      * 责任人id, 逗号分割
      */
-    workerUid: string
+    workerUid?: string
     /**
-     * 编辑需要
+     * 版本线
      */
-    taskId?: string
+    versionLine?: string
+    /**
+     * 投产类型
+     */
+    releaseType?: string
+    /**
+     * 系统中文名
+     */
+    sysChi?: string
+    /**
+     * 系统英文名
+     */
+    sysEng?: string
+    /**
+     * 测试人员
+     */
+    adUserNames?: string
+    /**
+     * 测试经理
+     */
+    testManagers?: string
+    /**
+     * 开发机构名称
+     */
+    devOrgName?: string
+    /**
+     * 开发机构ID(去重校验)
+     */
+    devOrgId?: string
   }
   export interface TaskListResponse extends Paging {
     data: TaskList[]
@@ -604,8 +632,8 @@ export declare namespace API {
     waiting_verified: boolean
     reverse_token: string
     runtime_id: string
-    quoted_request: string
-    quoted_response: string
+    quoted_request?: string
+    quoted_response?: string
     is_potential: boolean
     cve: string
     description: string
@@ -718,6 +746,21 @@ export declare namespace API {
   export interface QueryPluginsWhereList {
     token?: string
     uuid?: string[]
+  }
+  export interface QoSStatus {
+    configured?: QoSPolicy
+    effective?: QoSPolicy
+  }
+  export interface QoSPolicy {
+    disabled?: boolean
+    requestRPSOverride?: number
+    requestRPMOverride?: number
+    tokenTPMOverride?: number
+    outputTPSOverride?: number
+    concurrentOverride?: number
+    qoSLevel1RatioOverride?: number
+    qoSLevel2RatioOverride?: number
+    qoSHardRatioOverride?: number
   }
   export interface ProjectListResponse extends Paging {
     data: ProjectList[]
@@ -1166,6 +1209,50 @@ export declare namespace API {
      * 不通过时必传
      */
     logDescription?: string
+  }
+  export interface PayRequest {
+    money?: number
+    /**
+     * 运营用户充值时指定目标用户的 AIBalance uid
+     */
+    user_uid?: string
+  }
+  export interface PaymentQrcodeResponse {
+    /**
+     * 支付路径
+     */
+    codeUrl?: string
+    outTradeNo?: string
+  }
+  export interface PaymentOrderResponse {
+    /**
+     * 商户订单号
+     */
+    outTradeNo?: string
+    /**
+     * 支付渠道 wechatpay / alipay
+     */
+    channel?: string
+    /**
+     * 订单金额（元）
+     */
+    money?: number
+    /**
+     * 本次支付预计增加的 token 数
+     */
+    tokenAdded?: number
+    /**
+     * 订单状态 pending / paid / failed
+     */
+    status?: string
+    /**
+     * 支付失败原因（关闭/取消/超时等）
+     */
+    failReason?: string
+    /**
+     * 支付成功时间戳（秒），未支付为 0
+     */
+    payTime?: number
   }
   export interface PayloadWhere {
     group?: string
@@ -1668,6 +1755,8 @@ export declare namespace API {
     department?: string
     beforeRiskCreatedAt?: number
     afterRiskCreatedAt?: number
+    beforeCreatedAt?: number
+    afterCreatedAt?: number
   }
   export interface GetRiskRequest extends Pagination, GetRiskWhere {}
   export interface GetRemoteWhere {
@@ -1818,6 +1907,35 @@ export declare namespace API {
     role_id?: number
     nickName?: string
   }
+  export interface EditTaskRequest {
+    taskId: string
+    title?: string
+    description?: string
+    /**
+     * 责任人id, 逗号分割
+     */
+    workerUid?: string
+    /**
+     * 版本线
+     */
+    versionLine?: string
+    /**
+     * 投产类型
+     */
+    releaseType?: string
+    /**
+     * 测试人员
+     */
+    adUserNames?: string
+    /**
+     * 开发机构名称
+     */
+    devOrgName?: string
+    /**
+     * 开发机构ID(去重校验)
+     */
+    devOrgId?: string
+  }
   export interface DepartmentListResponse extends Paging {
     data: DepartmentList[]
   }
@@ -1898,15 +2016,34 @@ export declare namespace API {
     user_name: string
     role?: string
   }
+  export interface ApiUserUsageResponse {
+    uid?: string
+    kind?: string
+    data?: AiApiUserUsageItem[]
+    summary?: AiApiUserUsageSummary
+  }
+  export interface ApiUserResponse {
+    uid?: string
+    username?: string
+    remark?: string
+    tokenLimit?: number
+    tokenUsed?: number
+    tokenLimitEnable?: boolean
+    quotaInitialized?: boolean
+    tokenLimitRMB?: string
+    tokenUsedRMB?: string
+    activeDays?: number
+    lastUsedTime?: string
+    createdAt?: string
+    deletedAt?: string
+    qoS?: QoSStatus
+  }
   export interface ApiKeysResponse {
-    data: ApiKeyDetail[]
+    data: ApiKeyDetail
   }
   export interface ApiKeysRequest {
-    keyword?: string
-    username?: string
-    active?: string
-    page?: number
-    pageSize?: number
+    page: number
+    pageSize: number
   }
   export interface ApiKeyDetail {
     inputBytes?: number
@@ -1914,12 +2051,12 @@ export declare namespace API {
     usageCount?: number
     successCount?: number
     failureCount?: number
-    lastUsedTime?: number
+    lastUsedTime?: string
     active?: boolean
     webSearchCount?: number
     remark?: string
     metaInfo?: string
-    apiKey?: string
+    apiKey?: string[]
     allowedModels?: string[]
     tokenLimit?: number
     tokenLimitEnable?: boolean
@@ -1942,6 +2079,32 @@ export declare namespace API {
   export interface AIConfigHealthCheckRequest {
     content?: string
     config?: ThirdPartyApplicationConfig
+  }
+  export interface AiApiUserUsageSummary {
+    requestCount?: number
+    estimatedCount?: number
+    uncachedInputTokens?: number
+    outputTokens?: number
+    cacheCreationTokens?: number
+    cacheHitTokens?: number
+    weightedTokens?: number
+    rmb?: string
+    activeDays?: number
+  }
+  export interface AiApiUserUsageItem {
+    date?: string
+    uid?: string
+    apiKeyID?: number
+    requestedModel?: string
+    internalModel?: string
+    requestCount?: number
+    estimatedCount?: number
+    uncachedInputTokens?: number
+    outputTokens?: number
+    cacheCreationTokens?: number
+    cacheHitTokens?: number
+    weightedTokens?: number
+    lastUsedTime?: string
   }
   export interface ActionSucceeded {
     /**

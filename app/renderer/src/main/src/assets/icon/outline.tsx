@@ -6427,3 +6427,21 @@ const OutlineLandPlot = () => (
 export const OutlineLandPlotIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineLandPlot} {...props} />
 }
+
+const OutlineArrowUpRight = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M11.3333 11.3333V4.66663H4.66663M11.3333 4.66663L4.66663 11.3333"
+      stroke="var(--Colors-Use-Main-Primary)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/**
+ * @description Outline/ArrowUpRight Icon/ArrowUpRight
+ */
+export const OutlineArrowUpRightIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineArrowUpRight} {...props} />
+}

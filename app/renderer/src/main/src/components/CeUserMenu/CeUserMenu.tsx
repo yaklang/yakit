@@ -11,6 +11,9 @@ import yakitImg from '@/assets/yakit.jpg'
 import { useMemoizedFn } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import { getTokenLimit, getTokenPercent, getTokenUsed } from './CeUsageStatisticsModal'
+import { OutlineDocumentduplicateIcon } from '@/assets/icon/outline'
+import { setClipboardText } from '@/utils/clipboard'
+import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 
 export interface CeUserItemProps extends YakitMenuItemProps {
   icon?: React.ReactNode
@@ -66,11 +69,13 @@ export const CeUserMenuContent: React.FC<CeUserMenuContentProps> = (props) => {
 interface CeUserInfoProps {
   userInfo: UserInfoProps
   onOpenStatistics?: () => void
-  apiKeysInfo?: API.ApiKeyDetail
+  onOpenRecharge?: () => void
+  apiKeysInfo?: API.ApiUserUsageResponse
+  apiKeys?: API.ApiKeyDetail
 }
 
 export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
-  const { userInfo, onOpenStatistics, apiKeysInfo } = props
+  const { userInfo, onOpenStatistics, onOpenRecharge, apiKeysInfo, apiKeys } = props
   const { t } = useI18nNamespaces(['layout'])
 
   const platformType = UserPlatformType[userInfo.platform || '']
@@ -91,46 +96,99 @@ export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
     return yakitImg
   }, [userInfo, platformType])
 
-  const handleClick = useMemoizedFn((e: React.MouseEvent) => {
-    if (!apiKeysInfo) {
-      return
-    }
+  const firstApiKey = apiKeys?.apiKey?.[0] || ''
+
+  const tokenPercent = useMemo(() => {
+    if (!apiKeys) return 0
+    return getTokenPercent(apiKeys)
+  }, [apiKeys])
+
+  const tokenUsed = useMemo(() => {
+    if (!apiKeys) return 0
+    return getTokenUsed(apiKeys)
+  }, [apiKeys])
+
+  const tokenLimit = useMemo(() => {
+    if (!apiKeys) return 0
+    return getTokenLimit(apiKeys)
+  }, [apiKeys])
+
+  /** 余额（元）：1 元 = 10M Token */
+  const balanceYuanText = useMemo(() => {
+    const usedNum = typeof tokenUsed === 'number' ? tokenUsed : Number(tokenUsed)
+    const tokenBalanceM = Math.max(0, tokenLimit - (Number.isFinite(usedNum) ? usedNum : 0))
+    const yuan = Math.round((tokenBalanceM / 10) * 100) / 100
+    return Number.isInteger(yuan) ? String(yuan) : yuan.toFixed(2).replace(/\.?0+$/, '')
+  }, [tokenLimit, tokenUsed])
+
+  const handleOpenStatistics = useMemoizedFn((e: React.MouseEvent) => {
+    if (!apiKeysInfo) return
     e.stopPropagation()
     onOpenStatistics?.()
   })
 
+  const handleOpenRecharge = useMemoizedFn((e: React.MouseEvent) => {
+    e.stopPropagation()
+    onOpenRecharge?.()
+  })
+
+  const handleCopyApiKey = useMemoizedFn((e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!firstApiKey) return
+    setClipboardText(firstApiKey)
+  })
+
   return (
-    <div
-      className={classNames(styles['ce-user-info'], {
-        [styles['ce-user-info-clickable']]: !!apiKeysInfo,
-      })}
-      onClick={handleClick}
-    >
+    <div className={styles['ce-user-info']}>
       <div className={styles['ce-user-info-avatar-wrapper']}>
-        <Avatar src={avatarSrc} size={40} />
+        <Avatar src={avatarSrc} size={32} />
         <div className={styles['ce-user-info-name-wrapper']}>
-          <div className={styles['ce-user-info-name']}>{userName}</div>
-          {/* <div className={styles['ce-user-info-email']}>{MOCK_USER_EMAIL}</div> */}
+          <div className={classNames(styles['ce-user-info-name'], 'yakit-single-line-ellipsis')}>{userName}</div>
+          {!!firstApiKey && (
+            <div className={styles['ce-user-info-apikey-row']}>
+              <span
+                className={classNames(styles['ce-user-info-apikey'], 'yakit-single-line-ellipsis')}
+                title={firstApiKey}
+              >
+                {firstApiKey}
+              </span>
+              <YakitButton
+                type="text2"
+                size="small"
+                className={styles['ce-user-info-apikey-copy']}
+                icon={<OutlineDocumentduplicateIcon />}
+                onClick={handleCopyApiKey}
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {apiKeysInfo && (
-        <div className={styles['ce-user-info-token']}>
-          <div className={styles['ce-user-info-progress-track']}>
-            <div
-              className={styles['ce-user-info-progress-fill']}
-              style={{ width: `${getTokenPercent(apiKeysInfo)}%` }}
-            />
+      {apiKeys && (
+        <div className={styles['ce-user-info-token']} onClick={handleOpenStatistics}>
+          <div className={styles['ce-user-info-balance-row']}>
+            <span className={styles['ce-user-info-balance']}>
+              {t('CeUserMenu.balance')}
+              <span className={styles['ce-user-info-balance-value']}>
+                {apiKeys.tokenLimitEnable ? `¥${balanceYuanText}` : t('CeUserMenu.unlimited')}
+              </span>
+            </span>
+            <button type="button" className={styles['ce-user-info-recharge']} onClick={handleOpenRecharge}>
+              {t('CeUserMenu.recharge')}
+            </button>
+          </div>
+          <div className={styles['ce-user-info-progress-box']}>
+            <div className={styles['ce-user-info-progress-track']}>
+              <div className={styles['ce-user-info-progress-fill']} style={{ width: `${tokenPercent}%` }} />
+            </div>
           </div>
           <div className={styles['ce-user-info-token-row']}>
             <span className={styles['ce-user-info-token-label']}>
               {t('CeUserMenu.tokenConsumption')}
-              <span className={styles['ce-user-info-token-percent']}>({getTokenPercent(apiKeysInfo)}%)</span>
+              <span className={styles['ce-user-info-token-percent']}>({tokenPercent.toFixed(1)}%)</span>
             </span>
             <span className={styles['ce-user-info-token-value']}>
-              {apiKeysInfo?.tokenLimitEnable
-                ? `${getTokenUsed(apiKeysInfo)}/${getTokenLimit(apiKeysInfo)}M`
-                : t('CeUserMenu.unlimited')}
+              {apiKeys.tokenLimitEnable ? `${tokenUsed}/${tokenLimit}M` : t('CeUserMenu.unlimited')}
             </span>
           </div>
         </div>
