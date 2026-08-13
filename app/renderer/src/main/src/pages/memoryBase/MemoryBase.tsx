@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import type {
   MemoryBaseProps,
-  AITextareaProps,
   MemoryQueryProps,
   MemoryTableProps,
   AIMemoryEntityFilter,
@@ -16,17 +15,14 @@ import type {
 import styles from './MemoryBase.module.scss'
 import classNames from 'classnames'
 import { ChevrondownButton, ChevronleftButton } from '../ai-re-act/aiReActChat/AIReActComponent'
-import { QSInputTextarea } from '../ai-agent/template/template'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineArrowupIcon,
   OutlineQuestionmarkcircleIcon,
   OutlineRefreshIcon,
   OutlineTrashIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
 import { Badge, Divider, type RadioChangeEvent, Slider, Tooltip } from 'antd'
-import { OutlineSparklesColorsIcon } from '@/assets/icon/colors'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import numeral from 'numeral'
@@ -1214,35 +1210,6 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
       <div className={styles['open-wrapper']} onClick={() => setShow(true)}>
         <ChevrondownButton />
         <div className={styles['text']}>高级查询</div>
-      </div>
-    </div>
-  )
-})
-
-/**@deprecated UI发送变化，暂时不需要了 */
-const AITextarea: React.FC<AITextareaProps> = React.memo((props) => {
-  const { textProps } = props
-  return (
-    <div className={styles['query-input-wrapper']}>
-      <div className={styles['query-input-content']}>
-        <div className={styles['query-input']}>
-          <OutlineSparklesColorsIcon />
-          <QSInputTextarea
-            placeholder="请输入关注内容，Al 将帮你聚焦相关记忆..."
-            className={styles['query-input-text-area']}
-            {...textProps}
-          />
-        </div>
-        <div className={styles['query-input-footer']}>
-          <Divider type="vertical" />
-          <YakitButton
-            radius="50%"
-            icon={<OutlineArrowupIcon />}
-            onClick={(e) => {
-              e.stopPropagation()
-            }}
-          />
-        </div>
       </div>
     </div>
   )

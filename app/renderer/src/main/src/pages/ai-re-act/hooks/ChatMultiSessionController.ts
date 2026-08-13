@@ -66,7 +66,6 @@ const hasSessionRenderTree = (content?: SessionRenderContent): boolean => {
   if (!content) return false
   return (
     (content.casualElements?.length || 0) > 0 ||
-    (content.taskElements?.length || 0) > 0 ||
     Object.keys(content.items || {}).length > 0 ||
     Object.keys(content.groups || {}).length > 0 ||
     Object.keys(content.tasks || {}).length > 0
@@ -642,7 +641,6 @@ export class ChatMultiSessionController {
       groups: { ...state.groups },
       tasks: { ...state.tasks },
       casualElements: [...state.casualChat.elements],
-      taskElements: [...state.taskChat.elements],
     }
     void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
   }
@@ -1187,7 +1185,6 @@ export class ChatMultiSessionController {
           groups: { ...state.groups },
           tasks: { ...state.tasks },
           casualElements: [...state.casualChat.elements],
-          taskElements: [...state.taskChat.elements],
         }
         await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
         this.finishSessionRestoreLoading(sessionId)
@@ -1200,7 +1197,6 @@ export class ChatMultiSessionController {
             groups: { ...state.groups },
             tasks: { ...state.tasks },
             casualElements: [...state.casualChat.elements],
-            taskElements: [...state.taskChat.elements],
           }
           await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
           this.finishSessionRestoreLoading(sessionId)
@@ -1216,7 +1212,6 @@ export class ChatMultiSessionController {
           groups: { ...state.groups },
           tasks: { ...state.tasks },
           casualElements: [...state.casualChat.elements],
-          taskElements: [...state.taskChat.elements],
         }
         await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
       }
@@ -1301,7 +1296,6 @@ export class ChatMultiSessionController {
               groups: { ...state.groups },
               tasks: { ...state.tasks },
               casualElements: [...state.casualChat.elements],
-              taskElements: [...state.taskChat.elements],
             }
             void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
           }

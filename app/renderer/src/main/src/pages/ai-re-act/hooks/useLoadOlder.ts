@@ -41,9 +41,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
 
   /** recovery_history 在途状态（真实 gRPC loading，由 ChatMultiSessionController 置/关） */
   const loading = useStore(store, (s) => s.grpcLoadMoreLoading)
-  const dataLength = useStore(store, (s) =>
-    chatType === 'reAct' ? s.casualChat.elements.length : s.taskChat.elements.length,
-  )
+  const dataLength = useStore(store, (s) => s.casualChat.elements.length)
   /**
    * 消息处理中（currentChatStatus.status=processing）。
    * 处理中禁止 gRPC 向上加载，避免与流式写入并发导致后端表死锁（IDB hydrate 不受影响）。
@@ -163,7 +161,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   /** 取当前 chatType 的 elements */
   const getElements = useMemoizedFn(() => {
     const state = store.getState()
-    return chatType === 'reAct' ? state.casualChat.elements : state.taskChat.elements
+    return state.casualChat.elements
   })
 
   /**

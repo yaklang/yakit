@@ -8,11 +8,6 @@ export interface AIReActTaskChatProps {
   onTaskTabsChange?: (hasTabs: boolean) => void
 }
 
-export interface AIReActTaskChatContentProps {
-  scrollToBottom: boolean
-  onScrollToBottom: () => void
-}
-
 export interface AIReActTaskChatLeftSideProps {
   leftExpand: boolean
   setLeftExpand: (v: boolean) => void

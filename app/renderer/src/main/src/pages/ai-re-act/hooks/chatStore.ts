@@ -136,7 +136,6 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.tasks = content.tasks || {}
           // 任务规划数据已合并到自由对话列表：直接用 casualElements（dispatchStreamingNode 已按后端顺序写入）
           state.casualChat.elements = [...(content.casualElements || [])]
-          state.taskChat.elements = []
         }),
 
       updateCurrentChatStatus: (partial) =>

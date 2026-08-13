@@ -37,12 +37,9 @@ describe('chatStore basics', () => {
       groups: {},
       tasks: {},
       casualElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
-      taskElements: [{ kind: 'item', token: 'legacy-task', chatType: 'task', isHistory: false }],
     })
     expect(store.getState().items.a.token).toBe('a')
     expect(store.getState().casualChat.elements).toHaveLength(1)
-    // 任务规划已合并到自由对话列表，hydrate 不再写入 taskChat.elements
-    expect(store.getState().taskChat.elements).toEqual([])
   })
 
   it('C6: updatePlanTree / currentReviewDetail / folders / timeline / http / risk', () => {

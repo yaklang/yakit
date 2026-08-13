@@ -154,36 +154,6 @@
   }
 }
 
-/* ---------- AIAgentChatStream ----------*/
-.ai-agent-chat-stream {
-  // padding-left: 12px;
-  width: 100%;
-  height: 100%;
-  overflow: hidden auto;
-  .item-wrapper {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0 12px;
-    .item-inner {
-      padding-top: 4px;
-    }
-    &:first-child {
-      padding-top: 12px;
-    }
-  }
-  // 后代类名ai-stream-chat-content-wrapper且下一个也是 的不要 padding-top（concurrent-stream-card 本身是流卡片容器，排除在外保留间距）
-  // .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
-  //   & + .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
-  //     .item-inner:has(:global(.ai-stream-chat-content-wrapper)):not(:has(:global(.concurrent-stream-card))) {
-  //       padding-top: 0;
-  //     }
-  //   }
-  // }
-  .task-loading-footer {
-    padding: 0 12px 60px;
-  }
-}
-
 /* ---------- AIAgentChatFooter ----------*/
 .ai-agent-chat-footer {
   height: 56px;

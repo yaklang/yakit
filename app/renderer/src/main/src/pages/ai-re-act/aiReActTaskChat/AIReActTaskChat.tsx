@@ -4,22 +4,15 @@ import type {
   AIInputSettingPopoverProps,
   AIManualAdditionPopoverProps,
   AIManualAdditionProps,
-  AIReActTaskChatContentProps,
   AIReActTaskChatLeftSideProps,
   AIReActTaskChatProps,
 } from './AIReActTaskChatType'
 import styles from './AIReActTaskChat.module.scss'
-import { AIAgentChatStream, AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplate'
+import { AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplate'
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
-import {
-  OutlineArrowscollapseIcon,
-  OutlineArrowsexpandIcon,
-  OutlineHandIcon,
-  OutlineInformationcircleIcon,
-  OutlinePositionIcon,
-} from '@/assets/icon/outline'
+import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { type AIInputEvent, AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
@@ -135,51 +128,6 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 
 export default AIReActTaskChat
 
-/**@deprecated */
-export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
-  const { scrollToBottom, onScrollToBottom } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
-
-  const store = useCurrentStore()
-  const streams = useStore(store, (state) => state.taskChat.elements)
-  const execute = useStore(store, (state) => state.execute)
-  const currentReviewDetail = useStore(store, (state) => state.currentReviewDetail)
-
-  return (
-    <>
-      <div className={styles['tab-content']}>
-        <AIAgentChatStream scrollToBottom={scrollToBottom} />
-      </div>
-      {!currentReviewDetail.token && streams.length > 0 && (
-        <div className={styles['footer']}>
-          {execute && (
-            <AIManualAdditionPopover chatType="task">
-              <YakitButton
-                type="outline2"
-                radius="28px"
-                icon={<OutlineHandIcon />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                }}
-                size="large"
-              >
-                {t('AIReActTaskChatContent.humanIntervention')}
-              </YakitButton>
-            </AIManualAdditionPopover>
-          )}
-          <YakitButton
-            type="outline2"
-            icon={<OutlinePositionIcon />}
-            radius="50%"
-            onClick={onScrollToBottom}
-            className={styles['position-button']}
-            size="large"
-          />
-        </div>
-      )}
-    </>
-  )
-})
 export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = React.memo((props) => {
   const { children, chatType } = props
   const [manualAdditionVisible, setManualAdditionVisible] = useControllableValue<boolean>(props, {

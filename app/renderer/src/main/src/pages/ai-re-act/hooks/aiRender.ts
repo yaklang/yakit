@@ -128,7 +128,6 @@ export interface SessionRenderContent {
   groups: Record<string, ReActChatGroupMeta>
   tasks: Record<string, ReActChatTaskMeta>
   casualElements: ReActChatRenderElement[]
-  taskElements: ReActChatRenderElement[]
 }
 
 /** 控制UI渲染的数据数组元素 */
@@ -592,7 +591,6 @@ export interface ChatStoreState {
     todoListUpdate: number
   }
   taskChat: {
-    elements: SessionRenderContent['taskElements']
     plan: CurrentExecTaskTree
   }
   // #endregion
