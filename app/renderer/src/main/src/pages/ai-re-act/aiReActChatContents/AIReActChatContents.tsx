@@ -60,6 +60,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
         nodeLabel={nodeLabel}
         modalInfo={modalInfo}
         referenceNode={referenceNode}
+        streaming={streaming}
       />
     )
   }

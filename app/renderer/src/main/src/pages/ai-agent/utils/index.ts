@@ -12,6 +12,7 @@ import type { UseChatIPCStartParams } from '../useContext/AIAgentContext'
 import type { AISession } from '../type/aiChat'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import { DeleteSessionsAISourceEnum, type DeleteSessionsAISourceType } from '../historyChat/utils'
+import { isYaklangScriptDeliveryPath } from '@/pages/yakRunner/utils'
 
 export const getPlanTaskLevel = (task: Pick<AITaskInfoProps, 'level'>) => task.level
 
@@ -240,12 +241,15 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
         ]
       : [
           {
-            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
+            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
             Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
             Value: item.rootPath,
           },
+          // .yak 选区路径用 Type=code（可写交付）；其它文件路径仍用 Type=file（参考附加）
           {
-            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
+            Type: isYaklangScriptDeliveryPath(item.path)
+              ? AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE
+              : AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
             Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
             Value: item.path,
           },

@@ -10,4 +10,6 @@ export interface AIYaklangCodeProps {
   modalInfo: ModalInfoProps
   contentType: AIOutputEvent['ContentType']
   referenceNode?: ReactNode
+  /** false 表示流式已结束（status === 'end'）或历史消息 */
+  streaming?: boolean
 }
