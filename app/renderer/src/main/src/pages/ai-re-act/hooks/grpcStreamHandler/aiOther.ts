@@ -362,6 +362,7 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
       } else {
         // 该问题对话不存在异步任务
         console.log('casual-end', meta.taskPlanEndGate)
+        store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
         store.getState().updateCurrentChatStatus({ status: info.react_task_now_status })
         store.getState().updateState({ focusMode: '', cancelChatLoading: false })
       }
