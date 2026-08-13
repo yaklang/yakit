@@ -41,8 +41,10 @@ export interface RightClickPluginItem {
   help?: string
 }
 
-/** 自定义顺序缓存：tabKey -> 插件名列表 */
-export type RightClickPluginsOrderCache = Record<string, string[]>
+/**
+ * 自定义顺序缓存：tabKey -> 插件 ID 数组
+ */
+export type RightClickPluginsOrderCache = Record<string, number[]>
 
 export const GroupTabList: RightClickGroupTab[] = [
   {
@@ -56,14 +58,14 @@ export const GroupTabList: RightClickGroupTab[] = [
     tag: PluginSwitchToTag.PluginCodecMultipleHistorySwitch,
   },
   {
-    key: ManageRightClickPluginsTabKey.PacketContextMenu,
-    label: 'ManageRightClickPlugins.packetContextMenu',
-    tag: PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch,
-  },
-  {
     key: ManageRightClickPluginsTabKey.PacketMutate,
     label: 'ManageRightClickPlugins.packetMutate',
     tag: PluginSwitchToTag.PluginCodecHttpSwitch,
+  },
+  {
+    key: ManageRightClickPluginsTabKey.PacketContextMenu,
+    label: 'ManageRightClickPlugins.packetContextMenu',
+    tag: PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch,
   },
 ]
 

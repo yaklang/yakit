@@ -1,10 +1,10 @@
 {
   "ManageRightClickPlugins": {
     "editRightClickPlugins": "Edit Right-Click Plugins",
-    "pluginExtensionSingle": "Plugin Extension (Single)",
-    "pluginExtensionMultiple": "Plugin Extension (Multiple)",
-    "packetContextMenu": "Packet Context Menu",
-    "packetMutate": "Packet Mutate",
+    "pluginExtensionSingle": "History Plugin Extension (Single)",
+    "pluginExtensionMultiple": "History Plugin Extension (Multiple)",
+    "packetMutate": "HTTP Packet Mutate",
+    "packetContextMenu": "Packet Plugin Extension",
     "addedPluginsCount": "Added {{count}} / {{UpperLimit}}",
     "clearConfirm": "Clear all added plugins for the current tab?",
     "noPluginAdded": "No plugins added",

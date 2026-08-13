@@ -56,38 +56,38 @@ export const fetchDefaultPluginsByTag = (tag?: string): Promise<RightClickPlugin
 }
 
 /**
- * 按自定义插件名顺序解析完整插件详情
+ * 按自定义插件 ID 顺序解析完整插件详情
  * - 有 tag：须仍带有该 tag
- * - 无 tag：仅按插件名解析
+ * - 无 tag：仅按插件 ID 解析
  */
-export const fetchYakScriptsByCustomNames = (names: string[], tag?: string): Promise<YakScript[]> => {
-  if (!names.length) return Promise.resolve([])
+export const fetchYakScriptsByCustomIds = (ids: number[], tag?: string): Promise<YakScript[]> => {
+  if (!ids.length) return Promise.resolve([])
   const params: Record<string, any> = {
-    Pagination: { Limit: names.length, Order: 'desc', Page: 1, OrderBy: 'updated_at' },
-    IncludedScriptNames: names,
+    Pagination: { Limit: ids.length, Order: 'desc', Page: 1, OrderBy: 'updated_at' },
+    IncludedScriptIds: ids,
   }
   if (tag) params.Tag = [tag]
   return ipcRenderer
     .invoke('QueryYakScript', params)
     .then((res: QueryYakScriptsResponse) => {
-      const map = new Map((res.Data || []).map((p) => [p.ScriptName, p]))
-      return names.map((name) => map.get(name)).filter(Boolean) as YakScript[]
+      const map = new Map((res.Data || []).map((p) => [+p.Id, p]))
+      return ids.map((id) => map.get(id)).filter(Boolean) as YakScript[]
     })
     .catch(() => [])
 }
 
 /**
- * 按自定义插件名顺序解析插件详情
+ * 按自定义插件 ID 顺序解析插件详情
  * - 有 tag：须仍带有该 tag（与右侧列表条件对齐）
- * - 无 tag：仅按插件名解析（该 tab 自己的已选数据）
+ * - 无 tag：仅按插件 ID 解析（该 tab 自己的已选数据）
  */
-export const fetchPluginsByCustomNames = (names: string[], tag?: string): Promise<RightClickPluginItem[]> => {
-  return fetchYakScriptsByCustomNames(names, tag).then((list) => list.map(yakScriptToPluginItem))
+export const fetchPluginsByCustomIds = (ids: number[], tag?: string): Promise<RightClickPluginItem[]> => {
+  return fetchYakScriptsByCustomIds(ids, tag).then((list) => list.map(yakScriptToPluginItem))
 }
 
 /**
  * 按 tab 获取最新顺序的完整插件列表
- * - 有自定义顺序：按 RemotePluginGV.RightClickPluginsOrder 中的插件名顺序解析
+ * - 有自定义顺序：按 RemotePluginGV.RightClickPluginsOrder 中的插件 ID 顺序解析
  * - 无自定义顺序：有 tag 时默认取该 tag 前 N 个
  */
 export const getOrderedRightClickYakScripts = (
@@ -114,9 +114,9 @@ export const getOrderedRightClickYakScriptsWithMeta = (
       }
       if (!customCache || typeof customCache !== 'object') customCache = {}
 
-      const customNames = customCache[tabKey]
-      if (Array.isArray(customNames)) {
-        return fetchYakScriptsByCustomNames(customNames.slice(0, UpperLimit), tag).then((list) => ({
+      const customIds = customCache[tabKey]
+      if (Array.isArray(customIds)) {
+        return fetchYakScriptsByCustomIds(customIds.slice(0, UpperLimit), tag).then((list) => ({
           list,
           fromCustom: true,
         }))

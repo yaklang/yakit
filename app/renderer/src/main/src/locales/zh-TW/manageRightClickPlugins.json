@@ -1,10 +1,10 @@
 {
   "ManageRightClickPlugins": {
     "editRightClickPlugins": "編輯右鍵外掛",
-    "pluginExtensionSingle": "外掛擴展（單選）",
-    "pluginExtensionMultiple": "外掛擴展（多選）",
-    "packetContextMenu": "資料包右鍵",
-    "packetMutate": "資料包變形",
+    "pluginExtensionSingle": "History 外掛擴展（單選）",
+    "pluginExtensionMultiple": "History 外掛擴展（多選）",
+    "packetMutate": "HTTP 資料包變形",
+    "packetContextMenu": "資料包外掛擴展",
     "addedPluginsCount": "已新增外掛 {{count}} / {{UpperLimit}}",
     "clearConfirm": "確定清空目前已新增外掛嗎？",
     "noPluginAdded": "暫未新增外掛",

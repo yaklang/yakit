@@ -36,7 +36,7 @@ import {
 } from './constants'
 import {
   fetchDefaultPluginsByTag,
-  fetchPluginsByCustomNames,
+  fetchPluginsByCustomIds,
   getItemStyle,
   parsePluginTags,
   reorder,
@@ -83,7 +83,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
   const selectedPlugins = useMemo(() => pluginsByTab[currentTabKey] || [], [pluginsByTab, currentTabKey])
   /** 右侧可用插件列表（拖拽入中间时按 index 取对应插件） */
   const availablePluginsRef = useRef<YakScript[]>([])
-  /** 自定义顺序缓存：tab.key -> 插件名数组 */
+  /** 自定义顺序缓存：tab.key -> 插件 ID 数组 */
   const customOrderCacheRef = useRef<RightClickPluginsOrderCache>({})
   /** 拖拽目标区域标识（用于高亮当前拖拽落点） */
   const [destinationDrag, setDestinationDrag] = useState<string>(DROP_SELECTED)
@@ -94,7 +94,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
   // #region 已选插件数据刷新
   /**
    * 刷新中间已选插件：
-   * - 有自定义顺序的 tab → 按自定义顺序取插件
+   * - 有自定义顺序的 tab → 按自定义顺序中的插件 ID 解析详情
    * - 无自定义顺序但有 tag → 默认取该 tag 前 UpperLimit 个
    * - 无自定义顺序且无 tag → 空列表
    */
@@ -112,21 +112,21 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
 
         return Promise.all(
           GroupTabList.map(({ key, tag }) => {
-            const customNames = customCache[key]
-            if (Array.isArray(customNames)) {
-              const names = customNames.slice(0, UpperLimit)
-              return fetchPluginsByCustomNames(names, tag).then((list) => ({
+            const customIds = customCache[key]
+            if (Array.isArray(customIds)) {
+              const ids = customIds.slice(0, UpperLimit)
+              return fetchPluginsByCustomIds(ids, tag).then((list) => ({
                 key,
                 list,
                 fromCustom: true as const,
-                customNames: names,
+                customIds: ids,
               }))
             }
             return fetchDefaultPluginsByTag(tag).then((list) => ({
               key,
               list,
               fromCustom: false as const,
-              customNames: [] as string[],
+              customIds: [] as number[],
             }))
           }),
         )
@@ -139,7 +139,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
               key,
               list,
               fromCustom: false as const,
-              customNames: [] as string[],
+              customIds: [] as number[],
             })),
           ),
         ),
@@ -149,15 +149,15 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
         const nextCache: RightClickPluginsOrderCache = { ...customOrderCacheRef.current }
         let cacheChanged = false
 
-        results.forEach(({ key, list, fromCustom, customNames }) => {
+        results.forEach(({ key, list, fromCustom, customIds }) => {
           next[key] = list
-          // 自定义缓存中已失效的插件同步清理
+          // 自定义缓存中已失效（被删除/丢失）的插件 ID 同步清理
           if (fromCustom) {
-            const validNames = list.map((item) => item.scriptName)
+            const validIds = list.map((item) => item.scriptId)
             const isSame =
-              validNames.length === customNames.length && validNames.every((name, index) => name === customNames[index])
+              validIds.length === customIds.length && validIds.every((id, index) => id === customIds[index])
             if (!isSame) {
-              nextCache[key] = validNames
+              nextCache[key] = validIds
               cacheChanged = true
             }
           }
@@ -182,7 +182,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
   const savePluginOrder = useMemoizedFn((tabKey: string, list: RightClickPluginItem[]) => {
     const nextCache: RightClickPluginsOrderCache = {
       ...customOrderCacheRef.current,
-      [tabKey]: list.map((item) => item.scriptName),
+      [tabKey]: list.map((item) => item.scriptId),
     }
     customOrderCacheRef.current = nextCache
     setRemoteValue(RemotePluginGV.RightClickPluginsOrder, JSON.stringify(nextCache))
@@ -232,9 +232,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
 
   /** 同步更新右侧可用列表中的插件详情（tag 变更后回写） */
   const syncAvailablePluginDetail = useMemoizedFn((plugin: YakScript) => {
-    const index = availablePluginsRef.current.findIndex(
-      (item) => item.Id === plugin.Id || item.ScriptName === plugin.ScriptName,
-    )
+    const index = availablePluginsRef.current.findIndex((item) => item.Id === plugin.Id)
     if (index >= 0) {
       availablePluginsRef.current[index] = plugin
     }
@@ -256,13 +254,14 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
           yakitNotify('error', t('ManageRightClickPlugins.maxAddLimit', { UpperLimit }))
           return
         }
-        if (currentList.some((i) => i.scriptName === plugin.ScriptName)) return
+        const pluginId = +plugin.Id || 0
+        if (currentList.some((i) => i.scriptId === pluginId)) return
 
         const updatedPlugin = await ensurePluginHasTag(plugin, tabTag)
         syncAvailablePluginDetail(updatedPlugin)
         const pluginItem = yakScriptToPluginItem(updatedPlugin)
         const next = [...(pluginsByTabRef.current[tabKey] || [])]
-        if (next.some((i) => i.scriptName === pluginItem.scriptName)) return
+        if (next.some((i) => i.scriptId === pluginItem.scriptId)) return
         if (typeof insertIndex === 'number') {
           next.splice(Math.min(insertIndex, next.length), 0, pluginItem)
         } else {
@@ -288,7 +287,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
   const onRemovePlugin = useMemoizedFn((plugin: RightClickPluginItem) => {
     const tabKey = currentTabKeyRef.current
     updateSelectedPlugins(
-      (pluginsByTabRef.current[tabKey] || []).filter((i) => i.scriptName !== plugin.scriptName),
+      (pluginsByTabRef.current[tabKey] || []).filter((i) => i.scriptId !== plugin.scriptId),
       true,
       tabKey,
     )
@@ -393,7 +392,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
                 {(provided) => (
                   <div {...provided.droppableProps} ref={provided.innerRef} className={styles['selected-drop-area']}>
                     {selectedPlugins.map((item, index) => (
-                      <Draggable key={item.scriptName} draggableId={item.scriptName} index={index}>
+                      <Draggable key={item.scriptId} draggableId={`${item.scriptId}`} index={index}>
                         {(providedItem, snapshot) => (
                           <div
                             ref={providedItem.innerRef}
@@ -585,7 +584,8 @@ const AvailablePluginList: React.FC<AvailablePluginListProps> = React.memo((prop
             loadMoreData={loadMoreData}
             defItemHeight={44}
             renderRow={(data: YakScript, index) => {
-              const isAdded = selectedPlugins.some((i) => i.scriptName === data.ScriptName)
+              const pluginId = +data.Id || 0
+              const isAdded = selectedPlugins.some((i) => i.scriptId === pluginId)
               return (
                 <Draggable key={data.Id} draggableId={`${data.Id}-plugin`} index={index} isDragDisabled={isAdded}>
                   {(providedItem, snapshot) => (
