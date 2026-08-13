@@ -106,8 +106,7 @@ export function getNumberLocale(language?: string) {
 }
 
 export function rmbPerMillionTotalTokens(model: ModelPrice, scenario: EstimateScenario) {
-  const effectiveInputRmb =
-    scenario.cacheHitRate * model.cachedInputRmb + (1 - scenario.cacheHitRate) * model.inputRmb
+  const effectiveInputRmb = scenario.cacheHitRate * model.cachedInputRmb + (1 - scenario.cacheHitRate) * model.inputRmb
   return (scenario.inputOutputRatio * effectiveInputRmb + model.outputRmb) / (scenario.inputOutputRatio + 1)
 }
 
