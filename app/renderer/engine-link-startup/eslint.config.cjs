@@ -62,7 +62,7 @@ module.exports = tseslint.config(
 
       'react-hooks/set-state-in-effect': 'warn',
       'react-hooks/immutability': 'error',
-      'react-hooks/refs': 'off',
+      'react-hooks/refs': 'error',
       'react-hooks/use-memo': 'off',
       'react-hooks/purity': 'off',
       'react-hooks/set-state-in-render': 'off',
