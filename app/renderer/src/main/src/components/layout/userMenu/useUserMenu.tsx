@@ -25,6 +25,7 @@ import {
 import { deriveIMControlBadge, type IMControlBadgeStatus, type IMControlBadgeView } from '@/pages/robotControl/status'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { UserMenusMap } from './constants'
+import { debugToPrintLogs } from '@/utils/logCollection'
 
 export interface UseUserMenuParams {
   isEngineLink: boolean
@@ -454,7 +455,6 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       url: 'api/users',
     })
       .then((res) => {
-        console.log('333---', res)
         setApiKeysInfo(res)
       })
       .catch((err) => {
@@ -469,7 +469,6 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       url: 'apikey',
     })
       .then((res) => {
-        console.log('222---', res)
         if (res.ok) {
           apiFetchToken()
         } else {
@@ -493,7 +492,6 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       },
     })
       .then((res) => {
-        console.log('111---', res)
         if (res && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
           // 当前存在 API Key 跳转到步骤三：获取 API Key Token
           apiFetchToken()
@@ -504,7 +502,13 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
         }
       })
       .catch((err) => {
-        yakitFailed(t('FuncDomain.getApiKeyListFailed', { error: err }))
+        // 写入到日志中，避免用户看到报错信息
+        debugToPrintLogs({
+          page: 'useUserMenu',
+          fun: 'apiFetchApiKeys',
+          content: `获取 API Key 列表失败：${err}`,
+        })
+        // yakitFailed(t('FuncDomain.getApiKeyListFailed', { error: err }))
       })
       .finally(() => {
         isLoading && setApiKeysInfoLoading(false)

@@ -15,7 +15,10 @@ import type { UserInfoProps } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import yakitImg from '@/assets/yakit.jpg'
 import { yakitNotify } from '@/utils/notification'
+import { openExternalWebsite } from '@/utils/openWebsite'
+import { WebsiteGV } from '@/enums/website'
 import CeApiKeysListModal from './CeApiKeysListModal'
+import { grpcUpdateApiKey, maskApiKey } from './ceApiKey'
 import styles from './CeUsageStatisticsModal.module.scss'
 import { MetricCaptionFailedIcon, MetricCaptionSuccessIcon } from './icon'
 
@@ -69,6 +72,7 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
   const { visible, onClose, apiKeysInfo, apiKeys, userInfo, loading, onOpenRecharge } = props
   const { t } = useI18nNamespaces(['layout'])
   const [apiKeysListVisible, setApiKeysListVisible] = useState(false)
+  const [replacing, setReplacing] = useState(false)
 
   const platformType = UserPlatformType[userInfo.platform || '']
 
@@ -120,12 +124,27 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
     setClipboardText(apiKey)
   })
 
-  const handleReplace = useMemoizedFn(() => {
-    yakitNotify('info', t('CeUserMenu.replaceApiKeyDeveloping'))
+  const handleReplace = useMemoizedFn((apiKey?: string) => {
+    if (!apiKey || replacing) return
+    setReplacing(true)
+    grpcUpdateApiKey(apiKey)
+      .then(() => {
+        yakitNotify('success', t('CeUserMenu.replaceApiKeySuccess'))
+      })
+      .catch((err) => {
+        yakitNotify('error', t('CeUserMenu.replaceApiKeyFailed', { error: err }))
+      })
+      .finally(() => {
+        setReplacing(false)
+      })
   })
 
   const handleRecharge = useMemoizedFn(() => {
     onOpenRecharge?.()
+  })
+
+  const handleManageApiKey = useMemoizedFn(() => {
+    openExternalWebsite(WebsiteGV.OfficialWebsite)
   })
 
   return (
@@ -149,14 +168,27 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
               <div className={styles['user-banner-left']}>
                 <Avatar src={avatarSrc} size={40} style={{ marginTop: 2 }} />
                 <div className={styles['user-banner-meta']}>
-                  <div className={classNames(styles['user-banner-name'], 'yakit-single-line-ellipsis')}>{userName}</div>
+                  <div className={styles['user-banner-name-row']}>
+                    <div className={classNames(styles['user-banner-name'], 'yakit-single-line-ellipsis')}>
+                      {userName}
+                    </div>
+                    <div className={styles['key-row-action']} onClick={handleManageApiKey}>
+                      {t('CeUserMenu.manageApiKey')}
+                    </div>
+                    {showAllKeys && (
+                      <>
+                        <span className={styles['key-row-divider']} />
+                        <div className={styles['key-row-action']} onClick={() => setApiKeysListVisible(true)}>
+                          {t('CeUserMenu.showAllApiKeys')}
+                        </div>
+                      </>
+                    )}
+                  </div>
                   <div className={styles['user-banner-keys']}>
                     {previewKeys.length === 0 ? (
                       <div className={styles['user-banner-key-empty']}>{t('CeUserMenu.noApiKey')}</div>
                     ) : (
                       previewKeys.map((key, index) => {
-                        const showReplace = index === 0
-                        const showAll = index === 2 && showAllKeys
                         return (
                           <div key={`${key}-${index}`} className={styles['user-banner-key-row']}>
                             <div className={styles['key-row-main']}>
@@ -165,7 +197,7 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
                                 className={classNames(styles['user-banner-key-value'], 'yakit-single-line-ellipsis')}
                                 title={key}
                               >
-                                {key || '-'}
+                                {maskApiKey(key) || '-'}
                               </span>
                               {!!key && (
                                 <YakitButton
@@ -176,26 +208,20 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
                                 />
                               )}
                             </div>
-                            <div className={styles['key-row-aside']}>
-                              {showReplace && (
-                                <>
-                                  <span className={styles['key-row-divider']} />
-                                  <div className={styles['key-row-action']} onClick={handleReplace}>
-                                    {t('CeUserMenu.replaceApiKey')}
-                                    <OutlineArrowUpRightIcon />
-                                  </div>
-                                </>
-                              )}
-                              {showAll && (
-                                <>
-                                  <span className={styles['key-row-divider']} />
-                                  <div className={styles['key-row-action']} onClick={() => setApiKeysListVisible(true)}>
-                                    {t('CeUserMenu.showAllApiKeys')}
-                                    <OutlineArrowUpRightIcon />
-                                  </div>
-                                </>
-                              )}
-                            </div>
+                            {!!key && (
+                              <div className={styles['key-row-aside']}>
+                                <span className={styles['key-row-divider']} />
+                                <div
+                                  className={classNames(styles['key-row-action'], {
+                                    [styles['key-row-action-disabled']]: replacing,
+                                  })}
+                                  onClick={() => handleReplace(key)}
+                                >
+                                  {t('CeUserMenu.replaceApiKey')}
+                                  <OutlineArrowUpRightIcon />
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )
                       })

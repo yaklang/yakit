@@ -141,6 +141,21 @@ module.exports = (win, getClient) => {
     return await asyncSetAIGlobalConfig(params)
   })
 
+  const asyncUpdateApiKey = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().UpdateApiKey(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('UpdateApiKey', async (e, params) => {
+    return await asyncUpdateApiKey(params)
+  })
+
   const asyncListAIProviders = (params) => {
     return new Promise((resolve, reject) => {
       getClient().ListAIProviders(params, (err, data) => {

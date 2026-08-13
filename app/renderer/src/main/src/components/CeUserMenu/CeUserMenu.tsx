@@ -14,6 +14,7 @@ import { getTokenLimit, getTokenPercent, getTokenUsed } from './CeUsageStatistic
 import { OutlineDocumentduplicateIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
+import { maskApiKey } from './ceApiKey'
 
 export interface CeUserItemProps extends YakitMenuItemProps {
   icon?: React.ReactNode
@@ -150,7 +151,7 @@ export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
                 className={classNames(styles['ce-user-info-apikey'], 'yakit-single-line-ellipsis')}
                 title={firstApiKey}
               >
-                {firstApiKey}
+                {maskApiKey(firstApiKey)}
               </span>
               <YakitButton
                 type="text2"

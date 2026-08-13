@@ -12,12 +12,16 @@
 }
 
 .api-keys-list-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   max-height: 420px;
-  overflow: auto;
   min-height: 120px;
+}
+
+.api-keys-list-scroll {
+  width: 100%;
+}
+
+.api-keys-list-row {
+  margin-bottom: 8px;
 }
 
 .api-keys-list-empty {
@@ -39,6 +43,8 @@
   border: 1px solid var(--Colors-Use-Neutral-Border);
   border-radius: 8px;
   background: var(--Colors-Use-Basic-Background);
+  box-sizing: border-box;
+  height: 56px;
 }
 
 .api-keys-list-item-main {
@@ -66,7 +72,16 @@
   flex: 1;
 }
 
+.api-keys-list-item-key-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
 .api-keys-list-item-key {
+  flex: 0 1 auto;
+  min-width: 0;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 13px;
   line-height: 20px;

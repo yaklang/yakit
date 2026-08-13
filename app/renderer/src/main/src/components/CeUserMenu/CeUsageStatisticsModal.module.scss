@@ -34,7 +34,16 @@
   flex: 1;
 }
 
+.user-banner-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .user-banner-name {
+  flex: 0 1 auto;
+  min-width: 0;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 14px;
   font-weight: 600;
@@ -119,6 +128,13 @@
 
   &:hover {
     color: var(--Colors-Use-Main-Hover);
+  }
+
+  &:disabled,
+  &.key-row-action-disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
   }
 
   :global(svg) {
