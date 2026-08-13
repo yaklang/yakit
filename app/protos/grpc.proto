@@ -765,8 +765,10 @@ service Yak {
   rpc UpsertAIProvider(UpsertAIProviderRequest) returns (UpsertAIProviderResponse);
   rpc DeleteAIProvider(DeleteAIProviderRequest) returns (Empty);
   rpc GetAIThirdPartyAppConfigTemplate(Empty) returns (GetThirdPartyAppConfigTemplateResponse);
-
+  // 废弃
   rpc GetApiKeyByOnline(GetApiKeyByOnlineRequest) returns (GetApiKeyByOnlineResponse);
+
+  rpc UpdateApiKey(UpdateApiKeyRequest) returns (Empty);
 
   // 指纹库
   rpc GetFingerprint(GetFingerprintRequest) returns (GetFingerprintResponse);
@@ -8033,6 +8035,10 @@ message GetApiKeyByOnlineRequest {
 }
 
 message GetApiKeyByOnlineResponse {
+  string ApiKey = 1;
+}
+
+message UpdateApiKeyRequest {
   string ApiKey = 1;
 }
 
