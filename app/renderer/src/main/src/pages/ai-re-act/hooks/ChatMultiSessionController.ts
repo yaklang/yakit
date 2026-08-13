@@ -27,9 +27,15 @@ import {
 } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
-import type { AIChatIPCStartParams, AIChatSendParams, AIFileSystemPin } from './type'
+import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
-import { type AIChatQSData, AIChatQSDataTypeEnum, type AIToolResult, type SessionRenderContent } from './aiRender'
+import {
+  type AIChatQSData,
+  AIChatQSDataTypeEnum,
+  type AIFileSystemPin,
+  type AIToolResult,
+  type SessionRenderContent,
+} from './aiRender'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
@@ -1048,9 +1054,7 @@ export class ChatMultiSessionController {
   public async loadTimelineHistory(sessionId: string): Promise<boolean> {
     const { rawData, store } = this.ensureSession(sessionId)
     // 置 loading（驱动 TimelineCard 的 YakitSpin）；与 finally 一致用 store.getState() 取最新
-    store.getState().updateState({
-      requestHistoryState: { ...store.getState().requestHistoryState, timelinesLoading: true },
-    })
+    store.getState().updateState({ timelinesLoading: true })
     try {
       const request: AIEventQueryRequest = {
         Filter: { SessionID: sessionId, NodeId: ['timeline_item'] },
@@ -1088,10 +1092,7 @@ export class ChatMultiSessionController {
     } catch {
       return false
     } finally {
-      const curState = store.getState()
-      store.getState().updateState({
-        requestHistoryState: { ...curState.requestHistoryState, timelinesLoading: false },
-      })
+      store.getState().updateState({ timelinesLoading: false })
     }
   }
 

@@ -75,13 +75,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       grpcLoadMoreLoading: false,
 
       cancelChatLoading: false,
-      requestHistoryState: {
-        initLoading: false,
-        casualLoadMoreLoading: false,
-        taskLoadMoreLoading: false,
-        saveLoading: false,
-        timelinesLoading: false,
-      },
+      timelinesLoading: false,
 
       updateStateCount: (type) =>
         set((state) => {

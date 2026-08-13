@@ -1,6 +1,7 @@
 import type {
   AgentChatStatus,
   AgentLoadingTitle,
+  AIQuestionQueues,
   AIToolResult,
   CurrentExecTaskTree,
   PlanItemDetailsData,
@@ -8,7 +9,6 @@ import type {
 } from './aiRender'
 import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
-import type { AIQuestionQueues } from './type'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
 /** 工具执行结果-默认值 */

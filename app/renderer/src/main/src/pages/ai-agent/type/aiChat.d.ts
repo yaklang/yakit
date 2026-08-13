@@ -1,8 +1,5 @@
-import type { UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
-import type { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { PlanItemDetailsData, SessionRenderContent } from '@/pages/ai-re-act/hooks/aiRender'
-import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
-import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent, AIStartParams, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { PlanItemDetailsData, SessionRenderContent, AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { type PaginationSchema } from '@/pages/invoker/schema'
 
 /** 上下文字节统计 */
@@ -27,45 +24,6 @@ export interface AIContextStatsDetail {
 export interface AIContextSectionsDetail {
   summary: Map<string, string>
   sections: AIAgentGrpcApi.AIContextSections[]
-}
-
-export interface AIChatData {
-  /** 获取历史数据时的最早ID节点 */
-  beforeID: {
-    timelineID: number
-    chatID: number
-  }
-  /** 记录数据里所有的httpRunTimeIDs */
-  httpRunTimeIDs: UseChatIPCState['httpRunTimeIDs']
-  /** 记录数据里所有的riskRunTimeIDs */
-  riskRunTimeIDs: UseChatIPCState['riskRunTimeIDs']
-  /** 性能相关数据 */
-  aiPerfData: {
-    /** 消耗Token */
-    consumption: AIAgentGrpcApi.Consumption
-    /** 上下文压力 */
-    pressure: Record<AIAgentGrpcApi.Pressure['model_tier'], AIAgentGrpcApi.Pressure[]>
-    /** 首字符响应耗时 */
-    firstCost: Record<AIAgentGrpcApi.AIFirstCostMS['model_tier'], AIAgentGrpcApi.AIFirstCostMS[]>
-    /** 总对话耗时 */
-    totalCost: Record<AIAgentGrpcApi.AITotalCostMS['model_tier'], AIAgentGrpcApi.AITotalCostMS[]>
-    /** 上下文字节统计 */
-    contextStats: AIContextStatsDetail
-    /** 上下文成分 */
-    contextSections: AIContextSectionsDetail
-  }
-  /** 自由对话(ReAct)会话 */
-  casualChat: Omit<UseChatIPCState['casualChat'], 'toolListRenderNumber'> & {
-    /** 会话内每条信息的详情 */
-    contents: Map<string, AIChatQSData>
-  }
-  taskChat: UseChatIPCState['taskChat'] & {
-    contents: Map<string, AIChatQSData>
-  }
-  /** 任务详情数据（不区分 chatType，按 taskId 索引） */
-  taskDetailsMap: Map<string, PlanItemDetailsData>
-  grpcFolders: UseChatIPCState['grpcFolders']
-  reActTimelines: UseChatIPCState['reActTimelines']
 }
 
 /** UI-chat 信息 */

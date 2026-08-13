@@ -10,7 +10,7 @@ import {
   type ContextStatsChartMetric,
 } from '../../chatTemplate/AIEcharts'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { AIChatData } from '../../type/aiChat'
+import type { AIAgentChatData } from '../../type/aiChat'
 import { formatNumberUnits } from '../../utils'
 import {
   OutlineArrowdownIcon,
@@ -38,10 +38,10 @@ interface CurrentModel {
 export interface AIEchartsDetailsProps {
   overallToken: [number | string, number | string, number | string]
   tierConsumption?: AIAgentGrpcApi.Consumption['tier_consumption']
-  pressure?: AIChatData['aiPerfData']['pressure']
-  firstCost?: AIChatData['aiPerfData']['firstCost']
-  contextStats?: AIChatData['aiPerfData']['contextStats']
-  contextSections?: AIChatData['aiPerfData']['contextSections']
+  pressure?: AIAgentChatData['aiPerfData']['pressure']
+  firstCost?: AIAgentChatData['aiPerfData']['firstCost']
+  contextStats?: AIAgentChatData['aiPerfData']['contextStats']
+  contextSections?: AIAgentChatData['aiPerfData']['contextSections']
   onClose: () => void
   renderNumber: number
 }

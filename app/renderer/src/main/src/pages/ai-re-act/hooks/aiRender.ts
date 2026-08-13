@@ -1,9 +1,20 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
-import type { AIFileSystemPin, AIQuestionQueues, UseAIMessageDataState } from './type'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 // #region AI-Agent 非会话列表外的渲染数据
+/** 自由对话-实时问题队列 */
+export interface AIQuestionQueues {
+  total: number
+  data: AIAgentGrpcApi.QuestionQueueItem[]
+}
+
+/** 会话文件系统-pin */
+export interface AIFileSystemPin {
+  path: string
+  isFolder: boolean
+}
+
 /** 插件执行中的文件操作记录 */
 export interface AIYakExecFileRecord extends StreamResult.Log {
   /** 前端主动对接口流输出的文件记录进行先后操作的记录 */
@@ -602,10 +613,8 @@ export interface ChatStoreState {
   /** 用户主动取消问题的loading状态(自由对话) */
   cancelChatLoading: boolean
 
-  /**
-   * TODO - 有问题，需要调整 请求历史数据相关State
-   */
-  requestHistoryState: UseAIMessageDataState
+  /** 时间线加载中 */
+  timelinesLoading: boolean
 
   /** 更新精准字段数据依赖的渲染版本号 */
   updateStateCount: (

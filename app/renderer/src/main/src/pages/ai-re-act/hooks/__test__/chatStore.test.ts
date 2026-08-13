@@ -10,11 +10,18 @@ describe('chatStore basics', () => {
     expect(store.getState().currentChatStatus).toEqual(DefaultAgentChatStatus)
     expect(store.getState().currentLoadingTitle).toEqual(DefaultAgentLoadingTitle)
     expect(store.getState().currentReviewDetail).toEqual({ token: '', renderNum: 0 })
+    expect(store.getState().showPlanList).toBe(false)
     expect(store.getState().cancelChatLoading).toBe(false)
+    expect(store.getState().timelinesLoading).toBe(false)
+    expect('cancelCasualLoading' in store.getState()).toBe(false)
+    expect('cancelTaskLoading' in store.getState()).toBe(false)
+    expect('requestHistoryState' in store.getState()).toBe(false)
 
-    store.getState().updateState({ execute: true })
+    store.getState().updateState({ execute: true, cancelChatLoading: true, timelinesLoading: true })
     store.getState().updateCurrentLoadingTitle({ casualTitle: 'hi' })
     expect(store.getState().execute).toBe(true)
+    expect(store.getState().cancelChatLoading).toBe(true)
+    expect(store.getState().timelinesLoading).toBe(true)
     expect(store.getState().currentLoadingTitle.casualTitle).toBe('hi')
 
     store.getState().updateCurrentLoadingTitle({ planTitle: 'p' })
@@ -30,10 +37,12 @@ describe('chatStore basics', () => {
       groups: {},
       tasks: {},
       casualElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
-      taskElements: [],
+      taskElements: [{ kind: 'item', token: 'legacy-task', chatType: 'task', isHistory: false }],
     })
     expect(store.getState().items.a.token).toBe('a')
     expect(store.getState().casualChat.elements).toHaveLength(1)
+    // 任务规划已合并到自由对话列表，hydrate 不再写入 taskChat.elements
+    expect(store.getState().taskChat.elements).toEqual([])
   })
 
   it('C6: updatePlanTree / currentReviewDetail / folders / timeline / http / risk', () => {

@@ -2,19 +2,10 @@
  * chat 对话数据相关处理工具
  */
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import type { DialogueRecord } from '@/pages/ai-agent/store/type'
-import {
-  type AITaskInfoProps,
-  type ReActChatRenderItem,
-  type AIChatQSDataType,
-  type TodoListCardData,
-  type ChatListRenderType,
-  AIChatQSDataTypeEnum,
-} from './aiRender'
+import { type AITaskInfoProps, type TodoListCardData, type ChatListRenderType, AIChatQSDataTypeEnum } from './aiRender'
 import { AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from './grpcApi'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
-import { JSONParseLog } from '@/utils/tool'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultTaskPlanEndGate } from './defaultConstant'
@@ -176,7 +167,7 @@ export const isAutoExecuteReviewContinue = (params: { type?: string; getFunc?: (
       }
       return false
     }
-  } catch (error) {
+  } catch {
     return false
   }
 }
@@ -197,64 +188,6 @@ export const isToolExecStream = (nodeID: string) => {
   if (isToolStdoutStream(nodeID)) return true
   return false
 }
-
-/**
- * indexedDB 数据库数据转 ReActChatRenderItem
- */
-export const indexedDBDataToReActChatRenderItem = (
-  chatType: ChatListRenderType,
-  data: DialogueRecord[],
-): ReActChatRenderItem[] =>
-  data.map((item) => {
-    if (item.isGroup) {
-      return {
-        chatType,
-        token: item.token,
-        type: item.type as AIChatQSDataType,
-        isGroup: true as const,
-        children: JSONParseLog(item.children || '[]'),
-        renderNum: 0,
-        isCached: true,
-        kind: item.kind,
-      }
-    }
-    return {
-      chatType,
-      token: item.token,
-      type: item.type as AIChatQSDataType,
-      isGroup: false,
-      renderNum: 0,
-      children: JSONParseLog(item.children || '[]'),
-      isCached: true,
-      kind: 'item',
-    }
-  })
-
-export function getTreeDataIds(tree: DialogueRecord[]): string[] {
-  return tree.flatMap((item) => {
-    let children: DialogueRecord[] = []
-    if (item.children) {
-      try {
-        children = JSONParseLog(item.children)
-      } catch {
-        children = []
-      }
-    }
-
-    return [item.token, ...getTreeDataIds(children)]
-  })
-}
-
-export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: string) =>
-  elements.map((item, index) => ({
-    token: item.token,
-    type: item.type,
-    kind: item.kind,
-    isGroup: item.kind === 'group' || item.kind === 'task',
-    children: JSON.stringify(item.kind === 'group' || item.kind === 'task' ? item.children : []),
-    sessionId,
-    cacheOrder: index,
-  }))
 
 /** 处理后端返回的todoList数据(全量数据，需要过滤出当前任务) */
 export const handleTodoListData: (

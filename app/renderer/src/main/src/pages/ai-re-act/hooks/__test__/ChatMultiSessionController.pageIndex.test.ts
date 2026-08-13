@@ -338,13 +338,33 @@ describe('ChatMultiSessionController start / send / history', () => {
     )
   })
 
-  it('A20/A21: timeline / filesystem history callable', async () => {
+  it('A20: loadTimelineHistory toggles timelinesLoading', async () => {
     ctrl.handleStartSession(startParams('s-tl'))
+    const { store } = ctrl.ensureSession('s-tl')
+    expect(store.getState().timelinesLoading).toBe(false)
+
+    const { grpcQueryAIEvent } = await import('@/pages/ai-agent/grpc')
+    let resolveQuery: (value: { Events: unknown[]; Total: number }) => void = () => undefined
+    ;(grpcQueryAIEvent as any).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveQuery = resolve
+        }),
+    )
+
+    const pending = ctrl.loadTimelineHistory('s-tl')
+    expect(store.getState().timelinesLoading).toBe(true)
+    resolveQuery({ Events: [], Total: 0 })
+    await expect(pending).resolves.toBe(false)
+    expect(store.getState().timelinesLoading).toBe(false)
+    expect(ctrl.hasMoreTimeline('s-tl')).toBe(false)
+  })
+
+  it('A21: loadFileSystemHistory callable', async () => {
+    ctrl.handleStartSession(startParams('s-fs'))
     const { grpcQueryAIEvent } = await import('@/pages/ai-agent/grpc')
     ;(grpcQueryAIEvent as any).mockResolvedValue({ Events: [] })
-    await expect(ctrl.loadTimelineHistory('s-tl')).resolves.toBeTypeOf('boolean')
-    expect(ctrl.hasMoreTimeline('s-tl')).toBeTypeOf('boolean')
-    await expect(ctrl.loadFileSystemHistory('s-tl')).resolves.toBeUndefined()
+    await expect(ctrl.loadFileSystemHistory('s-fs')).resolves.toBeUndefined()
   })
 })
 

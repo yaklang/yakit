@@ -88,7 +88,7 @@ const TimelineCard: FC = () => {
   const sessionId = useCurrentSessionId()
 
   const reActTimelines = useStore(store, (state) => state.reActTimelines)
-  const timelinesLoading = useStore(store, (state) => state.requestHistoryState.timelinesLoading)
+  const timelinesLoading = useStore(store, (state) => state.timelinesLoading)
 
   // 向上滚动加载历史 timeline
   const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
