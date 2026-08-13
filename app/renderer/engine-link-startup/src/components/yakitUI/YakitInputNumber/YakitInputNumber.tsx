@@ -64,6 +64,20 @@ export const YakitInputNumber: React.FC<YakitInputNumberProps> = (props) => {
 }
 
 /**
+ * @description: 获取精度
+ */
+const getPrecision = (value) => {
+  if (value === undefined || value === null) return 0
+  const valueString = value.toString()
+  const dotPosition = valueString.indexOf('.')
+  let precision = 0
+  if (dotPosition !== -1) {
+    precision = valueString.length - dotPosition - 1
+  }
+  return precision
+}
+
+/**
  * @description:horizontal size 不支持max-large
  * @description:不支持 bordered false ，无边框模式
  */
@@ -88,20 +102,6 @@ const YakitInputNumberHorizontal: React.FC<YakitInputNumberHorizontalProps> = (p
       precisionRef.current = Math.max(getPrecision(value), stepPrecision)
     }
   }, [props.value, props.step, props.precision])
-  /**
-   * @description: 获取精度
-   * @return {*} 精度
-   */
-  const getPrecision = (value) => {
-    if (value === undefined || value === null) return 0
-    const valueString = value.toString()
-    const dotPosition = valueString.indexOf('.')
-    let precision = 0
-    if (dotPosition !== -1) {
-      precision = valueString.length - dotPosition - 1
-    }
-    return precision
-  }
   /**
    * @description: 根据精度计算最后的值
    */

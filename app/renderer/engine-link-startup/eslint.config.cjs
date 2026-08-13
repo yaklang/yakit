@@ -60,8 +60,8 @@ module.exports = tseslint.config(
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
 
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/immutability': 'off',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/immutability': 'error',
       'react-hooks/refs': 'off',
       'react-hooks/use-memo': 'off',
       'react-hooks/purity': 'off',

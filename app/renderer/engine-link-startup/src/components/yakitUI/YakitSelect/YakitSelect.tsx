@@ -65,34 +65,32 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     options: [],
     defaultValue: [],
   })
-  useEffect(() => {
-    if (cacheHistoryDataKey && inViewport) onGetRemoteValues()
-  }, [cacheHistoryDataKey, inViewport])
-  useImperativeHandle(
-    ref,
-    () => ({
-      onSetRemoteValues: (value: string[]) => {
-        const newValue = value.length > 0 ? value : props.value || []
-        onSetRemoteValues(newValue)
-      },
-      onGetRemoteValues: () => {
-        return cacheHistoryData
-      },
-    }),
-    [cacheHistoryData, props.value],
-  )
 
-  const emptyImageTarget = useMemo(() => {
-    switch (__PLATFORM__) {
-      case 'irify':
-      case 'irify-enterprise':
-        return theme === 'dark' ? IrifyDarkEmptyPng : IrifyEmptyPng
-      case 'memfit':
-        return theme === 'dark' ? MemfitDarkEmptyPng : MemfitEmptyPng
-      default:
-        return theme === 'dark' ? YakitDarkEmptyPng : YakitEmptyPng
+  const getNewOption = useMemoizedFn((options, firstUse: boolean) => {
+    let newOption: YakitDefaultOptionType[] = []
+    if (options.length > 0) {
+      newOption = options as YakitDefaultOptionType[]
+    } else if (defaultOptions?.length > 0 && firstUse) {
+      newOption = (defaultOptions || []) as YakitDefaultOptionType[]
+    } else if ((props?.options?.length || 0) > 0) {
+      newOption = props.options as YakitDefaultOptionType[]
     }
-  }, [theme])
+    return newOption || []
+  })
+
+  /**@description 获取 cacheHistoryDataKey 对应的数据 */
+  const onGetRemoteValues = useMemoizedFn(() => {
+    if (!cacheHistoryDataKey) return
+    onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
+      const value = cacheData.defaultValue ? cacheData.defaultValue.split(',') : []
+      const newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options, !!cacheData.firstUse)
+      //非form表单时,设置value
+      if (isCacheDefaultValue) {
+        if (props.onChange) props.onChange(value, newOption)
+      }
+      setCacheHistoryData({ defaultValue: value, options: newOption as unknown as YakitOptionTypeProps })
+    })
+  })
 
   /**@description 缓存 cacheHistoryDataKey 对应的数据 */
   const onSetRemoteValues = useMemoizedFn((newValue: string[]) => {
@@ -138,30 +136,36 @@ export const YakitSelectCustom = <ValueType, OptionType>(
       )
     }
   })
-  /**@description 获取 cacheHistoryDataKey 对应的数据 */
-  const onGetRemoteValues = useMemoizedFn(() => {
-    if (!cacheHistoryDataKey) return
-    onGetRemoteValuesBase(cacheHistoryDataKey).then((cacheData) => {
-      const value = cacheData.defaultValue ? cacheData.defaultValue.split(',') : []
-      const newOption: YakitDefaultOptionType[] = getNewOption(cacheData.options, !!cacheData.firstUse)
-      //非form表单时,设置value
-      if (isCacheDefaultValue) {
-        if (props.onChange) props.onChange(value, newOption)
-      }
-      setCacheHistoryData({ defaultValue: value, options: newOption as unknown as YakitOptionTypeProps })
-    })
-  })
-  const getNewOption = useMemoizedFn((options, firstUse: boolean) => {
-    let newOption: YakitDefaultOptionType[] = []
-    if (options.length > 0) {
-      newOption = options as YakitDefaultOptionType[]
-    } else if (defaultOptions?.length > 0 && firstUse) {
-      newOption = (defaultOptions || []) as YakitDefaultOptionType[]
-    } else if ((props?.options?.length || 0) > 0) {
-      newOption = props.options as YakitDefaultOptionType[]
+
+  useEffect(() => {
+    if (cacheHistoryDataKey && inViewport) onGetRemoteValues()
+  }, [cacheHistoryDataKey, inViewport])
+  useImperativeHandle(
+    ref,
+    () => ({
+      onSetRemoteValues: (value: string[]) => {
+        const newValue = value.length > 0 ? value : props.value || []
+        onSetRemoteValues(newValue)
+      },
+      onGetRemoteValues: () => {
+        return cacheHistoryData
+      },
+    }),
+    [cacheHistoryData, props.value],
+  )
+
+  const emptyImageTarget = useMemo(() => {
+    switch (__PLATFORM__) {
+      case 'irify':
+      case 'irify-enterprise':
+        return theme === 'dark' ? IrifyDarkEmptyPng : IrifyEmptyPng
+      case 'memfit':
+        return theme === 'dark' ? MemfitDarkEmptyPng : MemfitEmptyPng
+      default:
+        return theme === 'dark' ? YakitDarkEmptyPng : YakitEmptyPng
     }
-    return newOption || []
-  })
+  }, [theme])
+
   /**@description 删除缓存项 */
   const delCatchOptionItem = (e: React.MouseEvent<Element, MouseEvent>, item: YakitDefaultOptionType) => {
     e.stopPropagation()
