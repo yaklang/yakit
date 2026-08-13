@@ -22,8 +22,10 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface HTTPFuzzerHistorySelectorProp {
   currentSelectId?: number
-  onSelect: (i: number, page: number, showAll: boolean) => any
+  onSelect: (i: number, page: number) => void
   onDeleteAllCallback: () => void
+  showAll: boolean
+  onShowAllChange: (showAll: boolean) => void
   fuzzerTabIndex: string
 }
 
@@ -53,19 +55,20 @@ export interface HTTPFuzzerTaskDetail {
 * */
 
 export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> = React.memo((props) => {
-  const { currentSelectId, fuzzerTabIndex } = props
-  const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
+  const { currentSelectId, fuzzerTabIndex, showAll, onShowAllChange } = props
+  const { t } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
   const [tasks, setTasks] = useState<HTTPFuzzerTaskDetail[]>([])
   const [loading, setLoading] = useState(false)
   const [paging, setPaging] = useState<PaginationSchema>({ Limit: 10, Order: '', OrderBy: '', Page: 1 })
   const [keyword, setKeyword] = useState('')
   const [total, setTotal] = useState(0)
-  const [showAll, setShowAll] = useState<boolean>(false)
   const page = useMemo(() => paging.Page, [paging.Page])
   const limit = useMemo(() => paging.Limit, [paging.Limit])
+
   useEffect(() => {
     reload(1, limit, true)
   }, [])
+
   const deleteAll = useMemoizedFn(() => {
     setLoading(true)
     const removeParams = {
@@ -81,7 +84,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
       })
       .finally(() => setTimeout(() => setLoading(false), 300))
   })
-  /**删除 对应的配置缓存历史数据 */
+
+  /** 删除对应的配置缓存历史数据 */
   const deleteFuzzerConfig = useMemoizedFn(() => {
     const deleteFuzzerConfigRequest: DeleteFuzzerConfigRequest = {
       PageId: [],
@@ -115,8 +119,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
       .finally(() => setTimeout(() => setLoading(false), 300))
   })
 
-  const onSwitchShowAll = useMemoizedFn((v) => {
-    setShowAll(v)
+  const onSwitchShowAll = useMemoizedFn((v: boolean) => {
+    onShowAllChange(v)
     setTimeout(() => {
       reload(1, limit)
     }, 200)
@@ -124,7 +128,6 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
 
   return (
     <YakitCard
-      // size={"small"}
       bordered={false}
       title={
         <Space style={{ lineHeight: '16px' }}>
@@ -133,7 +136,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
             type="text"
             size={'small'}
             icon={<ReloadOutlined />}
-            onClick={(e) => {
+            onClick={() => {
               reload(1, limit)
             }}
           />
@@ -147,35 +150,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
           </YakitPopconfirm>
         </Space>
       }
-      // style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}
       className={styles['history-card-container']}
     >
-      {/* <Form
-                size={"small"}
-                layout={"inline"}
-                onSubmitCapture={(e) => {
-                    e.preventDefault()
-
-                    reload(1, limit)
-                }}
-            >
-                <InputItem
-                    label={
-                        <div style={{display: "flex", alignItems: "center"}}>
-
-                            <Tooltip title={"快速搜索 Host 与 Request 中的内容"}>
-                                <YakitButton type='text' size={"small"} icon={<QuestionOutlined />} />
-                            </Tooltip>
-                        </div>
-                    }
-                    extraFormItemProps={{style: {marginBottom: 0}}}
-                    value={keyword}
-                    setValue={setKeyword}
-                />
-                <Form.Item style={{marginBottom: 0}}>
-                    <Button type='primary' htmlType='submit' icon={<SearchOutlined />} />
-                </Form.Item>
-            </Form> */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span>{t('HTTPFuzzerHistorySelector.quickSearch')}</span>
         <YakitInput.Search
@@ -201,7 +177,6 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
         className="yakit-list"
         loading={loading}
         dataSource={tasks}
-        // pagination={{total: tasks.length, size: "small", pageSize: 10}}
         pagination={{
           size: 'small',
           pageSize: limit,
@@ -215,7 +190,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
             reload(page, limit || 10)
           },
         }}
-        renderItem={(detail: HTTPFuzzerTaskDetail, index: number) => {
+        renderItem={(detail: HTTPFuzzerTaskDetail, index) => {
           const i = detail.BasicInfo
           let verbose = detail.OriginRequest.Verbose
           if (!verbose) {
@@ -249,8 +224,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                   hoverable={true}
                   onClick={(e) => {
                     e.preventDefault()
-                    const page = (paging.Page - 1) * 10 + index + 1
-                    props.onSelect(i.Id, page, showAll)
+                    const newPage = (paging.Page - 1) * paging.Limit + index + 1
+                    props.onSelect(i.Id, newPage)
                   }}
                   bordered={false}
                 >
