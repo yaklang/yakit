@@ -1,3 +1,4 @@
+import type { AIOutputI18n } from '@/pages/ai-re-act/hooks/grpcApi'
 import type {
   GetMCPToolListResponse,
   MCPServer,
@@ -31,10 +32,38 @@ export const normalizeMCPToolParams = (params: unknown): MCPServerToolParamInfo[
   return params.map(normalizeMCPToolParam).filter((item): item is MCPServerToolParamInfo => item !== null)
 }
 
-export const normalizeMCPToolConfig = (tool: MCPToolConfig): MCPToolConfig => ({
-  ...tool,
-  Params: normalizeMCPToolParams(tool.Params),
-})
+/** Normalize engine ypb.I18n into AIOutputI18n (same shape as NodeIdVerbose). */
+const normalizeAIOutputI18n = (raw: unknown): AIOutputI18n | undefined => {
+  if (!raw || typeof raw !== 'object') return undefined
+  const record = raw as Record<string, unknown>
+  const zh = String(record.Zh ?? record.zh ?? '').trim()
+  const en = String(record.En ?? record.en ?? '').trim()
+  if (!zh && !en) return undefined
+  return { Zh: zh || en, En: en || zh }
+}
+
+/** Resolve locale-aware UI label for MCP tool description. */
+export const resolveMCPToolDescriptionLabel = (
+  tool: Pick<MCPToolConfig, 'Description' | 'DescriptionI18n'>,
+  getLabelByParams: (value: AIOutputI18n) => string,
+): string => {
+  if (tool.DescriptionI18n) {
+    const label = getLabelByParams(tool.DescriptionI18n).trim()
+    if (label) return label
+  }
+  return String(tool.Description || '').trim()
+}
+
+export const normalizeMCPToolConfig = (tool: MCPToolConfig): MCPToolConfig => {
+  const raw = tool as MCPToolConfig & Record<string, unknown>
+  const description = String(tool.Description ?? raw.description ?? '')
+  return {
+    ...tool,
+    Description: description,
+    DescriptionI18n: normalizeAIOutputI18n(tool.DescriptionI18n ?? raw.DescriptionI18n),
+    Params: normalizeMCPToolParams(tool.Params),
+  }
+}
 
 export const normalizeGetMCPToolListResponse = (res: GetMCPToolListResponse): GetMCPToolListResponse => ({
   ...res,

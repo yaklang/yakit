@@ -213,16 +213,24 @@
         }
       }
 
-      .tool-name-wrap {
-        .tool-name {
-          color: var(--Colors-Use-Neutral-Text-1-Title);
-          font-weight: 500;
-        }
+      .tool-name {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-weight: 500;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
-        .tool-description {
-          color: var(--Colors-Use-Neutral-Disable);
-          font-size: 11px;
-        }
+      .tool-description-cell {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .filter-icon {

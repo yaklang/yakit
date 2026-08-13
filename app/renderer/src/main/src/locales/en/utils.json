@@ -79,8 +79,10 @@
     "modalTitle": "Configure engine scan proxy"
   },
   "ConfigSystemMcp": {
+    "modal_title": "Yak MCP",
     "startAddress": "Start address:",
     "tool_name": "Tool Name",
+    "tool_description": "Description",
     "enable_tool": "Enable Tool",
     "detailed_config": "Detailed Configuration",
     "stdio_remote_disabled_tip": "STDIO requires a locally running Yak engine process and is unavailable in remote connection mode",

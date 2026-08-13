@@ -1,5 +1,6 @@
 import type { KVPair } from '@/models/kv'
 import type { PaginationSchema } from '@/pages/invoker/schema'
+import type { AIOutputI18n } from '@/pages/ai-re-act/hooks/grpcApi'
 import { type AIMCPServerTypeEnum } from '../defaultConstant'
 
 export interface GetAllMCPServersRequest {
@@ -103,7 +104,10 @@ export interface MCPToolConfig {
   /** Non-empty only for bridge tools */
   ServerName: string
   Enable: boolean
+  /** English description for AI / MCP protocol */
   Description: string
+  /** UI bilingual description (schema.I18n / AIOutputI18n); use useAINodeLabel */
+  DescriptionI18n?: AIOutputI18n
   Params: MCPServerToolParamInfo[]
 }
 
