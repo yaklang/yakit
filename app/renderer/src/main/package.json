@@ -171,6 +171,7 @@
     "rollup-plugin-visualizer": "^5.14.0",
     "sass": "1.93.2",
     "vite": "8.2.0",
+    "vite-plugin-checker": "^0.14.5",
     "vite-plugin-node-polyfills": "^0.28.0",
     "vitest": "4.1.10"
   },

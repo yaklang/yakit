@@ -4,6 +4,7 @@ import path from 'path'
 import { fileURLToPath } from 'node:url'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { visualizer } from 'rollup-plugin-visualizer'
+import checker from 'vite-plugin-checker'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/main')
@@ -81,6 +82,15 @@ export default defineConfig(({ mode }) => {
     envPrefix: ['REACT_APP_', 'VITE_'],
     define: reactAppProcessEnvDefines(mode),
     plugins: [
+      checker({
+        // 官方 typescript checker 没有「只检查改动文件」选项，内部就是 tsc --watch。
+        // 首次仍会全量检查；之后靠 incremental + assumeChangesOnlyAffectDirectDependencies
+        // 只重查改动文件及其直接 import 方。ESLint 8 与 checker 0.14 flat config 不兼容，先不开。
+        typescript: {
+          tsconfigPath: 'tsconfig.checker.json',
+        },
+        enableBuild: false,
+      }),
       noopAntdComponentStylePlugin(),
       react(),
       nodePolyfills({
