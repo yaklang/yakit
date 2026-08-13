@@ -185,7 +185,7 @@ jobs:
       pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
       pr_ref: ${{ github.event.pull_request.head.ref }}
       workdir: app/renderer/engine-link-startup
-      run_command: yarn eslint src --ext .js,.jsx,.ts,.tsx
+      run_command: yarn lint
       log_filename: eslint-engine-link-output.log
       artifact_name: ci-log-eslint-engine-link
 

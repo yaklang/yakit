@@ -15,7 +15,7 @@ todos:
     content: 主端 typescript@6.0.3，迁到 devDependencies，修类型
     status: completed
   - id: migrate-eslint-9-flat
-    content: ESLint 9 flat + typescript-eslint@8；规则与现有 .eslintrc.cjs 逐条对齐；根目录共享 base + 两端薄包装
+    content: Link 已升 ESLint 9 + typescript-eslint 8；主端仍待做；共享 base 待主端一起抽
     status: pending
   - id: sync-ci-and-scripts
     content: 同步 GitHub Actions 与根 ci:*：ESLint 9 去掉 --ext；Link/主端补 type-check / lint 脚本
