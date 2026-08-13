@@ -26,7 +26,7 @@ import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
 import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
-import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatReviewBar'
+import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
@@ -320,7 +320,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               />
               <AIToDoListWrapper />
               <AIReActChatContents ref={aiReActChatContentsRef} />
-              <AIReActTaskChatReviewBar />
+              <AIReActTaskChatReview />
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>

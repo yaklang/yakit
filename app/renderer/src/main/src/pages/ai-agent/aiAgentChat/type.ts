@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 export interface AIAgentChatProps {}
 export type AIAgentChatMode = 'welcome' | 're-act'
 export interface AIReActTaskChatReviewProps {
-  footerExtra: (v: ReactNode) => ReactNode
+  footerExtra?: (v: ReactNode) => ReactNode
 }
 
 export interface HandleStartParams extends AIChatTextareaSubmit {

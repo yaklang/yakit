@@ -33,14 +33,6 @@
     "hideReview": "Hide, review later",
     "expandReview": "Expand review info"
   },
-  "AIRenderTaskFooterExtra": {
-    "cancelSubtaskConfirm": "Whether to confirm canceling this subtask, the next subtask will be executed in order after cancellation",
-    "skipSubtask": "Skip subtask",
-    "cancelTaskConfirm": "Whether to confirm canceling the entire task, it will stop execution after confirmation",
-    "continueTask": "Continue task",
-    "resumeTask": "Resume task",
-    "stoppingTask": "Stopping task ..."
-  },
   "AIChatWelcome": {
     "knowledgeBase": "Knowledge",
     "skillBase": "Skill",

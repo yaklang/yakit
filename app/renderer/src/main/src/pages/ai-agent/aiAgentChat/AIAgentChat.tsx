@@ -592,7 +592,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
         >
           {expand ? t('AIReActTaskChatReview.hideReview') : t('AIReActTaskChatReview.expandReview')}
         </YakitButton>
-        <div className={styles['review-footer-extra']}>{footerExtra(node)}</div>
+        <div className={styles['review-footer-extra']}>{footerExtra ? footerExtra(node) : null}</div>
       </div>
     )
   })

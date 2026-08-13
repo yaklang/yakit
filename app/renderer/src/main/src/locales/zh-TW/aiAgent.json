@@ -33,14 +33,6 @@
     "hideReview": "隱藏，稍後審閱",
     "expandReview": "展開審閱資訊"
   },
-  "AIRenderTaskFooterExtra": {
-    "cancelSubtaskConfirm": "是否確認取消該子任務，取消後會按順序執行下一個子任務",
-    "skipSubtask": "跳過子任務",
-    "cancelTaskConfirm": "是否確認取消整個任務，確認將停止執行",
-    "continueTask": "繼續任務",
-    "resumeTask": "恢復任務",
-    "stoppingTask": "停止任務中..."
-  },
   "AIChatWelcome": {
     "knowledgeBase": "知識庫",
     "skillBase": "技能庫",

@@ -1,4 +1,3 @@
-import type { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { ReactNode } from 'react'
 import type { ChatListRenderType } from '../hooks/aiRender'
 
@@ -17,12 +16,6 @@ export interface AIReActTaskChatContentProps {
 export interface AIReActTaskChatLeftSideProps {
   leftExpand: boolean
   setLeftExpand: (v: boolean) => void
-}
-export interface AIRenderTaskFooterExtraProps {
-  children?: ReactNode
-  btnProps?: YakitButtonProp
-  subTaskBtnProps?: YakitButtonProp
-  onExtraAction: (type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => void
 }
 
 export interface AIInputSettingPopoverProps {
