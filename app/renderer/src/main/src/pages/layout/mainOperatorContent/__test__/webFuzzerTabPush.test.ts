@@ -6,12 +6,14 @@ import {
   applyWebFuzzerTabMutation,
   countWebFuzzerTabs,
   filterMissingWebFuzzerNodes,
-  getCustomWebFuzzerGroupColorStyle,
-  getWebFuzzerGroupContrastColor,
-  isCustomWebFuzzerGroupColor,
   rebuildWebFuzzerTabTree,
   type WebFuzzerPushNode,
 } from '../webFuzzerTabPush'
+import {
+  getCustomWebFuzzerGroupColorStyle,
+  getWebFuzzerGroupContrastColor,
+  isCustomWebFuzzerGroupColor,
+} from '../webFuzzerGroupColor'
 
 const request = 'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n'
 
