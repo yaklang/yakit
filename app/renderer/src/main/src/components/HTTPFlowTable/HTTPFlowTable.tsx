@@ -24,6 +24,7 @@ import { ColorSwatchIcon, ChevronDownIcon, CloudDownloadIcon } from '@/assets/ne
 import classNames from 'classnames'
 import type { ColumnsTypeProps, FiltersItemProps, SortProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
+import { childWindowHash } from '@/pages/layout/mainOperatorContent/MainOperatorContent'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import { YakitCheckableTag } from '../yakitUI/YakitTag/YakitCheckableTag'
 import { YakitMenu } from '../yakitUI/YakitMenu/YakitMenu'
@@ -1594,10 +1595,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (rowDate) {
       setSelected(rowDate)
       setOnlyShowFirstNode && setOnlyShowFirstNode(false)
-      minWinSendToChildWin({
-        type: 'openPacketNewWindow',
-        data: getPacketNewWindow(rowDate),
-      })
+      // 仅在子窗口存在时才同步选中行数据（含 4.9MB 解码）到子窗口；无子窗口时跳过，避免单击行的无谓大内容构造
+      if (childWindowHash) {
+        minWinSendToChildWin({
+          type: 'openPacketNewWindow',
+          data: getPacketNewWindow(rowDate),
+        })
+      }
     } else {
       setSelected(undefined)
       setOnlyShowFirstNode && setOnlyShowFirstNode(!onlyShowFirstNode)
@@ -1605,8 +1609,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
 
   // 如果YakitResizeBox只展示第一个节点，则要清除Selected
+  // 同时清空 selected 并上抛 undefined，避免 4.9MB 大响应字符串在关闭详情后仍被父子两处 state 持有导致泄漏
   useEffect(() => {
-    onlyShowFirstNode && setCurrentIndex(undefined)
+    if (onlyShowFirstNode) {
+      setCurrentIndex(undefined)
+      setSelected(undefined)
+      props.onSelected && props.onSelected(undefined)
+    }
   }, [onlyShowFirstNode])
 
   const onSetCurrentRow = useDebounceFn(
