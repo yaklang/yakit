@@ -82,7 +82,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
       coordinatorId: startInfo.coordinator_id,
     },
   })
-  store.getState().updateCurrentLoadingTitle({ planTitle: '加载中...', taskTitle: '加载中...' })
+  store.getState().updateCurrentLoadingTitle({ planTitle: '加载中...' })
 }
 const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
   const { res, store, rawData, meta } = requestInfo
@@ -204,11 +204,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
         coordinatorId: '',
         status: AITaskStatus.inProgress,
       },
-      currentLoadingTitle: {
-        casualTitle: '问题执行中...',
-        planTitle: '',
-        taskTitle: '',
-      },
+      currentLoadingTitle: { casualTitle: '问题执行中...', planTitle: '' },
       focusMode: data.focus_mode ? data.focus_mode : '',
     })
     // 重置当前任务树详情
@@ -486,6 +482,7 @@ const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
       taskName: info.react_task_name || info.react_user_input || info.react_task_id,
       goal: info.react_user_input || '',
       status: info.react_task_status,
+      loadingTitle: '',
     },
   } as AIChatQSData
 

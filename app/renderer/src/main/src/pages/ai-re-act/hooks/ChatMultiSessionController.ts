@@ -776,13 +776,13 @@ export class ChatMultiSessionController {
     if (userQuery) {
       store.getState().updateState({
         execute: true,
-        currentLoadingTitle: { casualTitle: '会话初始化中...', planTitle: '', taskTitle: '' },
+        currentLoadingTitle: { casualTitle: '会话初始化中...', planTitle: '' },
       })
     } else {
       store.getState().updateState({
         execute: true,
         initLoading: true,
-        currentLoadingTitle: { casualTitle: '获取历史数据中...', planTitle: '', taskTitle: '' },
+        currentLoadingTitle: { casualTitle: '获取历史数据中...', planTitle: '' },
       })
       this.sessionRestoreLoading.add(sessionId)
     }
@@ -881,9 +881,7 @@ export class ChatMultiSessionController {
 
         if (isCasualIdle) {
           // 自由对话没有问题进行中时，才改变loading的title
-          store
-            .getState()
-            .updateState({ currentLoadingTitle: { casualTitle: '等待AI回复...', planTitle: '', taskTitle: '' } })
+          store.getState().updateState({ currentLoadingTitle: { casualTitle: '等待AI回复...', planTitle: '' } })
 
           const chatID = uuidv4()
           const AttachedResourceInfos = params.AttachedResourceInfo || []

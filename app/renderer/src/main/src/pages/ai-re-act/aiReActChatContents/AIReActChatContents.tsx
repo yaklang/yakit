@@ -121,7 +121,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const casualTitle = useStore(store, (state) => state.currentLoadingTitle.casualTitle)
     const planTitle = useStore(store, (state) => state.currentLoadingTitle.planTitle)
     const execute = useStore(store, (state) => state.execute)
-    // 任务规划运行态：进入任务规划后底部 loading 从 planTitle/taskTitle 取值
+    // 任务规划运行态：进入任务规划后底部 loading 从 planTitle 取值
     const taskCoordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId)
     const taskStatus = useStore(store, (state) => state.currentChatStatus.status)
     const isTaskPlanning = !!taskCoordinatorId && taskStatus === AITaskStatus.inProgress

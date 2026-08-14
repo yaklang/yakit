@@ -147,7 +147,6 @@ export const DefaultAgentChatStatus: AgentChatStatus = {
 export const DefaultAgentLoadingTitle: AgentLoadingTitle = {
   casualTitle: '',
   planTitle: '',
-  taskTitle: '',
 }
 
 /** end_plan_and_execution & react_task_status_changed 齐了才 settle status */

@@ -250,6 +250,8 @@ export interface AITaskStartInfo {
   goal: string
   /** AIAgentGrpcApi.PlanTask.progress */
   status?: AITaskStatusType
+  /** 任务的loading-title */
+  loadingTitle: string
 }
 
 interface ReviewSelectedOption {
@@ -498,8 +500,6 @@ export interface AgentLoadingTitle {
   casualTitle: string
   /** 任务规划的loading-title内容 */
   planTitle: string
-  /** 任务的loading-title内容 */
-  taskTitle: string
 }
 
 /** 当前正在执行的任务树 */

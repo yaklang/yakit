@@ -28,7 +28,6 @@ describe('defaultConstant', () => {
     expect(DefaultAgentLoadingTitle).toEqual({
       casualTitle: '',
       planTitle: '',
-      taskTitle: '',
     })
     expect(DefaultTaskPlanEndGate).toEqual({ endReceived: false, pendingStatus: undefined })
   })

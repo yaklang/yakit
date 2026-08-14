@@ -3,23 +3,27 @@ import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { checkStreamValidity, convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { AIChatQSDataTypeEnum } from '../aiRender'
 
 const handleStatus: AIMessageHandler = (request) => {
-  const { res, chatType, store, meta } = request
+  const { res, chatType, store, rawData, meta } = request
   if (res.Type !== 'structured' || res.NodeId !== 'status') return
   if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as { key: string; value: string }
+
+  const currentChatID = store.getState().currentChatStatus.questionID
   if (data.key === 're-act-loading-status-key') {
-    if (chatType === 'task') {
-      // 任务规划-loading展示标题
-      store.getState().updateCurrentLoadingTitle({ taskTitle: data.value || '加载中...' })
-    } else {
-      // 只展示自由对话问题的相关title
-      if (res.TaskId !== store.getState().currentChatStatus.questionID) return
-      // 自由对话-loading展示标题
+    if (!currentChatID) return
+    if (chatType === 'reAct' && res.TaskId === currentChatID) {
+      // 问题的loading-title
       store.getState().updateCurrentLoadingTitle({ casualTitle: data.value })
+    } else {
+      const chatDetail = rawData.contents.get(`${currentChatID}-${res.TaskId}`)
+      if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
+      chatDetail.data.loadingTitle = data.value || '加载中...'
+      store.getState().incrementNodeVersion(chatDetail.id, 'task')
     }
   } else if (data.key === 'plan-executing-loading-status-key') {
     if (chatType === 'task') {

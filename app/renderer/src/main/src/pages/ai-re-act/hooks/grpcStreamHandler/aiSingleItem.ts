@@ -358,6 +358,7 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
       taskName: info.task.name,
       goal: info.task.goal,
       status: info.task.task_status || AITaskStatus.inProgress,
+      loadingTitle: '',
     },
   }
   rawData.contents.set(chatData.id, chatData)

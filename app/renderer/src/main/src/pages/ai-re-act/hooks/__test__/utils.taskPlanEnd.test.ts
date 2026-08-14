@@ -70,7 +70,6 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
     session.meta.taskPlanEndGate = { endReceived: false, pendingStatus: 'aborted' }
     handleTaskPlanEnd(session)
     expect(session.store.getState().currentLoadingTitle.planTitle).toBe('已结束')
-    expect(session.store.getState().currentLoadingTitle.taskTitle).toBe('已结束')
     expect(session.store.getState().currentChatStatus.questionID).toBe('t1')
     expect(session.store.getState().currentChatStatus.status).toBe('aborted')
     expect(session.meta.taskPlanEndGate).toEqual(DefaultTaskPlanEndGate)
@@ -102,7 +101,7 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
       Timestamp: 1,
       AIService: '',
       AIModelName: '',
-      data: { status: AITaskStatus.inProgress },
+      data: { status: AITaskStatus.inProgress, loadingTitle: '' },
     } as any)
     session.store.getState().updatePlanTree({
       root_task_name: 'root',

@@ -92,7 +92,7 @@ export const handleTaskPlanEnd: (
   store.getState().updatePlanTree(newPlanTree)
 
   // end 只清展示文案，保留 taskID / coordinatorId / status（status 由 settle 写）
-  store.getState().updateCurrentLoadingTitle({ planTitle: '已结束', taskTitle: '已结束' })
+  store.getState().updateCurrentLoadingTitle({ planTitle: '已结束' })
   if (isChatEnd) {
     meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
   } else {

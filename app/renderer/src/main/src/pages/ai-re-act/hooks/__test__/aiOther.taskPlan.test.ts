@@ -39,7 +39,6 @@ describe('aiOther task plan gate', () => {
     })
     expect(req.store.getState().currentLoadingTitle).toMatchObject({
       planTitle: '加载中...',
-      taskTitle: '加载中...',
     })
     expect(req.store.getState().cancelChatLoading).toBe(false)
     expect(sendRequest).toHaveBeenCalledWith({
@@ -76,7 +75,6 @@ describe('aiOther task plan gate', () => {
       currentLoadingTitle: {
         casualTitle: '',
         planTitle: '加载中...',
-        taskTitle: '加载中...',
       },
       cancelChatLoading: true,
     })
