@@ -144,7 +144,7 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
   })
 
   const handleManageApiKey = useMemoizedFn(() => {
-    openExternalWebsite(WebsiteGV.OfficialWebsite)
+    openExternalWebsite(WebsiteGV.ApiKeyManageAddress)
   })
 
   return (
