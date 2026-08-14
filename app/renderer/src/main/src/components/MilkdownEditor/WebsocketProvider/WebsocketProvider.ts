@@ -2,8 +2,6 @@
  * @module provider/websocket
  */
 
-/* eslint-env browser */
-
 import * as Y from 'yjs' // eslint-disable-line
 import * as bc from 'lib0/broadcastchannel'
 import * as time from 'lib0/time'
