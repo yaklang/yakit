@@ -19,7 +19,7 @@ const {
   setLocalCache,
 } = require('./localCache')
 const { asyncKillDynamicControl } = require('./handlers/dynamicControlFun')
-const { getWindowStatePath, getConfig } = require('./filePath')
+const { getWindowStatePath } = require('./filePath')
 const Screenshots = require('./screenshots')
 const windowStateKeeper = require('electron-window-state')
 const { MenuTemplate } = require('./menu')

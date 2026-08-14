@@ -15,6 +15,9 @@ const DEFAULT_CONFIG = {
   yakitMode: 'classic',
 }
 
+// config.json 内存缓存，避免每次调用都重复同步读盘
+let configCache = null
+
 // --- 版本环境变量映射 ---
 const getVersionEnvVarName = () => {
   const appName = app.getName()
@@ -52,53 +55,105 @@ const getConfigPath = () => {
 }
 
 /**
- * 读取 config.json，自愈：文件不存在/格式错误时返回默认值并尝试重建
+ * 同步读取 config.json，启用内存缓存，避免每次调用都重复读盘
+ * 命中缓存时直接返回拷贝
  */
 const getConfig = () => {
-  const configPath = getConfigPath()
+  return configCache ? { ...configCache } : DEFAULT_CONFIG
+}
+
+const _ensureDirAsync = async (dir) => {
   try {
-    const dir = path.dirname(configPath)
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true })
-    }
-    // 从旧位置迁移：userData、Windows exe 同级
-    if (!fs.existsSync(configPath)) {
+    await fs.promises.mkdir(dir, { recursive: true })
+  } catch (e) {}
+}
+const _existsAsync = async (p) => {
+  try {
+    await fs.promises.access(p)
+    return true
+  } catch (_) {
+    return false
+  }
+}
+/**
+ * 异步获取应用配置（config.json）
+ *
+ * 核心职责：
+ *   1. 确保配置目录存在
+ *   2. 从旧版本路径（userData / Windows exe同级）迁移已有配置
+ *   3. 若迁移失败或全新安装，则使用默认配置初始化
+ *   4. 读取现有配置并与默认值合并，保证字段完整性
+ *   5. 异常兜底：任何错误都会回退到默认配置，保证应用不崩溃
+ *
+ * @returns {Promise<Object>} 返回配置对象的浅拷贝
+ */
+const getConfigAsync = async () => {
+  // 获取配置文件的绝对路径（由外部 getConfigPath 函数提供）
+  const configPath = getConfigPath()
+
+  try {
+    // ----- 阶段一：确保父级目录存在 -----
+    // 调用辅助函数，递归创建目录（若已存在则静默忽略错误）
+    await _ensureDirAsync(path.dirname(configPath))
+
+    // ----- 阶段二：检测配置文件是否存在，不存在则触发迁移 -----
+    if (!(await _existsAsync(configPath))) {
+      // 收集可能遗留旧配置文件的路径（按优先级排序）
       const legacy = []
+
+      // 候选路径1：Electron 提供的 userData 目录
       try {
         legacy.push(path.join(app.getPath('userData'), 'config.json'))
       } catch (_) {}
+
+      // 候选路径2：Windows 平台且打包后的 exe 同级目录
       try {
         if (process.platform === 'win32' && app.isPackaged) {
           legacy.push(path.join(path.dirname(app.getPath('exe')), 'config.json'))
         }
       } catch (_) {}
+
+      // 遍历所有候选旧路径，尝试复制第一个存在的文件到新位置
       for (const p of legacy) {
         try {
-          if (fs.existsSync(p)) {
-            fs.copyFileSync(p, configPath)
+          if (await _existsAsync(p)) {
+            // 找到旧配置，复制到目标配置路径
+            await fs.promises.copyFile(p, configPath)
             break
           }
         } catch (_) {}
       }
     }
-    if (!fs.existsSync(configPath)) {
-      fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf8')
-      return { ...DEFAULT_CONFIG }
+
+    // ----- 阶段三：迁移完成后再次检查，决定是否需要新建默认配置 -----
+    // 场景1：迁移成功 -> 文件已存在，跳过此块，进入读取逻辑
+    // 场景2：迁移失败（无旧文件/复制失败）-> 文件依然不存在，执行新建
+    if (!(await _existsAsync(configPath))) {
+      await fs.promises.writeFile(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf8')
+      configCache = { ...DEFAULT_CONFIG }
+      return { ...configCache }
     }
-    const raw = fs.readFileSync(configPath, 'utf8')
+
+    // ----- 阶段四：读取并解析现有配置文件 -----
+    const raw = await fs.promises.readFile(configPath, 'utf8')
     const parsed = JSON.parse(raw)
-    return { ...DEFAULT_CONFIG, ...parsed }
+    configCache = { ...DEFAULT_CONFIG, ...parsed }
+    return { ...configCache }
   } catch (e) {
+    // ----- 全局异常捕获（兜底策略）-----
+    // 捕获范围：目录创建、文件读写、JSON解析、迁移过程中的任何意外错误
     console.log(`read config.json failed, using defaults: ${e}`)
+    // 尽力尝试将默认配置写入磁盘（写入失败则静默忽略，避免二次异常）
     try {
-      fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf8')
+      await fs.promises.writeFile(configPath, JSON.stringify(DEFAULT_CONFIG, null, 2), 'utf8')
     } catch (_) {}
-    return { ...DEFAULT_CONFIG }
+    configCache = { ...DEFAULT_CONFIG }
+    return { ...configCache }
   }
 }
 
 /**
- * 写入配置项
+ * 写入配置项，成功时同步更新内存缓存
  */
 const setConfig = (key, value) => {
   const configPath = getConfigPath()
@@ -110,9 +165,12 @@ const setConfig = (key, value) => {
       fs.mkdirSync(dir, { recursive: true })
     }
     fs.writeFileSync(configPath, JSON.stringify(current, null, 2), 'utf8')
+    configCache = current
     return true
   } catch (e) {
     console.log(`write config.json failed: ${e}`)
+    // 写盘失败时清空缓存，下次读取重新加载文件
+    configCache = null
     return false
   }
 }
@@ -249,6 +307,7 @@ console.log(`---------- Global-Path End ----------`)
 module.exports = {
   getAppConfigDir,
   getConfigPath,
+  getConfigAsync,
   getConfig,
   setConfig,
 
