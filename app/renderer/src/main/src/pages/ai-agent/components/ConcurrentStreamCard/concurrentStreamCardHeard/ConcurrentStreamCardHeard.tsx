@@ -9,6 +9,8 @@ import useCreation from 'ahooks/lib/useCreation'
 import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
+import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
+import Loading from '@/components/Loading/Loading'
 
 const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((props) => {
   const { token, isChildWindow, onClickTitle, rowData, coordinatorId, expand, expandToggle, onRefresh } = props
@@ -63,9 +65,13 @@ const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((prop
     <div className={styles['chat-card-title']} onClick={onClickTitle}>
       <div className={styles['chat-card-title-left']}>
         {presentation.icon && <div className={styles['chat-card-title-icon']}>{presentation.icon}</div>}
-        <div className={styles['chat-card-title-text']}>
-          {titleText}
-          {rowData?.chatType}
+        <div className={styles['chat-card-title-text-wrapper']}>
+          <div className={styles['chat-card-title-text']}>{titleText}</div>
+          {rowData?.data?.status === AITaskStatus.inProgress && (
+            <Loading size={12} className={styles['loading-subtitle']}>
+              <ScrollText text={rowData?.data.loadingTitle} />
+            </Loading>
+          )}
         </div>
         <div className={styles['chat-card-title-extra']}>{modalInfo && <ModalInfo {...modalInfo} />}</div>
       </div>
