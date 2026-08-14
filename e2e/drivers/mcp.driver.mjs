@@ -1,6 +1,7 @@
 const MCP_PROTOCOL_VERSION = '2025-11-25'
 const MCP_SESSION_HEADER = 'mcp-session-id'
 const MCP_PROTOCOL_HEADER = 'mcp-protocol-version'
+const MCP_REQUEST_TIMEOUT_MS = 30_000
 
 const readResponseBody = async (response) => {
   const text = await response.text()
@@ -30,6 +31,25 @@ export class StreamableMCPClient {
     this.protocolVersion = MCP_PROTOCOL_VERSION
   }
 
+  /**
+   * 发起带统一超时的 fetch 请求。
+   * 使用 AbortController 避免测试套件因 MCP 无响应而永久挂起。
+   */
+  async #request(url, init) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), MCP_REQUEST_TIMEOUT_MS)
+    try {
+      return await fetch(url, { ...init, signal: controller.signal })
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new Error(`MCP request timed out after ${MCP_REQUEST_TIMEOUT_MS}ms: ${init.method || 'POST'} ${url}`)
+      }
+      throw error
+    } finally {
+      clearTimeout(timeout)
+    }
+  }
+
   async request(method, params) {
     const headers = {
       accept: 'application/json, text/event-stream',
@@ -40,7 +60,7 @@ export class StreamableMCPClient {
       headers[MCP_PROTOCOL_HEADER] = this.protocolVersion
     }
 
-    const response = await fetch(this.endpoint, {
+    const response = await this.#request(this.endpoint, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -66,7 +86,7 @@ export class StreamableMCPClient {
   }
 
   async notify(method, params) {
-    const response = await fetch(this.endpoint, {
+    const response = await this.#request(this.endpoint, {
       method: 'POST',
       headers: {
         accept: 'application/json, text/event-stream',
@@ -108,7 +128,7 @@ export class StreamableMCPClient {
 
   async close() {
     if (!this.sessionId) return
-    const response = await fetch(this.endpoint, {
+    const response = await this.#request(this.endpoint, {
       method: 'DELETE',
       headers: {
         [MCP_SESSION_HEADER]: this.sessionId,

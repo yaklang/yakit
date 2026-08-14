@@ -23,7 +23,6 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
-import { HTTPFuzzerHistorySelector } from './HTTPFuzzerHistory'
 import type { HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
 import type { HotPatchTempItem } from './HTTPFuzzerHotPatch'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
@@ -237,6 +236,11 @@ const HTTPFlowRealTimeTableAndEditor = React.lazy(() =>
 const MatcherAndExtraction = React.lazy(() =>
   import('./MatcherAndExtractionCard/MatcherAndExtractionCard').then(({ MatcherAndExtraction }) => ({
     default: MatcherAndExtraction,
+  })),
+)
+const HTTPFuzzerHistorySelector = React.lazy(() =>
+  import('./HTTPFuzzerHistory').then(({ HTTPFuzzerHistorySelector }) => ({
+    default: HTTPFuzzerHistorySelector,
   })),
 )
 const WebFuzzerResponseExtractor = React.lazy(() =>
@@ -954,6 +958,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useState<boolean>(false) // Response中显示匹配和提取器
   const [showExtra, setShowExtra] = useState<boolean>(false) // Response中显示payload和提取内容
   const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+  const [historySelectorOpen, setHistorySelectorOpen] = useState(false)
 
   const fuzzerRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(fuzzerRef)
@@ -3082,21 +3087,26 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                       trigger={'click'}
                       placement={'leftTop'}
                       destroyTooltipOnHide={true}
+                      onVisibleChange={setHistorySelectorOpen}
                       content={
                         <div style={{ width: 400 }}>
-                          <HTTPFuzzerHistorySelector
-                            currentSelectId={currentSelectId}
-                            onSelect={(e, page, showAll) => {
-                              cancelCurrentHTTPFuzzer()
-                              if (!showAll) setCurrentPage(page)
-                              loadHistory(e)
-                            }}
-                            onDeleteAllCallback={() => {
-                              setCurrentPage(0)
-                              getTotal()
-                            }}
-                            fuzzerTabIndex={props.id}
-                          />
+                          {historySelectorOpen && (
+                            <React.Suspense fallback={null}>
+                              <HTTPFuzzerHistorySelector
+                                currentSelectId={currentSelectId}
+                                onSelect={(e, page, showAll) => {
+                                  cancelCurrentHTTPFuzzer()
+                                  if (!showAll) setCurrentPage(page)
+                                  loadHistory(e)
+                                }}
+                                onDeleteAllCallback={() => {
+                                  setCurrentPage(0)
+                                  getTotal()
+                                }}
+                                fuzzerTabIndex={props.id}
+                              />
+                            </React.Suspense>
+                          )}
                         </div>
                       }
                     >

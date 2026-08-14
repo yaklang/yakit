@@ -185,11 +185,13 @@ import {
   applyWebFuzzerTabMutation,
   countWebFuzzerTabs,
   filterMissingWebFuzzerNodes,
+  type WebFuzzerPushNode,
+} from './webFuzzerTabPush'
+import {
   getCustomWebFuzzerGroupColorStyle,
   getWebFuzzerGroupContrastColor,
   isCustomWebFuzzerGroupColor,
-  type WebFuzzerPushNode,
-} from './webFuzzerTabPush'
+} from './webFuzzerGroupColor'
 
 const BatchAddNewGroup = React.lazy(() => import('./BatchAddNewGroup'))
 const BatchEditGroup = React.lazy(() => import('./BatchEditGroup/BatchEditGroup'))
@@ -3370,6 +3372,111 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
   })
 
+  /**
+   * 确保 Web Fuzzer 顶层页面已初始化。
+   * 若当前 pageCache 中不存在 HTTPFuzzer 路由，则调用 onInitFuzzer(false) 创建默认空白页；
+   * 避免服务端推送到达时目标页面尚未生成。
+   */
+  const ensureHTTPFuzzerPageInitialized = useMemoizedFn(async () => {
+    const isExistWF = getPageCache().findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
+    if (!isExistWF) {
+      await onInitFuzzer(false)
+    }
+  })
+
+  /**
+   * 处理服务端 create 推送：批量新建缺失的 Web Fuzzer 标签/分组。
+   * 过滤本地已存在的节点，保留服务端分配的 id，然后追加到现有页面。
+   */
+  const handleCreateWebFuzzerTabAction = useMemoizedFn(async (payload: WebFuzzerTabPush) => {
+    const { openFlag = true, data = [] } = payload
+    if (!data.length) return
+
+    await ensureHTTPFuzzerPageInitialized()
+
+    // 将 FuzzerConfig.Config 解析为节点
+    const pageList =
+      data.map((ele) =>
+        JSONParseLog(ele.Config, { page: 'MainOperatorContent', fun: 'onServerPushOpenWebFuzzerTab' }),
+      ) || []
+
+    // 过滤掉本地已存在的 id，防止 live-cache 恢复后重复创建
+    const currentWebFuzzer = getPageCache().find((ele) => ele.route === YakitRoute.HTTPFuzzer)
+    const missingPageList = filterMissingWebFuzzerNodes(
+      currentWebFuzzer?.multipleNode || [],
+      pageList as WebFuzzerPushNode[],
+    )
+
+    if (missingPageList.length > 0) {
+      // 保留服务端分配的 id，不经过 rebuildMultipleNodeTree 重新生成
+      await fetchFuzzerList(missingPageList, true, openFlag, true)
+    } else if (!isSecurityExpert && openFlag) {
+      // 无新增节点但 openFlag 为 true 时，切到 Web Fuzzer 顶层页
+      setCurrentTabKey(routeConvertKey(YakitRoute.HTTPFuzzer, ''))
+    }
+  })
+
+  /**
+   * 处理服务端 update/delete 推送：重建 Web Fuzzer 标签树并写回 store。
+   * 优先保留本地未覆盖的配置；openFlag 为 true 时切换顶层页并聚焦变更标签。
+   */
+  const handleUpdateDeleteWebFuzzerTabAction = useMemoizedFn(async (payload: WebFuzzerTabPush) => {
+    const openFlag = payload.openFlag ?? false
+    const changedData = payload.changedData || []
+    const deletedPageIds = payload.pageIds || []
+    if (changedData.length === 0 && deletedPageIds.length === 0) return
+
+    await ensureHTTPFuzzerPageInitialized()
+
+    const latestPageCache = cloneDeep(getPageCache())
+    const webFuzzerIndex = latestPageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
+    if (webFuzzerIndex === -1) return
+
+    const changedNodes =
+      changedData.map((ele) =>
+        JSONParseLog(ele.Config, { page: 'MainOperatorContent', fun: 'onServerPushOpenWebFuzzerTab' }),
+      ) || []
+    const currentWebFuzzerPage = latestPageCache[webFuzzerIndex]
+    const currentPageInfo = usePageInfo.getState().pages.get(YakitRoute.HTTPFuzzer)
+
+    // 当 openFlag 为 true 且仅单个标签变更时，将其作为 preferredPageId，使变更后自动聚焦该标签
+    const changedTabIds = changedNodes.filter((node) => !node.id.endsWith('group')).map((node) => node.id)
+    const preferredPageId = openFlag && changedTabIds.length === 1 ? changedTabIds[0] : ''
+
+    // 纯函数重建标签树与 page state，优先保留本地未覆盖的配置
+    const result = applyWebFuzzerTabMutation(
+      currentWebFuzzerPage.multipleNode || [],
+      currentPageInfo,
+      changedNodes as WebFuzzerPushNode[],
+      deletedPageIds,
+      preferredPageId,
+    )
+
+    // 写回 pageCache 与 pageInfo store，触发二级菜单重渲染
+    latestPageCache[webFuzzerIndex] = {
+      ...currentWebFuzzerPage,
+      multipleNode: result.multipleNode,
+      multipleLength: countWebFuzzerTabs(result.multipleNode),
+      openFlag,
+      selectSubItem: false,
+    }
+    setPagesData(YakitRoute.HTTPFuzzer, result.page)
+    setPageCache(latestPageCache)
+    emiter.emit('secondMenuTabDataChange', '')
+
+    if (!isSecurityExpert && openFlag) {
+      // 将 Web Fuzzer 切换为当前顶层页
+      setCurrentTabKey(routeConvertKey(YakitRoute.HTTPFuzzer, ''))
+    }
+
+    // 聚焦选中的子标签，使用 scheduleIdleTask 避免阻塞当前渲染帧
+    if (result.selectedPageId) {
+      scheduleIdleTask(() => {
+        emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: result.selectedPageId, forceRefresh: true }))
+      })
+    }
+  })
+
   const onServerPushOpenWebFuzzerTab = useMemoizedFn(async (res?: string) => {
     try {
       const payload: WebFuzzerTabPush = JSONParseLog(res || '{}', {
@@ -3378,83 +3485,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       })
       const action = payload.action || 'create'
 
+      // --- create：服务端要求新建一个或多个标签/分组 ---
       if (action === 'create') {
-        const { openFlag = true, data = [] } = payload
-        if (!data.length) return
-
-        const isExistWF = getPageCache().findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
-        if (!isExistWF) {
-          await onInitFuzzer(false)
-        }
-
-        const pageList =
-          data.map((ele) =>
-            JSONParseLog(ele.Config, { page: 'MainOperatorContent', fun: 'onServerPushOpenWebFuzzerTab' }),
-          ) || []
-
-        const currentWebFuzzer = getPageCache().find((ele) => ele.route === YakitRoute.HTTPFuzzer)
-        const missingPageList = filterMissingWebFuzzerNodes(
-          currentWebFuzzer?.multipleNode || [],
-          pageList as WebFuzzerPushNode[],
-        )
-        if (missingPageList.length > 0) {
-          await fetchFuzzerList(missingPageList, true, openFlag, true)
-        } else if (!isSecurityExpert && openFlag) {
-          setCurrentTabKey(routeConvertKey(YakitRoute.HTTPFuzzer, ''))
-        }
+        await handleCreateWebFuzzerTabAction(payload)
         return
       }
 
-      if (action !== 'update' && action !== 'delete') return
-
-      const openFlag = payload.openFlag ?? false
-      const changedData = payload.changedData || []
-      const deletedPageIds = payload.pageIds || []
-      if (changedData.length === 0 && deletedPageIds.length === 0) return
-
-      const isExistWF = getPageCache().findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
-      if (!isExistWF) {
-        await onInitFuzzer(false)
-      }
-
-      const latestPageCache = cloneDeep(getPageCache())
-      const webFuzzerIndex = latestPageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer)
-      if (webFuzzerIndex === -1) return
-
-      const changedNodes =
-        changedData.map((ele) =>
-          JSONParseLog(ele.Config, { page: 'MainOperatorContent', fun: 'onServerPushOpenWebFuzzerTab' }),
-        ) || []
-      const currentWebFuzzerPage = latestPageCache[webFuzzerIndex]
-      const currentPageInfo = usePageInfo.getState().pages.get(YakitRoute.HTTPFuzzer)
-      const changedTabIds = changedNodes.filter((node) => !node.id.endsWith('group')).map((node) => node.id)
-      const preferredPageId = openFlag && changedTabIds.length === 1 ? changedTabIds[0] : ''
-      const result = applyWebFuzzerTabMutation(
-        currentWebFuzzerPage.multipleNode || [],
-        currentPageInfo,
-        changedNodes as WebFuzzerPushNode[],
-        deletedPageIds,
-        preferredPageId,
-      )
-
-      latestPageCache[webFuzzerIndex] = {
-        ...currentWebFuzzerPage,
-        multipleNode: result.multipleNode,
-        multipleLength: countWebFuzzerTabs(result.multipleNode),
-        openFlag,
-        selectSubItem: false,
-      }
-      setPagesData(YakitRoute.HTTPFuzzer, result.page)
-      setPageCache(latestPageCache)
-      emiter.emit('secondMenuTabDataChange', '')
-
-      if (!isSecurityExpert && openFlag) {
-        setCurrentTabKey(routeConvertKey(YakitRoute.HTTPFuzzer, ''))
-      }
-      if (result.selectedPageId) {
-        scheduleIdleTask(() => {
-          emiter.emit('switchSubMenuItem', JSON.stringify({ pageId: result.selectedPageId, forceRefresh: true }))
-        })
+      // --- update / delete：服务端要求更新或删除已有标签/分组 ---
+      if (action === 'update' || action === 'delete') {
+        await handleUpdateDeleteWebFuzzerTabAction(payload)
       }
     } catch (error) {
       yakitNotify('error', t('MainOperatorContent.openWFFailed', { error: `${error}` }))
@@ -5000,20 +5039,22 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
     const onRemoveSubPageFun = useMemoizedFn((removeItem: MultipleNodeInfo) => {
       //  先更改当前选择item,在删除
       if (removeItem.id === selectSubMenu.id) onUpdateSelectSubPage(removeItem)
-      const { index, subIndex } = getPageItemById(subPage, removeItem.id)
+      // 浅拷贝 subPage，避免直接修改原状态引用
+      const newSubPage = [...subPage]
+      const { index, subIndex } = getPageItemById(newSubPage, removeItem.id)
       if (subIndex === -1) {
         // 删除游离页面
-        subPage.splice(index, 1)
+        newSubPage.splice(index, 1)
       } else {
         // 删除组内页面
-        const groupItem = subPage[index]
-        const groupChildren = groupItem.groupChildren || []
+        const groupItem = newSubPage[index]
+        const groupChildren = groupItem.groupChildren ? [...groupItem.groupChildren] : []
         if (groupChildren.length > 0) {
           groupChildren.splice(subIndex, 1)
         }
         //删除后再判断
         if (groupChildren.length === 0) {
-          subPage.splice(index, 1)
+          newSubPage.splice(index, 1)
           removePagesDataCacheById(pageRouteKey, groupItem.id)
           if (pageItem.route === YakitRoute.HTTPFuzzer) {
             removeFuzzerSequenceList({
@@ -5021,11 +5062,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             })
           }
         } else {
-          subPage.splice(index + 1, 0)
+          newSubPage.splice(index + 1, 0)
+          // 更新 groupItem 的 groupChildren 为新的数组引用
+          newSubPage[index] = { ...groupItem, groupChildren }
         }
       }
-      onUpdatePageCache([...subPage])
-      onUpdateSorting(subPage, pageRouteKey)
+      onUpdatePageCache(newSubPage)
+      onUpdateSorting(newSubPage, pageRouteKey)
     })
 
     /** @description 多开页面的二级页面关闭事件 */
@@ -6080,8 +6123,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 <div
                   className={classNames(styles['tab-menu-sub'], {
                     [styles['tab-menu-sub-width']]: pageItem.hideAdd === true,
-                    [styles['tab-menu-sub-maxWidth-64']]: isWebFuzzerRoute, // WF页面二级菜单的默认占位最大宽度
-                    [styles['tab-menu-sub-maxWidth-64']]: isShowExpandIcon && !isWebFuzzerRoute, // 除了WF页面，其他多开页面二级菜单展开后占位最大宽度
+                    [styles['tab-menu-sub-maxWidth-64']]: isWebFuzzerRoute || (isShowExpandIcon && !isWebFuzzerRoute), // WF页面或(非WF页面展开图标)使用64占位最大宽度
                     [styles['tab-menu-sub-maxWidth-96']]: isShowExpandIcon && isWebFuzzerRoute, // WF页面二级菜单展开后占位最大宽度
                     [styles['tab-menu-sub-expand']]: isExpand,
                   })}
