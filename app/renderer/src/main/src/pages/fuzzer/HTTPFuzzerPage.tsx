@@ -1790,7 +1790,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       setTimeout(() => {
         setIsPause(true)
         setLoading(false)
-        getTotal()
+        syncTotal()
       }, 500)
       stop()
       logger(httpFuzzerLog({ content: t('HTTPFuzzerPage.send_complete'), status: 'end' }))
@@ -1911,14 +1911,19 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   )
 
   const [currentPage, setCurrentPage] = useState<number>(0)
-  const [total, setTotal] = useState<number>()
-  /**获取上一个/下一个 */
+  const [total, setTotal] = useState<number>(0)
+  const [showAll, setShowAll] = useState<boolean>(false)
+  const skipNextSyncTotalRef = useRef(false)
+  const buildHistoryQueryParams = useMemoizedFn((pageInt: number, limitInt: number, all: boolean) => {
+    return {
+      FuzzerTabIndex: all ? '' : props.id,
+      Pagination: { Page: pageInt, Limit: limitInt },
+    }
+  })
+  /** 按历史序列位置 pageInt 加载单个历史数据包详情 */
   const getList = useMemoizedFn((pageInt: number) => {
     setLoading(true)
-    const params = {
-      FuzzerTabIndex: props.id,
-      Pagination: { Page: pageInt, Limit: 1 },
-    }
+    const params = buildHistoryQueryParams(pageInt, 1, showAll)
     ipcRenderer
       .invoke('QueryHistoryHTTPFuzzerTaskEx', params)
       .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
@@ -1932,37 +1937,46 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       })
       .finally(() => setTimeout(() => setLoading(false), 300))
   })
+  /** 上一个数据包：到第一条时禁用 */
   const onPrePage = useMemoizedFn(() => {
-    if (!isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1) {
-      return
-    }
     setCurrentPage(currentPage - 1)
     getList(currentPage - 1)
   })
+  /** 下一个数据包：到最后一条或没有历史时禁用 */
   const onNextPage = useMemoizedFn(() => {
-    if (!Number(total)) return
-    if (!isbuttonIsSendReqStatus) return
-    if (currentPage >= Number(total)) {
-      return
-    }
     setCurrentPage(currentPage + 1)
     getList(currentPage + 1)
   })
-
-  useEffect(() => {
-    getTotal()
-  }, [])
-
-  const getTotal = useMemoizedFn(() => {
-    ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', {
-        FuzzerTabIndex: props.id,
-        Pagination: { Page: 1, Limit: 1 },
-      })
-      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
-        setTotal(data.Total)
-      })
+  /** 查询历史任务总数 */
+  const queryHistoryTotal = useMemoizedFn((all: boolean) => {
+    return ipcRenderer
+      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, 1, all))
+      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => Number(data.Total))
   })
+  /** 仅同步 total，不处理 showAll 自动切换 */
+  const syncTotal = useMemoizedFn(() => {
+    if (skipNextSyncTotalRef.current) {
+      skipNextSyncTotalRef.current = false
+      return
+    }
+    queryHistoryTotal(showAll).then(setTotal)
+  })
+  /** 获取总数：当前 tab 无历史时自动切换到查看全部 */
+  const getInitTotal = useMemoizedFn(() => {
+    queryHistoryTotal(false).then((total: number) => {
+      if (total === 0 && !showAll) {
+        setShowAll(true)
+        return
+      }
+      setTotal(total)
+    })
+  })
+  useEffect(() => {
+    getInitTotal()
+  }, [])
+  useUpdateEffect(() => {
+    syncTotal()
+  }, [showAll])
 
   const webFuzzerNewEditorRef = useRef<any>()
 
@@ -2180,180 +2194,206 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     return p
   }, [firstFull, secondFull])
 
-  const firstNodeExtra = useMemoizedFn(() => (
-    <>
-      <div className={styles['fuzzer-firstNode-extra']}>
-        <div className={styles['fuzzer-flipping-pages']}>
-          <ChevronLeftIcon
-            className={classNames(styles['chevron-icon'], {
-              [styles['chevron-icon-disable']]: !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1,
-            })}
-            onClick={() => onPrePage()}
-          />
-          <ChevronRightIcon
-            className={classNames(styles['chevron-icon'], {
-              [styles['chevron-icon-disable']]:
-                !isbuttonIsSendReqStatus || currentPage >= Number(total) || !Number(total),
-            })}
-            onClick={() => onNextPage()}
-          />
-        </div>
-        {+(firstNodeSize?.width || 0) < 500 ? (
-          <YakitPopover
-            trigger={'click'}
-            content={
-              <>
-                <div>
-                  {t('YakitButton.privacy_mode')}&nbsp;
-                  <YakitSwitch checked={privacy} onChange={setPrivacy} />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  HEX
-                  <YakitSwitch checked={hex} onChange={setHex} />
-                </div>
-              </>
-            }
-          >
-            <OutlineDotsverticalIcon className={styles['resize-card-icon']} />
-          </YakitPopover>
-        ) : (
-          <>
-            <YakitCheckableTag checked={privacy} onChange={setPrivacy} style={{ marginRight: 0 }}>
-              {t('YakitButton.privacy_mode')}
-            </YakitCheckableTag>
-            <YakitCheckableTag checked={hex} onChange={setHex} style={{ marginRight: 0 }}>
-              HEX
-            </YakitCheckableTag>
-          </>
-        )}
-        <YakitButton
-          size="small"
-          type="outline2"
-          onMouseUp={(event) => event.currentTarget.blur()}
-          onClick={async () => {
-            if (!requestRef.current) return
-            const beautifyValue = await prettifyPacketCode(requestRef.current)
-            onSetRequest(Uint8ArrayToString(beautifyValue as Uint8Array, 'utf8'))
-            refreshRequest()
-          }}
-        >
-          {t('YakitButton.beautify')}
-        </YakitButton>
-        <div className={styles['hot-patch-trigger']} onMouseEnter={() => setHotCodeTemplateMounted(true)}>
-          <YakitButton
-            size="small"
-            type="primary"
-            className={styles['hot-patch-trigger-main']}
-            onClick={() => hotPatchTrigger()}
-          >
-            {t('HTTPFuzzerPage.hotReload')}
-          </YakitButton>
-          {hotCodeTemplateMounted ? (
-            <React.Suspense fallback={null}>
-              <HotCodeTemplate
-                type="fuzzer"
-                hotPatchTempLocal={hotPatchTempLocal}
-                onSetHotPatchTempLocal={setHotPatchTempLocal}
-                onClickHotCode={(temp, tempName) => {
-                  setHotPatchCode(temp)
-                  setSelectedHotPatchTemplateName(tempName || '')
-                  hotPatchTrigger()
+  const firstNodeExtra = useMemo(() => {
+    return () => {
+      const preDisabled = !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
+      const nextDisabled = !isbuttonIsSendReqStatus || !Number(total) || currentPage >= Number(total)
+
+      return (
+        <>
+          <div className={styles['fuzzer-firstNode-extra']}>
+            <div className={styles['fuzzer-flipping-pages']}>
+              <ChevronLeftIcon
+                className={classNames(styles['chevron-icon'], {
+                  [styles['chevron-icon-disable']]: preDisabled,
+                })}
+                onClick={() => {
+                  if (!preDisabled) {
+                    onPrePage()
+                  }
                 }}
-                onDeleteLocalTempOk={() => {
-                  setSelectedHotPatchTemplateName('')
-                }}
-                triggerNode={
-                  <YakitButton
-                    size="small"
-                    type="primary"
-                    className={styles['hot-patch-trigger-dropdown']}
-                    icon={<OutlineChevrondownIcon />}
-                  />
-                }
               />
-            </React.Suspense>
-          ) : (
+              <ChevronRightIcon
+                className={classNames(styles['chevron-icon'], {
+                  [styles['chevron-icon-disable']]: nextDisabled,
+                })}
+                onClick={() => {
+                  if (!nextDisabled) {
+                    onNextPage()
+                  }
+                }}
+              />
+            </div>
+            {+(firstNodeSize?.width || 0) < 500 ? (
+              <YakitPopover
+                trigger={'click'}
+                content={
+                  <>
+                    <div>
+                      {t('YakitButton.privacy_mode')}&nbsp;
+                      <YakitSwitch checked={privacy} onChange={setPrivacy} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      HEX
+                      <YakitSwitch checked={hex} onChange={setHex} />
+                    </div>
+                  </>
+                }
+              >
+                <OutlineDotsverticalIcon className={styles['resize-card-icon']} />
+              </YakitPopover>
+            ) : (
+              <>
+                <YakitCheckableTag checked={privacy} onChange={setPrivacy} style={{ marginRight: 0 }}>
+                  {t('YakitButton.privacy_mode')}
+                </YakitCheckableTag>
+                <YakitCheckableTag checked={hex} onChange={setHex} style={{ marginRight: 0 }}>
+                  HEX
+                </YakitCheckableTag>
+              </>
+            )}
             <YakitButton
               size="small"
-              type="primary"
-              className={styles['hot-patch-trigger-dropdown']}
-              icon={<OutlineChevrondownIcon />}
-              onClick={() => setHotCodeTemplateMounted(true)}
-            />
-          )}
-        </div>
-        <YakitPopover
-          trigger={'click'}
-          content={
-            <div style={{ width: 400 }}>
-              <Form
-                layout={'vertical'}
-                onFinish={(v) => {
-                  setAdvancedConfigValue({
-                    ...advancedConfigValue,
-                    isHttps: false,
-                  })
-                  ipcRenderer
-                    .invoke('Codec', {
-                      ...v,
-                      Text: v.Text.trim(),
-                    })
-                    .then((e) => {
-                      if (e?.Result) {
-                        requestRef.current = e.Result
-                        if (v.Text.includes('https://')) {
-                          setAdvancedConfigValue({
-                            ...advancedConfigValue,
-                            isHttps: true,
-                          })
-                        }
-                        refreshRequest()
-                      }
-                    })
-                    .catch((e) => {
-                      failed(e.message)
-                    })
-                    .finally(() => {})
-                }}
-                size={'small'}
+              type="outline2"
+              onMouseUp={(event) => event.currentTarget.blur()}
+              onClick={async () => {
+                if (!requestRef.current) return
+                const beautifyValue = await prettifyPacketCode(requestRef.current)
+                onSetRequest(Uint8ArrayToString(beautifyValue as Uint8Array, 'utf8'))
+                refreshRequest()
+              }}
+            >
+              {t('YakitButton.beautify')}
+            </YakitButton>
+            <div className={styles['hot-patch-trigger']} onMouseEnter={() => setHotCodeTemplateMounted(true)}>
+              <YakitButton
+                size="small"
+                type="primary"
+                className={styles['hot-patch-trigger-main']}
+                onClick={() => hotPatchTrigger()}
               >
-                <Form.Item name="Type" initialValue="packet-from-url">
-                  <YakitRadioButtons
-                    buttonStyle="solid"
-                    options={[
-                      {
-                        value: 'packet-from-url',
-                        label: 'URL',
-                      },
-                      {
-                        value: 'packet-from-curl',
-                        label: 'cURL',
-                      },
-                    ]}
+                {t('HTTPFuzzerPage.hotReload')}
+              </YakitButton>
+              {hotCodeTemplateMounted ? (
+                <React.Suspense fallback={null}>
+                  <HotCodeTemplate
+                    type="fuzzer"
+                    hotPatchTempLocal={hotPatchTempLocal}
+                    onSetHotPatchTempLocal={setHotPatchTempLocal}
+                    onClickHotCode={(temp, tempName) => {
+                      setHotPatchCode(temp)
+                      setSelectedHotPatchTemplateName(tempName || '')
+                      hotPatchTrigger()
+                    }}
+                    onDeleteLocalTempOk={() => {
+                      setSelectedHotPatchTemplateName('')
+                    }}
+                    triggerNode={
+                      <YakitButton
+                        size="small"
+                        type="primary"
+                        className={styles['hot-patch-trigger-dropdown']}
+                        icon={<OutlineChevrondownIcon />}
+                      />
+                    }
                   />
-                </Form.Item>
-                <Form.Item name="Text">
-                  <YakitInput size="small" />
-                </Form.Item>
-                <Form.Item style={{ marginBottom: 8, marginTop: 8 }}>
-                  <YakitButton type={'primary'} htmlType={'submit'}>
-                    {t('HTTPFuzzerPage.buildRequest')}
-                  </YakitButton>
-                </Form.Item>
-              </Form>
+                </React.Suspense>
+              ) : (
+                <YakitButton
+                  size="small"
+                  type="primary"
+                  className={styles['hot-patch-trigger-dropdown']}
+                  icon={<OutlineChevrondownIcon />}
+                  onClick={() => setHotCodeTemplateMounted(true)}
+                />
+              )}
             </div>
-          }
-        >
-          <YakitButton size={'small'} type={'primary'}>
-            {t('HTTPFuzzerPage.buildRequest')}
-          </YakitButton>
-        </YakitPopover>
-      </div>
-      <div className={styles['resize-card-icon']} onClick={() => setFirstFull(!firstFull)}>
-        {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
-      </div>
-    </>
-  ))
+            <YakitPopover
+              trigger={'click'}
+              content={
+                <div style={{ width: 400 }}>
+                  <Form
+                    layout={'vertical'}
+                    onFinish={(v) => {
+                      setAdvancedConfigValue({
+                        ...advancedConfigValue,
+                        isHttps: false,
+                      })
+                      ipcRenderer
+                        .invoke('Codec', {
+                          ...v,
+                          Text: v.Text.trim(),
+                        })
+                        .then((e) => {
+                          if (e?.Result) {
+                            requestRef.current = e.Result
+                            if (v.Text.includes('https://')) {
+                              setAdvancedConfigValue({
+                                ...advancedConfigValue,
+                                isHttps: true,
+                              })
+                            }
+                            refreshRequest()
+                          }
+                        })
+                        .catch((e) => {
+                          failed(e.message)
+                        })
+                        .finally(() => {})
+                    }}
+                    size={'small'}
+                  >
+                    <Form.Item name="Type" initialValue="packet-from-url">
+                      <YakitRadioButtons
+                        buttonStyle="solid"
+                        options={[
+                          {
+                            value: 'packet-from-url',
+                            label: 'URL',
+                          },
+                          {
+                            value: 'packet-from-curl',
+                            label: 'cURL',
+                          },
+                        ]}
+                      />
+                    </Form.Item>
+                    <Form.Item name="Text">
+                      <YakitInput size="small" />
+                    </Form.Item>
+                    <Form.Item style={{ marginBottom: 8, marginTop: 8 }}>
+                      <YakitButton type={'primary'} htmlType={'submit'}>
+                        {t('HTTPFuzzerPage.buildRequest')}
+                      </YakitButton>
+                    </Form.Item>
+                  </Form>
+                </div>
+              }
+            >
+              <YakitButton size={'small'} type={'primary'}>
+                {t('HTTPFuzzerPage.buildRequest')}
+              </YakitButton>
+            </YakitPopover>
+          </div>
+          <div className={styles['resize-card-icon']} onClick={() => setFirstFull(!firstFull)}>
+            {firstFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+          </div>
+        </>
+      )
+    }
+  }, [
+    isbuttonIsSendReqStatus,
+    currentPage,
+    total,
+    firstNodeSize?.width,
+    privacy,
+    hex,
+    hotPatchTempLocal,
+    hotCodeTemplateMounted,
+    advancedConfigValue,
+    firstFull,
+    i18nRefresh,
+  ])
 
   const secondNodeTitle = useMemoizedFn(() => {
     return (
@@ -2456,21 +2496,22 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   ))
 
   const getNewCurrentPage = useMemoizedFn(() => {
-    logger(
-      httpFuzzerLog({
-        title: t('HTTPFuzzerPage.run_function_start'),
-        content: 'getNewCurrentPage',
-      }),
-    )
-    const params = {
-      Pagination: { Limit: 1, Order: '', OrderBy: '', Page: 1 },
-      Keyword: '',
-      FuzzerTabIndex: props.id,
-    }
-    ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', params)
-      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
-        setCurrentPage(Number(data.Total) + 1)
+    // 延时确保能拿到最新total
+    setTimeout(() => {
+      logger(
+        httpFuzzerLog({
+          title: t('HTTPFuzzerPage.run_function_start'),
+          content: 'getNewCurrentPage',
+        }),
+      )
+      queryHistoryTotal(false).then((currentTotal: number) => {
+        if (showAll) {
+          skipNextSyncTotalRef.current = true
+          setShowAll(false)
+        }
+        setCurrentPage(0)
+        setCurrentSelectId(undefined)
+        setTotal(currentTotal)
         logger(
           httpFuzzerLog({
             title: t('HTTPFuzzerPage.run_function_end'),
@@ -2478,6 +2519,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
           }),
         )
       })
+    }, 1500)
   })
   // 跳转插件调试页面
   const handleSkipPluginDebuggerPage = async (tempType: 'path' | 'raw') => {
@@ -3094,14 +3136,21 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <React.Suspense fallback={null}>
                               <HTTPFuzzerHistorySelector
                                 currentSelectId={currentSelectId}
-                                onSelect={(e, page, showAll) => {
+                                onSelect={(e, page) => {
                                   cancelCurrentHTTPFuzzer()
-                                  if (!showAll) setCurrentPage(page)
+                                  setCurrentPage(page)
                                   loadHistory(e)
+                                }}
+                                showAll={showAll}
+                                onShowAllChange={(v) => {
+                                  setCurrentPage(0)
+                                  setCurrentSelectId(undefined)
+                                  setShowAll(v)
                                 }}
                                 onDeleteAllCallback={() => {
                                   setCurrentPage(0)
-                                  getTotal()
+                                  setCurrentSelectId(undefined)
+                                  syncTotal()
                                 }}
                                 fuzzerTabIndex={props.id}
                               />
