@@ -475,6 +475,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         visible={rechargeVisible}
         onClose={() => setRechargeVisible(false)}
         onPaySuccess={() => onUpdateApiKey()}
+        onNeedLogin={() => {
+          setLoginShow(true)
+        }}
       />
     </div>
   )

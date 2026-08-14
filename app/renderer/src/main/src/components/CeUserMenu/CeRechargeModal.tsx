@@ -62,10 +62,11 @@ export interface CeRechargeModalProps {
   visible: boolean
   onClose: () => void
   onPaySuccess?: () => void
+  onNeedLogin?: () => void
 }
 
 const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
-  const { visible, onClose, onPaySuccess } = props
+  const { visible, onClose, onPaySuccess, onNeedLogin } = props
   const { t, i18n } = useI18nNamespaces(['layout'])
   const numberLocale = getNumberLocale(i18n.language)
 
@@ -219,8 +220,13 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
       setPayStatus('ready')
       startUiCountdown()
       startOrderPolling()
-    } catch {
+    } catch (err) {
       if (seq !== fetchSeqRef.current) return
+      if (err === 'token过期') {
+        setView('plan')
+        onNeedLogin?.()
+        return
+      }
       setPayStatus('loadError')
     }
   })
