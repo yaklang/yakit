@@ -172,6 +172,11 @@ interface InitDataProps {
 export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
   const { nodeId, graphLine, message, activeKey, setActiveKey, auditRightParams } = props
   const [resultKey, setResultKey] = useState<string | string[]>()
+  const [prevGraphLine, setPrevGraphLine] = useState(graphLine)
+  if (graphLine !== prevGraphLine) {
+    setPrevGraphLine(graphLine)
+    setResultKey(undefined)
+  }
 
   const onExpendRightPathFun = useMemoizedFn((value: string) => {
     try {
@@ -213,7 +218,6 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
 
   const firstSource = useRef<JumpSourceDataProps>()
   const initData: InitDataProps[] = useMemo(() => {
-    setResultKey(undefined)
     let newData: InitDataProps[] = []
     if (graphLine) {
       clearMapResultDetail()
