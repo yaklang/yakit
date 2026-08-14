@@ -497,7 +497,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
       },
     })
       .then((res) => {
-        if (res && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
+        if (res && res.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
           // 当前存在 API Key 跳转到步骤三：获取 API Key Token
           apiFetchToken()
           setApiKeys(res.data)
