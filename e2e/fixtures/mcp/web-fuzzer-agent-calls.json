@@ -1,0 +1,421 @@
+{
+  "schemaVersion": 2,
+  "requiredTools": [
+    "create_web_fuzzer_tab",
+    "create_web_fuzzer_tabs",
+    "query_web_fuzzer_tabs",
+    "update_web_fuzzer_tab",
+    "delete_web_fuzzer_tabs",
+    "manage_web_fuzzer_tab_group"
+  ],
+  "calls": [
+    {
+      "id": "batch-create-with-generated-ids",
+      "tool": "create_web_fuzzer_tabs",
+      "arguments": {
+        "groupName": "AI Auth Flow",
+        "groupColor": "#2F80ED",
+        "openFlag": true,
+        "tabs": [
+          {
+            "tabName": "Login request",
+            "request": "POST /api/login HTTP/1.1\r\nHost: example.test\r\nContent-Type: application/json\r\n\r\n{\"username\":\"admin\",\"password\":\"{{params(password)}}\"}",
+            "isHttps": true,
+            "concurrent": 5,
+            "proxy": "http://127.0.0.1:8080, http://127.0.0.1:8081",
+            "hotPatchCode": "beforeRequest = func(req) { return req }",
+            "actualAddr": "127.0.0.1:9443"
+          },
+          {
+            "tabName": "Search request",
+            "request": "GET /api/search?q={{params(query)}} HTTP/1.1\r\nHost: example.test\r\n\r\n",
+            "isHttps": true
+          }
+        ]
+      },
+      "expectResult": { "operation": "created", "openFlag": true },
+      "capture": {
+        "authGroupId": "groupId",
+        "loginTabId": "changedPageIds.1",
+        "searchTabId": "changedPageIds.2"
+      },
+      "expectUI": {
+        "visible": true,
+        "groupCount": 1,
+        "tabCount": 2,
+        "groups": [
+          {
+            "id": "$ref:authGroupId",
+            "name": "AI Auth Flow",
+            "expanded": true,
+            "color": "#2F80ED",
+            "renderedColor": "rgb(47, 128, 237)"
+          }
+        ],
+        "tabs": [
+          { "id": "$ref:loginTabId", "name": "Login request", "groupId": "$ref:authGroupId", "sort": 1 },
+          { "id": "$ref:searchTabId", "name": "Search request", "groupId": "$ref:authGroupId", "sort": 2 }
+        ]
+      }
+    },
+    {
+      "id": "query-created-payloads",
+      "tool": "query_web_fuzzer_tabs",
+      "arguments": {
+        "pageIds": ["$ref:authGroupId", "$ref:loginTabId", "$ref:searchTabId"],
+        "includeRequest": true
+      },
+      "expectResult": {
+        "totalGroups": 1,
+        "totalTabs": 2,
+        "recommendedGroupColor": "purple",
+        "colorCollisionAvoidable": true
+      },
+      "expectResultPaths": {
+        "groups.0.pageId": "$ref:authGroupId",
+        "groups.0.name": "AI Auth Flow",
+        "groups.0.color": "#2F80ED",
+        "groups.0.tabIds.0": "$ref:loginTabId",
+        "groups.0.tabIds.1": "$ref:searchTabId",
+        "tabs.0.pageId": "$ref:loginTabId",
+        "tabs.0.request": "POST /api/login HTTP/1.1\r\nHost: example.test\r\nContent-Type: application/json\r\n\r\n{\"username\":\"admin\",\"password\":\"{{params(password)}}\"}",
+        "tabs.0.isHttps": true,
+        "tabs.0.concurrent": 5,
+        "tabs.0.proxy.0": "http://127.0.0.1:8080",
+        "tabs.0.proxy.1": "http://127.0.0.1:8081",
+        "tabs.0.hotPatchCode": "beforeRequest = func(req) { return req }",
+        "tabs.0.actualAddr": "127.0.0.1:9443",
+        "usedGroupColors.0": "#2F80ED",
+        "availableGroupColors.0": "purple"
+      }
+    },
+    {
+      "id": "create-existing-tab-with-generated-id",
+      "tool": "create_web_fuzzer_tab",
+      "arguments": {
+        "tabName": "Profile request",
+        "request": "GET /api/profile HTTP/1.1\r\nHost: example.test\r\nAuthorization: Bearer {{params(token)}}\r\n\r\n",
+        "isHttps": true,
+        "openFlag": false
+      },
+      "expectResult": { "operation": "created", "openFlag": false },
+      "capture": { "profileTabId": "pageId" },
+      "expectUI": {
+        "tabCount": 3,
+        "tabs": [{ "id": "$ref:profileTabId", "name": "Profile request", "groupId": "0" }]
+      }
+    },
+    {
+      "id": "group-existing-tab-with-generated-id",
+      "tool": "manage_web_fuzzer_tab_group",
+      "arguments": {
+        "action": "create",
+        "groupName": "AI Existing Tabs",
+        "tabIds": ["$ref:profileTabId"],
+        "color": "purple",
+        "expand": true,
+        "openFlag": true
+      },
+      "expectResult": { "operation": "group-created", "openFlag": true },
+      "capture": { "existingGroupId": "groupId" },
+      "expectUI": {
+        "groupCount": 2,
+        "tabCount": 3,
+        "activeTabId": "$ref:profileTabId",
+        "groups": [{ "id": "$ref:existingGroupId", "name": "AI Existing Tabs", "expanded": true, "color": "purple" }],
+        "tabs": [{ "id": "$ref:profileTabId", "groupId": "$ref:existingGroupId", "active": true }]
+      }
+    },
+    {
+      "id": "update-all-tab-fields-and-move",
+      "tool": "update_web_fuzzer_tab",
+      "arguments": {
+        "pageId": "$ref:loginTabId",
+        "tabName": "Login with token",
+        "request": "POST /api/login/refresh HTTP/1.1\r\nHost: api.example.test\r\n\r\ntoken={{params(token)}}",
+        "isHttps": false,
+        "proxy": "http://127.0.0.1:9090",
+        "concurrent": 8,
+        "hotPatchCode": "afterRequest = func(rsp) { return rsp }",
+        "actualAddr": "127.0.0.1:9080",
+        "targetGroupId": "$ref:existingGroupId",
+        "openFlag": true
+      },
+      "expectResult": { "operation": "updated", "openFlag": true },
+      "expectUI": {
+        "activeTabId": "$ref:loginTabId",
+        "tabs": [
+          { "id": "$ref:loginTabId", "name": "Login with token", "groupId": "$ref:existingGroupId", "active": true }
+        ]
+      }
+    },
+    {
+      "id": "query-updated-tab-fields",
+      "tool": "query_web_fuzzer_tabs",
+      "arguments": { "pageIds": ["$ref:loginTabId"], "includeRequest": true },
+      "expectResult": { "totalGroups": 0, "totalTabs": 1 },
+      "expectResultPaths": {
+        "tabs.0.pageId": "$ref:loginTabId",
+        "tabs.0.name": "Login with token",
+        "tabs.0.groupId": "$ref:existingGroupId",
+        "tabs.0.request": "POST /api/login/refresh HTTP/1.1\r\nHost: api.example.test\r\n\r\ntoken={{params(token)}}",
+        "tabs.0.isHttps": false,
+        "tabs.0.proxy.0": "http://127.0.0.1:9090",
+        "tabs.0.concurrent": 8,
+        "tabs.0.hotPatchCode": "afterRequest = func(rsp) { return rsp }",
+        "tabs.0.actualAddr": "127.0.0.1:9080"
+      }
+    },
+    {
+      "id": "create-with-open-flag-false",
+      "tool": "create_web_fuzzer_tab",
+      "arguments": {
+        "tabName": "Settings request",
+        "request": "GET /api/settings HTTP/1.1\r\nHost: example.test\r\n\r\n",
+        "isHttps": false,
+        "openFlag": false
+      },
+      "expectResult": { "operation": "created", "openFlag": false },
+      "capture": { "settingsTabId": "pageId" },
+      "expectUI": {
+        "tabCount": 4,
+        "activeTabId": "$ref:loginTabId",
+        "tabs": [
+          { "id": "$ref:loginTabId", "active": true },
+          { "id": "$ref:settingsTabId", "groupId": "0", "active": false }
+        ]
+      }
+    },
+    {
+      "id": "group-add-mode",
+      "tool": "manage_web_fuzzer_tab_group",
+      "arguments": {
+        "action": "update",
+        "groupId": "$ref:existingGroupId",
+        "groupName": "AI Account Flow",
+        "mode": "add",
+        "tabIds": ["$ref:settingsTabId"],
+        "color": "orange",
+        "expand": true,
+        "openFlag": false
+      },
+      "expectResult": { "operation": "group-updated" },
+      "expectUI": {
+        "activeTabId": "$ref:loginTabId",
+        "groups": [{ "id": "$ref:existingGroupId", "name": "AI Account Flow", "color": "orange", "expanded": true }],
+        "tabs": [{ "id": "$ref:settingsTabId", "groupId": "$ref:existingGroupId" }]
+      }
+    },
+    {
+      "id": "group-remove-mode",
+      "tool": "manage_web_fuzzer_tab_group",
+      "arguments": {
+        "action": "update",
+        "groupId": "$ref:existingGroupId",
+        "mode": "remove",
+        "tabIds": ["$ref:profileTabId"],
+        "openFlag": false
+      },
+      "expectResult": { "operation": "group-updated" },
+      "expectUI": {
+        "activeTabId": "$ref:loginTabId",
+        "tabs": [{ "id": "$ref:profileTabId", "groupId": "0" }]
+      }
+    },
+    {
+      "id": "group-replace-mode-and-remove-empty-origin-group",
+      "tool": "manage_web_fuzzer_tab_group",
+      "arguments": {
+        "action": "update",
+        "groupId": "$ref:existingGroupId",
+        "mode": "replace",
+        "tabIds": ["$ref:profileTabId", "$ref:searchTabId"],
+        "expand": false,
+        "openFlag": false
+      },
+      "expectResult": { "operation": "group-updated" },
+      "expectUI": {
+        "groupCount": 1,
+        "tabCount": 4,
+        "activeTabId": "$ref:loginTabId",
+        "absentIds": ["$ref:authGroupId"],
+        "groups": [{ "id": "$ref:existingGroupId", "expanded": false }],
+        "tabs": [
+          { "id": "$ref:profileTabId", "groupId": "$ref:existingGroupId", "sort": 1 },
+          { "id": "$ref:searchTabId", "groupId": "$ref:existingGroupId", "sort": 2 },
+          { "id": "$ref:loginTabId", "groupId": "0", "active": true },
+          { "id": "$ref:settingsTabId", "groupId": "0" }
+        ]
+      }
+    },
+    {
+      "id": "query-by-group-and-kind",
+      "tool": "query_web_fuzzer_tabs",
+      "arguments": { "kind": "tab", "groupId": "$ref:existingGroupId" },
+      "expectResult": { "totalGroups": 0, "totalTabs": 2 },
+      "expectResultPaths": {
+        "tabs.0.pageId": "$ref:profileTabId",
+        "tabs.1.pageId": "$ref:searchTabId"
+      }
+    },
+    {
+      "id": "query-by-name",
+      "tool": "query_web_fuzzer_tabs",
+      "arguments": { "kind": "tab", "nameContains": "login with" },
+      "expectResult": { "totalGroups": 0, "totalTabs": 1 },
+      "expectResultPaths": { "tabs.0.pageId": "$ref:loginTabId" }
+    },
+    {
+      "id": "reject-duplicate-tab-id",
+      "tool": "create_web_fuzzer_tab",
+      "arguments": {
+        "pageId": "$ref:profileTabId",
+        "tabName": "Duplicate profile",
+        "request": "GET /duplicate HTTP/1.1\r\nHost: example.test\r\n\r\n",
+        "isHttps": false
+      },
+      "expectError": "already exists",
+      "expectUI": { "groupCount": 1, "tabCount": 4 }
+    },
+    {
+      "id": "reject-empty-request",
+      "tool": "create_web_fuzzer_tab",
+      "arguments": { "tabName": "Invalid empty request", "request": "", "isHttps": false },
+      "expectError": "request is required",
+      "expectUI": { "groupCount": 1, "tabCount": 4 }
+    },
+    {
+      "id": "reject-removing-non-member",
+      "tool": "manage_web_fuzzer_tab_group",
+      "arguments": {
+        "action": "update",
+        "groupId": "$ref:existingGroupId",
+        "mode": "remove",
+        "tabIds": ["$ref:loginTabId"]
+      },
+      "expectError": "is not in group",
+      "expectUI": {
+        "groupCount": 1,
+        "tabCount": 4,
+        "tabs": [{ "id": "$ref:loginTabId", "groupId": "0" }]
+      }
+    },
+    {
+      "id": "reject-invalid-batch-atomically",
+      "tool": "create_web_fuzzer_tabs",
+      "arguments": {
+        "tabs": [
+          {
+            "pageId": "e2e-atomic-new-tab",
+            "tabName": "Must not be persisted",
+            "request": "GET /new HTTP/1.1\r\nHost: example.test\r\n\r\n",
+            "isHttps": false
+          },
+          {
+            "pageId": "$ref:profileTabId",
+            "tabName": "Duplicate profile",
+            "request": "GET /duplicate HTTP/1.1\r\nHost: example.test\r\n\r\n",
+            "isHttps": false
+          }
+        ]
+      },
+      "expectError": "already exists",
+      "expectUI": {
+        "groupCount": 1,
+        "tabCount": 4,
+        "absentIds": ["e2e-atomic-new-tab"]
+      }
+    },
+    {
+      "id": "verify-errors-left-state-unchanged",
+      "tool": "query_web_fuzzer_tabs",
+      "arguments": {},
+      "expectResult": { "totalGroups": 1, "totalTabs": 4 }
+    },
+    {
+      "id": "create-cascade-delete-group",
+      "tool": "manage_web_fuzzer_tab_group",
+      "arguments": {
+        "action": "create",
+        "groupName": "AI Disposable Flow",
+        "tabIds": ["$ref:loginTabId", "$ref:settingsTabId"],
+        "expand": true,
+        "openFlag": false
+      },
+      "expectResult": { "operation": "group-created" },
+      "capture": { "cascadeGroupId": "groupId" },
+      "expectUI": {
+        "groupCount": 2,
+        "tabCount": 4,
+        "groups": [{ "id": "$ref:cascadeGroupId", "name": "AI Disposable Flow" }],
+        "tabs": [
+          { "id": "$ref:loginTabId", "groupId": "$ref:cascadeGroupId" },
+          { "id": "$ref:settingsTabId", "groupId": "$ref:cascadeGroupId" }
+        ]
+      }
+    },
+    {
+      "id": "delete-group-with-tabs",
+      "tool": "manage_web_fuzzer_tab_group",
+      "arguments": {
+        "action": "delete",
+        "groupId": "$ref:cascadeGroupId",
+        "deleteTabs": true,
+        "openFlag": false
+      },
+      "expectResult": { "operation": "group-deleted" },
+      "expectUI": {
+        "groupCount": 1,
+        "tabCount": 2,
+        "absentIds": ["$ref:cascadeGroupId", "$ref:loginTabId", "$ref:settingsTabId"]
+      }
+    },
+    {
+      "id": "query-after-mcp-restart",
+      "restartMcpBefore": true,
+      "tool": "query_web_fuzzer_tabs",
+      "arguments": {
+        "pageIds": ["$ref:existingGroupId", "$ref:profileTabId", "$ref:searchTabId"],
+        "includeRequest": true
+      },
+      "expectResult": { "totalGroups": 1, "totalTabs": 2 },
+      "expectResultPaths": {
+        "groups.0.pageId": "$ref:existingGroupId",
+        "tabs.0.pageId": "$ref:profileTabId",
+        "tabs.1.pageId": "$ref:searchTabId"
+      },
+      "expectUI": { "groupCount": 1, "tabCount": 2 }
+    },
+    {
+      "id": "delete-group-but-preserve-tabs",
+      "tool": "manage_web_fuzzer_tab_group",
+      "arguments": {
+        "action": "delete",
+        "groupId": "$ref:existingGroupId",
+        "deleteTabs": false,
+        "openFlag": false
+      },
+      "expectResult": { "operation": "group-deleted" },
+      "expectUI": {
+        "groupCount": 0,
+        "tabCount": 2,
+        "absentIds": ["$ref:existingGroupId"],
+        "tabs": [
+          { "id": "$ref:profileTabId", "groupId": "0" },
+          { "id": "$ref:searchTabId", "groupId": "0" }
+        ]
+      }
+    },
+    {
+      "id": "delete-remaining-tabs",
+      "tool": "delete_web_fuzzer_tabs",
+      "arguments": { "pageIds": ["$ref:profileTabId", "$ref:searchTabId"] },
+      "expectResult": { "status": "ok" },
+      "expectUI": {
+        "groupCount": 0,
+        "tabCount": 0,
+        "absentIds": ["$ref:profileTabId", "$ref:searchTabId"]
+      }
+    }
+  ]
+}
