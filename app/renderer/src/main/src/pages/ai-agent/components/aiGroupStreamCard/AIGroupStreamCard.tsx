@@ -108,7 +108,7 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
 
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
-  const chatLength = useStore(store, (state) => state.casualChat.elements.length)
+  const chatLength = useStore(store, (state) => state.chatElements.length)
   const renderNum = useStore(store, (state) => state.groups[token]?.renderNum)
   const childrenTokensLength = useStore(store, (state) => state.groups[token]?.childrenTokens.length || 0)
 
@@ -133,7 +133,7 @@ const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps
   const isLastActiveGroup = useCreation(() => {
     if (expand === false) return false
     if (perHasNext.current === false) return false
-    perHasNext.current = store.getState().casualChat.elements[chatLength - 1]?.token === token
+    perHasNext.current = store.getState().chatElements[chatLength - 1]?.token === token
     return perHasNext.current
   }, [chatLength])
 

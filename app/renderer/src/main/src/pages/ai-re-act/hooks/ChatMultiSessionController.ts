@@ -65,7 +65,7 @@ export type DeleteSessionsParams = {
 const hasSessionRenderTree = (content?: SessionRenderContent): boolean => {
   if (!content) return false
   return (
-    (content.casualElements?.length || 0) > 0 ||
+    (content.chatElements?.length || 0) > 0 ||
     Object.keys(content.items || {}).length > 0 ||
     Object.keys(content.groups || {}).length > 0 ||
     Object.keys(content.tasks || {}).length > 0
@@ -204,7 +204,7 @@ const makePageKey = (route: YakitRouteType, pageId: string): PageKey => `${route
  */
 const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: number): string[] => {
   const tokenSet = new Set<string>()
-  const appendFromElements = (elements: SessionRenderContent['casualElements']) => {
+  const appendFromElements = (elements: SessionRenderContent['chatElements']) => {
     const top = elements.slice(-topCount)
     for (const el of top) {
       tokenSet.add(el.token)
@@ -222,8 +222,8 @@ const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: n
       }
     }
   }
-  appendFromElements(content.casualElements || [])
-  // taskElements 已合并到 casualElements（dispatchStreamingNode 统一写入 casualChat.elements），不再单独收集
+  appendFromElements(content.chatElements || [])
+  // taskElements 和 casualElement 合并成 新字段 chatElements （dispatchStreamingNode 统一写入 chatElements），不再单独收集
   return [...tokenSet]
 }
 // #endregion
@@ -640,7 +640,7 @@ export class ChatMultiSessionController {
       items: { ...state.items },
       groups: { ...state.groups },
       tasks: { ...state.tasks },
-      casualElements: [...state.casualChat.elements],
+      chatElements: [...state.chatElements],
     }
     void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
   }
@@ -993,9 +993,11 @@ export class ChatMultiSessionController {
                 if (optionValue === 'continue') {
                   const tasks = review.data
                   const plans = genExecTasks(tasks.plans.root_task)
-                  store.getState().updatePlanTree({
-                    task_tree: cloneDeep(plans),
-                    root_task_name: tasks.plans.root_task.name,
+                  store.getState().updateState({
+                    currentPlan: {
+                      task_tree: cloneDeep(plans),
+                      root_task_name: tasks.plans.root_task.name,
+                    },
                   })
                 }
                 rawData.contents.delete(review.id)
@@ -1182,7 +1184,7 @@ export class ChatMultiSessionController {
           items: { ...state.items },
           groups: { ...state.groups },
           tasks: { ...state.tasks },
-          casualElements: [...state.casualChat.elements],
+          chatElements: [...state.chatElements],
         }
         await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
         this.finishSessionRestoreLoading(sessionId)
@@ -1194,7 +1196,7 @@ export class ChatMultiSessionController {
             items: { ...state.items },
             groups: { ...state.groups },
             tasks: { ...state.tasks },
-            casualElements: [...state.casualChat.elements],
+            chatElements: [...state.chatElements],
           }
           await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
           this.finishSessionRestoreLoading(sessionId)
@@ -1209,7 +1211,7 @@ export class ChatMultiSessionController {
           items: { ...state.items },
           groups: { ...state.groups },
           tasks: { ...state.tasks },
-          casualElements: [...state.casualChat.elements],
+          chatElements: [...state.chatElements],
         }
         await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
       }
@@ -1293,7 +1295,7 @@ export class ChatMultiSessionController {
               items: { ...state.items },
               groups: { ...state.groups },
               tasks: { ...state.tasks },
-              casualElements: [...state.casualChat.elements],
+              chatElements: [...state.chatElements],
             }
             void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
           }

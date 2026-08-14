@@ -388,8 +388,7 @@ describe('ChatMultiSessionController restore / renderPersist / collect', () => {
       items: { a: { kind: 'item', token: 'a', type: 'thought', renderNum: 0, nodeId: '' } as any },
       groups: {},
       tasks: {},
-      casualElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
-      taskElements: [],
+      chatElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
     })
     expect(store.getState().items.a).toBeTruthy()
   })

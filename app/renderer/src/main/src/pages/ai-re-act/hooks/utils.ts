@@ -84,12 +84,12 @@ export const handleTaskPlanEnd: (
   }
 
   // 将当前正在执行的任务树里, 进行中的节点状态变成error
-  const newPlanTree = cloneDeep(store.getState().taskChat.plan)
+  const newPlanTree = cloneDeep(store.getState().currentPlan)
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
     if (item.progress === AITaskStatus.inProgress) item.progress = AITaskStatus.error
     return item
   })
-  store.getState().updatePlanTree(newPlanTree)
+  store.getState().updateState({ currentPlan: newPlanTree })
 
   // end 只清展示文案，保留 taskID / coordinatorId / status（status 由 settle 写）
   store.getState().updateCurrentLoadingTitle({ planTitle: '已结束' })

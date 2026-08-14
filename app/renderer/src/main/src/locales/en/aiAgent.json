@@ -125,10 +125,7 @@
     "downloadingModel": "Downloading model {{name}}..."
   },
   "AIAgent": {
-    "getKnowledgeBaseFailed": "Failed to get knowledge base list: {{error}}",
-    "tip": "Tip",
-    "memfitUpdateNotice": "Memfit session data upgraded, all historical session records in the system will be deleted.",
-    "clearHistoryConfirm": "Whether to clear database history records"
+    "getKnowledgeBaseFailed": "Failed to get knowledge base list: {{error}}"
   },
   "AIModelTestResult": {
     "quickPreview": "quick preview",

@@ -333,12 +333,12 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
   if (!data || typeof data !== 'object' || data?.type !== 'push_task') return
 
   const info = data as AIAgentGrpcApi.ChangeTask
-  const newPlanTree = cloneDeep(store.getState().taskChat.plan)
+  const newPlanTree = cloneDeep(store.getState().currentPlan)
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
     if (item.task_id === info.task.task_id) item.progress = AITaskStatus.inProgress
     return item
   })
-  store.getState().updatePlanTree(newPlanTree)
+  store.getState().updateState({ currentPlan: newPlanTree })
 
   const currentChat = store.getState().currentChatStatus
   if (!currentChat.questionID || !info.task.task_id) return
@@ -386,12 +386,12 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
   if (!data || typeof data !== 'object' || data?.type !== 'pop_task') return
 
   const info = data as AIAgentGrpcApi.ChangeTask
-  const newPlanTree = cloneDeep(store.getState().taskChat.plan)
+  const newPlanTree = cloneDeep(store.getState().currentPlan)
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
     if (item.task_id === info.task.task_id) item.progress = info.task.task_status
     return item
   })
-  store.getState().updatePlanTree(newPlanTree)
+  store.getState().updateState({ currentPlan: newPlanTree })
 
   const currentChat = store.getState().currentChatStatus
   if (!currentChat.questionID || !info.task.task_id) return

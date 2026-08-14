@@ -116,8 +116,8 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     const { activeChat } = useAIAgentStore()
 
     const store = useCurrentStore()
-    const casualChatElements = useStore(store, (state) => state.casualChat.elements)
-    const chatLength = useStore(store, (state) => state.casualChat.elements.length)
+    const casualChatElements = useStore(store, (state) => state.chatElements)
+    const chatLength = useStore(store, (state) => state.chatElements.length)
     const casualTitle = useStore(store, (state) => state.currentLoadingTitle.casualTitle)
     const planTitle = useStore(store, (state) => state.currentLoadingTitle.planTitle)
     const execute = useStore(store, (state) => state.execute)
@@ -168,7 +168,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     // 任务树点击定位：在自由对话列表中查找匹配的任务节点并定位高亮
     const onTreeLocate = useMemoizedFn((id?: string) => {
       if (!id) return
-      const elements = store.getState().casualChat.elements
+      const elements = store.getState().chatElements
       const index = elements.findLastIndex((item) => {
         const itemData = rawData.contents.get(item.token)
         switch (itemData?.type) {
@@ -236,7 +236,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       }),
       [Footer, Header, Item],
     )
-    // console.log('casualChat.elements', casualChatElements, store.getState().items)
+    // console.log('chatElements', casualChatElements, store.getState().items)
     return (
       <div ref={listRootRef} className={styles['ai-re-act-chat-contents']}>
         <Virtuoso

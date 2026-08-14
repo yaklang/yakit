@@ -142,10 +142,10 @@ const AIReActSubAgentTask: React.FC<AIReActSubAgentTaskProps> = React.memo((prop
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const getKind = useAIItemKind()
-  const casualChatElementLength = useStore(store, (state) => state.casualChat?.elements?.length || 0)
+  const casualChatElementLength = useStore(store, (state) => state.chatElements.length || 0)
 
   const onScrollToConcurrentTask = useMemoizedFn((token: string) => {
-    const elements = store.getState().casualChat?.elements || []
+    const elements = store.getState().chatElements || []
     const index = elements.findIndex((item) => item.token === token)
     if (index !== -1) {
       scrollToItemIndex?.(index, 'smooth')
@@ -154,9 +154,9 @@ const AIReActSubAgentTask: React.FC<AIReActSubAgentTaskProps> = React.memo((prop
 
   const casualConcurrentTaskList = useCreation(() => {
     const list: string[] = []
-    const elements = store.getState().casualChat?.elements || []
+    const elements = store.getState().chatElements || []
     for (const item of elements) {
-      // casualChat.elements 已合并 task 类型数据，子 agent 列表只展示 reAct 类型的并发任务
+      // chatElements 已合并 task 类型数据，子 agent 列表只展示 reAct 类型的并发任务
       if (item.chatType !== 'reAct') continue
       const kind = getKind(item.token)
       if (kind !== 'task') continue

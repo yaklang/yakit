@@ -103,14 +103,16 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
       AIModelName: '',
       data: { status: AITaskStatus.inProgress, loadingTitle: '' },
     } as any)
-    session.store.getState().updatePlanTree({
-      root_task_name: 'root',
-      task_tree: [{ task_id: 'a', progress: AITaskStatus.inProgress } as any],
+    session.store.getState().updateState({
+      currentPlan: {
+        root_task_name: 'root',
+        task_tree: [{ task_id: 'a', progress: AITaskStatus.inProgress } as any],
+      },
     })
     handleTaskPlanEnd(session)
     const node = session.rawData.contents.get(nodeId) as any
     expect(node.data.status).toBe(AITaskStatus.error)
-    expect(session.store.getState().taskChat.plan.task_tree[0].progress).toBe(AITaskStatus.error)
+    expect(session.store.getState().currentPlan.task_tree[0].progress).toBe(AITaskStatus.error)
     expect(session.meta.currentTaskPlanActiveNode.size).toBe(0)
   })
 })

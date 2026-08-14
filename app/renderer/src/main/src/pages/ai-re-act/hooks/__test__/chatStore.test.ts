@@ -16,6 +16,10 @@ describe('chatStore basics', () => {
     expect('cancelCasualLoading' in store.getState()).toBe(false)
     expect('cancelTaskLoading' in store.getState()).toBe(false)
     expect('requestHistoryState' in store.getState()).toBe(false)
+    expect('casualChat' in store.getState()).toBe(false)
+    expect('taskChat' in store.getState()).toBe(false)
+    expect('updatePlanTree' in store.getState()).toBe(false)
+    expect('updateCasualTodoList' in store.getState()).toBe(false)
 
     store.getState().updateState({ execute: true, cancelChatLoading: true, timelinesLoading: true })
     store.getState().updateCurrentLoadingTitle({ casualTitle: 'hi' })
@@ -36,16 +40,16 @@ describe('chatStore basics', () => {
       items: { a: { kind: 'item', token: 'a', type: 'thought', renderNum: 1, nodeId: '' } as any },
       groups: {},
       tasks: {},
-      casualElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
+      chatElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
     })
     expect(store.getState().items.a.token).toBe('a')
-    expect(store.getState().casualChat.elements).toHaveLength(1)
+    expect(store.getState().chatElements).toHaveLength(1)
   })
 
-  it('C6: updatePlanTree / currentReviewDetail / folders / timeline / http / risk', () => {
+  it('C6: currentPlan / currentReviewDetail / folders / timeline / http / risk', () => {
     const store = createChatStore()
-    store.getState().updatePlanTree({ root_task_name: 'r', task_tree: [] })
-    expect(store.getState().taskChat.plan.root_task_name).toBe('r')
+    store.getState().updateState({ currentPlan: { root_task_name: 'r', task_tree: [] } })
+    expect(store.getState().currentPlan.root_task_name).toBe('r')
 
     store.getState().updateState({ currentReviewDetail: { token: 'rev-1', renderNum: 0 } })
     expect(store.getState().currentReviewDetail.token).toBe('rev-1')
@@ -68,8 +72,8 @@ describe('chatStore basics', () => {
     expect(store.getState().httpTabShow).toBe(true)
     expect(store.getState().riskTabShow).toBe(true)
 
-    store.getState().updateCasualTodoList()
-    expect(store.getState().casualChat.todoListUpdate).toBe(1)
+    store.getState().updateStateCount('chatTodoListUpdate')
+    expect(store.getState().chatTodoListUpdate).toBe(1)
 
     expect(DefaultCurrentExecTaskTree.task_tree).toEqual([])
   })

@@ -125,10 +125,7 @@
     "downloadingModel": "模型 {{name}} 下载中..."
   },
   "AIAgent": {
-    "getKnowledgeBaseFailed": "获取知识库列表失败: {{error}}",
-    "tip": "提示",
-    "memfitUpdateNotice": "Memfit会话数据升级，会删除系统内的所有历史会话记录",
-    "clearHistoryConfirm": "是否清除数据库历史记录"
+    "getKnowledgeBaseFailed": "获取知识库列表失败: {{error}}"
   },
   "AIModelTestResult": {
     "quickPreview": "快速预览",

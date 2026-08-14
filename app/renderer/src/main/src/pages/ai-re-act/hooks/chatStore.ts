@@ -58,14 +58,9 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       groups: {},
       tasks: {},
 
-      casualChat: {
-        elements: [],
-        todoListUpdate: 0,
-      },
-      taskChat: {
-        elements: [],
-        plan: cloneDeep(DefaultCurrentExecTaskTree),
-      },
+      chatElements: [],
+      chatTodoListUpdate: 0,
+      currentPlan: cloneDeep(DefaultCurrentExecTaskTree),
 
       card: [],
       execFileRecord: new Map(),
@@ -134,8 +129,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.items = content.items || {}
           state.groups = content.groups || {}
           state.tasks = content.tasks || {}
-          // 任务规划数据已合并到自由对话列表：直接用 casualElements（dispatchStreamingNode 已按后端顺序写入）
-          state.casualChat.elements = [...(content.casualElements || [])]
+          // 任务规划和自由对话数据已合并到chatElements：直接用 chatElements 已按后端顺序写入）
+          state.chatElements = [...(content.chatElements || [])]
         }),
 
       updateCurrentChatStatus: (partial) =>
@@ -145,16 +140,6 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       updateCurrentLoadingTitle: (partial) =>
         set((state) => {
           Object.assign(state.currentLoadingTitle, partial)
-        }),
-
-      updateCasualTodoList: () => {
-        set((state) => {
-          state.casualChat.todoListUpdate += 1
-        })
-      },
-      updatePlanTree: (planTree: CurrentExecTaskTree) =>
-        set((state) => {
-          state.taskChat.plan = planTree
         }),
 
       updateExecFileRecord: (callToolID, info, order) =>
@@ -171,7 +156,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           const direction = isHistory ? 'prepend' : 'append'
           const elementRef = { kind: node.kind, token: node.token, chatType, isHistory }
           // 任务规划数据合并到自由对话列表，保留 chatType 字段
-          const targetElements = state.casualChat.elements
+          const targetElements = state.chatElements
 
           // 注册实体（group 由连续 stream item 碰撞自动生成，不支持手动注册）
           if (node.kind === 'item' && !state.items[node.token]) {
@@ -305,8 +290,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
           deleted = true
           const removeChatElement = (targetToken: string) => {
-            // 任务规划数据已合并到自由对话列表，统一从 casualChat 删除
-            state.casualChat.elements = state.casualChat.elements.filter((item) => item.token !== targetToken)
+            // 任务规划和自由对话数据已合并到chatElements，统一从 chatElements 删除
+            state.chatElements = state.chatElements.filter((item) => item.token !== targetToken)
           }
 
           const removeFromChildrenTokens = (
@@ -381,8 +366,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.items[newToken].renderNum += 1
           delete state.items[oldToken]
 
-          // 同步 casualChat.elements 中的 token 引用（任务规划数据已合并）
-          for (const el of state.casualChat.elements) {
+          // 同步 chatElements 中的 token 引用（任务规划数据已合并）
+          for (const el of state.chatElements) {
             if (el.token === oldToken) el.token = newToken
           }
 

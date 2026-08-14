@@ -15,7 +15,7 @@ export const AIToDoListWrapper: React.FC<AIToDoListWrapperProps> = React.memo((p
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
-  const todoListUpdate = useStore(store, (state) => state.casualChat?.todoListUpdate)
+  const todoListUpdate = useStore(store, (state) => state.chatTodoListUpdate)
 
   const todoData: TodoListCardData = useCreation(() => {
     if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)

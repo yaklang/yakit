@@ -56,9 +56,9 @@ describe('aiOther task plan gate', () => {
       res: makeGrpcJsonRes('start_plan_and_execution', startPayload),
       chatType: 'reAct',
     })
-    req.store.getState().updatePlanTree({ root_task_name: 'keep', task_tree: [] })
+    req.store.getState().updateState({ currentPlan: { root_task_name: 'keep', task_tree: [] } })
     aiOtherDataHandlers.start_plan_and_execution(req)
-    expect(req.store.getState().taskChat.plan.root_task_name).toBe('keep')
+    expect(req.store.getState().currentPlan.root_task_name).toBe('keep')
   })
 
   it('D2: end then change settles', () => {
@@ -171,7 +171,7 @@ describe('aiOther task plan gate', () => {
       chatType: 'reAct',
       sendRequest,
     })
-    req.store.getState().updatePlanTree({ root_task_name: 'old-plan', task_tree: [] })
+    req.store.getState().updateState({ currentPlan: { root_task_name: 'old-plan', task_tree: [] } })
 
     aiOtherDataHandlers.react_task_dequeue(req)
 
@@ -182,7 +182,8 @@ describe('aiOther task plan gate', () => {
     })
     expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('问题执行中...')
     expect(req.store.getState().focusMode).toBe('focus-a')
-    expect(req.store.getState().taskChat.plan).toEqual(DefaultCurrentExecTaskTree)
+    expect(req.store.getState().currentPlan).toEqual(DefaultCurrentExecTaskTree)
+    expect(req.store.getState().chatTodoListUpdate).toBe(1)
     expect(req.rawData.taskDetailsMap.has('q-normal')).toBe(true)
     expect(req.rawData.contents.get('q-normal')?.type).toBe(AIChatQSDataTypeEnum.QUESTION)
     expect(sendRequest).toHaveBeenCalledWith({
@@ -250,7 +251,7 @@ describe('aiOther task plan gate', () => {
       chatType: 'task',
     })
     aiOtherDataHandlers.plan(req)
-    expect(req.store.getState().taskChat.plan.root_task_name).toBe('root')
-    expect(req.store.getState().taskChat.plan.task_tree.some((t) => t.task_id === 'leaf-1')).toBe(true)
+    expect(req.store.getState().currentPlan.root_task_name).toBe('root')
+    expect(req.store.getState().currentPlan.task_tree.some((t) => t.task_id === 'leaf-1')).toBe(true)
   })
 })

@@ -10,8 +10,8 @@ describe('dispatchStreamingNode', () => {
       node: { token: 'task-1', kind: 'task', type: AIChatQSDataTypeEnum.TASK_NODE_GROUP },
     })
     expect(store.getState().tasks['task-1']).toBeTruthy()
-    // 任务规划数据已合并到自由对话列表
-    expect(store.getState().casualChat.elements.some((e) => e.token === 'task-1')).toBe(true)
+    // 任务规划和自由对话数据已合并到 chatElements
+    expect(store.getState().chatElements.some((e) => e.token === 'task-1')).toBe(true)
 
     store.getState().dispatchStreamingNode({
       chatType: 'task',
@@ -40,6 +40,6 @@ describe('dispatchStreamingNode', () => {
       chatType: 'reAct',
       node: { token: 'b', kind: 'item', type: 'thought', isHistory: true },
     })
-    expect(store.getState().casualChat.elements.map((e) => e.token)).toEqual(['b', 'a'])
+    expect(store.getState().chatElements.map((e) => e.token)).toEqual(['b', 'a'])
   })
 })

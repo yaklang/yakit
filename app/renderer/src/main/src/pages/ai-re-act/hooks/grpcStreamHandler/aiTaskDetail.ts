@@ -152,7 +152,7 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (requestInfo) => {
   applyTodoListFields(oldData)
   rawData.taskDetailsMap.set(res.TaskId, oldData)
   if (chatType === 'reAct') {
-    store.getState().updateCasualTodoList()
+    store.getState().updateStateCount('chatTodoListUpdate')
   }
 }
 

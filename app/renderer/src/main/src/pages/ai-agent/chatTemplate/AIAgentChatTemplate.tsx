@@ -42,7 +42,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
 
-  const taskChat = useStore(store, (state) => state.taskChat)
+  const currentPlan = useStore(store, (state) => state.currentPlan)
   const execute = useStore(store, (state) => state.execute)
   const memoryListUpdate = useStore(store, (state) => state.memoryListUpdate)
 
@@ -52,10 +52,10 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     valuePropName: 'expand',
     trigger: 'setExpand',
   })
-  // 任务规划数据已合并到 casualChat，用 plan.task_tree 判断是否有任务树
+  // 任务规划和自由对话数据已合并到 chatElements currentPlan.task_tree 判断是否有任务树
   const hasTaskTree = useCreation(() => {
-    return (taskChat?.plan?.task_tree?.length ?? 0) > 0
-  }, [taskChat?.plan?.task_tree])
+    return (currentPlan?.task_tree?.length ?? 0) > 0
+  }, [currentPlan?.task_tree])
   useEffect(() => {
     if (hasTaskTree) {
       setActiveTab(AIChatLeft.TaskTree)

@@ -23,9 +23,11 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
   // 该类型的实时数据只有任务规划才有
   if (isAuto) {
     const plans = genExecTasks(data.plans.root_task)
-    store.getState().updatePlanTree({
-      task_tree: cloneDeep(plans),
-      root_task_name: data.plans.root_task.name,
+    store.getState().updateState({
+      currentPlan: {
+        task_tree: cloneDeep(plans),
+        root_task_name: data.plans.root_task.name,
+      },
     })
   } else {
     // 弹框展示, 将数据存入hook里的缓存变量中
@@ -295,9 +297,11 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
         // 生成执行的任务树并更新到UI上
         const tasks = reviewDetail.data
         const plans = genExecTasks(tasks.plans.root_task)
-        store.getState().updatePlanTree({
-          task_tree: cloneDeep(plans),
-          root_task_name: tasks.plans.root_task.name,
+        store.getState().updateState({
+          currentPlan: {
+            task_tree: cloneDeep(plans),
+            root_task_name: tasks.plans.root_task.name,
+          },
         })
       }
       break

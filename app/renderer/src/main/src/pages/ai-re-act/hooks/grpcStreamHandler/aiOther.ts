@@ -197,7 +197,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
   if (!res.IsSync) {
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
     rawData.taskDetailsMap.set(res.TaskId || data.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
-    store.getState().updateCasualTodoList()
+    store.getState().updateStateCount('chatTodoListUpdate')
     store.getState().updateState({
       currentChatStatus: {
         questionID: res.TaskId || data.react_task_id,
@@ -208,7 +208,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
       focusMode: data.focus_mode ? data.focus_mode : '',
     })
     // 重置当前任务树详情
-    store.getState().updatePlanTree(cloneDeep(DefaultCurrentExecTaskTree))
+    store.getState().updateState({ currentPlan: cloneDeep(DefaultCurrentExecTaskTree) })
     // 刷新历史任务树
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   }
@@ -436,9 +436,9 @@ const handlePlan: AIMessageHandler = (requestInfo) => {
   const tasks = JSON.parse(ipcContent) as { root_task: AIAgentGrpcApi.PlanTask }
   if (has(tasks, 'root_task')) {
     const plans = genExecTasks(tasks.root_task)
-    store.getState().updatePlanTree({ task_tree: cloneDeep(plans), root_task_name: tasks.root_task.name })
+    store.getState().updateState({ currentPlan: { task_tree: cloneDeep(plans), root_task_name: tasks.root_task.name } })
   } else {
-    store.getState().updatePlanTree(cloneDeep(DefaultCurrentExecTaskTree))
+    store.getState().updateState({ currentPlan: cloneDeep(DefaultCurrentExecTaskTree) })
   }
 }
 

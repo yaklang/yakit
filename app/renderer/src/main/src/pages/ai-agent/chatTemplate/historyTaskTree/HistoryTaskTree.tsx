@@ -37,8 +37,8 @@ import emiter from '@/utils/eventBus/eventBus'
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const store = useCurrentStore()
   const planHistoryList = useStore(store, (state) => state.planHistoryList ?? cloneDeep(DefaultPlanHistoryList))
-  const taskTree = useStore(store, (state) => state.taskChat.plan.task_tree ?? [])
-  const taskName = useStore(store, (state) => state.taskChat.plan.root_task_name ?? '')
+  const taskTree = useStore(store, (state) => state.currentPlan.task_tree ?? [])
+  const taskName = useStore(store, (state) => state.currentPlan.root_task_name ?? '')
   const coordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId ?? '')
 
   const currentTaskItem = useCreation(() => {

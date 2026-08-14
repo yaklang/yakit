@@ -127,7 +127,7 @@ export interface SessionRenderContent {
   items: Record<string, ReActChatItemMeta>
   groups: Record<string, ReActChatGroupMeta>
   tasks: Record<string, ReActChatTaskMeta>
-  casualElements: ReActChatRenderElement[]
+  chatElements: ReActChatRenderElement[]
 }
 
 /** 控制UI渲染的数据数组元素 */
@@ -585,14 +585,11 @@ export interface ChatStoreState {
   groups: SessionRenderContent['groups']
   tasks: SessionRenderContent['tasks']
 
-  casualChat: {
-    elements: SessionRenderContent['casualElements']
-    /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
-    todoListUpdate: number
-  }
-  taskChat: {
-    plan: CurrentExecTaskTree
-  }
+  /** 会话列表-单个UI对应的数据集合 */
+  chatElements: SessionRenderContent['chatElements']
+  /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
+  chatTodoListUpdate: number
+  currentPlan: CurrentExecTaskTree
   // #endregion
 
   /** UI上的头部的card横向滚动列表数据 */
@@ -624,7 +621,8 @@ export interface ChatStoreState {
       | 'updateSystemStream'
       | 'yaklangCodeChangeUpdate'
       | 'syncIDUpdate'
-      | 'currentPlanReviewExtraUpdate',
+      | 'currentPlanReviewExtraUpdate'
+      | 'chatTodoListUpdate',
   ) => void
 
   updateFolders: (info: AIFileSystemPin) => void
@@ -661,8 +659,8 @@ export interface ChatStoreState {
         | 'items'
         | 'groups'
         | 'tasks'
-        | 'casualChat'
-        | 'taskChat'
+        | 'chatElements'
+        | 'chatTodoListUpdate'
       >
     >,
   ) => void
@@ -675,10 +673,6 @@ export interface ChatStoreState {
 
   updateCurrentChatStatus: (status: Partial<AgentChatStatus>) => void
   updateCurrentLoadingTitle: (status: Partial<AgentLoadingTitle>) => void
-
-  /** 更新自由对话列表的todoList，真实数据存放在内存池中 */
-  updateCasualTodoList: () => void
-  updatePlanTree: (planTree: CurrentExecTaskTree) => void
 
   /** 更新 每个工具执行过程中-文件的操作记录 */
   updateExecFileRecord: (callToolID: string, info: StreamResult.Log, order: number) => void

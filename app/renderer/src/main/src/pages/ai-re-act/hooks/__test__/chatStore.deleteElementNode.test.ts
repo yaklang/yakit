@@ -19,7 +19,7 @@ describe('deleteElementNode', () => {
       onDelContent,
     })
     expect(onDelContent).toHaveBeenCalledWith('del-me')
-    expect(store.getState().casualChat.elements.some((e) => e.token === 'del-me')).toBe(false)
+    expect(store.getState().chatElements.some((e) => e.token === 'del-me')).toBe(false)
     expect(onRenderStructureChange).toHaveBeenCalledTimes(1)
   })
 

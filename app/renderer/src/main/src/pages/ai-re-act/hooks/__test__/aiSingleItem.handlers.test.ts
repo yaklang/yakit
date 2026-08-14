@@ -16,7 +16,7 @@ describe('aiSingleItem handlers', () => {
     aiSingleItemDataHandlers.thought(req)
     const thoughts = [...req.rawData.contents.values()].filter((c) => c.type === AIChatQSDataTypeEnum.THOUGHT)
     expect(thoughts).toHaveLength(1)
-    expect(req.store.getState().casualChat.elements.length).toBeGreaterThan(0)
+    expect(req.store.getState().chatElements.length).toBeGreaterThan(0)
   })
 
   it('D5: result inserts when not after_stream', () => {
