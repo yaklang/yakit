@@ -5062,7 +5062,6 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             })
           }
         } else {
-          newSubPage.splice(index + 1, 0)
           // 更新 groupItem 的 groupChildren 为新的数组引用
           newSubPage[index] = { ...groupItem, groupChildren }
         }
