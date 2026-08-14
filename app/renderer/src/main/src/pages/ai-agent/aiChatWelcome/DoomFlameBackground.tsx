@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import styles from './DoomFlameBackground.module.scss'
+import { useInViewport, useMemoizedFn, useThrottleFn } from 'ahooks'
 
 // Oldschool doom flame effect, ported from the character-grid snippet.
 // Single-color chars (#eef0f3), value-noise driven.
@@ -102,95 +103,106 @@ const DoomFlameBackground: React.FC = React.memo(() => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef<number>(0)
 
+  const colsRef = useRef<number>(0)
+  const rowsRef = useRef<number>(0)
+  const dataRef = useRef<Uint8Array>(new Uint8Array(0))
+
+  const [inViewport = true] = useInViewport(canvasRef)
+
   useEffect(() => {
+    if (!inViewport) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ro = new ResizeObserver(resize)
+    ro.observe(canvas)
+    resize()
+    rafRef.current = requestAnimationFrame(loop)
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+      ro.disconnect()
+    }
+  }, [inViewport])
+
+  const loop = useMemoizedFn((t: number) => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-
-    let cols = 0
-    let rows = 0
-    let data: Uint8Array = new Uint8Array(0)
+    let last = 0
     const noise = valueNoise()
+    rafRef.current = requestAnimationFrame(loop)
+    if (t - last < 1000 / FPS) return
+    last = t
 
-    const resize = () => {
+    if (colsRef.current !== 0 && rowsRef.current !== 0) {
+      // --- pre: update buffer (flipped, source on top row) ---
+
+      // Fill the ceiling (top row) with some noise
+      const tt = t * 0.0015
+      for (let i = 0; i < colsRef.current; i++) {
+        const val = floor(map(noise(i * 0.05, tt), 0, 1, NOISE_MIN, NOISE_MAX))
+        dataRef.current[i] = min(val, dataRef.current[i] + 2)
+      }
+
+      // Propagate towards the floor with some randomness.
+      // Flip of the original: each cell writes to its OWN row (with a
+      // random column drift = flame flicker) and reads from the row ABOVE
+      // (src). Row 0 reads itself, so the noise source seeds row 1, then
+      // row 1 seeds row 2, etc. — the flame moves DOWN.
+      // A separate next-buffer keeps sources from being overwritten
+      // mid-pass by a random column offset landing on an unprocessed src.
+      const next = new Uint8Array(colsRef.current * rowsRef.current)
+      for (let i = 0; i < dataRef.current.length; i++) {
+        const row = floor(i / colsRef.current)
+        const col = i % colsRef.current
+        // dest is the current row, flickered sideways
+        const dest = row * colsRef.current + clamp(col + rndi(-1, 1), 0, colsRef.current - 1)
+        // src is one row UP; row 0 reads itself (the noise source)
+        const src = max(0, row - 1) * colsRef.current + col
+        next[dest] = max(0, dataRef.current[src] - rndi(DECAY_MIN, DECAY_MAX))
+      }
+      // Re-seed the top row: the loop above would otherwise erode the
+      // freshly-written noise values (row 0 reads itself minus decay).
+      for (let i = 0; i < colsRef.current; i++) next[i] = dataRef.current[i]
+      dataRef.current = next
+
+      // --- main: render single-color chars ---
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = COLOR
+      ctx.textBaseline = 'top'
+      for (let i = 0; i < dataRef.current.length; i++) {
+        const u = dataRef.current[i]
+        if (u === 0) continue
+        const row = floor(i / colsRef.current)
+        const col = i % colsRef.current
+        ctx.font = (u > 20 ? '700 ' : '100 ') + CELL_H + 'px monospace'
+        ctx.fillText(flame[clamp(u, 0, flame.length - 1)], col * CELL_W, row * CELL_H)
+      }
+    }
+  })
+
+  const resize = useThrottleFn(
+    () => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
       const rect = canvas.getBoundingClientRect()
       const dpr = window.devicePixelRatio || 1
       canvas.width = Math.max(1, Math.floor(rect.width * dpr))
       canvas.height = Math.max(1, Math.floor(rect.height * dpr))
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      cols = Math.floor(rect.width / CELL_W)
-      rows = Math.floor(rect.height / CELL_H)
-      if (cols < 1) cols = 1
-      if (rows < 1) rows = 1
-      data = new Uint8Array(cols * rows)
-    }
-
-    const ro = new ResizeObserver(resize)
-    ro.observe(canvas)
-    resize()
-
-    let last = 0
-    const loop = (t: number) => {
-      rafRef.current = requestAnimationFrame(loop)
-      if (t - last < 1000 / FPS) return
-      last = t
-
-      if (cols !== 0 && rows !== 0) {
-        // --- pre: update buffer (flipped, source on top row) ---
-
-        // Fill the ceiling (top row) with some noise
-        const tt = t * 0.0015
-        for (let i = 0; i < cols; i++) {
-          const val = floor(map(noise(i * 0.05, tt), 0, 1, NOISE_MIN, NOISE_MAX))
-          data[i] = min(val, data[i] + 2)
-        }
-
-        // Propagate towards the floor with some randomness.
-        // Flip of the original: each cell writes to its OWN row (with a
-        // random column drift = flame flicker) and reads from the row ABOVE
-        // (src). Row 0 reads itself, so the noise source seeds row 1, then
-        // row 1 seeds row 2, etc. — the flame moves DOWN.
-        // A separate next-buffer keeps sources from being overwritten
-        // mid-pass by a random column offset landing on an unprocessed src.
-        const next = new Uint8Array(cols * rows)
-        for (let i = 0; i < data.length; i++) {
-          const row = floor(i / cols)
-          const col = i % cols
-          // dest is the current row, flickered sideways
-          const dest = row * cols + clamp(col + rndi(-1, 1), 0, cols - 1)
-          // src is one row UP; row 0 reads itself (the noise source)
-          const src = max(0, row - 1) * cols + col
-          next[dest] = max(0, data[src] - rndi(DECAY_MIN, DECAY_MAX))
-        }
-        // Re-seed the top row: the loop above would otherwise erode the
-        // freshly-written noise values (row 0 reads itself minus decay).
-        for (let i = 0; i < cols; i++) next[i] = data[i]
-        data = next
-
-        // --- main: render single-color chars ---
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.fillStyle = COLOR
-        ctx.textBaseline = 'top'
-        for (let i = 0; i < data.length; i++) {
-          const u = data[i]
-          if (u === 0) continue
-          const row = floor(i / cols)
-          const col = i % cols
-          ctx.font = (u > 20 ? '700 ' : '100 ') + CELL_H + 'px monospace'
-          ctx.fillText(flame[clamp(u, 0, flame.length - 1)], col * CELL_W, row * CELL_H)
-        }
-      }
-    }
-
-    rafRef.current = requestAnimationFrame(loop)
-    return () => {
-      cancelAnimationFrame(rafRef.current)
-      ro.disconnect()
-    }
-  }, [])
+      colsRef.current = Math.floor(rect.width / CELL_W)
+      rowsRef.current = Math.floor(rect.height / CELL_H)
+      if (colsRef.current < 1) colsRef.current = 1
+      if (rowsRef.current < 1) rowsRef.current = 1
+      dataRef.current = new Uint8Array(colsRef.current * rowsRef.current)
+    },
+    { wait: 500 },
+  ).run
 
   return <canvas ref={canvasRef} className={styles['doom-flame-bg']} />
 })
