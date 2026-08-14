@@ -1553,13 +1553,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   /** ---------- 软件顶部展示采样中 End ---------- */
 
   /** ---------- 软件顶部展示录屏中状态 Start ---------- */
-  const { screenRecorderInfo } = useScreenRecorder()
+  const { screenRecorderInfo, setRecording } = useScreenRecorder()
   const stopScreen = useCreation(() => {
     return (
       <>
         {screenRecorderInfo.isRecording && (
           <YakitButton
             onClick={() => {
+              setRecording(false)
               yakitUILayout.cancelScreenRecorder(screenRecorderInfo.token)
             }}
             type="primary"
