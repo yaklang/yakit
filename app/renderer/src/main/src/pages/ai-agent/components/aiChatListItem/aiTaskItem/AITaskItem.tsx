@@ -11,8 +11,6 @@ const AITaskItem: React.FC<AITaskItemProps> = React.memo((props) => {
 
   const type = useStore(store, (state) => state.tasks[token].type)
   switch (type) {
-    // case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
-    //   return <AITaskDefaultGroupCard token={token} />
     case AIChatQSDataTypeEnum.TASK_NODE_GROUP:
       return <ConcurrentStreamCard token={token} />
     default:
