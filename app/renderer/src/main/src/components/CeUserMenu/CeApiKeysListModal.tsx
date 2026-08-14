@@ -146,7 +146,7 @@ const CeApiKeysListModal: React.FC<CeApiKeysListModalProps> = (props) => {
           />
           <div className={styles['api-keys-list-item-text']}>
             <div className={styles['api-keys-list-item-key-row']}>
-              <div className={classNames(styles['api-keys-list-item-key'], 'yakit-single-line-ellipsis')} title={key}>
+              <div className={classNames(styles['api-keys-list-item-key'], 'yakit-single-line-ellipsis')}>
                 {maskApiKey(key) || '-'}
               </div>
               {!!key && (

@@ -147,10 +147,7 @@ export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
           <div className={classNames(styles['ce-user-info-name'], 'yakit-single-line-ellipsis')}>{userName}</div>
           {!!firstApiKey && (
             <div className={styles['ce-user-info-apikey-row']}>
-              <span
-                className={classNames(styles['ce-user-info-apikey'], 'yakit-single-line-ellipsis')}
-                title={firstApiKey}
-              >
+              <span className={classNames(styles['ce-user-info-apikey'], 'yakit-single-line-ellipsis')}>
                 {maskApiKey(firstApiKey)}
               </span>
               <YakitButton

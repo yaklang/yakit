@@ -20,7 +20,7 @@ import { WebsiteGV } from '@/enums/website'
 import CeApiKeysListModal from './CeApiKeysListModal'
 import { grpcUpdateApiKey, maskApiKey } from './ceApiKey'
 import styles from './CeUsageStatisticsModal.module.scss'
-import { MetricCaptionFailedIcon, MetricCaptionSuccessIcon } from './icon'
+// import { MetricCaptionFailedIcon, MetricCaptionSuccessIcon } from './icon'
 
 type TokenQuotaLike = {
   tokenUsed?: number
@@ -195,7 +195,6 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
                               <span className={styles['user-banner-key-label']}>{t('CeUserMenu.apiKey')}:</span>
                               <span
                                 className={classNames(styles['user-banner-key-value'], 'yakit-single-line-ellipsis')}
-                                title={key}
                               >
                                 {maskApiKey(key) || '-'}
                               </span>

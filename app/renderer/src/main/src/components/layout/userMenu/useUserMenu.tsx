@@ -25,7 +25,6 @@ import {
 import { deriveIMControlBadge, type IMControlBadgeStatus, type IMControlBadgeView } from '@/pages/robotControl/status'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { UserMenusMap } from './constants'
-import { debugToPrintLogs } from '@/utils/logCollection'
 
 export interface UseUserMenuParams {
   isEngineLink: boolean
@@ -502,13 +501,9 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
         }
       })
       .catch((err) => {
-        // 写入到日志中，避免用户看到报错信息
-        debugToPrintLogs({
-          page: 'useUserMenu',
-          fun: 'apiFetchApiKeys',
-          content: `获取 API Key 列表失败：${err}`,
-        })
-        // yakitFailed(t('FuncDomain.getApiKeyListFailed', { error: err }))
+        setApiKeys(undefined)
+        setApiKeysInfo(undefined)
+        yakitFailed(t('FuncDomain.getApiKeyListFailed', { error: err }))
       })
       .finally(() => {
         isLoading && setApiKeysInfoLoading(false)
@@ -520,7 +515,12 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   })
 
   useEffect(() => {
-    apiFetchApiKeys()
+    if (userInfo.isLogin) {
+      apiFetchApiKeys()
+    } else {
+      setApiKeys(undefined)
+      setApiKeysInfo(undefined)
+    }
   }, [userInfo.isLogin])
 
   /** 渲染端通信-打开一个指定页面 */
