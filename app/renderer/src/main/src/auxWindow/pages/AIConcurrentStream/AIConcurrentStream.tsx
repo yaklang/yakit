@@ -12,8 +12,7 @@ import AIConcurrentStreamContent, {
   type AIConcurrentStreamDispatcher,
   type AIConcurrentStreamStore,
 } from './useContext/AIConcurrentStreamContent'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
-import { useDebounceFn } from 'ahooks'
+import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import ConcurrentStreamSkeleton from '@/auxWindow/components/ConcurrentStreamSkeleton/ConcurrentStreamSkeleton'
 
 // 子卡片按需加载，避免重型卡片（AINodeItem 及其下游 review/report/fuzz 等子卡）

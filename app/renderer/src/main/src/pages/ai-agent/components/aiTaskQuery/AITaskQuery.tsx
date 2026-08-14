@@ -9,6 +9,7 @@ import {
   OutlineTrashIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
+import { useMemoizedFn, useDebounceFn, useInViewport } from 'ahooks'
 import styles from './AITaskQuery.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { type AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -19,9 +20,6 @@ import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
-import useDebounceFn from 'ahooks/lib/useDebounceFn'
-import useInViewport from 'ahooks/lib/useInViewport'
 import emiter from '@/utils/eventBus/eventBus'
 
 export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {

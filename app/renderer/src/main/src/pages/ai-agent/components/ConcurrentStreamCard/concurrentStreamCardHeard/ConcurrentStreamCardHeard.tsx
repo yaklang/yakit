@@ -5,12 +5,11 @@ import type { ConcurrentStreamCardHeardProps } from './type'
 import styles from './ConcurrentStreamCardHeard.module.scss'
 import { getAIStatusPresentation } from '@/pages/ai-agent/utils/AIStatusUtils'
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
-import useCreation from 'ahooks/lib/useCreation'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
 import Loading from '@/components/Loading/Loading'
+import { useCreation, useMemoizedFn } from 'ahooks'
 
 const ConcurrentStreamCardHeard: FC<ConcurrentStreamCardHeardProps> = memo((props) => {
   const { token, isChildWindow, onClickTitle, rowData, coordinatorId, expand, expandToggle, onRefresh } = props

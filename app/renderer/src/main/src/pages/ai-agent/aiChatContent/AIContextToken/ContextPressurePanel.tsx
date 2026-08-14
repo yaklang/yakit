@@ -12,8 +12,7 @@ import styles from '../AIChatContent.module.scss'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import cloneDeep from 'lodash/cloneDeep'
-import useCreation from 'ahooks/lib/useCreation'
-
+import { useCreation } from 'ahooks'
 const ContextPressurePanel: React.FC<ContextPerfPanelProps> = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
 

@@ -1,7 +1,6 @@
 import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
-import { useUpdateEffect } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { ReActChatEventEnum } from '../defaultConstant'
 import { OutlineDesktopcomputerIcon, OutlineMessageCirclePlusIcon, OutlineSearchIcon } from '@/assets/icon/outline'
@@ -29,6 +28,7 @@ import { DeleteSessionsAISourceEnum, handAIHistoryChatRemove } from './utils'
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { sessionStatusStore } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import classNames from 'classnames'
+import { useUpdateEffect, useMemoizedFn, useDebounce } from 'ahooks'
 import {
   filterHistorySessionsBySource,
   getHistorySourceDeleteSessionSource,
@@ -38,8 +38,6 @@ import {
 } from './source'
 import type { DeleteSessionsAISourceType } from './utils'
 import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
-import useDebounce from 'ahooks/lib/useDebounce'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'

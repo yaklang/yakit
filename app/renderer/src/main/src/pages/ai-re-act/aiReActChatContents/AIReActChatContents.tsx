@@ -22,9 +22,6 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
 import { useCurrentStore, useCurrentRawData } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
-import useCreation from 'ahooks/lib/useCreation'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
-import { useDebounceFn, useMount } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
@@ -34,6 +31,7 @@ import { AITaskStatus } from '../hooks/grpcApi'
 import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
 import { OutlinePositionIcon } from '@/assets/icon/outline'
+import { useDebounceFn, useMount, useCreation, useMemoizedFn } from 'ahooks'
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   const { stream, aiMarkdownProps, listItemIndex, sessionId } = props

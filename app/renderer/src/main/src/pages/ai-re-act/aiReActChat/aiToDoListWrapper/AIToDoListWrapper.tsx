@@ -2,13 +2,13 @@ import React from 'react'
 import type { AIToDoListWrapperProps } from './type'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { useCurrentRawData, useCurrentStore } from '../../hooks/useCurrentDataBySession'
-import useCreation from 'ahooks/lib/useCreation'
 import cloneDeep from 'lodash/cloneDeep'
 import { useStore } from 'zustand'
 import type { TodoListCardData } from '../../hooks/aiRender'
 import { DefaultTodoListCardData } from '../../hooks/defaultConstant'
 import { AIToDoList } from '../aiToDoList/AIToDoList'
 import styles from './AIToDoListWrapper.module.scss'
+import { useCreation } from 'ahooks'
 
 export const AIToDoListWrapper: React.FC<AIToDoListWrapperProps> = React.memo((props) => {
   const { activeChat } = useAIAgentStore()

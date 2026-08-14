@@ -1,3 +1,4 @@
+import { useCreation } from 'ahooks'
 import {
   AIChatQSDataTypeEnum,
   type ChatReferenceMaterialPayload,
@@ -8,7 +9,6 @@ import styles from './AIGroupStreamCard.module.scss'
 import classNames from 'classnames'
 import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import useCreation from 'ahooks/lib/useCreation'
 import { useStore } from 'zustand'
 import type { AIGroupStreamCardHeardWrapperProps, AIGroupStreamCardListWrapperProps } from './type'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'

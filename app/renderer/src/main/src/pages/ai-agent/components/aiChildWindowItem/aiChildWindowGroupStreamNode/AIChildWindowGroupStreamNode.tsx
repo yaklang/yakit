@@ -1,9 +1,9 @@
 import { type FC, memo } from 'react'
 import type { AIChildWindowGroupStreamNodeProps } from './type'
 import useAIConcurrentStreamStore from '@/auxWindow/pages/AIConcurrentStream/useContext/useStore'
-import useCreation from 'ahooks/lib/useCreation'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIGroupStreamNode } from '../../aiGroupStreamCard/AIGroupStreamCard'
+import { useCreation } from 'ahooks'
 
 const AIChildWindowGroupStreamNode: FC<AIChildWindowGroupStreamNodeProps> = memo((props) => {
   const { itemData, renderNum, groupIndex } = props
