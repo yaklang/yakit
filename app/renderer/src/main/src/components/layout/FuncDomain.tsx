@@ -2998,6 +2998,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
   const [show, setShow] = useState<boolean>(false)
   /** 截图功能的loading */
   const [screenshotLoading, setScreenshotLoading] = useState<boolean>(false)
+  const { setRecording } = useScreenRecorder()
   const { t } = useI18nNamespaces(['layout'])
 
   const yakitMenuData = useCreation(() => {
@@ -3016,6 +3017,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
             <div
               className={styles['stop-screen-menu-item']}
               onClick={() => {
+                setRecording(false)
                 yakitUILayout.cancelScreenRecorder(token)
               }}
             >
@@ -3074,6 +3076,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
           <div
             className={styles['stop-screen-menu-item']}
             onClick={() => {
+              setRecording(false)
               yakitUILayout.cancelScreenRecorder(token)
             }}
           >
@@ -3107,6 +3110,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         break
       case 'screenCap':
         if (isRecording) {
+          setRecording(false)
           yakitUILayout.cancelScreenRecorder(token)
         } else {
           yakitUILayout.requestOpenScreenCapModal()

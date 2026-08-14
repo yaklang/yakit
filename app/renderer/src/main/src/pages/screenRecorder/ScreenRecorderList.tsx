@@ -322,8 +322,11 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
           <div className={styles['empty-footer']}>
             {screenRecorderInfo.isRecording ? (
               <YakitButton
+                htmlType="button"
                 onClick={() => {
                   ipcRenderer.invoke('cancel-StartScrecorder', screenRecorderInfo.token)
+                  // 延后切换按钮，避免同一次点击落到刚换成的 submit「开始」上，再次提交表单
+                  setTimeout(() => setRecording(false), 0)
                   setTimeout(() => {
                     onRefresh()
                   }, 1000)
@@ -374,19 +377,16 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
               CoefficientPTS: 1,
             }}
             onFinish={(v) => {
+              if (screenRecorderInfo.isRecording) return
               const newValue = {
                 ...v,
                 DisableMouse: !v.DisableMouse,
               }
               setRemoteValue(Screen_Recorder_Framerate, v.Framerate)
               setRemoteValue(Screen_Recorder_CoefficientPTS, v.CoefficientPTS)
-              if (screenRecorderInfo.isRecording) {
-                ipcRenderer.invoke('cancel-StartScrecorder', screenRecorderInfo.token)
-              } else {
-                ipcRenderer.invoke('StartScrecorder', newValue, screenRecorderInfo.token).then(() => {
-                  setRecording(true)
-                })
-              }
+              ipcRenderer.invoke('StartScrecorder', newValue, screenRecorderInfo.token).then(() => {
+                setRecording(true)
+              })
             }}
           >
             <Form.Item
@@ -418,8 +418,11 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
             <Divider type="vertical" style={{ margin: 0, height: 16, marginRight: 16, top: 4 }} />
             {screenRecorderInfo.isRecording ? (
               <YakitButton
+                htmlType="button"
                 onClick={() => {
                   ipcRenderer.invoke('cancel-StartScrecorder', screenRecorderInfo.token)
+                  // 延后切换按钮，避免同一次点击落到刚换成的 submit「开始」上，再次提交表单
+                  setTimeout(() => setRecording(false), 0)
                 }}
                 type="primary"
                 colors="danger"

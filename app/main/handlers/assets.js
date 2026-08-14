@@ -718,7 +718,23 @@ td {
   })
 
   const streamStartScrecorderMap = new Map()
-  ipcMain.handle('cancel-StartScrecorder', handlerHelper.cancelHandler(streamStartScrecorderMap))
+  const cancelScrecorderStream = (stream) => {
+    if (!stream) return
+    try {
+      stream.cancel()
+    } catch {}
+    try {
+      stream.destroy?.()
+    } catch {}
+  }
+  ipcMain.handle('cancel-StartScrecorder', async (_e, token) => {
+    const target = streamStartScrecorderMap.get(token)
+    const streams = target ? [[token, target]] : [...streamStartScrecorderMap.entries()]
+    streams.forEach(([t, stream]) => {
+      cancelScrecorderStream(stream)
+      streamStartScrecorderMap.delete(t)
+    })
+  })
   ipcMain.handle('StartScrecorder', (e, params, token) => {
     let stream = getClient().StartScrecorder(params)
     handlerHelper.registerHandler(win, stream, streamStartScrecorderMap, token)
