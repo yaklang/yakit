@@ -398,6 +398,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         overlayClassName={classNames(styles['ui-op-plus-dropdown'])}
                         placement={'bottomRight'}
                         trigger={'click'}
+                        destroyTooltipOnHide={true}
                         content={
                           <CeUserMenuContent
                             menu={userMenu}
@@ -407,8 +408,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             }}
                           />
                         }
-                        visible={ceUserMenuShow}
+                        visible={ceUserMenuShow && !loginShow}
                         onVisibleChange={(visible) => {
+                          if (loginShow) {
+                            setCeUserMenuShow(false)
+                            return
+                          }
                           if (visible) {
                             onUpdateApiKey()
                           }
@@ -476,6 +481,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         onClose={() => setRechargeVisible(false)}
         onPaySuccess={() => onUpdateApiKey()}
         onNeedLogin={() => {
+          setCeUserMenuShow(false)
           setLoginShow(true)
         }}
       />

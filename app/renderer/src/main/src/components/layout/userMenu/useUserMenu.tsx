@@ -95,6 +95,12 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   /** 用户功能菜单 */
   const [userMenu, setUserMenu] = useState<YakitMenuItemType[]>([UserMenusMap['singOut']])
   const [ceUserMenuShow, setCeUserMenuShow] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (loginShow) {
+      setCeUserMenuShow(false)
+    }
+  }, [loginShow])
   const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
   const [rechargeVisible, setRechargeVisible] = useState(false)
   const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
