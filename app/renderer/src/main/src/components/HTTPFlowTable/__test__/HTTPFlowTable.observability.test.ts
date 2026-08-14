@@ -545,6 +545,22 @@ describe('MITMFlowObservability', () => {
       querySamples: 1,
       flowSamples: 1,
     })
+    expect(observer.pipelineStatusSnapshot()).toMatchObject({
+      version: 1,
+      generatedAtUnixMs: 1_140,
+      state: {
+        latestBackendPersistedId: 7,
+        latestVisibleId: 7,
+        approximateIdBacklog: 0,
+        pendingQueries: 0,
+      },
+      flow: {
+        persistQueueWaitP95: 10,
+        persistWriteP95: 10,
+        persistToReactCommitP95: 150,
+        responseToReactCommitP95: 190,
+      },
+    })
   })
 
   it('preserves end-to-end timings when a stream summary bypasses QueryHTTPFlows', () => {

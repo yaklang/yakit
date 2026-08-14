@@ -50,15 +50,15 @@ const numberOrZero = (value: unknown): number => {
 }
 
 const collectFrontendPipelineState = (): FrontendPipelineState => {
-  const snapshot = mitmFlowObservability.snapshot()
+  const snapshot = mitmFlowObservability.pipelineStatusSnapshot()
   return {
     visibleBacklog: numberOrZero(snapshot.state.approximateIdBacklog),
     streamVisibleBacklog: numberOrZero(snapshot.state.streamVisibleIdBacklog),
     pendingQueries: numberOrZero(snapshot.state.pendingQueries),
-    persistQueueWaitP95: snapshot.flow.persistQueueWaitMs.p95,
-    persistWriteP95: snapshot.flow.persistWriteMs.p95,
-    persistToReactCommitP95: snapshot.flow.persistToReactCommitMs.p95,
-    responseToReactCommitP95: snapshot.flow.responseToReactCommitMs.p95,
+    persistQueueWaitP95: snapshot.flow.persistQueueWaitP95,
+    persistWriteP95: snapshot.flow.persistWriteP95,
+    persistToReactCommitP95: snapshot.flow.persistToReactCommitP95,
+    responseToReactCommitP95: snapshot.flow.responseToReactCommitP95,
   }
 }
 

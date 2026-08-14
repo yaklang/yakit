@@ -267,7 +267,6 @@ module.exports = (win, getClient) => {
       // another polling loop in the renderer.
       if (win && data['PipelineStats']) {
         win.webContents.send('client-mitmV2-pipeline-stats', data['PipelineStats'])
-        return
       }
 
       // 检查替代规则的问题，如果返回了有内容，说明没 BUG
