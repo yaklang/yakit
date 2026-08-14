@@ -32,13 +32,14 @@ import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { formatAIAgentSetting, onReStart } from '../../utils'
 import { DefaultPlanHistoryList } from '@/pages/ai-re-act/hooks/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
+import emiter from '@/utils/eventBus/eventBus'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const store = useCurrentStore()
   const planHistoryList = useStore(store, (state) => state.planHistoryList ?? cloneDeep(DefaultPlanHistoryList))
-  const taskTree = useStore(store, (state) => state.taskChat.plan.task_tree ?? [])
-  const taskName = useStore(store, (state) => state.taskChat.plan.root_task_name ?? '')
-  const coordinatorId = useStore(store, (state) => state.taskStatus.coordinatorId ?? '')
+  const taskTree = useStore(store, (state) => state.currentPlan.task_tree ?? [])
+  const taskName = useStore(store, (state) => state.currentPlan.root_task_name ?? '')
+  const coordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId ?? '')
 
   const currentTaskItem = useCreation(() => {
     const item: AIAgentGrpcApi.PlanHistory = {
@@ -150,8 +151,8 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
-  const isExecuting = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
-  const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
+  const isExecuting = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
+  const cancelChatLoading = useStore(store, (state) => state.cancelChatLoading)
   const execute = useStore(store, (state) => state.execute)
 
   const { activeChat } = useAIAgentStore()
@@ -162,36 +163,21 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
   const sendRecoverParamsRef = useRef<SendRecoverParams>()
 
   const loading = useCreation(() => {
-    return sendRecoverParamsRef.current?.taskId === taskId && cancelTaskLoading
-  }, [taskId, cancelTaskLoading])
+    return sendRecoverParamsRef.current?.taskId === taskId && cancelChatLoading
+  }, [taskId, cancelChatLoading])
 
-  useUpdateEffect(() => {
-    if (!isExecuting && sendRecoverParamsRef.current) {
-      onSendRecover(sendRecoverParamsRef.current)
-    }
-  }, [isExecuting])
-  /**
-   * TODO - 现在的版本中，任务中断后状态不一定是error
-   */
   const isShow = useMemoizedFn(() => {
-    const taskStatus = store.getState().taskStatus
-    const currentCoordinatorId = taskStatus?.coordinatorId || ''
+    const currentChatStatus = store.getState().currentChatStatus
+    const currentCoordinatorId = currentChatStatus?.coordinatorId || ''
 
     let show = true
     if (!execute) return true
     if (coordinatorId === currentCoordinatorId) {
-      show = taskStatus?.status !== AITaskStatus.inProgress
-    }
-    // 如果当前有任务正在等待被恢复
-    if (sendRecoverParamsRef.current) {
-      // 仅保持被点击的那个任务节点按钮显示（用于展示 loading 状态），隐藏其他所有的继续按钮
-      return (
-        sendRecoverParamsRef.current.coordinatorId === coordinatorId && sendRecoverParamsRef.current.taskId === taskId
-      )
+      show = currentChatStatus?.status !== AITaskStatus.inProgress
     }
 
-    // 停止/取消进行中：status 仍为 processing，用 cancelTaskLoading 表示停止中
-    if (cancelTaskLoading) {
+    // 停止/取消进行中：status 仍为 processing，用 cancelChatLoading 表示停止中
+    if (cancelChatLoading) {
       return false
     }
 
@@ -207,33 +193,16 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       SyncID: randomString(8),
     }
     onSend({ token: sessionId, type: 'task', params: info })
-    store.getState().updateTaskLoadingStatus({ taskID: '', status: AITaskStatus.created, coordinatorId: '' })
-
+    emiter.emit('changeAITaskQueryShow', 'true')
     sendRecoverParamsRef.current = undefined
   })
   const onRecover = useMemoizedFn(() => {
-    const taskStatus = store.getState().taskStatus
-    const currentTaskId = taskStatus.taskID
-
     if (!coordinatorId) return
     sendRecoverParamsRef.current = {
       coordinatorId,
       taskId,
     }
-    store.getState().updateState({
-      cancelTaskLoading: true,
-    })
-    if (taskStatus.status === AITaskStatus.inProgress && currentTaskId) {
-      // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
-      const info: AIInputEvent = {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: currentTaskId }),
-
-        SyncID: randomString(8),
-      }
-      onSend({ token: sessionId, type: 'task', params: info })
-    } else if (execute) {
+    if (execute) {
       onSendRecover(sendRecoverParamsRef.current)
     } else if (activeChat?.SessionID) {
       onReStart({

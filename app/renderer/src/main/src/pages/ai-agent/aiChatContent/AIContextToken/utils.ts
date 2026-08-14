@@ -1,8 +1,7 @@
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIModelTypeEnum, type AIModelTypeEnumType } from '../../defaultConstant'
 import type { AIEchartsDataKey, ContextPressureEchartsProps } from '../../chatTemplate/AIEcharts'
-import type { AIContextStatsDetail } from '../../type/aiChat'
-import type { AIChatData } from '../../type/aiChat'
+import type { AIAgentChatData, AIContextStatsDetail } from '../../type/aiChat'
 
 const MODEL_TIERS = [
   AIModelTypeEnum.TierIntelligent,
@@ -10,7 +9,7 @@ const MODEL_TIERS = [
   AIModelTypeEnum.TierVision,
 ] as const
 
-type PerfData = AIChatData['aiPerfData']
+type PerfData = AIAgentChatData['aiPerfData']
 
 /** 比较两个 Record<tier, any[]> 类型字段在各模型层级的数组长度是否变化 */
 export const isTierArrayLengthChanged = (
@@ -21,8 +20,8 @@ export const isTierArrayLengthChanged = (
 }
 
 export const isPressurePerfChanged = (
-  prev: AIChatData['aiPerfData']['pressure'] | null,
-  next: AIChatData['aiPerfData']['pressure'] | null,
+  prev: AIAgentChatData['aiPerfData']['pressure'] | null,
+  next: AIAgentChatData['aiPerfData']['pressure'] | null,
 ) => {
   if (!prev && !next) return false
   if (!prev || !next) return true
@@ -30,8 +29,8 @@ export const isPressurePerfChanged = (
 }
 
 export const isFirstCostPerfChanged = (
-  prev: AIChatData['aiPerfData']['firstCost'] | null,
-  next: AIChatData['aiPerfData']['firstCost'] | null,
+  prev: AIAgentChatData['aiPerfData']['firstCost'] | null,
+  next: AIAgentChatData['aiPerfData']['firstCost'] | null,
 ) => {
   if (!prev && !next) return false
   if (!prev || !next) return true

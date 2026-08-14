@@ -2,19 +2,10 @@
  * chat 对话数据相关处理工具
  */
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import type { DialogueRecord } from '@/pages/ai-agent/store/type'
-import {
-  type AITaskInfoProps,
-  type ReActChatRenderItem,
-  type AIChatQSDataType,
-  type TodoListCardData,
-  type ChatListRenderType,
-  AIChatQSDataTypeEnum,
-} from './aiRender'
+import { type AITaskInfoProps, type TodoListCardData, type ChatListRenderType, AIChatQSDataTypeEnum } from './aiRender'
 import { AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from './grpcApi'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
-import { JSONParseLog } from '@/utils/tool'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultTaskPlanEndGate } from './defaultConstant'
@@ -56,7 +47,7 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
 }
 
 /**
- * end_plan_and_execution & react_task_status_changed 终态齐套后，才把 pendingStatus 落到 taskStatus.status
+ * end_plan_and_execution & react_task_status_changed 终态齐套后，才把 pendingStatus 落到 currentChatStatus.status
  * 任一未到则保持 processing（等待中）
  */
 export const trySettleTaskPlanEnd = (
@@ -65,8 +56,9 @@ export const trySettleTaskPlanEnd = (
 ) => {
   const gate = meta.taskPlanEndGate
   if (!gate.endReceived || !gate.pendingStatus) return
-  store.getState().updateTaskLoadingStatus({ status: gate.pendingStatus })
-  store.getState().updateState({ cancelTaskLoading: false })
+  store.getState().updateCurrentChatStatus({ status: gate.pendingStatus })
+  store.getState().updateState({ cancelChatLoading: false })
+  store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
   meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
 }
 
@@ -92,15 +84,15 @@ export const handleTaskPlanEnd: (
   }
 
   // 将当前正在执行的任务树里, 进行中的节点状态变成error
-  const newPlanTree = cloneDeep(store.getState().taskChat.plan)
+  const newPlanTree = cloneDeep(store.getState().currentPlan)
   newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
     if (item.progress === AITaskStatus.inProgress) item.progress = AITaskStatus.error
     return item
   })
-  store.getState().updatePlanTree(newPlanTree)
+  store.getState().updateState({ currentPlan: newPlanTree })
 
   // end 只清展示文案，保留 taskID / coordinatorId / status（status 由 settle 写）
-  store.getState().updateTaskLoadingStatus({ plan: '已结束', task: '已结束' })
+  store.getState().updateCurrentLoadingTitle({ planTitle: '已结束' })
   if (isChatEnd) {
     meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
   } else {
@@ -175,7 +167,7 @@ export const isAutoExecuteReviewContinue = (params: { type?: string; getFunc?: (
       }
       return false
     }
-  } catch (error) {
+  } catch {
     return false
   }
 }
@@ -196,64 +188,6 @@ export const isToolExecStream = (nodeID: string) => {
   if (isToolStdoutStream(nodeID)) return true
   return false
 }
-
-/**
- * indexedDB 数据库数据转 ReActChatRenderItem
- */
-export const indexedDBDataToReActChatRenderItem = (
-  chatType: ChatListRenderType,
-  data: DialogueRecord[],
-): ReActChatRenderItem[] =>
-  data.map((item) => {
-    if (item.isGroup) {
-      return {
-        chatType,
-        token: item.token,
-        type: item.type as AIChatQSDataType,
-        isGroup: true as const,
-        children: JSONParseLog(item.children || '[]'),
-        renderNum: 0,
-        isCached: true,
-        kind: item.kind,
-      }
-    }
-    return {
-      chatType,
-      token: item.token,
-      type: item.type as AIChatQSDataType,
-      isGroup: false,
-      renderNum: 0,
-      children: JSONParseLog(item.children || '[]'),
-      isCached: true,
-      kind: 'item',
-    }
-  })
-
-export function getTreeDataIds(tree: DialogueRecord[]): string[] {
-  return tree.flatMap((item) => {
-    let children: DialogueRecord[] = []
-    if (item.children) {
-      try {
-        children = JSONParseLog(item.children)
-      } catch {
-        children = []
-      }
-    }
-
-    return [item.token, ...getTreeDataIds(children)]
-  })
-}
-
-export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: string) =>
-  elements.map((item, index) => ({
-    token: item.token,
-    type: item.type,
-    kind: item.kind,
-    isGroup: item.kind === 'group' || item.kind === 'task',
-    children: JSON.stringify(item.kind === 'group' || item.kind === 'task' ? item.children : []),
-    sessionId,
-    cacheOrder: index,
-  }))
 
 /** 处理后端返回的todoList数据(全量数据，需要过滤出当前任务) */
 export const handleTodoListData: (

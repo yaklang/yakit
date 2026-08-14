@@ -2,6 +2,7 @@ import type { AIAgentChatData, AIAgentChatMetaData } from '@/pages/ai-agent/type
 import {
   AIInputEventSyncTypeEnum,
   AISourceEnum,
+  AITaskStatus,
   type AIAgentGrpcApi,
   type AIEventQueryRequest,
   type AIInputEvent,
@@ -19,16 +20,22 @@ import {
 } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import {
+  DefaultAgentChatStatus,
+  DefaultAgentLoadingTitle,
   DefaultMemoryList,
-  DefaultPlanItemDetailsData,
   DefaultTaskPlanEndGate,
-  DefaultTaskPlanStatus,
 } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
-import type { AIChatIPCStartParams, AIChatSendParams, AIFileSystemPin } from './type'
+import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
-import { type AIChatQSData, AIChatQSDataTypeEnum, type AIToolResult, type SessionRenderContent } from './aiRender'
+import {
+  type AIChatQSData,
+  AIChatQSDataTypeEnum,
+  type AIFileSystemPin,
+  type AIToolResult,
+  type SessionRenderContent,
+} from './aiRender'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
@@ -58,8 +65,7 @@ export type DeleteSessionsParams = {
 const hasSessionRenderTree = (content?: SessionRenderContent): boolean => {
   if (!content) return false
   return (
-    (content.casualElements?.length || 0) > 0 ||
-    (content.taskElements?.length || 0) > 0 ||
+    (content.chatElements?.length || 0) > 0 ||
     Object.keys(content.items || {}).length > 0 ||
     Object.keys(content.groups || {}).length > 0 ||
     Object.keys(content.tasks || {}).length > 0
@@ -139,13 +145,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
       contextSections: { summary: new Map(), sections: [] },
     },
 
-    casualChat: {
-      planDetails: DefaultPlanItemDetailsData,
-      planDetailsMap: new Map(),
-    },
-    taskChat: {
-      planDetailsMap: new Map(),
-    },
+    taskDetailsMap: new Map(),
     contents: new Map(),
   }
   return cloneDeep(defaultData)
@@ -163,7 +163,6 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     notifyMessageTimer: null,
     currentTaskPlanActiveNode: new Set(),
     taskPlanEndGate: cloneDeep(DefaultTaskPlanEndGate),
-    historyReviewReleaseID: {},
     currentPlanReviewExtraId: '',
     planReviewExtraData: new Map(),
     toolStderrStreamData: new Map(),
@@ -205,7 +204,7 @@ const makePageKey = (route: YakitRouteType, pageId: string): PageKey => `${route
  */
 const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: number): string[] => {
   const tokenSet = new Set<string>()
-  const appendFromElements = (elements: SessionRenderContent['casualElements']) => {
+  const appendFromElements = (elements: SessionRenderContent['chatElements']) => {
     const top = elements.slice(-topCount)
     for (const el of top) {
       tokenSet.add(el.token)
@@ -223,8 +222,8 @@ const collectTopLevelContentTokens = (content: SessionRenderContent, topCount: n
       }
     }
   }
-  appendFromElements(content.casualElements || [])
-  appendFromElements(content.taskElements || [])
+  appendFromElements(content.chatElements || [])
+  // taskElements 和 casualElement 合并成 新字段 chatElements （dispatchStreamingNode 统一写入 chatElements），不再单独收集
   return [...tokenSet]
 }
 // #endregion
@@ -641,8 +640,7 @@ export class ChatMultiSessionController {
       items: { ...state.items },
       groups: { ...state.groups },
       tasks: { ...state.tasks },
-      casualElements: [...state.casualChat.elements],
-      taskElements: [...state.taskChat.elements],
+      chatElements: [...state.chatElements],
     }
     void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
   }
@@ -776,9 +774,16 @@ export class ChatMultiSessionController {
 
     // 恢复态：遮罩防止 hydrate / recovery 期间误点（UI 订阅 store.initLoading）
     if (userQuery) {
-      store.getState().updateState({ execute: true, casualTitle: '发送问题，开启会话...' })
+      store.getState().updateState({
+        execute: true,
+        currentLoadingTitle: { casualTitle: '会话初始化中...', planTitle: '' },
+      })
     } else {
-      store.getState().updateState({ execute: true, initLoading: true, casualTitle: '加载会话中...' })
+      store.getState().updateState({
+        execute: true,
+        initLoading: true,
+        currentLoadingTitle: { casualTitle: '获取历史数据中...', planTitle: '' },
+      })
       this.sessionRestoreLoading.add(sessionId)
     }
 
@@ -870,14 +875,13 @@ export class ChatMultiSessionController {
       }
 
       if (params.IsFreeInput) {
-        const { casualLoading, currentCasualTaskID, taskStatus } = store.getState()
-        // 如果自由对话引起了任务规划，那么自由对话其实是空闲状态
-        const isCasualIdle =
-          casualLoading && currentCasualTaskID && taskStatus.taskID && currentCasualTaskID === taskStatus.taskID
+        const { currentChatStatus } = store.getState()
+        // 如果问题的状态不是进行中，则属于空闲状态
+        const isCasualIdle = currentChatStatus.status !== AITaskStatus.inProgress
 
-        if (!casualLoading || isCasualIdle) {
+        if (isCasualIdle) {
           // 自由对话没有问题进行中时，才改变loading的title
-          store.getState().updateState({ casualTitle: '等待回复中...' })
+          store.getState().updateState({ currentLoadingTitle: { casualTitle: '等待AI回复...', planTitle: '' } })
 
           const chatID = uuidv4()
           const AttachedResourceInfos = params.AttachedResourceInfo || []
@@ -931,7 +935,7 @@ export class ChatMultiSessionController {
       switch (type) {
         case 'casual':
           if (params.IsInteractiveMessage && params.InteractiveId) {
-            const isExist = store.getState().currentCasualReview.includes(params.InteractiveId)
+            const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
@@ -943,25 +947,15 @@ export class ChatMultiSessionController {
                 // 非执行任务组的tool_review，并且review模式不是yolo，才能展示到UI上供用户主动操作
                 // 用户操作后，review结果不会展示到UI上，所以需要删除该review的所有数据
                 rawData.contents.delete(review.id)
-                store.getState().updateCasualReview(review.id, 'remove')
-                store.getState().deleteElementNode({
-                  chatType: 'reAct',
-                  token: review.id,
-                  kind: 'item',
-                  taskID: review.TaskId || undefined,
-                  onDelContent: (mapKey) => {
-                    rawData.contents.delete(mapKey)
-                  },
-                })
+                store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break
               case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
               case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
-                // review操作后正常展示在UI上
+                // review操作后移除review数据
                 review.data.selected = params.InteractiveJSONInput
                 review.data.optionValue = optionValue
-                store.getState().updateCasualReview(params.InteractiveId, 'remove')
-                store.getState().incrementNodeVersion(review.id, 'item')
-                persistIndependentItem(token, review)
+                rawData.contents.delete(review.id)
+                store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break
               default:
                 break
@@ -970,14 +964,14 @@ export class ChatMultiSessionController {
           break
         case 'task':
           if (params.IsInteractiveMessage && params.InteractiveId) {
-            const isExist = store.getState().currentPlanReviewToken.token === params.InteractiveId
+            const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)
             if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
               return
             }
 
-            store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
+            store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
             switch (review.type) {
               case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
               case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
@@ -986,41 +980,31 @@ export class ChatMultiSessionController {
                 console.error(`未知错误[handleSendMessage]: ${JSON.stringify(payload)}`)
                 break
               case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
-                // review操作后正常展示在UI上
+                // review操作后移除review数据
                 review.data.selected = params.InteractiveJSONInput
                 review.data.optionValue = optionValue
-                persistIndependentItem(token, review)
-                store.getState().dispatchStreamingNode({
-                  chatType: 'task',
-                  parentTaskId: review.TaskId,
-                  node: {
-                    token: review.id,
-                    kind: 'item',
-                    type: review.type,
-                  },
-                })
+                rawData.contents.delete(review.id)
+                store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break
               case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
                 review.data.selected = params.InteractiveJSONInput
                 review.data.optionValue = optionValue
-                persistIndependentItem(token, review)
+
                 if (optionValue === 'continue') {
                   const tasks = review.data
                   const plans = genExecTasks(tasks.plans.root_task)
-                  store.getState().updatePlanTree({
-                    task_tree: cloneDeep(plans),
-                    root_task_name: tasks.plans.root_task.name,
+                  store.getState().updateState({
+                    currentPlan: {
+                      task_tree: cloneDeep(plans),
+                      root_task_name: tasks.plans.root_task.name,
+                    },
                   })
                 }
-                store.getState().dispatchStreamingNode({
-                  chatType: 'task',
-                  parentTaskId: review.TaskId,
-                  node: {
-                    token: review.id,
-                    kind: 'item',
-                    type: review.type,
-                  },
-                })
+                // 清空plan-review的异步拓展信息
+                meta.currentPlanReviewExtraId = ''
+                meta.planReviewExtraData.clear()
+                rawData.contents.delete(review.id)
+                store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break
               default:
                 break
@@ -1071,9 +1055,7 @@ export class ChatMultiSessionController {
   public async loadTimelineHistory(sessionId: string): Promise<boolean> {
     const { rawData, store } = this.ensureSession(sessionId)
     // 置 loading（驱动 TimelineCard 的 YakitSpin）；与 finally 一致用 store.getState() 取最新
-    store.getState().updateState({
-      requestHistoryState: { ...store.getState().requestHistoryState, timelinesLoading: true },
-    })
+    store.getState().updateState({ timelinesLoading: true })
     try {
       const request: AIEventQueryRequest = {
         Filter: { SessionID: sessionId, NodeId: ['timeline_item'] },
@@ -1111,10 +1093,7 @@ export class ChatMultiSessionController {
     } catch {
       return false
     } finally {
-      const curState = store.getState()
-      store.getState().updateState({
-        requestHistoryState: { ...curState.requestHistoryState, timelinesLoading: false },
-      })
+      store.getState().updateState({ timelinesLoading: false })
     }
   }
 
@@ -1173,7 +1152,10 @@ export class ChatMultiSessionController {
     }, 5000)
 
     // 如果任务规划运行态有数据，则置空
-    store.getState().updateState({ taskStatus: cloneDeep(DefaultTaskPlanStatus) })
+    store.getState().updateState({
+      currentChatStatus: cloneDeep(DefaultAgentChatStatus),
+      currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
+    })
 
     // 拉取 timeline 历史（首批）+ 文件系统历史（全量），不阻塞建连主流程
     void this.loadTimelineHistory(sessionId)
@@ -1205,8 +1187,7 @@ export class ChatMultiSessionController {
           items: { ...state.items },
           groups: { ...state.groups },
           tasks: { ...state.tasks },
-          casualElements: [...state.casualChat.elements],
-          taskElements: [...state.taskChat.elements],
+          chatElements: [...state.chatElements],
         }
         await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
         this.finishSessionRestoreLoading(sessionId)
@@ -1218,8 +1199,7 @@ export class ChatMultiSessionController {
             items: { ...state.items },
             groups: { ...state.groups },
             tasks: { ...state.tasks },
-            casualElements: [...state.casualChat.elements],
-            taskElements: [...state.taskChat.elements],
+            chatElements: [...state.chatElements],
           }
           await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
           this.finishSessionRestoreLoading(sessionId)
@@ -1234,8 +1214,7 @@ export class ChatMultiSessionController {
           items: { ...state.items },
           groups: { ...state.groups },
           tasks: { ...state.tasks },
-          casualElements: [...state.casualChat.elements],
-          taskElements: [...state.taskChat.elements],
+          chatElements: [...state.chatElements],
         }
         await this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
       }
@@ -1282,7 +1261,7 @@ export class ChatMultiSessionController {
         if (meta.createChatQuestion) {
           this.requestMessage(sessionId, meta.createChatQuestion)
           meta.createChatQuestion = undefined
-          store.getState().updateState({ casualTitle: '等待回复中...' })
+          store.getState().updateCurrentLoadingTitle({ casualTitle: '等待AI回复...' })
 
           // 因为有用户问题发送，所以注册 获取问题队列轮询器
           if (meta.queuePollingTimer) clearInterval(meta.queuePollingTimer)
@@ -1319,8 +1298,7 @@ export class ChatMultiSessionController {
               items: { ...state.items },
               groups: { ...state.groups },
               tasks: { ...state.tasks },
-              casualElements: [...state.casualChat.elements],
-              taskElements: [...state.taskChat.elements],
+              chatElements: [...state.chatElements],
             }
             void this.persistSetSessionRender(sessionId, content, rawData.grpcOffset)
           }
@@ -1411,7 +1389,7 @@ export class ChatMultiSessionController {
         handleFunc({
           sessionId,
           res,
-          chatType: store.getState().taskStatus.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
+          chatType: store.getState().currentChatStatus.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
           store,
           rawData,
           request,
@@ -1458,34 +1436,11 @@ export class ChatMultiSessionController {
       return
     }
 
-    if (reviewDetail.chatType === 'reAct') {
-      rawData.contents.delete(reviewToken)
-      if (
-        reviewDetail.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE &&
-        store.getState().currentPlanReviewToken.token === reviewDetail.id
-      ) {
-        // 该类型在任务规划的review弹窗显示，需要清空当前任务规划的review
-        store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
-      } else {
-        store.getState().updateCasualReview(reviewToken, 'remove')
-        store.getState().deleteElementNode({
-          chatType: 'reAct',
-          token: reviewDetail.id,
-          kind: 'item',
-          taskID: reviewDetail.TaskId || undefined,
-          onDelContent: (mapKey) => {
-            rawData.contents.delete(mapKey)
-          },
-        })
-      }
-    } else if (reviewDetail.chatType === 'task') {
-      const currentReview = store.getState().currentPlanReviewToken
-      if (!currentReview.token || currentReview.token !== reviewDetail.id) return
+    const currentReview = store.getState().currentReviewDetail
+    if (!currentReview.token || currentReview.token !== reviewDetail.id) return
 
-      // 不用调用deleteElementNode，因为能触发这个方法的地方，说明review还没有进入list列表中
-      rawData.contents.delete(currentReview.token)
-      store.getState().updateState({ currentPlanReviewToken: { token: '', renderNum: 0 } })
-    }
+    rawData.contents.delete(currentReview.token)
+    store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
   }
 
   /** 更新某一个指定的工具卡片内容(AIChatQSDataTypeEnum.TOOL_RESULT) */
@@ -1631,11 +1586,9 @@ export class ChatMultiSessionController {
       this.closeSessionTimers(meta)
       // 任务规划结束后的相关逻辑
       handleTaskPlanEnd({ ...data, sessionId }, true)
-      store.getState().updateState({
-        execute: false,
-        casualLoading: false,
-        casualTitle: '会话已停止',
-      })
+      store.getState().updateState({ execute: false })
+      store.getState().updateCurrentChatStatus({ status: AITaskStatus.error })
+      store.getState().updateCurrentLoadingTitle({ casualTitle: '会话已关闭' })
       this.readyChannels.delete(sessionId)
 
       onEnd = meta.onEnd
@@ -1682,7 +1635,8 @@ export class ChatMultiSessionController {
       ipcRenderer.invoke('cancel-ai-re-act', session).catch(() => {})
       const store = this.storePool.get(session)
       if (store) {
-        store.getState().updateState({ execute: false, casualLoading: false, casualTitle: '会话关闭中...' })
+        store.getState().updateState({ execute: false })
+        store.getState().updateCurrentLoadingTitle({ casualTitle: '会话正在关闭...' })
       }
       if (meta) this.closeSessionTimers(meta)
     }

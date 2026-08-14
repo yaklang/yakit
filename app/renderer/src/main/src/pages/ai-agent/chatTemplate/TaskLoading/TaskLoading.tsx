@@ -1,12 +1,5 @@
-import Loading from '@/components/Loading/Loading'
-import { type FC, memo, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 import styles from './TaskLoading.module.scss'
-import useAISystemStream from '@/pages/ai-re-act/hooks/useAISystemStream'
-import { useAISystemStreamText } from '@/store/aiSystemStream'
-import classNames from 'classnames'
-import { useStore } from 'zustand'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export const ScrollText: FC<{ text?: string }> = ({ text = '' }) => {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -42,37 +35,3 @@ export const ScrollText: FC<{ text?: string }> = ({ text = '' }) => {
     </div>
   )
 }
-
-const TaskLoading: FC<{
-  className?: string
-}> = ({ className }) => {
-  const store = useCurrentStore()
-  const task = useStore(store, (state) => state.taskStatus.task)
-  const isRunning = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
-  const plan = useStore(store, (state) => state.taskStatus.plan)
-  const systemStream = useAISystemStreamText()
-  const { displayValue, mode } = useAISystemStream({
-    value: task,
-    systemStream,
-  })
-  return (
-    <div className={classNames(styles['task-loading'], className)}>
-      {isRunning && (
-        <>
-          <Loading
-            size={16}
-            style={{
-              marginTop: 8,
-            }}
-          >
-            <div className={styles['plan-text']}>{plan}</div>
-          </Loading>
-          <div className={styles['task-text']}>
-            {mode === 'value' ? displayValue : <ScrollText text={displayValue as string} />}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-export default memo(TaskLoading)

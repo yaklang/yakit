@@ -22,7 +22,7 @@ import type {
   AISendParams,
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import type { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITaskStatus, type AIAgentGrpcApi, type AIInputEvent, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitRoute, type YakitRouteType } from '@/enums/yakitRoute'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
@@ -324,7 +324,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const { onStart, onSend, onClose, onUpdatePageId } = useChatIPC(route, pageId)
 
   const store = globalSessionEngine.ensureSession(activeChat?.SessionID || '').store
-  const casualLoading = useStore(store, (state) => state.casualLoading)
+  const casualLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
 
   // 当前会话删除状态：删除中时遮罩整个对话区域，阻止用户操作
   const deleteStatus = useStore(

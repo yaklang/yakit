@@ -20,15 +20,18 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
-import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useCurrentStore, useCurrentRawData } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
-import useCreation from 'ahooks/lib/useCreation'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 import useLoadOlder from '../hooks/useLoadOlder'
 import { Code } from '@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStreamCard'
+import { AITaskStatus } from '../hooks/grpcApi'
+import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
+import emiter from '@/utils/eventBus/eventBus'
+import { OutlinePositionIcon } from '@/assets/icon/outline'
+import { useDebounceFn, useMount, useCreation, useMemoizedFn } from 'ahooks'
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   const { stream, aiMarkdownProps, listItemIndex, sessionId } = props
@@ -106,25 +109,49 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
 const TYPE = 'reAct'
 
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
-  forwardRef((_, ref) => {
+  forwardRef((props, ref) => {
     const listRootRef = useRef<HTMLDivElement>(null)
     const { activeChat } = useAIAgentStore()
 
     const store = useCurrentStore()
-    const casualChatElements = useStore(store, (state) => state.casualChat.elements)
-    const chatLength = useStore(store, (state) => state.casualChat.elements.length)
-    const casualTitle = useStore(store, (state) => state.casualTitle)
+    const casualChatElements = useStore(store, (state) => state.chatElements)
+    const chatLength = useStore(store, (state) => state.chatElements.length)
+    const casualTitle = useStore(store, (state) => state.currentLoadingTitle.casualTitle)
+    const planTitle = useStore(store, (state) => state.currentLoadingTitle.planTitle)
     const execute = useStore(store, (state) => state.execute)
+    // 任务规划运行态：进入任务规划后底部 loading 从 planTitle 取值
+    const taskCoordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId)
+    const taskStatus = useStore(store, (state) => state.currentChatStatus.status)
+    const isTaskPlanning = !!taskCoordinatorId && taskStatus === AITaskStatus.inProgress
     // 向上加载历史（recovery_history）的在途状态，给 Header 转圈提示
     const grpcLoadMoreLoading = useStore(store, (state) => state.grpcLoadMoreLoading)
 
     const { onRangeChange, firstItemIndex, handleLoadMore, isPrependingRef } = useLoadOlder(TYPE)
 
-    const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged, scrollToItemIndex } =
-      useVirtuosoAutoScroll({
-        total: chatLength,
-        isPrependingRef,
-      })
+    const {
+      virtuosoRef,
+      setScrollerRef,
+      setIsAtBottomRef,
+      handleTotalListHeightChanged,
+      scrollToItemIndex,
+      scrollToIndex,
+    } = useVirtuosoAutoScroll({
+      total: chatLength,
+      isPrependingRef,
+    })
+
+    // 是否已滚动到底部：ref 供 hook 内部判断，state 触发重渲染控制置底按钮显隐
+    const [isAtBottom, setIsAtBottom] = useState(true)
+    const handleAtBottomStateChange = useMemoizedFn((flag: boolean) => {
+      setIsAtBottomRef(flag)
+      setIsAtBottom(flag)
+    })
+    const onScrollToBottom = useDebounceFn(
+      () => {
+        scrollToIndex('LAST')
+      },
+      { wait: 200, leading: true },
+    ).run
 
     const { locateToIndex } = useChatStreamLocateHighlight({
       // Virtuoso scrollToIndex 接受绝对 index，定位下标需加 firstItemIndex 偏移
@@ -132,7 +159,32 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       listRootRef,
     })
 
+    const rawData = useCurrentRawData()
+
     useImperativeHandle(ref, () => ({ scrollToItemIndex: (index, behavior) => locateToIndex(index, behavior) }), [])
+
+    // 任务树点击定位：在自由对话列表中查找匹配的任务节点并定位高亮
+    const onTreeLocate = useMemoizedFn((id?: string) => {
+      if (!id) return
+      const elements = store.getState().chatElements
+      const index = elements.findLastIndex((item) => {
+        const itemData = rawData.contents.get(item.token)
+        switch (itemData?.type) {
+          case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
+          case AIChatQSDataTypeEnum.TASK_NODE_GROUP:
+            return itemData.data?.taskId === id
+          default:
+            return false
+        }
+      })
+      if (index !== -1) locateToIndex(index, 'auto')
+    })
+    useMount(() => {
+      emiter.on('onAITreeLocatePlanningList', onTreeLocate)
+      return () => {
+        emiter.off('onAITreeLocatePlanningList', onTreeLocate)
+      }
+    })
 
     const renderItem = useCallback((_, item?: ReActChatRenderElement) => {
       if (!item?.token) return null
@@ -151,27 +203,20 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     )
 
     const Footer = useCallback(() => {
-      return execute ? (
-        <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
-          {casualTitle ? (
-            <Loading
-              size={14}
-              style={{
-                marginTop: 8,
-              }}
-            >
-              <div className="text-ellipsis" style={{ fontWeight: 400, display: 'flex', alignItems: 'center' }}>
-                <ScrollText text={casualTitle as string} />
-              </div>
-            </Loading>
-          ) : (
-            <div className={styles['end']}>当前会话已结束</div>
-          )}
+      if (!execute) return chatLength ? <div className={styles['end']}>当前会话已停止</div> : null
+      // 任务规划进行中时从 planTitle 取值，否则从 casualTitle 取值
+      const mainTitle = isTaskPlanning ? planTitle : casualTitle
+      if (!mainTitle) return <div className={styles['end']}>当前会话已结束</div>
+      return (
+        <div className={styles['footer-loading']}>
+          <Loading size={14} style={{ marginTop: 8 }}>
+            <div className={styles['footer-loading-title']}>
+              <ScrollText text={mainTitle as string} />
+            </div>
+          </Loading>
         </div>
-      ) : chatLength ? (
-        <div className={styles['end']}>当前会话已停止</div>
-      ) : null
-    }, [casualTitle, execute, chatLength])
+      )
+    }, [casualTitle, planTitle, execute, chatLength, isTaskPlanning])
     const Header = useCallback(
       () =>
         grpcLoadMoreLoading ? (
@@ -189,8 +234,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       }),
       [Footer, Header, Item],
     )
-    // const rawData = useCurrentRawData()
-    // console.log('casualChat.elements', casualChatElements, store.getState().items)
+    // console.log('chatElements', casualChatElements, store.getState().items)
     return (
       <div ref={listRootRef} className={styles['ai-re-act-chat-contents']}>
         <Virtuoso
@@ -198,7 +242,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           ref={virtuosoRef}
           scrollerRef={setScrollerRef}
           defaultItemHeight={26}
-          atBottomStateChange={setIsAtBottomRef}
+          atBottomStateChange={handleAtBottomStateChange}
           data={casualChatElements}
           totalListHeightChanged={handleTotalListHeightChanged}
           itemContent={renderItem}
@@ -212,6 +256,18 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           rangeChanged={onRangeChange}
           className={styles['re-act-contents-list']}
         />
+        {chatLength > 0 && !isAtBottom && (
+          <div className={styles['scroll-to-bottom-wrapper']}>
+            <YakitButton
+              type="outline2"
+              icon={<OutlinePositionIcon />}
+              radius="50%"
+              onClick={onScrollToBottom}
+              className={styles['position-button']}
+              size="large"
+            />
+          </div>
+        )}
       </div>
     )
   }),

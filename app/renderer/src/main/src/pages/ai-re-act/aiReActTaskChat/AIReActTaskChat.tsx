@@ -4,34 +4,18 @@ import type {
   AIInputSettingPopoverProps,
   AIManualAdditionPopoverProps,
   AIManualAdditionProps,
-  AIReActTaskChatContentProps,
   AIReActTaskChatLeftSideProps,
   AIReActTaskChatProps,
-  AIRenderTaskFooterExtraProps,
 } from './AIReActTaskChatType'
 import styles from './AIReActTaskChat.module.scss'
-import { AIAgentChatStream, AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplate'
-import { useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplate'
+import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
-import {
-  OutlineArrowscollapseIcon,
-  OutlineArrowsexpandIcon,
-  OutlineExitIcon,
-  OutlineHandIcon,
-  OutlineInformationcircleIcon,
-  OutlinePlay2Icon,
-  OutlinePositionIcon,
-} from '@/assets/icon/outline'
+import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
-import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import {
-  type AIInputEvent,
-  AIInputEventHotPatchTypeEnum,
-  AIInputEventSyncTypeEnum,
-  AITaskStatus,
-} from '../hooks/grpcApi'
+import { type AIInputEvent, AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
 import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
@@ -47,7 +31,6 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { has } from 'lodash'
 import { AITaskContent } from '../aiTaskContent/AITaskContent'
-import { useTaskChatExtraAction } from './useTaskChatExtraAction'
 import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
@@ -145,54 +128,6 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 
 export default AIReActTaskChat
 
-export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
-  const { scrollToBottom, onScrollToBottom } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
-  const { onExtraAction } = useTaskChatExtraAction()
-
-  const store = useCurrentStore()
-  const streams = useStore(store, (state) => state.taskChat.elements)
-  const execute = useStore(store, (state) => state.execute)
-  const taskId = useStore(store, (state) => state.taskStatus.taskID)
-  const currentPlanReviewToken = useStore(store, (state) => state.currentPlanReviewToken)
-
-  return (
-    <>
-      <div className={styles['tab-content']}>
-        <AIAgentChatStream scrollToBottom={scrollToBottom} />
-      </div>
-      {!currentPlanReviewToken.token && streams.length > 0 && (
-        <div className={styles['footer']}>
-          {execute && (
-            <AIManualAdditionPopover chatType="task">
-              <YakitButton
-                type="outline2"
-                radius="28px"
-                icon={<OutlineHandIcon />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                }}
-                size="large"
-              >
-                {t('AIReActTaskChatContent.humanIntervention')}
-              </YakitButton>
-            </AIManualAdditionPopover>
-          )}
-
-          {execute && !!taskId && <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />}
-          <YakitButton
-            type="outline2"
-            icon={<OutlinePositionIcon />}
-            radius="50%"
-            onClick={onScrollToBottom}
-            className={styles['position-button']}
-            size="large"
-          />
-        </div>
-      )}
-    </>
-  )
-})
 export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = React.memo((props) => {
   const { children, chatType } = props
   const [manualAdditionVisible, setManualAdditionVisible] = useControllableValue<boolean>(props, {
@@ -371,27 +306,15 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
   const sessionId = useCurrentSessionId()
   const meta = useCurrentMeta()
   const store = useCurrentStore()
-  const taskStatus = useStore(store, (state) => state.taskStatus)
   const execute = useStore(store, (state) => state.execute)
   const syncIDUpdate = useStore(store, (state) => state.syncIDUpdate)
 
   const [prompt, setPrompt] = useState<string>()
 
-  const currentCoordinatorIdRef = useRef<string>('')
   const syncIdOfAddToContext = useRef<string>('')
-  const syncIdOfAddAndReExecute = useRef<string>('')
-
-  useUpdateEffect(() => {
-    if (taskStatus.status !== AITaskStatus.inProgress && currentCoordinatorIdRef.current) {
-      onSendRecover(currentCoordinatorIdRef.current)
-    }
-  }, [taskStatus.status])
 
   useEffect(() => {
-    if (
-      (syncIdOfAddToContext.current && !meta.syncIDMap?.get(syncIdOfAddToContext.current)) ||
-      (syncIdOfAddAndReExecute.current && !meta.syncIDMap?.get(syncIdOfAddAndReExecute.current))
-    ) {
+    if (syncIdOfAddToContext.current && !meta.syncIDMap?.get(syncIdOfAddToContext.current)) {
       onReset()
     }
   }, [syncIDUpdate])
@@ -405,54 +328,11 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
     onCancel()
     setPrompt('')
     if (syncIdOfAddToContext.current) syncIdOfAddToContext.current = ''
-    if (syncIdOfAddAndReExecute.current) syncIdOfAddAndReExecute.current = ''
   })
 
-  const onAddAndReExecute = useMemoizedFn(() => {
+  const onAddToContext = useMemoizedFn(() => {
     if (!prompt?.trim()) return
-    // 加入上下文后，停止任务再恢复任务
-    syncIdOfAddAndReExecute.current = randomString(8)
-    onAddToContext(syncIdOfAddAndReExecute.current)
-    const taskId = taskStatus.taskID
-    const coordinatorId = taskStatus.coordinatorId
-    if (!coordinatorId) return
-    currentCoordinatorIdRef.current = coordinatorId
-
-    store.getState().updateState({
-      cancelTaskLoading: true,
-    })
-
-    if (taskStatus.status === AITaskStatus.inProgress && taskId) {
-      // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
-      const info: AIInputEvent = {
-        IsSyncMessage: true,
-        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: taskId }),
-        SyncID: randomString(8),
-      }
-      onSend({ token: sessionId, type: 'task', params: info })
-    } else {
-      onSendRecover(coordinatorId)
-    }
-  })
-  const onSendRecover = useMemoizedFn((coordinatorId: string) => {
-    const info: AIInputEvent = {
-      IsSyncMessage: true,
-      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
-      SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
-
-      SyncID: randomString(8),
-    }
-    onSend({ token: sessionId, type: 'task', params: info })
-    currentCoordinatorIdRef.current = ''
-  })
-  const getTypeBySyncID = useMemoizedFn(() => {
-    if (syncIdOfAddToContext.current) return '加入上下文'
-    if (syncIdOfAddAndReExecute.current) return '加入并重新执行'
-    return ''
-  })
-  const onAddToContext = useMemoizedFn((syncID: string) => {
-    if (!prompt?.trim()) return
+    syncIdOfAddToContext.current = randomString(8)
     const info: AIInputEvent = {
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_USER_INTERVENTION,
@@ -469,16 +349,12 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
       chatType,
       type: AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
       Timestamp: moment().unix(),
-      data: { type: getTypeBySyncID(), content: prompt || '' },
+      data: { type: '加入上下文', content: prompt || '' },
       AIService: '',
       AIModelName: '',
     }
     globalSessionEngine.pushDataToSession(sessionId, chatData)
   })
-
-  const addAndReExecuteLoading = useCreation(() => {
-    return !!syncIdOfAddAndReExecute.current && !!meta.syncIDMap?.get(syncIdOfAddAndReExecute.current)
-  }, [syncIDUpdate])
 
   const addAndToContextLoading = useCreation(() => {
     return !!syncIdOfAddToContext.current && !!meta.syncIDMap?.get(syncIdOfAddToContext.current)
@@ -496,116 +372,11 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
         showCount
       />
       <div className={styles['ai-manual-addition-footer']}>
-        <YakitPopconfirm title="如果当前有任务正在执行,确认后会停止当前任务并重新执行" onConfirm={onAddAndReExecute}>
-          <YakitButton
-            type="outline2"
-            onClick={(e) => e.stopPropagation()}
-            loading={addAndReExecuteLoading}
-            className={styles['add-and-reexecute-btn']}
-            disabled={addAndToContextLoading}
-          >
-            加入并重新执行
-          </YakitButton>
-        </YakitPopconfirm>
-        <YakitButton
-          onClick={() => {
-            syncIdOfAddToContext.current = randomString(8)
-            onAddToContext(syncIdOfAddToContext.current)
-          }}
-          loading={addAndToContextLoading}
-          disabled={addAndReExecuteLoading}
-        >
+        <YakitButton onClick={onAddToContext} loading={addAndToContextLoading}>
           加入上下文
         </YakitButton>
       </div>
     </div>
-  )
-})
-export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.memo((props) => {
-  const { onExtraAction, btnProps, children } = props
-  const { t } = useI18nNamespaces(['aiAgent'])
-
-  const store = useCurrentStore()
-
-  const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
-  const status = useStore(store, (state) => state.taskStatus.status)
-  const renderBtn = useMemoizedFn(() => {
-    switch (status) {
-      case AITaskStatus.inProgress:
-        return (
-          <YakitPopconfirm
-            onConfirm={() => {
-              onExtraAction('stopTask', '')
-            }}
-            title={t('AIRenderTaskFooterExtra.cancelTaskConfirm')}
-            placement="top"
-          >
-            <YakitButton
-              type="primary"
-              icon={<OutlineExitIcon />}
-              className={styles['task-button']}
-              radius="28px"
-              size="large"
-              colors="danger"
-              loading={cancelTaskLoading}
-              {...btnProps}
-            />
-          </YakitPopconfirm>
-        )
-      case AITaskStatus.error:
-      case AITaskStatus.skipped:
-      case AITaskStatus.cancel:
-        return (
-          <YakitButton
-            type="primary"
-            icon={<OutlinePlay2Icon />}
-            radius="28px"
-            size="large"
-            onClick={() => {
-              store.getState().updateState({
-                cancelTaskLoading: true,
-              })
-              onExtraAction('recover', '')
-            }}
-            loading={cancelTaskLoading}
-            {...btnProps}
-          >
-            {t('AIRenderTaskFooterExtra.continueTask')}
-          </YakitButton>
-        )
-      default:
-        return null
-    }
-  })
-
-  return (
-    <>
-      {/* {getTaskInfo()?.status === AITaskStatus.inProgress && isSubTaskInProgress() && (
-        <YakitPopconfirm
-          onConfirm={() => {
-            syncIdOfStopSubTask.current = randomString(8)
-            onExtraAction('stopSubTask', syncIdOfStopSubTask.current)
-          }}
-          title={t('AIRenderTaskFooterExtra.cancelSubtaskConfirm')}
-          placement="top"
-        >
-          <YakitButton
-            type="outline1"
-            icon={<RedoDotIcon />}
-            className={styles['task-sub-button']}
-            radius="28px"
-            size="large"
-            colors="danger"
-            loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
-            {...subTaskBtnProps}
-          >
-            {t('AIRenderTaskFooterExtra.skipSubtask')}
-          </YakitButton>
-        </YakitPopconfirm>
-      )} */}
-      {children}
-      {renderBtn()}
-    </>
   )
 })
 

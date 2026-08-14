@@ -78,7 +78,7 @@ const ConcurrentStreamCardHeardWrapper: FC<ConcurrentStreamCardHeardWrapperProps
   const rawData = useCurrentRawData()
 
   const renderNum = useStore(store, (state) => state.tasks[token]?.renderNum)
-  const coordinatorId = useStore(store, (state) => state.taskStatus.coordinatorId)
+  const coordinatorId = useStore(store, (state) => state.currentChatStatus.coordinatorId)
 
   const raw = useCreation(() => {
     if (!rawData) return undefined

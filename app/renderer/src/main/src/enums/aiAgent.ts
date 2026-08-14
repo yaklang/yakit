@@ -3,10 +3,10 @@ export enum RemoteAIAgentGV {
   AIAgentChatSetting = 'ai-agent-chat-setting',
 
   /**
-   * 清空用户缓存数据的依据
-   * 代码会向缓存里设置一个固定值，如果缓存值和固定值不一样, 则需要清除缓存数据，一样则不需要清除
+   * 清空 AI 会话 IndexedDB 的依据
+   * 打开 IDB 时与 AIAgentIDBCacheClearValue 比较，缺标识或旧于当前值则清空三表
    */
-  AIAgentCacheClear = 'ai-agent-cache-clear',
+  AIAgentIDBCacheClear = 'ai-agent-idb-cache-clear',
 
   /** @name 替换 forge 模板时是否隐藏提示框, 直接进行替换 */
   AIAgentReplaceForgeNoPrompt = 'ai-agent-replace-forge-no-prompt',

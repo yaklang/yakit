@@ -7,14 +7,15 @@ import omit from 'lodash/omit'
 import { useStore } from 'zustand'
 import { useCurrentStore } from '../../hooks/useCurrentDataBySession'
 import useGetChatDataStoreKey from '../../hooks/useGetChatDataStoreKey'
+import { AITaskStatus } from '../../hooks/grpcApi'
 
 export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.memo(
   forwardRef((props, ref) => {
     const { handleSubmit, externalParameters, handleStopCasualTask } = props
 
     const store = useCurrentStore()
-    const cancelCasualLoading = useStore(store, (state) => state.cancelCasualLoading)
-    const casualLoading = useStore(store, (state) => state.casualLoading)
+    const cancelChatLoading = useStore(store, (state) => state.cancelChatLoading)
+    const casualLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
 
     const chatDataStoreKey = useGetChatDataStoreKey()
     return (
@@ -26,7 +27,7 @@ export const AIReactChatTextarea: React.FC<AIReactChatTextareaProps> = React.mem
           <div className={styles['extra-footer-right']}>
             {casualLoading && (
               <RoundedStopButton
-                loading={cancelCasualLoading}
+                loading={cancelChatLoading}
                 onClick={handleStopCasualTask}
                 style={{ width: 24, height: 24 }}
               />

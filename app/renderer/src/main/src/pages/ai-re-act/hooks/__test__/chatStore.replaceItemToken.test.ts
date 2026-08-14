@@ -14,7 +14,7 @@ describe('replaceItemToken', () => {
     store.getState().replaceItemToken('old', 'new')
     expect(store.getState().items['old']).toBeUndefined()
     expect(store.getState().items['new']).toBeTruthy()
-    expect(store.getState().casualChat.elements.some((e) => e.token === 'new')).toBe(true)
+    expect(store.getState().chatElements.some((e) => e.token === 'new')).toBe(true)
     expect(onRenderStructureChange).toHaveBeenCalledTimes(1)
   })
 

@@ -1,13 +1,14 @@
 import type {
+  AgentChatStatus,
+  AgentLoadingTitle,
+  AIQuestionQueues,
   AIToolResult,
   CurrentExecTaskTree,
   PlanItemDetailsData,
-  TaskPlanStatus,
   TodoListCardData,
 } from './aiRender'
 import { AITaskStatus } from './grpcApi'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
-import type { AIQuestionQueues } from './type'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
 
 /** 工具执行结果-默认值 */
@@ -137,13 +138,15 @@ export const DefaultMemoryList: AIAgentGrpcApi.MemoryEntryList = {
   },
 }
 
-/** 任务规划运行态-默认值 */
-export const DefaultTaskPlanStatus: TaskPlanStatus = {
-  plan: '',
-  task: '',
-  taskID: '',
-  status: AITaskStatus.created,
+export const DefaultAgentChatStatus: AgentChatStatus = {
+  questionID: '',
   coordinatorId: '',
+  status: AITaskStatus.created,
+}
+
+export const DefaultAgentLoadingTitle: AgentLoadingTitle = {
+  casualTitle: '',
+  planTitle: '',
 }
 
 /** end_plan_and_execution & react_task_status_changed 齐了才 settle status */

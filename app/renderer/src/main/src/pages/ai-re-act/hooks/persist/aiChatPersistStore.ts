@@ -1,7 +1,10 @@
 import type { AIAgentGrpcApi } from '../grpcApi'
 import type { AIChatQSData, SessionRenderContent } from '../aiRender'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import {
+  AIAgentIDBCacheClearValue,
   DB_NAME,
   DB_VERSION,
   INDEX_BY_SESSION_ID,
@@ -9,6 +12,7 @@ import {
   SESSION_CONTENT_STORE,
   SESSION_REFERENCE_STORE,
   SESSION_RENDER_STORE,
+  shouldClearIDBCache,
 } from './constants'
 import type {
   SessionContentUpdater,
@@ -27,46 +31,86 @@ import type {
  */
 class AIChatPersistStore {
   private dbPromise: Promise<IDBDatabase> | null = null
+  /** 版本标识检查（含可能的清库）进行中 / 已完成；失败会置回 null 以便下次 open 重试 */
+  private cacheClearPromise: Promise<void> | null = null
 
   /**
    * 打开（或复用）数据库连接；首次调用时建库建表。
+   * 打开后按远程 KV 标识决定是否清空旧结构数据（casualElements 等）。
    */
-  open(): Promise<IDBDatabase> {
+  async open(): Promise<IDBDatabase> {
     if (!this.dbPromise) {
-      this.dbPromise = new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION)
-        req.onerror = () => reject(req.error)
-        req.onsuccess = () => resolve(req.result)
-        req.onupgradeneeded = (event) => {
-          const db = (event.target as IDBOpenDBRequest).result
+      this.dbPromise = this.openDatabase()
+    }
+    const db = await this.dbPromise
+    await this.ensureIDBCacheClear(db)
+    return db
+  }
 
-          // 表1：会话渲染树，主键 [sessionId, source]；bySource 便于按来源批量查/删
-          if (!db.objectStoreNames.contains(SESSION_RENDER_STORE)) {
-            const renderStore = db.createObjectStore(SESSION_RENDER_STORE, {
-              keyPath: ['sessionId', 'source'],
-            })
-            renderStore.createIndex(INDEX_BY_SOURCE, 'source', { unique: false })
-          }
+  private openDatabase(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION)
+      req.onerror = () => reject(req.error)
+      req.onsuccess = () => resolve(req.result)
+      req.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result
 
-          // 表2：会话正文，主键 [sessionId, token]；按 session 批量删用 bySessionId
-          if (!db.objectStoreNames.contains(SESSION_CONTENT_STORE)) {
-            const contentStore = db.createObjectStore(SESSION_CONTENT_STORE, {
-              keyPath: ['sessionId', 'token'],
-            })
-            contentStore.createIndex(INDEX_BY_SESSION_ID, 'sessionId', { unique: false })
-          }
-
-          // 表3：参考资料，主键 [sessionId, token]；按 session 批量删用 bySessionId
-          if (!db.objectStoreNames.contains(SESSION_REFERENCE_STORE)) {
-            const refStore = db.createObjectStore(SESSION_REFERENCE_STORE, {
-              keyPath: ['sessionId', 'token'],
-            })
-            refStore.createIndex(INDEX_BY_SESSION_ID, 'sessionId', { unique: false })
-          }
+        // 表1：会话渲染树，主键 [sessionId, source]；bySource 便于按来源批量查/删
+        if (!db.objectStoreNames.contains(SESSION_RENDER_STORE)) {
+          const renderStore = db.createObjectStore(SESSION_RENDER_STORE, {
+            keyPath: ['sessionId', 'source'],
+          })
+          renderStore.createIndex(INDEX_BY_SOURCE, 'source', { unique: false })
         }
+
+        // 表2：会话正文，主键 [sessionId, token]；按 session 批量删用 bySessionId
+        if (!db.objectStoreNames.contains(SESSION_CONTENT_STORE)) {
+          const contentStore = db.createObjectStore(SESSION_CONTENT_STORE, {
+            keyPath: ['sessionId', 'token'],
+          })
+          contentStore.createIndex(INDEX_BY_SESSION_ID, 'sessionId', { unique: false })
+        }
+
+        // 表3：参考资料，主键 [sessionId, token]；按 session 批量删用 bySessionId
+        if (!db.objectStoreNames.contains(SESSION_REFERENCE_STORE)) {
+          const refStore = db.createObjectStore(SESSION_REFERENCE_STORE, {
+            keyPath: ['sessionId', 'token'],
+          })
+          refStore.createIndex(INDEX_BY_SESSION_ID, 'sessionId', { unique: false })
+        }
+      }
+    })
+  }
+
+  /**
+   * 比较远程 KV 标识。
+   * 无标识（旧库从未写过）或旧于当前值 → 清空三表后再写入新标识。
+   */
+  private ensureIDBCacheClear(db: IDBDatabase): Promise<void> {
+    if (!this.cacheClearPromise) {
+      this.cacheClearPromise = this.maybeClearStaleIDB(db).catch(() => {
+        this.cacheClearPromise = null
       })
     }
-    return this.dbPromise
+    return this.cacheClearPromise
+  }
+
+  private async maybeClearStaleIDB(db: IDBDatabase): Promise<void> {
+    const flag = await getRemoteValue(RemoteAIAgentGV.AIAgentIDBCacheClear)
+    if (!shouldClearIDBCache(flag)) return
+    await this.clearAllStores(db)
+    await setRemoteValue(RemoteAIAgentGV.AIAgentIDBCacheClear, AIAgentIDBCacheClearValue)
+  }
+
+  private clearAllStores(db: IDBDatabase): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+      tx.objectStore(SESSION_RENDER_STORE).clear()
+      tx.objectStore(SESSION_CONTENT_STORE).clear()
+      tx.objectStore(SESSION_REFERENCE_STORE).clear()
+    })
   }
 
   /** 关闭数据库连接并清空缓存的 Promise */
@@ -354,14 +398,7 @@ class AIChatPersistStore {
   /** 清空三表全部持久化数据（全库清删） */
   async deleteAllPersist(): Promise<void> {
     const db = await this.open()
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction([SESSION_RENDER_STORE, SESSION_CONTENT_STORE, SESSION_REFERENCE_STORE], 'readwrite')
-      tx.oncomplete = () => resolve()
-      tx.onerror = () => reject(tx.error)
-      tx.objectStore(SESSION_RENDER_STORE).clear()
-      tx.objectStore(SESSION_CONTENT_STORE).clear()
-      tx.objectStore(SESSION_REFERENCE_STORE).clear()
-    })
+    return this.clearAllStores(db)
   }
 }
 

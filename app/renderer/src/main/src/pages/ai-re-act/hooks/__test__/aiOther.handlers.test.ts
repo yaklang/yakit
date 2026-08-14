@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest'
 import { aiOtherDataHandlers } from '../grpcStreamHandler/aiOther'
 import { DefaultMemoryList } from '../defaultConstant'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
+import { AIChatQSDataTypeEnum, type ChatTaskNodeGroup } from '../aiRender'
+import { AITaskStatus } from '../grpcApi'
 
 vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
@@ -48,6 +50,33 @@ describe('aiOther other handlers', () => {
     })
     aiOtherDataHandlers.timeline_item(req)
     expect(req.store.getState().reActTimelines.some((t) => t.id === 9)).toBe(true)
+  })
+
+  it('D3: react_task_created initializes TASK_NODE_GROUP loadingTitle', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          react_task_status: AITaskStatus.inProgress,
+          react_user_input: 'sub goal',
+          react_task_id: 'sub-1',
+          react_task_uuid: 'uuid-1',
+          react_task_name: 'sub',
+          react_task_is_sub_agent: true,
+        },
+        { NodeId: 'react_task_created' },
+      ),
+      chatType: 'reAct',
+    })
+    req.store.getState().updateCurrentChatStatus({
+      questionID: 'q1',
+      status: AITaskStatus.inProgress,
+      coordinatorId: '',
+    })
+    aiOtherDataHandlers.react_task_created(req)
+    const node = req.rawData.contents.get('q1-sub-1') as ChatTaskNodeGroup | undefined
+    expect(node?.type).toBe(AIChatQSDataTypeEnum.TASK_NODE_GROUP)
+    expect(node?.data.loadingTitle).toBe('')
   })
 
   it('D3: notify sets message', () => {

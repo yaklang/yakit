@@ -30,7 +30,6 @@ import {
   TongyiIcon,
   MemfitIcon,
 } from './aiModelList/icon'
-import type { UseChatIPCState } from '../ai-re-act/hooks/type'
 import type { AIAgentGrpcApi } from '../ai-re-act/hooks/grpcApi'
 import { AISourceEnum, AITaskStatus } from '../ai-re-act/hooks/grpcApi'
 import {
@@ -41,14 +40,8 @@ import {
   SolidToolIcon,
 } from '@/assets/icon/solid'
 import type { MCPServerType } from './type/aiMCP'
-import {
-  DefaultCurrentExecTaskTree,
-  DefaultMemoryList,
-  DefaultPlanHistoryList,
-} from '../ai-re-act/hooks/defaultConstant'
 import { ColorsAIIcon } from '@/assets/icon/colors'
 import type { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
-import { cloneDeep } from 'lodash'
 import type { ExportAIForgeRequest } from './forgeName/type'
 
 /** AI-Agent 页面的唯一 id */
@@ -269,44 +262,6 @@ export enum AIMCPServerTypeEnum {
   Stdio = 'stdio',
   StreamableHTTP = 'streamable_http',
 }
-//#region ai hooks 默认值
-export const defaultChatIPCData: UseChatIPCState = {
-  execute: false,
-  httpRunTimeIDs: [],
-  riskRunTimeIDs: [],
-  casualChat: {
-    elements: [],
-    toolListRenderNumber: 0,
-  },
-  taskChat: {
-    plan: cloneDeep(DefaultCurrentExecTaskTree),
-    elements: [],
-  },
-  grpcFolders: [],
-  questionQueue: {
-    total: 0,
-    data: [],
-  },
-  reActTimelines: [],
-  memoryList: { ...DefaultMemoryList },
-  taskStatus: { plan: '', task: '', taskID: '', status: AITaskStatus.created, coordinatorId: '' },
-  focusMode: '',
-  initLoading: false,
-  planHistoryList: cloneDeep(DefaultPlanHistoryList),
-  cancelCasualLoading: false,
-  cancelTaskLoading: false,
-  notifyMessage: null,
-  requestHistoryState: {
-    initLoading: false,
-    casualLoadMoreLoading: false,
-    taskLoadMoreLoading: false,
-    saveLoading: false,
-    timelinesLoading: false,
-  },
-  casualLoading: false,
-  casualTitle: '',
-}
-//#endregion
 
 /** @name 任务回答类型对应图标 */
 export const taskAnswerToIconMap: Record<string, ReactNode> = {

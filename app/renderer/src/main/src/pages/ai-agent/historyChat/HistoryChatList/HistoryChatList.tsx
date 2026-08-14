@@ -339,8 +339,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
     return globalSessionEngine?.ensureSession(item.SessionID)?.store
   }, [item.SessionID])
 
-  const casualLoading = useStore(store, (state) => state.casualLoading)
-  const taskLoading = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
+  const loading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
   const [delLoading, setDelLoading] = useState<boolean>(false)
   const displayTitle = useCreation(() => {
     return getSessionDisplayTitle(item)
@@ -351,9 +350,6 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
       setDelLoading(false)
     })
   })
-  const loading = useCreation(() => {
-    return casualLoading || taskLoading
-  }, [casualLoading, taskLoading])
   return (
     <div
       key={item.SessionID}

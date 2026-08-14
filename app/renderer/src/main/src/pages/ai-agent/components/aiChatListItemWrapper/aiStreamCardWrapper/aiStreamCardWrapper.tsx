@@ -1,12 +1,11 @@
 import { type FC, memo, useEffect, useState } from 'react'
 import type { AIStreamCardWrapperProps } from './type'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import useRafInterval from 'ahooks/lib/useRafInterval'
 import { AIStreamCard } from '../../aiChatListItem/StreamingChatContent/StreamingChatContent'
 import { AIChatQSDataTypeEnum, type ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useStore } from 'zustand'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { useRafInterval, useMemoizedFn } from 'ahooks'
 
 const AIStreamCardWrapper: FC<AIStreamCardWrapperProps> = memo((props) => {
   const { token } = props

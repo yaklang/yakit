@@ -10,9 +10,9 @@ import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import styles from '../AIChatContent.module.scss'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
-import useCreation from 'ahooks/lib/useCreation'
 import cloneDeep from 'lodash/cloneDeep'
 import isEmpty from 'lodash/isEmpty'
+import { useCreation } from 'ahooks'
 
 const ContextTokenSummary: React.FC<ContextPerfPanelProps> = () => {
   const store = useCurrentStore()

@@ -4,9 +4,9 @@ import styles from './AIChildWindowConcurrentStreamCard.module.scss'
 import { type ChatTaskNodeGroup } from '@/pages/ai-re-act/hooks/aiRender'
 import useAIConcurrentStreamStore from '@/auxWindow/pages/AIConcurrentStream/useContext/useStore'
 import useAIConcurrentStreamDispatcher from '@/auxWindow/pages/AIConcurrentStream/useContext/useDispatcher'
-import useCreation from 'ahooks/lib/useCreation'
 import AIChildWindowConcurrentStreamContent from '../../aiChildWindowItem/aiChildWindowConcurrentStreamContent/AIChildWindowConcurrentStreamContent'
 import AIChildWindowConcurrentStreamCardHeard from './aiChildWindowConcurrentStreamCardHeard/AIChildWindowConcurrentStreamCardHeard'
+import { useCreation } from 'ahooks'
 
 export interface AIChildWindowConcurrentStreamCardProps {
   token: string

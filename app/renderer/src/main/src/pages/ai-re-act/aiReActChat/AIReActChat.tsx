@@ -26,6 +26,7 @@ import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { AIReactChatTextarea } from './aiReactChatTextarea/AIReactChatTextarea'
 import { AIReActChatHeader } from './aiReActChatHeader/AIReActChatHeader'
 import { AIToDoListWrapper } from './aiToDoListWrapper/AIToDoListWrapper'
+import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
@@ -277,11 +278,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const handleStopCasualTask = useMemoizedFn(() => {
-      const currentCasualTaskID = store.getState().currentCasualTaskID
+      const currentCasualTaskID = store.getState().currentChatStatus.questionID
       if (!store.getState().execute || !currentCasualTaskID) return
 
       store.getState().updateState({
-        cancelCasualLoading: true,
+        cancelChatLoading: true,
       })
       const info: AIInputEvent = {
         IsSyncMessage: true,
@@ -319,6 +320,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               />
               <AIToDoListWrapper />
               <AIReActChatContents ref={aiReActChatContentsRef} />
+              <AIReActTaskChatReview />
             </div>
             <div className={classNames(styles['chat-footer'])}>
               <div className={styles['footer-body']}>

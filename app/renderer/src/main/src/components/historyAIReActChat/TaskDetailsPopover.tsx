@@ -25,7 +25,7 @@ const TaskDetailsPopover: React.FC<TaskDetailsPopoverProps> = ({ taskLabel = '�
   const store = useCurrentStore()
   const handleOpen = useMemoizedFn(() => {
     if (visible) return
-    const taskId = store.getState().currentCasualTaskID
+    const taskId = store.getState().currentChatStatus.questionID
     if (!taskId) {
       yakitNotify('error', 'taskId不存在')
       return

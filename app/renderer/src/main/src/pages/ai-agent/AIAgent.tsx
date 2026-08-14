@@ -17,26 +17,20 @@ import type { KnowledgeBaseContentProps } from '../KnowledgeBase/TKnowledgeBase'
 import { useKnowledgeBase } from '../KnowledgeBase/hooks/useKnowledgeBase'
 import { failed } from '@/utils/notification'
 import { mergeKnowledgeBaseList } from '../KnowledgeBase/utils'
-import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 
 import emiter from '@/utils/eventBus/eventBus'
 import classNames from 'classnames'
 import styles from './AIAgent.module.scss'
-import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { AIBottomSideBar } from './aiBottomSideBar/AIBottomSideBar'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
 import { AIBottomDetails } from './aiBottomDetails/AIBottomDetails'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { omit } from 'lodash'
-import { grpcDeleteAISession } from './grpc'
 import { useChatIPC } from '../ai-re-act/hooks/useChatIPC'
 import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { globalSessionEngine } from '../ai-re-act/hooks/ChatMultiSessionController'
-
-/** 清空用户缓存的固定值 */
-export const AIAgentCacheClearValue = '20260113'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -62,36 +56,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       setShow(false)
     }
   }, [agentSize?.width])
-
-  // #region 新版本删除缓存提示框
-  const [delCacheVisible, setDelCacheVisible] = useState(false)
-  const [delCacheLoading, setDelCacheLoading] = useState(false)
-  const [isDelCache, setIsDelCache] = useState(false)
-  const handleDelCache = useMemoizedFn(async () => {
-    setDelCacheLoading(true)
-    // 清空无效的用户缓存数据-全局配置数据
-    setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, '')
-    // 设置清空标志位
-    setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
-
-    try {
-      if (isDelCache) {
-        // 删除数据库历史记录
-        await grpcDeleteAISession(
-          {
-            DeleteAll: true,
-          },
-          true,
-        )
-        emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
-      }
-      setDelCacheVisible(false)
-    } catch {
-    } finally {
-      setDelCacheLoading(false)
-    }
-  })
-  // #endregion
 
   // 缓存全局配置数据
   useUpdateEffect(() => {
@@ -123,41 +87,28 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   /**
    * 读取缓存并设置数据
-   * 读取全局配置setting和历史会话chats
+   * 读取全局配置 setting
    */
   const initToCacheData = useMemoizedFn(async () => {
     try {
-      const res = await getRemoteValue(RemoteAIAgentGV.AIAgentCacheClear)
-      if (!res) return setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
-
-      if (res >= AIAgentCacheClearValue) {
-        // 获取缓存的全局配置数据
-        getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
-          .then((res) => {
-            if (!res) return
-            try {
-              const cache = JSON.parse(res) as AIAgentSetting
-              if (typeof cache !== 'object') return
-              const newCache = omit(cache, ['AIService', 'AIModelName'])
-              setSetting({
-                ...AIAgentSettingDefault,
-                ...newCache,
-                SyncPerceptionTrigger: false,
-                EnablePlan: false,
-                Strategy: {
-                  EnableMultiAgent: false,
-                  EnableGoalMode: false,
-                  GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
-                  MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
-                },
-                Source: AISourceEnum.aiAgent,
-              })
-            } catch (error) {}
-          })
-          .catch(() => {})
-      } else {
-        setDelCacheVisible(true)
-      }
+      const res = await getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+      if (!res) return
+      const cache = JSON.parse(res) as AIAgentSetting
+      if (typeof cache !== 'object') return
+      const newCache = omit(cache, ['AIService', 'AIModelName'])
+      setSetting({
+        ...AIAgentSettingDefault,
+        ...newCache,
+        SyncPerceptionTrigger: false,
+        EnablePlan: false,
+        Strategy: {
+          EnableMultiAgent: false,
+          EnableGoalMode: false,
+          GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
+          MaxSubAgents: AIAgentSettingDefault.Strategy?.MaxSubAgents,
+        },
+        Source: AISourceEnum.aiAgent,
+      })
     } catch (error) {}
   })
 
@@ -275,26 +226,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
           </div>
         </div>
         <AIBottomSideBar setShowAIBottomDetails={setShowAIBottomDetails} />
-        <YakitHint
-          getContainer={agentRef.current || undefined}
-          visible={delCacheVisible}
-          title={t('AIAgent.tip')}
-          content={
-            <>
-              {t('AIAgent.memfitUpdateNotice')}
-              <br />
-              <br />
-              <YakitCheckbox checked={isDelCache} onChange={(e) => setIsDelCache(e.target.checked)}>
-                <span style={{ color: 'var(--Colors-Use-Neutral-Text-4-Help-text)' }}>
-                  {t('AIAgent.clearHistoryConfirm')}
-                </span>
-              </YakitCheckbox>
-            </>
-          }
-          cancelButtonProps={{ style: { display: 'none' } }}
-          okButtonProps={{ loading: delCacheLoading }}
-          onOk={handleDelCache}
-        ></YakitHint>
       </div>
     </AIAgentContext.Provider>
   )

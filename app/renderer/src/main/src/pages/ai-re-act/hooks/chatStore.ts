@@ -4,14 +4,17 @@ import { immer } from 'zustand/middleware/immer'
 import { enableMapSet } from 'immer'
 import cloneDeep from 'lodash/cloneDeep'
 import {
+  DefaultAgentChatStatus,
+  DefaultAgentLoadingTitle,
   DefaultAIQuestionQueues,
   DefaultCurrentExecTaskTree,
   DefaultPlanHistoryList,
-  DefaultTaskPlanStatus,
 } from './defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
+
 // state 里有 Map（execFileRecord），Immer 操作 Map/Set 前必须加载 MapSet 插件
 enableMapSet()
+
 export type CreateChatStoreOptions = {
   /** 渲染树结构变更时回调（dispatch / delete / replaceItemToken），用于 dirty debounce 落库 */
   onRenderStructureChange?: () => void
@@ -43,29 +46,21 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       riskTabShow: false,
       riskTabUpdate: 0,
 
-      currentCasualTaskID: '',
-      casualTitle: '',
-      casualLoading: false,
+      currentChatStatus: cloneDeep(DefaultAgentChatStatus),
+      currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
       focusMode: '',
       showPlanList: false,
-      taskStatus: cloneDeep(DefaultTaskPlanStatus),
 
-      currentCasualReview: [],
-      currentPlanReviewToken: { token: '', renderNum: 0 },
+      currentReviewDetail: { token: '', renderNum: 0 },
       currentPlanReviewExtraUpdate: 0,
 
       items: {},
       groups: {},
       tasks: {},
 
-      casualChat: {
-        elements: [],
-        todoListUpdate: 0,
-      },
-      taskChat: {
-        elements: [],
-        plan: cloneDeep(DefaultCurrentExecTaskTree),
-      },
+      chatElements: [],
+      chatTodoListUpdate: 0,
+      currentPlan: cloneDeep(DefaultCurrentExecTaskTree),
 
       card: [],
       execFileRecord: new Map(),
@@ -74,15 +69,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       initLoading: false,
       grpcLoadMoreLoading: false,
 
-      cancelCasualLoading: false,
-      cancelTaskLoading: false,
-      requestHistoryState: {
-        initLoading: false,
-        casualLoadMoreLoading: false,
-        taskLoadMoreLoading: false,
-        saveLoading: false,
-        timelinesLoading: false,
-      },
+      cancelChatLoading: false,
+      timelinesLoading: false,
 
       updateStateCount: (type) =>
         set((state) => {
@@ -141,32 +129,17 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.items = content.items || {}
           state.groups = content.groups || {}
           state.tasks = content.tasks || {}
-          state.casualChat.elements = content.casualElements || []
-          state.taskChat.elements = content.taskElements || []
+          // 任务规划和自由对话数据已合并到chatElements：直接用 chatElements 已按后端顺序写入）
+          state.chatElements = [...(content.chatElements || [])]
         }),
 
-      updateTaskLoadingStatus: (partial) =>
+      updateCurrentChatStatus: (partial) =>
         set((state) => {
-          Object.assign(state.taskStatus, partial)
+          Object.assign(state.currentChatStatus, partial)
         }),
-
-      updateCasualReview: (id: string, status: 'add' | 'remove') =>
+      updateCurrentLoadingTitle: (partial) =>
         set((state) => {
-          if (status === 'add' && !state.currentCasualReview.includes(id)) {
-            state.currentCasualReview.push(id)
-          } else if (status === 'remove' && state.currentCasualReview.includes(id)) {
-            state.currentCasualReview = state.currentCasualReview.filter((item) => item !== id)
-          }
-        }),
-
-      updateCasualTodoList: () => {
-        set((state) => {
-          state.casualChat.todoListUpdate += 1
-        })
-      },
-      updatePlanTree: (planTree: CurrentExecTaskTree) =>
-        set((state) => {
-          state.taskChat.plan = planTree
+          Object.assign(state.currentLoadingTitle, partial)
         }),
 
       updateExecFileRecord: (callToolID, info, order) =>
@@ -182,7 +155,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           const isHistory = node.isHistory ?? false
           const direction = isHistory ? 'prepend' : 'append'
           const elementRef = { kind: node.kind, token: node.token, chatType, isHistory }
-          const targetElements = chatType === 'reAct' ? state.casualChat.elements : state.taskChat.elements
+          // 任务规划数据合并到自由对话列表，保留 chatType 字段
+          const targetElements = state.chatElements
 
           // 注册实体（group 由连续 stream item 碰撞自动生成，不支持手动注册）
           if (node.kind === 'item' && !state.items[node.token]) {
@@ -289,20 +263,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
             return
           }
 
-          const lastEl = state.taskChat.elements.at(-1)
-          if (
-            direction === 'append' &&
-            chatType === 'task' &&
-            node.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP &&
-            lastEl?.kind === 'task' &&
-            state.tasks[lastEl.token]?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
-          ) {
-            // 任务规划最新一个元素，一定是默认任务组，所以别的元素需要往前插入
-            state.taskChat.elements.splice(state.taskChat.elements.length - 1, 0, elementRef)
-          } else {
-            if (direction === 'append') targetElements.push(elementRef)
-            else targetElements.unshift(elementRef)
-          }
+          if (direction === 'append') targetElements.push(elementRef)
+          else targetElements.unshift(elementRef)
         })
         onRenderStructureChange?.()
       },
@@ -328,8 +290,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
           deleted = true
           const removeChatElement = (targetToken: string) => {
-            const target = chatType === 'reAct' ? state.casualChat : state.taskChat
-            target.elements = target.elements.filter((item) => item.token !== targetToken)
+            // 任务规划和自由对话数据已合并到chatElements，统一从 chatElements 删除
+            state.chatElements = state.chatElements.filter((item) => item.token !== targetToken)
           }
 
           const removeFromChildrenTokens = (
@@ -404,13 +366,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.items[newToken].renderNum += 1
           delete state.items[oldToken]
 
-          // 同步 casualChat.elements 中的 token 引用
-          for (const el of state.casualChat.elements) {
-            if (el.token === oldToken) el.token = newToken
-          }
-
-          // 同步 taskChat.elements 中的 token 引用
-          for (const el of state.taskChat.elements) {
+          // 同步 chatElements 中的 token 引用（任务规划数据已合并）
+          for (const el of state.chatElements) {
             if (el.token === oldToken) el.token = newToken
           }
 

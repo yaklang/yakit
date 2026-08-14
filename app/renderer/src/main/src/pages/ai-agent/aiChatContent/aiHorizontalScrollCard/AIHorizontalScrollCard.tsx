@@ -18,8 +18,7 @@ import useAiChatLog from '@/hook/useAiChatLog/useAiChatLog.ts'
 import { ExportAILogsModal } from '../../components/ExportAILogsModal/ExportAILogsModal'
 import { failed, yakitNotify } from '@/utils/notification'
 import { grpcExportAILogs } from '../../grpc'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
-
+import { useMemoizedFn } from 'ahooks'
 export const AIHorizontalScrollCard: React.FC<AIHorizontalScrollCardProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 

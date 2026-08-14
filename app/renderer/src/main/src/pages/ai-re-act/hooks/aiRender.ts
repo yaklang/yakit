@@ -1,9 +1,20 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n } from './grpcApi'
-import type { AIFileSystemPin, AIQuestionQueues, UseAIMessageDataState } from './type'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 // #region AI-Agent 非会话列表外的渲染数据
+/** 自由对话-实时问题队列 */
+export interface AIQuestionQueues {
+  total: number
+  data: AIAgentGrpcApi.QuestionQueueItem[]
+}
+
+/** 会话文件系统-pin */
+export interface AIFileSystemPin {
+  path: string
+  isFolder: boolean
+}
+
 /** 插件执行中的文件操作记录 */
 export interface AIYakExecFileRecord extends StreamResult.Log {
   /** 前端主动对接口流输出的文件记录进行先后操作的记录 */
@@ -116,8 +127,7 @@ export interface SessionRenderContent {
   items: Record<string, ReActChatItemMeta>
   groups: Record<string, ReActChatGroupMeta>
   tasks: Record<string, ReActChatTaskMeta>
-  casualElements: ReActChatRenderElement[]
-  taskElements: ReActChatRenderElement[]
+  chatElements: ReActChatRenderElement[]
 }
 
 /** 控制UI渲染的数据数组元素 */
@@ -240,6 +250,8 @@ export interface AITaskStartInfo {
   goal: string
   /** AIAgentGrpcApi.PlanTask.progress */
   status?: AITaskStatusType
+  /** 任务的loading-title */
+  loadingTitle: string
 }
 
 interface ReviewSelectedOption {
@@ -472,19 +484,22 @@ export type AIChatQSData =
 // #endregion
 
 // #region 状态机定义及其相关字段的定义
-/** 任务规划运行态：展示文案 + 当前活动任务身份/状态（是否在跑只看 status） */
-export interface TaskPlanStatus {
-  plan: string
-  task: string
-  /** 当前任务规划的 re_act_task_id，'' 表示无活动任务规划 */
-  taskID: string
-  /**
-   * 当前任务规划状态，AITaskStatus.created 表示无；
-   * processing 表示执行中或等待 end∧change 齐套；终态表示已结束
-   */
-  status: AITaskStatusType
-  /** 当前任务规划的 coordinatorId，'' 表示无 */
+/** 会话里当前的问题ID、coordinatorId和状态 */
+export interface AgentChatStatus {
+  /** 问题的ID */
+  questionID: string
+  /** 问题进入异步任务的coordinatorId */
   coordinatorId: string
+  /** 问题的状态 */
+  status: AITaskStatusType
+}
+
+/** 问题执行中时的loading-title内容 */
+export interface AgentLoadingTitle {
+  /** 自由对话的loading-title内容 */
+  casualTitle: string
+  /** 任务规划的loading-title内容 */
+  planTitle: string
 }
 
 /** 当前正在执行的任务树 */
@@ -547,29 +562,19 @@ export interface ChatStoreState {
   riskTabUpdate: number
 
   // #region 会话列表相关数据
-  /** 当前自由对话问题的re_act_task_id */
-  currentCasualTaskID: string
-  /** 自由对话的loading 显示的文案 */
-  casualTitle: string
-  /** 自由对话的是否进行中 */
-  casualLoading: boolean
+  /** 当前问题的状态和ID信息 */
+  currentChatStatus: AgentChatStatus
+  /** 当前会话的loading-title内容 */
+  currentLoadingTitle: AgentLoadingTitle
+
   /** 场景状态(仅供自由对话[reAct])使用 */
   focusMode: string
   /** UI是否显示中间的任务规划列表 */
   showPlanList: boolean
-  /** 任务规划运行态（展示文案 + 当前活动任务；是否在跑看 status） */
-  taskStatus: TaskPlanStatus
 
-  /**
-   * 自由对话的当前review(未操作)
-   * 通过token去rawData中contents里取数据，token是唯一的
-   */
-  currentCasualReview: string[]
-  /**
-   * 任务规划当前显示的review数据
-   * 通过token去rawData中contents里取数据，token是唯一的
-   */
-  currentPlanReviewToken: { token: string; renderNum: number }
+  /** 当前正在等待用户操作的review数据 */
+  currentReviewDetail: { token: string; renderNum: number }
+
   /**
    * 当前review是plan时，异步数据的更新版本
    * aiChat.d.ts AIAgentChatMetaData planReviewExtraData
@@ -580,15 +585,11 @@ export interface ChatStoreState {
   groups: SessionRenderContent['groups']
   tasks: SessionRenderContent['tasks']
 
-  casualChat: {
-    elements: SessionRenderContent['casualElements']
-    /** aiChat.d.ts AIAgentChatData casualChat['planDetails'] */
-    todoListUpdate: number
-  }
-  taskChat: {
-    elements: SessionRenderContent['taskElements']
-    plan: CurrentExecTaskTree
-  }
+  /** 会话列表-单个UI对应的数据集合 */
+  chatElements: SessionRenderContent['chatElements']
+  /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
+  chatTodoListUpdate: number
+  currentPlan: CurrentExecTaskTree
   // #endregion
 
   /** UI上的头部的card横向滚动列表数据 */
@@ -605,14 +606,10 @@ export interface ChatStoreState {
   grpcLoadMoreLoading: boolean
 
   /** 用户主动取消问题的loading状态(自由对话) */
-  cancelCasualLoading: boolean
-  /** 用户主动取消问题的loading状态(任务规划) */
-  cancelTaskLoading: boolean
+  cancelChatLoading: boolean
 
-  /**
-   * TODO - 有问题，需要调整 请求历史数据相关State
-   */
-  requestHistoryState: UseAIMessageDataState
+  /** 时间线加载中 */
+  timelinesLoading: boolean
 
   /** 更新精准字段数据依赖的渲染版本号 */
   updateStateCount: (
@@ -624,7 +621,8 @@ export interface ChatStoreState {
       | 'updateSystemStream'
       | 'yaklangCodeChangeUpdate'
       | 'syncIDUpdate'
-      | 'currentPlanReviewExtraUpdate',
+      | 'currentPlanReviewExtraUpdate'
+      | 'chatTodoListUpdate',
   ) => void
 
   updateFolders: (info: AIFileSystemPin) => void
@@ -657,13 +655,12 @@ export interface ChatStoreState {
         | 'httpTabUpdate'
         | 'riskTabShow'
         | 'riskTabUpdate'
-        | 'currentCasualReview'
         | 'currentPlanReviewExtraUpdate'
         | 'items'
         | 'groups'
         | 'tasks'
-        | 'casualChat'
-        | 'taskChat'
+        | 'chatElements'
+        | 'chatTodoListUpdate'
       >
     >,
   ) => void
@@ -674,14 +671,8 @@ export interface ChatStoreState {
    */
   hydrateRenderTree: (content: SessionRenderContent) => void
 
-  updateTaskLoadingStatus: (status: Partial<TaskPlanStatus>) => void
-
-  /** 正在等待用户操作的reviewId列表 */
-  updateCasualReview: (id: string, status: 'add' | 'remove') => void
-
-  /** 更新自由对话列表的todoList，真实数据存放在内存池中 */
-  updateCasualTodoList: () => void
-  updatePlanTree: (planTree: CurrentExecTaskTree) => void
+  updateCurrentChatStatus: (status: Partial<AgentChatStatus>) => void
+  updateCurrentLoadingTitle: (status: Partial<AgentLoadingTitle>) => void
 
   /** 更新 每个工具执行过程中-文件的操作记录 */
   updateExecFileRecord: (callToolID: string, info: StreamResult.Log, order: number) => void

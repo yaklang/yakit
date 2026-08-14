@@ -5,23 +5,18 @@ import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
 } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
-import { AIChatQSDataTypeEnum, type AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { type AIYakExecFileRecord, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { fetchConcurrentStreamContents } from './fetchConcurrentStreamContents'
 import styles from './AIConcurrentStream.module.scss'
 import AIConcurrentStreamContent, {
   type AIConcurrentStreamDispatcher,
   type AIConcurrentStreamStore,
 } from './useContext/AIConcurrentStreamContent'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
-import { useDebounceFn } from 'ahooks'
+import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import ConcurrentStreamSkeleton from '@/auxWindow/components/ConcurrentStreamSkeleton/ConcurrentStreamSkeleton'
 
 // 子卡片按需加载，避免重型卡片（AINodeItem 及其下游 review/report/fuzz 等子卡）
 // 全量进入 aux bundle，拉长 did-finish-load 与首次开窗耗时。
-const AIChildWindowTaskDefaultGroupCard = lazy(
-  () =>
-    import('@/pages/ai-agent/components/aiChildWindowItem/aiChildWindowTaskDefaultGroupCard/AIChildWindowTaskDefaultGroupCard'),
-)
 const AIChildWindowConcurrentStreamCard = lazy(
   () =>
     import('@/pages/ai-agent/components/ConcurrentStreamCard/aiChildWindowConcurrentStreamCard/AIChildWindowConcurrentStreamCard'),
@@ -105,14 +100,6 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
     getRawDataDebounced(frame)
   })
 
-  const isTaskDefaultGroup = useMemo(() => {
-    if (!frame) return false
-    // 优先用 frame 随身携带的 rootType，无需等待 rawData 拉取完成
-    if (frame.rootType != null) return frame.rootType === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
-    const root = rawDataRef.current.get(frame.token)
-    return root?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
-  }, [frame, contentVersion])
-
   // 刷新：通过 IPC 通知主窗口重新构建并推送最新 frame（含最新 rawData）
   const requestRefresh = useMemoizedFn(() => {
     if (!frame) return
@@ -145,11 +132,7 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = memo(({ windowId }
         <div className={styles.divider} />
         <div className={styles.wrapper}>
           <Suspense fallback={<ConcurrentStreamSkeleton variant="card" />}>
-            {isTaskDefaultGroup ? (
-              <AIChildWindowTaskDefaultGroupCard token={frame.token} />
-            ) : (
-              <AIChildWindowConcurrentStreamCard token={frame.token} />
-            )}
+            <AIChildWindowConcurrentStreamCard token={frame.token} />
           </Suspense>
         </div>
       </div>

@@ -41,16 +41,12 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
 
   /** recovery_history 在途状态（真实 gRPC loading，由 ChatMultiSessionController 置/关） */
   const loading = useStore(store, (s) => s.grpcLoadMoreLoading)
-  const dataLength = useStore(store, (s) =>
-    chatType === 'reAct' ? s.casualChat.elements.length : s.taskChat.elements.length,
-  )
+  const dataLength = useStore(store, (s) => s.chatElements.length)
   /**
-   * 消息处理中（自由对话 casualLoading / 任务规划 taskStatus.status=processing）。
+   * 消息处理中（currentChatStatus.status=processing）。
    * 处理中禁止 gRPC 向上加载，避免与流式写入并发导致后端表死锁（IDB hydrate 不受影响）。
    */
-  const processing = useStore(store, (s) =>
-    chatType === 'reAct' ? s.casualLoading : s.taskStatus.status === AITaskStatus.inProgress,
-  )
+  const processing = useStore(store, (s) => s.currentChatStatus.status === AITaskStatus.inProgress)
 
   /** 上次 startIndex（数组下标），用于判断滚动方向 */
   const lastStartIndexRef = useRef(-1)
@@ -165,7 +161,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   /** 取当前 chatType 的 elements */
   const getElements = useMemoizedFn(() => {
     const state = store.getState()
-    return chatType === 'reAct' ? state.casualChat.elements : state.taskChat.elements
+    return state.chatElements
   })
 
   /**
@@ -260,8 +256,8 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
     if (!sessionId) return
     const keep = computeKeepTokens(startIndex, endIndex)
     // 强制保留当前活跃 review 数据，避免视窗淘汰导致提交时取不到
-    const { currentPlanReviewToken } = store.getState()
-    if (currentPlanReviewToken.token) keep.add(currentPlanReviewToken.token)
+    const currentReviewDetail = store.getState().currentReviewDetail
+    if (currentReviewDetail.token) keep.add(currentReviewDetail.token)
     const toEvict: string[] = []
     for (const token of rawData.contents.keys()) {
       if (!keep.has(token)) toEvict.push(token)

@@ -1,20 +1,37 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createChatStore } from '../chatStore'
-import { DefaultTaskPlanStatus, DefaultCurrentExecTaskTree } from '../defaultConstant'
+import { DefaultAgentChatStatus, DefaultAgentLoadingTitle, DefaultCurrentExecTaskTree } from '../defaultConstant'
+import { AITaskStatus } from '../grpcApi'
 
 describe('chatStore basics', () => {
-  it('C1: initial state and updateState / updateTaskLoadingStatus', () => {
+  it('C1: initial state and updateCurrentChatStatus / updateCurrentLoadingTitle', () => {
     const store = createChatStore()
     expect(store.getState().execute).toBe(false)
-    expect(store.getState().taskStatus).toEqual(DefaultTaskPlanStatus)
+    expect(store.getState().currentChatStatus).toEqual(DefaultAgentChatStatus)
+    expect(store.getState().currentLoadingTitle).toEqual(DefaultAgentLoadingTitle)
+    expect(store.getState().currentReviewDetail).toEqual({ token: '', renderNum: 0 })
+    expect(store.getState().showPlanList).toBe(false)
+    expect(store.getState().cancelChatLoading).toBe(false)
+    expect(store.getState().timelinesLoading).toBe(false)
+    expect('cancelCasualLoading' in store.getState()).toBe(false)
+    expect('cancelTaskLoading' in store.getState()).toBe(false)
+    expect('requestHistoryState' in store.getState()).toBe(false)
+    expect('casualChat' in store.getState()).toBe(false)
+    expect('taskChat' in store.getState()).toBe(false)
+    expect('updatePlanTree' in store.getState()).toBe(false)
+    expect('updateCasualTodoList' in store.getState()).toBe(false)
 
-    store.getState().updateState({ execute: true, casualTitle: 'hi' })
+    store.getState().updateState({ execute: true, cancelChatLoading: true, timelinesLoading: true })
+    store.getState().updateCurrentLoadingTitle({ casualTitle: 'hi' })
     expect(store.getState().execute).toBe(true)
-    expect(store.getState().casualTitle).toBe('hi')
+    expect(store.getState().cancelChatLoading).toBe(true)
+    expect(store.getState().timelinesLoading).toBe(true)
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('hi')
 
-    store.getState().updateTaskLoadingStatus({ plan: 'p', status: 'processing' })
-    expect(store.getState().taskStatus.plan).toBe('p')
-    expect(store.getState().taskStatus.status).toBe('processing')
+    store.getState().updateCurrentLoadingTitle({ planTitle: 'p' })
+    store.getState().updateCurrentChatStatus({ status: AITaskStatus.inProgress })
+    expect(store.getState().currentLoadingTitle.planTitle).toBe('p')
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.inProgress)
   })
 
   it('C2: hydrateRenderTree', () => {
@@ -23,22 +40,21 @@ describe('chatStore basics', () => {
       items: { a: { kind: 'item', token: 'a', type: 'thought', renderNum: 1, nodeId: '' } as any },
       groups: {},
       tasks: {},
-      casualElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
-      taskElements: [],
+      chatElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
     })
     expect(store.getState().items.a.token).toBe('a')
-    expect(store.getState().casualChat.elements).toHaveLength(1)
+    expect(store.getState().chatElements).toHaveLength(1)
   })
 
-  it('C6: updatePlanTree / updateCasualReview / folders / timeline / http / risk', () => {
+  it('C6: currentPlan / currentReviewDetail / folders / timeline / http / risk', () => {
     const store = createChatStore()
-    store.getState().updatePlanTree({ root_task_name: 'r', task_tree: [] })
-    expect(store.getState().taskChat.plan.root_task_name).toBe('r')
+    store.getState().updateState({ currentPlan: { root_task_name: 'r', task_tree: [] } })
+    expect(store.getState().currentPlan.root_task_name).toBe('r')
 
-    store.getState().updateCasualReview('rev-1', 'add')
-    expect(store.getState().currentCasualReview).toContain('rev-1')
-    store.getState().updateCasualReview('rev-1', 'remove')
-    expect(store.getState().currentCasualReview).not.toContain('rev-1')
+    store.getState().updateState({ currentReviewDetail: { token: 'rev-1', renderNum: 0 } })
+    expect(store.getState().currentReviewDetail.token).toBe('rev-1')
+    store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
+    expect(store.getState().currentReviewDetail.token).toBe('')
 
     store.getState().updateFolders({ path: '/a', isFolder: true })
     store.getState().updateFolders({ path: '/a', isFolder: true })
@@ -56,8 +72,8 @@ describe('chatStore basics', () => {
     expect(store.getState().httpTabShow).toBe(true)
     expect(store.getState().riskTabShow).toBe(true)
 
-    store.getState().updateCasualTodoList()
-    expect(store.getState().casualChat.todoListUpdate).toBe(1)
+    store.getState().updateStateCount('chatTodoListUpdate')
+    expect(store.getState().chatTodoListUpdate).toBe(1)
 
     expect(DefaultCurrentExecTaskTree.task_tree).toEqual([])
   })

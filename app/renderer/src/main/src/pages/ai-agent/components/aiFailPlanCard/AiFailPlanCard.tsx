@@ -8,8 +8,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
-import useCreation from 'ahooks/lib/useCreation'
-import useToggle from 'ahooks/lib/useToggle'
+import { useCreation, useToggle } from 'ahooks'
 
 const AiFailPlanCard: FC<{
   itemData: Extract<

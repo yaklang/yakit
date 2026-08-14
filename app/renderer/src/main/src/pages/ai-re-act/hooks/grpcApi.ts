@@ -868,6 +868,7 @@ export declare namespace AIAgentGrpcApi {
     created_at: string
     focus_mode: string
     id: string
+    is_recovery: boolean
     status: AITaskStatusType
     user_input: string
   }

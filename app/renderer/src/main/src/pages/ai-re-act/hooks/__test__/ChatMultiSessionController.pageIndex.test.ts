@@ -4,6 +4,7 @@ import { ChatMultiSessionController } from '../ChatMultiSessionController'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ipcRendererMock, resetIpcMocks } from './setupElectron'
 import { AITaskStatus } from '../grpcApi'
+import { DefaultCurrentExecTaskTree } from '../defaultConstant'
 import { makeGrpcJsonRes } from './fixtures'
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
@@ -164,8 +165,21 @@ describe('ChatMultiSessionController session api / dispatch', () => {
       chatType: 'reAct',
       data: {},
     } as any)
-    store.getState().updateCasualReview('rev-1', 'add')
+    rawData.contents.set('rev-stale', {
+      id: 'rev-stale',
+      type: 'tool_use_review_require',
+      chatType: 'reAct',
+      data: {},
+    } as any)
+    store.getState().updateState({ currentReviewDetail: { token: 'rev-1', renderNum: 0 } })
+    // token 不匹配时不应清空当前 review
+    ctrl.closeChatReview('s-api', 'rev-stale')
+    expect(rawData.contents.get('rev-stale')).toBeTruthy()
+    expect(store.getState().currentReviewDetail.token).toBe('rev-1')
+
     ctrl.closeChatReview('s-api', 'rev-1')
+    expect(rawData.contents.get('rev-1')).toBeUndefined()
+    expect(store.getState().currentReviewDetail.token).toBe('')
 
     rawData.contents.set('tool-1', {
       id: 'tool-1',
@@ -198,7 +212,8 @@ describe('ChatMultiSessionController lifecycle', () => {
     store.getState().updateState({ execute: true })
     ctrl.handleSessionEnd('s-life')
     expect(store.getState().execute).toBe(false)
-    expect(store.getState().casualTitle).toBe('会话已停止')
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('会话已关闭')
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.error)
     expect(ctrl.isSessionReady('s-life')).toBe(false)
   })
 
@@ -324,13 +339,127 @@ describe('ChatMultiSessionController start / send / history', () => {
     )
   })
 
-  it('A20/A21: timeline / filesystem history callable', async () => {
+  it('A20: loadTimelineHistory toggles timelinesLoading', async () => {
     ctrl.handleStartSession(startParams('s-tl'))
+    const { store } = ctrl.ensureSession('s-tl')
+    expect(store.getState().timelinesLoading).toBe(false)
+
+    const { grpcQueryAIEvent } = await import('@/pages/ai-agent/grpc')
+    let resolveQuery: (value: { Events: unknown[]; Total: number }) => void = () => undefined
+    ;(grpcQueryAIEvent as any).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveQuery = resolve
+        }),
+    )
+
+    const pending = ctrl.loadTimelineHistory('s-tl')
+    expect(store.getState().timelinesLoading).toBe(true)
+    resolveQuery({ Events: [], Total: 0 })
+    await expect(pending).resolves.toBe(false)
+    expect(store.getState().timelinesLoading).toBe(false)
+    expect(ctrl.hasMoreTimeline('s-tl')).toBe(false)
+  })
+
+  it('A21: loadFileSystemHistory callable', async () => {
+    ctrl.handleStartSession(startParams('s-fs'))
     const { grpcQueryAIEvent } = await import('@/pages/ai-agent/grpc')
     ;(grpcQueryAIEvent as any).mockResolvedValue({ Events: [] })
-    await expect(ctrl.loadTimelineHistory('s-tl')).resolves.toBeTypeOf('boolean')
-    expect(ctrl.hasMoreTimeline('s-tl')).toBeTypeOf('boolean')
-    await expect(ctrl.loadFileSystemHistory('s-tl')).resolves.toBeUndefined()
+    await expect(ctrl.loadFileSystemHistory('s-fs')).resolves.toBeUndefined()
+  })
+
+  it('A22: task plan-review continue updates currentPlan and clears extra', () => {
+    ctrl.handleStartSession(startParams('s-plan-cont'))
+    const session = ctrl.ensureSession('s-plan-cont')
+    session.rawData.contents.set('plan-rev-1', {
+      id: 'plan-rev-1',
+      type: 'plan_review_require',
+      chatType: 'task',
+      data: {
+        plans: {
+          root_task: {
+            task_id: 'root',
+            name: 'root-name',
+            goal: '',
+            semantic_identifier: 'root',
+            depends_on: [],
+            subtasks: [
+              {
+                task_id: 'leaf-1',
+                name: 'leaf',
+                goal: '',
+                semantic_identifier: 'leaf',
+                depends_on: [],
+                subtasks: [],
+              },
+            ],
+          },
+        },
+      },
+    } as any)
+    session.store.getState().updateState({ currentReviewDetail: { token: 'plan-rev-1', renderNum: 0 } })
+    session.meta.currentPlanReviewExtraId = 'extra-1'
+    session.meta.planReviewExtraData.set('extra-1', { id: 'extra-1' } as any)
+
+    ctrl.handleSendMessage({
+      token: 's-plan-cont',
+      type: 'task',
+      optionValue: 'continue',
+      params: {
+        IsInteractiveMessage: true,
+        InteractiveId: 'plan-rev-1',
+        InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
+      } as any,
+    })
+
+    expect(session.store.getState().currentPlan.root_task_name).toBe('root-name')
+    expect(session.store.getState().currentPlan.task_tree.some((t) => t.task_id === 'leaf-1')).toBe(true)
+    expect(session.meta.currentPlanReviewExtraId).toBe('')
+    expect(session.meta.planReviewExtraData.size).toBe(0)
+    expect(session.rawData.contents.get('plan-rev-1')).toBeUndefined()
+    expect(session.store.getState().currentReviewDetail.token).toBe('')
+  })
+
+  it('A23: task plan-review non-continue skips currentPlan but still clears extra', () => {
+    ctrl.handleStartSession(startParams('s-plan-chg'))
+    const session = ctrl.ensureSession('s-plan-chg')
+    session.rawData.contents.set('plan-rev-2', {
+      id: 'plan-rev-2',
+      type: 'plan_review_require',
+      chatType: 'task',
+      data: {
+        plans: {
+          root_task: {
+            task_id: 'root',
+            name: 'root-name',
+            goal: '',
+            semantic_identifier: 'root',
+            depends_on: [],
+            subtasks: [],
+          },
+        },
+      },
+    } as any)
+    session.store.getState().updateState({ currentReviewDetail: { token: 'plan-rev-2', renderNum: 0 } })
+    session.meta.currentPlanReviewExtraId = 'extra-2'
+    session.meta.planReviewExtraData.set('extra-2', { id: 'extra-2' } as any)
+
+    ctrl.handleSendMessage({
+      token: 's-plan-chg',
+      type: 'task',
+      optionValue: 'change',
+      params: {
+        IsInteractiveMessage: true,
+        InteractiveId: 'plan-rev-2',
+        InteractiveJSONInput: JSON.stringify({ suggestion: 'change' }),
+      } as any,
+    })
+
+    expect(session.store.getState().currentPlan).toEqual(DefaultCurrentExecTaskTree)
+    expect(session.meta.currentPlanReviewExtraId).toBe('')
+    expect(session.meta.planReviewExtraData.size).toBe(0)
+    expect(session.rawData.contents.get('plan-rev-2')).toBeUndefined()
+    expect(session.store.getState().currentReviewDetail.token).toBe('')
   })
 })
 
@@ -354,8 +483,7 @@ describe('ChatMultiSessionController restore / renderPersist / collect', () => {
       items: { a: { kind: 'item', token: 'a', type: 'thought', renderNum: 0, nodeId: '' } as any },
       groups: {},
       tasks: {},
-      casualElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
-      taskElements: [],
+      chatElements: [{ kind: 'item', token: 'a', chatType: 'reAct', isHistory: false }],
     })
     expect(store.getState().items.a).toBeTruthy()
   })
@@ -372,18 +500,17 @@ describe('ChatMultiSessionController restore / renderPersist / collect', () => {
     expect(aiChatPersistStore.setSessionRender).toHaveBeenCalled()
   })
 
-  it('A10b: session end with processing taskStatus', () => {
+  it('A10b: session end with processing currentChatStatus', () => {
     const { store } = ctrl.ensureSession('s-rp')
     store.getState().updateState({
-      taskStatus: {
-        plan: 'p',
-        task: 't',
-        taskID: 't1',
+      currentChatStatus: {
+        questionID: 't1',
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
     })
     ctrl.handleSessionEnd('s-rp')
     expect(store.getState().execute).toBe(false)
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.error)
   })
 })

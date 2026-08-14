@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { convertNodeIdToVerbose, DefaultTaskPlanStatus, DefaultTaskPlanEndGate } from '../defaultConstant'
+import {
+  convertNodeIdToVerbose,
+  DefaultAgentChatStatus,
+  DefaultAgentLoadingTitle,
+  DefaultTaskPlanEndGate,
+} from '../defaultConstant'
 import { AITaskStatus } from '../grpcApi'
 
 describe('defaultConstant', () => {
@@ -14,15 +19,16 @@ describe('defaultConstant', () => {
     })
   })
 
-  it('B12: DefaultTaskPlanStatus has no loading field', () => {
-    expect(DefaultTaskPlanStatus).toEqual({
-      plan: '',
-      task: '',
-      taskID: '',
-      status: AITaskStatus.created,
+  it('B12: DefaultAgentChatStatus / DefaultAgentLoadingTitle defaults', () => {
+    expect(DefaultAgentChatStatus).toEqual({
+      questionID: '',
       coordinatorId: '',
+      status: AITaskStatus.created,
     })
-    expect('loading' in DefaultTaskPlanStatus).toBe(false)
+    expect(DefaultAgentLoadingTitle).toEqual({
+      casualTitle: '',
+      planTitle: '',
+    })
     expect(DefaultTaskPlanEndGate).toEqual({ endReceived: false, pendingStatus: undefined })
   })
 })

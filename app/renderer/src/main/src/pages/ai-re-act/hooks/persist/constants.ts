@@ -18,3 +18,16 @@ export const INDEX_BY_SESSION_ID = 'bySessionId'
 
 /** 按 source 查询/删除用的索引名（建在 sessionRender） */
 export const INDEX_BY_SOURCE = 'bySource'
+
+/**
+ * 清空 IDB 的固定版本号（YYYYMMDD）。
+ * 远程 KV 里存一份，打开库时比较。
+ * 缺标识或旧于当前值 → 清空三表（旧 casualElements 快照不再兼容）。
+ */
+export const AIAgentIDBCacheClearValue = '20260814'
+
+/** 远程 KV 中无标识，或标识早于当前版本时，需要清空 IDB */
+export const shouldClearIDBCache = (flag?: string | null): boolean => {
+  if (!flag) return true
+  return flag < AIAgentIDBCacheClearValue
+}

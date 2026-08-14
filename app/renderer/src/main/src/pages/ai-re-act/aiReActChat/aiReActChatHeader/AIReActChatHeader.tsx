@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react'
 import classNames from 'classnames'
 import { Tooltip } from 'antd'
 import { useStore } from 'zustand'
-
 import styles from './AIReActChatHeader.module.scss'
 import { ColorsChatIcon } from '@/assets/icon/colors'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -15,9 +14,7 @@ import { OutlineLandPlotIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import type { AIReActChatHeaderExternalRightIconProps, AIReActChatHeaderProps, AIReActSubAgentTaskProps } from './type'
 import { ChevronleftButton } from '../AIReActComponent'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
-import useCreation from 'ahooks/lib/useCreation'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
@@ -27,6 +24,7 @@ import { SolidChatIcon } from '@/assets/icon/solid'
 import useAIItemKind from '../../hooks/useAIItemKind'
 import { AIChatQSDataTypeEnum } from '../../hooks/aiRender'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '../../hooks/useGetChatDataStoreKey'
+import { useMemoizedFn, useCreation } from 'ahooks'
 
 export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((props) => {
   const {
@@ -44,7 +42,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
   // 内部订阅 Store 数据
   const store = useCurrentStore()
   const focusMode = useStore(store, (state) => state.focusMode)
-  const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
+  const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
   const sessionRef = useRef<string | undefined>(undefined)
 
@@ -58,7 +56,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
     if (!activeChat?.Title || !activeChat?.SessionID) return
     if (sessionRef.current !== activeChat.SessionID) return
     emitTaskContentTab('update', activeChat.Title)
-  }, [activeChat?.Title, activeChat?.SessionID, currentCasualTaskID])
+  }, [activeChat?.Title, activeChat?.SessionID, currentChatStatusQuestionID])
 
   const defaultTaskTabLabel = useCreation(() => {
     return typeof title === 'string' ? title : '自由对话'
@@ -66,7 +64,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
 
   const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
     const sessionId = activeChat?.SessionID
-    const taskId = currentCasualTaskID
+    const taskId = currentChatStatusQuestionID
     if (!taskId || !sessionId) return false
     if (getSetting()?.Source !== 'ai') return false
     emiter.emit(
@@ -86,15 +84,15 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
 
   const syncCasualTaskTab = useMemoizedFn(() => {
     const sessionId = activeChat?.SessionID
-    if (!currentCasualTaskID || !sessionId) return
+    if (!currentChatStatusQuestionID || !sessionId) return
     if (getSetting().Source !== AISourceEnum.aiAgent) return false
     emitTaskContentTab('add')
     sessionRef.current = sessionId
   })
 
   const onDetails = useMemoizedFn(() => {
-    if (!currentCasualTaskID) {
-      yakitNotify('error', 'currentCasualTaskID不存在')
+    if (!currentChatStatusQuestionID) {
+      yakitNotify('error', 'currentChatStatus.questionID不存在')
       return
     }
     if (getSetting().Source !== AISourceEnum.aiAgent) {
@@ -122,7 +120,7 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
               <AIReActChatHeaderExternalRightIcon rightIcon={externalParameters?.rightIcon} />
             ) : (
               <>
-                {currentCasualTaskID && (
+                {currentChatStatusQuestionID && (
                   <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
                     任务详情
                   </YakitButton>
@@ -142,10 +140,10 @@ const AIReActSubAgentTask: React.FC<AIReActSubAgentTaskProps> = React.memo((prop
   const store = useCurrentStore()
   const rawData = useCurrentRawData()
   const getKind = useAIItemKind()
-  const casualChatElementLength = useStore(store, (state) => state.casualChat?.elements?.length || 0)
+  const casualChatElementLength = useStore(store, (state) => state.chatElements.length || 0)
 
   const onScrollToConcurrentTask = useMemoizedFn((token: string) => {
-    const elements = store.getState().casualChat?.elements || []
+    const elements = store.getState().chatElements || []
     const index = elements.findIndex((item) => item.token === token)
     if (index !== -1) {
       scrollToItemIndex?.(index, 'smooth')
@@ -154,8 +152,10 @@ const AIReActSubAgentTask: React.FC<AIReActSubAgentTaskProps> = React.memo((prop
 
   const casualConcurrentTaskList = useCreation(() => {
     const list: string[] = []
-    const elements = store.getState().casualChat?.elements || []
+    const elements = store.getState().chatElements || []
     for (const item of elements) {
+      // chatElements 已合并 task 类型数据，子 agent 列表只展示 reAct 类型的并发任务
+      if (item.chatType !== 'reAct') continue
       const kind = getKind(item.token)
       if (kind !== 'task') continue
       const itemContent = rawData.contents.get(item.token)
@@ -207,7 +207,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
   const { rightIcon } = props
 
   const store = useCurrentStore()
-  const currentCasualTaskID = useStore(store, (state) => state.currentCasualTaskID)
+  const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
   const { setting } = useAIAgentStore()
 
@@ -234,7 +234,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
 
   return rightIcon ? (
     <>
-      {currentCasualTaskID && rightIcon.taskDetails && <TaskDetailsPopover />}
+      {currentChatStatusQuestionID && rightIcon.taskDetails && <TaskDetailsPopover />}
       {rightIcon.dataDetails && (
         <AIContextToken iconOnly buttonProps={rightIcon.dataDetails === true ? undefined : rightIcon.dataDetails} />
       )}

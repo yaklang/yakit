@@ -13,91 +13,80 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
   it('B1: missing end keeps status unchanged', () => {
     const { store, meta } = createTestSession()
     store.getState().updateState({
-      taskStatus: {
-        plan: 'x',
-        task: 'y',
-        taskID: 't1',
+      currentChatStatus: {
+        questionID: 't1',
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
-      cancelTaskLoading: true,
+      cancelChatLoading: true,
     })
     meta.taskPlanEndGate = { endReceived: false, pendingStatus: 'completed' }
     trySettleTaskPlanEnd(store, meta)
-    expect(store.getState().taskStatus.status).toBe(AITaskStatus.inProgress)
-    expect(store.getState().cancelTaskLoading).toBe(true)
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.inProgress)
+    expect(store.getState().cancelChatLoading).toBe(true)
     expect(meta.taskPlanEndGate.pendingStatus).toBe('completed')
   })
 
   it('B1: missing pending keeps status unchanged', () => {
     const { store, meta } = createTestSession()
     store.getState().updateState({
-      taskStatus: {
-        plan: 'x',
-        task: 'y',
-        taskID: 't1',
+      currentChatStatus: {
+        questionID: 't1',
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
     })
     meta.taskPlanEndGate = { endReceived: true, pendingStatus: undefined }
     trySettleTaskPlanEnd(store, meta)
-    expect(store.getState().taskStatus.status).toBe(AITaskStatus.inProgress)
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.inProgress)
   })
 
   it('B1: both sides settle status and reset gate', () => {
     const { store, meta } = createTestSession()
     store.getState().updateState({
-      taskStatus: {
-        plan: 'x',
-        task: 'y',
-        taskID: 't1',
+      currentChatStatus: {
+        questionID: 't1',
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
-      cancelTaskLoading: true,
+      cancelChatLoading: true,
     })
     meta.taskPlanEndGate = { endReceived: true, pendingStatus: 'completed' }
     trySettleTaskPlanEnd(store, meta)
-    expect(store.getState().taskStatus.status).toBe('completed')
-    expect(store.getState().cancelTaskLoading).toBe(false)
+    expect(store.getState().currentChatStatus.status).toBe('completed')
+    expect(store.getState().cancelChatLoading).toBe(false)
     expect(meta.taskPlanEndGate).toEqual(DefaultTaskPlanEndGate)
   })
 
   it('B2: handleTaskPlanEnd sets endReceived and settles when pending exists', () => {
     const session = createTestSession()
     session.store.getState().updateState({
-      taskStatus: {
-        plan: 'p',
-        task: 't',
-        taskID: 't1',
+      currentChatStatus: {
+        questionID: 't1',
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
     })
     session.meta.taskPlanEndGate = { endReceived: false, pendingStatus: 'aborted' }
     handleTaskPlanEnd(session)
-    expect(session.store.getState().taskStatus.plan).toBe('已结束')
-    expect(session.store.getState().taskStatus.task).toBe('已结束')
-    expect(session.store.getState().taskStatus.taskID).toBe('t1')
-    expect(session.store.getState().taskStatus.status).toBe('aborted')
+    expect(session.store.getState().currentLoadingTitle.planTitle).toBe('已结束')
+    expect(session.store.getState().currentChatStatus.questionID).toBe('t1')
+    expect(session.store.getState().currentChatStatus.status).toBe('aborted')
     expect(session.meta.taskPlanEndGate).toEqual(DefaultTaskPlanEndGate)
   })
 
   it('B2: isChatEnd resets gate without settling', () => {
     const session = createTestSession()
     session.store.getState().updateState({
-      taskStatus: {
-        plan: 'p',
-        task: 't',
-        taskID: 't1',
+      currentChatStatus: {
+        questionID: 't1',
         status: AITaskStatus.inProgress,
         coordinatorId: 'c1',
       },
     })
     session.meta.taskPlanEndGate = { endReceived: true, pendingStatus: 'completed' }
     handleTaskPlanEnd(session, true)
-    expect(session.store.getState().taskStatus.status).toBe(AITaskStatus.inProgress)
+    expect(session.store.getState().currentChatStatus.status).toBe(AITaskStatus.inProgress)
     expect(session.meta.taskPlanEndGate).toEqual(DefaultTaskPlanEndGate)
   })
 
@@ -112,16 +101,18 @@ describe('trySettleTaskPlanEnd / handleTaskPlanEnd', () => {
       Timestamp: 1,
       AIService: '',
       AIModelName: '',
-      data: { status: AITaskStatus.inProgress },
+      data: { status: AITaskStatus.inProgress, loadingTitle: '' },
     } as any)
-    session.store.getState().updatePlanTree({
-      root_task_name: 'root',
-      task_tree: [{ task_id: 'a', progress: AITaskStatus.inProgress } as any],
+    session.store.getState().updateState({
+      currentPlan: {
+        root_task_name: 'root',
+        task_tree: [{ task_id: 'a', progress: AITaskStatus.inProgress } as any],
+      },
     })
     handleTaskPlanEnd(session)
     const node = session.rawData.contents.get(nodeId) as any
     expect(node.data.status).toBe(AITaskStatus.error)
-    expect(session.store.getState().taskChat.plan.task_tree[0].progress).toBe(AITaskStatus.error)
+    expect(session.store.getState().currentPlan.task_tree[0].progress).toBe(AITaskStatus.error)
     expect(session.meta.currentTaskPlanActiveNode.size).toBe(0)
   })
 })

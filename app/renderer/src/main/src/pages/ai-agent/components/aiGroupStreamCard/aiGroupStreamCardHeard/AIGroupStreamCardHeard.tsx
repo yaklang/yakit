@@ -6,8 +6,7 @@ import { memo } from 'react'
 import { useTypedStream } from '../../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import type { AIGroupStreamCardHeardProps } from '../type'
 import styles from './AIGroupStreamCardHeard.module.scss'
-import useCreation from 'ahooks/lib/useCreation'
-
+import { useCreation } from 'ahooks'
 const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((props) => {
   const { expand, setExpand, lastItem, nodeLabel, shouldShowMask, childrenTokensLength } = props
 

@@ -48,7 +48,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
   const execute = useStore(store, (state) => state.execute)
-  const taskStatusRunning = useStore(store, (state) => state.taskStatus.status === AITaskStatus.inProgress)
+  const taskStatusRunning = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
 
   const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
   const [reviewTrees, setReviewTrees] = useState<AITaskInfoProps[]>([])
@@ -286,11 +286,11 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   })
 
   const submitDetachedPlan = useMemoizedFn(() => {
-    const taskId = store.getState().taskStatus.taskID
+    const taskId = store.getState().currentChatStatus.questionID
     if (taskStatusRunning && taskId) {
       pendingDetachedPlanSubmitRef.current = true
       store.getState().updateState({
-        cancelTaskLoading: true,
+        cancelChatLoading: true,
       })
       const params: AIInputEvent = {
         IsSyncMessage: true,

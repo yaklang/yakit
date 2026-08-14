@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import type { AITaskQueryItemProps, AITaskQueryProps } from './type'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
@@ -9,6 +9,7 @@ import {
   OutlineTrashIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
+import { useMemoizedFn, useDebounceFn, useInViewport } from 'ahooks'
 import styles from './AITaskQuery.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { type AIInputEvent, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -19,8 +20,7 @@ import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
-import useMemoizedFn from 'ahooks/lib/useMemoizedFn'
-import useDebounceFn from 'ahooks/lib/useDebounceFn'
+import emiter from '@/utils/eventBus/eventBus'
 
 export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -34,7 +34,20 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
   const { onSend } = useAIAgentDispatcher()
 
   const [showList, setShowList] = useState<boolean>(true)
+  const taskQueryRef = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(taskQueryRef)
 
+  useEffect(() => {
+    if (inViewport) {
+      emiter.on('changeAITaskQueryShow', onActionAITaskContentTab)
+      return () => {
+        emiter.off('changeAITaskQueryShow', onActionAITaskContentTab)
+      }
+    }
+  }, [inViewport])
+  const onActionAITaskContentTab = useMemoizedFn((data: string) => {
+    setShowList(data === 'true')
+  })
   const onClearTaskQueue = useMemoizedFn(() => {
     if (!execute) return
     if (!sessionId) return
@@ -64,7 +77,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
     }, 500)
   })
   return execute && questionQueue?.total > 0 ? (
-    <div className={styles['ai-task-query']}>
+    <div className={styles['ai-task-query']} ref={taskQueryRef}>
       {showList ? (
         <div className={styles['ai-task-query-list-wrapper']}>
           <div className={styles['ai-task-query-list-header']}>
@@ -176,6 +189,11 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
     <div key={item.id} className={styles['task-query-list-item']}>
       <div className={styles['item-left']}>
         <OutlineChatIcon className={styles['chat-icon']} />
+        {item.is_recovery && (
+          <YakitTag color="info" size="small" fullRadius className={styles['recovery-tag']}>
+            恢复任务
+          </YakitTag>
+        )}
         <span className="content-ellipsis" title={item.user_input}>
           {item.user_input}
         </span>

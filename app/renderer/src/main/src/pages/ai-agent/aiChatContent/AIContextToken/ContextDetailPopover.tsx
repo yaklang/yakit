@@ -5,7 +5,7 @@ import { OutlinePresentationchartlineIcon } from '@/assets/icon/outline'
 import { Tooltip } from 'antd'
 import { YakitButton, type YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import type { AIChatData } from '../../type/aiChat'
+import type { AIAgentChatData } from '../../type/aiChat'
 import { formatNumberUnits } from '../../utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
@@ -31,7 +31,7 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
 
   const aiPerfData = useContextPerfStore()
 
-  const { renderNumber, aiDataRef: perfData } = useRafPolling<AIChatData['aiPerfData'] | null>({
+  const { renderNumber, aiDataRef: perfData } = useRafPolling<AIAgentChatData['aiPerfData'] | null>({
     getData: () => aiPerfData ?? null,
     interval: CONTEXT_PERF_POLL_INTERVAL,
     shouldStop: () => !execute,

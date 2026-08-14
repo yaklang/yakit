@@ -57,7 +57,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
   if (res.IsSync) return
 
   // 清空任务规划的todo-list数据
-  rawData.taskChat.planDetailsMap.clear()
+  rawData.taskDetailsMap.clear()
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
@@ -72,36 +72,17 @@ const handleStartPlanAndExecution: AIMessageHandler = (requestInfo) => {
   sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
   // 重置任务规划结束的中间状态
   meta.taskPlanEndGate = cloneDeep(DefaultTaskPlanEndGate)
-  const taskStatus = {
-    taskID: startInfo['re-act_task'],
-    status: AITaskStatus.inProgress,
-    // 取消任务规划需要的数据id
-    coordinatorId: startInfo.coordinator_id,
-    plan: '加载中...',
-    task: '加载中...',
-  }
   // 初始化任务规划运行态数据和部分UI状态
   store.getState().updateState({
-    taskStatus,
     showPlanList: true,
-    cancelTaskLoading: false,
+    cancelChatLoading: false,
+    currentChatStatus: {
+      questionID: startInfo['re-act_task'],
+      status: AITaskStatus.inProgress,
+      coordinatorId: startInfo.coordinator_id,
+    },
   })
-  // 重置当前任务树详情
-  store.getState().updatePlanTree(cloneDeep(DefaultCurrentExecTaskTree))
-  // 生成任务规划里的默认任务聚合组
-  const taskID = `${taskStatus.taskID}-default`
-  const chatData: AIChatQSData = {
-    ...genBaseAIChatData(res),
-    id: taskID,
-    chatType: 'task',
-    type: AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP,
-  } as AIChatQSData
-  rawData.contents.set(chatData.id, chatData)
-  persistIndependentItem(requestInfo.sessionId, chatData)
-  store.getState().dispatchStreamingNode({
-    chatType: 'task',
-    node: { token: chatData.id, kind: 'task', type: chatData.type },
-  })
+  store.getState().updateCurrentLoadingTitle({ planTitle: '加载中...' })
 }
 const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
   const { res, store, rawData, meta } = requestInfo
@@ -114,7 +95,7 @@ const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
     requestInfo.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
     return
   }
-  if (startInfo.coordinator_id === store.getState().taskStatus.coordinatorId) {
+  if (startInfo.coordinator_id === store.getState().currentChatStatus.coordinatorId) {
     const chatData: AIChatQSData = {
       ...genBaseAIChatData(res),
       chatType: 'task',
@@ -209,17 +190,27 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
+  // 只有reason='normal'时，才是执行问题的出队行为，别的情况不属于执行问题的出队行为，不处理
+  if (data.reason !== 'normal') return
 
   // 实时数据里，记录用户问题的状态和专注模式信息
   if (!res.IsSync) {
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
-    rawData.casualChat.planDetails = cloneDeep(DefaultPlanItemDetailsData)
-    store.getState().updateCasualTodoList()
+    rawData.taskDetailsMap.set(res.TaskId || data.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
+    store.getState().updateStateCount('chatTodoListUpdate')
     store.getState().updateState({
-      currentCasualTaskID: res.TaskId || data.react_task_id,
+      currentChatStatus: {
+        questionID: res.TaskId || data.react_task_id,
+        coordinatorId: '',
+        status: AITaskStatus.inProgress,
+      },
+      currentLoadingTitle: { casualTitle: '问题执行中...', planTitle: '' },
       focusMode: data.focus_mode ? data.focus_mode : '',
-      casualLoading: true,
     })
+    // 重置当前任务树详情
+    store.getState().updateState({ currentPlan: cloneDeep(DefaultCurrentExecTaskTree) })
+    // 刷新历史任务树
+    sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   }
 
   // 用户问题的UI回显
@@ -352,22 +343,29 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
 
-  const react_task_id = info.react_task_id
+  const currentChat = store.getState().currentChatStatus
+
   if (['completed', 'aborted', 'skipped'].includes(info.react_task_now_status)) {
-    if (store.getState().currentCasualTaskID && store.getState().currentCasualTaskID === react_task_id) {
-      store.getState().updateState({ focusMode: '', cancelCasualLoading: false, casualLoading: false })
-    }
-    if (store.getState().taskStatus.taskID === react_task_id) {
-      // 只推进中间状态；与 end 齐套后才落到 taskStatus.status
-      meta.taskPlanEndGate.pendingStatus = info.react_task_now_status as NonNullable<
-        AIAgentChatMetaData['taskPlanEndGate']['pendingStatus']
-      >
-      trySettleTaskPlanEnd(store, meta)
+    if (currentChat.questionID && currentChat.questionID === info.react_task_id) {
+      if (currentChat.coordinatorId) {
+        // 该问题对话存在异步任务
+        // 只推进中间状态；与 end 齐套后才落到 currentChatStatus.status
+        meta.taskPlanEndGate.pendingStatus = info.react_task_now_status as NonNullable<
+          AIAgentChatMetaData['taskPlanEndGate']['pendingStatus']
+        >
+        trySettleTaskPlanEnd(store, meta)
+      } else {
+        // 该问题对话不存在异步任务
+        store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
+        store.getState().updateCurrentChatStatus({ status: info.react_task_now_status })
+        store.getState().updateState({ focusMode: '', cancelChatLoading: false })
+      }
     }
   }
+
   // 更新自由对话-执行任务组的状态
-  if (!store.getState().currentCasualTaskID || !react_task_id) return
-  const taskKey = `${store.getState().currentCasualTaskID}-${react_task_id}`
+  if (!currentChat.questionID || !info.react_task_id) return
+  const taskKey = `${currentChat.questionID}-${info.react_task_id}`
   const taskDetail = rawData.contents.get(taskKey)
   if (!taskDetail || taskDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
   taskDetail.data.status = info.react_task_now_status as AITaskStatusType
@@ -436,9 +434,9 @@ const handlePlan: AIMessageHandler = (requestInfo) => {
   const tasks = JSON.parse(ipcContent) as { root_task: AIAgentGrpcApi.PlanTask }
   if (has(tasks, 'root_task')) {
     const plans = genExecTasks(tasks.root_task)
-    store.getState().updatePlanTree({ task_tree: cloneDeep(plans), root_task_name: tasks.root_task.name })
+    store.getState().updateState({ currentPlan: { task_tree: cloneDeep(plans), root_task_name: tasks.root_task.name } })
   } else {
-    store.getState().updatePlanTree(cloneDeep(DefaultCurrentExecTaskTree))
+    store.getState().updateState({ currentPlan: cloneDeep(DefaultCurrentExecTaskTree) })
   }
 }
 
@@ -464,8 +462,9 @@ const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
   // 非聚合任务不处理
   if (!info.react_task_is_sub_agent) return
 
-  if (!store.getState().currentCasualTaskID || !info.react_task_id) return
-  const taskKey = `${store.getState().currentCasualTaskID}-${info.react_task_id}`
+  const currentChat = store.getState().currentChatStatus
+  if (!currentChat.questionID || !info.react_task_id) return
+  const taskKey = `${currentChat.questionID}-${info.react_task_id}`
   meta.casualSubTaskIDs.add(info.react_task_id)
 
   const existing = rawData.contents.get(taskKey)
@@ -481,15 +480,14 @@ const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
       taskName: info.react_task_name || info.react_user_input || info.react_task_id,
       goal: info.react_user_input || '',
       status: info.react_task_status,
+      loadingTitle: '',
     },
   } as AIChatQSData
 
   rawData.contents.set(chatData.id, chatData)
   persistIndependentItem(requestInfo.sessionId, chatData)
-  // planDetailsMap / 子任务收集仍按后端子任务 ID（res.TaskId）索引
-  if (rawData.casualChat.planDetailsMap.has(info.react_task_id)) {
-    rawData.casualChat.planDetailsMap.set(info.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
-  }
+  // taskDetailsMap 按 react_task_id 初始化主任务详情条目
+  rawData.taskDetailsMap.set(info.react_task_id, cloneDeep(DefaultPlanItemDetailsData))
   store.getState().dispatchStreamingNode({
     chatType: 'reAct',
     node: {

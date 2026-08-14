@@ -3,7 +3,6 @@ import { type FC, memo } from 'react'
 import { AIModelErrorPrompt } from '../../aiChatListItem/aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIHttpFlowFuzzStatusCard } from '../../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'
 import { AIReportFinishCard } from '../../aiReportFinishCard/AIReportFinishCard'
-import { AIReviewResult } from '../../aiReviewResult/AIReviewResult'
 import AIChildWindowGroupStreamNode from '../aiChildWindowGroupStreamNode/AIChildWindowGroupStreamNode'
 import AIChildWindowStreamCard from '../aiChildWindowStreamCard/AIChildWindowStreamCard'
 import AIChildWindowToolInvokerCard from '../aiChildWindowToolInvokerCard/AIChildWindowToolInvokerCard'
@@ -23,21 +22,6 @@ const AIChildWindowNodeItemWrapper: FC<AIChildWindowNodeItemWrapperProps> = memo
     switch (itemData.type) {
       case AIChatQSDataTypeEnum.TOOL_RESULT:
         return <AIChildWindowToolInvokerCard itemData={itemData} renderNum={renderNum} />
-      case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
-      case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
-      case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
-      case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
-      case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
-        if (itemData.data?.selected) {
-          if (
-            itemData.type === AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE ||
-            itemData.type === AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE
-          )
-            return null
-          return <AIReviewResult info={itemData} renderNum={renderNum} />
-        }
-        // 任务子窗口中没有未review的数据
-        return null
 
       case AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS:
         return <AIHttpFlowFuzzStatusCard item={itemData} renderNum={renderNum} isChildWindow={true} />
