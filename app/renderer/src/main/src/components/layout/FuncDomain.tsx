@@ -147,6 +147,7 @@ import { judgeDynamic } from './userMenu/judgeDynamic'
 import { useUserMenu } from './userMenu/useUserMenu'
 import { UserMenuModals } from './userMenu/UserMenuModals'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
+import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
 
 // re-export 保持外部导入路径兼容
 export { randomAvatarColor }
@@ -209,6 +210,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     setCeUserMenuShow,
     usageStatisticsShow,
     setUsageStatisticsShow,
+    rechargeVisible,
+    setRechargeVisible,
+    apiKeys,
     apiKeysInfo,
     apiKeysInfoLoading,
     onUpdateApiKey,
@@ -394,6 +398,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         overlayClassName={classNames(styles['ui-op-plus-dropdown'])}
                         placement={'bottomRight'}
                         trigger={'click'}
+                        destroyTooltipOnHide={true}
                         content={
                           <CeUserMenuContent
                             menu={userMenu}
@@ -403,8 +408,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             }}
                           />
                         }
-                        visible={ceUserMenuShow}
+                        visible={ceUserMenuShow && !loginShow}
                         onVisibleChange={(visible) => {
+                          if (loginShow) {
+                            setCeUserMenuShow(false)
+                            return
+                          }
                           if (visible) {
                             onUpdateApiKey()
                           }
@@ -436,9 +445,14 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         onCancelLogin={() => setLoginShow(false)}
         usageStatisticsShow={usageStatisticsShow}
         apiKeysInfo={apiKeysInfo}
+        apiKeys={apiKeys}
         apiKeysInfoLoading={apiKeysInfoLoading}
         onCloseUsageStatistics={() => setUsageStatisticsShow(false)}
         onUpdateApiKey={onUpdateApiKey}
+        onOpenRecharge={() => {
+          setUsageStatisticsShow(false)
+          setRechargeVisible(true)
+        }}
         passwordShow={passwordShow}
         passwordClose={passwordClose}
         onCancelPassword={() => setPasswordShow(false)}
@@ -460,6 +474,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         setControlMyselfModal={setControlMyselfModal}
         setControlOtherModal={setControlOtherModal}
         runDynamicControlRemote={runDynamicControlRemote}
+      />
+
+      <CeRechargeModal
+        visible={rechargeVisible}
+        onClose={() => setRechargeVisible(false)}
+        onPaySuccess={() => onUpdateApiKey()}
+        onNeedLogin={() => {
+          setCeUserMenuShow(false)
+          setLoginShow(true)
+        }}
       />
     </div>
   )

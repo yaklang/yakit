@@ -41,8 +41,12 @@ export interface UseUserMenuResult {
   /** 使用统计弹窗 */
   usageStatisticsShow: boolean
   setUsageStatisticsShow: React.Dispatch<React.SetStateAction<boolean>>
+  /** 充值弹窗 */
+  rechargeVisible: boolean
+  setRechargeVisible: React.Dispatch<React.SetStateAction<boolean>>
   /** API Key 信息 */
-  apiKeysInfo: API.ApiKeyDetail | undefined
+  apiKeysInfo: API.ApiUserUsageResponse | undefined
+  apiKeys: API.ApiKeyDetail | undefined
   apiKeysInfoLoading: boolean
   onUpdateApiKey: (isLoading?: boolean) => void
   /** 修改密码弹窗 */
@@ -91,10 +95,17 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   /** 用户功能菜单 */
   const [userMenu, setUserMenu] = useState<YakitMenuItemType[]>([UserMenusMap['singOut']])
   const [ceUserMenuShow, setCeUserMenuShow] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (loginShow) {
+      setCeUserMenuShow(false)
+    }
+  }, [loginShow])
   const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
-  const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiKeyDetail>()
+  const [rechargeVisible, setRechargeVisible] = useState(false)
+  const [apiKeys, setApiKeys] = useState<API.ApiKeyDetail>()
+  const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiUserUsageResponse>()
   const [apiKeysInfoLoading, setApiKeysInfoLoading] = useState<boolean>(false)
-  const cacheApiKeyRef = useRef<string>()
   /** 修改密码弹框 */
   const [passwordShow, setPasswordShow] = useState<boolean>(false)
   /** 是否允许密码框关闭 */
@@ -354,9 +365,14 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
         <CeUserInfo
           userInfo={userInfo}
           apiKeysInfo={apiKeysInfo}
+          apiKeys={apiKeys}
           onOpenStatistics={() => {
             setCeUserMenuShow(false)
             setUsageStatisticsShow(true)
+          }}
+          onOpenRecharge={() => {
+            setCeUserMenuShow(false)
+            setRechargeVisible(true)
           }}
         />
       )
@@ -435,63 +451,82 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
         setUserMenu([...userAvatar, UserMenusMap['robotControl'], ...signOutMenu])
       }
     }
-  }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo])
+  }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo, apiKeys])
 
-  const apiFetchApiKeys = useMemoizedFn((apikey: string, isLoading: boolean = false) => {
+  // 步骤三：获取 API Key Token
+  const apiFetchToken = useMemoizedFn(() => {
+    NetWorkApi<null, API.ApiUserUsageResponse>({
+      method: 'post',
+      url: 'api/users',
+    })
+      .then((res) => {
+        setApiKeysInfo(res)
+      })
+      .catch((err) => {
+        yakitFailed(t('FuncDomain.getApiKeyDetailFailed', { error: err }))
+      })
+  })
+
+  // 步骤二：创建 API Key
+  const apiCreateApiKey = useMemoizedFn(() => {
+    NetWorkApi<null, API.ActionSucceeded>({
+      method: 'post',
+      url: 'apikey',
+    })
+      .then((res) => {
+        if (res.ok) {
+          apiFetchToken()
+        } else {
+          yakitFailed(t('FuncDomain.createApiKeyFailed', { error: '/apikey-post' }))
+        }
+      })
+      .catch((err) => {
+        yakitFailed(t('FuncDomain.createApiKeyFailed', { error: err }))
+      })
+  })
+
+  // 步骤一：获取 API Key 列表
+  const apiFetchApiKeys = useMemoizedFn((isLoading: boolean = false) => {
     isLoading && setApiKeysInfoLoading(true)
     NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
       method: 'post',
       url: 'apikeys',
       data: {
-        keyword: apikey,
+        page: 1,
+        pageSize: 5,
       },
     })
       .then((res) => {
-        if (res.data.length > 0) {
-          setApiKeysInfo(res.data[0])
+        if (res && res.data && Array.isArray(res.data.apiKey) && res.data.apiKey.length > 0) {
+          // 当前存在 API Key 跳转到步骤三：获取 API Key Token
+          apiFetchToken()
+          setApiKeys(res.data)
         } else {
-          setApiKeysInfo(undefined)
+          // 当前不存在 API Key 跳转到步骤二：创建 API Key
+          apiCreateApiKey()
         }
       })
       .catch((err) => {
-        yakitFailed(t('FuncDomain.getApiKeyDetailFailed', { error: err }))
+        setApiKeys(undefined)
+        setApiKeysInfo(undefined)
+        yakitFailed(t('FuncDomain.getApiKeyListFailed', { error: err }))
       })
       .finally(() => {
         isLoading && setApiKeysInfoLoading(false)
       })
   })
 
-  const getGrpcApiKey = useDebounceFn(
-    () => {
-      if (userInfo.isLogin && userInfo.token && userInfo.platform !== 'company') {
-        yakitEngine
-          .getApiKeyByOnline({ Token: userInfo.token })
-          .then((res) => {
-            cacheApiKeyRef.current = res.ApiKey
-            apiFetchApiKeys(res.ApiKey)
-          })
-          .catch((err) => {
-            // yakitFailed(t('FuncDomain.getApiKeyTokenFailed', { error: err }))
-          })
-      }
-      if (!userInfo.isLogin) {
-        setApiKeysInfo(undefined)
-        cacheApiKeyRef.current = undefined
-      }
-    },
-    { wait: 500 },
-  ).run
-
   const onUpdateApiKey = useMemoizedFn((isLoading: boolean = false) => {
-    if (cacheApiKeyRef.current) {
-      apiFetchApiKeys(cacheApiKeyRef.current, isLoading)
-    } else {
-      getGrpcApiKey()
-    }
+    apiFetchApiKeys(isLoading)
   })
 
   useEffect(() => {
-    getGrpcApiKey()
+    if (userInfo.isLogin) {
+      apiFetchApiKeys()
+    } else {
+      setApiKeys(undefined)
+      setApiKeysInfo(undefined)
+    }
   }, [userInfo.isLogin])
 
   /** 渲染端通信-打开一个指定页面 */
@@ -621,6 +656,9 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     setCeUserMenuShow,
     usageStatisticsShow,
     setUsageStatisticsShow,
+    rechargeVisible,
+    setRechargeVisible,
+    apiKeys,
     apiKeysInfo,
     apiKeysInfoLoading,
     onUpdateApiKey,

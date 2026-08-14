@@ -141,6 +141,21 @@ module.exports = (win, getClient) => {
     return await asyncSetAIGlobalConfig(params)
   })
 
+  const asyncUpdateApiKey = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().UpdateApiKey(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('UpdateApiKey', async (e, params) => {
+    return await asyncUpdateApiKey(params)
+  })
+
   const asyncListAIProviders = (params) => {
     return new Promise((resolve, reject) => {
       getClient().ListAIProviders(params, (err, data) => {
@@ -229,21 +244,6 @@ module.exports = (win, getClient) => {
   }
   ipcMain.handle('GetAIThirdPartyAppConfigTemplate', async (e, params) => {
     return await asyncGetAIThirdPartyAppConfigTemplate(params)
-  })
-
-  const asyncGetApiKeyByOnline = (params) => {
-    return new Promise((resolve, reject) => {
-      getClient().GetApiKeyByOnline(params, (err, data) => {
-        if (err) {
-          reject(err)
-          return
-        }
-        resolve(data)
-      })
-    })
-  }
-  ipcMain.handle('GetApiKeyByOnline', async (e, params) => {
-    return await asyncGetApiKeyByOnline(params)
   })
 
   // 查询自定义代码片段

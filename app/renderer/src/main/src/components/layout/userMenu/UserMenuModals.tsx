@@ -42,10 +42,12 @@ export interface UserMenuModalsProps {
   onCancelLogin: () => void
   /** CE 使用统计弹窗 */
   usageStatisticsShow: boolean
-  apiKeysInfo?: API.ApiKeyDetail
+  apiKeysInfo?: API.ApiUserUsageResponse
+  apiKeys?: API.ApiKeyDetail
   apiKeysInfoLoading: boolean
   onCloseUsageStatistics: () => void
   onUpdateApiKey: (isLoading?: boolean) => void
+  onOpenRecharge?: () => void
   /** 修改密码弹窗 */
   passwordShow: boolean
   passwordClose: boolean
@@ -86,9 +88,11 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
     onCancelLogin,
     usageStatisticsShow,
     apiKeysInfo,
+    apiKeys,
     apiKeysInfoLoading,
     onCloseUsageStatistics,
     onUpdateApiKey,
+    onOpenRecharge,
     passwordShow,
     passwordClose,
     onCancelPassword,
@@ -126,9 +130,12 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
           <CeUsageStatisticsModal
             visible={usageStatisticsShow}
             apiKeysInfo={apiKeysInfo}
+            apiKeys={apiKeys}
+            userInfo={userInfo}
             onClose={onCloseUsageStatistics}
             update={() => onUpdateApiKey(true)}
             loading={apiKeysInfoLoading}
+            onOpenRecharge={onOpenRecharge}
           />
         </YakitSuspense>
       )}
