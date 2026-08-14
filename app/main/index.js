@@ -19,7 +19,7 @@ const {
   setLocalCache,
 } = require('./localCache')
 const { asyncKillDynamicControl } = require('./handlers/dynamicControlFun')
-const { getWindowStatePath, getConfig } = require('./filePath')
+const { getWindowStatePath, initConfigAndHomeAsync } = require('./filePath')
 const Screenshots = require('./screenshots')
 const windowStateKeeper = require('electron-window-state')
 const { MenuTemplate } = require('./menu')
@@ -690,6 +690,11 @@ Menu.setApplicationMenu(menu)
  */
 if (!shouldAbortStartupForDebugFlags) {
   app.whenReady().then(async () => {
+    // 启动早期异步预初始化配置和 YAKIT_HOME 目录，后续 getYakitHomeConfig() 直接读同步缓存
+    initConfigAndHomeAsync().catch((err) => {
+      console.error(`init config and home failed: ${err}`)
+    })
+
     /**
      * init-log-folders:
      * 存在则检查文件数量是否超过10个，超过则只保留最近10个文件

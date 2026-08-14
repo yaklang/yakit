@@ -200,10 +200,10 @@ module.exports = {
   },
   registerIPC: (win) => {
     // YAKIT_HOME 配置管理
-    const { getConfig, setConfig, getYakitHome, getAppConfigDir } = require('./filePath')
+    const { getYakitHomeConfig, setConfig } = require('./filePath')
 
     ipcMain.handle('get-yakit-home-config', async () => {
-      return { ...getConfig(), currentHome: getYakitHome(), configDir: getAppConfigDir() }
+      return getYakitHomeConfig()
     })
 
     ipcMain.handle('set-yakit-home-config', async (e, key, value) => {
@@ -435,10 +435,10 @@ module.exports = {
   // 后续新开窗口可以传 ipcEventPre 用于区分注册的handle
   registerNewIPC: (win, ipcEventPre) => {
     // YAKIT_HOME 配置管理
-    const { getConfig, setConfig, getYakitHome, getAppConfigDir } = require('./filePath')
+    const { getYakitHomeConfig, setConfig } = require('./filePath')
 
     ipcMain.handle(ipcEventPre + 'get-yakit-home-config', async () => {
-      return { ...getConfig(), currentHome: getYakitHome(), configDir: getAppConfigDir() }
+      return getYakitHomeConfig()
     })
 
     ipcMain.handle(ipcEventPre + 'set-yakit-home-config', async (e, key, value) => {
