@@ -1029,10 +1029,7 @@ export const HotPatchManagement: React.FC = () => {
     return list.find((item) => item.name === selectedTemplate)
   }, [activeType, globalTemplateList, templateList, templateListOnline, selectedTemplate, selectedTemplateSource])
 
-  const disableSaveTemplate = useMemo(
-    () => !!(currentTemplate?.isDefault || selectedTemplateSource === 'online'),
-    [currentTemplate?.isDefault, selectedTemplateSource],
-  )
+  const disableSaveTemplate = !!(currentTemplate?.isDefault || selectedTemplateSource === 'online')
 
   const hideTemplateContent = useMemo(
     () => isGlobalType || ['mitm', 'httpflow-analyze'].includes(activeType),

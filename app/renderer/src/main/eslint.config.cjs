@@ -72,7 +72,7 @@ module.exports = tseslint.config(
       'react-hooks/memo-dependencies': 'off',
       'react-hooks/config': 'off',
       'react-hooks/rule-suppression': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
+      'react-hooks/preserve-manual-memoization': 'error',
       'react-hooks/error-boundaries': 'error',
 
       'no-useless-escape': 'off',

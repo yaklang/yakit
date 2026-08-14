@@ -238,6 +238,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
   }, [foucsedKey, info.id])
 
   // 获取详情
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const getDetail = useMemo(() => {
     return getDetailFun(info)
   }, [info])
@@ -1563,13 +1564,14 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
   }, [plugin?.Params])
 
   /** 自定义控件数据 */
+  const pluginParams = plugin?.Params
   const customParams = useMemo(() => {
     const defalut: FormExtraSettingProps = {
       double: false,
       data: [],
     }
     try {
-      const arr = plugin?.Params.filter((item) => !item.Required) || []
+      const arr = pluginParams?.filter((item) => !item.Required) || []
       const customArr = arr.filter((item) => (item.Group || '').length === 0)
       // 项目分片
       const peephole = customArr.find((item) => item.Field === 'peephole')?.ExtraSetting || '{}'
@@ -1593,7 +1595,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         languageArr: defalut,
       }
     }
-  }, [plugin?.Params])
+  }, [pluginParams])
 
   const onStartExecute = useMemoizedFn(() => {
     if (form && plugin) {
