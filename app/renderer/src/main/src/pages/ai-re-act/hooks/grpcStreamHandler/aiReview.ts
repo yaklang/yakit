@@ -294,15 +294,17 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
         // 清空plan-review的异步拓展信息
         meta.currentPlanReviewExtraId = ''
         meta.planReviewExtraData.clear()
-        // 生成执行的任务树并更新到UI上
-        const tasks = reviewDetail.data
-        const plans = genExecTasks(tasks.plans.root_task)
-        store.getState().updateState({
-          currentPlan: {
-            task_tree: cloneDeep(plans),
-            root_task_name: tasks.plans.root_task.name,
-          },
-        })
+        if (data.params?.suggestion === 'continue') {
+          // 生成执行的任务树并更新到UI上
+          const tasks = reviewDetail.data
+          const plans = genExecTasks(tasks.plans.root_task)
+          store.getState().updateState({
+            currentPlan: {
+              task_tree: cloneDeep(plans),
+              root_task_name: tasks.plans.root_task.name,
+            },
+          })
+        }
       }
       break
 

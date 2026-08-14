@@ -1000,6 +1000,9 @@ export class ChatMultiSessionController {
                     },
                   })
                 }
+                // 清空plan-review的异步拓展信息
+                meta.currentPlanReviewExtraId = ''
+                meta.planReviewExtraData.clear()
                 rawData.contents.delete(review.id)
                 store.getState().updateState({ currentReviewDetail: { token: '', renderNum: 0 } })
                 break

@@ -1,29 +1,39 @@
 import { describe, it, expect, vi } from 'vitest'
 import { aiReviewDataHandlers } from '../grpcStreamHandler/aiReview'
+import { DefaultCurrentExecTaskTree } from '../defaultConstant'
+import type { AIAgentGrpcApi } from '../grpcApi'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 
 vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
 }))
 
-const makePlanReviewPayload = (id = 'plan-rev-1') => ({
+const makePlanTask = (
+  task_id: string,
+  name: string,
+  subtasks: AIAgentGrpcApi.PlanTask[] = [],
+): AIAgentGrpcApi.PlanTask => ({
+  task_id,
+  name,
+  goal: '',
+  semantic_identifier: task_id,
+  depends_on: [] as string[],
+  subtasks,
+  isRemove: false,
+  tools: [] as string[],
+  description: '',
+  total_tool_call_count: 0,
+  success_tool_call_count: 0,
+  fail_tool_call_count: 0,
+  summary: '',
+})
+
+const makePlanReviewPayload = (id = 'plan-rev-1', subtasks: AIAgentGrpcApi.PlanTask[] = []) => ({
   id,
   plans_id: 'plans-1',
   selectors: [{ value: 'continue', prompt: 'ok' }],
   plans: {
-    root_task: {
-      task_id: 'root',
-      name: 'root',
-      goal: '',
-      semantic_identifier: 'root',
-      depends_on: [],
-      subtasks: [],
-      isRemove: false,
-      tools: [],
-      description: '',
-      total_tool_call_count: 0,
-      success_tool_call_count: 0,
-    },
+    root_task: makePlanTask('root', 'root', subtasks),
   },
 })
 
@@ -152,5 +162,53 @@ describe('aiReview handlers', () => {
     aiReviewDataHandlers.review_release(req)
     expect(req.rawData.contents.get('rev-1')).toBeTruthy()
     expect(req.store.getState().currentReviewDetail.token).toBe('rev-1')
+  })
+
+  it('D7: review_release plan-review continue writes currentPlan and clears extra', () => {
+    const payload = makePlanReviewPayload('plan-rev-cont', [makePlanTask('leaf-1', 'leaf')])
+    const req = makeHandlerRequest({
+      chatType: 'task',
+      res: makeGrpcJsonRes('review_release', { id: 'plan-rev-cont', params: { suggestion: 'continue' } }),
+    })
+    req.rawData.contents.set('plan-rev-cont', {
+      id: 'plan-rev-cont',
+      type: 'plan_review_require',
+      chatType: 'task',
+      data: payload,
+    } as any)
+    req.store.getState().updateState({ currentReviewDetail: { token: 'plan-rev-cont', renderNum: 0 } })
+    req.meta.currentPlanReviewExtraId = 'extra-1'
+    req.meta.planReviewExtraData.set('extra-1', { id: 'extra-1' } as any)
+
+    aiReviewDataHandlers.review_release(req)
+    expect(req.store.getState().currentPlan.root_task_name).toBe('root')
+    expect(req.store.getState().currentPlan.task_tree.some((t) => t.task_id === 'leaf-1')).toBe(true)
+    expect(req.meta.currentPlanReviewExtraId).toBe('')
+    expect(req.meta.planReviewExtraData.size).toBe(0)
+    expect(req.rawData.contents.get('plan-rev-cont')).toBeUndefined()
+    expect(req.store.getState().currentReviewDetail.token).toBe('')
+  })
+
+  it('D7: review_release plan-review non-continue skips currentPlan but still clears extra', () => {
+    const req = makeHandlerRequest({
+      chatType: 'task',
+      res: makeGrpcJsonRes('review_release', { id: 'plan-rev-chg', params: { suggestion: 'change' } }),
+    })
+    req.rawData.contents.set('plan-rev-chg', {
+      id: 'plan-rev-chg',
+      type: 'plan_review_require',
+      chatType: 'task',
+      data: makePlanReviewPayload('plan-rev-chg'),
+    } as any)
+    req.store.getState().updateState({ currentReviewDetail: { token: 'plan-rev-chg', renderNum: 0 } })
+    req.meta.currentPlanReviewExtraId = 'extra-2'
+    req.meta.planReviewExtraData.set('extra-2', { id: 'extra-2' } as any)
+
+    aiReviewDataHandlers.review_release(req)
+    expect(req.store.getState().currentPlan).toEqual(DefaultCurrentExecTaskTree)
+    expect(req.meta.currentPlanReviewExtraId).toBe('')
+    expect(req.meta.planReviewExtraData.size).toBe(0)
+    expect(req.rawData.contents.get('plan-rev-chg')).toBeUndefined()
+    expect(req.store.getState().currentReviewDetail.token).toBe('')
   })
 })
