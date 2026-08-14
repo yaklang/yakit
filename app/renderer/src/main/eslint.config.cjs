@@ -67,7 +67,7 @@ module.exports = tseslint.config(
       'react-hooks/purity': 'off',
       'react-hooks/set-state-in-render': 'error',
       'react-hooks/static-components': 'error',
-      'react-hooks/void-use-memo': 'off',
+      'react-hooks/void-use-memo': 'error',
       'react-hooks/exhaustive-effect-dependencies': 'error',
       'react-hooks/memo-dependencies': 'off',
       'react-hooks/config': 'error',

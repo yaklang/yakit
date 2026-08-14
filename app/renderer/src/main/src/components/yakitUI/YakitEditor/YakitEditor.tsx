@@ -255,7 +255,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   }, [type])
 
-  useMemo(() => {
+  useEffect(() => {
     if (editor) {
       setEditorContext(editor, 'plugin', props.type || '')
     }

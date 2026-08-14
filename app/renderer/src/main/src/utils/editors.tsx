@@ -113,7 +113,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     return GetPluginLanguage(props.type || 'http')
   }, [props.type])
 
-  useMemo(() => {
+  useEffect(() => {
     if (editor) {
       setEditorContext(editor, 'plugin', props.type || '')
     }
