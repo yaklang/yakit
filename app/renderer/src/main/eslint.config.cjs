@@ -60,8 +60,7 @@ module.exports = tseslint.config(
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'off',
 
-      // 关闭 v7 新增的 React Compiler lint 规则（主端历史代码量大，暂不收紧）
-      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/set-state-in-effect': 'warn',
       'react-hooks/immutability': 'off',
       'react-hooks/refs': 'off',
       'react-hooks/use-memo': 'off',
@@ -74,7 +73,7 @@ module.exports = tseslint.config(
       'react-hooks/config': 'off',
       'react-hooks/rule-suppression': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
-      'react-hooks/error-boundaries': 'off',
+      'react-hooks/error-boundaries': 'error',
 
       'no-useless-escape': 'off',
       'no-control-regex': 'warn',
