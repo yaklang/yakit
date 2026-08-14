@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import styles from './DoomFlameBackground.module.scss'
-import { useInViewport, useMemoizedFn, useThrottleFn } from 'ahooks'
+import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 
 // Oldschool doom flame effect, ported from the character-grid snippet.
 // Single-color chars (#eef0f3), value-noise driven.
@@ -183,7 +183,7 @@ const DoomFlameBackground: React.FC = React.memo(() => {
     }
   })
 
-  const resize = useThrottleFn(
+  const resize = useDebounceFn(
     () => {
       const canvas = canvasRef.current
       if (!canvas) return
@@ -201,7 +201,7 @@ const DoomFlameBackground: React.FC = React.memo(() => {
       if (rowsRef.current < 1) rowsRef.current = 1
       dataRef.current = new Uint8Array(colsRef.current * rowsRef.current)
     },
-    { wait: 500 },
+    { wait: 500, leading: true },
   ).run
 
   return <canvas ref={canvasRef} className={styles['doom-flame-bg']} />
