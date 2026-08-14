@@ -1,5 +1,6 @@
 import { CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon } from '@/assets/newIcon'
-import notification, { type ArgsProps } from 'antd/lib/notification'
+import { notification } from 'antd'
+import type { ArgsProps } from 'antd/lib/notification'
 
 type NotifyType = 'error' | 'success' | 'warning' | 'info'
 /**
