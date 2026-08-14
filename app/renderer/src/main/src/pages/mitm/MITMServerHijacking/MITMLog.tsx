@@ -29,7 +29,6 @@ import {
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import { RemoteHistoryGV } from '@/enums/history'
 import { cloneDeep } from 'lodash'
-import { MITMPipelineStatus } from '@/components/HTTPFlowTable/MITMPipelineStatus'
 
 const { ipcRenderer } = window.require('electron')
 interface MITMLogHeardExtraProps {
@@ -256,9 +255,6 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
           ))}
         </div>
         <TableTotalAndSelectNumber total={tableTotal} selectNum={tableSelectNum} />
-        <div className={styles['mitm-pipeline-status']}>
-          <MITMPipelineStatus />
-        </div>
       </div>
       <div className={styles['mitm-log-heard-right']}>
         <div className={styles['advancedSearch']}>

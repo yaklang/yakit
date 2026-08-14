@@ -245,16 +245,10 @@ const percentile = (sorted: number[], ratio: number): number | undefined => {
   return sorted[index]
 }
 
-const sortedMetricValues = (values: Array<number | undefined>): number[] =>
-  values
+const distribution = (values: Array<number | undefined>): MetricDistribution => {
+  const sorted = values
     .filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0)
     .sort((a, b) => a - b)
-
-const metricP95 = (values: Array<number | undefined>): number | undefined =>
-  percentile(sortedMetricValues(values), 0.95)
-
-const distribution = (values: Array<number | undefined>): MetricDistribution => {
-  const sorted = sortedMetricValues(values)
   if (!sorted.length) return { count: 0 }
   return {
     count: sorted.length,
@@ -1298,21 +1292,6 @@ export class MITMFlowObservability {
         directRecoveryHighWaterId: this.httpFlowLiveStreamDirectRecoveryHighWaterId,
         directRecoveryEntries: this.httpFlowLiveStreamDirectRecoveryEntries,
         directRecoveryCompletions: this.httpFlowLiveStreamDirectRecoveryCompletions,
-      },
-    }
-  }
-
-  pipelineStatusSnapshot() {
-    const pipeline = this.pipelineSnapshot()
-    return {
-      version: 1,
-      generatedAtUnixMs: pipeline.generatedAtUnixMs,
-      state: pipeline.state,
-      flow: {
-        persistQueueWaitP95: metricP95(this.flowSamples.map((sample) => sample.persistQueueWaitMs)),
-        persistWriteP95: metricP95(this.flowSamples.map((sample) => sample.persistWriteMs)),
-        persistToReactCommitP95: metricP95(this.flowSamples.map((sample) => sample.persistToReactCommitMs)),
-        responseToReactCommitP95: metricP95(this.flowSamples.map((sample) => sample.responseToReactCommitMs)),
       },
     }
   }

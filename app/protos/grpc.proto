@@ -9480,7 +9480,6 @@ message MITMV2Response {
 
   string ManualHijackListAction = 15; // add\delete\update\reload
   repeated SingleManualHijackInfoMessage ManualHijackList = 16; // top 20 hijack message
-  MITMPipelineStats PipelineStats = 17;
 }
 
 message SingleManualHijackControlMessage{
@@ -9982,40 +9981,4 @@ message UpdateAIReActRecommendedSkillRequest {
 
 message ResetAIReActRecommendedSkillRequest {
   string Name = 1;
-}
-
-// MITMPipelineStats is a one-second, session-scoped observation frame. Totals
-// are monotonic for the lifetime of one MITMV2 stream; clients derive rates
-// from consecutive frames instead of relying on reset-on-tick buckets.
-message MITMPipelineStats {
-  int32 Version = 1;
-  string SessionId = 2;
-  int64 SessionStartedAtUnixMs = 3;
-  int64 GeneratedAtUnixMs = 4;
-
-  uint64 RequestTotal = 5;
-  uint64 DispatchTotal = 6;
-  uint64 UpstreamCompletedTotal = 7;
-  uint64 ResponseMirroredTotal = 8;
-  uint64 DroppedTotal = 9;
-  uint64 FlowBuiltTotal = 10;
-  uint64 PersistEnqueuedTotal = 11;
-  uint64 PersistedTotal = 12;
-  uint64 PersistFailedTotal = 13;
-
-  int64 ActiveTotal = 14;
-  int64 PreDispatchActive = 15;
-  int64 ManualActive = 16;
-  int64 UpstreamActive = 17;
-  int64 ResponseProcessingActive = 18;
-  int64 PersistActive = 19;
-
-  int64 OldestPreDispatchAgeMs = 20;
-  int64 OldestManualAgeMs = 21;
-  int64 OldestUpstreamAgeMs = 22;
-  int64 OldestResponseProcessingAgeMs = 23;
-  int64 OldestPersistAgeMs = 24;
-
-  int64 DatabaseWriteQueueDepth = 25;
-  int64 DatabaseWriteQueueCapacity = 26;
 }

@@ -262,13 +262,6 @@ module.exports = (win, getClient) => {
         win.webContents.send('client-mitmV2-notification', data['NotificationContent'])
       }
 
-      // Session-scoped MITM pipeline metrics are already coalesced to one
-      // frame per second by the engine. Forward them directly without adding
-      // another polling loop in the renderer.
-      if (win && data['PipelineStats']) {
-        win.webContents.send('client-mitmV2-pipeline-stats', data['PipelineStats'])
-      }
-
       // 检查替代规则的问题，如果返回了有内容，说明没 BUG
       if (win && (data?.Replacers || []).length > 0) {
         win.webContents.send('client-mitmV2-content-replacer-update', data.Replacers)
@@ -306,7 +299,6 @@ module.exports = (win, getClient) => {
       destroyMessage()
       currentDownstreamProxyRuleId = ''
       currentDownstreamProxy = ''
-      if (win) win.webContents.send('client-mitmV2-pipeline-stats', null)
       if (err.code && win) {
         switch (err.code) {
           case 1:
@@ -326,7 +318,6 @@ module.exports = (win, getClient) => {
       destroyMessage()
       currentDownstreamProxyRuleId = ''
       currentDownstreamProxy = ''
-      if (win) win.webContents.send('client-mitmV2-pipeline-stats', null)
     })
     currentHost = Host
     currentPort = Port
@@ -355,7 +346,6 @@ module.exports = (win, getClient) => {
     }
     currentDownstreamProxyRuleId = ''
     currentDownstreamProxy = ''
-    if (win) win.webContents.send('client-mitmV2-pipeline-stats', null)
   })
 
   /**手动劫持 相关操作 */
