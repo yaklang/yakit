@@ -728,11 +728,12 @@ td {
     } catch {}
   }
   ipcMain.handle('cancel-StartScrecorder', async (_e, token) => {
-    const target = streamStartScrecorderMap.get(token)
-    const streams = target ? [[token, target]] : [...streamStartScrecorderMap.entries()]
+    const hasToken = typeof token === 'string' && token.length > 0
+    const target = hasToken ? streamStartScrecorderMap.get(token) : undefined
+    const streams = hasToken ? (target ? [[token, target]] : []) : [...streamStartScrecorderMap.entries()]
     streams.forEach(([t, stream]) => {
-      cancelScrecorderStream(stream)
       streamStartScrecorderMap.delete(t)
+      cancelScrecorderStream(stream)
     })
   })
   ipcMain.handle('StartScrecorder', (e, params, token) => {
