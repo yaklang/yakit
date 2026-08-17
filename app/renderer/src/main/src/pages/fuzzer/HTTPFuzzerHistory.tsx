@@ -66,7 +66,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
   const limit = useMemo(() => paging.Limit, [paging.Limit])
 
   useEffect(() => {
-    reload(1, limit, true)
+    reload(1, limit)
   }, [])
 
   const deleteAll = useMemoizedFn(() => {
@@ -99,7 +99,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
     apiDeleteFuzzerConfig(deleteFuzzerConfigRequest)
   })
 
-  const reload = useMemoizedFn((pageInt: number, limitInt: number, first?: boolean) => {
+  const reload = useMemoizedFn((pageInt: number, limitInt: number) => {
     setLoading(true)
     const params = {
       Pagination: { ...paging, Page: pageInt, Limit: limitInt },
@@ -112,9 +112,6 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
         setTasks(data.Data)
         setTotal(data.Total)
         setPaging(data.Pagination)
-        if (data.Total == 0 && first) {
-          onSwitchShowAll(true)
-        }
       })
       .finally(() => setTimeout(() => setLoading(false), 300))
   })
