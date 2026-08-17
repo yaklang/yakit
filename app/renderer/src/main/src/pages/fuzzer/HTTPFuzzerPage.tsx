@@ -1790,7 +1790,12 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       setTimeout(() => {
         setIsPause(true)
         setLoading(false)
-        syncTotal()
+        if (setNewCurrentPageRef.current) {
+          setNewCurrentPageRef.current = false
+          getNewCurrentPage()
+        } else {
+          syncTotal()
+        }
       }, 500)
       stop()
       logger(httpFuzzerLog({ content: t('HTTPFuzzerPage.send_complete'), status: 'end' }))
@@ -1910,6 +1915,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     [successFuzzer?.length, failedFuzzer?.length],
   )
 
+  const setNewCurrentPageRef = useRef(false)
   const [currentPage, setCurrentPage] = useState<number>(0)
   const [total, setTotal] = useState<number>(0)
   const [showAll, setShowAll] = useState<boolean>(false)
@@ -1947,34 +1953,54 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setCurrentPage(currentPage + 1)
     getList(currentPage + 1)
   })
-  /** 查询历史任务总数 */
-  const queryHistoryTotal = useMemoizedFn((all: boolean) => {
-    return ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, 1, all))
-      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => Number(data.Total))
-  })
   /** 仅同步 total，不处理 showAll 自动切换 */
   const syncTotal = useMemoizedFn(() => {
     if (skipNextSyncTotalRef.current) {
       skipNextSyncTotalRef.current = false
       return
     }
-    queryHistoryTotal(showAll).then(setTotal)
-  })
-  /** 获取总数：当前 tab 无历史时自动切换到查看全部 */
-  const getInitTotal = useMemoizedFn(() => {
-    queryHistoryTotal(false).then((total: number) => {
-      if (total === 0 && !showAll) {
-        setShowAll(true)
-        return
-      }
-      setTotal(total)
+    ipcRenderer.invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, 1, showAll)).then((data) => {
+      setTotal(data.Total)
     })
   })
+  /**
+   * 切换 showAll 作用域后，按 currentSelectId 在目标作用域（all）的分页列表中
+   * 查找其新的绝对位置并同步 currentPage，避免上一条/下一条因作用域切换指向错误记录
+   */
+  const resyncCurrentPageInAllScope = useMemoizedFn((id: number, limitInt: number) => {
+    ipcRenderer
+      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, limitInt, true))
+      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+        const idx = data.Data.findIndex((d) => d.BasicInfo.Id === id)
+        if (idx >= 0) {
+          setCurrentPage(idx + 1)
+        } else {
+          // 不在首页内：逐页向后查找，命中后按 (page-1)*limit + index + 1 计算绝对位置
+          const total = Number(data.Total) || 0
+          const maxPage = Math.ceil(total / limitInt)
+          let p = 2
+          const probe = () => {
+            if (p > maxPage) {
+              setCurrentPage(0)
+              return
+            }
+            ipcRenderer
+              .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(p, limitInt, true))
+              .then((res: { Data: HTTPFuzzerTaskDetail[]; Total: number }) => {
+                const i = res.Data.findIndex((d) => d.BasicInfo.Id === id)
+                if (i >= 0) {
+                  setCurrentPage((p - 1) * limitInt + i + 1)
+                } else {
+                  p += 1
+                  probe()
+                }
+              })
+          }
+          probe()
+        }
+      })
+  })
   useEffect(() => {
-    getInitTotal()
-  }, [])
-  useUpdateEffect(() => {
     syncTotal()
   }, [showAll])
 
@@ -2197,7 +2223,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const firstNodeExtra = useMemo(() => {
     return () => {
       const preDisabled = !isbuttonIsSendReqStatus || currentPage === 0 || currentPage === 1
-      const nextDisabled = !isbuttonIsSendReqStatus || !Number(total) || currentPage >= Number(total)
+      const nextDisabled =
+        !isbuttonIsSendReqStatus || !Number(total) || currentPage === 0 || currentPage >= Number(total)
 
       return (
         <>
@@ -2421,7 +2448,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setRedirectedResponse(undefined)
     sendFuzzerSettingInfo()
     onValidateHTTPFuzzer()
-    getNewCurrentPage()
+    setNewCurrentPageRef.current = true
   })
 
   const onCommitResponseSearch = useMemoizedFn((keyword: string) => {
@@ -2444,7 +2471,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       setRedirectedResponse(undefined)
       sendFuzzerSettingInfo()
       onValidateHTTPFuzzer()
-      getNewCurrentPage()
+      setNewCurrentPageRef.current = true
     } else {
       yakitNotify('info', t('HTTPFuzzerPage.retryNoFailedTask'))
     }
@@ -2495,31 +2522,42 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     </>
   ))
 
+  /** end 结束后选中最新历史：先取总数，再按升序末位（Page=total, Limit=1）取最新一条 */
   const getNewCurrentPage = useMemoizedFn(() => {
-    // 延时确保能拿到最新total
-    setTimeout(() => {
-      logger(
-        httpFuzzerLog({
-          title: t('HTTPFuzzerPage.run_function_start'),
-          content: 'getNewCurrentPage',
-        }),
-      )
-      queryHistoryTotal(false).then((currentTotal: number) => {
-        if (showAll) {
-          skipNextSyncTotalRef.current = true
-          setShowAll(false)
-        }
-        setCurrentPage(0)
-        setCurrentSelectId(undefined)
-        setTotal(currentTotal)
-        logger(
-          httpFuzzerLog({
-            title: t('HTTPFuzzerPage.run_function_end'),
-            content: 'getNewCurrentPage',
-          }),
-        )
+    logger(
+      httpFuzzerLog({
+        title: t('HTTPFuzzerPage.run_function_start'),
+        content: 'getNewCurrentPage',
+      }),
+    )
+    if (showAll) {
+      skipNextSyncTotalRef.current = true
+      setShowAll(false)
+    }
+    // 先拿到包含新发包的总数，再按升序末位（Page=total, Limit=1）取最新一条
+    ipcRenderer
+      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, 1, false))
+      .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+        const t = Number(data.Total) || 0
+        setTotal(t)
+        if (t <= 0) return
+        // 升序下最新任务位于全局末位，绝对位置 = t，对应 Page=t, Limit=1
+        ipcRenderer
+          .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(t, 1, false))
+          .then((res: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
+            const latest = res.Data[0]
+            if (latest) {
+              setCurrentPage(t)
+              setCurrentSelectId(latest.BasicInfo.Id)
+            }
+          })
       })
-    }, 1500)
+    logger(
+      httpFuzzerLog({
+        title: t('HTTPFuzzerPage.run_function_end'),
+        content: 'getNewCurrentPage',
+      }),
+    )
   })
   // 跳转插件调试页面
   const handleSkipPluginDebuggerPage = async (tempType: 'path' | 'raw') => {
@@ -2724,7 +2762,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setRedirectedResponse(undefined)
     sendFuzzerSettingInfo()
     onValidateHTTPFuzzer()
-    getNewCurrentPage()
+    setNewCurrentPageRef.current = true
   })
 
   const openAiPanel = useMemoizedFn(() => {
@@ -3142,9 +3180,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                   loadHistory(e)
                                 }}
                                 showAll={showAll}
-                                onShowAllChange={(v) => {
-                                  setCurrentPage(0)
-                                  setCurrentSelectId(undefined)
+                                onShowAllChange={(v, limit) => {
+                                  if (v === false) {
+                                    setCurrentPage(0)
+                                    setCurrentSelectId(undefined)
+                                  } else if (currentSelectId !== undefined) {
+                                    resyncCurrentPageInAllScope(currentSelectId, limit)
+                                  }
                                   setShowAll(v)
                                 }}
                                 onDeleteAllCallback={() => {
