@@ -332,9 +332,9 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
     onClose()
   }
 
-  const [refresh, setRefresh] = useState<number>(Math.random())
+  const [refresh, setRefresh] = useState(0)
   useEffect(() => {
-    setRefresh(Math.random())
+    setRefresh((c) => c + 1)
   }, [visible])
 
   return (

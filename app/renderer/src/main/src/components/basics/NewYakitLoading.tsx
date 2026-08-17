@@ -111,6 +111,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
 
   /** 加载页随机宣传语 */
   const loadingTitle = useMemo(
+    // eslint-disable-next-line react-hooks/purity
     () => LoadingTitle(t)[Math.floor(Math.random() * (LoadingTitle(t).length - 0)) + 0],
     [i18nRefresh],
   )

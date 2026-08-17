@@ -64,7 +64,7 @@ module.exports = tseslint.config(
       'react-hooks/immutability': 'off',
       'react-hooks/refs': 'off',
       'react-hooks/use-memo': 'off',
-      'react-hooks/purity': 'off',
+      'react-hooks/purity': 'error',
       'react-hooks/set-state-in-render': 'error',
       'react-hooks/static-components': 'error',
       'react-hooks/void-use-memo': 'error',

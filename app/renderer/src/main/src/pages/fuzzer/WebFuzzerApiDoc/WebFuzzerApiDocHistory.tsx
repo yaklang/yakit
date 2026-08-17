@@ -77,6 +77,11 @@ export const WebFuzzerApiDocHistory: React.FC<{
     refresh()
   }, [refreshToken, refresh])
 
+  const [groupNow, setGroupNow] = useState(0)
+  useEffect(() => {
+    setGroupNow(Date.now())
+  }, [items, keyword])
+
   const groups = useMemo(() => {
     const kw = keyword.toLowerCase()
     const filtered = kw ? items.filter((item) => getItemTitle(item).toLowerCase().includes(kw)) : items
@@ -86,12 +91,12 @@ export const WebFuzzerApiDocHistory: React.FC<{
     >
     filtered.forEach((item) => {
       const ts = item.lastUsedAt || item.updatedAt || item.createdAt
-      const diff = Math.max(Date.now() - normalizeTimestamp(ts), 0)
+      const diff = Math.max(groupNow - normalizeTimestamp(ts), 0)
       const groupKey = TIME_GROUPS.find((group) => diff <= group.max)?.key || 'thirtyDays'
       map[groupKey].push(item)
     })
     return TIME_GROUPS.map((group) => ({ ...group, list: map[group.key] })).filter((g) => g.list.length > 0)
-  }, [items, keyword])
+  }, [items, keyword, groupNow])
 
   const onDelete = useMemoizedFn(async (item: ApiDocHistoryItem) => {
     const { sessionId } = item
