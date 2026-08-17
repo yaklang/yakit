@@ -221,16 +221,28 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         case ManualHijackListAction.Hijack_List_Update:
           {
             const updateIndex = mitmV2HijackIndexRef.current.get(hijackData.TaskID) ?? -1
+            const updateItem: SingleManualHijackInfoMessage = {
+              ...hijackData,
+              manualHijackListAction: ManualHijackListAction.Hijack_List_Update,
+            }
             if (updateIndex === -1) {
               // 缓存数据中没有数据，直接使用data
               const displayedItem = displayedHijackByTaskID.get(hijackData.TaskID)
               if (displayedItem) {
                 mitmV2HijackIndexRef.current.set(hijackData.TaskID, mitmV2HijackInfoRef.current.length)
                 mitmV2HijackInfoRef.current.push({
-                  ...hijackData,
-                  manualHijackListAction: ManualHijackListAction.Hijack_List_Update,
+                  ...updateItem,
                   arrivalOrder: displayedItem.arrivalOrder,
                 })
+              }
+            } else {
+              // 同一刷新窗口内后到的状态覆盖先到的，避免 wait hijack 盖住 hijacking response
+              // 保留原 action：若先 Add 再 Update，仍按新增入库，否则刷新时列表还没有该行会被丢掉
+              const prev = mitmV2HijackInfoRef.current[updateIndex]
+              mitmV2HijackInfoRef.current[updateIndex] = {
+                ...updateItem,
+                manualHijackListAction: prev.manualHijackListAction,
+                arrivalOrder: prev.arrivalOrder,
               }
             }
           }
