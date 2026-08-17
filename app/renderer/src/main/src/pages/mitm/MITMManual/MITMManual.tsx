@@ -127,7 +127,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       if (flushIntervalRef.current !== null) return
       flushIntervalRef.current = setInterval(() => {
         handleManualHijackList()
-      }, 5000)
+      }, 100)
     })
     const stopFlushInterval = useMemoizedFn(() => {
       if (flushIntervalRef.current !== null) {
