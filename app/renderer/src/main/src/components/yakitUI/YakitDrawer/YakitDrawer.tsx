@@ -20,17 +20,13 @@ const tOriginal = i18n.getFixedT(null, 'yakitUi')
  */
 export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
   const { visible, ...restProps } = props
-  useEffect(() => {
-    if (visible) {
-      emiter.emit('setYakitHeaderDraggable', false)
-    } else {
-      emiter.emit('setYakitHeaderDraggable', true)
-    }
-  }, [visible])
 
   useEffect(() => {
+    // 底部橱窗不影响拖拽
+    if (props.placement === 'bottom') return
+    emiter.emit('setYakitHeaderDraggable', !visible)
     return () => emiter.emit('setYakitHeaderDraggable', true)
-  }, [])
+  }, [visible, props.placement])
 
   return (
     <Drawer
