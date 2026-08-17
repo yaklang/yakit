@@ -249,8 +249,8 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
     const flag = val === '/' ? false : !!val.trim()
     searchTreeFlag.current = flag
     setExpandedKeys([])
-    setSelectedKeys([])
-    setSelectedNodes([])
+    // setSelectedKeys([])
+    // setSelectedNodes([])
     setSearchValue(val)
     getTreeData(val)
   })
