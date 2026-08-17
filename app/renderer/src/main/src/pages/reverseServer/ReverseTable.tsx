@@ -67,18 +67,20 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
   const [selectRow, setSelectRow] = useState<ReverseNotification>()
   const [width, setWidth] = useState<number>(1000)
 
+  const debouncedTypes = useDebounce(types, { wait: 1000 })
+
   const newData: ReverseNotification[] = useMemo(() => {
     // setLoading(true)
     let lists = [...data]
     if (hasToken) lists = lists.filter((item) => !!item.token)
-    if (types) {
-      const typeArr = types.split(',')
+    if (debouncedTypes) {
+      const typeArr = debouncedTypes.split(',')
       lists = lists.filter((i) => typeArr.includes(i.type))
     }
 
     setTimeout(() => setLoading(false), 200)
     return lists
-  }, [data, hasToken, useDebounce(types, { wait: 1000 })])
+  }, [data, hasToken, debouncedTypes])
 
   const onRowClick = useMemoizedFn((rowDate?: ReverseNotification) => {
     if (rowDate) {

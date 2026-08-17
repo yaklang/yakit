@@ -2010,8 +2010,8 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   })
 
   const httpResponse: FuzzerResponse = useMemo(() => {
-    return redirectedResponse ? redirectedResponse : getFirstResponse()
-  }, [redirectedResponse, getFirstResponse()])
+    return redirectedResponse ? redirectedResponse : _firstResponse
+  }, [redirectedResponse, _firstResponse])
   /**多条数据返回的第一条数据 */
   const multipleReturnsHttpResponse: FuzzerResponse = useMemo(() => {
     return successFuzzer.length > 0 ? successFuzzer[0] : emptyFuzzer
