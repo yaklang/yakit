@@ -292,7 +292,7 @@ const buildMitmExtraV2 = (extra?: ExtraMITMServerProps) => {
     DnsServers: dnsServers,
     HostsMapping: hosts,
     EnableHostsMappingBeforeDownstreamProxy,
-    ExtraPorts: ExtraPorts.map((item) => parseInt(item) || 0).filter((item) => Boolean(item)),
+    ExtraPorts: (ExtraPorts || []).map((item) => parseInt(item) || 0).filter((item) => Boolean(item)),
     FilterWebsocket: filterWebsocket,
     DisableCACertPage: disableCACertPage,
     DisableSystemProxy,
