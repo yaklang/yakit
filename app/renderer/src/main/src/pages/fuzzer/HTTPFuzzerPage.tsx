@@ -1933,7 +1933,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     ipcRenderer
       .invoke('QueryHistoryHTTPFuzzerTaskEx', params)
       .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
-        setTotal(data.Total)
+        setTotal(Number(data.Total) || 0)
         if (data.Data.length > 0) {
           loadHistory(data.Data[0].BasicInfo.Id)
         }
@@ -1960,7 +1960,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       return
     }
     ipcRenderer.invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, 1, showAll)).then((data) => {
-      setTotal(data.Total)
+      setTotal(Number(data.Total) || 0)
     })
   })
   /**
