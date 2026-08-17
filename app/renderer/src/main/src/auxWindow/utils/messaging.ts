@@ -1,5 +1,4 @@
 import { yakitApp } from '@/services/electronBridge'
-import i18n from '@/i18n/i18n'
 import { useTheme, type Theme } from '@/hook/useTheme'
 import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
 import { isAuxWindow } from '@/utils/isAuxOrChildWindow'
@@ -24,15 +23,12 @@ function handleAppSyncMessage(message: AppSyncMessage) {
       useTheme.getState().syncTheme(theme)
       break
     }
-    case 'i18n':
-      if (message.payload) void i18n.changeLanguage(message.payload)
-      break
     default:
       break
   }
 }
 
-/** 主渲染 / 辅助窗入口：监听 theme / i18n 广播 */
+/** 主渲染 / 辅助窗入口：监听 theme 广播 */
 export function registerAppSyncHandlers() {
   if (appSyncRegistered) return () => {}
   appSyncRegistered = true
@@ -44,7 +40,7 @@ export function registerAppSyncHandlers() {
   }
 }
 
-/** 主窗口：广播 theme / i18n 到所有窗口 */
+/** 主窗口：广播 theme 到所有窗口 */
 export function syncAppSettings(message: AppSyncMessage) {
   return yakitApp.sync(message)
 }
