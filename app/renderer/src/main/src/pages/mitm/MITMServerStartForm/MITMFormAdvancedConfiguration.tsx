@@ -73,7 +73,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         certs,
         etcHosts,
       }
-
+      value.ExtraPorts = v.ExtraPorts || defFieldsRef.current.ExtraPorts
       value.proxyUsername = value.enableProxyAuth ? value.proxyUsername || '' : ''
       value.proxyPassword = value.enableProxyAuth ? value.proxyPassword || '' : ''
       value.SNI = value.OverwriteSNI ? value.SNI || '' : ''
