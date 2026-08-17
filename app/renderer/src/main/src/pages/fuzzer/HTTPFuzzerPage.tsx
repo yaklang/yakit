@@ -1964,40 +1964,45 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
   })
   /**
-   * 切换 showAll 作用域后，按 currentSelectId 在目标作用域（all）的分页列表中
-   * 查找其新的绝对位置并同步 currentPage，避免上一条/下一条因作用域切换指向错误记录
+   * 切换到「查看全部」作用域后，按 currentSelectId 在 all 列表中查找其新的绝对位置并同步 currentPage，
+   * 避免上一条/下一条因作用域切换指向错误记录。
+   * 采用「首页大 Limit 命中优先 + 未命中按大 Limit 逐页兜底」：
+   * 绝大多数情况下首页一次即可命中；最坏探测次数 ≈ total / LIMIT，相比小 Limit 大幅减少。
+   * 注：currentPage 的语义是「选中记录在全部列表中的绝对位置（1..total）」，
    */
-  const resyncCurrentPageInAllScope = useMemoizedFn((id: number, limitInt: number) => {
+  const resyncCurrentPageInAllScope = useMemoizedFn((id: number) => {
+    const LIMIT = 200
     ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, limitInt, true))
+      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, LIMIT, true))
       .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
         const idx = data.Data.findIndex((d) => d.BasicInfo.Id === id)
         if (idx >= 0) {
           setCurrentPage(idx + 1)
-        } else {
-          // 不在首页内：逐页向后查找，命中后按 (page-1)*limit + index + 1 计算绝对位置
-          const total = Number(data.Total) || 0
-          const maxPage = Math.ceil(total / limitInt)
-          let p = 2
-          const probe = () => {
-            if (p > maxPage) {
-              setCurrentPage(0)
-              return
-            }
-            ipcRenderer
-              .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(p, limitInt, true))
-              .then((res: { Data: HTTPFuzzerTaskDetail[]; Total: number }) => {
-                const i = res.Data.findIndex((d) => d.BasicInfo.Id === id)
-                if (i >= 0) {
-                  setCurrentPage((p - 1) * limitInt + i + 1)
-                } else {
-                  p += 1
-                  probe()
-                }
-              })
-          }
-          probe()
+          return
         }
+        const total = Number(data.Total) || 0
+        const maxPage = Math.max(1, Math.ceil(total / LIMIT))
+        let p = 2
+        const probe = () => {
+          if (p > maxPage) {
+            // 选中记录已不在当前 all 列表（如被删除），回到未选中态
+            setCurrentSelectId(undefined)
+            setCurrentPage(0)
+            return
+          }
+          ipcRenderer
+            .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(p, LIMIT, true))
+            .then((res: { Data: HTTPFuzzerTaskDetail[]; Total: number }) => {
+              const i = res.Data.findIndex((d) => d.BasicInfo.Id === id)
+              if (i >= 0) {
+                setCurrentPage((p - 1) * LIMIT + i + 1)
+              } else {
+                p += 1
+                probe()
+              }
+            })
+        }
+        probe()
       })
   })
   useEffect(() => {
@@ -3180,12 +3185,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                   loadHistory(e)
                                 }}
                                 showAll={showAll}
-                                onShowAllChange={(v, limit) => {
+                                onShowAllChange={(v) => {
                                   if (v === false) {
                                     setCurrentPage(0)
                                     setCurrentSelectId(undefined)
                                   } else if (currentSelectId !== undefined) {
-                                    resyncCurrentPageInAllScope(currentSelectId, limit)
+                                    // 切换到「查看全部」时保留选中 id，但 currentPage 需要按 id 在全部列表中的位置重新计算
+                                    resyncCurrentPageInAllScope(currentSelectId)
                                   }
                                   setShowAll(v)
                                 }}

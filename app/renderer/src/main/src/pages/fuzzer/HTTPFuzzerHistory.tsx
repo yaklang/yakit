@@ -25,7 +25,7 @@ export interface HTTPFuzzerHistorySelectorProp {
   onSelect: (i: number, page: number) => void
   onDeleteAllCallback: () => void
   showAll: boolean
-  onShowAllChange: (showAll: boolean, limit: number) => void
+  onShowAllChange: (showAll: boolean) => void
   fuzzerTabIndex: string
 }
 
@@ -117,7 +117,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
   })
 
   const onSwitchShowAll = useMemoizedFn((v: boolean) => {
-    onShowAllChange(v, limit)
+    onShowAllChange(v)
     setTimeout(() => {
       reload(1, limit)
     }, 200)
