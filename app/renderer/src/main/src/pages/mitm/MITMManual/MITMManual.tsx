@@ -239,9 +239,13 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               // 同一刷新窗口内后到的状态覆盖先到的，避免 wait hijack 盖住 hijacking response
               // 保留原 action：若先 Add 再 Update，仍按新增入库，否则刷新时列表还没有该行会被丢掉
               const prev = mitmV2HijackInfoRef.current[updateIndex]
+              const manualHijackListAction =
+                prev.manualHijackListAction === ManualHijackListAction.Hijack_List_Add
+                  ? ManualHijackListAction.Hijack_List_Add
+                  : ManualHijackListAction.Hijack_List_Update
               mitmV2HijackInfoRef.current[updateIndex] = {
                 ...updateItem,
-                manualHijackListAction: prev.manualHijackListAction,
+                manualHijackListAction,
                 arrivalOrder: prev.arrivalOrder,
               }
             }
