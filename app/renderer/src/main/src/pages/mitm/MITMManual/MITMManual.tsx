@@ -127,7 +127,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       if (flushIntervalRef.current !== null) return
       flushIntervalRef.current = setInterval(() => {
         handleManualHijackList()
-      }, 100)
+      }, 5000)
     })
     const stopFlushInterval = useMemoizedFn(() => {
       if (flushIntervalRef.current !== null) {
@@ -232,6 +232,14 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                   arrivalOrder: displayedItem.arrivalOrder,
                 })
               }
+            } else {
+              // 同一任务在一次刷新周期内可能连续从“等待劫持”切换为“劫持响应”，
+              // 保留队列动作和到达顺序，但必须使用最后一次更新的状态与报文。
+              mitmV2HijackInfoRef.current.splice(updateIndex, 1, {
+                ...hijackData,
+                manualHijackListAction: mitmV2HijackInfoRef.current[updateIndex].manualHijackListAction,
+                arrivalOrder: mitmV2HijackInfoRef.current[updateIndex].arrivalOrder,
+              })
             }
           }
           break
