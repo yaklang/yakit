@@ -2539,23 +2539,20 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       skipNextSyncTotalRef.current = true
       setShowAll(false)
     }
-    // 先拿到包含新发包的总数，再按升序末位（Page=total, Limit=1）取最新一条
     ipcRenderer
-      .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(1, 1, false))
+      .invoke('QueryHistoryHTTPFuzzerTaskEx', {
+        FuzzerTabIndex: props.id,
+        Pagination: { Page: 1, Limit: 1, Order: 'desc', OrderBy: 'created_at' },
+      })
       .then((data: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
         const t = Number(data.Total) || 0
         setTotal(t)
         if (t <= 0) return
-        // 升序下最新任务位于全局末位，绝对位置 = t，对应 Page=t, Limit=1
-        ipcRenderer
-          .invoke('QueryHistoryHTTPFuzzerTaskEx', buildHistoryQueryParams(t, 1, false))
-          .then((res: { Data: HTTPFuzzerTaskDetail[]; Total: number; Pagination: PaginationSchema }) => {
-            const latest = res.Data[0]
-            if (latest) {
-              setCurrentPage(t)
-              setCurrentSelectId(latest.BasicInfo.Id)
-            }
-          })
+        const latest = data.Data[0]
+        if (latest) {
+          setCurrentPage(t)
+          setCurrentSelectId(latest.BasicInfo.Id)
+        }
       })
     logger(
       httpFuzzerLog({
