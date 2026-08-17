@@ -39,6 +39,7 @@
 /** -------------------- 尺寸 end -------------------- */
 
 .yakit-modal-wrapper {
+  -webkit-app-region: no-drag;
   :global {
     .ant-modal-body {
       padding: 0;
