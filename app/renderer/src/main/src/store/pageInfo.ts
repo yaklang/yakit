@@ -107,6 +107,8 @@ interface PageParamsInfoProps {
   }
   /** 插件执行页（Plugin_OP） */
   pluginOpPageInfo?: PluginOpPageInfoProps
+  /** Codec 编解码页面 */
+  codecPageInfo?: CodecPageInfoProps
 }
 
 export interface AIForgeEditorPageInfoProps {
@@ -158,6 +160,20 @@ export interface WebsocketFuzzerPageInfoProps {
   wsTls?: boolean
   wsRequest?: Uint8Array
   wsToServer?: Uint8Array
+}
+
+export interface CodecPageInfoProps {
+  /** 编解码运行顺序，对应 NewCodec 的 RightItemsProps[] */
+  rightItems?: any[]
+  /** 输入框内容 */
+  inputEditor?: string
+  /** 执行输出，结构同 Codec 的 CodecResponseProps */
+  outputResponse?: {
+    Result: string
+    RawResult?: Uint8Array
+    ResultVerbose: string
+    IsFalseAppearance: boolean
+  }
 }
 
 export interface HTTPHistoryAnalysisPageInfo {
