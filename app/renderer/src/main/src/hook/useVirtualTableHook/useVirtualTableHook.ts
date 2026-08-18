@@ -38,6 +38,8 @@ const defSort: SortProps = {
   orderBy: 'Id',
 }
 
+const createDefaultSort = (): SortProps => ({ ...defSort })
+
 // 倒序时需要额外处理传给后端顺序
 export const verifyOrder = (pagination: VirtualPaging, AfterId?: number) => {
   // 是否将返回结果倒序
@@ -188,7 +190,7 @@ export default function useVirtualTableHook<
   // 是否循环接口
   const [isLoop, setIsLoop] = useState<boolean>(preferServerPush ? false : !isServerPushActive())
   // 表格排序
-  const sortRef = useRef<SortProps>(defSort)
+  const sortRef = useRef<SortProps>(createDefaultSort())
   const [loading, setLoading] = useState(false)
   const [offsetData, setOffsetData, getOffsetData] = useGetState<DataT[]>([])
   // 设置是否自动刷新
@@ -735,7 +737,7 @@ export default function useVirtualTableHook<
   const refreshT = useMemoizedFn((newFilter?: FilterProps, newPagination?: VirtualPaging) => {
     queryEpochRef.current += 1
     isGrpcRef.current = false
-    sortRef.current = defSort
+    sortRef.current = createDefaultSort()
     setParams({
       Filter: {
         ...defaultParams.Filter,
