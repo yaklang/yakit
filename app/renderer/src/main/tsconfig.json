@@ -1,25 +1,4 @@
 {
-  "compilerOptions": {
-    "target": "es2017",
-    "lib": ["dom", "dom.iterable", "esnext", "ES2015.Promise", "ES2021.String"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "noImplicitAny": false,
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "downlevelIteration": true,
-    "verbatimModuleSyntax": true
-  },
-  "include": ["src", "types"],
-  "exclude": ["./env-cmdrc", "src/alibaba/**"],
-  "extends": "./paths.json"
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
 }

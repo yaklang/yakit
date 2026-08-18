@@ -155,6 +155,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     return true
   })
 
+  const dbPathKey = JSON.stringify(dbPath)
+
   const btns = useMemo(() => {
     if (yakitStatus === 'install') {
       return (
@@ -570,16 +572,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     }
 
     return null
-  }, [
-    yakitStatus,
-    restartLoading,
-    engineMode,
-    checkStatus,
-    buildInEngineVersion,
-    JSON.stringify(dbPath),
-    countdown,
-    i18nRefresh,
-  ])
+  }, [yakitStatus, restartLoading, engineMode, checkStatus, buildInEngineVersion, dbPathKey, countdown, i18nRefresh])
 
   const logError = useMemo(() => {
     if (!yakitStatus) {

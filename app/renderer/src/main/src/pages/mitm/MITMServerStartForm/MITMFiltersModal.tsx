@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import styles from './MITMServerStartForm.module.scss'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -252,11 +252,12 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     setFilterData([])
   }
 
-  const removeFilterKey = useMemo(() => {
-    if (filterType === 'filter') return RemoteMitmGV.MitmSaveFilter
-    if (filterType === 'hijackFilter') return RemoteMitmGV.MitmHijackFilter
-    return ''
-  }, [filterType])
+  const removeFilterKey =
+    filterType === 'filter'
+      ? RemoteMitmGV.MitmSaveFilter
+      : filterType === 'hijackFilter'
+        ? RemoteMitmGV.MitmHijackFilter
+        : ''
 
   // 保存过滤器
   const onSaveFilter = useMemoizedFn(() => {

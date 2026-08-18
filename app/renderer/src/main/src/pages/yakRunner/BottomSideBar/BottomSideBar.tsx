@@ -50,17 +50,18 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
     return data
   }, [activeFile])
 
+  const position = activeFile?.position
   const showLocationInfo = useMemo(() => {
     const data = {
       lineNumber: 1,
       column: 1,
     }
-    if (activeFile?.position) {
-      data.lineNumber = activeFile.position.lineNumber
-      data.column = activeFile.position.column
+    if (position) {
+      data.lineNumber = position.lineNumber
+      data.column = position.column
     }
     return data
-  }, [activeFile?.position])
+  }, [position])
   return (
     <div className={styles['bottom-side-bar']}>
       {/* 语法检查|终端|帮助信息 */}

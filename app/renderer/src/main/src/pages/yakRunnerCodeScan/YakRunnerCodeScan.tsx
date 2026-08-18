@@ -2353,13 +2353,14 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
     }, [plugin?.Params])
 
     /** 自定义控件数据 */
+    const pluginParams = plugin?.Params
     const customParams = useMemo(() => {
       const defalut: FormExtraSettingProps = {
         double: false,
         data: [],
       }
       try {
-        const arr = plugin?.Params.filter((item) => !item.Required) || []
+        const arr = pluginParams?.filter((item) => !item.Required) || []
         const customArr = arr.filter((item) => (item.Group || '').length === 0)
         // 项目分片
         const peephole = customArr.find((item) => item.Field === 'peephole')?.ExtraSetting || '{}'
@@ -2389,7 +2390,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
           languageArr: defalut,
         }
       }
-    }, [plugin?.Params])
+    }, [pluginParams])
 
     const tokenRef = useRef<string>(randomString(40))
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({

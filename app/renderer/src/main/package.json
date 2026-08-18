@@ -95,7 +95,6 @@
     "remark-directive": "^3.0.0",
     "rsuite-table": "^5.2.1",
     "streamdown": "^2.1.0",
-    "typescript": "^5.1.6",
     "uuid": "^9.0.0",
     "validator": "^13.15.23",
     "video-react": "^0.16.0",
@@ -143,7 +142,8 @@
     "test:run": "vitest run",
     "verify-build-artifacts": "node scripts/verify-renderer-build-artifacts.mjs",
     "electron-render-breachtrace": "env-cmd -e noBrouser,devTool,breachtrace -f ./.env-cmdrc vite --mode breachtrace",
-    "lint": "eslint src --ext .js,.jsx,.ts,.tsx"
+    "type-check": "tsc -b",
+    "lint": "eslint src"
   },
   "browserslist": [
     ">0.2%",
@@ -151,33 +151,36 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.5.2",
     "@types/validator": "^13.15.10",
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-react": "^6.0.0",
     "@xterm/xterm": "5.5.0",
     "autoprefixer": "^10.4.20",
     "cross-env": "7.0.3",
     "env-cmd": "^10.1.0",
     "esbuild": "^0.28.1",
-    "eslint": "^8.57.0",
+    "eslint": "^9.39.1",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "^16.4.0",
     "jsdom": "^25.0.1",
     "less": "^4.8.1",
     "postcss": "^8.4.49",
     "rollup-plugin-visualizer": "^5.14.0",
     "sass": "1.93.2",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.46.0",
     "vite": "8.2.0",
+    "vite-plugin-checker": "^0.14.5",
     "vite-plugin-node-polyfills": "^0.28.0",
     "vitest": "4.1.10"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.22.0"
   },
   "homepage": "."
 }

@@ -44,10 +44,8 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
   })
   const [realtime, setRealtime] = useState(true)
 
-  const timestampNow = useMemo(() => {
-    return Math.floor(Date.now() / 1000)
-  }, [])
-  const [selected, setSelected] = useState<TrafficPacket | TrafficSession | TrafficTCPReassembled>()
+  const [timestampNow] = useState(() => Math.floor(Date.now() / 1000))
+  // const [selected, setSelected] = useState<TrafficPacket | TrafficSession | TrafficTCPReassembled>()
   const HexEditorRef = React.useRef<any>(null)
   const [treeData, setTreeData] = useState<TreeNode[]>()
   const [showData, setShowData] = useState<Uint8Array>(new Uint8Array([]))

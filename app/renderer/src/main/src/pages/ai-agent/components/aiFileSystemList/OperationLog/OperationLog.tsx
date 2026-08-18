@@ -68,57 +68,68 @@ type TimelineCardProps = {
   onToggle: (id: string) => void
 }
 
-const TimelineCard: FC<TimelineCardProps> = ({ item, isExpanded, onToggle }) => {
+const parseTimelineCardData = (data?: string) => {
   try {
-    const parsed = JSON.parse(item.data ?? '{}')
-    const { color, action, message, content } = getFileActionStatus(parsed.action, parsed.action_message)
-    return (
-      <div className={classNames(styles['timeline-card'], styles[`timeline-card-${color}`])}>
-        <div className={styles['timeline-card-header']}>
-          <div className={styles['timeline-card-header-left']}>
-            <div className={styles['timeline-card-dot']} />
-            <p>{formatTime(item.timestamp)}</p>
-            <YakitTag
-              color={color}
-              fullRadius
-              children={action}
-              border={false}
-              style={
-                color === 'white'
-                  ? { backgroundColor: 'var(--Colors-Use-Neutral-Border)', marginRight: 0 }
-                  : { marginRight: 0 }
-              }
-            />
-            <YakitTag
-              className={styles['timeline-card-header-tag']}
-              color="white"
-              border
-              hidden={!message}
-              children={message}
-            />
-          </div>
-
-          <div className={styles['timeline-card-header-extra']}>
-            {isPluginExecuteLogFileItem(parsed) && (
-              <span
-                onClick={() => onToggle(item.id)}
-                className={classNames(styles['expand-icon'], { [styles.expanded]: isExpanded })}
-              >
-                <OutlineChevrondownIcon />
-              </span>
-            )}
-          </div>
-        </div>
-        {isExpanded && (
-          <div className={styles['timeline-card-content']}>
-            <FilePreview level={item.level} data={parsed} content={content} />
-          </div>
-        )}
-      </div>
-    )
+    return { ok: true as const, parsed: JSON.parse(data ?? '{}') }
   } catch (error) {
-    return <div className={classNames(styles['timeline-card'], styles[`timeline-card-danger`])}>{String(error)}</div>
+    return { ok: false as const, error }
   }
+}
+
+const TimelineCard: FC<TimelineCardProps> = ({ item, isExpanded, onToggle }) => {
+  const result = parseTimelineCardData(item.data)
+  if (!result.ok) {
+    return (
+      <div className={classNames(styles['timeline-card'], styles['timeline-card-danger'])}>{String(result.error)}</div>
+    )
+  }
+
+  const { parsed } = result
+  const { color, action, message, content } = getFileActionStatus(parsed.action, parsed.action_message)
+  return (
+    <div className={classNames(styles['timeline-card'], styles[`timeline-card-${color}`])}>
+      <div className={styles['timeline-card-header']}>
+        <div className={styles['timeline-card-header-left']}>
+          <div className={styles['timeline-card-dot']} />
+          <p>{formatTime(item.timestamp)}</p>
+          <YakitTag
+            color={color}
+            fullRadius
+            children={action}
+            border={false}
+            style={
+              color === 'white'
+                ? { backgroundColor: 'var(--Colors-Use-Neutral-Border)', marginRight: 0 }
+                : { marginRight: 0 }
+            }
+          />
+          <YakitTag
+            className={styles['timeline-card-header-tag']}
+            color="white"
+            border
+            hidden={!message}
+            children={message}
+          />
+        </div>
+
+        <div className={styles['timeline-card-header-extra']}>
+          {isPluginExecuteLogFileItem(parsed) && (
+            <span
+              onClick={() => onToggle(item.id)}
+              className={classNames(styles['expand-icon'], { [styles.expanded]: isExpanded })}
+            >
+              <OutlineChevrondownIcon />
+            </span>
+          )}
+        </div>
+      </div>
+      {isExpanded && (
+        <div className={styles['timeline-card-content']}>
+          <FilePreview level={item.level} data={parsed} content={content} />
+        </div>
+      )}
+    </div>
+  )
 }
 
 const OperationLog: FC<OperationLogProps> = ({ loading, list }) => {

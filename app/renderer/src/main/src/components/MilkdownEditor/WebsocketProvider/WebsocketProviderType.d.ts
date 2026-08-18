@@ -54,7 +54,10 @@ export type WebsocketProviderAwarenessUpdateHandler = (
   origin: any,
 ) => void
 
-export type WebsocketProviderGetSendData = (v: { buf?: Uint8Array; docType: NotepadActionType }) => Uint8Array
+export type WebsocketProviderGetSendData = (v: {
+  buf?: Uint8Array
+  docType: NotepadActionType
+}) => Uint8Array<ArrayBuffer>
 
 export type WebsocketProviderExitHandler = () => void
 

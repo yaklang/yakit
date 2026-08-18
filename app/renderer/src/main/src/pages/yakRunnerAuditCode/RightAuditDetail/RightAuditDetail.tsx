@@ -173,6 +173,10 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
   const { nodeId, graphLine, message, activeKey, setActiveKey, auditRightParams } = props
   const [resultKey, setResultKey] = useState<string | string[]>()
 
+  useEffect(() => {
+    setResultKey(undefined)
+  }, [graphLine])
+
   const onExpendRightPathFun = useMemoizedFn((value: string) => {
     try {
       const data: JumpSourceDataProps = JSONParseLog(value, { page: 'RightAuditDetail', fun: 'onExpendRightPathFun' })
@@ -213,7 +217,6 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
 
   const firstSource = useRef<JumpSourceDataProps>()
   const initData: InitDataProps[] = useMemo(() => {
-    setResultKey(undefined)
     let newData: InitDataProps[] = []
     if (graphLine) {
       clearMapResultDetail()

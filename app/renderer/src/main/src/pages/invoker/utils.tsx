@@ -46,6 +46,8 @@ export const getFileActionStatus = (
   let message: string = '' //操作描述
   let actionText: string = '未知操作' //操作权限
   let color: YakitTagColor = 'white'
+  let statusJson: string | undefined
+  let chmodMode: ReturnType<typeof modeToPermissions> | undefined
   try {
     switch (action) {
       case FileActionEnum.Read_Action: {
@@ -83,27 +85,13 @@ export const getFileActionStatus = (
       case FileActionEnum.Status_Action: {
         const status = { ...action_message } as PluginExecuteLogFile.STATUSFileActionMessage
         actionText = '查看元信息'
-        content = (
-          <div style={{ height: 300 }}>
-            {/**NOTE - 个数过多后，可能会有性能影响 */}
-            <YakitEditor readOnly={true} type="yak" value={JSON.stringify(status.status, null, 2)} />
-          </div>
-        )
+        statusJson = JSON.stringify(status.status, null, 2)
         break
       }
       case FileActionEnum.Chmod_Action: {
         const chmod = { ...action_message } as PluginExecuteLogFile.CHMODFileActionMessage
         actionText = '修改权限'
-        const mode = modeToPermissions(chmod.chmodMode)
-        content = (
-          <>
-            所属者权限: {mode ? mode[0] : '未知'}
-            <br />
-            所属组权限: {mode ? mode[1] : '未知'}
-            <br />
-            其他用户权限: {mode ? mode[2] : '未知'}
-          </>
-        )
+        chmodMode = modeToPermissions(chmod.chmodMode)
         break
       }
       case FileActionEnum.Find_Action: {
@@ -120,6 +108,26 @@ export const getFileActionStatus = (
     actionText = action
     message = action_message.message
   }
+
+  if (statusJson !== undefined) {
+    content = (
+      <div style={{ height: 300 }}>
+        {/**NOTE - 个数过多后，可能会有性能影响 */}
+        <YakitEditor readOnly={true} type="yak" value={statusJson} />
+      </div>
+    )
+  } else if (chmodMode !== undefined) {
+    content = (
+      <>
+        所属者权限: {chmodMode ? chmodMode[0] : '未知'}
+        <br />
+        所属组权限: {chmodMode ? chmodMode[1] : '未知'}
+        <br />
+        其他用户权限: {chmodMode ? chmodMode[2] : '未知'}
+      </>
+    )
+  }
+
   return {
     color,
     action: actionText,

@@ -1130,6 +1130,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const [currentProject, setCurrentProject] = useState<ProjectDescription>()
   const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
   // 项目名字
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const projectName = useMemo(() => {
     if (showProjectManage) return ''
     if (currentProject?.ProjectName) {

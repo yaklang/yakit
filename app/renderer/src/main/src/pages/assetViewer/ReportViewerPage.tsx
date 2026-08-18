@@ -782,135 +782,159 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 interface ReportItemRenderProp {
   item: ReportItem
 }
+
+const tryParseJSON = (raw: string) => {
+  try {
+    return { ok: true as const, value: JSON.parse(raw) }
+  } catch (error) {
+    return { ok: false as const, error }
+  }
+}
+
+const parseRawView = (raw: string) => {
+  try {
+    const newData = JSON.parse(raw)
+    if (newData.type === 'report-cover') {
+      return { kind: 'cover' }
+    }
+    if (newData.type === 'bar-graph') {
+      const color = newData?.color
+      const name = (newData?.data || []).map((item) => item.name)
+      const value = (newData?.data || []).map((item) => item.value)
+      const title = newData?.title
+      return { kind: 'bar-graph', content: { name, value, color, title } }
+    }
+    if (newData.type === 'pie-graph') {
+      return { kind: 'pie-graph', data: newData.data, title: newData.title }
+    }
+    if (newData.type === 'fix-list') {
+      return { kind: 'fix-list', data: newData.data }
+    }
+    if (newData.type === 'info-risk-list') {
+      return { kind: 'info-risk-list', data: newData }
+    }
+
+    const inner = typeof newData === 'string' ? JSON.parse(newData) : newData
+    const { type, data } = inner
+    if (!type) {
+      return { kind: 'empty' }
+    }
+    switch (type) {
+      case 'multi-pie':
+        return { kind: 'multi-pie', content: inner }
+      case 'nightingle-rose':
+        return { kind: 'nightingle-rose', content: inner }
+      case 'general':
+        return { kind: 'general', content: inner }
+      case 'e-chart':
+        return { kind: 'e-chart', content: inner }
+      case 'year-cve':
+        return { kind: 'year-cve', content: inner }
+      case 'card':
+        return {
+          kind: 'card',
+          dataTitle: inner?.name_verbose || inner?.name || '',
+          dataSource: data,
+        }
+      case 'fix-array-list':
+        return { kind: 'fix-array-list', content: inner }
+      case 'risk-list':
+        return { kind: 'risk-list', data: inner }
+      case 'potential-risks-list':
+        return { kind: 'potential-risks-list', data: inner }
+      case 'search-json-table':
+        return { kind: 'search-json-table', data: inner }
+      default:
+        return { kind: 'fallback' }
+    }
+  } catch {
+    return { kind: 'fallback' }
+  }
+}
+
 const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
   const { type, content } = props.item
+  const fallback = (
+    <AutoCard style={{ width: '100%' }} size={'small'} extra={<YakitTag color="danger">{props.item.type}</YakitTag>}>
+      <div style={{ height: 300 }}>
+        <YakitEditor value={props.item.content} />
+      </div>
+    </AutoCard>
+  )
+  const graphFallback = (
+    <div style={{ height: 300 }}>
+      <YakitEditor value={props.item.content} />
+    </div>
+  )
+
   switch (type) {
     case 'markdown':
       return <SafeMarkdown source={props.item.content} />
     case 'json-table':
       return <JSONTableRender item={props.item} />
-    case 'pie-graph':
-      try {
-        return (
-          <PieGraph
-            type={'pie'}
-            height={300}
-            data={JSON.parse(props.item.content) as { key: string; value: number }[]}
-          />
-        )
-      } catch (e) {
-        return (
-          <div style={{ height: 300 }}>
-            <YakitEditor value={props.item.content} />
-          </div>
-        )
+    case 'pie-graph': {
+      const parsed = tryParseJSON(props.item.content)
+      if (!parsed.ok) {
+        return graphFallback
       }
-    case 'bar-graph':
-      try {
-        return (
-          <BarGraph
-            type={'bar'}
-            width={450}
-            direction={props.item?.direction}
-            data={JSON.parse(props.item.content) as { key: string; value: number }[]}
-          />
-        )
-      } catch (e) {
-        return (
-          <div style={{ height: 300 }}>
-            <YakitEditor value={props.item.content} />
-          </div>
-        )
+      return <PieGraph type={'pie'} height={300} data={parsed.value as { key: string; value: number }[]} />
+    }
+    case 'bar-graph': {
+      const parsed = tryParseJSON(props.item.content)
+      if (!parsed.ok) {
+        return graphFallback
       }
-    case 'raw':
-      try {
-        const newData = JSON.parse(content)
-        if (newData.type === 'report-cover') {
-          return <div style={{ height: 0 }}></div>
-        } else if (newData.type === 'bar-graph') {
-          const color = newData?.color
-          const name = (newData?.data || []).map((item) => item.name)
-          const value = (newData?.data || []).map((item) => item.value)
-          const title = newData?.title
-          const obj = { name, value, color, title }
-          return <VerticalOptionBar content={obj} />
-        } else if (newData.type === 'pie-graph') {
-          return <HollowPie data={newData.data} title={newData.title} />
-        } else if (newData.type === 'fix-list') {
-          return <FoldHoleCard data={newData.data} />
-        } else if (newData.type === 'info-risk-list') {
-          return <FoldTable data={newData} />
-        } else {
-          // kv图 南丁格尔玫瑰图 多层饼环
-          const content = typeof newData === 'string' ? JSON.parse(newData) : newData
-          const { type, data } = content
-          if (type) {
-            switch (type) {
-              case 'multi-pie':
-                return <MultiPie content={content} />
-              case 'nightingle-rose':
-                return <NightingleRose content={content} />
-              // 通用kv
-              case 'general':
-                // kv图展示柱状图
-                return <VerticalOptionBar content={content} />
-              // echarts任意图表
-              case 'e-chart':
-                return <EchartsOption content={content} />
-              case 'year-cve':
-                return <StackedVerticalBar content={content} />
-              case 'card': {
-                const dataTitle = content?.name_verbose || content?.name || ''
-                return <EchartsCard dataTitle={dataTitle} dataSource={data} />
-              }
-              case 'fix-array-list':
-                return <FoldRuleCard content={content} />
-              case 'risk-list':
-                return <RiskTable data={content} />
-              case 'potential-risks-list':
-                return <RiskTable data={content} />
-              case 'search-json-table':
-                return <ReportMergeTable data={content} />
-              default:
-                return (
-                  <AutoCard
-                    style={{ width: '100%' }}
-                    size={'small'}
-                    extra={<YakitTag color="danger">{props.item.type}</YakitTag>}
-                  >
-                    <div style={{ height: 300 }}>
-                      <YakitEditor value={props.item.content} />
-                    </div>
-                  </AutoCard>
-                )
-            }
-          }
-        }
-      } catch (error) {
-        return (
-          <AutoCard
-            style={{ width: '100%' }}
-            size={'small'}
-            extra={<YakitTag color="danger">{props.item.type}</YakitTag>}
-          >
-            <div style={{ height: 300 }}>
-              <YakitEditor value={props.item.content} />
-            </div>
-          </AutoCard>
-        )
-      }
-      return null
-    default:
       return (
-        <AutoCard
-          style={{ width: '100%' }}
-          size={'small'}
-          extra={<YakitTag color="danger">{props.item.type}</YakitTag>}
-        >
-          <div style={{ height: 300 }}>
-            <YakitEditor value={props.item.content} />
-          </div>
-        </AutoCard>
+        <BarGraph
+          type={'bar'}
+          width={450}
+          direction={props.item?.direction}
+          data={parsed.value as { key: string; value: number }[]}
+        />
       )
+    }
+    case 'raw': {
+      const view = parseRawView(content)
+      switch (view.kind) {
+        case 'fallback':
+          return fallback
+        case 'empty':
+          return null
+        case 'cover':
+          return <div style={{ height: 0 }}></div>
+        case 'bar-graph':
+          return <VerticalOptionBar content={view.content} />
+        case 'pie-graph':
+          return <HollowPie data={view.data} title={view.title} />
+        case 'fix-list':
+          return <FoldHoleCard data={view.data} />
+        case 'info-risk-list':
+          return <FoldTable data={view.data} />
+        case 'multi-pie':
+          return <MultiPie content={view.content} />
+        case 'nightingle-rose':
+          return <NightingleRose content={view.content} />
+        case 'general':
+          return <VerticalOptionBar content={view.content} />
+        case 'e-chart':
+          return <EchartsOption content={view.content} />
+        case 'year-cve':
+          return <StackedVerticalBar content={view.content} />
+        case 'card':
+          return <EchartsCard dataTitle={view.dataTitle} dataSource={view.dataSource} />
+        case 'fix-array-list':
+          return <FoldRuleCard content={view.content} />
+        case 'risk-list':
+          return <RiskTable data={view.data} />
+        case 'potential-risks-list':
+          return <RiskTable data={view.data} />
+        case 'search-json-table':
+          return <ReportMergeTable data={view.data} />
+        default:
+          return fallback
+      }
+    }
+    default:
+      return fallback
   }
 }

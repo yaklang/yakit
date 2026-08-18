@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { useTranslation } from 'react-i18next'
 import i18nInstance from './i18n'
@@ -144,12 +144,7 @@ function loadNamespaceOnce(lng: string, ns: I18nNamespace) {
 
 /** 订阅与本 hook namespaces 相关的 i18nRefresh */
 function useScopedI18nRefresh(namespaces: I18nNamespace[]) {
-  const nsRef = useRef(namespaces)
-  nsRef.current = namespaces
-
-  const getSnapshot = useCallback(() => getRefreshSnapshot(nsRef.current), [])
-
-  return useSyncExternalStore(subscribeRefresh, getSnapshot)
+  return useSyncExternalStore(subscribeRefresh, () => getRefreshSnapshot(namespaces))
 }
 
 /**

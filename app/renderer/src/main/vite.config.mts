@@ -1,9 +1,10 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { visualizer } from 'rollup-plugin-visualizer'
+import checker from 'vite-plugin-checker'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/main')
@@ -95,6 +96,21 @@ export default defineConfig(({ mode }) => {
         protocolImports: true,
       }),
       analyzerPlugin(),
+      checker({
+        // 仅 dev 模式启用（build 时跳过，避免与 type-check 脚本重复）
+        enableBuild: false,
+        // overlay 配置：仅 error 时自动展开面板
+        overlay: {
+          initialIsOpen: 'error',
+        },
+        // TypeScript 检查：使用 checker 专用配置（加 assumeChangesOnlyAffectDirectDependencies 加速增量）
+        // tsconfig.app.json 保持给 CI/build 用，不污染其配置
+        typescript: {
+          root: rootDir,
+          tsconfigPath: 'tsconfig.checker.json',
+          buildMode: false,
+        },
+      }),
     ].filter(Boolean),
     resolve: {
       alias: [
@@ -116,7 +132,7 @@ export default defineConfig(({ mode }) => {
           silenceDeprecations: ['legacy-js-api', 'global-builtin', 'import'],
           logger: {
             // 颜色关键字插值警告（aqua→cyan / gray→grey 是 dart-sass 既有行为，CRA 时代相同，非迁移回归）
-            warn(message, options) {
+            warn(message) {
               if (message.includes("don't mean to use the color value")) return
               console.warn(message)
             },
