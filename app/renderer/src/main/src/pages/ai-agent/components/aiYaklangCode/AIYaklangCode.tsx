@@ -54,6 +54,7 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
 
   const rawData = useCurrentRawData()
   const codeContainerRef = useRef<HTMLDivElement>(null)
+  const heightRafRef = useRef(0)
   const [streamedContent, setStreamedContent] = useState(() => defContent)
   const isLiveStreaming = streaming === true
   // 流式正文在 rawData 里原地累加，React 感知不到；仅在流式进行中轮询取最新驱动渲染。
@@ -108,18 +109,24 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
       const lineCount = editor.getModel()?.getLineCount() || 1
       const contentHeight = Math.ceil(editor.getTopForLineNumber(lineCount + 1) + lineHeight)
       const height = Math.min(CODE_BLOCK_MAX_HEIGHT, contentHeight)
+      const nextHeight = `${height}px`
+      if (container.style.height === nextHeight && editorEl.style.height === nextHeight) return
 
-      container.style.height = `${height}px`
-      editorEl.style.height = `${height}px`
+      container.style.height = nextHeight
+      editorEl.style.height = nextHeight
       editor.layout()
+    }
+    const scheduleUpdateHeight = () => {
+      if (heightRafRef.current) return
+      heightRafRef.current = requestAnimationFrame(() => {
+        heightRafRef.current = 0
+        updateHeight()
+      })
     }
 
     updateHeight()
-    editor.onDidChangeModelDecorations(() => {
-      updateHeight()
-      requestAnimationFrame(updateHeight)
-    })
-    editor.onDidContentSizeChange(updateHeight)
+    editor.onDidChangeModelDecorations(scheduleUpdateHeight)
+    editor.onDidContentSizeChange(scheduleUpdateHeight)
   })
 
   const renderCode = useMemoizedFn(() => {

@@ -4,8 +4,8 @@ import type { ChatListRenderType } from '../hooks/aiRender'
 export interface AIReActTaskChatProps {
   setShowFreeChat: (show: boolean) => void
   setTimeLine: (show: boolean) => void
-  /** 任务规划 tabs 是否有内容，用于外层自由对话变大 */
-  onTaskTabsChange?: (hasTabs: boolean) => void
+  /** @deprecated 任务规划 tabs 是否有内容，用于外层自由对话变大 */
+  // onTaskTabsChange?: (hasTabs: boolean) => void
 }
 
 export interface AIReActTaskChatLeftSideProps {

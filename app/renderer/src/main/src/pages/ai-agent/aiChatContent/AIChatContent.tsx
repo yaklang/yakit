@@ -58,7 +58,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
     const [timeLine, setTimeLine] = useState<boolean>(true) //侧边栏展开收起
     /** 任务规划 tabs 是否有内容（无则自由对话变大） */
-    const [hasTaskTabs, setHasTaskTabs] = useState(false)
+    // const [hasTaskTabs, setHasTaskTabs] = useState(false)
     /** 文件系统是否有文件预览（无则自由对话变大） */
     const [hasFilePreview, setHasFilePreview] = useState(false)
     const [runTimeId, setRunTimeId] = useState<string>() // 工具卡片跳转自带runTimeID
@@ -203,7 +203,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             <AIReActTaskChat
               setTimeLine={setTimeLine}
               setShowFreeChat={setShowFreeChat}
-              onTaskTabsChange={setHasTaskTabs}
+              // onTaskTabsChange={setHasTaskTabs} // 方法未使用，新版可以废弃
             />
           )
         case AITabsEnum.File_System:
@@ -249,7 +249,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       activeKey,
       showFreeChat,
       timeLine,
-      hasTaskTabs,
+      // hasTaskTabs,
       hasFilePreview,
     })
 

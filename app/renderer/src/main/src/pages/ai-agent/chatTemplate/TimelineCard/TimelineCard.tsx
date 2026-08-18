@@ -1,4 +1,4 @@
-import { type FC, useMemo, forwardRef, memo, useRef } from 'react'
+import { type FC, useMemo, forwardRef, memo } from 'react'
 import styles from './TimelineCard.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import classNames from 'classnames'
@@ -8,7 +8,7 @@ import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import useVirtuosoAutoScroll from '@/pages/ai-re-act/hooks/useVirtuosoAutoScroll'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
-import { useMemoizedFn, useSize } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
@@ -24,40 +24,37 @@ const TYPE_COLOR_MAP: Record<string, 'info' | 'white' | 'danger'> = {
   raw: 'danger',
 }
 
-const TimelineRow = memo(
-  ({ item, containerHeight }: { item: AIAgentGrpcApi.TimelineItem; containerHeight?: number }) => {
-    const status = TYPE_COLOR_MAP[item.type] || 'white'
-    const maxHeight = containerHeight ? containerHeight * 0.7 : 300
+const TimelineRow = memo(({ item }: { item: AIAgentGrpcApi.TimelineItem }) => {
+  const status = TYPE_COLOR_MAP[item.type] || 'white'
 
-    return (
-      <div className={classNames(styles['timeline-card'], styles[`timeline-card-${status}`])}>
-        <div className={styles['timeline-card-header']}>
-          <div className={styles['timeline-card-header-left']}>
-            <div className={styles['timeline-card-header-hot']} />
-            <span>{formatTime(item.timestamp)}</span>
+  return (
+    <div className={classNames(styles['timeline-card'], styles[`timeline-card-${status}`])}>
+      <div className={styles['timeline-card-header']}>
+        <div className={styles['timeline-card-header-left']}>
+          <div className={styles['timeline-card-header-hot']} />
+          <span>{formatTime(item.timestamp)}</span>
 
-            <YakitTag size="small" fullRadius color={status} className={styles['timeline-card-header-tag']}>
-              <p className={styles['timeline-card-header-tag-text']}>{item.entry_type ?? item.type}</p>
-            </YakitTag>
-          </div>
-
-          <YakitPopover
-            overlayClassName={styles['timeline-popover']}
-            overlayStyle={{ paddingLeft: 4 }}
-            placement="right"
-            content={<div style={{ maxHeight, overflowY: 'auto' }}>{item.content}</div>}
-          >
-            <div className={styles['icon-wrapper']}>
-              <OutlineInformationcircleIcon />
-            </div>
-          </YakitPopover>
+          <YakitTag size="small" fullRadius color={status} className={styles['timeline-card-header-tag']}>
+            <p className={styles['timeline-card-header-tag-text']}>{item.entry_type ?? item.type}</p>
+          </YakitTag>
         </div>
 
-        <div className={styles['timeline-card-body']}>{item.content || ''}</div>
+        <YakitPopover
+          overlayClassName={styles['timeline-popover']}
+          overlayStyle={{ paddingLeft: 4 }}
+          placement="right"
+          content={<div className={styles['timeline-popover-content']}>{item.content}</div>}
+        >
+          <div className={styles['icon-wrapper']}>
+            <OutlineInformationcircleIcon />
+          </div>
+        </YakitPopover>
       </div>
-    )
-  },
-)
+
+      <div className={styles['timeline-card-body']}>{item.content || ''}</div>
+    </div>
+  )
+})
 
 TimelineRow.displayName = 'TimelineRow'
 
@@ -102,8 +99,6 @@ const TimelineCard: FC = () => {
     total: reActTimelines.length,
     isPrependingRef,
   })
-  const containerRef = useRef<HTMLDivElement>(null)
-  const size = useSize(containerRef)
 
   const components = useMemo<Components<AIAgentGrpcApi.TimelineItem>>(
     () => ({
@@ -114,16 +109,13 @@ const TimelineCard: FC = () => {
     [reActTimelines.length],
   )
 
-  const itemContent = useMemoizedFn((_: number, item: AIAgentGrpcApi.TimelineItem) => (
-    <TimelineRow item={item} containerHeight={size?.height} />
-  ))
+  const itemContent = useMemoizedFn((_: number, item: AIAgentGrpcApi.TimelineItem) => <TimelineRow item={item} />)
 
   return (
     <div
       className={classNames(styles['timeline-card-wrapper'], {
         [styles['timeline-card-empty']]: reActTimelines.length === 0,
       })}
-      ref={containerRef}
     >
       <YakitSpin spinning={timelinesLoading}>
         <Virtuoso

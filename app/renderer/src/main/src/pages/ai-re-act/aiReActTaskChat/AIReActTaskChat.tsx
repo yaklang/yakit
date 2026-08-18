@@ -12,7 +12,7 @@ import { AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplat
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
-import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import { type AIInputEvent, AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum } from '../hooks/grpcApi'
@@ -20,7 +20,6 @@ import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
 import { randomString } from '@/utils/randomUtil'
-import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import useAIGlobalConfig from '../hooks/useAIGlobalConfig'
@@ -29,75 +28,84 @@ import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
-import { has } from 'lodash'
-import { AITaskContent } from '../aiTaskContent/AITaskContent'
+import has from 'lodash/has'
 import { useCurrentMeta, useCurrentStore } from '../hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '../hooks/useCurrentSessionId'
 import { globalSessionEngine } from '../hooks/ChatMultiSessionController'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
-  const { setShowFreeChat, setTimeLine, onTaskTabsChange } = props
+  const { /* setShowFreeChat, */ setTimeLine /* , onTaskTabsChange */ } = props
 
   const [leftExpand, setLeftExpand] = useState(true)
-  const [expand, setExpand] = useState(false)
-  const [hasTabs, setHasTabs] = useState(false)
+  // const [expand, setExpand] = useState(false)
+  // const [hasTabs, setHasTabs] = useState(false)
 
-  const onIsExpand = useMemoizedFn(() => {
-    setLeftExpand(expand)
-    setShowFreeChat(expand)
-    setExpand((v) => !v)
-  })
+  // const onIsExpand = useMemoizedFn(() => {
+  //   setLeftExpand(expand)
+  //   setShowFreeChat(expand)
+  //   setExpand((v) => !v)
+  // })
 
   useEffect(() => {
     setTimeLine(leftExpand)
   }, [leftExpand])
 
-  const onTabsChange = useMemoizedFn((tabsLength: number) => {
-    const next = tabsLength > 0
-    setHasTabs(next)
-    onTaskTabsChange?.(next)
-  })
+  // const onTabsChange = useMemoizedFn((tabsLength: number) => {
+  //   const next = tabsLength > 0
+  //   setHasTabs(next)
+  //   onTaskTabsChange?.(next)
+  // })
 
   // 无 tab：任务规划宽度强制为 0（覆盖 secondMinSize 默认 100px）；有 tab：时间线 30% + 规划区
-  const firstNodeStyle = useCreation(() => {
-    if (!hasTabs) {
-      return {
-        width: '100%',
-        overflow: 'hidden',
-        maxWidth: leftExpand ? '' : '30px',
-        borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
-      }
-    }
-    return {
-      width: leftExpand ? '30%' : undefined,
-      overflow: 'hidden',
-      maxWidth: leftExpand ? '' : '30px',
-      borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
-    }
-  }, [hasTabs, leftExpand])
+  // const firstNodeStyle = useCreation(() => {
+  //   if (!hasTabs) {
+  //     return {
+  //       width: '100%',
+  //       overflow: 'hidden',
+  //       maxWidth: leftExpand ? '' : '30px',
+  //       borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
+  //     }
+  //   }
+  //   return {
+  //     width: leftExpand ? '30%' : undefined,
+  //     overflow: 'hidden',
+  //     maxWidth: leftExpand ? '' : '30px',
+  //     borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
+  //   }
+  // }, [hasTabs, leftExpand])
 
-  const secondNodeStyle = useCreation(() => {
-    if (!hasTabs) {
-      return {
-        width: 0,
-        minWidth: 0,
-        maxWidth: 0,
-        padding: 0,
-        overflow: 'hidden' as const,
-        flex: 'none',
-      }
-    }
-    return {
-      width: leftExpand ? '100%' : 'calc(100% - 30px)',
-      padding: 0,
-      overflow: 'auto hidden' as const,
-    }
-  }, [hasTabs, leftExpand])
+  // const secondNodeStyle = useCreation(() => {
+  //   if (!hasTabs) {
+  //     return {
+  //       width: 0,
+  //       minWidth: 0,
+  //       maxWidth: 0,
+  //       padding: 0,
+  //       overflow: 'hidden' as const,
+  //       flex: 'none',
+  //     }
+  //   }
+  //   return {
+  //     width: leftExpand ? '100%' : 'calc(100% - 30px)',
+  //     padding: 0,
+  //     overflow: 'auto hidden' as const,
+  //   }
+  // }, [hasTabs, leftExpand])
 
   return (
     <div className={styles['ai-re-act-task-chat']}>
-      <YakitResizeBox
+      <div
+        style={{
+          width: leftExpand ? '100%' : 30,
+          height: '100%',
+          overflow: 'hidden',
+          borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
+        }}
+      >
+        <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
+      </div>
+      {/* <YakitResizeBox
         firstRatio={hasTabs ? '30%' : '100%'}
         secondRatio={hasTabs ? undefined : '0%'}
         lineDirection="right"
@@ -121,7 +129,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
             }
           />
         }
-      />
+      /> */}
     </div>
   )
 })
