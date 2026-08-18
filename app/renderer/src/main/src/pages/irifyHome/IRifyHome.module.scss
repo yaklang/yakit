@@ -137,6 +137,7 @@
   position: relative;
   background: linear-gradient(127deg, var(--yakit-colors-Main-90) 11.45%, var(--Colors-Use-Main-Pressed) 45.94%);
   color: var(--Colors-Use-Basic-Background);
+  overflow: hidden;
 }
 
 .audit-mode-card-ghost {
