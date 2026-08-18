@@ -24,6 +24,7 @@ import { ColorSwatchIcon, ChevronDownIcon, CloudDownloadIcon } from '@/assets/ne
 import classNames from 'classnames'
 import type { ColumnsTypeProps, FiltersItemProps, SortProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
+import { childWindowHash } from '@/pages/layout/mainOperatorContent/MainOperatorContent'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import { YakitCheckableTag } from '../yakitUI/YakitTag/YakitCheckableTag'
 import { YakitMenu } from '../yakitUI/YakitMenu/YakitMenu'
@@ -1594,19 +1595,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     if (rowDate) {
       setSelected(rowDate)
       setOnlyShowFirstNode && setOnlyShowFirstNode(false)
-      minWinSendToChildWin({
-        type: 'openPacketNewWindow',
-        data: getPacketNewWindow(rowDate),
-      })
+      // 仅在子窗口存在时才同步选中行数据（含 4.9MB 解码）到子窗口；无子窗口时跳过，避免单击行的无谓大内容构造
+      if (childWindowHash) {
+        minWinSendToChildWin({
+          type: 'openPacketNewWindow',
+          data: getPacketNewWindow(rowDate),
+        })
+      }
     } else {
       setSelected(undefined)
       setOnlyShowFirstNode && setOnlyShowFirstNode(!onlyShowFirstNode)
     }
   })
 
-  // 如果YakitResizeBox只展示第一个节点，则要清除Selected
+  // 只展示表格时清空 selected，selected 的 effect 会 onSelected(undefined)
   useEffect(() => {
-    onlyShowFirstNode && setCurrentIndex(undefined)
+    if (onlyShowFirstNode) {
+      setCurrentIndex(undefined)
+      setSelected(undefined)
+    }
   }, [onlyShowFirstNode])
 
   const onSetCurrentRow = useDebounceFn(

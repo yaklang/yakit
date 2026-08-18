@@ -2,7 +2,7 @@ import { type editor, type IRange, languages, type Position } from 'monaco-edito
 import type { CancellationToken } from 'typescript'
 import { monaco } from 'react-monaco-editor'
 import { getModelContext } from './yakEditor'
-import { getAllRows } from '@/components/configNetwork/CustomizeCode'
+import { getAllRows } from '@/components/configNetwork/CustomizeCodeTypes'
 import type { TCustomCodeGeneral } from '@/components/configNetwork/CustomizeCodeTypes'
 import { highlightKinds } from './fuzzHTTPMonacoSpec'
 

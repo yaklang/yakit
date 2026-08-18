@@ -1456,13 +1456,28 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     setBeforeRspValue('')
   })
 
+  // 记录上次 setOriginRspValue 设入的响应字符串，用于跳过"引用变但内容不变"的重复赋值。
+  // 场景：GetHTTPFlowById 刷新详情时，即使响应内容未变也会返回新的 Uint8Array/字符串引用，
+  // 若不比较会重复触发 Monaco pushEditOperations 全量替换 + getValue() 对比（对 4.9MB 是双重 4.9MB 序列化）。
+  // 用字符串 !== 比较是 O(n)，但只在 effect 触发时跑一次，远比 Monaco 全量替换便宜。
+  const lastRspStringRef = useRef<string>('')
+  // 同一轮 commit 里 setRspType('current') 尚未生效，下方 effect 可能仍看到 rspType==='response'
+  const skipStaleRspTypeEffectRef = useRef(false)
+
   useEffect(() => {
     // 复原数据
     setResType('current')
     setRspType('current')
+    // 勿无条件 skip：Tags 单独到达时下方 effect 不跑，残留会吞掉后续切原始响应
+    skipStaleRspTypeEffectRef.current = rspType === 'response' || id != flow?.Id
     setOriginResValue(fetchSsafeHTTPRequest())
     // id 比 flow 先更新，导致可能设置的内容是上一条数据的内容
-    if (id == flow?.Id) setOriginRspValue(flow?.ResponseString || '')
+    if (id == flow?.Id) {
+      const rspStr = flow?.ResponseString || ''
+      // 同步更新 lastRspStringRef，避免下方 [rspType, flow?.Response] effect 重复 setOriginRspValue
+      lastRspStringRef.current = rspStr
+      setOriginRspValue(rspStr)
+    }
     // 编辑器滚轮回到顶部
     reqEditor?.setScrollTop(0)
     resEditor?.setScrollTop(0)
@@ -1478,20 +1493,28 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     }
   }, [resType, flow?.Request])
 
-  // 定时赋值的计时器
-  const setValueTimer = useRef<any>(null)
   useEffect(() => {
+    if (skipStaleRspTypeEffectRef.current) {
+      skipStaleRspTypeEffectRef.current = false
+      return
+    }
     if (rspType === 'response') {
+      lastRspStringRef.current = beforeRspValue
       setOriginRspValue(beforeRspValue)
     } else {
-      if (setValueTimer.current) {
-        clearInterval(setValueTimer.current)
-        setValueTimer.current = null
+      const rspStr = flow?.ResponseString || ''
+      // 仅在响应字符串内容真正变化时才 setOriginRspValue，避免同内容新引用触发 Monaco 无谓全量替换
+      if (rspStr !== lastRspStringRef.current) {
+        lastRspStringRef.current = rspStr
+        // 直接一次性赋值完整响应字符串。
+        // 不再使用 asynSettingState 分片定时赋值：弱 CPU 上分片会把 1 次大渲染变成 5 次 1MB 渲染，
+        // 叠加 old+content 字符串拼接的 O(n) 内存复制，总开销反而更大，且带来 5 秒间歇性卡顿、5 秒才显示完整内容。
+        // 配合 Monaco 大内容降级（plaintext + 跳过装饰器 + 关 minimap/换行），一次性赋值的渲染成本已被大幅压缩。
+        setOriginRspValue(rspStr)
       }
-      if (!flow?.ResponseString) setOriginRspValue(flow?.ResponseString || '')
-      // 超大数据分片赋值
-      else setValueTimer.current = asynSettingState(flow?.ResponseString || '', setOriginRspValue)
     }
+    // 保留 flow?.Response 依赖：refresh 触发 GetHTTPFlowById 重新拉取同一 Id 时，
+    // Response 内容可能变化（MITM 规则替换/手动改响应后刷新），必须监听才能更新编辑器内容。
   }, [rspType, flow?.Response])
 
   const onInitBeforeValue = useMemoizedFn((data: 'request' | 'response') => {
