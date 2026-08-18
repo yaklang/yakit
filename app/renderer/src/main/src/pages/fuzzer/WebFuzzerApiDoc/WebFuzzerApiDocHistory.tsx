@@ -77,7 +77,7 @@ export const WebFuzzerApiDocHistory: React.FC<{
     refresh()
   }, [refreshToken, refresh])
 
-  const [groupNow, setGroupNow] = useState(0)
+  const [groupNow, setGroupNow] = useState(() => Date.now())
   useEffect(() => {
     setGroupNow(Date.now())
   }, [items, keyword])

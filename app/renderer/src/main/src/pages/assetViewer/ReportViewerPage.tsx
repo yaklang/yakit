@@ -791,6 +791,67 @@ const tryParseJSON = (raw: string) => {
   }
 }
 
+const parseRawView = (raw: string) => {
+  try {
+    const newData = JSON.parse(raw)
+    if (newData.type === 'report-cover') {
+      return { kind: 'cover' }
+    }
+    if (newData.type === 'bar-graph') {
+      const color = newData?.color
+      const name = (newData?.data || []).map((item) => item.name)
+      const value = (newData?.data || []).map((item) => item.value)
+      const title = newData?.title
+      return { kind: 'bar-graph', content: { name, value, color, title } }
+    }
+    if (newData.type === 'pie-graph') {
+      return { kind: 'pie-graph', data: newData.data, title: newData.title }
+    }
+    if (newData.type === 'fix-list') {
+      return { kind: 'fix-list', data: newData.data }
+    }
+    if (newData.type === 'info-risk-list') {
+      return { kind: 'info-risk-list', data: newData }
+    }
+
+    const inner = typeof newData === 'string' ? JSON.parse(newData) : newData
+    const { type, data } = inner
+    if (!type) {
+      return { kind: 'empty' }
+    }
+    switch (type) {
+      case 'multi-pie':
+        return { kind: 'multi-pie', content: inner }
+      case 'nightingle-rose':
+        return { kind: 'nightingle-rose', content: inner }
+      case 'general':
+        return { kind: 'general', content: inner }
+      case 'e-chart':
+        return { kind: 'e-chart', content: inner }
+      case 'year-cve':
+        return { kind: 'year-cve', content: inner }
+      case 'card':
+        return {
+          kind: 'card',
+          dataTitle: inner?.name_verbose || inner?.name || '',
+          dataSource: data,
+        }
+      case 'fix-array-list':
+        return { kind: 'fix-array-list', content: inner }
+      case 'risk-list':
+        return { kind: 'risk-list', data: inner }
+      case 'potential-risks-list':
+        return { kind: 'potential-risks-list', data: inner }
+      case 'search-json-table':
+        return { kind: 'search-json-table', data: inner }
+      default:
+        return { kind: 'fallback' }
+    }
+  } catch {
+    return { kind: 'fallback' }
+  }
+}
+
 const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
   const { type, content } = props.item
   const fallback = (
@@ -833,70 +894,45 @@ const ReportItemRender: React.FC<ReportItemRenderProp> = (props) => {
       )
     }
     case 'raw': {
-      const parsed = tryParseJSON(content)
-      if (!parsed.ok) {
-        return fallback
-      }
-      const newData = parsed.value
-
-      if (newData.type === 'report-cover') {
-        return <div style={{ height: 0 }}></div>
-      }
-      if (newData.type === 'bar-graph') {
-        const color = newData?.color
-        const name = (newData?.data || []).map((item) => item.name)
-        const value = (newData?.data || []).map((item) => item.value)
-        const title = newData?.title
-        return <VerticalOptionBar content={{ name, value, color, title }} />
-      }
-      if (newData.type === 'pie-graph') {
-        return <HollowPie data={newData.data} title={newData.title} />
-      }
-      if (newData.type === 'fix-list') {
-        return <FoldHoleCard data={newData.data} />
-      }
-      if (newData.type === 'info-risk-list') {
-        return <FoldTable data={newData} />
-      }
-
-      let inner = newData
-      if (typeof newData === 'string') {
-        const nested = tryParseJSON(newData)
-        if (!nested.ok) {
+      const view = parseRawView(content)
+      switch (view.kind) {
+        case 'fallback':
           return fallback
-        }
-        inner = nested.value
+        case 'empty':
+          return null
+        case 'cover':
+          return <div style={{ height: 0 }}></div>
+        case 'bar-graph':
+          return <VerticalOptionBar content={view.content} />
+        case 'pie-graph':
+          return <HollowPie data={view.data} title={view.title} />
+        case 'fix-list':
+          return <FoldHoleCard data={view.data} />
+        case 'info-risk-list':
+          return <FoldTable data={view.data} />
+        case 'multi-pie':
+          return <MultiPie content={view.content} />
+        case 'nightingle-rose':
+          return <NightingleRose content={view.content} />
+        case 'general':
+          return <VerticalOptionBar content={view.content} />
+        case 'e-chart':
+          return <EchartsOption content={view.content} />
+        case 'year-cve':
+          return <StackedVerticalBar content={view.content} />
+        case 'card':
+          return <EchartsCard dataTitle={view.dataTitle} dataSource={view.dataSource} />
+        case 'fix-array-list':
+          return <FoldRuleCard content={view.content} />
+        case 'risk-list':
+          return <RiskTable data={view.data} />
+        case 'potential-risks-list':
+          return <RiskTable data={view.data} />
+        case 'search-json-table':
+          return <ReportMergeTable data={view.data} />
+        default:
+          return fallback
       }
-      const { type: innerType, data } = inner
-      if (innerType) {
-        switch (innerType) {
-          case 'multi-pie':
-            return <MultiPie content={inner} />
-          case 'nightingle-rose':
-            return <NightingleRose content={inner} />
-          case 'general':
-            return <VerticalOptionBar content={inner} />
-          case 'e-chart':
-            return <EchartsOption content={inner} />
-          case 'year-cve':
-            return <StackedVerticalBar content={inner} />
-          case 'card': {
-            const dataTitle = inner?.name_verbose || inner?.name || ''
-            return <EchartsCard dataTitle={dataTitle} dataSource={data} />
-          }
-          case 'fix-array-list':
-            return <FoldRuleCard content={inner} />
-          case 'risk-list':
-            return <RiskTable data={inner} />
-          case 'potential-risks-list':
-            return <RiskTable data={inner} />
-          case 'search-json-table':
-            return <ReportMergeTable data={inner} />
-          default:
-            return fallback
-        }
-      }
-      return null
     }
     default:
       return fallback
