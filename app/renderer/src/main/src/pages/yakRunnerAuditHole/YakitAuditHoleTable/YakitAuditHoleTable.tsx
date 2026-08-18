@@ -213,7 +213,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
   }, [inViewport])
 
   useUpdateEffect(() => {
-    console.log('cyj222---')
     debugVirtualTableEvent.setP({
       ...tableParams,
       Filter: {
