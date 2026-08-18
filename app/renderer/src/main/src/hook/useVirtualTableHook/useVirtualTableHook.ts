@@ -26,6 +26,7 @@ import {
   selectVirtualTableViewportFillLimit,
   shouldRestoreVirtualTableViewport,
   shouldLoadVirtualTableBottom,
+  shouldLoadVirtualTableAscBottomOnViewportFit,
 } from './useVirtualTableScheduler'
 
 const OFFSET_LIMIT = 30
@@ -375,18 +376,20 @@ export default function useVirtualTableHook<
             return
           }
           if (isSliding && slidingClippedRef.current) return
-          if (['desc', 'none'].includes(query.Pagination.Order)) {
-            const newOffsetData = isSliding
-              ? mergeUniqueVirtualTableRows(
-                  [newData, getOffsetData()],
-                  idKey,
-                  query.Pagination.Order,
-                  query.Pagination.OrderBy || idKey,
-                )
-              : newData.concat(getOffsetData())
+          const newOffsetData = isSliding
+            ? mergeUniqueVirtualTableRows(
+                [newData, getOffsetData()],
+                idKey,
+                query.Pagination.Order,
+                query.Pagination.OrderBy || idKey,
+              )
+            : newData.concat(getOffsetData())
+          // 倒序：maxId 跟着缓冲最新一条走，下次 offset 从这里续，触顶可直接拼回表格。
+          // 升序：maxId 必须停在当前窗口最后一行，触底仍按窗口 AfterId 加载。
+          if (['desc', 'none'].includes(sortRef.current.order)) {
             maxIdRef.current = Number(newOffsetData[0][responseKey.id])
-            setOffsetData(newOffsetData)
           }
+          setOffsetData(newOffsetData)
         } else {
           if (newData.length <= 0) {
             // 没有数据
@@ -590,22 +593,29 @@ export default function useVirtualTableHook<
       return
     }
 
-    // 滚动条接近触顶
-    if (scrollTop < 10) {
-      updateTopData()
+    const isDesc = ['desc', 'none'].includes(sortRef.current.order)
+    // 升序且内容撑不满：没有滚动条，视为已停在新数据插入边，向底部补数
+    if (shouldLoadVirtualTableAscBottomOnViewportFit(sortRef.current.order, scrollTop, clientHeight, scrollHeight)) {
+      updateBottomData()
       setOffsetData([])
+    }
+    // 滚动条接近触顶
+    else if (scrollTop < 10) {
+      updateTopData()
+      // 倒序触顶会消费 offsetData；升序新数据在底部，红点提示应保留
+      if (isDesc) setOffsetData([])
     }
     // 滚动条接近触底
     else if (shouldLoadVirtualTableBottom(scrollTop, clientHeight, scrollHeight, isSliding, ROW_HEIGHT)) {
       updateBottomData()
       setOffsetData([])
     }
-    // 滚动条在中间 增量
-    else {
-      // 倒序的时候才需要掉接口拿偏移数据 开始裁剪后就不拿偏移数据
-      if (['desc', 'none'].includes(sortRef.current.order) && (!isSliding || !slidingClippedRef.current)) {
-        updateOffsetData()
-      }
+    // 滚动条在中间
+    // 倒序：AfterId=maxId 拉到的新行写入 offsetData，触顶时拼到表头。
+    // 升序：同样写入 offsetData 只出红点；触底走 updateBottomData 按窗口最后一行加载后清掉。
+    // 滑窗裁剪后窗口不再连续，再拉偏移会对不齐，所以不再请求。
+    else if (!isSliding || !slidingClippedRef.current) {
+      updateOffsetData()
     }
   })
 
