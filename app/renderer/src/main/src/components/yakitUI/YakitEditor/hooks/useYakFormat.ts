@@ -18,9 +18,11 @@ export interface UseYakFormatParams {
 export interface UseYakFormatResult {
   yakCompileAndFormat: {
     run: (editor: YakitIMonacoEditor, model: YakitITextModel) => void
+    cancel: () => void
   }
   yakStaticAnalyze: {
     run: (editor: YakitIMonacoEditor, model: YakitITextModel) => void
+    cancel: () => void
   }
   AnalyzeSessionIDRef: React.MutableRefObject<string>
 }
@@ -36,10 +38,12 @@ export const useYakFormat = (params: UseYakFormatParams): UseYakFormatResult => 
   /** Yak 代码格式化功能实现 */
   const yakCompileAndFormat = useDebounceFn(
     useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
+      if (!model || model.isDisposed()) return
       const allContent = model.getValue()
       ipcRenderer
         .invoke('YaklangCompileAndFormat', { Code: allContent })
         .then((e: { Errors: YakStaticAnalyzeErrorResult[]; Code: string }) => {
+          if (model.isDisposed()) return
           if (e.Code !== '') {
             model.setValue(e.Code)
           }
@@ -62,6 +66,7 @@ export const useYakFormat = (params: UseYakFormatParams): UseYakFormatResult => 
   /** Yak语言 代码错误检查并显示提示标记 */
   const yakStaticAnalyze = useDebounceFn(
     useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
+      if (!model || model.isDisposed()) return
       if (language === YaklangMonacoSpec || language === SyntaxFlowMonacoSpec) {
         const allContent = model.getValue()
         ipcRenderer
@@ -71,6 +76,7 @@ export const useYakFormat = (params: UseYakFormatParams): UseYakFormatResult => 
             SessionID: AnalyzeSessionIDRef.current,
           })
           .then((e: { Result: YakStaticAnalyzeErrorResult[] }) => {
+            if (model.isDisposed()) return
             if (e && e.Result.length > 0) {
               const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
               monaco.editor.setModelMarkers(model, 'owner', markers)

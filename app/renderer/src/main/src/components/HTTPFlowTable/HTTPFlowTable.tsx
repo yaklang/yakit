@@ -1608,13 +1608,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   })
 
-  // 如果YakitResizeBox只展示第一个节点，则要清除Selected
-  // 同时清空 selected 并上抛 undefined，避免 4.9MB 大响应字符串在关闭详情后仍被父子两处 state 持有导致泄漏
+  // 只展示表格时清空 selected，selected 的 effect 会 onSelected(undefined)
   useEffect(() => {
     if (onlyShowFirstNode) {
       setCurrentIndex(undefined)
       setSelected(undefined)
-      props.onSelected && props.onSelected(undefined)
     }
   }, [onlyShowFirstNode])
 
