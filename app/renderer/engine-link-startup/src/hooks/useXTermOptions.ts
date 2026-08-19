@@ -1,4 +1,4 @@
-import { getAllYakitColorVars } from '@/utils/theme'
+import { getAllYakitColorVars } from '@/utils/yakitCssVars'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { type Theme, useTheme } from './useTheme'
 

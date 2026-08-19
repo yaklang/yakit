@@ -1,5 +1,5 @@
 import type React from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { MacUIOp } from './MacUIOp'
 import { PerformanceDisplay, type yakProcess } from './PerformanceDisplay'
@@ -30,37 +30,37 @@ import {
   isMemfit,
 } from '@/utils/envfile'
 import { AllKillEngineConfirm } from './AllKillEngineConfirm'
-import { SoftwareSettings } from '@/pages/softwareSettings/SoftwareSettings'
+const SoftwareSettings = lazy(() => import('@/pages/softwareSettings/SoftwareSettings').then((m) => ({ default: m.SoftwareSettings })))
 import { StopIcon } from '@/assets/newIcon'
-import EnterpriseJudgeLogin from '@/pages/EnterpriseJudgeLogin'
+const EnterpriseJudgeLogin = lazy(() => import('@/pages/EnterpriseJudgeLogin'))
 import {
   type ExportProjectProps,
   getEnvTypeByProjects,
-  NewProjectAndFolder,
   type ProjectDescription,
   type ProjectIOProgress,
   type ProjectParamsProp,
-  TransferProject,
-} from '@/pages/softwareSettings/ProjectManage'
+} from '@/pages/softwareSettings/projectUtils'
+const NewProjectAndFolder = lazy(() => import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.NewProjectAndFolder })))
+const TransferProject = lazy(() => import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.TransferProject })))
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useScreenRecorder } from '@/store/screenRecorder'
-import { type ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicControl'
+import { type ResultObjProps, remoteOperation } from '@/pages/dynamicControl/remoteOperation'
 import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import emiter from '@/utils/eventBus/eventBus'
 import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
-import { DownloadYakit } from './update/DownloadYakit'
-import { DownloadYaklang } from './update/DownloadYaklang'
+const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({ default: m.DownloadYakit })))
+const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
 import { HelpDoc } from './HelpDoc/HelpDoc'
 import { SolidCheckCircleIcon, SolidHomeIcon } from '@/assets/icon/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
-import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
+const YakitGetOnlinePlugin = lazy(() => import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakitGetOnlinePlugin })))
 import type { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
-import NewThirdPartyApplicationConfig from '../configNetwork/NewThirdPartyApplicationConfig'
+const NewThirdPartyApplicationConfig = lazy(() => import('../configNetwork/NewThirdPartyApplicationConfig'))
 import { usePerformanceSampling } from '@/store/performanceSampling'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { OutlineExitIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
@@ -110,7 +110,7 @@ import type {
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
-import { PluginHasParamsModal } from '../pluginHasParamsDrawer/PluginHasParamsDrawer'
+const PluginHasParamsModal = lazy(() => import('../pluginHasParamsDrawer/PluginHasParamsDrawer').then((m) => ({ default: m.PluginHasParamsModal })))
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 
@@ -1344,9 +1344,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
               content: (
                 <>
                   <div className={styles['ai-describe']}>{t('UILayout.selectAiTypeForApiKey')}</div>
-                  <NewThirdPartyApplicationConfig
-                    isOnlyShowAiType={true}
-                    onAdd={(data) => {
+                  <Suspense fallback={null}>
+                    <NewThirdPartyApplicationConfig
+                      isOnlyShowAiType={true}
+                      onAdd={(data) => {
                       // 新增，有影响ai优化级
                       const newParams = handleAIConfig(
                         {
@@ -1367,6 +1368,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     }}
                     onCancel={() => m.destroy()}
                   />
+                  </Suspense>
                 </>
               ),
             })
@@ -1884,12 +1886,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           <div id="yakit-uilayout-body" className={styles['ui-layout-body']}>
             {!engineLink && !isRemoteEngine && yaklangDownload && (
               // 更新引擎
-              <DownloadYaklang
-                yaklangSpecifyVersion={yaklangSpecifyVersion}
-                system={system}
-                visible={yaklangDownload}
-                onCancel={onDownloadedYaklang}
-              />
+              <Suspense fallback={null}>
+                <DownloadYaklang
+                  yaklangSpecifyVersion={yaklangSpecifyVersion}
+                  system={system}
+                  visible={yaklangDownload}
+                  onCancel={onDownloadedYaklang}
+                />
+              </Suspense>
             )}
 
             {!engineLink && (
@@ -1904,14 +1908,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             {engineLink && (
               <YakitSpin spinning={switchEngineLoading}>
                 {isJudgeLicense ? (
-                  <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
+                  <Suspense fallback={null}>
+                    <EnterpriseJudgeLogin setJudgeLicense={setJudgeLicense} setJudgeLogin={(v: boolean) => {}} />
+                  </Suspense>
                 ) : showProjectManage ? (
-                  <SoftwareSettings
-                    engineMode={engineMode || 'local'}
-                    onEngineModeChange={handleOperations}
-                    onFinish={softwareSettingFinish}
-                    projectListRefreshTrigger={projectListRefreshTrigger}
-                  />
+                  <Suspense fallback={null}>
+                    <SoftwareSettings
+                      engineMode={engineMode || 'local'}
+                      onEngineModeChange={handleOperations}
+                      onFinish={softwareSettingFinish}
+                      projectListRefreshTrigger={projectListRefreshTrigger}
+                    />
+                  </Suspense>
                 ) : (
                   props.children
                 )}
@@ -1933,12 +1941,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                   }
                 />
                 {/* 更新yakit */}
-                <DownloadYakit
-                  system={system}
-                  visible={yakitDownload}
-                  setVisible={setYakitDownload}
-                  intranetYakit={intranetYakit}
-                />
+                <Suspense fallback={null}>
+                  <DownloadYakit
+                    system={system}
+                    visible={yakitDownload}
+                    setVisible={setYakitDownload}
+                    intranetYakit={intranetYakit}
+                  />
+                </Suspense>
               </div>
             )}
 
@@ -1957,22 +1967,26 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         </div>
       </div>
       {/* 项目加密导出弹框 */}
-      <NewProjectAndFolder
-        {...projectModalInfo}
-        setVisible={(open: boolean) => setProjectModalInfo({ visible: open })}
-        loading={projectModalLoading}
-        setLoading={setProjectModalLoading}
-        onModalSubmit={() => {
-          setProjectModalInfo({ visible: false })
-          setTimeout(() => setProjectModalLoading(false), 300)
-        }}
-      />
+      <Suspense fallback={null}>
+        <NewProjectAndFolder
+          {...projectModalInfo}
+          setVisible={(open: boolean) => setProjectModalInfo({ visible: open })}
+          loading={projectModalLoading}
+          setLoading={setProjectModalLoading}
+          onModalSubmit={() => {
+            setProjectModalInfo({ visible: false })
+            setTimeout(() => setProjectModalLoading(false), 300)
+          }}
+        />
+      </Suspense>
       {/* 项目明文导出弹框 */}
-      <TransferProject
-        {...projectTransferShow}
-        onSuccess={handleExportTemporaryProject}
-        setVisible={(open: boolean) => setProjectTransferShow({ visible: open })}
-      />
+      <Suspense fallback={null}>
+        <TransferProject
+          {...projectTransferShow}
+          onSuccess={handleExportTemporaryProject}
+          setVisible={(open: boolean) => setProjectTransferShow({ visible: open })}
+        />
+      </Suspense>
 
       {/* 由普通项目进入项目管理的二次确认框 */}
       <YakitHint
@@ -2023,28 +2037,32 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         onCancel={() => setServerPushEnterProject(null)}
       />
 
-      <YakitGetOnlinePlugin
-        visible={coedcPluginShow}
-        pluginType={['codec']}
-        setVisible={(v) => {
-          setCoedcPluginShow(v)
-        }}
-        onFinish={() => {
-          // 此处通知刷新各类基于codec插件菜单
-          emiter.emit('onRefPluginCodecMenu')
-        }}
-        getContainer={codecPluginContainerRef.current}
-      />
+      <Suspense fallback={null}>
+        <YakitGetOnlinePlugin
+          visible={coedcPluginShow}
+          pluginType={['codec']}
+          setVisible={(v) => {
+            setCoedcPluginShow(v)
+          }}
+          onFinish={() => {
+            // 此处通知刷新各类基于codec插件菜单
+            emiter.emit('onRefPluginCodecMenu')
+          }}
+          getContainer={codecPluginContainerRef.current}
+        />
+      </Suspense>
 
       {/* 带参插件参数 */}
-      <PluginHasParamsModal
-        visible={hasParamsOpen}
-        pluginType={'codec'}
-        scriptName={openFuzzerModalVarRef.current?.scriptName || ''}
-        onCloseParamsModal={setHasParamsOpen}
-        onOkParamsModal={onOkParamsDrawer}
-        {...paramsValueRef.current}
-      />
+      <Suspense fallback={null}>
+        <PluginHasParamsModal
+          visible={hasParamsOpen}
+          pluginType={'codec'}
+          scriptName={openFuzzerModalVarRef.current?.scriptName || ''}
+          onCloseParamsModal={setHasParamsOpen}
+          onOkParamsModal={onOkParamsDrawer}
+          {...paramsValueRef.current}
+        />
+      </Suspense>
     </div>
   )
 }

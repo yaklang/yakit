@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { failed, info, success, yakitNotify } from '@/utils/notification'
 import type { YaklangEngineMode } from '@/yakitGVDefine'
-import { LoadingOutlined } from '@ant-design/icons'
+import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { Sparklines, SparklinesCurve } from 'react-sparklines'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'

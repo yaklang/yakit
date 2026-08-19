@@ -9,18 +9,22 @@ import { DndProvider } from 'react-dnd'
 import './theme/yakit.scss'
 import './assets/global.scss'
 import './theme/scrollbar.scss'
-import { Suspense, useEffect, useState } from 'react'
-import ChildNewApp from './newApp/ChildNewApp'
-import MarkdownPdfPrintPage from './pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage'
+import './pages/GlobalClass.scss'
+import { Suspense, lazy, useEffect, useState } from 'react'
+const ChildNewApp = lazy(() => import('./newApp/ChildNewApp'))
+const MarkdownPdfPrintPage = lazy(() => import('./pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage'))
 import { GetMainColor } from './utils/envfile'
 import { useTheme } from './hook/useTheme'
 import { applyYakitThemeColors } from './utils/applyYakitThemeColors'
 import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
-import { setupConcurrentStreamMainBridge } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge'
 import { debugToPrintLogs } from './utils/logCollection'
 
-import { setupMonacoWorkers } from './utils/monacoSpec/setupMonacoWorkers'
+// 延迟加载并发流桥接，避免首屏同步拉入 AI-agent 会话机制
+import('@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge').then(
+  ({ setupConcurrentStreamMainBridge }) => setupConcurrentStreamMainBridge(),
+)
 
+import { setupMonacoWorkers } from './utils/monacoSpec/setupMonacoWorkers'
 setupMonacoWorkers()
 
 const getQueryParam = (param) => {
@@ -99,7 +103,6 @@ if (window.location.search.includes('window=child') || window.location.search.in
 // antd menu 存在多个二级菜单时, 在createRoot(divRoot).render生成下，会导致鼠标从一个二级菜单移动到下一个二级菜单后，前一个二级菜单不消失的情况，暂不确定原因，等升级antd5后再次尝试
 
 registerAppSyncHandlers()
-setupConcurrentStreamMainBridge()
 
 ReactDOM.render(
   // <React.StrictMode>

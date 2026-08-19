@@ -5,7 +5,7 @@ import type { EngineWatchDogCallbackType, YaklangEngineMode } from '@/yakitGVDef
 import { failed } from '@/utils/notification'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitDynamicStatus } from '@/store'
-import { remoteOperation } from '@/pages/dynamicControl/DynamicControl'
+import { remoteOperation } from '@/pages/dynamicControl/remoteOperation'
 import { fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify } from '@/utils/envfile'
 import emiter from '@/utils/eventBus/eventBus'
 import { debugToPrintLog } from '@/utils/logCollection'

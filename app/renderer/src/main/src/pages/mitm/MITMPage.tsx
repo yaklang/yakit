@@ -24,11 +24,11 @@ import { loadNucleiPoCFromLocal, loadYakitPluginCode } from '../yakitStore/Yakit
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
-import { StartExecYakCodeModal, type YakScriptParam } from '@/utils/basic'
+import type { YakScriptParam } from '@/utils/basic'
+const StartExecYakCodeModal = React.lazy(() => import('@/utils/basic').then((m) => ({ default: m.StartExecYakCodeModal })))
+import { defHost, defPort } from '@/pages/mitm/mitmDefaults'
 import {
   type ClientCertificate,
-  defHost,
-  defPort,
   maskProxyPassword,
   MITMServerStartForm,
 } from './MITMServerStartForm/MITMServerStartForm'
@@ -132,7 +132,8 @@ export interface MITMResponse extends MITMFilterSchema {
 
 export type TipPart = { key: string; value?: string }
 
-export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = 'CONST_DEFAULT_ENABLE_INITIAL_PLUGIN'
+export { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN } from '@/pages/mitm/mitmDefaults'
+import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN } from '@/pages/mitm/mitmDefaults'
 
 export type MitmStatus = 'idle' | 'hijacked' | 'hijacking'
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
@@ -1528,14 +1529,16 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
           {getRenderByLoadMode(loadMode)}
         </Form>
       </YakitModal>
-      <StartExecYakCodeModal
-        visible={startExecYakCodeModalVisible}
-        verbose={startExecYakCodeVerbose}
-        params={startExecYakCodeParams as YakScriptParam}
-        onClose={execYakCodeReset}
-        noErrorsLogCallBack={sendMsgToLocalPlugin}
-        successInfo={false}
-      ></StartExecYakCodeModal>
+      <React.Suspense fallback={null}>
+        <StartExecYakCodeModal
+          visible={startExecYakCodeModalVisible}
+          verbose={startExecYakCodeVerbose}
+          params={startExecYakCodeParams as YakScriptParam}
+          onClose={execYakCodeReset}
+          noErrorsLogCallBack={sendMsgToLocalPlugin}
+          successInfo={false}
+        ></StartExecYakCodeModal>
+      </React.Suspense>
     </>
   )
 })

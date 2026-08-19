@@ -7,6 +7,7 @@ import loopAnimationData1 from './loop1.json'
 import loopAnimationData2 from './loop2.json'
 import loopAnimationData3 from './loop3.json'
 import TypewriterText from './TypewriterText/TypewriterText'
+import { THEME_PRIMARY_COLOR, THEME_BORDER_COLOR } from '@/utils/yakitCssVars'
 
 const LOADING_TEXT = '数据加载中，请稍后'
 const BEGIN_ANIMATION_SPEED = 0.82
@@ -14,8 +15,6 @@ const BEGIN_ANIMATION_DELAY = 500
 // Lottie 源文件中用于主色与浅色边框的原始色值，渲染后会映射到主题变量。
 const ORIGINAL_PRIMARY_COLOR = [242, 140, 69] as const
 const ORIGINAL_BORDER_COLOR = [250, 197, 162] as const
-const THEME_PRIMARY_COLOR = 'var(--Colors-Use-Main-Primary)'
-const THEME_BORDER_COLOR = 'var(--Colors-Use-Main-Border)'
 const loopAnimationList = [loopAnimationData1, loopAnimationData2, loopAnimationData3] as const
 
 type AnimationStage = 'begin' | 'loop'

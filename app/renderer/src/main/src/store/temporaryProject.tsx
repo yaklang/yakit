@@ -1,4 +1,4 @@
-import { getEnvTypeByProjects } from '@/pages/softwareSettings/ProjectManage'
+import { getEnvTypeByProjects } from '@/pages/softwareSettings/projectUtils'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitFailed } from '@/utils/notification'
 import { RemoteGV } from '@/yakitGV'

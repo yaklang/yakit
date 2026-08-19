@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import { Form, Modal, Divider } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, type ExtraMITMServerProps, type MitmStatus } from '@/pages/mitm/MITMPage'
+import { type ExtraMITMServerProps, type MitmStatus } from '@/pages/mitm/MITMPage'
+import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, defHost, defPort } from '@/pages/mitm/mitmDefaults'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import type { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
@@ -68,8 +69,7 @@ export interface ClientCertificate {
   CaCertificates: Uint8Array[]
 }
 
-export const defHost = '127.0.0.1'
-export const defPort = '8083'
+export { defHost, defPort } from '@/pages/mitm/mitmDefaults'
 // 隐藏代理URL中的密码部分
 export const maskProxyPassword = (proxyUrl: string) => {
   // console.log("maskProxyPassword input:", proxyUrl, "type:", typeof proxyUrl)
