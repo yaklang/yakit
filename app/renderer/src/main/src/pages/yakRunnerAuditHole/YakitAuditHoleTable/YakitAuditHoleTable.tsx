@@ -1169,7 +1169,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
               total: tableTotal,
               limit: pagination.Limit,
               page: pagination.Page,
-              onChange: (page, limit) => onTableChange(page, limit, { order: 'desc', orderBy: 'id' }, {}),
+              onChange: (page, limit) => {},
             }}
             columns={columns}
             onSetCurrentRow={onSetCurrentRow}
