@@ -57,7 +57,7 @@ import {
 } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
-import { NewHTTPPacketEditor } from '@/utils/editors'
+import { type IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
 import type { EditorMenuItemType } from '@/components/yakitUI/YakitEditor/EditorMenu'
 import { openPacketNewWindow } from '@/utils/openWebsite'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -84,6 +84,13 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMitmShortcutKeyEvents, MitmShortcutKey } from '@/utils/globalShortcutKey/events/page/mitm'
 import { JSONParseLog } from '@/utils/tool'
 import { applyManualHijackBatch, decorateManualHijackRows } from './manualHijackListModel'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { LargeRequestFileReplaceModal } from './LargeMultipartFileReplaceModal'
+import {
+  getLargeRequestReplacementKey,
+  parseLargeRequestReplacementMarkers,
+  type LargeRequestReplacementMarker,
+} from './largeMultipartReplacement'
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
   forwardRef((props, ref) => {
@@ -1258,6 +1265,10 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
   })
 
   const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
+  const [packetEditor, setPacketEditor] = useState<IMonacoEditor>()
+  const [largeRequestReplacements, setLargeRequestReplacements] = useState<
+    Record<string, { Filename: string; Size: number }>
+  >({})
 
   const [type, setType] = useControllableValue<string>(props, {
     valuePropName: 'type',
@@ -1267,6 +1278,76 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
   useEffect(() => {
     setRefreshTrigger(!refreshTrigger)
   }, [currentPacket])
+  useEffect(() => {
+    setLargeRequestReplacements({})
+  }, [info.TaskID])
+  const largeRequestMarkers = useMemo(() => {
+    if (isResponse || info.IsWebsocket) return []
+    return parseLargeRequestReplacementMarkers(modifiedPacket)
+  }, [info.IsWebsocket, isResponse, modifiedPacket])
+  const openLargeRequestFileReplace = useMemoizedFn((marker: LargeRequestReplacementMarker) => {
+    const modal = showYakitModal({
+      title:
+        marker.kind === 'body'
+          ? t('MITMManual.replace_large_body_title', { size: marker.sizeVerbose })
+          : t('MITMManual.replace_large_file_title', { filename: marker.filename }),
+      width: 660,
+      footer: null,
+      content: (
+        <LargeRequestFileReplaceModal
+          taskID={info.TaskID}
+          marker={marker}
+          onCancel={() => modal.destroy()}
+          onComplete={(result) => {
+            setLargeRequestReplacements((previous) => ({
+              ...previous,
+              [getLargeRequestReplacementKey(marker)]: result,
+            }))
+            modal.destroy()
+          }}
+        />
+      ),
+      onCancel: () => modal.destroy(),
+    })
+  })
+  useEffect(() => {
+    if (!packetEditor || disabled || isResponse || largeRequestMarkers.length === 0) return
+    const decorationIDs = packetEditor.deltaDecorations(
+      [],
+      largeRequestMarkers.map((marker) => {
+        const replacement = largeRequestReplacements[getLargeRequestReplacementKey(marker)]
+        return {
+          range: {
+            startLineNumber: marker.lineNumber,
+            startColumn: 1,
+            endLineNumber: marker.lineNumber,
+            endColumn: marker.lineLength + 1,
+          },
+          options: {
+            inlineClassName: styles['large-request-replace-marker'],
+            after: {
+              content: replacement
+                ? `  ${t('MITMManual.replaced_with_file', { filename: replacement.Filename })}`
+                : `  ${t('MITMManual.click_to_replace')}`,
+              inlineClassName: styles['large-request-replace-hint'],
+            },
+          },
+        }
+      }),
+    )
+    const mouseDisposable = packetEditor.onMouseDown((event) => {
+      const position = event.target.position
+      if (!event.event.leftButton || !position) return
+      const marker = largeRequestMarkers.find(
+        (item) => item.lineNumber === position.lineNumber && position.column <= item.lineLength + 1,
+      )
+      if (marker) openLargeRequestFileReplace(marker)
+    })
+    return () => {
+      mouseDisposable.dispose()
+      packetEditor.deltaDecorations(decorationIDs, [])
+    }
+  }, [disabled, isResponse, largeRequestMarkers, largeRequestReplacements, packetEditor, t])
   const forResponse = useCreation(() => {
     return info.Status === ManualHijackListStatus.Hijacking_Response
   }, [info])
@@ -1404,6 +1485,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
 
   return (
     <NewHTTPPacketEditor
+      onEditor={setPacketEditor}
       noMinimap={!isResponse}
       noHeader={false}
       noPacketModifier={true}

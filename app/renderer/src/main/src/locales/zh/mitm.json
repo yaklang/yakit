@@ -508,7 +508,19 @@
     "forward_data": "放行数据",
     "drop_data": "丢弃数据",
     "hijack_response": "劫持该响应",
-    "render": "渲染"
+    "render": "渲染",
+    "click_to_replace": "点击替换整个文件",
+    "replaced_with_file": "已替换为 {{filename}}，点击可重新选择",
+    "replace_large_file_title": "替换超大文件 file={{filename}}",
+    "replace_large_file_warning": "当前文件超出内存编辑上限，不支持直接修改文件内容。请下载文件在本地修改后，上传修改后的文件进行整文件替换。",
+    "replace_large_body_title": "替换超大请求 Body（{{size}}）",
+    "replace_large_body_warning": "当前非 multipart 请求 Body 超出内存编辑上限。请选择本地文件，用文件内容替换整个请求 Body。",
+    "upload_file": "上传文件：",
+    "select_replacement_file": "请选择要替换的文件",
+    "replace_large_file_uploaded": "替换文件已上传，将在放行请求时生效",
+    "replace_large_file_failed": "替换超大文件失败：",
+    "cancel": "取消",
+    "confirm": "确定"
   },
   "MITMHijackedContent": {
     "listening": "监听中...",
