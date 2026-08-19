@@ -118,6 +118,10 @@
     "filter": "Filter",
     "greaterThanZeroOnly": "Only show > 0"
   },
+  "SearchInputTableWrapper": {
+    "search": "Search",
+    "placeholder": "Supports 1,2,3; separate multiple values with commas"
+  },
   "HistorySearch": {
     "keyword": "Keyword",
     "request": "Request",

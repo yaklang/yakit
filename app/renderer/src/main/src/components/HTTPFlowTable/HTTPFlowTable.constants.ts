@@ -338,6 +338,16 @@ export interface RangeInputNumberTableWrapperProps extends RangeInputNumberProps
   onCheckThan0: DebouncedFunc<(check: boolean) => void>
 }
 
+export interface SearchInputTableWrapperProps {
+  showSort?: boolean
+  sortOrder?: 'asc' | 'desc' | false
+  onSort?: (s: 'asc' | 'desc') => void
+  searchValue?: string
+  setSearchValue?: (s: string) => void
+  onSure?: () => void
+  placeholder?: string
+}
+
 export interface HistorySearchProps {
   searchVal?: string
   setSearchVal?: (s: string) => void

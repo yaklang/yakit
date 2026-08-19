@@ -21,8 +21,22 @@ import {
   shouldUseHTTPFlowMetadataOnlyQuery,
   splitHTTPFlowTableShieldData,
   uniqStrings,
+  parseIncludeIds,
 } from '@/components/HTTPFlowTable/HTTPFlowTable.utils'
 import { HTTP_FLOW_FAVORITE_TAG, type HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable.constants'
+
+describe('parseIncludeIds', () => {
+  it('parses single and comma-separated numbers into an id array', () => {
+    expect(parseIncludeIds('12')).toEqual([12])
+    expect(parseIncludeIds('1,2,10')).toEqual([1, 2, 10])
+    expect(parseIncludeIds('0')).toEqual([0])
+  })
+
+  it('drops empty segments, non-integers, negatives and duplicates', () => {
+    expect(parseIncludeIds('')).toEqual([])
+    expect(parseIncludeIds('1,,2,abc,-3,1.5,2')).toEqual([1, 2])
+  })
+})
 
 describe('normalizeHTTPFlowTotal', () => {
   it('normalizes proto-loader int64 strings before they enter numeric table state', () => {

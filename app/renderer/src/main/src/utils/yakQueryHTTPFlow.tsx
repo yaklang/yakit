@@ -64,6 +64,8 @@ export interface YakQueryHTTPFlowRequest {
   SkipTotal?: boolean
   /** 仅前端用于 BodyLength 筛选图标状态，不会传给后端 */
   bodyLength?: boolean
+  /** 仅前端用于 Id 列筛选图标状态（排序或搜索），不会传给后端 */
+  idFilter?: boolean
 }
 
 export interface YakDeleteHTTPFlowRequest {
