@@ -10,6 +10,7 @@ import {
   selectVirtualTableServerPushRows,
   selectVirtualTableAutoRefreshAction,
   shouldLoadVirtualTableBottom,
+  shouldLoadVirtualTableAscBottomOnViewportFit,
   shouldRestoreVirtualTableViewport,
 } from '../useVirtualTableScheduler'
 
@@ -143,6 +144,23 @@ describe('shouldLoadVirtualTableBottom', () => {
 
   it('keeps the legacy ninety-percent trigger for an unbounded table', () => {
     expect(shouldLoadVirtualTableBottom(8500, 600, 10000, false, 28)).toBe(true)
+  })
+})
+
+describe('shouldLoadVirtualTableAscBottomOnViewportFit', () => {
+  it('loads newer rows when an ascending table has no scrollbar', () => {
+    expect(shouldLoadVirtualTableAscBottomOnViewportFit('asc', 0, 600, 600)).toBe(true)
+    expect(shouldLoadVirtualTableAscBottomOnViewportFit('asc', 0, 600, 112)).toBe(true)
+  })
+
+  it('does not treat a descending fit viewport as an ascending live edge', () => {
+    expect(shouldLoadVirtualTableAscBottomOnViewportFit('desc', 0, 600, 600)).toBe(false)
+    expect(shouldLoadVirtualTableAscBottomOnViewportFit('none', 0, 600, 112)).toBe(false)
+  })
+
+  it('leaves ascending tables with a scrollbar to the existing top/bottom branches', () => {
+    expect(shouldLoadVirtualTableAscBottomOnViewportFit('asc', 0, 600, 2000)).toBe(false)
+    expect(shouldLoadVirtualTableAscBottomOnViewportFit('asc', 400, 600, 2000)).toBe(false)
   })
 })
 

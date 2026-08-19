@@ -87,6 +87,28 @@ export const shouldLoadVirtualTableBottom = (
 }
 
 /**
+ * 升序时新数据插在底部。内容撑不满视口时没有滚动条，会先命中 scrollTop < 10，
+ * 走不到触底分支。此时视为已停在新数据插入边，应向底部补数。
+ */
+export const shouldLoadVirtualTableAscBottomOnViewportFit = (
+  order: string,
+  scrollTop: number | undefined,
+  clientHeight: number | undefined,
+  scrollHeight: number | undefined,
+): boolean => {
+  if (order !== 'asc') return false
+  if (
+    !Number.isFinite(scrollTop) ||
+    !Number.isFinite(clientHeight) ||
+    !Number.isFinite(scrollHeight) ||
+    Number(scrollHeight) <= 0
+  ) {
+    return false
+  }
+  return Number(scrollTop) < 10 && Number(scrollHeight) <= Number(clientHeight) + 1
+}
+
+/**
  * A specialized table can have its own ordered stream in addition to the
  * shared duplex connection. Either healthy push source is enough to keep the
  * one-second compatibility poller stopped.
