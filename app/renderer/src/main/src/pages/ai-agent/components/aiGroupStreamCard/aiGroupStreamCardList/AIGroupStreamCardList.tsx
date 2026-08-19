@@ -44,14 +44,17 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
     if (!el || !expand) return
     if (!allowAutoScrollRef.current) return
     requestAnimationFrame(() => {
-      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+      el.scrollTop = el.scrollHeight
     })
     let rafId = 0
+    let lastScrollHeight = el.scrollHeight
     const observer = new ResizeObserver(() => {
       if (!allowAutoScrollRef.current) return
+      if (el.scrollHeight === lastScrollHeight) return
+      lastScrollHeight = el.scrollHeight
       cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(() => {
-        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+        el.scrollTop = el.scrollHeight
       })
     })
     observer.observe(el)

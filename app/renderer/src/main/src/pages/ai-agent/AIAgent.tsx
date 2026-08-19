@@ -7,7 +7,7 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import type { AISession } from './type/aiChat'
-import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useSize, useUpdateEffect } from 'ahooks'
+import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useUpdateEffect } from 'ahooks'
 import { AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { AIAgentChat } from './aiAgentChat/AIAgentChat'
@@ -49,13 +49,24 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   const { initialize, knowledgeBases } = useKnowledgeBase()
   const agentRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(agentRef)
-  const agentSize = useSize(agentRef)
 
-  useUpdateEffect(() => {
-    if (agentSize?.width && agentSize?.width < 1230) {
-      setShow(false)
-    }
-  }, [agentSize?.width])
+  // 只在宽度跌破阈值时收起侧栏，避免 useSize 每帧 setState 把整页（含会话列表）打满重渲染
+  useEffect(() => {
+    const el = agentRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    let skipFirst = true
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect?.width
+      if (!width) return
+      if (skipFirst) {
+        skipFirst = false
+        return
+      }
+      if (width < 1230) setShow((prev) => (prev ? false : prev))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   // 缓存全局配置数据
   useUpdateEffect(() => {
@@ -193,6 +204,28 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   const [isShowAIBottomDetails, setShowAIBottomDetails] = useState(false)
 
+  const splitDefaultSizes = useMemo(() => (isShowAIBottomDetails ? [undefined, 220] : []), [isShowAIBottomDetails])
+  const splitElements = useMemo(
+    () => [
+      {
+        element: (
+          <div className={classNames(styles['ai-agent-chat'])} onClick={onSendSwitchAIAgentTab}>
+            <AIAgentChat />
+          </div>
+        ),
+      },
+      {
+        element: (
+          <AIBottomDetails
+            isShowAIBottomDetails={isShowAIBottomDetails}
+            setShowAIBottomDetails={setShowAIBottomDetails}
+          />
+        ),
+      },
+    ],
+    [isShowAIBottomDetails, onSendSwitchAIAgentTab],
+  )
+
   return (
     <AIAgentContext.Provider value={{ store, dispatcher }}>
       <div id={YakitAIAgentPageID} className={styles['ai-agent']} ref={agentRef}>
@@ -204,24 +237,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             <SplitView
               isVertical={true}
               isLastHidden={!isShowAIBottomDetails}
-              defaultSizes={isShowAIBottomDetails ? [undefined, 220] : []}
-              elements={[
-                {
-                  element: (
-                    <div className={classNames(styles['ai-agent-chat'])} onClick={onSendSwitchAIAgentTab}>
-                      <AIAgentChat />
-                    </div>
-                  ),
-                },
-                {
-                  element: (
-                    <AIBottomDetails
-                      isShowAIBottomDetails={isShowAIBottomDetails}
-                      setShowAIBottomDetails={setShowAIBottomDetails}
-                    />
-                  ),
-                },
-              ]}
+              defaultSizes={splitDefaultSizes}
+              elements={splitElements}
             />
           </div>
         </div>
