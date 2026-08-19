@@ -982,11 +982,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       })
       if (historyId === obj.historyId) {
         let scrollToIndex: number | undefined = undefined
+        const id = Number(obj.id)
         data.some((item, index) => {
-          if (item.Id + '' === obj.id) {
+          if (item.Id == id) {
             scrollToIndex = index
           }
-          return item.Id + '' === obj.id
+          return item.Id == id
         })
         if (scrollToIndex !== undefined) {
           // 加随机值触发更新渲染执行表格跳转方法
