@@ -3,7 +3,6 @@ import styles from './HistoryChatList.module.scss'
 import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { SolidChatalt2Icon, SolidUserIcon, SolidUsersIcon } from '@/assets/icon/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { Tooltip } from 'antd'
 import classNames from 'classnames'
 import { YakitAIAgentPageID } from '../../defaultConstant'
@@ -19,7 +18,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
 import { AITaskStatus, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
-import { handAIHistoryChatRemove } from '../utils'
+import { AISessionDeleteCancelledError, handAIHistoryChatRemove } from '../utils'
 import useGetChatDataStoreKey, { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import type { HistoryChatListItemProps } from './type'
@@ -228,6 +227,7 @@ const HistoryChatList: FC<{
           grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
           handleClearAIImageParams: { chatDataStoreKey, sessionID: sessionIds },
           deleteSessionsParams: { sessionIds, source: [] },
+          confirmDeletionWithoutSchedules: true,
         })
         setSessions && setSessions(newChats)
         if (activeSessionId === SessionID && active) {
@@ -239,7 +239,9 @@ const HistoryChatList: FC<{
         if (activeSessionId === SessionID) {
           handleSetActiveChat(info)
         }
-        yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
+        if (!(error instanceof AISessionDeleteCancelledError)) {
+          yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
+        }
         reject()
       }
     })
@@ -339,16 +341,21 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
     return globalSessionEngine?.ensureSession(item.SessionID)?.store
   }, [item.SessionID])
 
-  const loading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
+  const localLoading = useStore(store, (state) => state.currentChatStatus.status === AITaskStatus.inProgress)
+  const loading = localLoading || Boolean(item.IsRunning)
   const [delLoading, setDelLoading] = useState<boolean>(false)
   const displayTitle = useCreation(() => {
     return getSessionDisplayTitle(item)
   }, [item])
   const handleDeleteChatItem = useMemoizedFn(async (info: AISession) => {
     setDelLoading(true)
-    handleDeleteChat(info).finally(() => {
+    try {
+      await handleDeleteChat(info)
+    } catch (_) {
+      // The parent already distinguishes cancellation from an actual failure.
+    } finally {
       setDelLoading(false)
-    })
+    }
   })
   return (
     <div
@@ -385,23 +392,15 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
             }}
           />
         </Tooltip>
-        <YakitPopconfirm
-          title={t('HistoryChatList.deleteConfirm')}
-          placement="bottom"
-          getPopupContainer={getPopupContainer}
-          overlayClassName={overlayClassName}
-          onConfirm={(e) => {
-            e?.stopPropagation()
+        <YakitButton
+          loading={delLoading}
+          type="text2"
+          icon={<OutlineTrashIcon className={styles['del-icon']} />}
+          onClick={(e) => {
+            e.stopPropagation()
             handleDeleteChatItem(item)
           }}
-        >
-          <YakitButton
-            loading={delLoading}
-            type="text2"
-            icon={<OutlineTrashIcon className={styles['del-icon']} />}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </YakitPopconfirm>
+        />
       </div>
     </div>
   )

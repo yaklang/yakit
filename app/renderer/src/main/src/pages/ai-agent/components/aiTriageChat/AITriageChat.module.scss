@@ -12,6 +12,8 @@
 }
 .triage-chat-content {
   display: flex;
+  align-items: flex-start;
+  gap: 4px;
   .content-wrapper {
     padding: 4px 8px;
     border-radius: 8px;
@@ -37,6 +39,17 @@
       margin-top: 4px;
     }
   }
+}
+.scheduled-trigger {
+  flex: none;
+  padding: 2px 6px;
+  border: 1px solid var(--Colors-Use-Main-Border);
+  border-radius: 4px;
+  color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Bg);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
 }
 .triage-chat-question {
   justify-content: flex-start;

@@ -213,6 +213,14 @@ export const startupDuplexConn = () => {
         case 'project':
           emiter.emit('onServerPushProjectChanged', JSON.stringify(obj))
           break
+        // 后端计划任务会独立创建 AI Session。收到持久化完成通知后按 ID
+        // 查询权威记录，让它像手动首问一样立即出现在历史列表中。
+        case 'ai_session':
+          if (typeof obj?.sessionId === 'string' && obj.sessionId.trim()) {
+            const updates = typeof obj?.isRunning === 'boolean' ? { IsRunning: obj.isRunning } : undefined
+            emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: obj.sessionId, updates }))
+          }
+          break
         // 通知QuerySSARisks轮询更新
         case 'ssa_risk':
           emiter.emit('onRefreshQuerySSARisks', JSON.stringify(obj))

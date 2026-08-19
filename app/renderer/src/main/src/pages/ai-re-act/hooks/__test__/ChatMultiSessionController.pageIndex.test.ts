@@ -318,6 +318,26 @@ describe('ChatMultiSessionController start / send / history', () => {
     expect(ctrl.ensureSession('s-restore').store.getState().initLoading).toBe(true)
   })
 
+  it('A14b: restoring a backend-running session keeps its processing UI after pong', async () => {
+    ctrl.handleStartSession({
+      ...startParams('s-running', 'page-1', ''),
+      isRunningSession: true,
+    })
+    const { store } = ctrl.ensureSession('s-running')
+
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.inProgress)
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('问题执行中...')
+
+    ctrl.handleGrpcOutputEvent('s-running', makeGrpcJsonRes('pong', {}))
+    await vi.waitFor(() => {
+      expect(store.getState().initLoading).toBe(false)
+    })
+    expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.inProgress)
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('问题执行中...')
+
+    ctrl.handleSessionEnd('s-running')
+  })
+
   it('A17: send without ready warns when active', () => {
     ctrl.setActiveShowSession('ghost')
     expect(() =>

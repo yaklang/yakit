@@ -155,6 +155,7 @@ const genAIAgentChatData = (): AIAgentChatData => {
 const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
   return {
     createChatQuestion: undefined,
+    restoreAsRunning: false,
     onEnd: undefined,
     pingSyncID: '',
     pingTimer: null,
@@ -756,7 +757,7 @@ export class ChatMultiSessionController {
    * @returns 是否真正发起了建连
    */
   public handleStartSession(requestParams: AIChatIPCStartParams, cb?: (sessionId: string) => void): boolean {
-    const { token: sessionId, params, route, pageId, localSource } = requestParams
+    const { token: sessionId, params, route, pageId, localSource, isRunningSession } = requestParams
     if (this.readyChannels.has(sessionId)) {
       yakitNotify('warning', '会话已经存在，请勿重复建立！')
       return false
@@ -771,6 +772,7 @@ export class ChatMultiSessionController {
 
     const { request, store, rawData, meta } = this.ensureSession(sessionId)
     const userQuery = (params.Params?.UserQuery || '').trim()
+    meta.restoreAsRunning = isRunningSession === true
 
     // 恢复态：遮罩防止 hydrate / recovery 期间误点（UI 订阅 store.initLoading）
     if (userQuery) {
@@ -782,7 +784,13 @@ export class ChatMultiSessionController {
       store.getState().updateState({
         execute: true,
         initLoading: true,
-        currentLoadingTitle: { casualTitle: '获取历史数据中...', planTitle: '' },
+        currentChatStatus: isRunningSession
+          ? { questionID: '', coordinatorId: '', status: AITaskStatus.inProgress }
+          : cloneDeep(DefaultAgentChatStatus),
+        currentLoadingTitle: {
+          casualTitle: isRunningSession ? '问题执行中...' : '获取历史数据中...',
+          planTitle: '',
+        },
       })
       this.sessionRestoreLoading.add(sessionId)
     }
@@ -1151,11 +1159,17 @@ export class ChatMultiSessionController {
       })
     }, 5000)
 
-    // 如果任务规划运行态有数据，则置空
-    store.getState().updateState({
-      currentChatStatus: cloneDeep(DefaultAgentChatStatus),
-      currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
-    })
+    // 普通历史恢复需要清掉旧运行态；中途接入仍在执行的后端会话时，
+    // 保留 processing/title，避免 pong 后 UI 短路为“当前会话已结束”。
+    const shouldKeepRunningState =
+      meta.restoreAsRunning && store.getState().currentChatStatus.status === AITaskStatus.inProgress
+    meta.restoreAsRunning = false
+    if (!shouldKeepRunningState) {
+      store.getState().updateState({
+        currentChatStatus: cloneDeep(DefaultAgentChatStatus),
+        currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
+      })
+    }
 
     // 拉取 timeline 历史（首批）+ 文件系统历史（全量），不阻塞建连主流程
     void this.loadTimelineHistory(sessionId)

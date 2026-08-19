@@ -18,6 +18,11 @@ export interface AIChatIPCStartParams {
    * 其它场景省略，走 params.Params?.Source 兜底。
    */
   localSource?: DeleteSessionsAISourceType
+  /**
+   * 打开后端仍在执行的历史会话时为 true；仅用于恢复本地 UI 运行态，不透传 gRPC。
+   * 典型场景是计划任务已启动、用户中途从历史列表进入该会话。
+   */
+  isRunningSession?: boolean
 }
 
 /** 执行流途中发送消息的参数 */

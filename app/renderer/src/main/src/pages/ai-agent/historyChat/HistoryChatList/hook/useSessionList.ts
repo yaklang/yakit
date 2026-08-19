@@ -40,8 +40,7 @@ const useSessionList = (aiSource: AISource[], platform: string[] = []) => {
   const historyLoadingRef = useRef(false)
 
   const refreshSession = useMemoizedFn(async (sessionId: string) => {
-    // 本来就在第一个，不需要重复请求
-    if (getSessions().at(0)?.SessionID === sessionId) return
+    // refresh 是失效通知：即使会话已在首位，标题、时间和启动参数也可能刚更新。
     try {
       const { Data } = await grpcQueryAISession({
         Pagination: initialHistoryPagination,

@@ -153,6 +153,33 @@ describe('aiOther task plan gate', () => {
     expect(req.meta.taskPlanEndGate.pendingStatus).toBeUndefined()
   })
 
+  it('D2: status_changed settles a running session attached after dequeue', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { react_task_id: 'q-attached', react_task_now_status: 'completed' },
+        { NodeId: 'react_task_status_changed' },
+      ),
+      chatType: 'reAct',
+    })
+    req.store.getState().updateState({
+      currentChatStatus: {
+        questionID: '',
+        status: AITaskStatus.inProgress,
+        coordinatorId: '',
+      },
+      currentLoadingTitle: { casualTitle: '问题执行中...', planTitle: '' },
+    })
+
+    aiOtherDataHandlers.react_task_status_changed(req)
+
+    expect(req.store.getState().currentChatStatus).toMatchObject({
+      questionID: 'q-attached',
+      status: AITaskStatus.success,
+    })
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('')
+  })
+
   it('D2: dequeue reason=normal updates chat status and refreshes plan list', () => {
     const sendRequest = vi.fn()
     const req = makeHandlerRequest({
@@ -162,6 +189,11 @@ describe('aiOther task plan gate', () => {
           reason: 'normal',
           react_task_id: 'q-normal',
           react_task_input: 'hello',
+          react_task_input_source: 'schedule',
+          react_task_schedule_uuid: 'schedule-uuid',
+          react_task_schedule_name: '天气巡检',
+          react_task_scheduled_at: '2026-08-18T12:00:00+08:00',
+          react_task_schedule_trigger: 'schedule',
           focus_mode: 'focus-a',
           react_task_user_input_uuid: '',
           queue_len: 1,
@@ -186,6 +218,14 @@ describe('aiOther task plan gate', () => {
     expect(req.store.getState().chatTodoListUpdate).toBe(1)
     expect(req.rawData.taskDetailsMap.has('q-normal')).toBe(true)
     expect(req.rawData.contents.get('q-normal')?.type).toBe(AIChatQSDataTypeEnum.QUESTION)
+    expect(req.rawData.contents.get('q-normal')?.extraValue).toMatchObject({
+      showQS: 'hello',
+      inputSource: 'schedule',
+      scheduleUUID: 'schedule-uuid',
+      scheduleName: '天气巡检',
+      scheduledAt: '2026-08-18T12:00:00+08:00',
+      scheduleTrigger: 'schedule',
+    })
     expect(sendRequest).toHaveBeenCalledWith({
       IsSyncMessage: true,
       SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,

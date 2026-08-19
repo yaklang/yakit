@@ -15,6 +15,7 @@ const AIChatSetting = React.lazy(() => import('./AIChatSetting/AIChatSetting'))
 const AIModelList = React.lazy(() => import('./aiModelList/AIModelList'))
 const HistoryChat = React.lazy(() => import('./historyChat/HistoryChat'))
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
+const ScheduledTasks = React.lazy(() => import('./scheduledTasks/ScheduledTasks'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   // const {} = props
@@ -69,6 +70,13 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         content = (
           <React.Suspense>
             <AIChatSetting />
+          </React.Suspense>
+        )
+        break
+      case AIAgentTabListEnum.Scheduled:
+        content = (
+          <React.Suspense>
+            <ScheduledTasks />
           </React.Suspense>
         )
         break

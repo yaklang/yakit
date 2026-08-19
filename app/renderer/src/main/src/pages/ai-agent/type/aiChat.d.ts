@@ -52,6 +52,8 @@ export interface AISession {
   StartParams?: AIStartParams
   /** source=im 时的结构化 IM 元数据（平台/会话类型/可读标题等）；其它来源为空 */
   IMSourceMeta?: IMSourceMeta
+  /** 后端权威运行态；用于尚未在前端建立流连接的计划任务等会话 */
+  IsRunning?: boolean
   /** 前端逻辑使用-欢迎页对话不触发切换会话的流建立逻辑 */
   isCreate?: boolean
 }
@@ -182,6 +184,8 @@ export interface AIAgentChatMetaData {
   onEnd?: () => void
   /** 通过用户问题创建会话时的问题 */
   createChatQuestion?: AIInputEvent
+  /** pong 恢复完成后是否需要保留后端会话的执行中 UI 状态 */
+  restoreAsRunning: boolean
 
   /** 建立会话后的ping请求测试连通性-ping的唯一ID和轮询定时器 */
   pingSyncID: string

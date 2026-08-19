@@ -165,6 +165,8 @@ export interface AIStartParams {
    * 需配合 EnablePlan=true 才会暴露 request_plan 动作。
    */
   EnableDetachedPlan?: boolean
+  /** 只连接同 TimelineSessionID 已在后台运行的 ReAct，不新建执行。 */
+  Attach?: boolean
   /**
    * 执行策略集合（多 Agent / Goal 模式等顶层运行策略）。
    * 与 EnablePlan 可同时勾选；目前策略侧不支持热更新，变更需下次启动生效。
@@ -861,6 +863,12 @@ export declare namespace AIAgentGrpcApi {
     reason?: string
     /** 前端发送用户问题时，自定义的UUID */
     react_task_user_input_uuid: string
+    /** 输入来源；schedule 表示由定时任务触发 */
+    react_task_input_source?: string
+    react_task_schedule_uuid?: string
+    react_task_schedule_name?: string
+    react_task_scheduled_at?: string
+    react_task_schedule_trigger?: string
     /** 出队前的问题队列长度 */
     queue_len: number
   }
@@ -1256,5 +1264,66 @@ export interface GetAIReActRecommendedSkillsResponse {
 export interface UpdateAIReActRecommendedSkillRequest {
   Name: string
   Content: string
+}
+// #endregion
+
+// #region AI ReAct recurring schedules
+export type AIReActScheduleStatus = 'active' | 'paused' | 'completed'
+export type AIReActScheduleTargetMode = 'continue_session' | 'new_session_per_run'
+
+export interface AIReActScheduleSpec {
+  RRule: string
+  Timezone: string
+  StartAt: number | string
+}
+
+export interface AIReActSchedulePayload {
+  Prompt: string
+  StartParams?: AIStartParams
+  AttachedResourceInfos?: AttachedResourceInfo[]
+  FocusModeLoop?: string
+}
+
+export interface AIReActSchedule {
+  Id?: number | string
+  UUID: string
+  Name: string
+  Status: AIReActScheduleStatus
+  TargetMode: AIReActScheduleTargetMode
+  TargetSessionID?: string
+  Payload: AIReActSchedulePayload
+  Schedule: AIReActScheduleSpec
+  NextRunAt?: number | string
+  LastRunAt?: number | string
+  MisfireGraceSeconds?: number | string
+  MaxRuntimeSeconds?: number | string
+  PauseReason?: string
+  LastError?: string
+  CreatedAt?: number | string
+  UpdatedAt?: number | string
+  OriginalRequest?: string
+  CreatedFromSessionID?: string
+  LastOutcome?: 'succeeded' | 'failed' | 'skipped' | 'cancelled' | 'interrupted' | 'needs_attention' | string
+  LastSkipReason?: string
+  LastStartedAt?: number | string
+  LastFinishedAt?: number | string
+}
+
+export interface QueryAIReActSchedulesRequest {
+  Pagination?: PaginationSchema
+  Filter?: {
+    UUIDs?: string[]
+    Status?: AIReActScheduleStatus[]
+    Keyword?: string
+    TargetSessionIDs?: string[]
+    TargetModes?: AIReActScheduleTargetMode[]
+    CreatedFromSessionIDs?: string[]
+  }
+}
+
+export interface QueryAIReActSchedulesResponse {
+  Pagination: PaginationSchema
+  Data: AIReActSchedule[]
+  Total: number | string
 }
 // #endregion

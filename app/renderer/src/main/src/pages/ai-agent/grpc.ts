@@ -11,6 +11,10 @@ import type {
   GetRandomAIMaterialsRequest,
   GetRandomAIMaterialsResponse,
   UpdateAIReActRecommendedSkillRequest,
+  AIReActSchedule,
+  AIReActScheduleSpec,
+  QueryAIReActSchedulesRequest,
+  QueryAIReActSchedulesResponse,
 } from '../ai-re-act/hooks/grpcApi'
 import type {
   AIForge,
@@ -349,3 +353,50 @@ export const grpcUpdateAISessionTitle: APIFunc<{ SessionID: string; Title: strin
       })
   })
 }
+
+const invokeAIReActSchedule = <TRequest, TResponse>(
+  method: string,
+  params: TRequest,
+  hiddenError?: boolean,
+): Promise<TResponse> => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke(method, params)
+      .then(resolve)
+      .catch((e) => {
+        if (!hiddenError) yakitNotify('error', `${method} 失败:` + e)
+        reject(e)
+      })
+  })
+}
+
+export const grpcCreateAIReActSchedule: APIFunc<{ Schedule: AIReActSchedule }, AIReActSchedule> = (
+  param,
+  hiddenError,
+) => invokeAIReActSchedule('CreateAIReActSchedule', param, hiddenError)
+
+export const grpcUpdateAIReActSchedule: APIFunc<{ Schedule: AIReActSchedule }, AIReActSchedule> = (
+  param,
+  hiddenError,
+) => invokeAIReActSchedule('UpdateAIReActSchedule', param, hiddenError)
+
+export const grpcDeleteAIReActSchedule: APIFunc<{ UUID: string }, unknown> = (param, hiddenError) =>
+  invokeAIReActSchedule('DeleteAIReActSchedule', param, hiddenError)
+
+export const grpcQueryAIReActSchedules: APIFunc<QueryAIReActSchedulesRequest, QueryAIReActSchedulesResponse> = (
+  param,
+  hiddenError,
+) => invokeAIReActSchedule('QueryAIReActSchedules', param, hiddenError)
+
+export const grpcSetAIReActScheduleEnabled: APIFunc<{ UUID: string; Enabled: boolean }, AIReActSchedule> = (
+  param,
+  hiddenError,
+) => invokeAIReActSchedule('SetAIReActScheduleEnabled', param, hiddenError)
+
+export const grpcPreviewAIReActScheduleTimes: APIFunc<
+  { Schedule: AIReActScheduleSpec; Count?: number; AfterTimestamp?: number },
+  { Timestamps: Array<number | string> }
+> = (param, hiddenError) => invokeAIReActSchedule('PreviewAIReActScheduleTimes', param, hiddenError)
+
+export const grpcRunAIReActScheduleNow: APIFunc<{ UUID: string }, unknown> = (param, hiddenError) =>
+  invokeAIReActSchedule('RunAIReActScheduleNow', param, hiddenError)

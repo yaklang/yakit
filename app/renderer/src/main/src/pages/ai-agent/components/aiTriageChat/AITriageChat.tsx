@@ -21,9 +21,11 @@ import type { AIChatTextareaSubmit } from '../../template/type'
 import { getAIReActRequestParams } from '../../utils'
 import { extractDataWithMilkdown } from '../aiMilkdownInput/utils'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
   const { isAnswer, contentClassName, chatClassName, itemData, chatDataStoreKey, renderNum } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
 
   const [edit, setEdit] = useState<boolean>(false)
 
@@ -50,6 +52,7 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
     }
     return <>{content}</>
   })
+  const isScheduledTrigger = !isAnswer && extraValue?.inputSource === 'schedule'
 
   return (
     <div className={styles['triage-chat-content-wrapper']}>
@@ -72,6 +75,9 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
               chatClassName || '',
             )}
           >
+            {isScheduledTrigger && (
+              <span className={styles['scheduled-trigger']}>{t('AIChatListItem.scheduledTrigger')}</span>
+            )}
             <div className={classNames(styles['content-wrapper'], contentClassName || '')}>{renderContent()}</div>
           </div>
           {!isAnswer && (

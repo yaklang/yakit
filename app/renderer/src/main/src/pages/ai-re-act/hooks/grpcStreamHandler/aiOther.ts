@@ -223,7 +223,14 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
     AIService: '',
     AIModelName: '',
     // showQS为了UI渲染方便，重新构建的字段
-    extraValue: { showQS: data.react_task_input || '' },
+    extraValue: {
+      showQS: data.react_task_input || '',
+      inputSource: data.react_task_input_source || '',
+      scheduleUUID: data.react_task_schedule_uuid || '',
+      scheduleName: data.react_task_schedule_name || '',
+      scheduledAt: data.react_task_scheduled_at || '',
+      scheduleTrigger: data.react_task_schedule_trigger || '',
+    },
   }
   rawData.contents.set(chatData.id, chatData)
 
@@ -344,9 +351,13 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
   const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
 
   const currentChat = store.getState().currentChatStatus
+  // 中途打开计划任务会话时，dequeue 已经发生在建流之前，恢复态只能先以
+  // processing + 空 questionID 占位；首个实时终态事件负责补齐真实任务 ID。
+  const isAttachedRunningTask = !currentChat.questionID && currentChat.status === AITaskStatus.inProgress
+  const isCurrentTask = currentChat.questionID === info.react_task_id || isAttachedRunningTask
 
   if (['completed', 'aborted', 'skipped'].includes(info.react_task_now_status)) {
-    if (currentChat.questionID && currentChat.questionID === info.react_task_id) {
+    if (isCurrentTask) {
       if (currentChat.coordinatorId) {
         // 该问题对话存在异步任务
         // 只推进中间状态；与 end 齐套后才落到 currentChatStatus.status
@@ -357,15 +368,19 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
       } else {
         // 该问题对话不存在异步任务
         store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
-        store.getState().updateCurrentChatStatus({ status: info.react_task_now_status })
+        store.getState().updateCurrentChatStatus({
+          questionID: currentChat.questionID || info.react_task_id,
+          status: info.react_task_now_status,
+        })
         store.getState().updateState({ focusMode: '', cancelChatLoading: false })
       }
     }
   }
 
   // 更新自由对话-执行任务组的状态
-  if (!currentChat.questionID || !info.react_task_id) return
-  const taskKey = `${currentChat.questionID}-${info.react_task_id}`
+  const questionID = currentChat.questionID || (isAttachedRunningTask ? info.react_task_id : '')
+  if (!questionID || !info.react_task_id) return
+  const taskKey = `${questionID}-${info.react_task_id}`
   const taskDetail = rawData.contents.get(taskKey)
   if (!taskDetail || taskDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return
   taskDetail.data.status = info.react_task_now_status as AITaskStatusType

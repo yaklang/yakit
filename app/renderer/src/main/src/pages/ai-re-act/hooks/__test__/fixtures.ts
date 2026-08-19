@@ -78,6 +78,7 @@ export const createTestRawData = (): AIAgentChatData => {
 /** 与 Controller 内 genAIAgentChatMetaData 对齐 */
 export const createTestMeta = (): AIAgentChatMetaData => ({
   createChatQuestion: undefined,
+  restoreAsRunning: false,
   onEnd: undefined,
   pingSyncID: '',
   pingTimer: null,

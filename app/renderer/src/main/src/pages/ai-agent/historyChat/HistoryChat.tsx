@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
@@ -24,7 +24,7 @@ import { type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { JSONParseLog } from '@/utils/tool'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
-import { DeleteSessionsAISourceEnum, handAIHistoryChatRemove } from './utils'
+import { AISessionDeleteCancelledError, DeleteSessionsAISourceEnum, handAIHistoryChatRemove } from './utils'
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { sessionStatusStore } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import classNames from 'classnames'
@@ -53,7 +53,9 @@ const HISTORY_SOURCE_FILTER_OPTIONS: {
   { key: 'dingtalk', title: '钉钉会话', icon: <DingtalkIcon /> },
 ]
 
-const IM_HISTORY_REFRESH_INTERVAL_MS = 5000
+// 普通前端新建会话和新版后端定时任务都有即时通知；轮询用于兼容旧引擎，
+// 并在双向连接断开或通知丢失时对账。
+const HISTORY_REFRESH_INTERVAL_MS = 5000
 const ALL_DELETE_SESSION_SOURCES = Object.values(DeleteSessionsAISourceEnum) as DeleteSessionsAISourceType[]
 
 const renderClearConfirm = (
@@ -123,6 +125,8 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   }, [enableHistorySourceFilter, historySourceFilter])
   const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
   const { activeChat } = useAIAgentStore()
+  /** 防止 started/finished 两次异步刷新乱序后，较旧的 started 把运行态写回 true。 */
+  const latestRunningUpdateRef = useRef(new Map<string, boolean>())
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
@@ -186,6 +190,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
         // 按 source 列表清空；不传 deleteAll，全库清删由其它入口负责
         deleteSessionsParams: { sessionIds: [], source: deleteSessionsSource },
+        scheduleSessionIds: filter.DeleteAll
+          ? []
+          : Array.from(new Set([...visibleSessions.map((item) => item.SessionID), ...getRouteSessionIds(sources)])),
       })
       onNewChat()
       setActiveChat?.(undefined)
@@ -194,7 +201,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       setSearch('')
       yakitNotify('success', t('HistoryChat.allChatsCleared'))
     } catch (e) {
-      yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      if (!(e instanceof AISessionDeleteCancelledError)) {
+        yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      }
     } finally {
       sessionStatusStore.getState().setSourceDeleting(sources, false)
       setClearLoading(false)
@@ -249,7 +258,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       dispatcher.resetPagination?.()
       yakitNotify('success', t('HistoryChat.clearedBeforeDays', { days }))
     } catch (e) {
-      yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      if (!(e instanceof AISessionDeleteCancelledError)) {
+        yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      }
     } finally {
       sessionStatusStore.getState().setSourceDeleting(historyQuerySources, false)
       setClearLoading(false)
@@ -262,7 +273,6 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   })
 
   const refreshSessions = useMemoizedFn(async () => {
-    handleResetSessions()
     await dispatcher.loadHistoryData?.(true)
   })
 
@@ -289,7 +299,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   }, [historySourceFilter])
 
   useEffect(() => {
-    if (!enableHistorySourceFilter || embedded || historySourceFilter === 'local') return
+    if (!enableHistorySourceFilter || embedded) return
 
     const refreshIfVisible = () => {
       if (document.visibilityState === 'visible') {
@@ -299,7 +309,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     window.addEventListener('focus', refreshIfVisible)
     document.addEventListener('visibilitychange', refreshIfVisible)
-    const timer = window.setInterval(refreshIfVisible, IM_HISTORY_REFRESH_INTERVAL_MS)
+    const timer = window.setInterval(refreshIfVisible, HISTORY_REFRESH_INTERVAL_MS)
 
     return () => {
       window.removeEventListener('focus', refreshIfVisible)
@@ -314,7 +324,23 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       switch (payload?.type) {
         case 'refresh':
           if (payload.sessionId) {
+            const isRunning = payload.updates?.IsRunning
+            if (typeof isRunning === 'boolean') {
+              latestRunningUpdateRef.current.set(payload.sessionId, isRunning)
+              dispatcher.setSessions((prev) =>
+                prev.map((item) => (item.SessionID === payload.sessionId ? { ...item, IsRunning: isRunning } : item)),
+              )
+              if (activeChat?.SessionID === payload.sessionId) {
+                setActiveChat((prev) => (prev ? { ...prev, IsRunning: isRunning } : prev))
+              }
+            }
             await dispatcher.refreshSession?.(payload.sessionId)
+            // refresh 是异步的，只允许该 session 最新一次生命周期通知覆盖查询结果。
+            if (typeof isRunning === 'boolean' && latestRunningUpdateRef.current.get(payload.sessionId) === isRunning) {
+              dispatcher.setSessions((prev) =>
+                prev.map((item) => (item.SessionID === payload.sessionId ? { ...item, IsRunning: isRunning } : item)),
+              )
+            }
           } else {
             handleResetSessions()
             await dispatcher.loadHistoryData?.(true)
@@ -358,7 +384,15 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     return () => {
       emiter.off('sessionData', handleSessionData)
     }
-  }, [dispatcher, handleResetSessions, historyQuerySources, isGlobalAIAgentHistory, isSessionVisibleInCurrentSource])
+  }, [
+    activeChat?.SessionID,
+    dispatcher,
+    handleResetSessions,
+    historyQuerySources,
+    isGlobalAIAgentHistory,
+    isSessionVisibleInCurrentSource,
+    setActiveChat,
+  ])
 
   return (
     <div className={styles['history-chat']}>

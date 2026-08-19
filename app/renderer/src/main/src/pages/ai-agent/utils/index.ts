@@ -320,6 +320,7 @@ export const onReStart = (props: ReStartParams) => {
       token: activeChat?.SessionID,
       params: aiInputEvent,
       localSource: resolveLocalSource(activeChat),
+      isRunningSession: activeChat.IsRunning === true,
     })
   }
 }
