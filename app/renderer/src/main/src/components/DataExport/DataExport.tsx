@@ -1,8 +1,8 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Space, Pagination, Checkbox, Row, Col } from 'antd'
-import { LoadingOutlined } from '@ant-design/icons'
-import { export_json_to_excel, type CellSetting } from './toExcel'
+import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
+import type { CellSetting } from './toExcel'
 import { failed } from '../../utils/notification'
 import { genDefaultPagination, type PaginationSchema, type QueryGeneralResponse } from '../../pages/invoker/schema'
 import { useMemoizedFn } from 'ahooks'
@@ -125,13 +125,15 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
 
           if (totalCellNumber < maxCellNumber && response.Total <= pageSize && chunks.length === 1) {
             // 单元格数量小于最大单元格数量 或者导出内容小于90M，直接导出
-            export_json_to_excel({
-              header: header,
-              data: exportData,
-              filename: `${fileNameMemo} 1-${exportData.length}`,
-              autoWidth: true,
-              bookType: 'xlsx',
-              optsSingleCellSetting,
+            import('./toExcel').then(({ export_json_to_excel }) => {
+              export_json_to_excel({
+                header: header,
+                data: exportData,
+                filename: `${fileNameMemo} 1-${exportData.length}`,
+                autoWidth: true,
+                bookType: 'xlsx',
+                optsSingleCellSetting,
+              })
             })
           } else if (!(totalCellNumber < maxCellNumber && response.Total <= pageSize)) {
             // 分批导出
@@ -183,13 +185,15 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
       page: pagination.Pagination.Page,
     })} ${exportNumber.current && firstIndx + 1}-${lastIndex})`
     const list: Array<string[]> = exportDataBatch.current?.slice(firstIndx, lastIndex + 1)
-    export_json_to_excel({
-      header: headerExcel.current,
-      data: list,
-      filename: name,
-      autoWidth: true,
-      bookType: 'xlsx',
-      optsSingleCellSetting: optsCell.current,
+    import('./toExcel').then(({ export_json_to_excel }) => {
+      export_json_to_excel({
+        header: headerExcel.current,
+        data: list,
+        filename: name,
+        autoWidth: true,
+        bookType: 'xlsx',
+        optsSingleCellSetting: optsCell.current,
+      })
     })
     setSelectItem(undefined)
   }
@@ -203,15 +207,17 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
   }
 
   const onSplitExport = useMemoizedFn((data, start, end) => {
-    export_json_to_excel({
-      header: headerExcel.current,
-      data: data,
-      filename: `${fileNameMemo} ${start}-${end}`,
-      autoWidth: true,
-      bookType: 'xlsx',
-      optsSingleCellSetting: optsCell.current,
+    import('./toExcel').then(({ export_json_to_excel }) => {
+      export_json_to_excel({
+        header: headerExcel.current,
+        data: data,
+        filename: `${fileNameMemo} ${start}-${end}`,
+        autoWidth: true,
+        bookType: 'xlsx',
+        optsSingleCellSetting: optsCell.current,
+      })
+      setSelectItem(undefined)
     })
-    setSelectItem(undefined)
   })
   return (
     <>

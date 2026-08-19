@@ -61,7 +61,7 @@ import { CheckIcon, RemoveIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
 import type { RouteToPageProps } from '../publicMenu/PublicMenu'
 import { type SubscribeCloseType, type YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
 import { YakitModalConfirm, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { defaultUserInfo } from '@/pages/MainOperator'
+import { defaultUserInfo } from '@/pages/userInfoDefaults'
 import { useStore } from '@/store'
 import { getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue } from '@/utils/kv'
 import type { GroupCount, QueryYakScriptsResponse } from '@/pages/invoker/schema'
@@ -72,7 +72,7 @@ import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import ReactResizeDetector from 'react-resize-detector'
-import { compareAsc } from '@/pages/yakitStore/viewers/base'
+import { compareAsc } from '@/pages/yakitStore/viewers/compareAsc'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitMenu, type YakitMenuItemProps, type YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -267,11 +267,8 @@ const getDeletedItems = (oldArray: MultipleNodeInfo[], newArray: MultipleNodeInf
  * 生成组id
  * @returns {string} 生成的组id
  */
-export const generateGroupId = (gIndex?: number) => {
-  const time = (new Date().getTime() + (gIndex || 0)).toString()
-  const groupId = `[${randomString(6)}]-${time}-group`
-  return groupId
-}
+export { generateGroupId } from './groupIdUtils'
+import { generateGroupId } from './groupIdUtils'
 
 const generateTabIdentity = (key: string, index?: number) => {
   const time = `${Date.now()}${typeof index === 'number' ? `-${index}` : ''}`
@@ -678,7 +675,8 @@ const getSubPageTotal = (subPage) => {
   return total
 }
 
-export let childWindowHash = ''
+import { childWindowHash, setChildWindowHash } from '@/utils/childWindowHash'
+export { childWindowHash } from '@/utils/childWindowHash'
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
   const { routeKeyToLabel } = props
   const { t, i18n } = useI18nNamespaces(['layout'])
@@ -717,10 +715,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
   useEffect(() => {
     ipcRenderer.on('child-window-hash', (event, { hash }) => {
-      childWindowHash = hash
+      setChildWindowHash(hash)
     })
     return () => {
-      childWindowHash = ''
+      setChildWindowHash('')
       ipcRenderer.send('close-childWin')
       ipcRenderer.removeAllListeners('child-window-hash')
     }

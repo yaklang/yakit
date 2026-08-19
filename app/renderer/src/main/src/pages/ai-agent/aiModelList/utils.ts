@@ -21,7 +21,6 @@ import type {
 } from '../type/aiModel'
 import omit from 'lodash/omit'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
-import { onOpenConfigModal } from './aiModelSelect/AIModelSelect'
 import type { KVPair } from '@/models/kv'
 import { genDefaultPagination, type PaginationSchema } from '@/pages/invoker/schema'
 import type { GetThirdPartyAppConfigTemplateResponse } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
@@ -292,7 +291,9 @@ export const isForcedSetAIModal: APIFunc<
           // 每个 tab / 页面只弹一次
           if (!openedAIModalMap.get(pageKey)) {
             openedAIModalMap.set(pageKey, true)
-            isOpen && t && onOpenConfigModal(mountContainer, t)
+            isOpen && t && import('./aiModelSelect/AIModelSelect').then(({ onOpenConfigModal }) => {
+              onOpenConfigModal(mountContainer, t)
+            })
           }
           noDataCall?.(res)
         } else {

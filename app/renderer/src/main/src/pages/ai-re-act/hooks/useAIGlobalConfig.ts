@@ -11,7 +11,6 @@ import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { shallow } from 'zustand/shallow'
 import { cloneDeep } from 'lodash'
-import { getFileNameByModelType } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import type { API } from '@/services/swagger/resposeType'
 
 interface UseAIGlobalConfigData {
@@ -134,7 +133,8 @@ function useAIGlobalConfig(params) {
       let serverConfig: ServerAIGlobalConfig = {}
       serverConfig = JSON.parse(aiConfig.content)
 
-      Object.values(AIModelTypeEnum).forEach((type) => {
+      Object.values(AIModelTypeEnum).forEach(async (type) => {
+        const { getFileNameByModelType } = await import('@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm')
         const key = getFileNameByModelType(type)
         if (!key) return
         const serverModels = (serverConfig[key] || []).map((model) => ({

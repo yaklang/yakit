@@ -16,7 +16,7 @@ import type {
   WatchProcessResponse,
 } from './PluginTunHijackType'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { TraceSvgSvgIcon } from '@/assets/icons'
+import { TraceSvgSvgIcon } from '@/assets/icons/traceSvg'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineExclamationcircleIcon,

@@ -1,15 +1,11 @@
 /* eslint-disable */
 import { yakitNotify } from '@/utils/notification'
-import { saveAs } from 'file-saver'
-import moment from 'moment'
-import * as XLSX from 'xlsx'
-import * as XLSXStyle from 'xlsx-js-style'
 import type { BookType } from 'xlsx'
 import i18n from '@/i18n/i18n'
 
 const tOriginal = i18n.getFixedT(null, 'components')
 
-function sheet_from_array_of_arrays(data, optsSingleCellSetting) {
+function sheet_from_array_of_arrays(data, optsSingleCellSetting, XLSX) {
   var ws = {}
   var range = {
     s: {
@@ -27,7 +23,7 @@ function sheet_from_array_of_arrays(data, optsSingleCellSetting) {
       if (range.s.c > C) range.s.c = C
       if (range.e.r < R) range.e.r = R
       if (range.e.c < C) range.e.c = C
-      var cell: XLSX.CellObject = {
+      var cell: any = {
         v: data[R][C],
         t: 's',
       }
@@ -76,7 +72,7 @@ export interface CellSetting {
   colorObj?: any
 }
 
-export function export_json_to_excel({
+export async function export_json_to_excel({
   header = [],
   data = [],
   filename = '',
@@ -85,17 +81,24 @@ export function export_json_to_excel({
   optsSingleCellSetting, //  单个单元格样式
   optsUnifiedCellSetting, // 整列或者整行的单元格样式，这个暂时没有做，因为没有需求
 }: ExcelJsonProps) {
+  const [{ default: XLSX }, { default: XLSXStyle }, { saveAs }, { default: moment }] = await Promise.all([
+    import('xlsx'),
+    import('xlsx-js-style'),
+    import('file-saver'),
+    import('moment'),
+  ])
+
   /* original data */
   filename = filename || 'excel-list'
   data = [...data]
   data.unshift(header)
 
   var ws_name = 'SheetJS'
-  var wb: XLSX.WorkBook = {
+  var wb: any = {
       SheetNames: [],
       Sheets: {},
     },
-    ws = sheet_from_array_of_arrays(data, optsSingleCellSetting)
+    ws = sheet_from_array_of_arrays(data, optsSingleCellSetting, XLSX)
 
   if (autoWidth) {
     /*设置worksheet每列的最大宽度*/

@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    compress: false,
   },
   resolve: {
     alias: {
@@ -26,6 +27,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
+    esbuildOptions: { target: 'esnext' },
     include: ['react', 'react-dom', 'antd', 'monaco-editor'],
   },
 })

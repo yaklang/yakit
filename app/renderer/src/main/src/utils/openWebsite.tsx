@@ -1,7 +1,7 @@
 import type React from 'react'
 import { success, yakitFailed, yakitNotify } from './notification'
 import type { OpenPacketNewWindowItem } from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
-import { childWindowHash } from '@/pages/layout/mainOperatorContent/MainOperatorContent'
+import { childWindowHash } from '@/utils/childWindowHash'
 import {
   changeClickEngineConsoleFlag,
   clickEngineConsoleFlag,

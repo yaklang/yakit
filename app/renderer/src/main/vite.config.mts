@@ -163,6 +163,8 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: 3000,
       strictPort: true,
+      // Electron 通过 localhost 加载，无需 gzip/brotli 压缩，关闭可省 CPU
+      compress: false,
       // 首屏前预热入口，减少运行中途发现新 dep 触发 504 Outdated Optimize Dep
       warmup: {
         clientFiles: ['./index.html', './yakit-aux.html', './src/index.tsx', './src/auxWindow/aux-entry.tsx'],
@@ -176,6 +178,8 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       // 等静态依赖爬完再对外服务，避免浏览器拿着旧 hash 打到已失效的预构建产物
       holdUntilCrawlEnd: true,
+      // 与 build.target 对齐，跳过 down-level 转译，加速预构建
+      esbuildOptions: { target: 'esnext' },
       include: [
         'react',
         'react-dom',
@@ -185,8 +189,7 @@ export default defineConfig(({ mode }) => {
         'antd/es/date-picker/locale/zh_TW',
         'antd/es/date-picker/locale/en_US',
         '@ant-design/icons',
-        'monaco-editor',
-        'react-monaco-editor',
+        'monaco-editor/esm/vs/editor/editor.api',
         'buffer',
         'ahooks',
         'lodash',
@@ -202,31 +205,6 @@ export default defineConfig(({ mode }) => {
         're-resizable',
         'react-draggable',
         'react-sparklines',
-        'react-codemirror2',
-        'codemirror',
-        'codemirror/mode/javascript/javascript',
-        'codemirror/mode/xml/xml',
-        'codemirror/mode/css/css',
-        'codemirror/mode/python/python',
-        'codemirror/mode/markdown/markdown',
-        'codemirror/mode/php/php',
-        'codemirror/mode/ruby/ruby',
-        'codemirror/mode/shell/shell',
-        'codemirror/mode/sql/sql',
-        'codemirror/mode/yaml/yaml',
-        'codemirror/mode/dockerfile/dockerfile',
-        'codemirror/mode/htmlmixed/htmlmixed',
-        'codemirror/mode/clike/clike',
-        'codemirror/addon/hint/show-hint',
-        'codemirror/addon/hint/javascript-hint',
-        'codemirror/addon/selection/active-line',
-        'codemirror/addon/edit/matchbrackets',
-        '@uiw/react-md-editor',
-        'rehype-sanitize',
-        'streamdown',
-        '@streamdown/code',
-        '@streamdown/math',
-        '@streamdown/mermaid',
         'prop-types',
       ],
     },
@@ -234,6 +212,8 @@ export default defineConfig(({ mode }) => {
       outDir,
       emptyOutDir: true,
       target: 'esnext',
+      // Electron 本地 file:// 加载，不需要 module preload polyfill
+      modulePreload: { polyfill: false },
       sourcemap,
       // Local/WSL Electron E2E builds keep production React semantics but skip
       // minification, whose minify workers can exceed 10 GiB in this project.
