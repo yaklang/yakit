@@ -32,6 +32,11 @@ export interface ManualHijackInfoRefProps {
   /**劫持响应 */
   onHijackingResponse: (s: SingleManualHijackInfoMessage) => void
 }
+export type LargeRequestReplacementResult = {
+  Filename: string
+  Size: number
+}
+
 export interface ManualHijackInfoProps {
   ref?: React.ForwardedRef<ManualHijackInfoRefProps>
   /**当前选中的数据数组下标 */
@@ -47,6 +52,12 @@ export interface ManualHijackInfoProps {
   setLoading: (b: boolean) => void
   /**是否只看响应 */
   isOnlyLookResponse: boolean
+  /**当前 TaskID 下已上传的超大请求替换结果（按 replacementKey） */
+  largeRequestReplacements: Record<string, LargeRequestReplacementResult>
+  /**写入当前 TaskID 的替换结果，切行后仍可回显「已替换为」 */
+  onLargeRequestReplacementComplete: (replacementKey: string, result: LargeRequestReplacementResult) => void
+  /**清除当前 TaskID 的替换结果（丢弃/放行时） */
+  onClearLargeRequestReplacements: () => void
 }
 
 export type ManualHijackTypeProps = `${ManualHijackType}`
@@ -80,6 +91,10 @@ export interface MITMV2ManualEditorProps {
   isResponse: boolean
   /**是否为只看响应 */
   isOnlyLookResponse?: boolean
+  /**当前 TaskID 下已上传的超大请求替换结果（按 replacementKey） */
+  largeRequestReplacements?: Record<string, LargeRequestReplacementResult>
+  /**写入当前 TaskID 的替换结果 */
+  onLargeRequestReplacementComplete?: (replacementKey: string, result: LargeRequestReplacementResult) => void
 }
 
 export interface CurrentPacketInfoProps {

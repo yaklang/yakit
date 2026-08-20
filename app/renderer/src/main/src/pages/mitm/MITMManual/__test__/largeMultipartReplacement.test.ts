@@ -1,5 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import { parseLargeRequestReplacementMarkers } from '../largeMultipartReplacement'
+import {
+  matchLargeRequestReplacementLine,
+  parseLargeRequestReplacementMarkers,
+} from '../largeMultipartReplacement'
+
+describe('matchLargeRequestReplacementLine', () => {
+  it('returns marker-only lineLength when trailing boundary is on the same line', () => {
+    const marker = '[[yakit: multipart file spilled, part=0, file=yak_windows_amd64.exe.(3).zip, size=67856048]]'
+    const trailingBoundary = '-----WebKitFormBoundarygrBMpnQW1ehMjVAI--'
+    expect(matchLargeRequestReplacementLine(marker + trailingBoundary)).toEqual({
+      kind: 'multipart',
+      partIndex: 0,
+      filename: 'yak_windows_amd64.exe.(3).zip',
+      size: 67856048,
+      lineLength: marker.length,
+    })
+  })
+
+  it('returns null for inline or invalid marker-like text', () => {
+    expect(
+      matchLargeRequestReplacementLine('prefix [[yakit: multipart file spilled, part=0, file=a.zip, size=1]]')
+    ).toBeNull()
+    expect(
+      matchLargeRequestReplacementLine('[[yakit: multipart file spilled, part=-1, file=a.zip, size=1]]')
+    ).toBeNull()
+  })
+})
 
 describe('parseLargeRequestReplacementMarkers', () => {
   it('parses spilled multipart marker metadata and line positions', () => {
@@ -45,7 +71,7 @@ describe('parseLargeRequestReplacementMarkers', () => {
         filename: 'yak_windows_amd64.exe.(3).zip',
         size: 67856048,
         lineNumber: 4,
-        lineLength: marker.length + trailingBoundary.length,
+        lineLength: marker.length,
       },
     ])
   })

@@ -14,7 +14,8 @@ import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelec
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
   getLargeRequestReplacementKey,
-  parseLargeRequestReplacementMarkers,
+  matchLargeRequestReplacementLine,
+  withLargeRequestReplacementLineNumber,
   type LargeRequestReplacementMarker,
 } from '@/pages/mitm/MITMManual/largeMultipartReplacement'
 import { LargeRequestFileReplaceModal } from '@/pages/mitm/MITMManual/LargeMultipartFileReplaceModal'
@@ -80,10 +81,6 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       Record<string, { Filename: string; Size: number }>
     >({})
 
-    const largeRequestMarkers = useMemo(() => {
-      return parseLargeRequestReplacementMarkers(newRequest)
-    }, [newRequest])
-
     const replaceMarkerWithFileTag = useMemoizedFn(
       (marker: LargeRequestReplacementMarker, filePath: string, filename: string) => {
         if (!reqEditor) return
@@ -138,45 +135,68 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     })
 
     useEffect(() => {
-      if (!reqEditor || largeRequestMarkers.length === 0) return
-      const decorationIDs = reqEditor.deltaDecorations(
-        [],
-        largeRequestMarkers.map((marker) => {
-          const replacement = largeRequestReplacements[getLargeRequestReplacementKey(marker)]
-          return {
-            range: {
-              startLineNumber: marker.lineNumber,
-              startColumn: 1,
-              endLineNumber: marker.lineNumber,
-              endColumn: marker.lineLength + 1,
-            },
-            options: {
-              inlineClassName: styles['large-request-replace-marker'],
-              after: {
-                content: replacement
-                  ? `  [已替换: ${replacement.Filename}]`
-                  : `  [点击替换为文件 fuzztag]`,
-                inlineClassName: styles['large-request-replace-hint'],
+      if (!reqEditor) return
+      const model = reqEditor.getModel()
+      if (!model) return
+
+      const toInjectedHint = (text: string) => text.replace(/ /g, '\u00A0')
+      let decorationIDs: string[] = []
+      let mouseDisposable: { dispose: () => void } | undefined
+      let modelMarkers: LargeRequestReplacementMarker[] = []
+
+      const applyDecorations = () => {
+        mouseDisposable?.dispose()
+        mouseDisposable = undefined
+        modelMarkers = []
+        for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
+          const matched = matchLargeRequestReplacementLine(model.getLineContent(lineNumber))
+          if (!matched) continue
+          modelMarkers.push(withLargeRequestReplacementLineNumber(matched, lineNumber))
+        }
+        decorationIDs = reqEditor.deltaDecorations(
+          decorationIDs,
+          modelMarkers.map((marker) => {
+            const replacement = largeRequestReplacements[getLargeRequestReplacementKey(marker)]
+            return {
+              range: {
+                startLineNumber: marker.lineNumber,
+                startColumn: 1,
+                endLineNumber: marker.lineNumber,
+                endColumn: marker.lineLength + 1,
               },
-              hoverMessage: { value: '点击替换为文件 fuzztag' },
-              glyphMarginClassName: styles['large-request-replace-glyph'],
-            },
-          }
-        })
-      )
-      const mouseDisposable = reqEditor.onMouseDown((event) => {
-        const position = event.target.position
-        if (!event.event.leftButton || !position) return
-        const marker = largeRequestMarkers.find(
-          (item) => item.lineNumber === position.lineNumber && position.column <= item.lineLength + 1
+              options: {
+                inlineClassName: styles['large-request-replace-marker'],
+                after: {
+                  content: replacement
+                    ? toInjectedHint(`  [已替换: ${replacement.Filename}]`)
+                    : toInjectedHint(`  [点击替换为文件 fuzztag]`),
+                  inlineClassName: styles['large-request-replace-hint'],
+                },
+                hoverMessage: { value: '点击替换为文件 fuzztag' },
+                glyphMarginClassName: styles['large-request-replace-glyph'],
+              },
+            }
+          })
         )
-        if (marker) openLargeRequestFileReplace(marker)
-      })
+        if (modelMarkers.length === 0) return
+        mouseDisposable = reqEditor.onMouseDown((event) => {
+          const position = event.target.position
+          if (!event.event.leftButton || !position) return
+          const marker = modelMarkers.find(
+            (item) => item.lineNumber === position.lineNumber && position.column <= item.lineLength + 1
+          )
+          if (marker) openLargeRequestFileReplace(marker)
+        })
+      }
+
+      applyDecorations()
+      const contentDisposable = reqEditor.onDidChangeModelContent(() => applyDecorations())
       return () => {
-        mouseDisposable.dispose()
+        contentDisposable.dispose()
+        mouseDisposable?.dispose()
         reqEditor.deltaDecorations(decorationIDs, [])
       }
-    }, [largeRequestMarkers, largeRequestReplacements, reqEditor])
+    }, [largeRequestReplacements, newRequest, reqEditor])
 
     useImperativeHandle(
       ref,
