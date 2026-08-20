@@ -33,6 +33,23 @@ describe('parseLargeRequestReplacementMarkers', () => {
     ])
   })
 
+  it('parses a marker followed directly by a multipart boundary on the same line', () => {
+    const marker = '[[yakit: multipart file spilled, part=0, file=yak_windows_amd64.exe.(3).zip, size=67856048]]'
+    const trailingBoundary = '-----WebKitFormBoundarygrBMpnQW1ehMjVAI--'
+    const packet = ['POST /upload HTTP/1.1', '', '--boundary', marker + trailingBoundary].join('\r\n')
+
+    expect(parseLargeRequestReplacementMarkers(packet)).toEqual([
+      {
+        kind: 'multipart',
+        partIndex: 0,
+        filename: 'yak_windows_amd64.exe.(3).zip',
+        size: 67856048,
+        lineNumber: 4,
+        lineLength: marker.length + trailingBoundary.length,
+      },
+    ])
+  })
+
   it('ignores invalid or inline marker-like text', () => {
     const packet = [
       'prefix [[yakit: multipart file spilled, part=0, file=a.zip, size=1]]',

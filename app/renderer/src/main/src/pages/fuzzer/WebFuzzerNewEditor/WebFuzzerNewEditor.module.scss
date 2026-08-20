@@ -1,0 +1,21 @@
+:global(.monaco-editor) .large-request-replace-marker {
+  color: var(--Colors-Use-Warning-Primary);
+  background: var(--Colors-Use-Warning-Bg);
+  cursor: pointer;
+}
+
+:global(.monaco-editor) .large-request-replace-hint {
+  color: var(--Colors-Use-Warning-Primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:global(.monaco-editor) .large-request-replace-glyph::before {
+  content: '⇅';
+  color: var(--Colors-Use-Warning-Primary);
+  font-size: 12px;
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  cursor: pointer;
+}

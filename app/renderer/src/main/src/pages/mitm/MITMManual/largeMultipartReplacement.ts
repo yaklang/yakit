@@ -17,7 +17,7 @@ export type LargeRequestReplacementMarker = LargeRequestMarkerPosition &
       }
   )
 
-const LARGE_MULTIPART_MARKER = /^\[\[yakit: multipart file spilled, part=(\d+), file=(.*), size=(\d+)\]\]$/
+const LARGE_MULTIPART_MARKER = /^\[\[yakit: multipart file spilled, part=(\d+), file=(.*?), size=(\d+)\]\]/
 const LARGE_REQUEST_BODY_MARKER =
   /^\[\[request(?: |-)too(?: |-)large\(([^)]+)\), truncated\]\](?: use GetHTTPFlowBodyById\(IsRequest=true\) for full body)?$/i
 

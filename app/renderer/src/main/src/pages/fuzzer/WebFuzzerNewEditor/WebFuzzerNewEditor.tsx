@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, useMemo, useState } from 'react'
+import React, { useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import { type IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
 import { insertFileFuzzTag, insertTemporaryFileFuzzTag } from '../InsertFileFuzzTag'
 import { monacoEditorWrite } from '../fuzzerTemplates'
@@ -12,6 +12,13 @@ import { openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import {
+  getLargeRequestReplacementKey,
+  parseLargeRequestReplacementMarkers,
+  type LargeRequestReplacementMarker,
+} from '@/pages/mitm/MITMManual/largeMultipartReplacement'
+import { LargeRequestFileReplaceModal } from '@/pages/mitm/MITMManual/LargeMultipartFileReplaceModal'
+import styles from './WebFuzzerNewEditor.module.scss'
 const { ipcRenderer } = window.require('electron')
 
 const HTTPFuzzerHotPatch = React.lazy(() =>
@@ -67,6 +74,109 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     const selectionByteCount = useSelectionByteCount(reqEditor, 500)
 
     const [newRequest, setNewRequest] = useState<string>(request) // 由于传过来的request是ref 值变化并不会导致重渲染 这里拿到的request还是旧值
+
+    // 超大请求占位标记的替换状态（key -> 替换结果）
+    const [largeRequestReplacements, setLargeRequestReplacements] = useState<
+      Record<string, { Filename: string; Size: number }>
+    >({})
+
+    const largeRequestMarkers = useMemo(() => {
+      return parseLargeRequestReplacementMarkers(newRequest)
+    }, [newRequest])
+
+    const replaceMarkerWithFileTag = useMemoizedFn(
+      (marker: LargeRequestReplacementMarker, filePath: string, filename: string) => {
+        if (!reqEditor) return
+        const model = reqEditor.getModel()
+        if (!model) return
+        const lineContent = model.getLineContent(marker.lineNumber)
+        const fileTag = `{{file(${filePath})}}`
+        // 在 multipart 场景下，占位标记行后面可能紧跟着 boundary；把整个标记行替换为 fuzztag 并保留换行。
+        const replacementText = marker.kind === 'multipart' ? `${fileTag}\n` : fileTag
+        const range = {
+          startLineNumber: marker.lineNumber,
+          startColumn: 1,
+          endLineNumber: marker.lineNumber,
+          endColumn: lineContent.length + 1,
+        }
+        reqEditor.executeEdits('large-request-replace', [
+          {
+            range,
+            text: replacementText,
+            forceMoveMarkers: false,
+          },
+        ])
+        setLargeRequestReplacements((previous) => ({
+          ...previous,
+          [getLargeRequestReplacementKey(marker)]: { Filename: filename, Size: 0 },
+        }))
+        yakitNotify('success', `已替换为文件 fuzztag：${filename}`)
+      }
+    )
+
+    const openLargeRequestFileReplace = useMemoizedFn((marker: LargeRequestReplacementMarker) => {
+      const modal = showYakitModal({
+        title:
+          marker.kind === 'body'
+            ? `替换超大请求 Body（${marker.sizeVerbose}）`
+            : `替换超大文件 file=${marker.filename}`,
+        width: 660,
+        footer: null,
+        content: (
+          <LargeRequestFileReplaceModal
+            marker={marker}
+            mode="fuzzer"
+            onCancel={() => modal.destroy()}
+            onComplete={(result) => {
+              replaceMarkerWithFileTag(marker, result.Filename, result.Filename)
+              modal.destroy()
+            }}
+          />
+        ),
+        onCancel: () => modal.destroy(),
+      })
+    })
+
+    useEffect(() => {
+      if (!reqEditor || largeRequestMarkers.length === 0) return
+      const decorationIDs = reqEditor.deltaDecorations(
+        [],
+        largeRequestMarkers.map((marker) => {
+          const replacement = largeRequestReplacements[getLargeRequestReplacementKey(marker)]
+          return {
+            range: {
+              startLineNumber: marker.lineNumber,
+              startColumn: 1,
+              endLineNumber: marker.lineNumber,
+              endColumn: marker.lineLength + 1,
+            },
+            options: {
+              inlineClassName: styles['large-request-replace-marker'],
+              after: {
+                content: replacement
+                  ? `  [已替换: ${replacement.Filename}]`
+                  : `  [点击替换为文件 fuzztag]`,
+                inlineClassName: styles['large-request-replace-hint'],
+              },
+              hoverMessage: { value: '点击替换为文件 fuzztag' },
+              glyphMarginClassName: styles['large-request-replace-glyph'],
+            },
+          }
+        })
+      )
+      const mouseDisposable = reqEditor.onMouseDown((event) => {
+        const position = event.target.position
+        if (!event.event.leftButton || !position) return
+        const marker = largeRequestMarkers.find(
+          (item) => item.lineNumber === position.lineNumber && position.column <= item.lineLength + 1
+        )
+        if (marker) openLargeRequestFileReplace(marker)
+      })
+      return () => {
+        mouseDisposable.dispose()
+        reqEditor.deltaDecorations(decorationIDs, [])
+      }
+    }, [largeRequestMarkers, largeRequestReplacements, reqEditor])
 
     useImperativeHandle(
       ref,
@@ -192,6 +302,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
           showHostHint: true,
           foldBinaryFuzztag,
           onFoldBinaryFuzztagChange,
+          glyphMargin: true,
         }}
         title={
           <span style={{ fontSize: 12 }}>

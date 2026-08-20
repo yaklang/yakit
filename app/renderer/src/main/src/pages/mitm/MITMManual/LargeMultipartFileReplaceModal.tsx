@@ -9,14 +9,17 @@ import type { LargeRequestReplacementMarker } from './largeMultipartReplacement'
 import styles from './MITMManual.module.scss'
 
 interface LargeRequestFileReplaceModalProps {
-  taskID: string
+  /** MITM 手动劫持模式需要 taskID；Web Fuzzer 模式不需要。 */
+  taskID?: string
   marker: LargeRequestReplacementMarker
   onCancel: () => void
   onComplete: (result: MITMV2ReplaceLargeRequestFileResponse) => void
+  /** 'mitm' 会把文件分块上传到引擎，放行请求时替换；'fuzzer' 只返回文件信息，由调用方写入编辑器。 */
+  mode?: 'mitm' | 'fuzzer'
 }
 
 export const LargeRequestFileReplaceModal: React.FC<LargeRequestFileReplaceModalProps> = React.memo((props) => {
-  const { taskID, marker, onCancel, onComplete } = props
+  const { taskID, marker, onCancel, onComplete, mode = 'mitm' } = props
   const { t } = useI18nNamespaces(['mitm'])
   const [filePath, setFilePath] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,12 +31,26 @@ export const LargeRequestFileReplaceModal: React.FC<LargeRequestFileReplaceModal
     }
     setLoading(true)
     try {
-      const result = await grpcMITMV2ReplaceLargeRequestFile({
-        TaskID: taskID,
-        ReplaceBody: marker.kind === 'body',
-        PartIndex: marker.kind === 'multipart' ? marker.partIndex : undefined,
-        FilePath: filePath,
-      })
+      let result: MITMV2ReplaceLargeRequestFileResponse
+      if (mode === 'fuzzer') {
+        const stat = await window.require('electron').ipcRenderer.invoke('is-file-exists', filePath)
+          .then(() => true)
+          .catch(() => false)
+        if (!stat) {
+          throw new Error('selected file does not exist')
+        }
+        result = { Filename: filePath, Size: 0 }
+      } else {
+        if (!taskID) {
+          throw new Error('MITM mode requires taskID')
+        }
+        result = await grpcMITMV2ReplaceLargeRequestFile({
+          TaskID: taskID,
+          ReplaceBody: marker.kind === 'body',
+          PartIndex: marker.kind === 'multipart' ? marker.partIndex : undefined,
+          FilePath: filePath,
+        })
+      }
       yakitNotify('success', t('MITMManual.replace_large_file_uploaded'))
       onComplete(result)
     } finally {
