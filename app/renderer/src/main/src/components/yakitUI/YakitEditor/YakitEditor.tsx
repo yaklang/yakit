@@ -932,89 +932,123 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const mouseDownDisposable = editor.onMouseDown(handleHostPrivacyClick)
 
     // 二进制 Fuzztag 折叠：点击小块打开 HEX 编辑弹窗
+    // 打开过程含 await decodeBinaryTag，无互斥时连点会叠多个弹窗
+    let isOpeningBinaryEditor = false
+    const releaseBinaryEditorLock = () => {
+      isOpeningBinaryEditor = false
+      try {
+        editor.getDomNode()?.classList.remove('binary-fuzz-chip-busy')
+      } catch (e) {}
+    }
     const openBinaryFoldEditor = async (
       entry: BinaryFuzztagEntry,
       hit: { id: string; range: monaco.Range; ordinal: number },
     ) => {
-      // 不可编辑（如 file）：只读展示原始引用文本
-      if (!entry.editable) {
-        const infoModal = showYakitModal({
-          title: `Binary Reference - {{${entry.tagName}(...)}}`,
-          width: '50%',
-          footer: null,
-          content: (
-            <div style={{ padding: 16, wordBreak: 'break-all', fontFamily: 'monospace', fontSize: 12 }}>
-              {entry.innerContent}
-            </div>
-          ),
-        })
+      if (isOpeningBinaryEditor) {
         return
       }
-      let initialData: Uint8Array
+      isOpeningBinaryEditor = true
       try {
-        initialData = await decodeBinaryTag(entry)
-      } catch (e) {
-        initialData = new Uint8Array()
-      }
-      const handleSubmit = async (bytes: Uint8Array, result: BinaryFuzztagSubmitResult) => {
-        try {
-          if (!result.changed) {
-            infoModal.destroy()
-            return
-          }
-          const newTagText = await encodeBytesToTag(entry.kind, entry.tagName, bytes)
-          // 重新折叠新标签得到新占位 + 侧表项（内容过短则返回原标签不折叠）
-          const { text: newPlaceholderText, entries: newEntries } = collapseBinaryFuzztag(newTagText)
-          newEntries.forEach((v, k) => {
-            binaryFoldEntriesRef.current.set(k, v)
-          })
-          // 按点击命中的第 N 个标签记录修改，并直接替换命中的 decoration range。
-          // 相同二进制标签会拥有相同 id，不能再按 id 全文搜索，否则会误改第一个相同标签。
-          binaryModifiedOrdinalsRef.current.add(hit.ordinal)
-          editor.executeEdits('binary-fuzz-fold', [
-            {
-              range: hit.range,
-              text: newPlaceholderText,
-              forceMoveMarkers: true,
-            },
-          ])
-        } catch (e) {
-          failed(`encode binary fuzztag failed: ${e}`)
-        }
-        infoModal.destroy()
-      }
-      // base64 / hex 走"文本/HEX 可切换"的公共编辑器（默认文本）；unquote(Binary) 走字节级 HEX 编辑器
-      const useTextHexEditor = entry.kind === 'base64' || entry.kind === 'hex'
-      const editorAction = readOnly ? 'View' : 'Edit'
-      const editorTitle = useTextHexEditor
-        ? `${editorAction} ${entry.kind === 'base64' ? 'Base64' : 'HexString'} - {{${entry.tagName}(...)}}`
-        : `${editorAction} Binary - {{${entry.tagName}(...)}}`
+        editor.getDomNode()?.classList.add('binary-fuzz-chip-busy')
+      } catch (e) {}
 
-      const infoModal = showYakitModal({
-        title: editorTitle,
-        width: '60%',
-        footer: null,
-        content: useTextHexEditor ? (
-          <Base64HexFuzztagModal
-            entry={entry}
-            initialData={initialData}
-            onSubmit={handleSubmit}
-            onCancel={() => infoModal.destroy()}
-          />
-        ) : (
-          <BinaryFuzztagHexModal
-            entry={entry}
-            readOnly={readOnly}
-            initialData={initialData}
-            onSubmit={handleSubmit}
-            onCancel={() => infoModal.destroy()}
-          />
-        ),
-      })
+      const showLockedModal = (modalProps: Parameters<typeof showYakitModal>[0]) => {
+        return showYakitModal({
+          ...modalProps,
+          modalAfterClose: () => {
+            modalProps.modalAfterClose?.()
+            releaseBinaryEditorLock()
+          },
+        })
+      }
+
+      try {
+        // 不可编辑（如 file）：只读展示原始引用文本
+        if (!entry.editable) {
+          showLockedModal({
+            title: `Binary Reference - {{${entry.tagName}(...)}}`,
+            width: '50%',
+            footer: null,
+            content: (
+              <div style={{ padding: 16, wordBreak: 'break-all', fontFamily: 'monospace', fontSize: 12 }}>
+                {entry.innerContent}
+              </div>
+            ),
+          })
+          return
+        }
+        let initialData: Uint8Array
+        try {
+          initialData = await decodeBinaryTag(entry)
+        } catch (e) {
+          initialData = new Uint8Array()
+        }
+        // 解码期间若已解锁（例如编辑器销毁）则不再弹窗
+        if (!isOpeningBinaryEditor) {
+          return
+        }
+        const handleSubmit = async (bytes: Uint8Array, result: BinaryFuzztagSubmitResult) => {
+          try {
+            if (!result.changed) {
+              infoModal.destroy()
+              return
+            }
+            const newTagText = await encodeBytesToTag(entry.kind, entry.tagName, bytes)
+            // 重新折叠新标签得到新占位 + 侧表项（内容过短则返回原标签不折叠）
+            const { text: newPlaceholderText, entries: newEntries } = collapseBinaryFuzztag(newTagText)
+            newEntries.forEach((v, k) => {
+              binaryFoldEntriesRef.current.set(k, v)
+            })
+            // 按点击命中的第 N 个标签记录修改，并直接替换命中的 decoration range。
+            // 相同二进制标签会拥有相同 id，不能再按 id 全文搜索，否则会误改第一个相同标签。
+            binaryModifiedOrdinalsRef.current.add(hit.ordinal)
+            editor.executeEdits('binary-fuzz-fold', [
+              {
+                range: hit.range,
+                text: newPlaceholderText,
+                forceMoveMarkers: true,
+              },
+            ])
+          } catch (e) {
+            failed(`encode binary fuzztag failed: ${e}`)
+          }
+          infoModal.destroy()
+        }
+        // base64 / hex 走"文本/HEX 可切换"的公共编辑器（默认文本）；unquote(Binary) 走字节级 HEX 编辑器
+        const useTextHexEditor = entry.kind === 'base64' || entry.kind === 'hex'
+        const editorAction = readOnly ? 'View' : 'Edit'
+        const editorTitle = useTextHexEditor
+          ? `${editorAction} ${entry.kind === 'base64' ? 'Base64' : 'HexString'} - {{${entry.tagName}(...)}}`
+          : `${editorAction} Binary - {{${entry.tagName}(...)}}`
+
+        const infoModal = showLockedModal({
+          title: editorTitle,
+          width: '60%',
+          footer: null,
+          content: useTextHexEditor ? (
+            <Base64HexFuzztagModal
+              entry={entry}
+              initialData={initialData}
+              onSubmit={handleSubmit}
+              onCancel={() => infoModal.destroy()}
+            />
+          ) : (
+            <BinaryFuzztagHexModal
+              entry={entry}
+              readOnly={readOnly}
+              initialData={initialData}
+              onSubmit={handleSubmit}
+              onCancel={() => infoModal.destroy()}
+            />
+          ),
+        })
+      } catch (e) {
+        releaseBinaryEditorLock()
+      }
     }
 
     const handleBinaryFoldClick = (e: monaco.editor.IEditorMouseEvent) => {
-      if (!foldBinaryEnabled || !e.event.leftButton) {
+      if (!foldBinaryEnabled || !e.event.leftButton || isOpeningBinaryEditor) {
         return
       }
       // 仅当点击命中小块本身（橙色/蓝色块）才触发；占位为零宽，行尾空白区域不应响应
@@ -1101,6 +1135,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         yakAnalyzeDisposable?.dispose()
         mouseDownDisposable.dispose()
         binaryFoldMouseDownDisposable.dispose()
+        releaseBinaryEditorLock()
         editorDomNode?.removeEventListener('copy', handleEditorClipboard, true)
         editorDomNode?.removeEventListener('cut', handleEditorClipboard, true)
         unregisterBinaryFoldEntries(model)
