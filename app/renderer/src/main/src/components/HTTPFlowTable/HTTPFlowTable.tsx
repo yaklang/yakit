@@ -1348,6 +1348,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     delete copyQuery.Pagination
     delete copyQuery.AfterId
     delete copyQuery.BeforeId
+    delete copyQuery.idFilter
+    delete copyQuery.bodyLength
     if (Array.isArray(copyQuery.Methods)) {
       copyQuery.Methods = copyQuery.Methods.join(',')
     }
