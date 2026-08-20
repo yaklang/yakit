@@ -606,28 +606,6 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                   })}
                 </>
               )}
-              {/* codec 插件专用 ↓↓↓ */}
-              {type === 'codec' && (
-                <>
-                  {CodecTypePluginSwitchs.map((item) => {
-                    const check = tags.findIndex((tag) => {
-                      return handleFilterTag(tag, item)
-                    })
-                    return (
-                      <div key={item} className={styles['switch-wrapper']}>
-                        <YakitSwitch
-                          checked={check !== -1}
-                          onChange={(check) => {
-                            handleSwitchToTags(check, item)
-                          }}
-                        />
-                        {PluginSwitchTagToContent[item] || t('EditorInfo.invalidItem')}
-                      </div>
-                    )
-                  })}
-                </>
-              )}
-
               <Form.Item name="YakitPluginAIBaseInfo" noStyle>
                 <AIPluginComponent getCodeContent={getCodeContent} />
               </Form.Item>

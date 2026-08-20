@@ -141,6 +141,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const {
     forceRenderMenu = false,
     menuType = [],
+    disableCodecPluginMenus = false,
     value,
     setValue,
     type,
@@ -315,7 +316,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(ref)
 
-  const { customHTTPMutatePlugin, contextMenuPlugin } = usePluginSearch({ menuType, inViewport })
+  const { customHTTPMutatePlugin, contextMenuPlugin } = usePluginSearch({
+    menuType,
+    inViewport,
+    disabled: disableCodecPluginMenus,
+  })
 
   /**
    * 整理右键菜单的对应关系
@@ -328,8 +333,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     try {
       const httpMenu = extraMenuListsObj['http'].menu[0] as EditorMenuItemProps
       const newHttpChildren = menuReduce([
-        ...(httpMenu?.children || []),
-        ...customHTTPMutatePlugin.map((item) => {
+        ...(httpMenu?.children || []).filter(
+          (item) => !(item as EditorMenuItemProps & { isCustom?: boolean }).isCustom,
+        ),
+        ...(disableCodecPluginMenus ? [] : customHTTPMutatePlugin).map((item) => {
           return {
             key: item.key,
             label: item.key,
@@ -342,7 +349,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       ;(extraMenuListsObj['http'].menu[0] as EditorMenuItemProps).children = newHttpChildren
 
       // 插件扩展（为保持key值唯一性，添加 plugin- ）
-      const newCustomContextMenu = contextMenuPlugin.map((item) => {
+      const newCustomContextMenu = (disableCodecPluginMenus ? [] : contextMenuPlugin).map((item) => {
         const baseItem = {
           key: `${PLUGIN_PREFIX}${item.value}`,
           label: (
@@ -408,7 +415,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
 
     keyToOnRunRef.current = { ...keyToRun }
-  }, [contextMenu, customHTTPMutatePlugin, contextMenuPlugin, extraMenuListsObj, baseMenuListsObj])
+  }, [
+    contextMenu,
+    customHTTPMutatePlugin,
+    contextMenuPlugin,
+    extraMenuListsObj,
+    baseMenuListsObj,
+    disableCodecPluginMenus,
+  ])
 
   /** 菜单功能点击处理事件 */
   const { run: menuItemHandle } = useDebounceFn(
@@ -709,6 +723,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     contextMenu,
     contextMenuPlugin,
     customHTTPMutatePlugin,
+    disableCodecPluginMenus,
     extraMenuListsObj,
     DefaultMenuTopArr,
     DefaultMenuBottomArr,

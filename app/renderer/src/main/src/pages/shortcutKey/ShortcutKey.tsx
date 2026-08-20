@@ -12,7 +12,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import cloneDeep from 'lodash/cloneDeep'
-import type { ShortcutKeyListProps, ShortcutKeyProps } from './type'
+import type { ShortcutKeyListProps, ShortcutKeyProps, ShortcutSettingPageName } from './type'
 
 import classNames from 'classnames'
 import styles from './ShortcutKey.module.scss'
@@ -197,22 +197,36 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
 })
 
 // 快捷键列表
-export const ShortcutKeyList: React.FC<ShortcutKeyListProps> = memo(() => {
-  const [activePage, setActivePage] = useState<ShortcutKeyPageName>('global')
+export const ShortcutKeyList: React.FC<ShortcutKeyListProps> = memo(({ defaultPage = 'global' }) => {
+  const [activePage, setActivePage] = useState<ShortcutSettingPageName>(defaultPage)
   const { t } = useI18nNamespaces(['shortcutKey'])
+
+  useEffect(() => {
+    setActivePage(defaultPage)
+  }, [defaultPage])
+
+  useEffect(() => {
+    const switchPage = (page: string) => {
+      if (Object.prototype.hasOwnProperty.call(pageEventMaps, page)) {
+        setActivePage(page as ShortcutSettingPageName)
+      }
+    }
+    emiter.on('switchShortcutSettingPage', switchPage)
+    return () => emiter.off('switchShortcutSettingPage', switchPage)
+  }, [])
 
   const newPageEventMaps = useMemo(() => {
     return Object.keys(pageEventMaps).filter((item) => {
       const page = item as ShortcutKeyPageName
       return !pageEventMaps[page].scopeShow || (pageEventMaps[page].scopeShow || []).includes(GetReleaseEdition())
-    })
+    }) as ShortcutSettingPageName[]
   }, [])
 
   return (
     <div className={styles['shortcut-key-list']}>
       <div className={styles['list']}>
         {newPageEventMaps.map((item) => {
-          const page = item as ShortcutKeyPageName
+          const page = item as ShortcutSettingPageName
           return (
             <div
               key={page}

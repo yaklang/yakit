@@ -139,7 +139,7 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
           newBase.current = newInfo
 
           //获取参数信息(yak 和 mitm, codec插件类型独有)
-          const paramsList = ['yak', 'mitm', 'codec'].includes(res.type)
+          const paramsList = ['yak', 'mitm', 'codec', 'context-menu'].includes(res.type)
             ? await onCodeToInfo({ type: res.type, code: res.content })
             : { CliParameter: [] }
           setPlugin({
@@ -229,7 +229,7 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
             data.RiskDetail = codeAnalysis.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
           }
           // 源码-获取参数信息
-          if (['yak', 'mitm', 'codec'].includes(data.Type) && codeAnalysis) {
+          if (['yak', 'mitm', 'codec', 'context-menu'].includes(data.Type) && codeAnalysis) {
             data.Params = codeAnalysis.CliParameter || []
             data.PluginEnvKey = codeAnalysis.PluginEnvKey || []
           }
@@ -691,7 +691,7 @@ const PluginBaseInfoForm: React.FC<PluginBaseInfoFormProps> = memo(
 
         <div
           className={classNames(styles['item-setting'], {
-            [styles['hidden']]: !['yak', 'codec'].includes(type),
+            [styles['hidden']]: type !== 'yak',
           })}
         >
           <div className={styles['item-setting-header']}>{t('PluginLogMergeDetail.pluginConfig')}</div>
@@ -709,28 +709,6 @@ const PluginBaseInfoForm: React.FC<PluginBaseInfoFormProps> = memo(
                   {t('PluginLogMergeDetail.enablePluginSelectorUI')}
                 </div>
                 {YakTypePluginSwitchs.map((item) => {
-                  const check = tags.findIndex((tag) => {
-                    return handleFilterTag(tag, item)
-                  })
-                  return (
-                    <div key={item} className={styles['switch-wrapper']}>
-                      <YakitSwitch
-                        disabled={allDisabled}
-                        checked={check !== -1}
-                        onChange={(check) => {
-                          handleSwitchToTags(check, item)
-                        }}
-                      />
-                      {PluginSwitchTagToContent[item] || t('PluginLogMergeDetail.invalidItem')}
-                    </div>
-                  )
-                })}
-              </>
-            )}
-            {/* codec 插件专用 ↓↓↓ */}
-            {type === 'codec' && (
-              <>
-                {CodecTypePluginSwitchs.map((item) => {
                   const check = tags.findIndex((tag) => {
                     return handleFilterTag(tag, item)
                   })

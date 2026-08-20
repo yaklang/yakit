@@ -113,6 +113,7 @@ import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { PluginHasParamsModal } from '../pluginHasParamsDrawer/PluginHasParamsDrawer'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
+import { ContextMenuExecutionHost } from '@/pages/contextMenuPlugin/ContextMenuExecutionHost'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -2045,6 +2046,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         onOkParamsModal={onOkParamsDrawer}
         {...paramsValueRef.current}
       />
+      <ContextMenuExecutionHost />
     </div>
   )
 }

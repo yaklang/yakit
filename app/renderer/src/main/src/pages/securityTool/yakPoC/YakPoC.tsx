@@ -704,7 +704,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
 
   const getQueryYakScriptGroup = useMemoizedFn(() => {
     setLoading(true)
-    apiFetchQueryYakScriptGroupLocal(false, ['yak', 'codec', 'lua'], 2)
+    apiFetchQueryYakScriptGroupLocal(false, ['yak', 'codec', 'context-menu', 'lua'], 2)
       .then((res) => {
         initialResponseRef.current = res
         if (selectGroupList.length > 0) {

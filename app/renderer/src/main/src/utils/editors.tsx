@@ -29,7 +29,10 @@ import type {
   YakitEditorProps,
   YakitIMonacoEditor,
 } from '@/components/yakitUI/YakitEditor/YakitEditorType'
-import { HTTPPacketYakitEditor } from '@/components/yakitUI/YakitEditor/extraYakitEditor'
+import {
+  HTTPPacketYakitEditor,
+  type ContextMenuPacketEditorConfig,
+} from '@/components/yakitUI/YakitEditor/extraYakitEditor'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatPacketRender, prettifyPacketCode, prettifyPacketRender } from './prettifyPacket'
 import styles from './editors.module.scss'
@@ -570,6 +573,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   noSendToComparer?: boolean
   /** 是否来自 MITM 页面 */
   fromMITM?: boolean
+  /** 右键插件数据包上下文；未传时仍会按当前编辑器的 Request/Response 角色执行 */
+  contextMenuPacket?: ContextMenuPacketEditorConfig
 }
 
 export type RenderTypeOptionVal = 'beautify' | 'render' | 'hex'
@@ -1208,6 +1213,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     onClickUrlWithoutQueryMenu={props.onClickUrlWithoutQueryMenu}
                     onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
                     onClickOpenPacketNewWindowMenu={props.onClickOpenPacketNewWindowMenu}
+                    contextMenuPacket={{
+                      role: isResponse ? 'response' : 'request',
+                      ...props.contextMenuPacket,
+                    }}
                     fixContentType={props.fixContentType}
                     originalContentType={props.originalContentType}
                     fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
