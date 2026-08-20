@@ -98,3 +98,6 @@ export const parseLargeRequestReplacementMarkers = (packet: string): LargeReques
   })
   return markers
 }
+
+/** InjectedText 提示文案：普通空格转 NBSP，避免折行点与 renderWhitespace 圆点。 */
+export const sanitizeChipInjectedText = (text: string): string => text.replace(/ /g, '\u00A0')

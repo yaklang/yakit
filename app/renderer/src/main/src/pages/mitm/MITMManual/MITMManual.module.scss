@@ -32,16 +32,28 @@
   gap: 8px;
 }
 
-:global(.monaco-editor) .large-request-replace-marker {
-  color: var(--Colors-Use-Warning-Primary);
-  background: var(--Colors-Use-Warning-Bg);
+:global(.monaco-editor) .large-request-replace-chip {
+  color: var(--Colors-Use-Main-On-Primary) !important;
+  background-color: var(--Colors-Use-Main-Primary);
+  border: none;
+  padding: 1px 0;
+  margin: 0;
+  border-radius: 0;
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 0.2px;
   cursor: pointer;
+  user-select: none;
+  opacity: 1 !important;
 }
 
-:global(.monaco-editor) .large-request-replace-hint {
-  color: var(--Colors-Use-Warning-Primary);
-  font-weight: 600;
-  cursor: pointer;
+:global(.monaco-editor) .large-request-replace-chip:hover {
+  filter: brightness(1.08);
+}
+
+:global(.monaco-editor) .large-request-replace-chip-replaced {
+  color: var(--Colors-Use-Warning-On-Primary) !important;
+  background-color: var(--Colors-Use-Warning-Primary);
 }
 
 .large-request-replace-modal {

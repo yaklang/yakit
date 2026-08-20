@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   matchLargeRequestReplacementLine,
   parseLargeRequestReplacementMarkers,
+  sanitizeChipInjectedText,
 } from '../largeMultipartReplacement'
 
 describe('matchLargeRequestReplacementLine', () => {
@@ -83,5 +84,12 @@ describe('parseLargeRequestReplacementMarkers', () => {
       'prefix [[request too large(10MB), truncated]]',
     ].join('\n')
     expect(parseLargeRequestReplacementMarkers(packet)).toEqual([])
+  })
+})
+
+describe('sanitizeChipInjectedText', () => {
+  it('replaces spaces with NBSP and leaves other text unchanged', () => {
+    expect(sanitizeChipInjectedText(' 点击替换整个文件')).toBe('\u00A0点击替换整个文件')
+    expect(sanitizeChipInjectedText('[已替换: a.zip]')).toBe('[已替换:\u00A0a.zip]')
   })
 })

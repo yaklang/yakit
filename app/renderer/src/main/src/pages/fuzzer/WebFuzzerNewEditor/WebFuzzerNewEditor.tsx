@@ -16,6 +16,7 @@ import {
   getLargeRequestReplacementKey,
   matchLargeRequestReplacementLine,
   withLargeRequestReplacementLineNumber,
+  sanitizeChipInjectedText,
   type LargeRequestReplacementMarker,
 } from '@/pages/mitm/MITMManual/largeMultipartReplacement'
 import { LargeRequestFileReplaceModal } from '@/pages/mitm/MITMManual/LargeMultipartFileReplaceModal'
@@ -108,7 +109,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
           [getLargeRequestReplacementKey(marker)]: { Filename: filename, Size: 0 },
         }))
         yakitNotify('success', `已替换为文件 fuzztag：${filename}`)
-      }
+      },
     )
 
     const openLargeRequestFileReplace = useMemoizedFn((marker: LargeRequestReplacementMarker) => {
@@ -139,7 +140,6 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       const model = reqEditor.getModel()
       if (!model) return
 
-      const toInjectedHint = (text: string) => text.replace(/ /g, '\u00A0')
       let decorationIDs: string[] = []
       let mouseDisposable: { dispose: () => void } | undefined
       let modelMarkers: LargeRequestReplacementMarker[] = []
@@ -157,6 +157,11 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
           decorationIDs,
           modelMarkers.map((marker) => {
             const replacement = largeRequestReplacements[getLargeRequestReplacementKey(marker)]
+            const markerText = model.getLineContent(marker.lineNumber).slice(0, marker.lineLength)
+            const hint = replacement ? `[已替换: ${replacement.Filename}]` : `[点击替换为文件 fuzztag]`
+            const chipClass = replacement
+              ? `${styles['large-request-replace-chip']} ${styles['large-request-replace-chip-replaced']}`
+              : styles['large-request-replace-chip']
             return {
               range: {
                 startLineNumber: marker.lineNumber,
@@ -165,26 +170,35 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 endColumn: marker.lineLength + 1,
               },
               options: {
-                inlineClassName: styles['large-request-replace-marker'],
+                inlineClassName: chipClass,
+                inlineClassNameAffectsLetterSpacing: true,
                 after: {
-                  content: replacement
-                    ? toInjectedHint(`  [已替换: ${replacement.Filename}]`)
-                    : toInjectedHint(`  [点击替换为文件 fuzztag]`),
-                  inlineClassName: styles['large-request-replace-hint'],
+                  content: sanitizeChipInjectedText(` ${hint}`),
+                  inlineClassName: chipClass,
+                  inlineClassNameAffectsLetterSpacing: true,
                 },
                 hoverMessage: { value: '点击替换为文件 fuzztag' },
                 glyphMarginClassName: styles['large-request-replace-glyph'],
               },
             }
-          })
+          }),
         )
         if (modelMarkers.length === 0) return
         mouseDisposable = reqEditor.onMouseDown((event) => {
+          if (!event.event.leftButton) return
+          const domTarget = (event.event.browserEvent?.target ?? null) as HTMLElement | null
+          const chipEl =
+            domTarget && typeof domTarget.closest === 'function'
+              ? domTarget.closest(`.${styles['large-request-replace-chip']}`)
+              : null
+          if (!chipEl) return
           const position = event.target.position
-          if (!event.event.leftButton || !position) return
-          const marker = modelMarkers.find(
-            (item) => item.lineNumber === position.lineNumber && position.column <= item.lineLength + 1
-          )
+          let marker: LargeRequestReplacementMarker | undefined
+          if (position) {
+            const sameLine = modelMarkers.filter((item) => item.lineNumber === position.lineNumber)
+            if (sameLine.length >= 1) marker = sameLine[0]
+          }
+          if (!marker && modelMarkers.length === 1) marker = modelMarkers[0]
           if (marker) openLargeRequestFileReplace(marker)
         })
       }
