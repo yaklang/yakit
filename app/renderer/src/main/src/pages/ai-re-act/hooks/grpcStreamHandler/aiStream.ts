@@ -12,7 +12,41 @@ import {
   setSessionReferencePersist,
   upsertSessionContent,
 } from '../persist/contentPersistHelper'
+import { ensureContentInMemory } from '../persist/ensureContentInMemory'
 import { ensureToolResultOnUI } from './aiToolResult'
+
+/**
+ * 构造 STREAM 正文（id = event_writer_id / EventUUID）。
+ * stream_start 直接写入 Map；stream / stream-finished 在 contents miss 时作为
+ * ensureContentInMemory 的 create：中途未落盘，淘汰后只能按当前事件重建，不写 IDB。
+ */
+const createStreamChatData = (
+  requestInfo: AIMessageHandlerParams,
+  eventWriterId: string,
+): Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.STREAM }> => {
+  const { res, chatType, store, rawData } = requestInfo
+  return {
+    ...genBaseAIChatData(res),
+    id: eventWriterId,
+    chatType,
+    type: AIChatQSDataTypeEnum.STREAM,
+    data: {
+      NodeId: res.NodeId,
+      NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
+      CallToolID: res.CallToolID,
+      EventUUID: eventWriterId,
+      status: 'start',
+      content: '',
+      ContentType: res.ContentType,
+    },
+    TaskId: generateTaskNodeDataID({
+      chatType,
+      planID: store.getState().currentChatStatus.questionID,
+      taskID: res.TaskId,
+      isExist: (key) => rawData.contents.has(key),
+    }),
+  }
+}
 
 /** 生成stream_group组数据 */
 const genStreamGroupData = (
@@ -63,8 +97,8 @@ const genStreamGroupData = (
   })
 }
 
-const handleStreamStart: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta } = requestInfo
+const handleStreamStart: AIMessageHandler = async (requestInfo) => {
+  const { sessionId, res, rawData, meta } = requestInfo
   if (res.Type !== 'stream_start') return
 
   if (res.IsSystem || res.IsReason) return
@@ -101,7 +135,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
       requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
-    const toolResult = rawData.contents.get(CallToolID)
+    const toolResult = await ensureContentInMemory(sessionId, CallToolID, rawData.contents)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
       requestInfo.pushLog({
         level: 'error',
@@ -110,27 +144,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
       return
     }
 
-    rawData.contents.set(event_writer_id, {
-      ...genBaseAIChatData(res),
-      id: event_writer_id,
-      chatType: chatType,
-      type: AIChatQSDataTypeEnum.STREAM,
-      data: {
-        NodeId,
-        NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(NodeId),
-        CallToolID,
-        EventUUID: event_writer_id,
-        status: 'start',
-        content: '',
-        ContentType: res.ContentType,
-      },
-      TaskId: generateTaskNodeDataID({
-        chatType,
-        planID: store.getState().currentChatStatus.questionID,
-        taskID: res.TaskId,
-        isExist: (key) => rawData.contents.has(key),
-      }),
-    })
+    rawData.contents.set(event_writer_id, createStreamChatData(requestInfo, event_writer_id))
     toolResult.data.stream.EventUUID = event_writer_id
     toolResult.data.type = 'stream'
     // stdout 流开始：工具卡片首次上树（create 阶段故意不上屏）
@@ -150,31 +164,11 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  rawData.contents.set(event_writer_id, {
-    ...genBaseAIChatData(res),
-    id: event_writer_id,
-    chatType: chatType,
-    type: AIChatQSDataTypeEnum.STREAM,
-    data: {
-      NodeId,
-      NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(NodeId),
-      CallToolID,
-      EventUUID: event_writer_id,
-      status: 'start',
-      content: '',
-      ContentType: res.ContentType,
-    },
-    TaskId: generateTaskNodeDataID({
-      chatType,
-      planID: store.getState().currentChatStatus.questionID,
-      taskID: res.TaskId,
-      isExist: (key) => rawData.contents.has(key),
-    }),
-  })
+  rawData.contents.set(event_writer_id, createStreamChatData(requestInfo, event_writer_id))
 }
 
-const handleStream: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta } = requestInfo
+const handleStream: AIMessageHandler = async (requestInfo) => {
+  const { sessionId, res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'stream') return
   // 历史数据-(系统信息|推理信息)数据，不处理
   if (res.IsSync && (res.IsSystem || res.IsReason)) return
@@ -237,7 +231,7 @@ const handleStream: AIMessageHandler = (requestInfo) => {
       requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
-    const toolResult = rawData.contents.get(CallToolID)
+    const toolResult = await ensureContentInMemory(sessionId, CallToolID, rawData.contents)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
       requestInfo.pushLog({
         level: 'error',
@@ -245,7 +239,12 @@ const handleStream: AIMessageHandler = (requestInfo) => {
       })
       return
     }
-    const toolForStreamData = rawData.contents.get(toolResult.data.stream.EventUUID)
+    const toolForStreamData = await ensureContentInMemory(
+      sessionId,
+      toolResult.data.stream.EventUUID,
+      rawData.contents,
+      () => createStreamChatData(requestInfo, toolResult.data.stream.EventUUID),
+    )
     if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
       requestInfo.pushLog({
         level: 'error',
@@ -264,7 +263,9 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   }
 
   // 数据集合中对应的数据
-  const streamData = rawData.contents.get(EventUUID)
+  const streamData = await ensureContentInMemory(sessionId, EventUUID, rawData.contents, () =>
+    createStreamChatData(requestInfo, EventUUID),
+  )
 
   // 数据不存在
   if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) {
@@ -296,8 +297,8 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   }
 }
 
-const handleStreamFinished: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, meta } = requestInfo
+const handleStreamFinished: AIMessageHandler = async (requestInfo) => {
+  const { sessionId, res, store, rawData, meta } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'stream-finished') return
   // 历史数据-(系统信息|推理信息)数据，不处理
   if (res.IsSync && (res.IsSystem || res.IsReason)) return
@@ -341,7 +342,7 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
       return
     }
 
-    const toolResult = rawData.contents.get(CallToolID)
+    const toolResult = await ensureContentInMemory(sessionId, CallToolID, rawData.contents)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
       // 工具执行结果卡片UI没有展示时
       toolErrorResult.status = 'end'
@@ -362,11 +363,16 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
       return
     }
 
-    const toolResult = rawData.contents.get(res.CallToolID)
+    const toolResult = await ensureContentInMemory(sessionId, res.CallToolID, rawData.contents)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
       return
     }
-    const toolForStreamData = rawData.contents.get(toolResult.data.stream.EventUUID)
+    const toolForStreamData = await ensureContentInMemory(
+      sessionId,
+      toolResult.data.stream.EventUUID,
+      rawData.contents,
+      () => createStreamChatData(requestInfo, toolResult.data.stream.EventUUID),
+    )
     if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
       return
     }
@@ -385,7 +391,12 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   }
 
   // 数据集合中对应的数据
-  const streamData = rawData.contents.get(event_writer_id)
+  const streamData = await ensureContentInMemory(sessionId, event_writer_id, rawData.contents, () => {
+    const created = createStreamChatData(requestInfo, event_writer_id)
+    created.data.NodeId = node_id
+    created.data.status = 'end'
+    return created
+  })
   // 数据不存在 不输出到日志，因为日志的流数据也有该类型数据
   if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) return
 
@@ -395,15 +406,17 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   upsertSessionContent(requestInfo.sessionId, streamData.id, streamData)
 }
 
-const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
+const handleReferenceMaterial: AIMessageHandler = async (requestInfo) => {
   const { sessionId, res, chatType, store, rawData } = requestInfo
   if (res.Type !== 'reference_material') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReferenceMaterialPayload
 
-  const chatData = rawData.contents.get(data.event_uuid)
-  const toolResult = rawData.contents.get(res.CallToolID || '')
+  const chatData = await ensureContentInMemory(sessionId, data.event_uuid, rawData.contents)
+  const toolResult = res.CallToolID
+    ? await ensureContentInMemory(sessionId, res.CallToolID, rawData.contents)
+    : undefined
 
   // 收数时自动生成 refToken，立刻落表3；内存只挂 token，不存完整 payload
   const refToken = uuidv4()

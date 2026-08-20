@@ -51,6 +51,7 @@ describe('utils core helpers', () => {
     expect(base.AIModelName).toBe('model')
     expect(base.Timestamp).toBe(123)
     expect(base.id).toBeTruthy()
+    expect(base.stageSettled).toBe(false)
   })
 
   it('B4: genExecTasks flattens tree and maps depends_on', () => {

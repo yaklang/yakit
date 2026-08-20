@@ -411,6 +411,11 @@ export interface AIChatQSDataBase<T extends string, U> {
   reference?: string[]
   /** 父集合组的key/token(如果被收集到集合组中, 则存在该字段) */
   parentGroupToken?: string
+  /**
+   * 阶段性完成。false=热数据，不可从内存淘汰；true=可按视窗 evict。
+   * 缺字段（IDB 旧行）视为 true。
+   */
+  stageSettled?: boolean
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>

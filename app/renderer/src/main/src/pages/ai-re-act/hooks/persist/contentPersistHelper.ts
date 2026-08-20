@@ -30,6 +30,21 @@ export const clonePersistableContent = (data: AIChatQSData): AIChatQSData => {
   return cloneDeep(data)
 }
 
+/** IDB 灌回：缺 stageSettled 视为已完成，可淘汰 */
+export const applyHydratedStageSettled = (content: AIChatQSData): AIChatQSData => {
+  if (content.stageSettled !== false) content.stageSettled = true
+  return content
+}
+
+/** 按 token 读取会话正文；读盘失败返回 undefined，不抛 */
+export const persistGetSessionContent = async (sessionId: string, token: string): Promise<AIChatQSData | undefined> => {
+  try {
+    return await aiChatPersistStore.getSessionContent(sessionId, token)
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * 写入/覆盖会话正文（入队串行）。
  * next 为完整对象时直接 put；为 updater 时走同事务 get→update→put。
@@ -42,8 +57,13 @@ export const upsertSessionContent = (
   return enqueueContentWrite(sessionId, token, async () => {
     try {
       if (typeof next === 'function') {
-        await aiChatPersistStore.setSessionContent(sessionId, token, next)
+        await aiChatPersistStore.setSessionContent(sessionId, token, (old) => {
+          const result = next(old)
+          result.stageSettled = true
+          return result
+        })
       } else {
+        next.stageSettled = true
         const snapshot = clonePersistableContent(next)
         await aiChatPersistStore.setSessionContent(sessionId, token, () => snapshot)
       }
