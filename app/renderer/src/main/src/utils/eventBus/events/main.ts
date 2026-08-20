@@ -1,4 +1,5 @@
 import type { MultipleNodeInfo } from '@/pages/layout/mainOperatorContent/MainOperatorContentType'
+import type { YakitRoute } from '@/enums/yakitRoute'
 
 export type MainOperatorEventProps = {
   /** 远程打开一个页面 */
@@ -16,6 +17,6 @@ export type MainOperatorEventProps = {
 
   /**二级路由Tab数据变化 */
   secondMenuTabDataChange: string
-  /**复制 webfuzzer 标签页 */
-  onDuplicateWebFuzzerTabs: { item: MultipleNodeInfo; count: number }
+  /**复制标签页（通用，按 route switch 分发到各页面的复制逻辑） */
+  onDuplicateTabs: { item: MultipleNodeInfo; count: number; route: YakitRoute }
 }

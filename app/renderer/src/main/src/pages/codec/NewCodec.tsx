@@ -1,6 +1,14 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Divider, Tooltip, Upload } from 'antd'
-import { useMemoizedFn, useThrottleFn, useUpdateEffect, useDebounceEffect, useSize, useControllableValue } from 'ahooks'
+import {
+  useMemoizedFn,
+  useThrottleFn,
+  useUpdateEffect,
+  useDebounceFn,
+  useDebounceEffect,
+  useSize,
+  useControllableValue,
+} from 'ahooks'
 import styles from './NewCodec.module.scss'
 import { failed, success, warn, info } from '@/utils/notification'
 import classNames from 'classnames'
@@ -78,6 +86,10 @@ import { useTheme } from '@/hook/useTheme'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { type CodecPageInfoProps, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { defaultCodecPageInfo, initialRightItems } from '@/defaultConstants/Codec'
+import cloneDeep from 'lodash/cloneDeep'
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
@@ -2008,7 +2020,7 @@ interface RightItemsFlexProps {
   // 控件类型
   type: 'flex'
 }
-interface RightItemsProps {
+export interface RightItemsProps {
   title: string
   codecType: string
   key: string
@@ -2016,20 +2028,6 @@ interface RightItemsProps {
   // 屏蔽/中止
   status?: 'shield' | 'suspend' | 'run'
 }
-const initialRightItems: RightItemsProps[] = [
-  // {
-  //     title: "Item A",
-  //     codecType:"55",
-  //     key:"QQ",
-  //     node: [
-  //         {
-  //             leftNode: {name:"DD",type: "input", title: "IV"},
-  //             rightNode: {name:"BB",selectArr: [{label:"B",value:"B"}, {label:"K",value:"K"},{label:"M",value:"M"}], type: "select"},
-  //             type: "flex"
-  //         },
-  //     ]
-  // },
-]
 export interface CodecParam {
   Name: string
   Type: string
@@ -2057,11 +2055,27 @@ export interface NewCodecProps {
 export const NewCodec: React.FC<NewCodecProps> = (props) => {
   const { t, i18nRefresh } = useI18nNamespaces(['codec', 'yakitUi'])
   const { id } = props
+  const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
+    (s) => ({
+      queryPagesDataById: s.queryPagesDataById,
+      updatePagesDataCacheById: s.updatePagesDataCacheById,
+    }),
+    shallow,
+  )
+  const [cachedPageInfo] = useState<CodecPageInfoProps>(() => {
+    const currentItem = queryPagesDataById(YakitRoute.Codec, id)
+    if (currentItem && currentItem.pageParamsInfo.codecPageInfo) {
+      return currentItem.pageParamsInfo.codecPageInfo
+    }
+    return cloneDeep(defaultCodecPageInfo)
+  })
   // codec分类展开收起
   const [fold, setFold] = useState<boolean>(true)
   // 是否全部展开
   const [isExpand, setExpand] = useState<boolean>(false)
-  const [rightItems, setRightItems] = useState<RightItemsProps[]>(initialRightItems)
+  const [rightItems, setRightItems] = useState<RightItemsProps[]>(
+    cachedPageInfo.rightItems || cloneDeep(initialRightItems),
+  )
   const [leftData, setLeftData] = useState<LeftDataProps[]>([])
   // 我的收藏
   const [leftCollectData, setLeftCollectData] = useState<LeftDataProps[]>([])
@@ -2073,8 +2087,32 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
   const [isShowSearchList, setShowSearchList] = useState<boolean>(false)
   const cacheCodecRef = useRef<CodecMethod[]>([])
   // Input/Output编辑器内容
-  const [inputEditor, setInputEditor] = useState<string>('')
-  const [outputResponse, setOutputResponse] = useState<CodecResponseProps>()
+  const [inputEditor, setInputEditor] = useState<string>(cachedPageInfo.inputEditor || '')
+  const [outputResponse, setOutputResponse] = useState<CodecResponseProps | undefined>(cachedPageInfo.outputResponse)
+
+  // 编辑后回写 pageInfo store：rightItems / inputEditor / outputResponse
+  const { run: syncCodecPageInfo } = useDebounceFn(
+    () => {
+      const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Codec, id)
+      if (!currentItem) return
+      updatePagesDataCacheById(YakitRoute.Codec, {
+        ...currentItem,
+        pageParamsInfo: {
+          ...currentItem.pageParamsInfo,
+          codecPageInfo: {
+            rightItems,
+            inputEditor,
+            outputResponse,
+          },
+        },
+      })
+    },
+    { wait: 300 },
+  )
+  useUpdateEffect(() => {
+    syncCodecPageInfo()
+  }, [rightItems, inputEditor, outputResponse])
+
   // 是否正在执行
   const [runLoading, setRunLoading] = useState<boolean>(false)
   // 是否为点击添加至执行列表

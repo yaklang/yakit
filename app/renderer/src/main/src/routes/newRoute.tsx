@@ -146,6 +146,7 @@ import type {
   AuditHoleInfoProps,
   AIRepositoryProps,
   PluginOpPageInfoProps,
+  CodecPageInfoProps,
 } from '@/store/pageInfo'
 import { SpaceEnginePage } from '@/pages/spaceEngine/SpaceEnginePage'
 import { SinglePluginExecution } from '@/pages/plugins/singlePluginExecution/SinglePluginExecution'
@@ -663,6 +664,8 @@ export interface ComponentParams {
   simpleDetectPageInfo?: SimpleDetectPageInfoProps
   /**webSocket页面 */
   websocketFuzzerPageInfo?: WebsocketFuzzerPageInfoProps
+  /**Codec 编解码页面 */
+  codecPageInfo?: CodecPageInfoProps
   /**流量分析器页面 */
   hTTPHistoryAnalysisPageInfo?: HTTPHistoryAnalysisPageInfo
   /**新建插件页面 */

@@ -147,6 +147,7 @@ import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript
 import { useMenuHeight } from '@/store/menuHeight'
 import type { HybridScanInputTarget } from '@/models/HybridScan'
 import { defaultWebsocketFuzzerPageInfo } from '@/defaultConstants/WebsocketFuzzer'
+import { defaultCodecPageInfo } from '@/defaultConstants/Codec'
 import { DuplicateTabContent, type RecoveryModel, RestoreTabContent } from './TabRenameModalContent'
 import {
   type FuzzerConfig,
@@ -207,7 +208,8 @@ const Close_Group_Tip = 'close-group_tip'
 const colorList = ['purple', 'blue', 'lakeBlue', 'green', 'red', 'orange', 'bluePurple', 'grey']
 const droppable = 'droppable'
 const droppableGroup = 'droppableGroup'
-const duplicateWebFuzzerTabsEvent = 'onDuplicateWebFuzzerTabs'
+// 支持「复制标签页」的路由列表（仅组内 tab 显示菜单项）。
+const duplicateTabRoutes: YakitRoute[] = [YakitRoute.HTTPFuzzer, YakitRoute.Codec]
 const pageTabItemRightOperation: (t: TFunction) => YakitMenuItemType[] = (t) => {
   return [
     {
@@ -1729,74 +1731,105 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   })
 
-  const onDuplicateWebFuzzerTabs = useMemoizedFn(({ item, count }: { item: MultipleNodeInfo; count: number }) => {
-    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, item.id)
-    const webFuzzerPageInfo = currentItem?.pageParamsInfo?.webFuzzerPageInfo
-    if (!webFuzzerPageInfo) return
+  // 通用「复制标签页」：从 pageInfo store 读原 tab 内容，克隆 N 个新 tab 到原 tab 所在组（或顶层）
+  const onDuplicateTabs = useMemoizedFn(
+    ({ item, count, route }: { item: MultipleNodeInfo; count: number; route: YakitRoute }) => {
+      const newPageCache = cloneDeep(getPageCache())
+      const currentPageCache = newPageCache.find((ele) => ele.route === route)
+      if (!currentPageCache) return
 
-    const { request = defaultPostTemplate, advancedConfigValue, advancedConfigShow, hotPatchCode } = webFuzzerPageInfo
+      const { index, subIndex } = getPageItemById(currentPageCache.multipleNode || [], item.id)
+      const targetGroupId = subIndex !== -1 && index !== -1 ? currentPageCache.multipleNode[index].id : '0'
+      const groupChildrenLength =
+        targetGroupId !== '0' && index !== -1 ? currentPageCache.multipleNode[index].groupChildren?.length || 0 : 0
 
-    const pageParams: ComponentParams = {
-      request,
-      system: item.pageParams?.system,
-      advancedConfigValue,
-      advancedConfigShow,
-      hotPatchCode,
-    }
+      const currentItem = queryPagesDataById(route, item.id)
+      const baseName = item.verbose || currentItem?.pageName
+      const key = routeConvertKey(route, '')
 
-    const baseName = item.verbose || currentItem?.pageName
-    const key = routeConvertKey(YakitRoute.HTTPFuzzer, '')
-
-    const newPageCache = cloneDeep(getPageCache())
-    const currentPageCache = newPageCache.find((ele) => ele.route === YakitRoute.HTTPFuzzer)
-    if (!currentPageCache) return
-
-    const { index, subIndex } = getPageItemById(currentPageCache.multipleNode || [], item.id)
-    const targetGroupId = subIndex !== -1 && index !== -1 ? currentPageCache.multipleNode[index].id : '0'
-    const groupChildrenLength =
-      targetGroupId !== '0' && index !== -1 ? currentPageCache.multipleNode[index].groupChildren?.length || 0 : 0
-
-    const baseSortId =
-      targetGroupId !== '0' ? groupChildrenLength + 1 : (currentPageCache.multipleNode?.length || 0) + 1
-    const createdNodes: MultipleNodeInfo[] = Array.from({ length: count }, (_, index) => {
-      const { time, tabId } = generateTabIdentity(key, index)
-      return {
-        id: tabId,
-        verbose: `${baseName}(${index + 1})`,
-        time,
-        pageParams: {
-          ...pageParams,
-          id: tabId,
-          groupId: targetGroupId,
-        },
-        groupId: targetGroupId,
-        sortFieId: baseSortId + index,
+      // 按 route 构造新节点的 pageParams（含克隆内容）。返回 undefined 表示该路由不支持复制。
+      const buildPageParams: (route: YakitRoute) => ComponentParams | undefined = (route) => {
+        switch (route) {
+          case YakitRoute.HTTPFuzzer: {
+            const info = currentItem?.pageParamsInfo?.webFuzzerPageInfo
+            if (!info) return undefined
+            return {
+              request: info.request || defaultPostTemplate,
+              system: item.pageParams?.system,
+              advancedConfigValue: info.advancedConfigValue,
+              advancedConfigShow: info.advancedConfigShow,
+              hotPatchCode: info.hotPatchCode,
+            }
+          }
+          case YakitRoute.Codec: {
+            const info = currentItem?.pageParamsInfo?.codecPageInfo
+            if (!info) return undefined
+            return {
+              codecPageInfo: {
+                rightItems: cloneDeep(info.rightItems),
+                inputEditor: info.inputEditor,
+                outputResponse: cloneDeep(info.outputResponse),
+              },
+            }
+          }
+          default:
+            return undefined
+        }
       }
-    })
+      const pageParams = buildPageParams(route)
+      if (!pageParams) return
 
-    if (targetGroupId !== '0' && index !== -1) {
-      currentPageCache.multipleNode[index].groupChildren = [
-        ...(currentPageCache.multipleNode[index].groupChildren || []),
-        ...createdNodes,
-      ]
-    } else {
-      currentPageCache.multipleNode.push(...createdNodes)
-    }
-    currentPageCache.multipleLength = (currentPageCache.multipleLength || 0) + createdNodes.length
-    currentPageCache.openFlag = false
-    currentPageCache.selectSubItem = false
+      const baseSortId =
+        targetGroupId !== '0' ? groupChildrenLength + 1 : (currentPageCache.multipleNode?.length || 0) + 1
+      const createdNodes: MultipleNodeInfo[] = Array.from({ length: count }, (_, index) => {
+        const { time, tabId } = generateTabIdentity(key, index)
+        return {
+          id: tabId,
+          verbose: `${baseName}(${index + 1})`,
+          time,
+          pageParams: {
+            ...pageParams,
+            id: tabId,
+            groupId: targetGroupId,
+          },
+          groupId: targetGroupId,
+          sortFieId: baseSortId + index,
+        }
+      })
 
-    createdNodes.forEach((node) => {
-      addFuzzerList(node.id, node, node.sortFieId)
-    })
+      if (targetGroupId !== '0' && index !== -1) {
+        currentPageCache.multipleNode[index].groupChildren = [
+          ...(currentPageCache.multipleNode[index].groupChildren || []),
+          ...createdNodes,
+        ]
+      } else {
+        currentPageCache.multipleNode.push(...createdNodes)
+      }
+      currentPageCache.multipleLength = (currentPageCache.multipleLength || 0) + createdNodes.length
+      currentPageCache.openFlag = false
+      currentPageCache.selectSubItem = false
 
-    setPageCache(newPageCache)
-  })
+      // 按 route 调对应注册函数，把新节点写入 pageInfo store
+      createdNodes.forEach((node) => {
+        switch (route) {
+          case YakitRoute.HTTPFuzzer:
+            addFuzzerList(node.id, node, node.sortFieId)
+            break
+          case YakitRoute.Codec:
+            onCodec(node, node.sortFieId)
+            break
+          default:
+            break
+        }
+      })
 
+      setPageCache(newPageCache)
+    },
+  )
   useEffect(() => {
-    emiter.on(duplicateWebFuzzerTabsEvent, onDuplicateWebFuzzerTabs)
+    emiter.on('onDuplicateTabs', onDuplicateTabs)
     return () => {
-      emiter.off(duplicateWebFuzzerTabsEvent, onDuplicateWebFuzzerTabs)
+      emiter.off('onDuplicateTabs', onDuplicateTabs)
     }
   }, [])
 
@@ -2245,6 +2278,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         break
       case YakitRoute.DataCompare:
         onDataCompare(node, order)
+        break
+      case YakitRoute.Codec:
+        onCodec(node, order)
         break
       default:
         break
@@ -3239,7 +3275,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
     addPagesDataCache(YakitRoute.WebsocketFuzzer, newPageNode)
   })
-
   /**记事本编辑 */
   const onSetModifyNotepadData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
     const newPageNode: PageNodeItemProps = {
@@ -3268,6 +3303,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       sortFieId: order,
     }
     addPagesDataCache(YakitRoute.DataCompare, newPageNode)
+  })
+
+  /** Codec */
+  const onCodec = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+    const newPageNode: PageNodeItemProps = {
+      id: `${randomString(8)}-${order}`,
+      routeKey: YakitRoute.Codec,
+      pageGroupId: node.groupId,
+      pageId: node.id,
+      pageName: node.verbose,
+      pageParamsInfo: {
+        codecPageInfo: {
+          ...(node?.pageParams?.codecPageInfo || cloneDeep(defaultCodecPageInfo)),
+        },
+      },
+      sortFieId: order,
+    }
+    addPagesDataCache(YakitRoute.Codec, newPageNode)
   })
 
   /**
@@ -5094,7 +5147,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       } catch (error) {}
     })
 
-    const onShowDuplicateModal = useMemoizedFn((item: MultipleNodeInfo) => {
+    const onShowDuplicateModal = useMemoizedFn((item: MultipleNodeInfo, route: YakitRoute) => {
       const m = showYakitModal({
         title: (modalT) => modalT('TabRenameModalContent.duplicateTabs'),
         footer: null,
@@ -5103,7 +5156,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             maxCount={secondaryTabsNumRef.current}
             subPageCount={getSubPageTotal(subPage)}
             onClose={() => m.destroy()}
-            onDuplicate={(count) => emiter.emit(duplicateWebFuzzerTabsEvent, { item, count })}
+            onDuplicate={(count) => emiter.emit('onDuplicateTabs', { item, count, route })}
           />
         ),
       })
@@ -5149,16 +5202,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
           key: 'removeFromGroup',
         })
       }
+      // 复制标签页：对 duplicateTabRoutes 中的路由、且组内 tab 显示
+      if (duplicateTabRoutes.includes(pageItem.route) && subIndex !== -1) {
+        menuData = [
+          ...menuData,
+          {
+            label: t('TabRenameModalContent.duplicateTabs'),
+            key: 'duplicateTab',
+          },
+        ]
+      }
+      // 恢复标签页：目前仅 WebFuzzer 有历史恢复机制
       if (pageItem.route === YakitRoute.HTTPFuzzer) {
-        if (subIndex !== -1) {
-          menuData = [
-            ...menuData,
-            {
-              label: t('TabRenameModalContent.duplicateTabs'),
-              key: 'duplicateTab',
-            },
-          ]
-        }
         menuData = [
           ...menuData,
           {
@@ -5208,7 +5263,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 onNewGroup(item)
                 break
               case 'duplicateTab':
-                onShowDuplicateModal(item)
+                onShowDuplicateModal(item, pageItem.route)
                 break
               case 'restoreTab':
                 onRestoreHistory(pageRouteKey)
