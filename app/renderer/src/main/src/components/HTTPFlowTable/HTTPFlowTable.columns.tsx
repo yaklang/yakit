@@ -111,14 +111,17 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       filterProps: {
         filterKey: 'idFilter',
         filterIcon: <OutlineSelectorIcon className={style['filter-icon']} />,
-        filterRender: () => (
+        filterRender: (closePopover: () => void) => (
           <SearchInputTableWrapper
             showSort={true}
             sortOrder={getIdSort()}
             onSort={onIdSort}
             searchValue={getIncludeIdSearch()}
             setSearchValue={setIncludeIdSearch}
-            onSure={onIncludeIdSearchSure}
+            onSure={() => {
+              closePopover()
+              onIncludeIdSearchSure()
+            }}
           />
         ),
       },

@@ -67,6 +67,12 @@ export const SearchInputTableWrapper: React.FC<SearchInputTableWrapperProps> = R
             placeholder={placeholder || t('SearchInputTableWrapper.placeholder')}
             onChange={onInputChange}
             onBlur={onInputBlur}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.stopPropagation()
+                triggerSure()
+              }
+            }}
           />
         </div>
       ) : (
