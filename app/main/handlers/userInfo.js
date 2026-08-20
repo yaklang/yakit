@@ -113,10 +113,11 @@ module.exports = {
             webSecurity: true,
           },
         })
+        const usedCodes = new Set()
         authWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
         authWindow.show()
         authWindow.loadURL(loginUrl)
-        authWindow.webContents.on('will-navigate', (navigationEvent, targetUrl) => {
+        const onWillNavigate = (navigationEvent, targetUrl) => {
           if (!targetUrl) return
           if (!typeApi[type]) return
 
@@ -145,6 +146,10 @@ module.exports = {
             authWindow.close()
             return
           }
+          if (usedCodes.has(wxCode)) {
+            return
+          }
+          usedCodes.add(wxCode)
           httpApi({
             method: 'get',
             url: typeApi[type],
@@ -164,17 +169,21 @@ module.exports = {
               commonSignIn(res)
 
               clearBrowserSession(authWindow)
-              setTimeout(() => authWindow.close(), 200)
+              authWindow.close()
             })
             .catch((err) => {
               clearBrowserSession(authWindow)
               win.webContents.send('fetch-signin-data', { ok: false, info: '登录错误:' + err })
               authWindow.close()
             })
-        })
+        }
+        authWindow.webContents.on('will-navigate', onWillNavigate)
 
         authWindow.on('close', () => {
           clearBrowserSession(authWindow)
+          if (authWindow && !authWindow.isDestroyed()) {
+            authWindow.webContents.removeListener('will-navigate', onWillNavigate)
+          }
           authWindow = null
         })
       }
