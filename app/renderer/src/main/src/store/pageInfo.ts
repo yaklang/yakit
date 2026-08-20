@@ -21,6 +21,7 @@ import type { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkd
 import type { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
 import i18n from '@/i18n/i18n'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import type { CodecResponseProps, RightItemsProps } from '@/pages/codec/NewCodec'
 const tOriginal = i18n.getFixedT(null, 'store')
 
 /**
@@ -164,16 +165,11 @@ export interface WebsocketFuzzerPageInfoProps {
 
 export interface CodecPageInfoProps {
   /** 编解码运行顺序，对应 NewCodec 的 RightItemsProps[] */
-  rightItems?: any[]
+  rightItems?: RightItemsProps[]
   /** 输入框内容 */
   inputEditor?: string
   /** 执行输出，结构同 Codec 的 CodecResponseProps */
-  outputResponse?: {
-    Result: string
-    RawResult?: Uint8Array
-    ResultVerbose: string
-    IsFalseAppearance: boolean
-  }
+  outputResponse?: CodecResponseProps
 }
 
 export interface HTTPHistoryAnalysisPageInfo {

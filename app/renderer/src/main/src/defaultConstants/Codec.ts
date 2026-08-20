@@ -1,5 +1,6 @@
 import type { RightItemsProps } from '@/pages/codec/NewCodec'
 import type { CodecPageInfoProps } from '@/store/pageInfo'
+import cloneDeep from 'lodash/cloneDeep'
 
 export const initialRightItems: RightItemsProps[] = [
   // {
@@ -17,7 +18,7 @@ export const initialRightItems: RightItemsProps[] = [
 ]
 
 export const defaultCodecPageInfo: CodecPageInfoProps = {
-  rightItems: initialRightItems,
+  rightItems: cloneDeep(initialRightItems),
   inputEditor: '',
   outputResponse: undefined,
 }

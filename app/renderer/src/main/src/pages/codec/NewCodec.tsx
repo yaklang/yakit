@@ -2072,9 +2072,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
   const [fold, setFold] = useState<boolean>(true)
   // 是否全部展开
   const [isExpand, setExpand] = useState<boolean>(false)
-  const [rightItems, setRightItems] = useState<RightItemsProps[]>(
-    (cachedPageInfo.rightItems as RightItemsProps[]) || initialRightItems,
-  )
+  const [rightItems, setRightItems] = useState<RightItemsProps[]>(cachedPageInfo.rightItems || initialRightItems)
   const [leftData, setLeftData] = useState<LeftDataProps[]>([])
   // 我的收藏
   const [leftCollectData, setLeftCollectData] = useState<LeftDataProps[]>([])
@@ -2087,9 +2085,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
   const cacheCodecRef = useRef<CodecMethod[]>([])
   // Input/Output编辑器内容
   const [inputEditor, setInputEditor] = useState<string>(cachedPageInfo.inputEditor || '')
-  const [outputResponse, setOutputResponse] = useState<CodecResponseProps>(
-    cachedPageInfo.outputResponse as CodecResponseProps,
-  )
+  const [outputResponse, setOutputResponse] = useState<CodecResponseProps | undefined>(cachedPageInfo.outputResponse)
 
   // 编辑后回写 pageInfo store：rightItems / inputEditor / outputResponse
   const { run: syncCodecPageInfo } = useDebounceFn(
