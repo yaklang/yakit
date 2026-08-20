@@ -997,14 +997,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         filterProps: {
           filterKey: 'idFilter',
           filterIcon: <OutlineSelectorIcon className={styles['filter-icon']} />,
-          filterRender: () => (
+          filterRender: (closePopover: () => void) => (
             <SearchInputTableWrapper
               showSort={true}
               sortOrder={getIdSort()}
               onSort={onIdSort}
               searchValue={getIncludeIdSearch()}
               setSearchValue={setIncludeIdSearch}
-              onSure={onIncludeIdSearchSure}
+              onSure={() => {
+                closePopover()
+                onIncludeIdSearchSure()
+              }}
             />
           ),
         },
