@@ -3315,7 +3315,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       pageName: node.verbose,
       pageParamsInfo: {
         codecPageInfo: {
-          ...(node?.pageParams?.codecPageInfo || defaultCodecPageInfo),
+          ...(node?.pageParams?.codecPageInfo || cloneDeep(defaultCodecPageInfo)),
         },
       },
       sortFieId: order,

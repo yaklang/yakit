@@ -89,6 +89,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { type CodecPageInfoProps, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { defaultCodecPageInfo, initialRightItems } from '@/defaultConstants/Codec'
+import cloneDeep from 'lodash/cloneDeep'
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
@@ -2066,13 +2067,15 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     if (currentItem && currentItem.pageParamsInfo.codecPageInfo) {
       return currentItem.pageParamsInfo.codecPageInfo
     }
-    return { ...defaultCodecPageInfo }
+    return cloneDeep(defaultCodecPageInfo)
   })
   // codec分类展开收起
   const [fold, setFold] = useState<boolean>(true)
   // 是否全部展开
   const [isExpand, setExpand] = useState<boolean>(false)
-  const [rightItems, setRightItems] = useState<RightItemsProps[]>(cachedPageInfo.rightItems || initialRightItems)
+  const [rightItems, setRightItems] = useState<RightItemsProps[]>(
+    cachedPageInfo.rightItems || cloneDeep(initialRightItems),
+  )
   const [leftData, setLeftData] = useState<LeftDataProps[]>([])
   // 我的收藏
   const [leftCollectData, setLeftCollectData] = useState<LeftDataProps[]>([])
