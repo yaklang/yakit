@@ -1,0 +1,56 @@
+@mixin thought-stream-header {
+  @keyframes thought-blink {
+    0% {
+      background-position: 100% 0;
+    }
+    100% {
+      background-position: -100% 0;
+    }
+  }
+
+  .thought-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    cursor: pointer;
+    user-select: none;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+
+  .thought-title-blink {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    background-image: linear-gradient(
+      90deg,
+      var(--Colors-Use-Neutral-Text-3-Secondary) 20%,
+      var(--Colors-Use-Basic-White) 50%,
+      var(--Colors-Use-Neutral-Text-3-Secondary) 80%
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: thought-blink 1.2s linear infinite;
+  }
+
+  .thought-chevron {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    transition: transform 0.15s ease;
+
+    svg {
+      width: 12px;
+      height: 12px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+  }
+
+  .thought-chevron-collapsed {
+    transform: rotate(-90deg);
+  }
+}

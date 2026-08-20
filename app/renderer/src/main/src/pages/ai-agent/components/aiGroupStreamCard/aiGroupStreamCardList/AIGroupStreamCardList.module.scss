@@ -64,3 +64,20 @@
     }
   }
 }
+
+.content-thought {
+  max-height: 240px;
+
+  &.expand {
+    border-radius: 0;
+  }
+
+  .content-inner {
+    padding-left: 8px;
+    border-left: 2px solid var(--Colors-Use-Neutral-Disable);
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 20px;
+  }
+}

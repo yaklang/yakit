@@ -8,7 +8,7 @@ import styles from './AIGroupStreamCardList.module.scss'
 const BOTTOM_THRESHOLD = 10
 
 const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props) => {
-  const { expand, childrenTokens, rendItem } = props
+  const { expand, childrenTokens, rendItem, isThought } = props
 
   const contentRef = useRef<HTMLDivElement>(null)
   const [isScroll, setIsScroll] = useState(false)
@@ -69,7 +69,8 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
     <div
       className={classNames(styles['content'], {
         [styles.expand]: expand,
-        [styles.noMask]: isScroll,
+        [styles.noMask]: isScroll || isThought,
+        [styles['content-thought']]: isThought,
       })}
     >
       <div
