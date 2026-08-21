@@ -355,10 +355,6 @@
   version "0.16.8"
   resolved "https://registry.yarnpkg.com/@humanfs/node/-/node-0.16.8.tgz#8f800cccc13f4f8cd3116e2d9c0a94939da3e3ed"
   integrity sha512-gE1eQNZ3R++kTzFUpdGlpmy8kDZD/MLyHqDwqjkVQI0JMdI1D51sy1H958PNXYkM2rAac7e5/CnIKZrHtPh3BQ==
-  dependencies:
-    "@humanfs/core" "^0.19.2"
-    "@humanfs/types" "^0.15.0"
-    "@humanwhocodes/retry" "^0.4.0"
 
 "@humanfs/types@^0.15.0":
   version "0.15.0"
@@ -895,10 +891,10 @@
   resolved "https://registry.yarnpkg.com/@xterm/xterm/-/xterm-5.5.0.tgz#275fb8f6e14afa6e8a0c05d4ebc94523ff775396"
   integrity sha512-hqJHYaQb5OptNunnyAnkHyM8aCjZ1MEIDTQu1iIbbTD/xops91NB5yq1ZK/dC2JDbVWtF23zUtl9JE2NqwT87A==
 
-"@yakit-libs/color@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@yakit-libs/color/-/color-1.2.0.tgz#1b9a85ae64b07ada67c426badf2927238b453fbe"
-  integrity sha512-7/E+FE7ORFWJ56UihLKMOgKADKXl/8tWnGs8XWgyJV9EoBUzloPWGpSTu87SCkLYh+GhqsMHak7NAq/yigqKnA==
+"@yakit-libs/color@1.4.1":
+  version "1.4.1"
+  resolved "https://registry.npmjs.org/@yakit-libs/color/-/color-1.4.1.tgz#876a8314dab6bd9d83256eff6ab768a228c89f4a"
+  integrity sha512-RK/Qm8IUaLrCBgfYn33411qpTu3JQ07EHc7jFYfeUxALDhwo4JqxST60CkOS2Mx0EY13mJLg6f/o7yPI+oe+Qw==
 
 acorn-jsx@^5.3.2:
   version "5.3.2"

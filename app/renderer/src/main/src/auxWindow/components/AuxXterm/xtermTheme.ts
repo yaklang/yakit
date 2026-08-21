@@ -1,47 +1,10 @@
-/** aux 专用：读取 CSS 变量生成 xterm theme，避免引入 monaco 相关模块 */
-function getAuxYakitColorVars(): Record<string, string> {
-  const el = document.documentElement
-  const computed = getComputedStyle(el)
-  const seen = new Set<string>()
-  const result: Record<string, string> = {}
-
-  for (const sheet of document.styleSheets) {
-    let rules: CSSRuleList
-    try {
-      rules = sheet.cssRules
-    } catch {
-      continue
-    }
-
-    for (const rule of rules) {
-      if (rule.type !== CSSRule.STYLE_RULE) continue
-      const styleRule = rule as CSSStyleRule
-
-      for (let i = 0; i < styleRule.style.length; i++) {
-        const prop = styleRule.style[i]
-        if ((prop.startsWith('--Colors-Use-') || prop.startsWith('--yakit-colors-')) && !seen.has(prop)) {
-          seen.add(prop)
-          const value = computed.getPropertyValue(prop).trim()
-          if (value) result[prop] = value
-        }
-      }
-    }
-  }
-
-  for (let i = 0; i < el.style.length; i++) {
-    const prop = el.style[i]
-    if ((prop.startsWith('--Colors-Use-') || prop.startsWith('--yakit-colors-')) && !seen.has(prop)) {
-      seen.add(prop)
-      const value = computed.getPropertyValue(prop).trim()
-      if (value) result[prop] = value
-    }
-  }
-
-  return result
-}
+import type { Theme } from '@/hook/useTheme'
+import { GetMainColor } from '@/utils/envfile'
+import { getYakitColorVars } from '@/utils/yakitColorVars'
 
 export const getXtermTheme = () => {
-  const vars = getAuxYakitColorVars()
+  const theme = (document.documentElement.dataset.theme as Theme | undefined) ?? 'light'
+  const vars = getYakitColorVars(theme, GetMainColor(theme))
   return {
     foreground: vars['--Colors-Use-Neutral-Text-1-Title'],
     background: vars['--Colors-Use-Neutral-Bg'],
