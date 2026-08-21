@@ -40,11 +40,12 @@ const QR_EXPIRE_SECONDS = 120
 const POLL_INTERVAL_MS = 2000
 
 const TOKEN_PACKAGES: TokenPackage[] = [
-  { id: 'p1', price: 20 },
+  { id: 'p1', price: 10 },
   { id: 'p2', price: 50 },
   { id: 'p3', price: 100 },
   { id: 'p4', price: 200 },
 ]
+const DEFAULT_PACKAGE = TOKEN_PACKAGES[0]
 
 const formatPayTime = (date: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -71,8 +72,8 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
   const numberLocale = getNumberLocale(i18n.language)
 
   const [view, setView] = useState<ViewType>('plan')
-  const [selectedPackageId, setSelectedPackageId] = useState<string>()
-  const [customAmount, setCustomAmount] = useState(0)
+  const [selectedPackageId, setSelectedPackageId] = useState<string | undefined>(DEFAULT_PACKAGE.id)
+  const [customAmount, setCustomAmount] = useState(DEFAULT_PACKAGE.price)
   const [payMethod, setPayMethod] = useState<PayMethod>()
   const [payStatus, setPayStatus] = useState<PayStatus>('loading')
   const [expireSeconds, setExpireSeconds] = useState(QR_EXPIRE_SECONDS)
@@ -236,8 +237,8 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
       fetchSeqRef.current += 1
       resetPayRuntime()
       setView('plan')
-      setSelectedPackageId(undefined)
-      setCustomAmount(0)
+      setSelectedPackageId(DEFAULT_PACKAGE.id)
+      setCustomAmount(DEFAULT_PACKAGE.price)
       setPayMethod(undefined)
       setPayStatus('loading')
     }

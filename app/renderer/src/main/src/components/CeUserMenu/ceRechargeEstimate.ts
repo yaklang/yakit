@@ -61,6 +61,18 @@ export const SCENARIOS: Record<EstimateMode, EstimateScenario> = {
 
 export const MODELS: ModelPrice[] = [
   {
+    id: 'deepseek',
+    name: 'DeepSeek-V4-Flash',
+    labelKey: 'CeUserMenu.modelLabelDeepseek',
+    noteKey: 'CeUserMenu.modelNoteDeepseek',
+    sourceLabelKey: 'CeUserMenu.modelSourceDeepseek',
+    sourceURL: 'https://api-docs.deepseek.com/zh-cn/quick_start/pricing/',
+    inputRmb: 1,
+    cachedInputRmb: 0.02,
+    outputRmb: 2,
+    accent: '#74a98c',
+  },
+  {
     id: 'glm',
     name: 'GLM-5.2',
     labelKey: 'CeUserMenu.modelLabelGlm',
@@ -83,18 +95,6 @@ export const MODELS: ModelPrice[] = [
     cachedInputRmb: 2,
     outputRmb: 100,
     accent: '#cab189',
-  },
-  {
-    id: 'deepseek',
-    name: 'DeepSeek-V4-Flash',
-    labelKey: 'CeUserMenu.modelLabelDeepseek',
-    noteKey: 'CeUserMenu.modelNoteDeepseek',
-    sourceLabelKey: 'CeUserMenu.modelSourceDeepseek',
-    sourceURL: 'https://api-docs.deepseek.com/zh-cn/quick_start/pricing/',
-    inputRmb: 1,
-    cachedInputRmb: 0.02,
-    outputRmb: 2,
-    accent: '#74a98c',
   },
 ]
 
