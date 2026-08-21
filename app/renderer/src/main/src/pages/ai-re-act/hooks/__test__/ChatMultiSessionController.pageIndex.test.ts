@@ -15,6 +15,10 @@ vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
   persistToolResultIfTerminal: vi.fn(),
   drainSessionContentWrites: vi.fn().mockResolvedValue([]),
+  applyHydratedStageSettled: (content: any) => {
+    if (content && content.stageSettled !== false) content.stageSettled = true
+    return content
+  },
 }))
 vi.mock('../persist/aiChatPersistStore', () => ({
   default: {
@@ -88,8 +92,16 @@ describe('ChatMultiSessionController page index / ensureSession', () => {
     expect(request.Source).toBe('ai')
 
     rawData.contents.set('t1', { id: 't1' } as any)
-    // 当前实现体已注释，调用应不抛；恢复删除逻辑后再断言 has===false
-    expect(() => ctrl.removeContentsFromMemory('s-cfg', ['t1'])).not.toThrow()
+    ctrl.removeContentsFromMemory('s-cfg', ['t1'])
+    expect(rawData.contents.has('t1')).toBe(false)
+    expect(() => ctrl.removeContentsFromMemory('ghost')).not.toThrow()
+    rawData.contents.set('a', { id: 'a' } as any)
+    rawData.contents.set('b', { id: 'b' } as any)
+    ctrl.removeContentsFromMemory('s-cfg')
+    expect(rawData.contents.size).toBe(0)
+    rawData.contents.set('c', { id: 'c' } as any)
+    ctrl.removeContentsFromMemory('s-cfg', [])
+    expect(rawData.contents.size).toBe(0)
   })
 
   it('A22: getSessionExecute is read-only and does not create empty pool', () => {

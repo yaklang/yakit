@@ -43,6 +43,7 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
     AIService: info.AIService,
     AIModelName: info.AIModelName,
     Timestamp: info.Timestamp,
+    stageSettled: false as boolean,
   }
 }
 

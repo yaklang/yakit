@@ -8,6 +8,7 @@ import {
   deletePersistedContent,
   setSessionReferencePersist,
   drainSessionContentWrites,
+  applyHydratedStageSettled,
 } from '../persist/contentPersistHelper'
 import { AIChatQSDataTypeEnum } from '../aiRender'
 import aiChatPersistStore from '../persist/aiChatPersistStore'
@@ -49,7 +50,17 @@ describe('contentPersistHelper', () => {
       data: { tool: { status: 'success' } },
     } as any
     await persistToolResultIfTerminal('s1', terminal)
+    expect(terminal.stageSettled).toBe(true)
     expect(aiChatPersistStore.setSessionContent).toHaveBeenCalled()
+  })
+
+  it('marks IDB hydrate missing stageSettled as true', () => {
+    const content = { id: 'old', type: AIChatQSDataTypeEnum.THOUGHT, data: 'x' } as any
+    applyHydratedStageSettled(content)
+    expect(content.stageSettled).toBe(true)
+    const hot = { id: 'hot', stageSettled: false } as any
+    applyHydratedStageSettled(hot)
+    expect(hot.stageSettled).toBe(false)
   })
 
   it('E3: clone / persistIndependent / delete', async () => {
@@ -63,6 +74,7 @@ describe('contentPersistHelper', () => {
     expect(cloned).not.toBe(data)
 
     await persistIndependentItem('s1', data)
+    expect(data.stageSettled).toBe(true)
     expect(aiChatPersistStore.setSessionContent).toHaveBeenCalledWith('s1', 'x1', expect.any(Function))
 
     await deletePersistedContent('s1', 'x1')

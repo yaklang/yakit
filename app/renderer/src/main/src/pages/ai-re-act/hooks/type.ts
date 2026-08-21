@@ -37,5 +37,5 @@ export interface AIMessageHandlerParams extends ReturnType<ChatMultiSessionContr
   sendRequest: (request: AIInputEvent) => void
   pushLog: (log: AIAgentGrpcApi.Log) => void
 }
-export type AIMessageHandler = (params: AIMessageHandlerParams) => void
+export type AIMessageHandler = (params: AIMessageHandlerParams) => void | Promise<void>
 // #endregion

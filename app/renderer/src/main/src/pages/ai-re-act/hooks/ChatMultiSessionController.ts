@@ -46,6 +46,7 @@ import {
   drainSessionContentWrites,
   persistIndependentItem,
   persistToolResultIfTerminal,
+  applyHydratedStageSettled,
 } from './persist/contentPersistHelper'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 
@@ -518,16 +519,8 @@ export class ChatMultiSessionController {
     }
   }
 
-  /** 按 token 获取会话消息内容 */
-  private async persistGetSessionContent(sessionId: string, token: string) {
-    try {
-      return await aiChatPersistStore.getSessionContent(sessionId, token)
-    } catch {
-      return undefined
-    }
-  }
   /** 按 token 列表批量获取会话消息内容 */
-  async persistGetSessionContents(sessionId: string, tokens: string[]) {
+  public async persistGetSessionContents(sessionId: string, tokens: string[]) {
     try {
       return await aiChatPersistStore.getSessionContents(sessionId, tokens)
     } catch {
@@ -585,6 +578,7 @@ export class ChatMultiSessionController {
     if (tokens.length) {
       const rows = await this.persistGetSessionContents(sessionId, tokens)
       for (const row of rows) {
+        applyHydratedStageSettled(row.content)
         rawData.contents.set(row.token, row.content)
       }
     }
@@ -593,12 +587,17 @@ export class ChatMultiSessionController {
     return true
   }
 
-  /** 仅删除内存 contents 中的条目，不删渲染树 / IDB */
-  public removeContentsFromMemory(sessionId: string, tokens: string[]) {
-    // const { rawData } = this.ensureSession(sessionId)
-    // for (const token of tokens) {
-    //   rawData.contents.delete(token)
-    // }
+  /** 仅删除内存 contents 中的条目，不删渲染树 / IDB。未传 tokens 或空数组则清空该 session 全部 contents。池不存在时 no-op（不 ensureSession）。 */
+  public removeContentsFromMemory(sessionId: string, tokens?: string[]) {
+    const rawData = this.rawDataPool.get(sessionId)
+    if (!rawData) return
+    if (!tokens || tokens.length === 0) {
+      rawData.contents.clear()
+      return
+    }
+    for (const token of tokens) {
+      rawData.contents.delete(token)
+    }
   }
   // #endregion
 
@@ -1386,7 +1385,7 @@ export class ChatMultiSessionController {
       // mirrorToLogWindow()
 
       if (handleFunc) {
-        handleFunc({
+        const result = handleFunc({
           sessionId,
           res,
           chatType: store.getState().currentChatStatus.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
@@ -1400,6 +1399,11 @@ export class ChatMultiSessionController {
             pushLogToOtherWindow({ sessionId: sessionId, Timestamp: res.Timestamp, ...log })
           },
         })
+        if (result && typeof result.then === 'function') {
+          void result.catch((error) => {
+            console.error('handleGrpcOutputEvent error', error)
+          })
+        }
       }
     } catch (error) {
       console.error('handleGrpcOutputEvent error', error)

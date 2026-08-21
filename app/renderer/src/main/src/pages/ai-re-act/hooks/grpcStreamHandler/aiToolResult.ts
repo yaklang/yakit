@@ -6,6 +6,7 @@ import { AIChatQSDataTypeEnum, type AIChatQSData, type AIToolResult } from '../a
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultAIToolResult, DefaultToolResultSummary } from '../defaultConstant'
 import { persistToolResultIfTerminal, upsertSessionContent } from '../persist/contentPersistHelper'
+import { ensureContentInMemory } from '../persist/ensureContentInMemory'
 
 /**
  * 工具卡片首次上树用 dispatchStreamingNode；已在 items 里则只 bump renderNum。
@@ -30,6 +31,15 @@ export const ensureToolResultOnUI = (
       isHistory: res.IsSync,
     },
   })
+}
+
+const ensureToolResultContent = async (
+  requestInfo: AIMessageHandlerParams,
+  callToolId: string,
+): Promise<Extract<AIChatQSData, { type: AIChatQSDataTypeEnum.TOOL_RESULT }> | undefined> => {
+  const item = await ensureContentInMemory(requestInfo.sessionId, callToolId, requestInfo.rawData.contents)
+  if (!item || item.type !== AIChatQSDataTypeEnum.TOOL_RESULT) return undefined
+  return item
 }
 
 const handleToolCallStart: AIMessageHandler = (requestInfo) => {
@@ -68,8 +78,8 @@ const handleToolCallStart: AIMessageHandler = (requestInfo) => {
   })
 }
 
-const handleToolCallParam: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+const handleToolCallParam: AIMessageHandler = async (requestInfo) => {
+  const { res } = requestInfo
   if (res.Type !== 'tool_call_param') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -79,8 +89,8 @@ const handleToolCallParam: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const toolResult = rawData.contents.get(call_tool_id)
-  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+  const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
@@ -94,7 +104,7 @@ const handleToolCallParam: AIMessageHandler = (requestInfo) => {
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
-const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
+const handleToolCallWatcher: AIMessageHandler = async (requestInfo) => {
   const { res, rawData } = requestInfo
   if (res.Type !== 'tool_call_watcher') return
 
@@ -106,8 +116,8 @@ const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
   }
 
   // 先获取工具结果数据，从里面拿到stream的EventUUID
-  const toolResult = rawData.contents.get(call_tool_id)
-  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
+  const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!toolResult || !toolResult.data.stream.EventUUID) {
     requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
@@ -115,7 +125,11 @@ const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
     return
   }
   // 通过上面获取到的EventUUID，获取stream数据
-  const toolForStreamData = rawData.contents.get(toolResult.data.stream.EventUUID)
+  const toolForStreamData = await ensureContentInMemory(
+    requestInfo.sessionId,
+    toolResult.data.stream.EventUUID,
+    rawData.contents,
+  )
   if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
     requestInfo.pushLog({
       level: 'error',
@@ -137,8 +151,8 @@ const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
   }
 }
 
-const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+const handleToolCallLogDir: AIMessageHandler = async (requestInfo) => {
+  const { res } = requestInfo
   if (res.Type !== 'tool_call_log_dir') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -148,8 +162,8 @@ const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const toolResult = rawData.contents.get(call_tool_id)
-  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+  const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
@@ -170,8 +184,8 @@ const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
-const handleToolCallResult: AIMessageHandler = (requestInfo) => {
-  const { res, rawData, meta } = requestInfo
+const handleToolCallResult: AIMessageHandler = async (requestInfo) => {
+  const { res, meta } = requestInfo
   if (!['tool_call_user_cancel', 'tool_call_done', 'tool_call_error'].includes(res.Type)) return
   const status =
     { tool_call_user_cancel: 'user_cancelled', tool_call_done: 'success', tool_call_error: 'failed' }[res.Type] ||
@@ -185,8 +199,8 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const toolResult = rawData.contents.get(call_tool_id)
-  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+  const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
@@ -221,8 +235,8 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
   upsertSessionContent(requestInfo.sessionId, toolResult.id, toolResult)
 }
 
-const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
-  const { res, rawData, meta } = requestInfo
+const handleToolCallSummary: AIMessageHandler = async (requestInfo) => {
+  const { res, meta } = requestInfo
   if (res.Type !== 'tool_call_summary') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -232,8 +246,8 @@ const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const toolResult = rawData.contents.get(call_tool_id)
-  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+  const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
@@ -262,8 +276,8 @@ const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
-const handleToolCallStatus: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+const handleToolCallStatus: AIMessageHandler = async (requestInfo) => {
+  const { res } = requestInfo
   if (res.Type !== 'tool_call_status') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -273,8 +287,8 @@ const handleToolCallStatus: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const toolResult = rawData.contents.get(call_tool_id)
-  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+  const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
@@ -290,8 +304,8 @@ const handleToolCallStatus: AIMessageHandler = (requestInfo) => {
   persistToolResultIfTerminal(requestInfo.sessionId, toolResult)
 }
 
-const handleToolCallReason: AIMessageHandler = (requestInfo) => {
-  const { res, rawData } = requestInfo
+const handleToolCallReason: AIMessageHandler = async (requestInfo) => {
+  const { res } = requestInfo
   if (res.Type !== 'tool_call_reason') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
@@ -301,8 +315,8 @@ const handleToolCallReason: AIMessageHandler = (requestInfo) => {
     return
   }
 
-  const toolResult = rawData.contents.get(call_tool_id)
-  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+  const toolResult = await ensureToolResultContent(requestInfo, call_tool_id)
+  if (!toolResult) {
     requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
