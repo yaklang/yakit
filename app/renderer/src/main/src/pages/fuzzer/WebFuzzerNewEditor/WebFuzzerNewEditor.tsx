@@ -71,7 +71,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       foldBinaryFuzztag = true,
       onFoldBinaryFuzztagChange,
     } = props
-    const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer'])
+    const { t, i18nRefresh } = useI18nNamespaces(['webFuzzer', 'mitm'])
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const selectionByteCount = useSelectionByteCount(reqEditor, 500)
 
@@ -108,7 +108,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
           ...previous,
           [getLargeRequestReplacementKey(marker)]: { Filename: filename, Size: 0 },
         }))
-        yakitNotify('success', `已替换为文件 fuzztag：${filename}`)
+        yakitNotify('success', t('WebFuzzerNewEditor.replacedWithFileFuzztag', { filename }))
       },
     )
 
@@ -116,8 +116,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       const modal = showYakitModal({
         title:
           marker.kind === 'body'
-            ? `替换超大请求 Body（${marker.sizeVerbose}）`
-            : `替换超大文件 file=${marker.filename}`,
+            ? t('MITMManual.replace_large_body_title', { size: marker.sizeVerbose })
+            : t('MITMManual.replace_large_file_title', { filename: marker.filename }),
         width: 660,
         footer: null,
         content: (
@@ -158,7 +158,9 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
           modelMarkers.map((marker) => {
             const replacement = largeRequestReplacements[getLargeRequestReplacementKey(marker)]
             const markerText = model.getLineContent(marker.lineNumber).slice(0, marker.lineLength)
-            const hint = replacement ? `[已替换: ${replacement.Filename}]` : `[点击替换为文件 fuzztag]`
+            const hint = replacement
+              ? t('WebFuzzerNewEditor.replacedChipHint', { filename: replacement.Filename })
+              : t('WebFuzzerNewEditor.clickToReplaceChipHint')
             const chipClass = replacement
               ? `${styles['large-request-replace-chip']} ${styles['large-request-replace-chip-replaced']}`
               : styles['large-request-replace-chip']
@@ -177,7 +179,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                   inlineClassName: chipClass,
                   inlineClassNameAffectsLetterSpacing: true,
                 },
-                hoverMessage: { value: '点击替换为文件 fuzztag' },
+                hoverMessage: { value: t('WebFuzzerNewEditor.clickToReplaceFileFuzztag') },
                 glyphMarginClassName: styles['large-request-replace-glyph'],
               },
             }
@@ -210,7 +212,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         mouseDisposable?.dispose()
         reqEditor.deltaDecorations(decorationIDs, [])
       }
-    }, [largeRequestReplacements, newRequest, reqEditor])
+    }, [largeRequestReplacements, reqEditor, i18nRefresh, t])
 
     useImperativeHandle(
       ref,

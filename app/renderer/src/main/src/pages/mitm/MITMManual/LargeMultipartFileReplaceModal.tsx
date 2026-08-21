@@ -33,12 +33,8 @@ export const LargeRequestFileReplaceModal: React.FC<LargeRequestFileReplaceModal
     try {
       let result: MITMV2ReplaceLargeRequestFileResponse
       if (mode === 'fuzzer') {
-        const stat = await window
-          .require('electron')
-          .ipcRenderer.invoke('is-file-exists', filePath)
-          .then(() => true)
-          .catch(() => false)
-        if (!stat) {
+        const exists: boolean = await window.require('electron').ipcRenderer.invoke('is-file-exists', filePath)
+        if (!exists) {
           throw new Error('selected file does not exist')
         }
         result = { Filename: filePath, Size: 0 }

@@ -379,7 +379,11 @@
     "insertFuzzDictionaryTag": "插入模糊測試字典標籤",
     "insertHotReloadTag": "插入熱載入標籤",
     "insertFileTag": "插入檔案標籤",
-    "copyUrlFailed": "複製 URL 失敗：包含 Fuzz 標籤可能會導致 URL 不完整"
+    "copyUrlFailed": "複製 URL 失敗：包含 Fuzz 標籤可能會導致 URL 不完整",
+    "replacedWithFileFuzztag": "已替換為檔案 fuzztag：{{filename}}",
+    "clickToReplaceFileFuzztag": "點擊替換為檔案 fuzztag",
+    "replacedChipHint": "[已替換: {{filename}}]",
+    "clickToReplaceChipHint": "[點擊替換為檔案 fuzztag]"
   },
   "EncodeTag": {
     "encodeTagIntro": "編碼標籤介紹"

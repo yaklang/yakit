@@ -379,7 +379,11 @@
     "insertFuzzDictionaryTag": "插入模糊测试字典标签",
     "insertHotReloadTag": "插入热加载标签",
     "insertFileTag": "插入文件标签",
-    "copyUrlFailed": "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整"
+    "copyUrlFailed": "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整",
+    "replacedWithFileFuzztag": "已替换为文件 fuzztag：{{filename}}",
+    "clickToReplaceFileFuzztag": "点击替换为文件 fuzztag",
+    "replacedChipHint": "[已替换: {{filename}}]",
+    "clickToReplaceChipHint": "[点击替换为文件 fuzztag]"
   },
   "EncodeTag": {
     "encodeTagIntro": "编码标签介绍"

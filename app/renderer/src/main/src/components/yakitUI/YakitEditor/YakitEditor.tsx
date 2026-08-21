@@ -178,6 +178,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     execAutoDecodeCallback,
     // 此处 添加 propsTheme 字段是因为类 弹窗 / 抽屉组件是在 root 节点之外，provider包裹的入口节点就无法实时获取到theme
     propsTheme,
+    glyphMargin = false,
   } = props
   const { t, i18n, i18nRefresh } = useI18nNamespaces(['yakitUi'])
 
@@ -1338,6 +1339,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       },
       fixedOverflowWidgets: true,
       renderValidationDecorations: renderValidationDecorations,
+      glyphMargin,
     }),
     [
       readOnly,
@@ -1348,6 +1350,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       noMiniMap,
       lineNumbersMinChars,
       renderValidationDecorations,
+      glyphMargin,
     ],
   )
 
