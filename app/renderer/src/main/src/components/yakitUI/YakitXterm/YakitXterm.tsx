@@ -122,10 +122,8 @@ interface IProps {
    */
   customKeyEventHandler?(event: KeyboardEvent): boolean
 }
-export const defaultTerminalOptions = {
-  fontFamily: 'Consolas, "Lucida Console", "Courier New", monospace',
-  convertEol: true,
-}
+export { defaultTerminalOptions } from './terminalOptions'
+import { defaultTerminalOptions } from './terminalOptions'
 
 export const TERMINAL_KEYBOARD_Map = {
   KeyV: {

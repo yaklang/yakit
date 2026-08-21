@@ -118,13 +118,7 @@ import type { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
 
 const { ipcRenderer } = window.require('electron')
 
-export const isShowCodeScanDetail = (selectItem: Risk) => {
-  const { ResultID, SyntaxFlowVariable, ProgramName } = selectItem
-  if (ResultID && SyntaxFlowVariable && ProgramName) {
-    return true
-  }
-  return false
-}
+export { isShowCodeScanDetail } from './riskTableUtils'
 
 const batchExportMenuData: (t: TFunction) => YakitMenuItemProps[] = (t) => {
   return [

@@ -66,63 +66,29 @@ import { Trans } from 'react-i18next'
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
 
-export const getEnvTypeByProjects = () => {
-  return isIRify() ? 'ssa_project' : 'project'
-}
+export {
+  getEnvTypeByProjects,
+  type ProjectManageProp,
+  type ProjectParamsProps,
+  type ProjectParamsProp,
+  type ProjectDescription,
+  type ProjectsResponse,
+  type ExportProjectProps,
+  type FileProjectInfoProps,
+  type ProjectIOProgress,
+} from './projectUtils'
+import {
+  getEnvTypeByProjects,
+  type ProjectManageProp,
+  type ProjectParamsProps,
+  type ProjectParamsProp,
+  type ProjectDescription,
+  type ProjectsResponse,
+  type ExportProjectProps,
+  type FileProjectInfoProps,
+  type ProjectIOProgress,
+} from './projectUtils'
 
-export interface ProjectManageProp {
-  engineMode: YaklangEngineMode
-  onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
-  onFinish: () => any
-  projectListRefreshTrigger?: number
-}
-/** (新建|编辑)项目|文件夹参数 */
-export interface ProjectParamsProps {
-  Id?: number
-  ProjectName: string
-  Description?: string
-  Type: string
-  FolderId?: number
-  ChildFolderId?: number
-  Database?: string
-  ExternalModule?: string
-  ExternalProjectCode?: string
-}
-/** 项目列表查询条件 */
-export interface ProjectParamsProp extends QueryGeneralRequest {
-  ProjectName?: string
-  Description?: string
-  Type: string
-  FolderId?: number
-  ChildFolderId?: number
-  FrontendType?: 'project' | 'ssa_project'
-  AfterUpdatedAt?: number
-}
-/** 单条项目数据 */
-export interface ProjectDescription {
-  Id: number
-  ProjectName: string
-  Description: string
-  DatabasePath: string
-  CreatedAt: number
-  UpdateAt: number
-  FolderId: number
-  FolderName: string
-  ChildFolderId: number
-  ChildFolderName: string
-  Type: string
-  FileSize: string
-  ExternalModule: string
-  ExternalProjectCode: string
-  OnlineSubTaskID: string
-}
-export interface ProjectsResponse {
-  Pagination: { Page: number; Limit: number }
-  Projects: ProjectDescription[]
-  Total: number
-  TotalPage: number
-  ProjectToTal: number
-}
 /** 表头描述数据对象 */
 interface HeaderProp<T> {
   key: string
@@ -1650,23 +1616,12 @@ interface ProjectFolderInfoProps {
   ExternalModule?: string
   ExternalProjectCode?: string
 }
-export interface ExportProjectProps {
-  Id: number
-  ProjectName: string
-  Password: string
-}
 interface ImportProjectProps {
   ProjectFilePath: string
   LocalProjectName?: string
   Password?: string
   FolderId?: number
   ChildFolderId?: number
-}
-/** 文件夹级联组件节点属性 */
-export interface FileProjectInfoProps extends ProjectDescription {
-  children?: ProjectDescription[]
-  isLeaf?: boolean
-  loading?: boolean
 }
 
 export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((props) => {
@@ -2425,11 +2380,6 @@ interface TransferProjectProps {
   visible: boolean
   setVisible: (open: boolean) => any
   onSuccess: (type: string) => any
-}
-export interface ProjectIOProgress {
-  TargetPath: string
-  Percent: number
-  Verbose: string
 }
 export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
   const { t } = useI18nNamespaces(['projectManage', 'yakitUi'])

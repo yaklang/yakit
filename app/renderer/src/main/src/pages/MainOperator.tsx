@@ -1,6 +1,6 @@
 import React, { type ReactNode, useEffect, useRef, useState } from 'react'
 import { Avatar, Layout, Upload } from 'antd'
-import { CameraOutlined } from '@ant-design/icons'
+import CameraOutlined from '@ant-design/icons/lib/icons/CameraOutlined'
 import { failed, success, yakitFailed } from '../utils/notification'
 import {
   type CompletionTotal,
@@ -32,7 +32,7 @@ import {
 } from '@/utils/envfile'
 import HeardMenu from './layout/HeardMenu/HeardMenu'
 import { CodeGV } from '@/yakitGV'
-import { EnterpriseLoginInfoIcon } from '@/assets/icons'
+import { EnterpriseLoginInfoIcon } from '@/assets/icons/enterprise'
 import CustomizeMenu from './customizeMenu/CustomizeMenu'
 import { ControlOperation } from '@/pages/dynamicControl/DynamicControl'
 import { YakitHintModal } from '@/components/yakitUI/YakitHint/YakitHintModal'
@@ -59,7 +59,6 @@ import { MITMConsts } from './mitm/MITMConsts'
 import { checkProxyVersion } from '@/utils/proxyConfigUtil'
 
 import './main.scss'
-import './GlobalClass.scss'
 import { genDefaultPagination } from './invoker/schema'
 import { apiQuerySSAPrograms } from './yakRunnerScanHistory/utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -71,21 +70,7 @@ import aiChatPersistStore from './ai-re-act/hooks/persist/aiChatPersistStore'
 
 const { ipcRenderer } = window.require('electron')
 
-export const defaultUserInfo: UserInfoProps = {
-  isLogin: false,
-  platform: null,
-  githubName: null,
-  githubHeadImg: null,
-  wechatName: null,
-  wechatHeadImg: null,
-  qqName: null,
-  qqHeadImg: null,
-  companyName: null,
-  companyHeadImg: null,
-  role: null,
-  user_id: null,
-  token: '',
-}
+export { defaultUserInfo } from './userInfoDefaults'
 
 export interface MainProp {
   tlsGRPC?: boolean

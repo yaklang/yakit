@@ -15,7 +15,11 @@ import { useControllableValue, useDebounceFn, useMemoizedFn, useSize, useUpdateE
 import { Buffer } from 'buffer'
 import { StringToUint8Array, Uint8ArrayToString } from './str'
 import { packetTextToRawBytes, rawBytesToPacketText } from '@/components/yakitUI/YakitEditor/binaryFuzztag'
-import { BinaryFuzztagHexEditor } from '@/components/yakitUI/YakitEditor/BinaryFuzztagHexEditor'
+const BinaryFuzztagHexEditor = React.lazy(() =>
+  import('@/components/yakitUI/YakitEditor/BinaryFuzztagHexEditor').then((m) => ({
+    default: m.BinaryFuzztagHexEditor,
+  })),
+)
 import { getRemoteValue } from '@/utils/kv'
 import { type editor, type IPosition, type IRange } from 'monaco-editor'
 import { ConvertYakStaticAnalyzeErrorToMarker, type YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
@@ -38,7 +42,9 @@ import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableT
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { OutlineDotsverticalIcon } from '@/assets/icon/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { DataCompareModal } from '@/pages/compare/DataCompare'
+const DataCompareModal = React.lazy(() =>
+  import('@/pages/compare/DataCompare').then((m) => ({ default: m.DataCompareModal })),
+)
 import emiter from './eventBus/eventBus'
 import { v4 as uuidv4 } from 'uuid'
 import { GetPluginLanguage } from '@/pages/plugins/builtInData'
@@ -51,7 +57,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
 import { useEditorShowLineBreaks } from '@/store/editorShowLineBreaks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { newWebFuzzerTab } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { JSONParseLog } from './tool'
 import { yakitEditorTools } from '@/services/electronBridge'
 
@@ -747,14 +752,16 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
       const m = showYakitModal({
         title: null,
         content: (
-          <DataCompareModal
-            onClose={() => m.destroy()}
-            rightTitle={dataCompare.rightTitle}
-            leftTitle={dataCompare.leftTitle}
-            leftCode={dataCompare.leftCode ? dataCompare.leftCode : showValue}
-            rightCode={dataCompare.rightCode}
-            loadCallBack={() => setCompareLoading(false)}
-          />
+          <React.Suspense fallback={null}>
+            <DataCompareModal
+              onClose={() => m.destroy()}
+              rightTitle={dataCompare.rightTitle}
+              leftTitle={dataCompare.leftTitle}
+              leftCode={dataCompare.leftCode ? dataCompare.leftCode : showValue}
+              rightCode={dataCompare.rightCode}
+              loadCallBack={() => setCompareLoading(false)}
+            />
+          </React.Suspense>
         ),
         onCancel: () => {
           m.destroy()
@@ -1059,12 +1066,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                   type={'primary'}
                   icon={<ThunderboltFilled />}
                   onClick={() =>
-                    newWebFuzzerTab({
-                      isHttps: props.defaultHttps || false,
-                      request: props.defaultPacket ? props.defaultPacket : originValue,
-                      downstreamProxyStr,
-                      openFlag: true,
-                      fromMITM: props.fromMITM,
+                    import('@/pages/fuzzer/HTTPFuzzerPage').then(({ newWebFuzzerTab }) => {
+                      newWebFuzzerTab({
+                        isHttps: props.defaultHttps || false,
+                        request: props.defaultPacket ? props.defaultPacket : originValue,
+                        downstreamProxyStr,
+                        openFlag: true,
+                        fromMITM: props.fromMITM,
+                      })
                     })
                   }
                 >
@@ -1217,12 +1226,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                   />
                 )}
                 {showHexView && !empty && !renderHtml && !props.renderHtml && (
-                  <BinaryFuzztagHexEditor
-                    key={hexMountKey}
-                    dataRef={hexDataRef}
-                    readOnly={!!props.readOnly}
-                    onChange={handleHexEditorChange}
-                  />
+                  <React.Suspense fallback={null}>
+                    <BinaryFuzztagHexEditor
+                      key={hexMountKey}
+                      dataRef={hexDataRef}
+                      readOnly={!!props.readOnly}
+                      onChange={handleHexEditorChange}
+                    />
+                  </React.Suspense>
                 )}
               </div>
             )}

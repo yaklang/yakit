@@ -84,7 +84,7 @@ import { ShieldCheckIcon as AllShieldCheckIcon } from '@/components/layout/globa
 import { useScreenRecorder } from '@/store/screenRecorder'
 import numeral from 'numeral'
 import { CloudDownloadIcon } from '@/assets/newIcon'
-import { getEnvTypeByProjects, type ProjectDescription } from '../softwareSettings/ProjectManage'
+import { getEnvTypeByProjects, type ProjectDescription } from '../softwareSettings/projectUtils'
 import type { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import type { FieldName, Fields } from '../risks/RiskTable'
 import { apiQueryYakScriptTotal } from '../plugins/utils'

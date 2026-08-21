@@ -18,7 +18,7 @@ import { JSONParseLog } from './tool'
 import { yakitHost } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
-import { defHost, defPort } from '@/pages/mitm/MITMServerStartForm/MITMServerStartForm'
+import { defHost, defPort } from '@/pages/mitm/mitmDefaults'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 

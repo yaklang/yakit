@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from 'antd'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
-import { ExclamationCircleOutlined } from '@ant-design/icons'
+import ExclamationCircleOutlined from '@ant-design/icons/lib/icons/ExclamationCircleOutlined'
+import { lazy, Suspense } from 'react'
 import { useStore, yakitDynamicStatus } from '@/store'
-import { defaultUserInfo, SetUserInfo } from '@/pages/MainOperator'
+import { defaultUserInfo } from '@/pages/userInfoDefaults'
+const SetUserInfo = lazy(() => import('@/pages/MainOperator').then((m) => ({ default: m.SetUserInfo })))
 import { loginOut } from '@/utils/login'
 import { success, yakitFailed } from '@/utils/notification'
 import { NetWorkApi } from '@/services/fetch'
@@ -255,7 +257,9 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
     // EE|SE 版本
     if (userInfo.platform === 'company') {
       const SetUserInfoModule = () => (
-        <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
+        <Suspense fallback={null}>
+          <SetUserInfo userInfo={userInfo} avatarColor={avatarColor.current} setStoreUserInfo={setStoreUserInfo} />
+        </Suspense>
       )
 
       // 用户头像

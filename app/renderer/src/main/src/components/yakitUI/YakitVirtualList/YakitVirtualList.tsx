@@ -12,7 +12,7 @@ import {
 } from 'ahooks'
 import { useEffect, useRef, useState } from 'react'
 import ReactResizeDetector from 'react-resize-detector'
-import { LoadingOutlined } from '@ant-design/icons'
+import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import {
   YakitProtoCheckbox,
   type YakitProtoCheckboxProps,
