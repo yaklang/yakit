@@ -38,13 +38,14 @@ export function useUiExpandFromStore(
 
 /**
  * 主窗口：展开态写入当前会话 chatStore.uiExpandMap（抗 Virtuoso remount）。
- * 子窗口：仅为快照，走本地 useState，不碰主会话 store。
+ * 子窗口 / 无 token：仅为快照，走本地 useState，不碰主会话 store。
  */
 export function useUiExpand(token: string, defaultExpand: boolean): UiExpandTuple {
   const isChildWindow = useRef(isAuxOrChildWindow()).current
+  const useLocal = isChildWindow || !token
   const store = useCurrentStore()
-  // 子窗口仍调用 useCurrentStore（hooks 规则），但用空 token 跳过 map 读写
-  const storeTuple = useUiExpandFromStore(store, isChildWindow ? '' : token, defaultExpand)
+  // 子窗口/无 token 仍调用 useCurrentStore（hooks 规则），但用空 token 跳过 map 读写
+  const storeTuple = useUiExpandFromStore(store, useLocal ? '' : token, defaultExpand)
 
   const [localExpand, setLocalExpand] = useState(defaultExpand)
   const setLocal = useMemoizedFn<Dispatch<SetStateAction<boolean>>>((next) => {
@@ -54,7 +55,7 @@ export function useUiExpand(token: string, defaultExpand: boolean): UiExpandTupl
     setLocalExpand((prev) => !prev)
   })
 
-  if (isChildWindow) {
+  if (useLocal) {
     return [localExpand, setLocal, toggleLocal]
   }
   return storeTuple

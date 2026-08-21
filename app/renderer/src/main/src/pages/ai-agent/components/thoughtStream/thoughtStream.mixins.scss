@@ -1,5 +1,5 @@
 @mixin thought-stream-header {
-  @keyframes thought-blink {
+  @keyframes ai-thought-stream-blink {
     0% {
       background-position: 100% 0;
     }
@@ -46,7 +46,7 @@
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: thought-blink 1.2s linear infinite;
+    animation: ai-thought-stream-blink 1.2s linear infinite;
   }
 
   .thought-chevron {
