@@ -24,7 +24,7 @@ export function resolveYakitColorVars(colors: Record<string, string>): Record<st
       const match = value.match(VAR_REF_PATTERN)
       if (!match) continue
 
-      const refValue = resolved?.[match[1]]
+      const refValue = resolved[match[1]]
       if (refValue && !refValue.startsWith('var(')) {
         resolved[key] = refValue
         changed = true

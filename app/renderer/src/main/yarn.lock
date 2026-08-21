@@ -2946,7 +2946,7 @@
   resolved "https://registry.npmjs.org/@xterm/xterm/-/xterm-5.5.0.tgz#275fb8f6e14afa6e8a0c05d4ebc94523ff775396"
   integrity sha512-hqJHYaQb5OptNunnyAnkHyM8aCjZ1MEIDTQu1iIbbTD/xops91NB5yq1ZK/dC2JDbVWtF23zUtl9JE2NqwT87A==
 
-"@yakit-libs/color@^1.4.1":
+"@yakit-libs/color@1.4.1":
   version "1.4.1"
   resolved "https://registry.npmjs.org/@yakit-libs/color/-/color-1.4.1.tgz#876a8314dab6bd9d83256eff6ab768a228c89f4a"
   integrity sha512-RK/Qm8IUaLrCBgfYn33411qpTu3JQ07EHc7jFYfeUxALDhwo4JqxST60CkOS2Mx0EY13mJLg6f/o7yPI+oe+Qw==
