@@ -30,6 +30,7 @@ import type { AIReActSchedule, AIReActScheduleTargetMode, AIStartParams } from '
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { SwitchAIAgentTabEventEnum } from '../defaultConstant'
+import { getSessionDisplayTitle } from '../historyChat/source'
 import type { AISession } from '../type/aiChat'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
@@ -56,6 +57,7 @@ interface ScheduleFormValues {
   IntervalMinutes: number
   StartAt: Moment
   TargetMode: AIReActScheduleTargetMode
+  TargetSessionID?: string
 }
 
 interface DetailRowProps {
@@ -150,9 +152,12 @@ const ScheduledTasks = () => {
   const [operationUUID, setOperationUUID] = useState('')
   const [relatedSession, setRelatedSession] = useState<AISession>()
   const [relatedSessionLoading, setRelatedSessionLoading] = useState(false)
+  const [selectableSessions, setSelectableSessions] = useState<AISession[]>([])
+  const [selectableSessionsLoading, setSelectableSessionsLoading] = useState(false)
   const frequency = Form.useWatch('Frequency', form)
   const intervalMinutes = Form.useWatch('IntervalMinutes', form)
   const startAt = Form.useWatch('StartAt', form)
+  const targetMode = Form.useWatch('TargetMode', form)
 
   const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', [])
   const canContinueCurrentSession = Boolean(activeChat?.SessionID && !activeChat.isCreate)
@@ -175,6 +180,18 @@ const ScheduledTasks = () => {
         .some((value) => value?.toLocaleLowerCase().includes(normalizedSearch))
     })
   }, [filter, schedules, search])
+  const sessionOptions = useMemo(
+    () =>
+      selectableSessions.map((session) => {
+        const title = getSessionDisplayTitle(session) || session.question || t('ScheduledTasks.unnamedChat')
+        const lastUsedAt = formatCompactTime(session.LastUsedAt || session.UpdatedAt || session.CreatedAt)
+        return {
+          value: session.SessionID,
+          label: lastUsedAt === '-' ? title : `${title} · ${lastUsedAt}`,
+        }
+      }),
+    [selectableSessions, t],
+  )
 
   const getFrequencyLabel = useMemoizedFn((schedule: AIReActSchedule) => {
     const preset = rruleToFrequency(schedule.Schedule.RRule)
@@ -275,6 +292,40 @@ const ScheduledTasks = () => {
     return () => window.clearTimeout(timer)
   }, [frequency, intervalMinutes, modalVisible, startAt, timezone])
 
+  useEffect(() => {
+    if (!modalVisible) {
+      setSelectableSessions([])
+      setSelectableSessionsLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setSelectableSessionsLoading(true)
+    grpcQueryAISession(
+      {
+        Pagination: { Page: 1, Limit: -1, OrderBy: 'last_used_at', Order: 'desc' },
+        Filter: { Source: ['ai', 'im', ''] },
+      },
+      true,
+    )
+      .then((response) => {
+        if (!cancelled) setSelectableSessions(response.Data || [])
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setSelectableSessions([])
+          yakitNotify('error', t('ScheduledTasks.sessionLoadFailed', { error: String(error) }))
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSelectableSessionsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [modalVisible])
+
   const openCreate = useMemoizedFn(() => {
     setEditing(undefined)
     form.setFieldsValue({
@@ -284,6 +335,7 @@ const ScheduledTasks = () => {
       IntervalMinutes: 5,
       StartAt: moment().add(5, 'minutes').startOf('minute'),
       TargetMode: canContinueCurrentSession ? 'continue_session' : 'new_session_per_run',
+      TargetSessionID: canContinueCurrentSession ? activeChat?.SessionID : undefined,
     })
     setModalVisible(true)
   })
@@ -297,6 +349,7 @@ const ScheduledTasks = () => {
       IntervalMinutes: rruleToIntervalMinutes(schedule.Schedule.RRule),
       StartAt: moment.unix(unixNumber(schedule.Schedule.StartAt)),
       TargetMode: schedule.TargetMode,
+      TargetSessionID: schedule.TargetMode === 'continue_session' ? schedule.TargetSessionID : undefined,
     })
     setModalVisible(true)
   })
@@ -305,8 +358,7 @@ const ScheduledTasks = () => {
     setSaving(true)
     try {
       const baseParams: AIStartParams = editing?.Payload.StartParams || formatAIAgentSetting(getSetting())
-      const targetSessionID =
-        values.TargetMode === 'continue_session' ? editing?.TargetSessionID || activeChat?.SessionID || '' : ''
+      const targetSessionID = values.TargetMode === 'continue_session' ? values.TargetSessionID || '' : ''
       const schedule: AIReActSchedule = {
         UUID: editing?.UUID || '',
         Name: values.Name.trim(),
@@ -760,12 +812,30 @@ const ScheduledTasks = () => {
                 {
                   value: 'continue_session',
                   label: t('ScheduledTasks.continueSession'),
-                  disabled: !editing?.TargetSessionID && !canContinueCurrentSession,
                 },
                 { value: 'new_session_per_run', label: t('ScheduledTasks.newSessionPerRun') },
               ]}
             />
           </Form.Item>
+          {targetMode === 'continue_session' && (
+            <Form.Item
+              name="TargetSessionID"
+              label={t('ScheduledTasks.relatedChat')}
+              rules={[{ required: true, message: t('ScheduledTasks.relatedChatRequired') }]}
+            >
+              <YakitSelect
+                showSearch
+                allowClear
+                loading={selectableSessionsLoading}
+                optionFilterProp="label"
+                options={sessionOptions}
+                placeholder={t('ScheduledTasks.relatedChatPlaceholder')}
+                notFoundContent={
+                  selectableSessionsLoading ? t('ScheduledTasks.loading') : t('ScheduledTasks.noSelectableChats')
+                }
+              />
+            </Form.Item>
+          )}
           <div className={styles['preview']}>
             <div>{t('ScheduledTasks.preview')}</div>
             {previewTimes.length > 0
