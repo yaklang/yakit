@@ -672,9 +672,6 @@ export interface ChatStoreState {
     >,
   ) => void
 
-  /** 清除指定 token 的展开态记录（仅 store 内部删除节点时用；对外写操作走 ChatMultiSessionController） */
-  clearUiExpand: (token: string) => void
-
   /**
    * 用持久化渲染树快照整体替换 items/groups/tasks/elements
    * 供 ChatMultiSessionController 从 IDB 恢复会话使用
