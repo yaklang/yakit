@@ -112,6 +112,7 @@
   },
   "scripts": {
     "cli": "node scripts/cli.js",
+    "generate:theme": "node scripts/generate-theme-css.cjs",
     "electron-render": "env-cmd -e noBrouser,devTool -f ./.env-cmdrc vite",
     "electron-render-enterprise": "env-cmd -e noBrouser,devTool,enterprise -f ./.env-cmdrc vite --mode enterprise",
     "electron-render-simple-enterprise": "env-cmd -e noBrouser,devTool,simpleEE -f ./.env-cmdrc vite --mode simpleEE",
