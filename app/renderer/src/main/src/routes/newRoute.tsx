@@ -172,9 +172,12 @@ import { RuleManagement } from '@/pages/ruleManagement/RuleManagement'
 import { YakRunnerAuditHole } from '@/pages/yakRunnerAuditHole/YakRunnerAuditHole'
 import { Misstatement } from '@/pages/misstatement/Misstatement'
 import { SystemConfig } from '@/pages/systemConfig/SystemConfig'
-import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
+import type { ShortcutSettingPageName } from '@/pages/shortcutKey/type'
 import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { ShortcutKeyList } from '@/pages/shortcutKey/ShortcutKey'
+import { ContextMenuActionExecution } from '@/pages/contextMenuPlugin/ContextMenuActionExecution'
+import { ContextMenuManager } from '@/pages/contextMenuPlugin/ContextMenuManager'
+import type { ContextMenuScene } from '@/pages/contextMenuPlugin/types'
 import { AIAgent } from '@/pages/ai-agent/AIAgent'
 import { SolidClipboardlistIcon, SolidCodecIcon, SolidTerminalIcon } from '@/assets/icon/solid'
 import { PublicToolDataCompareIcon, PublicToolVulinboxIcon } from './publicIcon'
@@ -399,6 +402,8 @@ export const YakitRouteToPageInfo: Record<
   'system-config': { label: '系统配置', labelUi: 'YakitRoute.systemConfig' },
   'yak-java-decompiler': { label: 'Java 反编译', labelUi: 'YakitRoute.javaDecompile' },
   'shortcut-key': { label: '快捷键设置', labelUi: 'YakitRoute.shortcutSettings' },
+  'context-menu-manager': { label: '右键插件管理' },
+  'context-menu-result': { label: '右键插件结果' },
   'fingerprint-manage': { label: '指纹库', labelUi: 'YakitRoute.fingerprintDatabase' },
   'ai-agent': { label: 'AIAgent', labelUi: 'YakitRoute.AIAgent' },
   'ssa-result-diff': { label: 'ssa-result-diff', labelUi: 'YakitRoute.ssa-result-diff' },
@@ -463,6 +468,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.System_Config,
   YakitRoute.Yak_Java_Decompiler,
   YakitRoute.ShortcutKey,
+  YakitRoute.ContextMenuManager,
   YakitRoute.FingerprintManage,
   YakitRoute.AI_Agent,
   YakitRoute.Ssa_Result_Diff,
@@ -493,6 +499,8 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.HTTPFuzzer,
   YakitRoute.DB_Ports,
   YakitRoute.DB_HTTPHistory,
+  YakitRoute.ContextMenuManager,
+  YakitRoute.ContextMenuResult,
   YakitRoute.DB_HTTPHistoryAnalysis,
   YakitRoute.Plugin_Audit,
   YakitRoute.AddYakitScript,
@@ -542,6 +550,7 @@ export const NoScrollRoutes: YakitRoute[] = [
   YakitRoute.YakScript,
   YakitRoute.AI_Agent,
   YakitRoute.ShortcutKey,
+  YakitRoute.ContextMenuManager,
   YakitRoute.YakRunner_ScanHistory,
 ]
 
@@ -685,7 +694,14 @@ export interface ComponentParams {
   mitmHackerPageInfo?: MITMHackerPageInfoProps
 
   /** 快捷键配置页面信息 */
-  shortcutKeyPage?: ShortcutKeyPageName
+  shortcutKeyPage?: ShortcutSettingPageName
+
+  /** 右键插件管理的初始场景 */
+  contextMenuScene?: ContextMenuScene
+
+  /** 右键插件执行结果 */
+  executionID?: string
+  pluginName?: string
 
   /** 编辑 forge 模板 */
   modifyAIForgePageInfo?: AIForgeEditorPageInfoProps
@@ -960,7 +976,15 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.AI_Agent:
       return <AIAgent pageId={params?.id || ''} />
     case YakitRoute.ShortcutKey:
-      return <ShortcutKeyList />
+      return <ShortcutKeyList defaultPage={params?.shortcutKeyPage} />
+    case YakitRoute.ContextMenuManager:
+      return <ContextMenuManager initialScene={params?.contextMenuScene} />
+    case YakitRoute.ContextMenuResult:
+      return params?.executionID ? (
+        <ContextMenuActionExecution executionID={params.executionID} mode="tab" />
+      ) : (
+        <div>右键插件执行上下文不存在。</div>
+      )
     case YakitRoute.FingerprintManage:
       return <FingerprintManage />
     case YakitRoute.Ssa_Result_Diff:

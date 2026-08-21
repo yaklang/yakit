@@ -289,7 +289,7 @@ export const PluginBatchExecutor: React.FC<PluginBatchExecutorProps> = React.mem
         fetchListInPageFirstAfter={fetchListInPageFirstAfter}
         selectNum={selectNum}
         setSelectNum={setSelectNum}
-        pluginGroupExcludeType={['yak', 'codec', 'lua']}
+        pluginGroupExcludeType={['yak', 'codec', 'context-menu', 'lua']}
       >
         <div className={styles['right-wrapper']}>
           {isShowPluginLog && (

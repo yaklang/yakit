@@ -166,7 +166,8 @@ import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import { defaultHTTPHistoryAnalysisPageInfo } from '@/defaultConstants/hTTPHistoryAnalysis'
 import type { BatchAddNewGroupFormItem } from './BatchAddNewGroup'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
-import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
+import type { ShortcutSettingPageName } from '@/pages/shortcutKey/type'
+import type { ContextMenuScene } from '@/pages/contextMenuPlugin/types'
 import { getGlobalShortcutKeyEvents } from '@/utils/globalShortcutKey/events/global'
 import {
   convertKeyEventToKeyCombination,
@@ -949,6 +950,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.ShortcutKey:
         addShortcutKey(params)
         break
+      case YakitRoute.ContextMenuManager:
+        addContextMenuManager(params)
+        break
+      case YakitRoute.ContextMenuResult:
+        addContextMenuResult(params)
+        break
       case YakitRoute.AddAIForge:
       case YakitRoute.ModifyAIForge: {
         const isModifyAIForge = route === YakitRoute.ModifyAIForge
@@ -1008,12 +1015,40 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
   })
 
-  const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {
+  const addShortcutKey = useMemoizedFn((data: ShortcutSettingPageName) => {
+    emiter.emit('switchShortcutSettingPage', data)
     openMenuPage(
       { route: YakitRoute.ShortcutKey },
       {
         pageParams: {
           shortcutKeyPage: data,
+        },
+      },
+    )
+  })
+
+  const addContextMenuResult = useMemoizedFn((data: { executionID: string; pluginName: string }) => {
+    if (!data?.executionID) return
+    openMenuPage(
+      { route: YakitRoute.ContextMenuResult },
+      {
+        verbose: data.pluginName || '右键插件结果',
+        hideAdd: true,
+        pageParams: {
+          executionID: data.executionID,
+          pluginName: data.pluginName,
+        },
+      },
+    )
+  })
+
+  const addContextMenuManager = useMemoizedFn((data?: { contextMenuScene?: ContextMenuScene }) => {
+    if (data?.contextMenuScene) emiter.emit('switchContextMenuManagerScene', data.contextMenuScene)
+    openMenuPage(
+      { route: YakitRoute.ContextMenuManager },
+      {
+        pageParams: {
+          contextMenuScene: data?.contextMenuScene,
         },
       },
     )
@@ -2723,7 +2758,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       extraOpenMenuPage({ route: YakitRoute.SimpleDetect })
       // 简易企业版判断本地插件数-导入弹窗
       const newParams = {
-        Type: 'yak,mitm,codec,packet-hack,port-scan',
+        Type: 'yak,mitm,codec,context-menu,packet-hack,port-scan',
         Keyword: '',
         Pagination: { Limit: 20, Order: 'desc', Page: 1, OrderBy: 'updated_at' },
         UserId: 0,

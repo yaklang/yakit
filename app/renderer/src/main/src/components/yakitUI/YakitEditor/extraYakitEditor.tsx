@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemoizedFn } from 'ahooks'
 import type {
   OtherMenuListProps,
   YakitEditorExtraRightMenuType,
@@ -10,6 +11,7 @@ import { failed, info, yakitNotify } from '@/utils/notification'
 import { type ShareValueProps, newWebFuzzerTab } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { generateCSRFPocByRequest } from '@/pages/invoker/fromPacketToYakCode'
 import { StringToUint8Array } from '@/utils/str'
+import { rawBytesToPacketText } from './binaryFuzztag'
 import { showResponseViaResponseRaw } from '@/components/ShowInBrowser'
 import { openExternalWebsite, saveABSFileToOpen } from '@/utils/openWebsite'
 import { Modal } from 'antd'
@@ -34,9 +36,31 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { JSONParseLog } from '@/utils/tool'
 import { fetchCursorContent, fetchEditorFullContent } from './editorUtils'
+import { customMutateRequest } from './contextMenus'
+import { runContextMenuAction } from '@/pages/contextMenuPlugin/ContextMenuExecutionHost'
+import { useContextMenuActions } from '@/pages/contextMenuPlugin/useContextMenuActions'
+import { openContextMenuManager } from '@/pages/contextMenuPlugin/navigation'
+import {
+  ContextMenuExecutionType,
+  ContextMenuScene,
+  type ContextMenuAction,
+  type ContextMenuHttpsState,
+  type ContextMenuPacketActionResult,
+  type ContextMenuTrigger,
+} from '@/pages/contextMenuPlugin/types'
+import { convertKeyEventToKeyCombination, sortKeysCombination } from '@/utils/globalShortcutKey/utils'
+import emiter from '@/utils/eventBus/eventBus'
 const { ipcRenderer } = window.require('electron')
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = 'HTTP_PACKET_EDITOR_DisableUnicodeDecode'
+
+export interface ContextMenuPacketEditorConfig {
+  role?: 'request' | 'response'
+  peerValue?: string
+  onPeerValueChange?: (value: string) => void
+  source?: string
+  httpsState?: ContextMenuHttpsState
+}
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, 'menuType'> {
   defaultHttps?: boolean
@@ -62,6 +86,24 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, 'menuType'> {
   onClickOpenBrowserMenu?: () => void
   onClickOpenPacketNewWindowMenu?: () => void
   fromMITM?: boolean // 是否来自 MITM 页面
+  contextMenuPacket?: ContextMenuPacketEditorConfig
+}
+
+const CONTEXT_MENU_PACKET_GROUP_KEY = 'contextMenuPluginV2'
+const CONTEXT_MENU_PACKET_MANAGE_KEY = 'contextMenuAction:manage'
+const getPacketActionKey = (action: ContextMenuAction, operation: 'execute' | 'configure') =>
+  `contextMenuAction:${encodeURIComponent(action.PluginUUID)}:${action.ActionID}:${operation}`
+
+const packetRevision = (request: string | undefined, response: string | undefined) => {
+  const input = `request:${request === undefined ? 'missing' : request}\nresponse:${
+    response === undefined ? 'missing' : response
+  }`
+  let hash = 2166136261
+  for (let index = 0; index < input.length; index++) {
+    hash ^= input.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return `v1-${input.length}-${(hash >>> 0).toString(16)}`
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -91,6 +133,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     onClickOpenPacketNewWindowMenu,
     onlyBasicMenu = false,
     fromMITM = false,
+    contextMenuPacket,
+    editorDidMount,
     ...restProps
   } = props
   const { t, i18nRefresh } = useI18nNamespaces(['yakitUi', 'history'])
@@ -105,6 +149,133 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
   const [system, setSystem] = useState<YakitSystem>('Darwin')
   const [disableUnicodeDecode, setDisableUnicodeDecode] = useState<boolean>(false)
   const { setCompareLeft, setCompareRight } = useHttpFlowStore()
+  const { actions: contextMenuActions } = useContextMenuActions({
+    scene: ContextMenuScene.HTTPPacket,
+    enabled: !onlyBasicMenu && !isWebSocket,
+  })
+  const visibleContextMenuActions = useMemo(
+    () =>
+      contextMenuActions.filter(
+        (action) => !(noPacketModifier && action.ExecutionType === ContextMenuExecutionType.LegacyPacketMutate),
+      ),
+    [contextMenuActions, noPacketModifier],
+  )
+  const contextMenuActionsRef = useRef<ContextMenuAction[]>([])
+  contextMenuActionsRef.current = visibleContextMenuActions
+
+  const getPacketContext = useMemoizedFn((editor: YakitIMonacoEditor) => {
+    const currentValue = fetchEditorFullContent(editor)
+    const role =
+      contextMenuPacket?.role ||
+      (downbodyParams
+        ? downbodyParams.IsRequest
+          ? 'request'
+          : 'response'
+        : /^HTTP\/\d(?:\.\d)?\s/.test(currentValue)
+          ? 'response'
+          : 'request')
+    const request = role === 'request' ? currentValue : contextMenuPacket?.peerValue
+    const response = role === 'response' ? currentValue : contextMenuPacket?.peerValue
+    return {
+      role,
+      request,
+      response,
+      revision: packetRevision(request, response),
+    }
+  })
+
+  const runPacketAction = useMemoizedFn(
+    (action: ContextMenuAction, trigger: ContextMenuTrigger, editor: YakitIMonacoEditor, configureParams = false) => {
+      if (action.ExecutionType === ContextMenuExecutionType.LegacyPacketMutate) {
+        customMutateRequest(action.PluginName, fetchEditorFullContent(editor), editor)
+        return
+      }
+
+      if (action.ExecutionType === ContextMenuExecutionType.LegacyPacketContext) {
+        const model = editor.getModel()
+        const selection = editor.getSelection()
+        const selectedText = selection ? model?.getValueInRange(selection) || '' : ''
+        emiter.emit(
+          'onOpenFuzzerModal',
+          JSON.stringify({
+            text: selectedText || model?.getValue() || '',
+            scriptName: action.PluginName,
+            params: action.Params,
+            isAiPlugin: action.IsAIPlugin,
+            isExec: !configureParams,
+          }),
+        )
+        return
+      }
+
+      const packet = getPacketContext(editor)
+      const httpsState: ContextMenuHttpsState =
+        contextMenuPacket?.httpsState ||
+        (props.defaultHttps === undefined ? 'unknown' : defaultHttps ? 'https' : 'http')
+
+      const applyPacketResult = (result: ContextMenuPacketActionResult) => {
+        const current = getPacketContext(editor)
+        if (result.PacketRevision !== packet.revision || current.revision !== packet.revision) {
+          yakitNotify('warning', '数据包在插件执行期间已变化，未应用插件修改')
+          return false
+        }
+
+        const model = editor.getModel()
+        if (!model) return false
+        if (packet.role === 'request' && result.ReplaceRequest) {
+          model.setValue(rawBytesToPacketText(result.Request))
+        }
+        if (packet.role === 'response' && result.ReplaceResponse) {
+          model.setValue(rawBytesToPacketText(result.Response))
+        }
+
+        const replacePeer = packet.role === 'request' ? result.ReplaceResponse : result.ReplaceRequest
+        const peerBytes = packet.role === 'request' ? result.Response : result.Request
+        if (replacePeer) {
+          if (contextMenuPacket?.onPeerValueChange) {
+            contextMenuPacket.onPeerValueChange(rawBytesToPacketText(peerBytes))
+          } else {
+            yakitNotify('warning', '插件同时修改了另一侧数据包，但当前页面未提供回填入口')
+          }
+        }
+        return true
+      }
+
+      runContextMenuAction({
+        action,
+        configureParams,
+        onPacketResult: readOnly ? undefined : applyPacketResult,
+        request: {
+          Source: contextMenuPacket?.source || (fromMITM ? 'MITM' : 'http-packet-editor'),
+          Trigger: trigger,
+          HttpsState: httpsState,
+          HTTPFlowIDs: downbodyParams?.Id ? [Number(downbodyParams.Id)] : [],
+          Request: packet.request === undefined ? undefined : StringToUint8Array(packet.request),
+          Response: packet.response === undefined ? undefined : StringToUint8Array(packet.response),
+          HasRequest: packet.request !== undefined,
+          HasResponse: packet.response !== undefined,
+          PacketRevision: packet.revision,
+        },
+      })
+    },
+  )
+
+  const handleEditorDidMount = useMemoizedFn((editor: YakitIMonacoEditor, monaco) => {
+    editor.onKeyDown((event) => {
+      const keys = convertKeyEventToKeyCombination(event.browserEvent)
+      if (!keys?.length) return
+      const shortcut = sortKeysCombination(keys).join('|')
+      const action = contextMenuActionsRef.current.find(
+        (item) => item.Shortcut && sortKeysCombination(item.Shortcut.split('|')).join('|') === shortcut,
+      )
+      if (!action) return
+      event.preventDefault()
+      event.stopPropagation()
+      event.browserEvent.stopImmediatePropagation()
+      runPacketAction(action, 'shortcut', editor)
+    })
+    editorDidMount?.(editor, monaco)
+  })
 
   useEffect(() => {
     ipcRenderer.invoke('fetch-system-name').then((systemType: YakitSystem) => {
@@ -126,13 +297,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
       // 只展示最基础菜单
       return []
     }
-    const init: YakitEditorExtraRightMenuType[] = ['code', 'decode', 'http']
-    if (noPacketModifier) {
-      return init
-    } else {
-      return init.concat(['customcontextmenu'])
-    }
-  }, [noPacketModifier, onlyBasicMenu])
+    return ['code', 'decode', 'http']
+  }, [onlyBasicMenu])
 
   const rightContextMenu: OtherMenuListProps = useMemo(() => {
     if (onlyBasicMenu) {
@@ -642,6 +808,59 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
       }
     }
 
+    menuItems[CONTEXT_MENU_PACKET_GROUP_KEY] = {
+      menu: [
+        {
+          key: CONTEXT_MENU_PACKET_GROUP_KEY,
+          label: '右键插件',
+          children: [
+            ...visibleContextMenuActions.flatMap((action) => {
+              const sameNameCount = visibleContextMenuActions.filter(
+                (item) => item.PluginName === action.PluginName,
+              ).length
+              const label = sameNameCount > 1 ? `${action.PluginName} · ${action.HookName}` : action.PluginName
+              const canConfigure =
+                action.Params?.length && action.ExecutionType !== ContextMenuExecutionType.LegacyPacketMutate
+              if (!canConfigure) {
+                return [
+                  {
+                    key: getPacketActionKey(action, 'execute'),
+                    label,
+                  },
+                ]
+              }
+              return [
+                {
+                  key: getPacketActionKey(action, 'execute'),
+                  label: `${label} · 执行`,
+                },
+                {
+                  key: getPacketActionKey(action, 'configure'),
+                  label: `${label} · 设置参数`,
+                },
+              ]
+            }),
+            {
+              key: CONTEXT_MENU_PACKET_MANAGE_KEY,
+              label: '管理右键插件',
+            },
+          ],
+        },
+      ],
+      onRun: (editor: YakitIMonacoEditor, key: string) => {
+        if (key === CONTEXT_MENU_PACKET_MANAGE_KEY) {
+          openContextMenuManager(ContextMenuScene.HTTPPacket)
+          return
+        }
+        const action = visibleContextMenuActions.find((item) =>
+          key.startsWith(`contextMenuAction:${encodeURIComponent(item.PluginUUID)}:${item.ActionID}:`),
+        )
+        if (!action) return
+        runPacketAction(action, 'context-menu', editor, key.endsWith(':configure'))
+      },
+      order: 12,
+    }
+
     // 发送到对比器
     if (!noSendToComparer) {
       menuItems.sendToComparer = {
@@ -715,6 +934,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     setCompareLeft,
     setCompareRight,
     noSendToComparer,
+    visibleContextMenuActions,
+    contextMenuPacket,
+    runPacketAction,
   ])
 
   return (
@@ -725,8 +947,10 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
       contextMenu={rightContextMenu}
       hiddenDefaultContextMenuKeys={['copy']}
       disableUnicodeDecode={disableUnicodeDecode}
+      editorDidMount={handleEditorDidMount}
       {...restProps}
       {...extraEditorProps}
+      disableCodecPluginMenus={true}
     />
   )
 })

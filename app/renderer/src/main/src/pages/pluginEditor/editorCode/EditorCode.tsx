@@ -105,8 +105,8 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
       return type
     })
     useUpdateEffect(() => {
-      // yak、lua、mitm、codec类型都可以自定义参数
-      if (['yak', 'lua', 'mitm', 'codec'].includes(getType())) {
+      // Yak 代码类插件可以自定义参数
+      if (['yak', 'lua', 'mitm', 'codec', 'context-menu'].includes(getType())) {
         handleFetchParams(true)
       } else {
         setParams([])
@@ -174,7 +174,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
     }, [params])
     const initFormValue = useMemoizedFn(() => {
       // 其他类型只有默认参数
-      if (!['yak', 'lua', 'mitm', 'codec'].includes(type)) {
+      if (!['yak', 'lua', 'mitm', 'codec', 'context-menu'].includes(type)) {
         onSettingDefault()
         return
       }
@@ -207,6 +207,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
       switch (type) {
         case 'yak':
         case 'lua':
+        case 'context-menu':
           return (
             <ExecuteEnterNodeByPluginParams
               paramsList={requiredParams}
@@ -399,6 +400,10 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
     })
 
     const onStartExecute = useMemoizedFn(() => {
+      if (type === 'context-menu') {
+        yakitNotify('info', '右键插件需要保存后，从对应的 History 或 HTTP 数据包场景触发')
+        return
+      }
       if (form) {
         form
           .validateFields()
@@ -578,7 +583,14 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                     </div>
                   </>
                 ) : (
-                  <YakitEmpty style={{ marginTop: 60 }} description={'点击【执行】以开始'} />
+                  <YakitEmpty
+                    style={{ marginTop: 60 }}
+                    description={
+                      type === 'context-menu'
+                        ? '保存插件后，从对应的 History 或 HTTP 数据包右键菜单触发执行'
+                        : '点击【执行】以开始'
+                    }
+                  />
                 )}
               </div>
             </div>
@@ -592,9 +604,9 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                   </YakitButton>
                   <div
                     className={styles['divider-style']}
-                    style={['yak', 'mitm', 'codec'].includes(type) ? { marginRight: 0 } : undefined}
+                    style={['yak', 'mitm', 'codec', 'context-menu'].includes(type) ? { marginRight: 0 } : undefined}
                   ></div>
-                  {['yak', 'mitm', 'codec'].includes(type) && (
+                  {['yak', 'mitm', 'codec', 'context-menu'].includes(type) && (
                     <>
                       <YakitButton type="text" loading={fetchParamsLoading} onClick={() => handleFetchParams()}>
                         获取参数
@@ -602,7 +614,9 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                       <div className={styles['divider-style']}></div>
                     </>
                   )}
-                  {isExecuting ? (
+                  {type === 'context-menu' ? (
+                    <YakitTag color="blue">保存后从场景右键菜单执行</YakitTag>
+                  ) : isExecuting ? (
                     <YakitButton danger onClick={onStopExecute}>
                       停止
                     </YakitButton>

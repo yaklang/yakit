@@ -8,6 +8,7 @@ import {
 } from '@/assets/icon/colors'
 import type { ReactNode } from 'react'
 import { CodecPluginTemplate } from '../invoker/data/CodecPluginTemplate'
+import { ContextMenuPluginTemplate } from '../invoker/data/ContextMenuPluginTemplate'
 import { MITMPluginTemplate, PortScanPluginTemplate } from '../pluginDebugger/defaultData'
 import { SolidFlagIcon, SolidBadgecheckIcon, SolidBanIcon, SolidCircleIcon } from '@/assets/icon/solid'
 import type { TypeSelectOpt } from './funcTemplateType'
@@ -67,6 +68,14 @@ export const pluginTypeToName: Record<string, PluginTypeInfoProps> = {
     content: CodecPluginTemplate,
     language: 'yak',
   },
+  'context-menu': {
+    name: 'Yak-右键插件',
+    description: '按需处理 History 单选、多选或 HTTP 数据包，并复用 Yakit 内置结果展示能力',
+    icon: <SolidSparklesPluginIcon />,
+    color: 'bluePurple',
+    content: ContextMenuPluginTemplate,
+    language: 'yak',
+  },
   lua: {
     name: 'Lua 模块',
     description: '监修中，无法使用',
@@ -106,6 +115,7 @@ export const DefaultTypeList: { icon: ReactNode; name: string; description: stri
   { ...pluginTypeToName['mitm'], key: 'mitm' },
   { ...pluginTypeToName['port-scan'], key: 'port-scan' },
   { ...pluginTypeToName['codec'], key: 'codec' },
+  { ...pluginTypeToName['context-menu'], key: 'context-menu' },
   { ...pluginTypeToName['lua'], key: 'lua' },
   { ...pluginTypeToName['nuclei'], key: 'nuclei' },
 ]

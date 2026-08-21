@@ -359,7 +359,7 @@ const mutateRequest = (params: MutateHTTPRequestParams, editor?: YakitIMonacoEdi
   })
 }
 /** @name 自定义HTTP数据包变形模块处理函数 */
-const customMutateRequest = (key: string, text?: string, editor?: YakitIMonacoEditor) => {
+export const customMutateRequest = (key: string, text?: string, editor?: YakitIMonacoEditor) => {
   if (!editor) {
     return
   }

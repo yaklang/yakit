@@ -12,6 +12,7 @@ import type { CodecTypeProps, contextMenuProps } from '../constants'
 export interface UsePluginSearchParams {
   menuType: YakitEditorExtraRightMenuType[]
   inViewport: boolean | undefined
+  disabled?: boolean
 }
 
 export interface UsePluginSearchResult {
@@ -28,7 +29,7 @@ export interface UsePluginSearchResult {
  * 自定义HTTP数据包变形处理 + 插件扩展
  */
 export const usePluginSearch = (params: UsePluginSearchParams): UsePluginSearchResult => {
-  const { menuType, inViewport } = params
+  const { menuType, inViewport, disabled = false } = params
 
   // 自定义HTTP数据包变形处理
   const { customHTTPMutatePlugin, contextMenuPlugin, setCustomHTTPMutatePlugin, setContextMenuPlugin } = useStore()
@@ -91,14 +92,14 @@ export const usePluginSearch = (params: UsePluginSearchParams): UsePluginSearchR
   })
 
   useEffect(() => {
-    if (inViewport && menuType.length > 0) {
+    if (inViewport && menuType.length > 0 && !disabled) {
       searchCodecCustomHTTPMutatePlugin()
       searchCodecCustomContextMenuPlugin()
     }
-  }, [inViewport])
+  }, [inViewport, disabled])
 
   const onRefreshPluginCodecMenu = useMemoizedFn(() => {
-    if (inViewport && menuType.length > 0) {
+    if (inViewport && menuType.length > 0 && !disabled) {
       searchCodecCustomHTTPMutatePlugin()
       searchCodecCustomContextMenuPlugin()
     }

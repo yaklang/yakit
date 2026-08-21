@@ -28,6 +28,9 @@ export interface YakitEditorProps {
   /** @name 自带的菜单组可选项(多选) */
   menuType?: YakitEditorExtraRightMenuType[]
 
+  /** @name 由统一右键插件管理接管旧 CODEC 菜单，禁止自动注入旧插件 */
+  disableCodecPluginMenus?: boolean
+
   /** @name 编辑器内容(string类型) */
   value?: string
   /** @name 修改编辑器内容事件回调 */

@@ -5,7 +5,6 @@ import { useMemoizedFn } from 'ahooks'
 import { showResponseViaHTTPFlowID } from '@/components/ShowInBrowser'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { setClipboardText } from '@/utils/clipboard'
-import emiter from '@/utils/eventBus/eventBus'
 import { isEnpriTrace } from '@/utils/envfile'
 import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
 import {
@@ -36,7 +35,13 @@ import type { HistoryMenuData, HTTPFlow } from './HTTPFlowTable.constants'
 import { hydrateHTTPFlowRequest, hydrateHTTPFlowRequests } from './HTTPFlowTable.packet'
 import { isHTTPFlowFavorite } from './HTTPFlowTable.utils'
 import style from './HTTPFlowTable.module.scss'
-import { PLUGIN_PREFIX } from '../yakitUI/YakitEditor/YakitEditor'
+import { openContextMenuManager } from '@/pages/contextMenuPlugin/navigation'
+import {
+  ContextMenuExecutionType,
+  ContextMenuScene,
+  type ContextMenuAction,
+  type ContextMenuTrigger,
+} from '@/pages/contextMenuPlugin/types'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -67,6 +72,13 @@ const REQUEST_PACKET_BATCH_MENU_KEYS = new Set([
 ])
 
 const REQUEST_PACKET_BATCH_LIMIT = 10
+const CONTEXT_MENU_PLUGIN_KEY = 'contextMenuPlugin'
+const CONTEXT_MENU_MANAGE_KEY = 'contextMenuPlugin:manage'
+
+const getContextMenuPluginActionKey = (
+  action: ContextMenuAction,
+  operation: 'execute' | 'run' | 'configure' = 'execute',
+) => `${CONTEXT_MENU_PLUGIN_KEY}:${encodeURIComponent(action.PluginUUID)}:${action.ActionID}:${operation}`
 
 export interface UseHTTPFlowTableContextMenuOptions {
   t: TFunction
@@ -89,10 +101,6 @@ export interface UseHTTPFlowTableContextMenuOptions {
   setCompareLeft: (value: { content: string; language: string }) => void
   setCompareRight: (value: { content: string; language: string }) => void
   getUrlWithoutQuery: (url?: string) => string
-  getCodecHistoryPlugin: () => HistoryMenuData[]
-  codecMultipleHistoryPluginCom: unknown
-  codecSingleHistoryPluginCom: unknown
-  selectedRowKeysCom: unknown
   onRemoveHttpHistory: (query: YakDeleteHTTPFlowRequest) => void
   onShareData: (ids: string[], number: number) => void
   onUploadData: (ids: string[]) => void
@@ -107,6 +115,13 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onShieldDomain: (flow: HTTPFlow) => void
   onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean, rows?: HTTPFlow[]) => void
   onViewAttachmentDataRefresh: (id: number) => void
+  contextMenuActions: ContextMenuAction[]
+  onContextMenuAction: (
+    action: ContextMenuAction,
+    trigger: ContextMenuTrigger,
+    row?: HTTPFlow,
+    configureParams?: boolean,
+  ) => void
 }
 
 export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenuOptions) => {
@@ -131,10 +146,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     setCompareLeft,
     setCompareRight,
     getUrlWithoutQuery,
-    getCodecHistoryPlugin,
-    codecMultipleHistoryPluginCom,
-    codecSingleHistoryPluginCom,
-    selectedRowKeysCom,
     onRemoveHttpHistory,
     onShareData,
     onUploadData,
@@ -149,6 +160,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onShieldDomain,
     onBatch,
     onViewAttachmentDataRefresh,
+    contextMenuActions,
+    onContextMenuAction,
   } = options
 
   const menuData = useMemo(() => {
@@ -252,13 +265,38 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         })),
       },
       {
-        key: 'pluginExtension',
-        label: t('HTTPFlowTable.RowContextMenu.pluginExtension'),
+        key: CONTEXT_MENU_PLUGIN_KEY,
+        label: '右键插件',
         default: true,
-        webSocket: false,
+        webSocket: true,
         onClickSingle: () => {},
         onClickBatch: () => {},
-        children: getCodecHistoryPlugin(),
+        children: [
+          ...contextMenuActions.map((action) => {
+            const sameNameCount = contextMenuActions.filter((item) => item.PluginName === action.PluginName).length
+            return {
+              key: getContextMenuPluginActionKey(action),
+              label: sameNameCount > 1 ? `${action.PluginName} · ${action.HookName}` : action.PluginName,
+              keybindings: action.Shortcut ? action.Shortcut.split('|').filter(Boolean) : undefined,
+              children: action.Params?.length
+                ? [
+                    {
+                      key: getContextMenuPluginActionKey(action, 'run'),
+                      label: '执行',
+                    },
+                    {
+                      key: getContextMenuPluginActionKey(action, 'configure'),
+                      label: '设置参数',
+                    },
+                  ]
+                : undefined,
+            }
+          }),
+          {
+            key: CONTEXT_MENU_MANAGE_KEY,
+            label: '管理右键插件',
+          },
+        ],
       },
       {
         key: 'copyUrl',
@@ -579,110 +617,23 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       })
     }
     return menu
-  }, [
-    userInfo.isLogin,
-    i18nRefresh,
-    codecMultipleHistoryPluginCom,
-    codecSingleHistoryPluginCom,
-    selectedRowKeysCom,
-    selected?.Id,
-    onlyFavorite,
-    getUrlWithoutQuery,
-    total,
-  ])
+  }, [userInfo.isLogin, i18nRefresh, selected?.Id, onlyFavorite, getUrlWithoutQuery, total, contextMenuActions])
 
-  // 插件扩展处理
-  const onPluginExtensionHandle = useMemoizedFn(
-    ({
-      key,
-      keyPath,
-      id,
-      menu,
-    }: {
-      key: string
-      keyPath: string[]
-      id: Array<string | number>
-      menu: HistoryMenuData[]
-    }) => {
-      const menuItemName = keyPath[0]
-
-      const emitGetPluginEvent = () => {
-        emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
-      }
-
-      const emitPluginEvent = (child: HistoryMenuData, isExec: boolean, scriptName: string) => {
-        emiter.emit(
-          'onOpenFuzzerModal',
-          JSON.stringify({
-            text: id.join(','),
-            scriptName,
-            params: child.params,
-            isAiPlugin: child.isAiPlugin,
-            isExec,
-          }),
-        )
-      }
-
-      const getScriptName = (childKey: string) => childKey.replace(PLUGIN_PREFIX, '')
-
-      // ----- 点击获取插件 -----
-      if (key === 'Get*plug-in') {
-        emitGetPluginEvent()
-        return
-      }
-
-      // ----- 获取父菜单及其子项 -----
-      const targetMenu = menu.find((item: HistoryMenuData) => item.key === 'pluginExtension')
-      if (!targetMenu?.children?.length) {
-        return
-      }
-
-      // ----- 匹配并执行子菜单项 -----
-      try {
-        for (const child of targetMenu.children) {
-          // 点击一级菜单
-          if (menuItemName === 'pluginExtension') {
-            // 执行第一个子项 —— 有三级则执行第二个子项
-            // if (child.key === 'Get*plug-in') {
-            //   // 当子项为获取插件
-            //   emitGetPluginEvent()
-            // } else {
-            //   // 全选状态检查
-            //   if (isAllSelect) {
-            //     yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
-            //     return
-            //   }
-            //   // 当子为插件时
-            //   emitPluginEvent(child, true, getScriptName(child.key))
-            // }
-            return
-          }
-
-          // 全选状态检查
-          if (isAllSelect) {
-            yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
-            return
-          }
-
-          // 点击二级菜单
-          if (child.key === menuItemName) {
-            emitPluginEvent(child, true, getScriptName(child.key))
-            return
-          }
-
-          // 点击带参数的三级菜单，后缀匹配（如 "execCodecPlugin_测试codec" 匹配 key="测试codec"）
-          if (menuItemName.endsWith('_' + getScriptName(child.key))) {
-            const prefix = menuItemName.split('_')[0]
-            const isExec = prefix !== 'updateCodecParams'
-            emitPluginEvent(child, isExec, getScriptName(child.key))
-            return
-          }
-        }
-      } catch (error) {
-        yakitNotify('error', `右键插件子菜单匹配失败: ${error}`)
-      }
-    },
-  )
+  const handleContextMenuPlugin = useMemoizedFn((key: string, trigger: ContextMenuTrigger, row?: HTTPFlow) => {
+    if (key === CONTEXT_MENU_MANAGE_KEY) {
+      openContextMenuManager(
+        selectedRowKeys.length > 1 ? ContextMenuScene.HistoryMulti : ContextMenuScene.HistorySingle,
+      )
+      return
+    }
+    if (!key.startsWith(`${CONTEXT_MENU_PLUGIN_KEY}:`)) return
+    const action = contextMenuActions.find((item) =>
+      key.startsWith(`${CONTEXT_MENU_PLUGIN_KEY}:${encodeURIComponent(item.PluginUUID)}:${item.ActionID}:`),
+    )
+    if (!action) return
+    onContextMenuAction(action, trigger, row, key.endsWith(':configure'))
+    return action
+  })
 
   /** 菜单自定义快捷键渲染处理事件 */
   const contextMenuKeybindingHandle = useMemoizedFn((data) => {
@@ -752,9 +703,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             return
           }
 
-          const menuName = keyPath[keyPath.length - 1]
-          if (menuName.startsWith('pluginExtension')) {
-            onPluginExtensionHandle({ key, keyPath, id: [rowData.Id], menu: rowContextmenu })
+          if (keyPath.includes(CONTEXT_MENU_PLUGIN_KEY)) {
+            handleContextMenuPlugin(key, 'context-menu', rowData)
             return
           }
 
@@ -906,11 +856,14 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
   const onMultipleClick = useMemoizedFn(async (key: string, keyPath: string[]) => {
     const batchContextMenu = getBatchContextMenu()
 
-    const menuName = keyPath[keyPath.length - 1]
-    if (menuName.startsWith('pluginExtension')) {
-      onPluginExtensionHandle({ key, keyPath, id: selectedRowKeys, menu: batchContextMenu })
-      setSelectedRowKeys([])
-      setSelectedRows([])
+    if (keyPath.includes(CONTEXT_MENU_PLUGIN_KEY)) {
+      const action = handleContextMenuPlugin(key, 'context-menu')
+      if (action?.ExecutionType === ContextMenuExecutionType.LegacyHistory) {
+        // Preserve the legacy CODEC batch interaction after moving it into the
+        // unified manager; only the discovery/menu source changes.
+        setSelectedRowKeys([])
+        setSelectedRows([])
+      }
       return
     }
 
