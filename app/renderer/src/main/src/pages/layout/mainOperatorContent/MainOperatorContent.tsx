@@ -6591,9 +6591,13 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
     setGroup({ ...group })
     onUpdateGroup({ ...group })
   })
-  const customGroupColorStyle = useMemo(
-    () => (isCustomWebFuzzerGroupColor(group.color) ? getWebFuzzerGroupColorStyle(group.color, theme) : {}),
-    [group.color, theme],
+  const customGroupColorStyle = useWebFuzzerGroupColorStyle(
+    isCustomWebFuzzerGroupColor(group.color) ? group.color : undefined,
+  )
+  const fixedGroupColorStyles = useMemo(
+    () =>
+      Object.fromEntries(webFuzzerGroupColorList.map((c) => [c, getWebFuzzerGroupColorStyle(c, theme)])),
+    [theme],
   )
   const menu = useCreation(() => {
     return [
@@ -6649,7 +6653,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
             <div
               className={styles['color-list-item']}
               style={{ backgroundColor: customGroupColorStyle['--web-fuzzer-group-color'] }}
-              title={group.color}
+              title={customGroupColorStyle['--web-fuzzer-group-color'] || group.color}
             >
               <CheckIcon
                 className={styles['check-icon']}
@@ -6658,7 +6662,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
             </div>
           )}
           {webFuzzerGroupColorList.map((color) => {
-            const colorStyle = getWebFuzzerGroupColorStyle(color, theme)
+            const colorStyle = fixedGroupColorStyles[color]
             return (
               <div
                 className={styles['color-list-item']}
