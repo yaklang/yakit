@@ -642,10 +642,7 @@ const utf8ByteLengthOf = (str: string): number => {
  * Go strconv.Unquote 语义的有界扫描：统计完整 byteLength，只保留前 maxPreviewBytes。
  * 用于 chip 预览，避免大 unquote 内容全量分配 Uint8Array / number[]。
  */
-export const goUnquotePreview = (
-  input: string,
-  maxPreviewBytes = 4,
-): { byteLength: number; preview: Uint8Array } => {
+export const goUnquotePreview = (input: string, maxPreviewBytes = 4): { byteLength: number; preview: Uint8Array } => {
   let s = input
   if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"') {
     s = s.slice(1, s.length - 1)

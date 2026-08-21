@@ -37,7 +37,7 @@ const LARGE_REQUEST_BODY_MARKER =
   /^\[\[request(?: |-)too(?: |-)large\(([^)]+)\), truncated\]\](?: use GetHTTPFlowBodyById\(IsRequest=true\) for full body)?$/i
 
 export const getLargeRequestReplacementKey = (
-  marker: LargeRequestReplacementMarker | LargeRequestReplacementLineMatch
+  marker: LargeRequestReplacementMarker | LargeRequestReplacementLineMatch,
 ): string => {
   return marker.kind === 'body' ? 'body' : `multipart:${marker.partIndex}`
 }
@@ -45,7 +45,7 @@ export const getLargeRequestReplacementKey = (
 /** 为单行匹配结果补上 Monaco / split 行号，避免 union spread 拓宽报错。 */
 export const withLargeRequestReplacementLineNumber = (
   matched: LargeRequestReplacementLineMatch,
-  lineNumber: number
+  lineNumber: number,
 ): LargeRequestReplacementMarker => {
   if (matched.kind === 'multipart') {
     return {

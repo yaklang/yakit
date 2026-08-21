@@ -20,10 +20,10 @@ describe('matchLargeRequestReplacementLine', () => {
 
   it('returns null for inline or invalid marker-like text', () => {
     expect(
-      matchLargeRequestReplacementLine('prefix [[yakit: multipart file spilled, part=0, file=a.zip, size=1]]')
+      matchLargeRequestReplacementLine('prefix [[yakit: multipart file spilled, part=0, file=a.zip, size=1]]'),
     ).toBeNull()
     expect(
-      matchLargeRequestReplacementLine('[[yakit: multipart file spilled, part=-1, file=a.zip, size=1]]')
+      matchLargeRequestReplacementLine('[[yakit: multipart file spilled, part=-1, file=a.zip, size=1]]'),
     ).toBeNull()
   })
 })
@@ -46,8 +46,7 @@ describe('parseLargeRequestReplacementMarkers', () => {
   })
 
   it('parses a flat oversized request body marker', () => {
-    const marker =
-      '[[request too large(141.9MB), truncated]] use GetHTTPFlowBodyById(IsRequest=true) for full body'
+    const marker = '[[request too large(141.9MB), truncated]] use GetHTTPFlowBodyById(IsRequest=true) for full body'
     const packet = ['PUT /upload HTTP/1.1', '', marker].join('\r\n')
 
     expect(parseLargeRequestReplacementMarkers(packet)).toEqual([
