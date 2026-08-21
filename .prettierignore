@@ -34,3 +34,8 @@ app/renderer/src/main/src/alibaba/ali-react-table-dist
 
 ## workflows
 .github/workflows
+
+## Generated theme css
+app/renderer/src/main/public/theme.css
+app/main/handlers/openNewChildWindow/theme.css
+app/renderer/engine-link-startup/public/theme.css
