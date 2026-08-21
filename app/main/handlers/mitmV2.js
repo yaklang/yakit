@@ -6,19 +6,29 @@ const { engineLogOutputFile, getFormattedDateTime } = require('../logFile')
 
 // 创建消息发送器的工厂函数
 const createMessageSender = (stream, options) => {
-  const { maxRetries = 3 } = options || {}
+  const { maxRetries = 3, writeTimeoutMs = 30000 } = options || {}
   // 内部变量
   let count = 0
   let isProcessing = false
   let destroyed = false
+  let inflightEntry = null
   let messageStreamRequest = [] // 消息数据
   // 添加重试计数器
   let retryMap = new Map()
+  const settleEntry = (entry, error) => {
+    if (!entry || entry.settled) return
+    entry.settled = true
+    if (error) {
+      if (entry.reject) entry.reject(error)
+      return
+    }
+    if (entry.resolve) entry.resolve()
+  }
   // 失败重试
   const onErrorRetry = ({ entry, error }) => {
-    const { id, message, reject } = entry
+    const { id, message } = entry
     if (destroyed) {
-      if (reject) reject(error || new Error('MITM stream closed'))
+      settleEntry(entry, error || new Error('MITM stream closed'))
       return
     }
     const retries = retryMap.get(id) || 0
@@ -35,7 +45,7 @@ const createMessageSender = (stream, options) => {
           error,
         }),
       )
-      if (reject) reject(error)
+      settleEntry(entry, error)
     }
   }
   // 处理请求发送
@@ -44,28 +54,56 @@ const createMessageSender = (stream, options) => {
 
     isProcessing = true
     const entry = messageStreamRequest.shift()
-    const { id, message, resolve } = entry
+    inflightEntry = entry
+    const { id, message } = entry
     try {
       // 尝试写入流
       let writeError
-      const writeDone = new Promise((resolveWrite) => {
-        stream.write(message, (error) => {
-          writeError = error
-          resolveWrite()
+      let timedOut = false
+      let timeoutId
+      try {
+        const writeDone = new Promise((resolveWrite) => {
+          stream.write(message, (error) => {
+            writeError = error
+            resolveWrite()
+          })
         })
-      })
-      // 按 writable callback 串行发送；callback 只会在该 chunk 已被消费后触发，
-      // 因此不会把整个替换文件堆进消息队列。
-      await writeDone
-      if (writeError) {
+        // 按 writable callback 串行发送；callback 只会在该 chunk 已被消费后触发，
+        // 因此不会把整个替换文件堆进消息队列。
+        await Promise.race([
+          writeDone,
+          new Promise((resolveTimeout) => {
+            timeoutId = setTimeout(() => {
+              timedOut = true
+              resolveTimeout()
+            }, writeTimeoutMs)
+          }),
+        ])
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId)
+      }
+      if (timedOut) {
+        retryMap.delete(id)
+        const timeoutError = new Error('MITM stream write timeout')
+        engineLogOutputFile(
+          JSON.stringify({
+            grpcIInterface: 'MITMV2',
+            time: getFormattedDateTime(),
+            message,
+            error: timeoutError,
+          }),
+        )
+        settleEntry(entry, timeoutError)
+      } else if (writeError) {
         onErrorRetry({ entry, error: writeError })
       } else {
         retryMap.delete(id)
-        if (resolve) resolve()
+        settleEntry(entry)
       }
     } catch (err) {
       onErrorRetry({ entry, error: err })
     } finally {
+      inflightEntry = null
       await new Promise((resolve) => setTimeout(resolve, 20)) // 必须加上，不然后端接口会卡死
       isProcessing = false
       if (!destroyed) processQueue() // 继续处理下一条
@@ -101,8 +139,11 @@ const createMessageSender = (stream, options) => {
     destroy: () => {
       if (destroyed) return
       destroyed = true
+      const closedError = new Error('MITM stream closed')
+      settleEntry(inflightEntry, closedError)
+      inflightEntry = null
       for (const pending of messageStreamRequest) {
-        if (pending.reject) pending.reject(new Error('MITM stream closed'))
+        settleEntry(pending, closedError)
       }
       messageStreamRequest = []
       retryMap.clear()
