@@ -354,7 +354,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             >
               {userInfo.isLogin ? (
                 <>
-                  {userInfo.platform === 'company' ? (
+                  {['company', 'ccb'].includes(userInfo.platform || '') ? (
                     <div
                       className={classNames({
                         [styles['user-info']]: !dynamicConnect,
@@ -2384,7 +2384,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         type="white"
         size="large"
         visible={isShowEnpriTraceUpdateVisible}
-        title="检测到 内网版 EnpriTrace 版本升级"
+        title={`检测到 内网版 ${getReleaseEditionName()} 版本升级`}
         children={`检测到有新版本${yakitLastIntranetVersion}，请立即更新`}
         onCancel={() => {
           setShowEnpriTraceUpdateVisible(false)

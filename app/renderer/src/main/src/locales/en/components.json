@@ -142,6 +142,8 @@
     "privateDomainHasSpace": "Private domain address contains spaces",
     "enterValidPrivateDomain": "Please enter a valid private domain address",
     "enterpriseLogin": "Enterprise Login",
+    "useCCBAccountLogin": "Use CCB Account Login",
+    "switchLoginMethod": "Switch Login Method",
     "privateDomainAddress": "Private Domain Address",
     "enterPrivateDomain": "Please enter your private domain address",
     "setProxy": "Set Proxy",

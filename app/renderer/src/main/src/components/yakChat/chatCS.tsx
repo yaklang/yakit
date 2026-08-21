@@ -167,7 +167,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
   const showName = useMemo(() => {
     if (userInfo.platform === 'github') return userInfo.githubName
     if (userInfo.platform === 'wechat') return userInfo.wechatName
-    if (userInfo.platform === 'company') return userInfo.companyName
+    if (['company', 'ccb'].includes(userInfo.platform || '')) return userInfo.companyName
     return '游客'
   }, [userInfo])
 
@@ -1561,7 +1561,7 @@ const ChatUserContent: React.FC<ChatUserContentProps> = memo((props) => {
   const showImg = useMemo(() => {
     if (userInfo.platform === 'github') return userInfo.githubHeadImg || ''
     if (userInfo.platform === 'wechat') return userInfo.wechatHeadImg || ''
-    if (userInfo.platform === 'company') return userInfo.companyHeadImg || ''
+    if (['company', 'ccb'].includes(userInfo.platform || '')) return userInfo.companyHeadImg || ''
     return ``
   }, [userInfo])
 

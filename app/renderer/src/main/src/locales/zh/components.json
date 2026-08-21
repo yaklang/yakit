@@ -142,6 +142,8 @@
     "privateDomainHasSpace": "私有域地址存在空格",
     "enterValidPrivateDomain": "请输入符合要求的私有域地址",
     "enterpriseLogin": "企业登录",
+    "useCCBAccountLogin": "使用 CCB 账号登录",
+    "switchLoginMethod": "切换登录方式",
     "privateDomainAddress": "私有域地址",
     "enterPrivateDomain": "请输入你的私有域地址",
     "setProxy": "设置代理",

@@ -83,8 +83,6 @@ FunctionEnd
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_SHOWREADME
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "创建桌面快捷方式"
-!define MUI_FINISHPAGE_LINK "Yakit官网"
-!define MUI_FINISHPAGE_LINK_LOCATION "https://yaklang.com"
 !insertmacro MUI_PAGE_FINISH
 
 
@@ -155,11 +153,11 @@ FunctionEnd
             StrCpy $EXE_NAME "IRifyEnpriTrace"
             StrCpy $ENV_VAR_NAME "IRIFYENPRITRACE_HOME"  ; IRifyEE版本专用环境变量
         ${Else}
-            ${StrStr} $0 $EXEFILE "EnpriTrace"
+            ${StrStr} $0 $EXEFILE "PenetraX"
             ${If} $0 != "" ; ee
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-                StrCpy $EXE_NAME "EnpriTrace"
-                StrCpy $ENV_VAR_NAME "ENPRITRACE_HOME"  ; EE版本专用环境变量
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "PenetraX_InstallPath"
+                StrCpy $EXE_NAME "PenetraX"
+                StrCpy $ENV_VAR_NAME "PENETRAX_HOME"  ; EE版本专用环境变量
             ${Else}
                 ${StrStr} $0 $EXEFILE "IRify"
                 ${If} $0 != "" ; irify
@@ -200,10 +198,10 @@ FunctionEnd
             StrCpy $EXE_NAME "IRifyEnpriTrace"
             StrCpy $ENV_VAR_NAME "IRIFYENPRITRACE_HOME"
         ${Else}
-            ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-                StrCpy $EXE_NAME "EnpriTrace"
-                StrCpy $ENV_VAR_NAME "ENPRITRACE_HOME"
+            ${If} ${FileExists} `$INSTDIR\PenetraX.exe` ; ee
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "PenetraX_InstallPath"
+                StrCpy $EXE_NAME "PenetraX"
+                StrCpy $ENV_VAR_NAME "PENETRAX_HOME"
             ${Else}
                 ${If} ${FileExists} `$INSTDIR\IRify.exe` ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"

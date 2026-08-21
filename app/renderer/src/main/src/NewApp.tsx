@@ -1,0 +1,330 @@
+import { useRef, useEffect, Suspense, lazy, useState } from 'react'
+// by types
+import { failed, warn, yakitFailed } from './utils/notification'
+import { getRemoteValue, setRemoteValue } from './utils/kv'
+import { useDebounceFn, useInterval, useMemoizedFn } from 'ahooks'
+import { NetWorkApi } from './services/fetch'
+import type { API } from './services/swagger/resposeType'
+import { useGoogleChromePluginPath, useStore, yakitDynamicStatus } from './store'
+import { refreshToken } from './utils/login'
+import UILayout from './components/layout/UILayout'
+import { getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify, isMemfit } from '@/utils/envfile'
+import { FIXED_PRIVATE_DOMAIN_BASE_URL } from '@/enums/privateDomain'
+import { RemoteGV } from './yakitGV'
+import { coordinate, setChartsColorList } from './pages/globalVariable'
+import { remoteOperation } from './pages/dynamicControl/DynamicControl'
+import { useTemporaryProjectStore } from './store/temporaryProject'
+import { useRunNodeStore } from './store/runNode'
+import { handleFetchSystemInfo } from './constants/hardware'
+import { closeWebSocket, startWebSocket } from './utils/webSocket/webSocket'
+import { startShortcutKeyMonitor, stopShortcutKeyMonitor } from './utils/globalShortcutKey/utils'
+import { getStorageGlobalShortcutKeyEvents } from './utils/globalShortcutKey/events/global'
+import { useUploadInfoByEnpriTrace } from './components/layout/utils'
+import emiter from './utils/eventBus/eventBus'
+import { JSONParseLog } from './utils/tool'
+import { debugToPrintLogs } from './utils/logCollection'
+import { yakitApp, yakitProfile, yakitSocket } from './services/electronBridge'
+import { useI18nNamespaces } from './i18n/useI18nNamespaces'
+
+/** 部分页面懒加载 */
+const Main = lazy(() => import('./pages/MainOperator'))
+
+export interface OnlineProfileProps {
+  BaseUrl: string
+  Password?: string
+  IsCompany?: boolean
+}
+
+function NewApp() {
+  const { t } = useI18nNamespaces(['layout'])
+  const { userInfo } = useStore()
+  const { setGoogleChromePluginPath } = useGoogleChromePluginPath()
+
+  const onWriteLog = useMemoizedFn((event: MouseEvent) => {
+    try {
+      // 获取点击元素的关键信息
+      const target = event.target as HTMLElement
+      if (!target) return
+      const log = {
+        tag: target.tagName,
+        className: typeof target.className === 'string' ? target.className : undefined,
+        text: target.innerText ? target.innerText.slice(0, 80) : undefined,
+      }
+      debugToPrintLogs({
+        status: 'INFO',
+        title: t('NewApp.userClickEvent'),
+        content: JSON.stringify(log),
+      })
+    } catch (error) {}
+  })
+
+  const startClickMonitor = useMemoizedFn(() => {
+    document.addEventListener('click', onWriteLog)
+  })
+
+  const stopClickMonitor = useMemoizedFn(() => {
+    document.removeEventListener('click', onWriteLog)
+  })
+
+  // 快捷键注册+获取全局快捷键事件集合缓存
+  useEffect(() => {
+    getStorageGlobalShortcutKeyEvents()
+    startShortcutKeyMonitor()
+    startClickMonitor()
+    return () => {
+      stopShortcutKeyMonitor()
+      stopClickMonitor()
+    }
+  }, [])
+
+  // 软件初始化配置
+  useEffect(() => {
+    // 设置echarts颜色(替换原始颜色)
+    setChartsColorList()
+    // 解压命令执行引擎脚本压缩包
+    yakitApp.generateStartEngine()
+    // 解压Google 插件压缩包
+    yakitApp
+      .generateChromePlugin()
+      .then((res) => {
+        setGoogleChromePluginPath(res)
+      })
+      .catch((e) => {})
+    // 获取系统信息
+    handleFetchSystemInfo()
+    // 告诉主进程软件的版本(CE|EE)
+    yakitApp.setEnterpriseToDomain(!isCommunityEdition())
+  }, [])
+
+  // 全局记录鼠标坐标位置(为右键菜单提供定位)
+  const handleMouseMove = useDebounceFn(
+    useMemoizedFn((e: MouseEvent) => {
+      const { screenX, screenY, clientX, clientY, pageX, pageY } = e
+
+      coordinate.screenX = screenX
+      coordinate.screenY = screenY
+      coordinate.clientX = clientX
+      coordinate.clientY = clientY
+      coordinate.pageX = pageX
+      coordinate.pageY = pageY
+    }),
+    { wait: 50 },
+  ).run
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+    }
+  }, [])
+
+  // 全局监听change事件 input & textrea 都去掉浏览器自带的拼写校验
+  useEffect(() => {
+    const handleInputEvent = (event) => {
+      const { target } = event
+      const isInput = target && (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)
+      if (isInput) {
+        const spellCheck = target.getAttribute('spellCheck')
+        if (spellCheck || spellCheck === null) {
+          target.setAttribute('spellCheck', 'false')
+        }
+      }
+    }
+    document.addEventListener('change', handleInputEvent)
+    return () => {
+      document.removeEventListener('change', handleInputEvent)
+    }
+  }, [])
+
+  // 全局监听登录状态
+  const setStoreUserInfo = useStore((state) => state.setStoreUserInfo)
+
+  /** yaklang引擎 连接成功后的配置事件 */
+  const linkSuccess = () => {
+    testYak()
+  }
+
+  /** 定时器 */
+  const timeRef = useRef<NodeJS.Timeout>()
+  const testYak = () => {
+    getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
+      const storedValues = setting ? JSONParseLog(setting, { page: 'NewApp', fun: 'testYak' }) : {}
+      const values = { ...storedValues, BaseUrl: FIXED_PRIVATE_DOMAIN_BASE_URL }
+      yakitProfile
+        .setOnlineProfile({
+          ...values,
+          IsCompany: true,
+        } as OnlineProfileProps)
+        .then(() => {
+          yakitApp.syncEditBaseUrl(FIXED_PRIVATE_DOMAIN_BASE_URL)
+          setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
+          refreshLogin()
+          timeRef.current = setTimeout(() => {
+            if (timeRef.current) clearTimeout(timeRef.current)
+          }, 200)
+        })
+        .catch((e: any) => failed(t('NewApp.setPrivateDomainFailed', { error: String(e) })))
+    })
+  }
+
+  const refreshLogin = useMemoizedFn(() => {
+    // 获取引擎中的token(区分企业版与社区版)
+    const TokenSource = isCommunityEdition() ? RemoteGV.TokenOnline : RemoteGV.TokenOnlineEnterprise
+    // 企业版暂时不需要自动登录功能
+    if (!isCommunityEdition()) return
+    getRemoteValue(TokenSource)
+      .then((resToken) => {
+        if (!resToken) {
+          return
+        }
+        // 通过token获取用户信息
+        NetWorkApi<API.UserInfoByToken, API.UserData>({
+          method: 'post',
+          url: 'auth/user',
+          data: {
+            token: resToken,
+          },
+        })
+          .then((res) => {
+            setRemoteValue(TokenSource, resToken)
+            const user = {
+              isLogin: true,
+              platform: res.from_platform,
+              githubName: res.from_platform === 'github' ? res.name : null,
+              githubHeadImg: res.from_platform === 'github' ? res.head_img : null,
+              wechatName: res.from_platform === 'wechat' ? res.name : null,
+              wechatHeadImg: res.from_platform === 'wechat' ? res.head_img : null,
+              qqName: res.from_platform === 'qq' ? res.name : null,
+              qqHeadImg: res.from_platform === 'qq' ? res.head_img : null,
+              companyName: ['company', 'ccb'].includes(res.from_platform) ? res.name : null,
+              companyHeadImg: ['company', 'ccb'].includes(res.from_platform) ? res.head_img : null,
+              role: res.role,
+              user_id: res.user_id,
+              token: resToken,
+            }
+            yakitApp.syncUpdateUser(user)
+            setStoreUserInfo(user)
+            refreshToken(user)
+          })
+          .catch((e) => setRemoteValue(TokenSource, ''))
+      })
+      .catch(() => setRemoteValue(TokenSource, ''))
+  })
+
+  const { temporaryProjectId, delTemporaryProject } = useTemporaryProjectStore()
+  const temporaryProjectIdRef = useRef<string>('')
+  useEffect(() => {
+    temporaryProjectIdRef.current = temporaryProjectId
+  }, [temporaryProjectId])
+
+  const { runNodeList, clearRunNodeList } = useRunNodeStore()
+  const handleKillAllRunNode = async () => {
+    let promises: (() => Promise<any>)[] = []
+    Array.from(runNodeList).forEach(([key, pid]) => {
+      promises.push(() => yakitApp.killRunNode(Number(pid)))
+    })
+    try {
+      await Promise.allSettled(promises.map((promiseFunc) => promiseFunc()))
+      clearRunNodeList()
+    } catch (error) {
+      yakitFailed(error + '')
+    }
+  }
+
+  // 退出时 确保渲染进程各类事项已经处理完毕
+  const { dynamicStatus } = yakitDynamicStatus()
+  const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
+  useEffect(() => {
+    const offCloseWindow = yakitApp.onCloseWindow(async () => {
+      // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
+      const showCloseMessageBox = !(Array.from(runNodeList).length || temporaryProjectIdRef.current)
+      // 关闭前的所有接口调用都放到allSettled里面
+      try {
+        await Promise.allSettled([handleKillAllRunNode(), delTemporaryProject()])
+      } catch (error) {}
+      // 通知应用退出
+      if (dynamicStatus.isDynamicStatus) {
+        warn(t('NewApp.remoteControlClosing'))
+        await remoteOperation(false, dynamicStatus)
+        yakitApp.exitApp({ showCloseMessageBox, isIRify: isIRify(), isMemfit: isMemfit() })
+      } else {
+        yakitApp.exitApp({ showCloseMessageBox, isIRify: isIRify(), isMemfit: isMemfit() })
+      }
+    })
+
+    const offMinimizeWindow = yakitApp.onMinimizeWindow(async () => {
+      const { token } = userInfo
+      if (token && token.length > 0) {
+        uploadProjectEvent.startUpload({
+          isAutoUploadProject: true,
+          isUploadSyncData: true,
+        })
+      }
+    })
+
+    return () => {
+      offCloseWindow()
+      offMinimizeWindow()
+    }
+  }, [dynamicStatus.isDynamicStatus, userInfo])
+
+  useEffect(() => {
+    // 登录账号时 连接 WebSocket 服务器
+    if (userInfo.isLogin) {
+      yakitSocket.start()
+    }
+    // 退出账号时 关闭 WebSocket 服务器
+    else {
+      yakitSocket.close()
+    }
+  }, [userInfo.isLogin])
+
+  // 在页面打开时，执行一次，用于初始化WebSocket推送（DuplexConnection）
+  useEffect(() => {
+    startWebSocket()
+    return () => {
+      // 当组件销毁的时候，关闭WebSocket
+      closeWebSocket()
+    }
+  }, [])
+
+  useEffect(() => {
+    const titleElement = document.getElementById('app-html-title')
+    if (titleElement) {
+      titleElement.textContent = getReleaseEditionName()
+    }
+  }, [])
+
+  const destroyMainWinAntdUi = useMemoizedFn(() => {
+    const selectors = ['.ant-notification-notice', '.ant-modal-root', '.ant-drawer', '.ant-drawer-mask']
+    selectors.forEach((sel) => {
+      document.querySelectorAll(sel).forEach((el) => el.remove())
+    })
+  })
+  useEffect(() => {
+    emiter.on('destroyMainWinAntdUiEvent', destroyMainWinAntdUi)
+    return () => {
+      emiter.off('destroyMainWinAntdUiEvent', destroyMainWinAntdUi)
+    }
+  }, [])
+
+  // 半小时间隔定时收集流量信息
+  const [interval] = useState<number | undefined>(30 * 60 * 1000)
+  useInterval(() => {
+    const { token } = userInfo
+    if (token && token.length > 0) {
+      uploadProjectEvent.startUpload({
+        isUploadSyncData: true,
+      })
+    }
+  }, interval)
+
+  return (
+    <UILayout linkSuccess={linkSuccess}>
+      <Suspense fallback={<div>Loading Main</div>}>
+        <Main onErrorConfirmed={() => {}} />
+      </Suspense>
+    </UILayout>
+  )
+}
+
+export default NewApp

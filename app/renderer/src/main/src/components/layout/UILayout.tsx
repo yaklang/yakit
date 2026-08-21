@@ -25,6 +25,7 @@ import {
   GetConnectPort,
   getReleaseEditionName,
   isCommunityYakit,
+  isEnpriTrace,
   isEnpriTraceAgent,
   isEnterpriseEdition,
   isMemfit,
