@@ -325,6 +325,45 @@ export declare namespace API {
      */
     institutionTotal: number
   }
+
+  export interface TouristGainResponse {
+    /**
+     * 日增量
+     */
+    dayNew: number
+    /**
+     * 日增率
+     */
+    dayGain: string
+    /**
+     * up 增 down 减
+     */
+    dayGainUpOrDown: string
+    /**
+     * 周增量
+     */
+    weekNew: number
+    /**
+     * 周增率
+     */
+    weekGain: string
+    /**
+     * up 增 down 减
+     */
+    weekGainUpOrDown: string
+    /**
+     * 月增量
+     */
+    monthNew: number
+    /**
+     * 月增率
+     */
+    monthGain: string
+    /**
+     * up 增 down 减
+     */
+    monthGainUpOrDown: string
+  }
   export interface TouristActivityRateResponse {
     /**
      * 日活

@@ -675,7 +675,9 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
   // // 计算 上一年第一天0时0分0秒的日期
   // const previousYearFirstDay = today.clone().subtract(1, "years").startOf("year")
   const [userData, setUserData] = useState<API.TouristAndUserResponse>()
+  const [userGainData, setUserGainData] = useState<API.TouristGainResponse>()
   const [loading, setLoading] = useState<boolean>(false)
+  const [gainLoading, setGainLoading] = useState<boolean>(false)
   const [activeLineParams, setActiveLineParams] = useState<ActiveLineProp>({
     showType: 'day',
     startTime: moment(thirtyDaysAgo).unix(),
@@ -738,6 +740,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
 
   useEffect(() => {
     getUserData()
+    getUserGain()
   }, [])
   const getUserData = useMemoizedFn(() => {
     setLoading(true)
@@ -751,6 +754,21 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
       .catch((err) => {})
       .finally(() => {
         setLoading(false)
+      })
+  })
+
+  const getUserGain = useMemoizedFn(() => {
+    setGainLoading(true)
+    NetWorkApi<null, API.TouristGainResponse>({
+      url: 'tourist/gain',
+      method: 'get',
+    })
+      .then((data) => {
+        setUserGainData(data)
+      })
+      .catch((err) => {})
+      .finally(() => {
+        setGainLoading(false)
       })
   })
 
@@ -1112,12 +1130,14 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={() => getUserData()} />
               </div>
             </div>
+          </YakitSpin>
+          <YakitSpin spinning={gainLoading}>
             <div className={styles['card-box']}>
               <div className={classNames(styles['day-card'], styles['user-card'])}>
                 <div className={styles['line']} />
                 <div className={styles['header']}>
-                  <div className={styles['count']}>{userData?.dayNew ?? ''}</div>
-                  <UpsOrDowns type={userData?.dayGainUpOrDown} value={userData?.dayGain} />
+                  <div className={styles['count']}>{userGainData?.dayNew ?? ''}</div>
+                  <UpsOrDowns type={userGainData?.dayGainUpOrDown} value={userGainData?.dayGain} />
                 </div>
 
                 <div className={styles['title']}>今日新增用户</div>
@@ -1125,16 +1145,16 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
               <div className={classNames(styles['week-card'], styles['user-card'])}>
                 <div className={styles['line']} />
                 <div className={styles['header']}>
-                  <div className={styles['count']}>{userData?.weekNew ?? ''}</div>
-                  <UpsOrDowns type={userData?.weekGainUpOrDown} value={userData?.weekGain} />
+                  <div className={styles['count']}>{userGainData?.weekNew ?? ''}</div>
+                  <UpsOrDowns type={userGainData?.weekGainUpOrDown} value={userGainData?.weekGain} />
                 </div>
                 <div className={styles['title']}>本周新增用户</div>
               </div>
               <div className={classNames(styles['month-card'], styles['user-card'])}>
                 <div className={styles['line']} />
                 <div className={styles['header']}>
-                  <div className={styles['count']}>{userData?.monthNew ?? ''}</div>
-                  <UpsOrDowns type={userData?.monthGainUpOrDown} value={userData?.monthGain} />
+                  <div className={styles['count']}>{userGainData?.monthNew ?? ''}</div>
+                  <UpsOrDowns type={userGainData?.monthGainUpOrDown} value={userGainData?.monthGain} />
                 </div>
                 <div className={styles['title']}>本月新增用户</div>
               </div>
