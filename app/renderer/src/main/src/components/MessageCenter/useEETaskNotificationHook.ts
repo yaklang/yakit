@@ -4,7 +4,11 @@ import { useStore } from '@/store'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
 import { isEnpriTrace } from '@/utils/envfile'
-import { getEnvTypeByProjects, type ProjectParamsProp, type ProjectsResponse } from '@/pages/softwareSettings/projectUtils'
+import {
+  getEnvTypeByProjects,
+  type ProjectParamsProp,
+  type ProjectsResponse,
+} from '@/pages/softwareSettings/projectUtils'
 import { apiFetchMessageRead, apiFetchQueryAllTask } from './utils'
 import emiter from '@/utils/eventBus/eventBus'
 import type { API } from '@/services/swagger/resposeType'

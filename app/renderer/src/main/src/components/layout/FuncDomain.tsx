@@ -12,7 +12,9 @@ import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
-const ConfigPrivateDomain = React.lazy(() => import('../ConfigPrivateDomain/ConfigPrivateDomain').then((m) => ({ default: m.ConfigPrivateDomain })))
+const ConfigPrivateDomain = React.lazy(() =>
+  import('../ConfigPrivateDomain/ConfigPrivateDomain').then((m) => ({ default: m.ConfigPrivateDomain })),
+)
 import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigSystemProxyForm } from '@/utils/ConfigSystemProxy'
@@ -47,11 +49,15 @@ import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { addToTab } from '@/pages/MainTabs'
-const DatabaseUpdateModal = React.lazy(() => import('@/pages/cve/CVETable').then((m) => ({ default: m.DatabaseUpdateModal })))
+const DatabaseUpdateModal = React.lazy(() =>
+  import('@/pages/cve/CVETable').then((m) => ({ default: m.DatabaseUpdateModal })),
+)
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { WinKeyborad } from '../yakitUI/YakitEditor/keyboardConstants'
-const ScrecorderModal = React.lazy(() => import('@/pages/screenRecorder/ScrecorderModal').then((m) => ({ default: m.ScrecorderModal })))
+const ScrecorderModal = React.lazy(() =>
+  import('@/pages/screenRecorder/ScrecorderModal').then((m) => ({ default: m.ScrecorderModal })),
+)
 import { useScreenRecorder } from '@/store/screenRecorder'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useRunNodeStore } from '@/store/runNode'
@@ -71,11 +77,13 @@ import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { type PerformanceSamplingLog, usePerformanceSampling } from '@/store/performanceSampling'
-import {
-  isShowCodeScanDetail,
-} from '@/pages/risks/YakitRiskTable/riskTableUtils'
-const YakitCodeScanRiskDetails = React.lazy(() => import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitCodeScanRiskDetails })))
-const YakitRiskDetails = React.lazy(() => import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })))
+import { isShowCodeScanDetail } from '@/pages/risks/YakitRiskTable/riskTableUtils'
+const YakitCodeScanRiskDetails = React.lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitCodeScanRiskDetails })),
+)
+const YakitRiskDetails = React.lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
+)
 import { SolidPlayIcon } from '@/assets/icon/solid'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
@@ -97,16 +105,34 @@ import yakitImg from '../../assets/yakit.jpg'
 import classNames from 'classnames'
 import styles from './funcDomain.module.scss'
 import { useEETaskNotificationHook } from '../MessageCenter/useEETaskNotificationHook'
-const MessageCenter = React.lazy(() => import('../MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenter })))
-const TaskNotification = React.lazy(() => import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskNotification })))
-const TaskErrNotification = React.lazy(() => import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskErrNotification })))
+const MessageCenter = React.lazy(() =>
+  import('../MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenter })),
+)
+const TaskNotification = React.lazy(() =>
+  import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskNotification })),
+)
+const TaskErrNotification = React.lazy(() =>
+  import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskErrNotification })),
+)
 import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { randomString } from '@/utils/randomUtil'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
-const PluginExecuteResult = React.lazy(() => import('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult').then((m) => ({ default: m.PluginExecuteResult })))
-const ExecuteEnterNodeByPluginParams = React.lazy(() => import('@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard').then((m) => ({ default: m.ExecuteEnterNodeByPluginParams })))
-const PluginExecuteProgress = React.lazy(() => import('@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard').then((m) => ({ default: m.PluginExecuteProgress })))
+const PluginExecuteResult = React.lazy(() =>
+  import('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult').then((m) => ({
+    default: m.PluginExecuteResult,
+  })),
+)
+const ExecuteEnterNodeByPluginParams = React.lazy(() =>
+  import('@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard').then((m) => ({
+    default: m.ExecuteEnterNodeByPluginParams,
+  })),
+)
+const PluginExecuteProgress = React.lazy(() =>
+  import('@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard').then((m) => ({
+    default: m.PluginExecuteProgress,
+  })),
+)
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import {
   apiNewRiskRead,
@@ -117,7 +143,11 @@ import type {
   QueryNewSSARisksResponse,
   SSARisk,
 } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
-const YakitAuditRiskDetails = React.lazy(() => import('@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable').then((m) => ({ default: m.YakitAuditRiskDetails })))
+const YakitAuditRiskDetails = React.lazy(() =>
+  import('@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable').then((m) => ({
+    default: m.YakitAuditRiskDetails,
+  })),
+)
 import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
 const ConfigMcpModal = React.lazy(() => import('@/utils/ConfigSystemMcp').then((m) => ({ default: m.ConfigMcpModal })))

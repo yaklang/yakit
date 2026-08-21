@@ -22,8 +22,14 @@ import { Tooltip, Row, Col } from 'antd'
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { isEnpriTraceAgent, isIRify } from '@/utils/envfile'
 import type { QueryYakScriptsResponse } from '@/pages/invoker/schema'
-const IRifyApplySyntaxFlowRuleUpdate = lazy(() => import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.IRifyApplySyntaxFlowRuleUpdate })))
-const YakitGetOnlinePlugin = lazy(() => import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakitGetOnlinePlugin })))
+const IRifyApplySyntaxFlowRuleUpdate = lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({
+    default: m.IRifyApplySyntaxFlowRuleUpdate,
+  })),
+)
+const YakitGetOnlinePlugin = lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakitGetOnlinePlugin })),
+)
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 
 import classNames from 'classnames'

@@ -30,7 +30,9 @@ import {
   isMemfit,
 } from '@/utils/envfile'
 import { AllKillEngineConfirm } from './AllKillEngineConfirm'
-const SoftwareSettings = lazy(() => import('@/pages/softwareSettings/SoftwareSettings').then((m) => ({ default: m.SoftwareSettings })))
+const SoftwareSettings = lazy(() =>
+  import('@/pages/softwareSettings/SoftwareSettings').then((m) => ({ default: m.SoftwareSettings })),
+)
 import { StopIcon } from '@/assets/newIcon'
 const EnterpriseJudgeLogin = lazy(() => import('@/pages/EnterpriseJudgeLogin'))
 import {
@@ -40,8 +42,12 @@ import {
   type ProjectIOProgress,
   type ProjectParamsProp,
 } from '@/pages/softwareSettings/projectUtils'
-const NewProjectAndFolder = lazy(() => import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.NewProjectAndFolder })))
-const TransferProject = lazy(() => import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.TransferProject })))
+const NewProjectAndFolder = lazy(() =>
+  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.NewProjectAndFolder })),
+)
+const TransferProject = lazy(() =>
+  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.TransferProject })),
+)
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useScreenRecorder } from '@/store/screenRecorder'
@@ -58,7 +64,9 @@ import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
-const YakitGetOnlinePlugin = lazy(() => import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakitGetOnlinePlugin })))
+const YakitGetOnlinePlugin = lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakitGetOnlinePlugin })),
+)
 import type { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
 const NewThirdPartyApplicationConfig = lazy(() => import('../configNetwork/NewThirdPartyApplicationConfig'))
 import { usePerformanceSampling } from '@/store/performanceSampling'
@@ -110,7 +118,9 @@ import type {
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
-const PluginHasParamsModal = lazy(() => import('../pluginHasParamsDrawer/PluginHasParamsDrawer').then((m) => ({ default: m.PluginHasParamsModal })))
+const PluginHasParamsModal = lazy(() =>
+  import('../pluginHasParamsDrawer/PluginHasParamsDrawer').then((m) => ({ default: m.PluginHasParamsModal })),
+)
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 
@@ -1348,26 +1358,26 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     <NewThirdPartyApplicationConfig
                       isOnlyShowAiType={true}
                       onAdd={(data) => {
-                      // 新增，有影响ai优化级
-                      const newParams = handleAIConfig(
-                        {
-                          AppConfigs: obj.AppConfigs,
-                          AiApiPriority: obj.AiApiPriority,
-                        },
-                        data,
-                      )
-                      if (!newParams) {
-                        yakitNotify('error', t('UILayout.onFuzzerModalParamsError'))
-                        return
-                      }
-                      const params: GlobalNetworkConfig = { ...obj, ...newParams }
-                      apiSetGlobalNetworkConfig(params).then(() => {
-                        addNewPluginTab(codecParams)
-                        m.destroy()
-                      })
-                    }}
-                    onCancel={() => m.destroy()}
-                  />
+                        // 新增，有影响ai优化级
+                        const newParams = handleAIConfig(
+                          {
+                            AppConfigs: obj.AppConfigs,
+                            AiApiPriority: obj.AiApiPriority,
+                          },
+                          data,
+                        )
+                        if (!newParams) {
+                          yakitNotify('error', t('UILayout.onFuzzerModalParamsError'))
+                          return
+                        }
+                        const params: GlobalNetworkConfig = { ...obj, ...newParams }
+                        apiSetGlobalNetworkConfig(params).then(() => {
+                          addNewPluginTab(codecParams)
+                          m.destroy()
+                        })
+                      }}
+                      onCancel={() => m.destroy()}
+                    />
                   </Suspense>
                 </>
               ),

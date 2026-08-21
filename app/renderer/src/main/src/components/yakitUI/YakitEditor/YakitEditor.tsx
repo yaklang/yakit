@@ -71,7 +71,9 @@ import {
   unregisterBinaryFoldEntries,
 } from './binaryFuzztag'
 import type { BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
-const BinaryFuzztagHexModal = React.lazy(() => import('./BinaryFuzztagHexModal').then((m) => ({ default: m.BinaryFuzztagHexModal })))
+const BinaryFuzztagHexModal = React.lazy(() =>
+  import('./BinaryFuzztagHexModal').then((m) => ({ default: m.BinaryFuzztagHexModal })),
+)
 import { Base64HexFuzztagModal } from './Base64HexFuzztagModal'
 import { showYakitModal } from '../YakitModal/YakitModalConfirm'
 

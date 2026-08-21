@@ -128,58 +128,150 @@ import { PublicToolDataCompareIcon, PublicToolVulinboxIcon } from './publicIcon'
 import { type SoftMode, YakitModeEnum } from '@/store/softMode'
 
 // 页面组件懒加载，避免首屏同步拉入全部页面依赖
-const ShellReceiver = React.lazy(() => import('../pages/reverseShellReceiver/shellReceiver').then((m) => ({ default: m.ShellReceiver })))
+const ShellReceiver = React.lazy(() =>
+  import('../pages/reverseShellReceiver/shellReceiver').then((m) => ({ default: m.ShellReceiver })),
+)
 const PcapXDemo = React.lazy(() => import('@/components/playground/PcapXDemo').then((m) => ({ default: m.PcapXDemo })))
 const DataCompare = React.lazy(() => import('../pages/compare/DataCompare').then((m) => ({ default: m.DataCompare })))
-const PortAssetTable = React.lazy(() => import('@/pages/assetViewer/PortAssetPage').then((m) => ({ default: m.PortAssetTable })))
-const DomainAssetPage = React.lazy(() => import('@/pages/assetViewer/DomainAssetPage').then((m) => ({ default: m.DomainAssetPage })))
+const PortAssetTable = React.lazy(() =>
+  import('@/pages/assetViewer/PortAssetPage').then((m) => ({ default: m.PortAssetTable })),
+)
+const DomainAssetPage = React.lazy(() =>
+  import('@/pages/assetViewer/DomainAssetPage').then((m) => ({ default: m.DomainAssetPage })),
+)
 const RiskPage = React.lazy(() => import('@/pages/risks/RiskPage').then((m) => ({ default: m.RiskPage })))
 const DNSLogPage = React.lazy(() => import('@/pages/dnslog/DNSLogPage').then((m) => ({ default: m.DNSLogPage })))
-const ICMPSizeLoggerPage = React.lazy(() => import('@/pages/icmpsizelog/ICMPSizeLoggerPage').then((m) => ({ default: m.ICMPSizeLoggerPage })))
-const RandomPortLogPage = React.lazy(() => import('@/pages/randomPortLog/RandomPortLogPage').then((m) => ({ default: m.RandomPortLogPage })))
-const ReportViewerPage = React.lazy(() => import('@/pages/assetViewer/ReportViewerPage').then((m) => ({ default: m.ReportViewerPage })))
-const JavaPayloadPage = React.lazy(() => import('@/pages/payloadGenerater/NewJavaPayloadPage').then((m) => ({ default: m.JavaPayloadPage })))
-const NewReverseServerPage = React.lazy(() => import('@/pages/reverseServer/NewReverseServerPage').then((m) => ({ default: m.NewReverseServerPage })))
-const AccountAdminPage = React.lazy(() => import('@/pages/loginOperationMenu/AccountAdminPage').then((m) => ({ default: m.AccountAdminPage })))
-const RoleAdminPage = React.lazy(() => import('@/pages/loginOperationMenu/RoleAdminPage').then((m) => ({ default: m.RoleAdminPage })))
-const HoleCollectPage = React.lazy(() => import('@/pages/loginOperationMenu/HoleCollectPage').then((m) => ({ default: m.HoleCollectPage })))
-const LicenseAdminPage = React.lazy(() => import('@/pages/loginOperationMenu/LicenseAdminPage').then((m) => ({ default: m.LicenseAdminPage })))
-const TrustListPage = React.lazy(() => import('@/pages/loginOperationMenu/TrustListPage').then((m) => ({ default: m.TrustListPage })))
-const ChaosMakerPage = React.lazy(() => import('@/pages/chaosmaker/ChaosMaker').then((m) => ({ default: m.ChaosMakerPage })))
-const ScreenRecorderPage = React.lazy(() => import('@/pages/screenRecorder/ScreenRecorderPage').then((m) => ({ default: m.ScreenRecorderPage })))
+const ICMPSizeLoggerPage = React.lazy(() =>
+  import('@/pages/icmpsizelog/ICMPSizeLoggerPage').then((m) => ({ default: m.ICMPSizeLoggerPage })),
+)
+const RandomPortLogPage = React.lazy(() =>
+  import('@/pages/randomPortLog/RandomPortLogPage').then((m) => ({ default: m.RandomPortLogPage })),
+)
+const ReportViewerPage = React.lazy(() =>
+  import('@/pages/assetViewer/ReportViewerPage').then((m) => ({ default: m.ReportViewerPage })),
+)
+const JavaPayloadPage = React.lazy(() =>
+  import('@/pages/payloadGenerater/NewJavaPayloadPage').then((m) => ({ default: m.JavaPayloadPage })),
+)
+const NewReverseServerPage = React.lazy(() =>
+  import('@/pages/reverseServer/NewReverseServerPage').then((m) => ({ default: m.NewReverseServerPage })),
+)
+const AccountAdminPage = React.lazy(() =>
+  import('@/pages/loginOperationMenu/AccountAdminPage').then((m) => ({ default: m.AccountAdminPage })),
+)
+const RoleAdminPage = React.lazy(() =>
+  import('@/pages/loginOperationMenu/RoleAdminPage').then((m) => ({ default: m.RoleAdminPage })),
+)
+const HoleCollectPage = React.lazy(() =>
+  import('@/pages/loginOperationMenu/HoleCollectPage').then((m) => ({ default: m.HoleCollectPage })),
+)
+const LicenseAdminPage = React.lazy(() =>
+  import('@/pages/loginOperationMenu/LicenseAdminPage').then((m) => ({ default: m.LicenseAdminPage })),
+)
+const TrustListPage = React.lazy(() =>
+  import('@/pages/loginOperationMenu/TrustListPage').then((m) => ({ default: m.TrustListPage })),
+)
+const ChaosMakerPage = React.lazy(() =>
+  import('@/pages/chaosmaker/ChaosMaker').then((m) => ({ default: m.ChaosMakerPage })),
+)
+const ScreenRecorderPage = React.lazy(() =>
+  import('@/pages/screenRecorder/ScreenRecorderPage').then((m) => ({ default: m.ScreenRecorderPage })),
+)
 const CVEViewer = React.lazy(() => import('@/pages/cve/CVEViewer').then((m) => ({ default: m.CVEViewer })))
-const YakJavaDecompiler = React.lazy(() => import('@/pages/yakJavaDecompiler/YakJavaDecompiler').then((m) => ({ default: m.YakJavaDecompiler })))
-const ControlAdminPage = React.lazy(() => import('@/pages/dynamicControl/DynamicControl').then((m) => ({ default: m.ControlAdminPage })))
-const DebugMonacoEditorPage = React.lazy(() => import('@/pages/debugMonaco/DebugMonacoEditorPage').then((m) => ({ default: m.DebugMonacoEditorPage })))
-const VulinboxManager = React.lazy(() => import('@/pages/vulinbox/VulinboxManager').then((m) => ({ default: m.VulinboxManager })))
-const DiagnoseNetworkPage = React.lazy(() => import('@/pages/diagnoseNetwork/DiagnoseNetworkPage').then((m) => ({ default: m.DiagnoseNetworkPage })))
-const WebShellViewer = React.lazy(() => import('@/pages/webShell/WebShellViewer').then((m) => ({ default: m.WebShellViewer })))
-const WebShellDetailOpt = React.lazy(() => import('@/pages/webShell/WebShellDetailOpt').then((m) => ({ default: m.WebShellDetailOpt })))
-const ConfigNetworkPage = React.lazy(() => import('@/components/configNetwork/ConfigNetworkPage').then((m) => ({ default: m.ConfigNetworkPage })))
-const PluginManage = React.lazy(() => import('@/pages/plugins/manage/PluginManage').then((m) => ({ default: m.PluginManage })))
-const OnlineJudgment = React.lazy(() => import('@/pages/plugins/onlineJudgment/OnlineJudgment').then((m) => ({ default: m.OnlineJudgment })))
-const NewPayload = React.lazy(() => import('@/pages/payloadManager/newPayload').then((m) => ({ default: m.NewPayload })))
+const YakJavaDecompiler = React.lazy(() =>
+  import('@/pages/yakJavaDecompiler/YakJavaDecompiler').then((m) => ({ default: m.YakJavaDecompiler })),
+)
+const ControlAdminPage = React.lazy(() =>
+  import('@/pages/dynamicControl/DynamicControl').then((m) => ({ default: m.ControlAdminPage })),
+)
+const DebugMonacoEditorPage = React.lazy(() =>
+  import('@/pages/debugMonaco/DebugMonacoEditorPage').then((m) => ({ default: m.DebugMonacoEditorPage })),
+)
+const VulinboxManager = React.lazy(() =>
+  import('@/pages/vulinbox/VulinboxManager').then((m) => ({ default: m.VulinboxManager })),
+)
+const DiagnoseNetworkPage = React.lazy(() =>
+  import('@/pages/diagnoseNetwork/DiagnoseNetworkPage').then((m) => ({ default: m.DiagnoseNetworkPage })),
+)
+const WebShellViewer = React.lazy(() =>
+  import('@/pages/webShell/WebShellViewer').then((m) => ({ default: m.WebShellViewer })),
+)
+const WebShellDetailOpt = React.lazy(() =>
+  import('@/pages/webShell/WebShellDetailOpt').then((m) => ({ default: m.WebShellDetailOpt })),
+)
+const ConfigNetworkPage = React.lazy(() =>
+  import('@/components/configNetwork/ConfigNetworkPage').then((m) => ({ default: m.ConfigNetworkPage })),
+)
+const PluginManage = React.lazy(() =>
+  import('@/pages/plugins/manage/PluginManage').then((m) => ({ default: m.PluginManage })),
+)
+const OnlineJudgment = React.lazy(() =>
+  import('@/pages/plugins/onlineJudgment/OnlineJudgment').then((m) => ({ default: m.OnlineJudgment })),
+)
+const NewPayload = React.lazy(() =>
+  import('@/pages/payloadManager/newPayload').then((m) => ({ default: m.NewPayload })),
+)
 const NewCodec = React.lazy(() => import('@/pages/codec/NewCodec').then((m) => ({ default: m.NewCodec })))
-const DataStatistics = React.lazy(() => import('@/pages/dataStatistics/DataStatistics').then((m) => ({ default: m.DataStatistics })))
-const PluginBatchExecutor = React.lazy(() => import('@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor').then((m) => ({ default: m.PluginBatchExecutor })))
-const SpaceEnginePage = React.lazy(() => import('@/pages/spaceEngine/SpaceEnginePage').then((m) => ({ default: m.SpaceEnginePage })))
-const SinglePluginExecution = React.lazy(() => import('@/pages/plugins/singlePluginExecution/SinglePluginExecution').then((m) => ({ default: m.SinglePluginExecution })))
+const DataStatistics = React.lazy(() =>
+  import('@/pages/dataStatistics/DataStatistics').then((m) => ({ default: m.DataStatistics })),
+)
+const PluginBatchExecutor = React.lazy(() =>
+  import('@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor').then((m) => ({ default: m.PluginBatchExecutor })),
+)
+const SpaceEnginePage = React.lazy(() =>
+  import('@/pages/spaceEngine/SpaceEnginePage').then((m) => ({ default: m.SpaceEnginePage })),
+)
+const SinglePluginExecution = React.lazy(() =>
+  import('@/pages/plugins/singlePluginExecution/SinglePluginExecution').then((m) => ({
+    default: m.SinglePluginExecution,
+  })),
+)
 const YakPoC = React.lazy(() => import('@/pages/securityTool/yakPoC/YakPoC').then((m) => ({ default: m.YakPoC })))
-const NewPortScan = React.lazy(() => import('@/pages/securityTool/newPortScan/NewPortScan').then((m) => ({ default: m.NewPortScan })))
-const NewBrute = React.lazy(() => import('@/pages/securityTool/newBrute/NewBrute').then((m) => ({ default: m.NewBrute })))
-const SimpleDetect = React.lazy(() => import('@/pages/simpleDetect/SimpleDetect').then((m) => ({ default: m.SimpleDetect })))
+const NewPortScan = React.lazy(() =>
+  import('@/pages/securityTool/newPortScan/NewPortScan').then((m) => ({ default: m.NewPortScan })),
+)
+const NewBrute = React.lazy(() =>
+  import('@/pages/securityTool/newBrute/NewBrute').then((m) => ({ default: m.NewBrute })),
+)
+const SimpleDetect = React.lazy(() =>
+  import('@/pages/simpleDetect/SimpleDetect').then((m) => ({ default: m.SimpleDetect })),
+)
 const YakRunner = React.lazy(() => import('@/pages/yakRunner/YakRunner').then((m) => ({ default: m.YakRunner })))
-const IrifyAiCodeAuditPage = React.lazy(() => import('@/pages/irifyAiCodeAudit/IrifyAiCodeAuditPage').then((m) => ({ default: m.IrifyAiCodeAuditPage })))
-const YakRunnerCodeScan = React.lazy(() => import('@/pages/yakRunnerCodeScan/YakRunnerCodeScan').then((m) => ({ default: m.YakRunnerCodeScan })))
-const YakRunnerAuditCode = React.lazy(() => import('@/pages/yakRunnerAuditCode/YakRunnerAuditCode').then((m) => ({ default: m.YakRunnerAuditCode })))
-const AddYakitPlugin = React.lazy(() => import('@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin').then((m) => ({ default: m.AddYakitPlugin })))
-const WebsocketFuzzer = React.lazy(() => import('@/pages/websocket/WebsocketFuzzer').then((m) => ({ default: m.WebsocketFuzzer })))
-const YakRunnerProjectManager = React.lazy(() => import('@/pages/YakRunnerProjectManager/YakRunnerProjectManager').then((m) => ({ default: m.YakRunnerProjectManager })))
-const RuleManagement = React.lazy(() => import('@/pages/ruleManagement/RuleManagement').then((m) => ({ default: m.RuleManagement })))
-const YakRunnerAuditHole = React.lazy(() => import('@/pages/yakRunnerAuditHole/YakRunnerAuditHole').then((m) => ({ default: m.YakRunnerAuditHole })))
-const Misstatement = React.lazy(() => import('@/pages/misstatement/Misstatement').then((m) => ({ default: m.Misstatement })))
-const SystemConfig = React.lazy(() => import('@/pages/systemConfig/SystemConfig').then((m) => ({ default: m.SystemConfig })))
-const ShortcutKeyList = React.lazy(() => import('@/pages/shortcutKey/ShortcutKey').then((m) => ({ default: m.ShortcutKeyList })))
+const IrifyAiCodeAuditPage = React.lazy(() =>
+  import('@/pages/irifyAiCodeAudit/IrifyAiCodeAuditPage').then((m) => ({ default: m.IrifyAiCodeAuditPage })),
+)
+const YakRunnerCodeScan = React.lazy(() =>
+  import('@/pages/yakRunnerCodeScan/YakRunnerCodeScan').then((m) => ({ default: m.YakRunnerCodeScan })),
+)
+const YakRunnerAuditCode = React.lazy(() =>
+  import('@/pages/yakRunnerAuditCode/YakRunnerAuditCode').then((m) => ({ default: m.YakRunnerAuditCode })),
+)
+const AddYakitPlugin = React.lazy(() =>
+  import('@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin').then((m) => ({ default: m.AddYakitPlugin })),
+)
+const WebsocketFuzzer = React.lazy(() =>
+  import('@/pages/websocket/WebsocketFuzzer').then((m) => ({ default: m.WebsocketFuzzer })),
+)
+const YakRunnerProjectManager = React.lazy(() =>
+  import('@/pages/YakRunnerProjectManager/YakRunnerProjectManager').then((m) => ({
+    default: m.YakRunnerProjectManager,
+  })),
+)
+const RuleManagement = React.lazy(() =>
+  import('@/pages/ruleManagement/RuleManagement').then((m) => ({ default: m.RuleManagement })),
+)
+const YakRunnerAuditHole = React.lazy(() =>
+  import('@/pages/yakRunnerAuditHole/YakRunnerAuditHole').then((m) => ({ default: m.YakRunnerAuditHole })),
+)
+const Misstatement = React.lazy(() =>
+  import('@/pages/misstatement/Misstatement').then((m) => ({ default: m.Misstatement })),
+)
+const SystemConfig = React.lazy(() =>
+  import('@/pages/systemConfig/SystemConfig').then((m) => ({ default: m.SystemConfig })),
+)
+const ShortcutKeyList = React.lazy(() =>
+  import('@/pages/shortcutKey/ShortcutKey').then((m) => ({ default: m.ShortcutKeyList })),
+)
 const AIAgent = React.lazy(() => import('@/pages/ai-agent/AIAgent').then((m) => ({ default: m.AIAgent })))
 
 const HTTPHacker = React.lazy(() => import('../pages/hacker/httpHacker'))
