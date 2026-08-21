@@ -508,7 +508,19 @@
     "forward_data": "Forward Data",
     "drop_data": "Drop Data",
     "hijack_response": "Hijack Response",
-    "render": "Render"
+    "render": "Render",
+    "click_to_replace": "Click to replace the entire file",
+    "replaced_with_file": "Replaced with {{filename}}; click to choose again",
+    "replace_large_file_title": "Replace oversized file: {{filename}}",
+    "replace_large_file_warning": "This file exceeds the in-memory editing limit and cannot be edited directly. Download and edit it locally, then upload the modified file to replace the entire part.",
+    "replace_large_body_title": "Replace oversized request body ({{size}})",
+    "replace_large_body_warning": "This non-multipart request body exceeds the in-memory editing limit. Select a local file to replace the entire request body.",
+    "upload_file": "Upload file:",
+    "select_replacement_file": "Select a replacement file",
+    "replace_large_file_uploaded": "The replacement was uploaded and will be applied when the request is forwarded",
+    "replace_large_file_failed": "Failed to replace oversized file: ",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   },
   "MITMHijackedContent": {
     "listening": "Listening...",

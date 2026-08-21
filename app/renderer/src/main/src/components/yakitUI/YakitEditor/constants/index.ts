@@ -6,6 +6,8 @@ import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { EditorMenuItemType } from '../EditorMenu'
 import type { YakitIMonacoEditor } from '../YakitEditorType'
 
+export { MAX_BINARY_FOLD_ENTRIES } from '../binaryFoldLimits'
+
 export interface CodecTypeProps {
   key?: string
   verbose: string
@@ -38,10 +40,6 @@ interface IFindController extends monaco.editor.IStandaloneCodeEditor {
     seedSearchStringFromGlobalClipboard?: boolean
   }): void
 }
-
-// 二进制 Fuzztag 折叠侧表的内存上限：累积保留历史项以支持占位被破坏后再补回的恢复，
-// 用上限淘汰最旧项防止长会话内存膨胀
-export const MAX_BINARY_FOLD_ENTRIES = 500
 
 /** 插件扩展前缀 */
 export const PLUGIN_PREFIX = 'pluginExtension_'

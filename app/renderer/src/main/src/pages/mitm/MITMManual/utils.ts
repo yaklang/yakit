@@ -17,6 +17,14 @@ export interface SingleManualHijackControlMessage {
   Tags?: string[]
   UpdateTags?: boolean
   Payload?: Uint8Array
+  IsLargeRequestFileChunk?: boolean
+  LargeRequestPartIndex?: number
+  LargeRequestFilename?: string
+  LargeRequestFileData?: Uint8Array
+  LargeRequestFileStart?: boolean
+  LargeRequestFileEOF?: boolean
+  LargeRequestFileCancel?: boolean
+  LargeRequestReplaceBody?: boolean
 }
 /**手动劫持操作 */
 const grpcMITMManualHijackMessage: APIFunc<SingleManualHijackControlMessage, null> = (params) => {
@@ -130,6 +138,34 @@ export const grpcMITMV2SubmitRequestData: APIFunc<MITMV2SubmitRequestDataRequest
       .then(resolve)
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('MITMHacker.grpc_mitmv2submitrequestdata_failed') + e)
+        reject(e)
+      })
+  })
+}
+
+export interface MITMV2ReplaceLargeRequestFileRequest {
+  TaskID: string
+  ReplaceBody: boolean
+  PartIndex?: number
+  FilePath: string
+}
+
+export interface MITMV2ReplaceLargeRequestFileResponse {
+  Filename: string
+  Size: number
+}
+
+/** 分块上传替换文件；文件内容由 Electron 主进程流式发送，不进入 renderer 内存。 */
+export const grpcMITMV2ReplaceLargeRequestFile: APIFunc<
+  MITMV2ReplaceLargeRequestFileRequest,
+  MITMV2ReplaceLargeRequestFileResponse
+> = (params, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('mitmV2-replace-large-request-file', params)
+      .then(resolve)
+      .catch((e) => {
+        if (!hiddenError) yakitNotify('error', tOriginal('MITMManual.replace_large_file_failed') + String(e))
         reject(e)
       })
   })

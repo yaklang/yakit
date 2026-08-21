@@ -1,22 +1,41 @@
 const { ipcMain } = require('electron')
 const DNS = require('dns')
+const fs = require('fs')
+const path = require('path')
 const { engineLogOutputFile, getFormattedDateTime } = require('../logFile')
 
 // 创建消息发送器的工厂函数
 const createMessageSender = (stream, options) => {
-  const { maxRetries = 3 } = options || {}
+  const { maxRetries = 3, writeTimeoutMs = 30000 } = options || {}
   // 内部变量
   let count = 0
   let isProcessing = false
+  let destroyed = false
+  let inflightEntry = null
   let messageStreamRequest = [] // 消息数据
   // 添加重试计数器
   let retryMap = new Map()
+  const settleEntry = (entry, error) => {
+    if (!entry || entry.settled) return
+    entry.settled = true
+    if (error) {
+      if (entry.reject) entry.reject(error)
+      return
+    }
+    if (entry.resolve) entry.resolve()
+  }
   // 失败重试
-  const onErrorRetry = ({ id, message, error }) => {
+  const onErrorRetry = ({ entry, error }) => {
+    const { id, message } = entry
+    if (destroyed) {
+      settleEntry(entry, error || new Error('MITM stream closed'))
+      return
+    }
     const retries = retryMap.get(id) || 0
     if (retries < maxRetries) {
       retryMap.set(id, retries + 1)
-      messageStreamRequest.unshift(message)
+      messageStreamRequest.unshift(entry)
+      return
     } else {
       engineLogOutputFile(
         JSON.stringify({
@@ -26,39 +45,74 @@ const createMessageSender = (stream, options) => {
           error,
         }),
       )
+      settleEntry(entry, error)
     }
   }
   // 处理请求发送
   const processQueue = async () => {
-    if (isProcessing || !stream || !messageStreamRequest.length) return
+    if (destroyed || isProcessing || !stream || !messageStreamRequest.length) return
 
     isProcessing = true
-    const { id, message } = messageStreamRequest.shift()
+    const entry = messageStreamRequest.shift()
+    inflightEntry = entry
+    const { id, message } = entry
     try {
       // 尝试写入流
-      const canWrite = stream.write(
-        message, // 消息序列化方法
-        (error) => {
-          if (error) {
-            onErrorRetry({ id, message, error })
-          }
-        },
-      )
-      // 处理背压
-      if (!canWrite) {
-        await new Promise((resolve) => stream.once('drain', resolve))
+      let writeError
+      let timedOut = false
+      let timeoutId
+      try {
+        const writeDone = new Promise((resolveWrite) => {
+          stream.write(message, (error) => {
+            writeError = error
+            resolveWrite()
+          })
+        })
+        // 按 writable callback 串行发送；callback 只会在该 chunk 已被消费后触发，
+        // 因此不会把整个替换文件堆进消息队列。
+        await Promise.race([
+          writeDone,
+          new Promise((resolveTimeout) => {
+            timeoutId = setTimeout(() => {
+              timedOut = true
+              resolveTimeout()
+            }, writeTimeoutMs)
+          }),
+        ])
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId)
+      }
+      if (timedOut) {
+        retryMap.delete(id)
+        const timeoutError = new Error('MITM stream write timeout')
+        engineLogOutputFile(
+          JSON.stringify({
+            grpcIInterface: 'MITMV2',
+            time: getFormattedDateTime(),
+            message,
+            error: timeoutError,
+          }),
+        )
+        settleEntry(entry, timeoutError)
+      } else if (writeError) {
+        onErrorRetry({ entry, error: writeError })
+      } else {
+        retryMap.delete(id)
+        settleEntry(entry)
       }
     } catch (err) {
-      onErrorRetry({ id, message, error })
+      onErrorRetry({ entry, error: err })
     } finally {
+      inflightEntry = null
       await new Promise((resolve) => setTimeout(resolve, 20)) // 必须加上，不然后端接口会卡死
       isProcessing = false
-      processQueue() // 继续处理下一条
+      if (!destroyed) processQueue() // 继续处理下一条
     }
   }
   // 对外暴露的接口
   return {
     send: (data) => {
+      if (destroyed) return
       count += 1
       messageStreamRequest.push({
         id: count,
@@ -66,13 +120,34 @@ const createMessageSender = (stream, options) => {
       })
       processQueue() // 触发处理
     },
+    sendAndWait: (data) => {
+      return new Promise((resolve, reject) => {
+        if (destroyed) {
+          reject(new Error('MITM stream closed'))
+          return
+        }
+        count += 1
+        messageStreamRequest.push({
+          id: count,
+          message: data,
+          resolve,
+          reject,
+        })
+        processQueue()
+      })
+    },
     destroy: () => {
-      count = null
-      isProcessing = null
-      messageStreamRequest = null
+      if (destroyed) return
+      destroyed = true
+      const closedError = new Error('MITM stream closed')
+      settleEntry(inflightEntry, closedError)
+      inflightEntry = null
+      for (const pending of messageStreamRequest) {
+        settleEntry(pending, closedError)
+      }
+      messageStreamRequest = []
       retryMap.clear()
-      stream.cancel()
-      retryMap = null
+      if (stream) stream.cancel()
       stream = null
     },
   }
@@ -86,7 +161,9 @@ module.exports = (win, getClient) => {
   let currentDownstreamProxy
   let currentDownstreamProxyRuleId
   let sendMessage
+  let sendMessageAndWait
   let destroyMessage
+  let largeRequestUploadBarrier = Promise.resolve()
 
   // 用于恢复正在劫持的 MITM 状态
   ipcMain.handle('mitmV2-have-current-stream', (e) => {
@@ -333,8 +410,9 @@ module.exports = (win, getClient) => {
     currentDownstreamProxy = DownstreamProxy
     currentDownstreamProxyRuleId = DownstreamProxyRuleId || ''
     if (stream) {
-      const { send, destroy } = createMessageSender(stream)
+      const { send, sendAndWait, destroy } = createMessageSender(stream)
       sendMessage = send
+      sendMessageAndWait = sendAndWait
       destroyMessage = destroy
       if (params.hasOwnProperty('extra')) {
         delete params.extra
@@ -359,7 +437,8 @@ module.exports = (win, getClient) => {
   })
 
   /**手动劫持 相关操作 */
-  ipcMain.handle('mitmV2-manual-hijack-message', (e, params) => {
+  ipcMain.handle('mitmV2-manual-hijack-message', async (e, params) => {
+    await largeRequestUploadBarrier
     if (stream) {
       const value = {
         ManualHijackControl: true,
@@ -367,6 +446,65 @@ module.exports = (win, getClient) => {
       }
       sendMessage(value)
     }
+  })
+
+  ipcMain.handle('mitmV2-replace-large-request-file', async (e, params) => {
+    const upload = largeRequestUploadBarrier.then(async () => {
+      if (!stream || !sendMessageAndWait) {
+        throw new Error('MITM stream is not running')
+      }
+      const { TaskID, ReplaceBody, PartIndex, FilePath } = params || {}
+      const replaceBody = ReplaceBody === true
+      if (!TaskID || (!replaceBody && (!Number.isInteger(PartIndex) || PartIndex < 0)) || !FilePath) {
+        throw new Error('invalid large request replacement parameters')
+      }
+      const stat = await fs.promises.stat(FilePath)
+      if (!stat.isFile()) {
+        throw new Error('large request replacement path is not a file')
+      }
+      const filename = path.basename(FilePath)
+      let started = false
+      const sendChunk = async ({ Data = Buffer.alloc(0), Start = false, EOF = false, Cancel = false }) => {
+        await sendMessageAndWait({
+          ManualHijackControl: true,
+          ManualHijackMessage: {
+            TaskID,
+            IsLargeRequestFileChunk: true,
+            LargeRequestPartIndex: replaceBody ? 0 : PartIndex,
+            LargeRequestFilename: filename,
+            LargeRequestFileData: Data,
+            LargeRequestFileStart: Start,
+            LargeRequestFileEOF: EOF,
+            LargeRequestFileCancel: Cancel,
+            LargeRequestReplaceBody: replaceBody,
+          },
+        })
+      }
+      const sendFileChunk = async ({ Data = Buffer.alloc(0), EOF = false }) => {
+        const Start = !started
+        // Mark the upload as started before awaiting the write so a partial
+        // first-chunk failure still sends a best-effort cancel to the engine.
+        started = true
+        await sendChunk({ Data, Start, EOF })
+      }
+      try {
+        const fileStream = fs.createReadStream(FilePath, { highWaterMark: 1024 * 1024 })
+        for await (const data of fileStream) {
+          await sendFileChunk({ Data: data })
+        }
+        await sendFileChunk({ EOF: true })
+        return { Filename: filename, Size: stat.size }
+      } catch (error) {
+        if (started) {
+          try {
+            await sendChunk({ Cancel: true })
+          } catch (_) {}
+        }
+        throw error
+      }
+    })
+    largeRequestUploadBarrier = upload.catch(() => {})
+    return upload
   })
 
   // 设置mitm filter
