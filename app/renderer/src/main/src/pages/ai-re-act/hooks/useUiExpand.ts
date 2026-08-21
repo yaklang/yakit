@@ -2,16 +2,19 @@ import { useMemoizedFn } from 'ahooks'
 import { useStore, type StoreApi } from 'zustand'
 import type { ChatStoreState } from './aiRender'
 import { useCurrentStore } from './useCurrentDataBySession'
+import useCurrentSessionId from './useCurrentSessionId'
 import { useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
+import { globalSessionEngine } from './ChatMultiSessionController'
 
 type UiExpandTuple = [boolean, Dispatch<SetStateAction<boolean>>, () => void]
 
 /**
- * 从指定 chatStore 读写卡片展开态。
+ * 从指定 chatStore 订阅展开态，写操作统一走 ChatMultiSessionController。
  * 订阅粒度仅为 uiExpandMap[token]，其它 token 变更不会触发本组件重渲染。
  */
 export function useUiExpandFromStore(
+  sessionId: string,
   store: StoreApi<ChatStoreState>,
   token: string,
   defaultExpand: boolean,
@@ -21,16 +24,16 @@ export function useUiExpandFromStore(
   const expand = stored === undefined ? defaultExpand : stored
 
   const setExpand = useMemoizedFn<Dispatch<SetStateAction<boolean>>>((next) => {
-    if (!token) return
+    if (!sessionId || !token) return
     const prev = store.getState().uiExpandMap[token]
     const prevResolved = prev === undefined ? defaultExpand : prev
     const value = typeof next === 'function' ? next(prevResolved) : next
-    store.getState().setUiExpand(token, value)
+    globalSessionEngine.setUiExpand(sessionId, token, value)
   })
 
   const toggleExpand = useMemoizedFn(() => {
-    if (!token) return
-    store.getState().toggleUiExpand(token, defaultExpand)
+    if (!sessionId || !token) return
+    globalSessionEngine.toggleUiExpand(sessionId, token, defaultExpand)
   })
 
   return [expand, setExpand, toggleExpand]
@@ -43,9 +46,10 @@ export function useUiExpandFromStore(
 export function useUiExpand(token: string, defaultExpand: boolean): UiExpandTuple {
   const isChildWindow = useRef(isAuxOrChildWindow()).current
   const useLocal = isChildWindow || !token
+  const sessionId = useCurrentSessionId()
   const store = useCurrentStore()
-  // 子窗口/无 token 仍调用 useCurrentStore（hooks 规则），但用空 token 跳过 map 读写
-  const storeTuple = useUiExpandFromStore(store, useLocal ? '' : token, defaultExpand)
+  // 子窗口/无 token 仍调用 hooks（规则），但用空 token 跳过 map 读写
+  const storeTuple = useUiExpandFromStore(useLocal ? '' : sessionId, store, useLocal ? '' : token, defaultExpand)
 
   const [localExpand, setLocalExpand] = useState(defaultExpand)
   const setLocal = useMemoizedFn<Dispatch<SetStateAction<boolean>>>((next) => {

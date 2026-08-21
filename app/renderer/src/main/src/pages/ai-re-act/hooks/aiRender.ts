@@ -672,11 +672,7 @@ export interface ChatStoreState {
     >,
   ) => void
 
-  /** 设置指定 token 的展开态（不触发渲染树落库） */
-  setUiExpand: (token: string, expand: boolean) => void
-  /** 切换指定 token 的展开态；map 中无记录时以 defaultExpand 为当前值再取反 */
-  toggleUiExpand: (token: string, defaultExpand: boolean) => void
-  /** 清除指定 token 的展开态记录 */
+  /** 清除指定 token 的展开态记录（仅 store 内部删除节点时用；对外写操作走 ChatMultiSessionController） */
   clearUiExpand: (token: string) => void
 
   /**
