@@ -15,7 +15,11 @@ import { useControllableValue, useDebounceFn, useMemoizedFn, useSize, useUpdateE
 import { Buffer } from 'buffer'
 import { StringToUint8Array, Uint8ArrayToString } from './str'
 import { packetTextToRawBytes, rawBytesToPacketText } from '@/components/yakitUI/YakitEditor/binaryFuzztag'
-const BinaryFuzztagHexEditor = React.lazy(() => import('@/components/yakitUI/YakitEditor/BinaryFuzztagHexEditor').then((m) => ({ default: m.BinaryFuzztagHexEditor })))
+const BinaryFuzztagHexEditor = React.lazy(() =>
+  import('@/components/yakitUI/YakitEditor/BinaryFuzztagHexEditor').then((m) => ({
+    default: m.BinaryFuzztagHexEditor,
+  })),
+)
 import { getRemoteValue } from '@/utils/kv'
 import { type editor, type IPosition, type IRange } from 'monaco-editor'
 import { ConvertYakStaticAnalyzeErrorToMarker, type YakStaticAnalyzeErrorResult } from '@/utils/editorMarkers'
@@ -38,7 +42,9 @@ import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableT
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { OutlineDotsverticalIcon } from '@/assets/icon/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-const DataCompareModal = React.lazy(() => import('@/pages/compare/DataCompare').then((m) => ({ default: m.DataCompareModal })))
+const DataCompareModal = React.lazy(() =>
+  import('@/pages/compare/DataCompare').then((m) => ({ default: m.DataCompareModal })),
+)
 import emiter from './eventBus/eventBus'
 import { v4 as uuidv4 } from 'uuid'
 import { GetPluginLanguage } from '@/pages/plugins/builtInData'

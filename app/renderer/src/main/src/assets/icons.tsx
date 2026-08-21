@@ -9,7 +9,6 @@ export { EnterpriseLoginInfoIcon } from './icons/enterprise'
 export { ControlMyselfIcon, ControlOtherIcon } from './icons/dynamicControl'
 export { TraceSvgSvgIcon } from './icons/traceSvg'
 
-
 const OfficialYakitLogo = () => (
   <svg width="1em" height="1em" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg">
     <title>官方插件</title>
@@ -207,4 +206,3 @@ const Upload = () => (
 export const UploadIcon: React.FC = (props: any) => {
   return <Icon component={Upload} {...props} />
 }
-

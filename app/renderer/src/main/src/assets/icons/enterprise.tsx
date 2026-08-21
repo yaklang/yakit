@@ -25,4 +25,3 @@ const EnterpriseLoginInfo = () => (
 export const EnterpriseLoginInfoIcon: React.FC = (props: any) => {
   return <Icon component={EnterpriseLoginInfo} {...props} />
 }
-

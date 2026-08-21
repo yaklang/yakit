@@ -25,7 +25,9 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import type { YakScriptParam } from '@/utils/basic'
-const StartExecYakCodeModal = React.lazy(() => import('@/utils/basic').then((m) => ({ default: m.StartExecYakCodeModal })))
+const StartExecYakCodeModal = React.lazy(() =>
+  import('@/utils/basic').then((m) => ({ default: m.StartExecYakCodeModal })),
+)
 import { defHost, defPort } from '@/pages/mitm/mitmDefaults'
 import {
   type ClientCertificate,

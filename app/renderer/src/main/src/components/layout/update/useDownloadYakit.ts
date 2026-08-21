@@ -1,12 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useDebounce, useGetState, useMemoizedFn } from 'ahooks'
-import {
-  isCommunityEdition,
-  isEnterpriseEdition,
-  isEnpriTrace,
-  isIRify,
-  isMemfit,
-} from '@/utils/envfile'
+import { isCommunityEdition, isEnterpriseEdition, isEnpriTrace, isIRify, isMemfit } from '@/utils/envfile'
 import { success, failed } from '@/utils/notification'
 import type { DownloadingState } from '@/yakitGVDefine'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'

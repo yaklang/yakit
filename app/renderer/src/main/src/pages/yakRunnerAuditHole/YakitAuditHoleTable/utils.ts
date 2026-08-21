@@ -264,7 +264,8 @@ export const openAIForge = (params: {
   Promise.all([
     import('@/pages/ai-agent/grpc').then(({ grpcGetAIForge }) => grpcGetAIForge(query, true)),
     import('@/pages/ai-agent/defaultConstant').then(({ ReActChatEventEnum }) => ReActChatEventEnum),
-  ]).then(([res, ReActChatEventEnum]) => {
+  ])
+    .then(([res, ReActChatEventEnum]) => {
       if (!res) {
         yakitNotify('warning', tOriginal('YakitAuditHoleTable.noForgeNameMatchesFound'))
         return

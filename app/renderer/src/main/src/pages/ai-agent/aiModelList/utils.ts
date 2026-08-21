@@ -291,9 +291,11 @@ export const isForcedSetAIModal: APIFunc<
           // 每个 tab / 页面只弹一次
           if (!openedAIModalMap.get(pageKey)) {
             openedAIModalMap.set(pageKey, true)
-            isOpen && t && import('./aiModelSelect/AIModelSelect').then(({ onOpenConfigModal }) => {
-              onOpenConfigModal(mountContainer, t)
-            })
+            isOpen &&
+              t &&
+              import('./aiModelSelect/AIModelSelect').then(({ onOpenConfigModal }) => {
+                onOpenConfigModal(mountContainer, t)
+              })
           }
           noDataCall?.(res)
         } else {
