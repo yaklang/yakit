@@ -1,7 +1,7 @@
 {
   "name": "engine-link-startup",
   "private": true,
-  "version": "2.08.14",
+  "version": "2.08.21",
   "type": "module",
   "scripts": {
     "cli": "node scripts/cli.cjs",
@@ -54,13 +54,13 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
     "@types/node": "^22.12.0",
     "@types/react": "^18.2.9",
     "@types/react-dom": "^18.2.4",
-    "@eslint/js": "^9.39.1",
     "@vitejs/plugin-react": "6.0.5",
     "@vitest/ui": "4.1.10",
     "@xterm/xterm": "5.5.0",
