@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
@@ -55,6 +56,19 @@ function analyzerPlugin(): Plugin | null {
  */
 const ANTD_COMPONENT_STYLE_RE = /(^|[\\/])antd[\\/](es|lib)[\\/][\w-]+[\\/]style([\\/](index\.(less|css)|css(\.js)?))?$/
 
+/** public/theme.css 已从版本库移除，dev/build 启动时重新生成（含子窗口副本） */
+function generateThemeCssPlugin(): Plugin {
+  return {
+    name: 'generate-theme-css',
+    buildStart() {
+      execFileSync(process.execPath, [path.resolve(rootDir, 'scripts/generate-theme-css.cjs')], {
+        stdio: 'inherit',
+        cwd: rootDir,
+      })
+    },
+  }
+}
+
 function noopAntdComponentStylePlugin(): Plugin {
   return {
     name: 'noop-antd-component-style',
@@ -82,6 +96,7 @@ export default defineConfig(({ mode }) => {
     envPrefix: ['REACT_APP_', 'VITE_'],
     define: reactAppProcessEnvDefines(mode),
     plugins: [
+      generateThemeCssPlugin(),
       noopAntdComponentStylePlugin(),
       react(),
       nodePolyfills({

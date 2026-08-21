@@ -67,3 +67,8 @@ pr-ci-changed-files-list.txt
 /reports/junit.xml
 *.tsbuildinfo
 .mimosa/
+
+# Generated theme css
+app/renderer/src/main/public/theme.css
+app/main/handlers/openNewChildWindow/theme.css
+app/renderer/engine-link-startup/public/theme.css
