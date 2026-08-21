@@ -60,8 +60,8 @@ const PluginBatchExecuteExtraParamsDrawer: React.FC<PluginBatchExecuteExtraParam
   })
   return (
     <YakitDrawer
-      className={styles['plugin-batch-execute-extra-params-drawer']}
-      visible={visible}
+      rootClassName={styles['plugin-batch-execute-extra-params-drawer']}
+      open={visible}
       onClose={onClose}
       width="max(700px, 40%)"
       title="额外参数"
@@ -120,7 +120,7 @@ const PluginBatchExecuteExtraParams: React.FC<PluginBatchExecuteExtraParamsProps
             </YakitButton>
           }
         >
-          <FixExtraParamsNode form={form} pathRef={pathRef} onReset={onReset} />
+          <FixExtraParamsNode form={form as FormInstance} pathRef={pathRef} onReset={onReset} />
         </YakitPanel>
       )}
       <YakitPanel

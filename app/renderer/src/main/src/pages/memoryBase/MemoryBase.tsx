@@ -448,7 +448,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
       <>
         {queryParams?.rate?.map((item) => {
           return (
-            <Tooltip title={item.label} placement="top" overlayClassName="plugins-tooltip" key={item.id}>
+            <Tooltip title={item.label} placement="top" key={item.id}>
               <YakitTag closable onClose={() => onDelRate(item)} className={styles['tag-item']}>
                 {item.label}({numeral(item.min).format('0.00')}~{numeral(item.max).format('0.00')})
               </YakitTag>
@@ -457,7 +457,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
         })}
         {queryParams?.tags?.map((item) => {
           return (
-            <Tooltip title={item.Value} placement="top" overlayClassName="plugins-tooltip" key={item.Value}>
+            <Tooltip title={item.Value} placement="top" key={item.Value}>
               <YakitTag closable onClose={() => onDelTag(item)} className={styles['tag-item']}>
                 {item.Value}
               </YakitTag>
@@ -574,7 +574,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                   <TableTotalAndSelectNumber total={tableTotal} />
                   {queryNumber > 2 ? (
                     <YakitPopover
-                      onVisibleChange={setTagShow}
+                      onOpenChange={setTagShow}
                       content={<div className={styles['filter-popover']}>{queryContent()}</div>}
                     >
                       <YakitTag
@@ -1120,13 +1120,13 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
               >
                 <div className={styles['select-before']}>预设</div>
                 <YakitSelect
-                  bordered={false}
+                  variant="borderless"
                   options={rateOption}
                   value={rateMode}
                   onSelect={onRateSelect}
                   wrapperClassName={styles['select']}
                   size="small"
-                  onDropdownVisibleChange={setRateSelectVisible}
+                  onOpenChange={setRateSelectVisible}
                 />
               </div>
             </div>

@@ -1,0 +1,38 @@
+// ========================== ant tree yakit-start ==========================
+.ant-tree,
+.ant-select-tree {
+  --ant-tree-indent-size: 18px;
+  --ant-tree-title-height: 24px;
+  --ant-select-tree-indent-size: 18px;
+  --ant-select-tree-title-height: 24px;
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+// antd 5 会给 switcher/checkbox 额外加 (titleHeight - controlInteractiveSize) / 2 的间距
+.ant-tree .ant-tree-switcher,
+.ant-select-tree .ant-select-tree-switcher {
+  margin-inline-end: 0;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.ant-tree .ant-tree-checkbox,
+.ant-select-tree .ant-select-tree-checkbox {
+  margin-inline-end: 8px;
+}
+
+.ant-tree .ant-tree-node-content-wrapper:hover,
+.ant-select-tree .ant-select-tree-node-content-wrapper:hover {
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+}
+
+.ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected,
+.ant-select-tree .ant-select-tree-node-content-wrapper.ant-select-tree-node-selected {
+  background-color: var(--Colors-Use-Main-Primary);
+  color: var(--Colors-Use-Main-On-Primary);
+}
+
+.ant-tree-switcher {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+// ========================== ant tree yakit-end ==========================

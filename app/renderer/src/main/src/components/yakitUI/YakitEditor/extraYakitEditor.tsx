@@ -6,13 +6,12 @@ import type {
   YakitIMonacoEditor,
 } from './YakitEditorType'
 import { YakitEditor } from './YakitEditor'
-import { failed, info, yakitNotify } from '@/utils/notification'
+import { failed, info, yakitNotify, getModalApi } from '@/utils/notification'
 import { type ShareValueProps, newWebFuzzerTab } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { generateCSRFPocByRequest } from '@/pages/invoker/fromPacketToYakCode'
 import { StringToUint8Array } from '@/utils/str'
 import { showResponseViaResponseRaw } from '@/components/ShowInBrowser'
 import { openExternalWebsite, saveABSFileToOpen } from '@/utils/openWebsite'
-import { Modal } from 'antd'
 import { execAutoDecode, execCodec } from '@/utils/encodec'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { useStore } from '@/store'
@@ -434,7 +433,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           try {
             const text = editor.getModel()?.getValueInRange(editor.getSelection() as any) || ''
             if (!text) {
-              Modal.info({
+              getModalApi().info({
                 title: t('YakitEditor.HTTPPacketYakitEditor.autoDecodeFailed'),
                 content: <>{t('YakitEditor.HTTPPacketYakitEditor.textEmptySelectToAutoDecode')}</>,
               })

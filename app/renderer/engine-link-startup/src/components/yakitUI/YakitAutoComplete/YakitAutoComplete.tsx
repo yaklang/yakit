@@ -163,16 +163,20 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
           {...restProps}
           options={options}
           size="middle"
-          dropdownClassName={classNames(
-            styles['yakit-auto-complete-popup'],
-            {
-              [styles['yakit-auto-complete-popup-y']]: show,
+          classNames={{
+            popup: {
+              root: classNames(
+                styles['yakit-auto-complete-popup'],
+                {
+                  [styles['yakit-auto-complete-popup-y']]: show,
+                },
+                props.classNames?.popup?.root,
+              ),
             },
-            props.dropdownClassName,
-          )}
-          onDropdownVisibleChange={(open) => {
+          }}
+          onOpenChange={(open) => {
             setShow(open)
-            if (props.onDropdownVisibleChange) props.onDropdownVisibleChange(open)
+            if (props.onOpenChange) props.onOpenChange(open)
           }}
         />
       )}

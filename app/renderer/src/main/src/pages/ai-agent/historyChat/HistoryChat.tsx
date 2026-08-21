@@ -71,7 +71,7 @@ const renderClearConfirm = (
       title={title}
       onConfirm={onConfirm}
       getPopupContainer={overlayOptions?.getPopupContainer}
-      overlayClassName={overlayOptions?.overlayClassName}
+      classNames={{ root: overlayOptions?.overlayClassName }}
     >
       <div className={styles['clear-confirm-trigger']} onClick={(e) => e.stopPropagation()}>
         {label}
@@ -379,7 +379,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
                       title={item.title}
                       placement="top"
                       getPopupContainer={popupContainer}
-                      overlayClassName={embedded ? embeddedOverlayClass : undefined}
+                      classNames={{ root: embedded ? embeddedOverlayClass : undefined }}
                     >
                       <button
                         type="button"
@@ -452,7 +452,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
                 title={t('HistoryChat.clearChats')}
                 placement="topRight"
                 getPopupContainer={popupContainer}
-                overlayClassName={embedded ? embeddedOverlayClass : undefined}
+                classNames={{ root: embedded ? embeddedOverlayClass : undefined }}
               >
                 <YakitButton
                   disabled={clearLoading || (!isGlobalAIAgentHistory && visibleSessions.length === 0)}

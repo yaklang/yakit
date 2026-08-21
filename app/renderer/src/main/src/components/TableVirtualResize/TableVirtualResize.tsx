@@ -1878,9 +1878,10 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                       : renderFilterPopover(columnsItem, filterKey, columnsItem?.filterProps?.filtersType)}
                   </div>
                 }
-                overlayClassName={styles['search-popover']}
-                visible={opensPopover[filterKey]}
-                onVisibleChange={(v) => {
+                classNames={{ root: styles['search-popover'] }}
+                styles={{ body: { padding: 0 } }}
+                open={opensPopover[filterKey]}
+                onOpenChange={(v) => {
                   setOpensPopover({
                     ...opensPopover,
                     [filterKey]: v,

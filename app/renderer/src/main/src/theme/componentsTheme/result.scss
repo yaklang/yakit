@@ -1,11 +1,40 @@
 // ========================== ant Result yakit-start ==========================
-.ant-result-title {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
+.ant-result {
+  // 实心图标镂空（感叹号/对勾）走 colorWhite；全局 colorWhite 映射了 Main-On-Primary，亮色会偏粉
+  --ant-color-white: #ffffff;
+  --ant-color-text-light-solid: #ffffff;
+  --ant-color-success: var(--Colors-Use-Success-Primary);
+  --ant-color-error: var(--Colors-Use-Error-Primary);
+  --ant-color-warning: var(--Colors-Use-Warning-Primary);
+  --ant-color-info: var(--Colors-Use-Blue-Primary);
+
+  .ant-result-title {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+
+  .ant-result-content {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    background-color: var(--Colors-Use-Neutral-Bg);
+  }
+
+  .ant-result-subtitle {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
 }
-.ant-result-content {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  background-color: var(--Colors-Use-Neutral-Bg);
+
+html .ant-result-success .ant-result-icon .anticon {
+  color: var(--Colors-Use-Success-Primary);
 }
-.ant-result-subtitle {
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+
+html .ant-result-error .ant-result-icon .anticon {
+  color: var(--Colors-Use-Error-Primary);
 }
+
+html .ant-result-info .ant-result-icon .anticon {
+  color: var(--Colors-Use-Blue-Primary);
+}
+
+html .ant-result-warning .ant-result-icon .anticon {
+  color: var(--Colors-Use-Warning-Primary);
+}
+// ========================== ant Result yakit-end ==========================

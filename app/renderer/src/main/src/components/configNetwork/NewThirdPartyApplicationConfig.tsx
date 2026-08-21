@@ -2,7 +2,8 @@
  * 通用第三方应用配置表单组件。
  */
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Form } from 'antd'
+import { Form, type FormInstance } from 'antd'
+import type { FormLayout } from 'antd/lib/form/Form'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import type { KVPair } from '@/models/kv'
 import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
@@ -18,7 +19,6 @@ import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import styles from './ConfigNetworkPage.module.scss'
 import { isMemfit } from '@/utils/envfile'
-import type { FormInstance, FormLayout } from 'antd/lib/form/Form'
 import { JSONParseLog } from '@/utils/tool'
 import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -273,7 +273,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                     execModelNameOption.current = true
                     getModelNameOption()
                   }}
-                  dropdownRender={(menu) => {
+                  popupRender={(menu) => {
                     return (
                       <>
                         <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>

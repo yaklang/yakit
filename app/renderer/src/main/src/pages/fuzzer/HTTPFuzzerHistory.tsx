@@ -217,7 +217,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                 <Card
                   size={'small'}
                   style={{ marginBottom: 4, width: '100%' }}
-                  bodyStyle={{ paddingTop: 4, paddingBottom: 4 }}
+                  styles={{ body: { paddingTop: 4, paddingBottom: 4 } }}
                   hoverable={true}
                   onClick={(e) => {
                     e.preventDefault()

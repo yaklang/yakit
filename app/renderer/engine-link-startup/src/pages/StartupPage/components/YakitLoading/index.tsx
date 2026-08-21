@@ -761,8 +761,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                   {unLinkStatus && (
                     <div className={styles['more-version-btn']}>
                       <YakitPopover
-                        visible={moreVersionPopShow}
-                        overlayClassName={styles['more-versions-popover']}
+                        open={moreVersionPopShow}
+                        classNames={{ root: styles['more-versions-popover'] }}
                         placement="topLeft"
                         trigger="click"
                         content={
@@ -774,7 +774,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             }}
                           />
                         }
-                        onVisibleChange={(visible) => {
+                        onOpenChange={(visible) => {
                           setMoreVersionPopShow(visible)
                         }}
                       >

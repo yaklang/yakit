@@ -1,7 +1,8 @@
-import { Card, Menu } from 'antd'
+import { Card, ConfigProvider, Menu } from 'antd'
 import './showByCursor.css'
 import type React from 'react'
 import { createRoot } from 'react-dom/client'
+import { yakitAntdTheme } from '@/theme/antdTheme'
 export interface ByCursorContainerProp {
   content: JSX.Element
 }
@@ -37,9 +38,11 @@ export const showByCursorContainer = (props: ByCursorContainerProp, x: number, y
         cursorContainerRootDiv = createRoot(div)
       }
       cursorContainerRootDiv.render(
-        <Card bodyStyle={{ padding: 0 }} bordered={true} hoverable={true}>
-          {props.content}
-        </Card>,
+        <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+          <Card styles={{ body: { padding: 0 } }} variant="outlined" hoverable={true}>
+            {props.content}
+          </Card>
+        </ConfigProvider>,
       )
     })
   }
@@ -102,52 +105,50 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
         }
 
         cursorMenuRootDiv.render(
-          <Menu
-            className={'right-cursor-menu'}
-            onClick={(item: { key: string }) => {
-              const { key } = item
-              menuItemWalker(props.content, (item) => {
-                if (item?.id === key) {
-                  item.onClick()
-                  return
-                }
+          <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+            <Menu
+              className={'right-cursor-menu'}
+              onClick={(item: { key: string }) => {
+                const { key } = item
+                menuItemWalker(props.content, (item) => {
+                  if (item?.id === key) {
+                    item.onClick()
+                    return
+                  }
 
-                if (item.title === key) {
-                  item.onClick()
-                  return
-                }
-              })
-            }}
-          >
-            {props.content.map((item, index) => {
-              const { title, disabled, id } = item
-              if (item?.subMenuItems && item.subMenuItems.length > 0) {
-                return (
-                  <Menu.SubMenu
-                    popupClassName="right-cursor-submenu"
-                    key={`${title}-${index}`}
-                    title={title}
-                    disabled={!!disabled}
-                  >
-                    {(item.subMenuItems || []).map((subItem, index) => {
-                      const { title, render, disabled } = subItem
+                  if (item.title === key) {
+                    item.onClick()
+                    return
+                  }
+                })
+              }}
+              items={(props.content || []).map((item, index) => {
+                const { title, disabled, id } = item
+                if (item?.subMenuItems && item.subMenuItems.length > 0) {
+                  return {
+                    key: `${title}-${index}`,
+                    label: title,
+                    disabled: !!disabled,
+                    popupClassName: 'right-cursor-submenu',
+                    children: (item.subMenuItems || []).map((subItem) => {
+                      const { render, disabled: subDisabled } = subItem
                       const subId = subItem?.id
-                      return (
-                        <Menu.Item key={subId || subItem.title} disabled={!!disabled}>
-                          {render || subItem.title}
-                        </Menu.Item>
-                      )
-                    })}
-                  </Menu.SubMenu>
-                )
-              }
-              return (
-                <Menu.Item key={item?.id || item.title} disabled={!!disabled}>
-                  {item.title}
-                </Menu.Item>
-              )
-            })}
-          </Menu>,
+                      return {
+                        key: subId || subItem.title,
+                        label: render || subItem.title,
+                        disabled: !!subDisabled,
+                      }
+                    }),
+                  }
+                }
+                return {
+                  key: id || title,
+                  label: item.title,
+                  disabled: !!disabled,
+                }
+              })}
+            />
+          </ConfigProvider>,
         )
       }
     })

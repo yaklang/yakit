@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
-import { Form, Modal, Divider } from 'antd'
+import { Form, Divider } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, type ExtraMITMServerProps, type MitmStatus } from '@/pages/mitm/MITMPage'
@@ -9,14 +9,13 @@ import type { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import styles from './MITMServerStartForm.module.scss'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { yakitFailed } from '@/utils/notification'
+import { destroyAllModals, getModalApi, yakitFailed } from '@/utils/notification'
 import { CogIcon, RefreshIcon } from '@/assets/newIcon'
 import { RuleExportAndImportButton } from '../MITMRule/MITMRule'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { type AdvancedConfigurationFromValue, buildMitmExtra } from '../MITMAdvancedConfig'
 import ReactResizeDetector from 'react-resize-detector'
-import { useWatch } from 'antd/es/form/Form'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { RemoveIcon } from '@/assets/newIcon'
 import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
@@ -144,7 +143,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
   })
 
   const [form] = Form.useForm()
-  const stateSecretHijacking = useWatch<string>('stateSecretHijacking', form)
+  const stateSecretHijacking = Form.useWatch<string>('stateSecretHijacking', form)
 
   const mitmContent = useContext(MITMContext)
 
@@ -226,7 +225,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
   const onStartMITM = useMemoizedFn((values) => {
     // 开启替换规则
     if (openRepRuleFlag) {
-      Modal.confirm({
+      getModalApi().confirm({
         title: t('YakitModal.friendlyReminder'),
         icon: <ExclamationCircleOutlined />,
         content: t('MITMServerForm.replaceRuleWarning'),
@@ -238,7 +237,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
           <div
             onClick={(e) => {
               e.stopPropagation()
-              Modal.destroyAll()
+              destroyAllModals()
             }}
             className="modal-remove-icon"
           >
@@ -250,7 +249,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         },
         onCancel: () => {
           props.setVisible(true)
-          Modal.destroyAll()
+          destroyAllModals()
         },
         cancelButtonProps: { size: 'small', className: 'modal-cancel-button' },
         okButtonProps: { size: 'small', className: 'modal-ok-button' },
@@ -391,6 +390,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
           data-testid="mitm-start-form"
           form={form}
           onFinish={onStartMITM}
+          className={styles['mitm-start-antd-form']}
           labelCol={{ span: width > 610 ? 5 : 9 }}
           wrapperCol={{ span: width > 610 ? 15 : 16 }}
         >
@@ -422,6 +422,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             />
           </Item>
           <Item
+            className={styles['form-item-with-desc']}
             label={t('MITMServerForm.downstreamProxyLabel')}
             name="downstreamProxy"
             extra={
@@ -473,23 +474,27 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             />
           </Item>
           <Item
+            className={styles['form-item-with-desc']}
             label={t('MITMServerForm.http2Support')}
             name="enableHttp2"
-            help={t('MITMServerForm.http2SupportHelp')}
+            extra={<span className={styles['form-rule-help']}>{t('MITMServerForm.http2SupportHelp')}</span>}
             valuePropName="checked"
           >
             <YakitSwitch size="large" />
           </Item>
           <Item
+            className={styles['form-item-with-desc']}
             label={t('MITMServerForm.httpsConfig')}
             name="stateSecretHijacking"
             initialValue={'stateSecretHijacking'}
-            help={
-              stateSecretHijacking === 'enableGMTLS'
-                ? t('MITMServerForm.httpsConfigHelp.gmTLS')
-                : stateSecretHijacking === 'randomJA3'
-                  ? t('MITMServerForm.httpsConfigHelp.randomJA3')
-                  : t('MITMServerForm.httpsConfigHelp.default')
+            extra={
+              <span className={styles['form-rule-help']}>
+                {stateSecretHijacking === 'enableGMTLS'
+                  ? t('MITMServerForm.httpsConfigHelp.gmTLS')
+                  : stateSecretHijacking === 'randomJA3'
+                    ? t('MITMServerForm.httpsConfigHelp.randomJA3')
+                    : t('MITMServerForm.httpsConfigHelp.default')}
+              </span>
             }
           >
             <YakitRadioButtons
@@ -512,17 +517,19 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             />
           </Item>
           <Item
+            className={styles['form-item-with-desc']}
             label={t('MITMServerForm.disableKeepAlive')}
             name="ForceDisableKeepAlive"
             initialValue={true}
-            help={t('MITMServerForm.disableKeepAliveHelp')}
+            extra={<span className={styles['form-rule-help']}>{t('MITMServerForm.disableKeepAliveHelp')}</span>}
             valuePropName="checked"
           >
             <YakitSwitch size="large" />
           </Item>
           <Item
+            className={styles['form-item-with-desc']}
             label={t('MITMServerForm.contentRule')}
-            help={
+            extra={
               <span className={styles['form-rule-help']}>
                 {t('MITMServerForm.contentRuleHelp')}
                 <span
@@ -573,8 +580,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 </YakitButton>
               )}
               <ChromeLauncherButton
-                host={useWatch('host', form)}
-                port={useWatch('port', form)}
+                host={Form.useWatch('host', form)}
+                port={Form.useWatch('port', form)}
                 disableCACertPage={advancedFormRef.current?.getValue().disableCACertPage}
                 onFished={(host, port) => {
                   const values = {

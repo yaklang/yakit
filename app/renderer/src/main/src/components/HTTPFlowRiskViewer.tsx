@@ -48,7 +48,7 @@ export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
             ) : undefined}
           </>
         }
-        bodyStyle={{ overflow: 'hidden', width: '100%' }}
+        styles={{ body: { overflow: 'hidden', width: '100%' } }}
         extra={
           <YakitButton
             type="text"
@@ -75,7 +75,7 @@ export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
           </div>
           {showFragment &&
             (fragment || []).map((i) => (
-              <Card bordered={false} hoverable={true} bodyStyle={{ padding: 8 }}>
+              <Card variant="borderless" hoverable={true} styles={{ body: { padding: 8 } }}>
                 <Space direction={'vertical'} style={{ width: '100%' }}>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <span style={{ marginLeft: 8 }}>{highlight}</span>

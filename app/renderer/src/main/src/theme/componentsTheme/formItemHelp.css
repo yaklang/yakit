@@ -1,0 +1,60 @@
+/*
+ * 对齐 antd 4 / Yakit Form.Item help：
+ * - 字号 12px、行高 16px
+ * - help 和输入框之间留 4px
+ * - 表单项仍保留 16px margin-bottom（不要清成 0）
+ * - 只拆掉 antd 5 的 additional 内联 minHeight 和 margin-offset 负边距，避免再多出一截空白
+ */
+
+html body .ant-form-item-margin-offset {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html body .ant-form-item .ant-form-item-additional {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin-top: 4px !important;
+}
+
+html body .ant-form-item .ant-form-item-explain,
+html body .ant-form-item .ant-form-item-extra {
+  --ant-font-size: 12px;
+  --ant-line-height: 1.33334;
+  --ant-font-height: 16px;
+  --ant-control-height-sm: 0px;
+  font-size: 12px !important;
+  line-height: 16px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: visible !important;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+}
+
+html body .ant-form-item .ant-form-item-explain > div,
+html body .ant-form-item .ant-form-item-extra > div,
+html body .ant-form-item .ant-form-show-help-item {
+  font-size: 12px !important;
+  line-height: 16px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+
+html body .ant-form-item .ant-form-item-explain *,
+html body .ant-form-item .ant-form-item-extra * {
+  font-size: 12px !important;
+  line-height: 16px !important;
+}
+
+html body .ant-form-item .ant-form-item-explain-error,
+html body .ant-form-item .ant-form-item-explain-error * {
+  color: var(--Colors-Use-Error-Primary) !important;
+}

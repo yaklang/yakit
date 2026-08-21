@@ -1,14 +1,22 @@
 import { Cascader, type CascaderProps } from 'antd'
+import classNames from 'classnames'
 import styles from './YakitCascader.module.scss'
-import type { BaseOptionType, DefaultOptionType } from 'antd/lib/cascader'
 
-type YakitCascaderProps<OptionType> = CascaderProps<OptionType> & {}
-const YakitCascader = <OptionType extends DefaultOptionType | BaseOptionType = DefaultOptionType>(
-  props: YakitCascaderProps<OptionType>,
-) => {
+const YakitCascader = (props: CascaderProps) => {
+  const { classNames: cascaderClassNames, dropdownClassName, dropdownRender, popupRender, ...restProps } = props
   return (
     <div className={styles['yakit-cascader']}>
-      <Cascader {...props} dropdownClassName={styles['yakit-cascader-popup']} />
+      <Cascader
+        {...(restProps as CascaderProps<any, any, any>)}
+        classNames={{
+          ...cascaderClassNames,
+          popup: {
+            ...cascaderClassNames?.popup,
+            root: classNames(styles['yakit-cascader-popup'], dropdownClassName, cascaderClassNames?.popup?.root),
+          },
+        }}
+        popupRender={popupRender ?? dropdownRender}
+      />
     </div>
   )
 }

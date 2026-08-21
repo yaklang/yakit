@@ -50,7 +50,7 @@ import {
   SolidFolderopenIcon,
   SolidReplyIcon,
 } from '@/assets/icon/solid'
-import { Descriptions, Form, type InputRef, Modal, Progress, Tooltip } from 'antd'
+import { Descriptions, Form, type InputRef, Progress, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -75,7 +75,7 @@ import {
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { failed, yakitNotify } from '@/utils/notification'
+import { failed, yakitNotify, getModalApi } from '@/utils/notification'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
@@ -602,7 +602,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     }
 
     if (isModify) {
-      Modal.confirm({
+      getModalApi().confirm({
         title: t('YakitModal.friendlyReminder'),
         icon: <OutlineExclamationcircleIcon />,
         content: t('EditRuleDrawer.saveAndCloseConfirm'),
@@ -613,7 +613,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
           <div
             onClick={(e) => {
               e.stopPropagation()
-              Modal.destroyAll()
+              getModalApi().destroyAll()
             }}
             className="modal-remove-icon"
           >
@@ -622,11 +622,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         ),
         onOk: () => {
           handleFormSubmit()
-          Modal.destroyAll()
+          getModalApi().destroyAll()
         },
         onCancel: () => {
           onCallback(false)
-          Modal.destroyAll()
+          getModalApi().destroyAll()
         },
         cancelButtonProps: { size: 'small', className: 'modal-cancel-button' },
         okButtonProps: { size: 'small', className: 'modal-ok-button' },
@@ -995,8 +995,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         mask={false}
         closable={false}
         keyboard={false}
-        className={styles['edit-rule-drawer']}
-        bodyStyle={{ padding: 0 }}
+        rootClassName={styles['edit-rule-drawer']}
+        styles={{ body: { padding: 0 } }}
         height={showHeight}
         title={drawerTitle}
         extra={
@@ -1008,7 +1008,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             <YakitButton type="text2" icon={<OutlineXIcon />} onClick={handleCancel} />
           </div>
         }
-        visible={visible}
+        open={visible}
       >
         {/* 审计详情 */}
         <div className={classNames(styles['drawer-body'], { [styles['drawer-hidden']]: !auditDetailShow })}>
@@ -1031,8 +1031,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
               <div className={styles['header-title']}>{t('EditRuleDrawer.basicInfo')}</div>
               <Tooltip
                 title={t('EditRuleDrawer.collapseBasicInfo')}
-                visible={infoTooltipShow}
-                onVisibleChange={setInfoTooltipShow}
+                open={infoTooltipShow}
+                onOpenChange={setInfoTooltipShow}
               >
                 <YakitButton type="text2" icon={<OutlineCloseIcon />} onClick={handleSetExpand} />
               </Tooltip>
@@ -1105,8 +1105,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                   <Tooltip
                     placement="topLeft"
                     title={t('EditRuleDrawer.expandBasicInfo')}
-                    visible={codeTooltipShow}
-                    onVisibleChange={setCodeTooltipShow}
+                    open={codeTooltipShow}
+                    onOpenChange={setCodeTooltipShow}
                   >
                     <YakitButton type="text2" icon={<OutlineOpenIcon />} onClick={handleSetExpand} />
                   </Tooltip>
@@ -1501,7 +1501,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
             })
           ) : (
             <YakitPopover
-              overlayClassName={styles['rule-group-intersection-popover']}
+              classNames={{ root: styles['rule-group-intersection-popover'] }}
               content={
                 <div className={styles['rule-group-intersection']}>
                   {oldGroup.map((item) => {
@@ -1534,8 +1534,8 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
       )}
 
       <YakitPopover
-        overlayClassName={styles['add-and-remove-group-popover']}
-        visible={addGroupVisible}
+        classNames={{ root: styles['add-and-remove-group-popover'] }}
+        open={addGroupVisible}
         placement="bottomRight"
         trigger="click"
         content={
@@ -1604,7 +1604,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
             </div>
           </div>
         }
-        onVisibleChange={handleAddGroupVisibleChange}
+        onOpenChange={handleAddGroupVisibleChange}
       >
         <YakitButton type="text" disabled={!isActive} icon={<OutlinePluscircleIcon />}>
           {oldGroup.length ? undefined : t('UpdateRuleToGroup.addGroupButton')}
@@ -2192,7 +2192,7 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
     <YakitModal
       className={styles['RuleUploadAndDownloadModal']}
       getContainer={getContainer}
-      visible={true}
+      open={true}
       width={650}
       type="white"
       closable={false}
@@ -2397,7 +2397,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
           <>
             <YakitEmpty
               image={<img src={powerEmptyImage} alt="" />}
-              imageStyle={{ width: 220, height: 150, margin: 'auto' }}
+              styles={{ image: { width: 220, height: 150, margin: 'auto' } }}
               title={t('OnlineRuleGroupList.noPermissionTitle')}
               description={t('OnlineRuleGroupList.noPermissionDesc')}
             />
@@ -2620,8 +2620,7 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                     <div onClick={(e) => e.stopPropagation()}>
                       <YakitPopover
                         trigger="click"
-                        overlayClassName={styles['severity-menu-popover']}
-                        overlayStyle={{ paddingTop: 2 }}
+                        classNames={{ root: styles['severity-menu-popover'] }}
                         content={
                           <div className={styles['severity-menu-cont-wrapper']}>
                             {SeverityMapTag.map((item) => (

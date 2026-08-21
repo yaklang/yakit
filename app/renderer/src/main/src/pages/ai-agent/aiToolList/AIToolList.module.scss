@@ -134,17 +134,11 @@
   width: 300px;
 
   :global {
-    .ant-popover-inner-content {
-      height: 250px;
-      padding: 4px;
-    }
-
     .ant-popover-inner {
-      border-radius: 4px;
-    }
-
-    .ant-popover-arrow {
-      right: 0;
+      .ant-popover-inner-content {
+        height: 250px;
+        padding: 4px;
+      }
     }
 
     .ant-popover-placement-top,

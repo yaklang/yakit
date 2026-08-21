@@ -370,8 +370,8 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
               dropdown={{
                 trigger: ['click'],
                 placement: 'bottom',
-                visible: visible,
-                onVisibleChange: setVisible,
+                open: visible,
+                onOpenChange: setVisible,
               }}
             >
               <YakitButton
@@ -396,11 +396,11 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                   size="middle"
                   value={selectValue}
                   onChange={onSetTool}
-                  bordered={false}
+                  variant="borderless"
                   mode="tags"
                   disabled={!editable || !!item?.isRemove}
                   open={open}
-                  onDropdownVisibleChange={setOpen}
+                  onOpenChange={setOpen}
                   notFoundContent={loading ? <YakitSpin size="small" /> : null}
                 >
                   {response.Tools.map((toolItem) => {

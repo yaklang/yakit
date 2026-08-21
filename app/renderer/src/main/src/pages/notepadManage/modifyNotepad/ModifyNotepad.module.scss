@@ -94,18 +94,14 @@
     flex: 1;
   }
 }
+
 .share-popover {
   :global {
     .ant-popover-inner {
       border-radius: 8px;
-    }
-    .ant-popover-inner-content {
-      padding: 0;
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      border-radius: 8px;
-    }
-    .ant-popover-arrow-content {
-      background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
   }
 }

@@ -50,7 +50,7 @@ import {
   apiPortScan,
   apiSimpleDetect,
 } from './utils'
-import type { CheckboxValueType } from 'antd/es/checkbox/Group'
+import type { CheckboxValueType } from '@/utils/antdCompat'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { yakitNotify } from '@/utils/notification'
 import { type CreateReportContentProps, onCreateReportModal } from '@/pages/portscan/CreateReport'

@@ -593,7 +593,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                       <YakitPopover
                         title={t('OrganizationAdmin.editName')}
                         trigger={'click'}
-                        destroyTooltipOnHide
+                        destroyOnHidden
                         content={
                           <YakitInput
                             size="small"
@@ -1218,9 +1218,9 @@ const AccountList: React.FC<AccountListProps> = (props) => {
         }}
       ></TableVirtualResize>
       <YakitModal
-        visible={creatCountVisible}
+        open={creatCountVisible}
         title={editInfoRef.current ? '编辑账号' : '创建账号'}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         width={600}
         onCancel={() => {
@@ -1516,7 +1516,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         <YakitInput placeholder="请输入昵称" allowClear />
       </Form.Item>
       <Form.Item name="department" label="组织架构" rules={[{ required: true, message: '该项为必填' }]}>
-        {/* <YakitCascader options={depData} loadData={loadData} placeholder='请选择组织架构' changeOnSelect /> */}
         <YakitSelect showSearch placeholder="请选择组织架构" filterOption={filterOption}>
           {depData.map((item) => (
             <YakitSelect.Option key={item.value} value={item.value}>
@@ -1538,7 +1537,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
               getRolesData(rolePagination.page + 1)
             }
           }}
-          dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+          popupRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
         >
           {roleData.map((item) => (
             <YakitSelect.Option key={item.id} value={item.id}>

@@ -154,11 +154,11 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
       {!isEllipsis && (
         <div className={styles['ellipsis-wrapper']}>
           <YakitPopover
-            overlayClassName={styles['ellipsis-type-select-popover']}
+            classNames={{ root: styles['ellipsis-type-select-popover'] }}
             trigger={'click'}
             placement="bottomRight"
-            visible={visible}
-            onVisibleChange={(value) => setVisible(value)}
+            open={visible}
+            onOpenChange={(value) => setVisible(value)}
             content={
               <div className={styles['ellipsis-type-select-wrapper']}>
                 <div className={styles['list-wrapper']}>
@@ -229,7 +229,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
   }, [])
 
   return isIcon ? (
-    <Tooltip title={name} placement={tooltipPlacement} overlayClassName="plugins-tooltip">
+    <Tooltip title={name} placement={tooltipPlacement}>
       <YakitButton {...rest}></YakitButton>
     </Tooltip>
   ) : (
@@ -243,7 +243,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
 export const FuncBtnIcon: React.FC<FuncBtnIconProps> = memo((props) => {
   const { name, ...rest } = props
   return (
-    <Tooltip title={name} overlayClassName="plugins-tooltip">
+    <Tooltip title={name}>
       <YakitButton {...rest}></YakitButton>
     </Tooltip>
   )
@@ -347,7 +347,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
         }}
       />
       <YakitPopover
-        overlayClassName={styles['func-search-popver']}
+        classNames={{ root: styles['func-search-popver'] }}
         content={
           <YakitCombinationSearch
             beforeOptionWidth={92}
@@ -364,8 +364,8 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
           />
         }
         trigger="click"
-        visible={showPopver}
-        onVisibleChange={setShowPopver}
+        open={showPopver}
+        onOpenChange={setShowPopver}
         placement="bottomRight"
       >
         <YakitButton
@@ -434,9 +434,9 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
   return (
     <Dropdown
       overlayClassName={styles['func-filter-popover']}
-      overlay={overlay}
+      popupRender={() => overlay}
       placement={placement}
-      onVisibleChange={setShow}
+      onOpenChange={setShow}
       disabled={disabled}
     >
       {nameAndIcon ? (
@@ -532,7 +532,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
         <div className={styles['header-body']}>
           {!visible && (
             <div className={styles['header-body-filter']}>
-              <Tooltip title={t('FuncTemplate.expandFilter')} placement="topLeft" overlayClassName="plugins-tooltip">
+              <Tooltip title={t('FuncTemplate.expandFilter')} placement="topLeft">
                 <YakitButton
                   type="text2"
                   onClick={onExpend}
@@ -570,17 +570,12 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                 })
               ) : (
                 <YakitPopover
-                  overlayClassName={styles['plugins-list-tag-total-popover']}
+                  classNames={{ root: styles['plugins-list-tag-total-popover'] }}
                   content={
                     <div className={styles['plugins-list-tag-total']}>
                       {showTagList.map((item) => {
                         return (
-                          <Tooltip
-                            title={item.label}
-                            placement="top"
-                            overlayClassName="plugins-tooltip"
-                            key={item.value}
-                          >
+                          <Tooltip title={item.label} placement="top" key={item.value}>
                             <YakitTag closable onClose={() => onDelTag(item)}>
                               {item.label}
                             </YakitTag>
@@ -590,7 +585,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                     </div>
                   }
                   trigger="hover"
-                  onVisibleChange={setTagShow}
+                  onOpenChange={setTagShow}
                   placement="bottomLeft"
                 >
                   <div
@@ -612,7 +607,6 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
         <div className={styles['header-extra']}>
           {extraHeader || null}
           <Tooltip
-            className="plugins-tooltip"
             placement="topRight"
             title={isList ? t('FuncTemplate.switchToGrid') : t('FuncTemplate.switchToList')}
           >
@@ -665,7 +659,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
   return isShowSearchResultEmpty ? (
     <YakitEmpty
       image={emptyImageTarget}
-      imageStyle={{ width: 274, height: 180, marginBottom: 24 }}
+      styles={{ image: { width: 274, height: 180, marginBottom: 24 } }}
       title={t('YakitEmpty.searchEmpty')}
       style={{ paddingTop: '10%' }}
       className={styles['empty-list']}
@@ -1478,11 +1472,11 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
   })
   return (
     <YakitPopover
-      overlayClassName={styles['filter-popover-btn']}
+      classNames={{ root: styles['filter-popover-btn'] }}
       placement="bottomLeft"
       trigger={['click']}
-      visible={visible}
-      onVisibleChange={(value) => {
+      open={visible}
+      onOpenChange={(value) => {
         setVisible(value)
         if (!value) onFinish(form.getFieldsValue())
       }}
@@ -1788,9 +1782,9 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
       centered={true}
       maskClosable={false}
       closable={true}
-      visible={visible}
+      open={visible}
       footer={null}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       onCancel={onFailed}
       bodyStyle={{ padding: 0 }}
     >
@@ -1817,7 +1811,6 @@ export const PluginTypeTag: React.FC<PluginTypeTagProps> = memo((props) => {
       <div className={styles['type-tag-header']}>
         {icon}
         <Radio
-          className="plugins-radio-wrapper"
           disabled={disabled}
           checked={checked}
           onClick={(e) => {
@@ -1865,7 +1858,7 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
       closable={true}
       closeIcon={<OutlineArrowscollapseIcon className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(content)}
       bodyStyle={{ padding: 0 }}
     >
@@ -1910,7 +1903,7 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
       closable={true}
       closeIcon={<OutlineArrowscollapseIcon className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(content)}
       bodyStyle={{ padding: 0 }}
     >

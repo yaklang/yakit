@@ -737,7 +737,9 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 <>
                   <Dropdown
                     overlayClassName={style['customize-drop-menu']}
-                    overlay={
+                    open={customizeVisible}
+                    onOpenChange={setCustomizeVisible}
+                    popupRender={() => (
                       <>
                         {CustomizeMenuData.map((item) => (
                           <div
@@ -776,8 +778,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                           </div>
                         </YakitSpin>
                       </>
-                    }
-                    onVisibleChange={setCustomizeVisible}
+                    )}
                   >
                     <YakitButton
                       type="secondary2"
@@ -827,8 +828,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             onTabClick={onTabClick}
             popupClassName={style['heard-sub-menu-popup']}
             moreIcon={<DotsHorizontalIcon className={style['dots-icon']} />}
-          >
-            {subMenuData.map((item, index) => {
+            items={subMenuData.map((item, index) => {
               const lableShow = item.labelUi ? t(item.labelUi) : item.label
               const nodeLabel = (
                 <div className={classNames(style['sub-menu-expand-item-label'], style['heard-menu-item-label'])}>
@@ -836,61 +836,53 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 </div>
               )
               const isDisable = !item.label || (item.page === YakitRoute.Plugin_OP && !item.yakScriptId)
-              // 二级菜单的路由信息
               const tabKey = routeInfoToKey(item)
-              return (
-                <Tabs.TabPane
-                  tab={
-                    <div className={style['sub-menu-expand']}>
-                      {(!isDisable && (
-                        <div className={style['sub-menu-expand-item']} style={{ paddingLeft: index === 0 ? 0 : '' }}>
-                          <div className={style['sub-menu-expand-item-icon']}>
-                            <span className={style['item-icon']}>{item.icon}</span>
-                            <span className={style['item-hoverIcon']}>{item.hoverIcon}</span>
+              return {
+                key: tabKey,
+                label: (
+                  <div className={style['sub-menu-expand']}>
+                    {(!isDisable && (
+                      <div className={style['sub-menu-expand-item']} style={{ paddingLeft: index === 0 ? 0 : '' }}>
+                        <div className={style['sub-menu-expand-item-icon']}>
+                          <span className={style['item-icon']}>{item.icon}</span>
+                          <span className={style['item-hoverIcon']}>{item.hoverIcon}</span>
+                        </div>
+                        <Tooltip title={lableShow} placement="bottom">
+                          <div
+                            className={classNames(style['sub-menu-expand-item-label'], style['heard-menu-item-label'])}
+                          >
+                            {lableShow}
                           </div>
-                          <Tooltip title={lableShow} placement="bottom">
-                            <div
-                              className={classNames(
-                                style['sub-menu-expand-item-label'],
-                                style['heard-menu-item-label'],
-                              )}
-                            >
-                              {lableShow}
-                            </div>
+                        </Tooltip>
+                      </div>
+                    )) || (
+                      <div
+                        className={classNames(style['sub-menu-expand-item'], {
+                          [style['sub-menu-expand-item-disable']]: isDisable,
+                        })}
+                        style={{ paddingLeft: index === 0 ? 0 : '' }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (loading) return
+                          onClickMenu(item)
+                        }}
+                      >
+                        <div className={style['sub-menu-expand-item-icon']}>
+                          <span className={style['item-icon']}>{(loading && <LoadingOutlined />) || item.icon}</span>
+                        </div>
+                        {(loading && nodeLabel) || (
+                          <Tooltip title={t('Layout.HeardMenu.pluginMissingDownload')} placement="bottom">
+                            {nodeLabel}
                           </Tooltip>
-                        </div>
-                      )) || (
-                        <div
-                          className={classNames(style['sub-menu-expand-item'], {
-                            [style['sub-menu-expand-item-disable']]: isDisable,
-                          })}
-                          style={{ paddingLeft: index === 0 ? 0 : '' }}
-                          onClick={(e) => {
-                            // 设定loading为true时，点击菜单无效
-                            // 所以需要自定义处理事件，阻止tab组件的冒泡
-                            e.stopPropagation()
-                            if (loading) return
-                            onClickMenu(item)
-                          }}
-                        >
-                          <div className={style['sub-menu-expand-item-icon']}>
-                            <span className={style['item-icon']}>{(loading && <LoadingOutlined />) || item.icon}</span>
-                          </div>
-                          {(loading && nodeLabel) || (
-                            <Tooltip title={t('Layout.HeardMenu.pluginMissingDownload')} placement="bottom">
-                              {nodeLabel}
-                            </Tooltip>
-                          )}
-                        </div>
-                      )}
-                      {index !== subMenuData.length - 1 && <div className={style['sub-menu-expand-item-line']} />}
-                    </div>
-                  }
-                  key={tabKey}
-                />
-              )
+                        )}
+                      </div>
+                    )}
+                    {index !== subMenuData.length - 1 && <div className={style['sub-menu-expand-item-line']} />}
+                  </div>
+                ),
+              }
             })}
-          </Tabs>
+          />
         </div>
       )}
       {/* 后面看看菜单导出的数据格式 */}

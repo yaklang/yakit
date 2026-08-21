@@ -58,8 +58,8 @@ const SimpleDetectExtraParamsDrawer: React.FC<SimpleDetectExtraParamsDrawerProps
 
   return (
     <YakitDrawer
-      className={styles['simple-detect-execute-extra-params-drawer']}
-      visible={visible}
+      rootClassName={styles['simple-detect-execute-extra-params-drawer']}
+      open={visible}
       onClose={onClose}
       width="max(700px, 65%)"
       title="额外参数"

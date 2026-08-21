@@ -61,6 +61,11 @@
           }
         }
       }
+      & > .ant-tabs-content-holder {
+        & > .ant-tabs-content > .ant-tabs-tabpane {
+          height: 100%;
+        }
+      }
     }
     // tabPosition = bottom
     .ant-tabs-bottom {
@@ -80,8 +85,8 @@
           padding: 4px 8px;
           border-radius: 0px 0px 4px 4px;
           border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-          border-right: 1px solid (--Colors-Use-Neutral-Border);
-          border-left: 1px solid (--Colors-Use-Neutral-Border);
+          border-right: 1px solid var(--Colors-Use-Neutral-Border);
+          border-left: 1px solid var(--Colors-Use-Neutral-Border);
           border-top: 0;
           background: var(--Colors-Use-Neutral-Bg-Hover);
           .ant-tabs-tab-btn {
@@ -113,6 +118,11 @@
           }
         }
       }
+      & > .ant-tabs-content-holder {
+        & > .ant-tabs-content > .ant-tabs-tabpane {
+          height: 100%;
+        }
+      }
     }
 
     // tabPosition = right
@@ -138,9 +148,9 @@
           width: 21px;
           padding: 8px 4px;
           border-radius: 0px 4px 4px 0px;
-          border-top: 1px solid (--Colors-Use-Neutral-Border);
-          border-right: 1px solid (--Colors-Use-Neutral-Border);
-          border-bottom: 1px solid (--Colors-Use-Neutral-Border);
+          border-top: 1px solid var(--Colors-Use-Neutral-Border);
+          border-right: 1px solid var(--Colors-Use-Neutral-Border);
+          border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
           border-left: 0;
           background: var(--Colors-Use-Neutral-Bg-Hover);
           border-color: var(--Colors-Use-Neutral-Border);
@@ -182,6 +192,7 @@
         margin-right: 0;
         & > .ant-tabs-content > .ant-tabs-tabpane {
           padding-right: 0;
+          height: 100%;
         }
       }
     }
@@ -195,7 +206,7 @@
           position: absolute;
           top: 0;
           right: 0;
-          border-right: 1px solid (--Colors-Use-Neutral-Border);
+          border-right: 1px solid var(--Colors-Use-Neutral-Border);
           z-index: 0;
           content: '';
         }
@@ -208,9 +219,9 @@
           width: 21px;
           padding: 8px 4px;
           border-radius: 4px 0px 0px 4px;
-          border-top: 1px solid (--Colors-Use-Neutral-Border);
-          border-left: 1px solid (--Colors-Use-Neutral-Border);
-          border-bottom: 1px solid (--Colors-Use-Neutral-Border);
+          border-top: 1px solid var(--Colors-Use-Neutral-Border);
+          border-left: 1px solid var(--Colors-Use-Neutral-Border);
+          border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
           border-right: 0;
           background: var(--Colors-Use-Neutral-Bg-Hover);
           .ant-tabs-tab-btn {
@@ -250,6 +261,7 @@
         margin-left: 0;
         & > .ant-tabs-content > .ant-tabs-tabpane {
           padding-left: 0;
+          height: 100%;
         }
       }
     }
@@ -271,14 +283,14 @@
   overflow: hidden;
   :global {
     .ant-tabs-nav .ant-tabs-nav-list {
-      border-bottom: 1px solid (--Colors-Use-Neutral-Border);
+      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     }
     .ant-tabs-top {
       & > .ant-tabs-nav {
         height: 34px;
         margin-bottom: 0;
         &::before {
-          border-bottom: 1px solid (--Colors-Use-Neutral-Border);
+          border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
           z-index: 0;
         }
         .ant-tabs-ink-bar {
@@ -317,7 +329,7 @@
             position: absolute;
             height: 16px;
             width: 1px;
-            background-color: (--Colors-Use-Neutral-Border);
+            background-color: var(--Colors-Use-Neutral-Border);
             left: 0px;
           }
         }

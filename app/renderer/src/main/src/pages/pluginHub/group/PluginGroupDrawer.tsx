@@ -44,7 +44,7 @@ export const PluginGroupDrawer: React.FC<PluginFroupMagDrawerProp> = (props) => 
       closable: true,
       maskClosable: false,
       centered: true,
-      destroyOnClose: true,
+      destroyOnHidden: true,
       content: (
         <Form
           form={form}
@@ -109,7 +109,7 @@ export const PluginGroupDrawer: React.FC<PluginFroupMagDrawerProp> = (props) => 
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       onClose={() => onClose(pluginOperationGroupListRef.current?.changeGroupListFlag === true)}
       width="500px"
       title={

@@ -545,7 +545,7 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
         <div className={styles['renderTitle-wrapper']}>
           <div className={styles['renderTitle-wrapper-left']}>
             {!advancedQuery && (
-              <Tooltip title="展开筛选" placement="topLeft" overlayClassName="plugins-tooltip">
+              <Tooltip title="展开筛选" placement="topLeft">
                 <YakitButton
                   type="text2"
                   onClick={() => {
@@ -742,7 +742,7 @@ const MisstatementQuery: React.FC<MisstatementQueryProps> = React.forwardRef((pr
     >
       <div className={styles['misstatement-query-heard']}>
         <span>高级查询</span>
-        <Tooltip title="收起筛选" placement="top" overlayClassName="plugins-tooltip">
+        <Tooltip title="收起筛选" placement="top">
           <YakitButton type="text2" onClick={onClose} icon={<OutlineCloseIcon />}></YakitButton>
         </Tooltip>
       </div>

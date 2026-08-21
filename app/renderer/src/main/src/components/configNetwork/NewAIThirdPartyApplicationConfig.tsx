@@ -2,7 +2,8 @@
  * AI 专用第三方应用配置表单组件。
  */
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Collapse, Form } from 'antd'
+import { Form, type FormInstance } from 'antd'
+import type { FormLayout } from 'antd/lib/form/Form'
 import type { KVPair } from '@/models/kv'
 import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
@@ -16,7 +17,6 @@ import { yakitNotify } from '@/utils/notification'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import styles from './ConfigNetworkPage.module.scss'
 import { isMemfit } from '@/utils/envfile'
-import type { FormInstance, FormLayout } from 'antd/lib/form/Form'
 import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
@@ -293,7 +293,7 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
         bordered={false}
         className={styles['ai-third-party-application-config-collapse']}
       >
-        <Collapse.Panel
+        <YakitCollapse.YakitPanel
           header={
             <div className={styles['panel-heard']}>
               <span className={styles['title']}>高级配置</span>
@@ -305,7 +305,7 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
         >
           {optionalItems.map((item) => renderFieldByTemplate(item))}
           {renderCopyRow('Headers', 'Header', headersPack.display, headersPack.copy)}
-        </Collapse.Panel>
+        </YakitCollapse.YakitPanel>
       </YakitCollapse>
     </div>
   )

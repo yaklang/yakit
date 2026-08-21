@@ -269,7 +269,10 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             label={
               <>
                 同步意图识别
-                <Tooltip overlayClassName={styles['form-info-icon-tooltip']} title={'开启后回答精度更高，但速度会变慢'}>
+                <Tooltip
+                  classNames={{ root: styles['form-info-icon-tooltip'] }}
+                  title={'开启后回答精度更高，但速度会变慢'}
+                >
                   <OutlineInformationcircleIcon className={styles['info-icon']} />
                 </Tooltip>
               </>
@@ -299,7 +302,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
       }
       onVisibleChange={onVisibleChange}
       trigger={'click'}
-      destroyTooltipOnHide={true}
+      destroyOnHidden={true}
     >
       {children}
     </YakitPopover>

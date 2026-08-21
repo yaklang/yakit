@@ -1,5 +1,4 @@
 @use '../assets/global.scss' as global;
-@use '../theme/componentsTheme/form.scss';
 @use '../theme/componentsTheme/dropdown.scss';
 @use '../theme/componentsTheme/tooltip.scss';
 @use '../theme/componentsTheme/modal.scss';
@@ -11,12 +10,19 @@
 @use '../theme/componentsTheme/slider.scss';
 @use '../theme/componentsTheme/progress.scss';
 @use '../theme/componentsTheme/menu.scss';
-@use '../theme/componentsTheme/PageHeader.scss';
 @use '../theme/componentsTheme/card.scss';
 @use '../theme/componentsTheme/result.scss';
 @use '../theme/componentsTheme/alert.scss';
 @use '../theme/componentsTheme/divider.scss';
 @use '../theme/componentsTheme/typography.scss';
+@use '../theme/componentsTheme/raido.scss';
+@use '../theme/componentsTheme/space.scss';
+@use '../theme/componentsTheme/collapse.scss';
+@use '../theme/componentsTheme/datepicker.scss';
+@use '../theme/componentsTheme/tree.scss';
+@use '../theme/componentsTheme/table.scss';
+@use '../theme/componentsTheme/upload.scss';
+@use '../theme/componentsTheme/tag.scss';
 
 // typography
 body {
@@ -24,6 +30,11 @@ body {
   color: var(--Colors-Use-Neutral-Text-1-Title);
   background-color: var(--Colors-Use-Neutral-Bg);
   overflow: hidden;
+  font-size: 14px;
+  line-height: 1.5715;
+  font-family: var(--ant-font-family);
+  font-variant: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
 a {

@@ -11,12 +11,17 @@
     .ant-input:has(+ .ant-input-group-addon) {
       color: var(--Colors-Use-Neutral-Text-1-Title);
     }
-    .ant-input-group {
-      display: flex;
-    }
     .ant-input-group-wrapper {
       padding: 0 !important;
+      height: auto !important;
+      width: 100%;
       background: var(--Colors-Use-Basic-Background);
+    }
+
+    .ant-input-group > .ant-input {
+      height: 28px;
+      padding: 6px 12px;
+      font-size: 12px;
     }
 
     .ant-input-group-addon {
@@ -24,7 +29,15 @@
       border-color: var(--Colors-Use-Neutral-Border);
       background: var(--Colors-Use-Neutral-Bg);
       color: var(--Colors-Use-Neutral-Text-1-Title);
-      width: auto;
+      width: 1%;
+      white-space: nowrap;
+      vertical-align: middle;
+      text-align: center;
+      line-height: 1;
+
+      > * {
+        vertical-align: middle;
+      }
     }
 
     .ant-input-group > .ant-input:first-child,
@@ -38,10 +51,7 @@
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
       min-width: 24px;
-      padding: 0 4px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      padding: 0 8px;
       color: var(--Colors-Use-Neutral-Text-1-Title);
     }
 
@@ -54,9 +64,14 @@
     .ant-input:hover {
       border-color: var(--Colors-Use-Main-Hover);
     }
-    .ant-input::placeholder {
+    .ant-input::placeholder,
+    .ant-input-affix-wrapper > input.ant-input::placeholder {
       color: var(--Colors-Use-Neutral-Disable);
       opacity: 1;
+    }
+    .ant-input-prefix,
+    .ant-input-suffix {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
     .ant-input-affix-wrapper {
       padding: 0 8px;
@@ -122,16 +137,36 @@
 // ========================== middle ==========================
 
 .yakit-input-middle {
-  height: 28px;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 12px;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-  border-color: var(--Colors-Use-Neutral-Border);
-  :global {
-    .ant-input {
-      font-size: 12px;
-      height: 26px;
+  &:global(.ant-input-group-wrapper) {
+    height: auto;
+    padding: 0;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    border-color: var(--Colors-Use-Neutral-Border);
+
+    :global {
+      .ant-input-group > .ant-input {
+        font-size: 12px;
+        height: 28px;
+        padding: 6px 12px;
+      }
+    }
+  }
+
+  &:not(:global(.ant-input-group-wrapper)) {
+    height: 28px;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    border-color: var(--Colors-Use-Neutral-Border);
+
+    :global {
+      .ant-input {
+        font-size: 12px;
+        height: 26px;
+      }
     }
   }
 }
@@ -149,14 +184,30 @@
 }
 
 .yakit-input-small {
-  height: 24px;
-  padding: 3px 8px;
-  font-size: 12px;
-  line-height: 16px;
+  &:global(.ant-input-group-wrapper) {
+    height: auto;
+    padding: 0;
 
-  :global {
-    .ant-input {
-      height: 24px;
+    :global {
+      .ant-input-group > .ant-input {
+        height: 24px;
+        padding: 3px 8px;
+        font-size: 12px;
+        line-height: 16px;
+      }
+    }
+  }
+
+  &:not(:global(.ant-input-group-wrapper)) {
+    height: 24px;
+    padding: 3px 8px;
+    font-size: 12px;
+    line-height: 16px;
+
+    :global {
+      .ant-input {
+        height: 24px;
+      }
     }
   }
 }
@@ -167,12 +218,26 @@
 }
 
 .yakit-input-large {
-  height: 32px;
-  font-size: 14px;
+  &:global(.ant-input-group-wrapper) {
+    height: auto;
+    padding: 0;
 
-  :global {
-    .ant-input {
-      font-size: 14px;
+    :global {
+      .ant-input-group > .ant-input {
+        height: 32px;
+        font-size: 14px;
+      }
+    }
+  }
+
+  &:not(:global(.ant-input-group-wrapper)) {
+    height: 32px;
+    font-size: 14px;
+
+    :global {
+      .ant-input {
+        font-size: 14px;
+      }
     }
   }
 }
@@ -189,6 +254,9 @@
   --search-border-hover-color: var(--Colors-Use-Main-Hover);
   --search-border-focus-color: var(--Colors-Use-Main-Pressed);
 
+  // antd 5 搜索按钮高度走 --ant-control-height（默认 32），必须收到 Yakit 搜索框高度
+  --ant-control-height: 24px;
+
   border-radius: 4px;
   height: 24px;
 
@@ -204,15 +272,32 @@
     .ant-input-affix-wrapper {
       padding: 0 8px;
       height: 24px;
+      vertical-align: top;
       .ant-input {
         height: 100%;
       }
     }
 
-    .ant-btn-primary {
+    .ant-input-search > .ant-input-group > .ant-input-affix-wrapper:not(:last-child) {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .ant-input-search > .ant-input-group > .ant-input-affix-wrapper,
+    .ant-input-search > .ant-input-group > .ant-input-group-addon {
+      vertical-align: top;
+    }
+
+    .ant-btn-variant-solid {
+      color: var(--Colors-Use-Main-On-Primary);
       border-color: var(--search-border-color);
       background-color: var(--search-background-color);
       background: var(--search-background-color);
+    }
+
+    .ant-btn-variant-solid:not(:disabled):not(.ant-btn-disabled):hover {
+      color: var(--Colors-Use-Main-On-Primary);
+      background-color: var(--Colors-Use-Main-Hover);
     }
 
     .ant-input-search .ant-input:hover,
@@ -242,8 +327,12 @@
       box-shadow: none;
     }
 
+    .ant-input-search .ant-input-group-addon,
     .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child {
       left: 0;
+      top: 0;
+      padding: 0;
+      vertical-align: top;
       background: var(--Colors-Use-Basic-Background);
     }
 
@@ -255,24 +344,39 @@
     //     // color: var(--Colors-Use-Neutral-Text-3-Secondary);
     //     // background-color: var(--Colors-Use-Neutral-Disable);
     // }
-    .ant-input::placeholder {
+    .ant-input::placeholder,
+    .ant-input-affix-wrapper > input.ant-input::placeholder {
       color: var(--Colors-Use-Neutral-Disable);
       opacity: 1;
     }
+    .ant-input-prefix,
+    .ant-input-suffix {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
 
     .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child .ant-input-search-button {
+      margin-right: 0;
       border-radius: 0 4px 4px 0;
       border: 0;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      padding: 0;
+      color: var(--Colors-Use-Main-On-Primary);
+
+      .ant-btn-icon,
+      .anticon,
+      .anticon-search,
+      svg {
+        color: var(--Colors-Use-Main-On-Primary);
+      }
     }
 
     .ant-input-group-addon {
       border-radius: 4px;
     }
 
-    .ant-btn-primary {
+    .ant-btn-variant-solid {
       padding: 0;
       text-shadow: none;
       box-shadow: none;
@@ -281,6 +385,7 @@
       border-top-left-radius: 4px;
       border-bottom-left-radius: 4px;
     }
+    .ant-input-search-button .ant-btn-icon,
     .ant-input-search-button .anticon-search {
       height: 16px;
     }
@@ -308,12 +413,19 @@
       font-size: 11px;
     }
 
-    .ant-input-search-button {
+    .ant-input-search-button.ant-btn,
+    .ant-input-search-button.ant-btn-icon-only {
       width: 24px;
+      min-width: 24px;
       height: 24px;
+      min-height: 24px;
+      padding: 0;
     }
 
-    .ant-btn-primary {
+    .ant-btn-primary,
+    .ant-btn-color-primary,
+    .ant-input-search-button {
+      .ant-btn-icon,
       svg {
         width: 16px;
         height: 16px;
@@ -329,40 +441,77 @@
 
 // ========================== search-small ==========================
 .yakit-search-wrapper-small {
-  height: 20px;
+  --yakit-search-height: 20px;
+  --ant-control-height: 20px;
+  height: var(--yakit-search-height);
+
   :global {
-    .ant-input-wrapper {
-      display: inline-flex;
-      height: 20px;
+    .ant-input-group-wrapper,
+    .ant-input-group {
+      height: 100%;
     }
+
+    .ant-input-search > .ant-input-group > .ant-input-affix-wrapper:not(:last-child),
+    .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child {
+      height: var(--yakit-search-height);
+      box-sizing: border-box;
+    }
+
+    .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child {
+      left: 0;
+      top: 0;
+    }
+
     .ant-input-affix-wrapper {
       padding: 0 8px;
-      height: 20px;
-      width: calc(100% - 20px);
-      .ant-input {
-        height: 18px;
+      vertical-align: top;
+
+      > .ant-input {
+        height: 100%;
+        padding: 0;
+        font-size: 11px;
+        line-height: calc(var(--yakit-search-height) - 2px);
       }
     }
-    .ant-input-search-button .anticon-search {
-      height: 12px;
+
+    .ant-input-search > .ant-input-group > .ant-input-group-addon:last-child .ant-input-search-button {
+      width: var(--yakit-search-height);
+      min-width: var(--yakit-search-height);
+      height: var(--yakit-search-height);
+      min-height: var(--yakit-search-height);
     }
   }
 }
 
 .yakit-search-small {
   :global {
-    .ant-input {
-      height: 20px;
-      padding: 3px 8px;
+    .ant-input-affix-wrapper > input.ant-input {
+      height: 100%;
+      padding: 0;
       font-size: 11px;
     }
 
-    .ant-input-search-button {
+    .ant-input-search-button.ant-btn,
+    .ant-input-search-button.ant-btn-icon-only {
       width: 20px;
+      min-width: 20px;
       height: 20px;
+      min-height: 20px;
+      padding: 0;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     }
 
+    .ant-input-search-button .ant-btn-icon,
     .anticon-search {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+
       svg {
         width: 12px;
         height: 12px;
@@ -371,13 +520,16 @@
 
     .ant-input-group-addon {
       height: 20px;
-      line-height: 20px;
+      padding: 0;
+      line-height: 1;
+      vertical-align: top;
     }
   }
 }
 
 // ========================== search-large ==========================
 .yakit-search-wrapper-large {
+  --ant-control-height: 28px;
   height: 28px;
   :global {
     .ant-input-affix-wrapper {
@@ -398,9 +550,13 @@
       font-size: 11px;
     }
 
-    .ant-input-search-button {
+    .ant-input-search-button.ant-btn,
+    .ant-input-search-button.ant-btn-icon-only {
       width: 28px;
+      min-width: 28px;
       height: 28px;
+      min-height: 28px;
+      padding: 0;
     }
 
     .anticon-search {
@@ -419,6 +575,7 @@
 
 // ========================== search-maxLarge ==========================
 .yakit-search-wrapper-maxLarge {
+  --ant-control-height: 32px;
   height: 32px;
   :global {
     .ant-input-affix-wrapper {
@@ -439,9 +596,13 @@
       font-size: 11px;
     }
 
-    .ant-input-search-button {
+    .ant-input-search-button.ant-btn,
+    .ant-input-search-button.ant-btn-icon-only {
       width: 32px;
+      min-width: 32px;
       height: 32px;
+      min-height: 32px;
+      padding: 0;
     }
 
     .anticon-search {

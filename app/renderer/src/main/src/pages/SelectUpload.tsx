@@ -240,7 +240,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
           onChange={(value, selectedOptions) => {
             if (selectedOptions.length > 0 && selectedOptions[selectedOptions.length - 1].Type === 'project') {
               const item = selectedOptions[selectedOptions.length - 1]
-              setCascaderValue({ Id: item.Id, DatabasePath: item.DatabasePath })
+              setCascaderValue({ Id: String(item.Id), DatabasePath: item.DatabasePath })
             }
           }}
           suffixIcon={<OutlineChevrondownIcon style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />}

@@ -50,11 +50,18 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
     yakitEngine
       .getRemoteAuthAll()
       .then((e: YakitAuthInfo[]) => {
+        const seen = new Set<string>()
         setAuths(
-          e.map((item) => {
-            item.tls = !!item.tls
-            return item
-          }),
+          e
+            .map((item) => {
+              item.tls = !!item.tls
+              return item
+            })
+            .filter((item) => {
+              if (seen.has(item.name)) return false
+              seen.add(item.name)
+              return true
+            }),
         )
       })
       .catch(() => {})
@@ -371,9 +378,9 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
 
   return (
     <YakitPopover
-      overlayClassName={styles['pem-example-popover']}
+      classNames={{ root: styles['pem-example-popover'] }}
       content={content}
-      onVisibleChange={(visible) => {
+      onOpenChange={(visible) => {
         if (setShow) setShow(visible)
       }}
     >
@@ -422,9 +429,9 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
 
   return (
     <YakitPopover
-      overlayClassName={styles['pem-example-popover']}
+      classNames={{ root: styles['pem-example-popover'] }}
       content={content}
-      onVisibleChange={(visible) => {
+      onOpenChange={(visible) => {
         if (setShow) setShow(visible)
       }}
     >

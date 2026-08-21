@@ -1,0 +1,100 @@
+/**
+ * 把 antd 5 cssVar 挂到 html，弹出层（Modal/Drawer/Popover 等 portal 挂 body）也能跟随亮暗色。
+ *
+ * 职责分工（与 antdTheme.ts 的关系）：
+ * - antdTheme.ts：通过 ConfigProvider theme.token 以 JS 注入 antd 运行时 Token，驱动 antd 5 组件默认样式；
+ * - 本文件：在 html 上显式声明 --ant-* CSS 变量，用于 cssVar 模式下 portal 弹出层、
+ *   以及 Form 等独立场景（Form token 默认只挂在 .yakit.ant-form-css-var 上会丢失）的兜底。
+ *
+ * 两者的颜色映射语义重叠，调整主题色时需同步修改。主渲染端与 Link 端各一份，内容需保持一致。
+ */
+html {
+  --ant-color-primary: var(--Colors-Use-Main-Primary);
+  --ant-color-primary-hover: var(--Colors-Use-Main-Hover);
+  --ant-color-primary-active: var(--Colors-Use-Main-Pressed);
+  --ant-color-primary-bg: var(--Colors-Use-Main-Bg);
+  --ant-color-success: var(--Colors-Use-Success-Primary);
+  --ant-color-success-bg: var(--Colors-Use-Success-Bg);
+  --ant-color-success-border: var(--Colors-Use-Success-Border);
+  --ant-color-warning: var(--Colors-Use-Warning-Primary);
+  --ant-color-warning-bg: var(--Colors-Use-Warning-Bg);
+  --ant-color-warning-border: var(--Colors-Use-Warning-Border);
+  --ant-color-warning-hover: var(--Colors-Use-Warning-Hover);
+  --ant-color-warning-text: var(--Colors-Use-Warning-Primary);
+  --ant-color-error: var(--Colors-Use-Error-Primary);
+  --ant-color-error-hover: var(--Colors-Use-Error-Hover);
+  --ant-color-info: var(--Colors-Use-Blue-Primary);
+  --ant-color-info-bg: var(--Colors-Use-Blue-Bg);
+  --ant-color-info-border: var(--Colors-Use-Blue-Border);
+  --ant-tag-default-bg: var(--Colors-Use-Neutral-Bg-Hover);
+  --ant-tag-default-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  --ant-color-text-light-solid: var(--Colors-Use-Main-On-Primary);
+  --ant-color-white: var(--Colors-Use-Main-On-Primary);
+  --ant-badge-color: var(--Colors-Use-Error-Primary);
+  --ant-badge-color-hover: var(--Colors-Use-Error-Hover);
+  --ant-badge-text-color: var(--Colors-Use-Error-On-Primary);
+  --ant-color-text: var(--Colors-Use-Neutral-Text-1-Title);
+  --ant-color-text-secondary: var(--Colors-Use-Neutral-Text-2-Primary);
+  --ant-color-text-tertiary: var(--Colors-Use-Neutral-Text-3-Secondary);
+  --ant-color-text-quaternary: var(--Colors-Use-Neutral-Text-4-Help-text);
+  --ant-color-text-heading: var(--Colors-Use-Neutral-Text-1-Title);
+  --ant-color-text-description: var(--Colors-Use-Neutral-Text-3-Secondary);
+  --ant-color-text-disabled: var(--Colors-Use-Neutral-Disable);
+  --ant-color-text-placeholder: var(--Colors-Use-Neutral-Disable);
+  --ant-color-bg-container: var(--Colors-Use-Basic-Background);
+  --ant-color-bg-elevated: var(--Colors-Use-Basic-Background);
+  --ant-color-bg-layout: var(--Colors-Use-Neutral-Bg);
+  --ant-color-bg-spotlight: var(--Colors-Use-Neutral-Text-1-Title);
+  --ant-color-border: var(--Colors-Use-Neutral-Border);
+  --ant-color-border-secondary: var(--Colors-Use-Neutral-Border);
+  --ant-color-split: var(--Colors-Use-Neutral-Border);
+  --ant-color-fill: var(--Colors-Use-Neutral-Bg-Hover);
+  --ant-color-fill-secondary: var(--Colors-Use-Neutral-Bg-Hover);
+  --ant-color-fill-tertiary: var(--Colors-Use-Neutral-Bg);
+  --ant-color-fill-quaternary: var(--Colors-Use-Neutral-Bg);
+  --ant-color-icon: var(--Colors-Use-Neutral-Text-3-Secondary);
+  --ant-color-icon-hover: var(--Colors-Use-Neutral-Text-1-Title);
+  --ant-control-item-bg-hover: var(--Colors-Use-Neutral-Bg-Hover);
+  --ant-control-item-bg-active: var(--Colors-Use-Main-Bg);
+  --ant-control-outline: var(--Colors-Use-Main-Focus);
+  --ant-color-link: var(--Colors-Use-Main-Primary);
+  --ant-color-link-hover: var(--Colors-Use-Main-Hover);
+  --ant-color-link-active: var(--Colors-Use-Main-Pressed);
+  --ant-color-error-border: var(--Colors-Use-Error-Border);
+  --ant-color-error-bg: var(--Colors-Use-Error-Bg);
+  --ant-box-shadow: 0 8px 16px 0 var(--Colors-Use-Basic-Shadow);
+  --ant-box-shadow-secondary: 0 8px 16px 0 var(--Colors-Use-Basic-Shadow);
+  --ant-font-size: 14px;
+  --ant-font-size-sm: 12px;
+  --ant-font-size-lg: 16px;
+  --ant-line-height: 1.5714285714285714;
+  --ant-font-height: 22px;
+  /* Form 组件 token 默认只挂在 .yakit.ant-form-css-var 上，独立 Form.Item / 抽屉里会丢，label 就会继承 12px */
+  --ant-form-font-size: 14px;
+  --ant-form-label-font-size: 14px;
+  --ant-form-label-height: 32px;
+  --ant-form-label-color: var(--Colors-Use-Neutral-Text-1-Title);
+  --ant-form-label-required-mark-color: var(--Colors-Use-Error-Primary);
+  --ant-form-item-margin-bottom: 16px;
+  --ant-form-vertical-label-padding: 0 0 8px;
+  --ant-form-label-colon-margin-inline-start: 2px;
+  --ant-form-label-colon-margin-inline-end: 8px;
+  /* antd 5 Popover inner 默认 12px，对齐 antd 4 / Yakit 筛选项弹出层 */
+  --ant-popover-inner-padding: 0px;
+  --ant-switch-handle-bg: var(--Colors-Use-Basic-White);
+  --ant-font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+
+  font-family: var(--ant-font-family);
+  font-variant: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+body,
+.yakit {
+  font-family: var(--ant-font-family);
+  font-variant: tabular-nums;
+  font-feature-settings: 'tnum';
+}

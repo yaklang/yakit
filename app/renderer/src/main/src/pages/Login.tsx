@@ -105,7 +105,7 @@ const Login: React.FC<LoginProp> = (props) => {
       closable={false}
       footer={null}
       onCancel={() => props.onCancel()}
-      bodyStyle={{ padding: 0 }}
+      styles={{ body: { padding: 0 } }}
       width={409}
       style={{ top: '25%' }}
     >

@@ -1,7 +1,7 @@
 import type React from 'react'
 import { type ReactNode } from 'react'
 import { Dropdown, type DropDownProps } from 'antd'
-import '@ant-design/compatible/assets/index.css'
+import { normalizeDropdownProps } from '@/utils/antdCompat'
 import { BaseMenu, type BaseMenuProps } from './BaseMenu'
 
 import './DropdownMenu.css'
@@ -20,11 +20,12 @@ export interface DropdownMenuProps {
 }
 export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
   const {
-    dropdown: { overlay, ...restDropdown } = {},
+    dropdown: { popupRender, ...restDropdown } = {},
     menu: { data = [], onClick: onclick, ...restMenu } = {},
     onClick,
     children,
   } = props
+  const dropdownProps = normalizeDropdownProps(restDropdown)
 
   const Menus = () => {
     return (
@@ -32,7 +33,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
         data={data || []}
         {...restMenu}
         onClick={(e) => {
-          const { item, key, keyPath, domEvent } = e
+          const { key, keyPath, domEvent } = e
           if (onClick) onClick(key)
           if (onclick) onclick(e)
         }}
@@ -41,7 +42,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
   }
 
   return (
-    <Dropdown overlay={overlay ? overlay : Menus} {...restDropdown}>
+    <Dropdown popupRender={(originNode) => (popupRender ? popupRender(originNode) : Menus())} {...dropdownProps}>
       {children ? children : <></>}
     </Dropdown>
   )

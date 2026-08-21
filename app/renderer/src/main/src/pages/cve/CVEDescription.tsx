@@ -7,7 +7,6 @@ import { useCreation } from 'ahooks'
 import moment from 'moment'
 import React, { type ReactNode } from 'react'
 const { ipcRenderer } = window.require('electron')
-const { TabPane } = Tabs
 
 export const CVEDescription = React.memo(
   ({
@@ -150,16 +149,18 @@ export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) 
         size="small"
         type="card"
         className={classNames(styles['cwe-tabs'], 'main-content-tabs', 'yakit-layout-tabs')}
-        // className={styles["cwe-tabs"]}
         tabBarExtraContent={tabBarExtraContent}
-      >
-        {data.map((i: CWEDetail) => (
-          <TabPane tab={i.CWE} key={i.CWE}>
-            <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
-            <div className={styles['no-more']}>暂无更多</div>
-          </TabPane>
-        ))}
-      </Tabs>
+        items={data.map((i: CWEDetail) => ({
+          key: i.CWE,
+          label: i.CWE,
+          children: (
+            <>
+              <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
+              <div className={styles['no-more']}>暂无更多</div>
+            </>
+          ),
+        }))}
+      />
     </>
   )
 })

@@ -28,7 +28,7 @@ import {
 } from '../../HTTPFuzzerPage'
 import styles from './HTTPFuzzerPageTable.module.scss'
 import { HollowLightningBoltIcon } from '@/assets/newIcon'
-import { Alert, Divider, Tooltip } from 'antd'
+import { Divider, Tooltip } from 'antd'
 import { ExtractionResultsContent } from '../../MatcherAndExtractionCard/MatcherAndExtractionCard'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -48,6 +48,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { ExportDataType } from '@/utils/exporter'
 import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from './extractedFilter'
 import { useChunkAutoScrollToBottom } from '../../hooks/useAutoScrollToBottom'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1062,7 +1063,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     refreshMode={'debounce'}
                     refreshRate={50}
                   />
-                  <Alert
+                  <YakitAlert
                     message={data.length >= fuzzerTableMaxData ? moreLimtAlertMsg : noMoreLimtAlertMsg}
                     type="warning"
                     style={{ margin: '2px 0' }}

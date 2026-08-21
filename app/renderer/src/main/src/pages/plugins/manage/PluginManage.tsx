@@ -37,7 +37,7 @@ import {
 import type { API } from '@/services/swagger/resposeType'
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { Form, Progress, Tooltip } from 'antd'
+import { Form, Progress, Tooltip, Upload } from 'antd'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -75,7 +75,6 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { UpdateGroupList, type UpdateGroupListItem } from '@/pages/pluginHub/group/UpdateGroupList'
 import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import Dragger from 'antd/lib/upload/Dragger'
 import { PropertyIcon } from '@/pages/payloadManager/icon'
 import type { RcFile } from 'antd/lib/upload'
 import { RemoteGV } from '@/yakitGV'
@@ -1277,17 +1276,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                           })
                         ) : (
                           <YakitPopover
-                            overlayClassName={styles['hub-outer-list-group-popover']}
+                            classNames={{ root: styles['hub-outer-list-group-popover'] }}
                             content={
                               <div className={styles['hub-outer-list-filter']}>
                                 {showGroupList.map((group) => {
                                   return (
-                                    <Tooltip
-                                      title={group}
-                                      placement="top"
-                                      overlayClassName="plugins-tooltip"
-                                      key={group}
-                                    >
+                                    <Tooltip title={group} placement="top" key={group}>
                                       <YakitTag closable onClose={() => onRemoveGroup(group)}>
                                         {group}
                                       </YakitTag>
@@ -1297,7 +1291,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                               </div>
                             }
                             trigger="hover"
-                            onVisibleChange={setGroupTagShow}
+                            onOpenChange={setGroupTagShow}
                             placement="bottom"
                           >
                             <div
@@ -1316,8 +1310,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                       </div>
                     )}
                     <YakitPopover
-                      visible={addGroupVisible}
-                      overlayClassName={styles['add-group-popover']}
+                      open={addGroupVisible}
+                      classNames={{ root: styles['add-group-popover'] }}
                       placement="bottomRight"
                       trigger="click"
                       content={
@@ -1328,7 +1322,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                           onCanle={() => setAddGroupVisible(false)}
                         ></UpdateGroupList>
                       }
-                      onVisibleChange={(visible) => {
+                      onOpenChange={(visible) => {
                         setAddGroupVisible(visible)
                       }}
                     >
@@ -1473,7 +1467,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         <YakitModal
           title={t('PluginManage.importGroupTitle')}
           closable={true}
-          visible={importGroupVisible}
+          open={importGroupVisible}
           maskClosable={false}
           centered
           onCancel={() => setImportGroupVisible(false)}
@@ -1513,7 +1507,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         <YakitModal
           title={t('PluginManage.uploadPluginLibrary')}
           closable={true}
-          visible={uploadPluginLibraryVisible}
+          open={uploadPluginLibraryVisible}
           maskClosable={false}
           onCancel={() => setUploadPluginLibraryVisible(false)}
           footer={null}
@@ -1635,7 +1629,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
       centered={true}
       closable={true}
       keyboard={false}
-      visible={visible}
+      open={visible}
       cancelButtonProps={{ loading: submitLoading }}
       confirmLoading={submitLoading}
       onCancel={cancel}
@@ -1651,7 +1645,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
         >
           <YakitSelect
             placeholder={t('PluginManage.searchUsername')}
-            showArrow={false}
+            suffixIcon={null}
             showSearch={true}
             filterOption={false}
             allowClear={true}
@@ -1723,7 +1717,7 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
       closable={true}
       maskClosable={false}
       keyboard={false}
-      visible={visible}
+      open={visible}
       onCancel={setVisible}
       onOk={onSubmit}
       bodyStyle={{ padding: 0 }}
@@ -1733,7 +1727,6 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
           type === 'nopass' && null
           // <div className={styles["no-pass-kind"]}>
           //     <Radio
-          //         className='plugins-radio-wrapper'
           //         checked={kind === "body"}
           //         onClick={(e) => {
           //             if (kind === "body") return
@@ -1743,7 +1736,6 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
           //         内容不通过
           //     </Radio>
           //     <Radio
-          //         className='plugins-radio-wrapper'
           //         checked={kind === "extra"}
           //         onClick={(e) => {
           //             if (kind === "extra") return
@@ -1817,7 +1809,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
     <div className={styles['upload-yakit-ee']}>
       <YakitSpin spinning={loading}>
         <div className={styles['upload-dragger-box']}>
-          <Dragger
+          <Upload.Dragger
             className={styles['upload-dragger']}
             multiple={false}
             maxCount={1}
@@ -1888,7 +1880,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                 </div>
               )}
             </div>
-          </Dragger>
+          </Upload.Dragger>
         </div>
       </YakitSpin>
       <div style={{ textAlign: 'right', marginTop: 16 }}>
@@ -1937,7 +1929,7 @@ const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
   return (
     <div className={styles['upload-yakit-ee']}>
       <div className={styles['upload-dragger-box']}>
-        <Dragger
+        <Upload.Dragger
           className={styles['upload-dragger']}
           multiple={false}
           maxCount={1}
@@ -1971,7 +1963,7 @@ const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
               </div>
             )}
           </div>
-        </Dragger>
+        </Upload.Dragger>
       </div>
       <div style={{ textAlign: 'right', marginTop: 16 }}>
         <YakitButton className={styles['btn-style']} type="outline2" style={{ marginRight: 8 }} onClick={onClose}>

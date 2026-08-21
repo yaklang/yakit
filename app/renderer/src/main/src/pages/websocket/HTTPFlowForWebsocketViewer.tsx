@@ -62,12 +62,14 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
     <Card
       size={'small'}
       className={styles['hTTPFlow-websocket-viewer']}
-      headStyle={{
-        height: 32,
-        minHeight: 32,
-        boxSizing: 'content-box',
+      styles={{
+        header: {
+          height: 32,
+          minHeight: 32,
+          boxSizing: 'content-box',
+        },
+        body: { padding: 0, width: '100%', height: 'calc(100% - 32px)' },
       }}
-      bodyStyle={{ padding: 0, width: '100%', height: 'calc(100% - 32px)' }}
       title={
         <div className={styles['hTTPFlow-websocket-viewer-title-wrap']}>
           <div className={styles['hTTPFlow-websocket-viewer-title-wrap-label']}>Websocket</div>

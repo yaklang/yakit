@@ -496,8 +496,8 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
           </Form>
         </div>
       }
-      visible={visible}
-      onVisibleChange={onSetConfig}
+      open={visible}
+      onOpenChange={onSetConfig}
       placement="bottomRight"
     >
       <YakitButton type="text2" icon={<OutlineCogIcon />} />
@@ -1274,8 +1274,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                   title={t('AILocalModelListItem.disableConfirm', { name: item.Name })}
                   onConfirm={onStop}
                   onCancel={() => setStopVisible(false)}
-                  visible={stopVisible}
-                  onVisibleChange={setStopVisible}
+                  open={stopVisible}
+                  onOpenChange={setStopVisible}
                   trigger={'click'}
                   okButtonProps={{ loading: stopLoading }}
                 >
@@ -1299,8 +1299,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                 dropdown={{
                   trigger: ['click', 'contextMenu'],
                   placement: 'bottomLeft',
-                  visible: visible,
-                  onVisibleChange: setVisible,
+                  open: visible,
+                  onOpenChange: setVisible,
                 }}
               >
                 <YakitButton

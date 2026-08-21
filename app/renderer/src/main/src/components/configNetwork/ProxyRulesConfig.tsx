@@ -1,6 +1,6 @@
 import type React from 'react'
 import { memo, useMemo, useState } from 'react'
-import { Tooltip, Form, Divider, Table, Modal } from 'antd'
+import { Tooltip, Form, Divider, Table } from 'antd'
 import {
   OutlinePencilaltIcon,
   OutlineQuestionmarkcircleIcon,
@@ -21,6 +21,7 @@ import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getModalApi } from '@/utils/notification'
 import { YakitPopconfirm } from '../yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { useProxy } from '@/hook/useProxy'
 import { YakitSideTab } from '../yakitSideTab/YakitSideTab'
@@ -141,7 +142,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         handleDelete()
         return
       }
-      Modal.confirm({
+      getModalApi().confirm({
         title: t('ProxyConfig.delete_point_title'),
         content: t('ProxyConfig.delete_point_tips', { i: relatedRoutes.length }),
         okText: t('YakitButton.delete'),
@@ -179,7 +180,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         handleToggleDisable()
         return
       }
-      Modal.confirm({
+      getModalApi().confirm({
         title: t('ProxyConfig.disable_point_title'),
         content: t('ProxyConfig.disable_point_tips', { i: relatedRoutes.length }),
         okText: t('YakitButton.disable'),
@@ -406,7 +407,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
             ? `ProxyConfig.${editId ? 'edit_point' : 'add_point'}`
             : `ProxyConfig.${editId ? 'edit_rule' : 'add_rule'}`,
         )}
-        visible={modalVisible}
+        open={modalVisible}
         onOk={handleOk}
         maskClosable={false}
         onCancel={handleCancel}
@@ -506,7 +507,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       placement="bottom"
       onClose={onClose}
       height="70%"
@@ -521,7 +522,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         </div>
       }
       maskClosable={false}
-      className={styles['proxy-rules-config-overlay']}
+      rootClassName={styles['proxy-rules-config-overlay']}
     >
       {drawerContent}
     </YakitDrawer>
@@ -611,7 +612,9 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
             size="large"
             tip={t('ProxyConfig.detectionLoading')}
             wrapperClassName={styles['proxy-test-modal-loading']}
-          />
+          >
+            <div style={{ minHeight: 100 }} /> {/* 占位 */}
+          </YakitSpin>
         )
       case 'success':
         return (
@@ -662,7 +665,7 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
       )}
       <YakitModal
         title={t('ProxyConfig.proxyDetection')}
-        visible={visible}
+        open={visible}
         onCancel={onCancel}
         footer={null}
         width={600}

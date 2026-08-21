@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Form, notification } from 'antd'
+import { Form } from 'antd'
 import { failed, info, success, yakitFailed, yakitNotify } from '../../utils/notification'
 import type { MITMFilterSchema } from './MITMServerStartForm/MITMFilters'
 import type { QueryYakScriptRequest } from '../invoker/schema'
@@ -317,7 +317,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         DisableTrafficGuard: disableTrafficGuard,
       }
       return grpcMITMStartCall(params, true).catch((e: any) => {
-        notification['error']({ message: t('MITMPage.startMitmFailed') + e })
+        yakitNotify('error', t('MITMPage.startMitmFailed') + e)
       })
     },
   )
@@ -1480,12 +1480,12 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     <>
       <YakitModal
         type="white"
-        visible={visible}
+        open={visible}
         onCancel={onCancel}
         width={getLoadModeInfo('width') || 680}
         closable={true}
         maskClosable={false}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         title={
           !loadPluginMode ? (
             t('ImportLocalPlugin.pluginImportMethod')

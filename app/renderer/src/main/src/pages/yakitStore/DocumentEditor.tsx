@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useState } from 'react'
-import { Button, PageHeader } from 'antd'
+import { Button } from 'antd'
+import { YakitPageHeader } from '../../components/YakitPageHeader'
 import type { YakScript } from '../invoker/schema'
 import MDEditor from '@uiw/react-md-editor'
 import { success } from '../../utils/notification'
@@ -18,7 +19,7 @@ export const DocumentEditor: React.FC<DocumentEditorProp> = (props) => {
 
   return (
     <div>
-      <PageHeader
+      <YakitPageHeader
         title={'编辑/添加模块文档'}
         subTitle={props.yakScript.ScriptName + `[${props.yakScript.Id}]`}
         extra={[

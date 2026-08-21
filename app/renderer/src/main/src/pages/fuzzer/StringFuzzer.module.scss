@@ -83,14 +83,10 @@
 .stringFuzzer-popover {
   width: 600px;
   :global {
-    .ant-popover-inner-content {
-      padding: 4px;
-    }
     .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-arrow {
-      right: 0;
+      .ant-popover-inner-content {
+        padding: 4px;
+      }
     }
     .ant-popover-placement-top,
     .ant-popover-placement-topLeft,
