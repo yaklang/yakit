@@ -4,7 +4,7 @@ import {
   type ChatReferenceMaterialPayload,
   type ChatStream,
 } from '@/pages/ai-re-act/hooks/aiRender'
-import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo, memo } from 'react'
+import { type CSSProperties, type FC, useRef, useEffect, useMemo, memo } from 'react'
 import styles from './AIGroupStreamCard.module.scss'
 import classNames from 'classnames'
 import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
@@ -16,6 +16,9 @@ import AIGroupStreamCardHeard from './aiGroupStreamCardHeard/AIGroupStreamCardHe
 import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
+import { OutlineChevrondownIcon, OutlineThoughtIcon } from '@/assets/icon/outline'
+import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -37,6 +40,7 @@ export const AIGroupStreamNode: FC<{
   const { content } = useTypedStream({
     getContent: () => itemData.data.content,
     getStatus: () => itemData.data.status,
+    disableTyping: itemData.data.NodeId === AI_STREAM_THOUGHT_NODE_ID,
   })
 
   const { getLabelByParams } = useAINodeLabel()
@@ -73,31 +77,86 @@ export const AIGroupStreamNode: FC<{
 
 export const STREAM_MASK_THRESHOLD = 170
 
+const AIGroupThoughtHeader: FC<AIGroupStreamCardHeardWrapperProps> = memo((props) => {
+  const { expand, setExpand, token } = props
+  const { getLabelByParams } = useAINodeLabel()
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  const renderNum = useStore(store, (state) => state.groups[token]?.renderNum)
+  const groupData = useCreation(() => rawData.contents.get(token), [renderNum])
+
+  const nodeLabel = useCreation(() => {
+    if (!groupData) return ''
+    switch (groupData.type) {
+      case AIChatQSDataTypeEnum.STREAM_GROUP:
+        return getLabelByParams(groupData.data?.NodeIdVerbose)
+      default:
+        return ''
+    }
+  }, [renderNum])
+
+  const lastToken = useCreation(() => {
+    if (!groupData) return ''
+    switch (groupData.type) {
+      case AIChatQSDataTypeEnum.STREAM_GROUP:
+        return groupData.data.lastToken
+      default:
+        return ''
+    }
+  }, [renderNum])
+
+  const lastItemRenderNum = useStore(store, (state) => state.items[lastToken]?.renderNum)
+  const streaming = useCreation(() => {
+    const lastItem = rawData.contents.get(lastToken)
+    return lastItem?.type === AIChatQSDataTypeEnum.STREAM && lastItem.data.status !== 'end'
+  }, [lastToken, lastItemRenderNum])
+
+  return (
+    <div className={styles['thought-header']} onClick={() => setExpand((open) => !open)}>
+      <OutlineThoughtIcon className={styles['thought-icon']} />
+      <span className={classNames({ [styles['thought-title-blink']]: streaming })}>{nodeLabel}</span>
+      <OutlineChevrondownIcon
+        className={classNames(styles['thought-chevron'], {
+          [styles['thought-chevron-collapsed']]: !expand,
+        })}
+      />
+    </div>
+  )
+})
+
 const AIGroupStreamCard: FC<{
   token: string
 }> = memo(({ token }) => {
   const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
-  const [expand, setExpand] = useState(true)
+  const store = useCurrentStore()
+  const nodeId = useStore(store, (state) => state.groups[token]?.nodeId)
+  const isThought = nodeId === AI_STREAM_THOUGHT_NODE_ID
+  const [expand, setExpand] = useUiExpand(token, !isThought)
 
   return (
     <div
       className={classNames(styles.container, {
-        [styles['container-focus']]: isFocus,
+        [styles['container-focus']]: isFocus && !isThought,
+        [styles['container-thought']]: isThought,
       })}
       ref={containerRef}
     >
-      <AIGroupStreamCardHeardWrapper expand={expand} setExpand={setExpand} token={token} />
-      <AIGroupStreamCardListWrapper expand={expand} token={token} />
+      {isThought ? (
+        <AIGroupThoughtHeader expand={expand} setExpand={setExpand} token={token} />
+      ) : (
+        <AIGroupStreamCardHeardWrapper expand={expand} setExpand={setExpand} token={token} />
+      )}
+      <AIGroupStreamCardListWrapper expand={expand} token={token} isThought={isThought} />
     </div>
   )
 })
 export default AIGroupStreamCard
 
 const AIGroupStreamCardListWrapper: React.FC<AIGroupStreamCardListWrapperProps> = memo((props) => {
-  const { expand, token } = props
+  const { expand, token, isThought } = props
   const store = useCurrentStore()
   const childrenTokens = useStore(store, (state) => state.groups[token]?.childrenTokens || [])
-  return <AIGroupStreamCardList expand={expand} childrenTokens={childrenTokens} />
+  return <AIGroupStreamCardList expand={expand} childrenTokens={childrenTokens} isThought={isThought} />
 })
 const AIGroupStreamCardHeardWrapper: React.FC<AIGroupStreamCardHeardWrapperProps> = memo((props) => {
   const { expand, setExpand, token } = props

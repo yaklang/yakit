@@ -71,6 +71,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     case AIStreamContentType.TEXT_MARKDOWN:
       return (
         <AIMarkdown
+          token={stream.id}
           referenceNode={referenceNode}
           content={content}
           nodeLabel={nodeLabel}
@@ -103,7 +104,16 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
         />
       )
     default:
-      return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} referenceNode={referenceNode} />
+      return (
+        <AIStreamChatContent
+          token={stream.id}
+          content={content}
+          nodeId={NodeId}
+          nodeIdVerbose={NodeIdVerbose}
+          referenceNode={referenceNode}
+          streaming={streaming}
+        />
+      )
   }
 })
 const TYPE = 'reAct'

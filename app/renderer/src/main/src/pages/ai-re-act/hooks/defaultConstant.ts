@@ -49,6 +49,8 @@ export const DefaultToolResultSummary: Record<string, { wait: string; result: st
 }
 
 /** AI 流式输出中, NodeId 对应展示的内容 */
+export const AI_STREAM_THOUGHT_NODE_ID = 're-act-loop-thought'
+
 const AIStreamNodeIdToLabel: Record<string, { label: string }> = {
   're-act-loop': { label: '推理与行动' },
   'call-forge': { label: '智能应用' },
@@ -69,7 +71,7 @@ const AIStreamNodeIdToLabel: Record<string, { label: string }> = {
   decision: { label: '决策' },
   output: { label: '通用输出' },
   forge: { label: '智能应用' },
-  're-act-loop-thought': { label: '思考' },
+  [AI_STREAM_THOUGHT_NODE_ID]: { label: '思考' },
   're-act-loop-answer-payload': { label: 'AI 响应' },
   'enhance-query': { label: '知识增强' },
 }

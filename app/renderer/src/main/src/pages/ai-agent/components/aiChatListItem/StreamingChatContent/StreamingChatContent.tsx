@@ -3,6 +3,7 @@ import type { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { type FC, memo, useMemo } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
 import { useCreation, useMemoizedFn } from 'ahooks'
+import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import styles from './StreamingChatContent.module.scss'
 
 type SingleStreamProps = {
@@ -23,6 +24,7 @@ export const AIStreamCard: FC<SingleStreamProps> = memo(({ itemData, renderNum, 
   const { content } = useTypedStream({
     getContent: () => getContent(),
     getStatus: () => getStatus(),
+    disableTyping: itemData.data.NodeId === AI_STREAM_THOUGHT_NODE_ID,
   })
 
   const stream = useMemo<ChatStream | null>(() => {

@@ -1,4 +1,6 @@
 @use '../../../../styles/mixin.scss' as mixin;
+@use '../thoughtStream/thoughtStream.mixins.scss' as thought;
+
 .ai-stream-chat-content-wrapper {
   border-radius: 8px;
   // background: var(--Colors-Use-Neutral-Bg-Hover);
@@ -57,4 +59,29 @@
 .tooltip-stream-content {
   max-height: 40vh;
   overflow: auto;
+}
+
+.ai-stream-chat-content-thought {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  @include thought.thought-stream-header;
+
+  .thought-body {
+    @include thought.thought-stream-body;
+  }
+
+  .thought-body-inner {
+    @include thought.thought-stream-body-inner;
+  }
+
+  .thought-body-scroll {
+    @include thought.thought-stream-body-scroll;
+  }
+
+  .thought-body-inner-scroll {
+    @include thought.thought-stream-body-inner-scroll;
+  }
 }
