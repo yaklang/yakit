@@ -7,4 +7,6 @@ export interface AIStreamChatContentProps {
   nodeIdVerbose: AIOutputEvent['NodeIdVerbose']
   referenceNode?: ReactNode
   streaming?: boolean
+  /** 列表项 token，思考折叠态写入 chatStore.uiExpandMap */
+  token?: string
 }

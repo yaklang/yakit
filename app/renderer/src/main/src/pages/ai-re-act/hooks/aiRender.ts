@@ -590,6 +590,12 @@ export interface ChatStoreState {
   /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
   chatTodoListUpdate: number
   currentPlan: CurrentExecTaskTree
+
+  /**
+   * 虚拟列表卡片展开态（纯 UI，不落库）
+   * key 为 token；未出现表示用户未手动改过，组件使用各自默认值
+   */
+  uiExpandMap: Record<string, boolean>
   // #endregion
 
   /** UI上的头部的card横向滚动列表数据 */
@@ -661,9 +667,17 @@ export interface ChatStoreState {
         | 'tasks'
         | 'chatElements'
         | 'chatTodoListUpdate'
+        | 'uiExpandMap'
       >
     >,
   ) => void
+
+  /** 设置指定 token 的展开态（不触发渲染树落库） */
+  setUiExpand: (token: string, expand: boolean) => void
+  /** 切换指定 token 的展开态；map 中无记录时以 defaultExpand 为当前值再取反 */
+  toggleUiExpand: (token: string, defaultExpand: boolean) => void
+  /** 清除指定 token 的展开态记录 */
+  clearUiExpand: (token: string) => void
 
   /**
    * 用持久化渲染树快照整体替换 items/groups/tasks/elements

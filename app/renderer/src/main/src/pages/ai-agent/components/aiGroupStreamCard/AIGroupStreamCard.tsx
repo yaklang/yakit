@@ -4,7 +4,7 @@ import {
   type ChatReferenceMaterialPayload,
   type ChatStream,
 } from '@/pages/ai-re-act/hooks/aiRender'
-import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo, memo } from 'react'
+import { type CSSProperties, type FC, useRef, useEffect, useMemo, memo } from 'react'
 import styles from './AIGroupStreamCard.module.scss'
 import classNames from 'classnames'
 import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
@@ -18,6 +18,7 @@ import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/use
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
 import { OutlineChevrondownIcon } from '@/assets/icon/outline'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -129,7 +130,7 @@ const AIGroupStreamCard: FC<{
   const store = useCurrentStore()
   const nodeId = useStore(store, (state) => state.groups[token]?.nodeId)
   const isThought = nodeId === AI_STREAM_THOUGHT_NODE_ID
-  const [expand, setExpand] = useState(!isThought)
+  const [expand, setExpand] = useUiExpand(token, !isThought)
 
   return (
     <div

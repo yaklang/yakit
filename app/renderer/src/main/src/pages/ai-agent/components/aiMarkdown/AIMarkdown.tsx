@@ -21,15 +21,16 @@ import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import type { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
-  const { content, nodeLabel, className, referenceNode, streaming } = props
+  const { content, nodeLabel, className, referenceNode, streaming, token } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { goAddNotepad } = useGoEditNotepad()
 
   const [type, setType] = useState<'preview' | 'code'>('preview')
-  const [expand, setExpand] = useState<boolean>(true)
+  const [expand, setExpand] = useUiExpand(token || '', true)
   const item: ReportItem = useCreation(() => {
     const value: ReportItem = {
       type: '',

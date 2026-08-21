@@ -61,6 +61,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       chatElements: [],
       chatTodoListUpdate: 0,
       currentPlan: cloneDeep(DefaultCurrentExecTaskTree),
+      uiExpandMap: {},
 
       card: [],
       execFileRecord: new Map(),
@@ -71,6 +72,23 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
       cancelChatLoading: false,
       timelinesLoading: false,
+
+      setUiExpand: (token, expand) =>
+        set((state) => {
+          if (!token) return
+          state.uiExpandMap[token] = expand
+        }),
+      toggleUiExpand: (token, defaultExpand) =>
+        set((state) => {
+          if (!token) return
+          const prev = state.uiExpandMap[token]
+          state.uiExpandMap[token] = prev === undefined ? !defaultExpand : !prev
+        }),
+      clearUiExpand: (token) =>
+        set((state) => {
+          if (!token) return
+          delete state.uiExpandMap[token]
+        }),
 
       updateStateCount: (type) =>
         set((state) => {
@@ -303,11 +321,19 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
             }
           }
 
+          const clearExpand = (targetToken: string) => {
+            delete state.uiExpandMap[targetToken]
+          }
+
           /** 如果是group类型, 则清除整个group里的所有item数据 */
           const purgeGroup = (groupToken: string) => {
             const group = state.groups[groupToken]
             if (!group) return
-            group.childrenTokens.forEach(onDelContent)
+            group.childrenTokens.forEach((childToken) => {
+              onDelContent(childToken)
+              clearExpand(childToken)
+            })
+            clearExpand(groupToken)
             delete state.groups[groupToken]
           }
 
@@ -322,6 +348,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           switch (kind) {
             case 'item':
               onDelContent(token)
+              clearExpand(token)
               if (groupID) {
                 removeFromChildrenTokens(state.groups[groupID], token)
               } else if (taskID) {
@@ -344,6 +371,7 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
                   onDelContent(childToken)
                 }
               }
+              clearExpand(token)
               delete state.tasks[token]
               removeChatElement(token)
               break
@@ -365,6 +393,12 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
           state.items[newToken].token = newToken
           state.items[newToken].renderNum += 1
           delete state.items[oldToken]
+
+          // 同步展开态（纯 UI，不落库）
+          if (Object.prototype.hasOwnProperty.call(state.uiExpandMap, oldToken)) {
+            state.uiExpandMap[newToken] = state.uiExpandMap[oldToken]
+            delete state.uiExpandMap[oldToken]
+          }
 
           // 同步 chatElements 中的 token 引用（任务规划数据已合并）
           for (const el of state.chatElements) {

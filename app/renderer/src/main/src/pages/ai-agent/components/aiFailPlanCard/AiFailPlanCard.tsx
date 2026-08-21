@@ -8,7 +8,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
-import { useCreation, useToggle } from 'ahooks'
+import { useCreation } from 'ahooks'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 
 const AiFailPlanCard: FC<{
   itemData: Extract<
@@ -18,7 +19,7 @@ const AiFailPlanCard: FC<{
   renderNum: number
 }> = ({ itemData, renderNum }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const [expand, { toggle }] = useToggle(false)
+  const [expand, , toggle] = useUiExpand(itemData.id, false)
   const { nodeLabel } = useAINodeLabel(itemData.data.NodeIdVerbose)
 
   const content = useCreation(() => {

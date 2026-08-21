@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, type FC } from 'react'
-import { useBoolean, useCreation, useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import styles from './ConcurrentStreamCard.module.scss'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import { getAIStatusPresentation } from '../../utils/AIStatusUtils'
@@ -15,6 +15,7 @@ import type {
 import classNames from 'classnames'
 import ConcurrentStreamCardHeard from './concurrentStreamCardHeard/ConcurrentStreamCardHeard'
 import ConcurrentStreamContent from './ConcurrentStreamContent/ConcurrentStreamContent'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 
 const ConcurrentStreamCard: FC<{
   token: string
@@ -23,10 +24,8 @@ const ConcurrentStreamCard: FC<{
   const rawData = useCurrentRawData()
 
   const renderNum = useStore(store, (state) => state.tasks[token]?.renderNum)
-
-  const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(
-    rawData.contents.get(token)?.chatType !== 'reAct',
-  )
+  const defaultExpand = rawData.contents.get(token)?.chatType !== 'reAct'
+  const [expand, setExpand, expandToggle] = useUiExpand(token, defaultExpand)
 
   const raw = useCreation(() => {
     if (!rawData) return null
@@ -40,7 +39,7 @@ const ConcurrentStreamCard: FC<{
   useEffect(() => {
     if (!raw?.data?.status) return
     if (raw.data.status !== 'processing') {
-      collapseExpand()
+      setExpand(false)
     }
   }, [raw?.data?.status])
 
