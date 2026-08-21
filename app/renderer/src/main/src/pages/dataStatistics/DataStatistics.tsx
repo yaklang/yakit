@@ -16,14 +16,13 @@ import numeral from 'numeral'
 import moment, { type Moment } from 'moment'
 import 'moment/locale/zh-cn'
 import locale from 'antd/es/date-picker/locale/zh_CN'
-import type { RangePickerProps } from 'antd/lib/date-picker'
+import type { MomentDisabledDate } from '@/components/yakitUI/YakitDatePicker/YakitDatePickerType'
 import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
-import { message } from 'antd'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { defSort } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { IPTable, UserTable } from './UserTable/UserTable'
@@ -31,7 +30,6 @@ import type { IPTableRefProps, UserTableRefProps } from './UserTable/UserTableTy
 import { isEnpriTrace } from '@/utils/envfile'
 import { useTheme } from '@/hook/useTheme'
 const { RangePicker } = YakitDatePicker
-const { TabPane } = PluginTabs
 
 // 将分钟转换为小时，并保留两位小数
 const minutesToHours = (minutes: number) => {
@@ -782,7 +780,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
 
   const [detailHackValue, setDetailHackValue] = useState<RangeValue>(null)
   const [detailDates, setDetailDates] = useState<RangeValue>(null)
-  const disabledDetailDate: RangePickerProps['disabledDate'] = (current) => {
+  const disabledDetailDate: MomentDisabledDate = (current) => {
     if (detailDates) {
       const tooLate = (detailDates[0] && current.diff(detailDates[0], 'days') > 30) || false
       const tooEarly = (detailDates[1] && detailDates[1].diff(current, 'days') > 30) || false
@@ -823,7 +821,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
               document.body.removeChild(a)
               yakitNotify('success', '导出成功')
             } else {
-              message.error('下载失败')
+              yakitNotify('error', '下载失败')
             }
           }
         })
@@ -871,7 +869,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
       }
     })
     if (rangeObj.length === 0) {
-      message.warn('没有数据可以导出')
+      // yakitNotify("warning", "没有数据可以导出")
       return
     }
     if (rangeObj.length === 1) {
@@ -997,7 +995,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
   const [activeDates, setActiveDates] = useState<RangeValue>(null)
   const [activeHackValue, setActiveHackValue] = useState<RangeValue>(null)
 
-  const disabledRiseLineDate: RangePickerProps['disabledDate'] = (current) => {
+  const disabledRiseLineDate: MomentDisabledDate = (current) => {
     if (riseLineParams.showType === 'day') {
       if (riseDates) {
         const tooLate = (riseDates[0] && current.diff(riseDates[0], 'days') > 60) || false
@@ -1029,7 +1027,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     }
   }
 
-  const disabledActiveLineDate: RangePickerProps['disabledDate'] = (current) => {
+  const disabledActiveLineDate: MomentDisabledDate = (current) => {
     if (activeLineParams.showType === 'day') {
       if (activeDates) {
         const tooLate = (activeDates[0] && current.diff(activeDates[0], 'days') > 60) || false
@@ -1201,7 +1199,10 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                           }
                         }}
                         picker={getPicker('day')}
-                        onCalendarChange={(val) => setDetailDates(val)}
+                        onCalendarChange={(val) => {
+                          setDetailDates(val)
+                          setDetailHackValue(val)
+                        }}
                         onChange={(time) => {
                           const riseDates = time as [Moment, Moment] | null
 
@@ -1251,14 +1252,19 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                       </YakitDropdownMenu>
                     </div>
                   }
-                >
-                  <TabPane key="ip" tab="按IP">
-                    <IPTable ref={ipTableRef} />
-                  </TabPane>
-                  <TabPane key="account" tab="按账号">
-                    <UserTable ref={userTableRef} />
-                  </TabPane>
-                </PluginTabs>
+                  items={[
+                    {
+                      key: 'ip',
+                      label: '按IP',
+                      children: <IPTable ref={ipTableRef} />,
+                    },
+                    {
+                      key: 'account',
+                      label: '按账号',
+                      children: <UserTable ref={userTableRef} />,
+                    },
+                  ]}
+                ></PluginTabs>
               </div>
             ) : (
               <>
@@ -1326,7 +1332,10 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                     }
                   }}
                   picker={getPicker(riseLineParams.showType)}
-                  onCalendarChange={(val) => setRiseDates(val)}
+                  onCalendarChange={(val) => {
+                    setRiseDates(val)
+                    setRiseHackValue(val)
+                  }}
                   onChange={(time) => {
                     const riseDates = time as [Moment, Moment] | null
                     if (riseDates) {
@@ -1423,7 +1432,10 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                   }
                 }}
                 picker={getPicker(activeLineParams.showType)}
-                onCalendarChange={(val) => setActiveDates(val)}
+                onCalendarChange={(val) => {
+                  setActiveDates(val)
+                  setActiveHackValue(val)
+                }}
                 onChange={(time) => {
                   const riseDates = time as [Moment, Moment] | null
 

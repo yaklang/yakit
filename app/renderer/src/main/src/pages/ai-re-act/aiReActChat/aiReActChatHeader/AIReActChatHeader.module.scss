@@ -75,7 +75,7 @@
     }
   }
 
-  :global {
+  &:global(.ant-tooltip) :global {
     .ant-tooltip-inner {
       padding: 0;
       display: block;

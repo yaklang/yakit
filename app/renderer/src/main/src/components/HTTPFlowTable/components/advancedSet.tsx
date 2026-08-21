@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Modal, Tooltip } from 'antd'
+import { Tooltip } from 'antd'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { useMemoizedFn } from 'ahooks'
@@ -11,7 +11,7 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteHistoryGV } from '@/enums/history'
-import { yakitNotify } from '@/utils/notification'
+import { yakitNotify, getModalApi } from '@/utils/notification'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AdvancedSetProps, ColumnAllInfoItem } from '../HTTPFlowTable.constants'
@@ -108,7 +108,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     if (result == null) return
 
     if (result) {
-      Modal.confirm({
+      getModalApi().confirm({
         title: t('YakitModal.friendlyReminder'),
         icon: <ExclamationCircleOutlined />,
         content: t('AdvancedSet.saveAdvancedConfigAndClose'),
@@ -119,7 +119,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
           <div
             onClick={(e) => {
               e.stopPropagation()
-              Modal.destroyAll()
+              getModalApi().destroyAll()
             }}
             className="modal-remove-icon"
           >
@@ -138,9 +138,9 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
 
   return (
     <YakitDrawer
-      visible={true}
+      open={true}
       width="max(700px, 40%)"
-      className={style['history-advanced-set-wrapper']}
+      rootClassName={style['history-advanced-set-wrapper']}
       onClose={handleClose}
       title={
         <div className={style['advanced-configuration-drawer-title']}>

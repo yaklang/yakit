@@ -329,6 +329,11 @@
 
 .chrome-input-group {
   :global {
+    .ant-space-compact,
+    .ant-input-group {
+      display: flex;
+      width: 100%;
+    }
     .ant-input-affix-wrapper {
       border-radius: 0px;
     }
@@ -384,15 +389,15 @@
 }
 
 .add-group-popover {
-  padding-top: 0px;
-  border-radius: 4px;
   overflow: hidden;
   :global {
     .ant-popover-arrow {
       display: none;
     }
-    .ant-popover-inner-content {
-      padding: 14px 0 0;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 14px 0 0;
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { Col, DatePicker, Row } from 'antd'
+import { Col, Row } from 'antd'
+import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import moment from 'moment'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -29,7 +30,7 @@ export const TimePoint: React.FC<TimePointProps> = ({ value, placeholder, setVal
 
   return (
     <div>
-      <DatePicker
+      <YakitDatePicker
         style={{ width: '100%' }}
         showTime
         format="YYYY-MM-DD HH:mm:ss"
@@ -60,7 +61,7 @@ const TimeRange: React.FC<TimeRangeProps> = (props: TimeRangeProps) => {
       <Row>
         <Col span={12}>
           <div style={{ marginRight: 4 }}>
-            <DatePicker
+            <YakitDatePicker
               style={{ width: '100%' }}
               showTime
               format="YYYY-MM-DD HH:mm:ss"
@@ -74,7 +75,7 @@ const TimeRange: React.FC<TimeRangeProps> = (props: TimeRangeProps) => {
         </Col>
         <Col span={12}>
           <div style={{ marginRight: 4 }}>
-            <DatePicker
+            <YakitDatePicker
               style={{ width: '100%' }}
               showTime
               format="YYYY-MM-DD HH:mm:ss"

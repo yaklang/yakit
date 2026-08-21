@@ -1,3 +1,6 @@
+@use './componentsTheme/antdCssVar.scss';
+@use './componentsTheme/form.scss';
+
 html[data-theme='light'] {
   --mitm-bg-image: url('../assets/mitm-bg-light.png');
   --mitm-bg-color: linear-gradient(

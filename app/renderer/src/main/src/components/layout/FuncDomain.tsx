@@ -382,7 +382,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         dropdown={{
                           placement: 'bottom',
                           trigger: ['click'],
-                          onVisibleChange: (value: boolean) => {
+                          onOpenChange: (value: boolean) => {
                             setDynamicMenuOpen(value)
                           },
                         }}
@@ -398,7 +398,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         overlayClassName={classNames(styles['ui-op-plus-dropdown'])}
                         placement={'bottomRight'}
                         trigger={'click'}
-                        destroyTooltipOnHide={true}
+                        destroyOnHidden={true}
                         content={
                           <CeUserMenuContent
                             menu={userMenu}

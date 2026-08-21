@@ -3168,7 +3168,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <YakitPopover
                       trigger={'click'}
                       placement={'leftTop'}
-                      destroyTooltipOnHide={true}
+                      destroyOnHidden={true}
                       onVisibleChange={setHistorySelectorOpen}
                       content={
                         <div style={{ width: 400 }}>

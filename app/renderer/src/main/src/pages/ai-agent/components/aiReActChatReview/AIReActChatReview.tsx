@@ -206,7 +206,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             <div className={styles['summary-content']}>{short_summary}</div>
             <div className={styles['summary-detail']}>
               <YakitPopover
-                overlayClassName={styles['task-review-summary-popover']}
+                classNames={{ root: styles['task-review-summary-popover'] }}
                 content={
                   <div className={styles['task-long-summary']}>
                     <div className={styles['summary-header']}>
@@ -484,7 +484,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         </div>
         <div className={styles['ai-require-input']}>
           <Input.TextArea
-            bordered={false}
+            variant="borderless"
             placeholder={t('AIReActChatReview.tellMeMore')}
             autoSize={{ minRows: 4, maxRows: 4 }}
             value={requireQS}
@@ -658,7 +658,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                   (editShow ? (
                     <div className={styles['review-input']}>
                       <Input.TextArea
-                        bordered={false}
+                        variant="borderless"
                         placeholder={editInfo.current?.prompt || t('YakitInput.please_enter')}
                         value={reviewQS}
                         autoSize={{ minRows: 4, maxRows: 4 }}

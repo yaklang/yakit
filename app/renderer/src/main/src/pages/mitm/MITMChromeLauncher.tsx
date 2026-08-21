@@ -1,6 +1,6 @@
 import React, { type CSSProperties, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Alert, Form, Space, Tooltip, Typography, Modal } from 'antd'
-import { failed, info, yakitNotify } from '../../utils/notification'
+import { Alert, Form, Space, Tooltip, Typography } from 'antd'
+import { destroyAllModals, failed, getModalApi, info, yakitNotify } from '../../utils/notification'
 import { CheckOutlined, CloseOutlined, CloudUploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
@@ -433,7 +433,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
 
   const clickChromeLauncher = useMemoizedFn(() => {
     if (repRuleFlag) {
-      Modal.confirm({
+      getModalApi().confirm({
         title: t('YakitModal.friendlyReminder'),
         icon: <ExclamationCircleOutlined />,
         content: t('MITMChromeLauncher.warning_content'),
@@ -445,7 +445,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
           <div
             onClick={(e) => {
               e.stopPropagation()
-              Modal.destroyAll()
+              destroyAllModals()
             }}
             className="modal-remove-icon"
           >
@@ -457,7 +457,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
         },
         onCancel: () => {
           onSetVisible && onSetVisible(true)
-          Modal.destroyAll()
+          destroyAllModals()
         },
         cancelButtonProps: { size: 'small', className: 'modal-cancel-button' },
         okButtonProps: { size: 'small', className: 'modal-ok-button' },
@@ -606,7 +606,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
 
   const resetToDefault = useMemoizedFn(() => {
     // 显示确认对话框
-    Modal.confirm({
+    getModalApi().confirm({
       title: t('MITMChromeLauncher.confirm_restore_default_params'),
       icon: <ExclamationCircleOutlined />,
       content: t('MITMChromeLauncher.restore_default_params_content'),
@@ -618,7 +618,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
         <div
           onClick={(e) => {
             e.stopPropagation()
-            Modal.destroyAll()
+            destroyAllModals()
           }}
           className="modal-remove-icon"
         >

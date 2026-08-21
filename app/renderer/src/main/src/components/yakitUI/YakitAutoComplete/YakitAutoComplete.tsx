@@ -1,5 +1,5 @@
 import { AutoComplete } from 'antd'
-import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, { Children, isValidElement, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
   YakitAutoCompleteCacheDataHistoryProps,
   YakitAutoCompleteProps,
@@ -33,6 +33,14 @@ export const YakitAutoComplete = React.forwardRef<YakitAutoCompleteRefProps, Yak
     initValue = '',
     wrapperStyle,
     isInit = true,
+    dropdownRender,
+    popupRender,
+    dropdownMatchSelectWidth,
+    popupMatchSelectWidth,
+    onDropdownVisibleChange,
+    onOpenChange,
+    dropdownClassName,
+    classNames: autoCompleteClassNames,
     ...restProps
   } = props
   const autoCompleteRef = useRef<HTMLDivElement>(null)
@@ -148,6 +156,16 @@ export const YakitAutoComplete = React.forwardRef<YakitAutoCompleteRefProps, Yak
     }
   }, [cacheHistoryData, restProps])
 
+  // antd5: 传入自定义输入元素作为 children 时,设置 `size` 会触发
+  // "You need to control style self instead of setting `size` when using customize input" 警告。
+  // 自定义输入时由外层 wrapper class 控制尺寸,不再传 size。
+  const childNodes = Children.toArray(restProps.children)
+  const isCustomizeInput =
+    childNodes.length === 1 &&
+    isValidElement(childNodes[0]) &&
+    !((childNodes[0] as React.ReactElement).type as any)?.isSelectOption &&
+    !((childNodes[0] as React.ReactElement).type as any)?.isSelectOptGroup
+
   return (
     <div
       ref={autoCompleteRef}
@@ -165,17 +183,25 @@ export const YakitAutoComplete = React.forwardRef<YakitAutoCompleteRefProps, Yak
           defaultValue={cacheHistoryData.defaultValue}
           {...restProps}
           options={options}
-          size="middle"
-          dropdownClassName={classNames(
-            styles['yakit-auto-complete-popup'],
-            {
-              [styles['yakit-auto-complete-popup-y']]: show,
+          {...(!isCustomizeInput && { size: 'middle' })}
+          classNames={{
+            popup: {
+              root: classNames(
+                styles['yakit-auto-complete-popup'],
+                {
+                  [styles['yakit-auto-complete-popup-y']]: show,
+                },
+                dropdownClassName,
+                autoCompleteClassNames?.popup?.root,
+              ),
             },
-            props.dropdownClassName,
-          )}
-          onDropdownVisibleChange={(open) => {
+          }}
+          popupRender={popupRender ?? dropdownRender}
+          popupMatchSelectWidth={popupMatchSelectWidth ?? dropdownMatchSelectWidth}
+          onOpenChange={(open) => {
             setShow(open)
-            if (props.onDropdownVisibleChange) props.onDropdownVisibleChange(open)
+            onOpenChange?.(open)
+            onDropdownVisibleChange?.(open)
           }}
         />
       )}

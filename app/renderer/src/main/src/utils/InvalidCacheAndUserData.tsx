@@ -1,10 +1,11 @@
 import { yakitNotify } from '@/utils/notification'
-import { Alert, Space } from 'antd'
+import { Space } from 'antd'
 import { getReleaseEditionName } from './envfile'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { yakitHost } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 const tOriginal = i18n.getFixedT(null, 'utils')
 
 export const invalidCacheAndUserData = (delTemporaryProject) => {
@@ -14,11 +15,11 @@ export const invalidCacheAndUserData = (delTemporaryProject) => {
     title: (modalT) => modalT('InvalidCacheAndUserData.title'),
     content: (modalT) => (
       <Space direction={'vertical'} style={{ width: '100%', padding: 20 }}>
-        <Alert
+        <YakitAlert
           type="success"
           message={modalT('InvalidCacheAndUserData.resetHint', { name: getReleaseEditionName() })}
         />
-        <Alert type="success" message={modalT('InvalidCacheAndUserData.warning')} />
+        <YakitAlert type="success" message={modalT('InvalidCacheAndUserData.warning')} />
         <YakitCheckbox onChange={(e) => (checked = e.target.checked)}>
           {modalT('InvalidCacheAndUserData.syncDeleteDatabase')}
         </YakitCheckbox>

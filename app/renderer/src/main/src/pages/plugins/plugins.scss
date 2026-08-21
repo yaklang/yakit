@@ -20,73 +20,10 @@
 .aduit-status-flag-color {
   color: var(--Colors-Use-Blue-Primary);
 }
-// -------------------- tooltip组件样式 ↓↓↓ --------------------
-.plugins-tooltip {
-  .ant-tooltip-inner {
-    display: flex;
-    padding: 8px 12px;
-    border-radius: 4px;
-    background: var(--Colors-Use-Neutral-Text-1-Title);
-    border: 1px solid var(--Colors-Use-Neutral-Text-1-Title);
-    color: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
-    // border-bottom-width: 0px;
-
-    font-size: 12px;
-    line-height: 16px;
-    cursor: text;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-top {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    bottom: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-topLeft {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    bottom: 1px;
-    left: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-topRight {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    right: 1px;
-    bottom: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottom {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    top: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottomLeft {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    top: 1px;
-    left: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottomRight {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    right: 1px;
-    top: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-right {
-  padding-left: 4px;
-  .ant-tooltip-arrow {
-    left: 1px;
-  }
-}
 // -------------------- form组件样式 ↓↓↓ --------------------
 .plugins-form {
   width: 100%;
-  .ant-row.ant-form-item {
+  .ant-form-item .ant-form-item-row {
     gap: 2px;
     .ant-form-item-label {
       padding-bottom: 0;
@@ -102,55 +39,6 @@
   color: var(--Colors-Use-Error-Primary);
   font-size: 14px;
   line-height: 14px;
-}
-// -------------------- radio组件样式 ↓↓↓ --------------------
-.plugins-radio-wrapper {
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-
-  .ant-radio:hover .ant-radio-inner {
-    border-color: var(--Colors-Use-Main-Border);
-  }
-  .ant-radio-checked .ant-radio-inner {
-    border-color: var(--Colors-Use-Main-Border);
-  }
-  .ant-radio-checked::after {
-    border-color: var(--Colors-Use-Main-Border);
-  }
-  .ant-radio-inner::after {
-    background-color: var(--Colors-Use-Main-Border);
-  }
-  .ant-radio-input:focus + .ant-radio-inner {
-    box-shadow: 0 0 0 3px var(--Colors-Use-Main-Focus);
-  }
-  .ant-radio.ant-radio-disabled .ant-radio-inner {
-    background-color: var(--Colors-Use-Neutral-Bg);
-    border-color: var(--Colors-Use-Neutral-Border);
-  }
-  .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner {
-    border-color: var(--Colors-Use-Neutral-Border);
-    background-color: transparent;
-  }
-  .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner:after {
-    background-color: var(--Colors-Use-Neutral-Bg);
-  }
-}
-// -------------------- anchor组件样式 ↓↓↓ --------------------
-.plugins-anchor {
-  &.ant-anchor-wrapper {
-    margin-left: 0;
-    padding-left: 0;
-    overflow: hidden;
-  }
-
-  .ant-anchor {
-    display: flex;
-    .ant-anchor-link {
-      padding: 0;
-    }
-    .ant-anchor-ink {
-      display: none;
-    }
-  }
 }
 
 // -------------------- 列表上方的header右侧样式 --------------------
@@ -263,20 +151,13 @@
 // 详情-插件列表单项-源码弹窗
 .terminal-popover {
   width: 429px;
-  padding-bottom: 4px;
-  padding-top: 4px;
-
-  .ant-popover-inner-content {
-    height: 40vh;
-    padding: 4px;
-  }
-
-  .ant-popover-inner {
-    border-radius: 4px;
-  }
-
-  .ant-popover-arrow {
-    left: 0;
+  :global {
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        height: 40vh;
+        padding: 4px;
+      }
+    }
   }
 }
 // --------------------

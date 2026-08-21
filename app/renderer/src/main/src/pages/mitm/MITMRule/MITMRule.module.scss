@@ -251,8 +251,10 @@
   padding-top: 6px;
 
   :global {
-    .ant-popover-inner-content {
-      padding: 6px 4px 8px;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 6px 4px 8px;
+      }
     }
   }
 }

@@ -59,6 +59,15 @@ const InternalInput: React.FC<YakitInputProps & React.RefAttributes<InputRef>> =
 const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<InputRef>> = forwardRef(
   (props, ref: React.Ref<InputRef>) => {
     const { size, wrapperClassName, className, wrapperStyle, allowClear = true, ...restProps } = props
+    const antdSearchSize = size === 'small' ? 'small' : size === 'large' || size === 'maxLarge' ? 'large' : 'middle'
+    const searchSizeClass =
+      size === 'small'
+        ? styles['yakit-search-small']
+        : size === 'large'
+          ? styles['yakit-search-large']
+          : size === 'maxLarge'
+            ? styles['yakit-search-maxLarge']
+            : styles['yakit-search-middle']
     const [focus, setFocus] = useState<boolean>(false)
     const onFocus = useMemoizedFn((e) => {
       setFocus(true)
@@ -91,13 +100,8 @@ const InternalSearch: React.FC<YakitInputSearchProps & React.RefAttributes<Input
           ref={ref}
           onFocus={onFocus}
           onBlur={onBlur}
-          size="middle"
-          className={classNames(styles['yakit-search-middle'], {
-            [styles['yakit-search-large']]: size === 'large',
-            [styles['yakit-search-small']]: size === 'small',
-            [styles['yakit-search-maxLarge']]: size === 'maxLarge',
-            className,
-          })}
+          size={antdSearchSize}
+          className={classNames(searchSizeClass, className)}
         />
       </div>
     )
@@ -155,7 +159,6 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps & React.RefAttr
 )
 
 type CompoundedComponent = React.ForwardRefExoticComponent<YakitInputProps & React.RefAttributes<InputRef>> & {
-  Group: typeof Input.Group
   Search: typeof InternalSearch
   TextArea: typeof InternalTextArea
   Password: typeof InternalInputPassword
@@ -167,7 +170,6 @@ type CompoundedComponent = React.ForwardRefExoticComponent<YakitInputProps & Rea
  */
 export const YakitInput = InternalInput as CompoundedComponent
 
-YakitInput.Group = Input.Group
 YakitInput.Search = InternalSearch
 YakitInput.TextArea = InternalTextArea
 YakitInput.Password = InternalInputPassword

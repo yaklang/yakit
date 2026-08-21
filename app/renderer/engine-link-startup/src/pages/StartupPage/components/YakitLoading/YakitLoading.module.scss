@@ -237,7 +237,7 @@
 }
 
 .more-versions-popover {
-  padding-top: 0px;
+  padding-top: 0;
 
   :global {
     .ant-popover-arrow {
@@ -246,6 +246,10 @@
 
     .ant-popover-inner {
       border-radius: 4px;
+    }
+
+    .ant-popover-inner-content {
+      padding: 12px !important;
     }
   }
 }

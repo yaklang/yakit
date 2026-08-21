@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { ManyMultiSelectForString, SwitchItem } from '@/utils/inputUtil'
-import { Divider, Form, Modal, Slider, Space, Upload } from 'antd'
+import { Divider, Form, Slider, Space, Upload } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { yakitInfo, warn, failed, success, yakitNotify } from '@/utils/notification'
+import { yakitInfo, warn, failed, success, yakitNotify, getModalApi } from '@/utils/notification'
 import { AutoSpin } from '@/components/AutoSpin'
 import update from 'immutability-helper'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
@@ -894,21 +894,23 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     }}
                     min={0x300}
                     max={0x304}
-                    tipFormatter={(value) => {
-                      switch (value) {
-                        case 0x300:
-                          return 'SSLv3'
-                        case 0x301:
-                          return 'TLS 1.0'
-                        case 0x302:
-                          return 'TLS 1.1'
-                        case 0x303:
-                          return 'TLS 1.2'
-                        case 0x304:
-                          return 'TLS 1.3'
-                        default:
-                          return value
-                      }
+                    tooltip={{
+                      formatter: (value) => {
+                        switch (value) {
+                          case 0x300:
+                            return 'SSLv3'
+                          case 0x301:
+                            return 'TLS 1.0'
+                          case 0x302:
+                            return 'TLS 1.1'
+                          case 0x303:
+                            return 'TLS 1.2'
+                          case 0x304:
+                            return 'TLS 1.3'
+                          default:
+                            return value
+                        }
+                      },
                     }}
                   />
                 </Form.Item>
@@ -1608,7 +1610,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
 
   const onClose = useMemoizedFn(() => {
     if (JSON.stringify(initData.current) !== JSON.stringify(data)) {
-      Modal.confirm({
+      getModalApi().confirm({
         title: t('YakitModal.friendlyReminder'),
         icon: <ExclamationCircleOutlined />,
         content: t('ConfigNetworkPage.saveHttpAuthAndClose'),
@@ -1619,7 +1621,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
           <div
             onClick={(e) => {
               e.stopPropagation()
-              Modal.destroyAll()
+              getModalApi().destroyAll()
             }}
             className="modal-remove-icon"
           >
@@ -1791,13 +1793,12 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         width="max(700px, 50%)"
         closable={false}
         onClose={() => onClose()}
-        visible={visible}
+        open={visible}
         getContainer={getContainer}
         // mask={false}
         maskClosable={false}
         // style={{height: visible ? heightDrawer : 0}}
-        className={classNames(styles['ntlm-config-drawer'])}
-        contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
+        rootClassName={classNames(styles['ntlm-config-drawer'])}
         title={
           <div className={styles['heard-title']}>
             <div className={styles['title']}>{t('ConfigNetworkPage.httpAuthGlobalConfig')}</div>
@@ -1932,7 +1933,7 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
     <YakitModal
       maskClosable={false}
       title={isEdit ? t('YakitButton.edit') : t('YakitButton.add_new')}
-      visible={modalStatus}
+      open={modalStatus}
       onCancel={() => onClose()}
       closable
       okType="primary"

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Divider, Form, notification, Tooltip, Typography } from 'antd'
+import { Divider, Form, Tooltip, Typography } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import ChromeLauncherButton from '@/pages/mitm/MITMChromeLauncher'
 import { info, yakitNotify } from '@/utils/notification'
@@ -234,7 +234,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = React.memo
         })
         .catch((e: any) => {
           reject(e)
-          notification['error']({ message: t('MITMServerHijacking.stop_mitm_hijack_failed', { e }) })
+          yakitNotify('error', t('MITMServerHijacking.stop_mitm_hijack_failed', { e }))
           debugToPrintLogs({
             page: 'MITMServerHijacking',
             fun: 'stopFun',
@@ -533,11 +533,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = React.memo
           </div>
           {isNarrow && (
             <YakitPopover
-              overlayClassName={classNames(style['more-popover'])}
+              classNames={{ root: classNames(style['more-popover']) }}
               placement="bottomRight"
               trigger="click"
-              visible={morePopoverVisible}
-              onVisibleChange={setMorePopoverVisible}
+              open={morePopoverVisible}
+              onOpenChange={setMorePopoverVisible}
               content={
                 <YakitMenu
                   selectedKeys={[]}
@@ -748,11 +748,11 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
   return (
     <>
       <YakitModal
-        visible={downStreamAgentModalVisible}
+        open={downStreamAgentModalVisible}
         title={t('ProxyConfig.downstream_agent')}
         width={506}
         maskClosable={false}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         closable
         centered
         okText={t('YakitButton.confirm')}

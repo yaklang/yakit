@@ -1,7 +1,7 @@
 import React, { type ReactNode, useMemo } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Menu, type MenuProps, Tooltip } from 'antd'
-import type { ItemType } from 'antd/lib/menu/hooks/useItems'
+import type { ItemType } from 'antd/es/menu/interface'
 import type { MenuDividerType } from 'rc-menu/lib/interface'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 
@@ -43,6 +43,8 @@ export interface YakitMenuProp extends MenuProps {
   size?: 'default' | 'rightMenu'
   /** 点击一级菜单触发 onClick */
   parentTitleClick?: boolean
+  /** 外层装饰 className */
+  menuWrapperClassName?: string
 }
 
 export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
@@ -56,6 +58,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     size = 'default',
     parentTitleClick = false,
     onClick,
+    menuWrapperClassName,
     ...restMenu
   } = props
 
@@ -165,7 +168,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
   if (data.length > 0) for (const item of data) items.push(generateMenuInfo(item))
 
   return (
-    <div className={classNames(styles['yakit-menu-div-wrapper'], menuTypeClass, menuSizeClass)}>
+    <div className={classNames(styles['yakit-menu-div-wrapper'], menuTypeClass, menuSizeClass, menuWrapperClassName)}>
       <Menu
         {...restMenu}
         onClick={onClick}

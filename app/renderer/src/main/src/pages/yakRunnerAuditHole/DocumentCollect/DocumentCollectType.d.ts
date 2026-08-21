@@ -1,4 +1,4 @@
-import type { DataNode } from 'antd/es/tree'
+import type { TreeDataNode as DataNode } from 'antd'
 import { type SSARisksFilter } from '../YakitAuditHoleTable/YakitAuditHoleTableType'
 import type { YakURLResource } from '@/pages/yakURLTree/data'
 

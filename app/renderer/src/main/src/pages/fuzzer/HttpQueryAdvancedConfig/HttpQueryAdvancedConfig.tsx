@@ -537,7 +537,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 label={
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.real_host')}
-                    <Tooltip title={t('HttpQueryAdvancedConfig.host_collision_tip')} overlayStyle={{ width: 150 }}>
+                    <Tooltip title={t('HttpQueryAdvancedConfig.host_collision_tip')} styles={{ root: { width: 150 } }}>
                       <InformationCircleIcon className={styles['info-icon']} />
                     </Tooltip>
                   </span>
@@ -550,7 +550,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 label={
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.set_proxy')}
-                    <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} overlayStyle={{ width: 150 }}>
+                    <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} styles={{ root: { width: 150 } }}>
                       <InformationCircleIcon className={styles['info-icon']} />
                     </Tooltip>
                   </span>
@@ -594,7 +594,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   mode="tags"
                   size="small"
                   maxTagCount={1}
-                  dropdownMatchSelectWidth={245}
+                  popupMatchSelectWidth={245}
                 />
               </Form.Item>
               <Form.Item label={<> </>}>
@@ -619,7 +619,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 label={
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.frontend_render_count')}
-                    <Tooltip title={t('HttpQueryAdvancedConfig.frontend_render_tip')} overlayStyle={{ width: 150 }}>
+                    <Tooltip title={t('HttpQueryAdvancedConfig.frontend_render_tip')} styles={{ root: { width: 150 } }}>
                       <InformationCircleIcon className={styles['info-icon']} />
                     </Tooltip>
                   </span>
@@ -722,7 +722,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   label={
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.render_fuzz')}
-                      <Tooltip title={t('HttpQueryAdvancedConfig.compat_mode_tip')} overlayStyle={{ width: 150 }}>
+                      <Tooltip title={t('HttpQueryAdvancedConfig.compat_mode_tip')} styles={{ root: { width: 150 } }}>
                         <InformationCircleIcon className={styles['info-icon']} />
                       </Tooltip>
                     </span>
@@ -740,7 +740,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   label={
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.no_fix_length')}
-                      <Tooltip title={t('HttpQueryAdvancedConfig.no_fix_length_tip')} overlayStyle={{ width: 220 }}>
+                      <Tooltip title={t('HttpQueryAdvancedConfig.no_fix_length_tip')} styles={{ root: { width: 220 } }}>
                         <InformationCircleIcon className={styles['info-icon']} />
                       </Tooltip>
                     </span>
@@ -944,7 +944,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   label={
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.random_delay2')}
-                      <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} overlayStyle={{ width: 150 }}>
+                      <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} styles={{ root: { width: 150 } }}>
                         <InformationCircleIcon className={styles['info-icon']} />
                       </Tooltip>
                     </span>
@@ -1469,11 +1469,11 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
 
   return (
     <YakitModal
-      visible={batchTargetModalVisible}
+      open={batchTargetModalVisible}
       title={t('BatchTargetModal.configure_batch_target')}
       width={600}
       maskClosable={false}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       closable
       centered
       okText={t('YakitButton.confirm')}
@@ -1768,14 +1768,14 @@ export const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props
   return (
     <YakitPopover
       placement="right"
-      overlayClassName={classNames(styles['matching-extraction-content'], styles['terminal-popover'])}
+      classNames={{ root: classNames(styles['matching-extraction-content'], styles['terminal-popover']) }}
       content={
         <div className={styles['terminal-popover-content']} ref={popoverContentRef}>
           {popoverContent}
         </div>
       }
-      visible={visiblePopover}
-      onVisibleChange={(v) => {
+      open={visiblePopover}
+      onOpenChange={(v) => {
         if (v) {
           setTimeout(() => {
             onSetArrowTop()

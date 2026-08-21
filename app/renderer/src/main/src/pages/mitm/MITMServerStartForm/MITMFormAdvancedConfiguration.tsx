@@ -8,7 +8,7 @@ import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { yakitFailed } from '@/utils/notification'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Divider, Form, Modal } from 'antd'
+import { Divider, Form } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { ExportIcon, PlusCircleIcon, RemoveIcon, TrashIcon } from '@/assets/newIcon'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -22,6 +22,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { cloneDeep, isEqual } from 'lodash'
+import { destroyAllModals, getModalApi } from '@/utils/notification'
 import {
   type AdvancedConfigurationFromValue,
   createDefaultAdvancedConfig,
@@ -187,7 +188,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         SNI: formValue.OverwriteSNI ? formValue.SNI : '',
       }
       if (!isEqual(oldValue, newValue)) {
-        Modal.confirm({
+        getModalApi().confirm({
           title: t('YakitModal.friendlyReminder'),
           icon: <ExclamationCircleOutlined />,
           content: t('MITMFormAdvancedConfiguration.saveAndCloseConfirm'),
@@ -198,7 +199,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             <div
               onClick={(e) => {
                 e.stopPropagation()
-                Modal.destroyAll()
+                destroyAllModals()
               }}
               className="modal-remove-icon"
             >
@@ -224,8 +225,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
 
     return (
       <YakitDrawer
-        className={styles['advanced-configuration-drawer']}
-        visible={visible}
+        rootClassName={styles['advanced-configuration-drawer']}
+        open={visible}
         onClose={() => onClose()}
         width="max(700px, 40%)"
         title={
@@ -267,42 +268,44 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             />
           </Form.Item>
           <Form.Item label={t('MITMFormAdvancedConfiguration.hostsConfig')} name="etcHosts">
-            <div className={styles['etcHosts-btns']}>
-              <YakitButton
-                onClick={() => {
-                  inputHTTPFuzzerHostConfigItem(
-                    (obj) => {
-                      setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
-                    },
-                    // 批量添加
-                    (items) => {
-                      const newKeys = items.map(({ Key }) => Key)
-                      const newEtcHosts = [...etcHosts.filter(({ Key }) => !newKeys.includes(Key)), ...items]
-                      setEtcHosts(newEtcHosts)
-                    },
-                  )
-                }}
-              >
-                {t('MITMFormAdvancedConfiguration.addHostsMapping')}
-              </YakitButton>
-              {!!etcHosts.length && (
-                <YakitButton type="text" danger onClick={() => setEtcHosts([])}>
-                  {t('YakitButton.reset')}
-                </YakitButton>
-              )}
-            </div>
-            <div className={classNames({ [styles['etcHosts-config']]: !!etcHosts.length })}>
-              {etcHosts.map((i, n) => (
-                <YakitTag
-                  closable={true}
-                  onClose={() => {
-                    setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
+            <div>
+              <div className={styles['etcHosts-btns']}>
+                <YakitButton
+                  onClick={() => {
+                    inputHTTPFuzzerHostConfigItem(
+                      (obj) => {
+                        setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
+                      },
+                      // 批量添加
+                      (items) => {
+                        const newKeys = items.map(({ Key }) => Key)
+                        const newEtcHosts = [...etcHosts.filter(({ Key }) => !newKeys.includes(Key)), ...items]
+                        setEtcHosts(newEtcHosts)
+                      },
+                    )
                   }}
-                  key={`${i.Key}-${n}`}
                 >
-                  {`${i.Key} => ${i.Value}`}
-                </YakitTag>
-              ))}
+                  {t('MITMFormAdvancedConfiguration.addHostsMapping')}
+                </YakitButton>
+                {!!etcHosts.length && (
+                  <YakitButton type="text" danger onClick={() => setEtcHosts([])}>
+                    {t('YakitButton.reset')}
+                  </YakitButton>
+                )}
+              </div>
+              <div className={classNames({ [styles['etcHosts-config']]: !!etcHosts.length })}>
+                {etcHosts.map((i, n) => (
+                  <YakitTag
+                    closable={true}
+                    onClose={() => {
+                      setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
+                    }}
+                    key={`${i.Key}-${n}`}
+                  >
+                    {`${i.Key} => ${i.Value}`}
+                  </YakitTag>
+                ))}
+              </div>
             </div>
           </Form.Item>
           <Form.Item
@@ -428,7 +431,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             name="PluginConcurrency"
             style={{ alignItems: 'center' }}
           >
-            <YakitInputNumber type="horizontal" min={1} defaultValue={20} />
+            <YakitInputNumber type="horizontal" min={1} />
           </Form.Item>
           <Form.Item label={t('AdvancedConfiguration.sni_config')} className={styles['sni-rules']}>
             <Form.List name="SNIMapping">

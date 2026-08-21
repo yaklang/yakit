@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Modal } from 'antd'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { useStore, yakitDynamicStatus } from '@/store'
 import { defaultUserInfo, SetUserInfo } from '@/pages/MainOperator'
 import { loginOut } from '@/utils/login'
-import { success, yakitFailed } from '@/utils/notification'
+import { success, yakitFailed, getModalApi } from '@/utils/notification'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import type { YakitMenuItemProps, YakitMenuItemType } from '../../yakitUI/YakitMenu/YakitMenu'
@@ -569,7 +568,7 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   const onUserMenuClick = useMemoizedFn((key: string) => {
     if (key === 'sign-out') {
       if (dynamicStatus.isDynamicStatus || dynamicStatus.isDynamicSelfStatus) {
-        Modal.confirm({
+        getModalApi().confirm({
           title: t('YakitModal.friendlyReminder'),
           icon: <ExclamationCircleOutlined />,
           content: t('FuncDomain.signOutRemoteConfirm'),

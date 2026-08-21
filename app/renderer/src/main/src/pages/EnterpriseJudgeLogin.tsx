@@ -99,7 +99,9 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     <>
       {loading ? (
         <div style={{ paddingTop: 10, textAlign: 'center' }}>
-          <Spin tip={t('EnterpriseJudgeLogin.verifyingLicense')}></Spin>
+          <Spin tip={t('EnterpriseJudgeLogin.verifyingLicense')}>
+            <div />
+          </Spin>
         </div>
       ) : (
         <>

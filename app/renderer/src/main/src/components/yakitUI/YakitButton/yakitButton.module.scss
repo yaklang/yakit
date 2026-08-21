@@ -35,12 +35,12 @@
   }
   &[disabled] {
     background: var(--Colors-Use-Main-Border);
-    color: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Main-On-Primary);
     border-color: var(--Colors-Use-Main-Border);
   }
   &[disabled]:hover {
     background: var(--Colors-Use-Main-Border);
-    color: var(--Colors-Use-Basic-Background);
+    color: var(--Colors-Use-Main-On-Primary);
     border-color: var(--Colors-Use-Main-Border);
   }
 }
@@ -352,9 +352,13 @@
   padding: 3px 6px;
   font-weight: 500;
   font-size: 11px;
+  gap: 2px;
   & > :global(.anticon + span),
-  & > :global(span + .anticon) {
-    margin-left: 2px;
+  & > :global(span + .anticon),
+  & > :global(.ant-btn-icon + span),
+  & > :global(span + .ant-btn-icon) {
+    margin-inline-start: 0;
+    margin-left: 0;
   }
 
   svg {
@@ -375,9 +379,13 @@
   padding: 3px 8px;
   font-weight: 500;
   font-size: 12px;
+  gap: 4px;
   & > :global(.anticon + span),
-  & > :global(span + .anticon) {
-    margin-left: 4px;
+  & > :global(span + .anticon),
+  & > :global(.ant-btn-icon + span),
+  & > :global(span + .ant-btn-icon) {
+    margin-inline-start: 0;
+    margin-left: 0;
   }
 
   svg {
@@ -394,9 +402,13 @@
   padding: 4px 12px;
   font-weight: 600;
   font-size: 14px;
+  gap: 4px;
   & > :global(.anticon + span),
-  & > :global(span + .anticon) {
-    margin-left: 4px;
+  & > :global(span + .anticon),
+  & > :global(.ant-btn-icon + span),
+  & > :global(span + .ant-btn-icon) {
+    margin-inline-start: 0;
+    margin-left: 0;
   }
 
   svg {
@@ -417,9 +429,13 @@
   padding: 5px 12px;
   font-weight: 500;
   font-size: 14px;
+  gap: 4px;
   & > :global(.anticon + span),
-  & > :global(span + .anticon) {
-    margin-left: 4px;
+  & > :global(span + .anticon),
+  & > :global(.ant-btn-icon + span),
+  & > :global(span + .ant-btn-icon) {
+    margin-inline-start: 0;
+    margin-left: 0;
   }
 
   svg {
@@ -436,6 +452,7 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
+  gap: 4px;
   box-shadow: none;
   border-radius: var(--yakit-button-border-radius);
   border: 1px solid transparent;
@@ -455,7 +472,7 @@
   }
 }
 
-.yakit-button-primary {
+.yakit-button.yakit-button-primary.yakit-button-primary {
   @include generatePrimary('primary');
   &.yakit-button-success {
     @include generatePrimary('success');
@@ -467,7 +484,7 @@
     @include generatePrimary('infoBlue');
   }
 }
-.yakit-button-secondary2 {
+.yakit-button.yakit-button-secondary2.yakit-button-secondary2 {
   @include generateSecondary2('primary');
   &.yakit-button-success {
     @include generateSecondary2('success');
@@ -479,7 +496,7 @@
     @include generateSecondary2('infoBlue');
   }
 }
-.yakit-button-outline1 {
+.yakit-button.yakit-button-outline1.yakit-button-outline1 {
   @include generateOutline1('primary');
   &.yakit-button-success {
     @include generateOutline1('success');
@@ -491,10 +508,10 @@
     @include generateOutline1('infoBlue');
   }
 }
-.yakit-button-outline2 {
+.yakit-button.yakit-button-outline2.yakit-button-outline2 {
   @include generateOutline2('primary');
 }
-.yakit-button-text {
+.yakit-button.yakit-button-text.yakit-button-text {
   @include generateText('primary');
   &.yakit-button-success {
     @include generateText('success');
@@ -506,7 +523,7 @@
     @include generateText('infoBlue');
   }
 }
-.yakit-button-text2 {
+.yakit-button.yakit-button-text2.yakit-button-text2 {
   @include generateText2('primary');
 }
 

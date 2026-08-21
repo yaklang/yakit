@@ -166,13 +166,12 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
         {(isYakit() || isMemfit()) && (
           <>
             <YakitPopover
-              overlayClassName={styles['menu-popover']}
-              overlayStyle={{ paddingTop: 2 }}
+              classNames={{ root: styles['menu-popover'] }}
               placement={'bottom'}
               trigger={'click'}
               content={importMenu}
-              visible={importMenuShow}
-              onVisibleChange={(visible) => setImportMenuShow(visible)}
+              open={importMenuShow}
+              onOpenChange={(visible) => setImportMenuShow(visible)}
             >
               <YakitButton
                 type="text"
@@ -248,8 +247,7 @@ export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
       return (
         <YakitPopover
           key={itemKey}
-          overlayClassName={classNames(styles['menu-popover'], styles['menu-popover-no-arrow'])}
-          overlayStyle={{ paddingTop: 2 }}
+          classNames={{ root: classNames(styles['menu-popover']) }}
           placement="bottomRight"
           trigger="click"
           content={
@@ -269,8 +267,8 @@ export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
               }}
             />
           }
-          visible={activePopoverKey === itemKey}
-          onVisibleChange={(visible) => {
+          open={activePopoverKey === itemKey}
+          onOpenChange={(visible) => {
             setActivePopoverKey(visible ? itemKey! : null)
           }}
         >

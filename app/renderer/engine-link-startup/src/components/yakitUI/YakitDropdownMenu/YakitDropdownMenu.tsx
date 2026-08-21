@@ -2,6 +2,7 @@ import { Dropdown, type DropdownProps } from 'antd'
 import classNames from 'classnames'
 import { memo, type ReactNode, useMemo } from 'react'
 import { YakitMenu, type YakitMenuProp } from '../YakitMenu/YakitMenu'
+import { normalizeDropdownProps } from '@/utils/antdCompat'
 import styles from './YakitDropdownMenu.module.scss'
 
 /** 可能准备写成基础组件 */
@@ -12,16 +13,26 @@ interface YakitDropdownMenuProps {
 }
 /** 可能准备写成基础组件 */
 export const YakitDropdownMenu: React.FC<YakitDropdownMenuProps> = memo((props) => {
-  const { dropdown: { overlayClassName, ...restProps } = {}, menu, children } = props
+  const {
+    dropdown = {},
+    menu: { menuWrapperClassName, ...resetMenu },
+    children,
+  } = props
+  const { overlayClassName, ...dropdownProps } = normalizeDropdownProps(dropdown)
 
   const overlay = useMemo(() => {
-    return <YakitMenu {...menu} />
-  }, [menu])
+    return (
+      <YakitMenu
+        {...resetMenu}
+        menuWrapperClassName={classNames(styles['yakit-dropdown-menu-div'], menuWrapperClassName)}
+      />
+    )
+  }, [resetMenu, menuWrapperClassName])
 
   return (
     <Dropdown
-      {...restProps}
-      overlay={overlay}
+      {...dropdownProps}
+      popupRender={() => overlay}
       overlayClassName={classNames(styles['yakit-dropdown-menu'], overlayClassName)}
     >
       {children}

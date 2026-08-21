@@ -12,7 +12,7 @@ import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
  * @augments YakitEmptyProps 继承antd的 Empty 默认属性
  */
 export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
-  const { title, titleClassName, ...restProps } = props
+  const { title, titleClassName, styles: callerStyles, imageStyle, ...restProps } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
 
   const emptyImageTarget = useEmptyImage('empty')
@@ -20,15 +20,15 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
   return (
     <Empty
       image={<img style={{ userSelect: 'none' }} draggable={false} src={emptyImageTarget} alt="" />}
-      imageStyle={
-        props.imageStyle
-          ? props.imageStyle
-          : {
-              height: 200,
-              width: 200,
-              margin: '24px auto',
-            }
-      }
+      styles={{
+        ...callerStyles,
+        image: callerStyles?.image ||
+          imageStyle || {
+            height: 200,
+            width: 200,
+            margin: '24px auto',
+          },
+      }}
       {...restProps}
       description={
         props.descriptionReactNode ? (

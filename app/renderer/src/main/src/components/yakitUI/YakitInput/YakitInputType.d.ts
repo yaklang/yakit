@@ -16,6 +16,7 @@ export interface YakitInputProps extends Omit<InputProps, 'size'> {
   size?: YakitSizeType
   wrapperClassName?: string
   wrapperStyle?: CSSProperties
+  _skipAddonWarning?: boolean
 }
 /**
  * @description YakitInputSearchProps 的属性

@@ -39,10 +39,11 @@
 }
 
 .domainAsset-table-drop-down-popover {
-  padding-top: 5px;
   :global {
-    .ant-popover-inner-content {
-      padding: 4px;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 4px;
+      }
     }
   }
 }

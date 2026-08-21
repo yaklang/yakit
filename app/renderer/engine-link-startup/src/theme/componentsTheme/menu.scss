@@ -1,7 +1,15 @@
-.ant-popover-inner {
+html .ant-popover .ant-popover-inner {
+  --ant-popover-inner-padding: 0px;
+  padding: 0 !important;
   background: var(--Colors-Use-Basic-Background);
   border: 1px solid var(--Colors-Use-Neutral-Border);
+  box-shadow: 0 8px 16px var(--Colors-Use-Basic-Shadow);
+  border-radius: 4px;
   ul {
     background: var(--Colors-Use-Basic-Background);
   }
+}
+
+html .ant-popover .ant-popover-inner-content {
+  padding: 0;
 }

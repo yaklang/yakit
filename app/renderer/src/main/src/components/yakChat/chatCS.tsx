@@ -1134,12 +1134,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             {/* <YakitChatCSIcon />
                         ChatCS
                         <Tooltip
-                            overlayClassName={classNames(styles["tooltip-wrapper"], styles["info-hint-popover"])}
-                            overlayStyle={{paddingTop: 4}}
+                            classNames={{ root: classNames(styles["tooltip-wrapper"], styles["info-hint-popover"]) }}
+                            styles={{ root: { paddingTop: 4 } }}
                             title={"ChatCS模型参数：6.5b，训练Token: 1.5T 显卡资源：A40*4，使用文心增强知识推理能力"}
                         >
                             <OutlineInformationcircleIcon className={styles["info-hint"]} />
-                        </Tooltip> */}
+                        </Tooltip>
             {/* <YakitRadioButtons
                             value={chatcsType}
                             onChange={(e) => {
@@ -1172,7 +1172,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             <div className={styles['extra-base-btn']}>
               {chatcsType === 'ChatCS' && history.length !== 0 && (
                 <>
-                  <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'会话历史记录'}>
+                  <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'会话历史记录'}>
                     <div
                       className={classNames(styles['big-btn'], styles['btn-style'], {
                         [styles['disable-style']]: loading,
@@ -1190,7 +1190,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
               )}
               {chatcsType === 'PluginAI' && pluginAIList.length > 0 && !showOnly && (
                 <>
-                  <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'清空插件输出'}>
+                  <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'清空插件输出'}>
                     <div
                       className={classNames(styles['small-btn'], styles['btn-style'])}
                       onClick={() => {
@@ -1205,7 +1205,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
               )}
               {chatcsType === 'PluginAI' && showOnly && (
                 <>
-                  <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'历史'}>
+                  <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'历史'}>
                     <div
                       className={classNames(styles['big-btn'], styles['btn-style'])}
                       onClick={() => {
@@ -1333,7 +1333,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 <div className={styles['footer-wrapper']}>
                   <Input.TextArea
                     className={styles['text-area-wrapper']}
-                    bordered={false}
+                    variant="borderless"
                     placeholder={`问我任何问题...(${convertKeyboardToUIKey(
                       getChatCSShortcutKeyEvents()['nextLine*chatCS'].keys,
                     )} 换行)`}
@@ -1356,8 +1356,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                   <div className={styles['input-footer']}>
                     {(+width || 451) < 450 ? (
                       <YakitPopover
-                        overlayClassName={styles['yakit-popover-type']}
-                        overlayStyle={{ paddingBottom: 4 }}
                         placement="topRight"
                         trigger={'click'}
                         content={
@@ -1366,7 +1364,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                               <div className={styles['type-title']}>
                                 回答类型
                                 <Tooltip
-                                  overlayClassName={styles['tooltip-wrapper']}
+                                  classNames={{ root: styles['tooltip-wrapper'] }}
                                   title={'ChatCS 将根据选择的类型回答你的问题'}
                                 >
                                   <QuestionMarkCircleIcon />
@@ -1418,7 +1416,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                       <div className={styles['footer-type-wrapper']}>
                         <div className={styles['type-title']}>
                           回答类型
-                          <Tooltip overlayStyle={{ paddingBottom: 5 }} title={'ChatCS 将根据选择的类型回答你的问题'}>
+                          <Tooltip
+                            styles={{ root: { paddingBottom: 5 } }}
+                            title={'ChatCS 将根据选择的类型回答你的问题'}
+                          >
                             <QuestionMarkCircleIcon />
                           </Tooltip>
                           :
@@ -1443,7 +1444,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                           <YakitPopover
                             title={'插件配置'}
                             // placement="topLeft"
-                            overlayClassName={styles['chatcs-plugin-option-popover']}
+                            classNames={{ root: styles['chatcs-plugin-option-popover'] }}
                             content={
                               <div className={styles['option-box']}>
                                 <div>最大执行数量：</div>
@@ -1461,11 +1462,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 </div>
                               </div>
                             }
-                            onVisibleChange={(v) => {
+                            onOpenChange={(v) => {
                               setPopoverVisible(v)
                             }}
-                            overlayInnerStyle={{ width: 220 }}
-                            visible={popoverVisible}
+                            styles={{ body: { width: 220 } }}
+                            open={popoverVisible}
                           >
                             <YakitButton icon={<SettingOutlined />} type={'text'} size={'small'} />
                           </YakitPopover>
@@ -2287,7 +2288,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
       className={styles['drawer-wrapper']}
       closable={false}
       placement="bottom"
-      visible={visible}
+      open={visible}
       onClose={() => setVisible(false)}
     >
       <div className={styles['drawer-body']}>
@@ -2318,7 +2319,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                       </div>
                     </div>
                     <div className={styles['opt-operate']}>
-                      <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'编辑对话标题'}>
+                      <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'编辑对话标题'}>
                         <div
                           className={styles['operate-btn']}
                           onClick={(e) => {
@@ -2329,7 +2330,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                           <PencilAltIcon />
                         </div>
                       </Tooltip>
-                      <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'删除该对话'}>
+                      <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'删除该对话'}>
                         <div
                           className={styles['operate-btn']}
                           onClick={(e) => {
@@ -2659,9 +2660,9 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
         ))}
       </div>
       <YakitDrawer
-        // className={styles['drawer-wrapper']}
-        className={classNames([styles['chat-cs-prompt-drawer'], styles['drawer-wrapper']])}
-        visible={visible}
+        // rootClassName={styles['drawer-wrapper']}
+        rootClassName={classNames([styles['chat-cs-prompt-drawer'], styles['drawer-wrapper']])}
+        open={visible}
         placement="bottom"
         height={452}
         onClose={() => onClose()}
@@ -2727,7 +2728,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
               <div className={styles['input-text-area']}>
                 <Input.TextArea
                   autoSize={true}
-                  bordered={false}
+                  variant="borderless"
                   className={styles['text-area-wrapper']}
                   placeholder={`请输入${item}`}
                   onChange={(e) => {
@@ -2753,7 +2754,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                     <div className={styles["input-text-area"]}>
                         <Input.TextArea
                             autoSize={true}
-                            bordered={false}
+                            variant="borderless"
                             className={styles["text-area-wrapper"]}
                             placeholder='请输入情报需求...'
                         />
@@ -2835,7 +2836,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
       keyboard={false}
       maskClosable={false}
       width={modalWidth}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       bodyStyle={{ padding: 0 }}
     >

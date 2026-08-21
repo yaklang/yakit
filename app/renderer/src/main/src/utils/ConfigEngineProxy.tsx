@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { Alert, Button, Form, Space, Tag } from 'antd'
+import { Form, Space, Tag } from 'antd'
 import { info } from '@/utils/notification'
 import { ReloadOutlined } from '@ant-design/icons'
 import { InputItem } from '@/utils/inputUtil'
@@ -12,6 +12,8 @@ import { yakitEngine } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 
@@ -77,7 +79,7 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
       wrapperCol={{ span: 14 }}
     >
       <Form.Item label={' '} colon={false}>
-        <Alert
+        <YakitAlert
           closable={false}
           type={'info'}
           message={
@@ -86,7 +88,7 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
                 <Space>
                   <div>{t('ConfigEngineProxy.currentProxy')}</div>
                   <Tag color={'red'}>{proxy}</Tag>
-                  <Button type={'link'} icon={<ReloadOutlined />} onClick={update} />
+                  <YakitButton type={'text'} icon={<ReloadOutlined />} onClick={update} />
                 </Space>
                 <div>{t('ConfigEngineProxy.hint')}</div>
               </Space>
@@ -102,10 +104,10 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
         help={t('ConfigEngineProxy.proxyHelp')}
       />
       <Form.Item colon={false} label={' '}>
-        <Button loading={loading} type="primary" htmlType="submit">
+        <YakitButton loading={loading} type="primary" htmlType="submit">
           {' '}
           {t('ConfigEngineProxy.updateProxy')}{' '}
-        </Button>
+        </YakitButton>
       </Form.Item>
     </Form>
   )

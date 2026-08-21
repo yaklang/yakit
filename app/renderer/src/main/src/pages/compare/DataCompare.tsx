@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect, useMemo } from 'react'
-import { Button, Space } from 'antd'
+import { Space } from 'antd'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import { AutoCard } from '../../components/AutoCard'
 import { LineConversionIcon } from '../../assets/icons'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './DataCompare.module.scss'
 import { RemoveIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -42,9 +43,9 @@ export const DataCompare: React.FC<DataCompareProps> = (props) => {
       bordered={false}
       extra={
         <Space>
-          <Button
+          <YakitButton
             size={'small'}
-            type={!noWrap ? 'primary' : 'link'}
+            type={!noWrap ? 'primary' : 'text'}
             icon={<LineConversionIcon />}
             onClick={() => {
               codeComparisonRef.current?.onChangeLineConversion()

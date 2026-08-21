@@ -8,7 +8,8 @@ import React, {
   useCallback,
   type FC,
 } from 'react'
-import { Button, Card, Col, Descriptions, PageHeader, Row, Space, Tooltip } from 'antd'
+import { Button, Card, Col, Descriptions, Row, Space, Tooltip } from 'antd'
+import { YakitPageHeader } from './YakitPageHeader'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons'
 import type { HTTPFlow } from './HTTPFlowTable/HTTPFlowTable'
 import { type IMonacoEditor, NewHTTPCard, NewHTTPPacketEditor, type RenderTypeOptionVal } from '../utils/editors'
@@ -305,7 +306,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
       {flow ? (
         <>
           {props.noHeader ? undefined : (
-            <PageHeader
+            <YakitPageHeader
               title={t('HTTPFlowDetail.requestDetails')}
               subTitle={`${props.id}${
                 (props.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(',')}` : ''
@@ -445,7 +446,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     </>
                   }
                   size={'small'}
-                  bodyStyle={{ padding: 0 }}
+                  styles={{ body: { padding: 0 } }}
                 >
                   <div style={{ height: 350 }}>
                     {flow.IsWebsocket ? (
@@ -500,7 +501,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                     </>
                   }
                   size={'small'}
-                  bodyStyle={{ padding: 0 }}
+                  styles={{ body: { padding: 0 } }}
                 >
                   <div style={{ height: 350 }}>
                     {flow.IsWebsocket ? (
@@ -1051,7 +1052,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         <NewHTTPPacketEditor
                           fromMITM={props.pageType === 'MITM'}
                           title={
-                            <Button.Group size={'small'}>
+                            <Space.Compact size={'small'}>
                               {existedInfoType.map((i) => {
                                 return (
                                   <YakitButton
@@ -1066,7 +1067,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                   </YakitButton>
                                 )
                               })}
-                            </Button.Group>
+                            </Space.Compact>
                           }
                           readOnly={true}
                           noLineNumber={true}
@@ -1119,7 +1120,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         title={
                           <div className={styles['table-header-rules']}>
                             <Space>
-                              <Button.Group size={'small'}>
+                              <Space.Compact size={'small'}>
                                 {existedInfoType.map((i) => {
                                   return (
                                     <YakitButton
@@ -1134,7 +1135,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     </YakitButton>
                                   )
                                 })}
-                              </Button.Group>
+                              </Space.Compact>
                               <Tooltip title={t('HTTPFlowDetailMini.previousRule')}>
                                 <YakitButton
                                   type="text"
@@ -1212,7 +1213,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                         title={
                           <div className={styles['table-header']} style={{ width: '100%' }}>
                             <Space>
-                              <Button.Group size={'small'}>
+                              <Space.Compact size={'small'}>
                                 {existedInfoType.map((i) => {
                                   return (
                                     <YakitButton
@@ -1227,7 +1228,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     </YakitButton>
                                   )
                                 })}
-                              </Button.Group>
+                              </Space.Compact>
                             </Space>
                             <Space>
                               <div className={classNames(styles['http-history-fold-box'])}>

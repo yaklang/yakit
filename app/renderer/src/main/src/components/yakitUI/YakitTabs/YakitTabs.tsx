@@ -1,9 +1,7 @@
 import type React from 'react'
 import { Tabs, type TabsProps } from 'antd'
 import classNames from 'classnames'
-import styles from './YakitTabs.module.scss'
-
-const { TabPane } = Tabs
+import { childrenToTabItems, CompatTabPane } from '@/utils/antdCompat'
 
 /**
  * 暂时用在插件商店 其他页面误用 后面会删除这个组件
@@ -14,10 +12,19 @@ interface YakitTabsProps extends TabsProps {
 }
 
 const YakitTabs: React.FC<YakitTabsProps> = (props) => {
-  const { tabPosition = 'top', className = '', type = 'line', tabBarGutter, boxStyle, ...restProps } = props
+  const {
+    tabPosition = 'top',
+    className = '',
+    type = 'line',
+    tabBarGutter,
+    boxStyle,
+    children,
+    items,
+    ...restProps
+  } = props
 
   return (
-    <div className={styles.yakitTabs} style={boxStyle}>
+    <div style={boxStyle}>
       <Tabs
         {...restProps}
         className={classNames(className, {
@@ -26,9 +33,10 @@ const YakitTabs: React.FC<YakitTabsProps> = (props) => {
         })}
         tabPosition={tabPosition}
         tabBarGutter={tabBarGutter !== undefined ? tabBarGutter : type === 'card' ? 5 : 32}
+        items={items ?? childrenToTabItems(children)}
       />
     </div>
   )
 }
 
-export default Object.assign(YakitTabs, { YakitTabPane: TabPane })
+export default Object.assign(YakitTabs, { YakitTabPane: CompatTabPane })

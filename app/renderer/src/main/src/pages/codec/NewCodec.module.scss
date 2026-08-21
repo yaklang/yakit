@@ -567,16 +567,10 @@
     .ant-popover-content {
       max-width: 352px;
     }
-    .ant-popover-inner-content {
-      padding: 16px;
-    }
-
     .ant-popover-inner {
-      border-radius: 4px;
-    }
-
-    .ant-popover-arrow {
-      right: 0;
+      .ant-popover-inner-content {
+        padding: 16px;
+      }
     }
 
     .ant-popover-placement-top,

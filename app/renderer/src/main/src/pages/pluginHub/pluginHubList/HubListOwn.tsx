@@ -773,7 +773,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                 ) : listTotal > 0 ? (
                   <YakitEmpty
                     image={emptyImageTarget}
-                    imageStyle={{ margin: '0 auto 24px', width: 274, height: 180 }}
+                    styles={{ image: { margin: '0 auto 24px', width: 274, height: 180 } }}
                     title={t('YakitEmpty.searchEmpty')}
                     className={styles['hub-list-empty']}
                   />
@@ -809,10 +809,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                 <div className={styles['hub-detail-list-extra']}>
                   <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type="user" />
                   <div className={styles['divider-style']}></div>
-                  <Tooltip
-                    title={selectedNum > 0 ? t('YakitButton.download') : t('YakitButton.oneClickDownload')}
-                    overlayClassName="plugins-tooltip"
-                  >
+                  <Tooltip title={selectedNum > 0 ? t('YakitButton.download') : t('YakitButton.oneClickDownload')}>
                     <YakitButton
                       type="text2"
                       loading={batchDownloadLoading}
@@ -824,7 +821,6 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                   {/* <div className={styles["divider-style"]}></div>
                                     <Tooltip
                                         title={selectedNum > 0 ? "删除" : "清空"}
-                                        overlayClassName='plugins-tooltip'
                                     >
                                         <YakitButton
                                             type='text2'

@@ -876,16 +876,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
               <div className={styles['mitm-v2-hijacked-manual-heard-extra-right']}>
                 <div className={styles['mitm-v2-switch']}>
                   <YakitCheckbox checked={isOnlyLookResponse} onChange={onHijackResponse} />
-                  <Tooltip
-                    overlayClassName="plugins-tooltip"
-                    title={t('MITMHijackedContent.when_checked_all_requests_will_be_forwar')}
-                    placement="top"
-                  >
+                  <Tooltip title={t('MITMHijackedContent.when_checked_all_requests_will_be_forwar')} placement="top">
                     <span className={styles['mitm-v2-switch-label']}>只看响应</span>
                   </Tooltip>
                 </div>
                 <YakitPopover
-                  overlayClassName={styles['mitm-v2-hijacked-manual-drop-down-popover']}
+                  classNames={{ root: styles['mitm-v2-hijacked-manual-drop-down-popover'] }}
                   content={
                     <YakitMenu
                       width={150}
@@ -909,8 +905,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                   }
                   trigger="click"
                   placement="bottomLeft"
-                  visible={mitmV2PopoverVisible}
-                  onVisibleChange={setMITMV2PopoverVisible}
+                  open={mitmV2PopoverVisible}
+                  onOpenChange={setMITMV2PopoverVisible}
                 >
                   <YakitButton
                     type="outline2"

@@ -48,13 +48,13 @@ export const WebFuzzerAiTestTemplateModal: React.FC<WebFuzzerAiTestTemplateModal
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       title={mode === 'add' ? t('WebFuzzerAiTestTemplate.addTitle') : t('WebFuzzerAiTestTemplate.editTitle')}
       width={560}
       onCancel={onCancel}
       okText={t('YakitButton.save')}
       onOk={handleOk}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form form={form} layout="vertical" className={styles['web-fuzzer-ai-test-template-form']}>
         <Form.Item

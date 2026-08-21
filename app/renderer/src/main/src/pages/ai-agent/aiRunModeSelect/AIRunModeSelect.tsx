@@ -206,10 +206,10 @@ const AIRunModeSelect: React.FC = memo(() => {
   return (
     <Dropdown
       trigger={['click']}
-      visible={modeVisible}
-      onVisibleChange={setModeVisible}
+      open={modeVisible}
+      onOpenChange={setModeVisible}
       overlayClassName={styles['mode-dropdown']}
-      overlay={
+      popupRender={() => (
         <div className={styles['mode-menu']}>
           <div className={styles['mode-menu-hint']}>
             {execute ? 'AI 运行中，仅 Plan 可修改，Multi-Agent / Goal 暂不可改' : '请选择模式，可多选'}
@@ -282,7 +282,7 @@ const AIRunModeSelect: React.FC = memo(() => {
             </div>
           )}
         </div>
-      }
+      )}
     >
       <YakitButton
         type="outline2"

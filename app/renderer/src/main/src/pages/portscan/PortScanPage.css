@@ -7,33 +7,8 @@
   padding: 6px 0;
 }
 
-.scan-port-tabs {
-  width: 100%;
-  height: 100%;
-}
 .scan-port-tabs .ant-tabs-tab {
   padding: 5px 0;
-}
-
-.scan-port-tabs .scan-port-body {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-flow: row;
-}
-
-.scan-port-tabs .scan-port-body .right-container {
-  flex: 1;
-  padding-left: 10px;
-  overflow-x: hidden;
-  display: flex;
-  flex-flow: column;
-}
-.scan-port-tabs .scan-port-body .right-container .form-item-margin {
-  margin-bottom: 0;
-}
-.scan-port-tabs .scan-port-body .right-container .form-submit-style {
-  margin: 0 0 4px 7px;
 }
 .scan-port-tabs .ant-tabs-ink-bar {
   background: var(--Colors-Use-Main-Primary);

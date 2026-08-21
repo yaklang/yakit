@@ -59,11 +59,11 @@ const TaskDetailsPopover: React.FC<TaskDetailsPopoverProps> = ({ taskLabel = 'è‡
   return (
     <YakitPopover
       content={popoverContent}
-      destroyTooltipOnHide={true}
+      destroyOnHidden={true}
       trigger="click"
-      overlayClassName={styles['ai-re-act-task-popover']}
-      visible={visible}
-      onVisibleChange={handleVisibleChange}
+      classNames={{ root: styles['ai-re-act-task-popover'] }}
+      open={visible}
+      onOpenChange={handleVisibleChange}
     >
       <Tooltip title={t('YakitButton.viewDetail')}>
         <YakitButton isHover={visible} type="text2" icon={<OutlineListTodoIcon />} onClick={handleOpen} />

@@ -4,14 +4,14 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { Form, Modal, Tooltip } from 'antd'
+import { Form, Tooltip } from 'antd'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { contentType } from '../HTTPFlowTable'
 import { isEqual, toArray } from 'lodash'
 import { OutlineInformationcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { yakitNotify } from '@/utils/notification'
+import { yakitNotify, getModalApi } from '@/utils/notification'
 import styles from './HTTPFlowTableFormConfiguration.module.scss'
 
 // 旧的缓存 后续移除
@@ -124,7 +124,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
   }
   const onClose = useMemoizedFn(() => {
     if (hasUnsavedChange()) {
-      Modal.confirm({
+      getModalApi().confirm({
         title: t('YakitModal.friendlyReminder'),
         icon: <OutlineInformationcircleIcon />,
         content: t('HTTPFlowTableFormConfiguration.saveAdvancedConfigAndClose'),
@@ -135,7 +135,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
           <div
             onClick={(e) => {
               e.stopPropagation()
-              Modal.destroyAll()
+              getModalApi().destroyAll()
             }}
             className="modal-remove-icon"
           >
@@ -176,8 +176,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
 
   return (
     <YakitDrawer
-      className={styles['http-flow-table-form-configuration']}
-      visible={visible}
+      rootClassName={styles['http-flow-table-form-configuration']}
+      open={visible}
       width="max(700px, 40%)"
       onClose={onClose}
       title={

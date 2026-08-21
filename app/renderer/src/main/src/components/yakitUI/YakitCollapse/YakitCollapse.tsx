@@ -4,15 +4,26 @@ import styles from './YakitCollapse.module.scss'
 import classNames from 'classnames'
 import type { YakitCollapseProps, YakitPanelProps } from './YakitCollapseType'
 import { SolidChevrondownIcon, SolidChevronrightIcon } from '@/assets/icon/solid'
+import { childrenToCollapseItems } from '@/utils/antdCompat'
 
 const { Panel } = Collapse
 
 /**
  * @description: 折叠面板
- * @augments  继承antd的 CollapseProps 默认属性
+ * @augments 继承 antd CollapseProps，antd 5 的 onChange 固定为 string[]
  */
 const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
-  const { expandIcon, bordered, className = '', ...restProps } = props
+  const {
+    expandIcon,
+    bordered,
+    className = '',
+    destroyInactivePanel,
+    destroyOnHidden,
+    children,
+    items,
+    ...restProps
+  } = props
+  const mergedItems = items ?? childrenToCollapseItems(children)
   return (
     <Collapse
       {...restProps}
@@ -25,18 +36,19 @@ const YakitCollapse: React.FC<YakitCollapseProps> = (props) => {
         className,
       )}
       ghost
+      items={mergedItems}
+      destroyOnHidden={destroyOnHidden ?? destroyInactivePanel}
       expandIcon={expandIcon ? expandIcon : (e) => (e.isActive ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />)}
     />
   )
 }
 
 /**
- * @description: 折叠面板
- * @augments  继承antd的CollapsePanelProps 默认属性
+ * @description: 折叠面板项，继续走 antd Panel children，以便包装组件（如 MatchersPanel）内部的 header/extra 生效
  */
 const YakitPanel: React.FC<YakitPanelProps> = (props) => {
-  const { ...restProps } = props
-  return <Panel {...restProps} />
+  const { disabled, collapsible, ...restProps } = props
+  return <Panel {...restProps} collapsible={collapsible ?? (disabled ? 'disabled' : undefined)} />
 }
 
 export default Object.assign(YakitCollapse, { YakitPanel })

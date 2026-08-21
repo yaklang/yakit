@@ -19,28 +19,43 @@ const tOriginal = i18n.getFixedT(null, 'yakitUi')
  * @augments DrawerProps 继承antd的 DrawerProps 默认属性
  */
 export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
-  const { visible, ...restProps } = props
+  const { visible, open, style, height, placement, bodyStyle, headerStyle, styles: stylesProp, ...restProps } = props
+  const mergeOpen = open ?? visible
+  const isVertical = placement === 'bottom' || placement === 'top'
+  const { height: styleHeight, ...restStyle } = style || {}
+  const mergedHeight = height ?? (isVertical ? styleHeight : undefined)
+  // antd 5 已废弃 bodyStyle/headerStyle，归一化为 styles.body/styles.header，对齐 YakitModal/AutoCard 兼容策略
+  const baseStyles = stylesProp ?? {}
+  const mergedStyles = {
+    ...baseStyles,
+    ...(headerStyle ? { header: { ...baseStyles.header, ...headerStyle } } : {}),
+    ...(bodyStyle ? { body: { ...baseStyles.body, ...bodyStyle } } : {}),
+  }
 
   useEffect(() => {
     // 底部橱窗不影响拖拽
-    if (props.placement === 'bottom') return
-    emiter.emit('setYakitHeaderDraggable', !visible)
+    if (placement === 'bottom') return
+    emiter.emit('setYakitHeaderDraggable', !mergeOpen)
     return () => emiter.emit('setYakitHeaderDraggable', true)
-  }, [visible, props.placement])
+  }, [mergeOpen, placement])
 
   return (
     <Drawer
-      visible={visible}
+      open={mergeOpen}
+      placement={placement}
+      height={mergedHeight}
+      style={isVertical ? restStyle : style}
+      styles={mergedStyles}
       {...restProps}
       closeIcon={
         <div className={styles['yakit-drawer-icon']}>
           {props.closeIcon || <RemoveIcon className={styles['yakit-drawer-remove-icon']} />}
         </div>
       }
-      className={classNames(
+      rootClassName={classNames(
         styles['yakit-drawer'],
-        { [styles['yakit-drawer-bottom']]: props.placement === 'bottom' },
-        props.className,
+        { [styles['yakit-drawer-bottom']]: placement === 'bottom' },
+        props.rootClassName,
       )}
     >
       {props.children}
@@ -64,9 +79,9 @@ const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
         if (props.onCancel) props.onCancel(e)
         setVisible(false)
       }}
-      visible={visible}
+      open={visible}
       closable={true}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       {...resProps}
     />
   )

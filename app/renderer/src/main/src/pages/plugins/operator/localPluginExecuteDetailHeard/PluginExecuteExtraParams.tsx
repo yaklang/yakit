@@ -170,8 +170,8 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
     })
     return (
       <YakitDrawer
-        className={styles['plugin-execute-extra-params-drawer']}
-        visible={visible}
+        rootClassName={styles['plugin-execute-extra-params-drawer']}
+        open={visible}
         onClose={onClose}
         width="max(700px, 40%)"
         title="额外参数"
@@ -231,7 +231,7 @@ export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React
 
 interface FixExtraParamsNodeProps {
   pathRef: React.MutableRefObject<YakitBaseSelectRef>
-  form: FormInstance<HTTPRequestBuilderParams>
+  form: FormInstance
   onReset: (fields) => void
 
   /** YakitCollapse的bordered 插件调试页面的样式需要该属性 */
