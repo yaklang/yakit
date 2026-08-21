@@ -6595,8 +6595,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
     isCustomWebFuzzerGroupColor(group.color) ? group.color : undefined,
   )
   const fixedGroupColorStyles = useMemo(
-    () =>
-      Object.fromEntries(webFuzzerGroupColorList.map((c) => [c, getWebFuzzerGroupColorStyle(c, theme)])),
+    () => Object.fromEntries(webFuzzerGroupColorList.map((c) => [c, getWebFuzzerGroupColorStyle(c, theme)])),
     [theme],
   )
   const menu = useCreation(() => {
