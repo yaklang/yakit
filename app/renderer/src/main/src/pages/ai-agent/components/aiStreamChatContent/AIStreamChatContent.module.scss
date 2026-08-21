@@ -70,15 +70,18 @@
   @include thought.thought-stream-header;
 
   .thought-body {
-    max-height: 240px;
-    overflow-y: auto;
-    padding-left: 8px;
-    border-left: 2px solid var(--Colors-Use-Neutral-Disable);
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 20px;
-    white-space: pre-wrap;
-    word-break: break-word;
+    @include thought.thought-stream-body;
+  }
+
+  .thought-body-inner {
+    @include thought.thought-stream-body-inner;
+  }
+
+  .thought-body-scroll {
+    @include thought.thought-stream-body-scroll;
+  }
+
+  .thought-body-inner-scroll {
+    @include thought.thought-stream-body-inner-scroll;
   }
 }

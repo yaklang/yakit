@@ -19,6 +19,10 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
     if (isScroll) setIsScroll(false)
   }, contentRef)
 
+  useEffect(() => {
+    if (!expand) setIsScroll(false)
+  }, [expand])
+
   /** 监听当前容器得滚动条是否在底部 */
   useEffect(() => {
     const el = contentRef.current
@@ -71,15 +75,20 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
         [styles.expand]: expand,
         [styles.noMask]: isScroll || isThought,
         [styles['content-thought']]: isThought,
+        [styles['content-thought-scroll']]: isThought && isScroll,
       })}
     >
       <div
         ref={contentRef}
         onClick={() => setIsScroll(true)}
         className={styles['content-inner']}
-        style={{
-          overflow: isScroll ? 'overlay' : 'hidden',
-        }}
+        style={
+          isThought
+            ? undefined
+            : {
+                overflow: isScroll ? 'overlay' : 'hidden',
+              }
+        }
       >
         {childrenTokens.map((token, index) =>
           rendItem ? rendItem(token, index) : <StaticChatContent key={token} token={token} groupIndex={index} />,

@@ -1,13 +1,14 @@
-import React, { useMemo, type ReactNode } from 'react'
+import React, { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { AIStreamChatContentProps } from './type'
 import { Tooltip } from 'antd'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import styles from './AIStreamChatContent.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import classNames from 'classnames'
-import { OutlineChevrondownIcon } from '@/assets/icon/outline'
+import { OutlineChevrondownIcon, OutlineThoughtIcon } from '@/assets/icon/outline'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
+import { useClickAway } from 'ahooks'
 
 const STREAM_MASK_THRESHOLD = 100
 
@@ -19,9 +20,21 @@ const ThoughtStreamContent: React.FC<{
   streaming?: boolean
 }> = React.memo(({ token, content, nodeLabel, referenceNode, streaming }) => {
   const [expand, setExpand] = useUiExpand(token, false)
+  const [isScroll, setIsScroll] = useState(false)
+  const bodyRef = useRef<HTMLDivElement>(null)
+
+  useClickAway(() => {
+    if (isScroll) setIsScroll(false)
+  }, bodyRef)
+
+  useEffect(() => {
+    if (!expand) setIsScroll(false)
+  }, [expand])
+
   return (
     <div className={styles['ai-stream-chat-content-thought']}>
       <div className={styles['thought-header']} onClick={() => setExpand((open) => !open)}>
+        <OutlineThoughtIcon className={styles['thought-icon']} />
         <span className={classNames({ [styles['thought-title-blink']]: streaming })}>{nodeLabel}</span>
         <OutlineChevrondownIcon
           className={classNames(styles['thought-chevron'], {
@@ -30,9 +43,21 @@ const ThoughtStreamContent: React.FC<{
         />
       </div>
       {expand && (
-        <div className={styles['thought-body']}>
-          {content}
-          {referenceNode}
+        <div
+          ref={bodyRef}
+          className={classNames(styles['thought-body'], {
+            [styles['thought-body-scroll']]: isScroll,
+          })}
+          onClick={() => setIsScroll(true)}
+        >
+          <div
+            className={classNames(styles['thought-body-inner'], {
+              [styles['thought-body-inner-scroll']]: isScroll,
+            })}
+          >
+            {content}
+            {referenceNode}
+          </div>
         </div>
       )}
     </div>
