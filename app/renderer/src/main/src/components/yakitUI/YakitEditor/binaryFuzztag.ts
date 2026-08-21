@@ -148,9 +148,6 @@ const buildPlaceholder = (tagName: string, id: string): string =>
 
 /**
  * 从 `{{` 开始解析标签，返回标签名、括号内内容及结束位置
- * @param raw 原始字符串
- * @param start 指向 `{{` 的索引
- * @returns 解析结果或 null
  */
 function parseTag(raw: string, start: number): { tagName: string; content: string; endIndex: number } | null {
   const afterOpen = start + 2
@@ -276,8 +273,9 @@ const computePreview = (
       } catch (e) {}
       result = { byteLength, previewHex, previewText }
     } else if (kind === 'unquote') {
-      const bytes = goUnquoteToBytes(content)
-      result = { byteLength: bytes.length, previewHex: bytesToHex(bytes.slice(0, 4)) }
+      // 有界扫描：统计完整 byteLength，只保留头字节做 chip 预览（对齐 hex/base64 头切片）
+      const { byteLength, preview } = goUnquotePreview(content, 4)
+      result = { byteLength, previewHex: bytesToHex(preview) }
     } else if (kind === 'file') {
       result = { byteLength: content.length, previewHex: '' }
     }
@@ -620,7 +618,169 @@ const strToByteArray = (s: string): number[] => {
   return arr
 }
 
-// Go strconv.Unquote 语义的 JS 近似实现（仅用于预览/兜底），返回字节
+/** 估算 JS 字符串的 UTF-8 字节长度（不分配编码缓冲） */
+const utf8ByteLengthOf = (str: string): number => {
+  let len = 0
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i)
+    if (c < 0x80) {
+      len++
+    } else if (c < 0x800) {
+      len += 2
+    } else if (c >= 0xd800 && c <= 0xdbff) {
+      // 代理对 → 4 字节
+      len += 4
+      i++
+    } else {
+      len += 3
+    }
+  }
+  return len
+}
+
+/**
+ * Go strconv.Unquote 语义的有界扫描：统计完整 byteLength，只保留前 maxPreviewBytes。
+ * 用于 chip 预览，避免大 unquote 内容全量分配 Uint8Array / number[]。
+ */
+export const goUnquotePreview = (
+  input: string,
+  maxPreviewBytes = 4,
+): { byteLength: number; preview: Uint8Array } => {
+  let s = input
+  if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"') {
+    s = s.slice(1, s.length - 1)
+  }
+  const cap = Math.max(0, maxPreviewBytes)
+  const previewBuf = cap > 0 ? new Uint8Array(cap) : new Uint8Array(0)
+  let previewLen = 0
+  let byteLength = 0
+  const encoder = new TextEncoder()
+
+  const acceptByte = (b: number) => {
+    if (previewLen < cap) {
+      previewBuf[previewLen++] = b & 0xff
+    }
+    byteLength++
+  }
+  const acceptEncoded = (enc: Uint8Array) => {
+    for (let k = 0; k < enc.length; k++) {
+      acceptByte(enc[k])
+    }
+  }
+
+  let literal = ''
+  const flushLiteral = () => {
+    if (literal.length === 0) {
+      return
+    }
+    // 预览已满：只计长度，避免对大段字面量再 encode 整段进预览缓冲
+    if (previewLen >= cap) {
+      byteLength += utf8ByteLengthOf(literal)
+      literal = ''
+      return
+    }
+    const enc = encoder.encode(literal)
+    acceptEncoded(enc)
+    literal = ''
+  }
+  const pushRune = (codePoint: number) => {
+    acceptEncoded(encoder.encode(String.fromCodePoint(codePoint)))
+  }
+
+  let i = 0
+  const n = s.length
+  while (i < n) {
+    const c = s[i]
+    if (c !== '\\') {
+      literal += c
+      i++
+      continue
+    }
+    flushLiteral()
+    i++
+    if (i >= n) {
+      break
+    }
+    const e = s[i]
+    switch (e) {
+      case 'a':
+        acceptByte(7)
+        i++
+        break
+      case 'b':
+        acceptByte(8)
+        i++
+        break
+      case 'f':
+        acceptByte(12)
+        i++
+        break
+      case 'n':
+        acceptByte(10)
+        i++
+        break
+      case 'r':
+        acceptByte(13)
+        i++
+        break
+      case 't':
+        acceptByte(9)
+        i++
+        break
+      case 'v':
+        acceptByte(11)
+        i++
+        break
+      case '\\':
+        acceptByte(92)
+        i++
+        break
+      case '"':
+        acceptByte(34)
+        i++
+        break
+      case "'":
+        acceptByte(39)
+        i++
+        break
+      case 'x': {
+        const hex = s.slice(i + 1, i + 3)
+        acceptByte(parseInt(hex, 16) & 0xff)
+        i += 3
+        break
+      }
+      case 'u': {
+        const hex = s.slice(i + 1, i + 5)
+        pushRune(parseInt(hex, 16))
+        i += 5
+        break
+      }
+      case 'U': {
+        const hex = s.slice(i + 1, i + 9)
+        pushRune(parseInt(hex, 16))
+        i += 9
+        break
+      }
+      default: {
+        if (e >= '0' && e <= '7') {
+          const oct = s.slice(i, i + 3)
+          acceptByte(parseInt(oct, 8) & 0xff)
+          i += 3
+        } else {
+          literal += e
+          i++
+        }
+      }
+    }
+  }
+  flushLiteral()
+  return {
+    byteLength,
+    preview: previewLen === previewBuf.length ? previewBuf : previewBuf.slice(0, previewLen),
+  }
+}
+
+// Go strconv.Unquote 语义的 JS 近似实现（仅用于精确解码兜底），返回完整字节
 export const goUnquoteToBytes = (input: string): Uint8Array => {
   let s = input
   if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"') {

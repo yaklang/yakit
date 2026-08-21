@@ -229,6 +229,13 @@
   filter: brightness(1.08);
 }
 
+// 打开 Binary 编辑弹窗过程中禁用小块点击，避免连点叠窗
+.binary-fuzz-chip-busy .binary-fuzz-chip {
+  pointer-events: none;
+  cursor: wait;
+  opacity: 0.75 !important;
+}
+
 // 编辑后的小块：更醒目的橙色，提示已修改
 .binary-fuzz-chip-changed {
   color: var(--Colors-Use-Warning-On-Primary) !important;

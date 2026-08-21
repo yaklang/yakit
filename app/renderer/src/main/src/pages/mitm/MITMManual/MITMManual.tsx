@@ -977,7 +977,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         currentPacket: currentRequestPacket,
         TaskId: info.TaskID,
         isHttp: info.IsHttps,
-        requestPacket: Uint8ArrayToString(info.Request),
+        // 与 currentPacket 同源时复用同一 string，避免二次 Uint8ArrayToString
+        requestPacket: info?.IsWebsocket ? Uint8ArrayToString(info.Request) : currentRequestPacket,
         traceInfo: info.TraceInfo || {
           AvailableDNSServers: [],
           DurationMs: 0,
