@@ -241,7 +241,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           key={activeChat?.SessionID}
           ref={virtuosoRef}
           scrollerRef={setScrollerRef}
-          defaultItemHeight={26}
+          defaultItemHeight={80}
           atBottomStateChange={handleAtBottomStateChange}
           data={casualChatElements}
           totalListHeightChanged={handleTotalListHeightChanged}
@@ -249,7 +249,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           firstItemIndex={firstItemIndex}
           initialTopMostItemIndex={chatLength > 1 ? { index: 'LAST' } : 0}
           components={components}
-          // increaseViewportBy={{ top: 1200, bottom: 0 }}
+          increaseViewportBy={{ top: 600, bottom: 200 }}
           atBottomThreshold={50}
           skipAnimationFrameInResizeObserver
           startReached={handleLoadMore}

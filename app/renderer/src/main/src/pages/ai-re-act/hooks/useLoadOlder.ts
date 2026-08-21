@@ -12,8 +12,8 @@ import { collectEvictableContentTokens } from './contentEvict'
 
 /** 向上/向下固定预取条数 */
 const LOAD_AHEAD = 10
-/** 向后保留条数（已滚过的不立即淘汰，保留 5 条缓冲） */
-const KEEP_BEHIND = 5
+/** 向后保留条数（已滚过的不立即淘汰，贴底回看时减少空壳灌内容撑高） */
+const KEEP_BEHIND = 15
 /** 强制保留最新尾部条数（人在中间看历史时，底部流式输出不丢展示） */
 const TAIL_KEEP = 30
 /** firstItemIndex 起始偏移 */
