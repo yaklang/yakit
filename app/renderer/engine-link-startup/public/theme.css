@@ -150,10 +150,10 @@
   --Colors-Use-Neutral-Text-3-Secondary: var(--yakit-colors-Neutral-80);
   --Colors-Use-Neutral-Text-2-Primary: var(--yakit-colors-Neutral-90);
   --Colors-Use-Neutral-Text-1-Title: var(--yakit-colors-Neutral-100);
-  --Colors-Use-Basic-White: #ffffff;
+  --Colors-Use-Basic-White: #FFFFFF;
   --Colors-Use-Basic-Black: #171717;
-  --Colors-Use-Basic-Shadow: rgba(23, 23, 23, 0.08);
-  --Colors-Use-Basic-Modal-bg: rgba(23, 23, 23, 0.3);
+  --Colors-Use-Basic-Shadow: rgba(23,23,23, 0.08);
+  --Colors-Use-Basic-Modal-bg: rgba(23,23,23, 0.3);
   --Colors-Use-Basic-Background: var(--yakit-colors-Neutral-0);
   --Colors-Use-Status-Serious: var(--yakit-colors-Error-80);
   --Colors-Use-Status-High: var(--yakit-colors-Error-60);
@@ -248,7 +248,7 @@
   --Colors-Use-Grey-On-Primary: var(--yakit-colors-Neutral-10);
 }
 
-[data-theme='dark'] {
+[data-theme="dark"] {
   --yakit-colors-Main-10: #281f19;
   --yakit-colors-Main-20: #432c1c;
   --yakit-colors-Main-30: #58361f;
@@ -400,10 +400,10 @@
   --Colors-Use-Neutral-Text-3-Secondary: var(--yakit-colors-Neutral-60);
   --Colors-Use-Neutral-Text-2-Primary: var(--yakit-colors-Neutral-70);
   --Colors-Use-Neutral-Text-1-Title: var(--yakit-colors-Neutral-80);
-  --Colors-Use-Basic-White: #ffffff;
+  --Colors-Use-Basic-White: #FFFFFF;
   --Colors-Use-Basic-Black: #171717;
-  --Colors-Use-Basic-Shadow: rgba(0, 0, 0, 0.8);
-  --Colors-Use-Basic-Modal-bg: rgba(0, 0, 0, 0.7);
+  --Colors-Use-Basic-Shadow: rgba(0,0,0, 0.8);
+  --Colors-Use-Basic-Modal-bg: rgba(0,0,0, 0.7);
   --Colors-Use-Basic-Background: var(--yakit-colors-Neutral-0);
   --Colors-Use-Status-Serious: var(--yakit-colors-Error-50);
   --Colors-Use-Status-High: var(--yakit-colors-Error-70);
