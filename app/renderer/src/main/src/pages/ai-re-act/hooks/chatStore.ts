@@ -73,23 +73,6 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
       cancelChatLoading: false,
       timelinesLoading: false,
 
-      setUiExpand: (token, expand) =>
-        set((state) => {
-          if (!token) return
-          state.uiExpandMap[token] = expand
-        }),
-      toggleUiExpand: (token, defaultExpand) =>
-        set((state) => {
-          if (!token) return
-          const prev = state.uiExpandMap[token]
-          state.uiExpandMap[token] = prev === undefined ? !defaultExpand : !prev
-        }),
-      clearUiExpand: (token) =>
-        set((state) => {
-          if (!token) return
-          delete state.uiExpandMap[token]
-        }),
-
       updateStateCount: (type) =>
         set((state) => {
           state[type] += 1

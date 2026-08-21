@@ -1455,6 +1455,25 @@ export class ChatMultiSessionController {
     persistToolResultIfTerminal(sessionId, chatDetail)
   }
 
+  /** 设置指定 token 的卡片展开态（纯 UI，不触发渲染树落库） */
+  public setUiExpand(sessionId: string, token: string, expand: boolean) {
+    if (!sessionId || !token) return
+    const { store } = this.ensureSession(sessionId)
+    store.setState((state) => {
+      state.uiExpandMap[token] = expand
+    })
+  }
+
+  /** 切换指定 token 的展开态；map 中无记录时以 defaultExpand 为当前值再取反 */
+  public toggleUiExpand(sessionId: string, token: string, defaultExpand: boolean) {
+    if (!sessionId || !token) return
+    const { store } = this.ensureSession(sessionId)
+    store.setState((state) => {
+      const prev = state.uiExpandMap[token]
+      state.uiExpandMap[token] = prev === undefined ? !defaultExpand : !prev
+    })
+  }
+
   /**
    * 停流并卸池（deleteSessions / onPageUnload）
    * - 仍 ready：pendingDispose + forceClose，等 end/fallback 后 teardown
