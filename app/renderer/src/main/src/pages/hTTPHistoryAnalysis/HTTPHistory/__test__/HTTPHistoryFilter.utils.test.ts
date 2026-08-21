@@ -225,6 +225,7 @@ describe('buildHTTPFlowQueryRequestParams', () => {
       SearchURL: 'example.com',
       ContentType: ['json'],
       bodyLength: true,
+      idFilter: true,
       UpdatedAt: 1234567890,
       'UpdatedAt-time': '2026-01-01',
       SourceType: 'mitm',
@@ -251,6 +252,7 @@ describe('buildHTTPFlowQueryRequestParams', () => {
     })
     expect(requestParams).not.toHaveProperty('ContentType')
     expect(requestParams).not.toHaveProperty('bodyLength')
+    expect(requestParams).not.toHaveProperty('idFilter')
     expect(requestParams).not.toHaveProperty('UpdatedAt')
     expect(requestParams).not.toHaveProperty('UpdatedAt-time')
     expect(JSON.parse(tabQueryParams)).toEqual({

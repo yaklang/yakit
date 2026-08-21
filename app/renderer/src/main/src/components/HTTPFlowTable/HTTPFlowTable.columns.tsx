@@ -17,7 +17,7 @@ import { formatHTTPFlowPathSuffix } from './HTTPFlowPathSuffix'
 import { contentType, HTTP_FLOW_FAVORITE_TAG } from './HTTPFlowTable.constants'
 import type { ColumnAllInfoItem, HTTPFlow } from './HTTPFlowTable.constants'
 import { isHTTPFlowFavorite, onConvertBodySizeByUnit } from './HTTPFlowTable.utils'
-import { RangeInputNumberTableWrapper } from './components'
+import { RangeInputNumberTableWrapper, SearchInputTableWrapper } from './components'
 import style from './HTTPFlowTable.module.scss'
 import { buildColumnOrderMap, compareByColumnOrder } from '@/utils/sortByColumnOrder'
 import { defalutColumnsOrder } from '@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter'
@@ -55,6 +55,11 @@ export interface BuildHTTPFlowTableColumnsContext {
   getBodyLengthUnit: () => 'B' | 'K' | 'M'
   setBodyLengthUnit: (value: 'B' | 'K' | 'M') => void
   setParams: (updater: (prev: YakQueryHTTPFlowRequest) => YakQueryHTTPFlowRequest) => void
+  getIncludeIdSearch: () => string
+  setIncludeIdSearch: (value: string) => void
+  getIdSort: () => 'asc' | 'desc' | false
+  onIdSort: (s: 'asc' | 'desc') => void
+  onIncludeIdSearchSure: () => void
   actionHandlers: HTTPFlowTableColumnActionHandlers
   comBuiltinTagList: FiltersItemProps[]
 }
@@ -86,6 +91,11 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
     getBodyLengthUnit,
     setBodyLengthUnit,
     setParams,
+    getIncludeIdSearch,
+    setIncludeIdSearch,
+    getIdSort,
+    onIdSort,
+    onIncludeIdSearchSure,
     actionHandlers,
     comBuiltinTagList,
   } = ctx
@@ -98,8 +108,22 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       ellipsis: false,
       width: 96,
       enableDrag: false,
-      sorterProps: {
-        sorter: true,
+      filterProps: {
+        filterKey: 'idFilter',
+        filterIcon: <OutlineSelectorIcon className={style['filter-icon']} />,
+        filterRender: (closePopover: () => void) => (
+          <SearchInputTableWrapper
+            showSort={true}
+            sortOrder={getIdSort()}
+            onSort={onIdSort}
+            searchValue={getIncludeIdSearch()}
+            setSearchValue={setIncludeIdSearch}
+            onSure={() => {
+              closePopover()
+              onIncludeIdSearchSure()
+            }}
+          />
+        ),
       },
     },
     {

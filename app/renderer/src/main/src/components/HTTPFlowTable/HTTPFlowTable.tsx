@@ -101,6 +101,7 @@ import {
   hasActiveHTTPFlowTableFilterConfig,
   isHTTPFlowTableActive,
   normalizeHTTPFlowTotal,
+  parseIncludeIds,
   parseMITMLogResetSignal,
   safeParseHTTPFlowTableCache,
   selectHTTPFlowTableResizeAction,
@@ -313,6 +314,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [watchRefresh, setWatchRefresh] = useState<boolean>(false)
 
   const [checkBodyLength, setCheckBodyLength] = useState<boolean>(false) // 查询BodyLength大于0
+  const [, setIdSort, getIdSort] = useGetSetState<'asc' | 'desc' | false>(false)
+  const [, setIncludeIdSearch, getIncludeIdSearch] = useGetSetState('')
 
   const [batchVisible, setBatchVisible] = useState<boolean>(false)
 
@@ -522,6 +525,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       }
       if ('bodyLength' in query) {
         delete query.bodyLength
+      }
+      if ('idFilter' in query) {
+        delete query.idFilter
       }
       //插件执行中流量数据必有runTimeId
       if (pageType === 'Plugin' && !runTimeId) {
@@ -1205,22 +1211,62 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if (filter['ContentType']) {
         filter['SearchContentType'] = filter['ContentType'].join(',')
       }
+      const searchIds = parseIncludeIds(getIncludeIdSearch())
       setParams({
         Filter: {
           ...getParams(),
           ...filter,
           Tags: buildHTTPFlowQueryTags(tagsFilter, onlyFavorite),
-          bodyLength: !!(afterBodyLengthRef.current || beforeBodyLengthRef.current || checkBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
+          bodyLength: !!(afterBodyLengthRef.current || beforeBodyLengthRef.current || checkBodyLength), // 用来判断响应长度的icon颜色是否显示高亮
+          idFilter: !!(getIdSort() || getIncludeIdSearch()), // 用来判断id的icon颜色是否显示高亮
+          IncludeId: searchIds.length ? searchIds : viewAttachId ? getParams().IncludeId : [],
         },
         Pagination: {
           ...tableParams.Pagination,
-          Order: sort.order,
-          OrderBy: sort.orderBy === 'DurationMs' ? 'duration' : sort.orderBy || 'id',
+          Order: getIdSort() || sort.order,
+          OrderBy: 'id',
         },
       })
     },
     { wait: 500 },
   ).run
+
+  const onIdSort = useMemoizedFn((sort: 'asc' | 'desc') => {
+    const newSort = getIdSort() === sort ? false : sort
+    setIdSort(newSort)
+    setParams({
+      Filter: {
+        ...getParams(),
+        idFilter: !!(newSort || getIncludeIdSearch()),
+      },
+      Pagination: {
+        ...tableParams.Pagination,
+        Order: newSort || defSort.order,
+        OrderBy: defSort.orderBy,
+      },
+    })
+  })
+
+  const onIncludeIdSearchSure = useMemoizedFn(() => {
+    const rawInput = getIncludeIdSearch()
+    const ids = parseIncludeIds(rawInput)
+    const next = ids.length > 0 ? ids : undefined
+    const prevIds = getParams().IncludeId
+    // 判断新值和旧值是否“完全相同”（内容相等），同时处理两者都为 undefined/空数组的情况，视为相同，否则，必须两者都存在（非空）、长度相同、且每个元素按索引相等
+    const same =
+      (!next || next.length === 0) && (!prevIds || prevIds.length === 0)
+        ? true
+        : !!next && !!prevIds && next.length === prevIds.length && next.every((id, i) => id === prevIds[i])
+    // 如果新旧值相同，并且 viewAttachId 为假值（0 或 undefined），则不执行更新，直接返回
+    if (same && !viewAttachId) return
+    // 如果 viewAttachId 存在，则将其重置为 0（清除查看附近数据包状态）
+    if (viewAttachId) setViewAttachId(0)
+    setParams((prev) => ({
+      ...prev,
+      IncludeId: next,
+      idFilter: !!(getIdSort() || next?.length),
+    }))
+  })
 
   const campareProcessName = useCampare(props.ProcessName)
   useUpdateEffect(() => {
@@ -1302,6 +1348,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     delete copyQuery.Pagination
     delete copyQuery.AfterId
     delete copyQuery.BeforeId
+    delete copyQuery.idFilter
+    delete copyQuery.bodyLength
     if (Array.isArray(copyQuery.Methods)) {
       copyQuery.Methods = copyQuery.Methods.join(',')
     }
@@ -1762,6 +1810,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       getBodyLengthUnit,
       setBodyLengthUnit,
       setParams,
+      getIncludeIdSearch,
+      setIncludeIdSearch,
+      getIdSort,
+      onIdSort,
+      onIncludeIdSearchSure,
       actionHandlers: columnActionHandlers,
       comBuiltinTagList,
     })
@@ -2513,6 +2566,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setAfterBodyLength(undefined)
     setBodyLengthUnit('B')
     setSearchVal('')
+    setIdSort(false)
+    setIncludeIdSearch('')
     refreshTabsContRef.current = true
   })
   const onResetRefresh = useMemoizedFn(() => {
