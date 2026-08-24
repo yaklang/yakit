@@ -12,11 +12,8 @@ interface Params {
   activeKey?: AITabsEnumType
   showFreeChat: boolean
   timeLine: boolean
-  /**
-   * @deprecated 变量对应的赋值方法未使用，新版可以废弃
-   * 任务规划 tabs 是否有内容
-   */
-  // hasTaskTabs: boolean
+  /** 任务规划 tabs 是否有内容 */
+  hasTaskTabs: boolean
   /** 文件系统是否有预览文件 */
   hasFilePreview: boolean
 }
@@ -31,7 +28,7 @@ export function useAIChatResizeBox(params: Params) {
   }
 
   const resizeBoxProps = useCreation<ResizeBoxProps>(() => {
-    const { activeKey, showFreeChat, timeLine, hasFilePreview } = params
+    const { activeKey, showFreeChat, timeLine, hasTaskTabs, hasFilePreview } = params
     const override = overrideRef.current
     // 消费一次就清掉
     overrideRef.current = null
@@ -49,7 +46,7 @@ export function useAIChatResizeBox(params: Params) {
     const isFileSystem = activeKey === AITabsEnum.File_System
     const isOperationLog = activeKey === AITabsEnum.Operation_Log
     // 详情区为空 / 读写日志：左侧只保留列表宽度（与时间线一致），自由对话变大
-    const isDetailEmpty = isTaskContent || (isFileSystem && !hasFilePreview) || isOperationLog
+    const isDetailEmpty = (isTaskContent && !hasTaskTabs) || (isFileSystem && !hasFilePreview) || isOperationLog
 
     let secondRatio: ResizeBoxProps['secondRatio']
     let firstRatio: ResizeBoxProps['firstRatio']
@@ -76,7 +73,7 @@ export function useAIChatResizeBox(params: Params) {
       firstNodeStyle: {
         padding: 0,
         ...(!showFreeChat && { width: '100%' }),
-        ...(showFreeChat && isTaskContent && !timeLine ? { maxWidth: 30, minWidth: 30 } : {}),
+        ...(showFreeChat && isTaskContent && !hasTaskTabs && !timeLine ? { maxWidth: 30, minWidth: 30 } : {}),
       },
       secondNodeStyle: {
         padding: 0,
@@ -89,7 +86,7 @@ export function useAIChatResizeBox(params: Params) {
       ...computed,
       ...override,
     }
-  }, [params.activeKey, params.showFreeChat, params.timeLine, params.hasFilePreview, version])
+  }, [params.activeKey, params.showFreeChat, params.timeLine, params.hasTaskTabs, params.hasFilePreview, version])
 
   return {
     resizeBoxProps,

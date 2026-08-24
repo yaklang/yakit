@@ -7,7 +7,6 @@ import type {
   SideSettingButtonProps,
 } from './type'
 import styles from './AIChatWelcome.module.scss'
-import DoomFlameBackground from './DoomFlameBackground'
 import { AIChatTextarea } from '../template/template'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
@@ -205,7 +204,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
-        <DoomFlameBackground />
+        {/* <DoomFlameBackground /> */}
         <div className={styles['open-file-tree-button']} onClick={() => setOpenDrawer(!openDrawer)}>
           {t('AIChatWelcome.expandResources')}
           <YakitButton type="text2" icon={<OutlineOpenIcon />} />
