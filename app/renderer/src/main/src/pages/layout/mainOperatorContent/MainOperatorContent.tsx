@@ -87,7 +87,9 @@ import {
   OutlineStoreIcon,
 } from '@/assets/icon/outline'
 
-import { type FuzzerCacheDataProps, type ShareValueProps, getFuzzerCacheData } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
+import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fuzzerCacheData'
+import { type ShareValueProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
 import {
@@ -161,7 +163,6 @@ import { defaultCodeScanPageInfo } from '@/defaultConstants/CodeScan'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { defaultModifyNotepadPageInfo } from '@/defaultConstants/ModifyNotepad'
 import type { APIFunc } from '@/apiUtils/type'
-import { getHotPatchCodeInfo } from '@/pages/fuzzer/HTTPFuzzerHotPatch'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import { defaultHTTPHistoryAnalysisPageInfo } from '@/defaultConstants/hTTPHistoryAnalysis'
 import type { BatchAddNewGroupFormItem } from './BatchAddNewGroup'
@@ -675,8 +676,8 @@ const getSubPageTotal = (subPage) => {
   return total
 }
 
-import { childWindowHash, setChildWindowHash } from '@/utils/childWindowHash'
-export { childWindowHash } from '@/utils/childWindowHash'
+import { setChildWindowHash } from '@/utils/childWindowHash'
+export { getChildWindowHash, setChildWindowHash } from '@/utils/childWindowHash'
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
   const { routeKeyToLabel } = props
   const { t, i18n } = useI18nNamespaces(['layout'])

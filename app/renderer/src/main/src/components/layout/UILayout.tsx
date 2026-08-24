@@ -65,7 +65,7 @@ import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } 
 import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 const YakitGetOnlinePlugin = lazy(() =>
-  import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakitGetOnlinePlugin })),
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginOnline').then((m) => ({ default: m.YakitGetOnlinePlugin })),
 )
 import type { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
 const NewThirdPartyApplicationConfig = lazy(() => import('../configNetwork/NewThirdPartyApplicationConfig'))

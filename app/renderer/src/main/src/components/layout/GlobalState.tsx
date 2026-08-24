@@ -28,7 +28,7 @@ const IRifyApplySyntaxFlowRuleUpdate = lazy(() =>
   })),
 )
 const YakitGetOnlinePlugin = lazy(() =>
-  import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({ default: m.YakitGetOnlinePlugin })),
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginOnline').then((m) => ({ default: m.YakitGetOnlinePlugin })),
 )
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 

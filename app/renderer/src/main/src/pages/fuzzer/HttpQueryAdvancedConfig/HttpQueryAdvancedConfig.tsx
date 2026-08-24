@@ -60,6 +60,9 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useProxy } from '@/hook/useProxy'
+import { SetVariableItem } from './HttpQueryAdvancedConfigParts'
+
+export { SetVariableItem } from './HttpQueryAdvancedConfigParts'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -1511,30 +1514,6 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
         </Form>
       </div>
     </YakitModal>
-  )
-})
-
-interface SetVariableItemProps {
-  name: number
-}
-
-export const SetVariableItem: React.FC<SetVariableItemProps> = React.memo((props) => {
-  const { name } = props
-  const { t, i18n } = useI18nNamespaces(['webFuzzer'])
-
-  return (
-    <div className={styles['variable-item']}>
-      <Form.Item name={[name, 'Key']} noStyle wrapperCol={{ span: 24 }}>
-        <input placeholder={t('SetVariableItem.variableName')} className={styles['variable-item-input']} />
-      </Form.Item>
-
-      <div className={styles['variable-item-textarea-body']}>
-        <Form.Item name={[name, 'Value']} noStyle wrapperCol={{ span: 24 }}>
-          <AutoTextarea className={styles['variable-item-textarea']} placeholder={t('SetVariableItem.variableValue')} />
-        </Form.Item>
-        <ResizerIcon className={styles['resizer-icon']} />
-      </div>
-    </div>
   )
 })
 

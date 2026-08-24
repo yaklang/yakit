@@ -34,7 +34,7 @@ import { ColorSwatchIcon, ChevronDownIcon, CloudDownloadIcon } from '@/assets/ne
 import classNames from 'classnames'
 import type { ColumnsTypeProps, FiltersItemProps, SortProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
-import { childWindowHash } from '@/pages/layout/mainOperatorContent/MainOperatorContent'
+import { getChildWindowHash } from '@/utils/childWindowHash'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import { YakitCheckableTag } from '../yakitUI/YakitTag/YakitCheckableTag'
 import { YakitMenu } from '../yakitUI/YakitMenu/YakitMenu'
@@ -1657,7 +1657,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       setSelected(rowDate)
       setOnlyShowFirstNode && setOnlyShowFirstNode(false)
       // 仅在子窗口存在时才同步选中行数据（含 4.9MB 解码）到子窗口；无子窗口时跳过，避免单击行的无谓大内容构造
-      if (childWindowHash) {
+      if (getChildWindowHash()) {
         minWinSendToChildWin({
           type: 'openPacketNewWindow',
           data: getPacketNewWindow(rowDate),

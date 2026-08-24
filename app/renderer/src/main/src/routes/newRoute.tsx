@@ -294,11 +294,13 @@ const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
 const AIForge = React.lazy(() => import('@/pages/aiForge/AIForge'))
-const HTTPHistory = React.lazy(() => import('../components/HTTPHistory').then((m) => ({ default: m.HTTPHistory })))
+// HTTPHistory 被 HTTPFlowTable / editors 等广泛 sync import，route 级 lazy 无法 code-split
+import { HTTPHistory } from '../components/HTTPHistory'
 const HTTPHistoryAnalysis = React.lazy(() =>
   import('@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis').then((m) => ({ default: m.HTTPHistoryAnalysis })),
 )
-const HTTPFuzzerPage = React.lazy(() => import('@/pages/fuzzer/HTTPFuzzerPage'))
+// HTTPFuzzerPage 仍被 extraYakitEditor / FuzzerSequence / Home 等 sync import，route lazy 无法 code-split
+import HTTPFuzzerPage from '@/pages/fuzzer/HTTPFuzzerPage'
 
 /**
  * @description 页面路由对应的页面信息

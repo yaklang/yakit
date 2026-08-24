@@ -7,7 +7,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import emiter from '@/utils/eventBus/eventBus'
 import { safeFormatDownloadProcessState } from '../utils'
 import { grpcFetchIntranetYakitVersion, grpcFetchLatestYakitVersion } from '@/apiUtils/grpc'
-import { apiDownloadStorageType } from '@/pages/notepadManage/notepadManage/utils'
+import { apiDownloadStorageType } from '@/pages/notepadManage/notepadStorageUtils'
 import { yakitEngine, yakitShell } from '@/services/electronBridge'
 
 interface useDownloadYakitProps {

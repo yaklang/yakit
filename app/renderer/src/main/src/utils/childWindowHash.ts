@@ -1,5 +1,7 @@
-export let childWindowHash = ''
+let _childWindowHash = ''
+
+export const getChildWindowHash = () => _childWindowHash
 
 export const setChildWindowHash = (hash: string) => {
-  childWindowHash = hash
+  _childWindowHash = hash
 }

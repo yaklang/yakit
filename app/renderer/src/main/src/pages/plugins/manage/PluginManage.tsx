@@ -44,7 +44,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { type BackInfoProps, type DetailRefProps, PluginManageDetail } from './PluginManageDetail'
 import type { PluginFilterParams, PluginSearchParams, PluginListPageMeta } from '../baseTemplateType'
 import { initialOnlineState, pluginOnlineReducer } from '../pluginReducer'
-import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
+import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import { yakitNotify } from '@/utils/notification'
 import type { YakitPluginOnlineDetail } from '../online/PluginsOnlineType'
 import {

@@ -57,6 +57,9 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitGetOnlinePlugin } from './MITMPluginOnline'
+
+export { YakitGetOnlinePlugin, type YakitGetOnlinePluginProps } from './MITMPluginOnline'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -319,111 +322,6 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.MITMHacker}`) || undefined}
       />
     </div>
-  )
-})
-
-export interface YakitGetOnlinePluginProps {
-  /**@name 'online'默认首页 mine 个人, recycle 回收站 check 审核页面" */
-  listType?: 'online' | 'mine' | 'recycle' | 'check'
-  // 限制下载的类型
-  pluginType?: string[]
-  visible: boolean
-  setVisible: (b: boolean) => void
-  onFinish?: () => void
-  isRereshLocalPluginList?: boolean
-  getContainer?: HTMLElement
-}
-/**
- * 一键下载插件
- * @param listType 'online'默认首页 mine 个人, recycle 回收站 check 审核页面"
- */
-export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
-  const {
-    listType = 'online',
-    pluginType,
-    visible,
-    setVisible,
-    onFinish,
-    isRereshLocalPluginList = true,
-    getContainer,
-  } = props
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
-  const taskToken = useMemo(() => randomString(40), [])
-  const [percent, setPercent] = useState<number>(0)
-  useEffect(() => {
-    if (!taskToken) {
-      return
-    }
-    ipcRenderer.on(`${taskToken}-data`, (_, data: DownloadOnlinePluginAllResProps) => {
-      const p = Math.floor(data.Progress * 100)
-      setPercent(p)
-    })
-    ipcRenderer.on(`${taskToken}-end`, () => {
-      setTimeout(() => {
-        setPercent(0)
-        setVisible(false)
-        onFinish && onFinish()
-        if (isCommunityEdition()) ipcRenderer.invoke('refresh-public-menu')
-        else ipcRenderer.invoke('change-main-menu')
-        onRefLocalPluginList()
-      }, 200)
-    })
-    ipcRenderer.on(`${taskToken}-error`, (_, e) => {
-      onRefLocalPluginList()
-      yakitNotify('error', t('YakitNotification.downloadFailed', { error: e + '' }))
-    })
-    return () => {
-      ipcRenderer.removeAllListeners(`${taskToken}-data`)
-      ipcRenderer.removeAllListeners(`${taskToken}-error`)
-      ipcRenderer.removeAllListeners(`${taskToken}-end`)
-    }
-  }, [taskToken])
-  useEffect(() => {
-    if (visible) {
-      const addParams: DownloadOnlinePluginsRequest = {
-        ListType: listType === 'online' ? '' : listType,
-        PluginType: pluginType ? pluginType : [],
-      }
-      ipcRenderer
-        .invoke('DownloadOnlinePlugins', addParams, taskToken)
-        .then(() => {})
-        .catch((e) => {
-          failed(t('YakitNotification.downloadFailed', { error: e + '' }))
-        })
-    }
-  }, [visible])
-  const StopAllPlugin = () => {
-    ipcRenderer.invoke('cancel-DownloadOnlinePlugins', taskToken).catch((e) => {
-      failed(t('MITMPluginLocalList.stop_download_failed_e', { e }))
-      onRefLocalPluginList()
-    })
-  }
-  /** 下载后需要刷新本地插件列表 */
-  const onRefLocalPluginList = useMemoizedFn(() => {
-    emiter.emit('onRefreshLocalPluginList', true)
-  })
-  return (
-    <YakitHint
-      visible={visible}
-      title={t('MITMPluginLocalList.cloud_plugins_downloading', { edition: getReleaseEditionName() })}
-      heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
-      onCancel={() => {
-        StopAllPlugin()
-        setVisible(false)
-      }}
-      okButtonProps={{ style: { display: 'none' } }}
-      isDrag={true}
-      mask={false}
-      getContainer={getContainer}
-      wrapClassName={style['yakitGetOnlinePlugin']}
-    >
-      <Progress
-        strokeColor="var(--Colors-Use-Main-Primary)"
-        trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
-        percent={percent}
-        format={(percent) => t('YakitProgress.downloadedPercent', { percent })}
-      />
-    </YakitHint>
   )
 })
 

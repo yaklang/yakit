@@ -30,7 +30,7 @@ import {
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '../fuzzer/HTTPFuzzerHotPatch'
+import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '../fuzzer/hotPatchShared'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { footerTabs, HotPatchDefaultContent } from '@/defaultConstants/hTTPHistoryAnalysis'
 import { AnalyzeHotPatchTempDefault } from '@/defaultConstants/mitm'
@@ -86,8 +86,8 @@ import {
   ColorSelect,
   MatcherAndExtractionDrawer,
   MatcherItem,
-  onFilterEmptySubMatcher,
 } from '../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard'
+import { onFilterEmptySubMatcher } from '../fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardShared'
 import type {
   FilterEmptySubMatcherFunctionProps,
   HTTPResponseMatcher,

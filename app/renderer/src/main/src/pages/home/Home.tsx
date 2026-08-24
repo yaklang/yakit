@@ -88,7 +88,7 @@ import { getEnvTypeByProjects, type ProjectDescription } from '../softwareSettin
 import type { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import type { FieldName, Fields } from '../risks/RiskTable'
 import { apiQueryYakScriptTotal } from '../plugins/utils'
-import { YakitGetOnlinePlugin } from '../mitm/MITMServerHijacking/MITMPluginLocalList'
+import { YakitGetOnlinePlugin } from '../mitm/MITMServerHijacking/MITMPluginOnline'
 import { apiQueryPortsBase } from '../assetViewer/PortTable/utils'
 import type { QueryPortsRequest } from '../assetViewer/PortAssetPage'
 import { getReleaseEditionName, isCommunityYakit, isEnpriTrace, isEnpriTraceAgent } from '@/utils/envfile'

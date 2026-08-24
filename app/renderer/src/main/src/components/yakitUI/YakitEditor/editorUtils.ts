@@ -7,7 +7,6 @@ import { expandBinaryFuzztagByModelKey } from './binaryFuzztag'
 
 // 纯常量/函数提取到独立模块，避免 layout 链路通过 editorUtils 间接拉入 monaco-editor
 export { KeyboardToValue, MacKeyborad, WinKeyborad, keySortHandle, convertKeyboard } from './keyboardConstants'
-import { keySortHandle } from './keyboardConstants'
 
 /**
  * @name 获取编辑器光标选中坐标范围值

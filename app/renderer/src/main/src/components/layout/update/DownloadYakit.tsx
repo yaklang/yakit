@@ -1,31 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  isCommunityEdition,
-  isEnterpriseEdition,
-  getReleaseEditionName,
-  isEnpriTrace,
-  isIRify,
-  isMemfit,
-} from '@/utils/envfile'
-import { success, failed } from '@/utils/notification'
-import type { YakitSystem, DownloadingState } from '@/yakitGVDefine'
+import { getReleaseEditionName } from '@/utils/envfile'
+import type { YakitSystem } from '@/yakitGVDefine'
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
-import { useDebounce, useGetState, useMemoizedFn } from 'ahooks'
+import { useDebounce, useMemoizedFn } from 'ahooks'
 import { Progress } from 'antd'
 import { YaklangInstallHintSvgIcon, MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon } from '../icons'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
-import emiter from '@/utils/eventBus/eventBus'
-import { safeFormatDownloadProcessState } from '../utils'
-import { grpcFetchIntranetYakitVersion, grpcFetchLatestYakitVersion } from '@/apiUtils/grpc'
 import { WebsiteGV } from '@/enums/website'
 
 import classNames from 'classnames'
 import styles from './DownloadYakit.module.scss'
-import { apiDownloadStorageType } from '@/pages/notepadManage/notepadManage/utils'
-import { yakitEngine, yakitShell } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 // hook 提取到独立文件，避免 layout 链路通过 DownloadYakit 间接拉入 react-draggable
