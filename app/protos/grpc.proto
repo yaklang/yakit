@@ -648,7 +648,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
   /*
     ChaosMakerRule: Bas
   */
@@ -931,6 +931,16 @@ service Yak {
   rpc DeleteAISession(DeleteAISessionRequest) returns (DbOperateMessage);
   rpc GetRandomAIMaterials(GetRandomAIMaterialsRequest) returns (GetRandomAIMaterialsResponse);
   rpc ExportAILogs(ExportAILogsRequest) returns (ExportAILogsResponse);
+
+  // AI ReAct recurring schedules
+  rpc CreateAIReActSchedule(CreateAIReActScheduleRequest) returns (AIReActSchedule);
+  rpc UpdateAIReActSchedule(UpdateAIReActScheduleRequest) returns (AIReActSchedule);
+  rpc DeleteAIReActSchedule(DeleteAIReActScheduleRequest) returns (DbOperateMessage);
+  rpc GetAIReActSchedule(GetAIReActScheduleRequest) returns (AIReActSchedule);
+  rpc QueryAIReActSchedules(QueryAIReActSchedulesRequest) returns (QueryAIReActSchedulesResponse);
+  rpc SetAIReActScheduleEnabled(SetAIReActScheduleEnabledRequest) returns (AIReActSchedule);
+  rpc PreviewAIReActScheduleTimes(PreviewAIReActScheduleTimesRequest) returns (PreviewAIReActScheduleTimesResponse);
+  rpc RunAIReActScheduleNow(RunAIReActScheduleNowRequest) returns (Empty);
 
   // AI Memory CRUD
   rpc CreateAIMemoryEntity(CreateAIMemoryEntityRequest) returns (Empty);
@@ -2316,8 +2326,8 @@ message AIExecutionStrategy {
   // Goal 模式下允许 finish 的最小迭代次数。<=0 时由服务端使用默认值。
   int64 GoalMinIterations = 3;
 
-  // Multi 模式下单次 dispatch 允许的子 Agent 数量（当前会话取值）。
-  // <=0 时由服务端使用默认值 3；超过 AbsoluteMaxSubAgents(20) 时由服务端钳制。
+  // Multi 模式下子 Agent 最大并发数（同时运行数量）。
+  // <=0 时由服务端使用默认值 5；超过 AbsoluteMaxSubAgentConcurrency(20) 时由服务端钳制。
   int64 MaxSubAgents = 4;
 }
 
@@ -2417,6 +2427,8 @@ message AISession {
   string Source = 10;
   // source=im 时的结构化 IM 元数据（平台/会话类型/可读标题等）；其它来源为空。
   IMSourceMeta IMSourceMeta = 11;
+  // 当前会话是否正在执行。包含交互式 ReAct 与计划任务的预留/运行阶段。
+  bool IsRunning = 12;
 }
 
 message QueryAISessionRequest {
@@ -2470,6 +2482,110 @@ message DeleteAISessionFilter {
 message DeleteAISessionRequest {
   DeleteAISessionFilter Filter = 1;
   bool DeleteAll = 2;
+}
+
+message AIReActScheduleSpec {
+  // RFC 5545 recurrence rule, for example RRULE:FREQ=DAILY;INTERVAL=1.
+  string RRule = 1;
+  // IANA timezone, for example Asia/Shanghai.
+  string Timezone = 2;
+  // First eligible occurrence as a Unix timestamp in seconds.
+  int64 StartAt = 3;
+}
+
+message AIReActSchedulePayload {
+  string Prompt = 1;
+  AIStartParams StartParams = 2;
+  repeated AttachedResourceInfo AttachedResourceInfos = 3;
+  string FocusModeLoop = 4;
+}
+
+message AIReActSchedule {
+  int64 Id = 1;
+  string UUID = 2;
+  string Name = 3;
+  // active | paused | completed
+  string Status = 4;
+  // continue_session | new_session_per_run
+  string TargetMode = 5;
+  string TargetSessionID = 6;
+  AIReActSchedulePayload Payload = 7;
+  AIReActScheduleSpec Schedule = 8;
+  int64 NextRunAt = 9;
+  int64 LastRunAt = 10;
+  int64 MisfireGraceSeconds = 11;
+  int64 MaxRuntimeSeconds = 12;
+  string PauseReason = 13;
+  string LastError = 14;
+  int64 CreatedAt = 15;
+  int64 UpdatedAt = 16;
+  // The user's original scheduling request before task-prompt normalization.
+  string OriginalRequest = 17;
+  // The chat in which this schedule was created. Informational for isolated runs.
+  string CreatedFromSessionID = 18;
+  // succeeded | failed | skipped | cancelled | interrupted | needs_attention
+  string LastOutcome = 19;
+  // Stable machine-readable reason, e.g. session_busy or scheduler_capacity.
+  string LastSkipReason = 20;
+  int64 LastStartedAt = 21;
+  int64 LastFinishedAt = 22;
+}
+
+message CreateAIReActScheduleRequest {
+  AIReActSchedule Schedule = 1;
+}
+
+message UpdateAIReActScheduleRequest {
+  AIReActSchedule Schedule = 1;
+}
+
+message DeleteAIReActScheduleRequest {
+  string UUID = 1;
+}
+
+message GetAIReActScheduleRequest {
+  string UUID = 1;
+}
+
+message AIReActScheduleFilter {
+  repeated string UUIDs = 1;
+  repeated string Status = 2;
+  string Keyword = 3;
+  repeated string TargetSessionIDs = 4;
+  repeated string TargetModes = 5;
+  repeated string CreatedFromSessionIDs = 6;
+}
+
+message QueryAIReActSchedulesRequest {
+  Paging Pagination = 1;
+  AIReActScheduleFilter Filter = 2;
+}
+
+message QueryAIReActSchedulesResponse {
+  Paging Pagination = 1;
+  repeated AIReActSchedule Data = 2;
+  int64 Total = 3;
+  reserved 4;
+}
+
+message SetAIReActScheduleEnabledRequest {
+  string UUID = 1;
+  bool Enabled = 2;
+}
+
+message PreviewAIReActScheduleTimesRequest {
+  AIReActScheduleSpec Schedule = 1;
+  int32 Count = 2;
+  // Preview strictly after this Unix timestamp. Zero means now minus one second.
+  int64 AfterTimestamp = 3;
+}
+
+message PreviewAIReActScheduleTimesResponse {
+  repeated int64 Timestamps = 1;
+}
+
+message RunAIReActScheduleNowRequest {
+  string UUID = 1;
 }
 
 message AIForgeFilter {
@@ -3867,7 +3983,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend 
+  // this type effect response.ProjectTotal, this type mark kind of frontend
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -7047,6 +7163,12 @@ message FuzzerResponse {
   repeated RandomChunkedResponse RandomChunkedData = 62;
 }
 
+enum ChunkedDataDirection {
+  CHUNKED_DATA_DIRECTION_UNSPECIFIED = 0;
+  CHUNKED_DATA_DIRECTION_REQUEST = 1;   // 请求分块：随机分块传输发送的请求 body 分块
+  CHUNKED_DATA_DIRECTION_RESPONSE = 2;  // 响应增量：如 SSE 流式响应的 body delta
+}
+
 message RandomChunkedResponse{
   int64 Index = 1; // 当前的 chunked index
   bytes Data = 2; // 当前的 chunked 数据
@@ -7060,12 +7182,6 @@ message RandomChunkedResponse{
   // 前端应按方向分别渲染，避免把请求分块当成响应内容回显。
   // 缺省值 UNSPECIFIED 兼容旧版本，按 RESPONSE 语义处理。
   ChunkedDataDirection Direction = 7;
-}
-
-enum ChunkedDataDirection {
-  CHUNKED_DATA_DIRECTION_UNSPECIFIED = 0;
-  CHUNKED_DATA_DIRECTION_REQUEST = 1;   // 请求分块：随机分块传输发送的请求 body 分块
-  CHUNKED_DATA_DIRECTION_RESPONSE = 2;  // 响应增量：如 SSE 流式响应的 body delta
 }
 
 message RedirectHTTPFlow {
@@ -7180,7 +7296,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-  
+
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
@@ -8596,9 +8712,9 @@ message SyntaxFlowScanResponse{
 message SyntaxFlowScanActiveTask {
   // index 
   string RuleName = 3;
-  string ProgramName = 4; 
+  string ProgramName = 4;
   // progress 
-  double Progress = 5; 
+  double Progress = 5;
 
   int64 RunningTime = 6;
   string Info = 7;
