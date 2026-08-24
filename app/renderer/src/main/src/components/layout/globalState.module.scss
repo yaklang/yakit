@@ -19,7 +19,7 @@
   --global-state-text-color: var(--Colors-Use-Primary-Primary);
 }
 
-.icon-style {
+.icon-style:global(.anticon) {
   color: var(--global-state-text-color);
   svg {
     width: 20px;

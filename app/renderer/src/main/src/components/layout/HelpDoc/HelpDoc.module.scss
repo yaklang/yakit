@@ -29,12 +29,12 @@
   }
   .op-btn-body-hover {
     background-color: var(--Colors-Use-Neutral-Bg);
-    .icon-style {
+    .icon-style:global(.anticon) {
       color: var(--Colors-Use-Main-Primary);
     }
   }
 
-  .icon-style {
+  .icon-style:global(.anticon) {
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     svg {
       width: 20px;
@@ -44,7 +44,7 @@
 }
 
 .ui-op-btn-wrapper:hover {
-  .icon-style {
+  .icon-style:global(.anticon) {
     color: var(--Colors-Use-Main-Primary);
   }
   .op-btn-body {

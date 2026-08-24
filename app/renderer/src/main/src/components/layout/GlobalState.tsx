@@ -19,7 +19,7 @@ import { showConfigSystemProxyForm, showConfigChromePathForm } from '@/utils/Con
 import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { Tooltip, Row, Col } from 'antd'
-import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
+import { LoadingOutlined } from '@ant-design/icons'
 import { isEnpriTraceAgent, isIRify } from '@/utils/envfile'
 import type { QueryYakScriptsResponse } from '@/pages/invoker/schema'
 const IRifyApplySyntaxFlowRuleUpdate = lazy(() =>
@@ -60,7 +60,7 @@ const ShowIcon: Record<string, ReactNode> = {
   warning: <ExclamationIcon className={styles['icon-style']} />,
   success: <RocketIcon className={styles['icon-style']} />,
   help: <OutlineShieldcheckIcon className={styles['icon-style']} />,
-  loading: <LoadingOutlined className={styles['icon-style']} style={{ color: 'var(--Colors-Use-Main-Primary)' }} />,
+  loading: <LoadingOutlined className={styles['icon-style']} />,
 }
 /** 不同状态下组件展示的颜色 */
 const ShowColorClass: Record<string, string> = {

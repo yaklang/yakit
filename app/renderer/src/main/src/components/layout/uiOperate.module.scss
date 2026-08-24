@@ -55,12 +55,12 @@
 
     .op-btn {
       padding: 8px 12px;
-      .icon-style {
+      .icon-style:global(.anticon) {
         color: var(--Colors-Use-Neutral-Text-1-Title);
       }
     }
     .op-btn:hover {
-      .icon-style {
+      .icon-style:global(.anticon) {
         color: var(--Colors-Use-Main-Primary);
       }
     }
