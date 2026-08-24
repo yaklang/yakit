@@ -4,6 +4,7 @@ import type { BookType } from 'xlsx'
 import i18n from '@/i18n/i18n'
 
 const tOriginal = i18n.getFixedT(null, 'components')
+const tYakitUi = i18n.getFixedT(null, 'yakitUi')
 
 function sheet_from_array_of_arrays(data, optsSingleCellSetting, XLSX) {
   var ws = {}
@@ -57,7 +58,7 @@ function s2ab(s) {
   return buf
 }
 
-interface ExcelJsonProps {
+export interface ExcelJsonProps {
   header: string[]
   data: Array<string[]>
   filename: string
@@ -81,75 +82,80 @@ export async function export_json_to_excel({
   optsSingleCellSetting, //  单个单元格样式
   optsUnifiedCellSetting, // 整列或者整行的单元格样式，这个暂时没有做，因为没有需求
 }: ExcelJsonProps) {
-  const [{ default: XLSX }, { default: XLSXStyle }, { saveAs }, { default: moment }] = await Promise.all([
-    import('xlsx'),
-    import('xlsx-js-style'),
-    import('file-saver'),
-    import('moment'),
-  ])
+  // 调用方多为 fire-and-forget；import / 写文件失败须在函数内消化，避免 unhandled rejection
+  try {
+    const [{ default: XLSX }, { default: XLSXStyle }, { saveAs }, { default: moment }] = await Promise.all([
+      import('xlsx'),
+      import('xlsx-js-style'),
+      import('file-saver'),
+      import('moment'),
+    ])
 
-  /* original data */
-  filename = filename || 'excel-list'
-  data = [...data]
-  data.unshift(header)
+    /* original data */
+    filename = filename || 'excel-list'
+    data = [...data]
+    data.unshift(header)
 
-  var ws_name = 'SheetJS'
-  var wb: any = {
-      SheetNames: [],
-      Sheets: {},
-    },
-    ws = sheet_from_array_of_arrays(data, optsSingleCellSetting, XLSX)
+    var ws_name = 'SheetJS'
+    var wb: any = {
+        SheetNames: [],
+        Sheets: {},
+      },
+      ws = sheet_from_array_of_arrays(data, optsSingleCellSetting, XLSX)
 
-  if (autoWidth) {
-    /*设置worksheet每列的最大宽度*/
-    const colWidth = data.map((row) =>
-      row.map((val) => {
-        /*先判断是否为null/undefined*/
-        if (val == null) {
-          return {
-            wch: 10,
+    if (autoWidth) {
+      /*设置worksheet每列的最大宽度*/
+      const colWidth = data.map((row) =>
+        row.map((val) => {
+          /*先判断是否为null/undefined*/
+          if (val == null) {
+            return {
+              wch: 10,
+            }
+          } else if (val.toString().charCodeAt(0) > 255) {
+            /*再判断是否为中文*/
+            return {
+              wch: val.toString().length * 2 > 60 ? 60 : val.toString().length * 2,
+            }
+          } else {
+            return {
+              wch: val.toString().length > 60 ? 60 : val.toString().length,
+            }
           }
-        } else if (val.toString().charCodeAt(0) > 255) {
-          /*再判断是否为中文*/
-          return {
-            wch: val.toString().length * 2 > 60 ? 60 : val.toString().length * 2,
+        }),
+      )
+      /*以第一行为初始值*/
+      let result = colWidth[0]
+      for (let i = 1; i < colWidth.length; i++) {
+        for (let j = 0; j < colWidth[i].length; j++) {
+          if (result[j]['wch'] < colWidth[i][j]['wch']) {
+            result[j]['wch'] = colWidth[i][j]['wch']
           }
-        } else {
-          return {
-            wch: val.toString().length > 60 ? 60 : val.toString().length,
-          }
-        }
-      }),
-    )
-    /*以第一行为初始值*/
-    let result = colWidth[0]
-    for (let i = 1; i < colWidth.length; i++) {
-      for (let j = 0; j < colWidth[i].length; j++) {
-        if (result[j]['wch'] < colWidth[i][j]['wch']) {
-          result[j]['wch'] = colWidth[i][j]['wch']
         }
       }
+
+      ws['!cols'] = result
     }
 
-    ws['!cols'] = result
-  }
-
-  /* add worksheet to workbook */
-  wb.SheetNames.push(ws_name)
-  wb.Sheets[ws_name] = ws
-  try {
-    var wbout = XLSXStyle.write(wb, {
-      bookType: bookType,
-      bookSST: false,
-      type: 'binary',
-    })
-    saveAs(
-      new Blob([s2ab(wbout)], {
-        type: 'application/octet-stream',
-      }),
-      `${filename}(${moment().valueOf()}).${bookType}`,
-    )
+    /* add worksheet to workbook */
+    wb.SheetNames.push(ws_name)
+    wb.Sheets[ws_name] = ws
+    try {
+      var wbout = XLSXStyle.write(wb, {
+        bookType: bookType,
+        bookSST: false,
+        type: 'binary',
+      })
+      saveAs(
+        new Blob([s2ab(wbout)], {
+          type: 'application/octet-stream',
+        }),
+        `${filename}(${moment().valueOf()}).${bookType}`,
+      )
+    } catch (error) {
+      yakitNotify('error', tOriginal('ExportExcel.xlsxTooLarge', { error: String(error) }))
+    }
   } catch (error) {
-    yakitNotify('error', tOriginal('ExportExcel.xlsxTooLarge', { error: String(error) }))
+    yakitNotify('error', tYakitUi('YakitNotification.exportFailed', { error: String(error) }))
   }
 }

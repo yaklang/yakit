@@ -8,10 +8,18 @@ import {
   grpcSetAIGlobalConfig,
 } from '@/pages/ai-agent/aiModelList/utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
-import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
+import { AIModelTypeInterFileNameEnum } from '@/pages/ai-agent/defaultConstant'
 import { shallow } from 'zustand/shallow'
 import { cloneDeep } from 'lodash'
 import type { API } from '@/services/swagger/resposeType'
+import { debugToPrintLogs } from '@/utils/logCollection'
+
+/** 与 getFileNameByModelType 对应的配置字段；直接用常量避免动态 import 整份 AIModelForm */
+const AI_MODEL_CONFIG_KEYS = [
+  AIModelTypeInterFileNameEnum.IntelligentModels,
+  AIModelTypeInterFileNameEnum.LightweightModels,
+  AIModelTypeInterFileNameEnum.VisionModels,
+] as const
 
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig
@@ -133,10 +141,8 @@ function useAIGlobalConfig(params) {
       let serverConfig: ServerAIGlobalConfig = {}
       serverConfig = JSON.parse(aiConfig.content)
 
-      Object.values(AIModelTypeEnum).forEach(async (type) => {
-        const { getFileNameByModelType } = await import('@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm')
-        const key = getFileNameByModelType(type)
-        if (!key) return
+      // 必须同步遍历：forEach(async) 不会被外层 await，会导致 merge 未完成就 setAIGlobalConfig
+      for (const key of AI_MODEL_CONFIG_KEYS) {
         const serverModels = (serverConfig[key] || []).map((model) => ({
           ...model,
           IsOnline: true,
@@ -157,10 +163,16 @@ function useAIGlobalConfig(params) {
           (model) => !mergedModels.some(({ ModelName, IsOnline }) => ModelName === model.ModelName && IsOnline),
         )
         nextConfig[key] = [...mergedModels, ...appendServerModels]
-      })
+      }
 
-      setAIGlobalConfig(nextConfig)
-    } catch (err) {}
+      await setAIGlobalConfig(nextConfig)
+    } catch (err) {
+      debugToPrintLogs({
+        page: 'useAIGlobalConfig',
+        fun: 'getAIGlobalConfigAfterLogin',
+        content: err,
+      })
+    }
   })
 
   const data: UseAIGlobalConfigData = useMemo(() => {

@@ -20,9 +20,16 @@ import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 import { debugToPrintLogs } from './utils/logCollection'
 
 // 延迟加载并发流桥接，避免首屏同步拉入 AI-agent 会话机制
-import('@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge').then(
-  ({ setupConcurrentStreamMainBridge }) => setupConcurrentStreamMainBridge(),
-)
+import('@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge')
+  .then(({ setupConcurrentStreamMainBridge }) => setupConcurrentStreamMainBridge())
+  .catch((err) => {
+    // chunk 失败时全局 unhandledrejection 也会记日志；此处显式 catch，避免启动期控制台噪音
+    debugToPrintLogs({
+      page: 'index',
+      fun: 'setupConcurrentStreamMainBridge',
+      content: err,
+    })
+  })
 
 import { setupMonacoWorkers } from './utils/monacoSpec/setupMonacoWorkers'
 setupMonacoWorkers()
