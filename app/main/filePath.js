@@ -185,7 +185,13 @@ const _ensureDir = (dir) => {
 
 const getYaklangEngineDir = () => path.join(getYakitHome(), 'yak-engine')
 
-const getYakitInstallDir = () => path.join(os.homedir(), 'Downloads')
+const getYakitInstallDir = () => {
+  try {
+    return app.getPath('downloads')
+  } catch (e) {
+    return path.join(os.homedir(), 'Downloads')
+  }
+}
 
 const getYakOnlineRagLatest = () => path.join(getYakitHome(), 'projects/libs/rag_files')
 

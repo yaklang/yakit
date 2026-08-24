@@ -567,7 +567,7 @@ module.exports = {
         } else {
           downloadUrl = await getDownloadUrl(version, 'YakitCE')
         }
-        // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
+        // 确保系统下载目录存在
         if (!fs.existsSync(getYakitInstallDir())) fs.mkdirSync(getYakitInstallDir(), { recursive: true })
         const dest = path.join(getYakitInstallDir(), path.basename(downloadUrl))
         try {
@@ -1437,7 +1437,7 @@ module.exports = {
           } else {
             downloadUrl = await getDownloadUrl(version, 'YakitCE')
           }
-          // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
+          // 确保系统下载目录存在
           if (!fs.existsSync(getYakitInstallDir())) fs.mkdirSync(getYakitInstallDir(), { recursive: true })
           const dest = path.join(getYakitInstallDir(), path.basename(downloadUrl))
           try {
