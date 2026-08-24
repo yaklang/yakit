@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import classNames from 'classnames'
 import { useDebounceEffect } from 'ahooks'
 import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
