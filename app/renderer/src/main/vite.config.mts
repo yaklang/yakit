@@ -128,11 +128,14 @@ export default defineConfig(({ mode }) => {
       }),
     ].filter(Boolean),
     resolve: {
+      dedupe: ['react', 'react-dom'],
       alias: [
         { find: '@', replacement: path.resolve(rootDir, 'src') },
         // antd / pro-layout less 里的 ~antd 写法
         { find: /^~antd/, replacement: path.resolve(rootDir, 'node_modules/antd') },
         { find: /^~/, replacement: '' },
+        { find: 'react', replacement: path.resolve(rootDir, 'node_modules/react') },
+        { find: 'react-dom', replacement: path.resolve(rootDir, 'node_modules/react-dom') },
       ],
     },
     css: {
@@ -182,12 +185,25 @@ export default defineConfig(({ mode }) => {
       esbuildOptions: { target: 'esnext' },
       // lazy 路由架构下，冷启动 crawl 全量 src，一次性发现 node_modules 依赖，避免首访页签 504 Outdated Optimize Dep
       // 显式 entries 会覆盖默认 html 推断，须保留 index / yakit-aux
-      entries: ['index.html', 'yakit-aux.html', 'src/**/*.{ts,tsx}', '!src/**/__test__/**', '!src/**/__tests__/**'],
+      entries: [
+        'index.html',
+        'yakit-aux.html',
+        'src/**/*.{ts,tsx}',
+        '!src/**/*.d.ts', // 核心：排除声明文件
+        '!src/**/__test__/**',
+        '!src/**/__tests__/**',
+        '!src/alibaba/ali-react-table-dist/**', // 第三方 dist 仅含 .d.ts，无需 crawl
+      ],
       // 重型 CJS 编辑器栈显式预构建（与 entries 互补；新增 lazy 页一般无需再改此处）
       include: [
         'react',
         'react-dom',
         'react-dom/client',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-dnd',
+        'react-dnd-html5-backend',
+        '@hello-pangea/dnd',
         'antd',
         'antd/es/date-picker/locale/zh_CN',
         'antd/es/date-picker/locale/zh_TW',
@@ -201,7 +217,16 @@ export default defineConfig(({ mode }) => {
         'lodash/omit',
         'lodash/has',
         'lodash/isArray',
+        'lodash/debounce',
+        'lodash/cloneDeep',
         'zustand',
+        'zustand/middleware',
+        'zustand/traditional',
+        'copy-to-clipboard',
+        'react-copy-to-clipboard',
+        '@ant-design/icons/es/icons/CheckOutlined',
+        '@ant-design/icons/lib/icons/CheckOutlined',
+        'rc-util/es/Dom/getScrollBarSize',
         'uuid',
         'moment',
         'moment/locale/zh-cn',

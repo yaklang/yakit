@@ -583,7 +583,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     [styles['hidden-tree-body']]: active !== 'global-filtering-function',
                   })}
                 >
-                  <GlobalFilterFunction projectName={projectName} />
+                  <React.Suspense fallback={<YakitSpin spinning />}>
+                    <GlobalFilterFunction projectName={projectName} />
+                  </React.Suspense>
                 </div>
               )}
             </div>

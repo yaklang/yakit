@@ -165,6 +165,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import { syncAppSettings } from '@/auxWindow/utils/messaging'
 import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
+import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
 
 // ===== 用户功能菜单拆分模块导入 =====
 import { randomAvatarColor } from './userMenu/constants'
@@ -173,7 +174,6 @@ import { judgeDynamic } from './userMenu/judgeDynamic'
 import { useUserMenu } from './userMenu/useUserMenu'
 import { UserMenuModals } from './userMenu/UserMenuModals'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
-const CeRechargeModal = React.lazy(() => import('../CeUserMenu/CeRechargeModal').then((m) => ({ default: m.default })))
 
 // re-export 保持外部导入路径兼容
 export { randomAvatarColor }
@@ -504,17 +504,15 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         runDynamicControlRemote={runDynamicControlRemote}
       />
 
-      <React.Suspense fallback={null}>
-        <CeRechargeModal
-          visible={rechargeVisible}
-          onClose={() => setRechargeVisible(false)}
-          onPaySuccess={() => onUpdateApiKey()}
-          onNeedLogin={() => {
-            setCeUserMenuShow(false)
-            setLoginShow(true)
-          }}
-        />
-      </React.Suspense>
+      <CeRechargeModal
+        visible={rechargeVisible}
+        onClose={() => setRechargeVisible(false)}
+        onPaySuccess={() => onUpdateApiKey()}
+        onNeedLogin={() => {
+          setCeUserMenuShow(false)
+          setLoginShow(true)
+        }}
+      />
     </div>
   )
 })
