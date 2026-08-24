@@ -30,10 +30,7 @@ import React from 'react'
 import { SolidCloudDownloadIcon } from '@/assets/newIcon'
 import useDownloadUrlToLocalHooks, { type DownloadUrlToLocal } from '@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal'
 import { apiDownloadStorageType } from '@/pages/notepadManage/notepadStorageUtils'
-import {
-  onOpenLocalFileByPath,
-  saveDialogAndGetLocalFileInfo,
-} from '@/pages/notepadManage/notepadManage/utils'
+import { onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo } from '@/pages/notepadManage/notepadManage/utils'
 import { getTypeAndNameByPath } from './customFilePathUtils'
 
 export { getTypeAndNameByPath } from './customFilePathUtils'

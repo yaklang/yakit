@@ -47,9 +47,7 @@ import type { API } from '@/services/swagger/resposeType'
 import { SolidPluscircleIcon } from '@/assets/icon/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
-import {
-  YakitGetOnlinePlugin,
-} from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
+import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import {
   PluginGroup,
   TagsAndGroupRender,

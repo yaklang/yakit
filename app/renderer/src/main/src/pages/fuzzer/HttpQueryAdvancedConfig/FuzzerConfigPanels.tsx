@@ -11,7 +11,10 @@ import type {
   MatchingAndExtraction,
 } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { ExtractionResultsContent, onFilterEmptySubMatcher } from '../MatcherAndExtractionCard/MatcherAndExtractionCardShared'
+import {
+  ExtractionResultsContent,
+  onFilterEmptySubMatcher,
+} from '../MatcherAndExtractionCard/MatcherAndExtractionCardShared'
 import { ExtractorsList, MatchersList } from './HttpQueryAdvancedConfig'
 import type { AdvancedConfigValueProps } from './HttpQueryAdvancedConfigType'
 import { StringToUint8Array } from '@/utils/str'

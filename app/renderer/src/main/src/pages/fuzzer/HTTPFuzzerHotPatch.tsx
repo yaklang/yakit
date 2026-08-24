@@ -44,7 +44,12 @@ import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { getWebFuzzerPageList, setSharedHotReloadEnabled } from './fuzzerHotPatchUtils'
-import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem, type QueryHotPatchTemplateResponse } from './hotPatchShared'
+import {
+  AddHotCodeTemplate,
+  HotCodeTemplate,
+  type HotPatchTempItem,
+  type QueryHotPatchTemplateResponse,
+} from './hotPatchShared'
 
 export { getHotPatchCodeInfo } from './fuzzerHotPatchUtils'
 export { HotCodeTemplate, AddHotCodeTemplate, type HotPatchTempItem, type HotCodeType } from './hotPatchShared'

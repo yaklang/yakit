@@ -182,13 +182,7 @@ export default defineConfig(({ mode }) => {
       esbuildOptions: { target: 'esnext' },
       // lazy 路由架构下，冷启动 crawl 全量 src，一次性发现 node_modules 依赖，避免首访页签 504 Outdated Optimize Dep
       // 显式 entries 会覆盖默认 html 推断，须保留 index / yakit-aux
-      entries: [
-        'index.html',
-        'yakit-aux.html',
-        'src/**/*.{ts,tsx}',
-        '!src/**/__test__/**',
-        '!src/**/__tests__/**',
-      ],
+      entries: ['index.html', 'yakit-aux.html', 'src/**/*.{ts,tsx}', '!src/**/__test__/**', '!src/**/__tests__/**'],
       // 重型 CJS 编辑器栈显式预构建（与 entries 互补；新增 lazy 页一般无需再改此处）
       include: [
         'react',
