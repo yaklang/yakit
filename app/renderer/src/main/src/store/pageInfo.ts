@@ -127,6 +127,12 @@ export interface AddYakitScriptPageInfoProps {
   /**插件源码 */
   code: string
   source: YakitRoute
+  /**从其他页面直接打开本地插件进行编辑 */
+  editPlugin?: {
+    id: number
+    uuid: string
+    name: string
+  }
   [key: string]: any
 }
 export interface SpaceEnginePageInfoProps {}

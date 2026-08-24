@@ -44,4 +44,6 @@ export type PluginsEventProps = {
    * 传递数据为对象 JSON, 定义为 KeyParamsFetchPluginDetail
    */
   editorLocalNewToLocalList: string
+  /** 新建插件 Tab 已存在时，切换到指定本地插件进行编辑 */
+  openPluginInEditor: string
 }

@@ -98,7 +98,7 @@ interface PluginEditorProps {
 export const PluginEditor: React.FC<PluginEditorProps> = memo(
   forwardRef((props, ref) => {
     const { t } = useI18nNamespaces(['plugin', 'yakitUi'])
-    const { title = t('PluginEditor.newPlugin'), headerExtra, onEditCancel } = props
+    const { title, headerExtra, onEditCancel } = props
 
     const userinfo = useStore((s) => s.userInfo)
     const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -467,6 +467,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
           .invoke('SaveYakScript', data)
           .then((res: YakScript) => {
             handleRefreshMenu()
+            emiter.emit('refreshContextMenuActions', res.UUID || res.ScriptName)
             resolve(res)
           })
           .catch((err) => {
@@ -942,7 +943,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
               })}
             >
               <div className={styles['header-title']}>
-                {title}
+                {title || (isEdit ? '编辑插件' : t('PluginEditor.newPlugin'))}
                 <div className={styles['header-subtitle']} onClick={handleOpenHelp}>
                   <span className={classNames(styles['subtitle-style'])}>{t('PluginEditor.helpDoc')}</span>
                   <OutlineQuestionmarkcircleIcon />

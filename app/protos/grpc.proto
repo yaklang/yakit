@@ -10033,7 +10033,9 @@ message QueryContextMenuActionsRequest {
 
 message QueryContextMenuActionsResponse {
   repeated ContextMenuAction Actions = 1;
+  // Enabled non-core plugin UUIDs in the requested Scene; zero when Scene is empty.
   int64 EnabledCustomPluginCount = 2;
+  // Per-Scene custom plugin limit.
   int64 MaxCustomPluginCount = 3;
 }
 

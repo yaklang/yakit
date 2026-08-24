@@ -1404,6 +1404,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
    */
   const addYakScript = useMemoizedFn((data: AddYakitScriptPageInfoProps) => {
     const isExist = pageCache.filter((item) => item.route === YakitRoute.AddYakitScript).length
+    const openEditorPage = () => {
+      openMenuPage(
+        { route: YakitRoute.AddYakitScript },
+        {
+          pageParams: {
+            addYakitScriptPageInfo: {
+              ...defaultAddYakitScriptPageInfo,
+              ...data,
+            },
+          },
+        },
+      )
+    }
+    if (isExist && data.editPlugin) {
+      openEditorPage()
+      emiter.emit('openPluginInEditor', JSON.stringify(data.editPlugin))
+      return
+    }
     if (isExist) {
       const modalProps = getSubscribeClose(YakitRoute.AddYakitScript)
       if (modalProps) {
@@ -1416,17 +1434,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
       }
     }
-    openMenuPage(
-      { route: YakitRoute.AddYakitScript },
-      {
-        pageParams: {
-          addYakitScriptPageInfo: {
-            ...defaultAddYakitScriptPageInfo,
-            ...data,
-          },
-        },
-      },
-    )
+    openEditorPage()
   })
   /**
    * @name 插件仓库

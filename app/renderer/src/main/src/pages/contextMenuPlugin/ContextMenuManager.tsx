@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Spin } from 'antd'
+import { Spin, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { DragDropContext, Draggable, type DropResult, Droppable } from '@hello-pangea/dnd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -12,6 +12,7 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import {
   OutlineCloseIcon,
+  OutlinePencilaltIcon,
   OutlinePlusIcon,
   OutlineRefreshIcon,
   OutlineSearchIcon,
@@ -19,6 +20,8 @@ import {
 } from '@/assets/icon/outline'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
+import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript'
+import { YakitRoute } from '@/enums/yakitRoute'
 import {
   convertKeyboardToUIKey,
   convertKeyEventToKeyCombination,
@@ -157,6 +160,11 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
     }, [])
 
     useEffect(() => {
+      emiter.on('editorLocalSaveToLocalList', refresh)
+      return () => emiter.off('editorLocalSaveToLocalList', refresh)
+    }, [])
+
+    useEffect(() => {
       if (sceneOrder.includes(initialScene)) setActiveScene(initialScene)
     }, [initialScene])
 
@@ -196,15 +204,14 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
         )
         .sort((left, right) => left.PluginName.localeCompare(right.PluginName))
     }, [sceneActions, keyword])
-    const enabledPluginUUIDs = useMemo(
+    const sceneEnabledPluginUUIDs = useMemo(
       () =>
         new Set(
-          response.Actions.filter((action) => action.Enabled && !action.IsCorePlugin).map(
-            (action) => action.PluginUUID,
-          ),
+          sceneActions.filter((action) => action.Enabled && !action.IsCorePlugin).map((action) => action.PluginUUID),
         ),
-      [response.Actions],
+      [sceneActions],
     )
+    const sceneEnabledCustomPluginCount = sceneEnabledPluginUUIDs.size
 
     const saveAction = useMemoizedFn(async (next: ContextMenuAction, refreshAfter = true) => {
       const key = actionKey(next)
@@ -222,9 +229,12 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
     })
 
     const addAction = useMemoizedFn((action: ContextMenuAction) => {
-      const consumesSlot = !enabledPluginUUIDs.has(action.PluginUUID)
-      if (consumesSlot && response.EnabledCustomPluginCount >= response.MaxCustomPluginCount) {
-        yakitNotify('warning', `最多启用 ${response.MaxCustomPluginCount} 个自定义右键插件`)
+      const consumesSlot = !sceneEnabledPluginUUIDs.has(action.PluginUUID)
+      if (consumesSlot && sceneEnabledCustomPluginCount >= response.MaxCustomPluginCount) {
+        yakitNotify(
+          'warning',
+          `${contextMenuSceneName[activeScene]}最多启用 ${response.MaxCustomPluginCount} 个自定义右键插件`,
+        )
         return
       }
       saveAction({ ...action, Enabled: true, Sort: configuredActions.length + 1 })
@@ -285,6 +295,39 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
       }
     })
 
+    const editPlugin = useMemoizedFn((action: ContextMenuAction) => {
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.AddYakitScript,
+          params: {
+            ...defaultAddYakitScriptPageInfo,
+            source: YakitRoute.ContextMenuManager,
+            editPlugin: {
+              id: 0,
+              uuid: action.PluginUUID,
+              name: action.PluginName,
+            },
+          },
+        }),
+      )
+    })
+
+    const renderEditButton = (action: ContextMenuAction) => (
+      <Tooltip title="在插件编辑器中打开">
+        <YakitButton
+          type="text2"
+          icon={<OutlinePencilaltIcon />}
+          onClick={(event) => {
+            event.stopPropagation()
+            editPlugin(action)
+          }}
+        >
+          编辑
+        </YakitButton>
+      </Tooltip>
+    )
+
     const renderIdentity = (action: ContextMenuAction) => (
       <div className={styles['plugin-identity']}>
         <div className={styles['plugin-avatar']}>
@@ -319,9 +362,9 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
           </div>
           <div className={styles['manager-actions']}>
             <div className={styles['quota']}>
-              <span>自定义额度</span>
+              <span>{contextMenuSceneName[activeScene]}额度</span>
               <strong>
-                {response.EnabledCustomPluginCount} / {response.MaxCustomPluginCount}
+                {sceneEnabledCustomPluginCount} / {response.MaxCustomPluginCount}
               </strong>
             </div>
             <YakitButton type="outline2" icon={<OutlineRefreshIcon />} onClick={refresh} loading={loading}>
@@ -350,7 +393,7 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
               )
             })}
             <div className={styles['scene-note']}>
-              核心插件固定展示且不占额度。15 个上限按插件计数，同一插件配置多个场景只占 1 个名额。
+              核心插件固定展示且不占额度。每个场景分别最多启用 15 个自定义插件，同一插件在同一场景只占 1 个名额。
             </div>
           </aside>
 
@@ -400,6 +443,7 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
                                       ⋮⋮
                                     </span>
                                     {renderIdentity(action)}
+                                    {renderEditButton(action)}
                                     {action.IsCorePlugin ? (
                                       <span className={styles['locked-text']}>固定展示</span>
                                     ) : (
@@ -493,11 +537,12 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
                 </div>
                 <div className={styles['available-list']}>
                   {availableActions.map((action) => {
-                    const consumesSlot = !enabledPluginUUIDs.has(action.PluginUUID)
-                    const quotaFull = consumesSlot && response.EnabledCustomPluginCount >= response.MaxCustomPluginCount
+                    const consumesSlot = !sceneEnabledPluginUUIDs.has(action.PluginUUID)
+                    const quotaFull = consumesSlot && sceneEnabledCustomPluginCount >= response.MaxCustomPluginCount
                     return (
                       <article className={styles['available-row']} key={actionKey(action)}>
                         {renderIdentity(action)}
+                        {renderEditButton(action)}
                         <YakitButton
                           type="text"
                           icon={<OutlinePlusIcon />}
