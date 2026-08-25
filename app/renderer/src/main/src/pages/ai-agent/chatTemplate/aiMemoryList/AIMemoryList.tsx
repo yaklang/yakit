@@ -108,12 +108,13 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
   })
   const onClearMemory = useMemoizedFn(() => {
     setLoading(true)
-    /** TODO - 多会话清空记忆库，数据清空后其余会话会有新数据往记忆库中增加，导致看起来清空失败 */
+    /** NOTE - 多会话清空记忆库，数据清空后其余会话会有新数据往记忆库中增加，导致看起来清空失败 */
     grpcDeleteAIMemoryEntity({
       Filter: {},
     })
       .then(() => {
         rawData.memoryList = cloneDeep(DefaultMemoryList)
+        store.getState().updateStateCount('memoryListUpdate')
       })
       .finally(() => {
         setTimeout(() => {
