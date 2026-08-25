@@ -1,12 +1,7 @@
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { YakitKeyBoard, YakitKeyMod } from '../../keyboard'
 import type { ShortcutKeyEventInfo } from '../pageMaps'
-import {
-  convertKeyEventToKeyCombination,
-  handleShortcutKey,
-  parseShortcutKeyEvent,
-  sortKeysCombination,
-} from '../../utils'
+import { convertKeyEventToKeyCombination, sortKeysCombination } from '../../shortcutKeyCore'
 import { type System, SystemInfo } from '@/constants/hardware'
 import { addScopeShow } from '../global'
 import { JSONParseLog } from '@/utils/tool'
@@ -407,14 +402,4 @@ export const isYakEditorShortcut = (ev: KeyboardEvent): boolean => {
 
   // }
   return has
-}
-
-/** 判断当前输入是否激活页面级或全局快捷键 */
-export const isPageOrGlobalShortcut = (ev: KeyboardEvent): string | null => {
-  const keys = convertKeyEventToKeyCombination(ev)
-  if (!keys) return null
-  const eventName = parseShortcutKeyEvent(keys)
-  if (!eventName) return null
-  handleShortcutKey(ev)
-  return eventName
 }
