@@ -49,15 +49,16 @@
       }
 
       .qs-icon {
-        width: 20px;
-        height: 20px;
+        display: flex;
+        align-items: center;
+        width: 32px;
+        height: 32px;
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         cursor: pointer;
         svg {
           width: 20px;
           height: 20px;
         }
-        margin-bottom: 5px;
       }
 
       .qs-icon:hover {
