@@ -182,7 +182,13 @@ export default defineConfig(({ mode }) => {
       // 等静态依赖爬完再对外服务，避免浏览器拿着旧 hash 打到已失效的预构建产物
       holdUntilCrawlEnd: true,
       // 与 build.target 对齐，跳过 down-level 转译，加速预构建
-      esbuildOptions: { target: 'esnext' },
+      esbuildOptions: {
+        target: 'esnext',
+        alias: {
+          react: path.resolve(rootDir, 'node_modules/react'),
+          'react-dom': path.resolve(rootDir, 'node_modules/react-dom'),
+        },
+      },
       // lazy 路由架构下，冷启动 crawl 全量 src，一次性发现 node_modules 依赖，避免首访页签 504 Outdated Optimize Dep
       // 显式 entries 会覆盖默认 html 推断，须保留 index / yakit-aux
       entries: [
