@@ -147,7 +147,7 @@ export const DefaultAgentChatStatus: AgentChatStatus = {
 }
 
 export const DefaultAgentLoadingTitle: AgentLoadingTitle = {
-  casualTitle: '',
+  casualTitle: '会话初始化中...',
   planTitle: '',
 }
 
