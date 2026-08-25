@@ -521,10 +521,14 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
   })
 
   const onUpdateApiKey = useMemoizedFn((isLoading: boolean = false) => {
+    // 仅ce社区版可以获取apiKey，企业版不需要
+    if (userInfo.platform === 'company') return
     apiFetchApiKeys(isLoading)
   })
 
   useEffect(() => {
+    // 仅ce社区版可以获取apiKey，企业版不需要
+    if (userInfo.platform === 'company') return
     if (userInfo.isLogin) {
       apiFetchApiKeys()
     } else {
