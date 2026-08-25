@@ -452,24 +452,30 @@ module.exports = {
     })
 
     ipcMain.handle(ipcEventPre + 'get-dir-size', async (e, dirPath) => {
-      const calcSize = (dir) => {
+      const calcSize = async (dir) => {
         let size = 0
         try {
-          const entries = fs.readdirSync(dir, { withFileTypes: true })
+          const entries = await fs.promises.readdir(dir, { withFileTypes: true })
           for (const entry of entries) {
             const fullPath = path.join(dir, entry.name)
             if (entry.isFile()) {
               try {
-                size += fs.statSync(fullPath).size
+                const stat = await fs.promises.stat(fullPath)
+                size += stat.size
               } catch (_) {}
             } else if (entry.isDirectory()) {
-              size += calcSize(fullPath)
+              size += await calcSize(fullPath)
             }
           }
         } catch (_) {}
         return size
       }
-      if (!dirPath || !fs.existsSync(dirPath)) return 0
+      if (!dirPath) return 0
+      try {
+        await fs.promises.access(dirPath)
+      } catch (_) {
+        return 0
+      }
       return calcSize(dirPath)
     })
 
