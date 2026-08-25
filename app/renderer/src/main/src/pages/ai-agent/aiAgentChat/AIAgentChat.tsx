@@ -13,15 +13,13 @@ import { AIReActChatReview } from '@/pages/ai-agent/components/aiReActChatReview
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon } from '@/assets/icon/outline'
 import { failed, yakitNotify } from '@/utils/notification'
-import { AIForgeForm, AIToolForm } from '../aiTriageChatTemplate/AITriageChatTemplate'
 import { grpcGetAIForge } from '../grpc'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import type { AIForge } from '../type/forge'
 import type { AITool } from '../type/aiTool'
-import { AIChatContent } from '../aiChatContent/AIChatContent'
-import { AIAgentSettingDefault, AITabsEnum, ReActChatEventEnum } from '../defaultConstant'
+import { AIAgentSettingDefault, ReActChatEventEnum } from '../defaultConstant'
 import { grpcGetAIToolById } from '../aiToolList/utils'
 import { isEqual } from 'lodash'
 import useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
@@ -40,8 +38,7 @@ import type { AIForgeFormSubmitParamsProps } from '../aiTriageChatTemplate/type'
 import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { onReStart } from '../utils'
-
-const AIChatWelcome = React.lazy(() => import('../aiChatWelcome/AIChatWelcome'))
+import { AIAgentChatLayout } from './AIAgentChatLayout/AIAgentChatLayout'
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -76,9 +73,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   const onSetReAct = useMemoizedFn(() => {
     setMode('re-act')
-    setTimeout(() => {
-      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Task_Content }))
-    }, 100)
   })
   /** 等自由对话渲染出来再发送 */
   const handleStart = useMemoizedFn((value: HandleStartParams) => {
@@ -482,39 +476,23 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   return (
     <div ref={wrapperRef} className={styles['ai-agent-chat']}>
-      <div className={styles['chat-wrapper']}>
-        {mode === 'welcome' ? (
-          <React.Suspense fallback={<div>loading...</div>}>
-            <AIChatWelcome
-              onTriageSubmit={handleStartTriageChat}
-              onSetReAct={onSetReAct}
-              api={api}
-              streams={streams}
-              ref={aiChatWelcomeRef}
-            />
-          </React.Suspense>
-        ) : (
-          <AIChatContent ref={aiReActChatRef} onChat={onChat} />
-        )}
-        <div className={styles['footer-forge-form']}>
-          {activeForge && (
-            <AIForgeForm
-              wrapperRef={wrapperRef}
-              info={activeForge}
-              onBack={handleClearActiveForge}
-              onSubmit={handleSubmitForge}
-            />
-          )}
-          {activeTool && (
-            <AIToolForm
-              wrapperRef={wrapperRef}
-              info={activeTool}
-              onBack={handleClearActiveTool}
-              onSubmit={handleSubmitTool}
-            />
-          )}
-        </div>
-      </div>
+      <AIAgentChatLayout
+        mode={mode}
+        onTriageSubmit={handleStartTriageChat}
+        onSetReAct={onSetReAct}
+        api={api}
+        streams={streams}
+        aiChatWelcomeRef={aiChatWelcomeRef}
+        aiReActChatRef={aiReActChatRef}
+        onChat={onChat}
+        wrapperRef={wrapperRef}
+        activeForge={activeForge}
+        activeTool={activeTool}
+        onClearActiveForge={handleClearActiveForge}
+        onSubmitForge={handleSubmitForge}
+        onClearActiveTool={handleClearActiveTool}
+        onSubmitTool={handleSubmitTool}
+      />
       <YakitHint
         getContainer={wrapperRef.current || undefined}
         visible={replaceShow}

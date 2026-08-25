@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import classNames from 'classnames'
 import { Tooltip } from 'antd'
 import { useStore } from 'zustand'
@@ -6,18 +6,13 @@ import styles from './AIReActChatHeader.module.scss'
 import { ColorsChatIcon } from '@/assets/icon/colors'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
-import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
 import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ClockIcon } from '@/assets/newIcon'
-import { OutlineLandPlotIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
+import { OutlineLandPlotIcon } from '@/assets/icon/outline'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import type { AIReActChatHeaderExternalRightIconProps, AIReActChatHeaderProps, AIReActSubAgentTaskProps } from './type'
-import { ChevronleftButton } from '../AIReActComponent'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
-import { yakitNotify } from '@/utils/notification'
-import emiter from '@/utils/eventBus/eventBus'
-import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { type AISource, AISourceEnum } from '../../hooks/grpcApi'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { SolidChatIcon } from '@/assets/icon/solid'
@@ -27,80 +22,12 @@ import { AI_AGENT_HISTORY_AI_SOURCES } from '../../hooks/useGetChatDataStoreKey'
 import { useMemoizedFn, useCreation } from 'ahooks'
 
 export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((props) => {
-  const {
-    title,
-    chatContainerHeaderClassName,
-    isShowRetract,
-    externalParameters,
-    handleSwitchShowFreeChat,
-    scrollToItemIndex,
-  } = props
-
-  const { activeChat } = useAIAgentStore()
-  const { getSetting } = useAIAgentDispatcher()
+  const { title, chatContainerHeaderClassName, isShowRetract, externalParameters, scrollToItemIndex } = props
 
   // 内部订阅 Store 数据
   const store = useCurrentStore()
   const focusMode = useStore(store, (state) => state.focusMode)
-  const currentChatStatusQuestionID = useStore(store, (state) => state.currentChatStatus.questionID)
 
-  const sessionRef = useRef<string | undefined>(undefined)
-
-  useEffect(() => {
-    if (sessionRef.current && sessionRef.current !== activeChat?.SessionID) {
-      sessionRef.current = undefined
-    }
-  }, [activeChat?.SessionID])
-
-  useEffect(() => {
-    if (!activeChat?.Title || !activeChat?.SessionID) return
-    if (sessionRef.current !== activeChat.SessionID) return
-    emitTaskContentTab('update', activeChat.Title)
-  }, [activeChat?.Title, activeChat?.SessionID, currentChatStatusQuestionID])
-
-  const defaultTaskTabLabel = useCreation(() => {
-    return typeof title === 'string' ? title : '自由对话'
-  }, [title])
-
-  const emitTaskContentTab = useMemoizedFn((type: 'add' | 'update', label?: string) => {
-    const sessionId = activeChat?.SessionID
-    const taskId = currentChatStatusQuestionID
-    if (!taskId || !sessionId) return false
-    if (getSetting()?.Source !== 'ai') return false
-    emiter.emit(
-      'actionAITaskContentTab',
-      JSON.stringify({
-        type,
-        params: {
-          key: sessionId,
-          taskId,
-          label: label || activeChat?.Title || defaultTaskTabLabel,
-          goal: '',
-        },
-      }),
-    )
-    return true
-  })
-
-  const syncCasualTaskTab = useMemoizedFn(() => {
-    const sessionId = activeChat?.SessionID
-    if (!currentChatStatusQuestionID || !sessionId) return
-    if (getSetting().Source !== AISourceEnum.aiAgent) return false
-    emitTaskContentTab('add')
-    sessionRef.current = sessionId
-  })
-
-  const onDetails = useMemoizedFn(() => {
-    if (!currentChatStatusQuestionID) {
-      yakitNotify('error', 'currentChatStatus.questionID不存在')
-      return
-    }
-    if (getSetting().Source !== AISourceEnum.aiAgent) {
-      yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
-      return
-    }
-    syncCasualTaskTab()
-  })
   return (
     <div className={classNames(styles['chat-header'], chatContainerHeaderClassName)}>
       <div className={styles['chat-header-title']}>
@@ -116,17 +43,8 @@ export const AIReActChatHeader: React.FC<AIReActChatHeaderProps> = React.memo((p
         {isShowRetract && (
           <>
             <AIReActSubAgentTask scrollToItemIndex={scrollToItemIndex} />
-            {externalParameters?.rightIcon ? (
+            {externalParameters?.rightIcon && (
               <AIReActChatHeaderExternalRightIcon rightIcon={externalParameters?.rightIcon} />
-            ) : (
-              <>
-                {currentChatStatusQuestionID && (
-                  <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
-                    任务详情
-                  </YakitButton>
-                )}
-                <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
-              </>
             )}
           </>
         )}
@@ -235,9 +153,9 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
   return rightIcon ? (
     <>
       {currentChatStatusQuestionID && rightIcon.taskDetails && <TaskDetailsPopover />}
-      {rightIcon.dataDetails && (
+      {/* {rightIcon.dataDetails && (
         <AIContextToken iconOnly buttonProps={rightIcon.dataDetails === true ? undefined : rightIcon.dataDetails} />
-      )}
+      )} */}
       {rightIcon.history && (
         <Tooltip
           trigger={['click']}

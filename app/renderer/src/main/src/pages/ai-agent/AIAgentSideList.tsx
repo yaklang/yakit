@@ -9,17 +9,13 @@ import styles from './AIAgentSideList.module.scss'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-import { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
-
 const AIChatSetting = React.lazy(() => import('./AIChatSetting/AIChatSetting'))
 const AIModelList = React.lazy(() => import('./aiModelList/AIModelList'))
-const HistoryChat = React.lazy(() => import('./historyChat/HistoryChat'))
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
-  // const {} = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
-  const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
+  const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.Setting)
   const [show, setShow] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'show',
@@ -58,13 +54,13 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   const renderTabContent = useMemoizedFn((key: AIAgentTabListEnum) => {
     let content: ReactNode = <></>
     switch (key) {
-      case AIAgentTabListEnum.History:
-        content = (
-          <React.Suspense>
-            <HistoryChat aiSource={AI_AGENT_HISTORY_AI_SOURCES} />
-          </React.Suspense>
-        )
-        break
+      // case AIAgentTabListEnum.History:
+      //   content = (
+      //     <React.Suspense>
+      //       <HistoryChat aiSource={AI_AGENT_HISTORY_AI_SOURCES} />
+      //     </React.Suspense>
+      //   )
+      //   break
       case AIAgentTabListEnum.Setting:
         content = (
           <React.Suspense>

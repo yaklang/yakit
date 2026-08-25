@@ -1,6 +1,7 @@
 import { FileListTileMenu, type FileTreeSystemListWrapperProps, type HistoryItem, PathIncludeResult } from '../type'
 import { type FC, useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
+import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './FileTreeSystemListWrapper.module.scss'
 import FileTreeSystemList from '../FileTreeSystemList/FileTreeSystemList'
@@ -42,6 +43,8 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
   path,
   title,
   isOpen,
+  fillHeight = true,
+  showTitleActions = true,
   selected,
   setSelected,
   onTreeDragStart,
@@ -122,31 +125,33 @@ const FileTreeSystemListWrapper: FC<FileTreeSystemListWrapperProps> = ({
   })
 
   return (
-    <div className={styles['file-tree-system']}>
+    <div className={classNames(styles['file-tree-system'], { [styles['file-tree-system-fill']]: fillHeight })}>
       <div className={styles['file-tree-system-title']}>
         <div className={styles['file-tree-system-title-toggle']} onClick={() => setExpanded((p) => !p)}>
           <OutlineChevrondownIcon style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
-          <span style={{ marginLeft: 4 }}>{title}</span>
+          <span>{title}</span>
         </div>
 
-        <div className={styles['file-tree-system-title-icon']}>
-          <YakitButton
-            hidden={!isOpen}
-            type="text2"
-            title="打开文件"
-            onClick={() => menuSelect(FileListTileMenu.OpenFile)}
-            icon={<OutlineDocumentaddIcon />}
-          />
-          <YakitButton
-            hidden={!isOpen}
-            type="text2"
-            title="打开文件夹"
-            onClick={() => menuSelect(FileListTileMenu.OpenFolder)}
-            icon={<OutlineFolderaddIcon />}
-          />
-        </div>
+        {showTitleActions && (
+          <div className={styles['file-tree-system-title-icon']}>
+            <YakitButton
+              hidden={!isOpen}
+              type="text2"
+              title="打开文件"
+              onClick={() => menuSelect(FileListTileMenu.OpenFile)}
+              icon={<OutlineDocumentaddIcon />}
+            />
+            <YakitButton
+              hidden={!isOpen}
+              type="text2"
+              title="打开文件夹"
+              onClick={() => menuSelect(FileListTileMenu.OpenFolder)}
+              icon={<OutlineFolderaddIcon />}
+            />
+          </div>
+        )}
       </div>
-      {expanded && renderContent()}
+      {expanded && <div className={styles['file-tree-system-body']}>{renderContent()}</div>}
     </div>
   )
 }

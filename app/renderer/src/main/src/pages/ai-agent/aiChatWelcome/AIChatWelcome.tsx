@@ -16,10 +16,8 @@ import {
   OutlileHistoryIcon,
   OutlineChatIcon,
   OutlineCheckIcon,
-  OutlineCloseIcon,
   OutlineExportIcon,
   OutlineImportIcon,
-  OutlineOpenIcon,
   OutlinePencilaltIcon,
   OutlinePinIcon,
   OutlinePinOffIcon,
@@ -30,15 +28,11 @@ import {
 import { Tooltip } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import FileTreeList from './FileTreeList/FileTreeList'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import KnowledgeSidebarList, { type KnowledgeModalRef } from './KnowledgeSidebarList/KnowledgeSidebarList'
-import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
-import Tabs from './Tabs/Tabs'
 import ForgeName, { type ForgeNameRef } from '../forgeName/ForgeName'
 import AIToolList, { handleAddAITool } from '../aiToolList/AIToolList'
-import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
 import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
 import classNames from 'classnames'
@@ -53,6 +47,7 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
+import DoomFlameBackground from './DoomFlameBackground'
 
 enum AIChatWelcomeTabKeyEnum {
   Knowledge = 'knowledge',
@@ -83,18 +78,8 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
     const settingCardRef = useRef<AIChatWelcomeSettingCardRef>(null)
 
-    // 控制下拉菜单
-    const [openDrawer, setOpenDrawer] = useState<boolean>(true)
-    const [tabActiveKey, setTabActiveKey] = useState<AIChatWelcomeTabKeyEnum>(AIChatWelcomeTabKeyEnum.Knowledge)
-
     const welcomeRef = useRef<HTMLDivElement>(null)
     const welcomeSize = useSize(welcomeRef)
-
-    useUpdateEffect(() => {
-      if (welcomeSize?.width && welcomeSize?.width < 1430) {
-        setOpenDrawer(false)
-      }
-    }, [welcomeSize?.width])
 
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
       // 通过 ref 主动拉取选中的推荐场景（支持多选），附加到 enabledCapabilities 传出
@@ -103,9 +88,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         ...value,
         enabledCapabilities: select,
       })
-    })
-    const handleTabChange = useMemoizedFn((key: string) => {
-      setTabActiveKey(key as AIChatWelcomeTabKeyEnum)
     })
 
     const [isSelectForgeName, setIsSelectForgeName] = useState<boolean>(false)
@@ -204,38 +186,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
-        {/* <DoomFlameBackground /> */}
-        <div className={styles['open-file-tree-button']} onClick={() => setOpenDrawer(!openDrawer)}>
-          {t('AIChatWelcome.expandResources')}
-          <YakitButton type="text2" icon={<OutlineOpenIcon />} />
-        </div>
-
-        <YakitDrawer
-          width={298}
-          visible={openDrawer}
-          getContainer={false}
-          className={styles['drawer']}
-          mask={false}
-          placement="left"
-          style={{ transform: 'translateX(0)' }}
-          onClose={() => setOpenDrawer(false)}
-          closable={false}
-          title={
-            <div className={styles['drawer-title']}>
-              <span>{t('AIChatWelcome.expandResources')}</span>
-              <YakitButton onClick={() => setOpenDrawer(false)} type="text2" icon={<OutlineCloseIcon />} />
-            </div>
-          }
-        >
-          <SplitView
-            isVertical
-            elements={[
-              { element: <FileTreeList /> },
-              { element: <Tabs items={items} activeKey={tabActiveKey} onChange={handleTabChange} /> },
-            ]}
-            sashClassName={styles['split-view-line']}
-          />
-        </YakitDrawer>
+        <DoomFlameBackground />
         <div className={styles['input-wrapper']}>
           <div className={styles['input-heard']}>
             <ColorsMemfitIcon className={styles['memfit-icon']} />

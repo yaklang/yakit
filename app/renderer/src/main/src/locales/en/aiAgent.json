@@ -337,7 +337,8 @@
     "sendToChat": "Send to free chat"
   },
   "FileTreeSystem": {
-    "myOpenedFiles": "My Opened Files"
+    "myOpenedFiles": "My Opened Files",
+    "aiArtifacts": "AI Artifacts"
   },
   "ExportAILogsModal": {
     "title": "Export AI Logs",
@@ -367,6 +368,17 @@
     "newChat": "New Session",
     "log": "Log",
     "exportLog": "Export Log"
+  },
+  "ChatSessionPane": {
+    "sessionList": "Session List",
+    "noBrowserInstance": "No browser instances"
+  },
+  "AIAgentChatLayout": {
+    "dockDisabledTip": "The screen is too small to dock this panel on the right"
+  },
+  "AIHorizontalScrollCard": {
+    "questionIdMissing": "currentChatStatus.questionID does not exist",
+    "taskDetailSourceMismatch": "The current session does not belong to the AIAgent data source and task details cannot be viewed"
   },
   "AIContextToken": {
     "pressure": "Context Pressure",

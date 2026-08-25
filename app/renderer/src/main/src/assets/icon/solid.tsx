@@ -4920,3 +4920,26 @@ const OutlineLog = () => (
 export const OutlineLogIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineLog} {...props} />
 }
+
+const SolidFloatWindow = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <g clipPath="url(#clip0_557_12134)">
+      <rect opacity="0.6" y="1.59998" width="10.4" height="6.4" rx="2" fill="#868C97" />
+      <path
+        d="M14.4001 2.40002C15.2838 2.40002 16.0001 3.11637 16.0001 4.00002V12C16.0001 12.8285 15.3703 13.5096 14.5634 13.5914L14.4001 13.6H3.2001L3.03682 13.5914C2.28357 13.5151 1.68506 12.9165 1.60869 12.1633L1.6001 12V8.80002H2.4001V12C2.4001 12.4419 2.75827 12.8 3.2001 12.8H14.4001C14.8419 12.8 15.2001 12.4419 15.2001 12V4.00002C15.2001 3.5582 14.8419 3.20002 14.4001 3.20002H11.2001V2.40002H14.4001Z"
+        fill="#868C97"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0_557_12134">
+        <rect width="16" height="16" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+)
+/**
+ * @description Solid/浮窗 Icon/FloatWindow
+ */
+export const SolidFloatWindowIcon = (props: Partial<IconProps>) => {
+  return <Icon component={SolidFloatWindow} {...props} />
+}

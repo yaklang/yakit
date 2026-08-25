@@ -18,6 +18,10 @@ export interface FileTreeSystemListWrapperProps {
   path: HistoryItem[]
   title: string
   isOpen?: boolean
+  /** 是否撑满父容器高度，手风琴场景下应关闭 */
+  fillHeight?: boolean
+  /** 标题栏是否展示打开文件/文件夹按钮 */
+  showTitleActions?: boolean
   selected?: FileNodeProps
   setSelected: (v?: FileNodeProps) => void
   onTreeDragStart?: () => void

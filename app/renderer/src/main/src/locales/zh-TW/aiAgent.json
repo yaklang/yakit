@@ -337,7 +337,8 @@
     "sendToChat": "傳送到自由對話"
   },
   "FileTreeSystem": {
-    "myOpenedFiles": "我開啟的檔案"
+    "myOpenedFiles": "我開啟的檔案",
+    "aiArtifacts": "AI Artifacts"
   },
   "ExportAILogsModal": {
     "title": "匯出 AI 日誌",
@@ -367,6 +368,17 @@
     "newChat": "新建會話",
     "log": "日誌",
     "exportLog": "匯出日誌"
+  },
+  "ChatSessionPane": {
+    "sessionList": "會話列表",
+    "noBrowserInstance": "暫無瀏覽器實例"
+  },
+  "AIAgentChatLayout": {
+    "dockDisabledTip": "螢幕過小，不支援該模組停靠在右邊"
+  },
+  "AIHorizontalScrollCard": {
+    "questionIdMissing": "currentChatStatus.questionID不存在",
+    "taskDetailSourceMismatch": "當前會話不屬於 AIAgent 資料來源，無法查看任務詳情"
   },
   "AIContextToken": {
     "pressure": "上下文壓力",

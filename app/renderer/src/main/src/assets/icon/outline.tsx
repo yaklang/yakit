@@ -6469,3 +6469,75 @@ const OutlineThought = () => (
 export const OutlineThoughtIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineThought} {...props} />
 }
+
+const OutlineKeepLeft = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect opacity="0.6" x="2.3999" y="4" width="3.2" height="8" rx="0.5" fill="currentColor" />
+    <rect x="1.30005" y="2.8999" width="13.4" height="10.2" rx="1.5" stroke="currentColor" />
+  </svg>
+)
+
+/**
+ * @description Outline/KeepLeft Icon/KeepLeft
+ */
+export const OutlineKeepLeftIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineKeepLeft} {...props} />
+}
+
+const OutlineSettings2 = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M13.6667 11.3333H9.00004M6.33337 11.3333C6.33337 12.4378 5.43794 13.3333 4.33337 13.3333C3.2288 13.3333 2.33337 12.4378 2.33337 11.3333C2.33337 10.2287 3.2288 9.33325 4.33337 9.33325C5.43794 9.33325 6.33337 10.2287 6.33337 11.3333Z"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M13.6667 4.66675H9.00004M6.33337 4.66675C6.33337 5.77132 5.43794 6.66675 4.33337 6.66675C3.2288 6.66675 2.33337 5.77132 2.33337 4.66675C2.33337 3.56218 3.2288 2.66675 4.33337 2.66675C5.43794 2.66675 6.33337 3.56218 6.33337 4.66675Z"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/**
+ * @description Outline/Settings2 Icon/Settings2
+ */
+export const OutlineSettings2Icon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineSettings2} {...props} />
+}
+
+const OutlineTimeline = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M12.6667 3.99999H8M3.66667 6.66666C4.58714 6.66666 5.33333 5.92047 5.33333 4.99999C5.33333 4.07952 4.58714 3.33333 3.66667 3.33333M3.66667 6.66666C2.74619 6.66666 2 5.92047 2 4.99999C2 4.07952 2.74619 3.33333 3.66667 3.33333M3.66667 6.66666V9.33333M3.66667 3.33333V1.33333M3.66667 9.33333C2.74619 9.33333 2 10.0795 2 11C2 11.9205 2.74619 12.6667 3.66667 12.6667M3.66667 9.33333C4.58714 9.33333 5.33333 10.0795 5.33333 11C5.33333 11.9205 4.58714 12.6667 3.66667 12.6667M14 7.99999H8M12.6667 12H8M3.66667 12.6667V14.6667"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+/**
+ * @description  Icon/Outline/timeline
+ */
+export const OutlineTimelineIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineTimeline} {...props} />
+}
+
+const OutlineScrollText = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M10 8H6.66671M10 5.33333H6.66671M4.00004 5.33333H2.00004C1.82323 5.33333 1.65366 5.2631 1.52864 5.13807C1.40361 5.01305 1.33337 4.84348 1.33337 4.66667V3.33333C1.33337 2.97971 1.47385 2.64057 1.7239 2.39052C1.97395 2.14048 2.31309 2 2.66671 2H11.3334C11.687 2 12.0261 2.14048 12.2762 2.39052C12.5262 2.64057 12.6667 2.97971 12.6667 3.33333V11.3333M2.66671 2C3.02033 2 3.35947 2.14048 3.60952 2.39052C3.85956 2.64057 4.00004 2.97971 4.00004 3.33333V12.6667C4.00004 13.0203 4.14052 13.3594 4.39056 13.6095C4.64061 13.8595 4.97975 14 5.33337 14M5.33337 14H13.3334C13.687 14 14.0261 13.8595 14.2762 13.6095C14.5262 13.3594 14.6667 13.0203 14.6667 12.6667V12C14.6667 11.8232 14.5965 11.6536 14.4714 11.5286C14.3464 11.4036 14.1769 11.3333 14 11.3333H7.33337C7.15656 11.3333 6.98699 11.4036 6.86197 11.5286C6.73695 11.6536 6.66671 11.8232 6.66671 12V12.6667C6.66671 13.0203 6.52623 13.3594 6.27618 13.6095C6.02613 13.8595 5.687 14 5.33337 14Z"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+/**
+ * @description  Icon/Outline/scrollText
+ */
+export const OutlineScrollTextIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineScrollText} {...props} />
+}

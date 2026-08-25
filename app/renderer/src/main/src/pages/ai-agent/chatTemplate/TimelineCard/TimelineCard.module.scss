@@ -13,16 +13,16 @@
   position: relative;
   .virtuoso-item-list {
     position: relative;
-    padding: 8px 12px;
+    // padding: 8px 12px;
 
     &::before {
       content: '';
       position: absolute;
-      top: 0;
-      bottom: 0;
+      // 对齐首条圆点中心：item-inner padding-top 4px + card padding-top 6px + header 内热区垂直居中
+      top: 20px;
       left: var(--timeline-line-left);
       width: var(--timeline-line-width);
-      height: calc(100% + 3px);
+      height: calc(100% - 20px + 3px);
       background-color: var(--Colors-Use-Neutral-Disable);
       z-index: 0;
     }
@@ -148,6 +148,11 @@
 
 .timeline-popover {
   max-width: 500px;
+  :global {
+    .ant-popover-arrow {
+      display: none;
+    }
+  }
 }
 .timeline-popover-content {
   max-height: 70vh;
