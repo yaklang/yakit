@@ -1,3 +1,5 @@
+@use '../../../styles/mixin.scss' as mixin;
+
 .ui-op-dropdown {
   top: 24px !important;
 }
@@ -29,13 +31,13 @@
   }
   .op-btn-body-hover {
     background-color: var(--Colors-Use-Neutral-Bg);
-    .icon-style:global(.anticon) {
-      color: var(--Colors-Use-Main-Primary);
+    .icon-style {
+      @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
     }
   }
 
-  .icon-style:global(.anticon) {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  .icon-style {
+    @include mixin.anticon-color(var(--Colors-Use-Neutral-Text-3-Secondary));
     svg {
       width: 20px;
       height: 20px;
@@ -44,8 +46,8 @@
 }
 
 .ui-op-btn-wrapper:hover {
-  .icon-style:global(.anticon) {
-    color: var(--Colors-Use-Main-Primary);
+  .icon-style {
+    @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
   }
   .op-btn-body {
     background-color: var(--Colors-Use-Neutral-Bg-Hover);

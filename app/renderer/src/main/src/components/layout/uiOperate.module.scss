@@ -1,3 +1,5 @@
+@use '../../styles/mixin.scss' as mixin;
+
 .mac-ui-op-wrapper {
   height: 100%;
   padding: 10px;
@@ -55,13 +57,13 @@
 
     .op-btn {
       padding: 8px 12px;
-      .icon-style:global(.anticon) {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
+      .icon-style {
+        @include mixin.anticon-color(var(--Colors-Use-Neutral-Text-1-Title));
       }
     }
     .op-btn:hover {
-      .icon-style:global(.anticon) {
-        color: var(--Colors-Use-Main-Primary);
+      .icon-style {
+        @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
       }
     }
   }

@@ -1,3 +1,5 @@
+@use '../../styles/mixin.scss' as mixin;
+
 .func-domain-wrapper {
   height: 100%;
   .func-domain-body {
@@ -118,8 +120,8 @@
     justify-content: center;
     align-items: center;
     background-color: var(--Colors-Use-Neutral-Bg);
-    .icon-hover-style:global(.anticon) {
-      color: var(--Colors-Use-Main-Primary);
+    .icon-hover-style {
+      @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
       font-size: 20px;
     }
   }
@@ -142,11 +144,11 @@
       height: 20px;
     }
   }
-  .icon-style:global(.anticon) {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  .icon-style {
+    @include mixin.anticon-color(var(--Colors-Use-Neutral-Text-3-Secondary));
   }
-  .icon-hover-style:global(.anticon) {
-    color: var(--Colors-Use-Main-Primary);
+  .icon-hover-style {
+    @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
   }
   .wrench-icon {
     svg {
@@ -169,8 +171,8 @@
   }
 }
 .ui-op-btn-wrapper:hover {
-  .icon-style:global(.anticon) {
-    color: var(--Colors-Use-Main-Primary);
+  .icon-style {
+    @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
   }
   .op-btn-body {
     background-color: var(--Colors-Use-Neutral-Bg-Hover);
@@ -306,14 +308,14 @@
             line-height: 20px;
             cursor: pointer;
 
-            .icon-style:global(.anticon) {
-              color: var(--Colors-Use-Neutral-Disable);
+            .icon-style {
+              @include mixin.anticon-color(var(--Colors-Use-Neutral-Disable));
             }
           }
           .content-style:hover {
             color: var(--Colors-Use-Main-Primary);
-            .icon-style:global(.anticon) {
-              color: var(--Colors-Use-Main-Primary);
+            .icon-style {
+              @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
             }
           }
         }
