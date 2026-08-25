@@ -26,7 +26,7 @@ describe('defaultConstant', () => {
       status: AITaskStatus.created,
     })
     expect(DefaultAgentLoadingTitle).toEqual({
-      casualTitle: '',
+      casualTitle: '会话初始化中...',
       planTitle: '',
     })
     expect(DefaultTaskPlanEndGate).toEqual({ endReceived: false, pendingStatus: undefined })
