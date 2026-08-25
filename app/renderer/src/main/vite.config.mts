@@ -60,7 +60,8 @@ const ANTD_COMPONENT_STYLE_RE = /(^|[\\/])antd[\\/](es|lib)[\\/][\w-]+[\\/]style
 function generateThemeCssPlugin(): Plugin {
   return {
     name: 'generate-theme-css',
-    buildStart() {
+    // 必须早于 initPublicFiles，否则新生成的 theme.css 不在 publicFiles 白名单里
+    config() {
       execFileSync(process.execPath, [path.resolve(rootDir, 'scripts/generate-theme-css.cjs')], {
         stdio: 'inherit',
         cwd: rootDir,
