@@ -18,6 +18,7 @@ import {
   OutlineSearchIcon,
   OutlineTrashIcon,
 } from '@/assets/icon/outline'
+import { IconSolidAIIcon } from '@/assets/icon/colors'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript'
@@ -331,7 +332,13 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
     const renderIdentity = (action: ContextMenuAction) => (
       <div className={styles['plugin-identity']}>
         <div className={styles['plugin-avatar']}>
-          {action.HeadImg ? <img src={action.HeadImg} alt="" /> : action.PluginName.slice(0, 1).toUpperCase()}
+          {action.HeadImg ? (
+            <img src={action.HeadImg} alt="" />
+          ) : action.IsAIPlugin ? (
+            <IconSolidAIIcon className={styles['ai-plugin-avatar']} />
+          ) : (
+            action.PluginName.slice(0, 1).toUpperCase()
+          )}
         </div>
         <div className={styles['identity-content']}>
           <div className={styles['plugin-name-line']}>

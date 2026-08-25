@@ -42,6 +42,7 @@ import {
   type ContextMenuAction,
   type ContextMenuTrigger,
 } from '@/pages/contextMenuPlugin/types'
+import { ContextMenuActionLabel } from '@/pages/contextMenuPlugin/ContextMenuActionLabel'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -274,10 +275,12 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         children: [
           ...contextMenuActions.map((action) => {
             const sameNameCount = contextMenuActions.filter((item) => item.PluginName === action.PluginName).length
+            const label = sameNameCount > 1 ? `${action.PluginName} · ${action.HookName}` : action.PluginName
             return {
               key: getContextMenuPluginActionKey(action),
-              label: sameNameCount > 1 ? `${action.PluginName} · ${action.HookName}` : action.PluginName,
+              label: <ContextMenuActionLabel action={action} label={label} />,
               keybindings: action.Shortcut ? action.Shortcut.split('|').filter(Boolean) : undefined,
+              isAiPlugin: action.IsAIPlugin,
               children: action.Params?.length
                 ? [
                     {

@@ -40,6 +40,7 @@ import { customMutateRequest } from './contextMenus'
 import { runContextMenuAction } from '@/pages/contextMenuPlugin/ContextMenuExecutionHost'
 import { useContextMenuActions } from '@/pages/contextMenuPlugin/useContextMenuActions'
 import { openContextMenuManager } from '@/pages/contextMenuPlugin/navigation'
+import { ContextMenuActionLabel } from '@/pages/contextMenuPlugin/ContextMenuActionLabel'
 import {
   ContextMenuExecutionType,
   ContextMenuScene,
@@ -825,18 +826,18 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 return [
                   {
                     key: getPacketActionKey(action, 'execute'),
-                    label,
+                    label: <ContextMenuActionLabel action={action} label={label} />,
                   },
                 ]
               }
               return [
                 {
                   key: getPacketActionKey(action, 'execute'),
-                  label: `${label} · 执行`,
+                  label: <ContextMenuActionLabel action={action} label={`${label} · 执行`} />,
                 },
                 {
                   key: getPacketActionKey(action, 'configure'),
-                  label: `${label} · 设置参数`,
+                  label: <ContextMenuActionLabel action={action} label={`${label} · 设置参数`} />,
                 },
               ]
             }),
