@@ -59,6 +59,7 @@ import { useEditorShowLineBreaks } from '@/store/editorShowLineBreaks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { JSONParseLog } from './tool'
 import { yakitEditorTools } from '@/services/electronBridge'
+import { resolveWebFuzzerPacket } from '@/components/yakitUI/YakitEditor/editorUtils'
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor
 
@@ -77,9 +78,9 @@ export interface EditorProps {
   theme?: string
   fontSize?: number
 
-  // 自动换行？ true 应该不换行，false 换行
+  // 自动换行�?true 应该不换行，false 换行
   noWordWrap?: boolean
-  /**@name 是否显示换行符 */
+  /**@name 是否显示换行�?*/
   showLineBreaks?: boolean
 
   noMiniMap?: boolean
@@ -294,8 +295,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         return
       }
 
-      // 注入右键菜单的样式
-      const divElement = outterContainer.current as HTMLDivElement
+      // 注入右键菜单的样�?      const divElement = outterContainer.current as HTMLDivElement
       const host = divElement.querySelector('.shadow-root-host')
       // adds the custom stylesheet once per editor
       if (host && host.shadowRoot && !host.shadowRoot.querySelector('.custom')) {
@@ -453,7 +453,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
 }
 /**@name 字体大小 */
 export const HTTP_PACKET_EDITOR_FONT_SIZE = 'HTTP_PACKET_EDITOR_FONT_SIZE'
-/**@name 获取换行符是否显示 */
+/**@name 获取换行符是否显�?*/
 export const HTTP_PACKET_EDITOR_Line_Breaks = 'HTTP_PACKET_EDITOR_Line_Breaks'
 /**@name 是否显示响应信息 */
 export const HTTP_PACKET_EDITOR_Response_Info = 'HTTP_PACKET_EDITOR_Response_Info'
@@ -469,7 +469,7 @@ interface DataCompareProps {
 }
 
 export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
-  /** yakit-editor组件基础属性 */
+  /** yakit-editor组件基础属�?*/
   disabled?: boolean
   readOnly?: boolean
   contextMenu?: OtherMenuListProps
@@ -478,7 +478,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   noMinimap?: boolean
   onAddOverlayWidget?: (editor: IMonacoEditor, isShow?: boolean) => any
   extraEditorProps?: YakitEditorProps | any
-  /** 是否启用二进制 Fuzztag 折叠（unquote/hexdecode/base64decode/file 折叠为小块，点击 HEX 编辑） */
+  /** 是否启用二进�?Fuzztag 折叠（unquote/hexdecode/base64decode/file 折叠为小块，点击 HEX 编辑�?*/
   foldBinaryFuzztag?: boolean
   /** 右键菜单切换二进制组件时回调 */
   onFoldBinaryFuzztagChange?: (enabled: boolean) => void
@@ -489,10 +489,9 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   // 是否定位高亮光标位置
   isPositionHighLightCursor?: boolean
 
-  /** 扩展属性 */
+  /** 扩展属�?*/
   originValue: string
-  // 接口返回原始包
-  originalPackage?: Uint8Array
+  // 接口返回原始�?  originalPackage?: Uint8Array
   onChange?: (i: string) => any
   disableFullscreen?: boolean
   defaultHeight?: number
@@ -525,19 +524,19 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   webSocketValue?: string
   webSocketToServer?: string
 
-  /**@name 外部控制换行状态 */
+  /**@name 外部控制换行状�?*/
   noWordWrapState?: boolean
   /**@name 外部控制字体大小 */
   fontSizeState?: number
-  /**@name 是否显示换行符 */
+  /**@name 是否显示换行�?*/
   showLineBreaksState?: boolean
   /**@name 是否增加OverlayWidget */
   isAddOverlayWidget?: boolean
-  /**@name 外部控制是否记录操作(拥有此项可记录字体大小及换行符) */
+  /**@name 外部控制是否记录操作(拥有此项可记录字体大小及换行�? */
   editorOperationRecord?: string
   /**@name 外部控制WebFuzzer数据 */
   webFuzzerValue?: string
-  /**@name 打开WebFuzzer的回调 */
+  /**@name 打开WebFuzzer的回�?*/
   webFuzzerCallBack?: () => void
   /**@name 是否显示美化/hex/渲染TYPE(默认显示) 这里的美化渲染hex只试用与只读的编辑器，可编辑编辑器的美化按钮请外部用按钮自行实现 */
   isShowBeautifyRender?: boolean
@@ -547,13 +546,13 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   renderHtml?: React.ReactNode
   // 是否由外部接管children的渲染，如果是由外部接管children的渲染，则编辑器组件不再对children进行任何处理，完全由外部控制，适用于一些特殊场景，比如内嵌入一些特殊组件等
   children?: React.ReactNode
-  /**@name 是否显示显示Extra默认项 */
+  /**@name 是否显示显示Extra默认�?*/
   showDefaultExtra?: boolean
-  /**@name 是否显示配置编辑器（默认显示） */
+  /**@name 是否显示配置编辑器（默认显示�?*/
   noSetIngEditor?: boolean
-  /**@name 数据对比(默认无对比) */
+  /**@name 数据对比(默认无对�? */
   dataCompare?: DataCompareProps
-  /**默认选中美化或渲染 */
+  /**默认选中美化或渲�?*/
   typeOptionVal?: RenderTypeOptionVal
   onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
   /** 编码按钮 */
@@ -636,16 +635,14 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   // 对比loading
   const [compareLoading, setCompareLoading] = useState<boolean>(false)
 
-  // 编辑器Id 用于区分每个编辑器
-  const [editorId, setEditorId] = useState<string>(uuidv4())
+  // 编辑器Id 用于区分每个编辑�?  const [editorId, setEditorId] = useState<string>(uuidv4())
 
   useEffect(() => {
     initFontSize()
     initShowLineBreaks()
   }, [])
 
-  // 读取上次选择的字体大小/换行符
-  const onRefreshEditorOperationRecord = useMemoizedFn((v) => {
+  // 读取上次选择的字体大�?换行�?  const onRefreshEditorOperationRecord = useMemoizedFn((v) => {
     try {
       const obj: RefreshEditorOperationRecordProps = JSONParseLog(v, {
         page: 'editors',
@@ -698,10 +695,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     setShowLineBreaks(props.showLineBreaksState || false)
   }, [props.showLineBreaksState])
 
-  /*如何实现 monaco editor 高亮？*/
+  /*如何实现 monaco editor 高亮�?/
   // https://microsoft.github.io/monaco-editor/playground.html#interacting-with-the-editor-line-and-inline-decorations
 
-  // hex editor：可编辑时复用 BinaryFuzztagHexEditor（顶部插入/替换工具栏，往下顶一行）
+  // hex editor：可编辑时复�?BinaryFuzztagHexEditor（顶部插�?替换工具栏，往下顶一行）
   const hexDataRef = useRef<Uint8Array>(new Uint8Array())
   const [hexMountKey, setHexMountKey] = useState(0)
   const showHexView = type === 'hex' || !noShowHex
@@ -825,8 +822,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     try {
       const model = monacoEditor.getModel()
-      // @ts-expect-error 类型定义不完整，需要忽略此行
-      const range: IRange = model.findNextMatch(
+      // @ts-expect-error 类型定义不完整，需要忽略此�?      const range: IRange = model.findNextMatch(
         props.defaultSearchKeyword,
         { lineNumber: 0, column: 0 } as IPosition,
         false,
@@ -838,7 +834,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
       monacoEditor.revealRangeNearTop(range)
       monacoEditor.trigger('', 'actions.find', undefined)
     } catch (e) {
-      console.info('加载默认搜索字符串失败', props.defaultSearchKeyword)
+      console.info('加载默认搜索字符串失�?, props.defaultSearchKeyword)
     }
   }, [props.defaultSearchKeyword, monacoEditor])
 
@@ -848,8 +844,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
       const encoder = new TextEncoder()
       const bytes = encoder.encode(originValue)
       const mb = bytes.length / 1024 / 1024
-      // 0.5mb 及以下内容才可美化
-      if (isResponse) {
+      // 0.5mb 及以下内容才可美�?      if (isResponse) {
         formatPacketRender(originalPackage || StringToUint8Array(originValue), (packet) => {
           if (packet) {
             if (mb > 0.5) {
@@ -1066,6 +1061,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                   type={'primary'}
                   icon={<ThunderboltFilled />}
                   onClick={() =>
+<<<<<<< HEAD
                     import('@/pages/fuzzer/HTTPFuzzerPage').then(({ newWebFuzzerTab }) => {
                       newWebFuzzerTab({
                         isHttps: props.defaultHttps || false,
@@ -1074,6 +1070,17 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                         openFlag: true,
                         fromMITM: props.fromMITM,
                       })
+=======
+                    newWebFuzzerTab({
+                      isHttps: props.defaultHttps || false,
+                      // 优先读取当前 model，并展开内联二进制标签的内部折叠占位�?                      request: resolveWebFuzzerPacket(
+                        monacoEditor,
+                        props.defaultPacket ? props.defaultPacket : originValue,
+                      ),
+                      downstreamProxyStr,
+                      openFlag: true,
+                      fromMITM: props.fromMITM,
+>>>>>>> cd9b81b0d8a5d (feat(mitm): align large request editing)
                     })
                   }
                 >

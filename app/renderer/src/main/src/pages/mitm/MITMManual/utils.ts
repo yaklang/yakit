@@ -19,7 +19,6 @@ export interface SingleManualHijackControlMessage {
   Payload?: Uint8Array
   IsLargeRequestFileChunk?: boolean
   LargeRequestPartIndex?: number
-  LargeRequestFilename?: string
   LargeRequestFileData?: Uint8Array
   LargeRequestFileStart?: boolean
   LargeRequestFileEOF?: boolean

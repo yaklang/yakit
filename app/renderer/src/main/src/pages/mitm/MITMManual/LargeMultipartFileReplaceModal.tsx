@@ -14,7 +14,7 @@ interface LargeRequestFileReplaceModalProps {
   marker: LargeRequestReplacementMarker
   onCancel: () => void
   onComplete: (result: MITMV2ReplaceLargeRequestFileResponse) => void
-  /** 'mitm' 会把文件分块上传到引擎，放行请求时替换；'fuzzer' 只返回文件信息，由调用方写入编辑器。 */
+  /** 两种模式都将 GUI 本地文件分块上传到当前引擎；fuzzer 模式再把返回的引擎路径写入工作副本。 */
   mode?: 'mitm' | 'fuzzer'
 }
 
@@ -33,11 +33,13 @@ export const LargeRequestFileReplaceModal: React.FC<LargeRequestFileReplaceModal
     try {
       let result: MITMV2ReplaceLargeRequestFileResponse
       if (mode === 'fuzzer') {
-        const exists: boolean = await window.require('electron').ipcRenderer.invoke('is-file-exists', filePath)
-        if (!exists) {
-          throw new Error('selected file does not exist')
+        const uploaded = await window.require('electron').ipcRenderer.invoke('UploadToTemporaryFile', {
+          FilePath: filePath,
+        })
+        if (!uploaded?.FileName) {
+          throw new Error('Yak engine did not return a temporary file path')
         }
-        result = { Filename: filePath, Size: 0 }
+        result = { Filename: uploaded.FileName, Size: Number(uploaded.Size) || 0 }
       } else {
         if (!taskID) {
           throw new Error('MITM mode requires taskID')

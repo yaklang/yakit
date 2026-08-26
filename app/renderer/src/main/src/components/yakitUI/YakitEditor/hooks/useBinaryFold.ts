@@ -90,7 +90,8 @@ export const useBinaryFold = (params: UseBinaryFoldParams): UseBinaryFoldResult 
       emit(content)
       return
     }
-    emit(expandBinaryFuzztag(content, binaryFoldEntriesRef.current))
+    const expandedContent = expandBinaryFuzztag(content, binaryFoldEntriesRef.current)
+    emit(expandedContent)
   })
 
   return {

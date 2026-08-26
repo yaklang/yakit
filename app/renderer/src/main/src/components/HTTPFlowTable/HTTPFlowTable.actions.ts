@@ -64,9 +64,7 @@ export const onSendToTab = async (
         isHttps: isHttpUrl ? false : (rowData as HTTPFlow).IsHTTPS,
         downstreamProxyStr,
         ...params,
-        request: (rowData as HTTPFlow).InvalidForUTF8Request
-          ? (rowData as HTTPFlow).SafeHTTPRequest!
-          : Buffer.from(rowData.Request).toString('utf8'),
+        request: (rowData as HTTPFlow).SafeHTTPRequest || Buffer.from(rowData.Request).toString('utf8'),
       },
     })
     .then(() => {
