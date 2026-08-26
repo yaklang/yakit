@@ -261,7 +261,9 @@
   "YakitDatePicker": {
     "oneMinute": "1分钟",
     "oneHour": "1小时",
-    "oneDay": "1天"
+    "oneDay": "1天",
+    "now": "此刻",
+    "confirm": "确定"
   },
   "YakitTable": {
     "order": "序号",
