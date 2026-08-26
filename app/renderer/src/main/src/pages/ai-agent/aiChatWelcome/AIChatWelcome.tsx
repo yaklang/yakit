@@ -204,7 +204,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
-        {/* <DoomFlameBackground /> */}
         <div className={styles['open-file-tree-button']} onClick={() => setOpenDrawer(!openDrawer)}>
           {t('AIChatWelcome.expandResources')}
           <YakitButton type="text2" icon={<OutlineOpenIcon />} />
