@@ -18,7 +18,7 @@
   background: linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Basic-Background) 50%);
   .drawer {
     position: absolute;
-    z-index: 1;
+    z-index: 2;
     :global {
       .ant-drawer-header {
         padding: 8px 12px 0;
@@ -188,7 +188,7 @@
     position: absolute;
     top: 16px;
     left: 16px;
-    z-index: 1;
+    z-index: 2;
     border-radius: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
     background: var(--Colors-Use-Basic-Background);

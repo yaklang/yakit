@@ -15,6 +15,7 @@ const AIChatSetting = React.lazy(() => import('./AIChatSetting/AIChatSetting'))
 const AIModelList = React.lazy(() => import('./aiModelList/AIModelList'))
 const HistoryChat = React.lazy(() => import('./historyChat/HistoryChat'))
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
+const AIScheduledTasks = React.lazy(() => import('./aiScheduledTasks/AIScheduledTasks'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   // const {} = props
@@ -60,42 +61,35 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
     switch (key) {
       case AIAgentTabListEnum.History:
         content = (
-          <React.Suspense>
+          <React.Suspense fallback={<div>Loading...</div>}>
             <HistoryChat aiSource={AI_AGENT_HISTORY_AI_SOURCES} />
           </React.Suspense>
         )
         break
       case AIAgentTabListEnum.Setting:
         content = (
-          <React.Suspense>
+          <React.Suspense fallback={<div>Loading...</div>}>
             <AIChatSetting />
           </React.Suspense>
         )
         break
-      // case AIAgentTabListEnum.Forge_Name:
-      //     content = (
-      //         <React.Suspense>
-      //             <ForgeName />
-      //         </React.Suspense>
-      //     )
-      //     break
-      // case AIAgentTabListEnum.Tool:
-      //     content = (
-      //         <React.Suspense>
-      //             <AIToolList />
-      //         </React.Suspense>
-      //     )
-      //     break
+      case AIAgentTabListEnum.Scheduled:
+        content = (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <AIScheduledTasks />
+          </React.Suspense>
+        )
+        break
       case AIAgentTabListEnum.AI_Model:
         content = (
-          <React.Suspense>
+          <React.Suspense fallback={<div>Loading...</div>}>
             <AIModelList />
           </React.Suspense>
         )
         break
       case AIAgentTabListEnum.MCP:
         content = (
-          <React.Suspense>
+          <React.Suspense fallback={<div>Loading...</div>}>
             <AIMCP />
           </React.Suspense>
         )
