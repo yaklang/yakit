@@ -44,6 +44,7 @@
     height: 100%;
     display: flex;
     .chat-workspace {
+      // flex: 1.2;
       flex: 1;
       min-width: 0;
       height: 100%;
@@ -56,6 +57,7 @@
     .chat-workspace-hidden {
       flex: 0 0 0;
       width: 0;
+      // min-width: 0;
       border-right: 0;
       pointer-events: none;
     }

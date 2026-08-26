@@ -82,7 +82,7 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
       onVisibleChange={setVisible}
     >
       <Tooltip title={t('YakitButton.viewDetail')}>
-        <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type="outline2" {...buttonProps} />
+        <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type="text2" {...buttonProps} />
       </Tooltip>
     </YakitPopover>
   )

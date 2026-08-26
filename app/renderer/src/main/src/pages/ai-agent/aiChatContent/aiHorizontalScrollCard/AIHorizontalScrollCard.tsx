@@ -33,6 +33,7 @@ import { useChatSecondaryPaneStore } from '../../aiAgentChat/useChatSecondaryPan
 import { onNewChat } from '../../historyChat/HistoryChat'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useCasualTaskTab } from '../hooks/useCasualTaskTab'
+import { Tooltip } from 'antd'
 
 export const AIHorizontalScrollCard = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -158,12 +159,12 @@ export const AIHorizontalScrollCard = memo(() => {
             <div className={styles['extra']}>
               <AIContextToken />
               <ContextDetailPopover />
-              <YakitButton type="text2" icon={<OutlineScrollTextIcon />} onClick={onDetails} />
-              {/* {t('AIChatContent.log')}
-              </YakitButton> */}
-              <YakitButton type="text2" icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
-              {/* {t('AIChatContent.exportLog')} */}
-              {/* </YakitButton> */}
+              <Tooltip title={t('AIChatContent.taskDetail')}>
+                <YakitButton type="text2" icon={<OutlineScrollTextIcon />} onClick={onDetails} />
+              </Tooltip>
+              <Tooltip title={t('AIChatContent.newChat')}>
+                <YakitButton type="text2" icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
+              </Tooltip>
               <YakitDropdownMenu
                 menu={{
                   data: [

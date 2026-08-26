@@ -601,6 +601,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const getTableWidthAndColWidth = useMemoizedFn((scrollBarWidth: number) => {
     const cLength = props.columns.length
     if (!width || cLength <= 0) return
+    // /** 无固定 width 的弹性列最小宽度，避免容器偏窄时被压成单字符 */
+    // const MIN_FLEX_COL_WIDTH = 96
     let total: number = 0
     let columnsAllWidth = 0
     defColumns.forEach((item) => {
@@ -613,6 +615,9 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       columnsAllWidth = 0
       total = 0
     }
+    // const flexCount = cLength - total || 1
+    // const w = (width - columnsAllWidth) / flexCount
+    // const cw = Math.max(MIN_FLEX_COL_WIDTH, w - scrollBarWidth / flexCount)
     const w = (width - columnsAllWidth) / (cLength - total || 1)
     const cw = w - scrollBarWidth / (cLength - total || 1)
 
@@ -621,6 +626,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         return {
           ...ele,
           width: cw,
+          // width: Math.max(cw, ele.minWidth || 0),
         }
       }
 
@@ -634,7 +640,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       return {
         ...ele,
         isDefWidth: !ele.width,
-        width: ele.width || cw,
+        width: ele.width || Math.max(cw, ele.minWidth || 0),
       }
     })
 

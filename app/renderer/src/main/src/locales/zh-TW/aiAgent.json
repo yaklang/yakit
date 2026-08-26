@@ -367,7 +367,8 @@
     "newChatTitle": "新會話",
     "newChat": "新建會話",
     "log": "日誌",
-    "exportLog": "匯出日誌"
+    "exportLog": "匯出日誌",
+    "taskDetail": "任務詳情"
   },
   "ChatSessionPane": {
     "sessionList": "會話列表",

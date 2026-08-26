@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { useStore } from 'zustand'
 import classNames from 'classnames'
@@ -107,6 +107,19 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     if (filePreviewData) openFilePreview(filePreviewData)
   }, [filePreviewData])
 
+  /** 流量或风险首次有数据时，只自动打开一次对应 tab */
+  const autoOpenedHttpOrRiskRef = useRef(false)
+  useEffect(() => {
+    autoOpenedHttpOrRiskRef.current = false
+  }, [activeChat?.SessionID])
+  useEffect(() => {
+    if (autoOpenedHttpOrRiskRef.current) return
+    const type = httpTabShow ? AITabsEnum.HTTP : riskTabShow ? AITabsEnum.Risk : null
+    if (!type) return
+    autoOpenedHttpOrRiskRef.current = true
+    openTab({ key: type, type, label: getDefaultLabel(type) })
+  }, [httpTabShow, riskTabShow])
+
   const onSwitchAIAgentTab = useMemoizedFn((data?: string) => {
     if (!data) return
     let payload: AIAgentTabPayload
@@ -204,10 +217,20 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
 
   const activeTab = tabs.find((item) => item.key === activeTabKey)
 
+  /** 关闭 runtimeId 筛选标签，恢复为会话聚合视图（旧 AIChatContent 行为） */
+  const onClearRuntimeFilter = useMemoizedFn(() => {
+    if (!activeTabKey) return
+    setTabs((current) => current.map((item) => (item.key === activeTabKey ? { ...item, runtimeId: undefined } : item)))
+  })
+
   const filterTagDom = useMemo(() => {
     if (!activeTab?.runtimeId) return null
-    const showId = activeTab.runtimeId.slice(0, 30) + '…'
-    return <YakitTag color="info">{showId}</YakitTag>
+    const showId = activeTab.runtimeId.slice(0, 20) + '…'
+    return (
+      <YakitTag color="info" closable onClose={onClearRuntimeFilter}>
+        {showId}
+      </YakitTag>
+    )
   }, [activeTab?.runtimeId])
 
   const onCloseTab = useMemoizedFn((event: React.MouseEvent, key: string) => {

@@ -367,7 +367,8 @@
     "newChatTitle": "New Session",
     "newChat": "New Session",
     "log": "Log",
-    "exportLog": "Export Log"
+    "exportLog": "Export Log",
+    "taskDetail": "Task Detail"
   },
   "ChatSessionPane": {
     "sessionList": "Session List",
