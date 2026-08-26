@@ -1,7 +1,6 @@
 import React, { memo, useEffect, useState } from 'react'
 import type { RefObject } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { useStore } from 'zustand'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineFlagIcon, OutlineKeepLeftIcon, OutlineViewlistIcon } from '@/assets/icon/outline'
@@ -13,7 +12,6 @@ import {
 import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import type useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
-import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { AIForgeForm, AIToolForm } from '../../aiTriageChatTemplate/AITriageChatTemplate'
 import type { AIForgeFormSubmitParamsProps } from '../../aiTriageChatTemplate/type'
 import type { AIForge } from '../../type/forge'
@@ -23,7 +21,8 @@ import { AIChatWorkspace } from '../../aiChatContent/AIChatWorkspace/AIChatWorks
 import type { AIChatContentRefProps } from '../../aiChatContent/type'
 import FileTreeList from '../../aiChatWelcome/FileTreeList/FileTreeList'
 import ChatSessionPane from '../../ChatSessionPane/ChatSessionPane'
-import { HistoryTaskTree } from '../../chatTemplate/historyTaskTree/HistoryTaskTree'
+import { TaskListPane } from '../../chatTemplate/historyTaskTree/TaskListPane'
+import { useHasTaskTree } from '../../chatTemplate/historyTaskTree/useHasTaskTree'
 import TimelineCard from '../../chatTemplate/TimelineCard/TimelineCard'
 import { YakitAIAgentPageID } from '../../defaultConstant'
 import { useChatSessionPaneStore } from '../../ChatSessionPane/useChatSessionPaneStore'
@@ -86,9 +85,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   const workspaceVisible = useChatSecondaryPaneStore((state) => state.visible)
   const setWorkspaceVisible = useChatSecondaryPaneStore((state) => state.setVisible)
 
-  const store = useCurrentStore()
-  const taskTree = useStore(store, (state) => state.currentPlan.task_tree ?? [])
-  const hasTaskTree = taskTree.length > 0
+  const hasTaskTree = useHasTaskTree()
 
   const [filePreviewData, setFilePreviewData] = useState<FileNodeProps>()
   const [dockDisabled, setDockDisabled] = useState(false)
@@ -212,7 +209,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
           />
         }
       >
-        {multiFuncTab === 'task-list' ? <HistoryTaskTree /> : <TimelineCard />}
+        {multiFuncTab === 'task-list' ? <TaskListPane /> : <TimelineCard />}
       </YakitDockablePane>
       <div className={styles['footer-forge-form']}>
         {activeForge && (

@@ -263,7 +263,9 @@
   "HistoryTaskTree": {
     "stopCurrentTask": "停掉當前正在執行的任務，恢復此任務",
     "restoreTaskConfirm": "是否確認恢復該此任務",
-    "updateTime": "更新時間: {{time}}"
+    "updateTime": "更新時間: {{time}}",
+    "taskList": "任務列表",
+    "subAgent": "子Agent"
   },
   "AITree": {
     "cancelSubtaskConfirm": "是否確認取消該子任務，取消後會按順序執行下一個子任務?"

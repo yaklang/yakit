@@ -165,7 +165,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 
     const { locateToIndex } = useChatStreamLocateHighlight({
       // Virtuoso scrollToIndex 接受绝对 index，定位下标需加 firstItemIndex 偏移
-      scrollToIndex: (index, behavior) => scrollToItemIndex(index + firstItemIndex, behavior),
+      scrollToIndex: (index, behavior) => scrollToItemIndex(index, behavior),
       listRootRef,
     })
 

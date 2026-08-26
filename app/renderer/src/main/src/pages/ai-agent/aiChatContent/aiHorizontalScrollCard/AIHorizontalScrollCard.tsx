@@ -33,6 +33,7 @@ import { useChatSecondaryPaneStore } from '../../aiAgentChat/useChatSecondaryPan
 import { onNewChat } from '../../historyChat/HistoryChat'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useCasualTaskTab } from '../hooks/useCasualTaskTab'
+import { useHasTaskTree } from '../../chatTemplate/historyTaskTree/useHasTaskTree'
 import { Tooltip } from 'antd'
 
 export const AIHorizontalScrollCard = memo(() => {
@@ -54,8 +55,7 @@ export const AIHorizontalScrollCard = memo(() => {
 
   const store = useCurrentStore()
   const yakExecResultCard = useStore(store, (state) => state.card)
-  const taskTree = useStore(store, (state) => state.currentPlan.task_tree ?? [])
-  const hasTaskTree = taskTree.length > 0
+  const hasTaskTree = useHasTaskTree()
   const { currentChatStatusQuestionID, syncCasualTaskTab } = useCasualTaskTab()
 
   const onExpand = useMemoizedFn((e) => {
@@ -160,7 +160,12 @@ export const AIHorizontalScrollCard = memo(() => {
               <AIContextToken />
               <ContextDetailPopover />
               <Tooltip title={t('AIChatContent.taskDetail')}>
-                <YakitButton type="text2" icon={<OutlineScrollTextIcon />} onClick={onDetails} />
+                <YakitButton
+                  hidden={!currentChatStatusQuestionID}
+                  type="text2"
+                  icon={<OutlineScrollTextIcon />}
+                  onClick={onDetails}
+                />
               </Tooltip>
               <Tooltip title={t('AIChatContent.newChat')}>
                 <YakitButton type="text2" icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />

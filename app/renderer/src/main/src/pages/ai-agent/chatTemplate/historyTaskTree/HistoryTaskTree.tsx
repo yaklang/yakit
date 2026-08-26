@@ -17,7 +17,7 @@ import { AITree } from '../../aiTree/AITree'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { OutlineLoadingIcon, OutlinePlay2Icon, RedoDotIcon } from '@/assets/icon/outline'
+import { OutlineChevrondownIcon, OutlineLoadingIcon, OutlinePlay2Icon, RedoDotIcon } from '@/assets/icon/outline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { Tooltip } from 'antd'
@@ -35,6 +35,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import emiter from '@/utils/eventBus/eventBus'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const store = useCurrentStore()
   const planHistoryList = useStore(store, (state) => state.planHistoryList ?? cloneDeep(DefaultPlanHistoryList))
   const taskTree = useStore(store, (state) => state.currentPlan.task_tree ?? [])
@@ -73,7 +74,13 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const [activeKey, setActiveKey] = useState<string>(
     currentCoordinatorId || planHistoryList.records[0]?.coordinator_id || '',
   )
-  const historyContainerRef = useRef<HTMLDivElement>(null)
+  const [expanded, setExpanded] = useState(true)
+
+  const historyRecords = useCreation(() => {
+    return planHistoryList.records.filter((ele) => ele.coordinator_id !== currentCoordinatorId)
+  }, [planHistoryList.records, currentCoordinatorId])
+
+  const hasTaskList = currentTaskItem.task_tree.length > 0 || historyRecords.length > 0
 
   useUpdateEffect(() => {
     const firstItemId = planHistoryList.records[0]?.coordinator_id || ''
@@ -83,64 +90,72 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
       setActiveKey(firstItemId)
     }
   }, [currentCoordinatorId, planHistoryList.records[0]])
+
+  if (!hasTaskList) return null
+
   return (
-    <div className={styles['history-task-tree-container']} ref={historyContainerRef}>
-      <YakitCollapse
-        destroyInactivePanel
-        accordion
-        bordered={false}
-        activeKey={activeKey}
-        onChange={(k) => setActiveKey(k as string)}
-        style={{ marginBottom: 8, height: '100%' }}
-      >
-        {currentTaskItem.task_tree.length > 0 && (
-          <YakitCollapse.YakitPanel
-            header={
-              <div className={styles['history-task-tree-item-header']}>
-                <div className={styles['history-task-tree-item-header-left']}>
-                  <div
-                    className={styles['history-task-tree-item-header-title']}
-                    title={currentTaskItem?.root_task_name}
-                  >
-                    {currentTaskItem?.root_task_name}
-                  </div>
-                  <YakitTag color="info" size="small" fullRadius>
-                    当前任务
-                  </YakitTag>
-                </div>
-              </div>
-            }
-            key={currentCoordinatorId}
+    <div className={styles['section']}>
+      <div className={styles['section-title']} onClick={() => setExpanded((p) => !p)}>
+        <OutlineChevrondownIcon style={{ transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+        <span>{t('HistoryTaskTree.taskList')}</span>
+      </div>
+      {expanded && (
+        <div className={styles['section-body']}>
+          <YakitCollapse
+            destroyInactivePanel
+            accordion
+            bordered={false}
+            activeKey={activeKey}
+            onChange={(k) => setActiveKey(k as string)}
+            style={{ marginBottom: 8, height: '100%' }}
           >
-            <HistoryTaskTreeItem
-              item={currentTaskItem}
-              currentCoordinatorId={currentCoordinatorId}
-              taskType="current"
-            />
-          </YakitCollapse.YakitPanel>
-        )}
-        {planHistoryList.records
-          // 历史任务树会包含当前正在执行的任务树，需要将其过滤
-          .filter((ele) => ele.coordinator_id !== currentCoordinatorId)
-          .map((item) => {
-            return (
+            {currentTaskItem.task_tree.length > 0 && (
               <YakitCollapse.YakitPanel
                 header={
                   <div className={styles['history-task-tree-item-header']}>
                     <div className={styles['history-task-tree-item-header-left']}>
-                      <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
-                        {item?.root_task_name}
+                      <div
+                        className={styles['history-task-tree-item-header-title']}
+                        title={currentTaskItem?.root_task_name}
+                      >
+                        {currentTaskItem?.root_task_name}
                       </div>
+                      <YakitTag color="info" size="small" fullRadius>
+                        当前任务
+                      </YakitTag>
                     </div>
                   </div>
                 }
-                key={item.coordinator_id}
+                key={currentCoordinatorId}
               >
-                <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} taskType="history" />
+                <HistoryTaskTreeItem
+                  item={currentTaskItem}
+                  currentCoordinatorId={currentCoordinatorId}
+                  taskType="current"
+                />
               </YakitCollapse.YakitPanel>
-            )
-          })}
-      </YakitCollapse>
+            )}
+            {historyRecords.map((item) => {
+              return (
+                <YakitCollapse.YakitPanel
+                  header={
+                    <div className={styles['history-task-tree-item-header']}>
+                      <div className={styles['history-task-tree-item-header-left']}>
+                        <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
+                          {item?.root_task_name}
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  key={item.coordinator_id}
+                >
+                  <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} taskType="history" />
+                </YakitCollapse.YakitPanel>
+              )
+            })}
+          </YakitCollapse>
+        </div>
+      )}
     </div>
   )
 })

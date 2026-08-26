@@ -16,7 +16,7 @@ import styles from './AIAgentChatTemplate.module.scss'
 import { PreWrapper } from '../components/ToolInvokerCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import TimelineCard from './TimelineCard/TimelineCard'
-import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
+import { TaskListPane } from './historyTaskTree/TaskListPane'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
@@ -75,7 +75,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const renderDom = useMemoizedFn(() => {
     switch (activeTab) {
       case AIChatLeft.TaskTree:
-        return <HistoryTaskTree />
+        return <TaskListPane />
       case AIChatLeft.Timeline:
         return <TimelineCard />
       default:

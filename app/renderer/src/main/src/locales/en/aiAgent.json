@@ -263,7 +263,9 @@
   "HistoryTaskTree": {
     "stopCurrentTask": "Stop the current task and restore this one",
     "restoreTaskConfirm": "Are you sure you want to restore this task?",
-    "updateTime": "Updated: {{time}}"
+    "updateTime": "Updated: {{time}}",
+    "taskList": "Task List",
+    "subAgent": "Sub Agent"
   },
   "AITree": {
     "cancelSubtaskConfirm": "Are you sure you want to cancel this subtask? The next subtask will be executed in order after cancellation"
