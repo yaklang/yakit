@@ -55,16 +55,18 @@ export interface GetNotepadRequestProps extends API.GetNotepadRequest, PluginLis
  */
 export const apiGetNotepadList: APIFunc<GetNotepadRequestProps, API.GetNotepadResponse> = (query, hiddenError) => {
   return new Promise((resolve, reject) => {
-    NetWorkApi<GetNotepadRequestProps, API.GetNotepadResponse>({
-      method: 'get',
-      url: 'notepad',
-      params: {
+    NetWorkApi<API.NotepadListRequest, API.GetNotepadResponse>({
+      method: 'post',
+      url: 'notepad/list',
+      data: {
         page: query.page || 1,
         limit: query.limit || 20,
         order: query.order || 'desc',
         order_by: query.order_by || 'updated_at',
+        keywords: query.keywords,
+        user: query.user,
+        collaborator: query.collaborator,
       },
-      data: { ...query },
     })
       .then(resolve)
       .catch((err) => {
