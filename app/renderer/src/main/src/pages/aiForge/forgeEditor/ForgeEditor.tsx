@@ -108,6 +108,13 @@ import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { parserCtx } from '@milkdown/core'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
+import { isMemfit } from '@/utils/envfile'
+import { DIGITAL_EMPLOYEES } from '@/pages/digitalEmployee/config'
+import {
+  applyDigitalEmployeeRoleToTags,
+  getDigitalEmployeeRoleId,
+  getVisibleAgentTags,
+} from '@/pages/digitalEmployee/roleAssignment'
 
 import classNames from 'classnames'
 import styles from './ForgeEditor.module.scss'
@@ -176,7 +183,8 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
             ForgeType: forgeData.current.ForgeType || 'yak',
             ForgeName: forgeData.current.ForgeName || '',
             Description: forgeData.current.Description || '',
-            Tag: forgeData.current.Tag || [],
+            DigitalEmployeeRoleId: getDigitalEmployeeRoleId(forgeData.current),
+            Tag: getVisibleAgentTags(forgeData.current.Tag),
             ToolNames: forgeData.current.ToolNames || [],
             ToolKeywords: forgeData.current.ToolKeywords || [],
           })
@@ -707,6 +715,7 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
     })
 
     const [form] = Form.useForm()
+    const isMemfitMode = isMemfit()
 
     const handleSetFormValues = useMemoizedFn((values: any) => {
       const data = cloneDeep(values)
@@ -733,7 +742,9 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
             ForgeType: formData.ForgeType ?? '',
             ForgeName: formData.ForgeName ?? '',
             Description: formData.Description ?? undefined,
-            Tag: formData.Tag ?? [],
+            Tag: isMemfitMode
+              ? applyDigitalEmployeeRoleToTags(formData.Tag, formData.DigitalEmployeeRoleId)
+              : formData.Tag ?? [],
             ToolNames: formData.ToolNames ?? [],
             ToolKeywords: formData.ToolKeywords ?? [],
           }
@@ -865,6 +876,30 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
                   })}
                 </YakitSelect>
               </Form.Item>
+
+              {isMemfitMode && (
+                <Form.Item
+                  label={
+                    <>
+                      数字员工角色<span className="form-item-required">*</span>:
+                    </>
+                  }
+                  name="DigitalEmployeeRoleId"
+                  rules={[{ required: true, message: '请选择数字员工角色' }]}
+                >
+                  <YakitSelect
+                    wrapperClassName={styles['item-select']}
+                    size="large"
+                    placeholder="请选择该智能体所属的数字员工角色"
+                  >
+                    {DIGITAL_EMPLOYEES.map((employee) => (
+                      <YakitSelect.Option key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </YakitSelect.Option>
+                    ))}
+                  </YakitSelect>
+                </Form.Item>
+              )}
 
               <Form.Item
                 label={

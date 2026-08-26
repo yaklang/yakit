@@ -29,6 +29,7 @@ import { AIChatQSData, AIReviewType } from '@/pages/ai-re-act/hooks/aiRender'
 import { failed, yakitNotify } from '@/utils/notification'
 import { AIForgeForm, AIToolForm } from '../aiTriageChatTemplate/AITriageChatTemplate'
 import { grpcGetAIForge } from '../grpc'
+import { useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -66,6 +67,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   const { activeChat } = useAIAgentStore()
   const { setActiveChat, getSetting, setSetting } = useAIAgentDispatcher()
+  const { selectAgentByForgeName } = useDigitalEmployee()
 
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
@@ -79,6 +81,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     setMode('re-act')
     handleStart(data)
   })
+
+  useEffect(() => {
+    selectAgentByForgeName(activeChat?.StartParams?.ForgeName)
+  }, [activeChat?.StartParams?.ForgeName])
 
   useEffect(() => {
     const chatData = aiChatDataStore.get(activeChat?.SessionID || '')

@@ -46,8 +46,17 @@ import classNames from 'classnames'
 import { isMemfit } from '@/utils/envfile'
 import { DIGITAL_EMPLOYEES } from '../digitalEmployee/config'
 import { formatDate } from '@/utils/timeUtil'
+import {
+  createDigitalEmployeeRoleTag,
+  getDigitalEmployeeRoleId,
+  getVisibleAgentTags,
+} from '../digitalEmployee/roleAssignment'
 
-const MEMFIT_AGENT_CATEGORIES = ['全部', ...DIGITAL_EMPLOYEES.map((employee) => employee.name)]
+const MEMFIT_ALL_AGENT_CATEGORY = 'all'
+const MEMFIT_AGENT_CATEGORIES = [
+  { id: MEMFIT_ALL_AGENT_CATEGORY, name: '全部' },
+  ...DIGITAL_EMPLOYEES.map((employee) => ({ id: employee.id, name: employee.name })),
+]
 
 const getAgentTypeLabel = (type: AIForge['ForgeType']) => {
   if (type === 'skillmd') return '技能智能体'
@@ -82,7 +91,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
 
   // 搜索条件
   const [search, setSearch] = useState<string>('')
-  const [activeCategory, setActiveCategory] = useState<string>('全部')
+  const [activeCategory, setActiveCategory] = useState<string>(MEMFIT_ALL_AGENT_CATEGORY)
   const [loading, setLoading] = useState<boolean>(false)
   const requestLoadingRef = useRef<boolean>(false)
 
@@ -144,9 +153,14 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
         Page: isInit ? 1 : ++pageInfo.Page,
       },
     }
-    const keyword =
-      search.trim() || (isMemfitMode && activeCategory !== MEMFIT_AGENT_CATEGORIES[0] ? activeCategory : '')
-    if (keyword) request.Filter = { Keyword: keyword }
+    const keyword = search.trim()
+    if (keyword || (isMemfitMode && activeCategory !== MEMFIT_ALL_AGENT_CATEGORY)) {
+      request.Filter = {}
+      if (keyword) request.Filter.Keyword = keyword
+      if (isMemfitMode && activeCategory !== MEMFIT_ALL_AGENT_CATEGORY) {
+        request.Filter.Tag = [createDigitalEmployeeRoleTag(activeCategory)]
+      }
+    }
 
     requestLoadingRef.current = true
     setLoading(true)
@@ -289,19 +303,19 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
             <div className={styles['category-list']} role="tablist" aria-label="智能体分类">
               {MEMFIT_AGENT_CATEGORIES.map((category) => (
                 <button
-                  key={category}
+                  key={category.id}
                   type="button"
                   role="tab"
-                  aria-selected={activeCategory === category}
+                  aria-selected={activeCategory === category.id}
                   className={classNames(styles['category-item'], {
-                    [styles['category-item-active']]: activeCategory === category,
+                    [styles['category-item-active']]: activeCategory === category.id,
                   })}
                   onClick={() => {
                     setSearch('')
-                    setActiveCategory(category)
+                    setActiveCategory(category.id)
                   }}
                 >
-                  {category}
+                  {category.name}
                 </button>
               ))}
             </div>
@@ -317,8 +331,8 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value)
-                  if (activeCategory !== MEMFIT_AGENT_CATEGORIES[0]) {
-                    setActiveCategory(MEMFIT_AGENT_CATEGORIES[0])
+                  if (activeCategory !== MEMFIT_ALL_AGENT_CATEGORY) {
+                    setActiveCategory(MEMFIT_ALL_AGENT_CATEGORY)
                   }
                 }}
                 size="large"
@@ -481,7 +495,9 @@ const AIForgeMarketplaceItem: React.FC<AIForgePageItemProps> = React.memo((props
   const isBuiltin = !!data.IsBuiltin
   const displayName = data.ForgeVerboseName || data.ForgeName || '未命名智能体'
   const updateTime = Number(data.UpdatedAt || data.CreatedAt || 0)
-  const capabilityCount = (data.Tag || []).filter(Boolean).length + (data.ToolNames || []).filter(Boolean).length
+  const roleId = getDigitalEmployeeRoleId(data)
+  const role = DIGITAL_EMPLOYEES.find((employee) => employee.id === roleId)
+  const capabilityCount = getVisibleAgentTags(data.Tag).length + (data.ToolNames || []).filter(Boolean).length
 
   const handleDelete = useMemoizedFn(() => {
     setLoading(true)
@@ -513,6 +529,7 @@ const AIForgeMarketplaceItem: React.FC<AIForgePageItemProps> = React.memo((props
         <div className={styles['agent-card-footer']}>
           <div className={styles['agent-facts']}>
             <span className={styles['agent-type']}>{getAgentTypeLabel(data.ForgeType)}</span>
+            <span>{role?.name || '未分配角色'}</span>
             {capabilityCount > 0 && <span>{capabilityCount} 项关联能力</span>}
             {!!data.Author && <span>{data.Author}</span>}
           </div>
@@ -598,7 +615,7 @@ const AIForgePageItem: React.FC<AIForgePageItemProps> = React.memo((props) => {
       onCheck={onCheck}
       title={data.ForgeVerboseName || data.ForgeName}
       type={data.ForgeType}
-      tags={data.Tag?.join(',') || ''}
+      tags={getVisibleAgentTags(data.Tag).join(',')}
       help={data.Description || ''}
       img={''}
       user={isBuiltin ? 'yaklang.io' : ''}

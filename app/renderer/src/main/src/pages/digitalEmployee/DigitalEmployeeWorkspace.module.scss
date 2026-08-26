@@ -6,8 +6,8 @@
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(76, 123, 183, 0.16);
-  background:
-    linear-gradient(180deg, rgba(247, 251, 255, 0.98), rgba(239, 247, 255, 0.94)), var(--Colors-Use-Basic-Background);
+  background: linear-gradient(180deg, rgba(247, 251, 255, 0.98), rgba(239, 247, 255, 0.94)),
+    var(--Colors-Use-Basic-Background);
   transition:
     width 180ms ease,
     padding 180ms ease;
@@ -227,8 +227,7 @@
   gap: clamp(14px, 1.35vw, 22px);
   overflow: hidden;
   border-bottom: 1px solid rgba(66, 119, 184, 0.15);
-  background:
-    radial-gradient(circle at 18% -40%, rgba(62, 153, 255, 0.16), transparent 38%),
+  background: radial-gradient(circle at 18% -40%, rgba(62, 153, 255, 0.16), transparent 38%),
     linear-gradient(110deg, #fbfdff 0%, #f1f7ff 58%, #f9fcff 100%);
 
   &::after {
@@ -375,6 +374,175 @@
   box-shadow: 0 0 8px rgba(43, 198, 139, 0.5);
 }
 
+.agent-selector {
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(70, 137, 209, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 10px 28px rgba(46, 105, 169, 0.08);
+}
+
+.agent-selector-header {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  div {
+    min-width: 0;
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    color: #1b3d68;
+    font-size: 14px;
+  }
+
+  span {
+    margin-top: 3px;
+    color: #7890ad;
+    font-size: 11px;
+  }
+
+  > span {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 3px 9px;
+    color: #2c7bc6;
+    border-radius: 999px;
+    background: #eaf5ff;
+  }
+}
+
+.agent-selector-list {
+  max-height: 250px;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.agent-selector-item {
+  min-width: 0;
+  min-height: 104px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  color: #526b8e;
+  text-align: left;
+  border: 1px solid rgba(72, 137, 205, 0.15);
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(242, 248, 255, 0.9));
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(31, 127, 232, 0.42);
+    box-shadow: 0 8px 18px rgba(51, 113, 181, 0.11);
+    transform: translateY(-1px);
+  }
+}
+
+.agent-selector-item-active {
+  border-color: #2186e5;
+  background: linear-gradient(145deg, #f8fcff, #e8f4ff);
+  box-shadow: 0 0 0 2px rgba(33, 134, 229, 0.1);
+}
+
+.agent-selector-item-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  strong {
+    min-width: 0;
+    overflow: hidden;
+    color: #1b3d68;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    flex: 0 0 auto;
+    color: #1682df;
+    font-size: 10px;
+  }
+}
+
+.agent-selector-item-description {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 17px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.agent-selector-item-tags {
+  margin-top: auto;
+  display: flex;
+  gap: 5px;
+  overflow: hidden;
+
+  small {
+    flex: 0 0 auto;
+    padding: 2px 6px;
+    color: #4c82b7;
+    font-size: 9px;
+    border-radius: 999px;
+    background: #eaf4fd;
+  }
+}
+
+.agent-selector-empty {
+  min-height: 122px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #7890ad;
+  text-align: center;
+  border: 1px dashed rgba(72, 137, 205, 0.25);
+  border-radius: 10px;
+  background: rgba(245, 250, 255, 0.75);
+
+  strong {
+    color: #365b83;
+  }
+
+  span,
+  small {
+    font-size: 11px;
+  }
+
+  button {
+    padding: 4px 12px;
+    color: #167bd5;
+    border: 1px solid rgba(22, 123, 213, 0.28);
+    border-radius: 7px;
+    cursor: pointer;
+    background: #fff;
+  }
+}
+
 @media (max-width: 1120px) {
   .employee-sidebar {
     width: 164px;
@@ -405,6 +573,10 @@
 
   .profile-main p {
     max-width: 66vw;
+  }
+
+  .agent-selector-list {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

@@ -12,6 +12,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
 import type { AIForge } from '@/pages/ai-agent/type/forge'
 import { consumeDigitalEmployeeQuickNavigation } from '../quickNavigation'
+import { createDigitalEmployeeRoleTag } from '../roleAssignment'
 
 describe('DigitalEmployeeSelectPage', () => {
   afterEach(() => {
@@ -31,13 +32,19 @@ describe('DigitalEmployeeSelectPage', () => {
 
     vi.spyOn(DigitalEmployeeContext, 'useDigitalEmployee').mockReturnValue({
       employees,
+      agents: [],
+      roleAgents: [],
+      unassignedAgents: [],
       selectedEmployee: employees[0],
+      selectedAgent: undefined,
       confirmed: false,
       loading: false,
       selectionVersion: 0,
       selectEmployee: vi.fn(),
       confirmSelection,
       switchEmployee,
+      selectAgent: vi.fn(() => true),
+      selectAgentByForgeName: vi.fn(() => false),
       retry: vi.fn(),
     })
 
@@ -89,43 +96,6 @@ describe('DigitalEmployeeSelectPage', () => {
     expect(confirmSelection).toHaveBeenCalledTimes(1)
   })
 
-  it('renders additional employee cards from context without an eight-card limit', () => {
-    const extraEmployee = {
-      ...DIGITAL_EMPLOYEES[0],
-      id: 'extra-employee',
-      order: DIGITAL_EMPLOYEES.length + 1,
-      name: '扩展数字员工',
-    }
-    const employees = [...DIGITAL_EMPLOYEES, extraEmployee].map((employee) => ({
-      ...employee,
-      status: 'ready' as const,
-    }))
-
-    vi.spyOn(DigitalEmployeeContext, 'useDigitalEmployee').mockReturnValue({
-      employees,
-      selectedEmployee: employees[0],
-      confirmed: false,
-      loading: false,
-      selectionVersion: 0,
-      selectEmployee: vi.fn(),
-      confirmSelection: vi.fn(() => true),
-      switchEmployee: vi.fn(() => true),
-      retry: vi.fn(),
-    })
-
-    const { container } = render(<DigitalEmployeeSelectPage onQuickNavigation={vi.fn()} />)
-
-    expect(container.querySelectorAll('[aria-pressed]')).toHaveLength(DIGITAL_EMPLOYEES.length + 1)
-    expect(screen.getByText('扩展数字员工')).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: '数字员工翻页' })).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /切换到第 \d+ 页/ })).toHaveLength(2)
-    expect(screen.getByRole('button', { name: '上一页' })).toBeDisabled()
-
-    fireEvent.click(screen.getByRole('button', { name: '下一页' }))
-    expect(screen.getByRole('button', { name: '切换到第 2 页' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('button', { name: '下一页' })).toBeDisabled()
-  })
-
   it('uses the quick-navigation route after the default employee page is initialized', async () => {
     const setCurrentRoute = vi.fn()
 
@@ -154,7 +124,7 @@ describe('DigitalEmployeeSelectPage', () => {
     expect(consumeDigitalEmployeeQuickNavigation()).toBeUndefined()
   })
 
-  it('renders exactly one employee for each Forge returned by the backend', async () => {
+  it('keeps eight roles and groups multiple backend agents by their explicit role marker', async () => {
     const forges: AIForge[] = DIGITAL_EMPLOYEES.map((employee, index) => ({
       Id: 101 + index,
       ForgeName: `forge-${employee.order}`,
@@ -165,7 +135,11 @@ describe('DigitalEmployeeSelectPage', () => {
       ...forges[0],
       ForgeVerboseName: '后端更新的智能体名称',
       Description: '后端更新的智能体描述',
-      Tag: ['后端标签一', '后端标签二'],
+      Tag: ['后端标签一', '后端标签二', createDigitalEmployeeRoleTag(DIGITAL_EMPLOYEES[0].id)],
+    }
+    forges[1] = {
+      ...forges[1],
+      Tag: [createDigitalEmployeeRoleTag(DIGITAL_EMPLOYEES[0].id)],
     }
     forges.push({
       Id: 109,
@@ -180,22 +154,13 @@ describe('DigitalEmployeeSelectPage', () => {
     } as never)
 
     const ContextProbe = () => {
-      const { employees } = DigitalEmployeeContext.useDigitalEmployee()
+      const { employees, agents, roleAgents, unassignedAgents } = DigitalEmployeeContext.useDigitalEmployee()
       return (
         <div>
           <span data-testid="employee-count">{employees.length}</span>
-          {employees.map((employee) => (
-            <span
-              key={employee.id}
-              data-employee-id={employee.id}
-              data-portrait={employee.portrait}
-              data-forge-id={employee.forge?.Id}
-              data-description={employee.cardDescription}
-              data-skills={employee.skills.join(',')}
-            >
-              {employee.name}
-            </span>
-          ))}
+          <span data-testid="agent-count">{agents.length}</span>
+          <span data-testid="role-agent-count">{roleAgents.length}</span>
+          <span data-testid="unassigned-count">{unassignedAgents.length}</span>
         </div>
       )
     }
@@ -206,14 +171,10 @@ describe('DigitalEmployeeSelectPage', () => {
       </DigitalEmployeeContext.DigitalEmployeeProvider>,
     )
 
-    await waitFor(() => expect(screen.getByTestId('employee-count')).toHaveTextContent('9'))
-    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-forge-id', '101')
-    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-employee-id', DIGITAL_EMPLOYEES[0].id)
-    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-description', '后端更新的智能体描述')
-    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-skills', '后端标签一,后端标签二')
-    expect(screen.getByText('后端更新的智能体名称')).toHaveAttribute('data-portrait', DIGITAL_EMPLOYEES[0].portrait)
-    expect(screen.getByText('SSA项目检查')).toHaveAttribute('data-forge-id', '109')
-    expect(screen.getByText('SSA项目检查')).toHaveAttribute('data-portrait', DIGITAL_EMPLOYEES[0].portrait)
+    await waitFor(() => expect(screen.getByTestId('agent-count')).toHaveTextContent('9'))
+    expect(screen.getByTestId('employee-count')).toHaveTextContent(String(DIGITAL_EMPLOYEES.length))
+    expect(screen.getByTestId('role-agent-count')).toHaveTextContent('2')
+    expect(screen.getByTestId('unassigned-count')).toHaveTextContent('7')
     expect(grpcQueryAIForge).toHaveBeenCalledTimes(1)
     expect(grpcQueryAIForge).toHaveBeenCalledWith(
       expect.objectContaining({ Pagination: expect.objectContaining({ Page: 1, Limit: 100 }) }),

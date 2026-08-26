@@ -4,7 +4,6 @@ import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-ag
 import {
   applyDigitalEmployeeSkillToInputEvent,
   applyForgeNameToStartParams,
-  findForgeByVerboseName,
   getDigitalEmployeeDefaultMention,
   normalizeForgeVerboseName,
 } from '../resolver'
@@ -12,24 +11,8 @@ import {
 const forge = (item: Partial<AIForge>): AIForge => item as AIForge
 
 describe('digital employee forge resolver', () => {
-  it('matches ForgeVerboseName exactly after trimming', () => {
-    const forges = [
-      forge({ Id: 1, ForgeName: 'threat-analysis', ForgeVerboseName: ' 威胁分析专家 ' }),
-      forge({ Id: 2, ForgeName: 'threat-analysis-lite', ForgeVerboseName: '威胁分析专家 Lite' }),
-    ]
-
-    expect(findForgeByVerboseName(forges, '威胁分析专家')?.ForgeName).toBe('threat-analysis')
-  })
-
-  it('does not treat fuzzy skill results as digital employees', () => {
-    const forges = [forge({ Id: 1, ForgeName: 'threat-analysis-lite', ForgeVerboseName: '威胁分析专家 Lite' })]
-
-    expect(findForgeByVerboseName(forges, '威胁分析专家')).toBeUndefined()
-  })
-
   it('normalizes empty names safely', () => {
     expect(normalizeForgeVerboseName(undefined)).toBe('')
-    expect(findForgeByVerboseName([], '')).toBeUndefined()
   })
 
   it('injects the selected employee ForgeName into start params', () => {
@@ -50,9 +33,9 @@ describe('digital employee forge resolver', () => {
   it('maps an employee to the original locked forge mention used by the chat input', () => {
     expect(
       getDigitalEmployeeDefaultMention({
-        id: 'threat-analyst',
-        forgeVerboseName: '威胁分析专家',
-        forge: forge({ Id: 18, ForgeName: 'threat-analysis', ForgeVerboseName: '威胁分析专家' }),
+        Id: 18,
+        ForgeName: 'threat-analysis',
+        ForgeVerboseName: '威胁分析专家',
       }),
     ).toEqual({
       mentionId: '18',
@@ -63,11 +46,7 @@ describe('digital employee forge resolver', () => {
   })
 
   it('sends the employee skill with user-selected resources and removes duplicates', () => {
-    const employee = {
-      id: 'threat-analyst',
-      forgeVerboseName: '威胁分析专家',
-      forge: forge({ Id: 1, ForgeName: 'threat-analysis', ForgeVerboseName: '威胁分析专家' }),
-    }
+    const employee = forge({ Id: 1, ForgeName: 'threat-analysis', ForgeVerboseName: '威胁分析专家' })
     const toolResource = {
       Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_AITOOL,
       Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_NAME,

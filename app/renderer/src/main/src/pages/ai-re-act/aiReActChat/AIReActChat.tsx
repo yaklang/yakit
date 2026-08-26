@@ -85,11 +85,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const { activeChat, setting } = useAIAgentStore()
-    const { selectedEmployee, selectionVersion } = useDigitalEmployee()
+    const { selectedAgent, selectionVersion } = useDigitalEmployee()
     const defaultEmployeeMentions = useCreation(() => {
-      const mention = getDigitalEmployeeDefaultMention(selectedEmployee)
+      const mention = getDigitalEmployeeDefaultMention(selectedAgent)
       return mention ? [mention] : []
-    }, [selectedEmployee])
+    }, [selectedAgent])
     const { getSession } = useSessionId()
 
     const contextTokenSession = useCreation(() => {
@@ -144,7 +144,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           PreferSessionCachedConfig: true,
           Source: getAISourceFromChatDataStoreKey(chatDataStoreKey),
         },
-        selectedEmployee?.forge?.ForgeName,
+        selectedAgent?.ForgeName,
       )
 
       const session = getSession(sessionId)
@@ -161,7 +161,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           AttachedResourceInfo: attachedResourceInfo,
           FocusModeLoop: value.focusMode,
         },
-        selectedEmployee,
+        selectedAgent,
       )
       const onStart = (res: AIHandleStartResProps) => {
         const { params, extraParams, onChat, onChatFromHistory } = res
@@ -230,7 +230,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             AttachedResourceInfo: attachedResourceInfo,
             FocusModeLoop: data.focusMode,
           },
-          selectedEmployee,
+          selectedAgent,
         )
         const onSend = (res: AISendResProps) => {
           const { params } = res

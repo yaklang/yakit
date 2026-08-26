@@ -52,7 +52,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     const { onChat, onChatFromHistory } = props
     const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
     const chatIPCStore = useChatIPCStore()
-    const { selectedEmployee } = useDigitalEmployee()
+    const { selectedEmployee, selectedAgent } = useDigitalEmployee()
     const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, requestHistoryState } =
       chatIPCStore.chatIPCData
     const { activeChat } = useAIAgentStore()
@@ -303,7 +303,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     // })
     const startRequest = useMemoizedFn((data: AIHandleStartParams) => {
       return new Promise<AIHandleStartResProps>((resolve) => {
-        const forgeName = selectedEmployee?.forge?.ForgeName
+        const forgeName = selectedAgent?.ForgeName
         resolve({
           params: forgeName
             ? {
