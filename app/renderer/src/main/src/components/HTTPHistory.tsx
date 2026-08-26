@@ -120,6 +120,8 @@ export interface HTTPFlowBodyByIdRequest {
   BufSize?: number
   RuntimeId?: string
   IsRisk?: boolean
+  // WebFuzzer 单条结果：按 HiddenIndex 定位 HTTPFlow，避免 RuntimeId 命中任务内其它 hop。
+  HiddenIndex?: string
   // multipart 请求：指定要流式下载的文件 part 索引（来自 HTTPFlow.MultipartFiles）。
   // 不传 = 下载完整 body（multipart 时服务端现场流式重建完整 body）。
   PartIndex?: number

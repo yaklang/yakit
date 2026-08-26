@@ -1247,6 +1247,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 onClickUrlWithoutQueryMenu={copyUrlWithoutQuery}
                 onClickOpenBrowserMenu={onClickOpenBrowserMenu}
                 downbodyParams={{
+                  HiddenIndex: currentSelectItem?.HiddenIndex,
                   RuntimeId: currentSelectItem?.RuntimeID,
                   IsRequest: currentSelectShowType === 'request',
                 }}
