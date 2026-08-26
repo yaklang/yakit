@@ -815,7 +815,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           key: CONTEXT_MENU_PACKET_GROUP_KEY,
           label: '右键插件',
           children: [
-            ...visibleContextMenuActions.flatMap((action) => {
+            ...visibleContextMenuActions.map((action) => {
               const sameNameCount = visibleContextMenuActions.filter(
                 (item) => item.PluginName === action.PluginName,
               ).length
@@ -823,23 +823,25 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
               const canConfigure =
                 action.Params?.length && action.ExecutionType !== ContextMenuExecutionType.LegacyPacketMutate
               if (!canConfigure) {
-                return [
+                return {
+                  key: getPacketActionKey(action, 'execute'),
+                  label: <ContextMenuActionLabel action={action} label={label} />,
+                }
+              }
+              return {
+                key: `contextMenuAction:${encodeURIComponent(action.PluginUUID)}:${action.ActionID}:menu`,
+                label: <ContextMenuActionLabel action={action} label={label} />,
+                children: [
                   {
                     key: getPacketActionKey(action, 'execute'),
-                    label: <ContextMenuActionLabel action={action} label={label} />,
+                    label: '执行插件',
                   },
-                ]
+                  {
+                    key: getPacketActionKey(action, 'configure'),
+                    label: '修改参数',
+                  },
+                ],
               }
-              return [
-                {
-                  key: getPacketActionKey(action, 'execute'),
-                  label: <ContextMenuActionLabel action={action} label={`${label} · 执行`} />,
-                },
-                {
-                  key: getPacketActionKey(action, 'configure'),
-                  label: <ContextMenuActionLabel action={action} label={`${label} · 设置参数`} />,
-                },
-              ]
             }),
             {
               key: CONTEXT_MENU_PACKET_MANAGE_KEY,

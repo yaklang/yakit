@@ -162,7 +162,11 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
 
     useEffect(() => {
       emiter.on('editorLocalSaveToLocalList', refresh)
-      return () => emiter.off('editorLocalSaveToLocalList', refresh)
+      emiter.on('editorLocalNewToLocalList', refresh)
+      return () => {
+        emiter.off('editorLocalSaveToLocalList', refresh)
+        emiter.off('editorLocalNewToLocalList', refresh)
+      }
     }, [])
 
     useEffect(() => {

@@ -13,7 +13,7 @@ export interface PluginExecuteResultProps {
   pluginExecuteResultWrapper?: string
   PluginTabsRightNode?: React.ReactNode
   isCrawler?: boolean
-  /** 插件类型，codec 类型时不展示 HTTP 流量 tab 并默认切换到执行结果 */
+  /** 插件类型，codec 和 context-menu 类型不展示 HTTP 流量 tab */
   pluginType?: string
 }
 

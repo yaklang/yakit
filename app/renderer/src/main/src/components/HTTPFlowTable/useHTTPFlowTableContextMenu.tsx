@@ -285,11 +285,11 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
                 ? [
                     {
                       key: getContextMenuPluginActionKey(action, 'run'),
-                      label: '执行',
+                      label: '执行插件',
                     },
                     {
                       key: getContextMenuPluginActionKey(action, 'configure'),
-                      label: '设置参数',
+                      label: '修改参数',
                     },
                   ]
                 : undefined,

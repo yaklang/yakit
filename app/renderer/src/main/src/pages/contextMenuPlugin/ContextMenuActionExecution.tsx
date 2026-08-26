@@ -33,6 +33,7 @@ export const ContextMenuActionExecution: React.FC<{ executionID: string; mode: '
       waitTime: 200,
       isShowEnd: false,
       isShowError: false,
+      jsonTableToTab: true,
       setRuntimeId: setRuntimeID,
       onEnd: () => {
         setLoading(false)

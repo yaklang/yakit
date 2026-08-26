@@ -63,6 +63,8 @@ export interface HoldGRPCStreamParams {
   isShowEnd?: boolean
   /** @name 是否限制缓存多少条logState信息（默认100） */
   isLimitLogs?: boolean
+  /** @name 是否将 yakit.NewTable 的 json-table 输出提升为独立表格 Tab */
+  jsonTableToTab?: boolean
 }
 /** 判断是否为无效数据 */
 export const checkStreamValidity = (stream: StreamResult.Log) => {
@@ -89,6 +91,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     isShowError = true,
     isShowEnd = true,
     isLimitLogs = true,
+    jsonTableToTab = false,
   } = params
 
   // 插件日志条数
@@ -296,6 +299,45 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
                 data: datas,
               })
             } catch (e) {}
+            return
+          }
+
+          // yakit.NewTable 静态表格。默认仍沿用日志展示，仅在调用方明确要求时提升为独立 Tab。
+          if (obj.type === 'log' && logData.level === 'json-table' && jsonTableToTab) {
+            try {
+              const checkInfo = checkStreamValidity(logData) as { head?: unknown; data?: unknown }
+              if (!checkInfo || !Array.isArray(checkInfo.head) || !Array.isArray(checkInfo.data)) {
+                pushLogs(obj)
+                return
+              }
+
+              let nextIndex = 1
+              let tableName = '执行结果'
+              while (tabTable.current.has(tableName)) {
+                nextIndex += 1
+                tableName = `执行结果 ${nextIndex}`
+              }
+
+              const columns = checkInfo.head.map((title, index) => ({
+                title: String(title),
+                dataKey: `column-${index}`,
+              }))
+              const data = new Map<string, Record<string, any>>()
+              checkInfo.data.forEach((row) => {
+                if (!Array.isArray(row)) return
+                const uuid = uuidv4()
+                const record: Record<string, any> = { uuid }
+                columns.forEach((column, index) => {
+                  record[column.dataKey] = row[index]
+                })
+                data.set(uuid, record)
+              })
+
+              placeTab(true, { tabName: tableName, type: 'table' })
+              tabTable.current.set(tableName, { name: tableName, columns, data })
+            } catch (e) {
+              pushLogs(obj)
+            }
             return
           }
 

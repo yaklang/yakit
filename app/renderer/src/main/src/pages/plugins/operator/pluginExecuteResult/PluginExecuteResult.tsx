@@ -180,8 +180,8 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
 
   const showTabs = useMemo(() => {
     let tabs = streamInfo.tabsState
-    // Codec 插件不展示 HTTP 流量 tab
-    if (pluginType === 'codec') {
+    // Codec 和右键插件的输入流量不是执行产物，不展示通用的 HTTP 流量 Tab。
+    if (pluginType === 'codec' || pluginType === 'context-menu') {
       tabs = tabs.filter((item) => item.type !== 'http')
     }
     if (!tempTotal && !tabs.find((item) => item.type === 'ssa-risk')) {
