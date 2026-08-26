@@ -86,4 +86,40 @@ describe('aiOther other handlers', () => {
     aiOtherDataHandlers.notify(req)
     expect(req.store.getState().notifyMessage?.content).toBe('n1')
   })
+
+  it('D3: skip_subtask_in_plan removes matching id', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          message: 'ok',
+          reason: 'user skip',
+          subtask_id: 'sub-1',
+          subtask_index: '0',
+          subtask_name: 'leaf',
+          success: true,
+        },
+        { NodeId: 'skip_subtask_in_plan' },
+      ),
+    })
+    req.store.setState((state) => {
+      state.skipSubtaskTaskIDs = ['sub-1', 'sub-2']
+    })
+    aiOtherDataHandlers.skip_subtask_in_plan(req)
+    expect(req.store.getState().skipSubtaskTaskIDs).toEqual(['sub-2'])
+  })
+
+  it('D3: skip_subtask_in_plan missing subtask_id logs error', () => {
+    const pushLog = vi.fn()
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes('structured', { success: false, subtask_id: '' }, { NodeId: 'skip_subtask_in_plan' }),
+      pushLog,
+    })
+    req.store.setState((state) => {
+      state.skipSubtaskTaskIDs = ['sub-keep']
+    })
+    aiOtherDataHandlers.skip_subtask_in_plan(req)
+    expect(pushLog).toHaveBeenCalledWith(expect.objectContaining({ level: 'error' }))
+    expect(req.store.getState().skipSubtaskTaskIDs).toEqual(['sub-keep'])
+  })
 })
