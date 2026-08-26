@@ -1,6 +1,6 @@
 # AI SenSo 数字员工功能交接
 
-更新时间：2026-07-30
+更新时间：2026-08-26
 
 ## 1. 当前结果
 
@@ -21,6 +21,7 @@
 - 右侧“思考与执行”只读取原版 `casualChat.planDetails.todoList`，展示真实任务内容、进度和后端时间戳，不再展示无数据的工具统计、目标或意图卡片。
 - 选择页与员工工作区已经统一使用新生成的透明高清 `AI SenSo` Logo，不再通过白底 JPG 和 `mix-blend-mode` 适配主题。
 - 选择页 8 个员工徽章、6 个快捷导航图标已经从低分辨率截图裁片替换为项目内置 SVG 图标，高分屏与响应式缩放下保持清晰。
+- 选择页 6 个快捷导航已经接入主菜单开页事件，可直接进入智能体广场、知识库、记忆库、工具库、插件仓库和流量历史；点击入口会自动确认当前默认/已选员工，不要求再点底部确认按钮。
 - 左侧员工栏的展开/收起箭头已经替换为标准 SVG chevron，按图标几何盒垂直居中，不再依赖文字字符基线。
 - 选择页选中卡片已从普通蓝边升级为蓝青渐变描边、柔和双层光晕、主题化进入按钮和“当前选择”状态标识；hover 只显示较弱描边，与真正选中态有明确层级。
 - AI Agent 顶部员工信息区已放大到约 132–168px，并同步放大 Logo、头像、标题、描述和技能标签；720px 以下高度会自动回落到紧凑尺寸。
@@ -54,6 +55,25 @@
 
 不要再额外制作一套“看起来像标签”的普通 DOM；默认员工必须继续走 Milkdown mention 数据链路。
 
+### 2.3 选择页快捷导航（2026-08-26）
+
+快捷导航复用主界面已有的 `menuOpenPage` 事件，不新增第二套路由状态。选择页显示时，负责接收该事件的主页面尚未挂载，因此不能在选择页内直接发事件，也不能依赖 `setTimeout(0)` 猜测挂载时序。
+
+正确链路由 `DigitalEmployeeGate.tsx` 负责：先保存 `pendingRoute` 并确认当前员工；主内容挂载后，Gate 的 effect 再发送 `menuOpenPage`，此时菜单监听器已经存在。当前映射必须与 `routes/newRoute.tsx` 中的实际 Memfit 菜单保持一致：
+
+| 快捷入口 | 目标路由 |
+| --- | --- |
+| 智能体广场 | `YakitRoute.AI_Forge` |
+| 知识库 | `YakitRoute.AI_REPOSITORY` |
+| 记忆库 | `YakitRoute.AI_Memory` |
+| 工具库 | `YakitRoute.AI_Tool` |
+| 插件仓库 | `YakitRoute.Plugin_Hub` |
+| 流量历史 | `YakitRoute.DB_HTTPHistory` |
+
+“数据库”是菜单分组，不是可打开页面，因此快捷入口使用其首个具体子菜单“流量历史”。快捷项使用原生 `button`，保留鼠标、键盘焦点和按下反馈。
+
+回归注意：如果以后把发事件逻辑重新下放到 `DigitalEmployeeSelectPage`，会复现“无论点哪个入口都只进入数字员工页”的问题。
+
 ## 3. 主要文件
 
 ### 数字员工配置与请求绑定
@@ -65,6 +85,7 @@
 
 ### 选择页与工作区样式
 
+- `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeGate.tsx`
 - `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeSelectPage.tsx`
 - `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeSelectPage.module.scss`
 - `app/renderer/src/main/src/pages/digitalEmployee/DigitalEmployeeWorkspace.module.scss`
@@ -114,6 +135,13 @@
 - 顶部主题通过 `isMemfit()` 条件类实现：`ui-layout-wrapper-memfit`、`heard-menu-body-memfit`、`tab-menu-memfit`。不要把这些颜色直接覆盖到通用类。
 
 ## 5. 测试结果
+
+2026-08-26 快捷导航完成后：
+
+- `DigitalEmployeeSelectPage.test.tsx`：6 项测试全部通过；除逐项检查 6 个入口映射外，还覆盖“主内容监听器挂载后才收到路由”的 Gate 集成场景。
+- `tsc --noEmit`：通过。
+- `git diff --check`：通过。
+- 本地开发服务热更新编译成功，`http://localhost:3000` 返回 200；编译日志仅保留仓库已有 warning。
 
 2026-07-30 本轮完成后：
 
@@ -179,6 +207,9 @@ yarn start-electron
 
 - 仓库：`https://gitee.com/a1543733438/ai-sense.git`
 - 分支：`master`
+- 2026-08-26 快捷导航功能提交：`9b3e3b4 feat: enable digital employee quick navigation`。
+- 2026-08-26 Gate 时序修复提交：`6217c82 fix: defer quick navigation until menu mount`。
+- 安全回滚完整快捷导航功能：`git revert 6217c82 9b3e3b4`（按新到旧顺序）。该命令会生成反向提交，不会覆盖工作区中的其他未提交改动。
 - 本交接生成前最新已推送提交：`d368069 fix: sharpen digital employee visual assets`。
 - 已推送的关键提交：
   - `acaae69 feat: initialize AI SenSo digital employee experience`
