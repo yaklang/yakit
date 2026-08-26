@@ -261,7 +261,9 @@
   "YakitDatePicker": {
     "oneMinute": "1 Minute",
     "oneHour": "1 Hour",
-    "oneDay": "1 Day"
+    "oneDay": "1 Day",
+    "now": "Now",
+    "confirm": "OK"
   },
   "YakitTable": {
     "order": "Order",
