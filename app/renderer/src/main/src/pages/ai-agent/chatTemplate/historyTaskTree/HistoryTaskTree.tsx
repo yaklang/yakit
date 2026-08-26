@@ -221,7 +221,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
   const onChatStart = useMemoizedFn((data) => {
     onStart({
       ...data,
-      onSuccess: () => {
+      onLinkSuccess: () => {
         sendRecoverParamsRef.current && onSendRecover(sendRecoverParamsRef.current)
       },
     })

@@ -754,7 +754,15 @@ export class ChatMultiSessionController {
    * - 无 UserQuery：视为恢复态，置 initLoading，pong 后 hydrate 或发 recovery_history
    * @returns 是否真正发起了建连
    */
-  public handleStartSession(requestParams: AIChatIPCStartParams, cb?: (sessionId: string) => void): boolean {
+  public handleStartSession(
+    requestParams: AIChatIPCStartParams,
+    cb?: {
+      /** 会话建联开始的回调事件 */
+      onLinkStart?: (sessionId: string) => void
+      /** 会话建联成功后的回调事件 */
+      onLinkSuccess?: (sessionId: string) => void
+    },
+  ): boolean {
     const { token: sessionId, params, route, pageId, localSource } = requestParams
     if (this.readyChannels.has(sessionId)) {
       yakitNotify('warning', '会话已经存在，请勿重复建立！')
@@ -769,6 +777,9 @@ export class ChatMultiSessionController {
     })
 
     const { request, store, rawData, meta } = this.ensureSession(sessionId)
+    // 该行最好放在上面一行的后面，因为ensureSession方法初始化了session的数据环境
+    // 如果放到上行的前面，可能导致onLinkStart引起的UI变化，无法拿到对应session的数据环境
+    cb?.onLinkStart?.(sessionId)
     const userQuery = (params.Params?.UserQuery || '').trim()
 
     // 恢复态：遮罩防止 hydrate / recovery 期间误点（UI 订阅 store.initLoading）
@@ -833,7 +844,7 @@ export class ChatMultiSessionController {
         },
       })
     }
-    meta.onLinkSuccess = cb
+    meta.onLinkSuccess = cb?.onLinkSuccess
 
     // 读 IDB + 查最新事件 id（不依赖本会话流），完成后再 IPC start
     void this.prepareSessionPersistBeforeStart(sessionId).finally(() => {
@@ -929,6 +940,23 @@ export class ChatMultiSessionController {
       if (params.IsSyncMessage && params.SyncID) {
         meta.syncIDMap.set(params.SyncID, true)
         store.getState().updateStateCount('syncIDUpdate')
+      }
+
+      // 记录跳过子任务操作
+      if (
+        params.IsSyncMessage &&
+        params.SyncType === AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN &&
+        params.SyncJsonInput
+      ) {
+        try {
+          const subTaskID = JSON.parse(params.SyncJsonInput)?.subtask_id
+          if (subTaskID) {
+            store.setState((state) => {
+              if (state.skipSubtaskTaskIDs.includes(subTaskID)) return
+              state.skipSubtaskTaskIDs = [...state.skipSubtaskTaskIDs, subTaskID]
+            })
+          }
+        } catch (error) {}
       }
 
       switch (type) {
@@ -1328,6 +1356,7 @@ export class ChatMultiSessionController {
           'capability_inventory',
           'react_task_created',
           'plan_exec_tasks',
+          'skip_subtask_in_plan',
         ].includes(res.NodeId)
       ) {
         funcKey = res.NodeId

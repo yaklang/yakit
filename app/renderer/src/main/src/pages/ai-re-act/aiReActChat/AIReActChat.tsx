@@ -191,7 +191,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         onStart({
           token: session,
           params,
-          onSuccess: () => {
+          onLinkSuccess: () => {
             // 必须成功链接后再设置 activeChat
             if (!sessionID && newChat) setActiveChat && setActiveChat(newChat)
           },

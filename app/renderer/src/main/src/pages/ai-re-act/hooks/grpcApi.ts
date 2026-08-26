@@ -1177,6 +1177,16 @@ export declare namespace AIAgentGrpcApi {
     title: string
     summary_markdown: string
   }
+
+  /** 自由对话子 agent 任务创建消息 */
+  export interface SkipSubtaskInPlan {
+    message: string
+    reason: string
+    subtask_id: string
+    subtask_index: string
+    subtask_name: string
+    success: boolean
+  }
 }
 
 // #region AI相关普通接口的请求和定义结构

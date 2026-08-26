@@ -1,5 +1,6 @@
 // useChatIPC.ts
 import { useEffect } from 'react'
+import type { ChatMultiSessionController } from './ChatMultiSessionController'
 import { globalSessionEngine } from './ChatMultiSessionController'
 import type { AIChatSendParams } from './type'
 import { useMemoizedFn } from 'ahooks'
@@ -13,7 +14,7 @@ export function useChatIPC(route: YakitRouteType, pageId: string) {
    * isSessionReady 已连则直接返回（不动已有监听）→ 用入参 token 挂监听 → handleStartSession
    * prepare 异步，invoke 晚于本同步栈挂监听，不会丢流；token 不依赖 React 闭包里的 SessionID
    */
-  const onStart = useMemoizedFn(({ token, params, onSuccess, localSource }: UseChatIPCStartParams) => {
+  const onStart = useMemoizedFn(({ token, params, localSource, onLinkStart, onLinkSuccess }: UseChatIPCStartParams) => {
     if (globalSessionEngine.isSessionReady(token)) {
       yakitNotify('warning', '会话已经存在，请勿重复建立！')
       return
@@ -32,7 +33,14 @@ export function useChatIPC(route: YakitRouteType, pageId: string) {
       globalSessionEngine.handleSessionEnd(token, res)
     })
 
-    globalSessionEngine.handleStartSession({ token, params, route, pageId, localSource }, onSuccess)
+    let cb: Parameters<ChatMultiSessionController['handleStartSession']>[1] = undefined
+    if (onLinkStart || onLinkSuccess) {
+      cb = {
+        onLinkStart,
+        onLinkSuccess,
+      }
+    }
+    globalSessionEngine.handleStartSession({ token, params, route, pageId, localSource }, cb)
   })
 
   const onSend = useMemoizedFn((payload: AIChatSendParams) => {
