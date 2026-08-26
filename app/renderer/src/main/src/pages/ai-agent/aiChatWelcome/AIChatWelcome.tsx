@@ -8,7 +8,7 @@ import type {
 } from './type'
 import styles from './AIChatWelcome.module.scss'
 import { AIChatTextarea } from '../template/template'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -79,7 +79,24 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const settingCardRef = useRef<AIChatWelcomeSettingCardRef>(null)
 
     const welcomeRef = useRef<HTMLDivElement>(null)
-    const welcomeSize = useSize(welcomeRef)
+    const [isCompact, setIsCompact] = useState(false)
+    useEffect(() => {
+      const el = welcomeRef.current
+      if (!el || typeof ResizeObserver === 'undefined') return
+      const update = (width: number, height: number) => {
+        const next = width < 720 || height < 680
+        setIsCompact((prev) => (prev === next ? prev : next))
+      }
+      update(el.clientWidth, el.clientHeight)
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0]
+        if (!entry) return
+        const { width, height } = entry.contentRect
+        update(width, height)
+      })
+      observer.observe(el)
+      return () => observer.disconnect()
+    }, [])
 
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
       // 通过 ref 主动拉取选中的推荐场景（支持多选），附加到 enabledCapabilities 传出
@@ -187,14 +204,18 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
         <DoomFlameBackground />
-        <div className={styles['input-wrapper']}>
+        <div
+          className={classNames(styles['input-wrapper'], {
+            [styles['input-wrapper-compact']]: isCompact,
+          })}
+        >
           <div className={styles['input-heard']}>
             <ColorsMemfitIcon className={styles['memfit-icon']} />
             <div className={styles['title']}>Memfit AI Agent</div>
             <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
           </div>
           <div className={styles['input-body-wrapper']}>
-            <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} />
+            <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} compact={isCompact} />
             <div className={styles['input-panel']}>
               <AIChatWelcomeSettingCard ref={settingCardRef} />
               <AIChatTextarea
@@ -236,7 +257,7 @@ const pickRandomWelcomeTips = (list: typeof welcomeTips) => {
   return copied.slice(0, Math.min(count, copied.length))
 }
 
-const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInputValue }) => {
+const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInputValue, compact }) => {
   const introTipsRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(introTipsRef)
   const [randomWelcomeTips, setRandomWelcomeTips] = useState(() => pickRandomWelcomeTips(welcomeTips))
@@ -247,9 +268,11 @@ const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInp
     }
   }, [inViewport])
 
+  const visibleTips = compact ? randomWelcomeTips.slice(0, 3) : randomWelcomeTips
+
   return (
     <div className={styles['intro-tips']} ref={introTipsRef}>
-      {randomWelcomeTips.map((item) => {
+      {visibleTips.map((item) => {
         return (
           <div
             key={item.text}

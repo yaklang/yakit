@@ -1,17 +1,17 @@
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import { useEffect, useMemo, useState, type FC } from 'react'
+// import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import { useEffect, useState, type FC } from 'react'
 import styles from './FilePreview.module.scss'
-import { OutlineFolderopenIcon } from '@/assets/icon/outline'
+// import { OutlineFolderopenIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
+// import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { getCodeByPath, getCodeSizeByPath, MAX_FILE_SIZE_BYTES, monacaLanguageType } from '@/pages/yakRunner/utils'
 import { useMemoizedFn } from 'ahooks'
 import { Result } from 'antd'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
+// import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { yakitNotify } from '@/utils/notification'
 import type { FileInfo } from '../type'
 import { getLocalFileName } from '@/components/MilkdownEditor/CustomFile/utils'
@@ -20,17 +20,17 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const path = data?.path ?? ''
-  const name = data?.name ?? ''
-  const icon = data?.icon ?? 'default'
+  // const name = data?.name ?? ''
+  // const icon = data?.icon ?? 'default'
 
   const [showFileHint, setShowFileHint] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
   const [isBinary, setIsBinary] = useState(false)
 
-  const iconPath = useMemo(() => {
-    return KeyToIcon[icon]?.iconPath ?? ''
-  }, [icon])
+  // const iconPath = useMemo(() => {
+  //   return KeyToIcon[icon]?.iconPath ?? ''
+  // }, [icon])
 
   const fetchFileInfo = useMemoizedFn(async (targetPath: string) => {
     if (!targetPath) return
@@ -63,7 +63,7 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
 
   return (
     <div className={styles['file-preview']}>
-      <div className={styles['file-preview-title']}>
+      {/* <div className={styles['file-preview-title']}>
         <div className={styles['file-preview-title-icon']}>
           <div className={styles['file-preview-title-icon-left']}>
             <img src={iconPath} alt="" />
@@ -80,43 +80,43 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
           </div>
         </div>
         <div className={styles['file-preview-title-path']}>{path}</div>
-      </div>
-      <div className={styles['file-preview-content']}>
-        <YakitSpin spinning={loading}>
-          {isBinary ? (
-            <Result
-              status={'warning'}
-              subTitle={t('FilePreview.binaryNotice')}
-              extra={[
-                <YakitButton size="max" type="primary" onClick={() => setIsBinary(false)}>
-                  {t('FilePreview.openAnyway')}
-                </YakitButton>,
-              ]}
-            />
-          ) : (
-            <YakitEditor
-              key={fileInfo?.path || 'empty-editor'}
-              value={fileInfo?.content}
-              readOnly
-              editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
-              type={fileInfo?.language === 'yak' ? 'yak' : 'plaintext'}
-            />
-          )}
-        </YakitSpin>
+      </div> */}
+      {/* <div className={styles['file-preview-content']}> */}
+      <YakitSpin spinning={loading}>
+        {isBinary ? (
+          <Result
+            status={'warning'}
+            subTitle={t('FilePreview.binaryNotice')}
+            extra={[
+              <YakitButton size="max" type="primary" onClick={() => setIsBinary(false)}>
+                {t('FilePreview.openAnyway')}
+              </YakitButton>,
+            ]}
+          />
+        ) : (
+          <YakitEditor
+            key={fileInfo?.path || 'empty-editor'}
+            value={fileInfo?.content}
+            readOnly
+            editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
+            type={fileInfo?.language === 'yak' ? 'yak' : 'plaintext'}
+          />
+        )}
+      </YakitSpin>
 
-        {/* 文件过大弹窗 */}
-        <YakitHint
-          visible={showFileHint}
-          title={t('FilePreview.warningTitle')}
-          content={t('FilePreview.tooLarge')}
-          cancelButtonProps={{ style: { display: 'none' } }}
-          onOk={() => {
-            setFileInfo(null)
-            setShowFileHint(false)
-          }}
-          okButtonText={t('YakitButton.iKnow')}
-        />
-      </div>
+      {/* 文件过大弹窗 */}
+      <YakitHint
+        visible={showFileHint}
+        title={t('FilePreview.warningTitle')}
+        content={t('FilePreview.tooLarge')}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        onOk={() => {
+          setFileInfo(null)
+          setShowFileHint(false)
+        }}
+        okButtonText={t('YakitButton.iKnow')}
+      />
+      {/* </div> */}
     </div>
   )
 }

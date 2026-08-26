@@ -33,6 +33,8 @@ export interface SideSettingButtonProps extends YakitButtonProp {}
 
 export interface AIChatWelcomeIntroTipsProps {
   onSetInputValue: (v: string) => void
+  /** 页面较小时只展示 3 条建议 */
+  compact?: boolean
 }
 
 export type DragSource = 'desktopToAItree' | 'AIRreeToChat' | null

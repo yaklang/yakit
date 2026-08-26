@@ -23,12 +23,12 @@ import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
   OutlineBugIcon,
-  OutlineFolderIcon,
-  OutlineGlobealtIcon,
+  OutlineFlowIcon,
   OutlineListTodoIcon,
   OutlineNewspaperIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
+import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import styles from './AIChatWorkspace.module.scss'
 
 interface AIChatWorkspaceProps {
@@ -48,11 +48,21 @@ interface WorkspaceTab {
 }
 
 const TabIcons: Record<AITabsEnumType, React.ReactNode> = {
-  [AITabsEnum.File_Preview]: <OutlineFolderIcon />,
+  [AITabsEnum.File_Preview]: null,
   [AITabsEnum.Task_Detail]: <OutlineListTodoIcon />,
-  [AITabsEnum.HTTP]: <OutlineGlobealtIcon />,
+  [AITabsEnum.HTTP]: <OutlineFlowIcon />,
   [AITabsEnum.Risk]: <OutlineBugIcon />,
   [AITabsEnum.Operation_Log]: <OutlineNewspaperIcon />,
+}
+
+const getFileIconByName = (name: string) => {
+  const suffix = name.includes('.') ? name.split('.').pop() || '' : ''
+  return suffix ? FileSuffix[suffix] || FileDefault : FileDefault
+}
+
+const getFileTabIcon = (file?: FileNodeProps) => {
+  const iconKey = file?.icon && KeyToIcon[file.icon] ? file.icon : FileDefault
+  return <img src={KeyToIcon[iconKey].iconPath} alt="" />
 }
 
 export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props) => {
@@ -141,7 +151,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         name,
         path: value,
         isFolder: false,
-        icon: 'default',
+        icon: getFileIconByName(name),
         depth: 0,
         isLeaf: true,
       }
@@ -309,7 +319,9 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
                 onClick={() => setActiveTabKey(tab.key)}
               >
                 <div className={styles['workspace-tab-main']}>
-                  <span className={styles['workspace-tab-icon']}>{TabIcons[tab.type]}</span>
+                  <span className={styles['workspace-tab-icon']}>
+                    {tab.type === AITabsEnum.File_Preview ? getFileTabIcon(tab.file) : TabIcons[tab.type]}
+                  </span>
                   <span className={classNames(styles['workspace-tab-label'], 'content-ellipsis')}>{tab.label}</span>
                 </div>
                 <span

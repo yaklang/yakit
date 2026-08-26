@@ -6541,3 +6541,20 @@ const OutlineScrollText = () => (
 export const OutlineScrollTextIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineScrollText} {...props} />
 }
+
+const OutlineFlow = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M0.666656 8.00001H3.33332L4.99999 11L6.99999 2.33334L9.33332 13.6667L11.3333 5.33334L12.3333 8.00001H15.3333"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+/**
+ * @description  Icon/Outline/流量 Icon/Outline/flow
+ */
+export const OutlineFlowIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineFlow} {...props} />
+}
