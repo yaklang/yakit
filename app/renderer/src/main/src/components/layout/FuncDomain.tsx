@@ -2128,10 +2128,15 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   })
 
   const onFetchMessage = useMemoizedFn(() => {
-    apiFetchQueryMessage({
-      page: 1,
-      limit: 20,
-    }).then((res) => {
+    apiFetchQueryMessage(
+      {
+        page: 1,
+        limit: 20,
+      },
+      {
+        isRead: 'false',
+      },
+    ).then((res) => {
       setMessageList(res.data || [])
     })
   })
@@ -2146,9 +2151,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
     try {
       const obj: API.MessageLogDetail = JSONParseLog(data, { page: 'FuncDomain', fun: 'onRefreshMessageSocketFun' })
-      setMessageList((prev) => {
-        return [obj, ...prev]
-      })
+      if (obj.isRead === false) {
+        setMessageList((prev) => {
+          return [obj, ...prev]
+        })
+      }
     } catch (error) {}
   })
 
@@ -2165,11 +2172,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       hash: '',
     }).then((ok) => {
       if (ok) {
-        setMessageList((prev) => {
-          return prev.map((item) => {
-            return { ...item, isRead: true }
-          })
-        })
+        onFetchMessage()
       }
     })
   })

@@ -37,6 +37,7 @@ import {
 } from '@/pages/softwareSettings/ProjectManage'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import moment from 'moment'
+import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 const { ipcRenderer } = window.require('electron')
 
 export interface MessageItemProps {
@@ -433,7 +434,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
   const { userInfo } = useStore()
   const [newMessageList, setNewMessageList] = useState<API.MessageLogDetail[]>(messageList)
   const [taskLoading, taskModalInfo, taskErrModalInfo, debugTaskEvent] = useEETaskNotificationHook({})
-
+  const [loading, setLoading] = useState(false)
   useUpdateEffect(() => {
     setNewMessageList(messageList)
   }, [messageList])
@@ -445,8 +446,20 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
 
   // 移除列表中的某一项
   const removeItem = useMemoizedFn((item: API.MessageLogDetail) => {
-    const newList = newMessageList.filter((i) => i.hash !== item.hash)
-    setNewMessageList(newList)
+    setLoading(true)
+    apiFetchMessageRead({
+      isAll: false,
+      hash: item.hash,
+    })
+      .then((ok) => {
+        if (ok) {
+          const newList = newMessageList.filter((i) => i.hash !== item.hash)
+          setNewMessageList(newList)
+        }
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   })
 
   return (
@@ -454,23 +467,25 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
       {userInfo.isLogin ? (
         <>
           {newMessageList.length > 0 ? (
-            <div className={styles['message-center']}>
-              {newMessageList.map((item) => (
-                <MessageItem
-                  data={item}
-                  key={item.hash}
-                  onClose={onClose}
-                  onRedTaskItem={onRedTaskItem}
-                  removeItem={removeItem}
-                />
-              ))}
+            <YakitSpin spinning={loading}>
+              <div className={styles['message-center']}>
+                {newMessageList.map((item) => (
+                  <MessageItem
+                    data={item}
+                    key={item.hash}
+                    onClose={onClose}
+                    onRedTaskItem={onRedTaskItem}
+                    removeItem={removeItem}
+                  />
+                ))}
 
-              <div className={styles['footer-btn']}>
-                <YakitButton type="text2" onClick={getAllMessage}>
-                  {t('YakitButton.view_all_button')}
-                </YakitButton>
+                <div className={styles['footer-btn']}>
+                  <YakitButton type="text2" onClick={getAllMessage}>
+                    {t('YakitButton.view_all_button')}
+                  </YakitButton>
+                </div>
               </div>
-            </div>
+            </YakitSpin>
           ) : (
             <div className={styles['meeage-no-data']}>
               {/* <img src={LoginMessage} alt='' /> */}
