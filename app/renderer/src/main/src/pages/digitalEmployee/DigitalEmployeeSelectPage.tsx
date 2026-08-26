@@ -19,16 +19,18 @@ import {
 } from '@/assets/icon/outline'
 import { SolidBadgecheckIcon } from '@/assets/icon/solid'
 import aiSenSoLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
+import { YakitRoute } from '@/enums/yakitRoute'
+import emiter from '@/utils/eventBus/eventBus'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeSelectPage.module.scss'
 
 const QuickNavigation = [
-  { key: 'agent', title: '智能体广场', icon: <OutlineRobotIcon /> },
-  { key: 'skill', title: '安全技能库', icon: <OutlineShieldcheckIcon /> },
-  { key: 'knowledge', title: '安全知识库', icon: <OutlineBookopenIcon /> },
-  { key: 'tool', title: '工具插件库', icon: <OutlinePuzzleIcon /> },
-  { key: 'memory', title: '记忆管理', icon: <OutlineBrainCircuitIcon /> },
-  { key: 'database', title: '安全数据库', icon: <OutlineDatabaseIcon /> },
+  { key: 'agent', title: '智能体广场', route: YakitRoute.AI_Forge, icon: <OutlineRobotIcon /> },
+  { key: 'knowledge', title: '知识库', route: YakitRoute.AI_REPOSITORY, icon: <OutlineBookopenIcon /> },
+  { key: 'memory', title: '记忆库', route: YakitRoute.AI_Memory, icon: <OutlineBrainCircuitIcon /> },
+  { key: 'tool', title: '工具库', route: YakitRoute.AI_Tool, icon: <OutlinePuzzleIcon /> },
+  { key: 'plugin', title: '插件仓库', route: YakitRoute.Plugin_Hub, icon: <OutlineShieldcheckIcon /> },
+  { key: 'database', title: '流量历史', route: YakitRoute.DB_HTTPHistory, icon: <OutlineDatabaseIcon /> },
 ]
 
 const EMPLOYEES_PER_PAGE = 8
@@ -219,12 +221,19 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
             </div>
             <div className={styles['quick-list']}>
               {QuickNavigation.map((item) => (
-                <div className={styles['quick-item']} key={item.key} title="选择员工后可使用">
+                <button
+                  type="button"
+                  className={styles['quick-item']}
+                  key={item.key}
+                  title={`打开${item.title}`}
+                  aria-label={`打开${item.title}`}
+                  onClick={() => emiter.emit('menuOpenPage', JSON.stringify({ route: item.route }))}
+                >
                   <span className={styles['quick-icon']} aria-hidden="true">
                     {item.icon}
                   </span>
                   <span>{item.title}</span>
-                </div>
+                </button>
               ))}
             </div>
           </section>

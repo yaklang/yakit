@@ -7,8 +7,10 @@ vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIForge: vi.fn() }))
 import { DigitalEmployeeSelectPage } from '../DigitalEmployeeSelectPage'
 import * as DigitalEmployeeContext from '../DigitalEmployeeContext'
 import { DIGITAL_EMPLOYEES } from '../config'
+import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
 import type { AIForge } from '@/pages/ai-agent/type/forge'
+import emiter from '@/utils/eventBus/eventBus'
 
 describe('DigitalEmployeeSelectPage', () => {
   afterEach(() => {
@@ -19,6 +21,7 @@ describe('DigitalEmployeeSelectPage', () => {
   it('renders all employees with the first employee selected by default', () => {
     const switchEmployee = vi.fn(() => true)
     const confirmSelection = vi.fn(() => true)
+    const emitSpy = vi.spyOn(emiter, 'emit')
     const employees = DIGITAL_EMPLOYEES.map((employee) => ({
       ...employee,
       status: 'ready' as const,
@@ -48,6 +51,18 @@ describe('DigitalEmployeeSelectPage', () => {
     expect(actionArrowGroups).toHaveLength(DIGITAL_EMPLOYEES.length)
     actionArrowGroups.forEach((group) => expect(group.querySelectorAll('svg')).toHaveLength(3))
     expect(quickNavigationIcons).toHaveLength(6)
+    const navigationItems = [
+      ['智能体广场', YakitRoute.AI_Forge],
+      ['知识库', YakitRoute.AI_REPOSITORY],
+      ['记忆库', YakitRoute.AI_Memory],
+      ['工具库', YakitRoute.AI_Tool],
+      ['插件仓库', YakitRoute.Plugin_Hub],
+      ['流量历史', YakitRoute.DB_HTTPHistory],
+    ] as const
+    navigationItems.forEach(([title, route]) => {
+      fireEvent.click(screen.getByRole('button', { name: `打开${title}` }))
+      expect(emitSpy).toHaveBeenLastCalledWith('menuOpenPage', JSON.stringify({ route }))
+    })
     expect(employeeCards[0].querySelectorAll('img')).toHaveLength(1)
     expect(screen.getByText('当前选择')).toBeInTheDocument()
     expect(employeeCards[0]).toHaveAttribute('aria-pressed', 'true')
