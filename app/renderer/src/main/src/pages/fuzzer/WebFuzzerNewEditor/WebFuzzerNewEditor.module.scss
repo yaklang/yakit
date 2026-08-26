@@ -1,0 +1,33 @@
+:global(.monaco-editor) .large-request-replace-chip {
+  color: var(--Colors-Use-Main-On-Primary) !important;
+  background-color: var(--Colors-Use-Main-Primary);
+  border: none;
+  padding: 1px 0;
+  margin: 0;
+  border-radius: 0;
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  user-select: none;
+  opacity: 1 !important;
+}
+
+:global(.monaco-editor) .large-request-replace-chip:hover {
+  filter: brightness(1.08);
+}
+
+:global(.monaco-editor) .large-request-replace-chip-replaced {
+  color: var(--Colors-Use-Warning-On-Primary) !important;
+  background-color: var(--Colors-Use-Warning-Primary);
+}
+
+:global(.monaco-editor) .large-request-replace-glyph::before {
+  content: '⇅';
+  color: var(--Colors-Use-Main-Primary);
+  font-size: 12px;
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  cursor: pointer;
+}

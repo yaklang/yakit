@@ -36,7 +36,7 @@ import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitS
 import {
   ExtraParamsNodeByType,
   FixExtraParamsNode,
-} from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
+} from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParamsNodes'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { randomString } from '@/utils/randomUtil'
 import { failed, yakitNotify } from '@/utils/notification'

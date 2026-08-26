@@ -118,6 +118,10 @@
     "filter": "篩選",
     "greaterThanZeroOnly": "僅看大於0"
   },
+  "SearchInputTableWrapper": {
+    "search": "搜尋",
+    "placeholder": "支援輸入 1,2,3，多個用逗號分隔"
+  },
   "HistorySearch": {
     "keyword": "關鍵字",
     "request": "請求",

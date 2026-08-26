@@ -7,6 +7,7 @@ vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
   persistToolResultIfTerminal: vi.fn(),
   upsertSessionContent: vi.fn(),
+  persistGetSessionContent: vi.fn().mockResolvedValue(undefined),
 }))
 
 describe('aiToolResult handlers', () => {
@@ -22,9 +23,10 @@ describe('aiToolResult handlers', () => {
     aiToolResultDataHandlers.tool_call_start(req)
     const item = req.rawData.contents.get('call-9')
     expect(item?.type).toBe(AIChatQSDataTypeEnum.TOOL_RESULT)
+    expect(item?.stageSettled).toBe(false)
   })
 
-  it('D6: tool_call_param updates params', () => {
+  it('D6: tool_call_param updates params', async () => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes('tool_call_param', {
         call_tool_id: 'call-9',
@@ -40,7 +42,7 @@ describe('aiToolResult handlers', () => {
       AIModelName: '',
       data: { tool: { status: 'default' }, callToolId: 'call-9' },
     } as any)
-    aiToolResultDataHandlers.tool_call_param(req)
+    await aiToolResultDataHandlers.tool_call_param(req)
     expect((req.rawData.contents.get('call-9') as any).data.tool.reviewParams).toEqual({ a: 1 })
   })
 

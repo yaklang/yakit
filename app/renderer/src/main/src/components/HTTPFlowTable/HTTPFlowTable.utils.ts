@@ -571,6 +571,27 @@ export const getRunTimeIdObj = (runTimeId?: string) => {
   }
 }
 
+/**
+ * 将逗号分隔的字符串解析为不重复的非负整数数组
+ * @param input - 例如 "1, 2, 3" 或 "1,2,3"
+ * @returns 过滤后的数字数组，例如 [1, 2, 3]
+ */
+export function parseIncludeIds(input: string): number[] {
+  if (!input) return []
+  const ids: number[] = []
+  const seen = new Set<number>()
+  input.split(',').forEach((part) => {
+    const trimmed = part.trim()
+    if (!trimmed) return
+    const num = Number(trimmed)
+    if (!Number.isInteger(num) || num < 0) return
+    if (seen.has(num)) return
+    seen.add(num)
+    ids.push(num)
+  })
+  return ids
+}
+
 export function getFullRange(id: number, count = 10, minId = 1, maxId = null) {
   const range: number[] = []
   const start = Math.max(minId, id - count)

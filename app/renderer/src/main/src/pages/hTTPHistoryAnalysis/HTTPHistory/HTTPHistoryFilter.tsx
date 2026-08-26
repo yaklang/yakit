@@ -50,7 +50,9 @@ import {
   onExpandHTTPFlow,
   onRemoveCalloutColor,
   onSendToTab,
+  parseIncludeIds,
   RangeInputNumberTableWrapper,
+  SearchInputTableWrapper,
   isHTTPFlowFavorite,
   SourceType,
   toggleHTTPFlowFavorite,
@@ -804,13 +806,54 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       setIsResetSort((prev) => !prev)
     }
     setBodyLengthSort(newSort)
+    setIdSort(false)
     sorterTableRef.current = {
-      orderBy: newSort ? 'body_length' : 'Id',
+      orderBy: newSort ? 'body_length' : 'id',
       order: newSort || 'desc',
     }
-    queyChangeUpdateData()
+    setQuery((prev) => ({
+      ...prev,
+      idFilter: !!getIncludeIdSearch(),
+    }))
   })
+
   /** ---- 响应长度 end ----*/
+
+  /** ---- id start ----*/
+  const [, setIdSort, getIdSort] = useGetSetState<'asc' | 'desc' | false>(false)
+  const [, setIncludeIdSearch, getIncludeIdSearch] = useGetSetState('')
+  const onIdSort = useMemoizedFn((sort: 'asc' | 'desc') => {
+    const newSort = getIdSort() === sort ? false : sort
+    if (newSort) {
+      setIsResetSort((prev) => !prev)
+    }
+    setIdSort(newSort)
+    setBodyLengthSort(false)
+    sorterTableRef.current = {
+      orderBy: 'id',
+      order: newSort || 'desc',
+    }
+    setQuery((prev) => ({
+      ...prev,
+      idFilter: !!(newSort || getIncludeIdSearch()),
+    }))
+  })
+  const onIncludeIdSearchSure = useMemoizedFn(() => {
+    const ids = parseIncludeIds(getIncludeIdSearch())
+    setQuery((prev) => {
+      const nextQuery = {
+        ...prev,
+        idFilter: !!(getIdSort() || ids.length),
+      }
+      if (ids.length) {
+        nextQuery.IncludeId = ids
+      } else {
+        delete nextQuery.IncludeId
+      }
+      return nextQuery
+    })
+  })
+  /** ---- id end ----*/
 
   // url 清空网站树需要刷新
   useUpdateEffect(() => {
@@ -820,7 +863,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   }, [query.SearchURL])
 
   const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-    if (!getBodyLengthSort() || newSort.orderBy !== '') {
+    const keepCustomSort = (!!getBodyLengthSort() || !!getIdSort()) && newSort.orderBy === ''
+    // 是否保留自定义排序
+    if (!keepCustomSort) {
       sorterTableRef.current = {
         ...newSort,
         ...(newSort.order === 'none' ? { order: 'desc' } : {}),
@@ -831,13 +876,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             : {}),
       }
       setBodyLengthSort(false)
+      setIdSort(false)
     }
     setQuery((prev) => {
+      const searchIds = parseIncludeIds(getIncludeIdSearch())
       const newQuery = {
         ...prev,
         ...filter,
         Tags: buildHTTPFlowQueryTags([...tagsFilter], onlyFavorite),
         bodyLength: !!(afterBodyLength || beforeBodyLength || getBodyLengthSort() || checkBodyLength), // 主要是用来响应长度icon显示颜色
+        idFilter: !!(getIdSort() || getIncludeIdSearch()), // 主要是用来ID icon显示颜色
+        IncludeId: searchIds.length ? searchIds : [],
       }
 
       if (filter['ContentType']) {
@@ -945,8 +994,22 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         ellipsis: false,
         width: 96,
         enableDrag: false,
-        sorterProps: {
-          sorter: true,
+        filterProps: {
+          filterKey: 'idFilter',
+          filterIcon: <OutlineSelectorIcon className={styles['filter-icon']} />,
+          filterRender: (closePopover: () => void) => (
+            <SearchInputTableWrapper
+              showSort={true}
+              sortOrder={getIdSort()}
+              onSort={onIdSort}
+              searchValue={getIncludeIdSearch()}
+              setSearchValue={setIncludeIdSearch}
+              onSure={() => {
+                closePopover()
+                onIncludeIdSearchSure()
+              }}
+            />
+          ),
         },
       },
       {

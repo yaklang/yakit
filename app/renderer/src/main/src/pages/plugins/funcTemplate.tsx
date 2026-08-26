@@ -59,7 +59,7 @@ import {
   SolidDocumentSearchPluginIcon,
   SolidCollectionPluginIcon,
 } from '@/assets/icon/colors'
-import { LoadingOutlined } from '@ant-design/icons'
+import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'

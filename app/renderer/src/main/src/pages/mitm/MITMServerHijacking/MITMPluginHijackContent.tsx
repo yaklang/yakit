@@ -29,7 +29,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import emiter from '@/utils/eventBus/eventBus'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '@/pages/fuzzer/HTTPFuzzerHotPatch'
+import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '@/pages/fuzzer/hotPatchShared'
 import { cloneDeep } from 'lodash'
 import { MITMHotPatchTempDefault } from '@/defaultConstants/mitm'
 import { SolidPlayIcon, SolidStopIcon } from '@/assets/icon/solid'

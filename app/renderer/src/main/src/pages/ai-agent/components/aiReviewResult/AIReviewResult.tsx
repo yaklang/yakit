@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from 'react'
 import type { AIReviewParamsProps, AIReviewResultProps, AISingHaveColorTextProps } from './type'
-import { useClickAway, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
 import styles from './AIReviewResult.module.scss'
 import React from 'react'
 import ChatCard from '../ChatCard'
@@ -16,31 +16,13 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isEmpty } from 'lodash'
 import classNames from 'classnames'
 import { AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
-  const { info, renderNum, taskLength, casualLength } = props
+  const { info, renderNum } = props
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-  const getChatType = useMemoizedFn(() => {
-    return info.chatType
-  })
-
-  const [expand, setExpand] = useState<boolean>(false)
-
-  const isInit = useRef<boolean>(true)
-
-  useUpdateEffect(() => {
-    if (isInit.current && getChatType() === 'task') {
-      setExpand(false)
-      isInit.current = false
-    }
-  }, [taskLength])
-  useUpdateEffect(() => {
-    if (isInit.current && getChatType() === 'reAct') {
-      setExpand(false)
-      isInit.current = false
-    }
-  }, [casualLength])
+  const [expand, setExpand] = useUiExpand(info.id, false)
   const title = useCreation(() => {
     switch (info.type) {
       case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:

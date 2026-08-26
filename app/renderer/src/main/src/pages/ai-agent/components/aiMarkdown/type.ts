@@ -7,4 +7,6 @@ export interface AIMarkdownProps {
   referenceNode: ReactNode
   /** 是否正在流式输出（用于开启流式淡入渲染效果，结束后关闭） */
   streaming?: boolean
+  /** 列表项 token，折叠态写入 chatStore.uiExpandMap */
+  token?: string
 }

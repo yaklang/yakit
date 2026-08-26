@@ -9,6 +9,7 @@ import {
   unregisterBinaryFoldEntries,
   findPlaceholderOffsets,
   goUnquoteToBytes,
+  goUnquotePreview,
   bytesToHex,
   packetTextToRawBytes,
   rawBytesToPacketText,
@@ -354,6 +355,37 @@ describe('goUnquoteToBytes', () => {
   it('解析常见控制符转义', () => {
     const bytes = goUnquoteToBytes('"\\n\\r\\t\\\\"')
     expect(Array.from(bytes)).toEqual([10, 13, 9, 92])
+  })
+})
+
+describe('goUnquotePreview', () => {
+  it('预览头字节与全量解码头一致，并返回完整 byteLength', () => {
+    const content = '"\\xff\\xd8\\x00A\\x01\\x02"'
+    const full = goUnquoteToBytes(content)
+    const { byteLength, preview } = goUnquotePreview(content, 4)
+    expect(byteLength).toBe(full.length)
+    expect(Array.from(preview)).toEqual(Array.from(full.slice(0, 4)))
+  })
+
+  it('中等体积：goUnquotePreview 全长统计与全量解码一致', () => {
+    const hugeContent = '"' + '\\x50\\x4b\\x03\\x04'.repeat(5000) + '"'
+    const full = goUnquoteToBytes(hugeContent)
+    const { byteLength, preview } = goUnquotePreview(hugeContent, 4)
+    expect(byteLength).toBe(full.length)
+    expect(byteLength).toBe(5000 * 4)
+    expect(Array.from(preview)).toEqual([0x50, 0x4b, 0x03, 0x04])
+  })
+
+  it('大体积 unquote：collapse 预览与全量解码头一致', () => {
+    const hugeContent = '"' + '\\x50\\x4b\\x03\\x04'.repeat(5000) + '"'
+    const full = goUnquoteToBytes(hugeContent)
+    const { byteLength, preview } = goUnquotePreview(hugeContent, 4)
+    expect(byteLength).toBe(full.length)
+
+    const { entries } = collapseBinaryFuzztag(`{{unquote(${hugeContent})}}`)
+    const entry = Array.from(entries.values())[0]
+    expect(entry.byteLength).toBe(byteLength)
+    expect(entry.previewHex).toBe(bytesToHex(preview))
   })
 })
 

@@ -1,48 +1,3 @@
-@use '../../../assets/global.scss' as global;
-
-$colors: global.$colors;
-$keyColor: map-keys($colors);
-
-@for $c from 1 through length($keyColor) {
-  $name: nth($keyColor, $c);
-  $currentColor: map-get($colors, $name);
-
-  .tab-menu-sub-item-combine-#{'' + $name} {
-    &::before {
-      content: '';
-      width: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
-      transition: width 0.2s linear;
-      border-top: 2px solid map-get($currentColor, 'backgroundColor') !important;
-    }
-  }
-
-  .tab-menu-sub-group-#{'' + $name} {
-    &::before {
-      content: '';
-      width: calc(100% - 6px) !important;
-      position: absolute;
-      top: 0;
-      left: 4px;
-      z-index: 9;
-      border-top: 2px solid map-get($currentColor, 'backgroundColor');
-    }
-  }
-
-  .tab-menu-sub-group-name-#{'' + $name} {
-    background-color: map-get($currentColor, 'backgroundColor');
-    color: map-get($currentColor, 'textColor');
-  }
-
-  .tab-menu-sub-group-number-#{'' + $name} {
-    color: map-get($currentColor, 'backgroundColor');
-    background-color: map-get($currentColor, 'textColor');
-  }
-}
-
 .tab-menu-sub-item-combine-custom-color {
   &::before {
     content: '';
@@ -675,11 +630,14 @@ $keyColor: map-keys($colors);
   width: 232px;
 
   .show-content-heard {
+    width: 100%;
     padding: 8px 8px 0px 8px;
   }
 
   .color-list {
     @extend .flex-align-center;
+    flex-wrap: wrap;
+    width: 100%;
     padding: 8px 0;
     gap: 8px;
 

@@ -27,7 +27,7 @@ import styles from './AuditCode.module.scss'
 import { genDefaultPagination, type QueryGeneralResponse, type YakScript } from '@/pages/invoker/schema'
 import { Divider, Form, Progress, Slider, Tooltip, Tree } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
+import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParamsNodes'
 import { FormContentItemByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import { getValueByType, getYakExecutorParam, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
@@ -2150,12 +2150,17 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
   useEffect(() => {
     // 初次打开时带参执行
     if (nameOrConfig) {
-      const paramsUIConfig = JSONParseLog(nameOrConfig, {
-        page: 'AfreshAuditModal',
-        fun: 'useEffect',
-      })
-      if (paramsUIConfig?.CodeSource?.local_file) {
-        pathRef.current = paramsUIConfig?.CodeSource?.local_file || ''
+      // nameOrConfig：compile 为 JSON 配置，afresh_compile 为项目名，不能 JSON.parse
+      pathRef.current = ''
+      if (type === 'compile') {
+        const paramsUIConfig = JSONParseLog(nameOrConfig, {
+          page: 'AfreshAuditModal',
+          fun: 'useEffect',
+          throwOnError: false,
+        })
+        if (paramsUIConfig?.CodeSource?.local_file) {
+          pathRef.current = paramsUIConfig.CodeSource.local_file || ''
+        }
       }
 
       const requestParams: DebugPluginRequest = {
@@ -2185,7 +2190,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
         debugPluginStreamEvent.start()
       })
     }
-  }, [nameOrConfig])
+  }, [nameOrConfig, type])
 
   const onCancelAudit = () => {
     logInfoRef.current = []

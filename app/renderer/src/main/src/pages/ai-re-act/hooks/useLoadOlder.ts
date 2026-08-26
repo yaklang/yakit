@@ -6,12 +6,14 @@ import { globalSessionEngine } from './ChatMultiSessionController'
 import { useCurrentStore, useCurrentRawData } from './useCurrentDataBySession'
 import useCurrentSessionId from './useCurrentSessionId'
 import { AITaskStatus } from './grpcApi'
-import type { ChatListRenderType } from './aiRender'
+import { type ChatListRenderType } from './aiRender'
+import { applyHydratedStageSettled } from './persist/contentPersistHelper'
+import { collectEvictableContentTokens } from './contentEvict'
 
 /** 向上/向下固定预取条数 */
 const LOAD_AHEAD = 10
-/** 向后保留条数（已滚过的不立即淘汰，保留 5 条缓冲） */
-const KEEP_BEHIND = 5
+/** 向后保留条数（已滚过的不立即淘汰，贴底回看时减少空壳灌内容撑高） */
+const KEEP_BEHIND = 15
 /** 强制保留最新尾部条数（人在中间看历史时，底部流式输出不丢展示） */
 const TAIL_KEEP = 30
 /** firstItemIndex 起始偏移 */
@@ -143,7 +145,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   }, [processing, handleLoadMore])
   // #endregion
 
-  // 切会话时重置方向跟踪与杂项 Ref + 清空旧 contents（旧 session Map 占内存）
+  // 切会话：cleanup 清旧会话；执行中不清。不要在切进来时清空当前 session。
   useEffect(() => {
     lastStartIndexRef.current = -1
     wasLoadingRef.current = false
@@ -151,10 +153,11 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
     isPrependingRef.current = false
     atTopRef.current = false
     pendingRequestRef.current = false
-    // 清空旧 session 的 contents 视窗（保留 IDB，可恢复）
-    if (sessionId && rawData.contents.size > 0) {
-      const tokens = [...rawData.contents.keys()]
-      globalSessionEngine.removeContentsFromMemory(sessionId, tokens)
+    const leavingId = sessionId
+    return () => {
+      if (!leavingId) return
+      if (globalSessionEngine.getSessionExecute(leavingId)) return
+      globalSessionEngine.removeContentsFromMemory(leavingId)
     }
   }, [sessionId])
 
@@ -211,6 +214,7 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
     const rows = await globalSessionEngine.persistGetSessionContents(sessionId, tokens)
     const state = store.getState()
     for (const row of rows) {
+      applyHydratedStageSettled(row.content)
       rawData.contents.set(row.token, row.content)
       // 按 kind bump renderNum：item→items，group→groups，task→tasks
       if (state.items[row.token]) {
@@ -255,13 +259,13 @@ const useLoadOlder = (chatType: ChatListRenderType) => {
   const evictOutsideViewport = useMemoizedFn((startIndex: number, endIndex: number) => {
     if (!sessionId) return
     const keep = computeKeepTokens(startIndex, endIndex)
-    // 强制保留当前活跃 review 数据，避免视窗淘汰导致提交时取不到
     const currentReviewDetail = store.getState().currentReviewDetail
     if (currentReviewDetail.token) keep.add(currentReviewDetail.token)
-    const toEvict: string[] = []
-    for (const token of rawData.contents.keys()) {
-      if (!keep.has(token)) toEvict.push(token)
-    }
+    const toEvict = collectEvictableContentTokens(
+      rawData.contents,
+      keep,
+      globalSessionEngine.getSessionExecute(sessionId),
+    )
     if (toEvict.length) {
       globalSessionEngine.removeContentsFromMemory(sessionId, toEvict)
     }

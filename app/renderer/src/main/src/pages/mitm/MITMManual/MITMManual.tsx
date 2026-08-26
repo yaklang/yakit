@@ -1,6 +1,7 @@
 import React, { forwardRef, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
   CurrentPacketInfoProps,
+  LargeRequestReplacementResult,
   ManualHijackInfoProps,
   ManualHijackInfoRefProps,
   MITMManualProps,
@@ -57,7 +58,7 @@ import {
 } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
-import { NewHTTPPacketEditor } from '@/utils/editors'
+import { type IMonacoEditor, NewHTTPPacketEditor } from '@/utils/editors'
 import type { EditorMenuItemType } from '@/components/yakitUI/YakitEditor/EditorMenu'
 import { openPacketNewWindow } from '@/utils/openWebsite'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -84,6 +85,15 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMitmShortcutKeyEvents, MitmShortcutKey } from '@/utils/globalShortcutKey/events/page/mitm'
 import { JSONParseLog } from '@/utils/tool'
 import { applyManualHijackBatch, decorateManualHijackRows } from './manualHijackListModel'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { LargeRequestFileReplaceModal } from './LargeMultipartFileReplaceModal'
+import {
+  getLargeRequestReplacementKey,
+  matchLargeRequestReplacementLine,
+  withLargeRequestReplacementLineNumber,
+  sanitizeChipInjectedText,
+  type LargeRequestReplacementMarker,
+} from './largeMultipartReplacement'
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
   forwardRef((props, ref) => {
@@ -108,6 +118,30 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       string,
       boolean
     >(new Map())
+
+    // 超大请求替换结果按 TaskID 持久化，切行重开仍可回显「已替换为」
+    const [largeRequestReplacementsByTaskID, setLargeRequestReplacementsByTaskID] = useState<
+      Record<string, Record<string, LargeRequestReplacementResult>>
+    >({})
+    const clearLargeRequestReplacements = useMemoizedFn((taskID: string) => {
+      setLargeRequestReplacementsByTaskID((previous) => {
+        if (!(taskID in previous)) return previous
+        const next = { ...previous }
+        delete next[taskID]
+        return next
+      })
+    })
+    const onLargeRequestReplacementComplete = useMemoizedFn(
+      (taskID: string, replacementKey: string, result: LargeRequestReplacementResult) => {
+        setLargeRequestReplacementsByTaskID((previous) => ({
+          ...previous,
+          [taskID]: {
+            ...previous[taskID],
+            [replacementKey]: result,
+          },
+        }))
+      },
+    )
 
     // 性能优化：currentOrder 仅在 forwardHandlerV2 中赋值 arrivalOrder，不在 JSX 中读取，改为 ref 避免 Add 消息触发重渲染
     const currentOrderRef = useRef<number>(1)
@@ -257,6 +291,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             mitmV2HijackIndexRef.current.clear()
             stopFlushInterval()
             resetLoading()
+            setLargeRequestReplacementsByTaskID({})
             let order = 0
             const newData = value.ManualHijackList.map((ele) => {
               order += 1
@@ -309,6 +344,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         onDelete: (item, dataAfterDelete) => {
           const taskID = item.TaskID
           removeLoading(taskID)
+          clearLargeRequestReplacements(taskID)
           if (newSelectItem?.TaskID === taskID) {
             if (dataAfterDelete.length === 0) {
               newEditorShowIndexShowIndex = 0
@@ -545,6 +581,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         Drop: true,
       }
       setLoading(rowData.TaskID, true)
+      clearLargeRequestReplacements(rowData.TaskID)
       grpcMITMV2Drop(value)
     })
     const onSetColor = useMemoizedFn((color: string, rowData: SingleManualHijackInfoMessage) => {
@@ -748,6 +785,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         case ManualHijackListStatus.Hijacking_Response:
         case ManualHijackListStatus.Hijack_WS:
           setLoading(item.TaskID, true)
+          clearLargeRequestReplacements(item.TaskID)
           grpcMITMV2Forward({
             TaskID: item.TaskID,
             Forward: true,
@@ -826,6 +864,13 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               loading={!!getLoading(currentSelectItem.TaskID)}
               setLoading={onSetLoading}
               isOnlyLookResponse={isOnlyLookResponse}
+              largeRequestReplacements={
+                largeRequestReplacementsByTaskID[currentSelectItem.TaskID] || emptyLargeRequestReplacements
+              }
+              onLargeRequestReplacementComplete={(replacementKey, result) =>
+                onLargeRequestReplacementComplete(currentSelectItem.TaskID, replacementKey, result)
+              }
+              onClearLargeRequestReplacements={() => clearLargeRequestReplacements(currentSelectItem.TaskID)}
             />
           )
         }
@@ -850,11 +895,25 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
   }),
 )
 
+const emptyLargeRequestReplacements: Record<string, LargeRequestReplacementResult> = {}
+
 export default MITMManual
 
 const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
   forwardRef((props, ref) => {
-    const { info, index, isOnlyLookResponse, handleAutoForward, onDiscardData, onScrollTo, loading, setLoading } = props
+    const {
+      info,
+      index,
+      isOnlyLookResponse,
+      handleAutoForward,
+      onDiscardData,
+      onScrollTo,
+      loading,
+      setLoading,
+      largeRequestReplacements,
+      onLargeRequestReplacementComplete,
+      onClearLargeRequestReplacements,
+    } = props
     // request/ws 修改的值
     const [modifiedRequestPacket, setModifiedRequestPacket] = useState<string>('')
     const [modifiedResponsePacket, setModifiedResponsePacket] = useState<string>('')
@@ -918,7 +977,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         currentPacket: currentRequestPacket,
         TaskId: info.TaskID,
         isHttp: info.IsHttps,
-        requestPacket: Uint8ArrayToString(info.Request),
+        // 与 currentPacket 同源时复用同一 string，避免二次 Uint8ArrayToString
+        requestPacket: info?.IsWebsocket ? Uint8ArrayToString(info.Request) : currentRequestPacket,
         traceInfo: info.TraceInfo || {
           AvailableDNSServers: [],
           DurationMs: 0,
@@ -974,8 +1034,11 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
 
       if (rowData.TaskID === info.TaskID) setLoading(true)
 
+      const hasLargeRequestReplacement = Object.keys(largeRequestReplacements || {}).length > 0
       const request = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
-      if (isEqual(request, rowData.Request)) {
+      // 已上传超大文件替换时优先 Forward，避免 Submit skeleton 冲掉引擎临时文件
+      if (hasLargeRequestReplacement || isEqual(request, rowData.Request)) {
+        if (hasLargeRequestReplacement) onClearLargeRequestReplacements()
         grpcMITMV2Forward({
           TaskID: rowData.TaskID,
           Forward: true,
@@ -1180,6 +1243,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
               onHijackingResponse={onHijackingResponse}
               isResponse={isResponse}
               isOnlyLookResponse={true}
+              largeRequestReplacements={largeRequestReplacements}
+              onLargeRequestReplacementComplete={onLargeRequestReplacementComplete}
             />
           </div>
         ) : (
@@ -1200,6 +1265,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                   disabled={disabledRequest}
                   handleAutoForward={handleAutoForward}
                   onHijackingResponse={onHijackingResponse}
+                  largeRequestReplacements={largeRequestReplacements}
+                  onLargeRequestReplacementComplete={onLargeRequestReplacementComplete}
                 />
               </div>
             }
@@ -1258,6 +1325,9 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
   })
 
   const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
+  const [packetEditor, setPacketEditor] = useState<IMonacoEditor>()
+  const largeRequestReplacements = props.largeRequestReplacements || emptyLargeRequestReplacements
+  const onLargeRequestReplacementComplete = props.onLargeRequestReplacementComplete
 
   const [type, setType] = useControllableValue<string>(props, {
     valuePropName: 'type',
@@ -1267,6 +1337,106 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
   useEffect(() => {
     setRefreshTrigger(!refreshTrigger)
   }, [currentPacket])
+  const openLargeRequestFileReplace = useMemoizedFn((marker: LargeRequestReplacementMarker) => {
+    const modal = showYakitModal({
+      title:
+        marker.kind === 'body'
+          ? t('MITMManual.replace_large_body_title', { size: marker.sizeVerbose })
+          : t('MITMManual.replace_large_file_title', { filename: marker.filename }),
+      width: 660,
+      footer: null,
+      content: (
+        <LargeRequestFileReplaceModal
+          taskID={info.TaskID}
+          marker={marker}
+          onCancel={() => modal.destroy()}
+          onComplete={(result) => {
+            onLargeRequestReplacementComplete?.(getLargeRequestReplacementKey(marker), result)
+            modal.destroy()
+          }}
+        />
+      ),
+      onCancel: () => modal.destroy(),
+    })
+  })
+  useEffect(() => {
+    if (!packetEditor || disabled || isResponse || info.IsWebsocket) return
+    const model = packetEditor.getModel()
+    if (!model) return
+
+    let decorationIDs: string[] = []
+    let mouseDisposable: { dispose: () => void } | undefined
+    let modelMarkers: LargeRequestReplacementMarker[] = []
+
+    const applyDecorations = () => {
+      mouseDisposable?.dispose()
+      mouseDisposable = undefined
+      modelMarkers = []
+      for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
+        const matched = matchLargeRequestReplacementLine(model.getLineContent(lineNumber))
+        if (!matched) continue
+        modelMarkers.push(withLargeRequestReplacementLineNumber(matched, lineNumber))
+      }
+      decorationIDs = packetEditor.deltaDecorations(
+        decorationIDs,
+        modelMarkers.map((marker) => {
+          const replacement = largeRequestReplacements[getLargeRequestReplacementKey(marker)]
+          const markerText = model.getLineContent(marker.lineNumber).slice(0, marker.lineLength)
+          const hint = replacement
+            ? t('MITMManual.replaced_with_file', { filename: replacement.Filename })
+            : t('MITMManual.click_to_replace')
+          const chipClass = replacement
+            ? `${styles['large-request-replace-chip']} ${styles['large-request-replace-chip-replaced']}`
+            : styles['large-request-replace-chip']
+          return {
+            range: {
+              startLineNumber: marker.lineNumber,
+              startColumn: 1,
+              endLineNumber: marker.lineNumber,
+              endColumn: marker.lineLength + 1,
+            },
+            options: {
+              inlineClassName: chipClass,
+              inlineClassNameAffectsLetterSpacing: true,
+              after: {
+                content: sanitizeChipInjectedText(` ${hint}`),
+                inlineClassName: chipClass,
+                inlineClassNameAffectsLetterSpacing: true,
+              },
+              hoverMessage: { value: `${markerText}\n${hint}` },
+            },
+          }
+        }),
+      )
+      if (modelMarkers.length === 0) return
+      mouseDisposable = packetEditor.onMouseDown((event) => {
+        if (!event.event.leftButton) return
+        const domTarget = (event.event.browserEvent?.target ?? null) as HTMLElement | null
+        const chipEl =
+          domTarget && typeof domTarget.closest === 'function'
+            ? domTarget.closest(`.${styles['large-request-replace-chip']}`)
+            : null
+        if (!chipEl) return
+        const position = event.target.position
+        let marker: LargeRequestReplacementMarker | undefined
+        if (position) {
+          const sameLine = modelMarkers.filter((item) => item.lineNumber === position.lineNumber)
+          if (sameLine.length >= 1) marker = sameLine[0]
+        }
+        if (!marker && modelMarkers.length === 1) marker = modelMarkers[0]
+        if (marker) openLargeRequestFileReplace(marker)
+      })
+    }
+
+    // model 可能晚于 modifiedPacket 同步（refreshTrigger）；内容变化后再扫一次
+    applyDecorations()
+    const contentDisposable = packetEditor.onDidChangeModelContent(() => applyDecorations())
+    return () => {
+      contentDisposable.dispose()
+      mouseDisposable?.dispose()
+      packetEditor.deltaDecorations(decorationIDs, [])
+    }
+  }, [disabled, info.IsWebsocket, isResponse, largeRequestReplacements, modifiedPacket, packetEditor, t])
   const forResponse = useCreation(() => {
     return info.Status === ManualHijackListStatus.Hijacking_Response
   }, [info])
@@ -1404,6 +1574,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
 
   return (
     <NewHTTPPacketEditor
+      onEditor={setPacketEditor}
       noMinimap={!isResponse}
       noHeader={false}
       noPacketModifier={true}

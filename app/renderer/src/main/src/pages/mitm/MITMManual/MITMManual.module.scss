@@ -32,6 +32,51 @@
   gap: 8px;
 }
 
+:global(.monaco-editor) .large-request-replace-chip {
+  color: var(--Colors-Use-Main-On-Primary) !important;
+  background-color: var(--Colors-Use-Main-Primary);
+  border: none;
+  padding: 1px 0;
+  margin: 0;
+  border-radius: 0;
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  user-select: none;
+  opacity: 1 !important;
+}
+
+:global(.monaco-editor) .large-request-replace-chip:hover {
+  filter: brightness(1.08);
+}
+
+:global(.monaco-editor) .large-request-replace-chip-replaced {
+  color: var(--Colors-Use-Warning-On-Primary) !important;
+  background-color: var(--Colors-Use-Warning-Primary);
+}
+
+.large-request-replace-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px 24px 20px;
+}
+
+.large-request-replace-field {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  line-height: 32px;
+}
+
+.large-request-replace-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .mitm-v2-manual-table-status {
   display: flex;
   align-items: center;

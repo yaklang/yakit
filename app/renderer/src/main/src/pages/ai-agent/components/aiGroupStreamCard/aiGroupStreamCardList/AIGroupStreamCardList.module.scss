@@ -1,3 +1,5 @@
+@use '../../thoughtStream/thoughtStream.mixins.scss' as thought;
+
 .content {
   cursor: pointer;
   display: grid;
@@ -61,6 +63,28 @@
       font-weight: 400;
       letter-spacing: 0.5px;
       scrollbar-gutter: stable;
+    }
+  }
+}
+
+.content-thought {
+  @include thought.thought-stream-body;
+  max-height: 240px;
+
+  &.expand {
+    border-radius: 0;
+  }
+
+  .content-inner {
+    @include thought.thought-stream-body-inner;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
+
+  &.content-thought-scroll {
+    @include thought.thought-stream-body-scroll;
+
+    .content-inner {
+      @include thought.thought-stream-body-inner-scroll;
     }
   }
 }

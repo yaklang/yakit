@@ -1,17 +1,17 @@
 import type { APIFunc, APIOptionalFunc } from '@/apiUtils/type'
-import { getTypeAndNameByPath } from '@/components/MilkdownEditor/CustomFile/CustomFile'
+import { getTypeAndNameByPath } from '@/components/MilkdownEditor/CustomFile/customFilePathUtils'
+import { apiDownloadStorageType } from '@/pages/notepadManage/notepadStorageUtils'
+
+export { apiDownloadStorageType } from '@/pages/notepadManage/notepadStorageUtils'
 import { defaultNoteFilter } from '@/defaultConstants/ModifyNotepad'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import type { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
 import type { PluginListPageMeta, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
-import { getRemoteHttpSettingGV } from '@/utils/envfile'
 import emiter from '@/utils/eventBus/eventBus'
-import { getRemoteValue } from '@/utils/kv'
-import { failed, yakitNotify } from '@/utils/notification'
+import { yakitNotify } from '@/utils/notification'
 import { openABSFileLocated } from '@/utils/openWebsite'
-import { JSONParseLog } from '@/utils/tool'
 import type { Paging } from '@/utils/yakQueryHTTPFlow'
 import cloneDeep from 'lodash/cloneDeep'
 import { v4 as uuidv4 } from 'uuid'
@@ -177,46 +177,6 @@ export const onBaseNotepadDown: APIFunc<API.NotepadDownloadRequest, SaveDialogRe
     } catch (error) {
       reject(error)
     }
-  })
-}
-
-export const apiDownloadStorageType: APIFunc<string, string> = (filePath) => {
-  return new Promise((resolve, reject) => {
-    NetWorkApi<API.NotepadDownloadRequest, string>({
-      method: 'get',
-      url: 'storage',
-    })
-      .then((type) => {
-        if (['oss', 's3'].includes(type)) {
-          resolve(filePath)
-        } else {
-          const match = filePath.match(/yakit-projects(\/[^]+)$/)
-          if (match) {
-            getRemoteValue(getRemoteHttpSettingGV())
-              .then((setting) => {
-                if (!setting) {
-                  reject()
-                  return
-                }
-                const value = JSONParseLog(setting)
-                const url = value.BaseUrl
-                // 重要！！！ 此处仅供测试时使用 上线请复原
-                // resolve(`http://192.168.3.88:8080/install_package${match[1]}`)
-                resolve(`${url}/install_package${match[1]}`)
-              })
-              .catch(() => {
-                reject()
-              })
-          } else {
-            failed('当前链接存在问题，无法正常解析')
-            reject()
-          }
-        }
-      })
-      .catch((err) => {
-        console.error('apiDownloadStorageType error:', err)
-        resolve(filePath)
-      })
   })
 }
 

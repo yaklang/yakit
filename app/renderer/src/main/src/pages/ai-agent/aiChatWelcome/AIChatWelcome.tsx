@@ -7,7 +7,6 @@ import type {
   SideSettingButtonProps,
 } from './type'
 import styles from './AIChatWelcome.module.scss'
-import DoomFlameBackground from './DoomFlameBackground'
 import { AIChatTextarea } from '../template/template'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
@@ -205,7 +204,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
-        <DoomFlameBackground />
+        {/* <DoomFlameBackground /> */}
         <div className={styles['open-file-tree-button']} onClick={() => setOpenDrawer(!openDrawer)}>
           {t('AIChatWelcome.expandResources')}
           <YakitButton type="text2" icon={<OutlineOpenIcon />} />
@@ -450,37 +449,4 @@ const AIChatWelcomeSettingCard = memo(
   }),
 )
 
-export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
-  const [isAutoHidden, setIsAutoHidden] = useState<boolean>(true)
-  useEffect(() => {
-    onGetSideSetting()
-  }, [])
-  const onGetSideSetting = useMemoizedFn(() => {
-    getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
-      .then((res) => {
-        setIsAutoHidden(res !== 'false')
-      })
-      .catch(() => {})
-  })
-  const onSideSetting = useDebounceFn(
-    useMemoizedFn((e) => {
-      e.stopPropagation()
-      const checked = !isAutoHidden
-      setIsAutoHidden(checked)
-      setRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode, `${checked}`)
-      emiter.emit('switchSideHiddenMode', `${checked}`)
-    }),
-    { wait: 200, leading: true },
-  ).run
-  return (
-    <Tooltip title={!isAutoHidden ? t('SideSettingButton.pinMenuOn') : t('SideSettingButton.pinMenuOff')}>
-      <YakitButton
-        type={isAutoHidden ? 'text2' : 'outline1'}
-        icon={isAutoHidden ? <OutlinePinOffIcon /> : <OutlinePinIcon />}
-        onClick={onSideSetting}
-        {...props}
-      />
-    </Tooltip>
-  )
-})
+export { SideSettingButton } from './AIChatWelcomeSideSetting'

@@ -1,3 +1,5 @@
+@use '../../../../styles/mixin.scss' as mixin;
+
 .drop-select-wrapper {
   width: 300px;
   display: flex;
@@ -152,7 +154,7 @@
       display: none;
     }
     .brain-icon {
-      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      @include mixin.anticon-color(var(--Colors-Use-Neutral-Text-3-Secondary));
       svg {
         width: 14px;
         height: 14px;
@@ -185,7 +187,7 @@
       gap: 4px;
     }
     .check-icon {
-      color: var(--Colors-Use-Main-Primary);
+      @include mixin.anticon-color(var(--Colors-Use-Main-Primary));
     }
   }
   .select-option-wrapper-select {

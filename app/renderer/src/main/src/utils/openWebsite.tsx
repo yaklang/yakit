@@ -1,7 +1,7 @@
 import type React from 'react'
 import { success, yakitFailed, yakitNotify } from './notification'
 import type { OpenPacketNewWindowItem } from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
-import { childWindowHash } from '@/pages/layout/mainOperatorContent/MainOperatorContent'
+import { getChildWindowHash } from '@/utils/childWindowHash'
 import {
   changeClickEngineConsoleFlag,
   clickEngineConsoleFlag,
@@ -33,7 +33,7 @@ export const openExternalWebsite = (u: string) => {
 }
 
 export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
-  if (childWindowHash) {
+  if (getChildWindowHash()) {
     minWinSendToChildWin({ type: 'openPacketNewWindow', data })
   } else {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
@@ -45,7 +45,7 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
 }
 
 export const openRiskNewWindow = (data?: Risk) => {
-  if (childWindowHash) {
+  if (getChildWindowHash()) {
     minWinSendToChildWin({ type: 'openRiskNewWindow', data })
   } else {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
@@ -57,7 +57,7 @@ export const openRiskNewWindow = (data?: Risk) => {
 }
 
 export const openSSARiskNewWindow = (data?: SSARisk) => {
-  if (childWindowHash) {
+  if (getChildWindowHash()) {
     minWinSendToChildWin({ type: 'openSSARiskNewWindow', data })
   } else {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
@@ -85,7 +85,7 @@ export const minWinSendToChildWin = (params) => {
   yakitWindow.focusChildWindow()
   yakitWindow.sendToChildWindow({
     type: params.type,
-    hash: childWindowHash,
+    hash: getChildWindowHash(),
     data: params.data,
   })
 }

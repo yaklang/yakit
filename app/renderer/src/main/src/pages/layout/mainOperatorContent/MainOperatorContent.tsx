@@ -61,7 +61,7 @@ import { CheckIcon, RemoveIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
 import type { RouteToPageProps } from '../publicMenu/PublicMenu'
 import { type SubscribeCloseType, type YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
 import { YakitModalConfirm, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
-import { defaultUserInfo } from '@/pages/MainOperator'
+import { defaultUserInfo } from '@/pages/userInfoDefaults'
 import { useStore } from '@/store'
 import { getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue } from '@/utils/kv'
 import type { GroupCount, QueryYakScriptsResponse } from '@/pages/invoker/schema'
@@ -72,7 +72,7 @@ import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import ReactResizeDetector from 'react-resize-detector'
-import { compareAsc } from '@/pages/yakitStore/viewers/base'
+import { compareAsc } from '@/pages/yakitStore/viewers/compareAsc'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitMenu, type YakitMenuItemProps, type YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -87,7 +87,9 @@ import {
   OutlineStoreIcon,
 } from '@/assets/icon/outline'
 
-import { type FuzzerCacheDataProps, type ShareValueProps, getFuzzerCacheData } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
+import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fuzzerCacheData'
+import { type ShareValueProps } from '@/pages/fuzzer/HTTPFuzzerPage'
 import type { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
 import {
@@ -147,6 +149,7 @@ import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript
 import { useMenuHeight } from '@/store/menuHeight'
 import type { HybridScanInputTarget } from '@/models/HybridScan'
 import { defaultWebsocketFuzzerPageInfo } from '@/defaultConstants/WebsocketFuzzer'
+import { defaultCodecPageInfo } from '@/defaultConstants/Codec'
 import { DuplicateTabContent, type RecoveryModel, RestoreTabContent } from './TabRenameModalContent'
 import {
   type FuzzerConfig,
@@ -160,7 +163,6 @@ import { defaultCodeScanPageInfo } from '@/defaultConstants/CodeScan'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { defaultModifyNotepadPageInfo } from '@/defaultConstants/ModifyNotepad'
 import type { APIFunc } from '@/apiUtils/type'
-import { getHotPatchCodeInfo } from '@/pages/fuzzer/HTTPFuzzerHotPatch'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import { defaultHTTPHistoryAnalysisPageInfo } from '@/defaultConstants/hTTPHistoryAnalysis'
 import type { BatchAddNewGroupFormItem } from './BatchAddNewGroup'
@@ -179,6 +181,7 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
 import { type SoftMode, useSoftMode, YakitModeEnum } from '@/store/softMode'
+import { useTheme } from '@/hook/useTheme'
 import { RemoteSoftModeGV } from '@/enums/softMode'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { scheduleIdleTask } from '@/utils/scheduleIdleTask'
@@ -189,9 +192,12 @@ import {
   type WebFuzzerPushNode,
 } from './webFuzzerTabPush'
 import {
-  getCustomWebFuzzerGroupColorStyle,
-  getWebFuzzerGroupContrastColor,
+  getGroupLength,
+  getWebFuzzerGroupColorStyle,
   isCustomWebFuzzerGroupColor,
+  pickWebFuzzerGroupColor,
+  useWebFuzzerGroupColorStyle,
+  webFuzzerGroupColorList,
 } from './webFuzzerGroupColor'
 
 const BatchAddNewGroup = React.lazy(() => import('./BatchAddNewGroup'))
@@ -205,10 +211,10 @@ const { ipcRenderer } = window.require('electron')
 /** 关闭组的提示缓存字段 */
 const Close_Group_Tip = 'close-group_tip'
 
-const colorList = ['purple', 'blue', 'lakeBlue', 'green', 'red', 'orange', 'bluePurple', 'grey']
 const droppable = 'droppable'
 const droppableGroup = 'droppableGroup'
-const duplicateWebFuzzerTabsEvent = 'onDuplicateWebFuzzerTabs'
+// 支持「复制标签页」的路由列表（仅组内 tab 显示菜单项）。
+const duplicateTabRoutes: YakitRoute[] = [YakitRoute.HTTPFuzzer, YakitRoute.Codec]
 const pageTabItemRightOperation: (t: TFunction) => YakitMenuItemType[] = (t) => {
   return [
     {
@@ -263,11 +269,8 @@ const getDeletedItems = (oldArray: MultipleNodeInfo[], newArray: MultipleNodeInf
  * 生成组id
  * @returns {string} 生成的组id
  */
-export const generateGroupId = (gIndex?: number) => {
-  const time = (new Date().getTime() + (gIndex || 0)).toString()
-  const groupId = `[${randomString(6)}]-${time}-group`
-  return groupId
-}
+export { generateGroupId } from './groupIdUtils'
+import { generateGroupId } from './groupIdUtils'
 
 const generateTabIdentity = (key: string, index?: number) => {
   const time = `${Date.now()}${typeof index === 'number' ? `-${index}` : ''}`
@@ -455,24 +458,6 @@ const getPageItemById = (subPage: MultipleNodeInfo[], id: string) => {
     if (isBreak) break
   }
   return { current, index, subIndex }
-}
-/**
- * @description 获取组的个数
- * @param subPage
- * @returns {number} 组的个数
- */
-const getGroupLength = (subPage) => {
-  return subPage.filter((ele) => ele.groupChildren && ele.groupChildren.length > 0).length
-}
-/**
- * @description 获取当前组的颜色
- * @param subPage
- * @returns {string} 返回颜色
- */
-const getColor = (subPage) => {
-  const groupLength = getGroupLength(subPage)
-  const randNum = groupLength % colorList.length
-  return colorList[randNum] || 'purple'
 }
 // 软件初始化时的默认打开页面数据
 const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) => {
@@ -692,10 +677,12 @@ const getSubPageTotal = (subPage) => {
   return total
 }
 
-export let childWindowHash = ''
+import { setChildWindowHash } from '@/utils/childWindowHash'
+export { getChildWindowHash, setChildWindowHash } from '@/utils/childWindowHash'
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
   const { routeKeyToLabel } = props
   const { t, i18n } = useI18nNamespaces(['layout'])
+  const { theme } = useTheme()
 
   const [loading, setLoading] = useState(false)
 
@@ -730,10 +717,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
   useEffect(() => {
     ipcRenderer.on('child-window-hash', (event, { hash }) => {
-      childWindowHash = hash
+      setChildWindowHash(hash)
     })
     return () => {
-      childWindowHash = ''
+      setChildWindowHash('')
       ipcRenderer.send('close-childWin')
       ipcRenderer.removeAllListeners('child-window-hash')
     }
@@ -1772,74 +1759,105 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   })
 
-  const onDuplicateWebFuzzerTabs = useMemoizedFn(({ item, count }: { item: MultipleNodeInfo; count: number }) => {
-    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, item.id)
-    const webFuzzerPageInfo = currentItem?.pageParamsInfo?.webFuzzerPageInfo
-    if (!webFuzzerPageInfo) return
+  // 通用「复制标签页」：从 pageInfo store 读原 tab 内容，克隆 N 个新 tab 到原 tab 所在组（或顶层）
+  const onDuplicateTabs = useMemoizedFn(
+    ({ item, count, route }: { item: MultipleNodeInfo; count: number; route: YakitRoute }) => {
+      const newPageCache = cloneDeep(getPageCache())
+      const currentPageCache = newPageCache.find((ele) => ele.route === route)
+      if (!currentPageCache) return
 
-    const { request = defaultPostTemplate, advancedConfigValue, advancedConfigShow, hotPatchCode } = webFuzzerPageInfo
+      const { index, subIndex } = getPageItemById(currentPageCache.multipleNode || [], item.id)
+      const targetGroupId = subIndex !== -1 && index !== -1 ? currentPageCache.multipleNode[index].id : '0'
+      const groupChildrenLength =
+        targetGroupId !== '0' && index !== -1 ? currentPageCache.multipleNode[index].groupChildren?.length || 0 : 0
 
-    const pageParams: ComponentParams = {
-      request,
-      system: item.pageParams?.system,
-      advancedConfigValue,
-      advancedConfigShow,
-      hotPatchCode,
-    }
+      const currentItem = queryPagesDataById(route, item.id)
+      const baseName = item.verbose || currentItem?.pageName
+      const key = routeConvertKey(route, '')
 
-    const baseName = item.verbose || currentItem?.pageName
-    const key = routeConvertKey(YakitRoute.HTTPFuzzer, '')
-
-    const newPageCache = cloneDeep(getPageCache())
-    const currentPageCache = newPageCache.find((ele) => ele.route === YakitRoute.HTTPFuzzer)
-    if (!currentPageCache) return
-
-    const { index, subIndex } = getPageItemById(currentPageCache.multipleNode || [], item.id)
-    const targetGroupId = subIndex !== -1 && index !== -1 ? currentPageCache.multipleNode[index].id : '0'
-    const groupChildrenLength =
-      targetGroupId !== '0' && index !== -1 ? currentPageCache.multipleNode[index].groupChildren?.length || 0 : 0
-
-    const baseSortId =
-      targetGroupId !== '0' ? groupChildrenLength + 1 : (currentPageCache.multipleNode?.length || 0) + 1
-    const createdNodes: MultipleNodeInfo[] = Array.from({ length: count }, (_, index) => {
-      const { time, tabId } = generateTabIdentity(key, index)
-      return {
-        id: tabId,
-        verbose: `${baseName}(${index + 1})`,
-        time,
-        pageParams: {
-          ...pageParams,
-          id: tabId,
-          groupId: targetGroupId,
-        },
-        groupId: targetGroupId,
-        sortFieId: baseSortId + index,
+      // 按 route 构造新节点的 pageParams（含克隆内容）。返回 undefined 表示该路由不支持复制。
+      const buildPageParams: (route: YakitRoute) => ComponentParams | undefined = (route) => {
+        switch (route) {
+          case YakitRoute.HTTPFuzzer: {
+            const info = currentItem?.pageParamsInfo?.webFuzzerPageInfo
+            if (!info) return undefined
+            return {
+              request: info.request || defaultPostTemplate,
+              system: item.pageParams?.system,
+              advancedConfigValue: info.advancedConfigValue,
+              advancedConfigShow: info.advancedConfigShow,
+              hotPatchCode: info.hotPatchCode,
+            }
+          }
+          case YakitRoute.Codec: {
+            const info = currentItem?.pageParamsInfo?.codecPageInfo
+            if (!info) return undefined
+            return {
+              codecPageInfo: {
+                rightItems: cloneDeep(info.rightItems),
+                inputEditor: info.inputEditor,
+                outputResponse: cloneDeep(info.outputResponse),
+              },
+            }
+          }
+          default:
+            return undefined
+        }
       }
-    })
+      const pageParams = buildPageParams(route)
+      if (!pageParams) return
 
-    if (targetGroupId !== '0' && index !== -1) {
-      currentPageCache.multipleNode[index].groupChildren = [
-        ...(currentPageCache.multipleNode[index].groupChildren || []),
-        ...createdNodes,
-      ]
-    } else {
-      currentPageCache.multipleNode.push(...createdNodes)
-    }
-    currentPageCache.multipleLength = (currentPageCache.multipleLength || 0) + createdNodes.length
-    currentPageCache.openFlag = false
-    currentPageCache.selectSubItem = false
+      const baseSortId =
+        targetGroupId !== '0' ? groupChildrenLength + 1 : (currentPageCache.multipleNode?.length || 0) + 1
+      const createdNodes: MultipleNodeInfo[] = Array.from({ length: count }, (_, index) => {
+        const { time, tabId } = generateTabIdentity(key, index)
+        return {
+          id: tabId,
+          verbose: `${baseName}(${index + 1})`,
+          time,
+          pageParams: {
+            ...pageParams,
+            id: tabId,
+            groupId: targetGroupId,
+          },
+          groupId: targetGroupId,
+          sortFieId: baseSortId + index,
+        }
+      })
 
-    createdNodes.forEach((node) => {
-      addFuzzerList(node.id, node, node.sortFieId)
-    })
+      if (targetGroupId !== '0' && index !== -1) {
+        currentPageCache.multipleNode[index].groupChildren = [
+          ...(currentPageCache.multipleNode[index].groupChildren || []),
+          ...createdNodes,
+        ]
+      } else {
+        currentPageCache.multipleNode.push(...createdNodes)
+      }
+      currentPageCache.multipleLength = (currentPageCache.multipleLength || 0) + createdNodes.length
+      currentPageCache.openFlag = false
+      currentPageCache.selectSubItem = false
 
-    setPageCache(newPageCache)
-  })
+      // 按 route 调对应注册函数，把新节点写入 pageInfo store
+      createdNodes.forEach((node) => {
+        switch (route) {
+          case YakitRoute.HTTPFuzzer:
+            addFuzzerList(node.id, node, node.sortFieId)
+            break
+          case YakitRoute.Codec:
+            onCodec(node, node.sortFieId)
+            break
+          default:
+            break
+        }
+      })
 
+      setPageCache(newPageCache)
+    },
+  )
   useEffect(() => {
-    emiter.on(duplicateWebFuzzerTabsEvent, onDuplicateWebFuzzerTabs)
+    emiter.on('onDuplicateTabs', onDuplicateTabs)
     return () => {
-      emiter.off(duplicateWebFuzzerTabsEvent, onDuplicateWebFuzzerTabs)
+      emiter.off('onDuplicateTabs', onDuplicateTabs)
     }
   }, [])
 
@@ -2288,6 +2306,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         break
       case YakitRoute.DataCompare:
         onDataCompare(node, order)
+        break
+      case YakitRoute.Codec:
+        onCodec(node, order)
         break
       default:
         break
@@ -3093,7 +3114,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       const fuzzerMenuItem = structuredClone(pageCache[index])
       newGroupItem.verbose = `未命名[${getGroupLength(fuzzerMenuItem.multipleNode)}]`
       newGroupItem.sortFieId = fuzzerMenuItem.multipleNode.length + 1
-      newGroupItem.color = getColor(fuzzerMenuItem.multipleNode)
+      newGroupItem.color = pickWebFuzzerGroupColor(fuzzerMenuItem.multipleNode, theme)
       fuzzerMenuItem.multipleNode.push(newGroupItem)
       pageCache[index] = fuzzerMenuItem
       setPageCache([...pageCache])
@@ -3282,7 +3303,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
     addPagesDataCache(YakitRoute.WebsocketFuzzer, newPageNode)
   })
-
   /**记事本编辑 */
   const onSetModifyNotepadData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
     const newPageNode: PageNodeItemProps = {
@@ -3311,6 +3331,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       sortFieId: order,
     }
     addPagesDataCache(YakitRoute.DataCompare, newPageNode)
+  })
+
+  /** Codec */
+  const onCodec = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+    const newPageNode: PageNodeItemProps = {
+      id: `${randomString(8)}-${order}`,
+      routeKey: YakitRoute.Codec,
+      pageGroupId: node.groupId,
+      pageId: node.id,
+      pageName: node.verbose,
+      pageParamsInfo: {
+        codecPageInfo: {
+          ...(node?.pageParams?.codecPageInfo || cloneDeep(defaultCodecPageInfo)),
+        },
+      },
+      sortFieId: order,
+    }
+    addPagesDataCache(YakitRoute.Codec, newPageNode)
   })
 
   /**
@@ -4360,6 +4398,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       onSaveHistory,
     } = props
     const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi'])
+    const { theme } = useTheme()
 
     //拖拽组件相关
     const [combineIds, setCombineIds] = useState<string[]>([]) //组合中的ids
@@ -4588,7 +4627,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
           if (groupChildrenList.length > 0) return
           const ids = [result.combine.draggableId, result.draggableId]
           if (combineIds.length === 0 && !combineColorRef.current) {
-            combineColorRef.current = getColor(subPage)
+            combineColorRef.current = pickWebFuzzerGroupColor(subPage, theme)
           }
           setCombineIds(ids)
           return
@@ -4597,7 +4636,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         if (sourceDroppableId.includes('group') && result.combine.droppableId === 'droppable2') {
           const ids = [result.combine.draggableId, result.draggableId]
           if (combineIds.length === 0 && !combineColorRef.current) {
-            combineColorRef.current = getColor(subPage)
+            combineColorRef.current = pickWebFuzzerGroupColor(subPage, theme)
           }
           setCombineIds(ids)
           return
@@ -5137,7 +5176,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       } catch (error) {}
     })
 
-    const onShowDuplicateModal = useMemoizedFn((item: MultipleNodeInfo) => {
+    const onShowDuplicateModal = useMemoizedFn((item: MultipleNodeInfo, route: YakitRoute) => {
       const m = showYakitModal({
         title: (modalT) => modalT('TabRenameModalContent.duplicateTabs'),
         footer: null,
@@ -5146,7 +5185,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             maxCount={secondaryTabsNumRef.current}
             subPageCount={getSubPageTotal(subPage)}
             onClose={() => m.destroy()}
-            onDuplicate={(count) => emiter.emit(duplicateWebFuzzerTabsEvent, { item, count })}
+            onDuplicate={(count) => emiter.emit('onDuplicateTabs', { item, count, route })}
           />
         ),
       })
@@ -5167,15 +5206,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             labelText = `“${groupChildren[0].verbose}”和另外 ${gLength - 1} 个标签页`
           }
         }
-        const isCustomGroupColor = isCustomWebFuzzerGroupColor(groupItem.color)
+        const groupColorStyle = getWebFuzzerGroupColorStyle(groupItem.color, theme)
         const node = {
           label: (
             <div className={styles['right-menu-item']} key={groupItem.id}>
               <div
-                className={classNames(styles['item-color-block'], {
-                  [`color-bg-${groupItem.color}`]: !isCustomGroupColor,
-                })}
-                style={isCustomGroupColor ? { backgroundColor: groupItem.color } : undefined}
+                className={styles['item-color-block']}
+                style={{ backgroundColor: groupColorStyle['--web-fuzzer-group-color'] }}
               />
               <span>{labelText}</span>
             </div>
@@ -5192,16 +5229,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
           key: 'removeFromGroup',
         })
       }
+      // 复制标签页：对 duplicateTabRoutes 中的路由、且组内 tab 显示
+      if (duplicateTabRoutes.includes(pageItem.route) && subIndex !== -1) {
+        menuData = [
+          ...menuData,
+          {
+            label: t('TabRenameModalContent.duplicateTabs'),
+            key: 'duplicateTab',
+          },
+        ]
+      }
+      // 恢复标签页：目前仅 WebFuzzer 有历史恢复机制
       if (pageItem.route === YakitRoute.HTTPFuzzer) {
-        if (subIndex !== -1) {
-          menuData = [
-            ...menuData,
-            {
-              label: t('TabRenameModalContent.duplicateTabs'),
-              key: 'duplicateTab',
-            },
-          ]
-        }
         menuData = [
           ...menuData,
           {
@@ -5251,7 +5290,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 onNewGroup(item)
                 break
               case 'duplicateTab':
-                onShowDuplicateModal(item)
+                onShowDuplicateModal(item, pageItem.route)
                 break
               case 'restoreTab':
                 onRestoreHistory(pageRouteKey)
@@ -5457,7 +5496,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
               .filter((i) => addNewGroupTabsIds.includes(i.id))
               .map((i: MultipleNodeInfo) => ({ ...i, groupId })),
             expand: true,
-            color: getColor(subPage),
+            color: pickWebFuzzerGroupColor(subPage, theme),
           }
 
           if (selectSubMenu.id === item.id) {
@@ -5516,7 +5555,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         sortFieId: subPage.length,
         groupChildren: [{ ...item, groupId }],
         expand: true,
-        color: getColor(subPage),
+        color: pickWebFuzzerGroupColor(subPage, theme),
       }
       if (selectSubMenu.id === item.id) {
         setSelectSubMenu({ ...item, groupId })
@@ -6291,8 +6330,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
     pageRouteKey,
   } = props
   const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
-  const isCustomCombineColor = useMemo(() => isCustomWebFuzzerGroupColor(combineColor), [combineColor])
-  const customCombineColorStyle = useMemo(() => getCustomWebFuzzerGroupColorStyle(combineColor), [combineColor])
+  const combineColorStyle = useWebFuzzerGroupColorStyle(combineColor)
   const [tabStatus, setTabStatus] = useState<ExpandAndRetractExcessiveState>()
   useEffect(() => {
     emiter.on('simpleDetectTabEvent', onSimpleDetectTabEvent)
@@ -6341,13 +6379,12 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
             data-sort={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.sortFieId : undefined}
             style={{
               ...itemStyle,
-              ...customCombineColorStyle,
+              ...combineColorStyle,
             }}
             className={classNames(styles['tab-menu-sub-item'], {
               [styles['tab-menu-sub-item-active']]: isActive,
               [styles['tab-menu-sub-item-dragging']]: snapshot.isDragging,
-              [styles[`tab-menu-sub-item-combine-${combineColor}`]]: !!combineColor && !isCustomCombineColor,
-              [styles['tab-menu-sub-item-combine-custom-color']]: isCustomCombineColor,
+              [styles['tab-menu-sub-item-combine-custom-color']]: !!combineColor,
               [styles[`tab-menu-sub-item-${tabStatus}`]]: !!tabStatus,
               [styles[`tab-menu-sub-item-disable-drag`]]: !!isDragDisabled,
             })}
@@ -6437,8 +6474,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
     pageRouteKey,
   } = props
   const color = useMemo(() => subItem.color || 'purple', [subItem.color])
-  const isCustomColor = useMemo(() => isCustomWebFuzzerGroupColor(color), [color])
-  const customColorStyle = useMemo(() => getCustomWebFuzzerGroupColorStyle(color), [color])
+  const customColorStyle = useWebFuzzerGroupColorStyle(color)
 
   useEffect(() => {
     const element = document.getElementById(subItem.id)
@@ -6488,16 +6524,14 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
             data-sort={pageRouteKey === YakitRoute.HTTPFuzzer ? subItem.sortFieId : undefined}
             style={{ ...groupStyle, ...customColorStyle }}
             className={classNames(styles['tab-menu-sub-group'], styles['tab-menu-sub-group-hidden'], {
-              [styles[`tab-menu-sub-group-${color}`]]: subItem.expand && !isCustomColor,
-              [styles['tab-menu-sub-group-custom-color']]: subItem.expand && isCustomColor,
+              [styles['tab-menu-sub-group-custom-color']]: !!subItem.expand,
               [styles[`tab-menu-sub-group-disable-drag`]]: isDragDisabled,
             })}
           >
             <div
               {...providedGroup.dragHandleProps}
-              className={classNames(styles['tab-menu-sub-group-name'], styles[`tab-menu-sub-group-name-${color}`], {
+              className={classNames(styles['tab-menu-sub-group-name'], styles['tab-menu-sub-group-name-custom-color'], {
                 [styles['tab-menu-sub-group-name-retract']]: !subItem.expand,
-                [styles['tab-menu-sub-group-name-custom-color']]: isCustomColor,
               })}
               onClick={onGroupClick}
               onContextMenu={(e) => onGroupContextMenu(e, index)}
@@ -6506,8 +6540,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
               <div
                 className={classNames(
                   styles['tab-menu-sub-group-number'],
-                  { [styles[`tab-menu-sub-group-number-${color}`]]: !isCustomColor },
-                  { [styles['tab-menu-sub-group-number-custom-color']]: isCustomColor },
+                  styles['tab-menu-sub-group-number-custom-color'],
                 )}
                 style={{ display: subItem.expand ? 'none' : 'flex' }}
               >
@@ -6589,6 +6622,7 @@ const onVerifyGroupName = (val: string, t: TFunction) => {
 const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = React.memo((props) => {
   const { groupItem, onOperateGroup, onUpdateGroup } = props
   const { t, i18nRefresh } = useI18nNamespaces(['layout'])
+  const { theme } = useTheme()
   const [group, setGroup] = useState<MultipleNodeInfo>({ ...groupItem })
   const [name, setName] = useState<string>(group.verbose)
   useEffect(() => {
@@ -6599,6 +6633,13 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
     setGroup({ ...group })
     onUpdateGroup({ ...group })
   })
+  const customGroupColorStyle = useWebFuzzerGroupColorStyle(
+    isCustomWebFuzzerGroupColor(group.color) ? group.color : undefined,
+  )
+  const fixedGroupColorStyles = useMemo(
+    () => Object.fromEntries(webFuzzerGroupColorList.map((c) => [c, getWebFuzzerGroupColorStyle(c, theme)])),
+    [theme],
+  )
   const menu = useCreation(() => {
     return [
       {
@@ -6650,26 +6691,37 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
         />
         <div className={classNames(styles['color-list'])}>
           {isCustomWebFuzzerGroupColor(group.color) && (
-            <div className={styles['color-list-item']} style={{ backgroundColor: group.color }} title={group.color}>
+            <div
+              className={styles['color-list-item']}
+              style={{ backgroundColor: customGroupColorStyle['--web-fuzzer-group-color'] }}
+              title={customGroupColorStyle['--web-fuzzer-group-color'] || group.color}
+            >
               <CheckIcon
                 className={styles['check-icon']}
-                style={{ color: getWebFuzzerGroupContrastColor(group.color || '') }}
+                style={{ color: customGroupColorStyle['--web-fuzzer-group-contrast-color'] }}
               />
             </div>
           )}
-          {colorList.map((color) => (
-            <div
-              className={classNames(styles['color-list-item'], `color-bg-${color}`)}
-              onClick={(e) => {
-                onUpdate('color', color)
-              }}
-              key={color}
-            >
-              {group.color === color && (
-                <CheckIcon className={classNames(styles['check-icon'], `color-text-${color}`)} />
-              )}
-            </div>
-          ))}
+          {webFuzzerGroupColorList.map((color) => {
+            const colorStyle = fixedGroupColorStyles[color]
+            return (
+              <div
+                className={styles['color-list-item']}
+                style={{ backgroundColor: colorStyle['--web-fuzzer-group-color'] }}
+                onClick={(e) => {
+                  onUpdate('color', color)
+                }}
+                key={color}
+              >
+                {group.color === color && (
+                  <CheckIcon
+                    className={styles['check-icon']}
+                    style={{ color: colorStyle['--web-fuzzer-group-contrast-color'] }}
+                  />
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
       <YakitMenu
@@ -6726,16 +6778,14 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
     setGroupItem(subPage[index])
   }, [draggableId])
   const isActive = useMemo(() => item.id === selectSubMenu?.id, [item, selectSubMenu])
-  const isCustomColor = useMemo(() => isCustomWebFuzzerGroupColor(groupItem.color), [groupItem.color])
-  const customColorStyle = useMemo(() => getCustomWebFuzzerGroupColorStyle(groupItem.color), [groupItem.color])
+  const customColorStyle = useWebFuzzerGroupColorStyle(groupItem.color)
   return (
     <div
       style={customColorStyle}
       className={classNames(styles['tab-menu-sub-item'], {
         [styles['tab-menu-sub-item-active']]: isActive,
         [styles['tab-menu-sub-item-dragging']]: true,
-        [styles[`tab-menu-sub-item-combine-${groupItem.color}`]]: !!groupItem.color && !isCustomColor,
-        [styles['tab-menu-sub-item-combine-custom-color']]: isCustomColor,
+        [styles['tab-menu-sub-item-combine-custom-color']]: !!groupItem.color,
       })}
     >
       {isActive && (

@@ -37,7 +37,7 @@ import {
   ExecuteEnterNodeByPluginParams,
   PluginExecuteProgress,
 } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
+import { ExtraParamsNodeByType } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParamsNodes'
 import { apiCancelDebugPlugin, apiDebugPlugin, type DebugPluginRequest } from '@/pages/plugins/utils'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'

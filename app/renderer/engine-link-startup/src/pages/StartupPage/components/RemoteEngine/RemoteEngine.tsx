@@ -20,7 +20,7 @@ import {
 } from '@/assets/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { EngineModeVerbose } from '../../utils'
-import { Editor } from '@/components/Editor'
+const Editor = React.lazy(() => import('@/components/Editor').then((m) => ({ default: m.Editor })))
 import { yakitApp, yakitEngine, yakitShell } from '@/utils/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './RemoteEngine.module.scss'
@@ -235,11 +235,13 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                         [styles['error-border']]: isCheck && !remote.caPem,
                       })}
                     >
-                      <Editor
-                        language={'pem'}
-                        value={remote.caPem}
-                        onSetValue={(caPem) => setRemote({ ...remote, caPem })}
-                      />
+                      <React.Suspense fallback={null}>
+                        <Editor
+                          language={'pem'}
+                          value={remote.caPem}
+                          onSetValue={(caPem) => setRemote({ ...remote, caPem })}
+                        />
+                      </React.Suspense>
                     </div>
                   </Form.Item>
                   <Form.Item label={t('RemoteEngine.password')}>
@@ -364,7 +366,9 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
       {t('RemoteEngine.pem_example_intro')}
       <br />
       <div className={styles['code-pem']}>
-        <Editor language="plaintext" readOnly={true} value={PemPlaceHolder} />
+        <React.Suspense fallback={null}>
+          <Editor language="plaintext" readOnly={true} value={PemPlaceHolder} />
+        </React.Suspense>
       </div>
     </div>
   )

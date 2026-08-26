@@ -30,7 +30,7 @@ import type { YakParamProps } from '../pluginsType'
 import {
   ExtraParamsNodeByType,
   FixExtraParamsNode,
-} from '../operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
+} from '../operator/localPluginExecuteDetailHeard/PluginExecuteExtraParamsNodes'
 import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import type { CustomPluginExecuteFormValue } from '../operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { ParamsToGroupByGroupName, getValueByType, getYakExecutorParam, onCodeToInfo } from '../editDetails/utils'

@@ -1,3 +1,4 @@
+import { generateColorScales, generateRandomColorScales } from '@yakit-libs/color'
 import { describe, expect, it } from 'vitest'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { getFuzzerProcessedCacheData, type PageNodeItemProps, type PageProps } from '@/store/pageInfo'
@@ -10,9 +11,12 @@ import {
   type WebFuzzerPushNode,
 } from '../webFuzzerTabPush'
 import {
-  getCustomWebFuzzerGroupColorStyle,
-  getWebFuzzerGroupContrastColor,
+  collectUsedBaseHex,
+  getFixedColorBaseHex,
+  getWebFuzzerGroupColorStyle,
   isCustomWebFuzzerGroupColor,
+  pickWebFuzzerGroupColor,
+  webFuzzerGroupColorList,
 } from '../webFuzzerGroupColor'
 
 const request = 'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n'
@@ -67,16 +71,74 @@ const page = (nodes: WebFuzzerPushNode[], selectedPageId: string): PageProps => 
   pageList: nodes.map((node) => pageNode(node)),
 })
 
-describe('custom Web Fuzzer group colors', () => {
-  it('turns a safe hex color into readable CSS variables', () => {
+describe('Web Fuzzer group colors', () => {
+  const makeGroup = (id: string, color: string): MultipleNodeInfo => ({
+    id,
+    groupId: '0',
+    verbose: id,
+    sortFieId: 1,
+    expand: true,
+    color,
+    groupChildren: [{ id: `${id}-tab`, groupId: id, verbose: 'tab', sortFieId: 1 }],
+  })
+
+  const withMockRandom = (random: () => number, runTest: () => void) => {
+    const originalRandom = Math.random
+    Math.random = random
+    try {
+      runTest()
+    } finally {
+      Math.random = originalRandom
+    }
+  }
+
+  it('turns a named fixed color into generateColorScales 60/10 CSS variables', () => {
+    const baseHex = getFixedColorBaseHex('purple', 'light')
+    const scales = generateColorScales([{ name: 'WebFuzzer-purple', hex: baseHex }]).light
+    expect(getWebFuzzerGroupColorStyle('purple', 'light')).toEqual({
+      '--web-fuzzer-group-color': scales['--yakit-colors-WebFuzzer-purple-60'],
+      '--web-fuzzer-group-contrast-color': scales['--yakit-colors-WebFuzzer-purple-10'],
+    })
+  })
+
+  it('collects the eight fixed theme base colors from named groups', () => {
+    const subPage = webFuzzerGroupColorList.map((color, index) => makeGroup(`group-${index}`, color))
+    const exclusions = collectUsedBaseHex(subPage, 'light')
+    expect(exclusions).toHaveLength(8)
+    webFuzzerGroupColorList.forEach((color) => {
+      expect(exclusions).toContain(getFixedColorBaseHex(color, 'light').toLowerCase())
+    })
+  })
+
+  it('returns light Random-1-60 after eight named groups and remixed hex on display', () => {
+    const subPage = webFuzzerGroupColorList.map((color, index) => makeGroup(`group-${index}`, color))
+    withMockRandom(
+      () => 0,
+      () => {
+        const exclusions = collectUsedBaseHex(subPage, 'light')
+        const expectedHex = generateRandomColorScales(exclusions, 1).light['--yakit-colors-Random-1-60']
+        const persistedHex = pickWebFuzzerGroupColor(subPage, 'light')
+        expect(persistedHex).toMatch(/^#[0-9A-Fa-f]{6}$/)
+        expect(persistedHex).toBe(expectedHex)
+        expect(pickWebFuzzerGroupColor(subPage, 'dark')).toBe(persistedHex)
+
+        const remixed = generateColorScales([{ name: 'WebFuzzerGroup', hex: persistedHex }])
+        const lightStyle = getWebFuzzerGroupColorStyle(persistedHex, 'light')
+        const darkStyle = getWebFuzzerGroupColorStyle(persistedHex, 'dark')
+        expect(lightStyle['--web-fuzzer-group-color']).toBe(remixed.light['--yakit-colors-WebFuzzerGroup-60'])
+        expect(lightStyle['--web-fuzzer-group-contrast-color']).toBe(remixed.light['--yakit-colors-WebFuzzerGroup-10'])
+        expect(darkStyle['--web-fuzzer-group-color']).toBe(remixed.dark['--yakit-colors-WebFuzzerGroup-70'])
+        expect(darkStyle['--web-fuzzer-group-contrast-color']).toBe(remixed.dark['--yakit-colors-WebFuzzerGroup-100'])
+        expect(lightStyle['--web-fuzzer-group-color']).not.toBe(persistedHex)
+        expect(darkStyle['--web-fuzzer-group-color']).not.toBe(lightStyle['--web-fuzzer-group-color'])
+      },
+    )
+  })
+
+  it('does not treat named colors as custom hex colors', () => {
     expect(isCustomWebFuzzerGroupColor('#2F80ED')).toBe(true)
     expect(isCustomWebFuzzerGroupColor('red')).toBe(false)
-    expect(getCustomWebFuzzerGroupColorStyle('#2f80ed')).toEqual({
-      '--web-fuzzer-group-color': '#2F80ED',
-      '--web-fuzzer-group-contrast-color': '#FFFFFF',
-    })
-    expect(getWebFuzzerGroupContrastColor('#FFFFFF')).toBe('#111827')
-    expect(getCustomWebFuzzerGroupColorStyle('not-a-color')).toEqual({})
+    expect(getWebFuzzerGroupColorStyle('not-a-color')).toEqual({})
   })
 })
 

@@ -84,7 +84,7 @@ import { PluginExecuteResult } from '../plugins/operator/pluginExecuteResult/Plu
 import { v4 as uuidv4 } from 'uuid'
 import { grpcFetchLocalPluginDetail } from '../pluginHub/utils/grpc'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
-import { ExtraParamsNodeByType } from '../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
+import { ExtraParamsNodeByType } from '../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParamsNodes'
 import { getValueByType, getYakExecutorParam, ParamsToGroupByGroupName } from '../plugins/editDetails/utils'
 import { apiCancelDebugPlugin, apiDebugPlugin, type DebugPluginRequest } from '../plugins/utils'
 import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'

@@ -38,6 +38,7 @@ import { useStreamingChatContent } from './aiChatListItem/StreamingChatContent/h
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 import { setClipboardText } from '@/utils/clipboard'
 import { success } from '@/utils/notification'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
@@ -232,7 +233,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
 
   const [loading, setLoading] = useState<boolean>(false)
 
-  const [expand, setExpand] = useState<boolean>(false)
+  const [expand, , expandToggle] = useUiExpand(itemData.id, false)
 
   // 判断路由，子窗口有些功能不展示
   const isChildWindow = useRef(isAuxOrChildWindow())
@@ -257,10 +258,6 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
       aiFilePath: isChildWindow.current ? '' : data.tool.dirPath,
     }
   }, [renderNum])
-
-  const expandToggle = useMemoizedFn(() => {
-    setExpand((v) => !v)
-  })
 
   const httpFlowDataCount = useCreation(() => {
     return data.httpFlowDataCount

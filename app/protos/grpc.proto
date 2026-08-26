@@ -9507,6 +9507,19 @@ message SingleManualHijackControlMessage{
   bytes Request = 9;
   bytes Response = 10;
   bytes Payload = 11;
+
+  // Stream a local replacement file for an oversized request. Chunks are
+  // written to an engine-side temporary file and applied when the hijacked
+  // request is forwarded, so the renderer never loads the full file.
+  bool IsLargeRequestFileChunk = 12;
+  int32 LargeRequestPartIndex = 13;
+  string LargeRequestFilename = 14;
+  bytes LargeRequestFileData = 15;
+  bool LargeRequestFileStart = 16;
+  bool LargeRequestFileEOF = 17;
+  bool LargeRequestFileCancel = 18;
+  // Replace the complete request body instead of one multipart file part.
+  bool LargeRequestReplaceBody = 19;
 }
 
 message SingleManualHijackInfoMessage{

@@ -19,10 +19,12 @@ export interface AIGroupStreamCardHeardWrapperProps {
 export interface AIGroupStreamCardListWrapperProps {
   expand: boolean
   token: string
+  isThought?: boolean
 }
 
 export interface AIGroupStreamCardListProps {
   expand: boolean
   childrenTokens: string[]
   rendItem?: (token: string, index: number) => ReactNode
+  isThought?: boolean
 }

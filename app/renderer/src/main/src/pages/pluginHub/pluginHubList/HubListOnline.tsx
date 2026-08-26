@@ -47,11 +47,11 @@ import type { API } from '@/services/swagger/resposeType'
 import { SolidPluscircleIcon } from '@/assets/icon/solid'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
+import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import {
   PluginGroup,
   TagsAndGroupRender,
   type YakFilterRemoteObj,
-  YakitGetOnlinePlugin,
 } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import { isCommunityEdition } from '@/utils/envfile'
 import { FilterPopoverBtn } from '@/pages/plugins/funcTemplate'

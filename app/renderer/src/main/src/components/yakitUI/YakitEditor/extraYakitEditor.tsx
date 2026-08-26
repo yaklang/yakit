@@ -306,7 +306,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
       // 只展示最基础菜单
       return {}
     }
-    const originValueBytes = StringToUint8Array(originValue)
     let menuItems: OtherMenuListProps = {
       ...(contextMenu || {}),
       copyActions: {
@@ -555,6 +554,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             return
           }
           try {
+            // 仅在菜单真正需要时再转字节，避免大包每次 originValue 变化都全量 StringToUint8Array
+            const originValueBytes = StringToUint8Array(originValue)
             if (readOnly && originValueBytes) {
               showResponseViaResponseRaw(originValueBytes)
               return

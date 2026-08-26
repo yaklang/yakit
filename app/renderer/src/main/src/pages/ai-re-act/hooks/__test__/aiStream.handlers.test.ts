@@ -8,6 +8,7 @@ vi.mock('../persist/contentPersistHelper', () => ({
   persistToolResultIfTerminal: vi.fn(),
   upsertSessionContent: vi.fn(),
   setSessionReferencePersist: vi.fn(),
+  persistGetSessionContent: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../AIAgentLogEmitter', () => ({
@@ -16,7 +17,7 @@ vi.mock('../AIAgentLogEmitter', () => ({
 }))
 
 describe('aiStream handlers', () => {
-  it('D4: stream_start creates STREAM content', () => {
+  it('D4: stream_start creates STREAM content', async () => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(
         'stream_start',
@@ -24,12 +25,13 @@ describe('aiStream handlers', () => {
         { NodeId: 're-act-loop-thought', EventUUID: 'eu-1' },
       ),
     })
-    aiStreamDataHandlers.stream_start(req)
+    await aiStreamDataHandlers.stream_start(req)
     const found = [...req.rawData.contents.values()].find((c) => c.type === AIChatQSDataTypeEnum.STREAM)
     expect(found).toBeTruthy()
+    expect(found?.stageSettled).toBe(false)
   })
 
-  it('D4: stream-finished ends stream by event_writer_id', () => {
+  it('D4: stream-finished ends stream by event_writer_id', async () => {
     const req = makeHandlerRequest({
       res: makeGrpcJsonRes(
         'structured',
@@ -51,7 +53,7 @@ describe('aiStream handlers', () => {
         content: 'hi',
       },
     } as any)
-    aiStreamDataHandlers['stream-finished'](req)
+    await aiStreamDataHandlers['stream-finished'](req)
     const stream = req.rawData.contents.get('ew-1') as any
     expect(stream.data.status).toBe('end')
   })
@@ -60,7 +62,7 @@ describe('aiStream handlers', () => {
     expect(typeof aiStreamDataHandlers.reference_material).toBe('function')
   })
 
-  it('D4: stream handler is registered', () => {
+  it('D4: stream handler hydrates/rebuilds when contents missing', async () => {
     expect(typeof aiStreamDataHandlers.stream).toBe('function')
     const req = makeHandlerRequest({
       res: makeGrpcRes({
@@ -70,7 +72,10 @@ describe('aiStream handlers', () => {
         Content: new TextEncoder().encode('x'),
       }),
     })
-    // without prior start may no-op; ensure no throw
-    expect(() => aiStreamDataHandlers.stream(req)).not.toThrow()
+    await aiStreamDataHandlers.stream(req)
+    const stream = req.rawData.contents.get('eu-1') as any
+    expect(stream?.type).toBe(AIChatQSDataTypeEnum.STREAM)
+    expect(stream.data.content).toBe('x')
+    expect(stream.stageSettled).toBe(false)
   })
 })

@@ -16,6 +16,8 @@ export interface UseTypedStreamOptions {
    * 同样必须是 getter，理由同 getContent。
    */
   getStatus: () => 'start' | 'end' | undefined
+  /** 关闭打字机，内容即时对齐，仍会探测流式增长 */
+  disableTyping?: boolean
   /** 单步最小输出字符数（下限），默认 2 */
   step?: number
   /** 单步最大输出字符数（上限，保证每次渲染长度不会突然过大），默认 18 */
@@ -60,7 +62,15 @@ export interface UseTypedStreamResult {
  *   原先靠 300ms setInterval poll 拉起，导致"追上→静默最多 300ms→突然输出一大段"的卡顿；心跳把探测延迟降到 interval。
  */
 export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamResult {
-  const { getContent, getStatus, step = 2, maxStep = 18, interval = 30, catchUpFrames = 9 } = options
+  const {
+    getContent,
+    getStatus,
+    disableTyping = false,
+    step = 2,
+    maxStep = 18,
+    interval = 30,
+    catchUpFrames = 9,
+  } = options
 
   const [displayed, setDisplayed] = useState<string>(() => getContent())
   const [isTyping, setIsTyping] = useState<boolean>(false)
@@ -82,10 +92,12 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
   const maxStepRef = useRef(maxStep)
   const intervalRef = useRef(interval)
   const catchUpFramesRef = useRef(catchUpFrames)
+  const disableTypingRef = useRef(disableTyping)
   stepRef.current = step
   maxStepRef.current = maxStep
   intervalRef.current = interval
   catchUpFramesRef.current = catchUpFrames
+  disableTypingRef.current = disableTyping
 
   // 实时读最新内容与状态（通过 getter 读活属性，无 clone）
   const readLatest = useMemoizedFn((): { content: string; status: 'start' | 'end' | undefined } => {
@@ -117,6 +129,16 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
       timerRef.current = null
       const { content, status } = readLatest()
       if (status === 'end') finishedRef.current = true
+
+      if (disableTypingRef.current) {
+        alignToFull(content)
+        if (finishedRef.current) {
+          setTyping(false)
+          return
+        }
+        scheduleStep()
+        return
+      }
 
       const total = content.length
       const len = displayedLenRef.current
@@ -172,6 +194,14 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
     if (finishedRef.current) {
       alignToFull(initial.content)
       return
+    }
+
+    if (disableTypingRef.current) {
+      alignToFull(initial.content)
+      scheduleStep()
+      return () => {
+        clearTimer()
+      }
     }
 
     // 先跑一帧（挂载即可能已有积压）；打字追上后由 scheduleStep 自身心跳保持探测，

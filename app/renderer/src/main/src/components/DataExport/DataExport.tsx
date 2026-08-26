@@ -1,8 +1,8 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Space, Pagination, Checkbox, Row, Col } from 'antd'
-import { LoadingOutlined } from '@ant-design/icons'
-import { export_json_to_excel, type CellSetting } from './toExcel'
+import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
+import type { CellSetting, ExcelJsonProps } from './toExcel'
 import { failed } from '../../utils/notification'
 import { genDefaultPagination, type PaginationSchema, type QueryGeneralResponse } from '../../pages/invoker/schema'
 import { useMemoizedFn } from 'ahooks'
@@ -112,6 +112,15 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
     return fileName || t('YakitRoute.portAssets')
   }, [i18nRefresh, fileName])
 
+  /** toExcel 内部已 toast 写文件失败；此处只兜底 toExcel chunk 加载失败 */
+  const runExportExcel = useMemoizedFn((params: ExcelJsonProps) => {
+    return import('./toExcel')
+      .then(({ export_json_to_excel }) => export_json_to_excel(params))
+      .catch((e) => {
+        failed(t('YakitNotification.exportFailed', { error: `${e}` }))
+      })
+  })
+
   const toExcel = useMemoizedFn((query = { Limit: pageSize, Page: 1 }) => {
     setLoading(true)
     getData(query as any)
@@ -125,7 +134,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
 
           if (totalCellNumber < maxCellNumber && response.Total <= pageSize && chunks.length === 1) {
             // 单元格数量小于最大单元格数量 或者导出内容小于90M，直接导出
-            export_json_to_excel({
+            runExportExcel({
               header: header,
               data: exportData,
               filename: `${fileNameMemo} 1-${exportData.length}`,
@@ -183,15 +192,14 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
       page: pagination.Pagination.Page,
     })} ${exportNumber.current && firstIndx + 1}-${lastIndex})`
     const list: Array<string[]> = exportDataBatch.current?.slice(firstIndx, lastIndex + 1)
-    export_json_to_excel({
+    runExportExcel({
       header: headerExcel.current,
       data: list,
       filename: name,
       autoWidth: true,
       bookType: 'xlsx',
       optsSingleCellSetting: optsCell.current,
-    })
-    setSelectItem(undefined)
+    }).finally(() => setSelectItem(undefined))
   }
 
   const onChange = (page, pageSize) => {
@@ -203,15 +211,14 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
   }
 
   const onSplitExport = useMemoizedFn((data, start, end) => {
-    export_json_to_excel({
+    runExportExcel({
       header: headerExcel.current,
       data: data,
       filename: `${fileNameMemo} ${start}-${end}`,
       autoWidth: true,
       bookType: 'xlsx',
       optsSingleCellSetting: optsCell.current,
-    })
-    setSelectItem(undefined)
+    }).finally(() => setSelectItem(undefined))
   })
   return (
     <>

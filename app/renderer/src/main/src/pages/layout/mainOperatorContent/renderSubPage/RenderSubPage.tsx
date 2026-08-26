@@ -29,7 +29,9 @@ const RenderSubPagePanel = React.memo(
       }}
       className={styles['page-body']}
     >
-      <PageItem routeKey={route} params={subItem.pageParams} />
+      <React.Suspense fallback={null}>
+        <PageItem routeKey={route} params={subItem.pageParams} />
+      </React.Suspense>
     </div>
   ),
   (prev, next) =>

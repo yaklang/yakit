@@ -24,7 +24,7 @@ import {
 } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
 import type { HTTPFuzzerTaskDetail } from './HTTPFuzzerHistory'
-import type { HotPatchTempItem } from './HTTPFuzzerHotPatch'
+import type { HotPatchTempItem } from './hotPatchShared'
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
 import { StringToUint8Array, Uint8ArrayToString } from '../../utils/str'
 import { PacketScanButton } from '@/pages/packetScanner/DefaultPacketScanGroup'
@@ -133,6 +133,7 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { WebFuzzerCasualReplaceReviewOverlay } from '@/pages/fuzzer/WebFuzzerCasualReplaceReviewOverlay'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import type { WebFuzzerType } from './WebFuzzerPage/WebFuzzerPageType'
+import type { AdvancedConfigShowProps } from './fuzzerCacheData'
 import cloneDeep from 'lodash/cloneDeep'
 import { useGlobalHotPatch, useGlobalHotPatchTag } from '@/store/globalHotPatch'
 
@@ -214,7 +215,7 @@ const HTTPFuzzerHotPatchSidebar = React.lazy(() =>
 )
 /** 与侧栏同模块：工具栏模板入口也懒加载，避免静态 import 把整份 HotPatch 打进主 chunk */
 const HotCodeTemplate = React.lazy(() =>
-  import('./HTTPFuzzerHotPatch').then(({ HotCodeTemplate }) => ({
+  import('./hotPatchShared').then(({ HotCodeTemplate }) => ({
     default: HotCodeTemplate,
   })),
 )
@@ -274,7 +275,8 @@ const logger = (log: LoggerData) => {
   ipcRenderer.invoke('add-log', log)
 }
 
-export type AdvancedConfigShowProps = Record<Exclude<WebFuzzerType, 'sequence' | 'concurrency'>, boolean>
+export type { AdvancedConfigShowProps, FuzzerCacheDataProps } from './fuzzerCacheData'
+export { getFuzzerCacheData } from './fuzzerCacheData'
 export interface ShareValueProps {
   /**高级配置显示/隐藏 */
   advancedConfigShow: AdvancedConfigShowProps
@@ -797,62 +799,6 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
         />
       ),
     })
-  })
-}
-
-export interface FuzzerCacheDataProps {
-  proxy: string[]
-  dnsServers: string[]
-  etcHosts: KVPair[]
-  advancedConfigShow: AdvancedConfigShowProps | null
-  resNumlimit: number
-  noSystemProxy: boolean
-  disableUseConnPool: boolean
-}
-/**获取fuzzer高级配置中得 proxy dnsServers etcHosts resNumlimit*/
-export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
-  return new Promise(async (resolve, rejects) => {
-    try {
-      const [
-        proxyResult,
-        dnsServersResult,
-        etcHostsResult,
-        advancedConfigShowResult,
-        resNumlimitResult,
-        noSystemProxyResult,
-        disableUseConnPoolResult,
-      ] = await Promise.allSettled([
-        getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY),
-        getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config),
-        getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config),
-        getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow),
-        getRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit),
-        getRemoteValue(FuzzerRemoteGV.FuzzerNoSystemProxy),
-        getRemoteValue(FuzzerRemoteGV.FuzzerDisableUseConnPool),
-      ])
-
-      const proxy = proxyResult.status === 'fulfilled' ? proxyResult.value : ''
-      const dnsServers = dnsServersResult.status === 'fulfilled' ? dnsServersResult.value : ''
-      const etcHosts = etcHostsResult.status === 'fulfilled' ? etcHostsResult.value : ''
-      const advancedConfigShow = advancedConfigShowResult.status === 'fulfilled' ? advancedConfigShowResult.value : ''
-      const resNumlimit = resNumlimitResult.status === 'fulfilled' ? resNumlimitResult.value : ''
-      const noSystemProxy = noSystemProxyResult.status === 'fulfilled' ? noSystemProxyResult.value : ''
-      const disableUseConnPool = disableUseConnPoolResult.status === 'fulfilled' ? disableUseConnPoolResult.value : ''
-
-      const value: FuzzerCacheDataProps = {
-        proxy: proxy ? proxy.split(',') : [],
-        dnsServers: dnsServers ? JSON.parse(dnsServers) : [],
-        etcHosts: etcHosts ? JSON.parse(etcHosts) : [],
-        advancedConfigShow: advancedConfigShow ? JSON.parse(advancedConfigShow) : null,
-        resNumlimit: resNumlimit ? JSON.parse(resNumlimit) : DefFuzzerTableMaxData,
-        noSystemProxy: noSystemProxy === 'true',
-        disableUseConnPool: disableUseConnPool === 'true',
-      }
-      resolve(value)
-    } catch (error) {
-      rejects(error)
-      yakitFailed(error + '')
-    }
   })
 }
 

@@ -116,6 +116,8 @@ export interface YakitEditorProps {
   onFoldBinaryFuzztagChange?: (enabled: boolean) => void
   /** @name 外部接管解码后的操作，现用于history编解码呼出 */
   execAutoDecodeCallback?: () => void
+  /** @name 是否显示 glyph 栏（默认关闭，避免其它编辑器多出一列 gutter） */
+  glyphMargin?: boolean
 }
 
 /**

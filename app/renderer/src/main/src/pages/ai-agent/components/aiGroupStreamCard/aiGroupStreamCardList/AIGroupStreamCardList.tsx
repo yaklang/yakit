@@ -8,7 +8,7 @@ import styles from './AIGroupStreamCardList.module.scss'
 const BOTTOM_THRESHOLD = 10
 
 const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props) => {
-  const { expand, childrenTokens, rendItem } = props
+  const { expand, childrenTokens, rendItem, isThought } = props
 
   const contentRef = useRef<HTMLDivElement>(null)
   const [isScroll, setIsScroll] = useState(false)
@@ -18,6 +18,10 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
   useClickAway(() => {
     if (isScroll) setIsScroll(false)
   }, contentRef)
+
+  useEffect(() => {
+    if (!expand) setIsScroll(false)
+  }, [expand])
 
   /** 监听当前容器得滚动条是否在底部 */
   useEffect(() => {
@@ -69,16 +73,22 @@ const AIGroupStreamCardList: React.FC<AIGroupStreamCardListProps> = memo((props)
     <div
       className={classNames(styles['content'], {
         [styles.expand]: expand,
-        [styles.noMask]: isScroll,
+        [styles.noMask]: isScroll || isThought,
+        [styles['content-thought']]: isThought,
+        [styles['content-thought-scroll']]: isThought && isScroll,
       })}
     >
       <div
         ref={contentRef}
         onClick={() => setIsScroll(true)}
         className={styles['content-inner']}
-        style={{
-          overflow: isScroll ? 'overlay' : 'hidden',
-        }}
+        style={
+          isThought
+            ? undefined
+            : {
+                overflow: isScroll ? 'overlay' : 'hidden',
+              }
+        }
       >
         {childrenTokens.map((token, index) =>
           rendItem ? rendItem(token, index) : <StaticChatContent key={token} token={token} groupIndex={index} />,

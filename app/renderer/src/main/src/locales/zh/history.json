@@ -118,6 +118,10 @@
     "filter": "筛选",
     "greaterThanZeroOnly": "仅看大于0"
   },
+  "SearchInputTableWrapper": {
+    "search": "搜索",
+    "placeholder": "支持输入 1,2,3，多个用逗号分隔"
+  },
   "HistorySearch": {
     "keyword": "关键字",
     "request": "请求",

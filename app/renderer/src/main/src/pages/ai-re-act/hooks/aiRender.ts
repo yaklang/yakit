@@ -411,6 +411,11 @@ export interface AIChatQSDataBase<T extends string, U> {
   reference?: string[]
   /** 父集合组的key/token(如果被收集到集合组中, 则存在该字段) */
   parentGroupToken?: string
+  /**
+   * 阶段性完成。false=热数据，不可从内存淘汰；true=可按视窗 evict。
+   * 缺字段（IDB 旧行）视为 true。
+   */
+  stageSettled?: boolean
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, string>
@@ -590,6 +595,12 @@ export interface ChatStoreState {
   /** 任务详情数据触发计数，对应 taskDetailsMap 的 todoList 更新 */
   chatTodoListUpdate: number
   currentPlan: CurrentExecTaskTree
+
+  /**
+   * 虚拟列表卡片展开态（纯 UI，不落库）
+   * key 为 token；未出现表示用户未手动改过，组件使用各自默认值
+   */
+  uiExpandMap: Record<string, boolean>
   // #endregion
 
   /** UI上的头部的card横向滚动列表数据 */
@@ -661,6 +672,7 @@ export interface ChatStoreState {
         | 'tasks'
         | 'chatElements'
         | 'chatTodoListUpdate'
+        | 'uiExpandMap'
       >
     >,
   ) => void

@@ -1,6 +1,6 @@
 {
   "name": "main",
-  "version": "2.08.14",
+  "version": "2.08.25",
   "private": true,
   "dependencies": {
     "@ant-design/compatible": "^1.0.8",
@@ -36,7 +36,7 @@
     "@uiw/react-md-editor": "^3.6.5",
     "@viz-js/viz": "^3.7.0",
     "@xterm/addon-fit": "^0.10.0",
-    "@yakit-libs/color": "^1.2.0",
+    "@yakit-libs/color": "1.4.1",
     "ahooks": "3.7.9",
     "ali-react-table": "2.6.1",
     "antd": "4.21.7",
@@ -112,6 +112,7 @@
   },
   "scripts": {
     "cli": "node scripts/cli.js",
+    "generate:theme": "node scripts/generate-theme-css.cjs",
     "electron-render": "env-cmd -e noBrouser,devTool -f ./.env-cmdrc vite",
     "electron-render-enterprise": "env-cmd -e noBrouser,devTool,enterprise -f ./.env-cmdrc vite --mode enterprise",
     "electron-render-simple-enterprise": "env-cmd -e noBrouser,devTool,simpleEE -f ./.env-cmdrc vite --mode simpleEE",

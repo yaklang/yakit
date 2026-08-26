@@ -379,7 +379,11 @@
     "insertFuzzDictionaryTag": "Insert Fuzz Dictionary Tag",
     "insertHotReloadTag": "Insert Hot Reload Tag",
     "insertFileTag": "Insert File Tag",
-    "copyUrlFailed": "Failed to copy URL: The URL may be incomplete if it contains Fuzz tags"
+    "copyUrlFailed": "Failed to copy URL: The URL may be incomplete if it contains Fuzz tags",
+    "replacedWithFileFuzztag": "Replaced with file fuzztag: {{filename}}",
+    "clickToReplaceFileFuzztag": "Click to replace with a file fuzztag",
+    "replacedChipHint": "[Replaced: {{filename}}]",
+    "clickToReplaceChipHint": "[Click to replace with a file fuzztag]"
   },
   "EncodeTag": {
     "encodeTagIntro": "Introduction to Encode Tags"

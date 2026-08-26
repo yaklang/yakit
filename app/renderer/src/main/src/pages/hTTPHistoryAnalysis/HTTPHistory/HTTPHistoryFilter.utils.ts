@@ -195,6 +195,7 @@ export const buildHTTPFlowQueryRequestParams = (
   delete requestParams['UpdatedAt-time']
   delete requestParams.ContentType
   delete requestParams.bodyLength
+  delete requestParams.idFilter
 
   const tabQueryParams = { ...requestParams }
   delete tabQueryParams.Pagination
