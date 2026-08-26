@@ -64,6 +64,7 @@ import {
 import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
+import { subscribeDigitalEmployeeQuickNavigation } from '@/pages/digitalEmployee/quickNavigation'
 import { CheckIcon, RemoveIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
 import { RouteToPageProps } from '../publicMenu/PublicMenu'
 import { SubscribeCloseType, YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
@@ -823,8 +824,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
    */
   useEffect(() => {
     emiter.on('menuOpenPage', menuOpenPage)
+    const unsubscribeQuickNavigation = subscribeDigitalEmployeeQuickNavigation((route) => {
+      menuOpenPage(JSON.stringify({ route }))
+    })
     return () => {
       emiter.off('menuOpenPage', menuOpenPage)
+      unsubscribeQuickNavigation()
     }
   }, [])
 

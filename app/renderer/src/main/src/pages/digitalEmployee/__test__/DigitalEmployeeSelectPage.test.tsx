@@ -11,7 +11,7 @@ import { DIGITAL_EMPLOYEES } from '../config'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
 import type { AIForge } from '@/pages/ai-agent/type/forge'
-import emiter from '@/utils/eventBus/eventBus'
+import { subscribeDigitalEmployeeQuickNavigation } from '../quickNavigation'
 
 describe('DigitalEmployeeSelectPage', () => {
   afterEach(() => {
@@ -130,8 +130,9 @@ describe('DigitalEmployeeSelectPage', () => {
 
     const MainContentProbe = () => {
       useEffect(() => {
-        emiter.on('menuOpenPage', menuOpenPage)
-        return () => emiter.off('menuOpenPage', menuOpenPage)
+        return subscribeDigitalEmployeeQuickNavigation((route) => {
+          menuOpenPage(JSON.stringify({ route }))
+        })
       }, [])
       return <div>主页面已挂载</div>
     }
