@@ -7,8 +7,9 @@
 ## 修改
 
 - 将 6 个静态快捷卡片改为可操作按钮。
-- 复用主界面 `menuOpenPage` 事件，不增加新的页面路由协议。
-- 选择页显示期间主内容及菜单监听器尚未挂载，并且主内容受 `Suspense` 懒加载；由 `quickNavigation.ts` 保存一次性待跳路由，自动确认当前员工，等真实 `MainOperatorContent` 注册后领取并直接开页。
+- 复用主界面实际开页逻辑，不增加新的页面路由协议。
+- 选择页显示期间主内容尚未挂载，并且主内容受 `Suspense` 懒加载；由 `quickNavigation.ts` 保存一次性待跳路由并自动确认当前员工。
+- `MainOperatorContent` 会在挂载时把当前标签初始化为 `AI_Agent`，因此快捷目标改为在这段默认初始化之后领取并打开，避免目标页面再次被员工页覆盖。
 - 路由映射：
   - 智能体广场 → `YakitRoute.AI_Forge`
   - 知识库 → `YakitRoute.AI_REPOSITORY`
@@ -40,10 +41,11 @@
 - 功能提交：`9b3e3b4 feat: enable digital employee quick navigation`
 - Gate 时序修复：`6217c82 fix: defer quick navigation until menu mount`
 - 懒加载回放修复：`35e239f fix: replay employee quick navigation after lazy mount`
+- 初始化覆盖修复：`e4dbfac fix: apply employee quick route after menu initialization`
 - 安全回滚：
 
 ```powershell
-git revert 35e239f 6217c82 9b3e3b4
+git revert e4dbfac 35e239f 6217c82 9b3e3b4
 ```
 
 使用 `git revert` 会保留历史并生成反向提交，适合当前仍有其他未提交品牌改动的工作区；不要使用 `git reset --hard`。

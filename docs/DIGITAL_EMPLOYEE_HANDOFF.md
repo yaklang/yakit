@@ -57,9 +57,9 @@
 
 ### 2.3 选择页快捷导航（2026-08-26）
 
-快捷导航复用主界面已有的 `menuOpenPage` 事件，不新增第二套路由状态。选择页显示时，负责接收该事件的主页面尚未挂载，因此不能在选择页内直接发事件，也不能依赖 `setTimeout(0)` 猜测挂载时序。
+快捷导航复用主界面已有的菜单开页逻辑，不新增第二套页面路由。选择页显示时，主页面尚未挂载，因此不能在选择页内直接发事件，也不能依赖 `setTimeout(0)` 猜测挂载时序。
 
-正确链路使用 `quickNavigation.ts` 的一次性可回放请求：`DigitalEmployeeGate.tsx` 先确认员工并提交目标路由；如果 `MainOperatorContent` 已挂载则立即开页，否则保存目标，等懒加载完成、真实菜单订阅者注册时领取并直接调用开页逻辑。当前映射必须与 `routes/newRoute.tsx` 中的实际 Memfit 菜单保持一致：
+正确链路使用 `quickNavigation.ts` 的一次性目标：`DigitalEmployeeGate.tsx` 先确认员工并保存目标路由；懒加载完成后，`MainOperatorContent` 先执行默认标签初始化，再领取目标并调用实际开页逻辑。领取必须放在默认 `setCurrentTabKey(AI_Agent)` 之后，否则初始化 effect 会把已经成功的跳转覆盖回数字员工页。当前映射必须与 `routes/newRoute.tsx` 中的实际 Memfit 菜单保持一致：
 
 | 快捷入口 | 目标路由 |
 | --- | --- |
@@ -72,7 +72,7 @@
 
 “数据库”是菜单分组，不是可打开页面，因此快捷入口使用其首个具体子菜单“流量历史”。快捷项使用原生 `button`，保留鼠标、键盘焦点和按下反馈。
 
-回归注意：`props.children` 外还有 `Suspense` 懒加载，仅依赖 `setTimeout` 或 Gate effect 都可能早于 `MainOperatorContent` 挂载。如果以后把发事件逻辑重新下放到 `DigitalEmployeeSelectPage`，会复现“无论点哪个入口都只进入数字员工页”的问题。
+回归注意：`props.children` 外还有 `Suspense` 懒加载，而且 `MainOperatorContent` 挂载后还会初始化默认标签。仅依赖 `setTimeout`、Gate effect 或“监听器已挂载”都不够；快捷目标必须在默认标签初始化之后消费，否则会复现“无论点哪个入口都只进入数字员工页”的问题。
 
 ## 3. 主要文件
 
@@ -139,7 +139,7 @@
 
 2026-08-26 快捷导航完成后：
 
-- `DigitalEmployeeSelectPage.test.tsx`：6 项测试全部通过；除逐项检查 6 个入口映射外，还覆盖“请求先产生、懒加载主内容后订阅并领取路由”的集成场景。
+- `DigitalEmployeeSelectPage.test.tsx`：6 项测试全部通过；除逐项检查 6 个入口映射外，还覆盖“先初始化 `AI_Agent`、再使用快捷目标覆盖”的顺序场景。
 - `tsc --noEmit`：通过。
 - `git diff --check`：通过。
 - 本地开发服务热更新编译成功，`http://localhost:3000` 返回 200；编译日志仅保留仓库已有 warning。
@@ -211,7 +211,8 @@ yarn start-electron
 - 2026-08-26 快捷导航功能提交：`9b3e3b4 feat: enable digital employee quick navigation`。
 - 2026-08-26 Gate 时序修复提交：`6217c82 fix: defer quick navigation until menu mount`。
 - 2026-08-26 懒加载回放修复提交：`35e239f fix: replay employee quick navigation after lazy mount`。
-- 安全回滚完整快捷导航功能：`git revert 35e239f 6217c82 9b3e3b4`（按新到旧顺序）。该命令会生成反向提交，不会覆盖工作区中的其他未提交改动。
+- 2026-08-26 初始化覆盖修复提交：`e4dbfac fix: apply employee quick route after menu initialization`。
+- 安全回滚完整快捷导航功能：`git revert e4dbfac 35e239f 6217c82 9b3e3b4`（按新到旧顺序）。该命令会生成反向提交，不会覆盖工作区中的其他未提交改动。
 - 本交接生成前最新已推送提交：`d368069 fix: sharpen digital employee visual assets`。
 - 已推送的关键提交：
   - `acaae69 feat: initialize AI SenSo digital employee experience`

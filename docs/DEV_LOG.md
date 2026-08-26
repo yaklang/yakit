@@ -17,15 +17,16 @@
 ### 数字员工选择页快捷导航接入实际菜单
 
 - **菜单对齐**：快捷入口调整为智能体广场、知识库、记忆库、工具库、插件仓库和流量历史，与 Memfit 实际菜单名称一致
-- **跳转机制**：复用已有 `menuOpenPage` 事件和 `YakitRoute`，点击后由主界面打开或切换到目标页面
-- **时序修复**：选择页期间主菜单监听器尚未挂载，且主内容外还有 `Suspense` 懒加载；现由 `quickNavigation.ts` 保存待跳路由，真实 `MainOperatorContent` 注册后领取并直接开页，修复所有入口都停在数字员工页的问题
+- **跳转机制**：复用已有 `YakitRoute` 和主菜单开页函数，点击后由主界面打开或切换到目标页面
+- **最终时序修复**：选择页期间主菜单尚未挂载，且 `MainOperatorContent` 自身的初始化 effect 会在早期跳转之后再次选中 `AI_Agent`。现由 `quickNavigation.ts` 只保存一次性目标，`MainOperatorContent` 完成默认页初始化后再领取并开页，不再通过菜单订阅时机回放
 - **数据库入口**：数据库是菜单分组且没有独立路由，因此快捷入口指向首个可访问子页面“流量历史”
 - **可访问性**：快捷项由静态容器改为原生按钮，补充键盘焦点和按下反馈
-- **验证**：选择页 6 项测试通过，其中新增 Gate 挂载顺序集成测试；TypeScript 检查和 `git diff --check` 通过；本地开发服务返回 HTTP 200
+- **验证**：选择页 6 项测试通过，其中明确覆盖“先初始化数字员工页、再以快捷目标覆盖”的执行顺序；TypeScript 检查和 `git diff --check` 通过；本地开发服务返回 HTTP 200
 - **功能提交**：`9b3e3b4 feat: enable digital employee quick navigation`
 - **时序修复提交**：`6217c82 fix: defer quick navigation until menu mount`
 - **懒加载回放修复**：`35e239f fix: replay employee quick navigation after lazy mount`
-- **回滚**：执行 `git revert 35e239f 6217c82 9b3e3b4`，按新到旧顺序安全撤销完整功能，不影响其他未提交修改
+- **初始化覆盖修复**：`e4dbfac fix: apply employee quick route after menu initialization`
+- **回滚**：执行 `git revert e4dbfac 35e239f 6217c82 9b3e3b4`，按新到旧顺序安全撤销完整功能，不影响其他未提交修改
 
 ## 2026-07-30
 
