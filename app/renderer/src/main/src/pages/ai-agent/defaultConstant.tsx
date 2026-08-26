@@ -12,6 +12,7 @@ import {
   OutlinePointerIcon,
   OutlineEarOffIcon,
   OutlineAIIcon,
+  OutlineCalendarIcon,
 } from '@/assets/icon/outline'
 import type { YakitSideTabProps, YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { genDefaultPagination, type PaginationSchema } from '../invoker/schema'
@@ -54,6 +55,7 @@ export enum AIAgentTabListEnum {
   AI_Model = 'AIModel',
   MCP = 'mcp',
   KnowledgeBase = 'knowledgeBase',
+  Scheduled = 'scheduled',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
   {
@@ -62,6 +64,7 @@ export const AiAgentTabList: YakitTabsProps[] = [
     icon: <ColorsChatIcon className="ai-agent-session-tab-icon" />,
   },
   { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <OutlineCogIcon /> },
+  { value: AIAgentTabListEnum.Scheduled, label: 'AIAgentTabs.scheduled', icon: <OutlineCalendarIcon /> },
   // {value: AIAgentTabListEnum.Forge_Name, label: "AIAgentTabs.skill", icon: <OutlineTemplateIcon />},
   // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},
   { value: AIAgentTabListEnum.AI_Model, label: 'AiAgengt.aiModel', icon: <OutlineChipIcon /> },

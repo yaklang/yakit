@@ -90,6 +90,7 @@ interface SessionDataPayload {
   payload?: AISession
   updates?: Partial<AISession>
   sessionId?: string
+  selectFirst?: boolean
 }
 
 /** 向对话框组件进行事件触发的通信 */
@@ -330,7 +331,11 @@ const HistoryChat = memo(
               await dispatcher.refreshSession?.(payload.sessionId)
             } else {
               handleResetSessions()
-              await dispatcher.loadHistoryData?.(true)
+              const total = await dispatcher.loadHistoryData?.(true)
+              if (payload?.selectFirst && total && total > 0) {
+                const sessions = dispatcher.getSessions?.() || []
+                setActiveChat?.(sessions[0])
+              }
             }
             break
           case 'loadNextPage':
