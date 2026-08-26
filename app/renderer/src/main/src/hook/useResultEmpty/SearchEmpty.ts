@@ -144,7 +144,7 @@ export const useEmptyImage = (type: EmptyImageType) => {
 
     switch (env) {
       case 'irify':
-      case 'irify-enterprise':
+      case 'irifyEE':
         map = irifyMap
         break
 

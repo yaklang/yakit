@@ -1,13 +1,27 @@
-import { defineConfig } from 'vite'
+import { execFileSync } from 'node:child_process'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 
+function generateThemeCssPlugin(): Plugin {
+  return {
+    name: 'generate-theme-css',
+    config() {
+      execFileSync(process.execPath, [path.resolve(rootDir, 'scripts/generate-theme-css.cjs')], {
+        stdio: 'inherit',
+        cwd: rootDir,
+      })
+    },
+  }
+}
+
 export default defineConfig({
   base: './',
-  plugins: [react()],
+  envPrefix: ['YAKIT_'],
+  plugins: [generateThemeCssPlugin(), react()],
   server: {
     host: true,
     port: 5173,

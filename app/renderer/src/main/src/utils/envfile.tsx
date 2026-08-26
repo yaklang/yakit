@@ -149,15 +149,13 @@ export const isEnterpriseOrSimpleEdition = () => {
 
 export const GetReleaseEdition = () => {
   switch (fetchEnv()) {
-    case 'enterprise':
-    case 'enpritrace':
+    case 'yakitEE':
       return PRODUCT_RELEASE_EDITION.EnpriTrace
-    case 'simple-enterprise':
-    case 'etraceagent':
+    case 'yakitSE':
       return PRODUCT_RELEASE_EDITION.EnpriTraceAgent
     case 'irify':
       return PRODUCT_RELEASE_EDITION.IRify
-    case 'irify-enterprise':
+    case 'irifyEE':
       return PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
     case 'breachtrace':
       return PRODUCT_RELEASE_EDITION.BreachTrace
@@ -170,9 +168,29 @@ export const GetReleaseEdition = () => {
 
 export const fetchEnv = () => {
   try {
-    return process.env.REACT_APP_PLATFORM
+    return process.env.YAKIT_EDITION
   } catch (e) {
     return ''
+  }
+}
+
+/** 引擎 Handshake 仍使用旧平台名 */
+export const toEngineHandshakeName = (edition = fetchEnv()) => {
+  switch (edition) {
+    case 'yakitEE':
+      return 'enterprise'
+    case 'yakitSE':
+      return 'simple-enterprise'
+    case 'irifyEE':
+      return 'irify-enterprise'
+    case 'irify':
+      return 'irify'
+    case 'memfit':
+      return 'memfit'
+    case 'breachtrace':
+      return 'breachtrace'
+    default:
+      return 'yakit'
   }
 }
 
@@ -187,8 +205,8 @@ yakitRelease.setEditionRaw(fetchEnv() || '').then(() => {
 
 /** 是否展示开发者工具 */
 export const showDevTool = () => {
-  const devTool = process.env.REACT_APP_DEVTOOL || ''
-  return devTool && devTool === 'true'
+  const devTool = process.env.YAKIT_DEVTOOLS || ''
+  return devTool === 'true'
 }
 
 export const globalUserLogout = () => {
@@ -245,13 +263,13 @@ export const getRemoteConfigBaseUrlGV = () => {
 
 export const GetConnectPort = () => {
   switch (fetchEnv()) {
-    case 'enterprise':
+    case 'yakitEE':
       return 9012
-    case 'simple-enterprise':
+    case 'yakitSE':
       return 9013
     case 'irify':
       return 9014
-    case 'irify-enterprise':
+    case 'irifyEE':
       return 9015
     case 'memfit':
       return 9016
@@ -263,12 +281,12 @@ export const GetConnectPort = () => {
 export const GetMainColor = (themeMode: Theme) => {
   switch (fetchEnv()) {
     case 'irify':
-    case 'irify-enterprise':
+    case 'irifyEE':
       return themeMode === 'dark' ? '#B081FF' : '#6A44A9'
     case 'memfit':
       return themeMode === 'dark' ? '#5E9DEA' : '#2E63B3'
-    case 'enterprise':
-    case 'simple-enterprise':
+    case 'yakitEE':
+    case 'yakitSE':
     case 'yakit':
       return '#F17F30'
   }

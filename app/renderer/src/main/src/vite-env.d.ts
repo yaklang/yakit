@@ -6,10 +6,10 @@
  * 资源模块（*.css / *.module.scss / *.svg / *?worker 等）已由 vite/client 提供，勿重复 declare。
  */
 interface ImportMetaEnv {
-  readonly REACT_APP_PLATFORM?: string
-  readonly REACT_APP_DEVTOOL?: string
-  readonly REACT_APP_REQUIRE_ENTERPRISE_LICENSE?: string
-  readonly REACT_APP_ANALYZER?: string
+  readonly YAKIT_EDITION?: string
+  readonly YAKIT_DEVTOOLS?: string
+  readonly YAKIT_REQUIRE_ENTERPRISE_LICENSE?: string
+  readonly YAKIT_ANALYZER?: string
 }
 
 interface ImportMeta {

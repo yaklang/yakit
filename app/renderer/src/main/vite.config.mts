@@ -11,33 +11,31 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const outDir = path.resolve(rootDir, '../../pages/main')
 
 /**
- * 将 REACT_APP_* / NODE_ENV 注入为 process.env（整体对象）。
- * 平台 PLATFORM：优先 process.env（env-cmd / CI 注入），再合并 loadEnv 文件值；
- * 发行版 PLATFORM 以 .env-cmdrc 为准，仅 .env.development 保留本地 DEVTOOL 等。
+ * 将 YAKIT_* / NODE_ENV 注入为 process.env（整体对象）。
+ * 发行版由 CLI 注入 YAKIT_EDITION，不再依赖 env-cmd / .env.[mode]。
  * 使用整体 define 而非逐键 `process.env.XXX`，避免与 vite-plugin-node-polyfills
- * 的 process shim 冲突导致标识符被拆坏（如残留裸标识符 REACT_APP_DEVTOOL）。
+ * 的 process shim 冲突导致标识符被拆坏。
  */
-function reactAppProcessEnvDefines(mode: string): Record<string, string> {
-  const fileEnv = loadEnv(mode, rootDir, ['REACT_APP_', 'VITE_'])
+function yakitProcessEnvDefines(mode: string): Record<string, string> {
+  const fileEnv = loadEnv(mode, rootDir, ['YAKIT_', 'REACT_APP_', 'VITE_'])
   const merged: Record<string, string> = {
     NODE_ENV: process.env.NODE_ENV || (mode === 'development' ? 'development' : 'production'),
     ...fileEnv,
   }
   for (const [key, value] of Object.entries(process.env)) {
     if (value == null || value === '') continue
-    if (key.startsWith('REACT_APP_') || key.startsWith('VITE_')) {
+    if (key.startsWith('YAKIT_') || key.startsWith('REACT_APP_') || key.startsWith('VITE_')) {
       merged[key] = value
     }
   }
   return {
-    // 字符串形式的对象字面量，使 process.env.FOO 变为 ({...}).FOO
     'process.env': JSON.stringify(merged),
   }
 }
 
-/** 构建分析：REACT_APP_ANALYZER=true */
+/** 构建分析：YAKIT_ANALYZER=true */
 function analyzerPlugin(): Plugin | null {
-  if (process.env.REACT_APP_ANALYZER !== 'true') return null
+  if (process.env.YAKIT_ANALYZER !== 'true') return null
   return visualizer({
     filename: path.resolve(outDir, 'stats.html'),
     open: true,
@@ -88,14 +86,14 @@ function noopAntdComponentStylePlugin(): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const sourcemap = process.env.GENERATE_SOURCEMAP === 'true'
+  const sourcemap = process.env.YAKIT_SOURCEMAP === 'true'
 
   return {
     root: rootDir,
     base: './',
     publicDir: 'public',
-    envPrefix: ['REACT_APP_', 'VITE_'],
-    define: reactAppProcessEnvDefines(mode),
+    envPrefix: ['YAKIT_', 'REACT_APP_', 'VITE_'],
+    define: yakitProcessEnvDefines(mode),
     plugins: [
       generateThemeCssPlugin(),
       noopAntdComponentStylePlugin(),
