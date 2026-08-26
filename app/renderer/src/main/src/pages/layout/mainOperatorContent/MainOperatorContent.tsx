@@ -64,7 +64,7 @@ import {
 import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
-import { subscribeDigitalEmployeeQuickNavigation } from '@/pages/digitalEmployee/quickNavigation'
+import { consumeDigitalEmployeeQuickNavigation } from '@/pages/digitalEmployee/quickNavigation'
 import { CheckIcon, RemoveIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
 import { RouteToPageProps } from '../publicMenu/PublicMenu'
 import { SubscribeCloseType, YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
@@ -824,12 +824,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
    */
   useEffect(() => {
     emiter.on('menuOpenPage', menuOpenPage)
-    const unsubscribeQuickNavigation = subscribeDigitalEmployeeQuickNavigation((route) => {
-      menuOpenPage(JSON.stringify({ route }))
-    })
     return () => {
       emiter.off('menuOpenPage', menuOpenPage)
-      unsubscribeQuickNavigation()
     }
   }, [])
 
@@ -2711,6 +2707,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const unFuzzerCacheData = useRef<any>(null)
   // web-fuzzer多开页面缓存数据、
   useEffect(() => {
+    const quickNavigationRoute = consumeDigitalEmployeeQuickNavigation()
+
     if (isEnterpriseEdition()) {
       // 不是社区版的时候，每次进来都需要清除页面数据中心数据和FuzzerSequence数据
       clearAllData()
@@ -2741,6 +2739,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
           yakitNotify('error', t('MainOperatorContent.SelectFirstMenuTabKeyFailed', { error: error + '' }))
         })
     }
+
+    // 数字员工选择页会先于主菜单挂载。必须在默认页初始化完成后再打开快捷目标，
+    // 否则上面的默认 AI_Agent 会覆盖用户点击的菜单。
+    if (quickNavigationRoute) {
+      extraOpenMenuPage({ route: quickNavigationRoute })
+    }
+
     // 开启fuzzer-tab页内数据的订阅事件
     if (unFuzzerCacheData.current) {
       unFuzzerCacheData.current()

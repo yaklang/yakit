@@ -11,10 +11,11 @@ import { DIGITAL_EMPLOYEES } from '../config'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcQueryAIForge } from '@/pages/ai-agent/grpc'
 import type { AIForge } from '@/pages/ai-agent/type/forge'
-import { subscribeDigitalEmployeeQuickNavigation } from '../quickNavigation'
+import { consumeDigitalEmployeeQuickNavigation } from '../quickNavigation'
 
 describe('DigitalEmployeeSelectPage', () => {
   afterEach(() => {
+    consumeDigitalEmployeeQuickNavigation()
     vi.restoreAllMocks()
     vi.mocked(grpcQueryAIForge).mockReset()
   })
@@ -125,14 +126,14 @@ describe('DigitalEmployeeSelectPage', () => {
     expect(screen.getByRole('button', { name: '下一页' })).toBeDisabled()
   })
 
-  it('opens a quick-navigation route after the gated main content mounts', async () => {
-    const menuOpenPage = vi.fn()
+  it('uses the quick-navigation route after the default employee page is initialized', async () => {
+    const setCurrentRoute = vi.fn()
 
     const MainContentProbe = () => {
       useEffect(() => {
-        return subscribeDigitalEmployeeQuickNavigation((route) => {
-          menuOpenPage(JSON.stringify({ route }))
-        })
+        setCurrentRoute(YakitRoute.AI_Agent)
+        const quickNavigationRoute = consumeDigitalEmployeeQuickNavigation()
+        if (quickNavigationRoute) setCurrentRoute(quickNavigationRoute)
       }, [])
       return <div>主页面已挂载</div>
     }
@@ -148,7 +149,9 @@ describe('DigitalEmployeeSelectPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '打开知识库' }))
 
     await waitFor(() => expect(screen.getByText('主页面已挂载')).toBeInTheDocument())
-    expect(menuOpenPage).toHaveBeenCalledWith(JSON.stringify({ route: YakitRoute.AI_REPOSITORY }))
+    expect(setCurrentRoute).toHaveBeenNthCalledWith(1, YakitRoute.AI_Agent)
+    expect(setCurrentRoute).toHaveBeenLastCalledWith(YakitRoute.AI_REPOSITORY)
+    expect(consumeDigitalEmployeeQuickNavigation()).toBeUndefined()
   })
 
   it('renders exactly one employee for each Forge returned by the backend', async () => {
