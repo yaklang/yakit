@@ -245,6 +245,44 @@ export declare namespace API {
      */
     searchTime: string
   }
+  export interface TouristGainResponse {
+    /**
+     * 日增量
+     */
+    dayNew: number
+    /**
+     * 日增率
+     */
+    dayGain: string
+    /**
+     * up 增 down 减
+     */
+    dayGainUpOrDown: string
+    /**
+     * 周增量
+     */
+    weekNew: number
+    /**
+     * 周增率
+     */
+    weekGain: string
+    /**
+     * up 增 down 减
+     */
+    weekGainUpOrDown: string
+    /**
+     * 月增量
+     */
+    monthNew: number
+    /**
+     * 月增率
+     */
+    monthGain: string
+    /**
+     * up 增 down 减
+     */
+    monthGainUpOrDown: string
+  }
   export interface TouristDetailWhere {
     /**
      * ip搜索
@@ -285,84 +323,9 @@ export declare namespace API {
      */
     loginTotal: number
     /**
-     * 日增量
-     */
-    dayNew: number
-    /**
-     * 日增率
-     */
-    dayGain: string
-    /**
-     * up 增 down 减
-     */
-    dayGainUpOrDown: string
-    /**
-     * 周增量
-     */
-    weekNew: number
-    /**
-     * 周增率
-     */
-    weekGain: string
-    /**
-     * up 增 down 减
-     */
-    weekGainUpOrDown: string
-    /**
-     * 月增量
-     */
-    monthNew: number
-    /**
-     * 月增率
-     */
-    monthGain: string
-    /**
-     * up 增 down 减
-     */
-    monthGainUpOrDown: string
-    /**
      * 机构总数
      */
     institutionTotal: number
-  }
-
-  export interface TouristGainResponse {
-    /**
-     * 日增量
-     */
-    dayNew: number
-    /**
-     * 日增率
-     */
-    dayGain: string
-    /**
-     * up 增 down 减
-     */
-    dayGainUpOrDown: string
-    /**
-     * 周增量
-     */
-    weekNew: number
-    /**
-     * 周增率
-     */
-    weekGain: string
-    /**
-     * up 增 down 减
-     */
-    weekGainUpOrDown: string
-    /**
-     * 月增量
-     */
-    monthNew: number
-    /**
-     * 月增率
-     */
-    monthGain: string
-    /**
-     * up 增 down 减
-     */
-    monthGainUpOrDown: string
   }
   export interface TouristActivityRateResponse {
     /**
@@ -519,6 +482,34 @@ export declare namespace API {
      * 0 待下发 1已下发 2 结束
      */
     status: number
+    /**
+     * 版本线
+     */
+    versionLine?: string
+    /**
+     * 投产类型
+     */
+    releaseType?: string
+    /**
+     * 系统中文名
+     */
+    sysChi?: string
+    /**
+     * 系统英文名
+     */
+    sysEng?: string
+    /**
+     * 测试经理
+     */
+    testManagers?: string
+    /**
+     * 开发机构名称
+     */
+    devOrgName?: string
+    /**
+     * 开发机构ID(去重校验)
+     */
+    devOrgId?: string
   }
   export interface SystemLogWhere {
     userName?: string
@@ -1385,6 +1376,7 @@ export declare namespace API {
     data: Operation[]
   }
   export interface Operation extends GormBaseModel, NewOperation {}
+  export interface NotepadListRequest extends GetNotepadRequest, Pagination {}
   export interface NotepadEitRequest {
     notepadHash?: string
     eitUser?: number
