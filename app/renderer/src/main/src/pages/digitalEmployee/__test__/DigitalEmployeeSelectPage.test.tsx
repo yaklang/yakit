@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/pages/ai-agent/grpc', () => ({ grpcQueryAIForge: vi.fn() }))
 
 import { DigitalEmployeeSelectPage } from '../DigitalEmployeeSelectPage'
+import { DigitalEmployeeGate } from '../DigitalEmployeeGate'
 import * as DigitalEmployeeContext from '../DigitalEmployeeContext'
 import { DIGITAL_EMPLOYEES } from '../config'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -21,7 +22,7 @@ describe('DigitalEmployeeSelectPage', () => {
   it('renders all employees with the first employee selected by default', () => {
     const switchEmployee = vi.fn(() => true)
     const confirmSelection = vi.fn(() => true)
-    const emitSpy = vi.spyOn(emiter, 'emit')
+    const onQuickNavigation = vi.fn()
     const employees = DIGITAL_EMPLOYEES.map((employee) => ({
       ...employee,
       status: 'ready' as const,
@@ -39,7 +40,7 @@ describe('DigitalEmployeeSelectPage', () => {
       retry: vi.fn(),
     })
 
-    const { container } = render(<DigitalEmployeeSelectPage />)
+    const { container } = render(<DigitalEmployeeSelectPage onQuickNavigation={onQuickNavigation} />)
     const employeeCards = container.querySelectorAll('[aria-pressed]')
     const selectedStateOverlays = container.querySelectorAll('img[src*="senso-card-selected-overlay"]')
     const employeeBadgeIcons = container.querySelectorAll('[aria-pressed] > span[aria-hidden="true"] svg')
@@ -59,9 +60,11 @@ describe('DigitalEmployeeSelectPage', () => {
       ['插件仓库', YakitRoute.Plugin_Hub],
       ['流量历史', YakitRoute.DB_HTTPHistory],
     ] as const
-    navigationItems.forEach(([title, route]) => {
+    navigationItems.forEach(([title]) => {
       fireEvent.click(screen.getByRole('button', { name: `打开${title}` }))
-      expect(emitSpy).toHaveBeenLastCalledWith('menuOpenPage', JSON.stringify({ route }))
+    })
+    navigationItems.forEach(([, route], index) => {
+      expect(onQuickNavigation).toHaveBeenNthCalledWith(index + 1, route)
     })
     expect(employeeCards[0].querySelectorAll('img')).toHaveLength(1)
     expect(screen.getByText('当前选择')).toBeInTheDocument()
@@ -109,7 +112,7 @@ describe('DigitalEmployeeSelectPage', () => {
       retry: vi.fn(),
     })
 
-    const { container } = render(<DigitalEmployeeSelectPage />)
+    const { container } = render(<DigitalEmployeeSelectPage onQuickNavigation={vi.fn()} />)
 
     expect(container.querySelectorAll('[aria-pressed]')).toHaveLength(DIGITAL_EMPLOYEES.length + 1)
     expect(screen.getByText('扩展数字员工')).toBeInTheDocument()
@@ -120,6 +123,31 @@ describe('DigitalEmployeeSelectPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '下一页' }))
     expect(screen.getByRole('button', { name: '切换到第 2 页' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('button', { name: '下一页' })).toBeDisabled()
+  })
+
+  it('opens a quick-navigation route after the gated main content mounts', async () => {
+    const menuOpenPage = vi.fn()
+
+    const MainContentProbe = () => {
+      useEffect(() => {
+        emiter.on('menuOpenPage', menuOpenPage)
+        return () => emiter.off('menuOpenPage', menuOpenPage)
+      }, [])
+      return <div>主页面已挂载</div>
+    }
+
+    render(
+      <DigitalEmployeeContext.DigitalEmployeeProvider enabled={false}>
+        <DigitalEmployeeGate>
+          <MainContentProbe />
+        </DigitalEmployeeGate>
+      </DigitalEmployeeContext.DigitalEmployeeProvider>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '打开知识库' }))
+
+    await waitFor(() => expect(screen.getByText('主页面已挂载')).toBeInTheDocument())
+    expect(menuOpenPage).toHaveBeenCalledWith(JSON.stringify({ route: YakitRoute.AI_REPOSITORY }))
   })
 
   it('renders exactly one employee for each Forge returned by the backend', async () => {

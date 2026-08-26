@@ -20,7 +20,6 @@ import {
 import { SolidBadgecheckIcon } from '@/assets/icon/solid'
 import aiSenSoLogo from '@/assets/newAssets/ai-senpike-logo-transparent-v2.png'
 import { YakitRoute } from '@/enums/yakitRoute'
-import emiter from '@/utils/eventBus/eventBus'
 import { useDigitalEmployee } from './DigitalEmployeeContext'
 import styles from './DigitalEmployeeSelectPage.module.scss'
 
@@ -34,6 +33,10 @@ const QuickNavigation = [
 ]
 
 const EMPLOYEES_PER_PAGE = 8
+
+export interface DigitalEmployeeSelectPageProps {
+  onQuickNavigation: (route: YakitRoute) => void
+}
 
 const getEmployeeBadgeIcon = (employeeId: string) => {
   switch (employeeId) {
@@ -58,7 +61,7 @@ const getEmployeeBadgeIcon = (employeeId: string) => {
   }
 }
 
-export const DigitalEmployeeSelectPage: React.FC = () => {
+export const DigitalEmployeeSelectPage: React.FC<DigitalEmployeeSelectPageProps> = ({ onQuickNavigation }) => {
   const { employees, selectedEmployee, loading, error, confirmSelection, switchEmployee, retry } = useDigitalEmployee()
   const carouselRef = useRef<HTMLDivElement>(null)
   const [currentPage, setCurrentPage] = useState(0)
@@ -227,7 +230,7 @@ export const DigitalEmployeeSelectPage: React.FC = () => {
                   key={item.key}
                   title={`打开${item.title}`}
                   aria-label={`打开${item.title}`}
-                  onClick={() => emiter.emit('menuOpenPage', JSON.stringify({ route: item.route }))}
+                  onClick={() => onQuickNavigation(item.route)}
                 >
                   <span className={styles['quick-icon']} aria-hidden="true">
                     {item.icon}

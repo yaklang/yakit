@@ -111,8 +111,8 @@ import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { PluginHasParamsModal } from '../pluginHasParamsDrawer/PluginHasParamsDrawer'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
-import { DigitalEmployeeProvider, useDigitalEmployee } from '@/pages/digitalEmployee/DigitalEmployeeContext'
-import { DigitalEmployeeSelectPage } from '@/pages/digitalEmployee/DigitalEmployeeSelectPage'
+import { DigitalEmployeeProvider } from '@/pages/digitalEmployee/DigitalEmployeeContext'
+import { DigitalEmployeeGate } from '@/pages/digitalEmployee/DigitalEmployeeGate'
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
   Host: '127.0.0.1',
@@ -126,11 +126,6 @@ const DefaultCredential: YaklangEngineWatchDogCredential = {
 export interface UILayoutProp {
   children?: React.ReactNode
   linkSuccess?: () => any
-}
-
-const DigitalEmployeeGate: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const { confirmed } = useDigitalEmployee()
-  return confirmed ? <>{children}</> : <DigitalEmployeeSelectPage />
 }
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
