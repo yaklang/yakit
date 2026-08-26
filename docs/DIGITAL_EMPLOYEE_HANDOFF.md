@@ -2,6 +2,16 @@
 
 更新时间：2026-08-26
 
+## 0. 最新交接摘要（上下文切换先读）
+
+- 当前分支：`master`。
+- 本地开发统一在仓库根目录执行 `yarn dev`，会启动 Memfit 主渲染器 `3000`、引擎连接页 `5713` 和 Electron。
+- 2026-08-26 数字员工选择页的 6 个快捷导航已经修复，用户完成实际点击测试并确认“可以啦”。
+- 最终根因不是路由映射错误，而是 `MainOperatorContent` 挂载后执行默认标签初始化，把已打开的目标页重新覆盖成 `AI_Agent`。
+- 最终方案：选择页仅保存一次性目标；主菜单完成默认页初始化后，再消费目标并调用实际开页逻辑。不要改回事件监听、`setTimeout` 或 Gate 挂载后立即跳转。
+- 最终功能提交：`e4dbfac fix: apply employee quick route after menu initialization`；对应记录提交：`7983735 docs: record menu initialization navigation fix`。
+- 工作区仍有大量未提交的 AI SenSo 品牌替换和去 Yak/Yaklang 标记修改。这些是用户已有工作，不能执行 `git reset --hard`、`git checkout --` 或批量覆盖。
+
 ## 1. 当前结果
 
 项目已经在原有 Memfit / AI Agent 代码上增加“选择你的数字员工”入口与数字员工工作区，没有重写聊天请求主链路。
@@ -21,7 +31,7 @@
 - 右侧“思考与执行”只读取原版 `casualChat.planDetails.todoList`，展示真实任务内容、进度和后端时间戳，不再展示无数据的工具统计、目标或意图卡片。
 - 选择页与员工工作区已经统一使用新生成的透明高清 `AI SenSo` Logo，不再通过白底 JPG 和 `mix-blend-mode` 适配主题。
 - 选择页 8 个员工徽章、6 个快捷导航图标已经从低分辨率截图裁片替换为项目内置 SVG 图标，高分屏与响应式缩放下保持清晰。
-- 选择页 6 个快捷导航已经接入主菜单开页事件，可直接进入智能体广场、知识库、记忆库、工具库、插件仓库和流量历史；点击入口会自动确认当前默认/已选员工，不要求再点底部确认按钮。
+- 选择页 6 个快捷导航已经接入主菜单实际开页逻辑，可直接进入智能体广场、知识库、记忆库、工具库、插件仓库和流量历史；点击入口会自动确认当前默认/已选员工，不要求再点底部确认按钮。
 - 左侧员工栏的展开/收起箭头已经替换为标准 SVG chevron，按图标几何盒垂直居中，不再依赖文字字符基线。
 - 选择页选中卡片已从普通蓝边升级为蓝青渐变描边、柔和双层光晕、主题化进入按钮和“当前选择”状态标识；hover 只显示较弱描边，与真正选中态有明确层级。
 - AI Agent 顶部员工信息区已放大到约 132–168px，并同步放大 Logo、头像、标题、描述和技能标签；720px 以下高度会自动回落到紧凑尺寸。
@@ -142,7 +152,8 @@
 - `DigitalEmployeeSelectPage.test.tsx`：6 项测试全部通过；除逐项检查 6 个入口映射外，还覆盖“先初始化 `AI_Agent`、再使用快捷目标覆盖”的顺序场景。
 - `tsc --noEmit`：通过。
 - `git diff --check`：通过。
-- 本地开发服务热更新编译成功，`http://localhost:3000` 返回 200；编译日志仅保留仓库已有 warning。
+- 本地开发服务完整重启并编译成功，`http://127.0.0.1:3000` 与 `http://127.0.0.1:5713` 均返回 200；编译日志仅保留仓库已有 warning。
+- 用户已在实际 Electron 窗口逐项复测快捷导航，并确认跳转恢复正常。
 
 2026-07-30 本轮完成后：
 
@@ -179,30 +190,27 @@ node node_modules/vitest/vitest.mjs run app/renderer/src/main/src/pages/digitalE
 
 ## 6. 本地运行注意事项
 
-根目录 `yarn dev` 固定等待 3000 端口，但数字员工开发页使用 2800，端口或入口用错都会出现白屏/打开通用 Yakit 页面。推荐分开启动，并给长期热更新进程预留更大的 Node 堆：
+当前根目录脚本已经统一为 Memfit 开发入口，直接运行：
 
 ```powershell
-# 窗口 1：主渲染进程
-$env:NODE_OPTIONS='--max-old-space-size=8192'
-$env:PORT='2800'
-yarn start-render-memfit
-
-# 窗口 2：仅当 5173 启动连接页没有运行时补启
-yarn start-link-render-memfit
-
-# 窗口 3：让 Electron 指向数字员工渲染器
-$env:YAKIT_DEV_RENDERER_URL='http://127.0.0.1:2800'
-yarn start-electron
+cd D:\360MoveData\Users\Titee_G\Desktop\aiSenPike\yakit-memfit-AISenPike
+yarn dev
 ```
 
-必须使用 `start-render-memfit`，它会设置 `REACT_APP_PLATFORM=memfit`；普通 `start-render` 会启动同仓库的通用 Yakit 界面。即使 2800 返回 200，也要先确认现有进程使用的是 Memfit 入口。若改用其他端口，需要同时修改两个环境变量。启动前先检查是否已有旧 Electron/Node 进程，避免多个窗口混淆。
+该命令会并行启动：
 
-若再次白屏，按以下顺序排查，不要先回退 UI 代码：
+- Memfit 主渲染器：`http://127.0.0.1:3000`
+- 引擎连接页：`http://127.0.0.1:5713`
+- Electron：等待两个端口后自动启动
 
-1. 检查 2800 是否监听且 HTTP 返回 200。
-2. 查看渲染日志末尾是否有 `heap out of memory`、`Failed to compile` 或 `ERROR in`。
-3. 若 2800 已退出，只重启 `start-render-memfit`；若 Electron 仍保留失败页面，再重启指向 2800 的 Electron。
-4. Electron 开发模式还会创建 5173 启动连接页；新开 Electron 前确认 5173 可访问，避免主窗口一直停留在隐藏状态。
+根脚本已设置 `NODE_OPTIONS=--max-old-space-size=8192`，用于降低长期热更新时的堆内存溢出风险。不要再沿用旧交接中的 2800/5173 手工组合，除非先同步修改根脚本和 Electron 环境变量。
+
+若再次白屏或 Electron 停在启动连接页，按以下顺序排查，不要先回退 UI 代码：
+
+1. 检查 3000、5713 是否监听且 HTTP 返回 200。
+2. 查看 `yarn dev` 日志末尾是否有 `heap out of memory`、`Failed to compile` 或 `ERROR in`。
+3. 检查本地引擎端口（当前通常为 3333）和连接状态；引擎连接超时与主渲染快捷导航无关。
+4. 完整重启时先结束当前 `yarn dev`，再从仓库根目录重新执行，避免多个 Electron 窗口和旧前端状态混淆。
 
 ## 7. Git 状态
 
@@ -212,6 +220,7 @@ yarn start-electron
 - 2026-08-26 Gate 时序修复提交：`6217c82 fix: defer quick navigation until menu mount`。
 - 2026-08-26 懒加载回放修复提交：`35e239f fix: replay employee quick navigation after lazy mount`。
 - 2026-08-26 初始化覆盖修复提交：`e4dbfac fix: apply employee quick route after menu initialization`。
+- 2026-08-26 初始化覆盖交接记录：`7983735 docs: record menu initialization navigation fix`。
 - 安全回滚完整快捷导航功能：`git revert e4dbfac 35e239f 6217c82 9b3e3b4`（按新到旧顺序）。该命令会生成反向提交，不会覆盖工作区中的其他未提交改动。
 - 本交接生成前最新已推送提交：`d368069 fix: sharpen digital employee visual assets`。
 - 已推送的关键提交：
@@ -224,6 +233,8 @@ yarn start-electron
 - 本轮工作区与导航主题优化提交标题为 `style: polish digital employee workspace theme`；具体提交哈希请以新窗口运行 `git log -1 --oneline` 的结果为准。
 
 仓库较大，`.gitignore` 已重点忽略依赖、构建产物、缓存、日志、临时文件和本地配置。不要提交 `node_modules`、构建目录或本机缓存。
+
+当前 `git status` 中仍有大量品牌文案、启动页、菜单、国际化资源及构建配置修改。这些修改不属于快捷导航提交，但属于本项目持续进行的 AI SenSo 品牌替换工作。后续提交必须继续按文件精确暂存，避免把不相关改动混入同一个提交，也不要为了得到干净工作区而丢弃它们。
 
 ## 8. 新窗口继续时的优先检查
 
@@ -242,4 +253,4 @@ yarn start-electron
 
 ## 9. 可直接交给新 AI 的指令
 
-请先阅读本文件和 `docs/changes/` 下 2026-07-30 的记录，再查看 `git status` 与最新提交。当前数字员工已经复用原版 AI Forge mention 链路：员工技能是输入框内默认标签，用户可继续通过 `@` 添加多个标签；请求层有兜底去重。请以最小改动原则继续，优先做上述手工交互检查和响应式 UI 微调，不要重写原版聊天发送逻辑。每次完成后运行类型检查和数字员工定向测试，并更新交接/改动记录后提交推送到 `origin/master`。
+请先阅读本文件、`docs/changes/2026-08-26-digital-employee-quick-navigation.md` 和 `docs/DEV_LOG.md`，再查看 `git status` 与最新提交。快捷导航已由用户实测通过；不要再修改其时序，除非有新的明确复现。当前数字员工已经复用原版 AI Forge mention 链路：员工技能是输入框内默认标签，用户可继续通过 `@` 添加多个标签；请求层有兜底去重。请以最小改动原则继续，优先处理用户下一项明确需求，不要重写原版聊天发送逻辑。每次完成后运行类型检查和数字员工定向测试，并更新交接/改动记录后单独提交；未经用户明确要求不要推送远端。
