@@ -6,10 +6,8 @@ import styles from './MITMServerStartForm.module.scss'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import classNames from 'classnames'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
-import {
-  LabelNodeItem,
-  MatcherAndExtractionValueList,
-} from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard'
+import { LabelNodeItem } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardShared'
+import { MatcherAndExtractionValueList } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { OutlineTrashIcon } from '@/assets/icon/outline'

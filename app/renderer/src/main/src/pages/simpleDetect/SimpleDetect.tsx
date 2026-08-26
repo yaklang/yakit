@@ -43,7 +43,7 @@ import { getLinkPluginConfig } from '../plugins/singlePluginExecution/SinglePlug
 import { PresetPorts } from '../portscan/schema'
 import { PluginExecuteProgress } from '../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { YakitGetOnlinePlugin } from '../mitm/MITMServerHijacking/MITMPluginLocalList'
+import { YakitGetOnlinePlugin } from '../mitm/MITMServerHijacking/MITMPluginOnline'
 import type { SimpleDetectExtraParam } from './SimpleDetectExtraParamsDrawer'
 import { convertStartBruteParams } from '../securityTool/newBrute/utils'
 import { OutlineClipboardlistIcon } from '@/assets/icon/outline'

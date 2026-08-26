@@ -55,3 +55,10 @@
 
   @content;
 }
+
+/// CSS Module 内为 antd Icon（.anticon）设色，特异性 (0,2,0)，抵御 dev 下晚注入的 .anticon 规则
+@mixin anticon-color($color) {
+  &:global(.anticon) {
+    color: $color;
+  }
+}

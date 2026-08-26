@@ -1,3 +1,5 @@
+@use '../../styles/mixin.scss' as mixin;
+
 .error-wrapper-bgcolor {
   --global-state-bg-color: var(--Colors-Use-Error-Primary);
   --global-state-text-color: var(--Colors-Use-Error-On-Primary);
@@ -20,7 +22,7 @@
 }
 
 .icon-style {
-  color: var(--global-state-text-color);
+  @include mixin.anticon-color(var(--global-state-text-color));
   svg {
     width: 20px;
     height: 20px;

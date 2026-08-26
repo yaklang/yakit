@@ -1,7 +1,7 @@
 import { useTheme, type Theme } from '../useTheme'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
-import { defaultTerminalOptions } from '@/components/yakitUI/YakitXterm/YakitXterm'
+import { getAllYakitColorVars } from '@/utils/yakitColorVars'
+import { defaultTerminalOptions } from '@/components/yakitUI/YakitXterm/terminalOptions'
 
 const applyYakitXtermTheme = (terminal, fun, theme: Theme) => {
   requestAnimationFrame(() => {

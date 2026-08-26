@@ -1,7 +1,7 @@
 import { monaco } from 'react-monaco-editor'
 import type { Theme } from '@/hooks/useTheme'
-import { GetMainColor, isYakit } from './envfile'
-import { getYakitColorVars } from './yakitColorVars'
+import { isYakit } from './envfile'
+import { getAllYakitColorVars } from './yakitColorVars'
 type CssVars = Record<string, string>
 type TGeneratorColor = (vars: CssVars, theme: Theme) => Record<string, string>
 
@@ -782,9 +782,4 @@ const defineMonacoTheme = (vars: CssVars, themeGlobal: Theme) => {
   })
   monaco.editor.setTheme('kurior')
 }
-export { applyYakitMonacoTheme }
-
-export const getAllYakitColorVars = (theme?: Theme): Record<string, string> => {
-  const currentTheme = theme ?? (document.documentElement.dataset.theme as Theme | undefined) ?? 'light'
-  return getYakitColorVars(currentTheme, GetMainColor(currentTheme))
-}
+export { applyYakitMonacoTheme, getAllYakitColorVars }

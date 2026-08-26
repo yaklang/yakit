@@ -7,7 +7,7 @@ import {
   OutlineShieldexclamationIcon,
   OutlineUserRoundCogIcon,
 } from '@/assets/icon/outline'
-import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
+import { getAllYakitColorVars } from '@/utils/yakitColorVars'
 import type { UserMenuItemType } from '../../CeUserMenu/CeUserMenu'
 import type { IMControlBadgeView } from '@/pages/robotControl/status'
 

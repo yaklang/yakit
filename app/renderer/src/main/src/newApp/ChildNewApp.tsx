@@ -55,7 +55,11 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
     if (parentWinData) {
       switch (parentWinData.type) {
         case 'openPacketNewWindow':
-          return <OpenPacketNewWindow data={parentWinData.data} />
+          return (
+            <div className={styles['child-packet-wrapper']}>
+              <OpenPacketNewWindow data={parentWinData.data} />
+            </div>
+          )
         case 'openRiskNewWindow':
           return (
             <YakitRiskDetails

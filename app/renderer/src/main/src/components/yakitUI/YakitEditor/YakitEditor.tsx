@@ -46,10 +46,10 @@ import { CloudDownloadIcon } from '@/assets/newIcon'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import {
   getStorageYakEditorShortcutKeyEvents,
-  isPageOrGlobalShortcut,
   isYakEditorDefaultShortcut,
   isYakEditorShortcut,
 } from '@/utils/globalShortcutKey/events/page/yakEditor'
+import { isPageOrGlobalShortcut } from '@/utils/globalShortcutKey/events/page/yakEditorPageShortcut'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import useFocusContextStore from '@/utils/globalShortcutKey/shortcutKeyFocusHook/hooks/useStore'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
@@ -70,7 +70,10 @@ import {
   registerBinaryFoldEntries,
   unregisterBinaryFoldEntries,
 } from './binaryFuzztag'
-import { BinaryFuzztagHexModal, type BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
+import type { BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
+const BinaryFuzztagHexModal = React.lazy(() =>
+  import('./BinaryFuzztagHexModal').then((m) => ({ default: m.BinaryFuzztagHexModal })),
+)
 import { Base64HexFuzztagModal } from './Base64HexFuzztagModal'
 import { showYakitModal } from '../YakitModal/YakitModalConfirm'
 
@@ -1034,13 +1037,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
               onCancel={() => infoModal.destroy()}
             />
           ) : (
-            <BinaryFuzztagHexModal
-              entry={entry}
-              readOnly={readOnly}
-              initialData={initialData}
-              onSubmit={handleSubmit}
-              onCancel={() => infoModal.destroy()}
-            />
+            <React.Suspense fallback={null}>
+              <BinaryFuzztagHexModal
+                entry={entry}
+                readOnly={readOnly}
+                initialData={initialData}
+                onSubmit={handleSubmit}
+                onCancel={() => infoModal.destroy()}
+              />
+            </React.Suspense>
           ),
         })
       } catch (e) {

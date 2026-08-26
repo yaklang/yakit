@@ -128,11 +128,14 @@ export default defineConfig(({ mode }) => {
       }),
     ].filter(Boolean),
     resolve: {
+      dedupe: ['react', 'react-dom'],
       alias: [
         { find: '@', replacement: path.resolve(rootDir, 'src') },
         // antd / pro-layout less 里的 ~antd 写法
         { find: /^~antd/, replacement: path.resolve(rootDir, 'node_modules/antd') },
         { find: /^~/, replacement: '' },
+        { find: 'react', replacement: path.resolve(rootDir, 'node_modules/react') },
+        { find: 'react-dom', replacement: path.resolve(rootDir, 'node_modules/react-dom') },
       ],
     },
     css: {
@@ -163,6 +166,8 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: 3000,
       strictPort: true,
+      // Electron 通过 localhost 加载，无需 gzip/brotli 压缩，关闭可省 CPU
+      compress: false,
       // 首屏前预热入口，减少运行中途发现新 dep 触发 504 Outdated Optimize Dep
       warmup: {
         clientFiles: ['./index.html', './yakit-aux.html', './src/index.tsx', './src/auxWindow/aux-entry.tsx'],
@@ -176,10 +181,35 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       // 等静态依赖爬完再对外服务，避免浏览器拿着旧 hash 打到已失效的预构建产物
       holdUntilCrawlEnd: true,
+      // 与 build.target 对齐，跳过 down-level 转译，加速预构建
+      esbuildOptions: {
+        target: 'esnext',
+        alias: {
+          react: path.resolve(rootDir, 'node_modules/react'),
+          'react-dom': path.resolve(rootDir, 'node_modules/react-dom'),
+        },
+      },
+      // lazy 路由架构下，冷启动 crawl 全量 src，一次性发现 node_modules 依赖，避免首访页签 504 Outdated Optimize Dep
+      // 显式 entries 会覆盖默认 html 推断，须保留 index / yakit-aux
+      entries: [
+        'index.html',
+        'yakit-aux.html',
+        'src/**/*.{ts,tsx}',
+        '!src/**/*.d.ts', // 核心：排除声明文件
+        '!src/**/__test__/**',
+        '!src/**/__tests__/**',
+        '!src/alibaba/ali-react-table-dist/**', // 第三方 dist 仅含 .d.ts，无需 crawl
+      ],
+      // 重型 CJS 编辑器栈显式预构建（与 entries 互补；新增 lazy 页一般无需再改此处）
       include: [
         'react',
         'react-dom',
         'react-dom/client',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'react-dnd',
+        'react-dnd-html5-backend',
+        '@hello-pangea/dnd',
         'antd',
         'antd/es/date-picker/locale/zh_CN',
         'antd/es/date-picker/locale/zh_TW',
@@ -193,7 +223,16 @@ export default defineConfig(({ mode }) => {
         'lodash/omit',
         'lodash/has',
         'lodash/isArray',
+        'lodash/debounce',
+        'lodash/cloneDeep',
         'zustand',
+        'zustand/middleware',
+        'zustand/traditional',
+        'copy-to-clipboard',
+        'react-copy-to-clipboard',
+        '@ant-design/icons/es/icons/CheckOutlined',
+        '@ant-design/icons/lib/icons/CheckOutlined',
+        'rc-util/es/Dom/getScrollBarSize',
         'uuid',
         'moment',
         'moment/locale/zh-cn',
@@ -234,6 +273,8 @@ export default defineConfig(({ mode }) => {
       outDir,
       emptyOutDir: true,
       target: 'esnext',
+      // Electron 本地 file:// 加载，不需要 module preload polyfill
+      modulePreload: { polyfill: false },
       sourcemap,
       // Local/WSL Electron E2E builds keep production React semantics but skip
       // minification, whose minify workers can exceed 10 GiB in this project.

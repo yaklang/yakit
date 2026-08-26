@@ -449,37 +449,4 @@ const AIChatWelcomeSettingCard = memo(
   }),
 )
 
-export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
-  const [isAutoHidden, setIsAutoHidden] = useState<boolean>(true)
-  useEffect(() => {
-    onGetSideSetting()
-  }, [])
-  const onGetSideSetting = useMemoizedFn(() => {
-    getRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode)
-      .then((res) => {
-        setIsAutoHidden(res !== 'false')
-      })
-      .catch(() => {})
-  })
-  const onSideSetting = useDebounceFn(
-    useMemoizedFn((e) => {
-      e.stopPropagation()
-      const checked = !isAutoHidden
-      setIsAutoHidden(checked)
-      setRemoteValue(RemoteAIAgentGV.AIAgentSideShowMode, `${checked}`)
-      emiter.emit('switchSideHiddenMode', `${checked}`)
-    }),
-    { wait: 200, leading: true },
-  ).run
-  return (
-    <Tooltip title={!isAutoHidden ? t('SideSettingButton.pinMenuOn') : t('SideSettingButton.pinMenuOff')}>
-      <YakitButton
-        type={isAutoHidden ? 'text2' : 'outline1'}
-        icon={isAutoHidden ? <OutlinePinOffIcon /> : <OutlinePinIcon />}
-        onClick={onSideSetting}
-        {...props}
-      />
-    </Tooltip>
-  )
-})
+export { SideSettingButton } from './AIChatWelcomeSideSetting'

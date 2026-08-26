@@ -10,13 +10,11 @@ import type {
 import type { FieldGroup } from '@/pages/risks/YakitRiskTable/utils'
 import type { FieldName } from '@/pages/risks/RiskTable'
 import type { DbOperateMessage } from '@/pages/layout/mainOperatorContent/utils'
-import { grpcGetAIForge } from '@/pages/ai-agent/grpc'
-import type { GetAIForgeRequest } from '@/pages/ai-agent/type/forge'
 import { JSONParseLog, type JSONParseLogOption } from '@/utils/tool'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { GetAIForgeRequest } from '@/pages/ai-agent/type/forge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'yakRunnerAuditHole'])
 
@@ -263,8 +261,11 @@ export const openAIForge = (params: {
   jsonParseLogParams: JSONParseLogOption
 }) => {
   const { query, handleParamsUIConfig, jsonParseLogParams } = params
-  grpcGetAIForge(query, true)
-    .then((res) => {
+  Promise.all([
+    import('@/pages/ai-agent/grpc').then(({ grpcGetAIForge }) => grpcGetAIForge(query, true)),
+    import('@/pages/ai-agent/defaultConstant').then(({ ReActChatEventEnum }) => ReActChatEventEnum),
+  ])
+    .then(([res, ReActChatEventEnum]) => {
       if (!res) {
         yakitNotify('warning', tOriginal('YakitAuditHoleTable.noForgeNameMatchesFound'))
         return

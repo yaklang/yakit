@@ -12,8 +12,10 @@ import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, yakitFailed, warn, yakitNotify } from '@/utils/notification'
-import { ConfigPrivateDomain } from '../ConfigPrivateDomain/ConfigPrivateDomain'
-import { ConfigGlobalReverse } from '@/utils/basic'
+const ConfigPrivateDomain = React.lazy(() =>
+  import('../ConfigPrivateDomain/ConfigPrivateDomain').then((m) => ({ default: m.ConfigPrivateDomain })),
+)
+import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import type { YakitSettingCallbackType, YakitSystem, YaklangEngineMode } from '@/yakitGVDefine'
 import { showConfigSystemProxyForm } from '@/utils/ConfigSystemProxy'
 import { showConfigYaklangEnvironment } from '@/utils/ConfigYaklangEnvironment'
@@ -47,11 +49,15 @@ import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { addToTab } from '@/pages/MainTabs'
-import { DatabaseUpdateModal } from '@/pages/cve/CVETable'
-import { LoadingOutlined } from '@ant-design/icons'
+const DatabaseUpdateModal = React.lazy(() =>
+  import('@/pages/cve/CVETable').then((m) => ({ default: m.DatabaseUpdateModal })),
+)
+import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
-import { WinKeyborad } from '../yakitUI/YakitEditor/editorUtils'
-import { ScrecorderModal } from '@/pages/screenRecorder/ScrecorderModal'
+import { WinKeyborad } from '../yakitUI/YakitEditor/keyboardConstants'
+const ScrecorderModal = React.lazy(() =>
+  import('@/pages/screenRecorder/ScrecorderModal').then((m) => ({ default: m.ScrecorderModal })),
+)
 import { useScreenRecorder } from '@/store/screenRecorder'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useRunNodeStore } from '@/store/runNode'
@@ -71,16 +77,14 @@ import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { type PerformanceSamplingLog, usePerformanceSampling } from '@/store/performanceSampling'
-import {
-  isShowCodeScanDetail,
-  YakitCodeScanRiskDetails,
-  YakitRiskDetails,
-} from '@/pages/risks/YakitRiskTable/YakitRiskTable'
+import { isShowCodeScanDetail } from '@/pages/risks/YakitRiskTable/riskTableUtils'
+const YakitCodeScanRiskDetails = React.lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitCodeScanRiskDetails })),
+)
+const YakitRiskDetails = React.lazy(() =>
+  import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
+)
 import { SolidPlayIcon } from '@/assets/icon/solid'
-import {
-  ExecuteEnterNodeByPluginParams,
-  PluginExecuteProgress,
-} from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, getYakExecutorParam } from '@/pages/plugins/editDetails/utils'
@@ -100,17 +104,35 @@ import YakitLogo from '@/assets/yakitLogo.png'
 import yakitImg from '../../assets/yakit.jpg'
 import classNames from 'classnames'
 import styles from './funcDomain.module.scss'
-import {
-  MessageCenter,
-  TaskErrNotification,
-  TaskNotification,
-  useEETaskNotificationHook,
-} from '../MessageCenter/MessageCenter'
+import { useEETaskNotificationHook } from '../MessageCenter/useEETaskNotificationHook'
+const MessageCenter = React.lazy(() =>
+  import('../MessageCenter/MessageCenter').then((m) => ({ default: m.MessageCenter })),
+)
+const TaskNotification = React.lazy(() =>
+  import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskNotification })),
+)
+const TaskErrNotification = React.lazy(() =>
+  import('../MessageCenter/MessageCenter').then((m) => ({ default: m.TaskErrNotification })),
+)
 import { apiFetchMessageRead, apiFetchQueryMessage } from '../MessageCenter/utils'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { randomString } from '@/utils/randomUtil'
 import type { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
-import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
+const PluginExecuteResult = React.lazy(() =>
+  import('@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult').then((m) => ({
+    default: m.PluginExecuteResult,
+  })),
+)
+const ExecuteEnterNodeByPluginParams = React.lazy(() =>
+  import('@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard').then((m) => ({
+    default: m.ExecuteEnterNodeByPluginParams,
+  })),
+)
+const PluginExecuteProgress = React.lazy(() =>
+  import('@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard').then((m) => ({
+    default: m.PluginExecuteProgress,
+  })),
+)
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import {
   apiNewRiskRead,
@@ -121,24 +143,29 @@ import type {
   QueryNewSSARisksResponse,
   SSARisk,
 } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
-import { YakitAuditRiskDetails } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
+const YakitAuditRiskDetails = React.lazy(() =>
+  import('@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable').then((m) => ({
+    default: m.YakitAuditRiskDetails,
+  })),
+)
 import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
-import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
+const ConfigMcpModal = React.lazy(() => import('@/utils/ConfigSystemMcp').then((m) => ({ default: m.ConfigMcpModal })))
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import useEngineConsole from './hooks/useEngineConsole/useEngineConsole'
 import { useTheme } from '@/hook/useTheme'
 import { grpcOpenEngineLogFolder, grpcOpenPrintLogFolder, grpcOpenRenderLogFolder } from '@/utils/logCollection'
-import { useDownloadYakit } from './update/DownloadYakit'
+import { useDownloadYakit } from './update/useDownloadYakit'
 import { JSONParseLog } from '@/utils/tool'
 import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { cloneDeep } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 import { syncAppSettings } from '@/auxWindow/utils/messaging'
 import { yakitApp, yakitEngine, yakitRisk, yakitShell, yakitStream, yakitUILayout } from '@/services/electronBridge'
 import { CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
+import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
 
 // ===== 用户功能菜单拆分模块导入 =====
 import { randomAvatarColor } from './userMenu/constants'
@@ -147,7 +174,6 @@ import { judgeDynamic } from './userMenu/judgeDynamic'
 import { useUserMenu } from './userMenu/useUserMenu'
 import { UserMenuModals } from './userMenu/UserMenuModals'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
-import CeRechargeModal from '../CeUserMenu/CeRechargeModal'
 
 // re-export 保持外部导入路径兼容
 export { randomAvatarColor }
@@ -280,16 +306,18 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             type: 'white',
             width: 520,
             content: (
-              <ScrecorderModal
-                onClose={() => {
-                  m.destroy()
-                }}
-                token={screenRecorderInfo.token}
-                onStartCallback={() => {
-                  setRecording(true)
-                  m.destroy()
-                }}
-              />
+              <React.Suspense fallback={null}>
+                <ScrecorderModal
+                  onClose={() => {
+                    m.destroy()
+                  }}
+                  token={screenRecorderInfo.token}
+                  onStartCallback={() => {
+                    setRecording(true)
+                    m.destroy()
+                  }}
+                />
+              </React.Suspense>
             ),
           })
         } else {
@@ -922,7 +950,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           maskClosable: false,
           width: i18n.language.startsWith('zh') ? 500 : 650,
           // onCancel: () => m.destroy(),
-          content: <ConfigPrivateDomain onClose={() => m.destroy()} />,
+          content: (
+            <React.Suspense fallback={null}>
+              <ConfigPrivateDomain onClose={() => m.destroy()} />
+            </React.Suspense>
+          ),
         })
         return m
       }
@@ -1118,14 +1150,20 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           </div>
         </div>
       </YakitPopover>
-      <DatabaseUpdateModal
-        available={available}
-        visible={dataBaseUpdateVisible}
-        setVisible={setDataBaseUpdateVisible}
-        latestMode={isDiffUpdate}
-      />
+      <React.Suspense fallback={null}>
+        <DatabaseUpdateModal
+          available={available}
+          visible={dataBaseUpdateVisible}
+          setVisible={setDataBaseUpdateVisible}
+          latestMode={isDiffUpdate}
+        />
+      </React.Suspense>
       <RunNodeModal runNodeModalVisible={runNodeModalVisible} onClose={() => setRunNodeModalVisible(false)} />
-      {configMcpModalVisible && <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />}
+      {configMcpModalVisible && (
+        <React.Suspense fallback={null}>
+          <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />
+        </React.Suspense>
+      )}
       <YakitHint
         visible={reclaimHint}
         title={t('HomeCom.reclaimDatabaseSpaceTitle')}
@@ -2293,15 +2331,17 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             </div>
           ) : (
             <div className={styles['notice-info-wrapper']}>
-              <MessageCenter
-                messageList={messageList}
-                getAllMessage={getAllMessage}
-                onLogin={() => {
-                  setShow(false)
-                  onLogin()
-                }}
-                onClose={() => setShow(false)}
-              />
+              <React.Suspense fallback={null}>
+                <MessageCenter
+                  messageList={messageList}
+                  getAllMessage={getAllMessage}
+                  onLogin={() => {
+                    setShow(false)
+                    onLogin()
+                  }}
+                  onClose={() => setShow(false)}
+                />
+              </React.Suspense>
             </div>
           )}
         </div>
@@ -2423,7 +2463,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       <YakitHint
         visible={taskModalInfo.visible}
         title={taskModalInfo.title}
-        content={<TaskNotification taskList={taskModalInfo.data} />}
+        content={
+          <React.Suspense fallback={null}>
+            <TaskNotification taskList={taskModalInfo.data} />
+          </React.Suspense>
+        }
         okButtonText={taskModalInfo.okButtonText}
         onOk={debugTaskEvent.sureT}
         cancelButtonProps={taskModalInfo.cancelButtonProps}
@@ -2435,7 +2479,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       <YakitHint
         visible={taskErrModalInfo.visible}
         title={taskErrModalInfo.title}
-        content={<TaskErrNotification reNames={taskErrModalInfo.data} />}
+        content={
+          <React.Suspense fallback={null}>
+            <TaskErrNotification reNames={taskErrModalInfo.data} />
+          </React.Suspense>
+        }
         okButtonText={taskErrModalInfo.okButtonText}
         cancelButtonText={taskErrModalInfo.cancelButtonText}
         onOk={debugTaskEvent.coverP}
@@ -2626,11 +2674,13 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
           title: '详情',
           content: (
             <div style={{ overflow: 'auto', maxHeight: '70vh' }}>
-              {isShowCodeScanDetail(res) ? (
-                <YakitCodeScanRiskDetails info={res} />
-              ) : (
-                <YakitRiskDetails info={res} boxStyle={{ height: 400 }} />
-              )}
+              <React.Suspense fallback={null}>
+                {isShowCodeScanDetail(res) ? (
+                  <YakitCodeScanRiskDetails info={res} />
+                ) : (
+                  <YakitRiskDetails info={res} boxStyle={{ height: 400 }} />
+                )}
+              </React.Suspense>
             </div>
           ),
           onOk: () => {
@@ -2882,7 +2932,9 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
           title: '详情',
           content: (
             <div style={{ overflow: 'auto', maxHeight: '70vh' }}>
-              <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
+              <React.Suspense fallback={null}>
+                <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
+              </React.Suspense>
             </div>
           ),
           modalAfterClose: () => {
@@ -3410,19 +3462,23 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
       <div className={styles['crash-log-wrapper']}>
         {streamInfo.progressState.length === 1 && (
           <div className={styles['crash-log-progress']}>
-            <PluginExecuteProgress
-              percent={streamInfo.progressState[0].progress}
-              name={streamInfo.progressState[0].id}
-            />
+            <React.Suspense fallback={null}>
+              <PluginExecuteProgress
+                percent={streamInfo.progressState[0].progress}
+                name={streamInfo.progressState[0].id}
+              />
+            </React.Suspense>
           </div>
         )}
-        <PluginExecuteResult
-          streamInfo={streamInfo}
-          runtimeId={runtimeId}
-          loading={isExecuting}
-          defaultActiveKey={t('PluginExecResultDefaultTabs.log')}
-          pluginExecuteResultWrapper={styles['plugin-execute-result-wrapper']}
-        />
+        <React.Suspense fallback={null}>
+          <PluginExecuteResult
+            streamInfo={streamInfo}
+            runtimeId={runtimeId}
+            loading={isExecuting}
+            defaultActiveKey={t('PluginExecResultDefaultTabs.log')}
+            pluginExecuteResultWrapper={styles['plugin-execute-result-wrapper']}
+          />
+        </React.Suspense>
       </div>
     </YakitModal>
   )
@@ -3449,7 +3505,9 @@ const PerformanceSampleForm: React.FC<PerformanceSampleFormProp> = (props) => {
         onPerformanceParams({ ...allValues })
       }}
     >
-      <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={'yak'} isExecuting={false} />
+      <React.Suspense fallback={null}>
+        <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={'yak'} isExecuting={false} />
+      </React.Suspense>
     </Form>
   )
 }

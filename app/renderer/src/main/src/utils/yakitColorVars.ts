@@ -1,6 +1,7 @@
 import { generateColors } from '@yakit-libs/color'
 import { getColors as getPreviewColors } from '@yakit-libs/color/preview'
 import type { ColorHex, ThemeMode } from '@yakit-libs/color'
+import { GetMainColor } from './envfile'
 
 const VAR_REF_PATTERN = /^var\((--[^)]+)\)$/
 export const DEFAULT_MAIN_COLOR = '#F17F30' as ColorHex
@@ -59,3 +60,12 @@ export function getYakitColorVars(theme: ThemeMode, mainColorOverride?: ColorHex
   resolvedColorsCache.set(cacheKey, colors)
   return colors
 }
+
+/** 读取当前主题色变量；不依赖 monaco，避免从 theme.ts 间接拉入编辑器 ESM */
+export function getAllYakitColorVars(theme?: ThemeMode): Record<string, string> {
+  const currentTheme = theme ?? (document.documentElement.dataset.theme as ThemeMode | undefined) ?? 'light'
+  return getYakitColorVars(currentTheme, GetMainColor(currentTheme) as ColorHex)
+}
+
+export const THEME_PRIMARY_COLOR = 'var(--Colors-Use-Main-Primary)'
+export const THEME_BORDER_COLOR = 'var(--Colors-Use-Main-Border)'

@@ -8,7 +8,7 @@ import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitS
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { PluginBatchExecuteExtraFormValue } from './pluginBatchExecutor'
-import { FixExtraParamsNode } from '../operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams'
+import { FixExtraParamsNode } from '../operator/localPluginExecuteDetailHeard/PluginExecuteExtraParamsNodes'
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'

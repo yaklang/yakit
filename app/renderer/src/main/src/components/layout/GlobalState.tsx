@@ -1,4 +1,4 @@
-import React, { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import React, { type ReactNode, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useGetState, useMemoizedFn } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
@@ -16,16 +16,20 @@ import {
   RocketIcon,
 } from './globalStateIcon'
 import { showConfigSystemProxyForm, showConfigChromePathForm } from '@/utils/ConfigSystemProxy'
-import { ConfigGlobalReverse } from '@/utils/basic'
+import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { Tooltip, Row, Col } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import { isEnpriTraceAgent, isIRify } from '@/utils/envfile'
 import type { QueryYakScriptsResponse } from '@/pages/invoker/schema'
-import {
-  IRifyApplySyntaxFlowRuleUpdate,
-  YakitGetOnlinePlugin,
-} from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
+const IRifyApplySyntaxFlowRuleUpdate = lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginLocalList').then((m) => ({
+    default: m.IRifyApplySyntaxFlowRuleUpdate,
+  })),
+)
+const YakitGetOnlinePlugin = lazy(() =>
+  import('@/pages/mitm/MITMServerHijacking/MITMPluginOnline').then((m) => ({ default: m.YakitGetOnlinePlugin })),
+)
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 
 import classNames from 'classnames'
@@ -34,7 +38,7 @@ import { useRunNodeStore } from '@/store/runNode'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import type { mcpStreamHooks } from './hooks/useMcp/useMcp'
-import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
+const ConfigMcpModal = lazy(() => import('@/utils/ConfigSystemMcp').then((m) => ({ default: m.ConfigMcpModal })))
 import emiter from '@/utils/eventBus/eventBus'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import { openABSFileLocated } from '@/utils/openWebsite'
@@ -56,7 +60,7 @@ const ShowIcon: Record<string, ReactNode> = {
   warning: <ExclamationIcon className={styles['icon-style']} />,
   success: <RocketIcon className={styles['icon-style']} />,
   help: <OutlineShieldcheckIcon className={styles['icon-style']} />,
-  loading: <LoadingOutlined className={styles['icon-style']} style={{ color: 'var(--Colors-Use-Main-Primary)' }} />,
+  loading: <LoadingOutlined className={styles['icon-style']} />,
 }
 /** 不同状态下组件展示的颜色 */
 const ShowColorClass: Record<string, string> = {
@@ -1413,19 +1417,23 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
           )
         }
       ></YakitHint>
-      <YakitGetOnlinePlugin
-        visible={pluginShow}
-        setVisible={(v) => {
-          setPluginShow(v)
-        }}
-      />
-      {ruleUpdateShow && (
-        <IRifyApplySyntaxFlowRuleUpdate
-          visible={ruleUpdateShow}
+      <Suspense fallback={null}>
+        <YakitGetOnlinePlugin
+          visible={pluginShow}
           setVisible={(v) => {
-            setRuleUpdateShow(v)
+            setPluginShow(v)
           }}
         />
+      </Suspense>
+      {ruleUpdateShow && (
+        <Suspense fallback={null}>
+          <IRifyApplySyntaxFlowRuleUpdate
+            visible={ruleUpdateShow}
+            setVisible={(v) => {
+              setRuleUpdateShow(v)
+            }}
+          />
+        </Suspense>
       )}
       {/* 规则更新确认弹框 */}
       <YakitHint
@@ -1462,7 +1470,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
           setCloseRunNodeItemVerifyVisible(false)
         }}
       />
-      {configMcpModalVisible && <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />}
+      {configMcpModalVisible && (
+        <Suspense fallback={null}>
+          <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />
+        </Suspense>
+      )}
     </>
   )
 })

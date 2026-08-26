@@ -7,7 +7,7 @@ import { PluginHubDetail, type PluginHubDetailRefProps } from '../pluginHubDetai
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemotePluginGV } from '@/enums/plugin'
-import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
+import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from '@/utils/globalShortcutKey/utils'
 import { ShortcutKeyPage } from '@/utils/globalShortcutKey/events/pageMaps'
 import { YakitRoute } from '@/enums/yakitRoute'

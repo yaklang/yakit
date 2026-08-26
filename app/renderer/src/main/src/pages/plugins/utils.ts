@@ -4,7 +4,7 @@ import { NetWorkApi, type requestConfig } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { info, yakitNotify } from '@/utils/notification'
 import { isCommunityEdition } from '@/utils/envfile'
-import { compareAsc } from '../yakitStore/viewers/base'
+import { compareAsc } from '../yakitStore/viewers/compareAsc'
 import {
   type GetYakScriptGroupResponse,
   type GetYakScriptTagsAndTypeResponse,
