@@ -13,6 +13,10 @@ const ELECTRON_BRIDGE_STUB = path.resolve(
   __dirname,
   'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/electronBridgeStub.ts',
 )
+const MONACO_EDITOR_STUB = path.resolve(
+  __dirname,
+  'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/monacoEditorStub.ts',
+)
 const STYLE_STUB = path.resolve(
   __dirname,
   'app/renderer/src/main/src/pages/ai-re-act/hooks/__test__/stubs/styleStub.ts',
@@ -86,15 +90,18 @@ export default defineConfig({
   ],
   resolve: {
     dedupe: ['vitest'],
-    alias: {
-      '@renderer': path.resolve(__dirname, 'app/renderer/src/main/src'),
-      '@engne': path.resolve(__dirname, 'app/renderer/engine-link-startup/src'),
-      '@engine': path.resolve(__dirname, 'app/renderer/engine-link-startup/src'),
-      '@app': path.resolve(__dirname, 'app'),
-      'i18next-resources-to-backend': I18NEXT_BACKEND_STUB,
-      '@/i18n/i18n': I18N_STUB,
-      '@/services/electronBridge': ELECTRON_BRIDGE_STUB,
-    },
+    alias: [
+      { find: '@renderer', replacement: path.resolve(__dirname, 'app/renderer/src/main/src') },
+      { find: '@engne', replacement: path.resolve(__dirname, 'app/renderer/engine-link-startup/src') },
+      { find: '@engine', replacement: path.resolve(__dirname, 'app/renderer/engine-link-startup/src') },
+      { find: '@app', replacement: path.resolve(__dirname, 'app') },
+      { find: 'i18next-resources-to-backend', replacement: I18NEXT_BACKEND_STUB },
+      { find: '@/i18n/i18n', replacement: I18N_STUB },
+      { find: '@/services/electronBridge', replacement: ELECTRON_BRIDGE_STUB },
+      // monaco-editor@0.40.0 的 package.json 缺 main/exports 入口，vitest 解析不了裸导入；
+      // 字符串 alias 只做精确匹配，react-monaco-editor 还会引 esm 子路径，须用正则一并兜住
+      { find: /^monaco-editor(\/.*)?$/, replacement: MONACO_EDITOR_STUB },
+    ],
   },
   test: {
     environment: 'jsdom',
