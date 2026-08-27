@@ -46,6 +46,42 @@ const modifierKeys = new Set<string>([YakitKeyMod.Control, YakitKeyMod.Shift, Ya
 const sceneOrder = [ContextMenuScene.HistorySingle, ContextMenuScene.HistoryMulti, ContextMenuScene.HTTPPacket]
 
 const actionKey = (action: ContextMenuAction) => `${action.PluginUUID}:${action.ActionID}`
+const pluginKey = (pluginUUID: string) => `plugin:${pluginUUID}`
+
+interface ContextMenuPluginGroup {
+  PluginUUID: string
+  actions: ContextMenuAction[]
+}
+
+const groupActionsByPlugin = (actions: ContextMenuAction[]): ContextMenuPluginGroup[] => {
+  const groups = new Map<string, ContextMenuPluginGroup>()
+  actions.forEach((action) => {
+    const group = groups.get(action.PluginUUID)
+    if (group) {
+      group.actions.push(action)
+      return
+    }
+    groups.set(action.PluginUUID, { PluginUUID: action.PluginUUID, actions: [action] })
+  })
+  return Array.from(groups.values())
+}
+
+const getPrimaryAction = (group: ContextMenuPluginGroup) =>
+  group.actions.find((action) => action.Enabled || action.IsCorePlugin) || group.actions[0]
+
+const getGroupSort = (group: ContextMenuPluginGroup) =>
+  Math.min(...group.actions.filter((action) => action.Enabled || action.IsCorePlugin).map((action) => action.Sort))
+
+const getCapabilityName = (action: ContextMenuAction) => {
+  switch (action.ExecutionType) {
+    case ContextMenuExecutionType.LegacyPacketContext:
+      return '数据包右键'
+    case ContextMenuExecutionType.LegacyPacketMutate:
+      return 'HTTP 数据包变形'
+    default:
+      return action.HookName
+  }
+}
 
 const normalizeAction = (action: ContextMenuAction): ContextMenuAction => ({
   ...action,
@@ -186,29 +222,37 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
       () => response.Actions.filter((action) => action.Scene === activeScene),
       [response.Actions, activeScene],
     )
-    const configuredActions = useMemo(
+    const sceneGroups = useMemo(() => groupActionsByPlugin(sceneActions), [sceneActions])
+    const configuredGroups = useMemo(
       () =>
-        sceneActions
-          .filter((action) => action.Enabled || action.IsCorePlugin)
+        sceneGroups
+          .filter((group) => group.actions.some((action) => action.Enabled || action.IsCorePlugin))
           .sort((left, right) => {
-            if (left.IsCorePlugin !== right.IsCorePlugin) return left.IsCorePlugin ? -1 : 1
-            return left.Sort - right.Sort || left.PluginName.localeCompare(right.PluginName)
+            const leftAction = getPrimaryAction(left)
+            const rightAction = getPrimaryAction(right)
+            if (leftAction.IsCorePlugin !== rightAction.IsCorePlugin) return leftAction.IsCorePlugin ? -1 : 1
+            return (
+              getGroupSort(left) - getGroupSort(right) || leftAction.PluginName.localeCompare(rightAction.PluginName)
+            )
           }),
-      [sceneActions],
+      [sceneGroups],
     )
-    const availableActions = useMemo(() => {
+    const availableGroups = useMemo(() => {
       const search = keyword.trim().toLowerCase()
-      return sceneActions
-        .filter((action) => !action.Enabled && !action.IsCorePlugin)
+      return sceneGroups
+        .filter((group) => group.actions.every((action) => !action.Enabled && !action.IsCorePlugin))
         .filter(
-          (action) =>
+          (group) =>
             !search ||
-            action.PluginName.toLowerCase().includes(search) ||
-            action.Help.toLowerCase().includes(search) ||
-            action.HookName.toLowerCase().includes(search),
+            group.actions.some(
+              (action) =>
+                action.PluginName.toLowerCase().includes(search) ||
+                action.Help.toLowerCase().includes(search) ||
+                action.HookName.toLowerCase().includes(search) ||
+                getCapabilityName(action).toLowerCase().includes(search),
+            ),
         )
-        .sort((left, right) => left.PluginName.localeCompare(right.PluginName))
-    }, [sceneActions, keyword])
+    }, [sceneGroups, keyword])
     const sceneEnabledPluginUUIDs = useMemo(
       () =>
         new Set(
@@ -233,8 +277,26 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
       }
     })
 
-    const addAction = useMemoizedFn((action: ContextMenuAction) => {
-      const consumesSlot = !sceneEnabledPluginUUIDs.has(action.PluginUUID)
+    const savePluginActions = useMemoizedFn(
+      async (group: ContextMenuPluginGroup, getNextAction: (action: ContextMenuAction) => ContextMenuAction) => {
+        setSavingKey(pluginKey(group.PluginUUID))
+        try {
+          for (const action of group.actions) {
+            await setContextMenuActionBinding(bindingRequest(getNextAction(action)))
+          }
+          await refresh()
+          emiter.emit('refreshContextMenuActions', group.PluginUUID)
+        } catch (error) {
+          yakitNotify('error', `保存右键配置失败: ${error}`)
+          await refresh()
+        } finally {
+          setSavingKey('')
+        }
+      },
+    )
+
+    const addPlugin = useMemoizedFn((group: ContextMenuPluginGroup) => {
+      const consumesSlot = !sceneEnabledPluginUUIDs.has(group.PluginUUID)
       if (consumesSlot && sceneEnabledCustomPluginCount >= response.MaxCustomPluginCount) {
         yakitNotify(
           'warning',
@@ -242,16 +304,16 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
         )
         return
       }
-      saveAction({ ...action, Enabled: true, Sort: configuredActions.length + 1 })
+      savePluginActions(group, (action) => ({ ...action, Enabled: true, Sort: configuredGroups.length + 1 }))
     })
 
-    const removeAction = useMemoizedFn((action: ContextMenuAction) => {
-      if (action.IsCorePlugin || action.Locked) return
-      saveAction({ ...action, Enabled: false, Shortcut: '' })
+    const removePlugin = useMemoizedFn((group: ContextMenuPluginGroup) => {
+      if (group.actions.some((action) => action.IsCorePlugin || action.Locked)) return
+      savePluginActions(group, (action) => ({ ...action, Enabled: false, Shortcut: '' }))
     })
 
     const clearScene = useMemoizedFn(async () => {
-      const removable = configuredActions.filter((action) => !action.IsCorePlugin && !action.Locked)
+      const removable = sceneActions.filter((action) => action.Enabled && !action.IsCorePlugin && !action.Locked)
       setClearVisible(false)
       if (!removable.length) return
       setSavingKey('clear')
@@ -271,25 +333,27 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
 
     const onDragEnd = useMemoizedFn(async (result: DropResult) => {
       if (!result.destination || result.source.index === result.destination.index) return
-      const next = [...configuredActions]
+      const next = [...configuredGroups]
       const [moved] = next.splice(result.source.index, 1)
       next.splice(result.destination.index, 0, moved)
       const ordered = [
-        ...next.filter((action) => action.IsCorePlugin),
-        ...next.filter((action) => !action.IsCorePlugin),
+        ...next.filter((group) => getPrimaryAction(group).IsCorePlugin),
+        ...next.filter((group) => !getPrimaryAction(group).IsCorePlugin),
       ]
-      const sortMap = new Map(ordered.map((action, index) => [actionKey(action), index + 1]))
+      const sortMap = new Map(ordered.map((group, index) => [group.PluginUUID, index + 1]))
       setResponse((previous) => ({
         ...previous,
         Actions: previous.Actions.map((action) => {
-          const sort = sortMap.get(actionKey(action))
-          return sort === undefined ? action : { ...action, Sort: sort }
+          const sort = sortMap.get(action.PluginUUID)
+          return sort === undefined || (!action.Enabled && !action.IsCorePlugin) ? action : { ...action, Sort: sort }
         }),
       }))
       setSavingKey('reorder')
       try {
-        for (const action of ordered.filter((item) => !item.IsCorePlugin)) {
-          await setContextMenuActionBinding(bindingRequest({ ...action, Sort: sortMap.get(actionKey(action)) || 0 }))
+        for (const group of ordered.filter((item) => !getPrimaryAction(item).IsCorePlugin)) {
+          for (const action of group.actions.filter((item) => item.Enabled)) {
+            await setContextMenuActionBinding(bindingRequest({ ...action, Sort: sortMap.get(group.PluginUUID) || 0 }))
+          }
         }
         emiter.emit('refreshContextMenuActions')
       } catch (error) {
@@ -333,34 +397,39 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
       </Tooltip>
     )
 
-    const renderIdentity = (action: ContextMenuAction) => (
-      <div className={styles['plugin-identity']}>
-        <div className={styles['plugin-avatar']}>
-          {action.HeadImg ? (
-            <img src={action.HeadImg} alt="" />
-          ) : action.IsAIPlugin ? (
-            <IconSolidAIIcon className={styles['ai-plugin-avatar']} />
-          ) : (
-            action.PluginName.slice(0, 1).toUpperCase()
-          )}
-        </div>
-        <div className={styles['identity-content']}>
-          <div className={styles['plugin-name-line']}>
-            <span className={styles['plugin-name']} title={action.PluginName}>
-              {action.PluginName}
-            </span>
-            {action.IsCorePlugin ? <YakitTag color="success">核心</YakitTag> : null}
-            <YakitTag color={action.PluginType === LEGACY_CONTEXT_MENU_PLUGIN_TYPE ? 'info' : 'blue'}>
-              {action.PluginType === LEGACY_CONTEXT_MENU_PLUGIN_TYPE ? 'CODEC 兼容' : '右键插件'}
-            </YakitTag>
+    const renderIdentity = (group: ContextMenuPluginGroup) => {
+      const action = getPrimaryAction(group)
+      const capabilities = Array.from(new Set(group.actions.map(getCapabilityName))).join('、')
+      const help = group.actions.map((item) => item.Help).find(Boolean) || ''
+      const meta = `${capabilities}${help ? ` · ${help}` : ''}`
+      return (
+        <div className={styles['plugin-identity']}>
+          <div className={styles['plugin-avatar']}>
+            {action.HeadImg ? (
+              <img src={action.HeadImg} alt="" />
+            ) : action.IsAIPlugin ? (
+              <IconSolidAIIcon className={styles['ai-plugin-avatar']} />
+            ) : (
+              action.PluginName.slice(0, 1).toUpperCase()
+            )}
           </div>
-          <div className={styles['plugin-meta']} title={action.Help || action.HookName}>
-            {action.HookName}
-            {action.Help ? ` · ${action.Help}` : ''}
+          <div className={styles['identity-content']}>
+            <div className={styles['plugin-name-line']}>
+              <span className={styles['plugin-name']} title={action.PluginName}>
+                {action.PluginName}
+              </span>
+              {action.IsCorePlugin ? <YakitTag color="success">核心</YakitTag> : null}
+              <YakitTag color={action.PluginType === LEGACY_CONTEXT_MENU_PLUGIN_TYPE ? 'info' : 'blue'}>
+                {action.PluginType === LEGACY_CONTEXT_MENU_PLUGIN_TYPE ? 'CODEC 兼容' : '右键插件'}
+              </YakitTag>
+            </div>
+            <div className={styles['plugin-meta']} title={meta}>
+              {meta}
+            </div>
           </div>
         </div>
-      </div>
-    )
+      )
+    }
 
     return (
       <div className={styles['context-menu-manager']}>
@@ -388,9 +457,11 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
           <aside className={styles['scene-nav']}>
             <div className={styles['scene-nav-title']}>右键场景</div>
             {sceneOrder.map((scene) => {
-              const configuredCount = response.Actions.filter(
-                (action) => action.Scene === scene && (action.Enabled || action.IsCorePlugin),
-              ).length
+              const configuredCount = new Set(
+                response.Actions.filter(
+                  (action) => action.Scene === scene && (action.Enabled || action.IsCorePlugin),
+                ).map((action) => action.PluginUUID),
+              ).size
               return (
                 <button
                   type="button"
@@ -420,7 +491,7 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
                     type="text2"
                     colors="danger"
                     icon={<OutlineTrashIcon />}
-                    disabled={!configuredActions.some((action) => !action.IsCorePlugin) || !!savingKey}
+                    disabled={!configuredGroups.some((group) => !getPrimaryAction(group).IsCorePlugin) || !!savingKey}
                     onClick={() => setClearVisible(true)}
                   >
                     清空当前场景
@@ -431,15 +502,17 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
                   <Droppable droppableId={`context-menu-${activeScene}`}>
                     {(provided) => (
                       <div className={styles['configured-list']} ref={provided.innerRef} {...provided.droppableProps}>
-                        {configuredActions.map((action, index) => {
-                          const key = actionKey(action)
-                          const actionSaving = savingKey === key
+                        {configuredGroups.map((group, index) => {
+                          const action = getPrimaryAction(group)
+                          const key = pluginKey(group.PluginUUID)
+                          const groupSaving = savingKey === key
+                          const groupLocked = group.actions.some((item) => item.IsCorePlugin || item.Locked)
                           return (
                             <Draggable
                               key={key}
                               draggableId={key}
                               index={index}
-                              isDragDisabled={action.IsCorePlugin || action.Locked || !!savingKey}
+                              isDragDisabled={groupLocked || !!savingKey}
                             >
                               {(dragProvided, snapshot) => (
                                 <article
@@ -453,72 +526,98 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
                                     <span className={styles['drag-handle']} {...dragProvided.dragHandleProps}>
                                       ⋮⋮
                                     </span>
-                                    {renderIdentity(action)}
+                                    {renderIdentity(group)}
                                     {renderEditButton(action)}
-                                    {action.IsCorePlugin ? (
+                                    {groupLocked ? (
                                       <span className={styles['locked-text']}>固定展示</span>
                                     ) : (
                                       <YakitButton
                                         type="text2"
                                         colors="danger"
                                         icon={<OutlineCloseIcon />}
-                                        disabled={actionSaving}
-                                        onClick={() => removeAction(action)}
+                                        disabled={groupSaving}
+                                        onClick={() => removePlugin(group)}
                                       >
                                         移除
                                       </YakitButton>
                                     )}
                                   </div>
-                                  <div className={styles['row-settings']}>
-                                    <label>
-                                      <span>快捷键</span>
-                                      <YakitButton
-                                        type="outline2"
-                                        onClick={() => setShortcutAction(action)}
-                                        disabled={actionSaving}
-                                      >
-                                        {action.Shortcut
-                                          ? convertKeyboardToUIKey(action.Shortcut.split('|').filter(Boolean))
-                                          : '未绑定'}
-                                      </YakitButton>
-                                    </label>
-                                    <label>
-                                      <span>结果展示</span>
-                                      {action.SupportsResultMode ? (
-                                        <YakitSelect
-                                          value={action.ResultMode}
-                                          disabled={actionSaving}
-                                          options={Object.values(ContextMenuResultMode).map((mode) => ({
-                                            value: mode,
-                                            label: contextMenuResultModeName[mode],
-                                          }))}
-                                          onChange={(value) => saveAction({ ...action, ResultMode: value })}
-                                        />
-                                      ) : (
-                                        <span className={styles['legacy-result']}>沿用 CODEC</span>
-                                      )}
-                                    </label>
-                                    <label className={styles['ask-setting']}>
-                                      <span>执行前询问参数</span>
-                                      <YakitSwitch
-                                        size="small"
-                                        checked={action.AskBeforeRun}
-                                        disabled={
-                                          !action.Params.length ||
-                                          action.ExecutionType === ContextMenuExecutionType.LegacyPacketMutate ||
-                                          actionSaving
-                                        }
-                                        onChange={(checked) => saveAction({ ...action, AskBeforeRun: checked })}
-                                      />
-                                    </label>
-                                  </div>
+                                  {group.actions.map((item) => {
+                                    const actionSaving =
+                                      groupSaving || savingKey === actionKey(item) || savingKey === 'reorder'
+                                    const actionDisabled = !item.Enabled && !item.IsCorePlugin
+                                    return (
+                                      <div className={styles['row-settings']} key={actionKey(item)}>
+                                        {group.actions.length > 1 ? (
+                                          <div className={styles['ability-setting-header']}>
+                                            <span>{getCapabilityName(item)}</span>
+                                            <YakitSwitch
+                                              size="small"
+                                              checked={item.Enabled || item.IsCorePlugin}
+                                              disabled={item.IsCorePlugin || item.Locked || actionSaving}
+                                              onChange={(checked) =>
+                                                saveAction({
+                                                  ...item,
+                                                  Enabled: checked,
+                                                  Sort: getGroupSort(group),
+                                                  Shortcut: checked ? item.Shortcut : '',
+                                                })
+                                              }
+                                            />
+                                          </div>
+                                        ) : null}
+                                        <label>
+                                          <span>快捷键</span>
+                                          <YakitButton
+                                            type="outline2"
+                                            onClick={() => setShortcutAction(item)}
+                                            disabled={actionDisabled || actionSaving}
+                                          >
+                                            {item.Shortcut
+                                              ? convertKeyboardToUIKey(item.Shortcut.split('|').filter(Boolean))
+                                              : '未绑定'}
+                                          </YakitButton>
+                                        </label>
+                                        <label>
+                                          <span>结果展示</span>
+                                          {item.SupportsResultMode ? (
+                                            <YakitSelect
+                                              value={item.ResultMode}
+                                              disabled={actionDisabled || actionSaving}
+                                              options={Object.values(ContextMenuResultMode).map((mode) => ({
+                                                value: mode,
+                                                label: contextMenuResultModeName[mode],
+                                              }))}
+                                              onChange={(value) => saveAction({ ...item, ResultMode: value })}
+                                            />
+                                          ) : (
+                                            <span className={styles['legacy-result']}>沿用 CODEC</span>
+                                          )}
+                                        </label>
+                                        <label className={styles['ask-setting']}>
+                                          <span>执行前询问参数</span>
+                                          <YakitSwitch
+                                            size="small"
+                                            checked={item.AskBeforeRun}
+                                            disabled={
+                                              actionDisabled ||
+                                              !item.Params.length ||
+                                              item.ExecutionType === ContextMenuExecutionType.LegacyPacketMutate ||
+                                              actionSaving
+                                            }
+                                            onChange={(checked) => saveAction({ ...item, AskBeforeRun: checked })}
+                                          />
+                                        </label>
+                                      </div>
+                                    )
+                                  })}
                                 </article>
                               )}
                             </Draggable>
                           )
                         })}
                         {provided.placeholder}
-                        {!configuredActions.length && (
+                        {!configuredGroups.length && (
                           <YakitEmpty
                             title="当前场景还没有配置右键插件"
                             descriptionReactNode="从右侧列表添加常用插件"
@@ -534,7 +633,7 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
                 <div className={styles['panel-header']}>
                   <div>
                     <div className={styles['panel-title']}>可添加插件</div>
-                    <div className={styles['panel-description']}>{availableActions.length} 项可用于当前场景</div>
+                    <div className={styles['panel-description']}>{availableGroups.length} 个可用于当前场景</div>
                   </div>
                 </div>
                 <div className={styles['search-wrapper']}>
@@ -547,25 +646,26 @@ export const ContextMenuManager: React.FC<ContextMenuManagerProps> = React.memo(
                   />
                 </div>
                 <div className={styles['available-list']}>
-                  {availableActions.map((action) => {
-                    const consumesSlot = !sceneEnabledPluginUUIDs.has(action.PluginUUID)
+                  {availableGroups.map((group) => {
+                    const action = getPrimaryAction(group)
+                    const consumesSlot = !sceneEnabledPluginUUIDs.has(group.PluginUUID)
                     const quotaFull = consumesSlot && sceneEnabledCustomPluginCount >= response.MaxCustomPluginCount
                     return (
-                      <article className={styles['available-row']} key={actionKey(action)}>
-                        {renderIdentity(action)}
+                      <article className={styles['available-row']} key={pluginKey(group.PluginUUID)}>
+                        {renderIdentity(group)}
                         {renderEditButton(action)}
                         <YakitButton
                           type="text"
                           icon={<OutlinePlusIcon />}
                           disabled={quotaFull || !!savingKey}
-                          onClick={() => addAction(action)}
+                          onClick={() => addPlugin(group)}
                         >
                           {quotaFull ? '额度已满' : '添加'}
                         </YakitButton>
                       </article>
                     )
                   })}
-                  {!availableActions.length && (
+                  {!availableGroups.length && (
                     <YakitEmpty title={keyword ? '没有匹配的插件' : '当前场景没有更多可添加插件'} />
                   )}
                 </div>

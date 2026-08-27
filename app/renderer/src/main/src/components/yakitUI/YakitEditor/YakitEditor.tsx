@@ -145,6 +145,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     forceRenderMenu = false,
     menuType = [],
     disableCodecPluginMenus = false,
+    httpPacketMutatePluginMenuItems = [],
+    onHTTPPacketMutatePluginRun,
     value,
     setValue,
     type,
@@ -338,7 +340,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       const httpMenu = extraMenuListsObj['http'].menu[0] as EditorMenuItemProps
       const newHttpChildren = menuReduce([
         ...(httpMenu?.children || []).filter(
-          (item) => !(item as EditorMenuItemProps & { isCustom?: boolean }).isCustom,
+          (item) =>
+            !(item as EditorMenuItemProps & { isCustom?: boolean }).isCustom &&
+            !(item as EditorMenuItemProps & { isManagedContextMenu?: boolean }).isManagedContextMenu,
         ),
         ...(disableCodecPluginMenus ? [] : customHTTPMutatePlugin).map((item) => {
           return {
@@ -348,6 +352,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             isCustom: true,
           } as EditorMenuItemProps
         }),
+        ...(httpPacketMutatePluginMenuItems.length
+          ? ([
+              { type: 'divider', isManagedContextMenu: true },
+              ...httpPacketMutatePluginMenuItems.map((item) => ({ ...item, isManagedContextMenu: true })),
+            ] as EditorMenuItemType[])
+          : []),
       ])
       // 自定义HTTP数据包变形
       ;(extraMenuListsObj['http'].menu[0] as EditorMenuItemProps).children = newHttpChildren
@@ -426,6 +436,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     extraMenuListsObj,
     baseMenuListsObj,
     disableCodecPluginMenus,
+    httpPacketMutatePluginMenuItems,
   ])
 
   /** 菜单功能点击处理事件 */
@@ -500,6 +511,15 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           onRightContextMenu(menuItemName)
           break
         } else if (keyToOnRunRef.current[name].includes('http') && menuName === 'http') {
+          const isManagedMutatePlugin = httpPacketMutatePluginMenuItems.some(
+            (item) => (item as EditorMenuItemProps).key === menuItemName,
+          )
+          if (isManagedMutatePlugin) {
+            onHTTPPacketMutatePluginRun?.(editor, menuItemName)
+            executeFunc = true
+            onRightContextMenu(menuItemName)
+            break
+          }
           // 获取是否为自定义HTTP数据包变形标记
           let key: string = menuItemName
           let data: boolean | undefined = undefined
@@ -728,6 +748,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     contextMenuPlugin,
     customHTTPMutatePlugin,
     disableCodecPluginMenus,
+    httpPacketMutatePluginMenuItems,
     extraMenuListsObj,
     DefaultMenuTopArr,
     DefaultMenuBottomArr,

@@ -161,6 +161,20 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
       ),
     [contextMenuActions, noPacketModifier],
   )
+  const packetMutateActions = useMemo(
+    () =>
+      visibleContextMenuActions.filter(
+        (action) => action.ExecutionType === ContextMenuExecutionType.LegacyPacketMutate,
+      ),
+    [visibleContextMenuActions],
+  )
+  const packetContextActions = useMemo(
+    () =>
+      visibleContextMenuActions.filter(
+        (action) => action.ExecutionType !== ContextMenuExecutionType.LegacyPacketMutate,
+      ),
+    [visibleContextMenuActions],
+  )
   const contextMenuActionsRef = useRef<ContextMenuAction[]>([])
   contextMenuActionsRef.current = visibleContextMenuActions
 
@@ -260,6 +274,21 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
       })
     },
   )
+
+  const packetMutatePluginMenuItems = useMemo(
+    () =>
+      packetMutateActions.map((action) => ({
+        key: getPacketActionKey(action, 'execute'),
+        label: <ContextMenuActionLabel action={action} label={action.PluginName} />,
+      })),
+    [packetMutateActions],
+  )
+
+  const runPacketMutatePlugin = useMemoizedFn((editor: YakitIMonacoEditor, key: string) => {
+    const action = packetMutateActions.find((item) => key === getPacketActionKey(item, 'execute'))
+    if (!action) return
+    runPacketAction(action, 'context-menu', editor)
+  })
 
   const handleEditorDidMount = useMemoizedFn((editor: YakitIMonacoEditor, monaco) => {
     editor.onKeyDown((event) => {
@@ -816,10 +845,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           key: CONTEXT_MENU_PACKET_GROUP_KEY,
           label: '右键插件',
           children: [
-            ...visibleContextMenuActions.map((action) => {
-              const sameNameCount = visibleContextMenuActions.filter(
-                (item) => item.PluginName === action.PluginName,
-              ).length
+            ...packetContextActions.map((action) => {
+              const sameNameCount = packetContextActions.filter((item) => item.PluginName === action.PluginName).length
               const label = sameNameCount > 1 ? `${action.PluginName} · ${action.HookName}` : action.PluginName
               const canConfigure =
                 action.Params?.length && action.ExecutionType !== ContextMenuExecutionType.LegacyPacketMutate
@@ -856,7 +883,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           openContextMenuManager(ContextMenuScene.HTTPPacket)
           return
         }
-        const action = visibleContextMenuActions.find((item) =>
+        const action = packetContextActions.find((item) =>
           key.startsWith(`contextMenuAction:${encodeURIComponent(item.PluginUUID)}:${item.ActionID}:`),
         )
         if (!action) return
@@ -938,7 +965,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     setCompareLeft,
     setCompareRight,
     noSendToComparer,
-    visibleContextMenuActions,
+    packetContextActions,
     contextMenuPacket,
     runPacketAction,
   ])
@@ -954,6 +981,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
       editorDidMount={handleEditorDidMount}
       {...restProps}
       {...extraEditorProps}
+      httpPacketMutatePluginMenuItems={packetMutatePluginMenuItems}
+      onHTTPPacketMutatePluginRun={runPacketMutatePlugin}
       disableCodecPluginMenus={true}
     />
   )

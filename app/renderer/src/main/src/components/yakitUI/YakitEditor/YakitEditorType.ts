@@ -31,6 +31,11 @@ export interface YakitEditorProps {
   /** @name 由统一右键插件管理接管旧 CODEC 菜单，禁止自动注入旧插件 */
   disableCodecPluginMenus?: boolean
 
+  /** @name 经右键插件管理启用的 HTTP 数据包变形菜单项 */
+  httpPacketMutatePluginMenuItems?: EditorMenuItemType[]
+  /** @name 执行已启用的 HTTP 数据包变形插件 */
+  onHTTPPacketMutatePluginRun?: (editor: YakitIMonacoEditor, key: string) => any
+
   /** @name 编辑器内容(string类型) */
   value?: string
   /** @name 修改编辑器内容事件回调 */
