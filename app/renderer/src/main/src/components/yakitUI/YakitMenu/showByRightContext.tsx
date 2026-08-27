@@ -99,10 +99,14 @@ export const showByRightContext = (props: YakitMenuProp | ReactNode, x?: number,
 
   const render = () => {
     setTimeout(() => {
-      document.addEventListener('click', function onClickOutsize() {
-        destory()
-        document.removeEventListener('click', onClickOutsize)
-      })
+      document.addEventListener(
+        'click',
+        function onClickOutsize() {
+          destory()
+          document.removeEventListener('click', onClickOutsize)
+        },
+        true,
+      )
       // document.addEventListener("contextmenu", function onContextMenuOutsize() {
       //     destory()
       //     document.removeEventListener("contextmenu", onContextMenuOutsize)
