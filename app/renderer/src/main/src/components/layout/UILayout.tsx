@@ -59,14 +59,12 @@ import type { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
 const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({ default: m.DownloadYakit })))
 const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
 import { HelpDoc } from './HelpDoc/HelpDoc'
+import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import { SolidCheckCircleIcon, SolidHomeIcon } from '@/assets/icon/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
-const YakitGetOnlinePlugin = lazy(() =>
-  import('@/pages/mitm/MITMServerHijacking/MITMPluginOnline').then((m) => ({ default: m.YakitGetOnlinePlugin })),
-)
 import type { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
 const NewThirdPartyApplicationConfig = lazy(() => import('../configNetwork/NewThirdPartyApplicationConfig'))
 import { usePerformanceSampling } from '@/store/performanceSampling'
