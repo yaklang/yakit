@@ -22,6 +22,7 @@ const SYSTEMS = [
 ]
 
 const INSTALL_TARGETS = ['electron', 'main', 'link']
+const isInstallTarget = (value) => INSTALL_TARGETS.includes(value) || value === 'cli'
 
 const EDITION_VALUES = EDITIONS.map((item) => item.value)
 const SYSTEM_VALUES = SYSTEMS.map((item) => item.value)
@@ -44,7 +45,6 @@ const ENGINE_HANDSHAKE_NAME = {
 
 const isEdition = (value) => EDITION_VALUES.includes(value)
 const isSystem = (value) => SYSTEM_VALUES.includes(value)
-const isInstallTarget = (value) => INSTALL_TARGETS.includes(value)
 
 const toEngineHandshakeName = (edition) => {
   if (!edition) return 'yakit'

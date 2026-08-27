@@ -15,13 +15,13 @@ node ./cli/cli.mjs <command>
 
 本仓库日常 / CI 仍以 `yarn cli` 为例，语义相同。
 
-`install` / `add` / `remove` 会调用当前包管理器。`install` 只用 Node 内置模块，**全新 clone 可直接** `yarn cli install` / `node ./cli/cli.mjs install`（不必先有 commander / inquirer）。其它命令需要根目录依赖已装好。
+`install` / `add` / `remove` 会调用当前包管理器。`install` 只用 Node 内置模块，**全新 clone 可直接** `yarn cli install` / `node ./cli/cli.mjs install`（不必先有 commander / inquirer）。`yarn cli install cli` 只装根目录 CLI 运行时（commander / execa / chalk / concurrently / inquirer），不装 Electron、不改 lockfile。其它命令需要这些包已在根 `node_modules`。
 
 ## 命令一览
 
 | 命令 | 做什么 | 常用参数 | 默认 |
 | --- | --- | --- | --- |
-| `install [electron\|main\|link]` | 装依赖 | 位置参数 | 三端全装 |
+| `install [electron\|main\|link\|cli]` | 装依赖 | 位置参数；`cli` 只装 CLI 运行时 | 三端全装 |
 | `add <electron\|main\|link> <pkg…>` | 给指定子项目加包 | `-D` / `--dev` 及其他 yarn/npm/pnpm 原样 flag | 必须指定一端 |
 | `remove <electron\|main\|link> <pkg…>` | 从指定子项目卸包 | 位置参数 | 必须指定一端 |
 | `start` | 开发态启动渲染端 | `-v`、`--main`、`--link` | 两端都启 |

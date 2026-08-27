@@ -277,6 +277,7 @@ yarn cli pack -s mac -v yakit
 | `yarn check-deps` | 检查本地依赖是否与仓库一致（启动前执行） |
 | `yarn cli install` | 安装根目录 + 两个渲染端依赖 |
 | `yarn cli install electron\|main\|link` | 只装其中一个 |
+| `yarn cli install cli` | 只装根目录 CLI 运行时（不含 Electron） |
 | `yarn cli add <electron\|main\|link> <pkg…>` | 给指定子项目加包（`-D` / `--dev`） |
 | `yarn cli remove <electron\|main\|link> <pkg…>` | 从指定子项目卸包 |
 | `yarn cli start -v <edition>` | 开发态启动两端渲染（`--main` / `--link` 只启一端） |

@@ -7,6 +7,8 @@
  * 2. 其余命令再加载 commander / inquirer / execa，注册 start / build / pack / electron / dev
  */
 import { spawn } from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
 import {
   genCLIDisplayList,
   importWithHint,
@@ -83,11 +85,34 @@ const pmMutateArgs = (pm, action, rest) => {
   return [action, ...mapped]
 }
 
-/** 安装依赖。无 target 时按 electron → link → main 依次 install，否则只装指定一端 */
+/** yarn cli build/start 在根目录需要的包（不含 Electron / electron-builder） */
+const CLI_RUNTIME_PACKAGES = ['chalk', 'commander', 'concurrently', 'execa', 'inquirer']
+
+/** 只把 CLI 运行时装进根 node_modules，不改 package.json / lockfile，也不跑 electron postinstall */
+const installCliRuntime = async () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'))
+  const specs = CLI_RUNTIME_PACKAGES.map((name) => {
+    const ver = pkg.devDependencies?.[name] || pkg.dependencies?.[name]
+    if (!ver) {
+      console.error(`Error: 根 package.json 未声明 ${name}`)
+      process.exit(1)
+    }
+    return `${name}@${ver}`
+  })
+  console.log(`Start install CLI runtime (npm --no-save, skip Electron) ...`)
+  await spawnPm('npm', ['install', '--no-save', '--no-package-lock', '--ignore-scripts', ...specs], repoRoot)
+}
+
+/** 安装依赖。无 target 时按 electron → link → main 依次 install；cli 只装 CLI 运行时 */
 const runCliInstall = async (target) => {
   if (target && !isInstallTarget(target)) {
-    console.error(`Error: 无效的安装目标 "${target}". 支持: ${INSTALL_TARGETS.join(' | ')}`)
+    console.error(`Error: 无效的安装目标 "${target}". 支持: ${INSTALL_TARGETS.join(' | ')} | cli`)
     process.exit(1)
+  }
+
+  if (target === 'cli') {
+    await installCliRuntime()
+    return
   }
 
   const pm = detectPmOrExit()
@@ -125,8 +150,9 @@ const cliArgs = process.argv.slice(2)
 if (cliArgs[0] === 'install' || cliArgs[0] === 'add' || cliArgs[0] === 'remove') {
   if (cliArgs.includes('-h') || cliArgs.includes('--help')) {
     if (cliArgs[0] === 'install') {
-      console.log(`Usage: yarn cli install [electron | main | link]`)
+      console.log(`Usage: yarn cli install [electron | main | link | cli]`)
       console.log('安装依赖（默认根目录 + 两个渲染端）。install 不依赖 commander，全新 clone 可直接执行。')
+      console.log('cli：只装根目录 CLI 运行时（commander / execa 等），不含 Electron。')
       console.log(InstallCMDExamplesDoc)
     } else if (cliArgs[0] === 'add') {
       console.log(`Usage: yarn cli add <electron | main | link> <pkg...> [-D|--dev]`)
@@ -356,7 +382,7 @@ program.configureOutput({
 program
   .command('install')
   .description('安装依赖（默认根目录 + 两个渲染端）')
-  .argument('[target]', `只装其中一个: ${INSTALL_TARGETS.join(' | ')}`)
+  .argument('[target]', '只装其中一个: electron | main | link | cli')
   .addHelpText('after', `\n${YellowChalk.bold('Examples:')}\n${InstallCMDExamplesDoc}`)
   .action(async (target) => {
     try {

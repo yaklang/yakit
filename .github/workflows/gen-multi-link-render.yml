@@ -30,7 +30,7 @@ jobs:
                   echo "TAG_VERSION=$tag" >> $GITHUB_ENV
 
             - name: "Install Link Render Dependencies"
-              run: yarn install && yarn cli install link
+              run: yarn cli install cli && yarn cli install link
               working-directory: ./
 
             - name: "Build CE Link Render"

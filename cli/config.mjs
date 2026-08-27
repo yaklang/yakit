@@ -30,6 +30,9 @@ const InstallCMDExamplesDoc = `
   $ yarn cli install electron
   $ yarn cli install main
   $ yarn cli install link
+
+  # 只装根目录 CLI 运行时（不含 Electron，给只构建渲染端的 CI 用）
+  $ yarn cli install cli
 `
 
 /** add -h：给指定子项目加包（含 -D） */
