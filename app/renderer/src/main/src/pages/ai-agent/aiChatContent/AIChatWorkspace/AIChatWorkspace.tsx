@@ -16,7 +16,6 @@ import OperationLog from '../../components/aiFileSystemList/OperationLog/Operati
 import { AITabs, AITabsEnum } from '../../defaultConstant'
 import type { AITabsEnumType, AIAgentTriggerEventInfo } from '../../aiAgentType'
 import useAIAgentStore from '../../useContext/useStore'
-import { useChatSessionPaneStore } from '../../ChatSessionPane/useChatSessionPaneStore'
 import type { AIAgentTabPayload } from '../type'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import emiter from '@/utils/eventBus/eventBus'
@@ -78,7 +77,6 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   const riskTabUpdate = useStore(store, (state) => state.riskTabUpdate)
 
   const { activeChat } = useAIAgentStore()
-  const chatSessionVisible = useChatSessionPaneStore((state) => state.visible)
   const relatedRuntimeIDs = useMemo(() => activeChat?.RelatedRuntimeIDs ?? [], [activeChat?.RelatedRuntimeIDs])
 
   const [tabs, setTabs] = useState<WorkspaceTab[]>([])
@@ -316,11 +314,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
 
   return (
     <div className={styles['workspace']}>
-      <div
-        className={classNames(styles['workspace-tab-bar'], {
-          [styles['workspace-tab-bar-session-hidden']]: !chatSessionVisible && tabs.length > 0,
-        })}
-      >
+      <div className={styles['workspace-tab-bar']}>
         {tabs.map((tab) => {
           const isActive = tab.key === activeTabKey
           return (

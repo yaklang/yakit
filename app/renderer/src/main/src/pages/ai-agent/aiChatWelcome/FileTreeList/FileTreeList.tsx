@@ -27,7 +27,7 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
   const onSelect = useMemoizedFn((node?: FileNodeProps) => {
     setSelected(node)
     if (node && !node.isFolder) {
-      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview }))
+      emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: node.path }))
     }
   })
 

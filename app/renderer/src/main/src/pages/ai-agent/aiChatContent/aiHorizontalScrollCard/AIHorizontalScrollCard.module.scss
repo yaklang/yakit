@@ -18,13 +18,7 @@
     @extend %display-column-center;
     width: 100%;
     flex: 1;
-    margin-left: 0;
-    transition: margin-left 0.2s ease;
 
-    &.expand-retract-content-session-hidden {
-      // 侧栏收起时给左上角「打开会话」按钮让位
-      margin-left: 36px;
-    }
     .header {
       @extend %display-flex-center;
       justify-content: space-between;

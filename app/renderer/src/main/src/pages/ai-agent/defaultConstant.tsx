@@ -4,7 +4,6 @@ import {
   OutlineChipIcon,
   OutlineCogIcon,
   OutlineMCPIcon,
-  OutlineSparklesIcon,
   OutlineWrenchIcon,
   OutlineBookOpenTextIcon,
   OutlineBotIcon,
@@ -40,7 +39,7 @@ import {
   SolidToolIcon,
 } from '@/assets/icon/solid'
 import type { MCPServerType } from './type/aiMCP'
-import { ColorsAIIcon } from '@/assets/icon/colors'
+import { ColorsAIIcon, ColorsChatIcon } from '@/assets/icon/colors'
 import type { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
 import type { ExportAIForgeRequest } from './forgeName/type'
 
@@ -48,7 +47,7 @@ import type { ExportAIForgeRequest } from './forgeName/type'
 export const YakitAIAgentPageID = 'yakit-ai-agent'
 
 export enum AIAgentTabListEnum {
-  // History = 'history',
+  Session = 'session',
   Setting = 'setting',
   Forge_Name = 'forgeName',
   Tool = 'tool',
@@ -57,7 +56,11 @@ export enum AIAgentTabListEnum {
   KnowledgeBase = 'knowledgeBase',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
-  // { value: AIAgentTabListEnum.History, label: 'AIAgentTabs.historyChat', icon: <OutlineSparklesIcon /> },
+  {
+    value: AIAgentTabListEnum.Session,
+    label: 'AIAgentTabs.session',
+    icon: <ColorsChatIcon className="ai-agent-session-tab-icon" />,
+  },
   { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <OutlineCogIcon /> },
   // {value: AIAgentTabListEnum.Forge_Name, label: "AIAgentTabs.skill", icon: <OutlineTemplateIcon />},
   // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},

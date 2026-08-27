@@ -2,14 +2,12 @@ import React, { memo, useEffect, useState } from 'react'
 import type { RefObject } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineFlagIcon, OutlineKeepLeftIcon, OutlineViewlistIcon } from '@/assets/icon/outline'
+import { OutlineFlagIcon, OutlineViewlistIcon } from '@/assets/icon/outline'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import {
   YakitDockablePane,
   yakitDockablePaneSegmentedLabel,
 } from '@/components/yakitUI/YakitDockablePane/YakitDockablePane'
-import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import type useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
 import { AIForgeForm, AIToolForm } from '../../aiTriageChatTemplate/AITriageChatTemplate'
@@ -19,22 +17,17 @@ import type { AITool } from '../../type/aiTool'
 import { AIChatContent } from '../../aiChatContent/AIChatContent'
 import { AIChatWorkspace } from '../../aiChatContent/AIChatWorkspace/AIChatWorkspace'
 import type { AIChatContentRefProps } from '../../aiChatContent/type'
-import FileTreeList from '../../aiChatWelcome/FileTreeList/FileTreeList'
-import ChatSessionPane from '../../ChatSessionPane/ChatSessionPane'
 import { TaskListPane } from '../../chatTemplate/historyTaskTree/TaskListPane'
 import { useHasTaskTree } from '../../chatTemplate/historyTaskTree/useHasTaskTree'
 import TimelineCard from '../../chatTemplate/TimelineCard/TimelineCard'
 import { YakitAIAgentPageID } from '../../defaultConstant'
-import { useChatSessionPaneStore } from '../../ChatSessionPane/useChatSessionPaneStore'
 import { useMultiFuncPaneStore } from '../useMultiFuncPaneStore'
-import { useChatSecondaryPaneStore } from '../useChatSecondaryPaneStore'
 import type { AIAgentChatMode, HandleStartParams } from '../type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './AIAgentChatLayout.module.scss'
 
 const AIChatWelcome = React.lazy(() => import('../../aiChatWelcome/AIChatWelcome'))
 
-const CHAT_SESSION_PANE_WIDTH = 320
 const MULTI_FUNC_PANE_WIDTH = 320
 const MIN_CHAT_CONTENT_WIDTH = 480
 
@@ -76,18 +69,15 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   } = props
 
   const { t } = useI18nNamespaces(['aiAgent'])
-  const chatSessionVisible = useChatSessionPaneStore((state) => state.visible)
-  const setChatSessionVisible = useChatSessionPaneStore((state) => state.setVisible)
   const multiFuncVisible = useMultiFuncPaneStore((state) => state.visible)
   const setMultiFuncVisible = useMultiFuncPaneStore((state) => state.setVisible)
   const multiFuncTab = useMultiFuncPaneStore((state) => state.tab)
   const setMultiFuncTab = useMultiFuncPaneStore((state) => state.setTab)
-  const workspaceVisible = useChatSecondaryPaneStore((state) => state.visible)
-  const setWorkspaceVisible = useChatSecondaryPaneStore((state) => state.setVisible)
 
   const hasTaskTree = useHasTaskTree()
 
   const [filePreviewData, setFilePreviewData] = useState<FileNodeProps>()
+  const [workspaceVisible, setWorkspaceVisible] = useState(false)
   const [dockDisabled, setDockDisabled] = useState(false)
 
   useEffect(() => {
@@ -100,7 +90,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
     const el = wrapperRef.current
     if (!el || typeof ResizeObserver === 'undefined') return
     const update = (width: number) => {
-      const occupied = (chatSessionVisible ? CHAT_SESSION_PANE_WIDTH : 0) + MULTI_FUNC_PANE_WIDTH
+      const occupied = MULTI_FUNC_PANE_WIDTH
       const next = width - occupied < MIN_CHAT_CONTENT_WIDTH
       setDockDisabled((prev) => (prev === next ? prev : next))
     }
@@ -112,7 +102,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [chatSessionVisible, wrapperRef])
+  }, [wrapperRef])
 
   const onTabsChange = useMemoizedFn((count: number) => {
     setWorkspaceVisible(count > 0)
@@ -120,30 +110,6 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
 
   return (
     <div className={styles['chat-wrapper']}>
-      <YakitButton
-        className={styles['open-expand-resources']}
-        type="text2"
-        icon={<OutlineKeepLeftIcon />}
-        onClick={() => setChatSessionVisible(true)}
-      />
-      <div
-        className={classNames(styles['chat-session-wrapper'], {
-          [styles['chat-session-wrapper-hidden']]: !chatSessionVisible,
-        })}
-      >
-        <SplitView
-          isVertical
-          elements={[
-            {
-              element: <ChatSessionPane />,
-            },
-            {
-              element: <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} />,
-            },
-          ]}
-          sashClassName={styles['split-view-line']}
-        />
-      </div>
       <div className={styles['chat-content-wrapper']}>
         <div
           className={classNames(styles['chat-workspace'], {

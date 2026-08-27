@@ -8,6 +8,10 @@ import classNames from 'classnames'
 import styles from './AIAgentSideList.module.scss'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import ChatSessionPane from './ChatSessionPane/ChatSessionPane'
+import { SplitView } from '../yakRunner/SplitView/SplitView'
+import FileTreeList from './aiChatWelcome/FileTreeList/FileTreeList'
+import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 
 const AIChatSetting = React.lazy(() => import('./AIChatSetting/AIChatSetting'))
 const AIModelList = React.lazy(() => import('./aiModelList/AIModelList'))
@@ -15,7 +19,7 @@ const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
-  const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.Setting)
+  const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.Session)
   const [show, setShow] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'show',
@@ -39,7 +43,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
       if (!params) return
       switch (type) {
         case SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE:
-          setActive(params.active as AIAgentTabListEnum)
+          setActive((params.active === 'history' ? AIAgentTabListEnum.Session : params.active) as AIAgentTabListEnum)
           setShow(params.show !== false)
           break
         case SwitchAIAgentTabEventEnum.SET_TAB_SHOW:
@@ -50,17 +54,24 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
       }
     } catch (error) {}
   })
-
+  const [filePreviewData, setFilePreviewData] = useState<FileNodeProps>()
   const renderTabContent = useMemoizedFn((key: AIAgentTabListEnum) => {
     let content: ReactNode = <></>
     switch (key) {
-      // case AIAgentTabListEnum.History:
-      //   content = (
-      //     <React.Suspense>
-      //       <HistoryChat aiSource={AI_AGENT_HISTORY_AI_SOURCES} />
-      //     </React.Suspense>
-      //   )
-      //   break
+      case AIAgentTabListEnum.Session:
+        content = (
+          <div className={styles['session-pane']}>
+            <SplitView
+              isVertical
+              className={styles['session-split']}
+              elements={[
+                { element: <ChatSessionPane /> },
+                { element: <FileTreeList selected={filePreviewData} setSelected={setFilePreviewData} /> },
+              ]}
+            />
+          </div>
+        )
+        break
       case AIAgentTabListEnum.Setting:
         content = (
           <React.Suspense>

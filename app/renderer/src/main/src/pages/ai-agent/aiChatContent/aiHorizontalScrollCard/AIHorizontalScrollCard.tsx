@@ -27,9 +27,7 @@ import { failed, yakitNotify } from '@/utils/notification'
 import { grpcExportAILogs } from '../../grpc'
 import { useMemoizedFn } from 'ahooks'
 import ContextDetailPopover from '../AIContextToken/ContextDetailPopover'
-import { useChatSessionPaneStore } from '../../ChatSessionPane/useChatSessionPaneStore'
 import { useMultiFuncPaneStore } from '../../aiAgentChat/useMultiFuncPaneStore'
-import { useChatSecondaryPaneStore } from '../../aiAgentChat/useChatSecondaryPaneStore'
 import { onNewChat } from '../../historyChat/HistoryChat'
 import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { useCasualTaskTab } from '../hooks/useCasualTaskTab'
@@ -47,8 +45,6 @@ export const AIHorizontalScrollCard = memo(() => {
   const { activeChat } = useAIAgentStore()
   const { getSetting } = useAIAgentDispatcher()
   const { onOpenLogWindow } = useAiChatLog()
-  const chatSessionVisible = useChatSessionPaneStore((state) => state.visible)
-  const workspaceVisible = useChatSecondaryPaneStore((state) => state.visible)
   const multiFuncVisible = useMultiFuncPaneStore((state) => state.visible)
   const openMultiFuncWithTab = useMultiFuncPaneStore((state) => state.openWithTab)
   const [dropdownVisible, setDropdownVisible] = useState(false)
@@ -142,11 +138,7 @@ export const AIHorizontalScrollCard = memo(() => {
         expandText={t('YakitButton.expand')}
         retractText={t('YakitButton.collapse')}
       >
-        <div
-          className={classNames(styles['expand-retract-content'], {
-            [styles['expand-retract-content-session-hidden']]: !chatSessionVisible && !workspaceVisible,
-          })}
-        >
+        <div className={classNames(styles['expand-retract-content'])}>
           <div className={styles['header']}>
             <div className={styles['title']}>
               <SolidChatalt2Icon className={styles['chat-alt-icon']} />

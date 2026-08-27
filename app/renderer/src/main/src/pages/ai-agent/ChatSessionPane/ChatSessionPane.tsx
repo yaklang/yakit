@@ -1,11 +1,13 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
+import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { OutlineKeepLeftIcon, OutlineMessageCirclePlusIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
+import { OutlineDesktopcomputerIcon, OutlineMessageCirclePlusIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
 import HistoryChatList from '../historyChat/HistoryChatList/HistoryChatList'
 import useSessionList from '../historyChat/HistoryChatList/hook/useSessionList'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
@@ -14,15 +16,30 @@ import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
 import { grpcDeleteAISession } from '../grpc'
-import { useChatSessionPaneStore } from './useChatSessionPaneStore'
 import styles from './ChatSessionPane.module.scss'
 import { onNewChat } from '../historyChat/HistoryChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { getSessionDisplayTitle } from '../historyChat/source'
+import {
+  filterHistorySessionsBySource,
+  getHistorySourceQueryPlatform,
+  getHistorySourceQuerySources,
+  getSessionDisplayTitle,
+  type HistorySourceFilter,
+} from '../historyChat/source'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
-type PaneTab = 'session' | 'browser'
+const HISTORY_SOURCE_FILTER_OPTIONS: {
+  key: HistorySourceFilter
+  title: string
+  icon: ReactNode
+}[] = [
+  { key: 'local', title: 'Yakit 本地会话', icon: <OutlineDesktopcomputerIcon /> },
+  { key: 'feishu', title: '飞书会话', icon: <FeishuIcon /> },
+  { key: 'dingtalk', title: '钉钉会话', icon: <DingtalkIcon /> },
+]
+
+const IM_HISTORY_REFRESH_INTERVAL_MS = 5000
 
 interface SessionDataPayload {
   type: 'refresh' | 'loadNextPage' | 'clear' | 'prependSession' | 'updateSession'
@@ -132,11 +149,19 @@ const SessionSearchCommand: React.FC<{
 
 const ChatSessionPane: React.FC = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const [activeTab, setActiveTab] = useState<PaneTab>('session')
   const [searchOpen, setSearchOpen] = useState(false)
-  const setVisible = useChatSessionPaneStore((state) => state.setVisible)
-  const [{ sessions }, dispatcher] = useSessionList(AI_AGENT_HISTORY_AI_SOURCES)
+  const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
+  const historyQuerySources = useMemo(
+    () => getHistorySourceQuerySources(AI_AGENT_HISTORY_AI_SOURCES, historySourceFilter),
+    [historySourceFilter],
+  )
+  const historyQueryPlatform = useMemo(() => getHistorySourceQueryPlatform(historySourceFilter), [historySourceFilter])
+  const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
+  const visibleSessions = useMemo(
+    () => filterHistorySessionsBySource(sessions, historySourceFilter),
+    [historySourceFilter, sessions],
+  )
 
   const handleResetSessions = useMemoizedFn(() => {
     dispatcher.setSessions?.([])
@@ -147,10 +172,15 @@ const ChatSessionPane: React.FC = memo(() => {
     setSearchOpen(false)
   })
 
-  // const handleChangeTab = useMemoizedFn((tab: PaneTab) => {
-  //   setActiveTab(tab)
-  //   if (tab !== 'session') setSearchOpen(false)
-  // })
+  const handleSetHistorySourceFilter = useMemoizedFn((filter: HistorySourceFilter) => {
+    if (historySourceFilter === filter) return
+    setHistorySourceFilter(filter)
+  })
+
+  const isSessionVisibleInCurrentSource = useMemoizedFn((session: AISession) => {
+    if (!isSessionMatchSource(session, historyQuerySources)) return false
+    return filterHistorySessionsBySource([session], historySourceFilter).length > 0
+  })
 
   const handleSelectSession = useMemoizedFn((info: AISession) => {
     setSetting?.((old) => ({
@@ -165,7 +195,6 @@ const ChatSessionPane: React.FC = memo(() => {
       },
     }))
     setActiveChat?.(info)
-    setActiveTab('session')
     setSearchOpen(false)
   })
 
@@ -189,7 +218,7 @@ const ChatSessionPane: React.FC = memo(() => {
           handleResetSessions()
           break
         case 'prependSession':
-          if (payload.payload && isSessionMatchSource(payload.payload, AI_AGENT_HISTORY_AI_SOURCES)) {
+          if (payload.payload && isSessionVisibleInCurrentSource(payload.payload)) {
             dispatcher.setSessions((prev) => [payload.payload!, ...prev])
           }
           break
@@ -208,40 +237,70 @@ const ChatSessionPane: React.FC = memo(() => {
     return () => {
       emiter.off('sessionData', handleSessionData)
     }
-  }, [AI_AGENT_HISTORY_AI_SOURCES, dispatcher, handleResetSessions])
+  }, [dispatcher, handleResetSessions, historyQuerySources, isSessionVisibleInCurrentSource])
+
+  useUpdateEffect(() => {
+    handleResetSessions()
+    dispatcher.loadHistoryData?.(true)
+  }, [historySourceFilter])
+
+  useEffect(() => {
+    if (historySourceFilter === 'local') return
+
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') {
+        handleResetSessions()
+        dispatcher.loadHistoryData?.(true)
+      }
+    }
+
+    window.addEventListener('focus', refreshIfVisible)
+    document.addEventListener('visibilitychange', refreshIfVisible)
+    const timer = window.setInterval(refreshIfVisible, IM_HISTORY_REFRESH_INTERVAL_MS)
+
+    return () => {
+      window.removeEventListener('focus', refreshIfVisible)
+      document.removeEventListener('visibilitychange', refreshIfVisible)
+      window.clearInterval(timer)
+    }
+  }, [dispatcher, handleResetSessions, historySourceFilter])
 
   return (
     <div className={styles['chat-session-pane']}>
       <div className={styles['chat-session-list-header']}>
-        <div className={styles['header-tabs']}>
-          {t('ChatSessionPane.sessionList')}
-          {/* <YakitRadioButtons
-            size="small"
-            buttonStyle="solid"
-            value={activeTab}
-            onChange={(e) => handleChangeTab(e.target.value as PaneTab)}
-            options={[
-              { label: '会话列表', value: 'session' },
-              { label: '浏览器实例', value: 'browser' },
-            ]}
-          /> */}
+        <div className={styles['header-title']}>
+          <span className={styles['title-text']}>{t('ChatSessionPane.sessionList')}</span>
+          <YakitRoundCornerTag wrapperClassName={styles['session-count-tag']}>
+            {visibleSessions.length}
+          </YakitRoundCornerTag>
+          <div className={styles['source-filter']}>
+            {HISTORY_SOURCE_FILTER_OPTIONS.map((item) => {
+              const active = historySourceFilter === item.key
+              return (
+                <Tooltip key={item.key} title={item.title} placement="top">
+                  <button
+                    type="button"
+                    aria-label={item.title}
+                    className={classNames(styles['source-filter-item'], styles[`source-filter-item-${item.key}`], {
+                      [styles['source-filter-item-active']]: active,
+                    })}
+                    onClick={() => handleSetHistorySourceFilter(item.key)}
+                  >
+                    {item.icon}
+                  </button>
+                </Tooltip>
+              )
+            })}
+          </div>
         </div>
         <div className={styles['header-actions']}>
-          <YakitButton
-            type="text2"
-            icon={<OutlineMessageCirclePlusIcon />}
-            onClick={() => {
-              onNewChat()
-              setVisible(false)
-            }}
-          />
+          <YakitButton type="text2" icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
           <YakitButton
             type="text2"
             isActive={searchOpen}
             icon={<OutlineSearchIcon />}
             onClick={() => setSearchOpen(true)}
           />
-          <YakitButton type="text2" icon={<OutlineKeepLeftIcon />} onClick={() => setVisible(false)} />
         </div>
       </div>
       <YakitModal
@@ -256,21 +315,17 @@ const ChatSessionPane: React.FC = memo(() => {
         bodyStyle={{ padding: 0 }}
         onCancel={handleCloseSearch}
       >
-        <SessionSearchCommand sessions={sessions} onSelect={handleSelectSession} onClose={handleCloseSearch} />
+        <SessionSearchCommand sessions={visibleSessions} onSelect={handleSelectSession} onClose={handleCloseSearch} />
       </YakitModal>
       <div className={styles['chat-session-list']}>
-        {activeTab === 'session' ? (
-          <HistoryChatList
-            search=""
-            sessionList={sessions}
-            aiSource={AI_AGENT_HISTORY_AI_SOURCES}
-            setSessions={dispatcher.setSessions}
-            loadHistoryData={dispatcher.loadHistoryData}
-            getSessions={dispatcher.getSessions}
-          />
-        ) : (
-          <YakitEmpty title={t('ChatSessionPane.noBrowserInstance')} />
-        )}
+        <HistoryChatList
+          search=""
+          sessionList={visibleSessions}
+          aiSource={historyQuerySources}
+          setSessions={dispatcher.setSessions}
+          loadHistoryData={dispatcher.loadHistoryData}
+          getSessions={dispatcher.getSessions}
+        />
       </div>
     </div>
   )

@@ -224,7 +224,7 @@
     "getGlobalKnowledgeBaseFailed": "獲取全域性知識庫失敗: {{error}}"
   },
   "AIAgentTabs": {
-    "historyChat": "歷史會話",
+    "session": "會話",
     "config": "配置",
     "skill": "技能",
     "tool": "工具"
@@ -376,8 +376,7 @@
     "taskDetail": "任務詳情"
   },
   "ChatSessionPane": {
-    "sessionList": "會話列表",
-    "noBrowserInstance": "暫無瀏覽器實例"
+    "sessionList": "會話"
   },
   "AIAgentChatLayout": {
     "dockDisabledTip": "螢幕過小，不支援該模組停靠在右邊"

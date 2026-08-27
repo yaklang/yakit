@@ -16,16 +16,10 @@
   overflow-y: hidden;
   background-color: var(--Colors-Use-Basic-Background);
   border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-  margin-left: 0;
-  transition: margin-left 0.2s ease;
 
   &::-webkit-scrollbar {
     display: none;
   }
-}
-
-.workspace-tab-bar-session-hidden {
-  margin-left: 44px;
 }
 
 .workspace-tab {
