@@ -30,7 +30,12 @@ const ChatCard: FC<ChatCardProps> = ({
 }) => {
   return (
     <div className={classNames(styles['chat-card'], className)} style={style}>
-      <div className={styles['chat-card-title']} onClick={onClickTitle}>
+      <div
+        className={classNames(styles['chat-card-title'], {
+          [styles['chat-card-title-clickable']]: !!onClickTitle,
+        })}
+        onClick={onClickTitle}
+      >
         <div className={styles['chat-card-title-left']}>
           {titleIcon && <div className={styles['chat-card-title-icon']}>{titleIcon}</div>}
           <div className={styles['chat-card-title-text']}>{titleText}</div>

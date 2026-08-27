@@ -88,7 +88,7 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
             status={'warning'}
             subTitle={t('FilePreview.binaryNotice')}
             extra={[
-              <YakitButton size="max" type="primary" onClick={() => setIsBinary(false)}>
+              <YakitButton key="open-anyway" size="max" type="primary" onClick={() => setIsBinary(false)}>
                 {t('FilePreview.openAnyway')}
               </YakitButton>,
             ]}

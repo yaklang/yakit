@@ -356,7 +356,14 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
 })
 /**HTTP 流量 */
 export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
-  const { runtimeId, filterTagDom, website = false, isCrawler = false } = props
+  const {
+    runtimeId,
+    filterTagDom,
+    website = false,
+    isCrawler = false,
+    showAdvancedSearch = false,
+    showSetting = false,
+  } = props
   const { t } = useI18nNamespaces(['plugin'])
 
   const [height, setHeight] = useState<number>(300) //表格所在div高度
@@ -425,11 +432,11 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
               paddingRight: 8,
             }}
             showSourceType={false}
-            showAdvancedSearch={false}
+            showAdvancedSearch={showAdvancedSearch}
             showProtocolType={false}
             showColorSwatch={false}
             showDelAll={false}
-            showSetting={false}
+            showSetting={showSetting}
             showBatchActions={false}
             showFlod={false}
             titleHeight={47}

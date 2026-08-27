@@ -354,12 +354,14 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     <ChatCard
       titleText={nodeLabel || data.toolName}
       titleIcon={<OutlineWrenchIcon1 />}
+      onClickTitle={expandToggle}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           {!!riskFlowDataCount && (
             <>
               <label
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation()
                   switchAIActTab(AITabsEnum.Risk)
                 }}
               >
@@ -370,17 +372,25 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
           )}
           {!!httpFlowDataCount && (
             <label
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation()
                 switchAIActTab(AITabsEnum.HTTP)
               }}
             >
               {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
             </label>
           )}
-          {/* </div> */}
           {isChildWindow.current || (
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
-              <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
+              <YakitButton
+                size="small"
+                type="text"
+                icon={<OutlineRefreshIcon />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  getListToolList()
+                }}
+              />
             </Tooltip>
           )}
 
@@ -389,7 +399,10 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
               size="small"
               type="text"
               icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
-              onClick={expandToggle}
+              onClick={(e) => {
+                e.stopPropagation()
+                expandToggle()
+              }}
               className={styles['expand-btn']}
             />
           </Tooltip>

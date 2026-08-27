@@ -192,12 +192,14 @@ export const AIHorizontalScrollCard = memo(() => {
                   onVisibleChange: setDropdownVisible,
                 }}
               >
-                <YakitButton
-                  type="text2"
-                  isActive={multiFuncVisible || dropdownVisible}
-                  icon={<OutlineSettings2Icon />}
-                  onClick={(e) => e.stopPropagation()}
-                />
+                <Tooltip title={t('YakitButton.more')}>
+                  <YakitButton
+                    type="text2"
+                    isActive={multiFuncVisible || dropdownVisible}
+                    icon={<OutlineSettings2Icon />}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </Tooltip>
               </YakitDropdownMenu>
             </div>
           </div>

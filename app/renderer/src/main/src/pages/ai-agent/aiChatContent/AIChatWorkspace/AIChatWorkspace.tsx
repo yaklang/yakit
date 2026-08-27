@@ -117,20 +117,25 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     if (filePreviewData) openFilePreview(filePreviewData)
   }, [filePreviewData])
 
-  /** 流量或风险首次有数据时，只自动打开一次对应 tab */
-  const autoOpenedHttpOrRiskRef = useRef(false)
+  /** 流量、风险各自首次有数据时自动打开对应 tab，互不影响 */
+  const autoOpenedHttpRef = useRef(false)
+  const autoOpenedRiskRef = useRef(false)
   useEffect(() => {
-    autoOpenedHttpOrRiskRef.current = false
+    autoOpenedHttpRef.current = false
+    autoOpenedRiskRef.current = false
     setTabs([])
     setActiveTabKey('')
     setFilePreviewData(undefined)
   }, [activeChat?.SessionID])
   useEffect(() => {
-    if (autoOpenedHttpOrRiskRef.current) return
-    const type = httpTabShow ? AITabsEnum.HTTP : riskTabShow ? AITabsEnum.Risk : null
-    if (!type) return
-    autoOpenedHttpOrRiskRef.current = true
-    openTab({ key: type, type, label: getDefaultLabel(type) })
+    if (httpTabShow && !autoOpenedHttpRef.current) {
+      autoOpenedHttpRef.current = true
+      openTab({ key: AITabsEnum.HTTP, type: AITabsEnum.HTTP, label: getDefaultLabel(AITabsEnum.HTTP) })
+    }
+    if (riskTabShow && !autoOpenedRiskRef.current) {
+      autoOpenedRiskRef.current = true
+      openTab({ key: AITabsEnum.Risk, type: AITabsEnum.Risk, label: getDefaultLabel(AITabsEnum.Risk) })
+    }
   }, [httpTabShow, riskTabShow])
 
   const onSwitchAIAgentTab = useMemoizedFn((data?: string) => {
@@ -267,7 +272,6 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
     const riskRunTimeIds = [
       ...new Set(activeTab.runtimeId ? [activeTab.runtimeId] : rawData.riskRunTimeIDs.concat(relatedRuntimeIDs)),
     ]
-
     switch (activeTab.type) {
       case AITabsEnum.File_Preview:
         return activeTab.file ? <FilePreview data={activeTab.file} /> : <YakitEmpty style={{ paddingTop: 48 }} />
@@ -285,7 +289,12 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         )
       case AITabsEnum.HTTP:
         return runTimeIds.length ? (
-          <PluginExecuteHttpFlow filterTagDom={filterTagDom} runtimeId={runTimeIds.join(',')} website />
+          <PluginExecuteHttpFlow
+            filterTagDom={filterTagDom}
+            runtimeId={runTimeIds.join(',')}
+            showAdvancedSearch
+            showSetting
+          />
         ) : (
           <YakitEmpty style={{ paddingTop: 48 }} />
         )
@@ -342,7 +351,14 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
         })}
       </div>
       <div className={styles['workspace-body']}>
-        <div className={styles['workspace-pane']}>{tabContent}</div>
+        <div
+          className={classNames(styles['workspace-pane'], {
+            [styles['workspace-pane-gutter']]:
+              activeTab?.type === AITabsEnum.HTTP || activeTab?.type === AITabsEnum.Risk,
+          })}
+        >
+          {tabContent}
+        </div>
       </div>
     </div>
   )

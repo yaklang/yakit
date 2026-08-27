@@ -11,7 +11,7 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  height: 44px;
+  height: 37px;
   overflow-x: auto;
   overflow-y: hidden;
   background-color: var(--Colors-Use-Basic-Background);
@@ -174,4 +174,8 @@
   min-height: 0;
   overflow: hidden;
   background: var(--Colors-Use-Basic-Background);
+}
+
+.workspace-pane-gutter {
+  padding: 0 12px;
 }
