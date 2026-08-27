@@ -290,6 +290,9 @@
   },
   "AIChatListItem": {
     "thinking": "Thinking: ",
+    "thoughtDuration": "for {{seconds}}s",
+    "thoughtDurationMinutes": "for {{minutes}}m",
+    "thoughtDurationMinutesSeconds": "for {{minutes}}m {{seconds}}s",
     "toolCall": "Tool Call",
     "taskEnd": "Task End",
     "taskEndDesc": "The current task has ended, below is the new task data"

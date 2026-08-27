@@ -290,6 +290,9 @@
   },
   "AIChatListItem": {
     "thinking": "思考：",
+    "thoughtDuration": "持续了 {{seconds}} 秒",
+    "thoughtDurationMinutes": "持续了 {{minutes}} 分钟",
+    "thoughtDurationMinutesSeconds": "持续了 {{minutes}} 分 {{seconds}} 秒",
     "toolCall": "工具调用",
     "taskEnd": "任务结束标志",
     "taskEndDesc": "当前任务已经结束，下面为新的任务数据"

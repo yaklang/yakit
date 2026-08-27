@@ -290,6 +290,9 @@
   },
   "AIChatListItem": {
     "thinking": "思考：",
+    "thoughtDuration": "持續了 {{seconds}} 秒",
+    "thoughtDurationMinutes": "持續了 {{minutes}} 分鐘",
+    "thoughtDurationMinutesSeconds": "持續了 {{minutes}} 分 {{seconds}} 秒",
     "toolCall": "工具呼叫",
     "taskEnd": "任務結束標誌",
     "taskEndDesc": "當前任務已經結束，下面為新的任務資料"
