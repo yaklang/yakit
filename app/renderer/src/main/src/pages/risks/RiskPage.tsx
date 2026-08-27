@@ -22,7 +22,7 @@ import { defQueryRisksRequest } from './YakitRiskTable/constants'
 import { type FieldGroup, apiRiskFieldGroup } from './YakitRiskTable/utils'
 import type { VulnerabilityLevelPieRefProps } from './VulnerabilityLevelPie/VulnerabilityLevelPieType'
 import type { VulnerabilityTypePieRefProps } from './VulnerabilityTypePie/VulnerabilityTypePieType'
-import { OutlineCloseIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { CloseOutlined, InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
@@ -171,7 +171,7 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
       <div className={styles['risk-query-heard']}>
         <span>{t('RiskQuery.advanced_query')}</span>
         <Tooltip title={t('YakitButton.collapseFilter')} placement="top" overlayClassName="plugins-tooltip">
-          <YakitButton type="text2" onClick={onClose} icon={<OutlineCloseIcon />}></YakitButton>
+          <YakitButton type="text2" onClick={onClose} icon={<CloseOutlined color="currentColor" />}></YakitButton>
         </Tooltip>
       </div>
       <div className={styles['risk-query-body']}>
@@ -285,7 +285,7 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
         <div className={styles['vulnerability-type-heard-title']}>
           {t('VulnerabilityType.top10VulnerabilityTypes')}
           <Tooltip title={t('VulnerabilityType.resetTipAfterManualSelection')}>
-            <OutlineInformationcircleIcon className={styles['info-icon']} />
+            <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
         </div>
         <YakitButton

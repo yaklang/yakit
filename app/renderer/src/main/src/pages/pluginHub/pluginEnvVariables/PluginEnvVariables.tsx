@@ -2,7 +2,7 @@ import type React from 'react'
 import { memo, useEffect, useRef, useState } from 'react'
 import { useDebounceFn, useInViewport, useMemoizedFn, useVirtualList } from 'ahooks'
 import type { InputRef } from 'antd'
-import { OutlinePencilaltIcon, OutlinePluscircleIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { PencilAltOutlined, PlusCircleOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { PluginEnvInfo, PluginEnvVariablesProps } from './PluginEnvVariablesType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -307,7 +307,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
             <YakitButton
               type="outline2"
               size="large"
-              icon={<OutlinePluscircleIcon />}
+              icon={<PlusCircleOutlined color="currentColor" />}
               onClick={() => {
                 handleOpenEdit(false)
               }}
@@ -370,7 +370,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                   <YakitButton
                                     type="text"
                                     colors="danger"
-                                    icon={<OutlineTrashIcon />}
+                                    icon={<TrashOutlined color="currentColor" />}
                                     loading={deleteKeys.includes(infoKey)}
                                     onClick={() => {
                                       handleDelete(data)
@@ -381,7 +381,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                               )}
                               <YakitButton
                                 type="text2"
-                                icon={<OutlinePencilaltIcon />}
+                                icon={<PencilAltOutlined color="currentColor" />}
                                 onClick={() => {
                                   handleOpenEdit(true, data)
                                 }}

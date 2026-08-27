@@ -7,7 +7,7 @@ import { Virtuoso, type Components, type ItemProps, type ListProps } from 'react
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import useVirtuosoAutoScroll from '@/pages/ai-re-act/hooks/useVirtuosoAutoScroll'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useMemoizedFn } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
@@ -45,7 +45,7 @@ const TimelineRow = memo(({ item }: { item: AIAgentGrpcApi.TimelineItem }) => {
           content={<div className={styles['timeline-popover-content']}>{item.content}</div>}
         >
           <div className={styles['icon-wrapper']}>
-            <OutlineInformationcircleIcon />
+            <InformationCircleOutlined color="currentColor" />
           </div>
         </YakitPopover>
       </div>

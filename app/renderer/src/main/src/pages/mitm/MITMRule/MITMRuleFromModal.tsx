@@ -35,7 +35,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { RegexTester } from './RegexTester'
-import { OutlineInformationcircleIcon, OutlineMinuscircleIcon, OutlinePluscircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined, MinusCircleOutlined, PlusCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -230,7 +230,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
               <span className={styles['form-label']}>
                 {t('MITMRule.rule_content')}
                 <Tooltip title={t('MITMRule.rule_content_tip')}>
-                  <OutlineInformationcircleIcon className={styles['info-icon']} />
+                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                 </Tooltip>
               </span>
             }
@@ -244,7 +244,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
               <span className={styles['form-label']}>
                 {t('MITMRule.Literal_matching')}
                 <Tooltip title={t('MITMRule.Literal_matching_desc')}>
-                  <OutlineInformationcircleIcon className={styles['info-icon']} />
+                  <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                 </Tooltip>
               </span>
             }
@@ -937,9 +937,13 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                 </div>
                 <div className={styles['rule-content-actions']}>
                   {index !== 0 && (
-                    <OutlineMinuscircleIcon className={styles['icon-remove']} onClick={() => onRemoveRuleItem(index)} />
+                    <MinusCircleOutlined
+                      className={styles['icon-remove']}
+                      onClick={() => onRemoveRuleItem(index)}
+                      color="currentColor"
+                    />
                   )}
-                  <OutlinePluscircleIcon
+                  <PlusCircleOutlined
                     className={classNames(styles['icon-plus'], {
                       [styles['icon-disabled']]: !canAdd,
                     })}
@@ -947,6 +951,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
                       if (!canAdd) return
                       onAddRuleItem(index)
                     }}
+                    color="currentColor"
                   />
                 </div>
               </div>

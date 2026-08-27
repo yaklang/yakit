@@ -4,7 +4,8 @@ import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './AIBottomDetails.module.scss'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineCogIcon, OutlineExitIcon, OutlinePlusIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { CogOutlined, PlusOutlined, XOutlined, FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
@@ -77,7 +78,7 @@ export const AIBottomDetails: React.FC<AIBottomDetailsProps> = (props) => {
         <div className={styles['extra']}>
           <YakitButton
             type="text2"
-            icon={<OutlinePlusIcon />}
+            icon={<PlusOutlined color="currentColor" />}
             onClick={() => {
               debugTerminalHookEvent.startTerminal()
             }}
@@ -145,13 +146,13 @@ export const AIBottomDetails: React.FC<AIBottomDetailsProps> = (props) => {
             overlayInnerStyle={{ width: 340 }}
             visible={popoverVisible}
           >
-            <YakitButton icon={<OutlineCogIcon />} type={popoverVisible ? 'text' : 'text2'} />
+            <YakitButton icon={<CogOutlined color="currentColor" />} type={popoverVisible ? 'text' : 'text2'} />
           </YakitPopover>
           {!isShowTerminalList && (
             <YakitButton
               type="text2"
               // danger
-              icon={<OutlineExitIcon />}
+              icon={<FigmaIcon28011794Outlined color="currentColor" />}
               className={styles['ai-terminal-close']}
               onClick={() => {
                 debugTerminalHookEvent.onDeleteTerminalItem(terminalRunnerId)
@@ -161,7 +162,7 @@ export const AIBottomDetails: React.FC<AIBottomDetailsProps> = (props) => {
 
           <YakitButton
             type="text2"
-            icon={<OutlineXIcon />}
+            icon={<XOutlined color="currentColor" />}
             onClick={() => {
               setShowAIBottomDetails(false)
             }}

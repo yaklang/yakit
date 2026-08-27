@@ -11,14 +11,15 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineExportIcon,
-  OutlineImportIcon,
-  OutlinePencilaltIcon,
-  OutlinePlusIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  PencilAltOutlined,
+  PlusOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  TrashOutlined,
+  FigmaIcon6480193584Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
@@ -198,7 +199,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
         <div className={styles['title']}>技能库</div>
         <div className={styles['extra']}>
           <YakitInput.Search
-            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
             allowClear
             placeholder="请输入关键词搜索"
             value={search}
@@ -217,10 +218,15 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
           >
             批量导出
           </YakitButton>
-          <YakitButton type="outline2" size="large" icon={<OutlineImportIcon />} onClick={onImport}>
+          <YakitButton
+            type="outline2"
+            size="large"
+            icon={<FigmaIcon6480193584Outlined color="currentColor" />}
+            onClick={onImport}
+          >
             导入
           </YakitButton>
-          <YakitButton size="large" icon={<OutlinePlusIcon />} onClick={onNewForge}>
+          <YakitButton size="large" icon={<PlusOutlined color="currentColor" />} onClick={onNewForge}>
             新建技能
           </YakitButton>
         </div>
@@ -270,10 +276,14 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
               <div className={styles['hub-list-empty']}>
                 <YakitEmpty title="暂无数据" description="可新建技能,创建属于自己的技能" />
                 <div className={styles['refresh-buttons']}>
-                  <YakitButton type="outline1" icon={<OutlinePlusIcon />} onClick={onNewForge}>
+                  <YakitButton type="outline1" icon={<PlusOutlined color="currentColor" />} onClick={onNewForge}>
                     新建技能
                   </YakitButton>
-                  <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={handleRefreshList}>
+                  <YakitButton
+                    type="outline1"
+                    icon={<RefreshOutlined color="currentColor" />}
+                    onClick={handleRefreshList}
+                  >
                     刷新
                   </YakitButton>
                 </div>
@@ -336,7 +346,7 @@ const AIForgePageItem: React.FC<AIForgePageItemProps> = React.memo((props) => {
           <div className={styles['diver-style']} />
           <YakitButton
             type="text2"
-            icon={<OutlinePencilaltIcon />}
+            icon={<PencilAltOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()
               handleModifyAIForge(data, YakitRoute.AI_Forge)
@@ -358,7 +368,7 @@ const AIForgePageItem: React.FC<AIForgePageItemProps> = React.memo((props) => {
                 <YakitButton
                   loading={loading}
                   type="text2"
-                  icon={<OutlineTrashIcon className={styles['del-icon']} />}
+                  icon={<TrashOutlined className={styles['del-icon']} color="currentColor" />}
                   onClick={(e) => {
                     e.stopPropagation()
                   }}

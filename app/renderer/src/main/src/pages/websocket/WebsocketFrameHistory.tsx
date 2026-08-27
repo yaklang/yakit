@@ -12,7 +12,7 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import HexEditor from 'react-hex-editor'
 import { Uint8ArrayToString } from '@/utils/str'
 import { filterColorTag, isCellRedSingleColor, parseColorTag } from '@/components/TableVirtualResize/utils'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 
 import classNames from 'classnames'
@@ -183,7 +183,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         <Tooltip title={t('YakitButton.refresh')} placement="top">
           <YakitButton
             type="text2"
-            icon={<OutlineRefreshIcon />}
+            icon={<RefreshOutlined color="currentColor" />}
             onClick={() => {
               fetchList(true)
             }}

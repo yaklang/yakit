@@ -15,11 +15,11 @@ import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import classNames from 'classnames'
 import {
-  OutlineClouddownloadIcon,
-  OutlineFolderopenIcon,
-  OutlinePuzzleIcon,
-  OutlineRefreshIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  FolderOpenOutlined,
+  PuzzleOutlined,
+  RefreshOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitLogoSvgIcon, YakitSpinLogoSvgIcon } from '../icon/sidebarIcon'
 import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils'
 import { downloadWithEvents, exclude } from '../utils'
@@ -204,12 +204,12 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
         >
           <div className={styles['header']}>
             <div className={styles['left']}>
-              <OutlinePuzzleIcon />
+              <PuzzleOutlined color="currentColor" />
               <div>插件下载</div>
               <Tooltip title="刷新插件列表">
                 <YakitButton
                   type="text"
-                  icon={<OutlineRefreshIcon />}
+                  icon={<RefreshOutlined color="currentColor" />}
                   onClick={(e) => {
                     e.stopPropagation()
                     binariesToInstallRefreshAsync?.()
@@ -219,7 +219,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
             </div>
             <div className={styles['right']}>
               <YakitButton
-                icon={<OutlineClouddownloadIcon />}
+                icon={<CloudDownloadOutlined color="currentColor" />}
                 type="text2"
                 onClick={() => runInstallAll()}
                 loading={loading}
@@ -259,7 +259,7 @@ const AllInstallPlugins: FC<AllInstallPluginsProps> = ({
                     ) : (
                       <YakitButton
                         type="text"
-                        icon={<OutlineFolderopenIcon />}
+                        icon={<FolderOpenOutlined color="currentColor" />}
                         onClick={() => onOpenLocalFileByPath(it.InstallPath)}
                       >
                         打开

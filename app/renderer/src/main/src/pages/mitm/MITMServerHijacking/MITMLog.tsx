@@ -10,11 +10,11 @@ import { setRemoteValue } from '@/utils/kv'
 import { MITMConsts } from '../MITMConsts'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { OutlineCheckIcon, OutlineRefreshIcon, OutlineSearchIcon, OutlineTerminalIcon } from '@/assets/icon/outline'
+import { CheckOutlined, RefreshOutlined, SearchOutlined, TerminalOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { iconProcessMap, type ProcessItem } from '@/components/HTTPHistory'
 import classNames from 'classnames'
-import { SolidCheckIcon } from '@/assets/icon/solid'
+import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import MITMContext from '../Context/MITMContext'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -274,7 +274,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
           {isFilter && (
             <YakitTag color={'success'} style={{ margin: 0 }}>
               已配置
-              <OutlineCheckIcon className={styles['check-icon']} />
+              <CheckOutlined className={styles['check-icon']} color="currentColor" />
             </YakitTag>
           )}
           <HTTPFlowTableFormConfiguration
@@ -296,7 +296,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
               <div>
                 <YakitInput
                   allowClear
-                  prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+                  prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
                   onChange={(e) => setSearchProcessVal(e.target.value)}
                 ></YakitInput>
               </div>
@@ -319,12 +319,14 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                               {item.icon ? (
                                 <div className={styles['process-icon']}>{item.icon}</div>
                               ) : (
-                                <OutlineTerminalIcon className={styles['process-icon']} />
+                                <TerminalOutlined className={styles['process-icon']} color="currentColor" />
                               )}
                               <div className={styles['process-item-label']} title={item.process}>
                                 {item.process}
                               </div>
-                              {curProcess.includes(item.process) && <SolidCheckIcon className={styles['check-icon']} />}
+                              {curProcess.includes(item.process) && (
+                                <CheckSolid className={styles['check-icon']} color="currentColor" />
+                              )}
                             </div>
                           </div>
                         ))}
@@ -419,7 +421,11 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
           }}
         >
           <Badge dot={hasNewData} offset={[-5, 4]}>
-            <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={(e) => e.stopPropagation()} />
+            <YakitButton
+              type="text2"
+              icon={<RefreshOutlined color="currentColor" />}
+              onClick={(e) => e.stopPropagation()}
+            />
           </Badge>
         </YakitDropdownMenu>
         <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} cancleAllFilter={cancleAllFilter} />

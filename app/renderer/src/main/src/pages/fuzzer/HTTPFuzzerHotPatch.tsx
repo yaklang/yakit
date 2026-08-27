@@ -13,16 +13,16 @@ import styles from './HTTPFuzzerHotPatch.module.scss'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { yakitNotify } from '@/utils/notification'
 import {
-  OutlineChevrondownIcon,
-  OutlineFileUpIcon,
-  OutlineStorageIcon,
-  OutlineTerminalIcon,
-  OutlineXIcon,
-  OutlineArrowsexpandIcon,
-  OutlineArrowscollapseIcon,
-  OutlineLightningboltIcon,
-} from '@/assets/icon/outline'
-import { SolidLightningboltIcon } from '@/assets/icon/solid'
+  ChevronDownOutlined,
+  FileUpOutlined,
+  TerminalOutlined,
+  XOutlined,
+  ArrowsExpandOutlined,
+  LightningBoltOutlined,
+  FigmaIcon13208172881Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
+import { LightningBoltSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
   defaultWebFuzzerPageInfo,
@@ -224,7 +224,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     <div className={styles['http-fuzzer-hotPatch']}>
       <div className={styles['http-fuzzer-hotPatch-heard']}>
         <span>{t('HTTPFuzzerHotPatch.debugInsertHotReload')}</span>
-        <OutlineXIcon onClick={onClose} />
+        <XOutlined onClick={onClose} color="currentColor" />
       </div>
       <Form
         onSubmitCapture={(e) => {
@@ -472,7 +472,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
               <YakitButton
                 type="text"
                 onClick={openConsoleNewWindow}
-                icon={<OutlineTerminalIcon className={styles['engineConsole-icon-style']} />}
+                icon={<TerminalOutlined className={styles['engineConsole-icon-style']} color="currentColor" />}
                 className={styles['btn-box']}
               ></YakitButton>
             </Tooltip>
@@ -768,7 +768,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                     <span className={classNames(styles['hotPatch-sidebar-template-text'], 'content-ellipsis')}>
                       {selectedTemplateName ? t(selectedTemplateName) : t('HotCodeTemplate.code_template')}
                     </span>
-                    <OutlineChevrondownIcon className={styles['hotPatch-sidebar-template-icon']} />
+                    <ChevronDownOutlined className={styles['hotPatch-sidebar-template-icon']} color="currentColor" />
                   </YakitButton>
                 }
               />
@@ -810,7 +810,13 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                     type="text"
                     size="small"
                     className={styles['hotPatch-sidebar-icon-button']}
-                    icon={sharedHotReloadCode ? <SolidLightningboltIcon /> : <OutlineLightningboltIcon />}
+                    icon={
+                      sharedHotReloadCode ? (
+                        <LightningBoltSolid color="currentColor" />
+                      ) : (
+                        <LightningBoltOutlined color="currentColor" />
+                      )
+                    }
                   />
                 </YakitPopover>
               </Tooltip>
@@ -819,7 +825,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                   disabled={!canSaveSelectedTemplate}
                   type="text"
                   size="small"
-                  icon={<OutlineFileUpIcon />}
+                  icon={<FileUpOutlined color="currentColor" />}
                   className={styles['hotPatch-sidebar-icon-button']}
                   onClick={onUpdateTemplate}
                 />
@@ -829,7 +835,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                   disabled={!code}
                   type="text"
                   size="small"
-                  icon={<OutlineStorageIcon />}
+                  icon={<FigmaIcon13208172881Outlined color="currentColor" />}
                   className={styles['hotPatch-sidebar-icon-button']}
                   onClick={() => setAddHotCodeTemplateVisible(true)}
                 />
@@ -846,11 +852,12 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
               {isFullScreen ? (
                 <OutlineArrowscollapseIcon className={styles['expand-icon']} onClick={() => setIsFullScreen(false)} />
               ) : (
-                <OutlineArrowsexpandIcon
+                <ArrowsExpandOutlined
                   className={classNames(styles['expand-icon'], styles['expand-icon-active'])}
                   onClick={() => {
                     setIsFullScreen(true)
                   }}
+                  color="currentColor"
                 />
               )}
             </div>
@@ -911,7 +918,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                       size="small"
                       className={styles['hotPatch-sidebar-icon-button']}
                       onClick={openConsoleNewWindow}
-                      icon={<OutlineTerminalIcon className={styles['engineConsole-icon-style']} />}
+                      icon={<TerminalOutlined className={styles['engineConsole-icon-style']} color="currentColor" />}
                     />
                   </Tooltip>
                   <YakitButton

@@ -1,7 +1,7 @@
 import type React from 'react'
 import styles from './AIBottomSideBar.module.scss'
 import classNames from 'classnames'
-import { OutlineCodeIcon } from '@/assets/icon/outline'
+import { CodeOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export interface AIBottomSideBarProps {
   setShowAIBottomDetails: React.Dispatch<React.SetStateAction<boolean>>
@@ -19,7 +19,7 @@ export const AIBottomSideBar: React.FC<AIBottomSideBarProps> = (props) => {
               setShowAIBottomDetails(true)
             }}
           >
-            <OutlineCodeIcon />
+            <CodeOutlined color="currentColor" />
             {t('AIBottomSideBar.terminal')}
           </div>
         </div>

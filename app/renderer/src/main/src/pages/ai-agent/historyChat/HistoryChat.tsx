@@ -4,12 +4,12 @@ import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
 import { ReActChatEventEnum } from '../defaultConstant'
 import {
-  OutlineDesktopcomputerIcon,
-  OutlineMessageCirclePlusIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
-import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
+  DesktopComputerOutlined,
+  MessageCirclePlusOutlined,
+  SearchOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { DingTalkSocialColorful, FeishuSocialColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -53,9 +53,9 @@ const HISTORY_SOURCE_FILTER_OPTIONS: {
   title: string
   icon: ReactNode
 }[] = [
-  { key: 'local', title: 'Yakit 本地会话', icon: <OutlineDesktopcomputerIcon /> },
-  { key: 'feishu', title: '飞书会话', icon: <FeishuIcon /> },
-  { key: 'dingtalk', title: '钉钉会话', icon: <DingtalkIcon /> },
+  { key: 'local', title: 'Yakit 本地会话', icon: <DesktopComputerOutlined color="currentColor" /> },
+  { key: 'feishu', title: '飞书会话', icon: <FeishuSocialColorful /> },
+  { key: 'dingtalk', title: '钉钉会话', icon: <DingTalkSocialColorful /> },
 ]
 
 const IM_HISTORY_REFRESH_INTERVAL_MS = 5000
@@ -476,14 +476,18 @@ const HistoryChat = memo(
                     colors="danger"
                     type="text2"
                     loading={clearLoading}
-                    icon={<OutlineTrashIcon />}
+                    icon={<TrashOutlined color="currentColor" />}
                   />
                 </Tooltip>
               </YakitDropdownMenu>
               {!embedded && (
                 <>
                   <Tooltip title={t('HistoryChat.newChat')} placement="topRight">
-                    <YakitButton type="text2" icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
+                    <YakitButton
+                      type="text2"
+                      icon={<MessageCirclePlusOutlined color="currentColor" />}
+                      onClick={onNewChat}
+                    />
                   </Tooltip>
                   {headerActionsExtra}
                   <SideSettingButton />
@@ -495,7 +499,7 @@ const HistoryChat = memo(
           {!hideInlineSearch && (
             <div className={styles['header-second']}>
               <YakitInput
-                prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+                prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
                 placeholder={t('YakitInput.searchKeyWordPlaceholder')}
                 allowClear
                 value={search}

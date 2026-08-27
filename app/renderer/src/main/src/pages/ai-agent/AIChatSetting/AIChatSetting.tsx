@@ -4,7 +4,7 @@ import { Form, Slider, Tooltip } from 'antd'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { useMemoizedFn } from 'ahooks'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import cloneDeep from 'lodash/cloneDeep'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
@@ -132,7 +132,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     overlayClassName={styles['form-info-icon-tooltip']}
                     title={'在工具运行时关掉AI审查，提升工具执行效率'}
                   >
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </>
               }
@@ -149,7 +149,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     overlayClassName={styles['form-info-icon-tooltip']}
                     title={'低于这个分数,AI 自动同意,如果高于这个分数,转成手动'}
                   >
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </>
               }
@@ -198,7 +198,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                       overlayClassName={styles['form-info-icon-tooltip']}
                       title={'在任务规划的时候，如果AI允许问用户问题，那么最多问几次'}
                     >
-                      <OutlineInformationcircleIcon className={styles['info-icon']} />
+                      <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                     </Tooltip>
                   </>
                 }
@@ -218,7 +218,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     overlayClassName={styles['form-info-icon-tooltip']}
                     title={'控制深度搜索或复杂拆解任务时的并行处理能力'}
                   >
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </>
               }
@@ -267,7 +267,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     overlayClassName={styles['form-info-icon-tooltip']}
                     title={'禁用任何外部工具，这就是一个纯聊天机器了'}
                   >
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </>
               }
@@ -285,7 +285,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     overlayClassName={styles['form-info-icon-tooltip']}
                     title={'如果远端AI不稳定（网络原因）的时候，某一次对话重试几次'}
                   >
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </>
               }
@@ -301,7 +301,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     overlayClassName={styles['form-info-icon-tooltip']}
                     title={'如果回答质量不高的时候，调大可以有效重试回答'}
                   >
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </>
               }
@@ -352,7 +352,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     overlayClassName={styles['form-info-icon-tooltip']}
                     title={'Token pressure limit, 当 AI 对话的 token 数量超过这个限制时，需要警告'}
                   >
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </>
               }
@@ -374,7 +374,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     overlayClassName={styles['form-info-icon-tooltip']}
                     title={'用户交互的最大次数限制,超过这个次数，AI 将不再被允许问用户问题'}
                   >
-                    <OutlineInformationcircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                   </Tooltip>
                 </>
               }

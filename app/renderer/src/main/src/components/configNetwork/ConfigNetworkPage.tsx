@@ -41,7 +41,7 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { CodeCustomize } from './CustomizeCode'
-import { OutlineCogIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { CogOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { LIMIT_LOG_NUM_NAME, DEFAULT_LOG_LIMIT } from '@/defaultConstants/HoldGRPCStream'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { checkProxyVersion } from '@/utils/proxyConfigUtil'
@@ -589,17 +589,19 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
           </div>
         </div>
         <div className={styles['certificate-card-item-footer']}>
-          <OutlineCogIcon
+          <CogOutlined
             className={styles['icon-cog']}
             onClick={() => {
               handleConfigureHost(key, item.Host)
             }}
+            color="currentColor"
           />
-          <OutlineTrashIcon
+          <TrashOutlined
             className={styles['icon-trash']}
             onClick={() => {
               closeCard(item)
             }}
+            color="currentColor"
           />
         </div>
       </div>
@@ -626,17 +628,19 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
           </div>
         </div>
         <div className={styles['certificate-card-item-footer']}>
-          <OutlineCogIcon
+          <CogOutlined
             className={styles['icon-cog']}
             onClick={() => {
               handleConfigureHost(key, item.Host)
             }}
+            color="currentColor"
           />
-          <OutlineTrashIcon
+          <TrashOutlined
             className={styles['icon-trash']}
             onClick={() => {
               closeCard(item)
             }}
+            color="currentColor"
           />
         </div>
       </div>
@@ -1178,7 +1182,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         {!hideRules ? `,${t('ProxyConfig.recordRoutesCount', { i: Routes.length })}` : null}
                       </div>
                       <div className={styles['form-rule-icon']}>
-                        <OutlineCogIcon />
+                        <CogOutlined color="currentColor" />
                       </div>
                     </div>
                   </div>

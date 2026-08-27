@@ -6,7 +6,7 @@ import { XTerm } from 'xterm-for-react'
 import { useXTermOptions } from '@/hooks/useXTermOptions'
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineDocumentduplicateIcon } from '@/assets/outline'
+import { DocumentDuplicateOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { Tooltip } from 'antd'
@@ -115,7 +115,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
       <div className={styles['engine-copy']}>
         <Tooltip title={t('EngineLog.copy_log_tooltip')} placement="topRight">
           <YakitButton
-            icon={<OutlineDocumentduplicateIcon />}
+            icon={<DocumentDuplicateOutlined color="currentColor" />}
             type="secondary2"
             onClick={onCopyEngineLog}
           ></YakitButton>

@@ -9,13 +9,13 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import {
-  OutlineArrowdownIcon,
-  OutlineArrowupIcon,
-  OutlineDocumentduplicateIcon,
-  OutlinePencilaltIcon,
-  OutlineSelectorIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  DocumentDuplicateOutlined,
+  PencilAltOutlined,
+  SelectorOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import type { PaginationSchema, QueryGeneralRequest, QueryGeneralResponse } from '../invoker/schema'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
@@ -355,10 +355,11 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
       width: 120,
       editable: true,
       filterIcon: (filtered) => (
-        <OutlineSelectorIcon
+        <SelectorOutlined
           className={classNames(styles['selector-icon'], {
             [styles['active-selector-icon']]: sortStatus !== undefined,
           })}
+          color="currentColor"
         />
       ),
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
@@ -371,7 +372,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             onClick={() => handleSort('asc')}
           >
             <div className={styles['icon']}>
-              <OutlineArrowupIcon />
+              <ArrowUpOutlined color="currentColor" />
             </div>
             <div className={styles['content']}>{t('YakitTable.asc')}</div>
           </div>
@@ -383,7 +384,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             onClick={() => handleSort('desc')}
           >
             <div className={styles['icon']}>
-              <OutlineArrowdownIcon />
+              <ArrowDownOutlined color="currentColor" />
             </div>
             <div className={styles['content']}>{t('YakitTable.desc')}</div>
           </div>
@@ -399,21 +400,23 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
       render: (_, record: Payload) => {
         return (
           <div className={styles['table-operation']}>
-            <OutlineDocumentduplicateIcon
+            <DocumentDuplicateOutlined
               className={styles['copy']}
               onClick={() => {
                 setClipboardText(record.Content)
               }}
+              color="currentColor"
             />
             <Divider type="vertical" style={{ top: 1, height: 12, margin: '0px 12px' }} />
-            <OutlineTrashIcon
+            <TrashOutlined
               className={styles['delete']}
               onClick={() => {
                 onDeletePayload && onDeletePayload({ Id: record.Id })
               }}
+              color="currentColor"
             />
             <Divider type="vertical" style={{ top: 1, height: 12, margin: '0px 12px' }} />
-            <OutlinePencilaltIcon
+            <PencilAltOutlined
               className={styles['edit']}
               onClick={() => {
                 const m = showYakitModal({
@@ -427,6 +430,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
                   ),
                 })
               }}
+              color="currentColor"
             />
           </div>
         )
@@ -476,10 +480,11 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
       dataIndex: 'HitCount',
       width: 120,
       filterIcon: (filtered) => (
-        <OutlineSelectorIcon
+        <SelectorOutlined
           className={classNames(styles['selector-icon'], {
             [styles['active-selector-icon']]: sortStatus !== undefined,
           })}
+          color="currentColor"
         />
       ),
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
@@ -492,7 +497,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             onClick={() => handleSort('asc')}
           >
             <div className={styles['icon']}>
-              <OutlineArrowupIcon />
+              <ArrowUpOutlined color="currentColor" />
             </div>
             <div className={styles['content']}>{t('YakitTable.asc')}</div>
           </div>
@@ -504,7 +509,7 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             onClick={() => handleSort('desc')}
           >
             <div className={styles['icon']}>
-              <OutlineArrowdownIcon />
+              <ArrowDownOutlined color="currentColor" />
             </div>
             <div className={styles['content']}>{t('YakitTable.desc')}</div>
           </div>

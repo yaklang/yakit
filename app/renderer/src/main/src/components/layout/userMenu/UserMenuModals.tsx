@@ -1,6 +1,6 @@
 import React from 'react'
 import { YakitModal } from '../../yakitUI/YakitModal/YakitModal'
-import { OutlineDevicemobileIcon } from '@/assets/icon/outline'
+import { DeviceMobileOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import robotControlStyles from '@/pages/robotControl/RobotControl.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { API } from '@/services/swagger/resposeType'
@@ -175,7 +175,7 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
         visible={robotControlModal}
         title={
           <div className={robotControlStyles['robot-modal-title']}>
-            <OutlineDevicemobileIcon
+            <DeviceMobileOutlined
               className={robotControlStyles['mobile-control-title-icon']}
               style={{ color: getMobileControlIconColor(imControlBadge.color) }}
             />

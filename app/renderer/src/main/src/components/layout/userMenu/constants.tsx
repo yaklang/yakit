@@ -1,12 +1,12 @@
 import {
-  OutlineDevicemobileIcon,
-  OutlineExitIcon,
-  OutlineOfficebuildingIcon,
-  OutlinePuzzleIcon,
-  OutlinePresentationchartlineIcon,
-  OutlineShieldexclamationIcon,
-  OutlineUserRoundCogIcon,
-} from '@/assets/icon/outline'
+  DeviceMobileOutlined,
+  OfficeBuildingOutlined,
+  PuzzleOutlined,
+  PresentationChartLineOutlined,
+  ShieldExclamationOutlined,
+  UserRoundCogOutlined,
+  FigmaIcon28011794Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { getAllYakitColorVars } from '@/utils/yakitColorVars'
 import type { UserMenuItemType } from '../../CeUserMenu/CeUserMenu'
 import type { IMControlBadgeView } from '@/pages/robotControl/status'
@@ -48,20 +48,41 @@ export const getMobileControlIconColor = (color: IMControlBadgeView['color']) =>
 export const UserMenusMap: Record<string, UserMenuItemType> = {
   divider: { type: 'divider' },
   /** CE用户菜单 */
-  singOut: { key: 'sign-out', label: 'FuncDomain.signOut', type: 'danger', icon: <OutlineExitIcon /> },
-  pluginAudit: { key: 'plugin-audit', label: 'FuncDomain.pluginAudit', icon: <OutlinePuzzleIcon /> },
-  misstatement: { key: 'misstatement', label: 'FuncDomain.misstatement', icon: <OutlineShieldexclamationIcon /> },
-  trustList: { key: 'trust-list', label: 'FuncDomain.trustList', icon: <OutlineUserRoundCogIcon /> },
-  licenseAdmin: { key: 'license-admin', label: 'FuncDomain.licenseAdmin', icon: <OutlineOfficebuildingIcon /> },
+  singOut: {
+    key: 'sign-out',
+    label: 'FuncDomain.signOut',
+    type: 'danger',
+    icon: <FigmaIcon28011794Outlined color="currentColor" />,
+  },
+  pluginAudit: {
+    key: 'plugin-audit',
+    label: 'FuncDomain.pluginAudit',
+    icon: <PuzzleOutlined color="currentColor" />,
+  },
+  misstatement: {
+    key: 'misstatement',
+    label: 'FuncDomain.misstatement',
+    icon: <ShieldExclamationOutlined color="currentColor" />,
+  },
+  trustList: {
+    key: 'trust-list',
+    label: 'FuncDomain.trustList',
+    icon: <UserRoundCogOutlined color="currentColor" />,
+  },
+  licenseAdmin: {
+    key: 'license-admin',
+    label: 'FuncDomain.licenseAdmin',
+    icon: <OfficeBuildingOutlined color="currentColor" />,
+  },
   dataStatistics: {
     key: 'data-statistics',
     label: 'FuncDomain.dataStatistics',
-    icon: <OutlinePresentationchartlineIcon />,
+    icon: <PresentationChartLineOutlined color="currentColor" />,
   },
   robotControl: {
     key: 'robot-control',
     label: 'FuncDomain.mobileControl',
-    icon: <OutlineDevicemobileIcon />,
+    icon: <DeviceMobileOutlined color="currentColor" />,
   },
   roleAdmin: { key: 'role-admin', label: 'FuncDomain.roleAdmin' },
   accountAdmin: { key: 'account-admin', label: 'FuncDomain.accountAdmin' },

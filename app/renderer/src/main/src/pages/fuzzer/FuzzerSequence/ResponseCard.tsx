@@ -9,7 +9,7 @@ import {
   HTTPFuzzerPageTable,
   type HTTPFuzzerPageTableQuery,
 } from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
-import { OutlineReplyIcon } from '@/assets/icon/outline'
+import { ReplyOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { emptyFuzzer } from '@/defaultConstants/HTTPFuzzerPage'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -107,7 +107,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
             setShowResponseInfoSecondEditor={() => {}}
           />
           <Divider type="vertical" style={{ marginRight: 0 }} />
-          <YakitButton onClick={() => setShowAllResponse()} type="text2" icon={<OutlineReplyIcon />}>
+          <YakitButton onClick={() => setShowAllResponse()} type="text2" icon={<ReplyOutlined color="currentColor" />}>
             {t('YakitButton.back')}
           </YakitButton>
         </div>

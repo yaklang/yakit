@@ -2,11 +2,12 @@ import type { FC } from 'react'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineChevronsDownUpIcon,
-  OutlineChevronsUpDownIcon,
-  OutlineListOneIcon,
-  OutlineListTodoIcon,
-} from '@/assets/icon/outline'
+  ChevronsDownUpOutlined,
+  ChevronsUpDownOutlined,
+  ListTodoOutlined,
+  List1Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
 import { openAIConcurrentStream } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -73,14 +74,14 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
       {showCancelTask && !!taskId && <AIHistorySkipTask taskId={taskId} isTask={chatType === 'task'} />}
       {showDetails && (
         <Tooltip title="任务详情" placement="top">
-          <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
+          <YakitButton size="small" icon={<ListTodoOutlined color="currentColor" />} type="text2" onClick={onDetails} />
         </Tooltip>
       )}
       <Tooltip title={t('ConcurrentStreamCard.openInNewWindow')}>
         <YakitButton
           size="small"
           type="text"
-          icon={<OutlineListOneIcon />}
+          icon={<List1Outlined color="currentColor" />}
           onClick={openChildWindow}
           className={styles['expand-btn']}
         />
@@ -89,7 +90,9 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
         <YakitButton
           size="small"
           type="text"
-          icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+          icon={
+            expand ? <ChevronsDownUpOutlined color="currentColor" /> : <ChevronsUpDownOutlined color="currentColor" />
+          }
           onClick={(e) => {
             e.stopPropagation()
             onExpandToggle()

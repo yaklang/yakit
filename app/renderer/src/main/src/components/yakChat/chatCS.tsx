@@ -41,8 +41,6 @@ import {
   PlusIcon,
   QuestionMarkCircleIcon,
   RemoveIcon,
-  SolidThumbDownIcon,
-  StopIcon,
   ThumbDownIcon,
   ThumbUpIcon,
   TrashIcon,
@@ -74,13 +72,21 @@ import { CopyComponents, YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { useStore } from '@/store'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
-import { SolidCheckCircleIcon, SolidPlayIcon, SolidThumbupIcon, SolidXcircleIcon } from '@/assets/icon/solid'
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  CheckCircleSolid,
+  PlaySolid,
+  ThumbUpSolid,
+  XCircleSolid,
+  PaperAirplaneSolid,
+  StopSolid,
+  ThumbDownSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
 import moment from 'moment'
 import classNames from 'classnames'
 import styles from './chatCS.module.scss'
 import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
-import { SolidPaperairplaneIcon } from '@/assets/icon/solid'
+
 import {
   SolidCloudpluginIcon,
   SolidPrivatepluginIcon,
@@ -1265,7 +1271,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     <div className={styles['welcome-preset-list']}>
                       <div className={styles['list-wrapper']}>
                         <div className={styles['info-hint-wrapper']}>
-                          <OutlineInformationcircleIcon />
+                          <InformationCircleOutlined color="currentColor" />
                           ChatCS模型参数：6.5b，训练Token: 1.5T 显卡资源：A40*4，使用文心增强知识推理能力
                         </div>
                       </div>
@@ -1746,7 +1752,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
           <div className={classNames(styles['header'], styles['succee'])}>
             <div className={styles['title']}>
               <div className={styles['icon']}>
-                <SolidCheckCircleIcon />
+                <CheckCircleSolid color="currentColor" />
               </div>
               <div className={styles['text']}>执行完成</div>
             </div>
@@ -1766,7 +1772,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
           <div className={classNames(styles['header'], styles['fail'])}>
             <div className={styles['title']}>
               <div className={styles['icon']}>
-                <SolidXcircleIcon />
+                <XCircleSolid color="currentColor" />
               </div>
               <div className={styles['text']}>执行失败</div>
             </div>
@@ -1926,7 +1932,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
               <div className={styles['extra']}>
                 <YakitButton
                   disabled={checkedList.length === 0}
-                  icon={<SolidPlayIcon />}
+                  icon={<PlaySolid color="currentColor" />}
                   onClick={() => {
                     onStartExecute(checkedList, datsSource.input)
                   }}
@@ -2110,7 +2116,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                 <YakitButton
                   type="primary"
                   colors="danger"
-                  icon={<StopIcon />}
+                  icon={<StopSolid />}
                   onClick={(e) => {
                     onStopExecute(e)
                   }}
@@ -2146,7 +2152,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             </div>
             <div className={showLoading ? styles['header-right-loading'] : styles['header-right']}>
               {showLoading ? (
-                <YakitButton type="primary" colors="danger" icon={<StopIcon />} onClick={onStop}>
+                <YakitButton type="primary" colors="danger" icon={<StopSolid />} onClick={onStop}>
                   停止
                 </YakitButton>
               ) : (
@@ -2160,7 +2166,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                       }}
                     >
                       {info.likeType === 'good' ? (
-                        <SolidThumbupIcon className={styles['actived-icon']} />
+                        <ThumbUpSolid className={styles['actived-icon']} color="currentColor" />
                       ) : (
                         <ThumbUpIcon />
                       )}
@@ -2175,7 +2181,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                       }}
                     >
                       {info.likeType === 'bad' ? (
-                        <SolidThumbDownIcon className={styles['actived-icon']} />
+                        <ThumbDownSolid className={styles['actived-icon']} />
                       ) : (
                         <ThumbDownIcon />
                       )}
@@ -2761,7 +2767,12 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                 </div> */}
         <ExampleCard content={selectItem.eg[0]} background="#F8F8F8" />
       </div>
-      <YakitButton icon={<SolidPaperairplaneIcon />} onClick={onSubmit} className={styles['submit']} size="large">
+      <YakitButton
+        icon={<PaperAirplaneSolid color="currentColor" />}
+        onClick={onSubmit}
+        className={styles['submit']}
+        size="large"
+      >
         发送
       </YakitButton>
     </div>
@@ -3281,7 +3292,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
         </div>
         <div className={showLoading ? styles['header-right-loading'] : styles['header-right']}>
           {showLoading ? (
-            <YakitButton type="primary" colors="danger" icon={<StopIcon />} onClick={onStop}>
+            <YakitButton type="primary" colors="danger" icon={<StopSolid />} onClick={onStop}>
               {t('YakitButton.stop')}
             </YakitButton>
           ) : (

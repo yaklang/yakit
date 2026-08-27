@@ -6,7 +6,7 @@ import styles from './HTTPFuzzerEditorMenu.module.scss'
 import { failed } from '@/utils/notification'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import ReactDraggable from 'react-draggable'
 import {
   ChevronDownIcon,
@@ -25,7 +25,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { QueryFuzzerLabelResponseProps } from './StringFuzzer'
 import { setRemoteValue } from '@/utils/kv'
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
-import { SolidTerminalIcon } from '@/assets/icon/solid'
+import { TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { queryYakScriptList } from '../yakitStore/network'
 import type { YakScript } from '../invoker/schema'
 import { IconSolidAIIcon } from '@/assets/icon/colors'
@@ -883,7 +883,7 @@ export const DecodeComponent: React.FC<DecodeComponentProps> = (props) => {
               return (
                 <Timeline.Item
                   className={styles['timeline-item']}
-                  dot={<SolidTerminalIcon className={styles['solid-terminal-icon']} />}
+                  dot={<TerminalSolid className={styles['solid-terminal-icon']} color="currentColor" />}
                 >
                   <DecodeCopyReplace
                     item={item}
@@ -975,7 +975,7 @@ export const SmartDecodeFloatPanel: React.FC<SmartDecodeFloatPanelProps> = (prop
           }}
         >
           <div className={styles['menu-drag']}>
-            <YakitButton type="text2" size="small" icon={<OutlineXIcon />} onClick={onClose} />
+            <YakitButton type="text2" size="small" icon={<XOutlined color="currentColor" />} onClick={onClose} />
           </div>
           <div className={styles['menu-content']}>
             <DecodeComponent

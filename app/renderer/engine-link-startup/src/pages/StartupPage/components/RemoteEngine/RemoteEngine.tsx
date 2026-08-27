@@ -12,12 +12,8 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { Divider, Form } from 'antd'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import {
-  OutlineArrowcirclerightIcon,
-  OutlineExitIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineXIcon,
-} from '@/assets/outline'
+import { ArrowCircleRightOutlined, QuestionMarkCircleOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineExitIcon } from '@/assets/bespokeIcons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { EngineModeVerbose } from '../../utils'
 const Editor = React.lazy(() => import('@/components/Editor').then((m) => ({ default: m.Editor })))
@@ -151,7 +147,8 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                   label: (
                     <div className={styles['remote-history-label-wrapper']}>
                       <div className={styles['remote-history-label']}>{item.name}</div>
-                      <OutlineXIcon
+                      <XOutlined
+                        color="currentColor"
                         className={styles['option-item-close']}
                         onClick={(e) => {
                           e.stopPropagation()
@@ -221,7 +218,10 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                         {t('RemoteEngine.grpc_root_ca_pem')}
                         <span className={styles.redStar}>*</span>{' '}
                         <PEMExample setShow={setShowSTL}>
-                          <OutlineQuestionmarkcircleIcon
+                          <QuestionMarkCircleOutlined
+                            color={
+                              showSTL ? 'var(--Colors-Use-Main-Primary)' : 'var(--Colors-Use-Neutral-Text-3-Secondary)'
+                            }
                             className={showSTL ? styles['icon-show-style'] : styles['icon-style']}
                           />
                         </PEMExample>
@@ -258,7 +258,10 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                   <div className={styles['pem-title']}>
                     {t('RemoteEngine.save_as_history')}{' '}
                     <PEMHint setShow={setShowAllow}>
-                      <OutlineQuestionmarkcircleIcon
+                      <QuestionMarkCircleOutlined
+                        color={
+                          showAllow ? 'var(--Colors-Use-Main-Primary)' : 'var(--Colors-Use-Neutral-Text-3-Secondary)'
+                        }
                         className={classNames(styles['icon-style'], {
                           [styles['icon-show-style']]: showAllow,
                         })}
@@ -322,7 +325,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
               }}
             >
               {EngineModeVerbose('local')}
-              <OutlineArrowcirclerightIcon className={styles['arrow-circle-right-icon']} />
+              <ArrowCircleRightOutlined color="currentColor" className={styles['arrow-circle-right-icon']} />
             </span>
           </div>
         </div>

@@ -2,13 +2,14 @@ import React, { type Dispatch, type ReactNode, type SetStateAction, useEffect, u
 import { useAsyncEffect, useMemoizedFn, useRequest, useSafeState } from 'ahooks'
 
 import {
-  OutlineFolderopenIcon,
-  OutlineLoadingIcon,
-  OutlinePaintbrushIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineRefreshIcon,
-  OutlineStethoscopeIcon,
-} from '@/assets/icon/outline'
+  FolderOpenOutlined,
+  PaintbrushOutlined,
+  QuestionMarkCircleOutlined,
+  RefreshOutlined,
+  StethoscopeOutlined,
+  FigmaIcon5237120699Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 import styles from '../knowledgeBase.module.scss'
@@ -27,7 +28,8 @@ import {
 } from '../utils'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { type KnowledgeBaseItem } from '../hooks/useKnowledgeBase'
-import { SolidLightningBoltIcon, SolidOutlineSearchIcon } from '@/assets/icon/solid'
+import { SolidLightningBoltIcon } from '@/assets/icon/bespokeSolid'
+import { SolidOutlineSearchIcon } from '@/assets/icon/bespokeSolid'
 import { AddKnowledgenBaseDropdownMenu } from './AddKnowledgenBaseDropdownMenu'
 import { OperateKnowledgenBaseItem } from './OperateKnowledgenBaseItem'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -535,7 +537,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                   <div className={styles['header-title']}>知识库管理</div>
                   <div className={styles['knowledge-size']}>{knowledgeBases.length ?? 0}</div>
                   <Tooltip title="查看知识库功能引导">
-                    <OutlineQuestionmarkcircleIcon
+                    <QuestionMarkCircleOutlined
                       className={styles['knowledge-icon']}
                       onClick={() => {
                         setJoyrideRun?.({
@@ -545,6 +547,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                         setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideStep, false)
                         setLocalValue(KnowledgeBaseGV.KnowledgeBaseJoyrideVisible, false)
                       }}
+                      color="currentColor"
                     />
                   </Tooltip>
                 </div>
@@ -554,7 +557,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                     <YakitButton
                       loading={progress < 100}
                       type="text2"
-                      icon={<OutlineStethoscopeIcon />}
+                      icon={<StethoscopeOutlined color="currentColor" />}
                       className="second-step"
                       onClick={() => {
                         setIsAIModelAvailable(true)
@@ -565,7 +568,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                   <Tooltip title="刷新知识库列表">
                     <YakitButton
                       type="text2"
-                      icon={<OutlineRefreshIcon />}
+                      icon={<RefreshOutlined color="currentColor" />}
                       onClick={(e) => {
                         e.stopPropagation()
                         refreshAsync?.()
@@ -574,7 +577,11 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                   </Tooltip>
                   <Divider style={{ margin: 0 }} type="vertical"></Divider>
                   <Tooltip title="重置知识库列表">
-                    <YakitButton icon={<OutlinePaintbrushIcon />} type="text2" onClick={handleCancelAll} />
+                    <YakitButton
+                      icon={<PaintbrushOutlined color="currentColor" />}
+                      type="text2"
+                      onClick={handleCancelAll}
+                    />
                   </Tooltip>
                 </div>
               </div>
@@ -644,7 +651,10 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                               <div className={styles['title']}>{items.KnowledgeBaseName}</div>
                               {api?.tokens?.includes(items.streamToken) && items.streamstep === 1 ? (
                                 <div className={styles['tag']}>
-                                  <OutlineLoadingIcon className={styles['loading-icon']} />
+                                  <FigmaIcon5237120699Outlined
+                                    className={styles['loading-icon']}
+                                    color="currentColor"
+                                  />
                                   生成中
                                 </div>
                               ) : items.IsDefault ? (
@@ -717,7 +727,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                         <Tooltip title="刷新线上知识库">
                           <YakitButton
                             type="text"
-                            icon={<OutlineRefreshIcon />}
+                            icon={<RefreshOutlined color="currentColor" />}
                             onClick={(e) => {
                               e.stopPropagation()
                               onRefreshOnlineRag()
@@ -828,7 +838,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                       ) : (
                         <YakitEmpty>
                           <YakitButton
-                            icon={<OutlineRefreshIcon />}
+                            icon={<RefreshOutlined color="currentColor" />}
                             onClick={(e) => {
                               e.stopPropagation()
                               onRefreshOnlineRag()
@@ -857,7 +867,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                     <Tooltip title="刷新插件">
                       <YakitButton
                         type="text"
-                        icon={<OutlineRefreshIcon />}
+                        icon={<RefreshOutlined color="currentColor" />}
                         onClick={(e) => {
                           e.stopPropagation()
                           binariesToInstallRefreshAsync?.()
@@ -917,7 +927,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                         ) : (
                           <YakitButton
                             type="text"
-                            icon={<OutlineFolderopenIcon />}
+                            icon={<FolderOpenOutlined color="currentColor" />}
                             onClick={() => onOpenLocalFileByPath(it.InstallPath)}
                           >
                             打开

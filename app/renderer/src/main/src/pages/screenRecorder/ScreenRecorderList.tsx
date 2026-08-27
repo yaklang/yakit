@@ -15,9 +15,9 @@ import {
   PencilAltIcon,
   PlayIcon,
   RefreshIcon,
-  StopIcon,
   TrashIcon,
 } from '@/assets/newIcon'
+import { StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { FramerateData, CoefficientPTSData, ScrecorderModal } from './ScrecorderModal'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -335,7 +335,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 colors="danger"
                 size="large"
               >
-                <StopIcon />
+                <StopSolid />
                 {t('ScreenRecorderList.stopRecording')}
               </YakitButton>
             ) : (
@@ -427,7 +427,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 type="primary"
                 colors="danger"
               >
-                <StopIcon />
+                <StopSolid />
                 {t('ScreenRecorderList.stopRecording')}
               </YakitButton>
             ) : (

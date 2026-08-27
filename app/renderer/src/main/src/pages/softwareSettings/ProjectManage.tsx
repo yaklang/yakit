@@ -42,12 +42,8 @@ import type { YaklangEngineMode } from '@/yakitGVDefine'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import {
-  OutlineDocumentduplicateIcon,
-  OutlineExportIcon,
-  OutlinePencilaltIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+import { DocumentDuplicateOutlined, PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 
 import classNames from 'classnames'
 import styles from './ProjectManage.module.scss'
@@ -551,7 +547,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               <div className={styles['boder-style']}></div>
             </div>
             <div className={styles['btn-wrapper']} onClick={() => operateFunc('edit', info)}>
-              <OutlinePencilaltIcon className={styles['btn-style']} />
+              <PencilAltOutlined className={styles['btn-style']} color="currentColor" />
             </div>
           </>
         )}
@@ -569,7 +565,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 setDelShow(true)
               }}
             >
-              <OutlineTrashIcon className={styles['del-style']} />
+              <TrashOutlined className={styles['del-style']} color="currentColor" />
             </div>
           </>
         )}
@@ -1161,9 +1157,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 <DocumentTextSvgIcon />
                 <div>
                   <div className={styles['title-style']}>{latestProject?.ProjectName || '[default]'}</div>
-                  <div className={styles['subtitle-style']}>{`${t(
-                    'ProjectManage.recentOperation',
-                  )}：${latestProject ? formatTimestamp(latestProject?.UpdateAt) : '- -'}`}</div>
+                  <div className={styles['subtitle-style']}>{`${t('ProjectManage.recentOperation')}：${
+                    latestProject ? formatTimestamp(latestProject?.UpdateAt) : '- -'
+                  }`}</div>
                 </div>
               </div>
 
@@ -1192,12 +1188,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         disabled:
                           latestProject?.ProjectName === '[default]' ||
                           (latestProject?.OnlineSubTaskID || '').length > 0,
-                        itemIcon: <OutlinePencilaltIcon />,
+                        itemIcon: <PencilAltOutlined color="currentColor" />,
                       },
                       {
                         key: 'copyPath',
                         label: t('ProjectManage.copyPath'),
-                        itemIcon: <OutlineDocumentduplicateIcon />,
+                        itemIcon: <DocumentDuplicateOutlined color="currentColor" />,
                       },
                       { type: 'divider' },
                       {
@@ -1205,7 +1201,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         label: t('YakitButton.delete'),
                         type: 'danger',
                         disabled: latestProject?.ProjectName === '[default]',
-                        itemIcon: <OutlineTrashIcon />,
+                        itemIcon: <TrashOutlined color="currentColor" />,
                       },
                     ],
                     className: styles['dropdown-menu-body'],

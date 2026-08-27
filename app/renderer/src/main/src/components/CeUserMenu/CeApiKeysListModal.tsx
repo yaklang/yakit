@@ -5,7 +5,7 @@ import { useMemoizedFn } from 'ahooks'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
-import { OutlineArrowUpRightIcon, OutlineDocumentduplicateIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { ArrowUpRightOutlined, DocumentDuplicateOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { setClipboardText } from '@/utils/clipboard'
 import { NetWorkApi } from '@/services/fetch'
@@ -153,7 +153,7 @@ const CeApiKeysListModal: React.FC<CeApiKeysListModalProps> = (props) => {
                 <YakitButton
                   type="text2"
                   size="small"
-                  icon={<OutlineDocumentduplicateIcon />}
+                  icon={<DocumentDuplicateOutlined color="currentColor" />}
                   onClick={() => setClipboardText(key)}
                 />
               )}
@@ -170,7 +170,7 @@ const CeApiKeysListModal: React.FC<CeApiKeysListModalProps> = (props) => {
             <YakitButton
               type="text2"
               size="small"
-              icon={<OutlineArrowUpRightIcon />}
+              icon={<ArrowUpRightOutlined color="currentColor" size={16} />}
               disabled={replacing}
               onClick={() => handleReplace(key)}
             />
@@ -193,7 +193,12 @@ const CeApiKeysListModal: React.FC<CeApiKeysListModalProps> = (props) => {
     >
       <div className={styles['api-keys-list-toolbar']}>
         <span className={styles['api-keys-list-count']}>{t('CeUserMenu.apiKeyCount', { count: list.length })}</span>
-        <YakitButton type="text2" size="small" icon={<OutlineRefreshIcon />} onClick={handleRefresh} />
+        <YakitButton
+          type="text2"
+          size="small"
+          icon={<RefreshOutlined color="currentColor" />}
+          onClick={handleRefresh}
+        />
       </div>
       <YakitSpin spinning={spinning}>
         {list.length === 0 && !spinning ? (

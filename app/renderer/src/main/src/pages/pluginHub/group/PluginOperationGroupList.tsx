@@ -1,8 +1,8 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { SolidFolderopenIcon } from '@/assets/icon/solid'
+import { FolderOpenSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { PluginGroupList, type GroupListItem } from './PluginGroupList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import {
@@ -75,7 +75,7 @@ export const PluginOperationGroupList: React.FC<PluginOperationGroupListProps> =
             id: item.Value + '_group',
             name: item.Value,
             number: item.Total,
-            icon: <SolidFolderopenIcon />,
+            icon: <FolderOpenSolid color="currentColor" />,
             iconColor: '#ffb660',
             showOptBtns: true,
             default: item.Default,
@@ -105,7 +105,7 @@ export const PluginOperationGroupList: React.FC<PluginOperationGroupListProps> =
             id: item.default ? item.value : item.value + '_group',
             name: item.value,
             number: item.total,
-            icon: <SolidFolderopenIcon />,
+            icon: <FolderOpenSolid color="currentColor" />,
             iconColor: '#ffb660',
             showOptBtns: true,
             default: item.default,
@@ -188,12 +188,12 @@ export const PluginOperationGroupList: React.FC<PluginOperationGroupListProps> =
               return (
                 <>
                   <YakitButton
-                    icon={<OutlinePencilaltIcon />}
+                    icon={<PencilAltOutlined color="currentColor" />}
                     type="text2"
                     onClick={(e) => setEditGroup(groupItem)}
                   ></YakitButton>
                   <YakitButton
-                    icon={<OutlineTrashIcon />}
+                    icon={<TrashOutlined color="currentColor" />}
                     type="text"
                     colors="danger"
                     onClick={(e) => onClickDel(groupItem)}

@@ -3,23 +3,24 @@ import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, us
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineClouddownloadIcon,
-  OutlineExportIcon,
-  OutlineFolderaddIcon,
-  OutlineImportIcon,
-  OutlinePencilaltIcon,
-  OutlinePluscircleIcon,
-  OutlinePlusIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  FolderAddOutlined,
+  PencilAltOutlined,
+  PlusCircleOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  TrashOutlined,
+  FigmaIcon6480193584Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import classNames from 'classnames'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { SolidFolderopenIcon } from '@/assets/icon/solid'
+import { FolderOpenSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { yakitNotify } from '@/utils/notification'
 import { cloneDeep } from 'lodash'
 import { Divider, Form, type InputRef, Table, Tooltip } from 'antd'
@@ -239,7 +240,7 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
           <div className={styles['fingerprintManage-init-btns']}>
             <YakitButton
               type="outline1"
-              icon={<OutlineClouddownloadIcon />}
+              icon={<CloudDownloadOutlined color="currentColor" />}
               onClick={downloadFingerprint}
               loading={downloadLoading}
             >
@@ -247,7 +248,7 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
             </YakitButton>
             <YakitButton
               type="primary"
-              icon={<OutlineImportIcon />}
+              icon={<FigmaIcon6480193584Outlined color="currentColor" />}
               onClick={() => {
                 handleOpenImportExportHint({
                   title: '导入指纹',
@@ -490,7 +491,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
           <div className={styles['header-extra']}>
             <YakitButton
               type="text"
-              icon={<OutlineClouddownloadIcon />}
+              icon={<CloudDownloadOutlined color="currentColor" />}
               loading={downloadLoading}
               onClick={downloadFingerprint}
             >
@@ -503,8 +504,12 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
             <YakitDropdownMenu
               menu={{
                 data: [
-                  { key: 'addGroup', label: '新建分组', itemIcon: <OutlineFolderaddIcon /> },
-                  { key: 'importFingerprint', label: '导入指纹', itemIcon: <OutlineImportIcon /> },
+                  { key: 'addGroup', label: '新建分组', itemIcon: <FolderAddOutlined color="currentColor" /> },
+                  {
+                    key: 'importFingerprint',
+                    label: '导入指纹',
+                    itemIcon: <FigmaIcon6480193584Outlined color="currentColor" />,
+                  },
                 ],
                 onClick: ({ key }) => {
                   switch (key) {
@@ -524,7 +529,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
                 placement: 'bottomRight',
               }}
             >
-              <YakitButton type="secondary2" icon={<OutlinePlusIcon />} />
+              <YakitButton type="secondary2" icon={<PlusOutlined color="currentColor" />} />
             </YakitDropdownMenu>
           </div>
         </div>
@@ -594,7 +599,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
                                   }}
                                   onClick={(e) => e.stopPropagation()}
                                 />
-                                <SolidFolderopenIcon />
+                                <FolderOpenSolid color="currentColor" />
                                 <span
                                   className={classNames(styles['title-style'], 'yakit-content-single-ellipsis')}
                                   title={data.GroupName}
@@ -612,7 +617,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
                               >
                                 <YakitButton
                                   type="secondary2"
-                                  icon={<OutlinePencilaltIcon />}
+                                  icon={<PencilAltOutlined color="currentColor" />}
                                   loading={isEditLoading}
                                   onClick={() => {
                                     handleEdit(data)
@@ -621,7 +626,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
                                 <YakitButton
                                   type="secondary2"
                                   colors="danger"
-                                  icon={<OutlineTrashIcon />}
+                                  icon={<TrashOutlined color="currentColor" />}
                                   loading={isDelLoading}
                                   onClick={() => {
                                     handleDelete(data)
@@ -838,7 +843,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
       render: (_, record: FingerprintRule) => {
         return (
           <div className={styles['table-operation']}>
-            <OutlineTrashIcon
+            <TrashOutlined
               className={styles['delete']}
               onClick={() => {
                 grpcDeleteFingerprint({ Filter: { IncludeId: [record.Id] } })
@@ -853,14 +858,16 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                   })
                   .catch(() => {})
               }}
+              color="currentColor"
             />
             <Divider type="vertical" style={{ top: 1, height: 12, margin: '0px 12px' }} />
-            <OutlinePencilaltIcon
+            <PencilAltOutlined
               className={styles['edit']}
               onClick={() => {
                 editInfoRef.current = record
                 setFingerprintFormVisible(true)
               }}
+              color="currentColor"
             />
           </div>
         )
@@ -1016,7 +1023,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                 <YakitButton
                   type="outline1"
                   colors="danger"
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   disabled={!rowSelectionKeys.length}
                   loading={batchDelLoading}
                   onClick={() => {
@@ -1045,7 +1052,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                 <YakitButton
                   type="outline1"
                   colors="danger"
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   loading={batchDelLoading}
                   onClick={() => {
                     setBatchDelLoading(true)
@@ -1080,13 +1087,17 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                 导出
               </YakitButton>
 
-              <YakitButton type="outline2" icon={<OutlineImportIcon />} onClick={onImport}>
+              <YakitButton
+                type="outline2"
+                icon={<FigmaIcon6480193584Outlined color="currentColor" />}
+                onClick={onImport}
+              >
                 导入
               </YakitButton>
 
               <YakitButton
                 type="outline2"
-                icon={<OutlinePlusIcon />}
+                icon={<PlusOutlined color="currentColor" />}
                 onClick={() => {
                   editInfoRef.current = undefined
                   setFingerprintFormVisible(true)
@@ -1726,7 +1737,7 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                 placeholder="输入关键字..."
                 maxLength={50}
                 allowClear
-                prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+                prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
                 value={search}
                 onChange={(e) => {
                   const val = e.target.value.trim()
@@ -1805,7 +1816,7 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
         }
         onVisibleChange={handleAddGroupVisibleChange}
       >
-        <YakitButton type="text" disabled={!isActive} icon={<OutlinePluscircleIcon />}>
+        <YakitButton type="text" disabled={!isActive} icon={<PlusCircleOutlined color="currentColor" />}>
           {oldGroup.length ? undefined : '添加分组'}
         </YakitButton>
       </YakitPopover>

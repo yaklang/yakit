@@ -5,7 +5,7 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-p
 import { TrashIcon } from '@/assets/newIcon'
 import { randomString } from '@/utils/randomUtil'
 import styles from '../knowledgeBase.module.scss'
-import { SolidDragsortIcon } from '@/assets/icon/solid'
+import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
@@ -54,7 +54,7 @@ const PotentialQuestionsList: React.FC<RelationListProps> = ({ form, disabled })
                                 }}
                               >
                                 <div {...provided.dragHandleProps}>
-                                  <SolidDragsortIcon className={styles['draggable-icon']} />
+                                  <FigmaIcon2281144183Solid className={styles['draggable-icon']} color="currentColor" />
                                 </div>
                                 <Item
                                   key={`relation-${id}`}

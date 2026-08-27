@@ -1,4 +1,4 @@
-import { OutlineChevronsUpDownIcon, OutlineChevronsDownUpIcon } from '@/assets/icon/outline'
+import { ChevronsUpDownOutlined, ChevronsDownUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import classNames from 'classnames'
@@ -40,7 +40,7 @@ const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((prop
           <YakitButton
             size="small"
             type="text"
-            icon={<OutlineChevronsUpDownIcon />}
+            icon={<ChevronsUpDownOutlined color="currentColor" />}
             className={classNames(styles['expand-btn'], {
               [styles['hidden-expand-btn']]: expand,
             })}
@@ -50,7 +50,7 @@ const AIGroupStreamCardHeard: React.FC<AIGroupStreamCardHeardProps> = memo((prop
           <YakitButton
             size="small"
             type="text"
-            icon={<OutlineChevronsDownUpIcon />}
+            icon={<ChevronsDownUpOutlined color="currentColor" />}
             className={classNames(styles['expand-btn'], {
               [styles['hidden-expand-btn']]: !expand,
             })}

@@ -5,7 +5,7 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { DragSortIcon } from '@/assets/newIcon'
-import { OutlineBanIcon, OutlineInformationcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { BanOutlined, InformationCircleOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
@@ -123,7 +123,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
             }}
             className="modal-remove-icon"
           >
-            <OutlineXIcon />
+            <XOutlined color="currentColor" />
           </div>
         ),
         onOk: handleOk,
@@ -171,7 +171,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                 />
                 <span className={style['title-style']}>{t('AdvancedSet.backgroundRefresh')}</span>
                 <Tooltip title={t('AdvancedSet.keepRefreshingTrafficData')}>
-                  <OutlineInformationcircleIcon className={style['hint-style']} />
+                  <InformationCircleOutlined className={style['hint-style']} color="currentColor" />
                 </Tooltip>
               </div>
             </div>
@@ -189,7 +189,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
               />
               <span className={style['title-style']}>{t('AdvancedSet.dragSelectMultiData')}</span>
               <Tooltip title={t('AdvancedSet.dragSelectMultiDataTip')}>
-                <OutlineInformationcircleIcon className={style['hint-style']} />
+                <InformationCircleOutlined className={style['hint-style']} color="currentColor" />
               </Tooltip>
             </div>
           </div>
@@ -207,7 +207,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
               />
               <span className={style['title-style']}>{t('AdvancedSet.binaryDisplayModal')}</span>
               <Tooltip title={t('AdvancedSet.binaryDisplayModalTip')}>
-                <OutlineInformationcircleIcon className={style['hint-style']} />
+                <InformationCircleOutlined className={style['hint-style']} color="currentColor" />
               </Tooltip>
             </div>
           </div>
@@ -240,7 +240,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                             <DragSortIcon />
                             <div className={style['column-title']}>{item.title}</div>
                             <Tooltip title={item.isShow ? t('YakitButton.disable') : t('YakitButton.enable')}>
-                              <OutlineBanIcon
+                              <BanOutlined
                                 className={classNames(style['ban-icon'])}
                                 onClick={() => {
                                   setCurColumnsAll((prev) => {
@@ -253,6 +253,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                                     return arr
                                   })
                                 }}
+                                color="currentColor"
                               />
                             </Tooltip>
                           </div>

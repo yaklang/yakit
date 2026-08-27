@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
-import { OutlineShareIcon, OutlineExportIcon, OutlineImportIcon } from '@/assets/icon/outline'
+import { ShareOutlined, FigmaIcon6480193584Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { onImportShare } from '@/pages/fuzzer/components/ShareImport'
@@ -344,7 +346,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
         <FuncBtn
           maxWidth={1600}
           type="outline2"
-          icon={<OutlineShareIcon />}
+          icon={<ShareOutlined color="currentColor" />}
           onClick={handleShare}
           name={t('YakitButton.share')}
           style={{ marginRight: 8 }}
@@ -365,7 +367,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
         <FuncBtn
           maxWidth={1600}
           type="outline2"
-          icon={<OutlineImportIcon />}
+          icon={<FigmaIcon6480193584Outlined color="currentColor" />}
           onClick={handlImport}
           name={t('YakitButton.import')}
           onContextMenuCapture={handlImport}

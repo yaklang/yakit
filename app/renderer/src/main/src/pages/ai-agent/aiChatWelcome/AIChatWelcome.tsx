@@ -4,7 +4,6 @@ import type {
   AIChatWelcomeProps,
   AIChatWelcomeSettingCardProps,
   AIChatWelcomeSettingCardRef,
-  SideSettingButtonProps,
 } from './type'
 import styles from './AIChatWelcome.module.scss'
 import { AIChatTextarea } from '../template/template'
@@ -13,13 +12,13 @@ import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/t
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlileHistoryIcon,
-  OutlineChatIcon,
-  OutlineCheckIcon,
-  OutlinePencilaltIcon,
-  OutlineShieldexclamationIcon,
-  OutlineWrenchIcon,
-} from '@/assets/icon/outline'
+  ChatOutlined,
+  CheckOutlined,
+  PencilAltOutlined,
+  ShieldExclamationOutlined,
+  FigmaIcon348196674Outlined,
+  Wrench1Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -86,7 +85,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         enabledCapabilities: select,
       })
     })
-
     const onSetInputValue = useMemoizedFn((v: string) => {
       aiChatTextareaRef.current?.setValue(v)
     })
@@ -169,7 +167,7 @@ const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInp
             onClick={() => onSetInputValue(item.text)}
           >
             <div className={styles['intro-tip-content']}>
-              <OutlineChatIcon className={styles['intro-tip-icon']} />
+              <ChatOutlined className={styles['intro-tip-icon']} color="currentColor" />
               <ColorsChatIcon className={styles['intro-tip-color-icon']} />
               <span className={styles['intro-tip-text']}>{item.text}</span>
             </div>
@@ -185,11 +183,11 @@ const getIconByName = (name: string) => {
     case 'code-review': //'代码审计'
       return <ColorsPreViewMDIcon className={styles['code-icon']} />
     case 'security-engineering': //'安全领域'
-      return <OutlineShieldexclamationIcon className={styles['shield-icon']} />
+      return <ShieldExclamationOutlined className={styles['shield-icon']} color="currentColor" />
     case 'pentest-task-design': //"渗透测试"
-      return <OutlileHistoryIcon className={styles['history-icon']} />
+      return <FigmaIcon348196674Outlined className={styles['history-icon']} color="currentColor" />
     default:
-      return <OutlineWrenchIcon className={styles['default-icon']} />
+      return <Wrench1Outlined className={styles['default-icon']} color="currentColor" />
   }
 }
 const AIChatWelcomeSettingCard = memo(
@@ -278,11 +276,19 @@ const AIChatWelcomeSettingCard = memo(
               className={classNames(styles['card-item'], { [styles['card-item-select']]: isSelect })}
               onClick={() => onSelect(item)}
             >
-              {isSelect ? <OutlineCheckIcon className={styles['select-icon']} /> : getIconByName(item.Name)}
+              {isSelect ? (
+                <CheckOutlined className={styles['select-icon']} color="currentColor" />
+              ) : (
+                getIconByName(item.Name)
+              )}
               <div className={styles['card-content']}>
                 <div>{displayName}</div>
               </div>
-              <OutlinePencilaltIcon onClick={(e) => onEdit(e, item)} className={styles['pencilalt-icon']} />
+              <PencilAltOutlined
+                onClick={(e) => onEdit(e, item)}
+                className={styles['pencilalt-icon']}
+                color="currentColor"
+              />
             </div>
           )
         })}

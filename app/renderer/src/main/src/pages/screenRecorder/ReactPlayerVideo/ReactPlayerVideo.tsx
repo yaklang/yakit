@@ -1,4 +1,5 @@
-import { FastForwardIcon, RewindIcon } from '@/assets/newIcon'
+import { RewindIcon } from '@/assets/newIcon'
+import { FastForwardSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import React, { useEffect, useRef, useState } from 'react'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -70,7 +71,7 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
             })}
           />
           <div className={isNext ? 'hint--top' : ''} aria-label={t('YakitButton.next')}>
-            <FastForwardIcon
+            <FastForwardSolid
               className={classNames(styles['bar-icon'], {
                 [styles['not-allowed-icon']]: !isNext,
               })}

@@ -5,7 +5,7 @@ import styles from './RightAuditDetail.module.scss'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { StringToUint8Array } from '@/utils/str'
 import { loadAuditFromYakURLRaw } from '../utils'
-import { OutlineCollectionIcon, OutlineXIcon, OutlineZoominIcon, OutlineZoomoutIcon } from '@/assets/icon/outline'
+import { CollectionOutlined, XOutlined, ZoomInOutlined, ZoomOutOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
@@ -540,8 +540,8 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
               </Tooltip>
             </div>
             <div className={styles['extra']}>
-              <YakitButton type="text2" icon={<OutlineZoominIcon />} onClick={handleZoomIn} />
-              <YakitButton type="text2" icon={<OutlineZoomoutIcon />} onClick={handleZoomOut} />
+              <YakitButton type="text2" icon={<ZoomInOutlined color="currentColor" />} onClick={handleZoomIn} />
+              <YakitButton type="text2" icon={<ZoomOutOutlined color="currentColor" />} onClick={handleZoomOut} />
             </div>
           </div>
         </div>
@@ -563,7 +563,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
             <div className={styles['extra']}>
               <YakitButton
                 type="text2"
-                icon={<OutlineXIcon />}
+                icon={<XOutlined color="currentColor" />}
                 onClick={() => {
                   setNodeId(undefined)
                   onChangeSvgStyle()
@@ -712,7 +712,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 <Tooltip title="一键收起">
                   <YakitButton
                     type="text2"
-                    icon={<OutlineCollectionIcon />}
+                    icon={<CollectionOutlined color="currentColor" />}
                     disabled={(graphLine || []).length === 0}
                     onClick={() => {
                       setActiveKey(undefined)
@@ -721,7 +721,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 </Tooltip>
                 <YakitButton
                   type="text2"
-                  icon={<OutlineXIcon />}
+                  icon={<XOutlined color="currentColor" />}
                   onClick={() => {
                     setShowAuditDetail(false)
                   }}

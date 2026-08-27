@@ -3,28 +3,21 @@ import styles from './CustomFile.module.scss'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { randomString } from '@/utils/randomUtil'
 import { yakitNotify } from '@/utils/notification'
-import {
-  IconNotepadFileTypeWord,
-  IconNotepadFileTypeCompress,
-  IconNotepadFileTypePPT,
-  IconNotepadFileTypePdf,
-  IconNotepadFileTypeUnknown,
-  IconNotepadFileTypeExcel,
-} from '../icon/icon'
+import { IconNotepadFileTypeCompress, IconNotepadFileTypePdf, IconNotepadFileTypeExcel } from '../icon/icon'
 import { Progress, Tooltip } from 'antd'
 import {
-  OutlineDocumentduplicateIcon,
-  OutlineDownloadIcon,
-  OutlineRefreshIcon,
-  OutlineUploadIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  DocumentDuplicateOutlined,
+  DownloadOutlined,
+  RefreshOutlined,
+  UploadOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import numeral from 'numeral'
 import classNames from 'classnames'
 import { TooltipIcon } from '../Tooltip/Tooltip'
 import { useMemoizedFn } from 'ahooks'
-import { SolidXcircleIcon } from '@/assets/icon/solid'
+import { XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import React from 'react'
 import { SolidCloudDownloadIcon } from '@/assets/newIcon'
@@ -42,7 +35,13 @@ import { getFileNameByUrl } from '../utils/trackDeletePlugin'
 import { httpDeleteNotepadFile } from '@/apiUtils/http'
 import { useStore } from '@/store'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { LogNodeStatusFileIcon, SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
+import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
+import {
+  FileLogColorful,
+  PowerPointFileTypeColorful,
+  UnknownFileTypeColorful,
+  WordFileTypeColorful,
+} from '@yakit-libs/yakit-ui-icons/colorful'
 import i18n from '@/i18n/i18n'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -70,7 +69,7 @@ export const renderFileTypeIcon = (params: { type: string; iconClassName?: strin
   switch (type) {
     case '.doc':
     case 'doc':
-      return <IconNotepadFileTypeWord className={iconClassName} />
+      return <WordFileTypeColorful className={iconClassName} />
     case '.zip':
     case 'zip':
     case '.7z':
@@ -80,7 +79,7 @@ export const renderFileTypeIcon = (params: { type: string; iconClassName?: strin
       return <IconNotepadFileTypeCompress className={iconClassName} />
     case '.ppt':
     case 'ppt':
-      return <IconNotepadFileTypePPT className={iconClassName} />
+      return <PowerPointFileTypeColorful className={iconClassName} />
     case '.csv':
     case 'csv':
     case '.xlsx':
@@ -95,12 +94,12 @@ export const renderFileTypeIcon = (params: { type: string; iconClassName?: strin
       return <IconNotepadFileTypePdf className={iconClassName} />
     case '.txt':
     case 'txt':
-      return <LogNodeStatusFileIcon className={iconClassName} />
+      return <FileLogColorful className={iconClassName} />
     case '.yak':
     case 'yak':
       return <SolidYakCattleNoBackColorIcon className={iconClassName} />
     default:
-      return <IconNotepadFileTypeUnknown className={iconClassName} />
+      return <UnknownFileTypeColorful className={iconClassName} />
   }
 }
 export const CustomFile: React.FC<CustomFileProps> = (props) => {
@@ -296,7 +295,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
     return (
       <Tooltip title={`${error}`}>
         <div className={styles['x-circle-btn']}>
-          <SolidXcircleIcon className={styles['x-circle-icon']} onClick={onRemoveFile} />
+          <XCircleSolid className={styles['x-circle-icon']} onClick={onRemoveFile} color="currentColor" />
         </div>
       </Tooltip>
     )
@@ -324,7 +323,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                 <div className={styles['error-action']}>
                   {errorNode(errorReason)}
                   <Tooltip title={t('MilkdownEditor.customFile.uploadFailedRetry')}>
-                    <YakitButton type="text2" icon={<OutlineUploadIcon />} onClick={onReloadUpload} />
+                    <YakitButton type="text2" icon={<UploadOutlined color="currentColor" />} onClick={onReloadUpload} />
                   </Tooltip>
                 </div>
               ) : (
@@ -346,7 +345,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                       <YakitButton
                         className={styles['x-btn']}
                         type="text2"
-                        icon={<OutlineXIcon />}
+                        icon={<XOutlined color="currentColor" />}
                         onClick={onCancel}
                       />
                     </div>
@@ -355,13 +354,13 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                       {fileInfo.url && (
                         <TooltipIcon
                           title={t('MilkdownEditor.customFile.downloadFile')}
-                          icon={<OutlineDownloadIcon />}
+                          icon={<DownloadOutlined color="currentColor" />}
                           onClick={onDown}
                         />
                       )}
                       <TooltipIcon
                         title={t('MilkdownEditor.customFile.copyLink')}
-                        icon={<OutlineDocumentduplicateIcon />}
+                        icon={<DocumentDuplicateOutlined color="currentColor" />}
                         onClick={onCopyLink}
                       />
                     </div>
@@ -381,7 +380,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                   <Tooltip title={t('MilkdownEditor.customFile.refreshFileInfo')}>
                     <YakitButton
                       type="text2"
-                      icon={<OutlineRefreshIcon />}
+                      icon={<RefreshOutlined color="currentColor" />}
                       loading={loadingRefresh}
                       onClick={onRefreshFileInfo}
                     />

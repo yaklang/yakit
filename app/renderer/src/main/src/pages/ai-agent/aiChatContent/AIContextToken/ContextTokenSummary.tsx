@@ -1,7 +1,7 @@
 import type React from 'react'
 import { memo } from 'react'
 import { formatNumberUnits } from '../../utils'
-import { OutlineArrowdownIcon, OutlineArrowupIcon } from '@/assets/icon/outline'
+import { ArrowDownOutlined, ArrowUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { isConsumptionPerfChanged } from './utils'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
@@ -41,11 +41,11 @@ const ContextTokenSummary: React.FC<ContextPerfPanelProps> = () => {
     <div className={styles['info-token']}>
       <div className={styles['token']}>Tokens:</div>
       <div className={classNames(styles['token-tag'], styles['upload-token'])}>
-        <OutlineArrowupIcon />
+        <ArrowUpOutlined color="currentColor" />
         {token[0]}
       </div>
       <div className={classNames(styles['token-tag'], styles['download-token'])}>
-        <OutlineArrowdownIcon />
+        <ArrowDownOutlined color="currentColor" />
         {token[1]}
       </div>
       <div className={classNames(styles['token-tag'], styles['download-token'])}>{token[2]}</div>

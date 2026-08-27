@@ -15,12 +15,13 @@ import styles from './FuzzerSequence.module.scss'
 import { useStreamConcurrency } from '@/pages/pluginHub/hooks/useStreamConcurrency'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  SolidDragsortIcon,
-  SolidPlayIcon,
-  SolidPlusIcon,
-  SolidStopIcon,
-  SolidSwitchConfigurationIcon,
-} from '@/assets/icon/solid'
+  PlaySolid,
+  PlusSolid,
+  StopSolid,
+  FigmaIcon2281144183Solid,
+  SwitchSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
+
 import { DragDropContext, Droppable, Draggable, type DropResult, type ResponderProvided } from '@hello-pangea/dnd'
 import {
   useControllableValue,
@@ -37,17 +38,17 @@ import {
   useUpdateEffect,
 } from 'ahooks'
 import {
-  OutlineChevrondownIcon,
-  OutlineArrowcirclerightIcon,
-  OutlineCodeIcon,
-  OutlineCogIcon,
-  OutlineDotsverticalIcon,
-  OutlinePencilaltIcon,
-  OutlinePlussmIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineTrashIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ChevronDownOutlined,
+  ArrowCircleRightOutlined,
+  CodeOutlined,
+  CogOutlined,
+  DotsVerticalOutlined,
+  PencilAltOutlined,
+  PlusSmOutlined,
+  QuestionMarkCircleOutlined,
+  TrashOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { Divider, Result, Tooltip } from 'antd'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -1870,7 +1871,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         onClick={() => ipcRenderer.invoke('open-url', WebsiteGV.WebFuzzerAddress)}
                       >
                         <span className={styles['text-style']}>{modalT('FuzzerSequence.official_documentation')}</span>
-                        <OutlineQuestionmarkcircleIcon />
+                        <QuestionMarkCircleOutlined color="currentColor" />
                       </div>
                     </div>
                   ),
@@ -1901,11 +1902,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     onSave={handleAdvancedSetSave}
                     onCancel={() => setAdvancedSetVisible(false)}
                   >
-                    <OutlineCogIcon
+                    <CogOutlined
                       onClick={() => setAdvancedSetVisible(true)}
                       className={classNames(styles['fuzzer-sequence-left-heard-setting'], {
                         [styles['fuzzer-sequence-left-heard-active']]: AdvancedConfigActive,
                       })}
+                      color="currentColor"
                     />
                   </AdvancedSetV2>
                 </>
@@ -1919,12 +1921,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             <div className={styles['fuzzer-sequence-left-heard-extra']}>
               <YakitButton type="text" disabled={loading} onClick={() => onAddSequenceNode()}>
                 {t(`${isConcurrency ? 'FuzzerConcurrency' : 'FuzzerSequence'}.add_node`)}
-                <SolidPlusIcon className={styles['plus-icon']} />
+                <PlusSolid className={styles['plus-icon']} color="currentColor" />
               </YakitButton>
               {loading ? (
                 <YakitButton
                   onClick={() => onForcedStop()}
-                  icon={<SolidStopIcon className={styles['stop-icon']} />}
+                  icon={<StopSolid className={styles['stop-icon']} color="currentColor" />}
                   colors="danger"
                   type={'primary'}
                 >
@@ -1933,7 +1935,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
               ) : (
                 <YakitButton
                   onClick={onValidateMatcherAndExtraction}
-                  icon={<SolidPlayIcon className={styles['play-icon']} />}
+                  icon={<PlaySolid className={styles['play-icon']} color="currentColor" />}
                   type={'primary'}
                 >
                   {t('YakitButton.start_execution')}
@@ -2009,7 +2011,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     <InheritLineIcon />
                   </div>
                 )}
-                <OutlinePlussmIcon className={styles['plus-sm-icon']} onClick={() => onAddSequenceNode()} />
+                <PlusSmOutlined
+                  className={styles['plus-sm-icon']}
+                  onClick={() => onAddSequenceNode()}
+                  color="currentColor"
+                />
               </div>
             )}
             <div className={styles['to-end']}>{t('YakitEmpty.end_of_list')}</div>
@@ -2026,7 +2032,11 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
               {isConcurrency ? currentSequenceItem?.pageName : currentSequenceItem?.name}&nbsp;
               {t('FuzzerSequence.config')}
             </span>
-            <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setIsShowSetting(false)} />
+            <YakitButton
+              type="text2"
+              icon={<XOutlined color="currentColor" />}
+              onClick={() => setIsShowSetting(false)}
+            />
           </div>
           {currentSequenceItem && !!currentSequenceItem.pageId && (
             <React.Suspense fallback={<>loading...</>}>
@@ -2262,10 +2272,11 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
         >
           <div className={styles['fuzzer-sequence-list-item-heard']}>
             <div className={styles['fuzzer-sequence-list-item-heard-title']}>
-              <SolidDragsortIcon
+              <FigmaIcon2281144183Solid
                 className={classNames(styles['drag-sort-icon'], {
                   [styles['drag-sort-disabled-icon']]: disabled,
                 })}
+                color="currentColor"
               />
               <Tooltip title={item.name}>
                 <span className="content-ellipsis">{item.name}</span>
@@ -2310,7 +2321,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                 onVisibleChange={setEditNameVisible}
               >
                 <YakitButton
-                  icon={<OutlinePencilaltIcon />}
+                  icon={<PencilAltOutlined color="currentColor" />}
                   isActive={editNameVisible}
                   type="text2"
                   disabled={disabled}
@@ -2322,7 +2333,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
             </div>
             <div className={styles['fuzzer-sequence-list-item-heard-extra']}>
               <YakitButton
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 type="text2"
                 onClick={(e) => {
                   e.stopPropagation()
@@ -2332,7 +2343,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
               />
               <Divider type="vertical" style={{ margin: 0 }} />
               <YakitButton
-                icon={<OutlineCogIcon />}
+                icon={<CogOutlined color="currentColor" />}
                 type="text2"
                 isActive={isActive}
                 onClick={(e) => {
@@ -2396,7 +2407,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                     overlayClassName={styles['cog-popover']}
                   >
                     <YakitButton
-                      icon={<SolidSwitchConfigurationIcon />}
+                      icon={<SwitchSolid color="currentColor" />}
                       type="text2"
                       disabled={disabled}
                       onClick={(e) => {
@@ -2409,7 +2420,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
               <Divider type="vertical" style={{ margin: 0 }} />
               <Tooltip title={t('SequenceItem.go_to_fuzzer_configuration')}>
                 <YakitButton
-                  icon={<OutlineArrowcirclerightIcon />}
+                  icon={<ArrowCircleRightOutlined color="currentColor" />}
                   type="text2"
                   disabled={disabled}
                   onClick={(e) => {
@@ -2590,7 +2601,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                 placement: 'bottom',
               }}
             >
-              <YakitButton type="primary" icon={<OutlineCodeIcon />}>
+              <YakitButton type="primary" icon={<CodeOutlined color="currentColor" />}>
                 {t('SequenceResponseHeard.generateYamlTemplate')}
               </YakitButton>
             </YakitDropdownMenu>
@@ -2819,7 +2830,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
               </>
             }
           >
-            <OutlineDotsverticalIcon className={styles['resize-card-icon']} />
+            <DotsVerticalOutlined className={styles['resize-card-icon']} color="currentColor" />
           </YakitPopover>
         ) : (
           <>
@@ -2869,7 +2880,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 size="small"
                 type="primary"
                 className={styles['hot-patch-trigger-dropdown']}
-                icon={<OutlineChevrondownIcon />}
+                icon={<ChevronDownOutlined color="currentColor" />}
               />
             }
           />

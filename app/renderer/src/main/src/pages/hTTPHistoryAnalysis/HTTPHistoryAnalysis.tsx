@@ -14,20 +14,20 @@ import {
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteHistoryGV } from '@/enums/history'
 import {
-  OutlineArrowscollapseIcon,
-  OutlineArrowsexpandIcon,
-  OutlineChevrondownIcon,
-  OutlineEyeIcon,
-  OutlineInformationcircleIcon,
-  OutlineLightningboltIcon,
-  OutlinePlusIcon,
-  OutlineRefreshIcon,
-  OutlineReplyIcon,
-  OutlineSearchIcon,
-  OutlineTerminalIcon,
-  OutlineTrashIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ArrowsExpandOutlined,
+  ChevronDownOutlined,
+  EyeOutlined,
+  InformationCircleOutlined,
+  LightningBoltOutlined,
+  PlusOutlined,
+  RefreshOutlined,
+  ReplyOutlined,
+  SearchOutlined,
+  TerminalOutlined,
+  TrashOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '../fuzzer/hotPatchShared'
@@ -785,7 +785,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         </div>
         <div className={styles['AnalysisMain-header-right']}>
           <YakitButton
-            icon={<OutlineXIcon />}
+            icon={<XOutlined color="currentColor" />}
             type="text2"
             onClick={() => {
               onStopExecute()
@@ -863,14 +863,18 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                 >
                                   {selectedTemplateName ? t(selectedTemplateName) : t('HotCodeTemplate.code_template')}
                                 </span>
-                                <OutlineChevrondownIcon />
+                                <ChevronDownOutlined color="currentColor" />
                               </YakitButton>
                             }
                           ></HotCodeTemplate>
                         </div>
                         <div className={styles['hotPatch-header-right']}>
                           <Tooltip placement="bottom" title={t('HTTPFuzzerHotPatch.engineConsole')}>
-                            <YakitButton type="text" onClick={openConsoleNewWindow} icon={<OutlineTerminalIcon />} />
+                            <YakitButton
+                              type="text"
+                              onClick={openConsoleNewWindow}
+                              icon={<TerminalOutlined color="currentColor" />}
+                            />
                           </Tooltip>
                           <YakitPopconfirm
                             title={t('AnalysisMain.confirm_reset_hot_reload_code')}
@@ -881,7 +885,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                             placement="top"
                           >
                             <YakitButton type="text">
-                              <OutlineRefreshIcon />
+                              <RefreshOutlined color="currentColor" />
                             </YakitButton>
                           </YakitPopconfirm>
                           <YakitButton type="outline1" onClick={() => setAddHotCodeTemplateVisible(true)}>
@@ -906,12 +910,13 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                               onClick={() => setFullScreenFirstNode(false)}
                             />
                           ) : (
-                            <OutlineArrowsexpandIcon
+                            <ArrowsExpandOutlined
                               className={styles['expand-icon']}
                               onClick={() => {
                                 setFullScreenSecondNode(false)
                                 setFullScreenFirstNode(true)
                               }}
+                              color="currentColor"
                             />
                           )}
                         </div>
@@ -1090,7 +1095,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                         <span className={styles['exec-form-item-label']}>
                           {t('AnalysisMain.matcher')}
                           <Tooltip title={t('AnalysisMain.discard_or_keep_traffic_analysis_tip')}>
-                            <OutlineInformationcircleIcon className={styles['info-icon']} />
+                            <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
                           </Tooltip>
                           ：
                         </span>
@@ -1100,7 +1105,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                               size="middle"
                               type="outline1"
                               onClick={onOpenMatcherAndExtractionDrawer}
-                              icon={<OutlinePlusIcon />}
+                              icon={<PlusOutlined color="currentColor" />}
                             >
                               {t('YakitButton.add_new')}
                             </YakitButton>
@@ -1151,18 +1156,20 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                       }}
                                     />
                                     <div className={styles['matchers-heard-right']}>
-                                      <OutlineTrashIcon
+                                      <TrashOutlined
                                         className={styles['trashIcon']}
                                         onClick={() => {
                                           setMatchersList((prev) => {
                                             return prev.filter((_, i) => i !== index)
                                           })
                                         }}
+                                        color="currentColor"
                                       />
                                       <Divider type="vertical" />
-                                      <OutlineLightningboltIcon
+                                      <LightningBoltOutlined
                                         className={styles['lightningboltIcon']}
                                         onClick={onOpenMatcherAndExtractionDrawer}
+                                        color="currentColor"
                                       />
                                     </div>
                                   </div>
@@ -1237,7 +1244,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                 ? t('YakitButton.continue')
                                 : t('YakitButton.exit')}
                         </YakitButton>
-                        <YakitButton type="outline2" icon={<OutlineReplyIcon />} onClick={exitReturn}>
+                        <YakitButton type="outline2" icon={<ReplyOutlined color="currentColor" />} onClick={exitReturn}>
                           {t('YakitButton.back')}
                         </YakitButton>
                         {fullScreenSecondNode ? (
@@ -1246,12 +1253,13 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                             onClick={() => setFullScreenSecondNode(false)}
                           />
                         ) : (
-                          <OutlineArrowsexpandIcon
+                          <ArrowsExpandOutlined
                             className={styles['expand-icon']}
                             onClick={() => {
                               setFullScreenFirstNode(false)
                               setFullScreenSecondNode(true)
                             }}
+                            color="currentColor"
                           />
                         )}
                       </div>
@@ -1301,10 +1309,14 @@ const MatchersAndExtractorsListItemOperate: React.FC<MatchersAndExtractorsListIt
           [styles['matchersList-item-operate-hover']]: visiblePopover,
         })}
       >
-        <OutlineTrashIcon className={styles['trash-icon']} onClick={onRemove} />
+        <TrashOutlined className={styles['trash-icon']} onClick={onRemove} color="currentColor" />
 
         <Tooltip title={t('MatchersAndExtractorsListItemOperate.debug')}>
-          <OutlineLightningboltIcon className={styles['hollow-lightningBolt-icon']} onClick={onEdit} />
+          <LightningBoltOutlined
+            className={styles['hollow-lightningBolt-icon']}
+            onClick={onEdit}
+            color="currentColor"
+          />
         </Tooltip>
         <TerminalPopover
           popoverContent={popoverContent}
@@ -1356,7 +1368,7 @@ const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
       }}
     >
       <span ref={terminalIconRef} style={{ height: 24, lineHeight: '16px' }}>
-        <OutlineEyeIcon className={styles['terminal-icon']} />
+        <EyeOutlined className={styles['terminal-icon']} color="currentColor" />
       </span>
     </YakitPopover>
   )
@@ -1647,7 +1659,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         filterProps: {
           filterKey: 'StatusCode',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
           filterInputProps: {
             placeholder: t('YakitInput.supportInputFormat'),
             wrapperStyle: { width: 270 },
@@ -1665,7 +1677,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         filterProps: {
           filterKey: 'SearchURL',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {
@@ -1680,7 +1692,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         filterProps: {
           filterKey: 'RuleVerboseName',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {
@@ -1689,7 +1701,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         filterProps: {
           filterKey: 'ExtractedContent',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
     ]

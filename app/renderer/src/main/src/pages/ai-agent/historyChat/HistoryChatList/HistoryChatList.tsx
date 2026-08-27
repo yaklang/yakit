@@ -1,7 +1,7 @@
 import { memo, useMemo, useRef, useState, type FC } from 'react'
 import styles from './HistoryChatList.module.scss'
-import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
-import { SolidChatalt2Icon, SolidUserIcon, SolidUsersIcon } from '@/assets/icon/solid'
+import { PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ChatAlt2Solid, UserSolid, UsersSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { Tooltip } from 'antd'
@@ -86,7 +86,7 @@ const HistorySessionIcon: FC<{
   overlayClassName?: string
 }> = ({ item, getPopupContainer, overlayClassName }) => {
   const iconMeta = getHistorySessionIconMeta(item)
-  const Icon = iconMeta.isIM ? (iconMeta.isGroupLike ? SolidUsersIcon : SolidUserIcon) : SolidChatalt2Icon
+  const Icon = iconMeta.isIM ? (iconMeta.isGroupLike ? UsersSolid : UserSolid) : ChatAlt2Solid
 
   return (
     <Tooltip
@@ -102,7 +102,7 @@ const HistorySessionIcon: FC<{
           styles[`item-icon-${iconMeta.chatKind}`],
         )}
       >
-        <Icon />
+        <Icon color="currentColor" />
       </div>
     </Tooltip>
   )
@@ -378,7 +378,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
         >
           <YakitButton
             type="text2"
-            icon={<OutlinePencilaltIcon />}
+            icon={<PencilAltOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()
               handleOpenEditName(item)
@@ -398,7 +398,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
           <YakitButton
             loading={delLoading}
             type="text2"
-            icon={<OutlineTrashIcon className={styles['del-icon']} />}
+            icon={<TrashOutlined className={styles['del-icon']} color="currentColor" />}
             onClick={(e) => e.stopPropagation()}
           />
         </YakitPopconfirm>

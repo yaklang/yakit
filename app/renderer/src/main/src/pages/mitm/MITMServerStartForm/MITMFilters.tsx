@@ -10,7 +10,7 @@ import { LabelNodeItem } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAn
 import { MatcherAndExtractionValueList } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { OutlineTrashIcon } from '@/assets/icon/outline'
+import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { defaultMITMBaseFilter, defaultMITMAdvancedFilter } from '@/defaultConstants/mitm'
 import cloneDeep from 'lodash/cloneDeep'
@@ -394,7 +394,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                   </div>
                 }
                 extra={
-                  <OutlineTrashIcon
+                  <TrashOutlined
                     className={styles['trash-icon']}
                     onClick={(e) => {
                       e.stopPropagation()
@@ -405,6 +405,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                         setActiveKey(`ID:${index - 1}`)
                       }
                     }}
+                    color="currentColor"
                   />
                 }
                 key={`ID:${index}`}

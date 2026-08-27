@@ -7,7 +7,7 @@ import { randomString } from '@/utils/randomUtil'
 import type { FileProjectInfoProps, ProjectIOProgress, ProjectsResponse } from './softwareSettings/ProjectManage'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
-import { OutlineChevrondownIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -243,7 +243,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
               setCascaderValue({ Id: item.Id, DatabasePath: item.DatabasePath })
             }
           }}
-          suffixIcon={<OutlineChevrondownIcon style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />}
+          suffixIcon={<ChevronDownOutlined style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />}
         />
       </Form.Item>
       {percent > 0 && (

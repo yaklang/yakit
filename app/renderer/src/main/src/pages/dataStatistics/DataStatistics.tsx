@@ -7,7 +7,7 @@ import styles from './DataStatistics.module.scss'
 import { failed, yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
 import { UserIcon } from './icon'
-import { SolidCalendarIcon, SolidTrendingdownIcon, SolidTrendingupIcon } from '@/assets/icon/solid'
+import { CalendarSolid, TrendingDownSolid, TrendingUpSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import * as echarts from 'echarts'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
@@ -19,7 +19,7 @@ import locale from 'antd/es/date-picker/locale/zh_CN'
 import type { RangePickerProps } from 'antd/lib/date-picker'
 import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
@@ -638,7 +638,9 @@ export const UpsOrDowns: React.FC<UpsOrDownsProps> = (props) => {
         {value ? `${value}%` : ''}
       </div>
       {['up', 'down'].includes(type) && (
-        <div className={styles['icon']}>{type === 'up' ? <SolidTrendingupIcon /> : <SolidTrendingdownIcon />}</div>
+        <div className={styles['icon']}>
+          {type === 'up' ? <TrendingUpSolid color="currentColor" /> : <TrendingDownSolid color="currentColor" />}
+        </div>
       )}
     </div>
   )
@@ -1127,7 +1129,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 <div className={styles['sub-title']}>登录用户总数</div>
               </div>
               <div className={styles['refresh']}>
-                <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={() => getUserData()} />
+                <YakitButton
+                  type="text2"
+                  icon={<RefreshOutlined color="currentColor" />}
+                  onClick={() => getUserData()}
+                />
               </div>
             </div>
           </YakitSpin>
@@ -1267,7 +1273,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                           placement: 'bottom',
                         }}
                       >
-                        <YakitButton type="text2" icon={<OutlineRefreshIcon />} />
+                        <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} />
                       </YakitDropdownMenu>
                     </div>
                   }
@@ -1288,7 +1294,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                     {cityDate && (
                       <>
                         <div className={styles['icon']}>
-                          <SolidCalendarIcon />
+                          <CalendarSolid color="currentColor" />
                         </div>
                         <div className={styles['date']}>{moment.unix(cityDate).format('YYYY-MM-DD HH:mm:ss')}</div>
                       </>

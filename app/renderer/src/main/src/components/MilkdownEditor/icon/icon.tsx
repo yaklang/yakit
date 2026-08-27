@@ -206,23 +206,6 @@ export const IconListOrdered = (props: Partial<IconProps>) => {
   return <Icon component={listOrdered} {...props} />
 }
 
-const list = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 6H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M8 12H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M8 18H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 6H3.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 12H3.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M3 18H3.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-/**
- * @description icon/list
- */
-export const IconList = (props: Partial<IconProps>) => {
-  return <Icon component={list} {...props} />
-}
-
 const checkSquare = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M9 11L12 14L22 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -343,26 +326,6 @@ export const IconNotepadFileTypeDir = (props: Partial<IconProps>) => {
   return <Icon component={notepadFileTypeDir} {...props} />
 }
 
-const notepadFileTypeUnknown = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M8.39062 3H30.3516L40.8047 13.5703V43.8281C40.8047 44.4753 40.28 45 39.6328 45H8.39062C7.74342 45 7.21875 44.4753 7.21875 43.8281V4.17188C7.21875 3.52467 7.74342 3 8.39062 3Z"
-      fill="#CCCCCC"
-    />
-    <path d="M30.3516 3V12.3984C30.3516 13.0456 30.8762 13.5703 31.5234 13.5703H40.8047L30.3516 3Z" fill="#EAEAEA" />
-    <path
-      d="M24 17.0859C25.6003 17.0859 27.2109 17.6106 28.4424 18.5714C29.8551 19.6736 30.6797 21.2686 30.6797 23.1328C30.6797 25.5574 29.0126 27.7745 25.8674 29.8823L25.8516 29.8929V32.625C25.8516 33.458 25.1831 34.1348 24.3533 34.1482L24.3281 34.1484C23.4867 34.1484 22.8047 33.4664 22.8047 32.625V29.0625C22.8047 28.8034 22.8707 28.5487 22.9966 28.3222C23.1225 28.0958 23.304 27.9052 23.5241 27.7685C26.3415 26.0179 27.6328 24.432 27.6328 23.1328C27.6328 22.2343 27.2602 21.5135 26.5681 20.9736C25.8866 20.4419 24.9378 20.1328 24 20.1328C23.0662 20.1328 22.1318 20.4394 21.4623 20.9681C20.7818 21.5055 20.4141 22.2276 20.4141 23.1328C20.4141 23.9742 19.732 24.6562 18.8906 24.6562C18.0492 24.6562 17.3672 23.9742 17.3672 23.1328C17.3672 21.2722 18.1785 19.6789 19.5741 18.5768C20.7964 17.6116 22.3984 17.0859 24 17.0859ZM24.3984 39.4688C25.3692 39.4688 26.1562 38.6817 26.1562 37.7109C26.1562 36.7402 25.3692 35.9531 24.3984 35.9531C23.4277 35.9531 22.6406 36.7402 22.6406 37.7109C22.6406 38.6817 23.4277 39.4688 24.3984 39.4688Z"
-      fill="white"
-    />
-  </svg>
-)
-/**
- * @description icon/记事本/文件类型/未知 Icon/notepad/file type/unknown
- */
-export const IconNotepadFileTypeUnknown = (props: Partial<IconProps>) => {
-  return <Icon component={notepadFileTypeUnknown} {...props} />
-}
-
 const notepadFileTypeCompress = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -381,26 +344,6 @@ const notepadFileTypeCompress = () => (
  */
 export const IconNotepadFileTypeCompress = (props: Partial<IconProps>) => {
   return <Icon component={notepadFileTypeCompress} {...props} />
-}
-
-const notepadFileTypePPT = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M8.39062 3H30.3516L40.8047 13.5703V43.8281C40.8047 44.4753 40.28 45 39.6328 45H8.39062C7.74342 45 7.21875 44.4753 7.21875 43.8281V4.17188C7.21875 3.52467 7.74342 3 8.39062 3Z"
-      fill="#FF7861"
-    />
-    <path d="M30.3516 3V12.3984C30.3516 13.0456 30.8762 13.5703 31.5234 13.5703H40.8047L30.3516 3Z" fill="#FFB0A4" />
-    <path
-      d="M31.4108 22.4106C31.7758 22.7839 31.9688 23.3208 31.9688 24.1172C31.9688 24.9135 31.7758 25.4505 31.4108 25.8238C31.0212 26.2224 30.361 26.5185 29.3857 26.6719H14.9062C14.0002 26.6719 13.2656 27.4064 13.2656 28.3125V35.6719C13.2656 36.578 14.0002 37.3125 14.9062 37.3125C15.8123 37.3125 16.5469 36.578 16.5469 35.6719V29.9531H29.5078C29.5854 29.9531 29.663 29.9476 29.7398 29.9366C33.2444 29.436 35.25 27.3845 35.25 24.1172C35.25 20.8499 33.2444 18.7984 29.7398 18.2977C29.663 18.2868 29.5854 18.2813 29.5078 18.2812H14.9062C14.0002 18.2812 13.2656 19.0158 13.2656 19.9219C13.2656 20.828 14.0002 21.5625 14.9062 21.5625H29.3857C30.361 21.7158 31.0212 22.012 31.4108 22.4106Z"
-      fill="white"
-    />
-  </svg>
-)
-/**
- * @description icon/记事本/文件类型/ppt Icon/notepad/file type/ppt
- */
-export const IconNotepadFileTypePPT = (props: Partial<IconProps>) => {
-  return <Icon component={notepadFileTypePPT} {...props} />
 }
 
 const notepadFileTypeExcel = () => (
@@ -445,24 +388,4 @@ const notepadFileTypePdf = () => (
  */
 export const IconNotepadFileTypePdf = (props: Partial<IconProps>) => {
   return <Icon component={notepadFileTypePdf} {...props} />
-}
-
-const notepadFileTypeWord = () => (
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M8.39062 3H30.3516L40.8047 13.5703V43.8281C40.8047 44.4753 40.28 45 39.6328 45H8.39062C7.74342 45 7.21875 44.4753 7.21875 43.8281V4.17188C7.21875 3.52467 7.74342 3 8.39062 3Z"
-      fill="#4A8DFF"
-    />
-    <path d="M30.3516 3V12.3984C30.3516 13.0456 30.8762 13.5703 31.5234 13.5703H40.8047L30.3516 3Z" fill="#E5F0FF" />
-    <path
-      d="M32.4915 36.7781C33.5015 37.8842 35.3438 37.1697 35.3438 35.6719V18.2344H32.0625V31.4418L25.5397 24.2977C24.8891 23.5851 23.7671 23.5851 23.1165 24.2977L16.5938 31.4418V18.2344H13.3125V35.6719C13.3125 37.1697 15.1548 37.8842 16.1647 36.7781L24.3281 27.837L32.4915 36.7781Z"
-      fill="white"
-    />
-  </svg>
-)
-/**
- * @description icon/记事本/文件类型/word Icon/notepad/file type/word
- */
-export const IconNotepadFileTypeWord = (props: Partial<IconProps>) => {
-  return <Icon component={notepadFileTypeWord} {...props} />
 }

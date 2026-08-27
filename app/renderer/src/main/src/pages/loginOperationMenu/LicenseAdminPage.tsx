@@ -11,12 +11,12 @@ import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtual
 import { NetWorkApi } from '@/services/fetch'
 import { yakitNotify } from '@/utils/notification'
 import {
-  OutlineInformationcircleIcon,
-  OutlinePencilaltIcon,
-  OutlinePluscircleIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  InformationCircleOutlined,
+  PencilAltOutlined,
+  PlusCircleOutlined,
+  SearchOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { Form, Tooltip, Typography } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
@@ -91,7 +91,7 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
       filterProps: {
         filterKey: 'keywords',
         filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+        filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
       },
       fixed: 'left',
     },
@@ -146,27 +146,29 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
       render: (_, record: API.CompanyLicenseConfigList) => (
         <div className={styles['table-action-icon']}>
           <Tooltip title={t('LicenseAdminPage.generateLicense')} align={{ offset: [-5, 10] }}>
-            <OutlinePluscircleIcon
+            <PlusCircleOutlined
               className={styles['action-icon']}
               onClick={() => {
                 companyRef.current = record
                 setCreateLicensePopShow(true)
               }}
+              color="currentColor"
             />
           </Tooltip>
-          <OutlinePencilaltIcon
+          <PencilAltOutlined
             className={styles['action-icon']}
             onClick={() => {
               editInfoRef.current = record
               setEnterprisesPopShow(true)
             }}
+            color="currentColor"
           />
           <YakitPopconfirm
             title={t('LicenseAdminPage.confirmDeleteCompany')}
             onConfirm={() => onRemoveSingle(record.id)}
             placement="right"
           >
-            <OutlineTrashIcon className={styles['del-icon']} />
+            <TrashOutlined className={styles['del-icon']} color="currentColor" />
           </YakitPopconfirm>
         </div>
       ),
@@ -450,7 +452,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
           tooltip={
             editInfo
               ? {
-                  icon: <OutlineInformationcircleIcon />,
+                  icon: <InformationCircleOutlined color="currentColor" />,
                   title: t('LicenseForm.changeUserCountTooltip'),
                 }
               : null
@@ -477,7 +479,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
           tooltip={
             editInfo
               ? {
-                  icon: <OutlineInformationcircleIcon />,
+                  icon: <InformationCircleOutlined color="currentColor" />,
                   title: t('LicenseForm.changeValidityPeriodTooltip'),
                 }
               : null

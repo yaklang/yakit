@@ -22,13 +22,13 @@ import styles from './RunnerTabs.module.scss'
 import { KeyToIcon } from '../../yakRunner/FileTree/icon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlinCompileIcon,
-  OutlineChevrondoubleleftIcon,
-  OutlineChevrondoublerightIcon,
-  OutlineImportIcon,
-  OutlineSplitScreenIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ChevronDoubleLeftOutlined,
+  ChevronDoubleRightOutlined,
+  XOutlined,
+  FigmaIcon6480193584Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlinCompileIcon, OutlineSplitScreenIcon } from '@/assets/icon/bespokeOutline'
 import { YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon } from '@/pages/yakRunner/icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import {
@@ -744,7 +744,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollLeftIconRef}
                 >
-                  <OutlineChevrondoubleleftIcon />
+                  <ChevronDoubleLeftOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['bar-container'])}
@@ -774,7 +774,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollRightIconRef}
                 >
-                  <OutlineChevrondoublerightIcon />
+                  <ChevronDoubleRightOutlined color="currentColor" />
                 </div>
                 {/* {pageItem.hideAdd !== true && (
                                     <OutlinePlusIcon
@@ -871,7 +871,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                   className={styles['del-btn']}
                   type="text2"
                   size="small"
-                  icon={<OutlineXIcon />}
+                  icon={<XOutlined color="currentColor" />}
                   onClick={closeTabItem}
                 />
               </div>
@@ -1433,7 +1433,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
                 <YakRunnerOpenFileIcon />
                 打开已有项目
               </div>
-              <OutlineImportIcon className={styles['icon-style']} />
+              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
             </div>
           </div>
         </div>
@@ -1736,7 +1736,7 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
       <div className={styles['header']}>
         <div className={styles['title']}>这里的代码有点问题</div>
         <div className={styles['extra']} onClick={closeFizzRangeWidget}>
-          <OutlineXIcon />
+          <XOutlined color="currentColor" />
         </div>
       </div>
       <div className={styles['content']}>

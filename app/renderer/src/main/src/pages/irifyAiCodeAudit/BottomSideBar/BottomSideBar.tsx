@@ -5,14 +5,15 @@ import type { BottomSideBarProps } from './BottomSideBarType'
 import classNames from 'classnames'
 import styles from './BottomSideBar.module.scss'
 import {
-  OutlineAnnotationIcon,
-  OutlineCodeIcon,
-  OutlineDeprecatedIcon,
-  OutlineExclamationIcon,
-  OutlineInformationcircleIcon,
-  OutlineStethoscopeIcon,
-  OutlineXcircleIcon,
-} from '@/assets/icon/outline'
+  AnnotationOutlined,
+  CodeOutlined,
+  ExclamationOutlined,
+  InformationCircleOutlined,
+  StethoscopeOutlined,
+  XCircleOutlined,
+  FigmaIcon22915169930Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import useStore from '../hooks/useStore'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -71,7 +72,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
               onOpenEditorDetails('syntaxCheck')
             }}
           >
-            <OutlineStethoscopeIcon />
+            <StethoscopeOutlined color="currentColor" />
             {t('BottomSideBar.syntaxCheck')}
           </div>
           <div
@@ -80,7 +81,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
               onOpenEditorDetails('syntaxCheck')
             }}
           >
-            <OutlineXcircleIcon />
+            <XCircleOutlined color="currentColor" />
             {showSyntaxInfo.error}
           </div>
           <div
@@ -89,7 +90,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
               onOpenEditorDetails('syntaxCheck')
             }}
           >
-            <OutlineExclamationIcon />
+            <ExclamationOutlined color="currentColor" />
             {showSyntaxInfo.warning}
           </div>
           <div
@@ -98,7 +99,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
               onOpenEditorDetails('syntaxCheck')
             }}
           >
-            <OutlineInformationcircleIcon />
+            <InformationCircleOutlined color="currentColor" />
             {showSyntaxInfo.info}
           </div>
           <div
@@ -107,7 +108,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
               onOpenEditorDetails('syntaxCheck')
             }}
           >
-            <OutlineDeprecatedIcon />
+            <FigmaIcon22915169930Outlined color="currentColor" />
             {showSyntaxInfo.hint}
           </div>
         </div>
@@ -117,7 +118,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             onOpenEditorDetails('terminal')
           }}
         >
-          <OutlineCodeIcon />
+          <CodeOutlined color="currentColor" />
           {t('BottomSideBar.terminal')}
         </div>
         <div
@@ -126,7 +127,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             onOpenEditorDetails('helpInfo')
           }}
         >
-          <OutlineAnnotationIcon />
+          <AnnotationOutlined color="currentColor" />
           {t('BottomSideBar.helpInfo')}
         </div>
       </div>

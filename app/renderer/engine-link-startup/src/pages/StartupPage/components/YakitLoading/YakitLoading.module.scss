@@ -120,19 +120,15 @@
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
       .exit-icon {
-        svg {
-          width: 16px;
-          height: 16px;
-        }
+        width: 16px;
+        height: 16px;
       }
 
       &:hover {
         color: var(--Colors-Use-Error-Primary);
 
         .exit-icon {
-          svg {
-            color: var(--Colors-Use-Error-Primary);
-          }
+          color: var(--Colors-Use-Error-Primary);
         }
       }
     }
@@ -163,10 +159,8 @@
         color: var(--Colors-Use-Main-Primary);
 
         .arrow-circle-right-icon {
-          svg {
-            width: 16px;
-            height: 16px;
-          }
+          width: 16px;
+          height: 16px;
         }
       }
 

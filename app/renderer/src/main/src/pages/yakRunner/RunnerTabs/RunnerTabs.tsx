@@ -20,15 +20,16 @@ import styles from './RunnerTabs.module.scss'
 import { KeyToIcon } from '../FileTree/icon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineChevrondoubleleftIcon,
-  OutlineChevrondoublerightIcon,
-  OutlineImportIcon,
-  OutlinePauseIcon,
-  OutlinePlayIcon,
-  OutlinePlusIcon,
-  OutlineSplitScreenIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ChevronDoubleLeftOutlined,
+  ChevronDoubleRightOutlined,
+  PauseOutlined,
+  PlayOutlined,
+  PlusOutlined,
+  XOutlined,
+  FigmaIcon6480193584Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineSplitScreenIcon } from '@/assets/icon/bespokeOutline'
 import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
 import { YakRunnerNewFileIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -670,12 +671,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         {isShowExtra && (
           <>
             {runnerTabsId === tabsId ? (
-              <YakitButton colors="danger" icon={<OutlinePauseIcon />} onClick={onStopYak}>
+              <YakitButton colors="danger" icon={<PauseOutlined color="currentColor" />} onClick={onStopYak}>
                 {t('YakitButton.stop')}
               </YakitButton>
             ) : (
               <YakitButton
-                icon={<OutlinePlayIcon />}
+                icon={<PlayOutlined color="currentColor" />}
                 loading={runnerTabsId === tabsId}
                 disabled={!!runnerTabsId && runnerTabsId !== tabsId}
                 onClick={onRunYak}
@@ -831,7 +832,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollLeftIconRef}
                 >
-                  <OutlineChevrondoubleleftIcon />
+                  <ChevronDoubleLeftOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['bar-container'])}
@@ -861,7 +862,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollRightIconRef}
                 >
-                  <OutlineChevrondoublerightIcon />
+                  <ChevronDoubleRightOutlined color="currentColor" />
                 </div>
                 {/* {pageItem.hideAdd !== true && (
                                     <OutlinePlusIcon
@@ -959,7 +960,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                   className={styles['del-btn']}
                   type="text2"
                   size="small"
-                  icon={<OutlineXIcon />}
+                  icon={<XOutlined color="currentColor" />}
                   onClick={closeTabItem}
                 />
               </div>
@@ -1396,21 +1397,21 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                 <YakRunnerNewFileIcon />
                 {t('YakitButton.newFile')}
               </div>
-              <OutlinePlusIcon className={styles['icon-style']} />
+              <PlusOutlined className={styles['icon-style']} color="currentColor" />
             </div>
             <div className={classNames(styles['btn-style'], styles['btn-open-file'])} onClick={openFile}>
               <div className={styles['btn-title']}>
                 <YakRunnerOpenFileIcon />
                 打开文件
               </div>
-              <OutlineImportIcon className={styles['icon-style']} />
+              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
             </div>
             <div className={classNames(styles['btn-style'], styles['btn-open-folder'])} onClick={openFolder}>
               <div className={styles['btn-title']}>
                 <YakRunnerOpenFolderIcon />
                 打开文件夹
               </div>
-              <OutlineImportIcon className={styles['icon-style']} />
+              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
             </div>
           </div>
         </div>

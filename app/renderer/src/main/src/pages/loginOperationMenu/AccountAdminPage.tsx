@@ -11,12 +11,12 @@ import { NetWorkApi } from '@/services/fetch'
 import type { API } from '@/services/swagger/resposeType'
 import { yakitNotify } from '@/utils/notification'
 import {
-  OutlineChevronrightIcon,
-  OutlineDocumentduplicateIcon,
-  OutlinePencilaltIcon,
-  OutlineRefreshIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ChevronRightOutlined,
+  DocumentDuplicateOutlined,
+  PencilAltOutlined,
+  RefreshOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -611,7 +611,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                         }
                       >
                         <YakitButton
-                          icon={<OutlinePencilaltIcon className={styles['edit-icon']} />}
+                          icon={<PencilAltOutlined className={styles['edit-icon']} color="currentColor" />}
                           type="text"
                           onClick={(e) => {
                             e.stopPropagation()
@@ -629,7 +629,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                         }}
                       >
                         <YakitButton
-                          icon={<OutlineTrashIcon className={styles['del-icon']} />}
+                          icon={<TrashOutlined className={styles['del-icon']} color="currentColor" />}
                           type="text"
                           colors="danger"
                           onClick={(e) => {
@@ -874,25 +874,27 @@ const AccountList: React.FC<AccountListProps> = (props) => {
       fixed: 'right',
       render: (_, record: API.UrmUserList) => (
         <div className={styles['table-action-icon']}>
-          <OutlinePencilaltIcon
+          <PencilAltOutlined
             className={styles['action-icon']}
             onClick={() => {
               editInfoRef.current = record
               setCreatCountVisible(true)
             }}
+            color="currentColor"
           />
           <YakitPopconfirm
             title={t('AccountList.resetPwdConfirm')}
             onConfirm={() => onResetPwd(record.uid, record.user_name)}
           >
             <Tooltip title={t('AccountList.resetPwdTooltip')} align={{ targetOffset: [0, -15] }}>
-              <OutlineRefreshIcon className={styles['action-icon']} onClick={() => {}} />
+              <RefreshOutlined className={styles['action-icon']} onClick={() => {}} color="currentColor" />
             </Tooltip>
           </YakitPopconfirm>
           <Tooltip title={t('AccountList.copySecretKeyTooltip')} align={{ targetOffset: [0, -15] }}>
-            <OutlineDocumentduplicateIcon
+            <DocumentDuplicateOutlined
               className={styles['action-icon']}
               onClick={() => copySecretKey(record.user_name)}
+              color="currentColor"
             />
           </Tooltip>
           <YakitPopconfirm
@@ -900,7 +902,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
             onConfirm={() => onRemoveSingle(record.uid, record.department_id)}
             placement="right"
           >
-            <OutlineTrashIcon className={styles['del-icon']} />
+            <TrashOutlined className={styles['del-icon']} color="currentColor" />
           </YakitPopconfirm>
         </div>
       ),
@@ -1154,7 +1156,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
             <div className={styles['first-title']}>{selectTitle.firstTitle}</div>
             {selectTitle?.secondTitle && (
               <>
-                <OutlineChevronrightIcon className={styles['right-outlined']} />
+                <ChevronRightOutlined className={styles['right-outlined']} color="currentColor" />
                 <div className={styles['second-title']}>{selectTitle.secondTitle}</div>
               </>
             )}

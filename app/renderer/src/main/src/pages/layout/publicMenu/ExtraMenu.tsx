@@ -6,7 +6,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { onImportShare } from '@/pages/fuzzer/components/ShareImport'
 import { useMemoizedFn } from 'ahooks'
 import type { RouteToPageProps } from './PublicMenu'
-import { OutlineChevrondownIcon, OutlineChevronupIcon, OutlineSaveIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, ChevronUpOutlined, SaveOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ImportLocalPlugin, type LoadPluginMode } from '@/pages/mitm/MITMPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { Form } from 'antd'
@@ -178,7 +178,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 type="text"
                 style={{ fontWeight: 500 }}
                 onClick={(e) => e.preventDefault()}
-                icon={<OutlineSaveIcon />}
+                icon={<SaveOutlined color="currentColor" />}
               >
                 {t('YakitButton.importResources')}
               </YakitButton>
@@ -283,7 +283,11 @@ export const OrdinaryMenu: React.FC<OrdinaryMenuProps> = React.memo((props) => {
             onClick={(e) => e.preventDefault()}
           >
             {item.i18n === false ? item.label : t(item.labelUi!)}
-            {activePopoverKey === itemKey ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+            {activePopoverKey === itemKey ? (
+              <ChevronUpOutlined color="currentColor" />
+            ) : (
+              <ChevronDownOutlined color="currentColor" />
+            )}
           </YakitButton>
         </YakitPopover>
       )

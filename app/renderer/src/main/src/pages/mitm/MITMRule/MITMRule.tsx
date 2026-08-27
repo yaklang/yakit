@@ -56,7 +56,7 @@ import {
 import MITMContext from '../Context/MITMContext'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { OutlineCogIcon, OutlineQuestionmarkcircleIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { CogOutlined, QuestionMarkCircleOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { setRemoteValue } from '@/utils/kv'
@@ -1007,7 +1007,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               <label>
                 {t('MITMRule.built_in_rules')}
                 <Tooltip destroyTooltipOnHide title={t('MITMRule.built_in_rules_tip')} placement="top">
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </Tooltip>
                 <YakitSwitch
                   defaultChecked={disableTrafficGuardRef.current}
@@ -1020,7 +1020,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               <Divider type="vertical" className={styles['heard-right-operation_divider']} />
             </div>
           )}
-          <YakitButton type="text" icon={<OutlineCogIcon />} onClick={() => setWhiteListVisible(true)}>
+          <YakitButton
+            type="text"
+            icon={<CogOutlined color="currentColor" />}
+            onClick={() => setWhiteListVisible(true)}
+          >
             {t('MITMRule.white_list')}
           </YakitButton>
           <Divider type="vertical" className={styles['heard-right-operation_divider']} />
@@ -1197,7 +1201,12 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                   <>
                     {tableTitleBodyWidth < 670 && (
                       <YakitPopover content={searchEle}>
-                        <YakitButton icon={<OutlineSearchIcon />} size="small" type="outline2" isHover={searchFlag} />
+                        <YakitButton
+                          icon={<SearchOutlined color="currentColor" />}
+                          size="small"
+                          type="outline2"
+                          isHover={searchFlag}
+                        />
                       </YakitPopover>
                     )}
                   </>

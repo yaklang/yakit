@@ -9,7 +9,7 @@ import { useMemoizedFn } from 'ahooks'
 import CheckOutlined from '@ant-design/icons/lib/icons/CheckOutlined'
 import LoadingOutlined from '@ant-design/icons/lib/icons/LoadingOutlined'
 import { success } from '@/utils/notification'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -38,7 +38,7 @@ export const YakitTag: React.FC<YakitTagProps> = (props) => {
       {...restProps}
       closeIcon={
         (enableCopy && <CopyComponents copyText={copyText || ''} onAfterCopy={onAfterCopy} iconColor={iconColor} />) ||
-        props.closeIcon || <OutlineXIcon />
+        props.closeIcon || <XOutlined color="currentColor" />
       }
       closable={props.closable || enableCopy}
       className={classNames(

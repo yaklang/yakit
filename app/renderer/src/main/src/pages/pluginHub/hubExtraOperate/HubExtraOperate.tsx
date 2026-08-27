@@ -2,19 +2,19 @@ import type React from 'react'
 import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import {
-  OutlineClouddownloadIcon,
-  OutlineClouduploadIcon,
-  OutlineDotshorizontalIcon,
-  OutlineExclamationcircleIcon,
-  OutlineExportIcon,
-  OutlineLockclosedIcon,
-  OutlineLockopenIcon,
-  OutlineMinuscircleIcon,
-  OutlinePencilaltIcon,
-  OutlinePluscircleIcon,
-  OutlineShareIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  CloudUploadOutlined,
+  DotsHorizontalOutlined,
+  ExclamationCircleOutlined,
+  LockClosedOutlined,
+  LockOpenOutlined,
+  MinusCircleOutlined,
+  PencilAltOutlined,
+  PlusCircleOutlined,
+  ShareOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { CodeScoreModule, FuncFilterPopover } from '@/pages/plugins/funcTemplate'
 import type { API } from '@/services/swagger/resposeType'
 import type { QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
@@ -123,13 +123,13 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
           {
             key: 'addMenu',
             label: t('HubExtraOperate.addToMenu'),
-            itemIcon: <OutlinePluscircleIcon />,
+            itemIcon: <PlusCircleOutlined color="currentColor" />,
             type: local ? undefined : 'info',
           },
           {
             key: 'removeMenu',
             label: t('HubExtraOperate.removeFromMenu'),
-            itemIcon: <OutlineMinuscircleIcon />,
+            itemIcon: <MinusCircleOutlined color="currentColor" />,
             type: local ? undefined : 'info',
             disabled: isInMenu,
           },
@@ -152,12 +152,16 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         first.push({
           key: 'status',
           label: online?.is_private ? t('HubExtraOperate.makePublic') : t('HubExtraOperate.makePrivate'),
-          itemIcon: online?.is_private ? <OutlineLockopenIcon /> : <OutlineLockclosedIcon />,
+          itemIcon: online?.is_private ? (
+            <LockOpenOutlined color="currentColor" />
+          ) : (
+            <LockClosedOutlined color="currentColor" />
+          ),
         })
         second.push({
           key: 'delOnline',
           label: t('HubExtraOperate.deleteOnline'),
-          itemIcon: <OutlineTrashIcon />,
+          itemIcon: <TrashOutlined color="currentColor" />,
           type: 'danger',
         })
       }
@@ -167,13 +171,13 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         {
           key: 'addMenu',
           label: t('HubExtraOperate.addToMenu'),
-          itemIcon: <OutlinePluscircleIcon />,
+          itemIcon: <PlusCircleOutlined color="currentColor" />,
           type: isLocal ? undefined : 'info',
         },
         {
           key: 'removeMenu',
           label: t('HubExtraOperate.removeFromMenu'),
-          itemIcon: <OutlineMinuscircleIcon />,
+          itemIcon: <MinusCircleOutlined color="currentColor" />,
           disabled: isInMenu,
         },
         {
@@ -188,7 +192,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         second.push({
           key: 'delLocal',
           label: t('HubExtraOperate.deleteLocal'),
-          itemIcon: <OutlineTrashIcon />,
+          itemIcon: <TrashOutlined color="currentColor" />,
           type: 'danger',
         })
       }
@@ -625,7 +629,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
           >
             {t('HubExtraOperate.doNotDownload')}{' '}
             <Tooltip title={t('HubExtraOperate.skipDownloadTooltip')} align={{ offset: [0, 10] }}>
-              <OutlineExclamationcircleIcon className={styles['exclamationcircleIcon']} />
+              <ExclamationCircleOutlined className={styles['exclamationcircleIcon']} color="currentColor" />
             </Tooltip>
           </YakitCheckbox>
         )}
@@ -634,7 +638,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             <HubButton
               width={wrapperWidth}
               iconWidth={900}
-              icon={<OutlinePencilaltIcon />}
+              icon={<PencilAltOutlined color="currentColor" />}
               type="text2"
               name={t('YakitButton.edit')}
               className={classNames({ [styles['share-disabled-btn']]: !local })}
@@ -647,7 +651,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             <HubButton
               width={wrapperWidth}
               iconWidth={900}
-              icon={<OutlineShareIcon />}
+              icon={<ShareOutlined color="currentColor" />}
               type="text2"
               name={t('YakitButton.share')}
               className={classNames({ [styles['share-disabled-btn']]: !online })}
@@ -665,7 +669,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
           <HubButton
             width={wrapperWidth}
             iconWidth={900}
-            icon={<OutlineClouduploadIcon />}
+            icon={<CloudUploadOutlined color="currentColor" />}
             type="outline2"
             name={t('YakitButton.upload')}
             onClick={(e) => {
@@ -678,7 +682,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
           <HubButton
             width={wrapperWidth}
             iconWidth={900}
-            icon={<OutlineClouddownloadIcon />}
+            icon={<CloudDownloadOutlined color="currentColor" />}
             name={isUpdate ? t('YakitButton.update') : t('YakitButton.download')}
             className={classNames({ [styles['download-disabled-btn']]: !online })}
             disabled={!online}
@@ -691,7 +695,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
           />
         )}
         <FuncFilterPopover
-          icon={<OutlineDotshorizontalIcon />}
+          icon={<DotsHorizontalOutlined color="currentColor" />}
           button={{ type: 'text2' }}
           menu={{
             type: 'primary',

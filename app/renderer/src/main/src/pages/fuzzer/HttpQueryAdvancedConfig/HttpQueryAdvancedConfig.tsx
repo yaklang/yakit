@@ -46,7 +46,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { VariableList } from '@/pages/httpRequestBuilder/HTTPRequestBuilder'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitFormDraggerContent } from '@/components/yakitUI/YakitForm/YakitForm'
-import { OutlineBadgecheckIcon } from '@/assets/icon/outline'
+import { BadgeCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ExtractorsPanel, MatchersPanel, type MatchersPanelEditProps, VariablePanel } from './FuzzerConfigPanels'
 import {
   matcherTypeList,
@@ -797,7 +797,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     icon={
                       JSON.stringify(advancedConfigValue.batchTarget) !== '{}' ? (
                         Uint8ArrayToString(advancedConfigValue.batchTarget || new Uint8Array()) ? (
-                          <OutlineBadgecheckIcon style={{ color: 'var(--Colors-Use-Green-Primary)' }} />
+                          <BadgeCheckOutlined style={{ color: 'var(--Colors-Use-Green-Primary)' }} />
                         ) : (
                           <PlusSmIcon />
                         )

@@ -13,7 +13,7 @@ import { YakitTag } from '../YakitTag/YakitTag'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
-import { OutlineCheckIcon, OutlineXIcon } from '@/assets/outline'
+import { CheckOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
 import {
   type CacheDataHistoryProps,
@@ -229,14 +229,16 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         }}
       >
         <div className={styles['yakit-option-item-label']}>{copyItem.label}</div>
-        <OutlineXIcon
+        <XOutlined
+          color="currentColor"
           style={{
             display: showClose ? 'block' : 'none',
           }}
           className={styles['option-item-close']}
           onClick={(e) => delCatchOptionItem(e, item)}
         />
-        <OutlineCheckIcon
+        <CheckOutlined
+          color="currentColor"
           style={{
             display: showSelectedIcon ? 'block' : 'none',
           }}

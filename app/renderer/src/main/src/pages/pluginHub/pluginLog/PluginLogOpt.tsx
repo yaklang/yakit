@@ -8,7 +8,7 @@ import { AuthorImg } from '@/pages/plugins/funcTemplate'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePencilaltIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import useAdmin from '@/hook/useAdmin'
 import { useStore } from '@/store'
 import { pluginSupplementJSONConvertToData } from '@/pages/pluginEditor/utils/convert'
@@ -462,7 +462,7 @@ export const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
                 <YakitButton
                   className={styles['reply-btn']}
                   type="outline2"
-                  icon={<OutlinePencilaltIcon />}
+                  icon={<PencilAltOutlined color="currentColor" />}
                   onClick={() => {
                     handleType('reply')
                   }}
@@ -475,7 +475,7 @@ export const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
                   className={styles['reply-btn']}
                   type="text"
                   colors="danger"
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   onClick={() => {
                     handleType('deleteComment')
                   }}

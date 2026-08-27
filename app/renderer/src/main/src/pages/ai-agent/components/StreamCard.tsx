@@ -1,4 +1,4 @@
-import { SolidAnnotationIcon } from '@/assets/icon/solid'
+import { AnnotationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useState, type FC, type ReactNode } from 'react'
 import ChatCard from './ChatCard'
 import FileList from './FileList'
@@ -26,7 +26,7 @@ const PromptCard: FC<{ prompt?: string }> = ({ prompt }) => {
   return (
     <div className={styles['stream-prompt']}>
       <div className={styles['stream-prompt-title']}>
-        <SolidAnnotationIcon />
+        <AnnotationSolid color="currentColor" />
         Prompt
       </div>
       <div className={styles['stream-prompt-content']}>{prompt}</div>

@@ -13,7 +13,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useMemoizedFn } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 import type { HTTPHistorySourcePageType } from '@/components/HTTPHistory'
-import { OutlineLog2Icon } from '@/assets/icon/outline'
+import { Log2Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { newWebsocketFuzzerTab } from './WebsocketFuzzer'
 import type { HistoryHighLightText } from '@/components/HTTPFlowDetail'
 import styles from './HTTPFlowForWebsocketViewer.module.scss'
@@ -90,7 +90,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
               : `${t('HTTPFlowForWebsocketViewer.body_size')}${flow.BodySizeVerbose}`}
           </YakitTag>
           {['History'].includes(pageType || '') && showJumpTree && (
-            <OutlineLog2Icon className={styles['jump-web-tree']} onClick={handleJumpWebTree} />
+            <Log2Outlined className={styles['jump-web-tree']} onClick={handleJumpWebTree} color="currentColor" />
           )}
           <ByteCountTag
             selectionByteCount={mode === 'request' ? reqSelectionByteCount : resSelectionByteCount}

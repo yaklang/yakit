@@ -1,9 +1,9 @@
 import type React from 'react'
 import type { DebouncedFunc } from 'lodash'
 import classNames from 'classnames'
-import { CheckCircleIcon, ArrowCircleRightSvgIcon, ChromeFrameSvgIcon } from '@/assets/newIcon'
-import { OutlineSearchIcon, OutlineSelectorIcon, OutlineStarIcon } from '@/assets/icon/outline'
-import { SolidStarIcon } from '@/assets/icon/solid'
+import { ArrowCircleRightSvgIcon, ChromeFrameSvgIcon } from '@/assets/newIcon'
+import { SearchOutlined, SelectorOutlined, StarOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CheckCircleSolid, StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import type { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
@@ -110,7 +110,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       enableDrag: false,
       filterProps: {
         filterKey: 'idFilter',
-        filterIcon: <OutlineSelectorIcon className={style['filter-icon']} />,
+        filterIcon: <SelectorOutlined className={style['filter-icon']} color="currentColor" />,
         filterRender: (closePopover: () => void) => (
           <SearchInputTableWrapper
             showSort={true}
@@ -151,7 +151,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       filterProps: {
         filterKey: 'StatusCode',
         filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={style['filter-icon']} />,
+        filterIcon: <SearchOutlined className={style['filter-icon']} color="currentColor" />,
         filterInputProps: {
           placeholder: t('YakitInput.supportInputFormat'),
           wrapperStyle: { width: 270 },
@@ -175,7 +175,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       filterProps: {
         filterKey: 'SearchURL',
         filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={style['filter-icon']} />,
+        filterIcon: <SearchOutlined className={style['filter-icon']} color="currentColor" />,
       },
     },
     {
@@ -195,7 +195,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       filterProps: {
         filterKey: 'FromPlugin',
         filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={style['filter-icon']} />,
+        filterIcon: <SearchOutlined className={style['filter-icon']} color="currentColor" />,
       },
     },
     {
@@ -226,7 +226,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       width: 130,
       filterProps: {
         filterKey: 'bodyLength',
-        filterIcon: <OutlineSelectorIcon className={style['filter-icon']} />,
+        filterIcon: <SelectorOutlined className={style['filter-icon']} color="currentColor" />,
         filterRender: (closePopover: () => void) => (
           <RangeInputNumberTableWrapper
             checkBodyLength={checkBodyLength}
@@ -329,7 +329,7 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
       render: (_, rowData) => (
         <div className={style['check-circle']}>
           {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
-            <CheckCircleIcon
+            <CheckCircleSolid
               className={classNames({
                 [style['check-circle-icon']]: !isCellRedSingleColor(rowData.cellClassName),
                 [style['check-circle-icon-text-3']]: shouldUseParamsIconText3(rowData.cellClassName),
@@ -432,16 +432,18 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
             })}
           >
             {favorite ? (
-              <SolidStarIcon
+              <StarSolid
                 className={classNames(style['favorite-icon-active'], style['icon-hover'])}
                 onClick={(e) => actionHandlers.onToggleFavorite(e, rowData, false)}
+                color="currentColor"
               />
             ) : (
-              <OutlineStarIcon
+              <StarOutlined
                 className={classNames(style['favorite-icon'], style['icon-hover'], {
                   [style['icon-style']]: !singleColorRow,
                 })}
                 onClick={(e) => actionHandlers.onToggleFavorite(e, rowData, true)}
+                color="currentColor"
               />
             )}
             <div className={style['divider-style']} />

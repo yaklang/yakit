@@ -12,7 +12,7 @@ import type { AddMCPServerRequest, MCPServerType, UpdateMCPServerRequest } from 
 import { grpcAddMCPServer, grpcUpdateMCPServer } from '../utils'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { yakitNotify } from '@/utils/notification'
-import { OutlinePluscircleIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { PlusCircleOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { InputHTTPHeaderForm } from '@/pages/mitm/MITMRule/MITMRuleFromModal'
 import type { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
@@ -143,7 +143,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                       <YakitButton
                         type="text"
                         style={{ paddingLeft: 0 }}
-                        icon={<OutlinePluscircleIcon />}
+                        icon={<PlusCircleOutlined color="currentColor" />}
                         onClick={() => {
                           const envs = form.getFieldValue('Envs') || []
                           if (envs.length > 0) {
@@ -190,7 +190,11 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                             <Form.Item {...field} name={[field.name, 'Value']} style={{ marginBottom: 0, flex: 1 }}>
                               <YakitInput size="small" style={{ width: '100%' }} />
                             </Form.Item>
-                            <YakitButton type="text" onClick={() => remove(field.name)} icon={<OutlineTrashIcon />} />
+                            <YakitButton
+                              type="text"
+                              onClick={() => remove(field.name)}
+                              icon={<TrashOutlined color="currentColor" />}
+                            />
                           </div>
                         </div>
                       ))}

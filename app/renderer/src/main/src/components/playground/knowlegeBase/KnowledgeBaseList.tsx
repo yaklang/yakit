@@ -20,8 +20,8 @@ import type {
 } from './types'
 import styles from './KnowledgeBaseList.module.scss'
 import { PlusIcon, TrashIcon } from '@/assets/newIcon'
-import { OutlinePencilaltIcon, OutlineChatalt2Icon } from '@/assets/icon/outline'
-import { SolidPlayIcon } from '@/assets/icon/solid'
+import { PencilAltOutlined, ChatAlt2Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -293,7 +293,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                           <YakitButton
                             type="text2"
                             size="small"
-                            icon={<SolidPlayIcon />}
+                            icon={<PlaySolid color="currentColor" />}
                             onClick={(e) => {
                               e.stopPropagation()
                               handleEmbedKnowledgeBase(kb)
@@ -304,7 +304,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                             <YakitButton
                               type="text2"
                               size="small"
-                              icon={<OutlineChatalt2Icon />}
+                              icon={<ChatAlt2Outlined color="currentColor" />}
                               onClick={(e) => {
                                 e.stopPropagation()
                                 // 列表入口：默认仅查询当前知识库
@@ -316,7 +316,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                           <YakitButton
                             type="text2"
                             size="small"
-                            icon={<OutlinePencilaltIcon />}
+                            icon={<PencilAltOutlined color="currentColor" />}
                             onClick={(e) => {
                               e.stopPropagation()
                               handleOpenEdit(kb)

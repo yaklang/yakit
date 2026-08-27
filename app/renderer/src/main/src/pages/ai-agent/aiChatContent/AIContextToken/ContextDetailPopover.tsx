@@ -1,7 +1,7 @@
 import type React from 'react'
 import { memo, useCallback, useMemo, useState } from 'react'
 import { useCreation } from 'ahooks'
-import { OutlinePresentationchartlineIcon } from '@/assets/icon/outline'
+import { PresentationChartLineOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 import { YakitButton, type YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -82,7 +82,12 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ buttonProps
       onVisibleChange={setVisible}
     >
       <Tooltip title={t('YakitButton.viewDetail')}>
-        <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type="text2" {...buttonProps} />
+        <YakitButton
+          isHover={visible}
+          icon={<PresentationChartLineOutlined color="currentColor" />}
+          type="text2"
+          {...buttonProps}
+        />
       </Tooltip>
     </YakitPopover>
   )

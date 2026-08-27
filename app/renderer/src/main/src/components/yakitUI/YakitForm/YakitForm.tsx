@@ -14,7 +14,7 @@ import classNames from 'classnames'
 import { YakitInput } from '../YakitInput/YakitInput'
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
 import { failed, yakitNotify } from '@/utils/notification'
-import { OutlineUploadIcon } from '@/assets/icon/outline'
+import { UploadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitAutoComplete } from '../YakitAutoComplete/YakitAutoComplete'
 import { UISettingSvgIcon } from '@/components/layout/icons'
 import { YakitPopover } from '../YakitPopover/YakitPopover'
@@ -782,7 +782,8 @@ export const YakitDraggerContent: React.FC<YakitDraggerContentProps> = React.mem
                 })}
                 onClick={onUploadFile}
               >
-                <OutlineUploadIcon className={styles['upload-icon']} /> {t('YakitDraggerContent.click_here')}
+                <UploadOutlined className={styles['upload-icon']} color="currentColor" />{' '}
+                {t('YakitDraggerContent.click_here')}
               </span>
               {t('YakitButton.upload')}
             </label>
@@ -973,7 +974,8 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                 })}
                 onClick={onUploadFile}
               >
-                <OutlineUploadIcon className={styles['upload-icon']} /> {t('YakitDraggerContent.click_here')}
+                <UploadOutlined className={styles['upload-icon']} color="currentColor" />{' '}
+                {t('YakitDraggerContent.click_here')}
               </span>
               {t('YakitButton.upload')}
             </label>

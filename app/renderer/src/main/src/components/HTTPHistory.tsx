@@ -28,14 +28,14 @@ import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { WebTree } from './WebTree/WebTree'
 import {
-  OutlineBotIcon,
-  OutlineFileSlidersIcon,
-  OutlineFilterIcon,
-  OutlineLog2Icon,
-  OutlineMessageCirclePlusIcon,
-  OutlineSearchIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  BotOutlined,
+  FileSlidersOutlined,
+  FilterOutlined,
+  Log2Outlined,
+  MessageCirclePlusOutlined,
+  SearchOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from './yakitUI/YakitInput/YakitInput'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
 import {
@@ -43,32 +43,34 @@ import {
   BashIcon,
   BurpSuiteCommunityIcon,
   BurpSuiteProfessionalIcon,
-  ChromeIcon,
   ClashIconSvgIcon,
   Cse360Icon,
   CursorIcon,
-  DingtalkIcon,
-  DockerIcon,
-  ExcelIcon,
-  FeishuIcon,
   FinderIcon,
-  FirefoxIcon,
-  JavaIcon,
-  MsedgeIcon,
   OpenvpnIcon,
-  OperaIcon,
-  PowerpointIcon,
   ProxifierIcon,
   QqIcon,
   Se360Icon,
   TelegramIcon,
   UToolsIcon,
   VMwareIcon,
-  VscodeIcon,
-  WechatIcon,
-  WordIconIcon,
   ZSHIcon,
 } from '@/assets/commonProcessIcons'
+import {
+  ChromeBrowserColorful,
+  DingTalkSocialColorful,
+  DockerCodingColorful,
+  EdgeBrowserColorful,
+  ExcelFileTypeColorful,
+  FeishuSocialColorful,
+  FirefoxBrowserColorful,
+  JavaCodingColorful,
+  OperaBrowserColorful,
+  PowerPointFileTypeColorful,
+  VisualStudioCodeCodingColorful,
+  WeChatSocialColorful,
+  WordFileTypeColorful,
+} from '@yakit-libs/yakit-ui-icons/colorful'
 import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 import { RefreshIcon } from '@/assets/newIcon'
@@ -140,22 +142,22 @@ interface HTTPHistoryProp extends HistoryTableTitleShow {
 }
 export const HistoryTab: YakitTabsProps[] = [
   {
-    icon: <OutlineLog2Icon />,
+    icon: <Log2Outlined color="currentColor" />,
     label: 'HTTPHistory.websiteTree',
     value: 'web-tree',
   },
   {
-    icon: <OutlineFilterIcon />,
+    icon: <FilterOutlined color="currentColor" />,
     label: 'RangeInputNumberTableWrapper.filter',
     value: 'process',
   },
   {
-    icon: <OutlineFileSlidersIcon />,
+    icon: <FileSlidersOutlined color="currentColor" />,
     label: 'HTTPFlowExtractedDataTable.ruleData',
     value: 'rules',
   },
   {
-    icon: <OutlineBotIcon />,
+    icon: <BotOutlined color="currentColor" />,
     label: 'HTTPHistory.AI',
     value: 'ai',
   },
@@ -393,13 +395,17 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                         <Tooltip title={t('HTTPHistory.new_session')}>
                           <YakitButton
                             type="text2"
-                            icon={<OutlineMessageCirclePlusIcon />}
+                            icon={<MessageCirclePlusOutlined color="currentColor" />}
                             onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
                       ),
                       close: (
-                        <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
+                        <YakitButton
+                          type="text2"
+                          icon={<XOutlined color="currentColor" />}
+                          onClick={() => setOpenTabsFlag(false)}
+                        />
                       ),
                       taskDetails: true,
                     },
@@ -761,19 +767,19 @@ interface CommonProcessItem {
 const commonProcess: CommonProcessItem[] = [
   {
     process: ['chrome'],
-    icon: <ChromeIcon />,
+    icon: <ChromeBrowserColorful />,
   },
   {
     process: ['firefox'],
-    icon: <FirefoxIcon />,
+    icon: <FirefoxBrowserColorful />,
   },
   {
     process: ['opera'],
-    icon: <OperaIcon />,
+    icon: <OperaBrowserColorful />,
   },
   {
     process: ['msedge'],
-    icon: <MsedgeIcon />,
+    icon: <EdgeBrowserColorful />,
   },
   {
     process: ['360se'],
@@ -785,7 +791,7 @@ const commonProcess: CommonProcessItem[] = [
   },
   {
     process: ['wechat'],
-    icon: <WechatIcon />,
+    icon: <WeChatSocialColorful />,
   },
   {
     process: ['qq'],
@@ -793,15 +799,15 @@ const commonProcess: CommonProcessItem[] = [
   },
   {
     process: ['code'],
-    icon: <VscodeIcon />,
+    icon: <VisualStudioCodeCodingColorful />,
   },
   {
     process: ['dingtalk'],
-    icon: <DingtalkIcon />,
+    icon: <DingTalkSocialColorful />,
   },
   {
     process: ['feishu'],
-    icon: <FeishuIcon />,
+    icon: <FeishuSocialColorful />,
   },
   {
     process: ['BaiduNetdisk'],
@@ -821,15 +827,15 @@ const commonProcess: CommonProcessItem[] = [
   },
   {
     process: ['Word'],
-    icon: <WordIconIcon />,
+    icon: <WordFileTypeColorful />,
   },
   {
     process: ['Excel'],
-    icon: <ExcelIcon />,
+    icon: <ExcelFileTypeColorful />,
   },
   {
     process: ['Powerpoint'],
-    icon: <PowerpointIcon />,
+    icon: <PowerPointFileTypeColorful />,
   },
   {
     process: ['Finder'],
@@ -845,11 +851,11 @@ const commonProcess: CommonProcessItem[] = [
   },
   {
     process: ['docker'],
-    icon: <DockerIcon />,
+    icon: <DockerCodingColorful />,
   },
   {
     process: ['jdk', 'java'],
-    icon: <JavaIcon />,
+    icon: <JavaCodingColorful />,
   },
   {
     process: ['zsh'],
@@ -1093,7 +1099,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
           }
           onVisibleChange={(visible) => !visible && onSearch(key)}
         >
-          <YakitButton icon={<OutlineSearchIcon />} type={hasActiveSearch ? 'text' : 'text2'} />
+          <YakitButton icon={<SearchOutlined color="currentColor" />} type={hasActiveSearch ? 'text' : 'text2'} />
         </YakitPopover>
       </div>
     )

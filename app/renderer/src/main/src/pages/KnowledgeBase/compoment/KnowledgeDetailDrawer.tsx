@@ -14,11 +14,11 @@ import { failed, success } from '@/utils/notification'
 
 import { randomString } from '@/utils/randomUtil'
 import {
-  OutlinePencilaltIcon,
-  OutlinePhotographIcon,
-  OutlinePlay2Icon,
-  OutlineTerminalIcon,
-} from '@/assets/icon/outline'
+  PencilAltOutlined,
+  PhotographOutlined,
+  Play2Outlined,
+  TerminalOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -189,7 +189,9 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
 
   const targetButtonMemo = useMemo(() => {
     if (type === 'base' && status === 'preview') {
-      return <YakitButton icon={<OutlinePencilaltIcon />} type="text2" onClick={() => setStatus('edit')} />
+      return (
+        <YakitButton icon={<PencilAltOutlined color="currentColor" />} type="text2" onClick={() => setStatus('edit')} />
+      )
     } else if (type === 'base' && status === 'edit') {
       return (
         <div>
@@ -349,7 +351,7 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
                   <HubButton
                     width={wrapperWidth}
                     iconWidth={1500}
-                    icon={<OutlinePlay2Icon />}
+                    icon={<Play2Outlined color="currentColor" />}
                     type="outline1"
                     name={'从实体生成知识'}
                   />
@@ -367,12 +369,12 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
                       <div className={styles['radio-buttons-label']}>
                         {wrapperWidth > 1500 ? (
                           <React.Fragment>
-                            <OutlinePhotographIcon />
+                            <PhotographOutlined color="currentColor" />
                             SVG
                           </React.Fragment>
                         ) : (
                           <Tooltip title="SVG">
-                            <OutlinePhotographIcon />
+                            <PhotographOutlined color="currentColor" />
                           </Tooltip>
                         )}
                       </div>
@@ -384,12 +386,12 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
                       <div className={styles['radio-buttons-label']}>
                         {wrapperWidth > 1500 ? (
                           <React.Fragment>
-                            <OutlineTerminalIcon />
+                            <TerminalOutlined color="currentColor" />
                             Code
                           </React.Fragment>
                         ) : (
                           <Tooltip title="Code">
-                            <OutlineTerminalIcon />
+                            <TerminalOutlined color="currentColor" />
                           </Tooltip>
                         )}
                       </div>

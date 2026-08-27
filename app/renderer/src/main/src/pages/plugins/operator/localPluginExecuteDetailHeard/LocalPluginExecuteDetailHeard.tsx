@@ -31,7 +31,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import classNames from 'classnames'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import type { PluginExecuteExtraParamsRefProps } from './PluginExecuteExtraParams'
 import { type DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, apiFetchOnlinePluginInfo } from '../../utils'
@@ -746,7 +746,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
     className: styles['plugin-execute-form-item'],
     tooltip: item.Help
       ? {
-          icon: <OutlineInformationcircleIcon />,
+          icon: <InformationCircleOutlined color="currentColor" />,
           title: item.Help,
         }
       : null,

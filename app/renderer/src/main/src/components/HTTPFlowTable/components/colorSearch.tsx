@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { CheckIcon } from '@/assets/newIcon'
-import { OutlineBanIcon } from '@/assets/icon/outline'
+import { BanOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { FooterBottom } from '@/components/TableVirtualResize/TableVirtualResize'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { availableColors } from '../HTTPFlowTable.availableColors'
@@ -32,7 +32,7 @@ export const ColorSearch = React.memo((props: ColorSearchProps) => {
       searchWord: 'YAKIT_COLOR_NONE',
       render: (t) => (
         <div className={classNames(style['history-color-tag'])}>
-          <OutlineBanIcon className={classNames(style['tag-color-display'])} />
+          <BanOutlined className={classNames(style['tag-color-display'])} color="currentColor" />
           {t('YakitTable.noColor')}
         </div>
       ),

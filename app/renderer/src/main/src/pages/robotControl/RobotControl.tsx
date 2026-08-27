@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { InputRef } from 'antd'
 import { useMemoizedFn, useVirtualList } from 'ahooks'
 import classNames from 'classnames'
-import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
-import { OutlinePlusIcon } from '@/assets/icon/outline'
+import { DingTalkSocialColorful, FeishuSocialColorful } from '@yakit-libs/yakit-ui-icons/colorful'
+import { PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -71,11 +71,11 @@ const IM_CONTROL_CONFIG_CACHE_KEY = 'robot-control-im-runtime-config'
 const getChannelIcon = (channel?: RobotChannelType) => {
   switch (channel) {
     case 'feishu':
-      return <FeishuIcon />
+      return <FeishuSocialColorful />
     case 'dingtalk':
-      return <DingtalkIcon />
+      return <DingTalkSocialColorful />
     default:
-      return <FeishuIcon />
+      return <FeishuSocialColorful />
   }
 }
 
@@ -574,7 +574,7 @@ export const RobotControl: React.FC<RobotControlProps> = (props) => {
         <YakitButton
           type="outline2"
           className={styles['create-robot-btn']}
-          icon={<OutlinePlusIcon />}
+          icon={<PlusOutlined color="currentColor" />}
           loading={loading}
           onClick={onCreateRobot}
         >

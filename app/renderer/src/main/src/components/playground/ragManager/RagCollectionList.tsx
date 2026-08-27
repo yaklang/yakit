@@ -12,7 +12,7 @@ import { useMemoizedFn } from 'ahooks'
 import { failed } from '@/utils/notification'
 import type { RagCollectionListProps, VectorStoreCollection, Paging } from './types'
 import styles from './RagCollectionList.module.scss'
-import { OutlineRefreshIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { RefreshOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -112,9 +112,14 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
               onSearch={handleSearch}
               style={{ width: 200 }}
               size="small"
-              suffix={<OutlineSearchIcon />}
+              suffix={<SearchOutlined color="currentColor" />}
             />
-            <YakitButton type="outline1" size="small" icon={<OutlineRefreshIcon />} onClick={handleRefreshList}>
+            <YakitButton
+              type="outline1"
+              size="small"
+              icon={<RefreshOutlined color="currentColor" />}
+              onClick={handleRefreshList}
+            >
               {t('YakitButton.refresh')}
             </YakitButton>
           </Space>

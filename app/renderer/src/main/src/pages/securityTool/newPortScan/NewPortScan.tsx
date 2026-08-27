@@ -18,13 +18,14 @@ import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamTyp
 import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineArrowscollapseIcon,
-  OutlineArrowsexpandIcon,
-  OutlineClipboardlistIcon,
-  OutlineRefreshIcon,
-  OutlineStoreIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ArrowsExpandOutlined,
+  ClipboardListOutlined,
+  RefreshOutlined,
+  TrashOutlined,
+  FigmaIcon13208172881Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
 import classNames from 'classnames'
 import { Checkbox, Divider, Form } from 'antd'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -232,7 +233,11 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
               )}
           {isEnpriTrace() && (
             <>
-              <YakitButton icon={<OutlineClipboardlistIcon />} disabled={disabledReport} onClick={onCreateReport}>
+              <YakitButton
+                icon={<ClipboardListOutlined color="currentColor" />}
+                disabled={disabledReport}
+                onClick={onCreateReport}
+              >
                 {t('NewPortScanExecute.generateReport')}
               </YakitButton>
               <div className={styles['divider-style']}></div>
@@ -240,7 +245,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
           )}
           <YakitButton
             type="text2"
-            icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+            icon={hidden ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()
               setHidden(!hidden)
@@ -729,19 +734,21 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                 </div>
               </YakitCheckbox>
               {disabled ? (
-                <OutlineTrashIcon
+                <TrashOutlined
                   className={styles['template-not-allowed-del-icon']}
                   onClick={(e) => {
                     e.stopPropagation()
                   }}
+                  color="currentColor"
                 />
               ) : (
-                <OutlineTrashIcon
+                <TrashOutlined
                   className={styles['template-del-icon']}
                   onClick={(e) => {
                     e.stopPropagation()
                     onDeleteTemplate(templateKey)
                   }}
+                  color="currentColor"
                 />
               )}
             </div>
@@ -755,7 +762,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
           <div className={styles['ports-form-extra']}>
             <YakitButton
               type="text"
-              icon={<OutlineStoreIcon />}
+              icon={<FigmaIcon13208172881Outlined color="currentColor" />}
               style={{ paddingLeft: 0 }}
               onClick={onShowSaveTemplate}
               disabled={disabled}
@@ -763,7 +770,12 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
               {t('NewPortScanExecuteForm.saveAsTemplate')}
             </YakitButton>
             <div className={styles['divider-style']}></div>
-            <YakitButton type="text" icon={<OutlineRefreshIcon />} onClick={onResetPort} disabled={disabled}>
+            <YakitButton
+              type="text"
+              icon={<RefreshOutlined color="currentColor" />}
+              onClick={onResetPort}
+              disabled={disabled}
+            >
               {t('NewPortScanExecuteForm.defaultConfig')}
             </YakitButton>
           </div>

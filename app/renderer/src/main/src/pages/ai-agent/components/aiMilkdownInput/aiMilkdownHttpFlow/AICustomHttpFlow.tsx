@@ -3,7 +3,7 @@ import { useNodeViewContext } from '@prosemirror-adapter/react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { OutlineLog2Icon } from '@/assets/icon/outline'
+import { Log2Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { AIHttpFlowRemovePayload } from './aiHttpFlowPlugin'
 import styles from './AICustomHttpFlow.module.scss'
 
@@ -53,7 +53,7 @@ export const AICustomHttpFlow: React.FC<AICustomHttpFlowProps> = (props) => {
     <YakitTag
       border={false}
       closable={closable}
-      icon={<div className={styles['http-flow-icon-wrapper']}>{<OutlineLog2Icon />}</div>}
+      icon={<div className={styles['http-flow-icon-wrapper']}>{<Log2Outlined color="currentColor" />}</div>}
       onClose={onRemove}
       className={classNames(styles['http-flow-custom'], {
         [styles['http-flow-custom-selected']]: selected && !readonly,

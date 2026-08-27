@@ -30,7 +30,7 @@ import { Code } from '@/pages/ai-agent/components/aiGroupStreamCard/AIGroupStrea
 import { AITaskStatus } from '../hooks/grpcApi'
 import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
-import { OutlinePositionIcon } from '@/assets/icon/outline'
+import { PositionOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useDebounceFn, useMount, useCreation, useMemoizedFn } from 'ahooks'
 
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
@@ -271,7 +271,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           <div className={styles['scroll-to-bottom-wrapper']}>
             <YakitButton
               type="outline2"
-              icon={<OutlinePositionIcon />}
+              icon={<PositionOutlined color="currentColor" />}
               radius="50%"
               onClick={onScrollToBottom}
               className={styles['position-button']}

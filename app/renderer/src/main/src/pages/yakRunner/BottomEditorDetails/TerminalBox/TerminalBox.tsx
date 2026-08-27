@@ -2,7 +2,7 @@ import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useGetState, useMap, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
 import YakitXterm from '@/components/yakitUI/YakitXterm/YakitXterm'
-import { OutlineTerminalIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { TerminalOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import styles from './TerminalBox.module.scss'
 import { v4 as uuidv4 } from 'uuid'
@@ -90,16 +90,17 @@ export const TerminalListBox: React.FC<TerminalListBoxProps> = (props) => {
             onClick={() => onSelectTerminalItem(ele.data.id)}
           >
             <div className={styles['content']}>
-              <OutlineTerminalIcon />
+              <TerminalOutlined color="currentColor" />
               <div className={classNames(styles['title'], 'yakit-content-single-ellipsis')}>{ele.data.title}</div>
             </div>
             <div className={styles['extra']}>
-              <OutlineTrashIcon
+              <TrashOutlined
                 className={styles['delete']}
                 onClick={(e) => {
                   e.stopPropagation()
                   onDeleteTerminalItem(ele.data.id)
                 }}
+                color="currentColor"
               />
             </div>
           </div>

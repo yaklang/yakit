@@ -6,8 +6,8 @@ import QRCode from 'qrcode'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { OutlineChevronleftIcon, OutlineCreditcardIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { WechatIcon } from '@/assets/commonProcessIcons'
+import { ChevronLeftOutlined, CreditCardOutlined, RefreshOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { WeChatSocialColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import { AlipayIcon, PayFailedIcon, PaySuccessIcon, QrLoadErrorIcon, QrLoadingIcon } from './icon'
 import {
   buildEstimates,
@@ -49,7 +49,9 @@ const DEFAULT_PACKAGE = TOKEN_PACKAGES[0]
 
 const formatPayTime = (date: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(
+    date.getMinutes(),
+  )}:${pad(date.getSeconds())}`
 }
 
 const formatPayTimeFromUnix = (payTime?: number) => {
@@ -349,7 +351,7 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
               {payStatus === 'expired' && (
                 <button type="button" className={styles['qr-expired-mask']} onClick={handleRefreshQr}>
                   <span className={styles['qr-refresh-icon']}>
-                    <OutlineRefreshIcon />
+                    <RefreshOutlined color="currentColor" />
                   </span>
                   <span className={styles['qr-refresh-text']}>{t('CeUserMenu.refreshQrcode')}</span>
                 </button>
@@ -371,7 +373,7 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
             type="outline2"
             size="large"
             className={styles['retry-btn']}
-            icon={<OutlineRefreshIcon />}
+            icon={<RefreshOutlined color="currentColor" />}
             onClick={handleRetryLoad}
           >
             {t('CeUserMenu.retry')}
@@ -429,7 +431,12 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
             <div className={styles['result-title']}>{t('CeUserMenu.payFailed')}</div>
           </div>
           <div className={styles['result-fail-reason']}>{failReason}</div>
-          <YakitButton type="outline2" size="large" icon={<OutlineRefreshIcon />} onClick={handleRetryPay}>
+          <YakitButton
+            type="outline2"
+            size="large"
+            icon={<RefreshOutlined color="currentColor" />}
+            onClick={handleRetryPay}
+          >
             {t('CeUserMenu.retry')}
           </YakitButton>
         </div>
@@ -458,7 +465,7 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
             <>
               <div className={styles['right-header']}>
                 <div className={styles['right-header-title']}>
-                  <OutlineCreditcardIcon />
+                  <CreditCardOutlined color="currentColor" />
                   <span>{t('CeUserMenu.recharge')}</span>
                 </div>
               </div>
@@ -517,7 +524,7 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
                       })}
                       onClick={() => setPayMethod('wechat')}
                     >
-                      <WechatIcon />
+                      <WeChatSocialColorful />
                       <span>{t('CeUserMenu.wechat')}</span>
                     </div>
                   </div>
@@ -537,7 +544,7 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
             <>
               <div className={styles['right-header']}>
                 <button type="button" className={styles['right-header-back']} onClick={handleBackToPlan}>
-                  <OutlineChevronleftIcon />
+                  <ChevronLeftOutlined color="currentColor" />
                   <span>{t('CeUserMenu.backToPayPlan')}</span>
                 </button>
               </div>
@@ -557,7 +564,7 @@ const CeRechargeModal: React.FC<CeRechargeModalProps> = (props) => {
 
         <div className={styles['recharge-left']}>
           <button type="button" className={styles['model-list-close']} onClick={onClose}>
-            <OutlineXIcon />
+            <XOutlined color="currentColor" />
           </button>
           <div className={styles['estimate-toolbar']}>
             <YakitRadioButtons

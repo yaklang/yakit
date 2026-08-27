@@ -22,7 +22,7 @@ import type {
 } from './CustomizeCodeTypes'
 import { getAllRows } from './CustomizeCodeTypes'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -268,7 +268,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
             <div className={styles['code-tag-content']}>
               <div>{it}</div>
               <div className={styles['close-icon']} onClick={(e) => onDelete(e, it)}>
-                <OutlineXIcon />
+                <XOutlined color="currentColor" />
               </div>
             </div>
           </YakitSpin>

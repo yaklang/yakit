@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react'
 import { Divider, Form, type FormInstance } from 'antd'
 import classNames from 'classnames'
-import { SolidPlusIcon } from '@/assets/icon/solid'
+import { PlusSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { JsonFormSchemaListWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -192,7 +192,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                 size="small"
               >
                 {t('YakitButton.add')}
-                <SolidPlusIcon className={styles['plus-icon']} />
+                <PlusSolid className={styles['plus-icon']} color="currentColor" />
               </YakitButton>
             </>
           }
@@ -236,7 +236,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                 size="small"
               >
                 {t('YakitButton.add')}
-                <SolidPlusIcon className={styles['plus-icon']} />
+                <PlusSolid className={styles['plus-icon']} color="currentColor" />
               </YakitButton>
             </>
           }
@@ -277,7 +277,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                 size="small"
               >
                 {t('YakitButton.add')}
-                <SolidPlusIcon className={styles['plus-icon']} />
+                <PlusSolid className={styles['plus-icon']} color="currentColor" />
               </YakitButton>
             </>
           }
@@ -318,7 +318,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                 size="small"
               >
                 {t('YakitButton.add')}
-                <SolidPlusIcon className={styles['plus-icon']} />
+                <PlusSolid className={styles['plus-icon']} color="currentColor" />
               </YakitButton>
             </>
           }

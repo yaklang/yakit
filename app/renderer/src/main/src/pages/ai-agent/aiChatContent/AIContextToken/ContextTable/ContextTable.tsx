@@ -1,7 +1,7 @@
 import { Table, type TableColumnsType, Tooltip } from 'antd'
 import { type FC, useCallback, useMemo, useState } from 'react'
 import styles from './ContextTable.module.scss'
-import { OutlineChevrondownIcon, OutlineFilterIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, FilterOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import type { AIContextSectionsDetail } from '@/pages/ai-agent/type/aiChat'
@@ -189,7 +189,7 @@ const ContextTable: FC<{
               }
             >
               <Tooltip title={t('AIContextToken.switchChartMetric')}>
-                <OutlineChevrondownIcon className={styles['table-metric-filter-icon-dropdown']} />
+                <ChevronDownOutlined className={styles['table-metric-filter-icon-dropdown']} color="currentColor" />
               </Tooltip>
             </YakitPopover>
           </div>
@@ -218,7 +218,10 @@ const ContextTable: FC<{
         width: 80,
         filters: roleFilters,
         filterIcon: (filtered: boolean) => (
-          <OutlineFilterIcon className={`${styles['filter-icon']} ${filtered ? styles['filter-icon-active'] : ''}`} />
+          <FilterOutlined
+            className={`${styles['filter-icon']} ${filtered ? styles['filter-icon-active'] : ''}`}
+            color="currentColor"
+          />
         ),
         filterDropdown: (props) => <RoleFilterDropdown roleFilters={roleFilters} {...props} />,
         onFilter: (value, record) => record.role === value,
@@ -302,7 +305,7 @@ const ContextTable: FC<{
                 className={`${styles['expand-icon']} ${expanded ? styles['expand-icon-expanded'] : ''}`}
                 onClick={(event) => onExpand(record, event)}
               >
-                <OutlineChevrondownIcon />
+                <ChevronDownOutlined color="currentColor" />
               </span>
             )
           },

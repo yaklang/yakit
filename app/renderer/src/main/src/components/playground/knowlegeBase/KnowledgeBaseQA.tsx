@@ -17,7 +17,7 @@ import type {
 } from './types'
 import styles from './KnowledgeBaseQA.module.scss'
 import { PaperAirplaneIcon } from '@/assets/newIcon'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -365,7 +365,13 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
   return (
     <div className={styles['knowledge-base-qa']}>
       <div className={styles['qa-header']}>
-        <YakitButton type="text2" size="small" icon={<OutlineRefreshIcon />} onClick={handleClear} disabled={loading}>
+        <YakitButton
+          type="text2"
+          size="small"
+          icon={<RefreshOutlined color="currentColor" />}
+          onClick={handleClear}
+          disabled={loading}
+        >
           {t('playground.KnowledgeBaseQA.clearChat')}
         </YakitButton>
       </div>

@@ -15,7 +15,7 @@ import type { AuditNodeDetailProps, AuditNodeProps, AuditYakUrlProps } from '../
 import { loadAuditFromYakURLRaw, onJumpByCodeRange } from '../utils'
 import { AuditTreeNode, getDetailFun } from '../AuditCode/AuditCode'
 import emiter from '@/utils/eventBus/eventBus'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { onSetSelectedSearchVal } from '../AuditSearchModal/AuditSearch'
 import classNames from 'classnames'
@@ -337,12 +337,13 @@ const GlobalFilterFunctionTree: React.FC<GlobalFilterFunctionTreeProps> = React.
               <div title={getDetail?.fileName} className={styles['fileName']}>
                 {getDetail?.fileName}
               </div>
-              <OutlineSearchIcon
+              <SearchOutlined
                 className={styles['search-icon']}
                 onClick={(e) => {
                   e.stopPropagation()
                   onSearch(info)
                 }}
+                color="currentColor"
               />
             </div>
           )}

@@ -16,7 +16,8 @@ import AIGroupStreamCardHeard from './aiGroupStreamCardHeard/AIGroupStreamCardHe
 import AIGroupStreamCardList from './aiGroupStreamCardList/AIGroupStreamCardList'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
-import { OutlineChevrondownIcon, OutlineThoughtIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineThoughtIcon } from '@/assets/icon/bespokeOutline'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 import ThoughtDuration from '../thoughtDuration/ThoughtDuration'
@@ -120,10 +121,11 @@ const AIGroupThoughtHeader: FC<AIGroupStreamCardHeardWrapperProps> = memo((props
         {nodeLabel}
         <ThoughtDuration persistKey={persistKey} status={streaming ? 'start' : 'end'} />
       </span>
-      <OutlineChevrondownIcon
+      <ChevronDownOutlined
         className={classNames(styles['thought-chevron'], {
           [styles['thought-chevron-collapsed']]: !expand,
         })}
+        color="currentColor"
       />
     </div>
   )

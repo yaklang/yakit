@@ -8,7 +8,7 @@ import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/Yak
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import type { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined, ClipboardCopyOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
@@ -41,7 +41,7 @@ import type { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
 import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
 import classNames from 'classnames'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
+
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSolidLoading } from '../yakitUI/YakitSolidLoading/YakitSolidLoading'
@@ -298,7 +298,7 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
             <YakitButton
               type="text2"
               size="small"
-              icon={<OutlineClipboardcopyIcon />}
+              icon={<ClipboardCopyOutlined color="currentColor" />}
               onClick={() => setClipboardText(clip)}
             />
           }
@@ -623,7 +623,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
         name: item.Name,
         tooltip: item.Desc
           ? {
-              icon: <OutlineInformationcircleIcon />,
+              icon: <InformationCircleOutlined color="currentColor" />,
               title: item.Desc,
             }
           : null,

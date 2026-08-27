@@ -8,11 +8,11 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import classNames from 'classnames'
 import { Divider, Tooltip } from 'antd'
 import {
-  OutlineArrowcirclerightIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ArrowCircleRightOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { TrashIcon } from '@/assets/newIcon'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
@@ -285,7 +285,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
             <Tooltip title={'打开项目'}>
               <YakitButton
                 type="text"
-                icon={<OutlineArrowcirclerightIcon />}
+                icon={<ArrowCircleRightOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
                   const params: AuditCodePageInfoProps = {
@@ -306,7 +306,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
             <YakitButton
               type="text"
               danger
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
               onClick={(e) => {
                 e?.stopPropagation()
                 setDeleteParams({
@@ -361,7 +361,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
           </YakitCheckbox>
 
           <YakitInput.Search
-            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
             placeholder="请输入关键词搜索"
             value={params.Keyword}
             onChange={(e) => {
@@ -399,7 +399,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
             迁移旧项目数据
           </YakitButton>
 
-          <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={(e) => update(true)} />
+          <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={(e) => update(true)} />
         </div>
       </div>
 

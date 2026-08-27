@@ -21,7 +21,7 @@ import { useMemoizedFn } from 'ahooks'
 import { onSetRemoteValuesBase } from '@/components/yakitUI/utils'
 import { CacheDropDownGV } from '@/yakitGV'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
-import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 
@@ -290,7 +290,10 @@ export const WebFuzzerApiDocModal: React.FC<{
                                 {param.name}
                                 {param.description && (
                                   <Tooltip title={param.description}>
-                                    <OutlineInformationcircleIcon className={styles['api-detail-info-icon']} />
+                                    <InformationCircleOutlined
+                                      className={styles['api-detail-info-icon']}
+                                      color="currentColor"
+                                    />
                                   </Tooltip>
                                 )}
                                 :

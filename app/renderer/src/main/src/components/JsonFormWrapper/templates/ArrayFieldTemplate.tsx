@@ -2,7 +2,6 @@ import type React from 'react'
 import { YakitButton, type YakitButtonProp } from '../../yakitUI/YakitButton/YakitButton'
 import { PlusIcon, TrashIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-// import {SolidArrownarrowdownIcon, SolidArrownarrowupIcon} from "@/assets/icon/solid"
 
 const AddButton: React.FC<YakitButtonProp> = (props) => {
   const { t } = useI18nNamespaces(['yakitUi'])

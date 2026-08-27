@@ -12,7 +12,7 @@ import type {
   PluginsContainerProps,
   PluginsLayoutProps,
 } from './baseTemplateType'
-import { SolidChevrondownIcon, SolidChevronupIcon } from '@/assets/icon/solid'
+import { ChevronDownSolid, ChevronUpSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { FilterPanel } from '@/components/businessUI/FilterPanel/FilterPanel'
 import {
   AuthorIcon,
@@ -25,15 +25,15 @@ import {
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineArrowscollapseIcon,
-  OutlineArrowsexpandIcon,
-  OutlineIdentificationIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineReplyIcon,
-  OutlineSparklesIcon,
-  OutlineTagIcon,
-  OutlineTerminalIcon,
-} from '@/assets/icon/outline'
+  ArrowsExpandOutlined,
+  IdentificationOutlined,
+  QuestionMarkCircleOutlined,
+  ReplyOutlined,
+  SparklesOutlined,
+  TagOutlined,
+  TerminalOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { Form, Tooltip } from 'antd'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -221,13 +221,13 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
               <span className={styles['subtitle-style']}>线上数据需要下载到本地才可执行</span>
             </div>
             <div className={styles['header-btn']}>
-              <YakitButton type="text2" icon={<OutlineReplyIcon />} onClick={onBack}>
+              <YakitButton type="text2" icon={<ReplyOutlined color="currentColor" />} onClick={onBack}>
                 返回列表
               </YakitButton>
               <div className={styles['divider-style']}></div>
               <YakitButton
                 type="text2"
-                icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                icon={hidden ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
                 onClick={() => setHidden(!hidden)}
               />
             </div>
@@ -295,7 +295,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
             </div>
             <div className={styles['subtitle-wrapper']}>
               <Tooltip title={help || 'No Description about it.'} overlayClassName="plugins-tooltip">
-                <OutlineQuestionmarkcircleIcon className={styles['help-icon']} />
+                <QuestionMarkCircleOutlined className={styles['help-icon']} color="currentColor" />
               </Tooltip>
               {titleNode || null}
             </div>
@@ -346,7 +346,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                 >
                   <YakitButton type="text2" isActive={prShow}>
                     {`${contributes.length}位协作者`}
-                    {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
+                    {prShow ? <ChevronUpSolid color="currentColor" /> : <ChevronDownSolid color="currentColor" />}
                   </YakitButton>
                 </YakitPopover>
               </>
@@ -509,7 +509,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             wrapperClassName={styles['modify-input']}
             placeholder="请输入..."
             size="large"
-            prefix={<OutlineIdentificationIcon />}
+            prefix={<IdentificationOutlined color="currentColor" />}
             maxLength={100}
             disabled={isEdit}
           />
@@ -547,7 +547,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
         {riskLength > 0 && (
           <div className={styles['modify-bug-type']}>
             <div className={styles['bug-icon']}>
-              <OutlineSparklesIcon />
+              <SparklesOutlined color="currentColor" />
             </div>
             <div className={styles['bug-info']}>
               <div className={styles['info-title']}>
@@ -604,7 +604,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
             </YakitSelect>
           </Form.Item>
           <div className={styles['modify-select-icon']}>
-            <OutlineTagIcon />
+            <TagOutlined color="currentColor" />
           </div>
         </Form.Item>
 
@@ -621,7 +621,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
               return (
                 <div key={item.CVE} className={styles['risk-info-opt']}>
                   <div className={styles['bug-icon']}>
-                    <OutlineSparklesIcon />
+                    <SparklesOutlined color="currentColor" />
                   </div>
                   <div className={styles['bug-info']}>
                     <div className={styles['info-title']}>
@@ -800,7 +800,7 @@ export const PluginEditorDiff: React.FC<PluginEditorDiffProps> = memo((props) =>
         <YakitButton
           size="small"
           type="text2"
-          icon={<OutlineArrowsexpandIcon />}
+          icon={<ArrowsExpandOutlined color="currentColor" />}
           onClick={() => (isDiff ? setDiffCodeModal(true) : setCodeModal(true))}
         />
       </div>
@@ -932,14 +932,14 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         <div className={'plugin-details-item-show'}>
           {extraNode()}
           <Tooltip title={help || 'No Description about it.'} placement="topRight" overlayClassName="plugins-tooltip">
-            <OutlineQuestionmarkcircleIcon className={'plugin-details-item-show-icon-style'} />
+            <QuestionMarkCircleOutlined className={'plugin-details-item-show-icon-style'} color="currentColor" />
           </Tooltip>
           <YakitPopover
             placement="topRight"
             overlayClassName={'terminal-popover'}
             content={<YakEditor type={pluginType} value={content} readOnly={true} />}
           >
-            <OutlineTerminalIcon className={'plugin-details-item-show-icon-style'} />
+            <TerminalOutlined className={'plugin-details-item-show-icon-style'} color="currentColor" />
           </YakitPopover>
         </div>
       </div>

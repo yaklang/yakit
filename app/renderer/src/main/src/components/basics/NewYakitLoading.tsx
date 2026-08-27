@@ -12,7 +12,7 @@ import {
   isMemfit,
 } from '@/utils/envfile'
 import { Tooltip } from 'antd'
-import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 
 import yakitSE from '@/assets/yakitSE.png'
@@ -255,7 +255,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
               >
                 {t('YakitLoading.openEngineFolder')}
                 <Tooltip title={t('YakitLoading.openEngineFolderTip')}>
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </Tooltip>
               </div>
             </div>

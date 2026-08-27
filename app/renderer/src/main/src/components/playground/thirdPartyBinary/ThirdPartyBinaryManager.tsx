@@ -15,7 +15,7 @@ import { failed, success, info } from '@/utils/notification'
 import type { ExecResult } from '@/pages/invoker/schema'
 import { Uint8ArrayToString } from '@/utils/str'
 import styles from './ThirdPartyBinaryManager.module.scss'
-import { OutlineDownloadIcon, OutlinePlayIcon, OutlineTrashIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { DownloadOutlined, PlayOutlined, TrashOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -275,7 +275,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
               <YakitButton
                 type="primary"
                 size="small"
-                icon={<OutlinePlayIcon />}
+                icon={<PlayOutlined color="currentColor" />}
                 onClick={() => openStartModal(record)}
                 disabled={loading}
               >
@@ -284,7 +284,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
               <YakitButton
                 danger
                 size="small"
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 onClick={() => handleUninstall(record.Name)}
                 disabled={loading}
               >
@@ -295,7 +295,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
             <YakitButton
               type="primary"
               size="small"
-              icon={<OutlineDownloadIcon />}
+              icon={<DownloadOutlined color="currentColor" />}
               onClick={() => {
                 setInstallVisible(true)
                 installForm.setFieldsValue({ name: record.Name })
@@ -319,13 +319,17 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
           <Space>
             <YakitButton
               type="primary"
-              icon={<OutlineDownloadIcon />}
+              icon={<DownloadOutlined color="currentColor" />}
               onClick={() => setInstallVisible(true)}
               disabled={loading}
             >
               {t('playground.ThirdPartyBinaryManager.installNewTool')}
             </YakitButton>
-            <YakitButton icon={<OutlineRefreshIcon />} onClick={fetchBinaries} loading={refreshLoading}>
+            <YakitButton
+              icon={<RefreshOutlined color="currentColor" />}
+              onClick={fetchBinaries}
+              loading={refreshLoading}
+            >
               {t('YakitButton.refresh')}
             </YakitButton>
           </Space>

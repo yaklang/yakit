@@ -3,7 +3,7 @@ import { useState } from 'react'
 import classNames from 'classnames'
 import { useDebounceEffect } from 'ahooks'
 import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
-import { SolidCheckIcon } from '@/assets/icon/solid'
+import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
@@ -109,7 +109,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
               onClick={() => handleClickCoding(item.codeKey)}
             >
               {item.label}
-              {codeKey === item.codeKey && <SolidCheckIcon className={styles['check-icon']} />}
+              {codeKey === item.codeKey && <CheckSolid className={styles['check-icon']} color="currentColor" />}
             </div>
           ))}
         </div>

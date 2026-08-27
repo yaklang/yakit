@@ -20,7 +20,7 @@ import {
 } from '../utils'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
-import { OutlineCheckIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { CheckOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
@@ -208,18 +208,20 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         }}
       >
         <div className={styles['yakit-option-item-label']}>{copyItem.label}</div>
-        <OutlineXIcon
+        <XOutlined
           style={{
             display: showClose ? 'block' : 'none',
           }}
           className={styles['option-item-close']}
           onClick={(e) => delCatchOptionItem(e, item)}
+          color="currentColor"
         />
-        <OutlineCheckIcon
+        <CheckOutlined
           style={{
             display: showSelectedIcon ? 'block' : 'none',
           }}
           className={styles['option-item-checked']}
+          color="currentColor"
         />
       </div>
     )

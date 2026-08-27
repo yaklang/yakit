@@ -33,7 +33,6 @@ import { AllKillEngineConfirm } from './AllKillEngineConfirm'
 const SoftwareSettings = lazy(() =>
   import('@/pages/softwareSettings/SoftwareSettings').then((m) => ({ default: m.SoftwareSettings })),
 )
-import { StopIcon } from '@/assets/newIcon'
 const EnterpriseJudgeLogin = lazy(() => import('@/pages/EnterpriseJudgeLogin'))
 import {
   type ExportProjectProps,
@@ -55,7 +54,7 @@ const DownloadYakit = lazy(() => import('./update/DownloadYakit').then((m) => ({
 const DownloadYaklang = lazy(() => import('./update/DownloadYaklang').then((m) => ({ default: m.DownloadYaklang })))
 import { HelpDoc } from './HelpDoc/HelpDoc'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
-import { SolidCheckCircleIcon, SolidHomeIcon } from '@/assets/icon/solid'
+import { CheckCircleSolid, HomeSolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { setNowProjectDescription } from '@/pages/globalVariable'
 import { handleAIConfig, apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import type { GlobalNetworkConfig } from '../configNetwork/ConfigNetworkPage'
@@ -64,7 +63,8 @@ import type { CodecParamsProps, OpenFuzzerModal } from '../yakChat/chatCS'
 const NewThirdPartyApplicationConfig = lazy(() => import('../configNetwork/NewThirdPartyApplicationConfig'))
 import { usePerformanceSampling } from '@/store/performanceSampling'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
-import { OutlineExitIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined, FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { CopyComponents } from '../yakitUI/YakitTag/YakitTag'
 import { Tooltip } from 'antd'
 import { openABSFileLocated } from '@/utils/openWebsite'
@@ -1467,7 +1467,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             }}
           >
             <div className={styles['stop-icon']}>
-              <StopIcon />
+              <StopSolid />
             </div>
             <span className={styles['stop-text']}>{t('UILayout.samplingInProgress')}</span>
           </YakitButton>
@@ -1515,7 +1515,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                         className={classNames(styles['footer-bottom'], styles['sampling-exit'])}
                         onClick={resetPerformanceSampling}
                       >
-                        <OutlineExitIcon />
+                        <FigmaIcon28011794Outlined color="currentColor" />
                         {t('YakitButton.exit')}
                       </div>
                       <div
@@ -1525,7 +1525,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           emiter.emit('performanceSampling')
                         }}
                       >
-                        <OutlineRefreshIcon />
+                        <RefreshOutlined color="currentColor" />
                         {t('UILayout.resample')}
                       </div>
                     </div>
@@ -1547,7 +1547,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     onClick={() => setIsShowSamplingInfo(true)}
                   >
                     <div className={styles['stop-icon']}>
-                      <SolidCheckCircleIcon />
+                      <CheckCircleSolid color="currentColor" />
                     </div>
                     <span className={styles['stop-text']}>{t('UILayout.samplingCompleted')}</span>
                   </YakitButton>
@@ -1580,7 +1580,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             size="middle"
           >
             <div className={styles['stop-icon']}>
-              <StopIcon />
+              <StopSolid />
             </div>
             <span className={styles['stop-text']}>{t('UILayout.recordingInProgress')}</span>
           </YakitButton>
@@ -1749,7 +1749,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           })}
                           onClick={() => changeYakitMode('soft')}
                         >
-                          <SolidHomeIcon className={styles['mode-icon-selected']} />
+                          <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
                         </div>
                       )}
                       <div className={classNames(dropClassName)}>
@@ -1829,7 +1829,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                           })}
                           onClick={() => changeYakitMode('soft')}
                         >
-                          <SolidHomeIcon className={styles['mode-icon-selected']} />
+                          <HomeSolid className={styles['mode-icon-selected']} color="currentColor" />
                         </div>
                       )}
 

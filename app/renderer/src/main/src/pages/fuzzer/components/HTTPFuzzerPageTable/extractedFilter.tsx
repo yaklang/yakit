@@ -1,4 +1,4 @@
-import { OutlineArrowdownIcon, OutlineArrowupIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { ArrowDownOutlined, ArrowUpOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Divider } from 'antd'
@@ -70,7 +70,7 @@ const ExtractedFilter: React.FC<ExtractedFilterProps> = memo((props) => {
             })}
             onClick={() => setShow(true)}
           >
-            <OutlineSearchIcon className={style['outlineFilterIcon']} />
+            <SearchOutlined className={style['outlineFilterIcon']} color="currentColor" />
             {t('YakitInput.search')}
           </div>
           <Divider style={{ margin: '4px 0' }} />
@@ -132,7 +132,7 @@ const TableFilterAndSorter: React.FC<TableFilterAndSorterProps> = memo((props) =
             onClick={() => handleSort(sortStatus === 'asc' ? 'none' : 'asc')}
           >
             <div className={style['icon']}>
-              <OutlineArrowupIcon />
+              <ArrowUpOutlined color="currentColor" />
             </div>
             <div className={style['content']}>{t('YakitTable.asc')}</div>
           </div>
@@ -144,7 +144,7 @@ const TableFilterAndSorter: React.FC<TableFilterAndSorterProps> = memo((props) =
             onClick={() => handleSort(sortStatus === 'desc' ? 'none' : 'desc')}
           >
             <div className={style['icon']}>
-              <OutlineArrowdownIcon />
+              <ArrowDownOutlined color="currentColor" />
             </div>
             <div className={style['content']}>{t('YakitTable.desc')}</div>
           </div>
@@ -155,7 +155,7 @@ const TableFilterAndSorter: React.FC<TableFilterAndSorterProps> = memo((props) =
             })}
             onClick={() => setShowRange(true)}
           >
-            <div className={style['icon']}>{isSearch ? <OutlineSearchIcon /> : <FilterIcon />}</div>
+            <div className={style['icon']}>{isSearch ? <SearchOutlined color="currentColor" /> : <FilterIcon />}</div>
             <div className={style['content']}>{t(isSearch ? 'YakitInput.search' : 'YakitTable.filter')}</div>
           </div>
         </>

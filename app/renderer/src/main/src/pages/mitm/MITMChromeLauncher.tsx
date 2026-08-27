@@ -25,11 +25,12 @@ import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoCo
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import classNames from 'classnames'
-import { OutlineChevronupIcon } from '@/assets/icon/outline'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { ChevronUpOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { v4 as uuidv4 } from 'uuid'
 import { chromeLauncherMinParams, chromeLauncherParamsArr } from '@/defaultConstants/mitm'
-import { SolidCheckIcon, SolidStoreIcon } from '@/assets/icon/solid'
+import { CheckSolid, FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
+
 import { useGoogleChromePluginPath } from '@/store'
 import { RemoteMitmGV } from '@/enums/mitm'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
@@ -311,10 +312,11 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
               style={{ borderRadius: '0 40px 40px 0' }}
               onClick={() => setShowChormeDropdown(!showChormeDropdown)}
             >
-              <OutlineChevronupIcon
+              <ChevronUpOutlined
                 className={classNames(style['title-icon'], {
                   [style['rotate-180']]: !showChormeDropdown,
                 })}
+                color="currentColor"
               />
             </div>
             <div
@@ -336,7 +338,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                   key={item.key}
                 >
                   <span>{item.label}</span>
-                  {chormeCheck === item.key && <SolidCheckIcon className={style['check-icon']} />}
+                  {chormeCheck === item.key && <CheckSolid className={style['check-icon']} color="currentColor" />}
                 </div>
               ))}
             </div>
@@ -826,11 +828,12 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
             <div className={style['table-action-icon']}>
               {record.cellStyle ? (
                 <Tooltip title={t('YakitButton.save')}>
-                  <SolidStoreIcon
+                  <FigmaIcon16256302540Solid
                     className={classNames(style['action-icon'], style['action-icon-save'])}
                     onClick={(e) => {
                       onSave(record)
                     }}
+                    color="currentColor"
                   />
                 </Tooltip>
               ) : (
@@ -912,7 +915,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
               onSearch={(value) => setSearchVal(value.trim())}
             />
             <YakitButton type="text" onClick={resetToDefault} disabled={tempEditId !== undefined}>
-              <OutlineRefreshIcon style={{ marginRight: 4 }} />
+              <RefreshOutlined style={{ marginRight: 4 }} color="currentColor" />
               {t('MITMChromeLauncher.restore_default_params')}
             </YakitButton>
           </div>

@@ -9,7 +9,8 @@ import { failed } from '@/utils/notification'
 import styles from './IRifyHomeTable.module.scss'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
-import { OutlineReloadScanIcon, OutlineScanIcon } from '@/assets/icon/outline'
+import { ScanOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineReloadScanIcon } from '@/assets/icon/bespokeOutline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AfreshAuditModal } from '../yakRunnerAuditCode/AuditCode/AuditCode'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -126,7 +127,7 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [], onRef
             <Tooltip title={t('AuditCode.codeScan')}>
               <YakitButton
                 type="text"
-                icon={<OutlineScanIcon />}
+                icon={<ScanOutlined color="currentColor" size={16} />}
                 onClick={async (e) => {
                   e.stopPropagation()
                   try {

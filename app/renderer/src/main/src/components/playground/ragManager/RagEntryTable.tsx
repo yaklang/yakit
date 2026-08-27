@@ -13,7 +13,7 @@ import { useMemoizedFn } from 'ahooks'
 import { failed } from '@/utils/notification'
 import type { RagEntryTableProps, VectorStoreEntry, Paging } from './types'
 import styles from './RagEntryTable.module.scss'
-import { OutlineSearchIcon, OutlineEyeIcon } from '@/assets/icon/outline'
+import { SearchOutlined, EyeOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
@@ -168,7 +168,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({ selectedCollection
           <YakitButton
             type="text2"
             size="small"
-            icon={<OutlineEyeIcon />}
+            icon={<EyeOutlined color="currentColor" />}
             onClick={() => handleViewDetail(item)}
             title={t('YakitButton.viewDetail')}
           />
@@ -202,7 +202,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({ selectedCollection
               onSearch={handleSearch}
               style={{ width: 250 }}
               size="small"
-              suffix={<OutlineSearchIcon />}
+              suffix={<SearchOutlined color="currentColor" />}
             />
             <YakitTag color="blue">
               {t('playground.RagEntryTable.totalCount', { count: selectedCollection.VectorCount || 0 })}

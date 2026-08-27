@@ -9,15 +9,15 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineClouddownloadIcon,
-  OutlineRefreshIcon,
-  OutlineReplyIcon,
-  OutlineThumbupIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  RefreshOutlined,
+  ReplyOutlined,
+  ThumbUpOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { yakitNotify } from '@/utils/notification'
 import { Tooltip } from 'antd'
-import { SolidPluscircleIcon, SolidThumbupIcon } from '@/assets/icon/solid'
+import { PlusCircleSolid, ThumbUpSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { HubExtraOperate, type HubExtraOperateRef } from '../hubExtraOperate/HubExtraOperate'
 import { v4 as uuidv4 } from 'uuid'
 import { grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail } from '../utils/grpc'
@@ -693,14 +693,18 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
           <FooterExtraBtn
             loading={starLoading}
             icon={
-              onlinePlugin.is_stars ? <SolidThumbupIcon className={styles['stared-icon']} /> : <OutlineThumbupIcon />
+              onlinePlugin.is_stars ? (
+                <ThumbUpSolid className={styles['stared-icon']} color="currentColor" />
+              ) : (
+                <ThumbUpOutlined color="currentColor" />
+              )
             }
             title={onlinePlugin.starsCountString || ''}
             onClick={onStar}
           />
           <FooterExtraBtn
             loading={downloadLoading}
-            icon={<OutlineClouddownloadIcon />}
+            icon={<CloudDownloadOutlined color="currentColor" />}
             title={onlinePlugin.downloadedTotalString || ''}
             onClick={handleDownload}
           />
@@ -716,10 +720,10 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         <div className={styles['detail-header']}>
           <div className={styles['header-title']}>{t('PluginHubDetail.pluginDetail')}</div>
           <div className={styles['header-btn']}>
-            <YakitButton size="large" icon={<SolidPluscircleIcon />} onClick={onNewPlugin}>
+            <YakitButton size="large" icon={<PlusCircleSolid color="currentColor" />} onClick={onNewPlugin}>
               {t('PluginHubDetail.newPlugin')}
             </YakitButton>
-            <YakitButton size="large" type="outline2" icon={<OutlineReplyIcon />} onClick={onBack}>
+            <YakitButton size="large" type="outline2" icon={<ReplyOutlined color="currentColor" />} onClick={onBack}>
               {t('YakitButton.back')}
             </YakitButton>
           </div>
@@ -896,7 +900,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
               />
               {isRefresh.current && (
                 <div className={styles['refresh-buttons']}>
-                  <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={onRefresh}>
+                  <YakitButton type="outline1" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh}>
                     {t('YakitButton.refresh')}
                   </YakitButton>
                 </div>

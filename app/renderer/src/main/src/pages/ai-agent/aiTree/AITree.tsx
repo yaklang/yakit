@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useMemo, useState } from 'react'
 import type { AITreeNodeProps, AITreeProps } from './type'
 import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from './icon'
-import { OutlineInformationcircleIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined, ListTodoOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useMemoizedFn } from 'ahooks'
 
@@ -153,12 +153,17 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
               visible={infoShow}
               onVisibleChange={setInfoShow}
             >
-              <OutlineInformationcircleIcon className={styles['info-icon']} />
+              <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
             </YakitPopover>
             {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskId={data.task_id} />}
             {taskType === 'current' && data.isLeaf && (
               <Tooltip title="任务详情" placement="top">
-                <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
+                <YakitButton
+                  size="small"
+                  icon={<ListTodoOutlined color="currentColor" />}
+                  type="text2"
+                  onClick={onDetails}
+                />
               </Tooltip>
             )}
             {aiTreeTitleExtraNode && <div className={styles['ai-tree-extra-node']}>{aiTreeTitleExtraNode?.(data)}</div>}

@@ -14,17 +14,17 @@ import { getHTTPFlowExportFields } from '@/components/HTTPFlowTable/HTTPFlowExpo
 import type { HTTPFlowsFieldGroupResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { buildHTTPFlowSuffixOptions, formatHTTPFlowPathSuffix } from '@/components/HTTPFlowTable/HTTPFlowPathSuffix'
 import {
-  OutlineChevrondownIcon,
-  OutlineCogIcon,
-  OutlineFilterIcon,
-  OutlineMessageCirclePlusIcon,
-  OutlineRefreshIcon,
-  OutlineReplyIcon,
-  OutlineSearchIcon,
-  OutlineSelectorIcon,
-  OutlineStarIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ChevronDownOutlined,
+  CogOutlined,
+  FilterOutlined,
+  MessageCirclePlusOutlined,
+  RefreshOutlined,
+  ReplyOutlined,
+  SearchOutlined,
+  SelectorOutlined,
+  StarOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { RemoteHistoryGV } from '@/enums/history'
 import { binaryDisplayEnabledStore, useBinaryDisplayEnabled } from '@/store/binaryDisplayEnabled'
@@ -71,7 +71,7 @@ import {
   shouldUseParamsIconText3,
 } from '@/components/TableVirtualResize/utils'
 import { yakitNotify } from '@/utils/notification'
-import { ArrowCircleRightSvgIcon, CheckCircleIcon, ChromeFrameSvgIcon, ColorSwatchIcon } from '@/assets/newIcon'
+import { ArrowCircleRightSvgIcon, ChromeFrameSvgIcon, ColorSwatchIcon } from '@/assets/newIcon'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow, saveABSFileToOpen } from '@/utils/openWebsite'
@@ -124,7 +124,7 @@ import {
   YakitMultipleShortcutKey,
 } from '@/utils/globalShortcutKey/events/multiple/yakitMultiple'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { SolidStarIcon } from '@/assets/icon/solid'
+import { CheckCircleSolid, StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 import styles from './HTTPHistoryFilter.module.scss'
 import {
@@ -358,13 +358,17 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                         <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
-                            icon={<OutlineMessageCirclePlusIcon />}
+                            icon={<MessageCirclePlusOutlined color="currentColor" />}
                             onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
                       ),
                       close: (
-                        <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
+                        <YakitButton
+                          type="text2"
+                          icon={<XOutlined color="currentColor" />}
+                          onClick={() => setOpenTabsFlag(false)}
+                        />
                       ),
                       taskDetails: true,
                     },
@@ -996,7 +1000,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         enableDrag: false,
         filterProps: {
           filterKey: 'idFilter',
-          filterIcon: <OutlineSelectorIcon className={styles['filter-icon']} />,
+          filterIcon: <SelectorOutlined className={styles['filter-icon']} color="currentColor" />,
           filterRender: (closePopover: () => void) => (
             <SearchInputTableWrapper
               showSort={true}
@@ -1055,7 +1059,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         filterProps: {
           filterKey: 'StatusCode',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
           filterInputProps: {
             placeholder: t('YakitInput.supportInputFormat'),
             wrapperStyle: { width: 270 },
@@ -1084,7 +1088,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         filterProps: {
           filterKey: 'SearchURL',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {
@@ -1104,7 +1108,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         filterProps: {
           filterKey: 'PayloadKeyword',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
         render: (v) => {
           return v ? v.join(',') : '-'
@@ -1117,7 +1121,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         filterProps: {
           filterKey: 'FromPlugin',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {
@@ -1149,7 +1153,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         width: 130,
         filterProps: {
           filterKey: 'bodyLength',
-          filterIcon: <OutlineSelectorIcon className={styles['filter-icon']} />,
+          filterIcon: <SelectorOutlined className={styles['filter-icon']} color="currentColor" />,
           filterRender: (closePopover: () => void) => (
             <RangeInputNumberTableWrapper
               showSort={true}
@@ -1258,7 +1262,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         render: (_, rowData) => (
           <div className={styles['check-circle']}>
             {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
-              <CheckCircleIcon
+              <CheckCircleSolid
                 className={classNames({
                   [styles['check-circle-icon']]: !isCellRedSingleColor(rowData.cellClassName),
                   [styles['check-circle-icon-text-3']]: shouldUseParamsIconText3(rowData.cellClassName),
@@ -1369,15 +1373,16 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
               })}
             >
               {favorite ? (
-                <SolidStarIcon
+                <StarSolid
                   className={classNames(styles['favorite-icon-active'], styles['icon-hover'])}
                   onClick={(e) => {
                     e.stopPropagation()
                     toggleHTTPFlowFavorite(rowData, false, setData, onlyFavorite)
                   }}
+                  color="currentColor"
                 />
               ) : (
-                <OutlineStarIcon
+                <StarOutlined
                   className={classNames(styles['favorite-icon'], styles['icon-hover'], {
                     [styles['icon-style']]: !singleColorRow,
                   })}
@@ -1385,6 +1390,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     e.stopPropagation()
                     toggleHTTPFlowFavorite(rowData, true, setData, onlyFavorite)
                   }}
+                  color="currentColor"
                 />
               )}
               <div className={styles['divider-style']} />
@@ -2654,7 +2660,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
               <div className={styles['http-history-table-right']}>
                 {webFuzzerPageId && toWebFuzzer && closable && (
                   <YakitButton
-                    icon={<OutlineReplyIcon />}
+                    icon={<ReplyOutlined color="currentColor" />}
                     size="small"
                     onClick={() => {
                       const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
@@ -2689,7 +2695,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                   <Tooltip title={t('YakitButton.advancedFilter')} placement="top">
                     <YakitButton
                       type="text2"
-                      icon={<OutlineFilterIcon />}
+                      icon={<FilterOutlined color="currentColor" />}
                       onClick={() => {
                         setDrawerFormVisible(true)
                       }}
@@ -2754,7 +2760,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 <Tooltip title={t('HTTPFlowTable.favorites')} placement="top">
                   <YakitButton
                     type={onlyFavorite ? 'outline1' : 'outline2'}
-                    icon={<SolidStarIcon />}
+                    icon={<StarSolid color="currentColor" />}
                     onClick={(e) => {
                       e.currentTarget.blur()
                       onToggleOnlyFavorite()
@@ -2820,11 +2826,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 >
                   <YakitButton type="outline2" disabled={selectedRowKeys.length === 0}>
                     {t('YakitButton.batchOperation')}
-                    <OutlineChevrondownIcon />
+                    <ChevronDownOutlined color="currentColor" />
                   </YakitButton>
                 </YakitPopover>
                 <YakitButton
-                  icon={<OutlineCogIcon />}
+                  icon={<CogOutlined color="currentColor" />}
                   type={isAdvancedSet ? 'text' : 'text2'}
                   onClick={() => {
                     setAdvancedSetVisible(true)
@@ -2835,7 +2841,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 </YakitButton>
                 <YakitButton
                   type="text2"
-                  icon={<OutlineRefreshIcon />}
+                  icon={<RefreshOutlined color="currentColor" />}
                   onClick={() => {
                     update(1)
                   }}

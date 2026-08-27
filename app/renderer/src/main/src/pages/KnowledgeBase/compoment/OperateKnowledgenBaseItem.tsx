@@ -1,6 +1,6 @@
 import { type Dispatch, type FC, type SetStateAction, useEffect } from 'react'
 
-import { SolidDotsverticalIcon } from '@/assets/icon/solid'
+import { DotsVerticalSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { knowledgeTypeOptions, manageMenuList } from '../utils'
 import { useRequest, useSafeState, useUpdateEffect } from 'ahooks'
@@ -169,12 +169,13 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
           visible: menuOpen,
         }}
       >
-        <SolidDotsverticalIcon
+        <DotsVerticalSolid
           onClick={(e) => {
             e.stopPropagation()
             setMenuSelectedId(items.ID)
           }}
           className={styles['dotsvertical-icon']}
+          color="currentColor"
         />
       </YakitDropdownMenu>
       <DeleteConfirm

@@ -10,7 +10,7 @@ import { failed } from '@/utils/notification'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Progress } from 'antd'
-import { SolidDocumentdownloadIcon } from '@/assets/icon/solid'
+import { DocumentDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
@@ -133,7 +133,7 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
       <div className={styles['yaklang-engine-hint-wrapper']}>
         <div className={styles['hint-left-wrapper']}>
           <div className={styles['hint-icon']}>
-            <SolidDocumentdownloadIcon />
+            <DocumentDownloadSolid color="currentColor" />
           </div>
         </div>
 

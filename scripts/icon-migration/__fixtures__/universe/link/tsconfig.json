@@ -1,0 +1,4 @@
+{
+  "compilerOptions": { "jsx": "react-jsx", "allowJs": true },
+  "include": ["src", "../shared"]
+}

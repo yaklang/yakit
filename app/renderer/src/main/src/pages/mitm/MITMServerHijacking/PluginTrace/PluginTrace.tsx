@@ -1,7 +1,7 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePlay2Icon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { Play2Outlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Descriptions, Divider } from 'antd'
 import {
   useCreation,
@@ -457,7 +457,12 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
             description={t('PluginTrace.enable_tracing_to_view_plugin_execution_')}
             style={{ marginTop: 80 }}
           >
-            <YakitButton type="primary" icon={<OutlinePlay2Icon />} onClick={startPluginTrace} loading={startLoading}>
+            <YakitButton
+              type="primary"
+              icon={<Play2Outlined color="currentColor" />}
+              onClick={startPluginTrace}
+              loading={startLoading}
+            >
               开始追踪
             </YakitButton>
           </YakitEmpty>
@@ -517,7 +522,11 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                               >
                                 停止追踪
                               </YakitButton>
-                              <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={refreshAndScrollNow} />
+                              <YakitButton
+                                type="text2"
+                                icon={<RefreshOutlined color="currentColor" />}
+                                onClick={refreshAndScrollNow}
+                              />
                             </div>
                           ) : (
                             <YakitButton type="primary" size="small" onClick={startPluginTrace} loading={startLoading}>

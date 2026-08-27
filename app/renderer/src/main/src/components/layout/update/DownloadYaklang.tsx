@@ -9,7 +9,7 @@ import { YaklangInstallHintSvgIcon } from '../icons'
 import { QuestionModal } from './InstallEngine'
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
-import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { safeFormatDownloadProcessState } from '../utils'
 import { grpcFetchLatestYakVersion } from '@/apiUtils/grpc'
 import { yakitEngine } from '@/services/electronBridge'
@@ -213,7 +213,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
                     setIsTop(2)
                   }}
                 >
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </div>
               </div>
 

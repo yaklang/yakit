@@ -9,8 +9,8 @@ import React, {
   useState,
 } from 'react'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { OutlineOpenIcon } from '@/assets/icon/outline'
-import { SolidPlayIcon } from '@/assets/icon/solid'
+import { OpenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
@@ -524,7 +524,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 onVisibleChange={(show) => setVisible(show)}
               >
                 <div className={styles['expand-btn']} onClick={handleExpand}>
-                  <OutlineOpenIcon />
+                  <OpenOutlined color="currentColor" />
                 </div>
               </Tooltip>
             )}
@@ -627,7 +627,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                           停止
                         </YakitButton>
                       ) : (
-                        <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
+                        <YakitButton icon={<PlaySolid color="currentColor" />} onClick={onStartExecute}>
                           执行
                         </YakitButton>
                       ))}

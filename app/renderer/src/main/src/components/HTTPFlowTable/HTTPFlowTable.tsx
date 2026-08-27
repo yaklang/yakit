@@ -53,8 +53,8 @@ import emiter from '@/utils/eventBus/eventBus'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
 import type { HTTPHistorySourcePageType } from '../HTTPHistory'
 import { useHttpFlowStore } from '@/store/httpFlow'
-import { OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
-import { SolidStarIcon } from '@/assets/icon/solid'
+import { CogOutlined, FilterOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
 import type { ParamsTProps, VirtualTableRefreshReason } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { useCampare } from '@/hook/useCompare/useCompare'
@@ -2985,7 +2985,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                   <Tooltip title={t('YakitButton.advancedFilter')} placement="top">
                     <YakitButton
                       type="text2"
-                      icon={<OutlineFilterIcon />}
+                      icon={<FilterOutlined color="currentColor" />}
                       onClick={() => {
                         setDrawerFormVisible(true)
                       }}
@@ -3048,7 +3048,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             <Tooltip title={t('HTTPFlowTable.favorites')} placement="top">
               <YakitButton
                 type={onlyFavorite ? 'outline1' : 'outline2'}
-                icon={<SolidStarIcon />}
+                icon={<StarSolid color="currentColor" />}
                 onClick={(e) => {
                   e.currentTarget.blur()
                   onToggleOnlyFavorite()
@@ -3190,7 +3190,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             )}
             {showSetting && (
               <YakitButton
-                icon={<OutlineCogIcon />}
+                icon={<CogOutlined color="currentColor" />}
                 type={isAdvancedSet ? 'text' : 'text2'}
                 onClick={() => {
                   setAdvancedSetVisible(true)
@@ -3232,7 +3232,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }}
               >
                 <Badge dot={offsetData.length > 0} offset={[-5, 4]} className={style['http-history-table-badge']}>
-                  <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={(e) => e.stopPropagation()} />
+                  <YakitButton
+                    type="text2"
+                    icon={<RefreshOutlined color="currentColor" />}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 </Badge>
               </YakitDropdownMenu>
             )}

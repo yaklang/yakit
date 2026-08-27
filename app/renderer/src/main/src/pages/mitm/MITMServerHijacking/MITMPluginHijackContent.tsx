@@ -32,14 +32,15 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '@/pages/fuzzer/hotPatchShared'
 import { cloneDeep } from 'lodash'
 import { MITMHotPatchTempDefault } from '@/defaultConstants/mitm'
-import { SolidPlayIcon, SolidStopIcon } from '@/assets/icon/solid'
+import { PlaySolid, StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import {
-  OutlineChevrondownIcon,
-  OutlineFileUpIcon,
-  OutlineRefreshIcon,
-  OutlineStoreIcon,
-  OutlineTerminalIcon,
-} from '@/assets/icon/outline'
+  ChevronDownOutlined,
+  FileUpOutlined,
+  RefreshOutlined,
+  TerminalOutlined,
+  FigmaIcon13208172881Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
 import {
   grpcClientMITMHooks,
@@ -543,7 +544,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                   <span className={classNames(styles['hotPatch-sidebar-template-text'], 'content-ellipsis')}>
                     {selectedTemplateName ? t(selectedTemplateName) : t('HotCodeTemplate.code_template')}
                   </span>
-                  <OutlineChevrondownIcon />
+                  <ChevronDownOutlined color="currentColor" />
                 </YakitButton>
               }
               onDeleteLocalTempOk={() => {
@@ -556,7 +557,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 <YakitButton
                   type="text"
                   onClick={openConsoleNewWindow}
-                  icon={<OutlineTerminalIcon className={styles['engineConsole-icon-style']} />}
+                  icon={<TerminalOutlined className={styles['engineConsole-icon-style']} color="currentColor" />}
                   style={{ padding: 0 }}
                 ></YakitButton>
               </Tooltip>
@@ -570,7 +571,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 placement="top"
               >
                 <YakitButton type="text">
-                  <OutlineRefreshIcon />
+                  <RefreshOutlined color="currentColor" />
                 </YakitButton>
               </YakitPopconfirm>
               <Tooltip title={t('MITMPluginHijackContent.update_and_save_current_template')} placement="top">
@@ -578,13 +579,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                   disabled={disableSaveTemplate}
                   type="text"
                   onClick={onUpdateTemplate}
-                  icon={<OutlineFileUpIcon />}
+                  icon={<FileUpOutlined color="currentColor" />}
                 ></YakitButton>
               </Tooltip>
               <Tooltip placement="top" title={t('MITMPluginHijackContent.save_as_new_template')}>
                 <YakitButton
                   type="text"
-                  icon={<OutlineStoreIcon />}
+                  icon={<FigmaIcon13208172881Outlined color="currentColor" />}
                   onClick={() => setAddHotCodeTemplateVisible(true)}
                 ></YakitButton>
               </Tooltip>
@@ -604,7 +605,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 <YakitButton
                   type="outline1"
                   colors="danger"
-                  icon={<SolidStopIcon />}
+                  icon={<StopSolid color="currentColor" />}
                   onClick={() => {
                     const value: MITMRemoveHookRequest = {
                       HookName: [],
@@ -622,7 +623,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
               ) : (
                 <YakitButton
                   type="outline1"
-                  icon={<SolidPlayIcon />}
+                  icon={<PlaySolid color="currentColor" />}
                   onClick={() => {
                     const value: MITMExecScriptContentRequest = {
                       YakScriptContent: script.Content,

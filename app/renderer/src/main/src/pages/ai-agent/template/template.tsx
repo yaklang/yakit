@@ -22,7 +22,7 @@ import {
 } from './type'
 import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineArrowupIcon, OutlineCogIcon, OutlineHandIcon } from '@/assets/icon/outline'
+import { ArrowUpOutlined, CogOutlined, HandOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import type { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
@@ -410,7 +410,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   <YakitButton
                     type="text2"
                     radius="50%"
-                    icon={<OutlineCogIcon />}
+                    icon={<CogOutlined color="currentColor" />}
                     onClick={(e) => e.stopPropagation()}
                     className={styles['btn-base']}
                     isHover={inputSettingVisible}
@@ -426,7 +426,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                       type="outline2"
                       radius="28px"
                       isHover={manualAdditionVisible}
-                      icon={<OutlineHandIcon />}
+                      icon={<HandOutlined color="currentColor" />}
                       onClick={(e) => {
                         e.stopPropagation()
                       }}
@@ -445,7 +445,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 radius="50%"
                 loading={loading}
                 disabled={disabled}
-                icon={<OutlineArrowupIcon />}
+                icon={<ArrowUpOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
                   handleSubmit()

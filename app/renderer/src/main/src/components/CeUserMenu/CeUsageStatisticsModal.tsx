@@ -6,7 +6,7 @@ import { useMemoizedFn } from 'ahooks'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
-import { OutlineDocumentduplicateIcon, OutlineArrowUpRightIcon } from '@/assets/icon/outline'
+import { DocumentDuplicateOutlined, ArrowUpRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { setClipboardText } from '@/utils/clipboard'
 import { formatNumberUnits } from '@/pages/ai-agent/utils'
@@ -202,7 +202,7 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
                                 <YakitButton
                                   type="text2"
                                   size="small"
-                                  icon={<OutlineDocumentduplicateIcon />}
+                                  icon={<DocumentDuplicateOutlined color="currentColor" />}
                                   onClick={() => handleCopy(key)}
                                 />
                               )}
@@ -217,7 +217,7 @@ const CeUsageStatisticsModal: React.FC<CeUsageStatisticsModalProps> = (props) =>
                                   onClick={() => handleReplace(key)}
                                 >
                                   {t('CeUserMenu.replaceApiKey')}
-                                  <OutlineArrowUpRightIcon />
+                                  <ArrowUpRightOutlined color="currentColor" size={16} />
                                 </div>
                               </div>
                             )}

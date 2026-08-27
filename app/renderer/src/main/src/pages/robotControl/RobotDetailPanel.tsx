@@ -1,7 +1,7 @@
 import type React from 'react'
 import classNames from 'classnames'
-import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
-import { OutlineTrashIcon } from '@/assets/icon/outline'
+import { DingTalkSocialColorful, FeishuSocialColorful } from '@yakit-libs/yakit-ui-icons/colorful'
+import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -18,11 +18,11 @@ import styles from './RobotControl.module.scss'
 const getChannelIcon = (channel?: RobotChannelType) => {
   switch (channel) {
     case 'feishu':
-      return <FeishuIcon />
+      return <FeishuSocialColorful />
     case 'dingtalk':
-      return <DingtalkIcon />
+      return <DingTalkSocialColorful />
     default:
-      return <FeishuIcon />
+      return <FeishuSocialColorful />
   }
 }
 
@@ -190,7 +190,12 @@ export const RobotDetailPanel: React.FC<RobotDetailPanelProps> = (props) => {
               <div className={styles['robot-detail-card-title']}>{t('RobotControl.deleteRobot')}</div>
               <div className={styles['robot-detail-card-desc']}>{t('RobotControl.deleteRobotDesc')}</div>
             </div>
-            <YakitButton type="primary" colors="danger" icon={<OutlineTrashIcon />} onClick={onDelete}>
+            <YakitButton
+              type="primary"
+              colors="danger"
+              icon={<TrashOutlined color="currentColor" />}
+              onClick={onDelete}
+            >
               {t('RobotControl.deleteRobot')}
             </YakitButton>
           </div>

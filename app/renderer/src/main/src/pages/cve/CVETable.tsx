@@ -17,13 +17,8 @@ import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtual
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
-import {
-  CheckCircleIcon,
-  CloudDownloadIcon,
-  RefreshIcon,
-  ShieldExclamationIcon,
-  SolidRefreshIcon,
-} from '@/assets/newIcon'
+import { CloudDownloadIcon, RefreshIcon, ShieldExclamationIcon } from '@/assets/newIcon'
+import { CheckCircleSolid, RefreshSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import classNames from 'classnames'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { failed, info, yakitFailed } from '@/utils/notification'
@@ -665,10 +660,10 @@ export const DatabaseUpdateModal: React.FC<DatabaseUpdateModalProps> = React.mem
   })
   const heardIconRender = useMemoizedFn(() => {
     if (status === 'done') {
-      return <CheckCircleIcon style={{ color: 'var(--Colors-Use-Success-Primary)' }} />
+      return <CheckCircleSolid style={{ color: 'var(--Colors-Use-Success-Primary)' }} />
     }
     if (available) {
-      return <SolidRefreshIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />
+      return <RefreshSolid style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />
     } else {
       return <ShieldExclamationIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />
     }

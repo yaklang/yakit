@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useState } from 'react'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useMemoizedFn } from 'ahooks'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Tooltip } from 'antd'
 import styles from './UpdateGroupList.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -125,7 +125,7 @@ export const UpdateGroupList: React.FC<UpdateGroupListProps> = React.forwardRef(
           placeholder="添加到组..."
           value={searchVal}
           size="middle"
-          prefix={<OutlineSearchIcon className="search-icon" />}
+          prefix={<SearchOutlined className="search-icon" color="currentColor" />}
           allowClear
           onChange={(e) => onSearch(e.target.value.trim())}
           onKeyDown={(e) => {

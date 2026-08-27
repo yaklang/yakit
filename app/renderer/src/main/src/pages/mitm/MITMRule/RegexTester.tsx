@@ -10,7 +10,7 @@ import styles from './RegexTester.module.scss'
 import { RegexpInput } from './MITMRuleFromModal'
 import { StringToUint8Array } from '@/utils/str'
 import { yakitFailed } from '@/utils/notification'
-import { OutlinePositionIcon } from '@/assets/icon/outline'
+import { PositionOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -215,11 +215,12 @@ export const RegexTester: React.FC<RegexTesterProps> = React.memo((props) => {
                 {match.index}-{match.index + match.length}
               </span>
               <span className={styles['match-value']}>{match.fullMatch}</span>
-              <OutlinePositionIcon
+              <PositionOutlined
                 className={classNames(styles['position-icon'], {
                   [styles['position-icon-active']]: activeMatchIndex === idx,
                 })}
                 onClick={() => scrollToMatch(match, idx)}
+                color="currentColor"
               />
             </div>
           ))}

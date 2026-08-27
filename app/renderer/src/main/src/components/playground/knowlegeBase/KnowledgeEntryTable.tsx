@@ -21,8 +21,8 @@ import type {
 
 import styles from './KnowledgeEntryTable.module.scss'
 import { PlusIcon, TrashIcon } from '@/assets/newIcon'
-import { OutlinePencilaltIcon, OutlineSearchIcon } from '@/assets/icon/outline'
-import { SolidPlayIcon } from '@/assets/icon/solid'
+import { PencilAltOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -282,7 +282,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
             <YakitButton
               type="text2"
               size="small"
-              icon={<SolidPlayIcon />}
+              icon={<PlaySolid color="currentColor" />}
               onClick={() => handleCreateIndex(item)}
               title={t('playground.KnowledgeEntryTable.createIndexForEntry')}
             >
@@ -292,7 +292,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
           <YakitButton
             type="text2"
             size="small"
-            icon={<OutlinePencilaltIcon />}
+            icon={<PencilAltOutlined color="currentColor" />}
             onClick={() => handleOpenEdit(item)}
             title={t('YakitButton.edit')}
           />
@@ -337,7 +337,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               style={{ width: 200 }}
-              suffix={<OutlineSearchIcon />}
+              suffix={<SearchOutlined color="currentColor" />}
             />
             <YakitButton type="primary" size="small" icon={<PlusIcon />} onClick={handleOpenCreate}>
               {t('playground.KnowledgeEntryTable.addEntry')}

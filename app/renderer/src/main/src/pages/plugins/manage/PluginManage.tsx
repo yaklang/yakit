@@ -14,17 +14,17 @@ import {
 } from '../funcTemplate'
 import type { TypeSelectOpt } from '../funcTemplateType'
 import {
-  OutlineClouddownloadIcon,
-  OutlineClouduploadIcon,
-  OutlineDotshorizontalIcon,
-  OutlinePaperairplaneIcon,
-  OutlinePencilaltIcon,
-  OutlinePluscircleIcon,
-  OutlineRefreshIcon,
-  OutlineSaveIcon,
-  OutlineTrashIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  CloudUploadOutlined,
+  DotsHorizontalOutlined,
+  PaperAirplaneOutlined,
+  PencilAltOutlined,
+  PlusCircleOutlined,
+  RefreshOutlined,
+  SaveOutlined,
+  TrashOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import {
   useDebounceEffect,
   useDebounceFn,
@@ -91,7 +91,7 @@ import styles from './pluginManage.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { randomString } from '@/utils/randomUtil'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { SolidClouduploadIcon } from '@/assets/icon/solid'
+import { CloudUploadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { httpUploadPluginToEE } from '@/pages/pluginHub/utils/http'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -467,28 +467,28 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
   const optExtraNode = useMemoizedFn((data: YakitPluginOnlineDetail) => {
     return (
       <FuncFilterPopover
-        icon={<OutlineDotshorizontalIcon />}
+        icon={<DotsHorizontalOutlined color="currentColor" />}
         menu={{
           data: admin.isAdmin
             ? [
                 {
                   key: 'download',
                   label: t('YakitButton.download'),
-                  itemIcon: <OutlineClouddownloadIcon />,
+                  itemIcon: <CloudDownloadOutlined color="currentColor" />,
                 },
                 { type: 'divider' },
                 {
                   key: 'del',
                   label: t('YakitButton.delete'),
                   type: 'danger',
-                  itemIcon: <OutlineTrashIcon />,
+                  itemIcon: <TrashOutlined color="currentColor" />,
                 },
               ]
             : [
                 {
                   key: 'download',
                   label: t('YakitButton.download'),
-                  itemIcon: <OutlineClouddownloadIcon />,
+                  itemIcon: <CloudDownloadOutlined color="currentColor" />,
                 },
               ],
           className: styles['func-filter-dropdown-menu'],
@@ -1104,7 +1104,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             <div className="btn-group-wrapper">
               {admin.ee && (
                 <FuncBtnIcon
-                  icon={<OutlinePaperairplaneIcon />}
+                  icon={<PaperAirplaneOutlined color="currentColor" />}
                   type="outline2"
                   size="large"
                   name={t('PluginManage.syncToEE')}
@@ -1113,7 +1113,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
               )}
               {admin.isAdmin && (
                 <FuncBtnIcon
-                  icon={<OutlinePencilaltIcon />}
+                  icon={<PencilAltOutlined color="currentColor" />}
                   disabled={selectNum === 0 && !allCheck}
                   type="outline2"
                   size="large"
@@ -1122,7 +1122,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 />
               )}
               <FuncBtnIcon
-                icon={<OutlineClouddownloadIcon />}
+                icon={<CloudDownloadOutlined color="currentColor" />}
                 type="outline2"
                 size="large"
                 loading={downloadLoading}
@@ -1132,7 +1132,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
               />
               {admin.isAdmin && (
                 <FuncBtnIcon
-                  icon={<OutlineSaveIcon />}
+                  icon={<SaveOutlined color="currentColor" />}
                   type="outline2"
                   size="large"
                   name={t('PluginManage.importGroup')}
@@ -1206,7 +1206,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                   }}
                 >
                   <FuncBtnIcon
-                    icon={<OutlineClouduploadIcon />}
+                    icon={<CloudUploadOutlined color="currentColor" />}
                     type="outline2"
                     size="large"
                     loading={resetLoading}
@@ -1216,7 +1216,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
               )}
               {admin.isAdmin && (
                 <FuncBtnIcon
-                  icon={<OutlineTrashIcon />}
+                  icon={<TrashOutlined color="currentColor" />}
                   type="outline2"
                   size="large"
                   name={selectNum > 0 ? t('YakitButton.delete') : t('YakitButton.clear')}
@@ -1309,7 +1309,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 {t('PluginManage.pluginGroupCountLabel')}{' '}
                                 <span className={styles['total-style']}>{showGroupList.length}</span>
                               </span>
-                              <OutlineXIcon onClick={() => onRemoveAllGroup()} />
+                              <XOutlined onClick={() => onRemoveAllGroup()} color="currentColor" />
                             </div>
                           </YakitPopover>
                         )}
@@ -1339,11 +1339,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                               [styles['op-btn-body-hover']]: addGroupVisible,
                             })}
                           >
-                            <OutlinePluscircleIcon
+                            <PlusCircleOutlined
                               className={classNames(
                                 addGroupVisible ? styles['icon-hover-style'] : styles['icon-style'],
                                 styles['plus-icon'],
                               )}
+                              color="currentColor"
                             />
                           </div>
                         </div>
@@ -1351,7 +1352,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         <YakitButton
                           disabled={!selectList.length && !allCheck}
                           type={'text'}
-                          icon={<OutlinePluscircleIcon />}
+                          icon={<PlusCircleOutlined color="currentColor" />}
                           style={{
                             color: addGroupVisible
                               ? 'var(--Colors-Use-Main-Primary)'
@@ -1435,7 +1436,11 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 <YakitEmpty title={t('YakitEmpty.noData')} />
 
                 <div className={styles['plugin-manage-buttons']}>
-                  <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={onRefListAndTotalAndGroup}>
+                  <YakitButton
+                    type="outline1"
+                    icon={<RefreshOutlined color="currentColor" />}
+                    onClick={onRefListAndTotalAndGroup}
+                  >
                     {t('YakitButton.refresh')}
                   </YakitButton>
                 </div>
@@ -1527,7 +1532,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
       <YakitHint
         visible={percentShow}
         title={t('PluginManage.uploadPluginLibrary')}
-        heardIcon={<SolidClouduploadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+        heardIcon={<CloudUploadSolid style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
         onCancel={onUploadPluginLibraryCancel}
         okButtonProps={{ style: { display: 'none' } }}
         isDrag={true}

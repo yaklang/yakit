@@ -34,7 +34,7 @@ import { WebTree } from '@/components/WebTree/WebTree'
 import classNames from 'classnames'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { SolidViewgridIcon } from '@/assets/icon/solid'
+import { ViewGridSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { ExportExcel } from '@/components/DataExport/DataExport'
 import type { QueryPortsRequest } from '@/pages/assetViewer/PortAssetPage'
 import type { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
@@ -51,12 +51,12 @@ import { defQueryRisksRequest } from '@/pages/risks/YakitRiskTable/constants'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { apiQueryRisksTotalByRuntimeId } from '@/pages/risks/YakitRiskTable/utils'
 import {
-  OutlineChartpieIcon,
-  OutlineDocumenttextIcon,
-  OutlineLogIcon,
-  OutlineTableIcon,
-  OutlineTerminalIcon,
-} from '@/assets/icon/outline'
+  ChartPieOutlined,
+  DocumentTextOutlined,
+  LogOutlined,
+  TableOutlined,
+  TerminalOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
 import { LocalList, LocalPluginLog, LocalText } from './LocalPluginLog'
 import { CodeScanResult } from '@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable'
@@ -204,7 +204,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     if (tab.type === 'table') {
       return (
         <span className={styles['tab-with-icon']}>
-          <OutlineTableIcon />
+          <TableOutlined color="currentColor" />
           {tab.tabName}
         </span>
       )
@@ -212,7 +212,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     if (tab.type === 'text') {
       return (
         <span className={styles['tab-with-icon']}>
-          <OutlineDocumenttextIcon />
+          <DocumentTextOutlined color="currentColor" />
           {tab.tabName}
         </span>
       )
@@ -343,7 +343,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
       setQuery={setParams}
       tableTitleExtraOperate={
         <>
-          <YakitButton type="primary" icon={<SolidViewgridIcon />} size="small" onClick={onJumpPort}>
+          <YakitButton type="primary" icon={<ViewGridSolid color="currentColor" />} size="small" onClick={onJumpPort}>
             {t('PluginExecutePortTable.portAssetManagement')}
           </YakitButton>
         </>
@@ -474,7 +474,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     const tab = [
       {
         name: t('PluginExecuteLog.plugin_log'),
-        icon: <OutlineLogIcon />,
+        icon: <LogOutlined color="currentColor" size={16} />,
         number: 0,
         type: 'plugin-log',
       },
@@ -482,7 +482,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     if (echartsLists.length) {
       tab.push({
         name: t('PluginExecuteLog.statistical_chart'),
-        icon: <OutlineChartpieIcon />,
+        icon: <ChartPieOutlined color="currentColor" />,
         number: echartsLists.length,
         type: 'echarts-statistics',
       })
@@ -490,7 +490,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
     if (textLists.length) {
       tab.push({
         name: t('PluginExecuteLog.output_text'),
-        icon: <OutlineTerminalIcon />,
+        icon: <TerminalOutlined color="currentColor" />,
         number: textLists.length,
         type: 'output-text',
       })

@@ -18,7 +18,7 @@ import { InputItem, ManyMultiSelectForString } from '@/utils/inputUtil'
 import type { YakScript } from '@/pages/invoker/schema'
 
 import webFuzzerStyles from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss'
-import { OutlineCodeIcon, OutlineQrcodeIcon } from '@/assets/icon/outline'
+import { CodeOutlined, QrcodeOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import style from '@/pages/customizeMenu/CustomizeMenu.module.scss'
@@ -293,12 +293,12 @@ const webFuzzerTabs = [
   {
     key: 'enCoder',
     label: '编码器',
-    icon: <OutlineCodeIcon />,
+    icon: <CodeOutlined color="currentColor" />,
   },
   {
     key: 'deCoder',
     label: '解码器',
-    icon: <OutlineQrcodeIcon />,
+    icon: <QrcodeOutlined color="currentColor" />,
   },
 ]
 

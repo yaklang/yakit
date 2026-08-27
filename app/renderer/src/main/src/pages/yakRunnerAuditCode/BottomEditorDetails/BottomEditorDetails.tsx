@@ -4,7 +4,7 @@ import { useMemoizedFn } from 'ahooks'
 import styles from './BottomEditorDetails.module.scss'
 import classNames from 'classnames'
 import type { BottomEditorDetailsProps, ShowItemType } from './BottomEditorDetailsType'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import useStore from '../hooks/useStore'
 import emiter from '@/utils/eventBus/eventBus'
@@ -195,7 +195,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
           )}
           <YakitButton
             type="text2"
-            icon={<OutlineXIcon />}
+            icon={<XOutlined color="currentColor" />}
             onClick={() => {
               setEditorDetails(false)
             }}

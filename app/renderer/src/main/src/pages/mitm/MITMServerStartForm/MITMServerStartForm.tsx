@@ -28,7 +28,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
 import { toMITMHacker } from '@/pages/hacker/httpHacker'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
@@ -369,7 +369,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             style={{ float: 'right' }}
             type="text2"
             size={'middle'}
-            icon={<OutlineXIcon />}
+            icon={<XOutlined color="currentColor" />}
             onClick={() => setAlertVisible(false)}
           />
         </div>

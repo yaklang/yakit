@@ -29,7 +29,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import styles from './WebsocketFuzzer.module.scss'
 import i18n from '@/i18n/i18n'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { OutlineCogIcon } from '@/assets/icon/outline'
+import { CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const tOriginal = i18n.getFixedT(null, ['yakitUi'])
 const { ipcRenderer } = window.require('electron')
@@ -374,7 +374,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                   </div>
                 }
               >
-                <OutlineCogIcon className={styles['UISettingSvgIcon']} />
+                <CogOutlined className={styles['UISettingSvgIcon']} color="currentColor" />
               </YakitPopover>
               <YakitButton disabled={!(executing && !!ursp)} type="primary" size="small" onClick={handleSendToServer}>
                 {t('WebsocketFuzzer.sendToServer')}

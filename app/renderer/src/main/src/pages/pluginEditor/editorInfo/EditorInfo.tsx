@@ -1,7 +1,7 @@
 import type React from 'react'
 import { type ForwardedRef, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDebounceEffect, useMemoizedFn, usePrevious, useUpdateEffect } from 'ahooks'
-import { OutlineCloseIcon, OutlineIdentificationIcon, OutlineTagIcon } from '@/assets/icon/outline'
+import { CloseOutlined, IdentificationOutlined, TagOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { Form, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -125,7 +125,7 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
             onVisibleChange={(show) => setVisible(show)}
           >
             <div className={styles['expand-btn']} onClick={handleFold}>
-              <OutlineCloseIcon />
+              <CloseOutlined color="currentColor" />
             </div>
           </Tooltip>
         </div>
@@ -516,7 +516,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
               wrapperClassName={styles['item-input']}
               placeholder={t('YakitInput.please_enter')}
               size="large"
-              prefix={<OutlineIdentificationIcon />}
+              prefix={<IdentificationOutlined color="currentColor" />}
               maxLength={100}
             />
           </Form.Item>
@@ -544,7 +544,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
               </YakitSelect>
             </Form.Item>
             <div className={styles['item-select-prefix-icon']}>
-              <OutlineTagIcon />
+              <TagOutlined color="currentColor" />
             </div>
           </Form.Item>
 

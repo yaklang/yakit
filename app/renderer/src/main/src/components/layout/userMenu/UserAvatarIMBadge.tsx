@@ -1,6 +1,6 @@
 import React from 'react'
 import { Tooltip } from 'antd'
-import { SolidMobileIcon } from '@/assets/icon/solid'
+import { MobileSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import classNames from 'classnames'
 import styles from '../funcDomain.module.scss'
 import type { IMControlBadgeView } from '@/pages/robotControl/status'
@@ -38,7 +38,7 @@ export const UserAvatarIMBadge = React.forwardRef<HTMLSpanElement, UserAvatarIMB
               onBadgeClick()
             }}
           >
-            <SolidMobileIcon />
+            <MobileSolid color="currentColor" />
           </span>
         </Tooltip>
       )}

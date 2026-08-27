@@ -1,5 +1,6 @@
 import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
-import { OutlinCompileThreeIcon, OutlineLogIcon } from '@/assets/icon/outline'
+import { LogOutlined, FigmaIcon34227111185Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { setClipboardText } from '@/utils/clipboard'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { useMemoizedFn } from 'ahooks'
@@ -68,14 +69,20 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
             size="small"
             type="text2"
             color="default"
-            icon={<OutlinCompileThreeIcon />}
+            icon={<FigmaIcon34227111185Outlined color="currentColor" />}
             onClick={handleViewFile}
           />
         </Tooltip>
       )}
       {callToolId && (
         <Tooltip placement="top" title={t('YakitButton.viewDetail')}>
-          <YakitButton size="small" type="text2" color="default" icon={<OutlineLogIcon />} onClick={handleDetails} />
+          <YakitButton
+            size="small"
+            type="text2"
+            color="default"
+            icon={<LogOutlined color="currentColor" size={16} />}
+            onClick={handleDetails}
+          />
         </Tooltip>
       )}
     </div>

@@ -6,24 +6,6 @@ export interface IconProps extends CustomIconComponentProps {
   onClick: (e: React.MouseEvent) => void
 }
 
-const CheckCircle = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM13.7071 8.70711C14.0976 8.31658 14.0976 7.68342 13.7071 7.29289C13.3166 6.90237 12.6834 6.90237 12.2929 7.29289L9 10.5858L7.70711 9.29289C7.31658 8.90237 6.68342 8.90237 6.29289 9.29289C5.90237 9.68342 5.90237 10.3166 6.29289 10.7071L8.29289 12.7071C8.68342 13.0976 9.31658 13.0976 9.70711 12.7071L13.7071 8.70711Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-/**
- * @description:  实心的选择圆形
- */
-export const CheckCircleIcon = (props: Partial<IconProps>) => {
-  return <Icon component={CheckCircle} {...props} />
-}
-
 const Refresh = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
     <path
@@ -1011,40 +993,6 @@ const YakitLogoSvg = () => (
 export const YakitLogoSvgIcon = (props: Partial<CustomIconComponentProps>) => {
   return <Icon component={YakitLogoSvg} {...props} />
 }
-const GithubSvg = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M9.99219 1.49048C5.16211 1.48853 1.25 5.39868 1.25 10.2249C1.25 14.0413 3.69727 17.2854 7.10547 18.4768C7.56445 18.592 7.49414 18.2659 7.49414 18.0432V16.5295C4.84375 16.8401 4.73633 15.0862 4.55859 14.7932C4.19922 14.1799 3.34961 14.0237 3.60352 13.7307C4.20703 13.4202 4.82227 13.8088 5.53516 14.8616C6.05078 15.6252 7.05664 15.4963 7.56641 15.3694C7.67773 14.9104 7.91602 14.5002 8.24414 14.1819C5.49805 13.6897 4.35352 12.0139 4.35352 10.0217C4.35352 9.05493 4.67188 8.16626 5.29688 7.44946C4.89844 6.26782 5.33398 5.2561 5.39258 5.10571C6.52734 5.00415 7.70703 5.91821 7.79883 5.99048C8.44336 5.81665 9.17969 5.72485 10.0039 5.72485C10.832 5.72485 11.5703 5.82056 12.2207 5.99634C12.4414 5.82837 13.5352 5.04321 14.5898 5.13892C14.6465 5.28931 15.0723 6.27759 14.6973 7.4436C15.3301 8.16235 15.6523 9.05884 15.6523 10.0276C15.6523 12.0237 14.5 13.7014 11.7461 14.1858C12.2051 14.6389 12.4902 15.2678 12.4902 15.9631V18.1604C12.5059 18.3362 12.4902 18.51 12.7832 18.51C16.2422 17.344 18.7324 14.0764 18.7324 10.2268C18.7324 5.39868 14.8184 1.49048 9.99219 1.49048Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-/** @name github图标 */
-export const GithubSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={GithubSvg} {...props} />
-}
-const FolderOpen = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M2 6C2 4.89543 2.89543 4 4 4H8L10 6H14C15.1046 6 16 6.89543 16 8V9H8C6.34315 9 5 10.3431 5 12V13.5C5 14.3284 4.32843 15 3.5 15C2.67157 15 2 14.3284 2 13.5V6Z"
-      fill="currentColor"
-    />
-    <path
-      d="M6 12C6 10.8954 6.89543 10 8 10H16C17.1046 10 18 10.8954 18 12V14C18 15.1046 17.1046 16 16 16H2H4C5.10457 16 6 15.1046 6 14V12Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-/**
- * @description: folder-open 文件夹
- */
-export const FolderOpenIcon = (props: Partial<IconProps>) => {
-  return <Icon component={FolderOpen} {...props} />
-}
-
 const CloudDownload = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -1291,24 +1239,6 @@ export const MenuIcon = (props: Partial<IconProps>) => {
   return <Icon component={Menu} {...props} />
 }
 
-const SolidRefresh = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M4 2C4.55228 2 5 2.44772 5 3V5.10125C6.27009 3.80489 8.04052 3 10 3C13.0494 3 15.641 4.94932 16.6014 7.66675C16.7855 8.18747 16.5126 8.75879 15.9918 8.94284C15.4711 9.12689 14.8998 8.85396 14.7157 8.33325C14.0289 6.38991 12.1755 5 10 5C8.36507 5 6.91204 5.78502 5.99935 7H9C9.55228 7 10 7.44772 10 8C10 8.55228 9.55228 9 9 9H4C3.44772 9 3 8.55228 3 8V3C3 2.44772 3.44772 2 4 2ZM4.00817 11.0572C4.52888 10.8731 5.1002 11.146 5.28425 11.6668C5.97112 13.6101 7.82453 15 10 15C11.6349 15 13.088 14.215 14.0006 13L11 13C10.4477 13 10 12.5523 10 12C10 11.4477 10.4477 11 11 11H16C16.2652 11 16.5196 11.1054 16.7071 11.2929C16.8946 11.4804 17 11.7348 17 12V17C17 17.5523 16.5523 18 16 18C15.4477 18 15 17.5523 15 17V14.8987C13.7299 16.1951 11.9595 17 10 17C6.95059 17 4.35905 15.0507 3.39857 12.3332C3.21452 11.8125 3.48745 11.2412 4.00817 11.0572Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-/**
- * @description:  刷新 两个圆弧的箭头 Solid
- */
-export const SolidRefreshIcon = (props: Partial<IconProps>) => {
-  return <Icon component={SolidRefresh} {...props} />
-}
-
 const Share = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -1404,22 +1334,6 @@ export const WrapIcon = (props: Partial<IconProps>) => {
   return <Icon component={Wrap} {...props} />
 }
 
-const Stop = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM8 7C7.44772 7 7 7.44772 7 8V12C7 12.5523 7.44772 13 8 13H12C12.5523 13 13 12.5523 13 12V8C13 7.44772 12.5523 7 12 7H8Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-/**
- * @description:  stop 停止
- */
-export const StopIcon = (props: Partial<IconProps>) => {
-  return <Icon component={Stop} {...props} />
-}
 const Exclamation = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -1496,21 +1410,6 @@ const CloudUpload = () => (
  */
 export const CloudUploadIcon = (props: Partial<IconProps>) => {
   return <Icon component={CloudUpload} {...props} />
-}
-
-const FastForward = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M4.5547 5.16795C4.24784 4.96338 3.8533 4.94431 3.52814 5.11833C3.20298 5.29235 3 5.63121 3 6V14C3 14.3688 3.20298 14.7077 3.52814 14.8817C3.8533 15.0557 4.24784 15.0366 4.5547 14.8321L10 11.2019V14C10 14.3688 10.203 14.7077 10.5281 14.8817C10.8533 15.0557 11.2478 15.0366 11.5547 14.8321L17.5547 10.8321C17.8329 10.6466 18 10.3344 18 10C18 9.66565 17.8329 9.35342 17.5547 9.16795L11.5547 5.16795C11.2478 4.96338 10.8533 4.94431 10.5281 5.11833C10.203 5.29235 10 5.63121 10 6V8.79815L4.5547 5.16795Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-/**
- * @description:  fast-forward 前进
- */
-export const FastForwardIcon = (props: Partial<IconProps>) => {
-  return <Icon component={FastForward} {...props} />
 }
 
 const Rewind = () => (
@@ -1895,25 +1794,6 @@ const ArrowDown = () => (
  */
 export const ArrowDownIcon = (props: Partial<IconProps>) => {
   return <Icon component={ArrowDown} {...props} />
-}
-
-const SolidThumbDown = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M18 9.5C18 10.3284 17.3285 11 16.5 11C15.6716 11 15 10.3284 15 9.5V3.5C15 2.67157 15.6716 2 16.5 2C17.3285 2 18 2.67157 18 3.5V9.5Z"
-      fill="currentColor"
-    />
-    <path
-      d="M14 9.66667V4.23607C14 3.47852 13.572 2.786 12.8945 2.44721L12.8446 2.42229C12.2892 2.14458 11.6767 2 11.0558 2L5.63964 2C4.68628 2 3.86545 2.67292 3.67848 3.60777L2.47848 9.60777C2.23097 10.8453 3.17755 12 4.43964 12H8.00004V16C8.00004 17.1046 8.89547 18 10 18C10.5523 18 11 17.5523 11 17V16.3333C11 15.4679 11.2807 14.6257 11.8 13.9333L13.2 12.0667C13.7193 11.3743 14 10.5321 14 9.66667Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-/**
- * @description  solid-thumb-down
- */
-export const SolidThumbDownIcon = (props: Partial<IconProps>) => {
-  return <Icon component={SolidThumbDown} {...props} />
 }
 
 const Polygon = () => (

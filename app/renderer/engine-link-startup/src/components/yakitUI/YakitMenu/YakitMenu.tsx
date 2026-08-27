@@ -6,7 +6,7 @@ import type { MenuDividerType } from 'rc-menu/lib/interface'
 
 import classNames from 'classnames'
 import styles from './yakitMenu.module.scss'
-import { OutlineChevronrightIcon } from '@/assets/outline'
+import { ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 export interface YakitMenuItemProps {
   /** 菜单项展示内容 */
@@ -119,7 +119,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                   </div>
                 )}
               </div>
-              <OutlineChevronrightIcon />
+              <ChevronRightOutlined color="currentColor" />
             </div>
           ),
           key: info.key,

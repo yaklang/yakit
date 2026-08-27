@@ -7,7 +7,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useMemoizedFn } from 'ahooks'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { Tooltip } from 'antd'
-import { OutlineCloseIcon } from '@/assets/icon/outline'
+import { CloseOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { API } from '@/services/swagger/resposeType'
 
 import styles from './FilterPanel.module.scss'
@@ -68,7 +68,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
             <YakitButton
               type="text2"
               onClick={onClose}
-              icon={<OutlineCloseIcon className={styles['panel-header-icon']} />}
+              icon={<CloseOutlined className={styles['panel-header-icon']} color="currentColor" />}
             ></YakitButton>
           </Tooltip>
         </div>

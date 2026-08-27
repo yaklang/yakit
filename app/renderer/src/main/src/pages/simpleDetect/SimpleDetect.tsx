@@ -46,7 +46,7 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { YakitGetOnlinePlugin } from '../mitm/MITMServerHijacking/MITMPluginOnline'
 import type { SimpleDetectExtraParam } from './SimpleDetectExtraParamsDrawer'
 import { convertStartBruteParams } from '../securityTool/newBrute/utils'
-import { OutlineClipboardlistIcon } from '@/assets/icon/outline'
+import { ClipboardListOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { SimpleTabInterface } from '../layout/mainOperatorContent/MainOperatorContent'
 import { type CreateReportContentProps, onCreateReportModal } from '../portscan/CreateReport'
 import { defaultSearch } from '../plugins/builtInData'
@@ -710,7 +710,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             </YakitButton>
             <div className={styles['divider-style']}></div>
             <YakitButton
-              icon={<OutlineClipboardlistIcon />}
+              icon={<ClipboardListOutlined color="currentColor" />}
               disabled={disabledReport}
               onClick={onCreateReport}
               style={{ marginRight: 8 }}

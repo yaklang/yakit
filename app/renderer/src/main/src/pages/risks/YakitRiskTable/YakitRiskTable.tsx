@@ -27,20 +27,20 @@ import {
 } from 'ahooks'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
-  OutlineChevrondownIcon,
-  OutlineChevronleftIcon,
-  OutlineChevronrightIcon,
-  OutlineClockIcon,
-  OutlineExportIcon,
-  OutlineEyeIcon,
-  OutlineOpenIcon,
-  OutlinePlayIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineTerminalIcon,
-  OutlineTrashIcon,
-  OutlineUploadIcon,
-} from '@/assets/icon/outline'
+  ChevronDownOutlined,
+  ChevronLeftOutlined,
+  ChevronRightOutlined,
+  ClockOutlined,
+  EyeOutlined,
+  OpenOutlined,
+  PlayOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  TerminalOutlined,
+  TrashOutlined,
+  UploadOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import cloneDeep from 'lodash/cloneDeep'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -68,13 +68,13 @@ import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { YakitResizeBox, type YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import classNames from 'classnames'
 import {
-  IconSolidInfoRiskIcon,
-  IconSolidLowRiskIcon,
-  IconSolidMediumRiskIcon,
-  IconSolidHighRiskIcon,
-  IconSolidSeriousIcon,
-  IconSolidDefaultRiskIcon,
-} from '../icon'
+  CriticalRiskColorful,
+  DefaultRiskColorful,
+  FingerprintInfoRiskColorful,
+  HighRiskColorful,
+  LowRiskColorful,
+  MediumRiskColorful,
+} from '@yakit-libs/yakit-ui-icons/colorful'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -281,22 +281,22 @@ const getSeverityIcon = (Severity?: string) => {
   let icon = <></>
   switch (severity?.name) {
     case '信息':
-      icon = <IconSolidInfoRiskIcon />
+      icon = <FingerprintInfoRiskColorful />
       break
     case '低危':
-      icon = <IconSolidLowRiskIcon />
+      icon = <LowRiskColorful />
       break
     case '中危':
-      icon = <IconSolidMediumRiskIcon />
+      icon = <MediumRiskColorful />
       break
     case '高危':
-      icon = <IconSolidHighRiskIcon />
+      icon = <HighRiskColorful />
       break
     case '严重':
-      icon = <IconSolidSeriousIcon />
+      icon = <CriticalRiskColorful />
       break
     default:
-      icon = <IconSolidDefaultRiskIcon />
+      icon = <DefaultRiskColorful />
       break
   }
   return {
@@ -507,7 +507,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         filterProps: {
           filterKey: 'Title',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
         render: (_, record) => record?.TitleVerbose || record.Title || '-',
       },
@@ -569,7 +569,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         filterProps: {
           filterKey: 'Network',
           filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
         },
       },
       {
@@ -595,7 +595,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               }}
             >
               <span>{text ? text.replaceAll('|', ',') : '-'}</span>
-              <OutlineChevrondownIcon className={styles['table-tag-icon']} />
+              <ChevronDownOutlined className={styles['table-tag-icon']} color="currentColor" />
             </div>
           </>
         ),
@@ -623,7 +623,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 e.stopPropagation()
                 onRemoveSingle(record.Id)
               }}
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
             />
             <Divider type="vertical" />
             <Tooltip
@@ -638,7 +638,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                   e.stopPropagation()
                   onRetest(record)
                 }}
-                icon={<OutlinePlayIcon />}
+                icon={<PlayOutlined color="currentColor" />}
               />
             </Tooltip>
             <Divider type="vertical" />
@@ -648,12 +648,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
               overlayStyle={{ paddingBottom: 0 }}
               placement="top"
             >
-              <OutlineUploadIcon
+              <UploadOutlined
                 className={styles['misstatement-icon']}
                 onClick={(e) => {
                   e.stopPropagation()
                   onClickRiskFeedbackToOnline(record)
                 }}
+                color="currentColor"
               />
             </Tooltip>
           </>
@@ -1331,7 +1332,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         <YakitButton
                           type="text2"
                           onClick={onExpend}
-                          icon={<OutlineOpenIcon onClick={onExpend} />}
+                          icon={<OpenOutlined onClick={onExpend} color="currentColor" />}
                         ></YakitButton>
                       </Tooltip>
                     )}
@@ -1379,7 +1380,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     <FuncBtn
                       maxWidth={1200}
                       type="outline2"
-                      icon={<OutlineEyeIcon />}
+                      icon={<EyeOutlined color="currentColor" />}
                       onClick={onAllRead}
                       name={t('YakitRiskTable.mark_all_as_read')}
                     />
@@ -1416,7 +1417,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         maxWidth={1200}
                         type="outline1"
                         colors="danger"
-                        icon={<OutlineTrashIcon />}
+                        icon={<TrashOutlined color="currentColor" />}
                         disabled={allTotal === 0}
                         name={selectNum === 0 ? t('YakitButton.clear') : t('YakitButton.delete')}
                       />
@@ -1434,7 +1435,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                       }}
                     >
                       <Badge dot={offsetDataInTop.length > 0} offset={[-5, 4]}>
-                        <YakitButton type="text2" icon={<OutlineRefreshIcon />} />
+                        <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} />
                       </Badge>
                     </YakitDropdownMenu>
                   </div>
@@ -1701,7 +1702,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                   <YakitButton
                     type="text"
                     disabled={packetIndex <= 0}
-                    icon={<OutlineChevronleftIcon />}
+                    icon={<ChevronLeftOutlined color="currentColor" />}
                     onClick={() => {
                       setPacketIndex((prev) => prev - 1)
                     }}
@@ -1711,7 +1712,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                   <YakitButton
                     type="text"
                     disabled={packetIndex + 1 === packetHistory.length}
-                    icon={<OutlineChevronrightIcon />}
+                    icon={<ChevronRightOutlined color="currentColor" />}
                     onClick={() => {
                       setPacketIndex((prev) => prev + 1)
                     }}
@@ -1757,7 +1758,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     placement: 'bottomLeft',
                   }}
                 >
-                  <YakitButton type="outline1" size="small" icon={<OutlineClockIcon />}>
+                  <YakitButton type="outline1" size="small" icon={<ClockOutlined color="currentColor" />}>
                     {t('YakitRiskDetails.verificationRecord')}
                   </YakitButton>
                 </YakitDropdownMenu>
@@ -1878,7 +1879,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
               <FuncBtn
                 maxWidth={1200}
                 type="outline2"
-                icon={<OutlinePlayIcon />}
+                icon={<PlayOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (onRetest) onRetest(info)
@@ -2152,7 +2153,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
             {isShowCollapse ? (
               <YakitButton
                 type="outline2"
-                icon={<OutlineTerminalIcon />}
+                icon={<TerminalOutlined color="currentColor" />}
                 onClick={(e) => {
                   e.stopPropagation()
                   jumpCodeScanPage()
@@ -2163,7 +2164,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
             ) : (
               <Tooltip title={t('YakitCodeScanRiskDetails.related_data_deleted')} placement="topLeft">
                 <div className={styles['disabled-open']}>
-                  <OutlineTerminalIcon />
+                  <TerminalOutlined color="currentColor" />
                   {t('YakitCodeScanRiskDetails.open_in_code_audit')}
                 </div>
               </Tooltip>
@@ -2393,7 +2394,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
           <Tooltip title={t('AuditResultCollapse.open_in_code_audit')}>
             <YakitButton
               type="text2"
-              icon={<OutlineTerminalIcon />}
+              icon={<TerminalOutlined color="currentColor" />}
               onClick={(e) => {
                 e.stopPropagation()
                 jumpCodeScanPage && jumpCodeScanPage(`/${index}`)

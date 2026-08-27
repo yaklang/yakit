@@ -900,6 +900,13 @@
   resolved "https://registry.npmjs.org/@yakit-libs/color/-/color-1.4.1.tgz#876a8314dab6bd9d83256eff6ab768a228c89f4a"
   integrity sha512-RK/Qm8IUaLrCBgfYn33411qpTu3JQ07EHc7jFYfeUxALDhwo4JqxST60CkOS2Mx0EY13mJLg6f/o7yPI+oe+Qw==
 
+"@yakit-libs/yakit-ui-icons@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.npmjs.org/@yakit-libs/yakit-ui-icons/-/yakit-ui-icons-0.2.1.tgz#c068d50eb5bad56a4f341096ba35287915cc1af2"
+  integrity sha512-vAY8NTesoj1JNBzpKMRn+FL0Cvlsr8T2ySpAsr1kCZkzluT+xLhHH+KrJEvN28pwBibXEBl/nTBB6MVE7wy/lw==
+  dependencies:
+    "@yakit-libs/color" "1.4.1"
+
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"

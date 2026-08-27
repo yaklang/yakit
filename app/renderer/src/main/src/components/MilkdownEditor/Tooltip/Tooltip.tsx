@@ -19,7 +19,7 @@ import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn } from 'ah
 import { IconBold, IconCode2, IconItalic, IconStrikethrough, IconType, IconUnderline } from '../icon/icon'
 import styles from './Tooltip.module.scss'
 import React from 'react'
-import { OutlineChevrondownIcon, OutlineChevronupIcon, OutlineLightbulbIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, ChevronUpOutlined, LightBulbOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm'
 import classNames from 'classnames'
@@ -432,9 +432,9 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
           <div className={styles['tooltip-t']}>
             <IconType />
             {visibleText ? (
-              <OutlineChevronupIcon className={styles['t-icon']} />
+              <ChevronUpOutlined className={styles['t-icon']} color="currentColor" />
             ) : (
-              <OutlineChevrondownIcon className={styles['t-icon']} />
+              <ChevronDownOutlined className={styles['t-icon']} color="currentColor" />
             )}
           </div>
         </div>
@@ -461,11 +461,11 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
       >
         <div className={styles['tooltip-light-wrapper']}>
           <div className={styles['tooltip-t']}>
-            <OutlineLightbulbIcon />
+            <LightBulbOutlined color="currentColor" />
             {visibleLight ? (
-              <OutlineChevronupIcon className={styles['t-icon']} />
+              <ChevronUpOutlined className={styles['t-icon']} color="currentColor" />
             ) : (
-              <OutlineChevrondownIcon className={styles['t-icon']} />
+              <ChevronDownOutlined className={styles['t-icon']} color="currentColor" />
             )}
           </div>
         </div>

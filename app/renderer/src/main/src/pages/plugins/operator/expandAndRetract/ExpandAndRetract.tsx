@@ -1,6 +1,6 @@
 import React, { type MouseEventHandler, type ReactNode } from 'react'
 import styles from './ExpandAndRetract.module.scss'
-import { OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon } from '@/assets/icon/outline'
+import { ChevronDoubleDownOutlined, ChevronDoubleUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 
 /** 根据状态显示过度动画 */
@@ -45,12 +45,12 @@ export const ExpandAndRetract: React.FC<ExpandAndRetractProps> = React.memo((pro
       <div className={classNames(styles['expand-and-retract-header-icon-body'], animationWrapperClassName)}>
         {isExpand ? (
           <>
-            <OutlineChevrondoubleupIcon className={styles['expand-and-retract-icon']} />
+            <ChevronDoubleUpOutlined className={styles['expand-and-retract-icon']} color="currentColor" />
             <span className={styles['expand-and-retract-header-icon-text']}>{retractText || '收起参数'}</span>
           </>
         ) : (
           <>
-            <OutlineChevrondoubledownIcon className={styles['expand-and-retract-icon']} />
+            <ChevronDoubleDownOutlined className={styles['expand-and-retract-icon']} color="currentColor" />
             <span className={styles['expand-and-retract-header-icon-text']}>{expandText || '展开参数'}</span>
           </>
         )}

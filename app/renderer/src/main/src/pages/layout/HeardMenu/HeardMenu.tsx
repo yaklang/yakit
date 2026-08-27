@@ -62,7 +62,7 @@ import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import classNames from 'classnames'
 import style from './HeardMenu.module.scss'
 import { ExtraMenu } from '../publicMenu/ExtraMenu'
-import { SolidPayloadIcon } from '@/assets/icon/solid'
+import { PayloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -803,7 +803,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 onClick={() => {
                   onRouteMenuSelect({ route: YakitRoute.PayloadManager })
                 }}
-                icon={<SolidPayloadIcon />}
+                icon={<PayloadSolid color="currentColor" />}
               >
                 {t('YakitRoute.Payload')}
               </YakitButton>

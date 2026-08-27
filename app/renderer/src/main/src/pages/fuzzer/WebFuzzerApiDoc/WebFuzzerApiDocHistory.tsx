@@ -2,7 +2,7 @@ import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { useDebounce, useMemoizedFn } from 'ahooks'
-import { OutlineBookopenIcon, OutlineSearchIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { BookOpenOutlined, SearchOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
@@ -126,7 +126,7 @@ export const WebFuzzerApiDocHistory: React.FC<{
         </div>
         <div className={historyChatStyles['header-second']}>
           <YakitInput
-            prefix={<OutlineSearchIcon className={historyChatStyles['search-icon']} />}
+            prefix={<SearchOutlined className={historyChatStyles['search-icon']} color="currentColor" />}
             placeholder={t('YakitInput.searchKeyWordPlaceholder')}
             allowClear
             value={search}
@@ -158,7 +158,7 @@ export const WebFuzzerApiDocHistory: React.FC<{
                     >
                       <div className={listStyles['item-info']}>
                         <div className={listStyles['item-icon']}>
-                          <OutlineBookopenIcon />
+                          <BookOpenOutlined color="currentColor" />
                         </div>
                         <div
                           className={classNames(listStyles['info-title'], 'yakit-content-single-ellipsis')}
@@ -181,7 +181,7 @@ export const WebFuzzerApiDocHistory: React.FC<{
                           <YakitButton
                             loading={deleting}
                             type="text2"
-                            icon={<OutlineTrashIcon className={listStyles['del-icon']} />}
+                            icon={<TrashOutlined className={listStyles['del-icon']} color="currentColor" />}
                             onClick={(e) => e.stopPropagation()}
                           />
                         </YakitPopconfirm>

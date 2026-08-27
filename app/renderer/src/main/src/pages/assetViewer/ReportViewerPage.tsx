@@ -6,7 +6,7 @@ import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { QuestionMarkCircleIcon, RefreshIcon } from '@/assets/newIcon'
 import { Pagination, Space, Tooltip } from 'antd'
-import { OutlineClipboardlistIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { ClipboardListOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { genDefaultPagination, type QueryGeneralRequest, type QueryGeneralResponse } from '../invoker/schema'
 import { yakitNotify } from '@/utils/notification'
@@ -251,7 +251,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
           >
             <YakitButton
               type="text"
-              icon={<OutlineTrashIcon />}
+              icon={<TrashOutlined color="currentColor" />}
               danger
               size="small"
               disabled={!response.Data.length}
@@ -260,7 +260,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
           {isIRify() && (
             <YakitButton
               type="primary"
-              icon={<OutlineClipboardlistIcon />}
+              icon={<ClipboardListOutlined color="currentColor" />}
               size="small"
               onClick={() => setCreateVisible(true)}
             >

@@ -22,12 +22,12 @@ import { failed, success } from '@/utils/notification'
 
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import {
-  OutlineExclamationIcon,
-  OutlinePhotographIcon,
-  OutlinePlay2Icon,
-  OutlineTerminalIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ExclamationOutlined,
+  PhotographOutlined,
+  Play2Outlined,
+  TerminalOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import type { GenerateERMDotResponse } from '@/components/playground/entityRepository'
@@ -455,11 +455,12 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
             <Divider type="vertical" />
             <div className={styles['select-all']}>
               Selected <span>all</span>{' '}
-              <OutlineXIcon
+              <XOutlined
                 onClick={() => {
                   setSelectList([])
                   setAllCheck(false)
                 }}
+                color="currentColor"
               />
             </div>
           </React.Fragment>
@@ -496,11 +497,12 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
                     <span>
                       Selected <span className={styles['total-style']}>{selectList.length}</span>
                     </span>
-                    <OutlineXIcon
+                    <XOutlined
                       onClick={() => {
                         setSelectList([])
                         setAllCheck(false)
                       }}
+                      color="currentColor"
                     />
                   </div>
                 </YakitPopover>
@@ -577,7 +579,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
                       <Divider type={'vertical'} />
 
                       <div className={styles['no-relationship-warning']}>
-                        <OutlineExclamationIcon />
+                        <ExclamationOutlined color="currentColor" />
                         图中只有实体没有关系，生成的知识精度低
                       </div>
                     </React.Fragment>
@@ -605,7 +607,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
                       <HubButton
                         width={wrapperWidth}
                         iconWidth={900}
-                        icon={<OutlinePlay2Icon />}
+                        icon={<Play2Outlined color="currentColor" />}
                         type="outline1"
                         name={'从实体生成知识'}
                       />
@@ -626,12 +628,12 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
                           <div className={styles['radio-buttons-label']}>
                             {wrapperWidth > 900 ? (
                               <React.Fragment>
-                                <OutlinePhotographIcon />
+                                <PhotographOutlined color="currentColor" />
                                 SVG
                               </React.Fragment>
                             ) : (
                               <Tooltip title="SVG">
-                                <OutlinePhotographIcon />
+                                <PhotographOutlined color="currentColor" />
                               </Tooltip>
                             )}
                           </div>
@@ -643,12 +645,12 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
                           <div className={styles['radio-buttons-label']}>
                             {wrapperWidth > 900 ? (
                               <React.Fragment>
-                                <OutlineTerminalIcon />
+                                <TerminalOutlined color="currentColor" />
                                 Code
                               </React.Fragment>
                             ) : (
                               <Tooltip title="Code">
-                                <OutlineTerminalIcon />
+                                <TerminalOutlined color="currentColor" />
                               </Tooltip>
                             )}
                           </div>

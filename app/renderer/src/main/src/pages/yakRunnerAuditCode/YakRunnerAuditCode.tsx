@@ -47,7 +47,7 @@ import { BottomEditorDetails } from './BottomEditorDetails/BottomEditorDetails'
 import type { JumpToAuditEditorProps, ShowItemType } from './BottomEditorDetails/BottomEditorDetailsType'
 import { AuditCodeWelcomePage, RunnerTabs } from './RunnerTabs/RunnerTabs'
 import { BottomSideBar } from './BottomSideBar/BottomSideBar'
-import { SolidDocumentdownloadIcon } from '@/assets/icon/solid'
+import { DocumentDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { AuditCodePageInfoProps } from '@/store/pageInfo'
 import type { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
 import type { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
@@ -890,7 +890,7 @@ export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) =
     <div className={styles['audit-code-status-info']}>
       <div className={styles['hint-left-wrapper']}>
         <div className={styles['hint-icon']}>
-          <SolidDocumentdownloadIcon />
+          <DocumentDownloadSolid color="currentColor" />
         </div>
       </div>
 

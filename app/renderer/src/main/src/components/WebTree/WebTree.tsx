@@ -3,15 +3,15 @@ import YakitTree, { type TreeKey } from '../yakitUI/YakitTree/YakitTree'
 import type { DataNode } from 'antd/es/tree'
 import { useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import {
-  OutlineDocumentIcon,
-  OutlineFolderremoveIcon,
-  OutlineLink2Icon,
-  OutlineVariableIcon,
-} from '@/assets/icon/outline'
+  DocumentOutlined,
+  FolderRemoveOutlined,
+  Link2Outlined,
+  VariableOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { requestYakURLList } from '@/pages/yakURLTree/netif'
 import { yakitFailed } from '@/utils/notification'
 import type { YakURL, YakURLResource } from '@/pages/yakURLTree/data'
-import { SolidFolderIcon, SolidFolderaddIcon, SolidFolderopenIcon } from '@/assets/icon/solid'
+import { FolderSolid, FolderAddSolid, FolderOpenSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { RefreshIcon } from '@/assets/newIcon'
@@ -73,9 +73,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
 
   const renderTreeNodeIcon = (treeNodeType: TreeNodeType) => {
     const iconsEle = {
-      file: <OutlineDocumentIcon className="yakitTreeNode-icon" />,
-      query: <OutlineVariableIcon className="yakitTreeNode-icon" />,
-      path: <OutlineLink2Icon className="yakitTreeNode-icon" />,
+      file: <DocumentOutlined className="yakitTreeNode-icon" color="currentColor" />,
+      query: <VariableOutlined className="yakitTreeNode-icon" color="currentColor" />,
+      path: <Link2Outlined className="yakitTreeNode-icon" color="currentColor" />,
     }
     return iconsEle[treeNodeType] || <></>
   }
@@ -156,9 +156,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
         icon: ({ expanded }) => {
           if (item.ResourceType === 'dir') {
             return expanded ? (
-              <SolidFolderopenIcon className="yakitTreeNode-icon yakit-flolder-icon" />
+              <FolderOpenSolid className="yakitTreeNode-icon yakit-flolder-icon" color="currentColor" />
             ) : (
-              <SolidFolderIcon className="yakitTreeNode-icon yakit-flolder-icon" />
+              <FolderSolid className="yakitTreeNode-icon yakit-flolder-icon" color="currentColor" />
             )
           }
           return renderTreeNodeIcon(item.ResourceType as TreeNodeType)
@@ -221,9 +221,9 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
               icon: ({ expanded }) => {
                 if (i.ResourceType === 'dir') {
                   return expanded ? (
-                    <OutlineFolderremoveIcon className="yakitTreeNode-icon" />
+                    <FolderRemoveOutlined className="yakitTreeNode-icon" color="currentColor" />
                   ) : (
-                    <SolidFolderaddIcon className="yakitTreeNode-icon" />
+                    <FolderAddSolid className="yakitTreeNode-icon" color="currentColor" />
                   )
                 }
                 return renderTreeNodeIcon(i.ResourceType as TreeNodeType)

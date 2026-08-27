@@ -45,7 +45,7 @@ import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUt
 import { useStore } from '@/store/mitmState'
 import { useProxy } from '@/hook/useProxy'
 import { debugToPrintLogs } from '@/utils/logCollection'
-import { OutlineChevrondownIcon, OutlineChevronupIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, ChevronUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useGlobalHotPatchTag, useGlobalHotPatch } from '@/store/globalHotPatch'
 import type { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
@@ -564,7 +564,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = React.memo
             >
               <YakitButton type="outline2" style={{ marginLeft: 8 }}>
                 更多
-                {morePopoverVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+                {morePopoverVisible ? (
+                  <ChevronUpOutlined color="currentColor" />
+                ) : (
+                  <ChevronDownOutlined color="currentColor" />
+                )}
               </YakitButton>
             </YakitPopover>
           )}

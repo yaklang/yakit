@@ -3,7 +3,7 @@ import { memo, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 
-import { OutlineListTodoIcon } from '@/assets/icon/outline'
+import { ListTodoOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
@@ -66,7 +66,12 @@ const TaskDetailsPopover: React.FC<TaskDetailsPopoverProps> = ({ taskLabel = 'è‡
       onVisibleChange={handleVisibleChange}
     >
       <Tooltip title={t('YakitButton.viewDetail')}>
-        <YakitButton isHover={visible} type="text2" icon={<OutlineListTodoIcon />} onClick={handleOpen} />
+        <YakitButton
+          isHover={visible}
+          type="text2"
+          icon={<ListTodoOutlined color="currentColor" />}
+          onClick={handleOpen}
+        />
       </Tooltip>
     </YakitPopover>
   )

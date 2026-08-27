@@ -1,10 +1,9 @@
-import { OutlineLightbulbIcon, OutlinePaperclipIcon } from '@/assets/icon/outline'
+import { LightBulbOutlined, List1Outlined, PaperClipOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import {
   IconHeading1,
   IconHeading2,
   IconHeading3,
   IconListOrdered,
-  IconList,
   IconCheckSquare,
   IconCurlyBraces,
   IconQuote,
@@ -61,7 +60,7 @@ export const MilkdownMenu = {
   },
   unorderedList: {
     key: 'unorderedList',
-    icon: <IconList />,
+    icon: <List1Outlined />,
     labelKey: 'MilkdownEditor.menu.unorderedList.label',
     descriptionKey: 'MilkdownEditor.menu.unorderedList.description',
   },
@@ -85,13 +84,13 @@ export const MilkdownMenu = {
   },
   highLight: {
     key: 'highLight',
-    icon: <OutlineLightbulbIcon />,
+    icon: <LightBulbOutlined color="currentColor" />,
     labelKey: 'MilkdownEditor.menu.highLight.label',
     descriptionKey: 'MilkdownEditor.menu.highLight.description',
   },
   file: {
     key: 'file',
-    icon: <OutlinePaperclipIcon />,
+    icon: <PaperClipOutlined color="currentColor" />,
     labelKey: 'MilkdownEditor.menu.file.label',
     descriptionKey: 'MilkdownEditor.menu.file.description',
   },

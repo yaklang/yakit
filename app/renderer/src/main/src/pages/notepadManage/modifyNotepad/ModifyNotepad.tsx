@@ -9,11 +9,12 @@ import type {
 } from './ModifyNotepadType'
 import { Tree } from 'antd'
 import {
-  OutlineChevrondownIcon,
-  OutlineChevronrightIcon,
-  OutlineListOneIcon,
-  OutlineListTwoIcon,
-} from '@/assets/icon/outline'
+  ChevronDownOutlined,
+  ChevronRightOutlined,
+  List1Outlined,
+  List2Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import classNames from 'classnames'
 import { buildTOCTree } from './utils'
 import { isEqual } from 'lodash'
@@ -45,12 +46,12 @@ export default ModifyNotepad
 
 const ModifyNotepadContentTab: YakitTabsProps[] = [
   {
-    icon: <OutlineListTwoIcon />,
+    icon: <List2Outlined color="currentColor" />,
     label: 'ModifyNotepad.list',
     value: 'list',
   },
   {
-    icon: <OutlineListOneIcon />,
+    icon: <List1Outlined color="currentColor" />,
     label: 'ModifyNotepad.catalogue',
     value: 'catalogue',
   },
@@ -208,7 +209,7 @@ const CatalogueTreeNode: React.FC<CatalogueTreeNodeProps> = React.memo((props) =
     <div className={styles['catalogue-tree-node']}>
       {(info.children?.length || 0) > 0 && (
         <div className={styles['tree-expand-icon']} onClick={() => onExpand(info)}>
-          {isExpanded ? <OutlineChevrondownIcon /> : <OutlineChevronrightIcon />}
+          {isExpanded ? <ChevronDownOutlined color="currentColor" /> : <ChevronRightOutlined color="currentColor" />}
         </div>
       )}
       <div

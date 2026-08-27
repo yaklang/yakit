@@ -2,7 +2,7 @@ import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useInterval, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import { OutlineLinkoutIcon, OutlineQrcodeIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { LinkoutOutlined, QrcodeOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitNotify } from '@/utils/notification'
@@ -210,14 +210,14 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
             <span className={styles['robot-link-connected-dot']} />
             <span>已绑定</span>
           </span>
-          <YakitButton type="outline2" icon={<OutlineLinkoutIcon />} onClick={onUnbind}>
+          <YakitButton type="outline2" icon={<LinkoutOutlined color="currentColor" />} onClick={onUnbind}>
             {t('RobotControl.unbind')}
           </YakitButton>
         </div>
       )
     }
     return (
-      <YakitButton type="outline2" icon={<OutlineQrcodeIcon />} onClick={onScanCode}>
+      <YakitButton type="outline2" icon={<QrcodeOutlined color="currentColor" />} onClick={onScanCode}>
         {t('RobotControl.scanCode')}
       </YakitButton>
     )
@@ -248,7 +248,12 @@ export const RobotLinkRobotCard: React.FC<RobotLinkRobotCardProps> = (props) => 
               )}
             </div>
             <div className={styles['robot-scan-actions']}>
-              <YakitButton type="outline2" size="small" icon={<OutlineRefreshIcon />} onClick={refreshQrCode}>
+              <YakitButton
+                type="outline2"
+                size="small"
+                icon={<RefreshOutlined color="currentColor" />}
+                onClick={refreshQrCode}
+              >
                 刷新二维码
               </YakitButton>
             </div>

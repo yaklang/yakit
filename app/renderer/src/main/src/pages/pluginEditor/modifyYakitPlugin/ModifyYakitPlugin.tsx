@@ -5,7 +5,7 @@ import { type ModifyPluginCallback, PluginEditor, type PluginEditorRefProps } fr
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import type { YakScript } from '@/pages/invoker/schema'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 
@@ -119,7 +119,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
           <PluginEditor
             ref={editorRef}
             title="编辑插件"
-            headerExtra={<YakitButton type="text2" icon={<OutlineXIcon />} onClick={onCancel} />}
+            headerExtra={<YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onCancel} />}
             onEditCancel={onModifyCallback}
           />
         )}

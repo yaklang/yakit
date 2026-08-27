@@ -2,13 +2,13 @@ import React, { useEffect, useRef, useState } from 'react'
 import type { AITaskQueryItemProps, AITaskQueryProps } from './type'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineArrowupIcon,
-  OutlineChatIcon,
-  OutlineInformationcircleIcon,
-  OutlineListTodoIcon,
-  OutlineTrashIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ArrowUpOutlined,
+  ChatOutlined,
+  InformationCircleOutlined,
+  ListTodoOutlined,
+  TrashOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { useMemoizedFn, useDebounceFn, useInViewport } from 'ahooks'
 import styles from './AITaskQuery.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -82,7 +82,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
         <div className={styles['ai-task-query-list-wrapper']}>
           <div className={styles['ai-task-query-list-header']}>
             <div className={styles['header-left']}>
-              <OutlineListTodoIcon className={styles['list-todo-icon']} />
+              <ListTodoOutlined className={styles['list-todo-icon']} color="currentColor" />
               <div className={styles['task-query-title']}>{t('AITaskQuery.taskQueue')}</div>
               <YakitTag size="small" fullRadius={true}>
                 {questionQueue.total}
@@ -99,7 +99,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
               >
                 {t('YakitButton.clear')}
               </YakitButton>
-              <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setShowList(false)} />
+              <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={() => setShowList(false)} />
             </div>
           </div>
           <div className={styles['task-query-list']}>
@@ -109,7 +109,12 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo(() => {
           </div>
         </div>
       ) : (
-        <YakitButton type="outline2" icon={<OutlineListTodoIcon />} radius={9999} onClick={() => setShowList(true)}>
+        <YakitButton
+          type="outline2"
+          icon={<ListTodoOutlined color="currentColor" />}
+          radius={9999}
+          onClick={() => setShowList(true)}
+        >
           {t('AITaskQuery.taskQueue')}
         </YakitButton>
       )}
@@ -188,7 +193,7 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
   return (
     <div key={item.id} className={styles['task-query-list-item']}>
       <div className={styles['item-left']}>
-        <OutlineChatIcon className={styles['chat-icon']} />
+        <ChatOutlined className={styles['chat-icon']} color="currentColor" />
         {item.is_recovery && (
           <YakitTag color="info" size="small" fullRadius className={styles['recovery-tag']}>
             恢复任务
@@ -201,11 +206,21 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
       <div className={styles['item-right']}>
         {item.focus_mode && (
           <Tooltip title={t('AITaskQuery.focusMode', { mode: item.focus_mode })}>
-            <OutlineInformationcircleIcon className={styles['info-icon']} />
+            <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
         )}
-        <YakitButton type="text2" icon={<OutlineArrowupIcon />} onClick={onTaskUp} loading={upLoading} />
-        <YakitButton type="text2" icon={<OutlineTrashIcon />} onClick={onTaskRemove} loading={removeLoading} />
+        <YakitButton
+          type="text2"
+          icon={<ArrowUpOutlined color="currentColor" />}
+          onClick={onTaskUp}
+          loading={upLoading}
+        />
+        <YakitButton
+          type="text2"
+          icon={<TrashOutlined color="currentColor" />}
+          onClick={onTaskRemove}
+          loading={removeLoading}
+        />
       </div>
     </div>
   )

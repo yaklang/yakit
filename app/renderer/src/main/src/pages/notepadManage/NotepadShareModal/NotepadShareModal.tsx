@@ -2,13 +2,13 @@ import React, { type ReactNode, useRef, useState } from 'react'
 import styles from './NotepadShareModal.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineCheckIcon,
-  OutlineChevrondownIcon,
-  OutlineChevronleftIcon,
-  OutlineChevronupIcon,
-  OutlineCogIcon,
-  OutlineUserIcon,
-} from '@/assets/icon/outline'
+  CheckOutlined,
+  ChevronDownOutlined,
+  ChevronLeftOutlined,
+  ChevronUpOutlined,
+  CogOutlined,
+  UserOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
@@ -208,7 +208,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
     <NotepadPopoverModal
       title={
         <div className={styles['manage-title']}>
-          <YakitButton type="text2" icon={<OutlineChevronleftIcon />} onClick={onCloseManage} />
+          <YakitButton type="text2" icon={<ChevronLeftOutlined color="currentColor" />} onClick={onCloseManage} />
           <span className={styles['manage-title-text']}>管理协作者</span>
         </div>
       }
@@ -252,14 +252,14 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
         <>
           <div className={styles['title-text']}>分享文档</div>
           <YakitButton loading={loadingManage} type="text" size="large" onClick={onOpenManage}>
-            管理协作者 <OutlineCogIcon />
+            管理协作者 <CogOutlined color="currentColor" />
           </YakitButton>
         </>
       }
       content={
         <>
           <div className={styles['notepad-user-select']}>
-            <OutlineUserIcon className={styles['user-icon']} />
+            <UserOutlined className={styles['user-icon']} color="currentColor" />
             <YakitSelect
               mode="multiple"
               placeholder="可搜索用户名邀请协作者"
@@ -366,7 +366,7 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
                 }}
               >
                 {ele.label}
-                {currentRole === ele.key && <OutlineCheckIcon className={styles['check-icon']} />}
+                {currentRole === ele.key && <CheckOutlined className={styles['check-icon']} color="currentColor" />}
               </div>
             ),
           )}
@@ -377,7 +377,7 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
     >
       <YakitButton type="text" className={className}>
         {text}
-        {authVisibleMenu ? <OutlineChevrondownIcon /> : <OutlineChevronupIcon />}
+        {authVisibleMenu ? <ChevronDownOutlined color="currentColor" /> : <ChevronUpOutlined color="currentColor" />}
       </YakitButton>
     </YakitPopover>
   )

@@ -21,18 +21,19 @@ import { getMCPServersById, grpcDeleteMCPServer, grpcGetAllMCPServers, grpcUpdat
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineDesktopcomputerIcon,
-  OutlineDotsverticalIcon,
-  OutlineExitIcon,
-  OutlineGlobealtIcon,
-  OutlineInformationcircleIcon,
-  OutlinePencilaltIcon,
-  OutlinePlayIcon,
-  OutlinePlussmIcon,
-  OutlineRefreshIcon,
-  OutlineReplyIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  DesktopComputerOutlined,
+  DotsVerticalOutlined,
+  GlobeAltOutlined,
+  InformationCircleOutlined,
+  PencilAltOutlined,
+  PlayOutlined,
+  PlusSmOutlined,
+  RefreshOutlined,
+  ReplyOutlined,
+  TrashOutlined,
+  FigmaIcon28011794Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
@@ -48,7 +49,7 @@ import { omit } from 'lodash'
 import { AIMCPServerTypeEnum } from '../defaultConstant'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { SolidToolIcon } from '@/assets/icon/solid'
+import { ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
@@ -141,11 +142,11 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
         <div className={styles['ai-mcp-list-header-left']}>
           <span>{t('AIMCP.toolList')}</span>
           <Tooltip title={t('AIMCP.protocolInfo')}>
-            <OutlineInformationcircleIcon className={styles['info-icon']} />
+            <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
           <YakitRoundCornerTag>{toolLis.length}</YakitRoundCornerTag>
         </div>
-        <YakitButton type="text" icon={<OutlineReplyIcon />} onClick={onBack}>
+        <YakitButton type="text" icon={<ReplyOutlined color="currentColor" />} onClick={onBack}>
           {t('YakitButton.back')}
         </YakitButton>
       </div>
@@ -172,10 +173,20 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
         ) : (
           <YakitEmpty title={t('YakitEmpty.noData')} description={t('AIMCP.disabledRefreshTools')}>
             <div className={styles['ai-mcp-tool-empty-btns']}>
-              <YakitButton type="outline1" icon={<OutlineRefreshIcon />} loading={loading} onClick={getMcpItem}>
+              <YakitButton
+                type="outline1"
+                icon={<RefreshOutlined color="currentColor" />}
+                loading={loading}
+                onClick={getMcpItem}
+              >
                 {t('YakitButton.refresh')}
               </YakitButton>
-              <YakitButton type="primary" icon={<OutlinePlayIcon />} loading={updateLoading} onClick={updateMCPServer}>
+              <YakitButton
+                type="primary"
+                icon={<PlayOutlined color="currentColor" />}
+                loading={updateLoading}
+                onClick={updateMCPServer}
+              >
                 {t('AIMCP.enableTools')}
               </YakitButton>
             </div>
@@ -192,7 +203,7 @@ const AIMCPToolItem: React.FC<AIMCPToolItemProps> = React.memo((props) => {
     <YakitPopover placement="right" content={<AIMCPToolItemPopoverContent toolItem={toolItem} />}>
       <div className={styles['ai-tool-list-item-content']}>
         <div className={styles['ai-tool-list-item-heard']}>
-          <SolidToolIcon className={styles['tool-icon']} />
+          <ToolSolid className={styles['tool-icon']} color="currentColor" />
           <span className={styles['ai-tool-list-item-heard-name-text']}>{toolItem.Name}</span>
         </div>
         <div className={styles['ai-tool-list-item-description']}>{toolItem.Description}</div>
@@ -339,13 +350,13 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
         <div className={styles['ai-mcp-list-header-left']}>
           <span>{t('AIMCP.mcpServerConfig')}</span>
           <Tooltip title={t('AIMCP.protocolInfo')}>
-            <OutlineInformationcircleIcon className={styles['info-icon']} />
+            <InformationCircleOutlined className={styles['info-icon']} color="currentColor" />
           </Tooltip>
           <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
           <YakitButton onClick={() => setConfigMcpModalVisible(true)}>Yak Mcp</YakitButton>
-          <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIMCP} />
+          <YakitButton icon={<PlusSmOutlined color="currentColor" />} onClick={handleNewAIMCP} />
         </div>
       </div>
       <YakitInput.Search
@@ -485,7 +496,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         desc = t('AIMCP.address', { url: item.URL })
         typeNode = (
           <YakitTag size="small" color="blue" className={styles['ai-mcp-type-tag']}>
-            <OutlineGlobealtIcon className={styles['type-icon']} />
+            <GlobeAltOutlined className={styles['type-icon']} color="currentColor" />
             sse
           </YakitTag>
         )
@@ -495,7 +506,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         desc = t('AIMCP.command', { command: item.Command })
         typeNode = (
           <YakitTag size="small" color="green" className={styles['ai-mcp-type-tag']}>
-            <OutlineDesktopcomputerIcon className={styles['type-icon']} />
+            <DesktopComputerOutlined className={styles['type-icon']} color="currentColor" />
             stdio
           </YakitTag>
         )
@@ -514,13 +525,13 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
       {
         key: 'edit',
         label: t('YakitButton.edit'),
-        itemIcon: <OutlinePencilaltIcon />,
+        itemIcon: <PencilAltOutlined color="currentColor" />,
       },
       {
         key: 'delete',
         label: t('YakitButton.delete'),
         type: 'danger',
-        itemIcon: <OutlineTrashIcon />,
+        itemIcon: <TrashOutlined color="currentColor" />,
       },
     ]
     return menu
@@ -565,12 +576,12 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                 trigger={'click'}
                 okButtonProps={{ loading: stopLoading }}
               >
-                <YakitButton type="text" colors="danger" icon={<OutlineExitIcon />}>
+                <YakitButton type="text" colors="danger" icon={<FigmaIcon28011794Outlined color="currentColor" />}>
                   {t('YakitButton.deactivated')}
                 </YakitButton>
               </YakitPopconfirm>
             ) : (
-              <YakitButton type="text" onClick={onStart} icon={<OutlinePlayIcon />}>
+              <YakitButton type="text" onClick={onStart} icon={<PlayOutlined color="currentColor" />}>
                 {t('YakitButton.enable')}
               </YakitButton>
             )}
@@ -587,7 +598,12 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                   onVisibleChange: setVisible,
                 }}
               >
-                <YakitButton isActive={visible} type="text2" size="small" icon={<OutlineDotsverticalIcon />} />
+                <YakitButton
+                  isActive={visible}
+                  type="text2"
+                  size="small"
+                  icon={<DotsVerticalOutlined color="currentColor" />}
+                />
               </YakitDropdownMenu>
             )}
           </div>

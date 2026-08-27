@@ -5,7 +5,7 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-p
 import { TrashIcon } from '@/assets/newIcon'
 import { randomString } from '@/utils/randomUtil'
 import styles from '../knowledgeBase.module.scss'
-import { SolidDragsortIcon } from '@/assets/icon/solid'
+import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -55,7 +55,7 @@ const RelationList: React.FC<RelationListProps> = ({ form, disabled }) => {
                                 }}
                               >
                                 <div {...provided.dragHandleProps}>
-                                  <SolidDragsortIcon className={styles['draggable-icon']} />
+                                  <FigmaIcon2281144183Solid className={styles['draggable-icon']} color="currentColor" />
                                 </div>
                                 <Item key={`concept-${id}`} name={[field.name, 'concept']} style={{ marginBottom: 8 }}>
                                   <YakitSelect

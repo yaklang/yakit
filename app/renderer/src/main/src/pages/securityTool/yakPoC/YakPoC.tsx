@@ -28,7 +28,7 @@ import {
   type ExpandAndRetractExcessiveState,
 } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
 import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
-import { OutlineCogIcon } from '@/assets/icon/outline'
+import { CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { FolderColorIcon, SolidCloudpluginIcon, SolidPrivatepluginIcon } from '@/assets/icon/colors'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -821,7 +821,7 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
             <YakitButton type="outline1" icon={<CloudDownloadIcon />} onClick={() => setVisibleOnline(true)}>
               {t('YakitButton.oneClickDownload')}
             </YakitButton>
-            <YakitButton icon={<OutlineCogIcon />} onClick={onToManageGroup}>
+            <YakitButton icon={<CogOutlined color="currentColor" />} onClick={onToManageGroup}>
               {t('PluginGroupGrid.manage')}
             </YakitButton>
           </div>

@@ -5,13 +5,13 @@ import { YakitResizeBox, type YakitResizeBoxProps } from '@/components/yakitUI/Y
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import {
-  IconSolidDefaultRiskIcon,
-  IconSolidHighRiskIcon,
-  IconSolidInfoRiskIcon,
-  IconSolidLowRiskIcon,
-  IconSolidMediumRiskIcon,
-  IconSolidSeriousIcon,
-} from '@/pages/risks/icon'
+  CriticalRiskColorful,
+  DefaultRiskColorful,
+  FingerprintInfoRiskColorful,
+  HighRiskColorful,
+  LowRiskColorful,
+  MediumRiskColorful,
+} from '@yakit-libs/yakit-ui-icons/colorful'
 import { SeverityMapTag } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
 import type { CodeRangeProps } from '@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail'
@@ -59,22 +59,22 @@ export const MisstatementRiskDetails = <T extends API.RiskFeedBackData>(props: M
     let icon = <></>
     switch (severity?.name) {
       case '信息':
-        icon = <IconSolidInfoRiskIcon />
+        icon = <FingerprintInfoRiskColorful />
         break
       case '低危':
-        icon = <IconSolidLowRiskIcon />
+        icon = <LowRiskColorful />
         break
       case '中危':
-        icon = <IconSolidMediumRiskIcon />
+        icon = <MediumRiskColorful />
         break
       case '高危':
-        icon = <IconSolidHighRiskIcon />
+        icon = <HighRiskColorful />
         break
       case '严重':
-        icon = <IconSolidSeriousIcon />
+        icon = <CriticalRiskColorful />
         break
       default:
-        icon = <IconSolidDefaultRiskIcon />
+        icon = <DefaultRiskColorful />
         break
     }
     return {
@@ -333,22 +333,22 @@ export const MisstatementAuditRiskDetails = <T extends API.SSARiskResponseData>(
     let icon = <></>
     switch (severity?.name) {
       case '信息':
-        icon = <IconSolidInfoRiskIcon />
+        icon = <FingerprintInfoRiskColorful />
         break
       case '低危':
-        icon = <IconSolidLowRiskIcon />
+        icon = <LowRiskColorful />
         break
       case '中危':
-        icon = <IconSolidMediumRiskIcon />
+        icon = <MediumRiskColorful />
         break
       case '高危':
-        icon = <IconSolidHighRiskIcon />
+        icon = <HighRiskColorful />
         break
       case '严重':
-        icon = <IconSolidSeriousIcon />
+        icon = <CriticalRiskColorful />
         break
       default:
-        icon = <IconSolidDefaultRiskIcon />
+        icon = <DefaultRiskColorful />
         break
     }
     return {

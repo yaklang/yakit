@@ -7,7 +7,7 @@ import ChatCard from '../ChatCard'
 import ModalInfo from '../ModelInfo'
 import { PreWrapper } from '../ToolInvokerCard'
 import { Tooltip } from 'antd'
-import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
+import { ChevronsDownUpOutlined, ChevronsUpDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { setClipboardText } from '@/utils/clipboard'
@@ -126,7 +126,13 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
                 onClick={() => {
                   setExpand((v) => !v)
                 }}
-                icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+                icon={
+                  expand ? (
+                    <ChevronsDownUpOutlined color="currentColor" />
+                  ) : (
+                    <ChevronsUpDownOutlined color="currentColor" />
+                  )
+                }
               />
             </Tooltip>
           </div>

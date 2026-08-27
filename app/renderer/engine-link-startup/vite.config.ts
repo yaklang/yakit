@@ -2,12 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { yakitUiIconsPurePlugin } from '../vite-plugins/yakitUiIconsPurePlugin.mjs'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   base: './',
-  plugins: [react()],
+  plugins: [yakitUiIconsPurePlugin(), react()],
   server: {
     host: true,
     port: 5173,

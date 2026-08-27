@@ -41,13 +41,13 @@ import classNames from 'classnames'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineArrowscollapseIcon,
-  OutlineArrowsexpandIcon,
-  OutlineClipboardlistIcon,
-  OutlineCogIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineTerminalIcon,
-} from '@/assets/icon/outline'
+  ArrowsExpandOutlined,
+  ClipboardListOutlined,
+  CogOutlined,
+  QuestionMarkCircleOutlined,
+  TerminalOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
 import { defYakitAutoCompleteRef, YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -113,7 +113,8 @@ import type { YakParamProps } from '../plugins/pluginsType'
 import moment from 'moment'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { ChevronDownIcon, ChevronUpIcon, FolderOpenIcon } from '@/assets/newIcon'
+import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
+import { FolderOpenSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { SSAProjectResponse } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
 import type { QuerySSAProgramRequest } from '../yakRunnerScanHistory/YakRunnerScanHistory'
 import { apiQuerySSAPrograms } from '../yakRunnerScanHistory/utils'
@@ -432,11 +433,12 @@ const CodeScanRuleSetting: React.FC<CodeScanRuleSettingProps> = React.memo((prop
           <YakitButton
             type="text"
             icon={
-              <OutlineCogIcon
+              <CogOutlined
                 className={classNames({
                   [styles['code-scan-rule-setting-no-active-icon']]: !isActive,
                   [styles['code-scan-rule-setting-active-icon']]: isActive,
                 })}
+                color="currentColor"
               />
             }
           />
@@ -646,7 +648,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                   [styles['tag-total-active']]: groupTagShow,
                 })}
               >
-                <FolderOpenIcon />
+                <FolderOpenSolid />
                 <span>
                   规则组 <span className={styles['total-style']}>{groupList.length}</span>
                 </span>
@@ -688,7 +690,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
               {selectGroup.map((i) => {
                 return (
                   <YakitTag key={i} style={{ marginBottom: 2 }} onClose={() => onCloseTag(i)} closable={true}>
-                    <FolderOpenIcon className={styles['folder-icon']} />
+                    <FolderOpenSolid className={styles['folder-icon']} />
                     <span className={classNames(styles['code-scan-rule-group-name'], 'content-ellipsis')}>{i}</span>
                   </YakitTag>
                 )
@@ -1287,14 +1289,18 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                   </>
                 )}
 
-            <YakitButton icon={<OutlineClipboardlistIcon />} disabled={disabledReport} onClick={onCreateReport}>
+            <YakitButton
+              icon={<ClipboardListOutlined color="currentColor" />}
+              disabled={disabledReport}
+              onClick={onCreateReport}
+            >
               生成报告
             </YakitButton>
             <div className={styles['divider-style']} />
 
             <YakitButton
               type="text2"
-              icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+              icon={hidden ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
               onClick={(e) => {
                 e.stopPropagation()
                 setHidden(!hidden)
@@ -2240,7 +2246,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
               width="90%"
               title="审计详情"
               extra={
-                <YakitButton icon={<OutlineTerminalIcon />} type="outline2" onClick={() => jumpCodeScanPage()}>
+                <YakitButton
+                  icon={<TerminalOutlined color="currentColor" />}
+                  type="outline2"
+                  onClick={() => jumpCodeScanPage()}
+                >
                   在代码审计中打开
                 </YakitButton>
               }
@@ -2934,7 +2944,7 @@ export const FlowRuleDetailsListItem: React.FC<FlowRuleDetailsListItemProps> = R
             placement="topRight"
             overlayClassName="plugins-tooltip"
           >
-            <OutlineQuestionmarkcircleIcon className={styles['flow-rule-item-show-icon-style']} />
+            <QuestionMarkCircleOutlined className={styles['flow-rule-item-show-icon-style']} color="currentColor" />
           </Tooltip>
         </div>
       </div>

@@ -7,14 +7,16 @@ import { useSubscribeClose } from '@/store/tabSubscribe'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineChevrondownIcon,
-  OutlineChevronrightIcon,
-  OutlineExitIcon,
-  OutlineIdentificationIcon,
-  OutlineRefreshIcon,
-  OutlineTagIcon,
-} from '@/assets/icon/outline'
-import { SolidPlayIcon, SolidStoreIcon } from '@/assets/icon/solid'
+  ChevronDownOutlined,
+  ChevronRightOutlined,
+  IdentificationOutlined,
+  RefreshOutlined,
+  TagOutlined,
+  FigmaIcon28011794Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { PlaySolid, FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
+
 import { DefaultToolYakToCode } from '../defaultConstant'
 import { Divider, Form } from 'antd'
 import cloneDeep from 'lodash/cloneDeep'
@@ -477,12 +479,16 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
               <YakitButton
                 loading={saveLoading}
                 type="outline1"
-                icon={<OutlineExitIcon />}
+                icon={<FigmaIcon28011794Outlined color="currentColor" />}
                 onClick={() => handleSaveAndExit()}
               >
                 {t('YakitButton.saveAndExit')}
               </YakitButton>
-              <YakitButton loading={saveLoading} icon={<SolidStoreIcon />} onClick={handleSave}>
+              <YakitButton
+                loading={saveLoading}
+                icon={<FigmaIcon16256302540Solid color="currentColor" />}
+                onClick={handleSave}
+              >
                 {t('YakitButton.save')}
               </YakitButton>
             </div>
@@ -558,7 +564,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                         type="text"
                         loading={fetchParamsLoading}
                         onClick={() => handleFetchParams()}
-                        icon={<OutlineRefreshIcon />}
+                        icon={<RefreshOutlined color="currentColor" />}
                       >
                         {t('YakitButton.getParams')}
                       </YakitButton>
@@ -568,7 +574,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                           {t('YakitButton.stop')}
                         </YakitButton>
                       ) : (
-                        <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
+                        <YakitButton icon={<PlaySolid color="currentColor" />} onClick={onStartExecute}>
                           {t('YakitButton.execute')}
                         </YakitButton>
                       )}
@@ -777,7 +783,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
               type="outline2"
               size="small"
               className={styles['expand-btn']}
-              icon={<OutlineChevronrightIcon />}
+              icon={<ChevronRightOutlined color="currentColor" />}
             />
 
             <div className={styles['header-title']}>{t('AIToolEditorInfoForm.basicInfo')}</div>
@@ -809,7 +815,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                   wrapperClassName={styles['item-input']}
                   placeholder={t('YakitInput.please_enter')}
                   size="large"
-                  prefix={<OutlineIdentificationIcon />}
+                  prefix={<IdentificationOutlined color="currentColor" />}
                   maxLength={100}
                 />
               </Form.Item>
@@ -866,7 +872,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                   </YakitSelect>
                 </Form.Item>
                 <div className={styles['item-select-prefix-icon']}>
-                  <OutlineTagIcon />
+                  <TagOutlined color="currentColor" />
                 </div>
               </Form.Item>
             </Form>
@@ -879,7 +885,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
               type="outline2"
               size="small"
               className={styles['expand-btn']}
-              icon={<OutlineChevrondownIcon />}
+              icon={<ChevronDownOutlined color="currentColor" />}
             />
             <div className={styles['header-title']}>{t('AIToolEditorInfoForm.basicInfo')}</div>
           </div>

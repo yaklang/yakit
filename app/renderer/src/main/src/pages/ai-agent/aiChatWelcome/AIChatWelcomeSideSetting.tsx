@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Tooltip } from 'antd'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
-import { OutlinePinIcon, OutlinePinOffIcon } from '@/assets/icon/outline'
+import { PinOutlined, PinOffOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -36,7 +36,7 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
     <Tooltip title={!isAutoHidden ? t('SideSettingButton.pinMenuOn') : t('SideSettingButton.pinMenuOff')}>
       <YakitButton
         type={isAutoHidden ? 'text2' : 'outline1'}
-        icon={isAutoHidden ? <OutlinePinOffIcon /> : <OutlinePinIcon />}
+        icon={isAutoHidden ? <PinOffOutlined color="currentColor" /> : <PinOutlined color="currentColor" />}
         onClick={onSideSetting}
         {...props}
       />

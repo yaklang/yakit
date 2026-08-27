@@ -25,17 +25,18 @@ import { useControllableValue, useDebounceFn, useMemoizedFn, useUpdateEffect } f
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineChevrondownIcon,
-  OutlineChevronrightIcon,
-  OutlineExitIcon,
-  OutlineFolderopenIcon,
-  OutlineIdentificationIcon,
-  OutlineInformationcircleIcon,
-  OutlinePluscircleIcon,
-  OutlineRefreshIcon,
-  OutlineTagIcon,
-} from '@/assets/icon/outline'
-import { SolidStoreIcon } from '@/assets/icon/solid'
+  ChevronDownOutlined,
+  ChevronRightOutlined,
+  FolderOpenOutlined,
+  IdentificationOutlined,
+  InformationCircleOutlined,
+  PlusCircleOutlined,
+  RefreshOutlined,
+  TagOutlined,
+  FigmaIcon28011794Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { FigmaIcon16256302540Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { Form, Result, Tooltip } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -603,10 +604,19 @@ const ForgeEditor: React.FC<ForgeEditorProps> = memo((props) => {
             <div className={styles['header-title']}>{isModify ? '编辑模板' : '新建模板'}</div>
 
             <div className={styles['header-btn-group']}>
-              <YakitButton loading={saveLoading} type="outline1" icon={<OutlineExitIcon />} onClick={handleSaveAndRun}>
+              <YakitButton
+                loading={saveLoading}
+                type="outline1"
+                icon={<FigmaIcon28011794Outlined color="currentColor" />}
+                onClick={handleSaveAndRun}
+              >
                 保存并执行
               </YakitButton>
-              <YakitButton loading={saveLoading} icon={<SolidStoreIcon />} onClick={handleSave}>
+              <YakitButton
+                loading={saveLoading}
+                icon={<FigmaIcon16256302540Solid color="currentColor" />}
+                onClick={handleSave}
+              >
                 保存
               </YakitButton>
             </div>
@@ -824,7 +834,7 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
               type="outline2"
               size="small"
               className={styles['expand-btn']}
-              icon={<OutlineChevronrightIcon />}
+              icon={<ChevronRightOutlined color="currentColor" />}
             />
 
             <div className={styles['header-title']}>基础信息</div>
@@ -885,7 +895,7 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
                   wrapperClassName={styles['item-input']}
                   placeholder="请输入..."
                   size="large"
-                  prefix={<OutlineIdentificationIcon />}
+                  prefix={<IdentificationOutlined color="currentColor" />}
                   maxLength={100}
                 />
               </Form.Item>
@@ -930,7 +940,7 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
                   </YakitSelect>
                 </Form.Item>
                 <div className={styles['item-select-prefix-icon']}>
-                  <OutlineTagIcon />
+                  <TagOutlined color="currentColor" />
                 </div>
               </Form.Item>
 
@@ -964,7 +974,7 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
               type="outline2"
               size="small"
               className={styles['expand-btn']}
-              icon={<OutlineChevrondownIcon />}
+              icon={<ChevronDownOutlined color="currentColor" />}
             />
             <div className={styles['header-title']}>基础信息</div>
           </div>
@@ -1008,7 +1018,7 @@ const PromptAndActiveTextarea: React.FC<PromptAndActiveTextareaProps> = memo((pr
       <div className={styles['textarea-header']}>
         <div className={styles['header-title']}>{title}</div>
         <Tooltip overlayClassName={styles['textarea-hint-icon-tooltip']} title={hint}>
-          {!!hint && <OutlineInformationcircleIcon className={styles['header-hint-icon']} />}
+          {!!hint && <InformationCircleOutlined className={styles['header-hint-icon']} color="currentColor" />}
         </Tooltip>
       </div>
 
@@ -1157,7 +1167,7 @@ const AIForgeEditorCodeAndParams: React.FC<AIForgeEditorCodeAndParamsProps> = me
           <div className={styles['header-extra']}>
             <YakitButton type="text" loading={fetchParamsLoading} onClick={handleFetchParams}>
               获取参数
-              <OutlineRefreshIcon />
+              <RefreshOutlined color="currentColor" />
             </YakitButton>
           </div>
         </div>
@@ -1494,7 +1504,7 @@ const AIForgeEditorSkillFiles: React.FC<AIForgeEditorSkillFilesProps> = memo((pr
                 <Tooltip title={'刷新'}>
                   <YakitButton
                     type="text2"
-                    icon={<OutlineRefreshIcon />}
+                    icon={<RefreshOutlined color="currentColor" />}
                     onClick={() => {
                       treeRef.current?.onResetTreeList()
                     }}
@@ -1510,7 +1520,7 @@ const AIForgeEditorSkillFiles: React.FC<AIForgeEditorSkillFilesProps> = memo((pr
                     placement: 'bottomLeft',
                   }}
                 >
-                  <YakitButton type="text2" icon={<OutlinePluscircleIcon />} />
+                  <YakitButton type="text2" icon={<PlusCircleOutlined color="currentColor" />} />
                 </YakitDropdownMenu>
               </div>
             </div>
@@ -1636,7 +1646,7 @@ const AIForgeSkillFileCont: React.FC<{ data?: FileNodeProps }> = ({ data }) => {
             <YakitButton
               type="text2"
               size="middle"
-              icon={<OutlineFolderopenIcon />}
+              icon={<FolderOpenOutlined color="currentColor" />}
               onClick={() => onOpenLocalFileByPath(path)}
             />
           </div>

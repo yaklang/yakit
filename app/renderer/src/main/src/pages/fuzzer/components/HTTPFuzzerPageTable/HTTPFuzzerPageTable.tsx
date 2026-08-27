@@ -40,7 +40,7 @@ import ReactResizeDetector from 'react-resize-detector'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { DefFuzzerTableMaxData } from '@/defaultConstants/HTTPFuzzerPage'
 import { CodingPopover } from '@/components/HTTPFlowDetailParts'
-import { OutlineSelectorIcon } from '@/assets/icon/outline'
+import { SelectorOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { isCellRedSingleColor } from '@/components/TableVirtualResize/utils'
 import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
@@ -264,10 +264,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         width: 200,
         filterProps: {
           filterIcon: (
-            <OutlineSelectorIcon
+            <SelectorOutlined
               className={classNames(styles['search-icon'], styles['filter-icon'], {
                 [styles['active-icon']]: !!query?.ExtractedResults?.length,
               })}
+              color="currentColor"
             />
           ),
           filterRender: () => (
@@ -360,10 +361,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 filterKey: 'StatusCode',
                 filtersType: 'input',
                 filterIcon: (
-                  <OutlineSelectorIcon
+                  <SelectorOutlined
                     className={classNames(styles['filter-icon'], {
                       [styles['active-icon']]: !!query?.StatusCode?.length || sorterTable?.orderBy === 'StatusCode',
                     })}
+                    color="currentColor"
                   />
                 ),
                 filterRender: () => (
@@ -401,11 +403,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
               filterProps: {
                 filterKey: 'bodyLength',
                 filterIcon: (
-                  <OutlineSelectorIcon
+                  <SelectorOutlined
                     className={classNames(styles['filter-icon'], {
                       [styles['active-icon']]:
                         query?.afterBodyLength || query?.beforeBodyLength || sorterTable?.orderBy === 'BodyLength',
                     })}
+                    color="currentColor"
                   />
                 ),
                 filterRender: () => (
@@ -444,11 +447,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
               filterProps: {
                 filterKey: 'durationMs',
                 filterIcon: (
-                  <OutlineSelectorIcon
+                  <SelectorOutlined
                     className={classNames(styles['filter-icon'], {
                       [styles['active-icon']]:
                         query?.afterDurationMs || query?.beforeDurationMs || sorterTable?.orderBy === 'DurationMs',
                     })}
+                    color="currentColor"
                   />
                 ),
                 filterRender: () => (

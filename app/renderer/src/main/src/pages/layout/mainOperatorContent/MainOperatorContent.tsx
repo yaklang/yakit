@@ -80,13 +80,13 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import type { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import {
-  OutlineChevrondoubleleftIcon,
-  OutlineChevrondoublerightIcon,
-  OutlinePlusIcon,
-  OutlineSortascendingIcon,
-  OutlineSortdescendingIcon,
-  OutlineStoreIcon,
-} from '@/assets/icon/outline'
+  ChevronDoubleLeftOutlined,
+  ChevronDoubleRightOutlined,
+  PlusOutlined,
+  SortAscendingOutlined,
+  SortDescendingOutlined,
+  FigmaIcon13208172881Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
 import { getHotPatchCodeInfo } from '@/pages/fuzzer/fuzzerHotPatchUtils'
 import { type FuzzerCacheDataProps, getFuzzerCacheData } from '@/pages/fuzzer/fuzzerCacheData'
@@ -232,7 +232,7 @@ const pageTabItemRightOperation: (t: TFunction) => YakitMenuItemType[] = (t) => 
         // },
         {
           label: t('MainOperatorContent.batchNewGroup'),
-          itemIcon: <OutlinePlusIcon />,
+          itemIcon: <PlusOutlined color="currentColor" />,
           key: 'batchNewGroup',
         },
       ],
@@ -6229,7 +6229,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                   })}
                   ref={scrollLeftIconRef}
                 >
-                  <OutlineChevrondoubleleftIcon />
+                  <ChevronDoubleLeftOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['tab-menu-sub'], {
@@ -6299,7 +6299,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                   })}
                   ref={scrollRightIconRef}
                 >
-                  <OutlineChevrondoublerightIcon />
+                  <ChevronDoubleRightOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['extra-operate'], {
@@ -6307,10 +6307,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                   })}
                 >
                   {isExpand ? (
-                    <OutlineSortascendingIcon className={styles['extra-operate-icon']} onClick={onRetract} />
+                    <SortAscendingOutlined
+                      className={styles['extra-operate-icon']}
+                      onClick={onRetract}
+                      color="currentColor"
+                    />
                   ) : (
                     isShowExpandIcon && (
-                      <OutlineSortdescendingIcon className={styles['extra-operate-icon']} onClick={onExpand} />
+                      <SortDescendingOutlined
+                        className={styles['extra-operate-icon']}
+                        onClick={onExpand}
+                        color="currentColor"
+                      />
                     )
                   )}
                   {isWebFuzzerRoute && (
@@ -6318,15 +6326,20 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                       title={t('MainOperatorContent.save_webfuzzer_history')}
                       placement={isExpand ? 'left' : 'top'}
                     >
-                      <OutlineStoreIcon
+                      <FigmaIcon13208172881Outlined
                         className={styles['extra-operate-icon']}
                         onClick={() => onSaveHistory(pageRouteKey)}
+                        color="currentColor"
                       />
                     </Tooltip>
                   )}
 
                   {pageItem.hideAdd !== true && (
-                    <OutlinePlusIcon className={styles['extra-operate-icon']} onClick={() => onAddSubPage()} />
+                    <PlusOutlined
+                      className={styles['extra-operate-icon']}
+                      onClick={() => onAddSubPage()}
+                      color="currentColor"
+                    />
                   )}
                 </div>
               </div>

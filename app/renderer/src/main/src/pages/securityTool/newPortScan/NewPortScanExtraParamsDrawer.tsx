@@ -20,7 +20,7 @@ import { defPortScanExecuteExtraFormValue } from './NewPortScan'
 import { yakitInfo } from '@/utils/notification'
 import { apiGetGlobalNetworkConfig, apiGetPcapMetadata, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import cloneDeep from 'lodash/cloneDeep'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { isEnpriTraceAgent } from '@/utils/envfile'
@@ -432,7 +432,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
               extra={
                 <div className={styles['ports-form-extra']}>
                   <Tooltip title={t('ScanPortForm.resetToDefaultPort')}>
-                    <YakitButton type="text" icon={<OutlineRefreshIcon />} onClick={onResetPort}>
+                    <YakitButton type="text" icon={<RefreshOutlined color="currentColor" />} onClick={onResetPort}>
                       {t('NewPortScanExecuteForm.defaultConfig')}
                     </YakitButton>
                   </Tooltip>

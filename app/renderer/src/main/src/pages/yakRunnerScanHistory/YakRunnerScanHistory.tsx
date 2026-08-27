@@ -38,13 +38,13 @@ import { genDefaultPagination, type QueryGeneralResponse } from '../invoker/sche
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { Tooltip } from 'antd'
 import {
-  OutlineArrowcirclerightIcon,
-  OutlineChevrondownIcon,
-  OutlineChevronrightIcon,
-  OutlineRefreshIcon,
-  OutlineScanIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  ArrowCircleRightOutlined,
+  ChevronDownOutlined,
+  ChevronRightOutlined,
+  RefreshOutlined,
+  ScanOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import type { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -415,7 +415,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
               renderTitle={
                 <div className={styles['YakRunnerScanHistory-table-title']}>
                   扫描历史
-                  <YakitButton type="text" icon={<OutlineRefreshIcon />} onClick={() => update(1)} />
+                  <YakitButton type="text" icon={<RefreshOutlined color="currentColor" />} onClick={() => update(1)} />
                 </div>
               }
               data={response.Data}
@@ -777,16 +777,18 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
               }}
             >
               {isExpanded ? (
-                <OutlineChevrondownIcon
+                <ChevronDownOutlined
                   className={classNames(styles['chevron-icon'], {
                     [styles['chevron-icon-active']]: isClick,
                   })}
+                  color="currentColor"
                 />
               ) : (
-                <OutlineChevronrightIcon
+                <ChevronRightOutlined
                   className={classNames(styles['chevron-icon'], {
                     [styles['chevron-icon-active']]: isClick,
                   })}
+                  color="currentColor"
                 />
               )}
             </div>
@@ -840,7 +842,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                 }
               }}
             >
-              <OutlineScanIcon />
+              <ScanOutlined color="currentColor" size={16} />
             </div>
           </Tooltip>
           <Tooltip title={t('YakRunnerScanHistory.openProject')}>
@@ -864,7 +866,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                 )
               }}
             >
-              <OutlineArrowcirclerightIcon />
+              <ArrowCircleRightOutlined color="currentColor" />
             </div>
           </Tooltip>
           {!rowData.isGroupChild && (
@@ -878,7 +880,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                 onDelete({ Filter: { Ids: [program.Id] } }, isHasChildren)
               }}
             >
-              <OutlineTrashIcon />
+              <TrashOutlined color="currentColor" />
             </div>
           )}
         </div>
@@ -891,7 +893,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
       <div className={styles['compile-history-header']}>
         <div className={classNames('yakit-content-single-ellipsis', styles['compile-history-title'])}>
           {t('YakRunnerScanHistory.compileHistory')}
-          <YakitButton type="text" icon={<OutlineRefreshIcon />} onClick={() => update(1)} />
+          <YakitButton type="text" icon={<RefreshOutlined color="currentColor" />} onClick={() => update(1)} />
         </div>
         <div className={styles['compile-history-sub-title']}>
           <div className={styles['modal-sub-title']}>

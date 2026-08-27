@@ -40,7 +40,7 @@ import {
 import type { YakitSideTabProps } from '../../components/yakitSideTab/YakitSideTabType'
 import type { API } from '@/services/swagger/resposeType'
 import { NetWorkApi } from '@/services/fetch'
-import { OutlineBookOpenTextIcon, OutlineChipIcon, OutlinePuzzleIcon } from '@/assets/icon/outline'
+import { BookOpenTextOutlined, ChipOutlined, PuzzleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import knowledgeJoyrideFirst from '@/pages/KnowledgeBase/images/knowledge-joyride-first.mp4'
 import knowledgeJoyrideLast from '@/pages/KnowledgeBase/images/knowledge-joyride-last.mp4'
 import joyrideFirstStepImg from '@/pages/KnowledgeBase/images/joyride-first-step.png'
@@ -68,17 +68,17 @@ export enum KnowledgeTabListEnum {
   AI_Model = 'AIModel',
 }
 export const KnowledgeTabList: YakitSideTabProps['yakitTabs'] = [
-  { value: KnowledgeTabListEnum.Knowledge, label: '知识库', icon: <OutlineBookOpenTextIcon /> },
+  { value: KnowledgeTabListEnum.Knowledge, label: '知识库', icon: <BookOpenTextOutlined color="currentColor" /> },
   {
     value: KnowledgeTabListEnum.Plugin,
     label: '插件',
-    icon: <OutlinePuzzleIcon />,
+    icon: <PuzzleOutlined color="currentColor" />,
   },
   {
     value: KnowledgeTabListEnum.AI_Model,
     label: () => (
       <div className="first-step" style={{ display: 'flex', gap: 4 }}>
-        <OutlineChipIcon />
+        <ChipOutlined color="currentColor" />
         模型
       </div>
     ),

@@ -21,7 +21,9 @@ import classNames from 'classnames'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { NotepadRemoteGV } from '@/enums/notepad'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineExportIcon, OutlineImportIcon, OutlinePlusIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { PlusOutlined, TrashOutlined, FigmaIcon6480193584Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { Dropdown, Tooltip } from 'antd'
 import {
   NotepadExport,
@@ -196,7 +198,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitButton
               className={styles['icon-16']}
               type="text2"
-              icon={<OutlineImportIcon />}
+              icon={<FigmaIcon6480193584Outlined color="currentColor" />}
               size="small"
               onClick={() => setImportVisible(true)}
             />
@@ -214,7 +216,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                 className={styles['icon-16']}
                 type="text"
                 danger
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 disabled={!response.Total}
               />
             </Tooltip>
@@ -233,7 +235,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitButton
               className={styles['icon-16']}
               type="primary"
-              icon={<OutlinePlusIcon />}
+              icon={<PlusOutlined color="currentColor" />}
               size="small"
               onClick={() => goAddNotepad()}
             />
@@ -268,7 +270,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                         key: 'delete',
                         label: t('YakitButton.delete'),
                         type: 'danger',
-                        itemIcon: <OutlineTrashIcon />,
+                        itemIcon: <TrashOutlined color="currentColor" />,
                       },
                     ]}
                     onClick={({ key }) => {

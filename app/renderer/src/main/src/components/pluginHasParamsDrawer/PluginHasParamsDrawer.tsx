@@ -18,9 +18,9 @@ import { useMemoizedFn } from 'ahooks'
 import type { YakitDrawerProps } from '../yakitUI/YakitDrawer/YakitDrawerType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
-import { OutlineChevronupIcon } from '@/assets/icon/outline'
+import { ChevronUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
-import { SolidCheckIcon } from '@/assets/icon/solid'
+import { CheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import styles from './PluginHasParamsDrawer.module.scss'
 
@@ -294,10 +294,11 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
                 : t('PluginHasParamsModal.executeWithoutSaving')}
             </div>
             <div className={styles['operation-btn-right']} onClick={() => setShowExecDropdown(!showExecDropdown)}>
-              <OutlineChevronupIcon
+              <ChevronUpOutlined
                 className={classNames(styles['title-icon'], {
                   [styles['rotate-180']]: showExecDropdown,
                 })}
+                color="currentColor"
               />
             </div>
             <div
@@ -319,7 +320,7 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
                   key={item.key}
                 >
                   <span>{item.label}</span>
-                  {execCheck === item.key && <SolidCheckIcon className={styles['check-icon']} />}
+                  {execCheck === item.key && <CheckSolid className={styles['check-icon']} color="currentColor" />}
                 </div>
               ))}
             </div>

@@ -6,7 +6,7 @@ import styles from './UserTable.module.scss'
 import type { IPTableProps, UserTableProps } from './UserTableType'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import moment from 'moment'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import useHttpVirtualTableHook from '@/hook/useHttpVirtualTableHook/useHttpVirtualTableHook'
 import ReactResizeDetector from 'react-resize-detector'
@@ -54,7 +54,7 @@ export const UserTable: React.FC<UserTableProps> = React.memo(
           filterProps: {
             filterKey: 'name',
             filtersType: 'input',
-            filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+            filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
           },
           render: (text, record) => text || record.ip,
         },
@@ -202,7 +202,7 @@ export const IPTable: React.FC<IPTableProps> = React.memo(
           filterProps: {
             filterKey: 'name',
             filtersType: 'input',
-            filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+            filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
           },
           render: (text, record) => text || record.ip,
         },
@@ -213,7 +213,7 @@ export const IPTable: React.FC<IPTableProps> = React.memo(
           filterProps: {
             filterKey: 'ip',
             filtersType: 'input',
-            filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+            filterIcon: <SearchOutlined className={styles['filter-icon']} color="currentColor" />,
           },
         },
         {

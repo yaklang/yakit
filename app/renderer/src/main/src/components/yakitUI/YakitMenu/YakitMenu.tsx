@@ -3,7 +3,7 @@ import { useMemoizedFn } from 'ahooks'
 import { Menu, type MenuProps, Tooltip } from 'antd'
 import type { ItemType } from 'antd/lib/menu/hooks/useItems'
 import type { MenuDividerType } from 'rc-menu/lib/interface'
-import { OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import classNames from 'classnames'
 import styles from './yakitMenu.module.scss'
@@ -107,7 +107,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                   </div>
                 )}
               </div>
-              <OutlineChevronrightIcon />
+              <ChevronRightOutlined color="currentColor" />
             </div>
           ),
           key: info.key,

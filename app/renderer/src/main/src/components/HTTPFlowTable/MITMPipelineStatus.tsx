@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
-import { OutlineArrowsmdownIcon, OutlineArrowsmupIcon } from '@/assets/icon/outline'
+import { ArrowSmDownOutlined, ArrowSmUpOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { mitmFlowObservability } from './HTTPFlowTable.observability'
@@ -283,11 +283,17 @@ export const MITMPipelineStatus: React.FC = React.memo(() => {
       >
         <span className={styles['trigger-summary']}>
           <span className={styles['trigger-metric']}>
-            <OutlineArrowsmupIcon className={classNames(styles['trigger-arrow'], styles['trigger-arrow-up'])} />
+            <ArrowSmUpOutlined
+              className={classNames(styles['trigger-arrow'], styles['trigger-arrow-up'])}
+              color="currentColor"
+            />
             <span>{view ? formatMITMPipelineRate(view.rates.dispatch) : '–'}/s</span>
           </span>
           <span className={styles['trigger-metric']}>
-            <OutlineArrowsmdownIcon className={classNames(styles['trigger-arrow'], styles['trigger-arrow-down'])} />
+            <ArrowSmDownOutlined
+              className={classNames(styles['trigger-arrow'], styles['trigger-arrow-down'])}
+              color="currentColor"
+            />
             <span>{view ? formatMITMPipelineRate(view.rates.upstreamCompleted) : '–'}/s</span>
           </span>
           <span className={styles['trigger-metric']}>

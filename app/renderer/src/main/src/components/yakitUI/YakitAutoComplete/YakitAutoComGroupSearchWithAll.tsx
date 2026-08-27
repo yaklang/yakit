@@ -9,7 +9,7 @@ import styles from './YakitAutoComplete.module.scss'
 import classNames from 'classnames'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { type YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase } from '../utils'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 export const defYakitAutoCompleteRef = {
   onGetRemoteValues: () => ({ options: [], defaultValue: '' }),
@@ -34,10 +34,11 @@ const YakitAutoCompleteOptionLabel = React.memo<{
     >
       <div className={styles['yakit-option-item-label']}>{item.label}</div>
       {deletable ? (
-        <OutlineXIcon
+        <XOutlined
           style={{ display: showClose ? 'block' : 'none' }}
           className={styles['option-item-close']}
           onClick={(e) => onDelete(e, item)}
+          color="currentColor"
         />
       ) : null}
     </div>

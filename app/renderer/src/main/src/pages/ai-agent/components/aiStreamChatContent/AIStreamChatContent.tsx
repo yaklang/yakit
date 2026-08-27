@@ -5,7 +5,8 @@ import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import styles from './AIStreamChatContent.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import classNames from 'classnames'
-import { OutlineChevrondownIcon, OutlineThoughtIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineThoughtIcon } from '@/assets/icon/bespokeOutline'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 import { useClickAway } from 'ahooks'
@@ -40,10 +41,11 @@ const ThoughtStreamContent: React.FC<{
           {nodeLabel}
           <ThoughtDuration persistKey={token} status={streaming ? 'start' : 'end'} />
         </span>
-        <OutlineChevrondownIcon
+        <ChevronDownOutlined
           className={classNames(styles['thought-chevron'], {
             [styles['thought-chevron-collapsed']]: !expand,
           })}
+          color="currentColor"
         />
       </div>
       {expand && (

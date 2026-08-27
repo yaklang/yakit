@@ -125,7 +125,7 @@ import {
 import { YakitRoute } from '../enums/yakitRoute'
 import type { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
-import { SolidClipboardlistIcon, SolidCodecIcon, SolidTerminalIcon } from '@/assets/icon/solid'
+import { ClipboardListSolid, CodecSolid, TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { PublicToolDataCompareIcon, PublicToolVulinboxIcon } from './publicIcon'
 import { type SoftMode, YakitModeEnum } from '@/store/softMode'
 
@@ -1689,12 +1689,12 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
     return [
       {
         page: YakitRoute.Codec,
-        icon: <SolidCodecIcon />,
+        icon: <CodecSolid color="currentColor" />,
         ...YakitRouteToPageInfo[YakitRoute.Codec],
       },
       {
         page: YakitRoute.Modify_Notepad,
-        icon: <SolidClipboardlistIcon />,
+        icon: <ClipboardListSolid color="currentColor" />,
         i18n: false,
         label: getNotepadNameByEditionMulLang(),
       },
@@ -1705,12 +1705,12 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
     return [
       {
         page: YakitRoute.YakScript,
-        icon: <SolidTerminalIcon />,
+        icon: <TerminalSolid color="currentColor" />,
         ...YakitRouteToPageInfo[YakitRoute.YakScript],
       },
       {
         page: undefined,
-        icon: <SolidClipboardlistIcon />,
+        icon: <ClipboardListSolid color="currentColor" />,
         i18n: false,
         label: getNotepadNameByEditionMulLang(),
         children: [
@@ -1734,18 +1734,18 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
       return [
         {
           page: YakitRoute.Codec,
-          icon: <SolidCodecIcon />,
+          icon: <CodecSolid color="currentColor" />,
           ...YakitRouteToPageInfo[YakitRoute.Codec],
         },
         {
           page: YakitRoute.YakScript,
-          icon: <SolidTerminalIcon />,
+          icon: <TerminalSolid color="currentColor" />,
           ...YakitRouteToPageInfo[YakitRoute.YakScript],
         },
         getVulinboxMenuItem(),
         {
           page: undefined,
-          icon: <SolidClipboardlistIcon />,
+          icon: <ClipboardListSolid color="currentColor" />,
           i18n: false,
           label: getNotepadNameByEditionMulLang(),
           children: [
@@ -1769,18 +1769,18 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
         return [
           {
             page: YakitRoute.Codec,
-            icon: <SolidCodecIcon />,
+            icon: <CodecSolid color="currentColor" />,
             ...YakitRouteToPageInfo[YakitRoute.Codec],
           },
           {
             page: YakitRoute.YakScript,
-            icon: <SolidTerminalIcon />,
+            icon: <TerminalSolid color="currentColor" />,
             ...YakitRouteToPageInfo[YakitRoute.YakScript],
           },
           getVulinboxMenuItem(),
           {
             page: YakitRoute.Modify_Notepad,
-            icon: <SolidClipboardlistIcon />,
+            icon: <ClipboardListSolid color="currentColor" />,
             i18n: false,
             label: getNotepadNameByEditionMulLang(),
           },
@@ -1904,7 +1904,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
         return [
           {
             page: YakitRoute.Codec,
-            icon: <SolidCodecIcon />,
+            icon: <CodecSolid color="currentColor" />,
             ...YakitRouteToPageInfo[YakitRoute.Codec],
           },
           {

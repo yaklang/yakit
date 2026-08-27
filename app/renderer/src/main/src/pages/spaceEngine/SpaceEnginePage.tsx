@@ -1,6 +1,6 @@
 import React, { type ReactNode, useEffect, useRef, useState } from 'react'
 import styles from './SpaceEnginePage.module.scss'
-import { OutlineInformationcircleIcon, OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { InformationCircleOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import {
   ExpandAndRetract,
   type ExpandAndRetractExcessiveState,
@@ -355,7 +355,8 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         {Number(engineStatus.Remain) === -1 ? t('SpaceEngineFormContent.unlimited') : engineStatus.Remain}
         {engineStatus.Type === 'zoomeye' && (
           <span className={styles['engine-help-zoomeye']} onClick={() => onOpenHelpModal()}>
-            <span>{t('SpaceEngineFormContent.zoomeyeBasicSyntax')}</span> <OutlineQuestionmarkcircleIcon />
+            <span>{t('SpaceEngineFormContent.zoomeyeBasicSyntax')}</span>{' '}
+            <QuestionMarkCircleOutlined color="currentColor" />
           </span>
         )}
       </span>
@@ -406,7 +407,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         label={t('SpaceEngineFormContent.randomDelay')}
         rules={[{ required: true }]}
         tooltip={{
-          icon: <OutlineInformationcircleIcon />,
+          icon: <InformationCircleOutlined color="currentColor" />,
           title: t('SpaceEngineFormContent.randomDelayHelp'),
         }}
       >
@@ -421,7 +422,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
         rules={[{ required: true }]}
         valuePropName="checked"
         tooltip={{
-          icon: <OutlineInformationcircleIcon />,
+          icon: <InformationCircleOutlined color="currentColor" />,
           title: t('SpaceEngineFormContent.scanVerificationHelp', { edition: getReleaseEditionName() }),
         }}
       >

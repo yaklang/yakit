@@ -53,33 +53,34 @@ import type { FormExtraSettingProps } from '@/pages/plugins/operator/localPlugin
 import useStore from '../hooks/useStore'
 import { loadAuditFromYakURLRaw } from '../utils'
 import {
-  OutlineArrowcirclerightIcon,
-  OutlineBugIcon,
-  OutlineChevronrightIcon,
-  OutlineClockIcon,
-  OutlineDeprecatedIcon,
-  OutlineDocumentduplicateIcon,
-  OutlineEyeIcon,
-  OutlinePencilaltIcon,
-  OutlineRefreshIcon,
-  OutlineReloadScanIcon,
-  OutlineScanIcon,
-  OutlineSearchIcon,
-  OutlineTrashIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ArrowCircleRightOutlined,
+  ChevronRightOutlined,
+  ClockOutlined,
+  DocumentDuplicateOutlined,
+  EyeOutlined,
+  PencilAltOutlined,
+  RefreshOutlined,
+  ScanOutlined,
+  SearchOutlined,
+  TrashOutlined,
+  XOutlined,
+  FigmaIcon22915169930Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineBugIcon } from '@/assets/icon/bespokeOutline'
+
+import { OutlineReloadScanIcon } from '@/assets/icon/bespokeOutline'
 import emiter from '@/utils/eventBus/eventBus'
 import { CloseOutlined, DeleteOutlined, LoadingOutlined, ReloadOutlined } from '@ant-design/icons'
 import { StringToUint8Array } from '@/utils/str'
 import { clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail } from './AuditTree/AuditMap'
 import { clearMapAuditChildDetail, getMapAuditChildDetail, setMapAuditChildDetail } from './AuditTree/ChildMap'
 import {
-  SolidDotsverticalIcon,
-  SolidExclamationIcon,
-  SolidInformationcircleIcon,
-  SolidPluscircleIcon,
-  SolidXcircleIcon,
-} from '@/assets/icon/solid'
+  DotsVerticalSolid,
+  ExclamationSolid,
+  InformationCircleSolid,
+  PlusCircleSolid,
+  XCircleSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
 import type { AuditCodeStreamData, AuditEmiterYakUrlProps, OpenFileByPathProps } from '../YakRunnerAuditCodeType'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -183,25 +184,25 @@ const showIcon = (severity) => {
     case 'hint':
       return (
         <div className={classNames(styles['hint-icon'], styles['icon-box'])}>
-          <OutlineDeprecatedIcon />
+          <FigmaIcon22915169930Outlined color="currentColor" />
         </div>
       )
     case 'info':
       return (
         <div className={classNames(styles['info-icon'], styles['icon-box'])}>
-          <SolidInformationcircleIcon />
+          <InformationCircleSolid color="currentColor" />
         </div>
       )
     case 'warning':
       return (
         <div className={classNames(styles['warn-icon'], styles['icon-box'])}>
-          <SolidExclamationIcon />
+          <ExclamationSolid color="currentColor" />
         </div>
       )
     case 'error':
       return (
         <div className={classNames(styles['error-icon'], styles['icon-box'])}>
-          <SolidXcircleIcon />
+          <XCircleSolid color="currentColor" />
         </div>
       )
 
@@ -263,7 +264,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
         >
           {!info.isLeaf && (
             <div className={classNames(styles['node-switcher'], { [styles['expanded']]: isExpanded })}>
-              <OutlineChevronrightIcon />
+              <ChevronRightOutlined color="currentColor" />
             </div>
           )}
           {info.ResourceType === 'message' && showIcon(info.VerboseType)}
@@ -1141,7 +1142,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                   >
                     <YakitButton type="text" size={'small'} colors="danger" icon={<DeleteOutlined />} />
                   </YakitDropdownMenu>
-                  <YakitButton type="text" icon={<OutlineXIcon />} onClick={() => setOnlyFileTree(true)} />
+                  <YakitButton
+                    type="text"
+                    icon={<XOutlined color="currentColor" />}
+                    onClick={() => setOnlyFileTree(true)}
+                  />
                 </div>
               ) : (
                 <div className={styles['extra']}>
@@ -1154,7 +1159,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         <YakitButton
                           type="text"
                           size={'small'}
-                          icon={<OutlineEyeIcon />}
+                          icon={<EyeOutlined color="currentColor" />}
                           onClick={() => {
                             setShowRiskTree(!isShowRiskTree)
                           }}
@@ -1163,7 +1168,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     </>
                   )}
 
-                  <YakitButton type="text" icon={<OutlineXIcon />} onClick={() => setOnlyFileTree(true)} />
+                  <YakitButton
+                    type="text"
+                    icon={<XOutlined color="currentColor" />}
+                    onClick={() => setOnlyFileTree(true)}
+                  />
                 </div>
               )}
             </>
@@ -2760,7 +2769,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     setClipboardText(path)
                   }}
                 >
-                  <OutlineDocumentduplicateIcon />
+                  <DocumentDuplicateOutlined color="currentColor" />
                 </div>
               </Tooltip>
             </>
@@ -2839,7 +2848,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     }
                   }}
                 >
-                  <OutlineScanIcon />
+                  <ScanOutlined color="currentColor" size={16} />
                 </div>
               </Tooltip>
               <Divider type="vertical" />
@@ -2851,7 +2860,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     onOpenProjectHistory(record)
                   }}
                 >
-                  <OutlineClockIcon />
+                  <ClockOutlined color="currentColor" />
                 </div>
               </Tooltip>
               <Divider type="vertical" />
@@ -2862,7 +2871,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                       key: 'edit',
                       label: (
                         <div className={styles['extra-menu']}>
-                          <OutlinePencilaltIcon />
+                          <PencilAltOutlined color="currentColor" />
                           <div className={styles['menu-name']}>{t('YakitButton.edit')}</div>
                         </div>
                       ),
@@ -2871,7 +2880,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                       key: 'delete',
                       label: (
                         <div className={classNames(styles['extra-menu'], styles['extra-menu-delete'])}>
-                          <OutlineTrashIcon />
+                          <TrashOutlined color="currentColor" />
                           <div className={styles['menu-name']}>{t('YakitButton.delete')}</div>
                         </div>
                       ),
@@ -2920,7 +2929,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 }}
               >
                 <div className={styles['extra-icon']}>
-                  <SolidDotsverticalIcon />
+                  <DotsVerticalSolid color="currentColor" />
                 </div>
               </YakitDropdownMenu>
             </div>
@@ -2989,7 +2998,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         </div>
         <div className={styles['extra']}>
           <YakitInput.Search
-            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            prefix={<SearchOutlined className={styles['search-icon']} color="currentColor" />}
             placeholder={t('YakitInput.searchKeyWordPlaceholder')}
             value={params.SearchKeyword}
             onChange={(e) => {
@@ -3035,7 +3044,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
           )}
 
           <YakitButton
-            icon={<SolidPluscircleIcon />}
+            icon={<PlusCircleSolid color="currentColor" />}
             onClick={() => {
               if (onExecuteAudit) {
                 onExecuteAudit()
@@ -3047,8 +3056,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
           >
             {t('AuditCode.addProject')}
           </YakitButton>
-          <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={(e) => update(true)} />
-          {onClose && <YakitButton type="text2" icon={<OutlineXIcon />} onClick={onClose} />}
+          <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={(e) => update(true)} />
+          {onClose && <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onClose} />}
         </div>
       </div>
 
@@ -3224,7 +3233,7 @@ const ProjectManagerDetail: React.FC<ProjectManagerDetailProps> = memo((props) =
                         onOpenCompileCodeScan(record, program)
                       }}
                     >
-                      <OutlineScanIcon />
+                      <ScanOutlined color="currentColor" size={16} />
                     </div>
                   </Tooltip>
                   <Divider type="vertical" />
@@ -3236,7 +3245,7 @@ const ProjectManagerDetail: React.FC<ProjectManagerDetailProps> = memo((props) =
                         onOpenCompileAuditCode(program)
                       }}
                     >
-                      <OutlineArrowcirclerightIcon />
+                      <ArrowCircleRightOutlined color="currentColor" />
                     </div>
                   </Tooltip>
                   <Divider type="vertical" />
@@ -3256,7 +3265,7 @@ const ProjectManagerDetail: React.FC<ProjectManagerDetailProps> = memo((props) =
                         e.stopPropagation()
                       }}
                     >
-                      <OutlineTrashIcon />
+                      <TrashOutlined color="currentColor" />
                     </div>
                   </YakitPopconfirm>
                 </div>

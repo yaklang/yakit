@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import classNames from 'classnames'
 import styles from './AIToDoList.module.scss'
 import type { AIToDoListItemProps, AIToDoListProps } from './type'
-import { OutlineChevrondownIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { ChevronDownOutlined, ChevronRightOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { useCreation, useHover, useMemoizedFn } from 'ahooks'
@@ -30,9 +30,9 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                 {!bannedExpand && (
                   <>
                     {!isHover ? (
-                      <OutlineChevronrightIcon className={styles['chevron-icon']} />
+                      <ChevronRightOutlined className={styles['chevron-icon']} color="currentColor" />
                     ) : (
-                      <OutlineChevrondownIcon className={styles['chevron-icon']} />
+                      <ChevronDownOutlined className={styles['chevron-icon']} color="currentColor" />
                     )}
                   </>
                 )}

@@ -13,11 +13,11 @@ import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AIAgentChatData } from '../../type/aiChat'
 import { formatNumberUnits } from '../../utils'
 import {
-  OutlineArrowdownIcon,
-  OutlineArrowupIcon,
-  OutlinePresentationchartlineIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  PresentationChartLineOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { getPressuresData, getCostData, getThreshold, getContextStatsData } from './utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -191,10 +191,10 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
     >
       <div className={styles['echarts-details-heard']}>
         <div className={styles['echarts-details-title']}>
-          <OutlinePresentationchartlineIcon />
+          <PresentationChartLineOutlined color="currentColor" />
           <span>{t('AIContextToken.dataDetails')}</span>
         </div>
-        <YakitButton icon={<OutlineXIcon />} type="text2" onClick={onClose} />
+        <YakitButton icon={<XOutlined color="currentColor" />} type="text2" onClick={onClose} />
       </div>
       <div className={styles['echarts-details-content']}>
         <div className={styles['token-wrapper']}>
@@ -204,14 +204,14 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = ({
               <div className={styles['token-overall']}>
                 <span>{t('AIContextToken.totalInput')}</span>
                 <div className={classNames(styles['token-tag'], styles['upload-token'])}>
-                  <OutlineArrowupIcon />
+                  <ArrowUpOutlined color="currentColor" />
                   {overallToken[0]}
                 </div>
               </div>
               <div className={styles['token-overall']}>
                 <span>{t('AIContextToken.totalOutput')}</span>
                 <div className={classNames(styles['token-tag'], styles['download-token'])}>
-                  <OutlineArrowdownIcon />
+                  <ArrowDownOutlined color="currentColor" />
                   {overallToken[1]}
                 </div>
               </div>

@@ -15,11 +15,16 @@ import {
   apiQueryHybridScanTask,
 } from './utils'
 import { genDefaultPagination } from '@/pages/invoker/schema'
-import { OutlineLoadingIcon, OutlineQuestionmarkcircleIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import {
+  QuestionMarkCircleOutlined,
+  RefreshOutlined,
+  FigmaIcon5237120699Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { Divider, Tooltip } from 'antd'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
-import { SolidCheckCircleIcon, SolidPlayIcon, SolidXcircleIcon } from '@/assets/icon/solid'
+import { CheckCircleSolid, PlaySolid, XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
@@ -156,31 +161,31 @@ const HybridScanTaskList: React.FC<HybridScanTaskListProps> = React.memo(
         case 'done':
           return (
             <div className={styles['table-status-item']}>
-              <SolidCheckCircleIcon className={styles['icon-success']} />
+              <CheckCircleSolid className={styles['icon-success']} color="currentColor" />
               <span className={styles['status-text']}>已完成</span>
             </div>
           )
         case 'executing':
           return (
             <div className={styles['table-status-item']}>
-              <OutlineLoadingIcon className={styles['icon-primary']} />
+              <FigmaIcon5237120699Outlined className={styles['icon-primary']} color="currentColor" />
               <span className={styles['status-text']}>执行中</span>
             </div>
           )
         case 'paused':
           return (
             <div className={styles['table-status-item']}>
-              <SolidPlayIcon className={styles['icon-helper']} />
+              <PlaySolid className={styles['icon-helper']} color="currentColor" />
               <span className={styles['status-text']}>暂停</span>
             </div>
           )
         default:
           return (
             <div className={styles['table-status-item']}>
-              <SolidXcircleIcon className={styles['icon-danger']} />
+              <XCircleSolid className={styles['icon-danger']} color="currentColor" />
               <span className={styles['status-text']}>失败</span>
               <Tooltip title={record.Reason || '未知原因'}>
-                <OutlineQuestionmarkcircleIcon className={styles['icon-question']} />
+                <QuestionMarkCircleOutlined className={styles['icon-question']} color="currentColor" />
               </Tooltip>
             </div>
           )
@@ -475,7 +480,7 @@ const HybridScanTaskList: React.FC<HybridScanTaskListProps> = React.memo(
       <TableVirtualResize<HybridScanTask>
         query={params.Filter}
         size="middle"
-        extra={<YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={onRefresh} />}
+        extra={<YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh} />}
         isRefresh={isRefresh}
         renderKey="TaskId"
         data={response?.Data || []}

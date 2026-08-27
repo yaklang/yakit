@@ -12,13 +12,13 @@ import { useControllableValue, useCreation, useDebounceFn, useMemoizedFn } from 
 import { ExpandIcon, RetractIcon } from './icon'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePlussmIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { PlusSmOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import type { GetAIToolListRequest, GetAIToolListResponse } from '../type/aiTool'
 import { yakitNotify } from '@/utils/notification'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { SolidAnnotationIcon, SolidToolIcon } from '@/assets/icon/solid'
+import { AnnotationSolid, ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { grpcGetAIToolList } from '../aiToolList/utils'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -358,7 +358,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
               <YakitButton
                 type="text2"
                 className={styles['trash-icon']}
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 onClick={onRemove}
               />
             )}
@@ -377,7 +377,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
               <YakitButton
                 onClick={(e) => e.stopPropagation()}
                 type="text2"
-                icon={<OutlinePlussmIcon />}
+                icon={<PlusSmOutlined color="currentColor" />}
                 className={styles['plus-sm-icon']}
               />
             </YakitDropdownMenu>
@@ -389,7 +389,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
             {showTool && (
               <div className={styles['related-tools']}>
                 <div className={styles['related-tools-heard']}>
-                  <SolidToolIcon />
+                  <ToolSolid color="currentColor" />
                   <span>关联工具</span>
                 </div>
                 <YakitSelect
@@ -416,7 +416,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
             {description && (
               <div className={styles['description']}>
                 <div className={styles['description-heard']}>
-                  <SolidAnnotationIcon />
+                  <AnnotationSolid color="currentColor" />
                   <span>解释</span>
                 </div>
                 <div>{description}</div>

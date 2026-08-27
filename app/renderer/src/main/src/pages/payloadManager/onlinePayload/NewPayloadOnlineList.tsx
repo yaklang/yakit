@@ -6,23 +6,23 @@ import { type UserInfoProps, useStore } from '@/store'
 import { isEnpriTrace } from '@/utils/envfile'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineClouddownloadIcon,
-  OutlineDocumentduplicateIcon,
-  OutlinePencilaltIcon,
-  OutlineTrashIcon,
-} from '@/assets/icon/outline'
+  CloudDownloadOutlined,
+  DocumentDuplicateOutlined,
+  PencilAltOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import Login from '../../Login'
 import {
-  SolidChevrondownIcon,
-  SolidChevronrightIcon,
-  SolidDatabaseIcon,
-  SolidDocumenttextIcon,
-  SolidDotsverticalIcon,
-  SolidFolderopenIcon,
-} from '@/assets/icon/solid'
+  ChevronDownSolid,
+  ChevronRightSolid,
+  DatabaseSolid,
+  DocumentTextSolid,
+  DotsVerticalSolid,
+  FolderOpenSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
 import classNames from 'classnames'
 import {
   type DataItem,
@@ -198,10 +198,14 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
           >
             <div className={styles['folder-header']}>
               <div className={styles['is-fold-icon']}>
-                {!notExpandArr.includes(folder.id) ? <SolidChevrondownIcon /> : <SolidChevronrightIcon />}
+                {!notExpandArr.includes(folder.id) ? (
+                  <ChevronDownSolid color="currentColor" />
+                ) : (
+                  <ChevronRightSolid color="currentColor" />
+                )}
               </div>
               <div className={styles['folder-icon']}>
-                <SolidFolderopenIcon />
+                <FolderOpenSolid color="currentColor" />
               </div>
               <div className={classNames(styles['folder-name'], 'yakit-content-single-ellipsis')}>{inputName}</div>
             </div>
@@ -221,7 +225,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                       key: 'copyFuzztag',
                       label: (
                         <div className={styles['extra-menu']}>
-                          <OutlineDocumentduplicateIcon />
+                          <DocumentDuplicateOutlined color="currentColor" />
                           <div className={styles['menu-name']}>复制 Fuzztag</div>
                         </div>
                       ),
@@ -230,7 +234,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                       key: 'rename',
                       label: (
                         <div className={styles['extra-menu']}>
-                          <OutlinePencilaltIcon />
+                          <PencilAltOutlined color="currentColor" />
                           <div className={styles['menu-name']}>重命名</div>
                         </div>
                       ),
@@ -240,7 +244,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                       key: 'download',
                       label: (
                         <div className={styles['extra-menu']}>
-                          <OutlineClouddownloadIcon />
+                          <CloudDownloadOutlined color="currentColor" />
                           <div className={styles['menu-name']}>下载</div>
                         </div>
                       ),
@@ -252,7 +256,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                       key: 'delete',
                       label: (
                         <div className={styles['extra-menu']}>
-                          <OutlineTrashIcon />
+                          <TrashOutlined color="currentColor" />
                           <div className={styles['menu-name']}>删除</div>
                         </div>
                       ),
@@ -291,7 +295,7 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                 }}
               >
                 <div className={styles['extra-icon']}>
-                  <SolidDotsverticalIcon />
+                  <DotsVerticalSolid color="currentColor" />
                 </div>
               </YakitDropdownMenu>
             </div>
@@ -497,7 +501,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
         key: 'copyFuzztag',
         label: (
           <div className={styles['extra-menu']}>
-            <OutlineDocumentduplicateIcon />
+            <DocumentDuplicateOutlined color="currentColor" />
             <div className={styles['menu-name']}>复制 Fuzztag</div>
           </div>
         ),
@@ -506,7 +510,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
         key: 'rename',
         label: (
           <div className={styles['extra-menu']}>
-            <OutlinePencilaltIcon />
+            <PencilAltOutlined color="currentColor" />
             <div className={styles['menu-name']}>重命名</div>
           </div>
         ),
@@ -516,7 +520,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
         key: 'download',
         label: (
           <div className={styles['extra-menu']}>
-            <OutlineClouddownloadIcon />
+            <CloudDownloadOutlined color="currentColor" />
             <div className={styles['menu-name']}>下载</div>
           </div>
         ),
@@ -528,7 +532,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
         key: 'delete',
         label: (
           <div className={styles['extra-menu']}>
-            <OutlineTrashIcon />
+            <TrashOutlined color="currentColor" />
             <div className={styles['menu-name']}>删除</div>
           </div>
         ),
@@ -585,11 +589,11 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
             <div className={styles['file-header']}>
               {file.type === 'DataBase' ? (
                 <div className={classNames(styles['file-icon'], styles['file-icon-database'])}>
-                  <SolidDatabaseIcon />
+                  <DatabaseSolid color="currentColor" />
                 </div>
               ) : (
                 <div className={classNames(styles['file-icon'], styles['file-icon-document'])}>
-                  <SolidDocumenttextIcon />
+                  <DocumentTextSolid color="currentColor" />
                 </div>
               )}
 
@@ -637,7 +641,7 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                 }}
               >
                 <div className={styles['extra-icon']}>
-                  <SolidDotsverticalIcon />
+                  <DotsVerticalSolid color="currentColor" />
                 </div>
               </YakitDropdownMenu>
             </div>

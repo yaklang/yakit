@@ -8,7 +8,8 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { ArrowsExpandOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
 import type { IMonacoEditor } from '@/utils/editors'
 import type { InternalTextAreaProps, YakitInputProps } from '@/components/yakitUI/YakitInput/YakitInputType'
 import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
@@ -260,7 +261,7 @@ export const NewCodecSelectUI: React.FC<NewCodecSelectUIProps> = (props) => {
           placeholder={t('YakitSelect.pleaseSelect')}
           suffixIcon={
             <div className={styles['search-icon']}>
-              <OutlineSearchIcon />
+              <SearchOutlined color="currentColor" />
             </div>
           }
           onSearch={(v) => {
@@ -410,7 +411,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
             })}
             onClick={onOperate}
           >
-            {extend ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+            {extend ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
           </div>
         </div>
       </div>

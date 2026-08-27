@@ -8,7 +8,7 @@ import { useDebounce, useMemoizedFn } from 'ahooks'
 import { Progress } from 'antd'
 import { YaklangInstallHintSvgIcon, MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon } from '../icons'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
-import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { WebsiteGV } from '@/enums/website'
 
 import classNames from 'classnames'
@@ -106,7 +106,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                     setIsTop(2)
                   }}
                 >
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </div>
               </div>
 

@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from 'react'
 import type { NotepadOnlineProps } from './NotepadManageOnlineType'
 import { useStore } from '@/store'
 import {
-  OutlineChevronupIcon,
-  OutlineChevrondownIcon,
-  OutlineTrashIcon,
-  OutlineClouddownloadIcon,
-} from '@/assets/icon/outline'
+  ChevronUpOutlined,
+  ChevronDownOutlined,
+  TrashOutlined,
+  CloudDownloadOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { OutlinePlusIcon } from '@/assets/newIcon'
 import { DownFilesModal } from '@/components/MilkdownEditor/CustomFile/CustomFile'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
@@ -143,7 +143,11 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
             >
               <YakitButton type="text2">
                 <span style={{ marginRight: 8 }}>{timeMap(t)[sorterKey]}</span>
-                {timeSortVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+                {timeSortVisible ? (
+                  <ChevronUpOutlined color="currentColor" />
+                ) : (
+                  <ChevronDownOutlined color="currentColor" />
+                )}
               </YakitButton>
             </YakitDropdownMenu>
           ),
@@ -356,7 +360,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
               <YakitButton
                 type="outline2"
                 danger
-                icon={<OutlineTrashIcon />}
+                icon={<TrashOutlined color="currentColor" />}
                 disabled={totalRef.current === 0}
                 loading={pageLoading}
               >
@@ -365,7 +369,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
             </YakitPopconfirm>
             <YakitButton
               type="outline2"
-              icon={<OutlineClouddownloadIcon />}
+              icon={<CloudDownloadOutlined color="currentColor" />}
               disabled={totalRef.current === 0}
               onClick={onBatchDown}
               loading={pageLoading}

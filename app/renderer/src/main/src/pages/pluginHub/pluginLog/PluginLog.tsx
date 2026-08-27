@@ -19,7 +19,7 @@ import { UserPlatformType } from '@/pages/globalVariable'
 import { UnLoginSvgIcon } from '@/components/layout/icons'
 import { failed } from '@/utils/notification'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineRefreshIcon } from '@/assets/icon/outline'
+import { RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import yakitImg from '@/assets/yakit.jpg'
 import classNames from 'classnames'
@@ -190,7 +190,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo(
             })}
           </div>
 
-          <YakitButton type="text2" icon={<OutlineRefreshIcon />} onClick={onRefresh}></YakitButton>
+          <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={onRefresh}></YakitButton>
         </div>
 
         <div className={styles['plugin-log-tab-body']}>

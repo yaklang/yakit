@@ -19,15 +19,16 @@ import type {
 import { getValueByType, ParamsToGroupByGroupName } from '../plugins/editDetails/utils'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import {
-  OutlileHistoryIcon,
-  OutlinePencilaltIcon,
-  OutlinePositionIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineTerminalIcon,
-} from '@/assets/icon/outline'
+  PencilAltOutlined,
+  PositionOutlined,
+  QuestionMarkCircleOutlined,
+  TerminalOutlined,
+  FigmaIcon348196674Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { SolidDotsverticalIcon, SolidLightningboltIcon } from '@/assets/icon/solid'
+import { DotsVerticalSolid, LightningBoltSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakEditor } from '@/utils/editors'
@@ -252,7 +253,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
             : t('YakScriptLoader.view_plugin_traffic')
         }
       >
-        <OutlileHistoryIcon
+        <FigmaIcon348196674Outlined
           className={classNames(style['history-icon'], {
             [style['history-icon-def']]: !showPluginHistoryList.includes(i.ScriptName),
             [style['history-icon-light']]: showPluginHistoryList.includes(i.ScriptName),
@@ -278,6 +279,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
               }),
             )
           }}
+          color="currentColor"
         />
       </Tooltip>
     )
@@ -314,7 +316,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
           p.onSendToPatch && p.onSendToPatch(i)
         }}
       >
-        <SolidLightningboltIcon className={style['lightning-bolt-icon']} />
+        <LightningBoltSolid className={style['lightning-bolt-icon']} color="currentColor" />
       </YakitPopconfirm>
     )
   }, [i, p, i18nRefresh])
@@ -382,11 +384,12 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', gap: 8, marginRight: 12 }}>
         {showEditor && (
-          <OutlinePencilaltIcon
+          <PencilAltOutlined
             className={style['mitm-params-edit-icon']}
             onClick={() => {
               handleMitmHasParams(true)
             }}
+            color="currentColor"
           />
         )}
         {status !== 'idle' ? (
@@ -400,7 +403,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         ) : null}
         {status !== 'idle' && hasPluginOutInfo && (
           <Tooltip title={t('YakScriptLoader.view_current_plugin_output')}>
-            <OutlinePositionIcon
+            <PositionOutlined
               className={classNames(style['position-icon'], {
                 [style['position-light']]: showPluginStream === i.ScriptName,
               })}
@@ -410,6 +413,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                   setShowPluginStream?.(i.ScriptName)
                 }
               }}
+              color="currentColor"
             />
           </Tooltip>
         )}
@@ -432,7 +436,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                       zIndex={9999}
                     >
                       <div className={style['extra-menu']}>
-                        <OutlineTerminalIcon className={style['plugin-local-icon']} />
+                        <TerminalOutlined className={style['plugin-local-icon']} color="currentColor" />
                         <div className={style['menu-name']}>源码</div>
                       </div>
                     </YakitPopover>
@@ -452,7 +456,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                       }}
                     >
                       <div className={style['extra-menu']}>
-                        <OutlineQuestionmarkcircleIcon className={style['plugin-local-icon']} />
+                        <QuestionMarkCircleOutlined className={style['plugin-local-icon']} color="currentColor" />
                         <div className={style['menu-name']}>帮助信息</div>
                       </div>
                     </Tooltip>
@@ -473,7 +477,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
               placement: 'bottomLeft',
             }}
           >
-            <SolidDotsverticalIcon className={style['extra-btns-icon']} />
+            <DotsVerticalSolid className={style['extra-btns-icon']} color="currentColor" />
           </YakitDropdownMenu>
         )}
       </div>

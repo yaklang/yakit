@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
-import { OutlineArrownarrowdownIcon, OutlineArrownarrowupIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { ArrowNarrowDownOutlined, ArrowNarrowUpOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -87,7 +87,8 @@ export const SearchInputTableWrapper: React.FC<SearchInputTableWrapperProps> = R
                   onSort?.('asc')
                 }}
               >
-                <OutlineArrownarrowupIcon className={style['outlineFilterIcon']} /> {t('YakitTable.asc')}
+                <ArrowNarrowUpOutlined className={style['outlineFilterIcon']} color="currentColor" />{' '}
+                {t('YakitTable.asc')}
               </div>
               <div
                 className={classNames(style['body-length-filter'], {
@@ -97,7 +98,8 @@ export const SearchInputTableWrapper: React.FC<SearchInputTableWrapperProps> = R
                   onSort?.('desc')
                 }}
               >
-                <OutlineArrownarrowdownIcon className={style['outlineFilterIcon']} /> {t('YakitTable.desc')}
+                <ArrowNarrowDownOutlined className={style['outlineFilterIcon']} color="currentColor" />{' '}
+                {t('YakitTable.desc')}
               </div>
             </>
           )}
@@ -109,7 +111,8 @@ export const SearchInputTableWrapper: React.FC<SearchInputTableWrapperProps> = R
               setShow(true)
             }}
           >
-            <OutlineSearchIcon className={style['outlineFilterIcon']} /> {t('SearchInputTableWrapper.search')}
+            <SearchOutlined className={style['outlineFilterIcon']} color="currentColor" />{' '}
+            {t('SearchInputTableWrapper.search')}
           </div>
         </>
       )}

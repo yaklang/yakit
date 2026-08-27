@@ -19,15 +19,16 @@ import classNames from 'classnames'
 import styles from './RunnerTabs.module.scss'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-  OutlineChevrondoubleleftIcon,
-  OutlineChevrondoublerightIcon,
-  OutlineDownloadIcon,
-  OutlineImportIcon,
-  OutlinePauseIcon,
-  OutlinePlayIcon,
-  OutlineSplitScreenIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+  ChevronDoubleLeftOutlined,
+  ChevronDoubleRightOutlined,
+  DownloadOutlined,
+  PauseOutlined,
+  PlayOutlined,
+  XOutlined,
+  FigmaIcon6480193584Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineSplitScreenIcon } from '@/assets/icon/bespokeOutline'
 import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
 import { YakRunnerOpenFolderIcon } from '../../yakRunner/icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -687,19 +688,19 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
               onClick={onDownloadReport}
               loading={downloadLoading}
               disabled={downloadLoading}
-              icon={<OutlineDownloadIcon />}
+              icon={<DownloadOutlined color="currentColor" />}
             >
               {t('YakitButton.downloadReport')}
             </YakitButton>
           ) : (
             <>
               {runnerTabsId === tabsId ? (
-                <YakitButton colors="danger" icon={<OutlinePauseIcon />} onClick={onStopYak}>
+                <YakitButton colors="danger" icon={<PauseOutlined color="currentColor" />} onClick={onStopYak}>
                   {t('YakitButton.stop')}
                 </YakitButton>
               ) : (
                 <YakitButton
-                  icon={<OutlinePlayIcon />}
+                  icon={<PlayOutlined color="currentColor" />}
                   loading={runnerTabsId === tabsId}
                   disabled={!!runnerTabsId && runnerTabsId !== tabsId}
                   onClick={onRunYak}
@@ -855,7 +856,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollLeftIconRef}
                 >
-                  <OutlineChevrondoubleleftIcon />
+                  <ChevronDoubleLeftOutlined color="currentColor" />
                 </div>
                 <div
                   className={classNames(styles['bar-container'])}
@@ -885,7 +886,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
                   })}
                   ref={scrollRightIconRef}
                 >
-                  <OutlineChevrondoublerightIcon />
+                  <ChevronDoubleRightOutlined color="currentColor" />
                 </div>
                 {/* {pageItem.hideAdd !== true && (
                                     <OutlinePlusIcon
@@ -983,7 +984,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                   className={styles['del-btn']}
                   type="text2"
                   size="small"
-                  icon={<OutlineXIcon />}
+                  icon={<XOutlined color="currentColor" />}
                   onClick={closeTabItem}
                 />
               </div>
@@ -1483,7 +1484,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo(()
                 <YakRunnerOpenFolderIcon />
                 {t('openLocalFolder')}
               </div>
-              <OutlineImportIcon className={styles['icon-style']} />
+              <FigmaIcon6480193584Outlined className={styles['icon-style']} color="currentColor" />
             </div>
           </div>
         </div>

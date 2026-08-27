@@ -11,7 +11,8 @@ import type {
   ShowItemType,
 } from './BottomEditorDetailsType'
 import { HelpInfoList } from '../CollapseList/CollapseList'
-import { OutlineCogIcon, OutlineExitIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { CogOutlined, XOutlined, FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SyntaxCheckList } from './SyntaxCheckList/SyntaxCheckList'
 import useStore from '../hooks/useStore'
@@ -346,13 +347,13 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 overlayInnerStyle={{ width: 340 }}
                 visible={popoverVisible}
               >
-                <YakitButton icon={<OutlineCogIcon />} type={popoverVisible ? 'text' : 'text2'} />
+                <YakitButton icon={<CogOutlined color="currentColor" />} type={popoverVisible ? 'text' : 'text2'} />
               </YakitPopover>
               {!isShowTerminalList && (
                 <YakitButton
                   type="text2"
                   // danger
-                  icon={<OutlineExitIcon />}
+                  icon={<FigmaIcon28011794Outlined color="currentColor" />}
                   className={styles['yak-runner-terminal-close']}
                   onClick={() => {
                     debugTerminalHookEvent.onDeleteTerminalItem(terminalRunnerId)
@@ -363,7 +364,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
           )}
           <YakitButton
             type="text2"
-            icon={<OutlineXIcon />}
+            icon={<XOutlined color="currentColor" />}
             onClick={() => {
               setEditorDetails(false)
             }}

@@ -49,7 +49,7 @@ import {
 } from '@/apiUtils/grpc'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
-import { OutlineShieldcheckIcon } from '@/assets/icon/outline'
+import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
 
 /** 不同状态下展示的ICON */
@@ -57,7 +57,7 @@ const ShowIcon: Record<string, ReactNode> = {
   error: <ExclamationIcon className={styles['icon-style']} />,
   warning: <ExclamationIcon className={styles['icon-style']} />,
   success: <RocketIcon className={styles['icon-style']} />,
-  help: <OutlineShieldcheckIcon className={styles['icon-style']} />,
+  help: <ShieldCheckOutlined className={styles['icon-style']} color="currentColor" />,
   loading: <LoadingOutlined className={styles['icon-style']} />,
 }
 /** 不同状态下组件展示的颜色 */

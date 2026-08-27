@@ -15,7 +15,9 @@ import {
 import { type ModifyNotepadPageInfoProps, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
-import { OutlineDotshorizontalIcon, OutlineTrashIcon, OutlineStoreIcon, OutlineExportIcon } from '@/assets/icon/outline'
+import { DotsHorizontalOutlined, TrashOutlined, FigmaIcon13208172881Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+
+import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { cataloguePlugin } from '@/components/MilkdownEditor/utils/cataloguePlugin'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -468,11 +470,16 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
             <YakitButton type="outline2" icon={<OutlineExportIcon />} size="large" onClick={onExport}>
               {t('YakitButton.export')}
             </YakitButton>
-            <YakitButton type="primary" icon={<OutlineStoreIcon />} size="large" onClick={onSave}>
+            <YakitButton
+              type="primary"
+              icon={<FigmaIcon13208172881Outlined color="currentColor" />}
+              size="large"
+              onClick={onSave}
+            >
               {t('YakitButton.save')}
             </YakitButton>
             <FuncFilterPopover
-              icon={<OutlineDotshorizontalIcon />}
+              icon={<DotsHorizontalOutlined color="currentColor" />}
               button={{ type: 'text2', size: 'large' }}
               menu={{
                 type: 'primary',
@@ -481,7 +488,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     key: 'remove',
                     label: t('YakitButton.delete'),
                     type: 'danger',
-                    itemIcon: <OutlineTrashIcon />,
+                    itemIcon: <TrashOutlined color="currentColor" />,
                   },
                 ],
                 onClick: ({ key }) => {

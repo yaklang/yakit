@@ -14,13 +14,8 @@ import type { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import emiter from '@/utils/eventBus/eventBus'
 import type { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MITMFilters'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  OutlineConfiguredIcon,
-  OutlineInformationcircleIcon,
-  OutlineRefreshIcon,
-  OutlineUnConfiguredIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+import { InformationCircleOutlined, RefreshOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { OutlineConfiguredIcon, OutlineUnConfiguredIcon } from '@/assets/icon/bespokeOutline'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import { convertLocalMITMFilterRequest, convertMITMFilterUI } from '../MITMServerStartForm/utils'
@@ -414,7 +409,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       <>
         检测到配置{openWhiteFilter()}，如抓包有问题可先将白名单设置{closeDisposition('filter')}
         <Tooltip title={t('MITMHijackedContent.when_disabled_all_content_matching_the_f')}>
-          <OutlineInformationcircleIcon className={styles['circle-icon']} />
+          <InformationCircleOutlined className={styles['circle-icon']} color="currentColor" />
         </Tooltip>
         。
       </>
@@ -426,7 +421,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       <>
         检测到配置{openReplaceRule()}，如抓包有问题可先将替换{closeDisposition('rule')}
         <Tooltip title={t('MITMHijackedContent.when_disabled_the_no_replacement_for_all')}>
-          <OutlineInformationcircleIcon className={styles['circle-icon']} />
+          <InformationCircleOutlined className={styles['circle-icon']} color="currentColor" />
         </Tooltip>
         。
       </>
@@ -439,7 +434,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         检测到配置{openReplaceRule()}和{openWhiteFilter()}白名单，如抓包有问题可先将配置
         {closeDisposition('all')}
         <Tooltip title={t('MITMHijackedContent.disable_no_replace_and_delete_content')}>
-          <OutlineInformationcircleIcon className={styles['circle-icon']} />
+          <InformationCircleOutlined className={styles['circle-icon']} color="currentColor" />
         </Tooltip>
         。
       </>
@@ -459,7 +454,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       <>
         检测到性能下降，如配置染色/匹配规则，可先将规则{closeDisposition('moreRuleLimit')}
         <Tooltip title={t('MITMHijackedContent.when_disabled_all_rules_will_be_disabled')}>
-          <OutlineInformationcircleIcon className={styles['circle-icon']} />
+          <InformationCircleOutlined className={styles['circle-icon']} color="currentColor" />
         </Tooltip>
         。
       </>
@@ -924,7 +919,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                   </YakitButton>
                 </YakitPopover>
                 <YakitButton onClick={onSubmitAll}>全部放行</YakitButton>
-                <YakitButton type="outline1" icon={<OutlineRefreshIcon />} onClick={onRefreshManual} />
+                <YakitButton
+                  type="outline1"
+                  icon={<RefreshOutlined color="currentColor" />}
+                  onClick={onRefreshManual}
+                />
               </div>
             </div>
           ) : (
@@ -1139,7 +1138,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             style={{ float: 'right' }}
             type="text2"
             size={'middle'}
-            icon={<OutlineXIcon />}
+            icon={<XOutlined color="currentColor" />}
             onClick={() => {
               if (moreRuleLimit) {
                 moreRuleLimitFlagRef.current = false

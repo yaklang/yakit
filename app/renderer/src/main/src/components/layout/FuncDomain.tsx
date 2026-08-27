@@ -43,7 +43,7 @@ import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
 import { LocalGV } from '@/yakitGV'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { showPcapPermission } from '@/utils/ConfigPcapPermission'
-import { GithubSvgIcon, TerminalIcon } from '@/assets/newIcon'
+import { TerminalIcon } from '@/assets/newIcon'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
@@ -66,12 +66,13 @@ import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import {
-  OutlinePencilaltIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineWrenchIcon,
-} from '@/assets/icon/outline'
+  PencilAltOutlined,
+  QuestionMarkCircleOutlined,
+  RefreshOutlined,
+  SearchOutlined,
+  Wrench1Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { type DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
@@ -84,7 +85,7 @@ const YakitCodeScanRiskDetails = React.lazy(() =>
 const YakitRiskDetails = React.lazy(() =>
   import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
 )
-import { SolidPlayIcon } from '@/assets/icon/solid'
+import { GitHubSolid, PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, getYakExecutorParam } from '@/pages/plugins/editDetails/utils'
@@ -1356,7 +1357,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
             <div className={styles['update-title']}>
               {`${versionTitle()} ${getReleaseEditionName()} ${lastVersion || version}`}{' '}
               {intranet && fetchIntranetYakitVersion && (
-                <OutlineRefreshIcon onClick={() => fetchIntranetYakitVersion(true)} />
+                <RefreshOutlined onClick={() => fetchIntranetYakitVersion(true)} color="currentColor" />
               )}
             </div>
             <div className={styles['update-time']}>{`当前版本: ${version}`}</div>
@@ -1383,7 +1384,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 if (onUpdateEdit) onUpdateEdit('yakit')
               }}
             >
-              <OutlinePencilaltIcon className={styles['edit-icon']} />
+              <PencilAltOutlined className={styles['edit-icon']} color="currentColor" />
             </div>
           )}
         </div>
@@ -1576,7 +1577,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                 if (onUpdateEdit) onUpdateEdit('yaklang')
               }}
             >
-              <OutlinePencilaltIcon className={styles['edit-icon']} />
+              <PencilAltOutlined className={styles['edit-icon']} color="currentColor" />
             </div>
           )}
         </div>
@@ -1682,7 +1683,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             ]}
           />
           <Tooltip title={t('MoreYaklangVersion.slimVersionTip')}>
-            <YakitButton type="text2" icon={<OutlineQuestionmarkcircleIcon />} size="small" />
+            <YakitButton type="text2" icon={<QuestionMarkCircleOutlined color="currentColor" />} size="small" />
           </Tooltip>
         </div>
       )}
@@ -1690,7 +1691,7 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
         <YakitInput
           value={searchVersionVal}
           size="middle"
-          prefix={<OutlineSearchIcon className="search-icon" />}
+          prefix={<SearchOutlined className="search-icon" color="currentColor" />}
           onChange={(e) => onSearchVersion(e.target.value.trim())}
         />
       </div>
@@ -2340,7 +2341,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                   className={styles['content-style']}
                   onClick={() => yakitShell.openExternal(WebsiteGV.YakitHistoryVersionAddress)}
                 >
-                  <GithubSvgIcon className={styles['icon-style']} /> 历史版本
+                  <GitHubSolid className={styles['icon-style']} /> 历史版本
                 </div>
               </div>
             </div>
@@ -3273,7 +3274,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
               requiredParams={requiredParams}
             ></PerformanceSampleForm>
           ),
-          okButtonProps: { icon: <SolidPlayIcon /> },
+          okButtonProps: { icon: <PlaySolid color="currentColor" /> },
           onOkText: '开始检测',
           onOk: () => {
             const yakExecutorParams: YakExecutorParam[] = []
@@ -3383,8 +3384,9 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
       >
         <div className={styles['ui-op-btn-wrapper']}>
           <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
-            <OutlineWrenchIcon
+            <Wrench1Outlined
               className={classNames(show ? styles['icon-hover-style'] : styles['icon-style'], styles['wrench-icon'])}
+              color="currentColor"
             />
           </div>
         </div>
