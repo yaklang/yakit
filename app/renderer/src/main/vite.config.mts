@@ -129,14 +129,15 @@ export default defineConfig(({ mode }) => {
       }),
     ].filter(Boolean),
     resolve: {
-      dedupe: ['react', 'react-dom'],
+      dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'ahooks'],
       alias: [
         { find: '@', replacement: path.resolve(rootDir, 'src') },
         // antd / pro-layout less 里的 ~antd 写法
         { find: /^~antd/, replacement: path.resolve(rootDir, 'node_modules/antd') },
         { find: /^~/, replacement: '' },
-        { find: 'react', replacement: path.resolve(rootDir, 'node_modules/react') },
-        { find: 'react-dom', replacement: path.resolve(rootDir, 'node_modules/react-dom') },
+        // 精确匹配，避免字符串前缀误伤 react-dom / react-dnd
+        { find: /^react$/, replacement: path.resolve(rootDir, 'node_modules/react') },
+        { find: /^react-dom$/, replacement: path.resolve(rootDir, 'node_modules/react-dom') },
       ],
     },
     css: {
@@ -171,7 +172,18 @@ export default defineConfig(({ mode }) => {
       compress: false,
       // 首屏前预热入口，减少运行中途发现新 dep 触发 504 Outdated Optimize Dep
       warmup: {
-        clientFiles: ['./index.html', './yakit-aux.html', './src/index.tsx', './src/auxWindow/aux-entry.tsx'],
+        clientFiles: [
+          './index.html',
+          './yakit-aux.html',
+          './src/index.tsx',
+          './src/auxWindow/aux-entry.tsx',
+          './src/newApp/NewApp.tsx',
+          './src/components/layout/UILayout.tsx',
+          './src/pages/mitm/MITMServerHijacking/MITMPluginOnline.tsx',
+          './src/pages/MainOperator.tsx',
+          './src/pages/softwareSettings/SoftwareSettings.tsx',
+          './src/pages/softwareSettings/ProjectManage.tsx',
+        ],
       },
     },
     preview: {

@@ -42,12 +42,7 @@ import {
   type ProjectIOProgress,
   type ProjectParamsProp,
 } from '@/pages/softwareSettings/projectUtils'
-const NewProjectAndFolder = lazy(() =>
-  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.NewProjectAndFolder })),
-)
-const TransferProject = lazy(() =>
-  import('@/pages/softwareSettings/ProjectManage').then((m) => ({ default: m.TransferProject })),
-)
+import { NewProjectAndFolder, TransferProject } from '@/pages/softwareSettings/ProjectManage'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { useScreenRecorder } from '@/store/screenRecorder'
