@@ -57,7 +57,7 @@ const scheduleStatusColor: Record<string, YakitTagColor> = {
 /**
  * 任务状态筛选选项
  *  - 全部：展示全部任务
- *  - 进行中 / 已暂停 Status 字段筛选
+ *  - 进行中 / 已暂停 / 已完成 Status 字段筛选
  */
 const scheduleQueryTypeOptions = (t: TFunction): YakitMenuItemType[] => {
   return [
@@ -72,6 +72,10 @@ const scheduleQueryTypeOptions = (t: TFunction): YakitMenuItemType[] => {
     {
       label: t('AIScheduledTasks.paused'),
       key: 'paused',
+    },
+    {
+      label: t('AIScheduledTasks.completed'),
+      key: 'completed',
     },
   ]
 }
@@ -144,6 +148,22 @@ const formatScheduleRule = (item: AIReActSchedule, t: TFunction) => {
   if (rrule.includes('FREQ=DAILY')) return t('AIScheduledTasks.frequencyDailyAtTime', { time: startTime })
   return t('AIScheduledTasks.frequencyDailyAtTime', { time: startTime })
 }
+
+/**
+ * 等待后端 ai_session 推送（立即运行的任务会话已创建/持久化），最多等 timeoutMs，
+ * 推送或超时任一先到即结束。重复调用 clearTimeout / off / resolve 均幂等，无需去重标记。
+ */
+const waitForAISessionPush = (timeoutMs: number) =>
+  new Promise<void>((resolve) => {
+    const finish = () => {
+      emiter.off('onServerPushAISession', finish)
+      window.clearTimeout(timer)
+      resolve()
+    }
+    const timer = window.setTimeout(finish, timeoutMs)
+    emiter.on('onServerPushAISession', finish)
+  })
+
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
@@ -262,9 +282,11 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   })
   const onAdd = useMemoizedFn(() => openForm())
 
-  // 立即运行定时任务：成功后切换到历史会话tab并刷新激活第一个会话（列表项与详情共用）
+  // 立即运行定时任务：成功后等待后端 ai_session 推送（最多 2s），
+  // 收到推送立即跳转历史会话；超时（旧引擎/通知丢失）则兜底切换并刷新选中第一个会话（列表项与详情共用）
   const runScheduleNow = useMemoizedFn((item: AIReActSchedule) => {
     return grpcRunAIReActScheduleNow({ UUID: item.UUID })
+      .then(() => waitForAISessionPush(2000))
       .then(() => {
         yakitNotify('success', t('AIScheduledTasks.runStarted'))
         emiter.emit(
@@ -382,6 +404,28 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
               isRef={isRef}
               recalculation={recalculation}
             />
+          ) : queryType !== 'all' || keyWord.trim() !== '' ? (
+            // 列表为空时区分「全库为空」与「筛选/搜索无结果」，后者展示清空筛选空态
+            <div className={styles['ai-list-empty-wrapper']}>
+              <YakitEmpty
+                title={t('AIScheduledTasks.emptyFilteredTitle')}
+                description={t('AIScheduledTasks.emptyFilteredDescription')}
+              />
+              <div className={styles['ai-list-btns-wrapper']}>
+                <YakitButton
+                  type="outline1"
+                  onClick={() => {
+                    setQueryType('all')
+                    setKeyWord('')
+                    setTimeout(() => {
+                      getList(1)
+                    }, 200)
+                  }}
+                >
+                  {t('AIScheduledTasks.clearFilter')}
+                </YakitButton>
+              </div>
+            </div>
           ) : (
             <div className={styles['ai-list-empty-wrapper']}>
               <YakitEmpty
@@ -406,16 +450,25 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
   const { item, onSetData, onRefresh, onEdit, onOpenDetail, onRunNow } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [visible, setVisible] = useState<boolean>(false)
-  const onToggleEnabled = useMemoizedFn((e) => {
+  const [toggling, setToggling] = useState<boolean>(false)
+  const onToggleEnabled = useMemoizedFn(async (e) => {
     e.stopPropagation()
+    if (toggling) return
+    setToggling(true)
     const enable = item.Status !== 'active'
-    grpcSetAIReActScheduleEnabled({ UUID: item.UUID, Enabled: enable }).then(() => {
+    try {
+      await grpcSetAIReActScheduleEnabled({ UUID: item.UUID, Enabled: enable })
       onSetData({
         ...item,
         Status: enable ? 'active' : 'paused',
       })
       yakitNotify('success', t(enable ? 'AIScheduledTasks.resumedSuccess' : 'AIScheduledTasks.pausedSuccess'))
-    })
+    } catch {
+    } finally {
+      setTimeout(() => {
+        setToggling(false)
+      }, 200)
+    }
   })
   const menuSelect = useMemoizedFn((key: string) => {
     switch (key) {
@@ -461,6 +514,8 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
                 type="text2"
                 size="small"
                 icon={item.Status === 'active' ? <OutlinePauseIcon /> : <OutlinePlayIcon />}
+                loading={toggling}
+                disabled={toggling}
                 onClick={onToggleEnabled}
               />
             </Tooltip>
