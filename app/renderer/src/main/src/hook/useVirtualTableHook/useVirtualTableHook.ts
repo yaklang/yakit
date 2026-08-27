@@ -871,22 +871,11 @@ export default function useVirtualTableHook<
   const setP = useMemoizedFn((newParams: ParamsTProps) => {
     queryEpochRef.current += 1
     isGrpcRef.current = false
-    const data: ParamsTProps = {
-      ...newParams,
-      Pagination: {
-        ...params.Pagination,
-        ...newParams.Pagination,
-      },
-      Filter: {
-        ...params.Filter,
-        ...newParams.Filter,
-      },
+    if (newParams.Pagination?.Order) {
+      sortRef.current.order = newParams.Pagination.Order as 'none' | 'asc' | 'desc'
     }
-    if (data.Pagination.Order) {
-      sortRef.current.order = data.Pagination.Order as 'none' | 'asc' | 'desc'
-    }
-    if (data.Pagination.OrderBy) {
-      sortRef.current.orderBy = data.Pagination.OrderBy
+    if (newParams.Pagination?.OrderBy) {
+      sortRef.current.orderBy = newParams.Pagination.OrderBy
     }
     if (typeof newParams.startLoop === 'boolean') {
       newParams.startLoop ? startT() : stopT()
@@ -894,7 +883,17 @@ export default function useVirtualTableHook<
     if (typeof newParams.endLoop === 'boolean') {
       isAllowSetEndLoopRef.current = true
     }
-    setParams(data)
+    setParams((prev) => ({
+      ...newParams,
+      Pagination: {
+        ...prev.Pagination,
+        ...newParams.Pagination,
+      },
+      Filter: {
+        ...prev.Filter,
+        ...newParams.Filter,
+      },
+    }))
   })
 
   return [
