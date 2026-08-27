@@ -85,6 +85,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMitmShortcutKeyEvents, MitmShortcutKey } from '@/utils/globalShortcutKey/events/page/mitm'
 import { JSONParseLog } from '@/utils/tool'
 import { applyManualHijackBatch, decorateManualHijackRows } from './manualHijackListModel'
+import { type ManualHijackBackendPacketSnapshot, planManualHijackPacketSync } from './manualHijackPacketSync'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { LargeRequestFileReplaceModal } from './LargeMultipartFileReplaceModal'
 import {
@@ -948,6 +949,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
     })
 
     const [type, setType] = useState<PackageTypeProps>('response')
+    const backendPacketSnapshotRef = useRef<ManualHijackBackendPacketSnapshot | undefined>(undefined)
 
     useImperativeHandle(ref, () => {
       return {
@@ -956,15 +958,11 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
       }
     }, [])
     useEffect(() => {
-      if (info.IsWebsocket) {
-        // WS Request
-        onSetRequest(info)
-      } else {
-        // Request
-        onSetRequest(info)
-        // Response
-        onSetResponse(info)
-      }
+      const plan = planManualHijackPacketSync(backendPacketSnapshotRef.current, info)
+      backendPacketSnapshotRef.current = plan.snapshot
+
+      if (plan.syncRequest) onSetRequest(info)
+      if (plan.syncResponse) onSetResponse(info)
     }, [info])
     useEffect(() => {
       if (isOnlyLookResponse) setType('response')
