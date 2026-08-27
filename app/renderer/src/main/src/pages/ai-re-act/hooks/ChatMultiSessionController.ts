@@ -49,6 +49,7 @@ import {
   applyHydratedStageSettled,
 } from './persist/contentPersistHelper'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
+import { clearThoughtDurationCache } from '@/pages/ai-agent/components/thoughtDuration/ThoughtDuration'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1516,6 +1517,7 @@ export class ChatMultiSessionController {
     // 卸池前清 debounce，避免空 ensureSession 后迟到 timer 把 IDB 盖成空树
     this.clearSessionRenderPersistTimer(sessionId)
     this.sessionRestoreLoading.delete(sessionId)
+    clearThoughtDurationCache(sessionId)
 
     this.readyChannels.delete(sessionId)
 

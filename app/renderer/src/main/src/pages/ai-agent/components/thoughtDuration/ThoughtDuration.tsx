@@ -1,6 +1,7 @@
 import { useCreation } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { type FC, memo, useEffect, useRef, useState } from 'react'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
 export interface ThoughtDurationProps {
   /** 稳定 id：单条用 stream token，组用第一条子 token，避免合并成组时重挂丢失秒数 */
@@ -14,21 +15,37 @@ type ThoughtDurationCache = {
   seenStart: boolean
 }
 
-const durationCache = new Map<string, ThoughtDurationCache>()
+/** sessionId -> persistKey -> 计时缓存；会话卸池时清掉 */
+const durationCache = new Map<string, Map<string, ThoughtDurationCache>>()
+
+export const clearThoughtDurationCache = (sessionId?: string) => {
+  if (!sessionId) {
+    durationCache.clear()
+    return
+  }
+  durationCache.delete(sessionId)
+}
 
 const ThoughtDuration: FC<ThoughtDurationProps> = memo((props) => {
   const { persistKey, status } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-  const cached = persistKey ? durationCache.get(persistKey) : undefined
+  const sessionId = useCurrentSessionId()
+  const sessionCache = sessionId ? durationCache.get(sessionId) : undefined
+  const cached = persistKey ? sessionCache?.get(persistKey) : undefined
   const seenStartRef = useRef(cached?.seenStart ?? false)
   const [seconds, setSeconds] = useState(cached?.seconds ?? 1)
 
   if (status === 'start') seenStartRef.current = true
 
   useEffect(() => {
-    if (!persistKey || !seenStartRef.current) return
-    durationCache.set(persistKey, { seconds, seenStart: true })
-  }, [persistKey, seconds])
+    if (!sessionId || !persistKey || !seenStartRef.current) return
+    let map = durationCache.get(sessionId)
+    if (!map) {
+      map = new Map()
+      durationCache.set(sessionId, map)
+    }
+    map.set(persistKey, { seconds, seenStart: true })
+  }, [sessionId, persistKey, seconds])
 
   useEffect(() => {
     if (status !== 'start') return
