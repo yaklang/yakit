@@ -223,7 +223,14 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
     AIService: '',
     AIModelName: '',
     // showQS为了UI渲染方便，重新构建的字段
-    extraValue: { showQS: data.react_task_input || '' },
+    extraValue: {
+      showQS: data.react_task_input || '',
+      inputSource: data.react_task_input_source || '',
+      scheduleUUID: data.react_task_schedule_uuid || '',
+      scheduleName: data.react_task_schedule_name || '',
+      scheduledAt: data.react_task_scheduled_at || '',
+      scheduleTrigger: data.react_task_schedule_trigger || '',
+    },
   }
   rawData.contents.set(chatData.id, chatData)
 

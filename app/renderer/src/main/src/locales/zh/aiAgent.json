@@ -256,6 +256,37 @@
     "noPreview": "当前规则没有后续运行时间",
     "runtimeNotice": "任务按托管 YOLO 策略无人值守执行，结果保留在对应聊天中，不生成单独的运行记录。继续当前会话时，如果触发瞬间该会话仍在运行，本次将静默跳过；独立会话模式则每次新建会话。应用关闭或电脑休眠时不会运行，恢复后按容错窗口处理。",
     "loading": "加载中…",
+    "taskIntro": "任务介绍",
+    "taskName": "任务名称",
+    "originalRequest": "原始请求",
+    "detail": "详情",
+    "timezone": "时区",
+    "status": "状态",
+    "completedNoToggle": "已完成任务无法切换状态",
+    "openChat": "打开关联会话",
+    "lastExecution": "最近执行",
+    "triggeredAt": "触发时间",
+    "startedAt": "开始时间",
+    "executionResult": "执行结果",
+    "finishedAt": "完成时间",
+    "skippedAt": "跳过于",
+    "endedAt": "结束于",
+    "skipReasonTitle": "跳过原因",
+    "lastError": "失败原因",
+    "pauseReasonTitle": "暂停原因",
+    "outcome": {
+      "succeeded": "成功",
+      "failed": "失败",
+      "skipped": "跳过",
+      "cancelled": "取消",
+      "interrupted": "中断",
+      "needs_attention": "需关注",
+      "running": "运行中"
+    },
+    "skipReason": {
+      "session_busy": "关联会话正在运行",
+      "scheduler_capacity": "调度器容量已满"
+    },
     "frequencyOptions": {
       "once": "仅一次",
       "minutes": "每 N 分钟",
@@ -362,7 +393,8 @@
     "thinking": "思考：",
     "toolCall": "工具调用",
     "taskEnd": "任务结束标志",
-    "taskEndDesc": "当前任务已经结束，下面为新的任务数据"
+    "taskEndDesc": "当前任务已经结束，下面为新的任务数据",
+    "scheduledTrigger": "由定时任务启动"
   },
   "AIReportFinishCard": {
     "openInAICodeAudit": "AI代码审计中打开",

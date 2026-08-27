@@ -4,6 +4,7 @@ import type {
   AIReActSchedule,
   CreateAIReActScheduleRequest,
   DeleteAIReActScheduleRequest,
+  GetAIReActScheduleRequest,
   PreviewAIReActScheduleTimesRequest,
   PreviewAIReActScheduleTimesResponse,
   QueryAIReActSchedulesRequest,
@@ -109,6 +110,19 @@ export const grpcRunAIReActScheduleNow: APIFunc<RunAIReActScheduleNowRequest, nu
             yakitNotify('error', 'grpcRunAIReActScheduleNow 失败:' + err)
           }
         }
+        reject(err)
+      })
+  })
+}
+
+/** 根据 UUID 获取单个定时任务详情 */
+export const grpcGetAIReActSchedule: APIFunc<GetAIReActScheduleRequest, AIReActSchedule> = (params, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('GetAIReActSchedule', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcGetAIReActSchedule 失败:' + err)
         reject(err)
       })
   })

@@ -8,4 +8,6 @@ export interface AIScheduledTasksListItemProps {
   onSetData: (value: AIReActSchedule) => void
   onRefresh: () => void
   onEdit: (value: AIReActSchedule) => void
+  onOpenDetail?: (value: AIReActSchedule) => void
+  onRunNow?: (value: AIReActSchedule) => void
 }

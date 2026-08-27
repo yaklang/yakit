@@ -7,6 +7,7 @@
   flex-direction: column;
 }
 .ai-schedule-list-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -147,11 +148,6 @@
           }
         }
       }
-      &-right {
-        @extend %display-flex-center;
-        gap: 4px;
-        flex-shrink: 0;
-      }
       &-status-icon {
         @extend %display-flex-center;
         flex-shrink: 0;
@@ -163,16 +159,13 @@
         }
       }
       &-status {
-        flex-shrink: 0;
-        white-space: nowrap;
-      }
-      &-run-count {
-        white-space: nowrap;
-      }
-      &-time {
+        min-width: 0;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+      }
+      &-run-count {
+        white-space: nowrap;
       }
       .rule-no-active {
         opacity: 0.5;

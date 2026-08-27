@@ -862,6 +862,12 @@ export declare namespace AIAgentGrpcApi {
     reason?: string
     /** 前端发送用户问题时，自定义的UUID */
     react_task_user_input_uuid: string
+    /** 输入来源；schedule 表示由定时任务触发 */
+    react_task_input_source?: string
+    react_task_schedule_uuid?: string
+    react_task_schedule_name?: string
+    react_task_scheduled_at?: string
+    react_task_schedule_trigger?: string
     /** 出队前的问题队列长度 */
     queue_len: number
   }
