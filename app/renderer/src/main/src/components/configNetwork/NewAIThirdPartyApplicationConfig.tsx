@@ -20,13 +20,20 @@ import type { FormInstance, FormLayout } from 'antd/lib/form/Form'
 import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import type { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
-import { AIConfigAPIKeyFormItem } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
+import {
+  AIConfigAPIKeyFormItem,
+  buildAIConfigHealthCheckConfig,
+} from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
+import {
+  buildReasoningEffortOptions,
+  probedExtendedEffortsFromResponse,
+} from '@/pages/ai-agent/aiModelList/aiModelForm/reasoningEffort'
 import {
   AI_API_TYPE_OPTIONS,
   DEFAULT_AI_API_TYPE,
   normalizeAIAPIType,
 } from '@/pages/ai-agent/aiModelList/aiApiTypeOptions'
-import { grpcGetAIThirdPartyAppConfigTemplate } from '@/pages/ai-agent/aiModelList/utils'
+import { grpcGetAIThirdPartyAppConfigTemplate, grpcProbeReasoningEffort } from '@/pages/ai-agent/aiModelList/utils'
 import { cloneDeep } from 'lodash'
 import { InputHTTPHeaderForm } from '@/pages/mitm/MITMRule/MITMRuleFromModal'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
@@ -324,6 +331,10 @@ export interface AIThirdPartyApplicationConfig {
   proxy?: string
   Headers?: KVPair[]
   ExtraParams?: KVPair[]
+  /** 探测到的扩展思考强度（表单内部字段，由 NewAIThirdPartyApplicationConfigBase 自动写入） */
+  _ProbedExtendedEfforts?: string[]
+  /** 是否已对 xhigh/max 做过探测（表单内部字段） */
+  _EffortProbed?: boolean
 }
 
 interface NewAIThirdPartyApplicationConfigBaseProps {
@@ -364,6 +375,10 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const apiKeyWatch = Form.useWatch('api_key', form)
     const execModelNameOption = useRef<boolean>(false)
     const enableEndpointWatch = Form.useWatch('enable_endpoint', form)
+    const reasoningEffortWatch = Form.useWatch('ReasoningEffort', form)
+    const [effortProbing, setEffortProbing] = useState<boolean>(false)
+    // 扩展思考强度探测结果：undefined=未探测；[]=探测过但不支持；非空=探测到支持的档位
+    const [probedExtendedEfforts, setProbedExtendedEfforts] = useState<string[] | undefined>(undefined)
     const headers = Form.useWatch('Headers', form) || []
     const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
     const headerItemRef = useRef<HTTPHeader>()
@@ -379,6 +394,40 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       }),
       [form],
     )
+
+    const reasoningEffortOptions = useCreation(() => {
+      return buildReasoningEffortOptions(probedExtendedEfforts, reasoningEffortWatch)
+    }, [probedExtendedEfforts, reasoningEffortWatch])
+
+    /**懒探测：首次打开强度下拉框时探测模型是否支持 xhigh/max；失败不置已探测，下次打开可重试 */
+    const ensureEffortProbed = useDebounceFn(
+      () => {
+        if (readOnly || IsOnline) return
+        if (probedExtendedEfforts !== undefined) return
+        if (effortProbing) return
+        const values = form.getFieldsValue()
+        if (!values?.Type || !values?.model) return
+        setEffortProbing(true)
+        grpcProbeReasoningEffort({
+          Config: buildAIConfigHealthCheckConfig(values),
+          Model: values.model,
+        })
+          .then((resp) => {
+            const efforts = probedExtendedEffortsFromResponse(resp)
+            setProbedExtendedEfforts(efforts)
+            // 探测结果写入 form，父组件提交时可直接读取
+            form.setFieldsValue({
+              _ProbedExtendedEfforts: efforts,
+              _EffortProbed: true,
+            })
+          })
+          .catch(() => {})
+          .finally(() => {
+            setEffortProbing(false)
+          })
+      },
+      { wait: 300, leading: true },
+    ).run
 
     // 获取类型
     useEffect(() => {
@@ -601,6 +650,13 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       return copyFormValues
     }, [formValues])
 
+    useEffect(() => {
+      // 编辑时若外部已有探测缓存，同步到组件内部 state
+      if (formValues?._EffortProbed) {
+        setProbedExtendedEfforts(formValues?._ProbedExtendedEfforts ?? [])
+      }
+    }, [formValues._EffortProbed, formValues._ProbedExtendedEfforts])
+
     const onSaveHeaders = useMemoizedFn((val, updateIndex) => {
       const obj = {
         Key: val.Header,
@@ -770,16 +826,17 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
                 <YakitInputNumber min={0} max={2} step={0.1} />
               </Form.Item>
-              <Form.Item label="Reasoning Effort" name="ReasoningEffort">
+              <Form.Item
+                label="Reasoning Effort"
+                name="ReasoningEffort"
+                help="off 关闭思考；不设置则跟随模型默认；xhigh / max 为扩展档位，仅探测确认支持后展示"
+              >
                 <YakitSelect
-                  options={[
-                    { label: '不设置', value: 'no-set' },
-                    { label: 'none', value: 'none' },
-                    { label: 'low', value: 'low' },
-                    { label: 'middle', value: 'middle' },
-                    { label: 'high', value: 'high' },
-                    { label: 'xhigh', value: 'xhigh' },
-                  ]}
+                  options={reasoningEffortOptions}
+                  loading={effortProbing}
+                  onDropdownVisibleChange={(open) => {
+                    if (open) ensureEffortProbed()
+                  }}
                 />
               </Form.Item>
             </YakitCollapse.YakitPanel>

@@ -45,6 +45,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { normalizeReasoningEffort } from './reasoningEffort'
 
 const defaultFormValues = {
   Type: '',
@@ -151,6 +152,10 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
     'Headers',
     'webhook_url',
     'api_key_id', //测试不需要传这个给后端
+    // 表单内部字段，不传给后端
+    'model_type',
+    '_ProbedExtendedEfforts',
+    '_EffortProbed',
   ])
 
   Object.entries(values).forEach(([key, value]) => {
@@ -187,7 +192,7 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     TopP: config?.TopP,
     TopK: config?.TopK,
     FrequencyPenalty: config?.FrequencyPenalty,
-    ReasoningEffort: config?.ReasoningEffort || 'no-set',
+    ReasoningEffort: normalizeReasoningEffort(config?.ReasoningEffort),
   } as AIThirdPartyApplicationConfig
 }
 export const getEnableThinkingOpt = (config: ThirdPartyApplicationConfig) => {
@@ -285,6 +290,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         api_key_id: item.ProviderId,
         model: item.ModelName,
         ...buildAIConfigHealthCheckFormValues(item.Provider),
+        _ProbedExtendedEfforts: item.ProbedExtendedEfforts,
+        _EffortProbed: item.EffortProbed,
       }
     } else {
       value = { ...defaultFormValues }
@@ -330,6 +337,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         ModelName: res.model,
         ExtraParams: [],
         ...(item?.IsOnline ? { IsOnline: true } : {}),
+        ...(res._EffortProbed ? { EffortProbed: true, ProbedExtendedEfforts: res._ProbedExtendedEfforts ?? [] } : {}),
       }
       const setConfigOptions = {
         modelType: res.model_type,

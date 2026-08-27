@@ -141,6 +141,21 @@ module.exports = (win, getClient) => {
     return await asyncSetAIGlobalConfig(params)
   })
 
+  const asyncProbeReasoningEffort = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().ProbeReasoningEffort(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('ProbeReasoningEffort', async (e, params) => {
+    return await asyncProbeReasoningEffort(params)
+  })
+
   const asyncUpdateApiKey = (params) => {
     return new Promise((resolve, reject) => {
       getClient().UpdateApiKey(params, (err, data) => {

@@ -360,6 +360,10 @@ export interface AIModelConfig {
   ModelName: string
   ExtraParams: KVPair[]
   IsOnline?: boolean
+  /**探测到的扩展思考强度（如 ["xhigh","max"]）；为空且 EffortProbed=true 表示探测过但不支持 */
+  ProbedExtendedEfforts?: string[]
+  /**是否已对 xhigh/max 做过探测 */
+  EffortProbed?: boolean
 }
 
 export interface ServerAIGlobalConfig {
@@ -486,6 +490,34 @@ export const grpcAIConfigHealthCheck: APIFunc<AIConfigHealthCheckRequest, AIConf
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcAIConfigHealthCheck 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export interface ProbeReasoningEffortRequest {
+  Config: ThirdPartyApplicationConfig
+  Model: string
+}
+
+export interface ProbeReasoningEffortResponse {
+  XhighSupported: boolean
+  MaxSupported: boolean
+  XhighErrorMessage: string
+  MaxErrorMessage: string
+}
+
+/**探测模型是否支持 xhigh/max 扩展思考强度 */
+export const grpcProbeReasoningEffort: APIFunc<ProbeReasoningEffortRequest, ProbeReasoningEffortResponse> = (
+  params,
+  hiddenError,
+) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('ProbeReasoningEffort', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcProbeReasoningEffort 失败:' + err)
         reject(err)
       })
   })
