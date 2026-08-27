@@ -1,3 +1,5 @@
+import * as React from 'react'
+
 const createIcon = (renderer: unknown, name: string) => ({ renderer, name })
 
 export const NamedIcon = () => (
