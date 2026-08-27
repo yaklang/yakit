@@ -46,11 +46,8 @@ import classNames from 'classnames'
 import { isMemfit } from '@/utils/envfile'
 import { DIGITAL_EMPLOYEES } from '../digitalEmployee/config'
 import { formatDate } from '@/utils/timeUtil'
-import {
-  createDigitalEmployeeRoleTag,
-  getDigitalEmployeeRoleId,
-  getVisibleAgentTags,
-} from '../digitalEmployee/roleAssignment'
+import { getDigitalEmployeeRoleId, getVisibleAgentTags } from '../digitalEmployee/roleAssignment'
+import { queryAIForgeByDigitalEmployeeRole } from './marketplaceRoleFilter'
 
 const MEMFIT_ALL_AGENT_CATEGORY = 'all'
 const MEMFIT_AGENT_CATEGORIES = [
@@ -154,23 +151,24 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
       },
     }
     const keyword = search.trim()
-    if (keyword || (isMemfitMode && activeCategory !== MEMFIT_ALL_AGENT_CATEGORY)) {
+    if (keyword) {
       request.Filter = {}
-      if (keyword) request.Filter.Keyword = keyword
-      if (isMemfitMode && activeCategory !== MEMFIT_ALL_AGENT_CATEGORY) {
-        request.Filter.Tag = [createDigitalEmployeeRoleTag(activeCategory)]
-      }
+      request.Filter.Keyword = keyword
     }
 
     requestLoadingRef.current = true
     setLoading(true)
-    grpcQueryAIForge(request)
+    const roleFilterActive = isMemfitMode && activeCategory !== MEMFIT_ALL_AGENT_CATEGORY
+    const queryPromise = roleFilterActive
+      ? queryAIForgeByDigitalEmployeeRole(grpcQueryAIForge, request, activeCategory)
+      : grpcQueryAIForge(request)
+    queryPromise
       .then((res) => {
         const newLength = res.Data?.length || 0
-        if (newLength < request.Pagination.Limit) hasMore.current = false
+        if (roleFilterActive || newLength < request.Pagination.Limit) hasMore.current = false
         else hasMore.current = true
 
-        const newArr = isInit ? res.Data : response.Data.concat(res.Data)
+        const newArr = isInit || roleFilterActive ? res.Data : response.Data.concat(res.Data)
         setResponse({ ...res, Pagination: request.Pagination, Data: newArr })
       })
       .catch(() => {})

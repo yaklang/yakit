@@ -22,7 +22,8 @@
 
 ## 智能体广场
 
-- 八个角色分类改为使用 `AIForgeFilter.Tag` 精确过滤，不再用角色中文名做 Keyword 模糊搜索。
+- 八个角色分类不再用角色中文名做 Keyword 模糊搜索。
+- 当前已发布引擎可以保存并返回 Forge 角色 Tag，但 `AIForgeFilter.Tag` 查询会返回空集；角色页签会分页读取候选智能体，再使用与卡片相同的 `getDigitalEmployeeRoleId` 在前端精确过滤。
 - 卡片展示智能体所属角色；未标记的旧智能体显示“未分配角色”。
 - `AIForgeFilter.Tag` 的前端类型已与 protobuf 的 `repeated string Tag` 对齐为 `string[]`。
 
@@ -38,7 +39,7 @@
 
 ## 验证
 
-- 数字员工及消息回显定向测试：6 个文件、16 项测试通过。
+- 数字员工、角色筛选及消息回显定向测试：7 个文件、17 项测试通过。
 - TypeScript `tsc --noEmit` 通过。
 - `git diff --check` 通过。
 - 测试日志仅有项目既有的 React 18 `ReactDOM.render` 兼容警告。
