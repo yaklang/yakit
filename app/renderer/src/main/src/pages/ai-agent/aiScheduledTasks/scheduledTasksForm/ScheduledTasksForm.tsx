@@ -48,7 +48,7 @@ export const frequencyToRRule = (frequency: FrequencyPreset, startAt: Moment, in
   }
 }
 
-const rruleToFrequency = (rrule: string): FrequencyPreset => {
+export const rruleToFrequency = (rrule: string): FrequencyPreset => {
   const normalized = rrule.toUpperCase()
   if (normalized.includes('COUNT=1')) return 'once'
   if (normalized.includes('FREQ=MINUTELY')) return 'minutes'
@@ -58,7 +58,7 @@ const rruleToFrequency = (rrule: string): FrequencyPreset => {
   return 'daily'
 }
 
-const rruleToIntervalMinutes = (rrule: string) => {
+export const rruleToIntervalMinutes = (rrule: string) => {
   const matched = rrule.toUpperCase().match(/(?:^|;)INTERVAL=(\d+)/)
   return Math.max(1, Number(matched?.[1] || 5))
 }

@@ -15,14 +15,21 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: {
-      '@': path.resolve(rootDir, 'src'),
+    // 数组形式：精确项优先；monaco 的正则项兜底拦截 'monaco-editor' 及其 esm 子路径导入
+    alias: [
+      { find: '@', replacement: path.resolve(rootDir, 'src') },
       // 测试环境不走真实 Electron bridge（模块顶层会读 window.yakitBridge）
-      '@/services/electronBridge': path.resolve(
-        rootDir,
-        'src/pages/ai-re-act/hooks/__test__/stubs/electronBridgeStub.ts',
-      ),
-    },
+      {
+        find: '@/services/electronBridge',
+        replacement: path.resolve(rootDir, 'src/pages/ai-re-act/hooks/__test__/stubs/electronBridgeStub.ts'),
+      },
+      // monaco-editor@0.40.0 的 package.json 缺 main/exports 入口，vitest 解析不了裸导入；
+      // 组件链路会传递引入它（含 react-monaco-editor 的 esm 子路径），测试统一走轻量 stub
+      {
+        find: /^monaco-editor(\/.*)?$/,
+        replacement: path.resolve(rootDir, 'src/pages/ai-re-act/hooks/__test__/stubs/monacoEditorStub.ts'),
+      },
+    ],
   },
   test: {
     environment: 'jsdom',
