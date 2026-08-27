@@ -1650,6 +1650,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
       setIsShowCode(true)
     } else {
       setIsShowCode(false)
+      setShowType('detail')
     }
     return () => {
       cancelled = true
