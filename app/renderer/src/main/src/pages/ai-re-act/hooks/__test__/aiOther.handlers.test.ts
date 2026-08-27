@@ -123,3 +123,57 @@ describe('aiOther other handlers', () => {
     expect(req.store.getState().skipSubtaskTaskIDs).toEqual(['sub-keep'])
   })
 })
+
+describe('aiOther react_task_dequeue schedule fields', () => {
+  it('carries schedule trigger metadata into extraValue', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          react_task_input: '每日巡检 prompt',
+          reason: 'normal',
+          react_task_user_input_uuid: '',
+          queue_len: 0,
+          react_task_input_source: 'schedule',
+          react_task_schedule_uuid: 'sch-uuid-1',
+          react_task_schedule_name: '每日巡检',
+          react_task_scheduled_at: '2026-08-27T10:00:00Z',
+          react_task_schedule_trigger: 'cron',
+        },
+        { NodeId: 'react_task_dequeue', TaskId: 'task-schedule-1', IsSync: true },
+      ),
+    })
+    aiOtherDataHandlers.react_task_dequeue(req)
+
+    const node = req.rawData.contents.get('task-schedule-1')
+    expect(node?.extraValue).toMatchObject({
+      showQS: '每日巡检 prompt',
+      inputSource: 'schedule',
+      scheduleUUID: 'sch-uuid-1',
+      scheduleName: '每日巡检',
+      scheduledAt: '2026-08-27T10:00:00Z',
+      scheduleTrigger: 'cron',
+    })
+  })
+
+  it('defaults schedule metadata to empty strings for a regular user question', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        { react_task_input: '普通提问', reason: 'normal', react_task_user_input_uuid: '', queue_len: 0 },
+        { NodeId: 'react_task_dequeue', TaskId: 'task-user-1', IsSync: true },
+      ),
+    })
+    aiOtherDataHandlers.react_task_dequeue(req)
+
+    const node = req.rawData.contents.get('task-user-1')
+    expect(node?.extraValue).toMatchObject({
+      showQS: '普通提问',
+      inputSource: '',
+      scheduleUUID: '',
+      scheduleName: '',
+      scheduledAt: '',
+      scheduleTrigger: '',
+    })
+  })
+})
