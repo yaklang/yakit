@@ -495,6 +495,12 @@ export const bytesToUnquoteString = (bytes: Uint8Array | number[]): string => {
       case 0x7d:
         s += '\\x7d'
         break
+      // The exported Fuzztag is commonly embedded in fuzz.Strings(`...`). A
+      // literal backtick would terminate that Yak raw string before the tag
+      // ends; unquote("\\x60") restores exactly the same source byte.
+      case 0x60:
+        s += '\\x60'
+        break
       default:
         s += b >= 0x20 && b <= 0x7e ? String.fromCharCode(b) : `\\x${b.toString(16).padStart(2, '0')}`
         break

@@ -597,4 +597,15 @@ describe('bytesToUnquoteString vs runCodec(StrQuote)', () => {
       '"\\x28\\x29\\x7b\\x7d\\\\\\""',
     )
   })
+
+  it('unquote 导出必须转义 Yak raw string 的反引号终止符', () => {
+    // “导出带 FuzzTag 的数据”常被直接嵌入 fuzz.Strings(`...`)。
+    // 文件字节中的反引号若保持为字面字符，会提前结束 Yak raw string，
+    // 后续合法的 \xNN 随即变成 Yak 源码并触发编译错误。
+    const bytes = new Uint8Array([0x41, 0x60, 0xff])
+    const quoted = bytesToUnquoteString(bytes)
+    expect(quoted).toBe('"A\\x60\\xff"')
+    expect(quoted).not.toContain('`')
+    expect(Array.from(goUnquoteToBytes(quoted))).toEqual(Array.from(bytes))
+  })
 })

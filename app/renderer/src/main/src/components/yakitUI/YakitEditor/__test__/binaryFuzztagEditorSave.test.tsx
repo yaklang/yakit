@@ -11,6 +11,7 @@ import {
   packetTextToRawBytes,
   type BinaryFuzztagEntry,
 } from '../binaryFuzztag'
+import { saveABSFileToOpen } from '@/utils/openWebsite'
 
 vi.mock('react-hex-editor', () => ({
   default: ({ onSetValue }: { onSetValue?: (offset: number, value: number) => void }) => (
@@ -44,7 +45,16 @@ vi.mock('@/components/yakitUI/YakitModal/YakitModalConfirm', () => ({
   showYakitModal: vi.fn(),
 }))
 vi.mock('../../YakitDropdownMenu/YakitDropdownMenu', () => ({
-  YakitDropdownMenu: ({ children }: any) => children,
+  YakitDropdownMenu: ({ children, menu }: any) => (
+    <div>
+      {children}
+      {menu.data.map((item: { key: string; label: string }) => (
+        <button type="button" key={item.key} onClick={() => menu.onClick({ key: item.key })}>
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ),
 }))
 vi.mock('@/assets/newIcon', () => ({ DocumentDuplicateSvgIcon: () => null }))
 vi.mock('@/assets/icon/outline', () => ({ OutlineExportIcon: () => null }))
@@ -72,6 +82,7 @@ beforeAll(async () => {
 
 afterEach(() => {
   cleanup()
+  vi.clearAllMocks()
 })
 
 const includesBytes = (packet: Uint8Array, expected: Uint8Array): boolean => {
@@ -152,4 +163,55 @@ describe('Binary chip HEX editor save path', () => {
     expect(requestSubmittedToMITMv2).not.toContain('\\\\x11')
     expect(includesBytes(packetTextToRawBytes(requestSubmittedToMITMv2), edited)).toBe(true)
   })
+})
+
+describe('History current/original Binary chip export contract', () => {
+  const requests = [
+    {
+      label: '当前请求',
+      // 修改后实际发送的内容：覆盖 HEX 字节并保留反引号/Fuzztag 分隔符。
+      bytes: new Uint8Array([0x11, 0x60, 0x28, 0x29, 0x7b, 0x7d, 0xff, 0x00, 0x50, 0x4b]),
+    },
+    {
+      label: '原始请求',
+      // 修改前捕获的内容必须独立导出，不能误用当前请求的 dataRef。
+      bytes: new Uint8Array([0x50, 0x4b, 0x60, 0x22, 0x5c, 0x93, 0x8c, 0x00]),
+    },
+  ]
+
+  for (const request of requests) {
+    it(`${request.label}同时支持无损原始导出和可执行 Fuzztag 导出`, async () => {
+      const tag = `{{unquote(${bytesToUnquoteString(request.bytes)})}}`
+      const collapsed = collapseBinaryFuzztag(tag)
+      const entry = Array.from(collapsed.entries.values())[0] as BinaryFuzztagEntry
+      const initialData = await decodeBinaryTag(entry)
+      expect(initialData).toEqual(request.bytes)
+
+      render(
+        <BinaryFuzztagHexModal
+          entry={entry}
+          initialData={initialData}
+          readOnly
+          onSubmit={() => {}}
+          onCancel={() => {}}
+        />,
+      )
+
+      fireEvent.click(screen.getByRole('button', { name: '导出原始数据' }))
+      await waitFor(() => expect(saveABSFileToOpen).toHaveBeenCalledTimes(1))
+      const [rawFilename, rawData] = vi.mocked(saveABSFileToOpen).mock.calls[0]
+      expect(rawFilename).toMatch(/^binary-unquote-\d+\.bin$/)
+      expect(rawData).toBeInstanceOf(Uint8Array)
+      expect(Array.from(rawData as Uint8Array)).toEqual(Array.from(request.bytes))
+
+      fireEvent.click(screen.getByRole('button', { name: '导出带FuzzTag的数据' }))
+      await waitFor(() => expect(saveABSFileToOpen).toHaveBeenCalledTimes(2))
+      const [fuzztagFilename, exportedTag] = vi.mocked(saveABSFileToOpen).mock.calls[1]
+      expect(fuzztagFilename).toMatch(/^fuzztag-unquote-\d+\.txt$/)
+      expect(typeof exportedTag).toBe('string')
+      expect(exportedTag).toContain('\\x60')
+      expect(exportedTag).not.toContain('`')
+      expect(Array.from(packetTextToRawBytes(exportedTag as string))).toEqual(Array.from(request.bytes))
+    })
+  }
 })
