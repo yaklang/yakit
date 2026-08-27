@@ -1090,13 +1090,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     useMemoizedFn(() => {
       if (updateAdvancedSearch) {
         const { shieldHosts } = splitHTTPFlowTableShieldData(getShieldData().data)
-        let newParams = { ...getParams() }
-        newParams = {
-          ...newParams,
-          ...buildHTTPFlowTableAdvancedQuery(filterConfig, shieldHosts),
-        }
+        const advancedQuery = buildHTTPFlowTableAdvancedQuery(filterConfig, shieldHosts)
         refreshTabsContRef.current = true
-        setParams(newParams)
+        setParams((prev) => ({
+          ...prev,
+          ...advancedQuery,
+        }))
         emiter.emit('onGetAdvancedSearchDataEvent', JSON.stringify(filterConfig))
       }
     }),
