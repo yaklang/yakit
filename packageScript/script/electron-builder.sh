@@ -8,6 +8,14 @@ if [ "$#" -lt 1 ]; then
 fi
 
 item="$1"
+if [ "${item}" = "ce" ]; then
+    edition="yakit"
+elif [ "${item}" = "ee" ]; then
+    edition="yakitEE"
+else
+    echo "Unknown packaged version: ${item}" >&2
+    exit 1
+fi
 
 rm -rf ./app/renderer/engine-link-startup/dist
 rm -rf ./app/renderer/pages
@@ -17,30 +25,12 @@ rm -rf ./release
 
 yarn remove electron && yarn add electron@27.0.0 --dev
 cp ./bins/yak_windows_normal_amd64.zip ./bins/yak_windows_amd64.zip
-if [ "${item}" = "ce" ]; then
-    ./packageScript/script/retryScript.sh "yarn pack-win" || { exit 1; }
-    ./packageScript/script/retryScript.sh "yarn pack-linux" || { exit 1; }
-    ./packageScript/script/retryScript.sh "yarn pack-mac" || { exit 1; }
-elif [ "${item}" = "ee" ]; then
-    ./packageScript/script/retryScript.sh "yarn pack-win-ee" || { exit 1; }
-    ./packageScript/script/retryScript.sh "yarn pack-linux-ee" || { exit 1; }
-    ./packageScript/script/retryScript.sh "yarn pack-mac-ee" || { exit 1; }
-else
-    echo "Unknown packaged version: ${item}" >&2
-    exit 1
-fi
+./packageScript/script/retryScript.sh "yarn cli pack -s win -v ${edition}" || { exit 1; }
+./packageScript/script/retryScript.sh "yarn cli pack -s linux -v ${edition}" || { exit 1; }
+./packageScript/script/retryScript.sh "yarn cli pack -s mac -v ${edition} --sign" || { exit 1; }
 
 yarn remove electron && yarn add electron@22.3.27 --dev
 cp ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.zip
-if [ "${item}" = "ce" ]; then
-    ./packageScript/script/retryScript.sh "yarn pack-win-legacy" || { exit 1; }
-    ./packageScript/script/retryScript.sh "yarn pack-linux-legacy" || { exit 1; }
-    ./packageScript/script/retryScript.sh "yarn pack-mac-legacy" || { exit 1; }
-elif [ "${item}" = "ee" ]; then
-    ./packageScript/script/retryScript.sh "yarn pack-win-ee-legacy" || { exit 1; }
-    ./packageScript/script/retryScript.sh "yarn pack-linux-ee-legacy" || { exit 1; }
-    ./packageScript/script/retryScript.sh "yarn pack-mac-ee-legacy" || { exit 1; }
-else
-    echo "Unknown packaged version: ${item}" >&2
-    exit 1
-fi
+./packageScript/script/retryScript.sh "yarn cli pack -s win -v ${edition} --legacy" || { exit 1; }
+./packageScript/script/retryScript.sh "yarn cli pack -s linux -v ${edition} --legacy" || { exit 1; }
+./packageScript/script/retryScript.sh "yarn cli pack -s mac -v ${edition} --legacy" || { exit 1; }

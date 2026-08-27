@@ -30,36 +30,36 @@ jobs:
                   echo "TAG_VERSION=$tag" >> $GITHUB_ENV
 
             - name: "Install Link Render Dependencies"
-              run: yarn install-link-render
+              run: yarn install && yarn cli install link
               working-directory: ./
 
             - name: "Build CE Link Render"
               working-directory: ./
-              run: yarn build-link-render
+              run: yarn cli build --link -v yakit
             - name: "zip CE Link Render"
               run: cd ${{ env.RENDER_PATH }} && zip -r ce.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
 
             - name: "Build EE Link Render"
               working-directory: ./
-              run: yarn build-link-render-enterprise
+              run: yarn cli build --link -v yakitEE
             - name: "zip EE Link Render"
               run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
 
             - name: "Build IRify Link Render"
               working-directory: ./
-              run: yarn build-link-render-irify
+              run: yarn cli build --link -v irify
             - name: "zip IRify Link Render"
               run: cd ${{ env.RENDER_PATH }} && zip -r irify.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
 
             - name: "Build IRifyEE Link Render"
               working-directory: ./
-              run: yarn build-link-render-irify-enterprise
+              run: yarn cli build --link -v irifyEE
             - name: "zip IRifyEE Link Render"
               run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
 
             - name: "Build Memfit Link Render"
               working-directory: ./
-              run: yarn build-link-render-memfit
+              run: yarn cli build --link -v memfit
             - name: "zip Memfit Link Render"
               run: cd ${{ env.RENDER_PATH }} && zip -r memfit.zip ./dist && rm -rf ./dist && cd ${{ env.RETURN_PATH }}
 

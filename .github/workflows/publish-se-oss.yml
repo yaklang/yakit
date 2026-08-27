@@ -31,12 +31,12 @@ jobs:
                   node-version: 22.22.1
 
             - name: "Install Render Dependencies"
-              run: yarn install-render
+              run: yarn install && yarn cli install main
               working-directory: ./
 
             - name: "Build Render"
               working-directory: ./
-              run: yarn build-render-simple-enterprise
+              run: yarn cli build --main -v yakitSE
             - name: "zip EE Render"
               run: cd ${{ env.RENDER_PATH }} && zip -r se.zip ./pages && cd ../../
 
@@ -147,9 +147,9 @@ jobs:
               run: |
                   yarn add -D dmg-license
                   chmod +x ./packageScript/script/retryScript.sh
-                  ./packageScript/script/retryScript.sh "yarn pack-win-se" || { exit 1; }
-                  ./packageScript/script/retryScript.sh "yarn pack-linux-se" || { exit 1; }
-                  ./packageScript/script/retryScript.sh "yarn pack-mac-se" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn cli pack -s win -v yakitSE" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn cli pack -s linux -v yakitSE" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn cli pack -s mac -v yakitSE --sign" || { exit 1; }
 
             - run: yarn remove electron && yarn add electron@22.3.27 --dev
               working-directory: ./
@@ -165,9 +165,9 @@ jobs:
               working-directory: ./
               run: |
                   chmod +x ./packageScript/script/retryScript.sh
-                  ./packageScript/script/retryScript.sh "yarn pack-win-se-legacy" || { exit 1; }
-                  ./packageScript/script/retryScript.sh "yarn pack-linux-se-legacy" || { exit 1; }
-                  ./packageScript/script/retryScript.sh "yarn pack-mac-se-legacy" || { exit 1; }重试次数则失败
+                  ./packageScript/script/retryScript.sh "yarn cli pack -s win -v yakitSE --legacy" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn cli pack -s linux -v yakitSE --legacy" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn cli pack -s mac -v yakitSE --legacy" || { exit 1; }
                   exit 0
 
             - name: View Published Content

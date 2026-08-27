@@ -35,21 +35,15 @@ Yakit 是一个基于 Electron + React 的跨平台桌面应用，主要技术�
 
 ## 依赖安装
 
-项目共有三个需要安装依赖的子项目，**务必按顺序全部安装**：
+项目共有三个需要安装依赖的子项目。一条命令即可按顺序全部安装（根目录 → Link 渲染端 → 主渲染端）：
 
 ```bash
-# 1. 根目录（Electron 主进程相关依赖，含 electron、electron-builder、concurrently、wait-on 等）
-yarn install
-
-# 2. 主渲染端（Vite 8）
-yarn install-render
-# 等价于：cd app/renderer/src/main && yarn install
-
-# 3. Link 渲染端（Vite）
-yarn install-link-render
-# 等价于：cd app/renderer/engine-link-startup && yarn install
+yarn cli install
+# 等价于：yarn cli install electron && yarn cli install link && yarn cli install main
+# 也可只装其中一个：yarn cli install electron | main | link
 ```
 
+命令细节见 [`cli/README.md`](cli/README.md)。本仓库日常仍以 `yarn cli` 为例；`pnpm cli` / `npm run cli --` / `node ./cli/cli.mjs` 语义相同。
 
 ## 启动开发环境
 
@@ -63,12 +57,12 @@ yarn install-link-render
 yarn check-deps
 ```
 
-- 若提示「未安装依赖」：按提示先完成上文「依赖安装」三步曲。
+- 若提示「未安装依赖」：按提示先执行 `yarn cli install`。
 - 若提示「依赖可能有更新」：**使用 `AskUserQuestion` 工具向用户弹选项框确认**是否重新安装对应子项目的依赖，而不是在回复里用文字描述选项让用户再答一遍。选项示例：
-  - `重装全部依赖`（按顺序执行 `yarn install` / `yarn install-render` / `yarn install-link-render`）
-  - `仅重装有改动的子项目`（按 check-deps 提示的列表）
+  - `重装全部依赖`（执行 `yarn cli install`）
+  - `仅重装有改动的子项目`（按 check-deps 提示的列表：`yarn cli install electron` / `main` / `link`）
   - `跳过，直接启动`
-- 若提示「依赖一致」：进入启动步骤。但若用户提到最近 `git pull` 过而未重装（见下文「常见问题排查」的盲区），**使用 `AskUserQuestion` 工具弹选项框**询问是否仍重跑依赖三步曲。
+- 若提示「依赖一致」：进入启动步骤。但若用户提到最近 `git pull` 过而未重装（见下文「常见问题排查」的盲区），**使用 `AskUserQuestion` 工具弹选项框**询问是否仍重跑 `yarn cli install`。
 
 > 通用规则：**凡涉及需要用户决策的环节（是否重装依赖、启动哪个版本、是否跳过某步等），一律优先用 `AskUserQuestion` 工具弹出选项框让用户一键选择，不要在回复里用文字罗列选项让用户再答一遍。**
 
@@ -85,17 +79,28 @@ yarn check-deps
 >    - 若用户选了 `Yakit` 或 `memfit`，无需追问，直接确定。
 > 3. 这样既不超出工具单次 4 选项上限，又能覆盖全部 6 个版本，且用户全程点选、无需手动输入「Other」。
 
-先同时启动两个渲染端（:3000 主渲染端 + :5173 Link 渲染端）：
+选完版本后，映射到 CLI `-v`（**不要**再跑已删除的 `start-renders*` / `pack-*`）：
+
+| 用户选择 | CLI `-v` | 启动两端渲染 |
+| --- | --- | --- |
+| Yakit | `yakit` | `yarn cli start -v yakit` |
+| enterprise | `yakitEE` | `yarn cli start -v yakitEE` |
+| simple-enterprise | `yakitSE` | `yarn cli start -v yakitSE` |
+| irify | `irify` | `yarn cli start -v irify` |
+| irify-enterprise | `irifyEE` | `yarn cli start -v irifyEE` |
+| memfit | `memfit` | `yarn cli start -v memfit` |
+
+先启动两个渲染端（:3000 主渲染端 + :5173 Link 渲染端），例如社区版：
 
 ```bash
-yarn start-renders
-# 等价于：concurrently "yarn start-render" "yarn start-link-render"
+yarn cli start -v yakit
+# 只启一端：yarn cli start -v yakit --main  或  --link
 ```
 
 待两个渲染端**真正就绪**后，再启动 Electron 主进程：
 
 ```bash
-yarn start-electron
+yarn cli electron
 ```
 
 > ⚠️ **重要：必须确认渲染端「真正就绪」后再启动 Electron，否则窗口会白屏。**
@@ -119,35 +124,38 @@ yarn start-electron
 >    until curl -s http://127.0.0.1:5173 | grep -qE '<script|<div id="root"'; do sleep 2; done
 >    ```
 >
-> 两端都通过上述检查后，再执行 `yarn start-electron`。
+> 两端都通过上述检查后，再执行 `yarn cli electron`。
+>
+> 也可用 `yarn cli dev -v <edition>` 一条命令（start + wait-on 端口 + electron）。Agent 启动仍优先走上面的 curl 内容轮询，因为端口 LISTEN 不等于页面可访问。
 
 ## 多版本/多平台变体
 
-> 依赖安装步骤与版本无关，请先按上文「依赖安装」完成；版本差异只体现在下面的启动 / 构建 / 打包命令上。
+> 依赖安装步骤与版本无关，请先按上文「依赖安装」完成；版本差异只体现在 CLI `-v` 上。
 
-项目通过 `--mode` / `env-cmd` 环境切换支持多个发行版本。开发时如无特殊需求，使用默认模式即可。
+发行版由 CLI 注入 `YAKIT_EDITION`（三端同一名字、同一取值），**不再**使用 `env-cmd` / `--mode` / `REACT_APP_PLATFORM` / `VITE_PLATFORM`。Electron 主进程不区分版本，它只加载当前已运行的渲染端地址。
 
-版本由渲染端注入的 env 决定（主渲染端 `REACT_APP_PLATFORM`、Link 渲染端 `VITE_PLATFORM`），**Electron 主进程不区分版本**，它只加载当前已运行的渲染端地址。
-
-| 版本（脚本后缀） | 产品名 | 性质 | 本地引擎端口 | 同时启动两渲染端 | 构建两渲染端 | 对应平台打包 |
-| --- | --- | --- | --- | --- | --- | --- |
-| 默认 | Yakit | 社区版 CE | `9011` | `yarn start-renders` | `yarn build-renders` | `pack-mac` / `pack-win` / `pack-linux` |
-| `-enterprise` | EnpriTrace | 企业版 EE | `9012` | `yarn start-renders-enterprise` | `yarn build-renders-enterprise` | `pack-*-ee` |
-| `-simple-enterprise` | EnpriTraceAgent | 便携 / 简易企业版 SE | `9013` | `yarn start-renders-simple-enterprise` | `yarn build-renders-simple-enterprise` | `pack-*-se` |
-| `-irify` | IRify | IRify 社区版 | `9014` | `yarn start-renders-irify` | `yarn build-renders-irify` | `pack-*-irify` |
-| `-irify-enterprise` | IRifyEnpriTrace | IRify 企业版 | `9015` | `yarn start-renders-irify-enterprise` | `yarn build-renders-irify-enterprise` | `pack-*-irify-ee` |
-| `-memfit` | Memfit AI | AI Agent 精简版 | `9016` | `yarn start-renders-memfit` | `yarn build-renders-memfit` | `pack-*-memfit` |
-
-> 也可以只启动单个渲染端：主渲染端用 `yarn start-render-<后缀>`，Link 渲染端用 `yarn start-link-render-<后缀>`（默认版本无后缀）。
-
-### 启动某个版本（非默认版本无一键 dev）
+| 用户选择（问询标签） | CLI `-v` | 产品名 | 性质 | 本地引擎端口 |
+| --- | --- | --- | --- | --- |
+| Yakit | `yakit` | Yakit | 社区版 CE | `9011` |
+| enterprise | `yakitEE` | EnpriTrace | 企业版 EE | `9012` |
+| simple-enterprise | `yakitSE` | EnpriTraceAgent | 便携 / 简易企业版 SE | `9013` |
+| irify | `irify` | IRify | IRify 社区版 | `9014` |
+| irify-enterprise | `irifyEE` | IRifyEnpriTrace | IRify 企业版 | `9015` |
+| memfit | `memfit` | Memfit AI | AI Agent 精简版 | `9016` |
 
 ```bash
-# 1. 同时启动该版本的两个渲染端（:3000 主渲染端 + :5173 Link 渲染端）
-yarn start-renders-enterprise        # 以企业版为例，其它版本见上表
+# 启动两端渲染（以企业版为例）
+yarn cli start -v yakitEE
 
-# 2. 按上文「启动步骤」中的两步法确认两个渲染端真正就绪（端口监听 + curl 拿到有效内容）后，启动 Electron 主进程
-yarn start-electron
+# 只启主渲染 / Link
+yarn cli start -v yakitEE --main
+yarn cli start -v yakitEE --link
+
+# 按上文「启动步骤」确认两端真正就绪后
+yarn cli electron
+
+# 或一条命令（wait-on 端口后起 Electron）
+yarn cli dev -v yakitEE
 ```
 
 ### 各版本功能差异（概要）
@@ -164,13 +172,11 @@ yarn start-electron
 若需打包发布，需先构建两个渲染端的静态产物，再执行 electron-builder：
 
 ```bash
-# 构建两个渲染端（默认版本）
-yarn build-renders
-# 等价于：run-s build-render build-link-render
-
-# 之后使用对应平台的打包命令，例如 macOS：
-yarn pack-mac
+yarn cli build -v yakit
+yarn cli pack -s mac -v yakit
 ```
+
+完整参数（`--devtools` / `--no-license` / `--legacy` / `--sign` 等）见 [`cli/README.md`](cli/README.md)。终端里先看 `yarn cli -h` / `yarn cli <cmd> -h`。
 
 ## 常见问题排查
 
@@ -178,7 +184,7 @@ yarn pack-mac
 >
 > ⚠️ 注意 `yarn check-deps` 的盲区：它通过 `git diff HEAD -- yarn.lock` 判断依赖是否更新，**只能检测工作区未提交的 yarn.lock 改动**。若用户刚 `git pull` 拉到了别人**已提交**的新 yarn.lock 但没重新 `yarn install`，此时新 lock 已进 HEAD，`git diff HEAD` 为空，脚本会误报「依赖一致」而实际 `node_modules` 已滞后。
 >
-> 因此：**若用户最近 `git pull` 过但没重新安装依赖，即便 `check-deps` 报「依赖一致」，也应使用 `AskUserQuestion` 工具弹选项框**询问用户是否按顺序重跑依赖安装三步曲（`yarn install` / `yarn install-render` / `yarn install-link-render`）后再启动，而不是在回复里用文字描述让用户再答一遍。
+> 因此：**若用户最近 `git pull` 过但没重新安装依赖，即便 `check-deps` 报「依赖一致」，也应使用 `AskUserQuestion` 工具弹选项框**询问用户是否重跑 `yarn cli install` 后再启动，而不是在回复里用文字描述让用户再答一遍。
 
 - **窗口白屏 / `ERR_CONNECTION_REFUSED`**：对应渲染端未就绪。注意端口监听 ≠ 加载完成，需按「启动步骤」用 `curl` 轮询确认两端返回有效 HTML 后再启动 Electron。
 - **启动 / 编译报错（模块找不到、API 报错、语法报错等）**：优先 `yarn check-deps` 排查依赖是否一致；结合上述盲区判断是否需要重装依赖。
@@ -264,26 +270,19 @@ yarn pack-mac
 
 ## 关键脚本速查
 
-**公共命令（与版本无关）**：
+命令细节以 [`cli/README.md`](cli/README.md) 为准。本仓库示例用 `yarn cli`；`pnpm cli` / `npm run cli --` 相同。
 
 | 命令 | 作用 |
 | --- | --- |
-| `yarn install` | 安装根目录依赖 |
-| `yarn install-render` | 安装主渲染端依赖 |
-| `yarn install-link-render` | 安装 Link 渲染端依赖 |
-| `yarn start-electron` | 启动 Electron 主进程（不区分版本） |
 | `yarn check-deps` | 检查本地依赖是否与仓库一致（启动前执行） |
+| `yarn cli install` | 安装根目录 + 两个渲染端依赖 |
+| `yarn cli install electron\|main\|link` | 只装其中一个 |
+| `yarn cli add <electron\|main\|link> <pkg…>` | 给指定子项目加包（`-D` / `--dev`） |
+| `yarn cli remove <electron\|main\|link> <pkg…>` | 从指定子项目卸包 |
+| `yarn cli start -v <edition>` | 开发态启动两端渲染（`--main` / `--link` 只启一端） |
+| `yarn cli electron` | 启动 Electron 主进程（不区分版本） |
+| `yarn cli dev -v <edition>` | start + wait-on :3000/:5173 + electron |
+| `yarn cli build -v <edition>` | 生产构建两端渲染 |
+| `yarn cli pack -s <os> -v <edition>` | electron-builder 打安装包（`win\|mac\|linux\|mwl`） |
 
-**各版本启动 / 构建 / 打包**（默认版本无后缀；后缀取值见「多版本/多平台变体」表）：
-
-| 命令模式 | 作用 |
-| --- | --- |
-| `yarn start-renders[-<后缀>]` | 同时启动两个渲染端（:3000 + :5173） |
-| `yarn start-render[-<后缀>]` | 仅启动主渲染端（:3000） |
-| `yarn start-link-render[-<后缀>]` | 仅启动 Link 渲染端（:5173） |
-| `yarn build-renders[-<后缀>]` | 构建两个渲染端静态产物 |
-| `yarn build-render[-<后缀>]` | 仅构建主渲染端 |
-| `yarn build-link-render[-<后缀>]` | 仅构建 Link 渲染端 |
-| `yarn pack-mac[-<后缀>]` / `pack-win[-<后缀>]` / `pack-linux[-<后缀>]` | 对应平台打包 |
-
-> 版本后缀对照：默认（无） / `-enterprise`（EE，打包为 `pack-*-ee`）/ `-simple-enterprise`（SE，`pack-*-se`）/ `-irify`（`pack-*-irify`）/ `-irify-enterprise`（`pack-*-irify-ee`）/ `-memfit`（`pack-*-memfit`）。
+`-v` 取值：`yakit` / `yakitEE` / `yakitSE` / `irify` / `irifyEE` / `memfit`（另有 `breachtrace`）。

@@ -12,7 +12,7 @@ let nsisInstallerIcon = null
 let nsisUninstallerIcon = null
 
 // 生成构建包的自定义配置
-const platform = process.env.PLATFORM
+const platform = process.env.YAKIT_EDITION
 /**
  * @synchronize [IDENTIFIER_NAME]
  * 注意：case的选项必须全局保持一致。
@@ -217,7 +217,7 @@ const configOption = {
 }
 
 // extraFiles 是否配置-构建兼容旧平台的扩展文件
-const isLegacy = process.env.THE_LEGACY == 'true'
+const isLegacy = process.env.YAKIT_LEGACY == 'true'
 if (isLegacy) {
   configOption.extraFiles.push({
     from: 'bins/yakit-system-mode.txt',

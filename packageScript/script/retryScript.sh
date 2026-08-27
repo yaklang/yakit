@@ -1,6 +1,6 @@
 #!/bin/sh
 # 用法: ./retryScript.sh <script>
-# 示例: ./retryScript.sh yarn pack-win
+# 示例: ./retryScript.sh "yarn cli pack -s win -v yakit"
 
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <script>"

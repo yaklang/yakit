@@ -74,7 +74,7 @@ jobs:
           rm -rf ./app/renderer/engine-link-startup/dist ./app/renderer/pages ./release
           ./packageScript/script/installRender.sh ce
           # signNormal -> CSC_IDENTITY_AUTO_DISCOVERY=true，具备 Apple 密钥时会走公证
-          yarn pack-mac
+          yarn cli pack -s mac -v yakit --sign
         shell: bash
 
       - name: Upload mac installers
