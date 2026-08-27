@@ -15,7 +15,7 @@ import { CeUserInfo, type CeUserItemProps, type UserMenuItemType } from '../../C
 import { YakitRoute } from '@/enums/yakitRoute'
 import type { RouteToPageProps } from '@/pages/layout/publicMenu/PublicMenu'
 import emiter from '@/utils/eventBus/eventBus'
-import { isEnpriTraceAgent, isEnpriTraceIRify, isIRify } from '@/utils/envfile'
+import { isCommunityEdition, isEnpriTraceAgent, isEnpriTraceIRify, isIRify } from '@/utils/envfile'
 import { yakitEngine, yakitNetwork, yakitUILayout } from '@/services/electronBridge'
 import {
   cancelIMControlState,
@@ -522,13 +522,13 @@ export const useUserMenu = (params: UseUserMenuParams): UseUserMenuResult => {
 
   const onUpdateApiKey = useMemoizedFn((isLoading: boolean = false) => {
     // 仅ce社区版可以获取apiKey，企业版不需要
-    if (userInfo.platform === 'company') return
+    if (!isCommunityEdition()) return
     apiFetchApiKeys(isLoading)
   })
 
   useEffect(() => {
     // 仅ce社区版可以获取apiKey，企业版不需要
-    if (userInfo.platform === 'company') return
+    if (!isCommunityEdition()) return
     if (userInfo.isLogin) {
       apiFetchApiKeys()
     } else {
