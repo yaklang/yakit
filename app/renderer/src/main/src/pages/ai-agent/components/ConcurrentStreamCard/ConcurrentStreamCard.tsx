@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, type FC } from 'react'
+import { memo, useEffect, useMemo, useRef, type FC } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import styles from './ConcurrentStreamCard.module.scss'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
@@ -36,9 +36,14 @@ const ConcurrentStreamCard: FC<{
       | undefined
   }, [renderNum])
 
+  const prevStatusRef = useRef(raw?.data?.status)
   useEffect(() => {
-    if (!raw?.data?.status) return
-    if (raw.data.status !== 'processing') {
+    const status = raw?.data?.status
+    if (!status) return
+    const prev = prevStatusRef.current
+    prevStatusRef.current = status
+    // 只在 processing → 结束 时自动收起；滚动卸载再挂载时 status 已是终态，不能覆盖用户展开态
+    if (prev === 'processing' && status !== 'processing') {
       setExpand(false)
     }
   }, [raw?.data?.status])
