@@ -36,4 +36,10 @@ export type AIAgentEventProps = {
    * @name payload
    */
   sessionData: string
+
+  /**
+   * 引擎 duplex 推送（MessageType = "ai_session"）：后端定时任务独立创建/持久化 AI 会话后通知
+   * @name payload {sessionId?: string, isRunning?: boolean}
+   */
+  onServerPushAISession: string
 }

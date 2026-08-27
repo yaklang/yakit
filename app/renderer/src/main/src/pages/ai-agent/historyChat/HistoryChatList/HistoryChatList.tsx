@@ -19,7 +19,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
 import { AITaskStatus, type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
-import { handAIHistoryChatRemove } from '../utils'
+import { handAIHistoryChatRemove, AISessionDeleteCancelledError } from '../utils'
 import useGetChatDataStoreKey, { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 import type { HistoryChatListItemProps } from './type'
@@ -239,7 +239,9 @@ const HistoryChatList: FC<{
         if (activeSessionId === SessionID) {
           handleSetActiveChat(info)
         }
-        yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
+        if (!(error instanceof AISessionDeleteCancelledError)) {
+          yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
+        }
         reject()
       }
     })

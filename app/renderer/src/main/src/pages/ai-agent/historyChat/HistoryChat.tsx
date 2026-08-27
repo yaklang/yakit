@@ -24,7 +24,7 @@ import { type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { YakitRouteType } from '@/enums/yakitRoute'
 import { JSONParseLog } from '@/utils/tool'
 import { getMainOperatorPageBodyContainer } from '@/utils/getMainOperatorPageBodyContainer'
-import { DeleteSessionsAISourceEnum, handAIHistoryChatRemove } from './utils'
+import { AISessionDeleteCancelledError, DeleteSessionsAISourceEnum, handAIHistoryChatRemove } from './utils'
 import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { sessionStatusStore } from '@/pages/ai-re-act/hooks/sessionStatus/sessionStatusStore'
 import classNames from 'classnames'
@@ -187,6 +187,10 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
         handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
         // 按 source 列表清空；不传 deleteAll，全库清删由其它入口负责
         deleteSessionsParams: { sessionIds: [], source: deleteSessionsSource },
+        // 预检绑定 continue_session 定时任务的会话；DeleteAll 全库清删时不按会话过滤
+        scheduleSessionIds: filter.DeleteAll
+          ? []
+          : Array.from(new Set([...visibleSessions.map((item) => item.SessionID), ...getRouteSessionIds(sources)])),
       })
       onNewChat()
       setActiveChat?.(undefined)
@@ -195,7 +199,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       setSearch('')
       yakitNotify('success', t('HistoryChat.allChatsCleared'))
     } catch (e) {
-      yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      if (!(e instanceof AISessionDeleteCancelledError)) {
+        yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      }
     } finally {
       sessionStatusStore.getState().setSourceDeleting(sources, false)
       setClearLoading(false)
@@ -250,7 +256,9 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
       dispatcher.resetPagination?.()
       yakitNotify('success', t('HistoryChat.clearedBeforeDays', { days }))
     } catch (e) {
-      yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      if (!(e instanceof AISessionDeleteCancelledError)) {
+        yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      }
     } finally {
       sessionStatusStore.getState().setSourceDeleting(historyQuerySources, false)
       setClearLoading(false)

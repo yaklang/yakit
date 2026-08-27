@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Form } from 'antd'
 import moment, { type Moment } from 'moment'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
@@ -65,7 +65,7 @@ const rruleToIntervalMinutes = (rrule: string) => {
 
 const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props) => {
   const { editing, onClose, onSuccess } = props
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t, i18nRefresh } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { getSetting } = useAIAgentDispatcher()
 
@@ -87,7 +87,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         Frequency: rruleToFrequency(editing.Schedule.RRule),
         IntervalMinutes: rruleToIntervalMinutes(editing.Schedule.RRule),
         StartAt: moment.unix(unixNumber(editing.Schedule.StartAt)),
-        TargetMode: 'new_session_per_run',
+        TargetMode: (editing.TargetMode as ScheduleFormValues['TargetMode']) || 'new_session_per_run',
       })
     } else {
       form.setFieldsValue({
@@ -100,6 +100,18 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
       })
     }
   }, [])
+
+  // 手动新建只有「每次新建会话」；编辑从会话创建的 continue_session 任务时，
+  // 额外展示其原模式，避免保存时把任务静默改成 new_session_per_run。
+  const targetModeOptions = useMemo(() => {
+    const options: Array<{ value: ScheduleFormValues['TargetMode']; label: string }> = [
+      { value: 'new_session_per_run', label: t('AIScheduledTasks.newSessionPerRun') },
+    ]
+    if (editing?.TargetMode === 'continue_session') {
+      options.unshift({ value: 'continue_session', label: t('AIScheduledTasks.continueSession') })
+    }
+    return options
+  }, [editing?.TargetMode, i18nRefresh])
 
   // 预览请求防抖：表单值变化后 250ms 内不再重复请求
   const fetchPreviewTimes = useDebounceFn(
@@ -141,6 +153,11 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         Name: values.Name.trim(),
         Status: editing?.Status === 'paused' ? 'paused' : 'active',
         TargetMode: values.TargetMode,
+        // 编辑 continue_session 任务时原样保留关联会话；切换为独立模式则清空
+        TargetSessionID: values.TargetMode === 'continue_session' ? editing?.TargetSessionID || '' : '',
+        // 记录任务创建来源的会话，仅信息性字段，编辑时保留
+        CreatedFromSessionID: editing?.CreatedFromSessionID || '',
+        OriginalRequest: editing?.OriginalRequest || values.Prompt.trim(),
         Payload: {
           Prompt: values.Prompt.trim(),
           StartParams: {
@@ -150,12 +167,16 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
             AllowPlanUserInteract: false,
             UserQuery: '',
           },
+          AttachedResourceInfos: editing?.Payload.AttachedResourceInfos || [],
+          FocusModeLoop: editing?.Payload.FocusModeLoop || '',
         },
         Schedule: {
           RRule: frequencyToRRule(values.Frequency, values.StartAt, values.IntervalMinutes),
           Timezone: getTimezone(),
           StartAt: values.StartAt.unix(),
         },
+        MisfireGraceSeconds: editing?.MisfireGraceSeconds || 300,
+        MaxRuntimeSeconds: editing?.MaxRuntimeSeconds || 7200,
       }
       if (editing) {
         await grpcUpdateAIReActSchedule({ Schedule: schedule }, true)
@@ -217,7 +238,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
             </Form.Item>
           )}
           <Form.Item name="TargetMode" label={t('AIScheduledTasks.targetMode')} rules={[{ required: true }]}>
-            <YakitSelect options={[{ value: 'new_session_per_run', label: t('AIScheduledTasks.newSessionPerRun') }]} />
+            <YakitSelect options={targetModeOptions} />
           </Form.Item>
           <div className={styles['preview']}>
             <div>{t('AIScheduledTasks.preview')}</div>

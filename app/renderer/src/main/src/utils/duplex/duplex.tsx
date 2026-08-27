@@ -221,6 +221,10 @@ export const startupDuplexConn = () => {
         case 'ai_memory':
           emiter.emit('onRefreshQueryAIMemoryEntity', JSON.stringify(obj))
           break
+        // 后端定时任务独立创建 AI 会话并持久化后的通知（payload: {sessionId, isRunning}）
+        case 'ai_session':
+          emiter.emit('onServerPushAISession', JSON.stringify(obj))
+          break
         // rps
         case 'rps':
           handleConcurrentLoadData('rps', obj)
