@@ -166,6 +166,12 @@
   }
 }
 
+@container ai-chat-textarea (max-width: 300px) {
+  .select-option-text {
+    display: none;
+  }
+}
+
 .popover-wrapper {
   width: 200px;
   display: flex;
