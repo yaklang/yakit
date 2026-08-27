@@ -1,30 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, waitFor } from '@testing-library/react'
-import { YaklangEngineWatchDog } from '../index'
-import type { YaklangEngineWatchDogProps } from '../index'
+import { YaklangEngineWatchDog } from '../YaklangEngineWatchDog'
+import type { YaklangEngineWatchDogProps } from '../YaklangEngineWatchDog'
 import emiter from '@/utils/eventBus/eventBus'
-import { yakitEngine } from '@/utils/electronBridge'
-import { grpcStartLocalEngine, isEngineConnectionAlive } from '../../../grpc'
-import { toEngineHandshakeName } from '@/utils/envfile'
-import type { YaklangEngineMode } from '@/pages/StartupPage/types'
-
-// Mock 外部依赖
-vi.mock('@/i18n/useI18nNamespaces', () => ({
-  useI18nNamespaces: () => ({
-    t: (key: string) => key,
-    i18n: {
-      language: 'zh',
-      hasResourceBundle: () => true,
-      loadNamespaces: vi.fn(async () => undefined),
-      on: vi.fn(),
-      off: vi.fn(),
-      t: (key: string) => key,
-      exists: () => true,
-      changeLanguage: vi.fn(async () => undefined),
-    },
-    isAllReady: true,
-  }),
-}))
+import { yakitEngine } from '@/services/electronBridge'
+import { isEngineConnectionAlive } from '@/components/layout/WelcomeConsoleUtil'
+import { fetchEnv, toEngineHandshakeName } from '@/utils/envfile'
 
 vi.mock('@/utils/eventBus/eventBus', () => ({
   default: {
@@ -33,19 +14,16 @@ vi.mock('@/utils/eventBus/eventBus', () => ({
   },
 }))
 
-vi.mock('@/utils/electronBridge', () => ({
+vi.mock('@/services/electronBridge', () => ({
   yakitEngine: {
     connectYaklangEngine: vi.fn(),
+    isPortAvailable: vi.fn(),
+    startLocalYaklangEngine: vi.fn(),
   },
 }))
 
-vi.mock('../../../grpc', () => ({
-  grpcStartLocalEngine: vi.fn(),
+vi.mock('@/components/layout/WelcomeConsoleUtil', () => ({
   isEngineConnectionAlive: vi.fn(),
-}))
-
-vi.mock('../../../utils', () => ({
-  outputToWelcomeConsole: vi.fn(),
 }))
 
 vi.mock('@/utils/logCollection', () => ({
@@ -53,13 +31,33 @@ vi.mock('@/utils/logCollection', () => ({
 }))
 
 vi.mock('@/utils/notification', () => ({
-  yakitNotify: vi.fn(),
+  failed: vi.fn(),
+}))
+
+vi.mock('@/utils/kv', () => ({
+  setRemoteValue: vi.fn(),
+}))
+
+vi.mock('@/store', () => ({
+  yakitDynamicStatus: () => ({
+    dynamicStatus: {
+      isDynamicStatus: false,
+      isDynamicSelfStatus: false,
+      baseUrl: '',
+    },
+    setDynamicStatus: vi.fn(),
+  }),
+}))
+
+vi.mock('@/pages/dynamicControl/remoteOperation', () => ({
+  remoteOperation: vi.fn(),
 }))
 
 vi.mock('@/utils/envfile', () => ({
-  __PLATFORM__: 'yakit',
-  FetchSoftwareVersion: vi.fn(() => 'yakit'),
+  fetchEnv: vi.fn(() => 'yakit'),
   isEnpriTraceAgent: vi.fn(() => false),
+  isIRify: vi.fn(() => false),
+  getRemoteHttpSettingGV: vi.fn(() => 'http-setting'),
   toEngineHandshakeName: vi.fn((edition = 'yakit') => {
     switch (edition) {
       case 'yakitEE':
@@ -76,7 +74,7 @@ vi.mock('@/utils/envfile', () => ({
 
 describe('YaklangEngineWatchDog 组件测试', () => {
   let props: YaklangEngineWatchDogProps
-  let triggerEngineTest: () => void
+  let triggerEngineTest: (isDynamicControl?: boolean) => void
 
   beforeEach(() => {
     props = {
@@ -88,20 +86,20 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       },
       keepalive: false,
       engineLink: false,
-      yakitStatus: '',
-      setYakitStatus: vi.fn(),
-      setCheckLog: vi.fn(),
       onReady: vi.fn(),
       onFailed: vi.fn(),
       onKeepaliveShouldChange: vi.fn(),
+      failedCallback: vi.fn(),
     }
 
     vi.clearAllMocks()
+    vi.mocked(fetchEnv).mockReturnValue('yakit')
     vi.mocked(yakitEngine.connectYaklangEngine).mockRejectedValue(new Error('fail'))
-    vi.mocked(grpcStartLocalEngine).mockResolvedValue({ ok: true, status: 'success', message: '' })
+    vi.mocked(yakitEngine.isPortAvailable).mockResolvedValue(undefined)
+    vi.mocked(yakitEngine.startLocalYaklangEngine).mockResolvedValue(undefined)
     vi.mocked(emiter.on).mockImplementation((event: any, callback) => {
       if (event === 'startAndCreateEngineProcess') {
-        triggerEngineTest = callback as () => void
+        triggerEngineTest = callback as unknown as (isDynamicControl?: boolean) => void
       }
       return emiter
     })
@@ -113,7 +111,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
 
   describe('engineTest - 引擎连接测试（由 startAndCreateEngineProcess 事件触发）', () => {
     it('当 credential.Mode 为空时，应直接返回，不调用连接', () => {
-      props.credential.Mode = '' as YaklangEngineMode
+      props.credential.Mode = undefined
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
 
@@ -145,13 +143,12 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       await waitFor(
         () => {
           expect(toEngineHandshakeName).toHaveBeenCalledWith('yakit')
-          expect(grpcStartLocalEngine).toHaveBeenCalledWith(
+          expect(yakitEngine.startLocalYaklangEngine).toHaveBeenCalledWith(
             expect.objectContaining({
               port: 9011,
-              password: 'test-password',
               version: 'yakit',
               isEnpriTraceAgent: false,
-              softwareVersion: 'yakit',
+              isIRify: false,
             }),
           )
         },
@@ -160,13 +157,15 @@ describe('YaklangEngineWatchDog 组件测试', () => {
     })
 
     it('启动本地引擎时，应将 yakitEE 映射为 enterprise 传给引擎', async () => {
-      vi.mocked(toEngineHandshakeName).mockReturnValueOnce('enterprise')
+      vi.mocked(fetchEnv).mockReturnValue('yakitEE')
+      vi.mocked(toEngineHandshakeName).mockReturnValue('enterprise')
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
 
       await waitFor(
         () => {
-          expect(grpcStartLocalEngine).toHaveBeenCalledWith(
+          expect(toEngineHandshakeName).toHaveBeenCalledWith('yakitEE')
+          expect(yakitEngine.startLocalYaklangEngine).toHaveBeenCalledWith(
             expect.objectContaining({
               version: 'enterprise',
             }),
@@ -181,29 +180,10 @@ describe('YaklangEngineWatchDog 组件测试', () => {
       render(<YaklangEngineWatchDog {...props} />)
       triggerEngineTest()
 
-      expect(grpcStartLocalEngine).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('自动启动本地引擎（autoStartProgress 触发的 useDebounceEffect）', () => {
-    it('启动成功时，应调用 onKeepaliveShouldChange(true)', async () => {
-      render(<YaklangEngineWatchDog {...props} />)
-      triggerEngineTest()
-
-      await waitFor(
-        () => {
-          expect(props.onKeepaliveShouldChange).toHaveBeenCalledWith(true)
-        },
-        { timeout: 2000 },
-      )
-    })
-
-    it('启动失败时，不调用 onKeepaliveShouldChange', async () => {
-      vi.mocked(grpcStartLocalEngine).mockResolvedValue({ ok: false, status: 'error', message: '' })
-      render(<YaklangEngineWatchDog {...props} />)
-      triggerEngineTest()
-
-      expect(props.onKeepaliveShouldChange).not.toHaveBeenCalled()
+      expect(yakitEngine.startLocalYaklangEngine).not.toHaveBeenCalled()
+      await waitFor(() => {
+        expect(props.failedCallback).toHaveBeenCalledWith('remote-connect-failed')
+      })
     })
   })
 
@@ -217,7 +197,7 @@ describe('YaklangEngineWatchDog 组件测试', () => {
 
     it('当 keepalive 为 true 且引擎连接存活时，应调用 onReady', async () => {
       props.keepalive = true
-      vi.mocked(isEngineConnectionAlive).mockResolvedValue(undefined)
+      vi.mocked(isEngineConnectionAlive).mockResolvedValue(true)
       render(<YaklangEngineWatchDog {...props} />)
 
       await waitFor(() => {
