@@ -10,6 +10,15 @@ export const useCasualConcurrentTaskList = () => {
   const rawData = useCurrentRawData()
   const getKind = useAIItemKind()
   const casualChatElementLength = useStore(store, (state) => state.chatElements.length || 0)
+  const taskRenderVersion = useStore(store, (state) => {
+    let version = 0
+    for (const item of state.chatElements) {
+      if (item.chatType !== 'reAct') continue
+      const task = state.tasks[item.token]
+      if (task) version += task.renderNum
+    }
+    return version
+  })
 
   return useCreation(() => {
     const list: AITaskInfoProps[] = []
@@ -38,7 +47,7 @@ export const useCasualConcurrentTaskList = () => {
       })
     }
     return list
-  }, [casualChatElementLength])
+  }, [casualChatElementLength, taskRenderVersion])
 }
 
 /** 有任务树或子 Agent 任务时，任务列表入口可点 */

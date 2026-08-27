@@ -11,7 +11,9 @@ export interface ThoughtDurationProps {
 }
 
 type ThoughtDurationCache = {
+  startedAt: number
   seconds: number
+  frozen: boolean
   seenStart: boolean
 }
 
@@ -26,6 +28,9 @@ export const clearThoughtDurationCache = (sessionId?: string) => {
   durationCache.delete(sessionId)
 }
 
+/** 开始瞬间展示 1 秒，之后按墙钟取整 */
+const deriveSeconds = (startedAt: number) => Math.max(1, 1 + Math.floor((Date.now() - startedAt) / 1000))
+
 const ThoughtDuration: FC<ThoughtDurationProps> = memo((props) => {
   const { persistKey, status } = props
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -33,9 +38,19 @@ const ThoughtDuration: FC<ThoughtDurationProps> = memo((props) => {
   const sessionCache = sessionId ? durationCache.get(sessionId) : undefined
   const cached = persistKey ? sessionCache?.get(persistKey) : undefined
   const seenStartRef = useRef(cached?.seenStart ?? false)
-  const [seconds, setSeconds] = useState(cached?.seconds ?? 1)
+  const startedAtRef = useRef(cached?.startedAt ?? 0)
+  const prevStatusRef = useRef(status)
+  const [seconds, setSeconds] = useState(() => {
+    if (!cached) return 1
+    if (cached.frozen) return cached.seconds
+    if (status === 'start' && cached.startedAt) return deriveSeconds(cached.startedAt)
+    return cached.seconds
+  })
 
-  if (status === 'start') seenStartRef.current = true
+  if (status === 'start') {
+    seenStartRef.current = true
+    if (!startedAtRef.current) startedAtRef.current = Date.now()
+  }
 
   useEffect(() => {
     if (!sessionId || !persistKey || !seenStartRef.current) return
@@ -44,12 +59,28 @@ const ThoughtDuration: FC<ThoughtDurationProps> = memo((props) => {
       map = new Map()
       durationCache.set(sessionId, map)
     }
-    map.set(persistKey, { seconds, seenStart: true })
-  }, [sessionId, persistKey, seconds])
+    map.set(persistKey, {
+      startedAt: startedAtRef.current,
+      seconds,
+      frozen: status === 'end',
+      seenStart: true,
+    })
+  }, [sessionId, persistKey, seconds, status])
 
   useEffect(() => {
-    if (status !== 'start') return
-    const id = window.setInterval(() => setSeconds((s) => s + 1), 1000)
+    const prev = prevStatusRef.current
+    prevStatusRef.current = status
+    // 本实例从 start → end 才用墙钟冻结；滚回来已是 end 时沿用缓存，避免把结束后的时间算进去
+    if (prev === 'start' && status === 'end' && startedAtRef.current) {
+      setSeconds(deriveSeconds(startedAtRef.current))
+    }
+  }, [status])
+
+  useEffect(() => {
+    if (status !== 'start' || !startedAtRef.current) return
+    const tick = () => setSeconds(deriveSeconds(startedAtRef.current))
+    tick()
+    const id = window.setInterval(tick, 1000)
     return () => window.clearInterval(id)
   }, [status])
 

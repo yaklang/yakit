@@ -121,6 +121,9 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
   const autoOpenedHttpOrRiskRef = useRef(false)
   useEffect(() => {
     autoOpenedHttpOrRiskRef.current = false
+    setTabs([])
+    setActiveTabKey('')
+    setFilePreviewData(undefined)
   }, [activeChat?.SessionID])
   useEffect(() => {
     if (autoOpenedHttpOrRiskRef.current) return
@@ -182,6 +185,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
       const tabKey = `task:${key}`
 
       if (type === 'update') {
+        if (!tabs.some((item) => item.key === tabKey)) return
         setTabs((current) =>
           current.map((item) =>
             item.key === tabKey
