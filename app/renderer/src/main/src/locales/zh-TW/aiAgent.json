@@ -259,6 +259,37 @@
     "noPreview": "當前規則沒有後續運行時間",
     "runtimeNotice": "任務按託管 YOLO 策略無人值守執行，結果保留在對應聊天中，不生成單獨的運行記錄。繼續目前會話時，如果觸發瞬間該會話仍在運行，本次將靜默跳過；獨立會話模式則每次新建會話。應用關閉或電腦休眠時不會運行，恢復後按容錯窗口處理。",
     "loading": "加載中…",
+    "taskIntro": "任務介紹",
+    "taskName": "任務名稱",
+    "originalRequest": "原始請求",
+    "detail": "詳情",
+    "timezone": "時區",
+    "status": "狀態",
+    "completedNoToggle": "已完成任務無法切換狀態",
+    "openChat": "打開關聯會話",
+    "lastExecution": "最近執行",
+    "triggeredAt": "觸發時間",
+    "startedAt": "開始時間",
+    "executionResult": "執行結果",
+    "finishedAt": "完成時間",
+    "skippedAt": "跳過於",
+    "endedAt": "結束於",
+    "skipReasonTitle": "跳過原因",
+    "lastError": "失敗原因",
+    "pauseReasonTitle": "暫停原因",
+    "outcome": {
+      "succeeded": "成功",
+      "failed": "失敗",
+      "skipped": "跳過",
+      "cancelled": "取消",
+      "interrupted": "中斷",
+      "needs_attention": "需關注",
+      "running": "運行中"
+    },
+    "skipReason": {
+      "session_busy": "關聯會話正在運行",
+      "scheduler_capacity": "調度器容量已滿"
+    },
     "frequencyOptions": {
       "once": "僅一次",
       "minutes": "每 N 分鐘",
@@ -371,7 +402,8 @@
     "thoughtDurationMinutesSeconds": "持續了 {{minutes}} 分 {{seconds}} 秒",
     "toolCall": "工具呼叫",
     "taskEnd": "任務結束標誌",
-    "taskEndDesc": "當前任務已經結束，下面為新的任務資料"
+    "taskEndDesc": "當前任務已經結束，下面為新的任務資料",
+    "scheduledTrigger": "由定時任務啟動"
   },
   "AIReportFinishCard": {
     "openInAICodeAudit": "AI代碼審計中打開",

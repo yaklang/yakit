@@ -259,6 +259,37 @@
     "noPreview": "This rule has no future occurrences",
     "runtimeNotice": "Tasks run unattended with managed YOLO. Results remain in their conversations and no separate run history is created. In current-conversation mode, an occurrence is silently skipped if that conversation is busy when it fires. Isolated mode starts a new conversation for every occurrence. Tasks do not run while the app is closed or the computer is asleep; missed runs use the grace window.",
     "loading": "Loading…",
+    "taskIntro": "Task Introduction",
+    "taskName": "Task Name",
+    "originalRequest": "Original Request",
+    "detail": "Details",
+    "timezone": "Timezone",
+    "status": "Status",
+    "completedNoToggle": "Completed tasks cannot be toggled",
+    "openChat": "Open related chat",
+    "lastExecution": "Last Execution",
+    "triggeredAt": "Triggered At",
+    "startedAt": "Started At",
+    "executionResult": "Result",
+    "finishedAt": "Finished At",
+    "skippedAt": "Skipped At",
+    "endedAt": "Ended At",
+    "skipReasonTitle": "Skip Reason",
+    "lastError": "Error Reason",
+    "pauseReasonTitle": "Pause Reason",
+    "outcome": {
+      "succeeded": "Success",
+      "failed": "Failed",
+      "skipped": "Skipped",
+      "cancelled": "Cancelled",
+      "interrupted": "Interrupted",
+      "needs_attention": "Needs Attention",
+      "running": "Running"
+    },
+    "skipReason": {
+      "session_busy": "Related session is busy",
+      "scheduler_capacity": "Scheduler capacity exceeded"
+    },
     "frequencyOptions": {
       "once": "Once",
       "minutes": "Every N minutes",
@@ -371,7 +402,8 @@
     "thoughtDurationMinutesSeconds": "for {{minutes}}m {{seconds}}s",
     "toolCall": "Tool Call",
     "taskEnd": "Task End",
-    "taskEndDesc": "The current task has ended, below is the new task data"
+    "taskEndDesc": "The current task has ended, below is the new task data",
+    "scheduledTrigger": "Started by scheduled task"
   },
   "AIReportFinishCard": {
     "openInAICodeAudit": "Open in AI code audit",

@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type { AIScheduledTasksListItemProps, AIScheduledTasksProps, ScheduleQueryType } from './type'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import type { AIReActSchedule } from '../../ai-re-act/hooks/grpcApi'
 import {
   grpcDeleteAIReActSchedule,
   grpcQueryAIReActSchedules,
@@ -30,11 +31,7 @@ import styles from './AIScheduledTasks.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import type { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
-import type {
-  AIReActSchedule,
-  QueryAIReActSchedulesRequest,
-  QueryAIReActSchedulesResponse,
-} from '../../ai-re-act/hooks/grpcApi'
+import type { QueryAIReActSchedulesRequest, QueryAIReActSchedulesResponse } from '../../ai-re-act/hooks/grpcApi'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { yakitNotify } from '@/utils/notification'
@@ -43,6 +40,7 @@ import { Tooltip } from 'antd'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import ScheduledTasksForm from './scheduledTasksForm/ScheduledTasksForm'
+import AIScheduledTasksDetail from './aiScheduledTasksDetail/AIScheduledTasksDetail'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { SwitchAIAgentTabEventEnum, AIAgentTabListEnum } from '../defaultConstant'
@@ -157,11 +155,17 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   const [isRef, setIsRef] = useState<boolean>(false)
   const [recalculation, setRecalculation] = useState<boolean>(false)
   const [filterVisible, setFilterVisible] = useState<boolean>(false)
+  const [selectedUUID, setSelectedUUID] = useState<string | null>(null)
   const [response, setResponse] = useState<QueryAIReActSchedulesResponse>({
     Data: [],
     Pagination: genDefaultPagination(20),
     Total: 0,
   })
+
+  const selectedSchedule = useMemo(
+    () => response.Data.find((schedule) => schedule.UUID === selectedUUID),
+    [response.Data, selectedUUID],
+  )
 
   const listRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(listRef)
@@ -257,8 +261,52 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
     })
   })
   const onAdd = useMemoizedFn(() => openForm())
+
+  // 立即运行定时任务：成功后切换到历史会话tab并刷新激活第一个会话（列表项与详情共用）
+  const runScheduleNow = useMemoizedFn((item: AIReActSchedule) => {
+    return grpcRunAIReActScheduleNow({ UUID: item.UUID })
+      .then(() => {
+        yakitNotify('success', t('AIScheduledTasks.runStarted'))
+        emiter.emit(
+          'switchAIAgentTab',
+          JSON.stringify({
+            type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+            params: {
+              active: AIAgentTabListEnum.History,
+              show: true,
+            },
+          }),
+        )
+        setTimeout(() => {
+          emiter.emit(
+            'sessionData',
+            JSON.stringify({
+              type: 'refresh',
+              selectFirst: true,
+            }),
+          )
+        }, 200)
+      })
+      .catch(() => {})
+  })
+
+  const onDeleteAfter = useMemoizedFn(() => {
+    // 删除逻辑已内聚在详情组件中，这里只需刷新列表
+    getList(1)
+  })
   return (
     <div className={styles['ai-schedule-list-wrapper']} ref={listRef}>
+      {selectedUUID && selectedSchedule && (
+        <AIScheduledTasksDetail
+          uuid={selectedUUID}
+          initialSchedule={selectedSchedule}
+          onClose={() => setSelectedUUID(null)}
+          onDataChange={onSetData}
+          onEdit={openForm}
+          onRunNow={runScheduleNow}
+          onDeleteAfter={onDeleteAfter}
+        />
+      )}
       <div className={styles['ai-schedule-list-header']}>
         <div className={styles['ai-schedule-list-header-left']}>
           <span className={styles['ai-schedule-list-header-title']}>{t('AIScheduledTasks.title')}</span>
@@ -318,6 +366,8 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
                       onSetData={onSetData}
                       onRefresh={getList}
                       onEdit={openForm}
+                      onOpenDetail={(detail) => setSelectedUUID(detail.UUID)}
+                      onRunNow={runScheduleNow}
                     />
                   </React.Fragment>
                 )
@@ -353,7 +403,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
 export default AIScheduledTasks
 
 const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.memo((props) => {
-  const { item, onSetData, onRefresh, onEdit } = props
+  const { item, onSetData, onRefresh, onEdit, onOpenDetail, onRunNow } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [visible, setVisible] = useState<boolean>(false)
   const onToggleEnabled = useMemoizedFn((e) => {
@@ -384,29 +434,7 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
     setVisible(false)
   })
   const onRun = useMemoizedFn(() => {
-    grpcRunAIReActScheduleNow({ UUID: item.UUID }).then(() => {
-      yakitNotify('success', t('AIScheduledTasks.runStarted'))
-      // 运行成功后切换到历史会话tab并刷新激活第一个会话
-      emiter.emit(
-        'switchAIAgentTab',
-        JSON.stringify({
-          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-          params: {
-            active: AIAgentTabListEnum.History,
-            show: true,
-          },
-        }),
-      )
-      setTimeout(() => {
-        emiter.emit(
-          'sessionData',
-          JSON.stringify({
-            type: 'refresh',
-            selectFirst: true,
-          }),
-        )
-      }, 200)
-    })
+    onRunNow?.(item)
   })
   const onRemove = useMemoizedFn(() => {
     grpcDeleteAIReActSchedule({ UUID: item.UUID }).then(() => {
@@ -415,9 +443,8 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
     })
   })
   const statusIcon = item.Status === 'active' ? <OutlinePlayIcon /> : <OutlinePauseIcon />
-  const runCount = item.RunCount
   return (
-    <div className={styles['ai-schedule-list-item-content']}>
+    <div className={styles['ai-schedule-list-item-content']} onClick={() => onOpenDetail?.(item)}>
       <div className={styles['ai-schedule-list-item-heard']}>
         <div className={styles['ai-schedule-list-item-heard-name']}>
           <span className={styles['ai-schedule-list-item-heard-name-text']}>{item.Name}</span>
@@ -481,11 +508,6 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
             })}
           >
             {formatScheduleRule(item, t)}
-          </YakitTag>
-        </div>
-        <div className={styles['ai-schedule-list-item-footer-right']}>
-          <YakitTag size="small" color={'white'}>
-            {t('AIScheduledTasks.runCount', { count: runCount || 0 })}
           </YakitTag>
         </div>
       </div>
