@@ -20,15 +20,7 @@ import {
   MAIN_RENDER_DIR,
   LINK_RENDER_DIR,
 } from './utils.mjs'
-import {
-  EDITIONS,
-  SYSTEMS,
-  INSTALL_TARGETS,
-  isEdition,
-  isSystem,
-  isInstallTarget,
-  buildYakitEnv,
-} from './env.mjs'
+import { EDITIONS, SYSTEMS, INSTALL_TARGETS, isEdition, isSystem, isInstallTarget, buildYakitEnv } from './env.mjs'
 import {
   RootHelpExtraDoc,
   InstallCMDExamplesDoc,
@@ -335,8 +327,7 @@ const runRenderers = async ({ main, link, build, env }) => {
   const { result } = concurrently(
     jobs.map((job) => {
       const binEnv = withLocalBin(job.cwd, env)
-      const command =
-        build && job.cwd === LINK_RENDER_DIR ? 'tsc -b && vite build' : build ? 'vite build' : 'vite'
+      const command = build && job.cwd === LINK_RENDER_DIR ? 'tsc -b && vite build' : build ? 'vite build' : 'vite'
       return {
         command,
         name: job.name,

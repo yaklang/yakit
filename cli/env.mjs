@@ -55,15 +55,7 @@ const toEngineHandshakeName = (edition) => {
  * 组装注入到 vite / electron-builder 子进程的 env。
  * 未开启的开关不写入，避免把 'false' 和「未设」混在一起。
  */
-const buildYakitEnv = ({
-  edition,
-  devtools,
-  sourcemap,
-  analyzer,
-  skipEnterpriseLicense,
-  legacy,
-  sign,
-} = {}) => {
+const buildYakitEnv = ({ edition, devtools, sourcemap, analyzer, skipEnterpriseLicense, legacy, sign } = {}) => {
   const env = { ...process.env }
 
   if (edition) env.YAKIT_EDITION = edition
