@@ -170,9 +170,11 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       // Electron 通过 localhost 加载，无需 gzip/brotli 压缩，关闭可省 CPU
       compress: false,
-      // 首屏前预热入口，减少运行中途发现新 dep 触发 504 Outdated Optimize Dep
+      // 首屏前预热：Vite 8 warmup 只跟静态 import，动态 import 必须显式列出。
+      // 非阻塞提示，不是 React 单实例保证；不穷尽全部 lazy 页，只覆盖启动无需再交互就会触发的边界。
       warmup: {
         clientFiles: [
+          // HTML / 入口壳层（显式 entries 会覆盖默认 html 推断，须保留）
           './index.html',
           './yakit-aux.html',
           './src/index.tsx',
@@ -180,9 +182,25 @@ export default defineConfig(({ mode }) => {
           './src/newApp/NewApp.tsx',
           './src/components/layout/UILayout.tsx',
           './src/pages/mitm/MITMServerHijacking/MITMPluginOnline.tsx',
+          './src/pages/softwareSettings/ProjectManage.tsx',
+          // 已有动态边界：NewApp lazy MainOperator；UILayout lazy SoftwareSettings
           './src/pages/MainOperator.tsx',
           './src/pages/softwareSettings/SoftwareSettings.tsx',
-          './src/pages/softwareSettings/ProjectManage.tsx',
+          // 多窗口入口：index.tsx 按 ?window= 首次渲染直接触发
+          './src/newApp/ChildNewApp.tsx',
+          './src/pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage.tsx',
+          // 主窗模块初始化无条件动态 import
+          './src/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge.ts',
+          // UILayout 无条件挂载 PluginHasParamsModal（visible=false 仍会初始化 lazy 模块）
+          './src/components/pluginHasParamsDrawer/PluginHasParamsDrawer.tsx',
+          // 发行版启动状态机自动选择的主体（inactive 页签 hasMounted=false，不预热）
+          './src/pages/EnterpriseJudgeLogin.tsx',
+          './src/pages/home/Home.tsx',
+          './src/pages/irifyHome/IRifyHome.tsx',
+          './src/pages/mitm/MITMHacker/MITMHacker.tsx',
+          './src/pages/ai-agent/AIAgent.tsx',
+          // Aux 并发流：frame 到达后才挂载，冷开窗与卡片 chunk 并行
+          './src/pages/ai-agent/components/ConcurrentStreamCard/aiChildWindowConcurrentStreamCard/AIChildWindowConcurrentStreamCard.tsx',
         ],
       },
     },
