@@ -109,10 +109,11 @@ interface HistoryChatProps {
   /** 顶栏操作区额外按钮（新建与钉住之间） */
   headerActionsExtra?: ReactNode
   renderExtra?: (sessions: AISession[]) => ReactNode
+  className?: string
 }
 
 const HistoryChat = memo(
-  ({ aiSource, embedded, title, hideInlineSearch, headerActionsExtra, renderExtra }: HistoryChatProps) => {
+  ({ aiSource, embedded, title, hideInlineSearch, headerActionsExtra, renderExtra, className }: HistoryChatProps) => {
     const { setActiveChat, getSetting } = useAIAgentDispatcher()
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
@@ -368,7 +369,7 @@ const HistoryChat = memo(
     }, [dispatcher, handleResetSessions, historyQuerySources, isGlobalAIAgentHistory, isSessionVisibleInCurrentSource])
 
     return (
-      <div className={styles['history-chat']}>
+      <div className={classNames(styles['history-chat'], className)}>
         <div className={styles['header-wrapper']}>
           <div className={styles['haeder-first']}>
             <div className={styles['first-title']}>

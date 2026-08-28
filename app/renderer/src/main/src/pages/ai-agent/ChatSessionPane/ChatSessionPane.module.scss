@@ -4,6 +4,11 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  background-color: var(--Colors-Use-Neutral-Bg);
+}
+
+.session-history-chat {
+  background-color: var(--Colors-Use-Neutral-Bg);
 }
 
 .session-search-modal {

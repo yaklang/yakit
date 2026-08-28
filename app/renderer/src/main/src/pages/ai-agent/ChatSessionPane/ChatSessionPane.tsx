@@ -42,6 +42,7 @@ const ChatSessionPane: React.FC = memo(() => {
         aiSource={AI_AGENT_HISTORY_AI_SOURCES}
         title={t('ChatSessionPane.sessionList')}
         hideInlineSearch
+        className={styles['session-history-chat']}
         headerActionsExtra={
           <YakitButton
             type="text2"
