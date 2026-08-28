@@ -2,6 +2,8 @@
 export enum WebsiteGV {
   /** @name 官网地址 */
   OfficialWebsite = 'https://www.yaklang.com/',
+  /** @name memfit 官网地址 */
+  MemfitWebsite = 'https://memfit.ai/',
   /** @name 关于我们 */
   AboutUsWebsite = 'https://megavector.cn/aboutUs/',
   /** @name yak-帮助文档地址 */

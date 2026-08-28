@@ -6,6 +6,7 @@ import { useMemoizedFn } from 'ahooks'
 import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
 import { WebsiteGV } from '@/enums/website'
 import { yakitShell } from '@/services/electronBridge'
+import { isMemfit } from '@/utils/envfile'
 
 import classNames from 'classnames'
 import styles from './HelpDoc.module.scss'
@@ -54,7 +55,7 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
         yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`)
         return
       case 'official_website':
-        yakitShell.openExternal(WebsiteGV.YakHelpDocAddress)
+        yakitShell.openExternal(isMemfit() ? WebsiteGV.MemfitWebsite : WebsiteGV.YakHelpDocAddress)
         return
       case 'aboutUs':
         yakitShell.openExternal(WebsiteGV.AboutUsWebsite)
