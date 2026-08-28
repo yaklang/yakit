@@ -5,7 +5,8 @@
     "visionModels": "視覺模型",
     "callingMode": "呼叫模式",
     "aiModel": "AI模型",
-    "focusMode": "場景"
+    "focusMode": "場景",
+    "reasoningEffort": "思考"
   },
   "AIAgentChat": {
     "templateDataError": "準備使用的模板資料異常，請稍後再試",
@@ -439,6 +440,9 @@
   },
   "AIFocusMode": {
     "focusModeTooltip": "複雜場景限定使用框架，限制AI思考範圍"
+  },
+  "AIReasoningEffort": {
+    "tooltip": "off 關閉思考；不設置則跟隨模型默認；xhigh / max 為擴展檔位，僅探測確認支援後展示"
   },
   "HistoryChat": {
     "title": "歷史會話",

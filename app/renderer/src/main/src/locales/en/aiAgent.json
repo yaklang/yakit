@@ -5,7 +5,8 @@
     "visionModels": "Vision Models",
     "callingMode": "Calling Mode",
     "aiModel": "AI model",
-    "focusMode": "Focus Mode"
+    "focusMode": "Focus Mode",
+    "reasoningEffort": "Thinking"
   },
   "AIAgentChat": {
     "templateDataError": "Template data error, please try again later",
@@ -439,6 +440,9 @@
   },
   "AIFocusMode": {
     "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope"
+  },
+  "AIReasoningEffort": {
+    "tooltip": "off disables thinking; unset follows the model default; xhigh / max are extended tiers shown only after probe confirmation"
   },
   "HistoryChat": {
     "title": "History Chat",

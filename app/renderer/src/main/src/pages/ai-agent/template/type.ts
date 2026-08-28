@@ -11,6 +11,7 @@ import type { AIChatMentionProps } from '../components/aiChatMention/type'
 import type { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
 import type { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 import type { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
+import type { AIReasoningEffortSelectProps } from '@/pages/ai-re-act/aiReasoningEffortSelect/type'
 import type { AIEnabledCapability } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
@@ -43,6 +44,7 @@ export interface AIChatTextareaRefProps {
 export enum AIInputInnerFeatureEnum {
   AIReviewRuleSelect = 'AIReviewRuleSelect',
   AIModelSelect = 'AIModelSelect',
+  AIReasoningEffortSelect = 'AIReasoningEffortSelect',
 }
 export enum AIInputFooterRightEnum {
   AIFocusMode = 'AIFocusMode',
@@ -56,8 +58,12 @@ interface FooterLeftTypesBase<T extends string, U> {
 }
 type AIReviewRuleSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
 type AIModelSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIModelSelect, AIModelSelectProps>
+type AIReasoningEffortSelectType = FooterLeftTypesBase<
+  AIInputInnerFeatureEnum.AIReasoningEffortSelect,
+  AIReasoningEffortSelectProps
+>
 type AIFocusModeType = FooterLeftTypesBase<'AIFocusMode', AIFocusModeProps>
-export type FooterLeftTypesComponentProps = AIReviewRuleSelectType | AIModelSelectType
+export type FooterLeftTypesComponentProps = AIReviewRuleSelectType | AIModelSelectType | AIReasoningEffortSelectType
 export type FooterRightTypesComponentProps = AIFocusModeType
 export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>

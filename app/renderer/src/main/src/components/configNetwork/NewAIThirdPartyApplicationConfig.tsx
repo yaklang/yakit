@@ -427,6 +427,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const [effortProbing, setEffortProbing] = useState<boolean>(false)
     // 扩展思考强度探测结果：undefined=未探测；[]=探测过但不支持；非空=探测到支持的档位
     const [probedExtendedEfforts, setProbedExtendedEfforts] = useState<string[] | undefined>(undefined)
+    // model/Type 变化后置 true：已有探测数据保留（不清空），但下拉列表回退为基础档位，下次打开下拉框重新探测
+    const [effortProbeDirty, setEffortProbeDirty] = useState<boolean>(false)
     const headers = Form.useWatch('Headers', form) || []
     const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
     const headerItemRef = useRef<HTTPHeader>()
@@ -444,14 +446,15 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     )
 
     const reasoningEffortOptions = useCreation(() => {
-      return buildReasoningEffortOptions(t, probedExtendedEfforts, reasoningEffortWatch)
-    }, [probedExtendedEfforts, reasoningEffortWatch, i18nRefresh])
+      // 待重探时扩展档位对新模型未确认，下拉只展示基础档位（当前已选的扩展档仍随 currentValue 保留）
+      return buildReasoningEffortOptions(t, effortProbeDirty ? undefined : probedExtendedEfforts, reasoningEffortWatch)
+    }, [effortProbeDirty, probedExtendedEfforts, reasoningEffortWatch, i18nRefresh])
 
-    /**懒探测：首次打开强度下拉框时探测模型是否支持 xhigh/max；失败不置已探测，下次打开可重试 */
+    /**懒探测：首次打开强度下拉框时探测模型是否支持 xhigh/max，model/Type 变化后再次打开会重新探测；失败不置已探测，下次打开可重试 */
     const ensureEffortProbed = useDebounceFn(
       () => {
         if (readOnly || IsOnline) return
-        if (probedExtendedEfforts !== undefined) return
+        if (probedExtendedEfforts !== undefined && !effortProbeDirty) return
         if (effortProbing) return
         const values = form.getFieldsValue()
         if (!values?.Type || !values?.model) return
@@ -461,7 +464,11 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           Model: values.model,
         })
           .then((resp) => {
+            // 探测期间 model/Type 已变化，丢弃过期结果，下次打开按新模型重探
+            const current = form.getFieldsValue()
+            if (current?.Type !== values.Type || current?.model !== values.model) return
             const efforts = probedExtendedEffortsFromResponse(resp)
+            setEffortProbeDirty(false)
             setProbedExtendedEfforts(efforts)
             // 探测结果写入 form，父组件提交时可直接读取
             form.setFieldsValue({
@@ -476,6 +483,11 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       },
       { wait: 300, leading: true },
     ).run
+
+    /**model / Type 是探测键：用户改动任一项后仅标记待重新探测，探测数据保留、下拉回退基础档位，重探成功后以新结果覆盖 */
+    const invalidateEffortProbe = useMemoizedFn(() => {
+      setEffortProbeDirty(true)
+    })
 
     // 获取类型
     useEffect(() => {
@@ -641,6 +653,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                   options={modelNameAllOptions}
                   groupSearchWithAll={true}
                   disabled={IsOnline}
+                  onChange={() => {
+                    invalidateEffortProbe()
+                  }}
                   onFocus={() => {
                     execModelNameOption.current = true
                     getModelNameOption()
@@ -775,6 +790,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 options={options}
                 groupSearchWithAll={true}
                 disabled={disabledType || IsOnline}
+                onChange={() => {
+                  invalidateEffortProbe()
+                }}
                 filterOption={(inputValue, option) => {
                   if (option?.label && typeof option?.label === 'string') {
                     return option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
@@ -786,6 +804,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               <YakitSelect
                 disabled={disabledType || IsOnline}
                 options={options}
+                onChange={() => {
+                  invalidateEffortProbe()
+                }}
                 filterOption={(inputValue, option) => {
                   if (option?.label && typeof option?.label === 'string') {
                     return option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1

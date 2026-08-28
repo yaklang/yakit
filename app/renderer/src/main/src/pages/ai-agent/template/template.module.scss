@@ -53,6 +53,9 @@ textarea.qs-input-textarea {
     .model-self-adaptive {
       @extend %self-adaptive;
     }
+    .reasoning-effort-self-adaptive {
+      @extend %self-adaptive;
+    }
     .focus-mode-self-adaptive {
       @extend %self-adaptive;
     }
