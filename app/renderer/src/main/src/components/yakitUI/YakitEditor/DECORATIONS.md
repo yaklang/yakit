@@ -140,7 +140,9 @@ options: {
   （`registerBinaryFoldEntries` / `unregisterBinaryFoldEntries` / `expandBinaryFuzztagByModelKey`）。小块文案策略：
   - `unquote` → `Binary[0x..NB]`（字节预览）；
   - `base64`/`hex` → 优先 `Base64[asdf]` / `HexString[asdf]`（解码文本预览 `previewText`），不可打印时回退字节预览；
-  - 改过追加 `|Changed`（布尔，无细节）；末尾统一追加 `Click to modify`（U+00A0 拼接）。
+  - `file` → 保留真实标签文本和引擎路径，不生成 `#YBIN`，不进入字节编辑；
+  - 普通单路径 `file` 在本地引擎模式可 `Ctrl+Click` 在文件管理器中定位；
+  - 可编辑项改过追加 `|Changed`（布尔，无细节）；提示空格均使用 U+00A0 拼接。
 - 辅助输入器（点击小块打开）：
   - `BinaryFuzztagHexModal.tsx`：Binary(unquote) 的字节级 HEX 编辑弹窗；
   - `Base64HexFuzztagModal.tsx`：Base64/HexString 公共弹窗，可切换 **文本/HEX**，默认文本（不可打印时默认 HEX）；

@@ -85,15 +85,17 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getMitmShortcutKeyEvents, MitmShortcutKey } from '@/utils/globalShortcutKey/events/page/mitm'
 import { JSONParseLog } from '@/utils/tool'
 import { applyManualHijackBatch, decorateManualHijackRows } from './manualHijackListModel'
+import { type ManualHijackBackendPacketSnapshot, planManualHijackPacketSync } from './manualHijackPacketSync'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { LargeRequestFileReplaceModal } from './LargeMultipartFileReplaceModal'
 import {
   getLargeRequestReplacementKey,
-  matchLargeRequestReplacementLine,
-  withLargeRequestReplacementLineNumber,
+  buildLargeRequestResourceChipLabel,
+  parseLargeRequestReplacementMarkers,
   sanitizeChipInjectedText,
   type LargeRequestReplacementMarker,
 } from './largeMultipartReplacement'
+import { resolveManualRequestSubmitAction } from './manualRequestSubmission'
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
   forwardRef((props, ref) => {
@@ -947,6 +949,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
     })
 
     const [type, setType] = useState<PackageTypeProps>('response')
+    const backendPacketSnapshotRef = useRef<ManualHijackBackendPacketSnapshot | undefined>(undefined)
 
     useImperativeHandle(ref, () => {
       return {
@@ -955,15 +958,11 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
       }
     }, [])
     useEffect(() => {
-      if (info.IsWebsocket) {
-        // WS Request
-        onSetRequest(info)
-      } else {
-        // Request
-        onSetRequest(info)
-        // Response
-        onSetResponse(info)
-      }
+      const plan = planManualHijackPacketSync(backendPacketSnapshotRef.current, info)
+      backendPacketSnapshotRef.current = plan.snapshot
+
+      if (plan.syncRequest) onSetRequest(info)
+      if (plan.syncResponse) onSetResponse(info)
     }, [info])
     useEffect(() => {
       if (isOnlyLookResponse) setType('response')
@@ -1036,9 +1035,11 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
 
       const hasLargeRequestReplacement = Object.keys(largeRequestReplacements || {}).length > 0
       const request = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
-      // 已上传超大文件替换时优先 Forward，避免 Submit skeleton 冲掉引擎临时文件
-      if (hasLargeRequestReplacement || isEqual(request, rowData.Request)) {
-        if (hasLargeRequestReplacement) onClearLargeRequestReplacements()
+      const submitAction = resolveManualRequestSubmitAction(
+        !isEqual(request, rowData.Request),
+        hasLargeRequestReplacement,
+      )
+      if (submitAction === 'forward') {
         grpcMITMV2Forward({
           TaskID: rowData.TaskID,
           Forward: true,
@@ -1049,7 +1050,10 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         TaskID: rowData.TaskID,
         Request: request,
       }
+      // grpcMITMV2SubmitRequestData 内部已 notify；此处吞掉 reject，避免 unhandled rejection
       grpcMITMV2SubmitRequestData(value)
+        .then(onClearLargeRequestReplacements)
+        .catch(() => {})
     })
     const onSubmitResponseData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
       if (loading || rowData.Status === ManualHijackListStatus.WaitHijack) return
@@ -1371,12 +1375,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     const applyDecorations = () => {
       mouseDisposable?.dispose()
       mouseDisposable = undefined
-      modelMarkers = []
-      for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
-        const matched = matchLargeRequestReplacementLine(model.getLineContent(lineNumber))
-        if (!matched) continue
-        modelMarkers.push(withLargeRequestReplacementLineNumber(matched, lineNumber))
-      }
+      modelMarkers = parseLargeRequestReplacementMarkers(model.getValue())
       decorationIDs = packetEditor.deltaDecorations(
         decorationIDs,
         modelMarkers.map((marker) => {
@@ -1385,6 +1384,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
           const hint = replacement
             ? t('MITMManual.replaced_with_file', { filename: replacement.Filename })
             : t('MITMManual.click_to_replace')
+          const label = buildLargeRequestResourceChipLabel(marker, hint)
           const chipClass = replacement
             ? `${styles['large-request-replace-chip']} ${styles['large-request-replace-chip-replaced']}`
             : styles['large-request-replace-chip']
@@ -1396,10 +1396,12 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
               endColumn: marker.lineLength + 1,
             },
             options: {
-              inlineClassName: chipClass,
+              // The ordinary file tag remains the model value used by
+              // SendPacket; users see the multipart filename and replace action.
+              inlineClassName: 'binary-fuzz-hidden',
               inlineClassNameAffectsLetterSpacing: true,
               after: {
-                content: sanitizeChipInjectedText(` ${hint}`),
+                content: sanitizeChipInjectedText(label),
                 inlineClassName: chipClass,
                 inlineClassNameAffectsLetterSpacing: true,
               },

@@ -1,8 +1,7 @@
 const { ipcMain } = require('electron')
 const DNS = require('dns')
-const fs = require('fs')
-const path = require('path')
 const { engineLogOutputFile, getFormattedDateTime } = require('../logFile')
+const { createMITMV2ReplacementUploadController } = require('./mitmV2LargeRequestUpload')
 
 // 创建消息发送器的工厂函数
 const createMessageSender = (stream, options) => {
@@ -163,7 +162,10 @@ module.exports = (win, getClient) => {
   let sendMessage
   let sendMessageAndWait
   let destroyMessage
-  let largeRequestUploadBarrier = Promise.resolve()
+  const largeRequestUploads = createMITMV2ReplacementUploadController({
+    isStreamRunning: () => !!stream,
+    getSendMessageAndWait: () => sendMessageAndWait,
+  })
 
   // 用于恢复正在劫持的 MITM 状态
   ipcMain.handle('mitmV2-have-current-stream', (e) => {
@@ -438,7 +440,7 @@ module.exports = (win, getClient) => {
 
   /**手动劫持 相关操作 */
   ipcMain.handle('mitmV2-manual-hijack-message', async (e, params) => {
-    await largeRequestUploadBarrier
+    await largeRequestUploads.waitForIdle()
     if (stream) {
       const value = {
         ManualHijackControl: true,
@@ -449,62 +451,7 @@ module.exports = (win, getClient) => {
   })
 
   ipcMain.handle('mitmV2-replace-large-request-file', async (e, params) => {
-    const upload = largeRequestUploadBarrier.then(async () => {
-      if (!stream || !sendMessageAndWait) {
-        throw new Error('MITM stream is not running')
-      }
-      const { TaskID, ReplaceBody, PartIndex, FilePath } = params || {}
-      const replaceBody = ReplaceBody === true
-      if (!TaskID || (!replaceBody && (!Number.isInteger(PartIndex) || PartIndex < 0)) || !FilePath) {
-        throw new Error('invalid large request replacement parameters')
-      }
-      const stat = await fs.promises.stat(FilePath)
-      if (!stat.isFile()) {
-        throw new Error('large request replacement path is not a file')
-      }
-      const filename = path.basename(FilePath)
-      let started = false
-      const sendChunk = async ({ Data = Buffer.alloc(0), Start = false, EOF = false, Cancel = false }) => {
-        await sendMessageAndWait({
-          ManualHijackControl: true,
-          ManualHijackMessage: {
-            TaskID,
-            IsLargeRequestFileChunk: true,
-            LargeRequestPartIndex: replaceBody ? 0 : PartIndex,
-            LargeRequestFilename: filename,
-            LargeRequestFileData: Data,
-            LargeRequestFileStart: Start,
-            LargeRequestFileEOF: EOF,
-            LargeRequestFileCancel: Cancel,
-            LargeRequestReplaceBody: replaceBody,
-          },
-        })
-      }
-      const sendFileChunk = async ({ Data = Buffer.alloc(0), EOF = false }) => {
-        const Start = !started
-        // Mark the upload as started before awaiting the write so a partial
-        // first-chunk failure still sends a best-effort cancel to the engine.
-        started = true
-        await sendChunk({ Data, Start, EOF })
-      }
-      try {
-        const fileStream = fs.createReadStream(FilePath, { highWaterMark: 1024 * 1024 })
-        for await (const data of fileStream) {
-          await sendFileChunk({ Data: data })
-        }
-        await sendFileChunk({ EOF: true })
-        return { Filename: filename, Size: stat.size }
-      } catch (error) {
-        if (started) {
-          try {
-            await sendChunk({ Cancel: true })
-          } catch (_) {}
-        }
-        throw error
-      }
-    })
-    largeRequestUploadBarrier = upload.catch(() => {})
-    return upload
+    return largeRequestUploads.replace(params)
   })
 
   // 设置mitm filter

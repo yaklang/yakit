@@ -1,6 +1,7 @@
 const { ipcMain, dialog } = require('electron')
 const FS = require('fs')
 const PATH = require('path')
+const { writeFileData } = require('./writeFileData')
 
 module.exports = (win, getClient) => {
   const handlerHelper = require('./handleStreamWithContext')
@@ -164,17 +165,9 @@ module.exports = (win, getClient) => {
   })
 
   // 将内容写入文件,文件未存在则新建文件后再进行写入
-  const asyncWriteFile = (params) => {
-    return new Promise((resolve, reject) => {
-      FS.writeFile(params.route, params.data, function (err) {
-        if (err) reject(err)
-        else resolve('success')
-      })
-    })
-  }
   ipcMain.handle('write-file', async (e, params) => {
     if (!params.route || !params.data) return 'fail'
-    return await asyncWriteFile(params)
+    return await writeFileData(params.route, params.data)
   })
 
   // 批量执行脚本的新接口：通过一个短 Filter 执行

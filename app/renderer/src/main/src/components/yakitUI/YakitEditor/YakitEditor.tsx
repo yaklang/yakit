@@ -36,7 +36,7 @@ import './StaticYakitEditor.scss'
 import { failed } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { v4 as uuidv4 } from 'uuid'
-import { openExternalWebsite } from '@/utils/openWebsite'
+import { openABSFileLocated, openExternalWebsite } from '@/utils/openWebsite'
 import emiter from '@/utils/eventBus/eventBus'
 import { GetPluginLanguage } from '@/pages/plugins/builtInData'
 import { setEditorContext, YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
@@ -66,7 +66,9 @@ import {
   collapseBinaryFuzztag,
   decodeBinaryTag,
   encodeBytesToTag,
+  canLocateFileReference,
   expandBinaryFuzztag,
+  findFileFuzztagPathAtOffset,
   registerBinaryFoldEntries,
   unregisterBinaryFoldEntries,
 } from './binaryFuzztag'
@@ -76,6 +78,7 @@ const BinaryFuzztagHexModal = React.lazy(() =>
 )
 import { Base64HexFuzztagModal } from './Base64HexFuzztagModal'
 import { showYakitModal } from '../YakitModal/YakitModalConfirm'
+import { SystemInfo } from '@/constants/hardware'
 
 // ===== 拆分模块导入 =====
 import {
@@ -746,6 +749,28 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const privacyMaskRangesRef = useRef<{ id: string; range: monaco.Range }[]>([])
   // 跟踪 model 是否已被释放
   const isModelDisposedRef = useRef<boolean>(false)
+
+  const resolveBinaryFoldHit = useMemoizedFn((position?: { lineNumber: number; column: number } | null) => {
+    if (!position) {
+      return undefined
+    }
+    const sameLine = binaryFoldRangesRef.current.filter((item) => item.range.startLineNumber === position.lineNumber)
+    if (sameLine.length === 1) {
+      return sameLine[0]
+    }
+    if (sameLine.length > 1) {
+      return sameLine.reduce((best, item) =>
+        Math.abs(item.range.startColumn - position.column) < Math.abs(best.range.startColumn - position.column)
+          ? item
+          : best,
+      )
+    }
+    if (binaryFoldRangesRef.current.length === 1) {
+      return binaryFoldRangesRef.current[0]
+    }
+    return undefined
+  })
+
   useEffect(() => {
     if (!editor) {
       return
@@ -967,20 +992,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       }
 
       try {
-        // 不可编辑（如 file）：只读展示原始引用文本
-        if (!entry.editable) {
-          showLockedModal({
-            title: `Binary Reference - {{${entry.tagName}(...)}}`,
-            width: '50%',
-            footer: null,
-            content: (
-              <div style={{ padding: 16, wordBreak: 'break-all', fontFamily: 'monospace', fontSize: 12 }}>
-                {entry.innerContent}
-              </div>
-            ),
-          })
-          return
-        }
         let initialData: Uint8Array
         try {
           initialData = await decodeBinaryTag(entry)
@@ -998,13 +1009,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
               return
             }
             const newTagText = await encodeBytesToTag(entry.kind, entry.tagName, bytes)
-            // 重新折叠新标签得到新占位 + 侧表项（内容过短则返回原标签不折叠）
             const { text: newPlaceholderText, entries: newEntries } = collapseBinaryFuzztag(newTagText)
-            newEntries.forEach((v, k) => {
-              binaryFoldEntriesRef.current.set(k, v)
+            newEntries.forEach((value, key) => {
+              binaryFoldEntriesRef.current.set(key, value)
             })
-            // 按点击命中的第 N 个标签记录修改，并直接替换命中的 decoration range。
-            // 相同二进制标签会拥有相同 id，不能再按 id 全文搜索，否则会误改第一个相同标签。
+            // 相同二进制标签会拥有相同 id；按点击命中的序号和 range 精确修改当前小块。
             binaryModifiedOrdinalsRef.current.add(hit.ordinal)
             editor.executeEdits('binary-fuzz-fold', [
               {
@@ -1020,7 +1029,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
         // base64 / hex 走"文本/HEX 可切换"的公共编辑器（默认文本）；unquote(Binary) 走字节级 HEX 编辑器
         const useTextHexEditor = entry.kind === 'base64' || entry.kind === 'hex'
-        const editorAction = readOnly ? 'View' : 'Edit'
+        const binaryReadOnly = !!readOnly || !entry.editable
+        const editorAction = binaryReadOnly ? 'View' : 'Edit'
         const editorTitle = useTextHexEditor
           ? `${editorAction} ${entry.kind === 'base64' ? 'Base64' : 'HexString'} - {{${entry.tagName}(...)}}`
           : `${editorAction} Binary - {{${entry.tagName}(...)}}`
@@ -1040,7 +1050,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             <React.Suspense fallback={null}>
               <BinaryFuzztagHexModal
                 entry={entry}
-                readOnly={readOnly}
+                readOnly={binaryReadOnly}
                 initialData={initialData}
                 onSubmit={handleSubmit}
                 onCancel={() => infoModal.destroy()}
@@ -1064,27 +1074,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       if (!chipEl) {
         return
       }
-      const clickPosition = e.target.position
-      // 解析对应 entry：按点击所在行匹配占位范围（同行多个时取最近列）
-      let hit: { id: string; range: monaco.Range; ordinal: number } | undefined
-      if (clickPosition) {
-        const sameLine = binaryFoldRangesRef.current.filter(
-          (item) => item.range.startLineNumber === clickPosition.lineNumber,
-        )
-        if (sameLine.length === 1) {
-          hit = sameLine[0]
-        } else if (sameLine.length > 1) {
-          hit = sameLine.reduce((best, item) =>
-            Math.abs(item.range.startColumn - clickPosition.column) <
-            Math.abs(best.range.startColumn - clickPosition.column)
-              ? item
-              : best,
-          )
-        }
-      }
-      if (!hit && binaryFoldRangesRef.current.length === 1) {
-        hit = binaryFoldRangesRef.current[0]
-      }
+      const hit = resolveBinaryFoldHit(e.target.position)
       if (!hit) {
         return
       }
@@ -1095,6 +1085,35 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       openBinaryFoldEditor(entry, hit)
     }
     const binaryFoldMouseDownDisposable = editor.onMouseDown(handleBinaryFoldClick)
+
+    // file 是引擎资源引用，不参与二进制折叠。保留真实标签和路径，同时在
+    // 本地引擎模式支持 Ctrl+点击定位文件；远程路径不能交给 GUI 机器打开。
+    const handleFileReferenceClick = (e: monaco.editor.IEditorMouseEvent) => {
+      if (!e.event.leftButton || !e.event.ctrlKey || !e.target.position) {
+        return
+      }
+      const { lineNumber, column } = e.target.position
+      const filePath = findFileFuzztagPathAtOffset(model.getLineContent(lineNumber), column - 1)
+      if (!filePath) {
+        return
+      }
+      if (!canLocateFileReference(true, SystemInfo.mode, filePath)) {
+        failed('Remote engine file paths cannot be located in the local file manager')
+        return
+      }
+      window
+        .require('electron')
+        .ipcRenderer.invoke('is-file-exists', filePath)
+        .then((exists: boolean) => {
+          if (exists) {
+            openABSFileLocated(filePath)
+          } else {
+            failed('File path does not exist on this computer')
+          }
+        })
+        .catch((error: unknown) => failed(`Locate file failed: ${error}`))
+    }
+    const fileReferenceMouseDownDisposable = editor.onMouseDown(handleFileReferenceClick)
 
     // 二进制 Fuzztag 折叠：拦截 copy/cut，确保复制到剪贴板的是真实内容而非占位
     // 捕获阶段统一覆盖 Ctrl+C/X、monaco clipboard action、右键菜单
@@ -1141,6 +1160,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         yakAnalyzeDisposable?.dispose()
         mouseDownDisposable.dispose()
         binaryFoldMouseDownDisposable.dispose()
+        fileReferenceMouseDownDisposable.dispose()
         releaseBinaryEditorLock()
         editorDomNode?.removeEventListener('copy', handleEditorClipboard, true)
         editorDomNode?.removeEventListener('cut', handleEditorClipboard, true)

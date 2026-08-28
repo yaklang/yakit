@@ -58,6 +58,13 @@ export const fetchEditorFullContent = (editor: YakitIMonacoEditor): string => {
 }
 
 /**
+ * 发送 WebFuzzer 时优先采用用户眼前的 editor model，并展开二进制折叠占位。
+ * fallback 仅用于 editor 尚未挂载或当前 model 为空的时刻。
+ */
+export const resolveWebFuzzerPacket = (editor: YakitIMonacoEditor | undefined, fallback: string): string =>
+  (editor && fetchEditorFullContent(editor)) || fallback
+
+/**
  * @name 获取编辑器光标选中内容字节数
  * @param editor 编辑器对象实例
  */

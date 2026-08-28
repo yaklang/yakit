@@ -4,14 +4,11 @@
 // 延迟获取 electron ipcRenderer，避免纯函数在非 electron 环境（如单测）导入即报错
 const getIpcRenderer = (): any => (window as any).require('electron').ipcRenderer
 
-// 超过该字节数（按标签内部参数文本长度估算）才折叠，避免打扰短标签
-export const BINARY_FOLD_THRESHOLD = 64
-
 // 占位标记前后缀，确保唯一且为纯 ASCII，便于 expand 时精确回填
 const PLACEHOLDER_PREFIX = '#YBIN_'
 const PLACEHOLDER_SUFFIX = '#'
 
-export type BinaryTagKind = 'unquote' | 'hex' | 'base64' | 'file'
+export type BinaryTagKind = 'unquote' | 'hex' | 'base64'
 
 export interface BinaryFuzztagEntry {
   id: string
@@ -35,6 +32,28 @@ export interface BinaryCollapseResult {
   entries: Map<string, BinaryFuzztagEntry>
 }
 
+/** Ctrl+点击 file 只允许定位 GUI 本机真实文件；远程引擎路径不能交给本机 Finder/Explorer。 */
+export const canLocateFileReference = (
+  ctrlKey: boolean,
+  engineMode: 'local' | 'remote' | undefined,
+  path: string,
+): boolean => ctrlKey && engineMode === 'local' && !!path && !path.includes('|')
+
+/** 返回点击位置命中的单文件 {{file(path)}} 路径；file 引用始终保留在 Monaco 原始文本中。 */
+export const findFileFuzztagPathAtOffset = (line: string, offset: number): string | undefined => {
+  const pattern = /\{\{file\(([^)\r\n|]+)\)\}\}/gi
+  let match: RegExpExecArray | null
+  while ((match = pattern.exec(line))) {
+    const start = match.index
+    const end = start + match[0].length
+    if (offset >= start && offset < end) {
+      const path = match[1].trim()
+      return path || undefined
+    }
+  }
+  return undefined
+}
+
 // 标签名 -> 类型映射（含别名）
 const TAG_NAME_KIND: Record<string, BinaryTagKind> = {
   unquote: 'unquote',
@@ -45,10 +64,7 @@ const TAG_NAME_KIND: Record<string, BinaryTagKind> = {
   base64d: 'base64',
   b64d: 'base64',
   base64decode: 'base64',
-  file: 'file',
 }
-
-const isEditableKind = (kind: BinaryTagKind): boolean => kind !== 'file'
 
 // 确定性 hash（cyrb53），保证 collapse(expand(x)) === x，避免受控组件覆盖死循环
 const hashId = (str: string): string => {
@@ -165,13 +181,13 @@ function parseTag(raw: string, start: number): { tagName: string; content: strin
   if (kind === 'unquote') {
     return parseUnquoteTag(raw, parenIdx, tagName)
   } else {
-    // hex / base64 / file 都使用简单解析
+    // hex / base64 使用简单解析
     return parseSimpleTag(raw, parenIdx, tagName)
   }
 }
 
 /**
- * 解析普通标签（hex/base64/file），内容不含 `)` 和 `}}`
+ * 解析普通标签（hex/base64），内容不含 `)` 和 `}}`
  */
 function parseSimpleTag(
   raw: string,
@@ -216,7 +232,11 @@ function parseUnquoteTag(
 }
 
 /**
- * 在 raw 中从 start 位置（指向第一个引号）开始，寻找匹配的未转义双引号
+ * 在 raw 中从 start 位置（指向第一个引号）开始寻找 unquote 的结构化结束引号。
+ *
+ * History 中也可能存在正文原本就是字面量转义文本的历史请求，其中的引号会显示成 `\\"`。
+ * 按普通字符串词法它看起来像一个未转义引号，但它并不是标签结尾。只接受后面紧跟 `)}}`
+ * 的引号，才能忠实展示这类既有数据，同时避免在大块内容中提前终止解析。
  */
 function findMatchingQuote(raw: string, start: number): number {
   let pos = start + 1
@@ -224,7 +244,10 @@ function findMatchingQuote(raw: string, start: number): number {
     if (raw[pos] === '\\' && pos + 1 < raw.length) {
       pos += 2 // 跳过转义字符和后面的字符
     } else if (raw[pos] === '"') {
-      return pos // 找到匹配的引号
+      if (raw[pos + 1] === ')' && raw.startsWith('}}', pos + 2)) {
+        return pos
+      }
+      pos++
     } else {
       pos++
     }
@@ -276,8 +299,6 @@ const computePreview = (
       // 有界扫描：统计完整 byteLength，只保留头字节做 chip 预览（对齐 hex/base64 头切片）
       const { byteLength, preview } = goUnquotePreview(content, 4)
       result = { byteLength, previewHex: bytesToHex(preview) }
-    } else if (kind === 'file') {
-      result = { byteLength: content.length, previewHex: '' }
     }
   } catch (e) {}
   rememberPreview(id, result)
@@ -324,13 +345,6 @@ export const collapseBinaryFuzztag = (raw: string): BinaryCollapseResult => {
       continue
     }
 
-    // 折叠策略：file 短内容不折叠
-    if (kind === 'file' && content.length <= BINARY_FOLD_THRESHOLD) {
-      resultParts.push(fullTag)
-      i = endIndex
-      continue
-    }
-
     // 折叠：生成占位符
     const id = hashId(fullTag)
     const preview = computePreview(kind, content, id)
@@ -338,7 +352,7 @@ export const collapseBinaryFuzztag = (raw: string): BinaryCollapseResult => {
       id,
       tagName,
       kind,
-      editable: isEditableKind(kind),
+      editable: true,
       originalTagText: fullTag,
       innerContent: content,
       byteLength: preview.byteLength,
@@ -356,7 +370,8 @@ export const collapseBinaryFuzztag = (raw: string): BinaryCollapseResult => {
 
 /**
  * 将含二进制 Fuzztag 的请求/响应文本解码为真实字节，供 HEX 视图使用。
- * unquote / hexdecode / base64decode 会解码；file 与普通文本按 UTF-8 保留。
+ * unquote / hexdecode / base64decode 会同步解码；file 不属于
+ * 二进制编辑协议，按普通文本原样保留。
  */
 export const packetTextToRawBytes = (raw: string): Uint8Array => {
   if (!raw) {
@@ -396,7 +411,7 @@ export const packetTextToRawBytes = (raw: string): Uint8Array => {
     const { tagName, content, endIndex } = parsed
     const fullTag = raw.slice(openIdx, endIndex)
     const kind = TAG_NAME_KIND[tagName.toLowerCase()]
-    if (!kind || kind === 'file') {
+    if (!kind) {
       pushText(fullTag)
       i = endIndex
       continue
@@ -462,6 +477,29 @@ export const bytesToUnquoteString = (bytes: Uint8Array | number[]): string => {
         break
       case 0x5c:
         s += '\\\\'
+        break
+      // These bytes are valid inside a Go quoted string, but they are also
+      // structural delimiters of the outer {{tag(...)}} grammar. Keep the
+      // renderer output compatible with the parser-safe delimiter rules in
+      // lowhttp.ToUnquoteFuzzTagForce so the engine parser cannot split a
+      // binary payload at printable (){} bytes.
+      case 0x28:
+        s += '\\x28'
+        break
+      case 0x29:
+        s += '\\x29'
+        break
+      case 0x7b:
+        s += '\\x7b'
+        break
+      case 0x7d:
+        s += '\\x7d'
+        break
+      // The exported Fuzztag is commonly embedded in fuzz.Strings(`...`). A
+      // literal backtick would terminate that Yak raw string before the tag
+      // ends; unquote("\\x60") restores exactly the same source byte.
+      case 0x60:
+        s += '\\x60'
         break
       default:
         s += b >= 0x20 && b <= 0x7e ? String.fromCharCode(b) : `\\x${b.toString(16).padStart(2, '0')}`
@@ -549,22 +587,19 @@ export const findPlaceholderOffsets = (text: string): PlaceholderOffset[] => {
   return res
 }
 
-// 小块类型前缀：按解码语义区分三类可编辑标签 + 只读文件引用
-// unquote -> Binary, hexdecode -> HexString, base64decode -> Base64, file -> File
+// 小块类型前缀：只包含可进行字节级编辑的内联标签。
 const KIND_CHIP_PREFIX: Record<BinaryTagKind, string> = {
   unquote: 'Binary',
   hex: 'HexString',
   base64: 'Base64',
-  file: 'File',
 }
 
 // 不间断空格(U+00A0)：editor 开启 renderWhitespace:'all' 只会把普通空格(U+0020)/Tab 渲染成
 // middot 圆点，U+00A0 不会被渲染成圆点；用它拼接“点击修改”提示，既能正常显示空格分词，
 // 又不出现圆点、也不会成为换行点导致小块折行。
 const NBSP = '\u00A0'
-// 提示用户该小块可点击编辑/查看。英文文案：Click to modify / Click to view
+// 提示用户该小块可点击编辑。英文文案：Click to modify
 const CLICK_HINT_EDIT = `${NBSP}Click${NBSP}to${NBSP}modify`
-const CLICK_HINT_VIEW = `${NBSP}Click${NBSP}to${NBSP}view`
 
 // 小块内文本净化：换行/Tab 转义为可见转义符，普通空格转 U+00A0，避免 renderWhitespace 圆点与折行
 const sanitizeChipText = (s: string): string =>
@@ -575,10 +610,6 @@ const sanitizeChipText = (s: string): string =>
 // changed 由调用方按"编辑器中第 N 个标签是否被改过"决定，与内容无关，保证复制出去的永远是纯内容。
 // 注意：除提示中的 U+00A0 外不使用普通空格（避免 renderWhitespace 圆点与折行）。
 export const buildChipLabel = (entry: BinaryFuzztagEntry, changed = false): string => {
-  if (entry.kind === 'file') {
-    const base = entry.innerContent.split(/[\\/]/).pop() || entry.innerContent
-    return `File[${truncateMiddle(base, 32).replace(/\s+/g, '_')}]${CLICK_HINT_VIEW}`
-  }
   // base64/hex 优先展示解码后的可读文本（如 Base64[asdf]）；不可打印的二进制内容回退到 0x..NB 字节预览
   let inner: string
   if ((entry.kind === 'base64' || entry.kind === 'hex') && entry.previewText) {

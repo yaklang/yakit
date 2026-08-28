@@ -42,7 +42,7 @@ const createHTTPFlowRuleQuery = (
 })
 
 describe('getSafeHTTPRequest', () => {
-  it('returns RequestString when InvalidForUTF8Request is false', () => {
+  it('returns RequestString when no safe representation exists', () => {
     expect(getSafeHTTPRequest({ InvalidForUTF8Request: false, RequestString: 'GET / HTTP/1.1' })).toBe('GET / HTTP/1.1')
   })
 
@@ -50,7 +50,7 @@ describe('getSafeHTTPRequest', () => {
     expect(getSafeHTTPRequest({ RequestString: 'POST /api HTTP/1.1' })).toBe('POST /api HTTP/1.1')
   })
 
-  it('returns SafeHTTPRequest when InvalidForUTF8Request is true', () => {
+  it('prefers SafeHTTPRequest whenever the backend provides one', () => {
     expect(
       getSafeHTTPRequest({
         InvalidForUTF8Request: true,
@@ -60,8 +60,18 @@ describe('getSafeHTTPRequest', () => {
     ).toBe('GET /safe HTTP/1.1')
   })
 
-  it('returns empty string when InvalidForUTF8Request is true but SafeHTTPRequest is undefined', () => {
-    expect(getSafeHTTPRequest({ InvalidForUTF8Request: true })).toBe('')
+  it('falls back to RequestString when the invalid flag is true but SafeHTTPRequest is absent', () => {
+    expect(getSafeHTTPRequest({ InvalidForUTF8Request: true, RequestString: 'fallback' })).toBe('fallback')
+  })
+
+  it('prefers a resource-backed safe request even when InvalidForUTF8Request is false', () => {
+    expect(
+      getSafeHTTPRequest({
+        InvalidForUTF8Request: false,
+        SafeHTTPRequest: 'POST / HTTP/1.1\r\n\r\n{{file(/tmp/resource)}}',
+        RequestString: 'internal marker',
+      }),
+    ).toContain('{{file(')
   })
 
   it('returns empty string when both fields are absent', () => {

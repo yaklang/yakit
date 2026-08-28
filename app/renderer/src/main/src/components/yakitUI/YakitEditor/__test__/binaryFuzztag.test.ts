@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
-  BINARY_FOLD_THRESHOLD,
   buildChipLabel,
   collapseBinaryFuzztag,
   expandBinaryFuzztag,
@@ -14,6 +13,10 @@ import {
   packetTextToRawBytes,
   rawBytesToPacketText,
   bytesToUnquoteString,
+  decodeBinaryTag,
+  encodeBytesToTag,
+  canLocateFileReference,
+  findFileFuzztagPathAtOffset,
   strQuoteBytesViaCodec,
 } from '../binaryFuzztag'
 
@@ -113,6 +116,12 @@ const mockNewCodec = ({ Text, WorkFlow }: { Text: string; WorkFlow: { CodecType:
     if (step.CodecType === 'HexDecode') {
       rawResult = new Uint8Array(hexToBytes(result))
       result = String.fromCharCode(...rawResult)
+    } else if (step.CodecType === 'StrUnQuote') {
+      // Electron IPC 的真实 NewCodec 会在 RawResult 返回解转义后的字节。
+      // 若 mock 缺少这一分支，decodeBinaryTag 会得到空 Uint8Array，导致
+      // “点击 Binary chip -> HEX 编辑 -> 写回”这条关键链路实际上从未被测试。
+      rawResult = goUnquoteToBytes(result)
+      result = String.fromCharCode(...rawResult)
     } else if (step.CodecType === 'StrQuote') {
       result = referenceGoStrconvQuoteBytes(rawResult)
     }
@@ -165,7 +174,6 @@ afterEach(() => {
 
 const bigUnquoteContent = '"' + '\\xff\\xd8'.repeat(40) + '"' // 远大于阈值
 const bigUnquoteTag = `{{unquote(${bigUnquoteContent})}}`
-
 describe('binaryFuzztag collapse/expand', () => {
   it('折叠大 unquote 标签为占位，侧表含一条记录', () => {
     const raw = `POST /a HTTP/1.1\r\nHost: x\r\n\r\n${bigUnquoteTag}`
@@ -205,11 +213,48 @@ describe('binaryFuzztag collapse/expand', () => {
     expect(collapseBinaryFuzztag(tinyUnquote).text).toContain('#YBIN_')
   })
 
-  it('只读 file 引用仍按阈值过滤：短引用不折叠', () => {
-    const smallFile = `{{file(/tmp/` + 'a'.repeat(BINARY_FOLD_THRESHOLD - 30) + `)}}`
-    const { text, entries } = collapseBinaryFuzztag(smallFile)
-    expect(text).toBe(smallFile)
-    expect(entries.size).toBe(0)
+  it('History 兼容展示正文原本就是字面量 \\xNN 的历史请求', () => {
+    // 这不是 Binary HEX 编辑的正确输出；它表示线上实际正文就是四个 ASCII 字节 "\\x11"。
+    // History 仍需忠实折叠和展示这类既有记录，但 HEX 窗口必须显示 5c 78 31 31，不能伪装成 0x11。
+    const escapedLiteralBody = '\\\\x11'.repeat(30_000)
+    const request = `POST /upload HTTP/1.1\r\nContent-Type: application/zip\r\n\r\n{{unquote("${escapedLiteralBody}")}}`
+    const result = collapseBinaryFuzztag(request)
+
+    expect(result.entries.size).toBe(1)
+    expect(result.text).toContain('#YBIN_')
+    expect(result.text).not.toContain(escapedLiteralBody)
+    const entry = Array.from(result.entries.values())[0]
+    expect(entry.byteLength).toBe(4 * 30_000)
+    expect(entry.previewHex).toBe('5c783131')
+    expect(expandBinaryFuzztag(result.text, result.entries)).toBe(request)
+  })
+
+  it('History 字面量转义正文含引号时仍完整折叠', () => {
+    // 这类历史正文中还可能包含 0x22 的文本表示，该位置形如 `\\"`；旧解析器会把
+    // 其中的引号误当成标签结尾，继而因后面不是 `)}}` 而放弃整段折叠。
+    const tag = String.raw`{{unquote("\\x11\\"\\x9aPK\\x03\\x04")}}`
+    const request = `POST /upload/case/safe HTTP/1.1\r\nContent-Type: application/zip\r\n\r\n${tag}`
+    const result = collapseBinaryFuzztag(request)
+
+    expect(result.entries.size).toBe(1)
+    expect(result.text).toContain('#YBIN_')
+    expect(result.text).not.toContain(tag)
+    expect(expandBinaryFuzztag(result.text, result.entries)).toBe(request)
+  })
+
+  it('History 外置资源保留真实 file tag 和引擎路径，不生成 YBIN', () => {
+    const tag = '{{file(/engine/yakit-projects/temp/large-request-body-id.txt)}}'
+    const result = collapseBinaryFuzztag(tag)
+    expect(result.text).toBe(tag)
+    expect(result.text).not.toContain('#YBIN_')
+    expect(result.entries.size).toBe(0)
+  })
+
+  it('只有 inline 二进制标签生成可编辑 entry', () => {
+    const packet = '{{file(/tmp/a)}} {{unquote("\\xff")}}'
+    const result = collapseBinaryFuzztag(packet)
+    expect(result.entries.size).toBe(1)
+    expect(Array.from(result.entries.values())[0].kind).toBe('unquote')
   })
 
   it('识别 hex / base64 标签', () => {
@@ -320,6 +365,17 @@ describe('binaryFuzztag changed 标记（布尔，只记是否被修改）', () 
     const entry = Array.from(entries.values())[0]
     expect(buildChipLabel(entry)).not.toContain('Changed')
     expect(buildChipLabel(entry, false)).not.toContain('Changed')
+  })
+
+  it('file 真实文本仅允许本地单路径 Ctrl+点击定位', () => {
+    const line = 'body={{file(/tmp/a.txt)}} tail'
+    const offset = line.indexOf('/tmp/a.txt') + 2
+    expect(findFileFuzztagPathAtOffset(line, offset)).toBe('/tmp/a.txt')
+    expect(findFileFuzztagPathAtOffset(line, 0)).toBeUndefined()
+    expect(canLocateFileReference(true, 'local', '/tmp/a.txt')).toBe(true)
+    expect(canLocateFileReference(false, 'local', '/tmp/a.txt')).toBe(false)
+    expect(canLocateFileReference(true, 'remote', '/tmp/a.txt')).toBe(false)
+    expect(canLocateFileReference(true, 'local', '/tmp/a.txt|/tmp/b.txt')).toBe(false)
   })
 })
 
@@ -457,6 +513,11 @@ describe('packetTextToRawBytes', () => {
   it('解码 hexdecode 标签', () => {
     expect(Array.from(packetTextToRawBytes('{{hexd(09e25168)}}'))).toEqual([0x09, 0xe2, 0x51, 0x68])
   })
+
+  it('整包同步转换保留 file 引用，不把异步文件标签吞掉', () => {
+    const packet = 'POST / HTTP/1.1\r\n\r\n{{file(/tmp/plain.txt)}}'
+    expect(new TextDecoder().decode(packetTextToRawBytes(packet))).toBe(packet)
+  })
 })
 
 describe('rawBytesToPacketText', () => {
@@ -506,5 +567,45 @@ describe('bytesToUnquoteString vs runCodec(StrQuote)', () => {
   it('大体积 unquote 内容与 Codec 路径一致', async () => {
     const bytes = goUnquoteToBytes(bigUnquoteContent)
     expect(bytesToUnquoteString(bytes)).toBe(await strQuoteBytesViaCodec(bytes))
+  })
+
+  it('MITM Binary chip 的 HEX 修改写回单层 unquote 并保持 0x11 字节语义', async () => {
+    // 对应真实操作：打开 ZIP 的 Binary chip，将第一行覆盖为 0x11，再点击提交和放行。
+    // 提交给 MITMv2 的文本只能有一层 \x11；若变成 \\x11，目标服务器收到的会是
+    // 5c 78 31 31 四个 ASCII 字节，而不是一个 0x11。
+    const original = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0xa5, 0xa5, 0xa5, 0xa5])
+    const originalTag = `{{unquote(${bytesToUnquoteString(original)})}}`
+    const collapsed = collapseBinaryFuzztag(originalTag)
+    const entry = Array.from(collapsed.entries.values())[0]
+    const edited = await decodeBinaryTag(entry)
+    edited.fill(0x11, 0, 4)
+
+    const editedTag = await encodeBytesToTag('unquote', 'unquote', edited)
+    expect(editedTag).toContain('\\x11\\x11\\x11\\x11')
+    expect(editedTag).not.toContain('\\\\x11')
+    expect(Array.from(packetTextToRawBytes(editedTag))).toEqual([0x11, 0x11, 0x11, 0x11, 0xa5, 0xa5, 0xa5, 0xa5])
+
+    const recollapsed = collapseBinaryFuzztag(editedTag)
+    expect(expandBinaryFuzztag(recollapsed.text, recollapsed.entries)).toBe(editedTag)
+  })
+
+  it('unquote 编码必须转义 Fuzztag 语法分隔符', () => {
+    // ZIP/PDF 等真实文件中经常出现 (){}。这些字节虽然是可打印 ASCII，
+    // 但直接放进 {{unquote("...")}} 会被后端 Fuzztag parser 当成语法，
+    // 导致 unquote handler 收到残缺参数，最终把 \xNN 文本当作文件发出。
+    expect(bytesToUnquoteString(new Uint8Array([0x28, 0x29, 0x7b, 0x7d, 0x5c, 0x22]))).toBe(
+      '"\\x28\\x29\\x7b\\x7d\\\\\\""',
+    )
+  })
+
+  it('unquote 导出必须转义 Yak raw string 的反引号终止符', () => {
+    // “导出带 FuzzTag 的数据”常被直接嵌入 fuzz.Strings(`...`)。
+    // 文件字节中的反引号若保持为字面字符，会提前结束 Yak raw string，
+    // 后续合法的 \xNN 随即变成 Yak 源码并触发编译错误。
+    const bytes = new Uint8Array([0x41, 0x60, 0xff])
+    const quoted = bytesToUnquoteString(bytes)
+    expect(quoted).toBe('"A\\x60\\xff"')
+    expect(quoted).not.toContain('`')
+    expect(Array.from(goUnquoteToBytes(quoted))).toEqual(Array.from(bytes))
   })
 })

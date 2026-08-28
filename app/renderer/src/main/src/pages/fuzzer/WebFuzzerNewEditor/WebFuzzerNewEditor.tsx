@@ -14,8 +14,9 @@ import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelec
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import {
   getLargeRequestReplacementKey,
-  matchLargeRequestReplacementLine,
-  withLargeRequestReplacementLineNumber,
+  buildLargeRequestFileTagEdit,
+  buildLargeRequestResourceChipLabel,
+  parseLargeRequestReplacementMarkers,
   sanitizeChipInjectedText,
   type LargeRequestReplacementMarker,
 } from '@/pages/mitm/MITMManual/largeMultipartReplacement'
@@ -88,19 +89,17 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         const model = reqEditor.getModel()
         if (!model) return
         const lineContent = model.getLineContent(marker.lineNumber)
-        const fileTag = `{{file(${filePath})}}`
-        // 在 multipart 场景下，占位标记行后面可能紧跟着 boundary；把整个标记行替换为 fuzztag 并保留换行。
-        const replacementText = marker.kind === 'multipart' ? `${fileTag}\n` : fileTag
+        const replacement = buildLargeRequestFileTagEdit(marker, filePath, lineContent)
         const range = {
           startLineNumber: marker.lineNumber,
           startColumn: 1,
           endLineNumber: marker.lineNumber,
-          endColumn: lineContent.length + 1,
+          endColumn: replacement.endColumn,
         }
         reqEditor.executeEdits('large-request-replace', [
           {
             range,
-            text: replacementText,
+            text: replacement.text,
             forceMoveMarkers: false,
           },
         ])
@@ -134,7 +133,6 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         onCancel: () => modal.destroy(),
       })
     })
-
     useEffect(() => {
       if (!reqEditor) return
       const model = reqEditor.getModel()
@@ -147,20 +145,15 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
       const applyDecorations = () => {
         mouseDisposable?.dispose()
         mouseDisposable = undefined
-        modelMarkers = []
-        for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
-          const matched = matchLargeRequestReplacementLine(model.getLineContent(lineNumber))
-          if (!matched) continue
-          modelMarkers.push(withLargeRequestReplacementLineNumber(matched, lineNumber))
-        }
+        modelMarkers = parseLargeRequestReplacementMarkers(model.getValue())
         decorationIDs = reqEditor.deltaDecorations(
           decorationIDs,
           modelMarkers.map((marker) => {
             const replacement = largeRequestReplacements[getLargeRequestReplacementKey(marker)]
-            const markerText = model.getLineContent(marker.lineNumber).slice(0, marker.lineLength)
             const hint = replacement
               ? t('WebFuzzerNewEditor.replacedChipHint', { filename: replacement.Filename })
               : t('WebFuzzerNewEditor.clickToReplaceChipHint')
+            const label = buildLargeRequestResourceChipLabel(marker, hint)
             const chipClass = replacement
               ? `${styles['large-request-replace-chip']} ${styles['large-request-replace-chip-replaced']}`
               : styles['large-request-replace-chip']
@@ -172,10 +165,10 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 endColumn: marker.lineLength + 1,
               },
               options: {
-                inlineClassName: chipClass,
+                inlineClassName: 'binary-fuzz-hidden',
                 inlineClassNameAffectsLetterSpacing: true,
                 after: {
-                  content: sanitizeChipInjectedText(` ${hint}`),
+                  content: sanitizeChipInjectedText(label),
                   inlineClassName: chipClass,
                   inlineClassNameAffectsLetterSpacing: true,
                 },

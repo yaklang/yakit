@@ -831,7 +831,7 @@ declare global {
     }
     dialog: {
       showSaveDialog: (name: string) => Promise<{ canceled: boolean; filePath?: string }>
-      writeFile: (payload: { route: string; data: string }) => Promise<unknown>
+      writeFile: (payload: { route: string; data: string | Uint8Array }) => Promise<unknown>
       openFileSystemDialog: (options: OpenFileDialogOptions) => Promise<OpenFileDialogReturnValue>
       saveFileSystemDialog: (options: SaveFileDialogOptions) => Promise<SaveFileDialogReturnValue>
     }

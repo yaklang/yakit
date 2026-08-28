@@ -27,7 +27,7 @@ export const getSafeHTTPRequest = (flow: {
   SafeHTTPRequest?: string
   RequestString?: string
 }): string => {
-  return (flow.InvalidForUTF8Request ? flow.SafeHTTPRequest : flow.RequestString) || ''
+  return flow.SafeHTTPRequest || flow.RequestString || ''
 }
 
 export const resolveHTTPHistoryAnalysisPageInfo = (

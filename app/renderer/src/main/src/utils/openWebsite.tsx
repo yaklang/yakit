@@ -12,21 +12,10 @@ import type { Risk } from '@/pages/risks/schema'
 import type { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import type { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
 import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
+import { normalizeFileExportData } from './fileExport'
 const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])
 
 const { ipcRenderer } = window.require('electron')
-
-const toWritableText = (data?: Uint8Array | string) => {
-  if (typeof data === 'string') {
-    return data
-  }
-
-  if (data instanceof Uint8Array) {
-    return new TextDecoder().decode(data)
-  }
-
-  return ''
-}
 
 export const openExternalWebsite = (u: string) => {
   yakitShell.openExternal(u)
@@ -114,7 +103,7 @@ export const saveABSFileToOpen = (name: string, data?: Uint8Array | string) => {
     yakitDialog
       .writeFile({
         route: res.filePath,
-        data: toWritableText(data),
+        data: normalizeFileExportData(data),
       })
       .then(() => {
         success(tOriginal('YakitNotification.downloadFinished'))
@@ -144,7 +133,7 @@ export const saveABSFileAnotherOpen = async (params: {
   return yakitDialog
     .writeFile({
       route: showSaveDialogRes.filePath,
-      data: toWritableText(data),
+      data: normalizeFileExportData(data),
     })
     .then(() => {
       success(successMsg)

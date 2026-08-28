@@ -1090,6 +1090,11 @@ service Yak {
   rpc UpdateAIReActRecommendedSkill(UpdateAIReActRecommendedSkillRequest) returns (AIReActRecommendedSkill);
   // 将推荐技能完整恢复为随当前版本发布的内置默认内容。
   rpc ResetAIReActRecommendedSkill(ResetAIReActRecommendedSkillRequest) returns (AIReActRecommendedSkill);
+
+  // Upload GUI-local bytes into the currently connected engine's temporary
+  // filesystem. Returned paths are engine paths and can be used by file
+  // Fuzztags in both local and remote-engine modes.
+  rpc UploadToTemporaryFile(stream UploadToTemporaryFileRequest) returns (UploadToTemporaryFileResponse);
 }
 
 // IMBotConfig 描述一个 IM 平台 bot 的配置凭证。
@@ -9512,7 +9517,10 @@ message SingleManualHijackControlMessage{
   // request is forwarded, so the renderer never loads the full file.
   bool IsLargeRequestFileChunk = 12;
   int32 LargeRequestPartIndex = 13;
-  string LargeRequestFilename = 14;
+  // Field 14 previously carried the GUI-local replacement filename. File
+  // replacement changes bytes only; multipart filename/MIME remain those of
+  // the intercepted request, so this field must not be reused.
+  reserved 14;
   bytes LargeRequestFileData = 15;
   bool LargeRequestFileStart = 16;
   bool LargeRequestFileEOF = 17;
@@ -10035,4 +10043,13 @@ message MITMPipelineStats {
 
   int64 DatabaseWriteQueueDepth = 25;
   int64 DatabaseWriteQueueCapacity = 26;
+}
+
+message UploadToTemporaryFileRequest {
+  bytes Data = 1;
+}
+
+message UploadToTemporaryFileResponse {
+  string FileName = 1;
+  int64 Size = 2;
 }

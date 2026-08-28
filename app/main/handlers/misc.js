@@ -3,6 +3,7 @@ const { getLocalYaklangEngine, loadExtraFilePath, getYakitHome } = require('../f
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
+const { uploadLocalFileToEngine } = require('./uploadToTemporaryFile')
 
 module.exports = (win, getClient) => {
   // asyncYsoDump wrapper
@@ -502,6 +503,9 @@ module.exports = (win, getClient) => {
   })
   ipcMain.handle('SaveTextToTemporalFile', async (e, params) => {
     return await asyncSaveTextToTemporalFile(params)
+  })
+  ipcMain.handle('UploadToTemporaryFile', async (e, params) => {
+    return await uploadLocalFileToEngine(getClient, params?.FilePath)
   })
 
   // asyncGetRegisteredVulinboxAgent wrapper

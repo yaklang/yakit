@@ -59,6 +59,7 @@ import { useEditorShowLineBreaks } from '@/store/editorShowLineBreaks'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { JSONParseLog } from './tool'
 import { yakitEditorTools } from '@/services/electronBridge'
+import { resolveWebFuzzerPacket } from '@/components/yakitUI/YakitEditor/editorUtils'
 
 export type IMonacoActionDescriptor = monaco.editor.IActionDescriptor
 
@@ -1069,7 +1070,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     import('@/pages/fuzzer/HTTPFuzzerPage').then(({ newWebFuzzerTab }) => {
                       newWebFuzzerTab({
                         isHttps: props.defaultHttps || false,
-                        request: props.defaultPacket ? props.defaultPacket : originValue,
+                        request: resolveWebFuzzerPacket(
+                          monacoEditor,
+                          props.defaultPacket ? props.defaultPacket : originValue,
+                        ),
                         downstreamProxyStr,
                         openFlag: true,
                         fromMITM: props.fromMITM,

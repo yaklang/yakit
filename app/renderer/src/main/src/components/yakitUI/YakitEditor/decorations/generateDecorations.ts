@@ -400,17 +400,17 @@ export const generateDecorations = (params: GenerateDecorationsParams): YakitIMo
       const fullText = model.getValue()
       const offsets = findPlaceholderOffsets(fullText)
       const newRanges: { id: string; range: monaco.Range; ordinal: number }[] = []
-      // index 即"编辑器中第 N 个二进制标签"的序号，按文档顺序；据此判断是否被修改过
       offsets.forEach((off, index) => {
         const entry = binaryFoldEntriesRef.current.get(off.id)
         if (!entry) {
           return
         }
-        const changed = binaryModifiedOrdinalsRef.current.has(index)
+        const ordinal = index
+        const changed = binaryModifiedOrdinalsRef.current.has(ordinal)
         const start = model.getPositionAt(off.start)
         const end = model.getPositionAt(off.end)
         const range = new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column)
-        newRanges.push({ id: off.id, range, ordinal: index })
+        newRanges.push({ id: off.id, range, ordinal })
         dec.push({
           id: 'binary-fold-' + off.id + '-' + off.start,
           ownerId: 0,

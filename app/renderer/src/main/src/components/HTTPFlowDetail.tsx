@@ -1431,7 +1431,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
 
   // 获取request内容
   const fetchSsafeHTTPRequest = useMemoizedFn(() => {
-    return (flow && (flow.InvalidForUTF8Request ? flow.SafeHTTPRequest! : flow.RequestString)) || ''
+    return (flow && (flow.SafeHTTPRequest || flow.RequestString)) || ''
   })
 
   const syncBarePacketFromFlowTags = useMemoizedFn(() => {
@@ -1797,7 +1797,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     })
   }
   const fromMITM = useMemo(() => props.pageType === 'MITM', [props.pageType])
-
   return (
     <YakitResizeBox
       firstNode={() => {
@@ -1900,7 +1899,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
               ...sendCodeCompareMenuItem('request'),
             }}
             // 这个为了解决不可见字符的问题
-            defaultPacket={flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
+            defaultPacket={originResValue || undefined}
             extra={
               <>
                 {flow.InvalidForUTF8Request ? (
