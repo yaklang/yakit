@@ -46,10 +46,10 @@ import { CloudDownloadIcon } from '@/assets/newIcon'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import {
   getStorageYakEditorShortcutKeyEvents,
-  isPageOrGlobalShortcut,
   isYakEditorDefaultShortcut,
   isYakEditorShortcut,
 } from '@/utils/globalShortcutKey/events/page/yakEditor'
+import { isPageOrGlobalShortcut } from '@/utils/globalShortcutKey/events/page/yakEditorPageShortcut'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import useFocusContextStore from '@/utils/globalShortcutKey/shortcutKeyFocusHook/hooks/useStore'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
