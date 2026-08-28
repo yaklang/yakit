@@ -383,6 +383,8 @@ export interface FuzzerResponse {
   FixContentType: string
   IsSetContentTypeOptions: boolean
   RandomChunkedData: RandomChunkedResponse[]
+  /** 与 http_flows / web_fuzzer_response 对齐的唯一键，下载 body 用它而不是 RuntimeID */
+  HiddenIndex?: string
 }
 export interface RandomChunkedResponse {
   /**@name 当前的 chunked index */
@@ -4901,8 +4903,12 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     })
 
     const editorDownBodyParams = useMemo(() => {
-      return { RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false }
-    }, [fuzzerResponse.RuntimeID])
+      return {
+        HiddenIndex: fuzzerResponse.HiddenIndex,
+        RuntimeId: fuzzerResponse.RuntimeID,
+        IsRequest: false,
+      }
+    }, [fuzzerResponse.HiddenIndex, fuzzerResponse.RuntimeID])
 
     // 计算当前显示的值
     // - 流式阶段：强制用 header 作为稳定的 base（body 由 hook 增量追加）

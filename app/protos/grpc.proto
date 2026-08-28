@@ -7045,6 +7045,8 @@ message FuzzerResponse {
   string FixContentType = 60;
   bool IsSetContentTypeOptions = 61;
   repeated RandomChunkedResponse RandomChunkedData = 62;
+  // 与 http_flows / web_fuzzer_response 对齐的唯一键，下载 body 用它而不是 RuntimeID。
+  string HiddenIndex = 64;
 }
 
 message RandomChunkedResponse{
@@ -7108,6 +7110,8 @@ message GetHTTPFlowBodyByIdRequest {
   // 未设 = 返回完整 body（multipart 时现场流式重建完整 body）。
   // 用 optional 以区分「未设」与「part 0」。
   optional int32 PartIndex = 6;
+  // WebFuzzer 单条结果：按 HiddenIndex 定位 HTTPFlow，避免 RuntimeId 命中任务内其它 hop。
+  string HiddenIndex = 7;
 }
 
 message MITMExtractAggregateFlowFilterRow {
