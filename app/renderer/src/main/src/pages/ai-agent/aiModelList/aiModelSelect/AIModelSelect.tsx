@@ -21,6 +21,7 @@ import {
   isFreeEnd,
   isMemfitStart,
 } from '../utils'
+import { normalizeReasoningEffort } from '../aiModelForm/reasoningEffort'
 import styles from './AIModelSelect.module.scss'
 import classNames from 'classnames'
 import type { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
@@ -43,7 +44,7 @@ import {
   OutlinePencilaltIcon,
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
-import { cloneDeep, has, isEqual, isNil } from 'lodash'
+import { cloneDeep, isEqual, isNil } from 'lodash'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -847,12 +848,8 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
     if (!aiService) return <></>
     return getIconByAI(aiService)
   }, [aiService])
-  const enableThinkingOpt = useCreation(() => {
-    return has(item, ['Provider', 'EnableThinkingOpt'])
-      ? item?.Provider?.EnableThinkingOpt
-        ? 'open'
-        : 'close'
-      : 'no-set'
+  const reasoningEffort = useCreation(() => {
+    return normalizeReasoningEffort(item?.Provider?.ReasoningEffort)
   }, [item])
   return (
     <div
@@ -871,7 +868,7 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
             {t('ProjectManage.server')}
           </YakitTag>
         ) : null}
-        {type === AIModelTypeEnum.TierIntelligent && enableThinkingOpt === 'open' && (
+        {type === AIModelTypeEnum.TierIntelligent && reasoningEffort !== 'no-set' && reasoningEffort !== 'off' && (
           <OutlineBrainIcon className={styles['brain-icon']} />
         )}
       </div>

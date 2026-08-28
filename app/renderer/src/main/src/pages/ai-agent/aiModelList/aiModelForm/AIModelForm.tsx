@@ -30,7 +30,7 @@ import { AIModelTypeEnum, type AIModelTypeEnumType, AIModelTypeInterFileNameEnum
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
-import { cloneDeep, has, isNil } from 'lodash'
+import { cloneDeep, isNil } from 'lodash'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIModelForm.module.scss'
@@ -186,7 +186,6 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     endpoint: config.Endpoint ?? '',
     enable_endpoint: config.EnableEndpoint ?? false,
     Headers: config.Headers ?? [],
-    EnableThinkingOpt: getEnableThinkingOpt(config),
     MaxTokens: config?.MaxTokens,
     Temperature: config?.Temperature,
     TopP: config?.TopP,
@@ -195,15 +194,6 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     ReasoningEffort: normalizeReasoningEffort(config?.ReasoningEffort),
   } as AIThirdPartyApplicationConfig
 }
-export const getEnableThinkingOpt = (config: ThirdPartyApplicationConfig) => {
-  return has(config, 'EnableThinkingOpt') ? `${config.EnableThinkingOpt === true ? 'open' : 'close'}` : 'no-set'
-}
-
-export const parseEnableThinkingOptValue = (val: any): boolean | undefined => {
-  if (isNil(val) || val === 'no-set') return undefined
-  return val === 'open'
-}
-
 export const parseValidStringOption = (val: any): string | undefined => {
   if (isNil(val) || val === 'no-set') return undefined
   return val
@@ -243,9 +233,6 @@ export const formValueToAIConfigProvider = (res) => {
     // Disabled: false
   }
   // 1. 单独处理特殊规则字段
-  const enableThinkingOpt = parseEnableThinkingOptValue(res.EnableThinkingOpt)
-  if (enableThinkingOpt !== undefined) date.EnableThinkingOpt = enableThinkingOpt
-
   const reasoningEffort = parseValidStringOption(res.ReasoningEffort)
   if (reasoningEffort !== undefined) date.ReasoningEffort = reasoningEffort
 
