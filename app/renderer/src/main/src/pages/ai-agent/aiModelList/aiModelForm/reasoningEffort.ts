@@ -41,10 +41,26 @@ export const buildReasoningEffortOptions = (
   return options
 }
 
-/**探测响应转换为支持的扩展档列表（都不支持为空数组，是合法结果） */
-export const probedExtendedEffortsFromResponse = (resp: ProbeReasoningEffortResponse): string[] => {
+export interface EffortProbeResult {
+  /**false=存在档位探测出错（限流/网络失败等瞬时错误），结果不可缓存、需保留重试 */
+  conclusive: boolean
+  /**探测确认支持的扩展档位（conclusive 时才可信） */
+  efforts: string[]
+}
+
+/**探测响应转换：Supported=false 且 ErrorMessage 非空视为瞬时错误（未得出结论），不算"不支持" */
+export const effortProbeResultFromResponse = (resp: ProbeReasoningEffortResponse): EffortProbeResult => {
   const efforts: string[] = []
-  if (resp?.XhighSupported) efforts.push('xhigh')
-  if (resp?.MaxSupported) efforts.push('max')
-  return efforts
+  let conclusive = true
+  if (resp?.XhighSupported) {
+    efforts.push('xhigh')
+  } else if (resp?.XhighErrorMessage) {
+    conclusive = false
+  }
+  if (resp?.MaxSupported) {
+    efforts.push('max')
+  } else if (resp?.MaxErrorMessage) {
+    conclusive = false
+  }
+  return { conclusive, efforts }
 }

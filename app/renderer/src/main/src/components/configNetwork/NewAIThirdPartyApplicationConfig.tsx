@@ -26,7 +26,7 @@ import {
 } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import {
   buildReasoningEffortOptions,
-  probedExtendedEffortsFromResponse,
+  effortProbeResultFromResponse,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/reasoningEffort'
 import {
   AI_API_TYPE_OPTIONS,
@@ -468,7 +468,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             // 探测期间 model/Type 已变化，丢弃过期结果，下次打开按新模型重探
             const current = form.getFieldsValue()
             if (current?.Type !== values.Type || current?.model !== values.model) return
-            const efforts = probedExtendedEffortsFromResponse(resp)
+            const { conclusive, efforts } = effortProbeResultFromResponse(resp)
+            // 瞬时错误（限流/网络失败等）：不落库不置已探测，保持待重探，下次打开重试
+            if (!conclusive) return
             setEffortProbeDirty(false)
             setProbedExtendedEfforts(efforts)
             // 探测结果写入 form，父组件提交时可直接读取
@@ -896,6 +898,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 </div>
               }
               key="2"
+              forceRender={true}
             >
               {/* #region 思考 */}
               <Form.Item

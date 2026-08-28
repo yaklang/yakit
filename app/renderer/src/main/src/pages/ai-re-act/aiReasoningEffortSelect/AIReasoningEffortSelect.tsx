@@ -10,8 +10,8 @@ import { AIChatSelect } from '../aiReviewRuleSelect/AIReviewRuleSelect'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import {
   buildReasoningEffortOptions,
+  effortProbeResultFromResponse,
   normalizeReasoningEffort,
-  probedExtendedEffortsFromResponse,
 } from '@/pages/ai-agent/aiModelList/aiModelForm/reasoningEffort'
 import { type AIModelConfig, grpcProbeReasoningEffort } from '@/pages/ai-agent/aiModelList/utils'
 import emiter from '@/utils/eventBus/eventBus'
@@ -64,7 +64,9 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
         Model: currentModel.ModelName,
       })
         .then((resp) => {
-          const efforts = probedExtendedEffortsFromResponse(resp)
+          const { conclusive, efforts } = effortProbeResultFromResponse(resp)
+          // 瞬时错误（限流/网络失败等）不落库已探测，下次触发可重试
+          if (!conclusive) return
           updateCurrentModel((m) => {
             if (m.ProviderId !== providerId || m.ModelName !== modelName) return m
             return { ...m, EffortProbed: true, ProbedExtendedEfforts: efforts }

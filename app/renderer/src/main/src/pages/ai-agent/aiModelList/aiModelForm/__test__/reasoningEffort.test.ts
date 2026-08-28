@@ -3,8 +3,8 @@ import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { ProbeReasoningEffortResponse } from '../../utils'
 import {
   buildReasoningEffortOptions,
+  effortProbeResultFromResponse,
   normalizeReasoningEffort,
-  probedExtendedEffortsFromResponse,
 } from '../reasoningEffort'
 
 const resp = (item: Partial<ProbeReasoningEffortResponse>): ProbeReasoningEffortResponse =>
@@ -64,19 +64,39 @@ describe('buildReasoningEffortOptions', () => {
   })
 })
 
-describe('probedExtendedEffortsFromResponse', () => {
+describe('effortProbeResultFromResponse', () => {
   it('两个扩展档都支持', () => {
-    expect(probedExtendedEffortsFromResponse(resp({ XhighSupported: true, MaxSupported: true }))).toEqual([
-      'xhigh',
-      'max',
-    ])
+    expect(effortProbeResultFromResponse(resp({ XhighSupported: true, MaxSupported: true }))).toEqual({
+      conclusive: true,
+      efforts: ['xhigh', 'max'],
+    })
   })
 
   it('仅支持其中一个', () => {
-    expect(probedExtendedEffortsFromResponse(resp({ XhighSupported: false, MaxSupported: true }))).toEqual(['max'])
+    expect(effortProbeResultFromResponse(resp({ XhighSupported: false, MaxSupported: true }))).toEqual({
+      conclusive: true,
+      efforts: ['max'],
+    })
   })
 
-  it('都不支持时为空数组（探测过的合法终态）', () => {
-    expect(probedExtendedEffortsFromResponse(resp({ XhighSupported: false, MaxSupported: false }))).toEqual([])
+  it('都不支持且无错误时为确定结论（探测过的合法终态）', () => {
+    expect(effortProbeResultFromResponse(resp({ XhighSupported: false, MaxSupported: false }))).toEqual({
+      conclusive: true,
+      efforts: [],
+    })
+  })
+
+  it('限流/网络失败等瞬时错误不算不支持，结论不可缓存', () => {
+    expect(
+      effortProbeResultFromResponse(
+        resp({ XhighSupported: false, XhighErrorMessage: '429 too many requests', MaxSupported: false }),
+      ),
+    ).toEqual({ conclusive: false, efforts: [] })
+  })
+
+  it('单个档位出错即整体不可缓存，已成功档位不落库', () => {
+    expect(
+      effortProbeResultFromResponse(resp({ XhighSupported: true, MaxSupported: false, MaxErrorMessage: 'timeout' })),
+    ).toEqual({ conclusive: false, efforts: ['xhigh'] })
   })
 })
