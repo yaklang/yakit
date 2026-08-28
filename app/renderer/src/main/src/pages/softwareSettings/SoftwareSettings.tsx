@@ -1,11 +1,12 @@
-import React, { memo, type ReactNode, Suspense, useEffect, useState } from 'react'
+import type React from 'react'
+import { memo, type ReactNode, useEffect, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { DesktopComputerSvgIcon, YakitLogoSvgIcon } from '@/assets/newIcon'
 import { Typography } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { SoftwareRemoteSvgIcon } from './icon'
 import type { YaklangEngineMode } from '@/yakitGVDefine'
-import type { ProjectManageProp } from './ProjectManage'
+import ProjectManage, { type ProjectManageProp } from './ProjectManage'
 
 import classNames from 'classnames'
 import styles from './SoftwareSettings.module.scss'
@@ -21,8 +22,6 @@ import {
   SolidMemfitFontLogoIcon,
   SolidMemfitMiniLogoIcon,
 } from '@/assets/icon/colors'
-
-const ProjectManage = React.lazy(() => import('./ProjectManage'))
 
 const { ipcRenderer } = window.require('electron')
 
@@ -57,11 +56,7 @@ const getSettingsMenu = (t: TFunction): SettingsMenuProp[] => [
 const switchSettings: (type: string, params: SoftwareSettingsProp) => ReactNode = (type, params) => {
   switch (type) {
     case 'project':
-      return (
-        <Suspense fallback={<div>loading</div>}>
-          <ProjectManage {...(params as ProjectManageProp)} />
-        </Suspense>
-      )
+      return <ProjectManage {...(params as ProjectManageProp)} />
 
     default:
       return <></>

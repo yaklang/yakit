@@ -1,24 +1,19 @@
 import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
+import { useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import type { API } from '@/services/swagger/resposeType'
 import styles from './MessageCenter.module.scss'
 import { failed, yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
-import { YakitButton, type YakitButtonProp } from '../yakitUI/YakitButton/YakitButton'
+import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { Resizable } from 're-resizable'
 import YakitTabs from '../yakitUI/YakitTabs/YakitTabs'
 import { formatTimestampJudge } from '@/utils/timeUtil'
 import { RemoveIcon } from '@/assets/newIcon'
 import { useStore } from '@/store'
 import { AuthorImg } from '@/pages/plugins/funcTemplate'
-import {
-  apiFetchMessageClear,
-  apiFetchMessageRead,
-  apiFetchQueryAllTask,
-  apiFetchQueryMessage,
-  type MessageQueryDataProps,
-} from './utils'
+import { apiFetchMessageClear, apiFetchMessageRead, apiFetchQueryMessage, type MessageQueryDataProps } from './utils'
+import { useEETaskNotificationHook } from './useEETaskNotificationHook'
 import emiter from '@/utils/eventBus/eventBus'
 import { RollingLoadList } from '../RollingLoadList/RollingLoadList'
 import { type PluginHubPageInfoProps } from '@/store/pageInfo'
@@ -30,14 +25,11 @@ import { LoginMessageIcon, NoLoginMessageIcon } from './IconMessageCenter'
 import { JSONParseLog } from '@/utils/tool'
 import { isEnpriTrace } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import {
-  getEnvTypeByProjects,
-  type ProjectParamsProp,
-  type ProjectsResponse,
-} from '@/pages/softwareSettings/projectUtils'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import moment from 'moment'
-const { ipcRenderer } = window.require('electron')
+import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
+
+const MESSAGE_PAGE_LIMIT = 20
 
 export interface MessageItemProps {
   onClose: () => void
@@ -433,7 +425,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
   const { userInfo } = useStore()
   const [newMessageList, setNewMessageList] = useState<API.MessageLogDetail[]>(messageList)
   const [taskLoading, taskModalInfo, taskErrModalInfo, debugTaskEvent] = useEETaskNotificationHook({})
-
+  const [loading, setLoading] = useState(false)
   useUpdateEffect(() => {
     setNewMessageList(messageList)
   }, [messageList])
@@ -445,8 +437,22 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
 
   // 移除列表中的某一项
   const removeItem = useMemoizedFn((item: API.MessageLogDetail) => {
-    const newList = newMessageList.filter((i) => i.hash !== item.hash)
-    setNewMessageList(newList)
+    setLoading(true)
+    apiFetchMessageRead({
+      isAll: false,
+      hash: item.hash,
+    })
+      .then((ok) => {
+        if (ok) {
+          setNewMessageList((prev) => prev.filter((i) => i.hash !== item.hash))
+        }
+      })
+      .catch((err) => {
+        failed(err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   })
 
   return (
@@ -454,23 +460,25 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
       {userInfo.isLogin ? (
         <>
           {newMessageList.length > 0 ? (
-            <div className={styles['message-center']}>
-              {newMessageList.map((item) => (
-                <MessageItem
-                  data={item}
-                  key={item.hash}
-                  onClose={onClose}
-                  onRedTaskItem={onRedTaskItem}
-                  removeItem={removeItem}
-                />
-              ))}
+            <YakitSpin spinning={loading}>
+              <div className={styles['message-center']}>
+                {newMessageList.map((item) => (
+                  <MessageItem
+                    data={item}
+                    key={item.hash}
+                    onClose={onClose}
+                    onRedTaskItem={onRedTaskItem}
+                    removeItem={removeItem}
+                  />
+                ))}
 
-              <div className={styles['footer-btn']}>
-                <YakitButton type="text2" onClick={getAllMessage}>
-                  {t('YakitButton.view_all_button')}
-                </YakitButton>
+                <div className={styles['footer-btn']}>
+                  <YakitButton type="text2" onClick={getAllMessage}>
+                    {t('YakitButton.view_all_button')}
+                  </YakitButton>
+                </div>
               </div>
-            </div>
+            </YakitSpin>
           ) : (
             <div className={styles['meeage-no-data']}>
               {/* <img src={LoginMessage} alt='' /> */}
@@ -559,7 +567,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     apiFetchQueryMessage(
       {
         page: 1,
-        limit: 20,
+        limit: MESSAGE_PAGE_LIMIT,
       },
       {
         ...newQueryData,
@@ -575,13 +583,15 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
           return
         }
 
-        const newData = isAdd ? [...dataSorce, ...(res.data || [])] : res.data
-        setDataSorce(newData)
-        if (res.pagemeta.total !== newData.length) {
-          setHasMore(true)
+        if (isAdd) {
+          setDataSorce((prev) => [...prev, ...(res.data || [])])
         } else {
-          setHasMore(false)
+          setDataSorce(res.data)
         }
+        setHasMore((res.data || []).length >= MESSAGE_PAGE_LIMIT)
+      })
+      .catch((err) => {
+        failed(err)
       })
       .finally(() => {
         setLoading(false)
@@ -624,7 +634,9 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         })
       }
       setIsRef((is) => !is)
-    } catch (error) {}
+    } catch (error) {
+      console.warn('[MessageCenterModal] onRefreshMessageSocketFun parse error:', error)
+    }
   })
 
   useEffect(() => {
@@ -708,12 +720,16 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
       apiFetchMessageRead({
         isAll: true,
         hash: '',
-      }).then((ok) => {
-        if (ok) {
-          update()
-          setNoRedDataTotal(0)
-        }
       })
+        .then((ok) => {
+          if (ok) {
+            update()
+            setNoRedDataTotal(0)
+          }
+        })
+        .catch((err) => {
+          failed(err)
+        })
     }
   })
 
@@ -721,11 +737,15 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     apiFetchMessageClear({
       isAll: true,
       hash: '',
-    }).then((ok) => {
-      if (ok) {
-        update()
-      }
     })
+      .then((ok) => {
+        if (ok) {
+          update()
+        }
+      })
+      .catch((err) => {
+        failed(err)
+      })
   })
 
   return (
@@ -878,37 +898,4 @@ export const TaskNotification: React.FC<TaskNotificationProps> = (props) => {
   )
 }
 
-interface TaskModalInfoProps {
-  visible: boolean
-  loading: boolean
-  title: string
-  data: API.MessageLogDetail[]
-  okButtonText?: string
-  cancelButtonText?: string
-  cancelButtonProps?: YakitButtonProp
-}
-
-interface TaskErrorModalInfoProps {
-  visible: boolean
-  loading: boolean
-  title: string
-  data: string[]
-  okButtonText?: string
-  cancelButtonText?: string
-  cancelButtonProps?: YakitButtonProp
-}
-
-interface StartTProps {
-  // 如若有值则为任务单个已读，没有值则为全部任务已读
-  item?: API.MessageLogDetail
-  // 是否全部已读其余消息
-  isReadAllOther?: boolean
-}
-
-interface useEETaskNotificationHookProps {
-  refresh?: () => void
-}
-
-/** @name 企业版任务通知 */
-export { useEETaskNotificationHook } from './useEETaskNotificationHook'
-import { useEETaskNotificationHook } from './useEETaskNotificationHook'
+export { useEETaskNotificationHook }

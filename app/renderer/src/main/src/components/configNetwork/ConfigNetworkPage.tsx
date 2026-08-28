@@ -1226,6 +1226,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                       let value = parseInt(params.MaxContentLength + '' || '0', 10)
                       if (!value || value === 0) {
                         value = 10
+                      } else if (value > 50) {
+                        value = 50
                       }
                       setParams({ ...params, MaxContentLength: value })
                     }}
@@ -1233,6 +1235,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                       let value = parseInt(params.MaxContentLength + '' || '0', 10)
                       if (!value || value === 0) {
                         value = 10
+                      } else if (value > 50) {
+                        value = 50
                       }
                       setParams({ ...params, MaxContentLength: value })
                     }}
