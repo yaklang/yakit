@@ -13,6 +13,7 @@
   width: 100%;
   border-bottom: 0;
   z-index: 8;
+  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
   .expand-retract-content {
     @extend %display-column-center;
     width: 100%;
@@ -45,8 +46,14 @@
       }
       .extra {
         @extend %display-flex-center;
-        gap: 16px;
+        gap: 4px;
         overflow-x: auto;
+        :global(.ant-btn) {
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
+          svg {
+            color: inherit;
+          }
+        }
       }
 
       .divider-style {

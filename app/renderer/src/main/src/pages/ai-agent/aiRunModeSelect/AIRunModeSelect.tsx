@@ -291,6 +291,7 @@ const AIRunModeSelect: React.FC = memo(() => {
         icon={<TriggerIcon />}
         onClick={(e) => e.stopPropagation()}
         className={styles['mode-btn']}
+        title={triggerDisplay.label}
       >
         <span className={styles['mode-btn-label']}>{triggerDisplay.label}</span>
         <OutlineChevrondownIcon className={styles['mode-btn-arrow']} />

@@ -314,6 +314,9 @@
   }
 
   :global {
+    .ant-popover-arrow {
+      display: none;
+    }
     .ant-popover-inner {
       box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
       border-radius: 8px;
@@ -386,6 +389,9 @@
   }
 
   :global {
+    .ant-popover-arrow {
+      display: none;
+    }
     .ant-popover-inner {
       box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
       border-radius: 4px;

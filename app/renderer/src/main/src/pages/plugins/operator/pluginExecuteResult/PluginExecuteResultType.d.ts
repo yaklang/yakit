@@ -47,6 +47,10 @@ export interface PluginExecuteWebsiteTreeProps {
   website?: boolean
   filterTagDom?: React.ReactNode
   isCrawler?: boolean
+  /** 流量表是否展示高级筛选，默认 false */
+  showAdvancedSearch?: boolean
+  /** 流量表是否展示列设置，默认 false */
+  showSetting?: boolean
 }
 export interface PluginExecutePortTableProps {
   runtimeId: string

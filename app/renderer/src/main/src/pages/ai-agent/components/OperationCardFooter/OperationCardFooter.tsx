@@ -37,7 +37,7 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
     if (getCurrentPageTabRouteKey() === YakitRoute.Irify_AI_Code_Audit) {
       emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify({ params: { path: aiFilePath }, isHistory: false }))
     }
-    emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_System }))
+    emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_Preview, value: aiFilePath }))
     setTimeout(() => {
       emiter.emit('fileSystemDefaultExpand', aiFilePath)
     }, 800)

@@ -12,7 +12,7 @@
 .ai-chat-content-wrapper {
   @extend %display-column-center;
   position: relative;
-  flex: 1;
+  height: 100%;
   overflow: hidden;
 
   .ai-chat-tab-wrapper {
@@ -23,6 +23,7 @@
     background-color: var(--Colors-Use-Basic-Background);
     padding: 0 12px 12px 12px;
     justify-content: flex-end;
+    display: flex;
 
     .ai-chat-content {
       display: flex;

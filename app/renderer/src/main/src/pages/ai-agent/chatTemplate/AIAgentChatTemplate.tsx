@@ -16,12 +16,10 @@ import styles from './AIAgentChatTemplate.module.scss'
 import { PreWrapper } from '../components/ToolInvokerCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import TimelineCard from './TimelineCard/TimelineCard'
-import AIMemoryList from './aiMemoryList/AIMemoryList'
-import { YakitResizeBox, type YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
+import { TaskListPane } from './historyTaskTree/TaskListPane'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -40,11 +38,9 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const sessionId = useCurrentSessionId()
 
   const store = useCurrentStore()
-  const rawData = useCurrentRawData()
 
   const currentPlan = useStore(store, (state) => state.currentPlan)
   const execute = useStore(store, (state) => state.execute)
-  const memoryListUpdate = useStore(store, (state) => state.memoryListUpdate)
 
   const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.Timeline)
   const [expand, setExpand] = useControllableValue<boolean>(props, {
@@ -61,10 +57,6 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
       setActiveTab(AIChatLeft.TaskTree)
     }
   }, [hasTaskTree])
-
-  const length = useCreation(() => {
-    return rawData?.memoryList?.memories?.length || 0
-  }, [memoryListUpdate])
 
   const handleCancelExpand = useMemoizedFn(() => {
     setExpand(false)
@@ -83,7 +75,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const renderDom = useMemoizedFn(() => {
     switch (activeTab) {
       case AIChatLeft.TaskTree:
-        return <HistoryTaskTree />
+        return <TaskListPane />
       case AIChatLeft.Timeline:
         return <TimelineCard />
       default:
@@ -114,51 +106,23 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
       />
     )
   }, [activeTab, handleTabChange, i18nRefresh])
-  const extraProps = useCreation(() => {
-    const p: Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'> = {}
-    if (!length) {
-      p.firstRatio = '100%'
-      p.secondRatio = '0%'
-      p.secondNodeStyle = {
-        display: 'none',
-        padding: 0,
-      }
-      p.lineStyle = {
-        display: 'none',
-        padding: 0,
-      }
-    }
-    return p
-  }, [length])
+
   return (
     <div className={classNames(styles['ai-chat-left-side'], { [styles['ai-chat-left-side-hidden']]: !expand })}>
-      <YakitResizeBox
-        isVer
-        firstNode={
-          <div className={styles['list-wrapper']}>
-            <div className={styles['side-header']}>
-              <YakitButton
-                type="outline2"
-                className={styles['side-header-btn']}
-                icon={<OutlineChevronrightIcon />}
-                onClick={handleCancelExpand}
-                size="small"
-              />
-              <div className={styles['header-title']}>{button}</div>
-            </div>
+      <div className={styles['list-wrapper']}>
+        <div className={styles['side-header']}>
+          <YakitButton
+            type="outline2"
+            className={styles['side-header-btn']}
+            icon={<OutlineChevronrightIcon />}
+            onClick={handleCancelExpand}
+            size="small"
+          />
+          <div className={styles['header-title']}>{button}</div>
+        </div>
 
-            <div className={styles['task-list']}>{renderDom()}</div>
-          </div>
-        }
-        secondNode={
-          !!length && (
-            <div className={styles['memory-wrapper']}>
-              <AIMemoryList />
-            </div>
-          )
-        }
-        {...extraProps}
-      />
+        <div className={styles['task-list']}>{renderDom()}</div>
+      </div>
     </div>
   )
 })

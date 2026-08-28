@@ -224,7 +224,7 @@
     "getGlobalKnowledgeBaseFailed": "获取全局知识库失败: {{error}}"
   },
   "AIAgentTabs": {
-    "historyChat": "历史",
+    "session": "会话",
     "config": "配置",
     "skill": "技能",
     "tool": "工具"
@@ -263,7 +263,9 @@
   "HistoryTaskTree": {
     "stopCurrentTask": "停掉当前正在执行的任务，恢复此任务",
     "restoreTaskConfirm": "是否确认恢复该此任务",
-    "updateTime": "更新时间: {{time}}"
+    "updateTime": "更新时间: {{time}}",
+    "taskList": "任务列表",
+    "subAgent": "子Agent"
   },
   "AITree": {
     "cancelSubtaskConfirm": "是否确认取消该子任务，取消后会按顺序执行下一个子任务?"
@@ -288,6 +290,9 @@
   },
   "AIChatListItem": {
     "thinking": "思考：",
+    "thoughtDuration": "持续了 {{seconds}} 秒",
+    "thoughtDurationMinutes": "持续了 {{minutes}} 分钟",
+    "thoughtDurationMinutesSeconds": "持续了 {{minutes}} 分 {{seconds}} 秒",
     "toolCall": "工具调用",
     "taskEnd": "任务结束标志",
     "taskEndDesc": "当前任务已经结束，下面为新的任务数据"
@@ -337,7 +342,8 @@
     "sendToChat": "发送到自由对话"
   },
   "FileTreeSystem": {
-    "myOpenedFiles": "我打开的文件"
+    "myOpenedFiles": "我打开的文件",
+    "aiArtifacts": "AI Artifacts"
   },
   "ExportAILogsModal": {
     "title": "导出 AI 日志",
@@ -366,7 +372,18 @@
     "newChatTitle": "新会话",
     "newChat": "新建会话",
     "log": "日志",
-    "exportLog": "导出日志"
+    "exportLog": "导出日志",
+    "taskDetail": "任务详情"
+  },
+  "ChatSessionPane": {
+    "sessionList": "会话"
+  },
+  "AIAgentChatLayout": {
+    "dockDisabledTip": "屏幕过小，不支持该模块停靠在右边"
+  },
+  "AIHorizontalScrollCard": {
+    "questionIdMissing": "currentChatStatus.questionID不存在",
+    "taskDetailSourceMismatch": "当前会话不属于 AIAgent 数据源，无法查看任务详情"
   },
   "AIContextToken": {
     "pressure": "上下文压力",

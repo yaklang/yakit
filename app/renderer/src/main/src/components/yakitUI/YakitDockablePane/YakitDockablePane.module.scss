@@ -1,0 +1,101 @@
+.dockable-pane-slot {
+  flex-shrink: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dockable-pane-slot-collapsed {
+  width: 0 !important;
+  border: none;
+  padding: 0;
+  pointer-events: none;
+}
+
+.dockable-pane {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  background: var(--Colors-Use-Basic-Background);
+  border-left: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  padding: 8px 12px 0 12px;
+}
+
+.dockable-pane-overlay {
+  z-index: 100;
+  height: auto;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  box-shadow: 0px 6px 12px 0px var(--Colors-Use-Basic-Shadow);
+  overflow: hidden;
+}
+
+.dockable-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: 24px;
+
+  :global {
+    .ant-segmented.ant-segmented-sm .ant-segmented-item-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      min-height: 24px;
+    }
+  }
+}
+
+.dockable-pane-header-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.dockable-pane-header-action-wrap {
+  display: inline-flex;
+}
+
+.dockable-pane-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.dockable-pane-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 8px 0;
+}
+
+.dockable-pane-segmented-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+
+  :global(.anticon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+}

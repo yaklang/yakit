@@ -34,7 +34,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const {
       chatContainerClassName,
       chatContainerHeaderClassName,
-      title = '自由对话',
+      title,
       sendRequest,
       startRequest,
       externalParameters,
@@ -269,9 +269,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const isShowExpand = useCreation(() => {
       return !showFreeChat
     }, [showFreeChat])
-    const handleSwitchShowFreeChat = useMemoizedFn((v) => {
-      setShowFreeChat(v)
-    })
 
     const onSetQuestion = useMemoizedFn((value: string) => {
       aiChatTextareaRef?.current?.setValue(value ?? '')
@@ -310,14 +307,15 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             })}
           >
             <div className={classNames(styles['chat-container'], chatContainerClassName)}>
-              <AIReActChatHeader
-                title={title}
-                chatContainerHeaderClassName={chatContainerHeaderClassName}
-                isShowRetract={isShowRetract}
-                externalParameters={externalParameters}
-                handleSwitchShowFreeChat={handleSwitchShowFreeChat}
-                scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
-              />
+              {title && (
+                <AIReActChatHeader
+                  title={title}
+                  chatContainerHeaderClassName={chatContainerHeaderClassName}
+                  isShowRetract={isShowRetract}
+                  externalParameters={externalParameters}
+                  scrollToItemIndex={aiReActChatContentsRef.current?.scrollToItemIndex}
+                />
+              )}
               <AIToDoListWrapper />
               <AIReActChatContents ref={aiReActChatContentsRef} />
               <AIReActTaskChatReview />
@@ -339,7 +337,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               </div>
             </div>
           </div>
-          <div className={styles['open-wrapper']} onClick={(e) => handleSwitchShowFreeChat(true)}>
+          <div className={styles['open-wrapper']} onClick={(e) => setShowFreeChat(true)}>
             <ChevrondownButton />
             <div className={styles['text']}>自由对话</div>
           </div>

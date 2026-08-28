@@ -10,7 +10,6 @@ export interface AIReActChatHeaderProps {
 
   source?: string
   onDetails?: (e: React.MouseEvent) => void
-  handleSwitchShowFreeChat: (show: boolean) => void
 
   scrollToItemIndex?: AIReActSubAgentTaskProps['scrollToItemIndex']
 }

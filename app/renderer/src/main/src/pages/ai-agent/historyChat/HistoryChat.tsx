@@ -3,7 +3,12 @@ import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
 import { ReActChatEventEnum } from '../defaultConstant'
-import { OutlineDesktopcomputerIcon, OutlineMessageCirclePlusIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import {
+  OutlineDesktopcomputerIcon,
+  OutlineMessageCirclePlusIcon,
+  OutlineSearchIcon,
+  OutlineTrashIcon,
+} from '@/assets/icon/outline'
 import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -103,406 +108,422 @@ interface HistoryChatProps {
   aiSource: AISource[]
   /** 嵌入 Tooltip 等浮层场景：隐藏新建/固定按钮，弹层挂载到当前页面容器 */
   embedded?: boolean
+  title?: ReactNode
+  /** 隐藏底部搜索输入，改由 headerActionsExtra / renderExtra 自定义搜索 */
+  hideInlineSearch?: boolean
+  /** 顶栏操作区额外按钮（新建与钉住之间） */
+  headerActionsExtra?: ReactNode
+  renderExtra?: (sessions: AISession[]) => ReactNode
+  className?: string
 }
 
-const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
-  const { setActiveChat, getSetting } = useAIAgentDispatcher()
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
-  const enableHistorySourceFilter = useMemo(() => aiSource.includes('im'), [aiSource])
-  const isGlobalAIAgentHistory = useMemo(() => {
-    return aiSource.includes('ai') && aiSource.includes('im') && aiSource.includes('')
-  }, [aiSource])
-  const historyQuerySources = useMemo(() => {
-    if (!enableHistorySourceFilter) return aiSource
-    return getHistorySourceQuerySources(aiSource, historySourceFilter)
-  }, [aiSource, enableHistorySourceFilter, historySourceFilter])
-  const historyQueryPlatform = useMemo(() => {
-    if (!enableHistorySourceFilter) return []
-    return getHistorySourceQueryPlatform(historySourceFilter)
-  }, [enableHistorySourceFilter, historySourceFilter])
-  const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
-  const { activeChat } = useAIAgentStore()
+const HistoryChat = memo(
+  ({ aiSource, embedded, title, hideInlineSearch, headerActionsExtra, renderExtra, className }: HistoryChatProps) => {
+    const { setActiveChat, getSetting } = useAIAgentDispatcher()
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+    const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
+    const enableHistorySourceFilter = useMemo(() => aiSource.includes('im'), [aiSource])
+    const isGlobalAIAgentHistory = useMemo(() => {
+      return aiSource.includes('ai') && aiSource.includes('im') && aiSource.includes('')
+    }, [aiSource])
+    const historyQuerySources = useMemo(() => {
+      if (!enableHistorySourceFilter) return aiSource
+      return getHistorySourceQuerySources(aiSource, historySourceFilter)
+    }, [aiSource, enableHistorySourceFilter, historySourceFilter])
+    const historyQueryPlatform = useMemo(() => {
+      if (!enableHistorySourceFilter) return []
+      return getHistorySourceQueryPlatform(historySourceFilter)
+    }, [enableHistorySourceFilter, historySourceFilter])
+    const [{ sessions }, dispatcher] = useSessionList(historyQuerySources, historyQueryPlatform)
+    const { activeChat } = useAIAgentStore()
 
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
-  const getPopupContainer = useMemoizedFn(() => getMainOperatorPageBodyContainer() || document.body)
-  const popupContainer = embedded ? getPopupContainer : undefined
-  const embeddedOverlayClass = styles['history-chat-embedded-overlay']
-  const embeddedPopconfirmClass = styles['history-chat-embedded-popconfirm']
-  const embeddedOverlayOptions = embedded
-    ? {
-        getPopupContainer: popupContainer,
-        overlayClassName: embeddedPopconfirmClass,
+    const getPopupContainer = useMemoizedFn(() => getMainOperatorPageBodyContainer() || document.body)
+    const popupContainer = embedded ? getPopupContainer : undefined
+    const embeddedOverlayClass = styles['history-chat-embedded-overlay']
+    const embeddedPopconfirmClass = styles['history-chat-embedded-popconfirm']
+    const embeddedOverlayOptions = embedded
+      ? {
+          getPopupContainer: popupContainer,
+          overlayClassName: embeddedPopconfirmClass,
+        }
+      : undefined
+
+    const [search, setSearch] = useState('')
+    const searchDebounce = useDebounce(search, { wait: 500 })
+    const visibleSessions = useMemo(() => {
+      if (!enableHistorySourceFilter) return sessions
+      return filterHistorySessionsBySource(sessions, historySourceFilter)
+    }, [enableHistorySourceFilter, historySourceFilter, sessions])
+
+    const [clearLoading, setClearLoading] = useState(false)
+
+    const chatDataStoreKey = useGetChatDataStoreKey()
+
+    /** 补齐尚未写入历史表、但当前路由内已经运行的会话。 */
+    const getRouteSessionIds = useMemoizedFn((sources: AISource[]) => {
+      const route = currentRouteKey as YakitRouteType
+      return sources.flatMap((source) => globalSessionEngine.getSessionIdsBySourceAndRoute(source, route))
+    })
+
+    const handleClearAllChat = useMemoizedFn(async () => {
+      if (clearLoading) return
+      const sources = isGlobalAIAgentHistory ? aiSource : historyQuerySources
+      if (!isGlobalAIAgentHistory && visibleSessions.length === 0 && getRouteSessionIds(sources).length === 0) {
+        yakitNotify('info', t('HistoryChat.noChatsToClear'))
+        return
       }
-    : undefined
 
-  const [search, setSearch] = useState('')
-  const searchDebounce = useDebounce(search, { wait: 500 })
-  const visibleSessions = useMemo(() => {
-    if (!enableHistorySourceFilter) return sessions
-    return filterHistorySessionsBySource(sessions, historySourceFilter)
-  }, [enableHistorySourceFilter, historySourceFilter, sessions])
-
-  const [clearLoading, setClearLoading] = useState(false)
-
-  const chatDataStoreKey = useGetChatDataStoreKey()
-
-  /** 补齐尚未写入历史表、但当前路由内已经运行的会话。 */
-  const getRouteSessionIds = useMemoizedFn((sources: AISource[]) => {
-    const route = currentRouteKey as YakitRouteType
-    return sources.flatMap((source) => globalSessionEngine.getSessionIdsBySourceAndRoute(source, route))
-  })
-
-  const handleClearAllChat = useMemoizedFn(async () => {
-    if (clearLoading) return
-    const sources = isGlobalAIAgentHistory ? aiSource : historyQuerySources
-    if (!isGlobalAIAgentHistory && visibleSessions.length === 0 && getRouteSessionIds(sources).length === 0) {
-      yakitNotify('info', t('HistoryChat.noChatsToClear'))
-      return
-    }
-
-    setClearLoading(true)
-    sessionStatusStore.getState().setSourceDeleting(sources, true)
-    try {
-      let filter: DeleteAISessionRequest = {}
-      let deleteSessionsSource: DeleteSessionsAISourceType[] = sources
-      if (isGlobalAIAgentHistory && historySourceFilter === 'local') {
-        // Global AI Agent 侧栏 + local 分组：清空全部来源的会话。
-        filter = { DeleteAll: true }
-        deleteSessionsSource = ALL_DELETE_SESSION_SOURCES
-      } else if (isGlobalAIAgentHistory && enableHistorySourceFilter) {
-        // Global AI Agent 侧栏 + IM 平台分组：只删该平台，不波及其它来源/平台。
-        // gRPC 仍按 Source=['im'] + Platform 精确删除；
-        // 本地 deleteSessionsParams.source 用平台区分型（im-Lark/im-DingTalk）以精确命中。
-        filter = { Filter: { Source: ['im'], Platform: historyQueryPlatform } }
-        deleteSessionsSource = [getHistorySourceDeleteSessionSource(historySourceFilter)]
-      } else {
-        // 业务页嵌入：按当前分组的 source + platform 删除。
-        filter = { Filter: { Source: historyQuerySources, Platform: historyQueryPlatform } }
-      }
-      await handAIHistoryChatRemove({
-        grpcDeleteAISessionParams: filter,
-        handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
-        // 按 source 列表清空；不传 deleteAll，全库清删由其它入口负责
-        deleteSessionsParams: { sessionIds: [], source: deleteSessionsSource },
-      })
-      onNewChat()
-      setActiveChat?.(undefined)
-      dispatcher.setSessions?.([])
-      dispatcher.resetPagination?.()
-      setSearch('')
-      yakitNotify('success', t('HistoryChat.allChatsCleared'))
-    } catch (e) {
-      yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
-    } finally {
-      sessionStatusStore.getState().setSourceDeleting(sources, false)
-      setClearLoading(false)
-    }
-  })
-
-  const handleClearChatByDays = useMemoizedFn(async (days: number) => {
-    if (clearLoading) return
-
-    const beforeTimestamp = Date.now() - days * DAY_MS
-    const sessionIds = visibleSessions
-      .filter((session) => getChatTimestamp(session) <= beforeTimestamp)
-      .map((session) => session.SessionID)
-
-    if (sessionIds.length === 0) {
-      yakitNotify('info', t('HistoryChat.noChatsBeforeDays', { days }))
-      return
-    }
-
-    setClearLoading(true)
-    // 按 source 打上批量删除标记，让 AIChatContent 的 sourceDeleting selector 生效
-    sessionStatusStore.getState().setSourceDeleting(historyQuerySources, true)
-    try {
-      const filter =
-        enableHistorySourceFilter && historySourceFilter !== 'local'
-          ? {
-              SessionID: sessionIds,
-              Source: historyQuerySources,
-              Platform: historyQueryPlatform,
-            }
-          : {
-              BeforeTimestamp: beforeTimestamp,
-              Source: historyQuerySources,
-            }
-      const source = getSetting().Source || 'ai'
-      await handAIHistoryChatRemove({
-        grpcDeleteAISessionParams: { Filter: filter },
-        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
-        deleteSessionsParams: { sessionIds, source: [] },
-      })
-      const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
-      const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)
-      if (nextChats.length === 0) {
+      setClearLoading(true)
+      sessionStatusStore.getState().setSourceDeleting(sources, true)
+      try {
+        let filter: DeleteAISessionRequest = {}
+        let deleteSessionsSource: DeleteSessionsAISourceType[] = sources
+        if (isGlobalAIAgentHistory && historySourceFilter === 'local') {
+          // Global AI Agent 侧栏 + local 分组：清空全部来源的会话。
+          filter = { DeleteAll: true }
+          deleteSessionsSource = ALL_DELETE_SESSION_SOURCES
+        } else if (isGlobalAIAgentHistory && enableHistorySourceFilter) {
+          // Global AI Agent 侧栏 + IM 平台分组：只删该平台，不波及其它来源/平台。
+          // gRPC 仍按 Source=['im'] + Platform 精确删除；
+          // 本地 deleteSessionsParams.source 用平台区分型（im-Lark/im-DingTalk）以精确命中。
+          filter = { Filter: { Source: ['im'], Platform: historyQueryPlatform } }
+          deleteSessionsSource = [getHistorySourceDeleteSessionSource(historySourceFilter)]
+        } else {
+          // 业务页嵌入：按当前分组的 source + platform 删除。
+          filter = { Filter: { Source: historyQuerySources, Platform: historyQueryPlatform } }
+        }
+        await handAIHistoryChatRemove({
+          grpcDeleteAISessionParams: filter,
+          handleClearAIImageParams: { chatDataStoreKey, sessionID: [] }, //删除全部只需要传chatDataStoreKey
+          // 按 source 列表清空；不传 deleteAll，全库清删由其它入口负责
+          deleteSessionsParams: { sessionIds: [], source: deleteSessionsSource },
+        })
         onNewChat()
         setActiveChat?.(undefined)
+        dispatcher.setSessions?.([])
+        dispatcher.resetPagination?.()
         setSearch('')
-      } else if (activeDeleted) {
-        setActiveChat?.(nextChats[0])
+        yakitNotify('success', t('HistoryChat.allChatsCleared'))
+      } catch (e) {
+        yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      } finally {
+        sessionStatusStore.getState().setSourceDeleting(sources, false)
+        setClearLoading(false)
+      }
+    })
+
+    const handleClearChatByDays = useMemoizedFn(async (days: number) => {
+      if (clearLoading) return
+
+      const beforeTimestamp = Date.now() - days * DAY_MS
+      const sessionIds = visibleSessions
+        .filter((session) => getChatTimestamp(session) <= beforeTimestamp)
+        .map((session) => session.SessionID)
+
+      if (sessionIds.length === 0) {
+        yakitNotify('info', t('HistoryChat.noChatsBeforeDays', { days }))
+        return
       }
 
-      dispatcher.setSessions?.(nextChats)
+      setClearLoading(true)
+      // 按 source 打上批量删除标记，让 AIChatContent 的 sourceDeleting selector 生效
+      sessionStatusStore.getState().setSourceDeleting(historyQuerySources, true)
+      try {
+        const filter =
+          enableHistorySourceFilter && historySourceFilter !== 'local'
+            ? {
+                SessionID: sessionIds,
+                Source: historyQuerySources,
+                Platform: historyQueryPlatform,
+              }
+            : {
+                BeforeTimestamp: beforeTimestamp,
+                Source: historyQuerySources,
+              }
+        const source = getSetting().Source || 'ai'
+        await handAIHistoryChatRemove({
+          grpcDeleteAISessionParams: { Filter: filter },
+          handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
+          deleteSessionsParams: { sessionIds, source: [] },
+        })
+        const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
+        const activeDeleted = !!activeChat && sessionIds.includes(activeChat.SessionID)
+        if (nextChats.length === 0) {
+          onNewChat()
+          setActiveChat?.(undefined)
+          setSearch('')
+        } else if (activeDeleted) {
+          setActiveChat?.(nextChats[0])
+        }
+
+        dispatcher.setSessions?.(nextChats)
+        dispatcher.resetPagination?.()
+        yakitNotify('success', t('HistoryChat.clearedBeforeDays', { days }))
+      } catch (e) {
+        yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
+      } finally {
+        sessionStatusStore.getState().setSourceDeleting(historyQuerySources, false)
+        setClearLoading(false)
+      }
+    })
+
+    const handleResetSessions = useMemoizedFn(() => {
+      dispatcher.setSessions?.([])
       dispatcher.resetPagination?.()
-      yakitNotify('success', t('HistoryChat.clearedBeforeDays', { days }))
-    } catch (e) {
-      yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
-    } finally {
-      sessionStatusStore.getState().setSourceDeleting(historyQuerySources, false)
-      setClearLoading(false)
-    }
-  })
+    })
 
-  const handleResetSessions = useMemoizedFn(() => {
-    dispatcher.setSessions?.([])
-    dispatcher.resetPagination?.()
-  })
+    const refreshSessions = useMemoizedFn(async () => {
+      handleResetSessions()
+      await dispatcher.loadHistoryData?.(true)
+    })
 
-  const refreshSessions = useMemoizedFn(async () => {
-    handleResetSessions()
-    await dispatcher.loadHistoryData?.(true)
-  })
+    const isSessionVisibleInCurrentSource = useMemoizedFn((session: AISession) => {
+      if (!isSessionMatchSource(session, historyQuerySources)) return false
+      if (!enableHistorySourceFilter) return true
+      return filterHistorySessionsBySource([session], historySourceFilter).length > 0
+    })
 
-  const isSessionVisibleInCurrentSource = useMemoizedFn((session: AISession) => {
-    if (!isSessionMatchSource(session, historyQuerySources)) return false
-    if (!enableHistorySourceFilter) return true
-    return filterHistorySessionsBySource([session], historySourceFilter).length > 0
-  })
+    const handleSetHistorySourceFilter = useMemoizedFn((filter: HistorySourceFilter) => {
+      if (historySourceFilter === filter) return
+      setHistorySourceFilter(filter)
+    })
 
-  const handleSetHistorySourceFilter = useMemoizedFn((filter: HistorySourceFilter) => {
-    if (historySourceFilter === filter) return
-    setHistorySourceFilter(filter)
-  })
+    useEffect(() => {
+      if (!embedded) return
+      setSearch('')
+      refreshSessions()
+    }, [embedded, aiSource, refreshSessions])
 
-  useEffect(() => {
-    if (!embedded) return
-    setSearch('')
-    refreshSessions()
-  }, [embedded, aiSource, refreshSessions])
+    useUpdateEffect(() => {
+      if (!enableHistorySourceFilter) return
+      refreshSessions()
+    }, [historySourceFilter])
 
-  useUpdateEffect(() => {
-    if (!enableHistorySourceFilter) return
-    refreshSessions()
-  }, [historySourceFilter])
+    useEffect(() => {
+      if (!enableHistorySourceFilter || embedded || historySourceFilter === 'local') return
 
-  useEffect(() => {
-    if (!enableHistorySourceFilter || embedded || historySourceFilter === 'local') return
-
-    const refreshIfVisible = () => {
-      if (document.visibilityState === 'visible') {
-        refreshSessions()
+      const refreshIfVisible = () => {
+        if (document.visibilityState === 'visible') {
+          refreshSessions()
+        }
       }
-    }
 
-    window.addEventListener('focus', refreshIfVisible)
-    document.addEventListener('visibilitychange', refreshIfVisible)
-    const timer = window.setInterval(refreshIfVisible, IM_HISTORY_REFRESH_INTERVAL_MS)
+      window.addEventListener('focus', refreshIfVisible)
+      document.addEventListener('visibilitychange', refreshIfVisible)
+      const timer = window.setInterval(refreshIfVisible, IM_HISTORY_REFRESH_INTERVAL_MS)
 
-    return () => {
-      window.removeEventListener('focus', refreshIfVisible)
-      document.removeEventListener('visibilitychange', refreshIfVisible)
-      window.clearInterval(timer)
-    }
-  }, [embedded, enableHistorySourceFilter, historySourceFilter, refreshSessions])
+      return () => {
+        window.removeEventListener('focus', refreshIfVisible)
+        document.removeEventListener('visibilitychange', refreshIfVisible)
+        window.clearInterval(timer)
+      }
+    }, [embedded, enableHistorySourceFilter, historySourceFilter, refreshSessions])
 
-  useEffect(() => {
-    const handleSessionData = async (data: string) => {
-      const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload | undefined
-      switch (payload?.type) {
-        case 'refresh':
-          if (payload.sessionId) {
-            await dispatcher.refreshSession?.(payload.sessionId)
-          } else {
-            handleResetSessions()
-            await dispatcher.loadHistoryData?.(true)
-          }
-          break
-        case 'loadNextPage':
-          await dispatcher.loadHistoryData?.()
-          break
-        case 'clear':
-          if (isGlobalAIAgentHistory) {
-            await grpcDeleteAISession({ DeleteAll: true }, true)
-          } else {
-            await grpcDeleteAISession(
-              {
-                Filter: {
-                  Source: historyQuerySources,
+    useEffect(() => {
+      const handleSessionData = async (data: string) => {
+        const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload | undefined
+        switch (payload?.type) {
+          case 'refresh':
+            if (payload.sessionId) {
+              await dispatcher.refreshSession?.(payload.sessionId)
+            } else {
+              handleResetSessions()
+              await dispatcher.loadHistoryData?.(true)
+            }
+            break
+          case 'loadNextPage':
+            await dispatcher.loadHistoryData?.()
+            break
+          case 'clear':
+            if (isGlobalAIAgentHistory) {
+              await grpcDeleteAISession({ DeleteAll: true }, true)
+            } else {
+              await grpcDeleteAISession(
+                {
+                  Filter: {
+                    Source: historyQuerySources,
+                  },
                 },
-              },
-              true,
-            )
-          }
-          handleResetSessions()
-          break
-        case 'prependSession':
-          if (payload.payload && isSessionVisibleInCurrentSource(payload.payload)) {
-            dispatcher.setSessions((prev) => [payload.payload!, ...prev])
-          }
-          break
-        case 'updateSession':
-          if (payload.sessionId && payload.updates) {
-            dispatcher.setSessions((prev) =>
-              prev.map((item) => (item.SessionID === payload.sessionId ? { ...item, ...payload.updates } : item)),
-            )
-          }
-          break
-        default:
-          break
+                true,
+              )
+            }
+            handleResetSessions()
+            break
+          case 'prependSession':
+            if (payload.payload && isSessionVisibleInCurrentSource(payload.payload)) {
+              dispatcher.setSessions((prev) => [payload.payload!, ...prev])
+            }
+            break
+          case 'updateSession':
+            if (payload.sessionId && payload.updates) {
+              dispatcher.setSessions((prev) =>
+                prev.map((item) => (item.SessionID === payload.sessionId ? { ...item, ...payload.updates } : item)),
+              )
+            }
+            break
+          default:
+            break
+        }
       }
-    }
-    emiter.on('sessionData', handleSessionData)
-    return () => {
-      emiter.off('sessionData', handleSessionData)
-    }
-  }, [dispatcher, handleResetSessions, historyQuerySources, isGlobalAIAgentHistory, isSessionVisibleInCurrentSource])
+      emiter.on('sessionData', handleSessionData)
+      return () => {
+        emiter.off('sessionData', handleSessionData)
+      }
+    }, [dispatcher, handleResetSessions, historyQuerySources, isGlobalAIAgentHistory, isSessionVisibleInCurrentSource])
 
-  return (
-    <div className={styles['history-chat']}>
-      <div className={styles['header-wrapper']}>
-        <div className={styles['haeder-first']}>
-          <div className={styles['first-title']}>
-            <span className={styles['title-text']}>{t('HistoryChat.title')}</span>
-            <YakitRoundCornerTag wrapperClassName={styles['history-count-tag']}>
-              {visibleSessions.length}
-            </YakitRoundCornerTag>
-            {enableHistorySourceFilter && (
-              <div className={styles['source-filter']}>
-                {HISTORY_SOURCE_FILTER_OPTIONS.map((item) => {
-                  const active = historySourceFilter === item.key
-                  return (
-                    <Tooltip
-                      key={item.key}
-                      title={item.title}
-                      placement="top"
-                      getPopupContainer={popupContainer}
-                      overlayClassName={embedded ? embeddedOverlayClass : undefined}
-                    >
-                      <button
-                        type="button"
-                        aria-label={item.title}
-                        className={classNames(styles['source-filter-item'], styles[`source-filter-item-${item.key}`], {
-                          [styles['source-filter-item-active']]: active,
-                        })}
-                        onClick={() => handleSetHistorySourceFilter(item.key)}
+    return (
+      <div className={classNames(styles['history-chat'], className)}>
+        <div className={styles['header-wrapper']}>
+          <div className={styles['haeder-first']}>
+            <div className={styles['first-title']}>
+              <span className={styles['title-text']}>{title ?? t('HistoryChat.title')}</span>
+              <YakitRoundCornerTag wrapperClassName={styles['history-count-tag']}>
+                {visibleSessions.length}
+              </YakitRoundCornerTag>
+              {enableHistorySourceFilter && (
+                <div className={styles['source-filter']}>
+                  {HISTORY_SOURCE_FILTER_OPTIONS.map((item) => {
+                    const active = historySourceFilter === item.key
+                    return (
+                      <Tooltip
+                        key={item.key}
+                        title={item.title}
+                        placement="top"
+                        getPopupContainer={popupContainer}
+                        overlayClassName={embedded ? embeddedOverlayClass : undefined}
                       >
-                        {item.icon}
-                      </button>
-                    </Tooltip>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-          <div className={styles['header-actions']}>
-            <YakitDropdownMenu
-              menu={{
-                data: [
-                  {
-                    key: '1',
-                    label: renderClearConfirm(
-                      t('HistoryChat.oneDay'),
-                      t('HistoryChat.clearConfirm', { days: t('HistoryChat.oneDay') }),
-                      () => handleClearChatByDays(1),
-                      embeddedOverlayOptions,
-                    ),
-                  },
-                  {
-                    key: '7',
-                    label: renderClearConfirm(
-                      t('HistoryChat.oneWeek'),
-                      t('HistoryChat.clearConfirm', { days: t('HistoryChat.oneWeek') }),
-                      () => handleClearChatByDays(7),
-                      embeddedOverlayOptions,
-                    ),
-                  },
-                  {
-                    key: '30',
-                    label: renderClearConfirm(
-                      t('HistoryChat.thirtyDays'),
-                      t('HistoryChat.clearConfirm', { days: t('HistoryChat.thirtyDays') }),
-                      () => handleClearChatByDays(30),
-                      embeddedOverlayOptions,
-                    ),
-                  },
-                  { type: 'divider' },
-                  {
-                    key: 'all',
-                    label: renderClearConfirm(
-                      t('HistoryChat.clearAll'),
-                      t('HistoryChat.clearAllConfirm'),
-                      handleClearAllChat,
-                      embeddedOverlayOptions,
-                    ),
-                  },
-                ],
-              }}
-              dropdown={{
-                trigger: ['click'],
-                placement: 'bottomRight',
-                disabled: clearLoading || (!isGlobalAIAgentHistory && visibleSessions.length === 0),
-                getPopupContainer: popupContainer,
-                overlayClassName: embedded ? embeddedOverlayClass : undefined,
-              }}
-            >
-              <Tooltip
-                title={t('HistoryChat.clearChats')}
-                placement="topRight"
-                getPopupContainer={popupContainer}
-                overlayClassName={embedded ? embeddedOverlayClass : undefined}
+                        <button
+                          type="button"
+                          aria-label={item.title}
+                          className={classNames(
+                            styles['source-filter-item'],
+                            styles[`source-filter-item-${item.key}`],
+                            {
+                              [styles['source-filter-item-active']]: active,
+                            },
+                          )}
+                          onClick={() => handleSetHistorySourceFilter(item.key)}
+                        >
+                          {item.icon}
+                        </button>
+                      </Tooltip>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            <div className={styles['header-actions']}>
+              <YakitDropdownMenu
+                menu={{
+                  data: [
+                    {
+                      key: '1',
+                      label: renderClearConfirm(
+                        t('HistoryChat.oneDay'),
+                        t('HistoryChat.clearConfirm', { days: t('HistoryChat.oneDay') }),
+                        () => handleClearChatByDays(1),
+                        embeddedOverlayOptions,
+                      ),
+                    },
+                    {
+                      key: '7',
+                      label: renderClearConfirm(
+                        t('HistoryChat.oneWeek'),
+                        t('HistoryChat.clearConfirm', { days: t('HistoryChat.oneWeek') }),
+                        () => handleClearChatByDays(7),
+                        embeddedOverlayOptions,
+                      ),
+                    },
+                    {
+                      key: '30',
+                      label: renderClearConfirm(
+                        t('HistoryChat.thirtyDays'),
+                        t('HistoryChat.clearConfirm', { days: t('HistoryChat.thirtyDays') }),
+                        () => handleClearChatByDays(30),
+                        embeddedOverlayOptions,
+                      ),
+                    },
+                    { type: 'divider' },
+                    {
+                      key: 'all',
+                      label: renderClearConfirm(
+                        t('HistoryChat.clearAll'),
+                        t('HistoryChat.clearAllConfirm'),
+                        handleClearAllChat,
+                        embeddedOverlayOptions,
+                      ),
+                    },
+                  ],
+                }}
+                dropdown={{
+                  trigger: ['click'],
+                  placement: 'bottomRight',
+                  disabled: clearLoading || (!isGlobalAIAgentHistory && visibleSessions.length === 0),
+                  getPopupContainer: popupContainer,
+                  overlayClassName: embedded ? embeddedOverlayClass : undefined,
+                }}
               >
-                <YakitButton
-                  disabled={clearLoading || (!isGlobalAIAgentHistory && visibleSessions.length === 0)}
-                  colors="danger"
-                  type="outline1"
-                  loading={clearLoading}
+                <Tooltip
+                  title={t('HistoryChat.clearChats')}
+                  placement="topRight"
+                  getPopupContainer={popupContainer}
+                  overlayClassName={embedded ? embeddedOverlayClass : undefined}
                 >
-                  {t('YakitButton.delete')}
-                </YakitButton>
-              </Tooltip>
-            </YakitDropdownMenu>
-            {!embedded && (
-              <>
-                <Tooltip title={t('HistoryChat.newChat')} placement="topRight">
-                  <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
+                  <YakitButton
+                    disabled={clearLoading || (!isGlobalAIAgentHistory && visibleSessions.length === 0)}
+                    colors="danger"
+                    type="text2"
+                    loading={clearLoading}
+                    icon={<OutlineTrashIcon />}
+                  />
                 </Tooltip>
-                <SideSettingButton />
-              </>
-            )}
+              </YakitDropdownMenu>
+              {!embedded && (
+                <>
+                  <Tooltip title={t('HistoryChat.newChat')} placement="topRight">
+                    <YakitButton type="text2" icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
+                  </Tooltip>
+                  {headerActionsExtra}
+                  <SideSettingButton />
+                </>
+              )}
+            </div>
           </div>
+
+          {!hideInlineSearch && (
+            <div className={styles['header-second']}>
+              <YakitInput
+                prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+                placeholder={t('YakitInput.searchKeyWordPlaceholder')}
+                allowClear
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
-        <div className={styles['header-second']}>
-          <YakitInput
-            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
-            placeholder={t('YakitInput.searchKeyWordPlaceholder')}
-            allowClear
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className={styles['content']}>
+          <YakitSpin spinning={clearLoading}>
+            <HistoryChatList
+              search={hideInlineSearch ? '' : searchDebounce}
+              sessionList={visibleSessions}
+              aiSource={historyQuerySources}
+              setSessions={dispatcher.setSessions}
+              loadHistoryData={dispatcher.loadHistoryData}
+              getSessions={dispatcher.getSessions}
+              getPopupContainer={popupContainer}
+              overlayClassName={embedded ? embeddedPopconfirmClass : undefined}
+              embedded={embedded}
+            />
+          </YakitSpin>
         </div>
+        {renderExtra?.(visibleSessions)}
       </div>
-
-      <div className={styles['content']}>
-        <YakitSpin spinning={clearLoading}>
-          <HistoryChatList
-            search={searchDebounce}
-            sessionList={visibleSessions}
-            aiSource={historyQuerySources}
-            setSessions={dispatcher.setSessions}
-            loadHistoryData={dispatcher.loadHistoryData}
-            getSessions={dispatcher.getSessions}
-            getPopupContainer={popupContainer}
-            overlayClassName={embedded ? embeddedPopconfirmClass : undefined}
-            embedded={embedded}
-          />
-        </YakitSpin>
-      </div>
-    </div>
-  )
-})
+    )
+  },
+)
 
 export default HistoryChat

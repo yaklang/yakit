@@ -19,6 +19,7 @@ import { AIReferenceNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActCh
 import { OutlineChevrondownIcon, OutlineThoughtIcon } from '@/assets/icon/outline'
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
+import ThoughtDuration from '../thoughtDuration/ThoughtDuration'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -106,6 +107,7 @@ const AIGroupThoughtHeader: FC<AIGroupStreamCardHeardWrapperProps> = memo((props
   }, [renderNum])
 
   const lastItemRenderNum = useStore(store, (state) => state.items[lastToken]?.renderNum)
+  const persistKey = useStore(store, (state) => state.groups[token]?.childrenTokens[0] || token)
   const streaming = useCreation(() => {
     const lastItem = rawData.contents.get(lastToken)
     return lastItem?.type === AIChatQSDataTypeEnum.STREAM && lastItem.data.status !== 'end'
@@ -114,7 +116,10 @@ const AIGroupThoughtHeader: FC<AIGroupStreamCardHeardWrapperProps> = memo((props
   return (
     <div className={styles['thought-header']} onClick={() => setExpand((open) => !open)}>
       <OutlineThoughtIcon className={styles['thought-icon']} />
-      <span className={classNames({ [styles['thought-title-blink']]: streaming })}>{nodeLabel}</span>
+      <span className={classNames({ [styles['thought-title-blink']]: streaming })}>
+        {nodeLabel}
+        <ThoughtDuration persistKey={persistKey} status={streaming ? 'start' : 'end'} />
+      </span>
       <OutlineChevrondownIcon
         className={classNames(styles['thought-chevron'], {
           [styles['thought-chevron-collapsed']]: !expand,

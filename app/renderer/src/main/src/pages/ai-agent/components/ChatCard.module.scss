@@ -18,6 +18,10 @@
     flex-wrap: wrap;
     gap: 0 8px;
 
+    &-clickable {
+      cursor: pointer;
+    }
+
     &-left {
       display: flex;
       align-items: center;

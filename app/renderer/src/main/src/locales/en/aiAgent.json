@@ -224,7 +224,7 @@
     "getGlobalKnowledgeBaseFailed": "Failed to get global knowledge base: {{error}}"
   },
   "AIAgentTabs": {
-    "historyChat": "History Chat",
+    "session": "Session",
     "config": "Settings",
     "skill": "Skill",
     "tool": "Tool"
@@ -263,7 +263,9 @@
   "HistoryTaskTree": {
     "stopCurrentTask": "Stop the current task and restore this one",
     "restoreTaskConfirm": "Are you sure you want to restore this task?",
-    "updateTime": "Updated: {{time}}"
+    "updateTime": "Updated: {{time}}",
+    "taskList": "Task List",
+    "subAgent": "Sub Agent"
   },
   "AITree": {
     "cancelSubtaskConfirm": "Are you sure you want to cancel this subtask? The next subtask will be executed in order after cancellation"
@@ -288,6 +290,9 @@
   },
   "AIChatListItem": {
     "thinking": "Thinking: ",
+    "thoughtDuration": "for {{seconds}}s",
+    "thoughtDurationMinutes": "for {{minutes}}m",
+    "thoughtDurationMinutesSeconds": "for {{minutes}}m {{seconds}}s",
     "toolCall": "Tool Call",
     "taskEnd": "Task End",
     "taskEndDesc": "The current task has ended, below is the new task data"
@@ -337,7 +342,8 @@
     "sendToChat": "Send to free chat"
   },
   "FileTreeSystem": {
-    "myOpenedFiles": "My Opened Files"
+    "myOpenedFiles": "My Opened Files",
+    "aiArtifacts": "AI Artifacts"
   },
   "ExportAILogsModal": {
     "title": "Export AI Logs",
@@ -366,7 +372,18 @@
     "newChatTitle": "New Session",
     "newChat": "New Session",
     "log": "Log",
-    "exportLog": "Export Log"
+    "exportLog": "Export Log",
+    "taskDetail": "Task Detail"
+  },
+  "ChatSessionPane": {
+    "sessionList": "Sessions"
+  },
+  "AIAgentChatLayout": {
+    "dockDisabledTip": "The screen is too small to dock this panel on the right"
+  },
+  "AIHorizontalScrollCard": {
+    "questionIdMissing": "currentChatStatus.questionID does not exist",
+    "taskDetailSourceMismatch": "The current session does not belong to the AIAgent data source and task details cannot be viewed"
   },
   "AIContextToken": {
     "pressure": "Context Pressure",

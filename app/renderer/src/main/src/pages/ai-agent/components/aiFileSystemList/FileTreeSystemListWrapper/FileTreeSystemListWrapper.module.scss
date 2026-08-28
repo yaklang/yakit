@@ -1,8 +1,19 @@
 .file-tree-system {
-  height: 100%;
   width: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  &-body {
+    overflow: auto;
+  }
+  &-fill {
+    height: 100%;
+    overflow: hidden;
+    .file-tree-system-body {
+      flex: 1;
+      min-height: 0;
+    }
+  }
   &-title {
     padding: 4px 0;
     display: flex;
@@ -16,19 +27,26 @@
     }
     &-toggle {
       height: 24px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      cursor: pointer;
       span {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-weight: 600;
         line-height: 16px;
         letter-spacing: 0.5px;
-        transition: all 0.3s;
-        cursor: pointer;
-        svg {
-          width: 12px;
-          height: 12px;
-          color: var(--Colors-Use-Neutral-Text-4-Help-text);
-        }
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      svg {
+        flex-shrink: 0;
+        width: 12px;
+        height: 12px;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
       }
     }
     &-icon {

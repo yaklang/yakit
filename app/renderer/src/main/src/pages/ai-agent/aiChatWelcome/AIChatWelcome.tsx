@@ -1,4 +1,4 @@
-import React, { type FC, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, { type FC, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type {
   AIChatWelcomeIntroTipsProps,
   AIChatWelcomeProps,
@@ -8,7 +8,7 @@ import type {
 } from './type'
 import styles from './AIChatWelcome.module.scss'
 import { AIChatTextarea } from '../template/template'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -16,31 +16,11 @@ import {
   OutlileHistoryIcon,
   OutlineChatIcon,
   OutlineCheckIcon,
-  OutlineCloseIcon,
-  OutlineExportIcon,
-  OutlineImportIcon,
-  OutlineOpenIcon,
   OutlinePencilaltIcon,
-  OutlinePinIcon,
-  OutlinePinOffIcon,
-  OutlinePluscircleIcon,
   OutlineShieldexclamationIcon,
   OutlineWrenchIcon,
 } from '@/assets/icon/outline'
-import { Tooltip } from 'antd'
-import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import FileTreeList from './FileTreeList/FileTreeList'
-import { RemoteAIAgentGV } from '@/enums/aiAgent'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import KnowledgeSidebarList, { type KnowledgeModalRef } from './KnowledgeSidebarList/KnowledgeSidebarList'
-import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
-import Tabs from './Tabs/Tabs'
-import ForgeName, { type ForgeNameRef } from '../forgeName/ForgeName'
-import AIToolList, { handleAddAITool } from '../aiToolList/AIToolList'
-import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
-import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
-import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
 import { ColorsChatIcon, ColorsMemfitIcon, ColorsPreViewMDIcon } from '@/assets/icon/colors'
@@ -53,17 +33,12 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorPageBodyContainer'
 import { yakitNotify } from '@/utils/notification'
-
-enum AIChatWelcomeTabKeyEnum {
-  Knowledge = 'knowledge',
-  Skills = 'skills',
-  Tools = 'tools',
-}
+import DoomFlameBackground from './DoomFlameBackground'
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
-    const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
-    const { onTriageSubmit, streams, api } = props
+    const { t } = useI18nNamespaces(['aiAgent'])
+    const { onTriageSubmit } = props
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -83,18 +58,25 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
     const settingCardRef = useRef<AIChatWelcomeSettingCardRef>(null)
 
-    // 控制下拉菜单
-    const [openDrawer, setOpenDrawer] = useState<boolean>(true)
-    const [tabActiveKey, setTabActiveKey] = useState<AIChatWelcomeTabKeyEnum>(AIChatWelcomeTabKeyEnum.Knowledge)
-
     const welcomeRef = useRef<HTMLDivElement>(null)
-    const welcomeSize = useSize(welcomeRef)
-
-    useUpdateEffect(() => {
-      if (welcomeSize?.width && welcomeSize?.width < 1430) {
-        setOpenDrawer(false)
+    const [isCompact, setIsCompact] = useState(false)
+    useEffect(() => {
+      const el = welcomeRef.current
+      if (!el || typeof ResizeObserver === 'undefined') return
+      const update = (width: number, height: number) => {
+        const next = width < 720 || height < 680
+        setIsCompact((prev) => (prev === next ? prev : next))
       }
-    }, [welcomeSize?.width])
+      update(el.clientWidth, el.clientHeight)
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0]
+        if (!entry) return
+        const { width, height } = entry.contentRect
+        update(width, height)
+      })
+      observer.observe(el)
+      return () => observer.disconnect()
+    }, [])
 
     const handleTriageSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {
       // 通过 ref 主动拉取选中的推荐场景（支持多选），附加到 enabledCapabilities 传出
@@ -104,146 +86,25 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         enabledCapabilities: select,
       })
     })
-    const handleTabChange = useMemoizedFn((key: string) => {
-      setTabActiveKey(key as AIChatWelcomeTabKeyEnum)
-    })
-
-    const [isSelectForgeName, setIsSelectForgeName] = useState<boolean>(false)
-    const knowledgeSidebarListRef = useRef<KnowledgeModalRef>(null)
-    const forgeNameRef = useRef<ForgeNameRef>(null)
-    const { installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync } = useCheckKnowledgePlugin()
-
-    const items = useMemo(() => {
-      return [
-        {
-          label: t('AIChatWelcome.knowledgeBase'),
-          key: AIChatWelcomeTabKeyEnum.Knowledge,
-          children: <KnowledgeSidebarList ref={knowledgeSidebarListRef} api={api} streams={streams} />,
-          extra: [
-            <YakitButton
-              key="import"
-              onClick={() => {
-                knowledgeSidebarListRef.current?.openImport()
-              }}
-              type="text2"
-              icon={<OutlineImportIcon />}
-            />,
-            <YakitButton
-              key="add"
-              onClick={async () => {
-                try {
-                  const result = await ThirdPartyBinaryRunAsync()
-                  const targetInstallPlugins = reseultKnowledgePlugin(result)
-                  targetInstallPlugins
-                    ? InstallPluginModal({
-                        getContainer: '#main-operator-page-body-ai-agent',
-                        callback: () => {
-                          refreshPluginStatus()
-                        },
-                      })
-                    : knowledgeSidebarListRef.current?.openAdd()
-                } catch (error) {}
-              }}
-              type="text2"
-              icon={<OutlinePluscircleIcon />}
-            />,
-          ],
-        },
-        {
-          label: t('AIChatWelcome.skillBase'),
-          key: AIChatWelcomeTabKeyEnum.Skills,
-          children: <ForgeName ref={forgeNameRef} onSelectChange={setIsSelectForgeName} />,
-          extra: [
-            <YakitButton
-              key="batch-export"
-              onClick={() => {
-                forgeNameRef.current?.onBatchExport()
-              }}
-              type="text2"
-              icon={<OutlineExportIcon />}
-              disabled={!isSelectForgeName}
-            />,
-            <YakitButton
-              key="import"
-              onClick={() => {
-                forgeNameRef.current?.openImport()
-              }}
-              type="text2"
-              icon={<OutlineImportIcon />}
-            />,
-            <YakitButton
-              key="add"
-              onClick={() => {
-                forgeNameRef.current?.openAdd()
-              }}
-              type="text2"
-              icon={<OutlinePluscircleIcon />}
-            />,
-          ],
-        },
-        {
-          label: t('AIChatWelcome.toolBase'),
-          key: AIChatWelcomeTabKeyEnum.Tools,
-          children: <AIToolList />,
-          extra: [
-            <YakitButton
-              key="add"
-              onClick={() => {
-                handleAddAITool()
-              }}
-              type="text2"
-              icon={<OutlinePluscircleIcon />}
-            />,
-          ],
-        },
-      ]
-    }, [api, streams, installPlug, i18nRefresh, isSelectForgeName])
 
     const onSetInputValue = useMemoizedFn((v: string) => {
       aiChatTextareaRef.current?.setValue(v)
     })
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>
-        {/* <DoomFlameBackground /> */}
-        <div className={styles['open-file-tree-button']} onClick={() => setOpenDrawer(!openDrawer)}>
-          {t('AIChatWelcome.expandResources')}
-          <YakitButton type="text2" icon={<OutlineOpenIcon />} />
-        </div>
-
-        <YakitDrawer
-          width={298}
-          visible={openDrawer}
-          getContainer={false}
-          className={styles['drawer']}
-          mask={false}
-          placement="left"
-          style={{ transform: 'translateX(0)' }}
-          onClose={() => setOpenDrawer(false)}
-          closable={false}
-          title={
-            <div className={styles['drawer-title']}>
-              <span>{t('AIChatWelcome.expandResources')}</span>
-              <YakitButton onClick={() => setOpenDrawer(false)} type="text2" icon={<OutlineCloseIcon />} />
-            </div>
-          }
+        <DoomFlameBackground />
+        <div
+          className={classNames(styles['input-wrapper'], {
+            [styles['input-wrapper-compact']]: isCompact,
+          })}
         >
-          <SplitView
-            isVertical
-            elements={[
-              { element: <FileTreeList /> },
-              { element: <Tabs items={items} activeKey={tabActiveKey} onChange={handleTabChange} /> },
-            ]}
-            sashClassName={styles['split-view-line']}
-          />
-        </YakitDrawer>
-        <div className={styles['input-wrapper']}>
           <div className={styles['input-heard']}>
             <ColorsMemfitIcon className={styles['memfit-icon']} />
             <div className={styles['title']}>Memfit AI Agent</div>
             <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
           </div>
           <div className={styles['input-body-wrapper']}>
-            <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} />
+            <AIChatWelcomeIntroTips onSetInputValue={onSetInputValue} compact={isCompact} />
             <div className={styles['input-panel']}>
               <AIChatWelcomeSettingCard ref={settingCardRef} />
               <AIChatTextarea
@@ -285,7 +146,7 @@ const pickRandomWelcomeTips = (list: typeof welcomeTips) => {
   return copied.slice(0, Math.min(count, copied.length))
 }
 
-const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInputValue }) => {
+const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInputValue, compact }) => {
   const introTipsRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(introTipsRef)
   const [randomWelcomeTips, setRandomWelcomeTips] = useState(() => pickRandomWelcomeTips(welcomeTips))
@@ -296,9 +157,11 @@ const AIChatWelcomeIntroTips: FC<AIChatWelcomeIntroTipsProps> = memo(({ onSetInp
     }
   }, [inViewport])
 
+  const visibleTips = compact ? randomWelcomeTips.slice(0, 3) : randomWelcomeTips
+
   return (
     <div className={styles['intro-tips']} ref={introTipsRef}>
-      {randomWelcomeTips.map((item) => {
+      {visibleTips.map((item) => {
         return (
           <div
             key={item.text}

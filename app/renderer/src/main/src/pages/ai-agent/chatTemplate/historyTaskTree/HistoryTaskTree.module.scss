@@ -2,7 +2,48 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 0 12px;
+  min-height: 0;
+  overflow: auto;
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .section-title {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 32px;
+    cursor: pointer;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+
+    span {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 16px;
+      letter-spacing: 0.5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    svg {
+      flex-shrink: 0;
+      width: 12px;
+      height: 12px;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      transition: transform 0.2s ease;
+    }
+  }
+
+  .section-body {
+    min-height: 0;
+  }
+
   :global {
     .ant-collapse-header-text {
       overflow: hidden;

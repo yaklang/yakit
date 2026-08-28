@@ -4,7 +4,6 @@ import {
   OutlineChipIcon,
   OutlineCogIcon,
   OutlineMCPIcon,
-  OutlineSparklesIcon,
   OutlineWrenchIcon,
   OutlineBookOpenTextIcon,
   OutlineBotIcon,
@@ -40,7 +39,7 @@ import {
   SolidToolIcon,
 } from '@/assets/icon/solid'
 import type { MCPServerType } from './type/aiMCP'
-import { ColorsAIIcon } from '@/assets/icon/colors'
+import { ColorsAIIcon, ColorsChatIcon } from '@/assets/icon/colors'
 import type { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
 import type { ExportAIForgeRequest } from './forgeName/type'
 
@@ -48,7 +47,7 @@ import type { ExportAIForgeRequest } from './forgeName/type'
 export const YakitAIAgentPageID = 'yakit-ai-agent'
 
 export enum AIAgentTabListEnum {
-  History = 'history',
+  Session = 'session',
   Setting = 'setting',
   Forge_Name = 'forgeName',
   Tool = 'tool',
@@ -57,7 +56,11 @@ export enum AIAgentTabListEnum {
   KnowledgeBase = 'knowledgeBase',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
-  { value: AIAgentTabListEnum.History, label: 'AIAgentTabs.historyChat', icon: <OutlineSparklesIcon /> },
+  {
+    value: AIAgentTabListEnum.Session,
+    label: 'AIAgentTabs.session',
+    icon: <ColorsChatIcon className="ai-agent-session-tab-icon" />,
+  },
   { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <OutlineCogIcon /> },
   // {value: AIAgentTabListEnum.Forge_Name, label: "AIAgentTabs.skill", icon: <OutlineTemplateIcon />},
   // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},
@@ -168,16 +171,16 @@ export enum SwitchAIAgentTabEventEnum {
   SET_TAB_SHOW = 'setTabShow',
 }
 export enum AITabsEnum {
-  Task_Content = 'task-content',
-  File_System = 'file-system',
+  File_Preview = 'file-preview',
+  Task_Detail = 'task-detail',
   HTTP = 'http',
   Risk = 'risk',
   Operation_Log = 'operation-log',
 }
 /** @name AI 默认展示的tab集合 */
 export const AITabs = {
-  'task-content': { label: 'AITabs.taskContent', value: AITabsEnum.Task_Content },
-  'file-system': { label: 'AITabs.fileSystem', value: AITabsEnum.File_System },
+  'file-preview': { label: 'AITabs.fileSystem', value: AITabsEnum.File_Preview },
+  'task-detail': { label: 'AITabs.taskContent', value: AITabsEnum.Task_Detail },
   http: { label: 'AITabs.httpTraffic', value: AITabsEnum.HTTP },
   risk: { label: 'YakitRoute.vulnerabilityAndrisk', value: AITabsEnum.Risk },
   'operation-log': { label: 'AITabs.readWriteLog', value: AITabsEnum.Operation_Log },

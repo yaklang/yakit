@@ -41,7 +41,6 @@ const TimelineRow = memo(({ item }: { item: AIAgentGrpcApi.TimelineItem }) => {
 
         <YakitPopover
           overlayClassName={styles['timeline-popover']}
-          overlayStyle={{ paddingLeft: 4 }}
           placement="right"
           content={<div className={styles['timeline-popover-content']}>{item.content}</div>}
         >

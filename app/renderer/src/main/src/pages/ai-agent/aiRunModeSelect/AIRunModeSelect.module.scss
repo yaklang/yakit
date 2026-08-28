@@ -20,6 +20,12 @@
   }
 }
 
+@container ai-chat-textarea (max-width: 300px) {
+  .mode-btn-label {
+    display: none;
+  }
+}
+
 // 运行模式下拉
 .mode-menu {
   width: 215px;

@@ -19,6 +19,8 @@ textarea.qs-input-textarea {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  container-type: inline-size;
+  container-name: ai-chat-textarea;
 
   &:focus-within {
     min-height: 124px;

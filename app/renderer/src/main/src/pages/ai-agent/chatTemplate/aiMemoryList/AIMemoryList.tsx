@@ -1,25 +1,12 @@
 import React, { useState } from 'react'
-import type { AIMemoryContentProps, AIMemoryEchartsProps, AIMemoryListProps, AIMemoryScoreEchartsProps } from './type'
-import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import type { AIMemoryContentProps, AIMemoryEchartsProps, AIMemoryScoreEchartsProps } from './type'
+import { useCreation, useDebounceFn, useUpdateEffect } from 'ahooks'
 import styles from './AIMemoryList.module.scss'
-import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import ReactECharts, { type EChartsOption } from 'echarts-for-react'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import classNames from 'classnames'
-import ReactResizeDetector from 'react-resize-detector'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineTrashIcon } from '@/assets/icon/outline'
-import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { grpcDeleteAIMemoryEntity } from '@/pages/memoryBase/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
-import { useStore } from 'zustand'
-import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
-import useAIAgentDispatcher from '../../useContext/useDispatcher'
-import cloneDeep from 'lodash/cloneDeep'
-import { DefaultMemoryList } from '@/pages/ai-re-act/hooks/defaultConstant'
 
 const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
   return [
@@ -53,147 +40,6 @@ const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
     },
   ]
 }
-const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
-
-  const sessionId = useCurrentSessionId()
-  const store = useCurrentStore()
-  const rawData = useCurrentRawData()
-
-  const { onClose } = useAIAgentDispatcher()
-
-  const memoryListUpdate = useStore(store, (state) => state.memoryListUpdate)
-  const execute = useStore(store, (state) => state.execute)
-
-  const [width, setWidth] = useState<number>()
-
-  const [loading, setLoading] = useState<boolean>(false)
-
-  const [isClearMemory, setIsClearMemory] = useState<boolean>(false)
-
-  useDebounceEffect(
-    () => {
-      if (!isClearMemory) return
-      onClose([sessionId], () => {
-        onClearMemory()
-        setIsClearMemory(false)
-      })
-    },
-    [isClearMemory],
-    { wait: 1000 },
-  )
-
-  const list = useCreation(() => {
-    return rawData?.memoryList?.memories || []
-  }, [memoryListUpdate])
-
-  const echartsData: AIMemoryEchartsProps['data'] = useCreation(() => {
-    const data = rawData?.memoryList?.score_overview
-    const xData: string[] = []
-    const yData: number[] = []
-    Object.entries(data || {}).forEach(([key, value]) => {
-      xData.push(key.substring(0, 1))
-      yData.push(value)
-    })
-    return { xData, yData }
-  }, [memoryListUpdate])
-
-  const onClearMemoryConfirm = useMemoizedFn((e) => {
-    e.stopPropagation()
-    if (execute) {
-      setIsClearMemory(true)
-    } else {
-      onClearMemory()
-    }
-  })
-  const onClearMemory = useMemoizedFn(() => {
-    setLoading(true)
-    /** NOTE - 多会话清空记忆库，数据清空后其余会话会有新数据往记忆库中增加，导致看起来清空失败 */
-    grpcDeleteAIMemoryEntity({
-      Filter: {},
-    })
-      .then(() => {
-        rawData.memoryList = cloneDeep(DefaultMemoryList)
-        store.getState().updateStateCount('memoryListUpdate')
-      })
-      .finally(() => {
-        setTimeout(() => {
-          setLoading(false)
-        }, 200)
-      })
-  })
-  return (
-    <div className={styles['ai-memory-list-wrapper']}>
-      <div className={styles['ai-memory-list-heard']}>
-        <div className={styles['title']}>{t('AIMemoryList.recentMemory', { count: list.length })}</div>
-        <YakitPopconfirm title="清空会停止当前会话后再清空，是否确认清空所有记忆" onConfirm={onClearMemoryConfirm}>
-          <YakitButton
-            type="outline1"
-            icon={<OutlineTrashIcon />}
-            colors="danger"
-            size="small"
-            loading={isClearMemory || loading}
-          >
-            清空
-          </YakitButton>
-        </YakitPopconfirm>
-      </div>
-      <div className={styles['ai-memory-list-body-wrapper']}>
-        <RollingLoadList<AIAgentGrpcApi.MemoryEntry>
-          data={list}
-          loadMoreData={() => {}}
-          renderRow={(item, index) => (
-            <YakitPopover
-              placement="rightBottom"
-              key={item.id}
-              overlayClassName={styles['memory-popover-wrapper']}
-              content={<AIMemoryContent item={item} />}
-            >
-              <div key={item.id} className={styles['memory-item']}>
-                <div className={styles['memory-content']}>{item.content}</div>
-                <div className={styles['memory-tags']} title={item.tags.join(',')}>
-                  {item.tags.map((tag) => (
-                    <YakitTag size="small" key={tag} fullRadius={true}>
-                      {tag}
-                    </YakitTag>
-                  ))}
-                </div>
-              </div>
-            </YakitPopover>
-          )}
-          page={1}
-          hasMore={false}
-          loading={false}
-          defItemHeight={88}
-          classNameList={styles['ai-memory-list']}
-          classNameRow={styles['ai-memory-list-row']}
-          rowKey="id"
-        />
-      </div>
-      <div className={styles['ai-memory-list-footer']}>
-        <ReactResizeDetector
-          onResize={(w, h) => {
-            if (!w || !h) {
-              return
-            }
-            setWidth(w)
-          }}
-          handleWidth={true}
-          handleHeight={true}
-          refreshMode={'debounce'}
-          refreshRate={50}
-        />
-        <AIMemoryEcharts
-          data={echartsData}
-          className={styles['memory-footer-echarts']}
-          style={{ width: width || '100%', height: 40 }}
-        />
-      </div>
-    </div>
-  )
-})
-
-export default AIMemoryList
 
 export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props) => {
   const { item } = props
@@ -335,68 +181,6 @@ const AIMemoryScoreEcharts: React.FC<AIMemoryScoreEchartsProps> = React.memo((pr
   const onSetOption = useDebounceFn(
     () => {
       const newOption = getScoreOption(data)
-      setOption(newOption)
-    },
-    { wait: 500, leading: true },
-  ).run
-  return <ReactECharts {...rest} option={option} />
-})
-const getOption = (value: AIMemoryEchartsProps['data']): EChartsOption => {
-  const option: EChartsOption = {
-    grid: {
-      top: 4, // 上边距
-      right: 0, // 右边距
-      bottom: 20, // 下边距
-      left: 0, // 左边距
-    },
-    tooltip: {
-      trigger: 'axis',
-    },
-    color: ['#F8ABAB', '#FBD391', '#93DFC6', '#A1C9FF', '#C4B1FB', '#EDAEEF', '#97DEE8'],
-    colorBy: 'data',
-    xAxis: {
-      show: true,
-      type: 'category',
-      barMinHeight: 2,
-      data: value.xData,
-      axisLabel: {
-        show: true,
-        interval: 0,
-        color: '#5A5D64',
-      },
-      axisTick: {
-        show: false,
-      },
-      axisLine: {
-        show: false, // 确保显示
-        lineStyle: {
-          color: '#C0C6D1',
-          width: 1, // 线宽
-        },
-      },
-    },
-    yAxis: {
-      show: false,
-      type: 'value',
-    },
-    series: [
-      {
-        data: value.yData,
-        type: 'bar',
-      },
-    ],
-  }
-  return option
-}
-const AIMemoryEcharts: React.FC<AIMemoryEchartsProps> = React.memo((props) => {
-  const { data, ...rest } = props
-  const [option, setOption] = useState<EChartsOption>(getOption(data))
-  useUpdateEffect(() => {
-    onSetOption()
-  }, [data])
-  const onSetOption = useDebounceFn(
-    () => {
-      const newOption = getOption(data)
       setOption(newOption)
     },
     { wait: 500, leading: true },

@@ -9,6 +9,7 @@ import { OutlineChevrondownIcon, OutlineThoughtIcon } from '@/assets/icon/outlin
 import { AI_STREAM_THOUGHT_NODE_ID } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { useUiExpand } from '@/pages/ai-re-act/hooks/useUiExpand'
 import { useClickAway } from 'ahooks'
+import ThoughtDuration from '../thoughtDuration/ThoughtDuration'
 
 const STREAM_MASK_THRESHOLD = 100
 
@@ -35,7 +36,10 @@ const ThoughtStreamContent: React.FC<{
     <div className={styles['ai-stream-chat-content-thought']}>
       <div className={styles['thought-header']} onClick={() => setExpand((open) => !open)}>
         <OutlineThoughtIcon className={styles['thought-icon']} />
-        <span className={classNames({ [styles['thought-title-blink']]: streaming })}>{nodeLabel}</span>
+        <span className={classNames({ [styles['thought-title-blink']]: streaming })}>
+          {nodeLabel}
+          <ThoughtDuration persistKey={token} status={streaming ? 'start' : 'end'} />
+        </span>
         <OutlineChevrondownIcon
           className={classNames(styles['thought-chevron'], {
             [styles['thought-chevron-collapsed']]: !expand,
