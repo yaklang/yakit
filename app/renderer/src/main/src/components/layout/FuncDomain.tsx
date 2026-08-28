@@ -2174,9 +2174,13 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       {
         isRead: 'false',
       },
-    ).then((res) => {
-      setMessageList(res.data || [])
-    })
+    )
+      .then((res) => {
+        setMessageList(res.data || [])
+      })
+      .catch((err) => {
+        failed(err)
+      })
   })
 
   // 初始化获取消息中心
@@ -2208,11 +2212,15 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     apiFetchMessageRead({
       isAll: true,
       hash: '',
-    }).then((ok) => {
-      if (ok) {
-        onFetchMessage()
-      }
     })
+      .then((ok) => {
+        if (ok) {
+          onFetchMessage()
+        }
+      })
+      .catch((err) => {
+        failed(err)
+      })
   })
 
   const notice = useMemo(() => {
