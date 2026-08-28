@@ -37,11 +37,6 @@ const reorder = <T,>(list: T[], startIndex: number, endIndex: number) => {
   return result
 }
 
-/** 透传 dnd 的位置样式，保持拖拽跟随 */
-const getItemStyle = (isDragging, draggableStyle) => ({
-  ...draggableStyle,
-})
-
 interface ManageRightClickPluginsProps {}
 const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
   // #region 基础 Hook 与可见性
@@ -106,12 +101,15 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
   // #endregion
 
   // #region 数据刷新
+  const refreshSeqRef = useRef(0)
   const refreshSelectedPlugins = useMemoizedFn(async () => {
+    const seq = ++refreshSeqRef.current
     const tabKey = currentTabKeyRef.current
     const scene = getGroupTabByKey(tabKey)?.scene
     if (!scene) return
     try {
       const actions = await fetchSceneActions(tabKey)
+      if (seq !== refreshSeqRef.current) return
       updateActionsByTab((prev) => ({ ...prev, [tabKey]: actions.filter((action) => action.Enabled) }))
       setAvailableActions(actions)
     } catch {}
@@ -160,11 +158,15 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
   // #endregion
 
   // #region 已选插件的增删改操作
+  /** 绑定保存串行锁：多步保存（拖拽重排 / 插入后移）进行中时忽略新的增删拖拽，避免交叉写入导致服务端顺序错乱 */
+  const bindingSavingRef = useRef(false)
   /**
    * 添加动作到已选列表（按钮点击 / 右侧拖入）
    * 每 tab 上限 UpperLimit 个
+   * 与拖拽排序一致：插入后整体归一 Sort，只保存「新插入项 + Sort 变化的既有项」
    */
   const addActionToSelected = useMemoizedFn(async (action: ContextMenuAction, insertIndex?: number) => {
+    if (bindingSavingRef.current) return
     const tabKey = currentTabKeyRef.current
     const currentList = actionsByTabRef.current[tabKey] || []
     if (currentList.length >= UpperLimit) {
@@ -173,13 +175,25 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
     }
     if (currentList.some((i) => i.ActionID === action.ActionID && i.PluginUUID === action.PluginUUID)) return
 
+    const insertPos = typeof insertIndex === 'number' ? Math.min(insertIndex, currentList.length) : currentList.length
     const next = [...currentList]
-    const sort = typeof insertIndex === 'number' ? insertIndex : next.length
-    const ok = await saveBinding(action, true, sort)
-    if (!ok) return
-
-    next.splice(Math.min(sort, next.length), 0, action)
-    updateActionsByTab((prev) => ({ ...prev, [tabKey]: next }))
+    next.splice(insertPos, 0, action)
+    // 新插入项（对象引用相等）必保存；其余仅保存 Sort 与新下标不同的项
+    const normalized = next.map((item, index) => ({ ...item, Sort: index }))
+    const changed = normalized.filter((_, index) => next[index] === action || next[index].Sort !== index)
+    bindingSavingRef.current = true
+    try {
+      updateActionsByTab((prev) => ({ ...prev, [tabKey]: normalized }))
+      for (const item of changed) {
+        const ok = await saveBinding(item, true, item.Sort)
+        if (!ok) {
+          refreshSelectedPlugins()
+          return
+        }
+      }
+    } finally {
+      bindingSavingRef.current = false
+    }
   })
 
   /** 点击右侧的“添加”按钮 */
@@ -189,6 +203,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
 
   /** 移除插件（核心插件锁定不可移除） */
   const onRemovePlugin = useMemoizedFn(async (action: ContextMenuAction) => {
+    if (bindingSavingRef.current) return
     if (action.Locked || action.IsCorePlugin) return
     const tabKey = currentTabKeyRef.current
     const ok = await saveBinding(action, false, action.Sort, '')
@@ -203,6 +218,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
 
   /** 清空当前 tab 已选插件（核心插件保留） */
   const onClearSelectedPlugins = useMemoizedFn(async () => {
+    if (bindingSavingRef.current) return
     const tabKey = currentTabKeyRef.current
     const currentList = actionsByTabRef.current[tabKey] || []
     const removable = currentList.filter((action) => !action.Locked && !action.IsCorePlugin)
@@ -224,26 +240,31 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
 
     // 已选列表内排序：按新顺序重发 Sort
     if (result.source.droppableId === DROP_SELECTED && result.destination.droppableId === DROP_SELECTED) {
+      if (bindingSavingRef.current) return
       const tabKey = currentTabKeyRef.current
       const currentList = actionsByTabRef.current[tabKey] || []
-      const next = reorder(currentList, result.source.index, result.destination.index)
-      updateActionsByTab((prev) => ({ ...prev, [tabKey]: next }))
-      for (let index = 0; index < next.length; index++) {
-        const action = next[index]
-        if (action.Sort !== index) {
-          const ok = await saveBinding(action, true, index)
+      const reordered = reorder(currentList, result.source.index, result.destination.index)
+      const next = reordered.map((item, index) => ({ ...item, Sort: index }))
+      const changed = next.filter((_, index) => reordered[index].Sort !== index)
+      bindingSavingRef.current = true
+      try {
+        updateActionsByTab((prev) => ({ ...prev, [tabKey]: next }))
+        for (const item of changed) {
+          const ok = await saveBinding(item, true, item.Sort)
           if (!ok) {
             refreshSelectedPlugins()
             return
           }
         }
+      } finally {
+        bindingSavingRef.current = false
       }
       return
     }
 
-    // 右侧可用动作拖入已选列表
+    // 右侧可用动作拖入已选列表（source.index 是渲染列表下标，须从过滤后的列表取值）
     if (result.source.droppableId === DROP_AVAILABLE && result.destination.droppableId === DROP_SELECTED) {
-      const currentAction = availableActions[result.source.index]
+      const currentAction = filteredAvailableActions[result.source.index]
       if (!currentAction) return
       addActionToSelected(currentAction, result.destination.index)
     }
@@ -330,7 +351,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
                             ref={providedItem.innerRef}
                             {...providedItem.draggableProps}
                             {...providedItem.dragHandleProps}
-                            style={getItemStyle(snapshot.isDragging, providedItem.draggableProps.style)}
+                            style={providedItem.draggableProps.style}
                           >
                             <SelectedPluginItem
                               plugin={item}
@@ -527,7 +548,7 @@ const AvailablePluginList: React.FC<AvailablePluginListProps> = React.memo((prop
                       ref={providedItem.innerRef}
                       {...providedItem.draggableProps}
                       {...providedItem.dragHandleProps}
-                      style={getItemStyle(snapshot.isDragging, providedItem.draggableProps.style)}
+                      style={providedItem.draggableProps.style}
                     >
                       <AvailablePluginItem
                         plugin={data}
@@ -584,22 +605,13 @@ const AvailablePluginItem: React.FC<AvailablePluginItemProps> = React.memo((prop
       ref={pluginRef}
     >
       <div className={styles['available-item-left']}>
-        {plugin.HeadImg ? (
-          <img
-            alt=""
-            src={plugin.HeadImg}
-            className={classNames(styles['available-item-avatar'], {
-              [styles['item-disabled']]: isAdded,
-            })}
-          />
-        ) : (
-          <Avatar
-            className={styles['plugin-avatar']}
-            src={plugin.HeadImg || ''}
-            icon={<PrivateOutlineDefaultPluginIcon />}
-          />
-        )}
-
+        <Avatar
+          className={classNames(styles['available-item-avatar'], {
+            [styles['item-disabled']]: isAdded,
+          })}
+          src={plugin.HeadImg || ''}
+          icon={<PrivateOutlineDefaultPluginIcon />}
+        />
         <span
           className={classNames(styles['available-item-name'], {
             [styles['item-disabled']]: isAdded,

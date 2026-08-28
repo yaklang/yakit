@@ -9,6 +9,7 @@ import type {
   SetContextMenuActionBindingRequest,
 } from './types'
 import { ContextMenuExecutionType } from './types'
+import { cloneDeep } from 'lodash'
 const tOriginal = i18n.getFixedT(null, 'manageRightClickPlugins')
 
 const { ipcRenderer } = window.require('electron')
@@ -26,7 +27,8 @@ export const grpcQueryContextMenuActions: APIOptionalFunc<
         const Actions = (res.Actions || []).filter(
           (action) => action.ExecutionType !== ContextMenuExecutionType.LegacyPacketMutate,
         )
-        resolve({ ...res, Actions })
+        const d = cloneDeep(Actions)
+        resolve({ ...res, Actions: d })
       })
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('grpc.queryContextMenuActionsFailed', { error: String(e) }))

@@ -1231,7 +1231,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     onFoldBinaryFuzztagChange={props.onFoldBinaryFuzztagChange}
                     contextMenuPacket={{
                       role: isResponse ? 'response' : 'request',
-                      httpFlowId: props.downbodyParams?.Id,
                       httpsState: props.defaultHttps === undefined ? undefined : props.defaultHttps ? 'https' : 'http',
                       source: props.fromMITM ? 'MITM' : 'http-packet-editor',
                       ...props.contextMenuPacket,

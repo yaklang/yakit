@@ -76,6 +76,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     onCacheExecuteConfig,
     onExecutionStop,
   } = props
+  const { t } = useI18nNamespaces(['manageRightClickPlugins'])
 
   const [form] = Form.useForm()
   const isContextMenuPlugin = plugin.Type === 'context-menu'
@@ -118,7 +119,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     return ParamsToGroupByGroupName(paramsList)
   }, [plugin.Params])
   useEffect(() => {
-    if (['yak', 'mitm', 'codec', 'context-menu'].includes(plugin.Type)) {
+    if (['yak', 'mitm', 'codec'].includes(plugin.Type)) {
       initFormValue()
     } else {
       form.resetFields()
@@ -234,7 +235,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   useEffect(() => {
     if (initialExecuteConfig) initFormValue(false)
   }, [initialExecuteConfig])
-  /**yak/lua 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
+  /**yak 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
   const pluginParamsNodeByPluginType = useMemoizedFn((type: string) => {
     switch (type) {
       case 'yak':
@@ -305,7 +306,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   /**开始执行 */
   const onStartExecute = useMemoizedFn((value) => {
     if (isContextMenuPlugin) {
-      failed('右键插件需要从对应的 History 或 HTTP 数据包场景触发')
+      failed(t('pluginEditor.contextMenuRunFromScene'))
       return
     }
     let yakExecutorParams: YakExecutorParam[] = []
@@ -519,10 +520,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         })}
       >
         {isContextMenuPlugin ? (
-          <YakitEmpty
-            style={{ marginTop: 60 }}
-            description="保存并在右键插件管理中启用后，从对应的 History 或 HTTP 数据包场景触发执行"
-          />
+          <YakitEmpty style={{ marginTop: 60 }} description={t('pluginEditor.contextMenuEnableAndTrigger')} />
         ) : (
           <Form
             form={form}

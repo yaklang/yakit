@@ -3,7 +3,7 @@
     "editRightClickPlugins": "Edit Right-Click Plugins",
     "pluginExtensionSingle": "History Context Menu Plugin (Single)",
     "pluginExtensionMultiple": "History Context Menu Plugin (Multiple)",
-    "packetContextMenu": "Packet Plugin Extension",
+    "packetContextMenu": "Packet Context Menu Plugin",
     "addedPluginsCount": "Added {{count}} / {{UpperLimit}}",
     "clearConfirm": "Clear all added plugins for the current tab?",
     "noPluginAdded": "No plugins added",
@@ -35,6 +35,12 @@
     "sourceCodeNotFound": "Plugin source not found",
     "requiredField": "${label} is required",
     "sourceTab": "Source"
+  },
+  "pluginEditor": {
+    "contextMenuSaveBeforeRun": "Right-click plugins must be saved first, then triggered from the corresponding History or HTTP packet scenario",
+    "contextMenuRunFromScene": "Right-click plugins must be triggered from the corresponding History or HTTP packet scenario",
+    "contextMenuSaveAndTrigger": "After saving the plugin, trigger it from the History or HTTP packet right-click menu",
+    "contextMenuEnableAndTrigger": "After saving and enabling the plugin in right-click plugin management, trigger it from the corresponding History or HTTP packet scenario"
   },
   "grpc": {
     "queryContextMenuActionsFailed": "Failed to query context menu plugins: {{error}}",

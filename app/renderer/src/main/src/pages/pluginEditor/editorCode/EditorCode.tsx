@@ -55,6 +55,7 @@ import '../../plugins/plugins.scss'
 import styles from './EditorCode.module.scss'
 import { getJsonSchemaListResult } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import { delInvalidPluginExecuteParams } from '../utils/convert'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface EditorCodeRefProps {
   onSubmit: () => string
@@ -74,6 +75,7 @@ interface EditorCodeProps {
 export const EditorCode: React.FC<EditorCodeProps> = memo(
   forwardRef((props, ref) => {
     const { expand, onExpand, isEdit = false, type, name, code, handleParsingYaml } = props
+    const { t } = useI18nNamespaces(['manageRightClickPlugins'])
 
     const [visible, setVisible] = useState<boolean>(false)
     const handleExpand = useMemoizedFn((e) => {
@@ -162,7 +164,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
       [key: string]: any
     }>({})
 
-    // 设置非(yak|lua|mitm|codec)类型的插件参数初始值
+    // 设置非(yak|mitm|codec|context-menu)类型的插件参数初始值
     const onSettingDefault = useMemoizedFn(() => {
       const defaultValue: CustomPluginExecuteFormValue = { ...defPluginExecuteFormValue, requestType: 'input' }
       form.setFieldsValue({ ...cloneDeep(defaultValue) })
@@ -408,7 +410,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
     const onStartExecute = useMemoizedFn(() => {
       if (type === 'context-menu') {
-        yakitNotify('info', '右键插件需要保存后，从对应的 History 或 HTTP 数据包场景触发')
+        yakitNotify('info', t('pluginEditor.contextMenuSaveBeforeRun'))
         return
       }
       if (form) {
@@ -592,9 +594,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                   <YakitEmpty
                     style={{ marginTop: 60 }}
                     description={
-                      type === 'context-menu'
-                        ? '保存插件后，从对应的 History 或 HTTP 数据包右键菜单触发执行'
-                        : '点击【执行】以开始'
+                      type === 'context-menu' ? t('pluginEditor.contextMenuSaveAndTrigger') : '点击【执行】以开始'
                     }
                   />
                 )}

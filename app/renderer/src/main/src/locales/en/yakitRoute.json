@@ -129,6 +129,7 @@
     "ai-memory": "Memory Base",
     "ai-tool": "Tool",
     "ai-forge": "Forge",
-    "manageRightClickPlugins": "Manage Right-Click Plugins"
+    "manageRightClickPlugins": "Manage Right-Click Plugins",
+    "contextMenuResult": "Right-Click Plugin Result"
   }
 }

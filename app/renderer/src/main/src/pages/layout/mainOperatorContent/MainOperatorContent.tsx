@@ -681,7 +681,7 @@ import { setChildWindowHash } from '@/utils/childWindowHash'
 export { getChildWindowHash, setChildWindowHash } from '@/utils/childWindowHash'
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
   const { routeKeyToLabel } = props
-  const { t, i18n } = useI18nNamespaces(['layout'])
+  const { t, i18n } = useI18nNamespaces(['layout', 'yakitRoute'])
   const { theme } = useTheme()
 
   const [loading, setLoading] = useState(false)
@@ -1316,7 +1316,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const addContextMenuResult = useMemoizedFn((data) => {
     if (!data?.executionID) return
     openMenuPage(
-      { route: YakitRoute.ContextMenuResult, pluginName: data.pluginName || '右键插件结果' },
+      { route: YakitRoute.ContextMenuResult, pluginName: data.pluginName || t('YakitRoute.contextMenuResult') },
       {
         pageParams: {
           contextMenuResultPageInfo: { ...data },

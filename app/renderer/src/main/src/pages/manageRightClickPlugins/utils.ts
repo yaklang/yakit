@@ -9,11 +9,6 @@ import { SystemInfo } from '@/constants/hardware'
 const tOriginal = i18n.getFixedT(null, 'manageRightClickPlugins')
 
 /**
- * 右键插件功能版本基线：1.4.8-beta14（含）之前的引擎尚无该功能，下一个版本才发布，
- */
-const MIN_CONTEXT_MENU_VERSION = '1.4.8-beta14'
-
-/**
  * 版本号比较（numeric 逐段比较，支持 beta 后缀数字）
  * @param a 当前版本
  * @param b 比较版本
@@ -29,9 +24,9 @@ function compare(a: string, b: string) {
 export const checkContextMenuVersion = (hide?: boolean): Promise<boolean> => {
   return grpcFetchLocalYakVersion(true)
     .then((localVersion) => {
-      const isValid = compare(localVersion, MIN_CONTEXT_MENU_VERSION)
+      const isValid = compare(localVersion, '1.4.8-beta14')
       if (!localVersion.includes('dev') && SystemInfo.mode === 'local' && !isValid) {
-        !hide && yakitFailed(tOriginal('utils.engineVersionTooLow', { version: MIN_CONTEXT_MENU_VERSION }))
+        !hide && yakitFailed(tOriginal('utils.engineVersionTooLow', { version: '1.4.8-beta14' }))
         return false
       }
       return true

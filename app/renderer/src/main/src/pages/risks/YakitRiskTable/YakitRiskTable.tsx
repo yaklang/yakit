@@ -1682,6 +1682,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         ? { Id: showPacket.HttpflowId, IsRequest: isRequest }
         : { IsRisk: true, Id: showPacket.Id, IsRequest: isRequest },
       contextMenuPacket: {
+        httpFlowId: showPacket.HttpflowId,
         peerValue: isRequest ? responseString(showPacket) : requestString(showPacket),
       },
     }

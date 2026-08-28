@@ -85,16 +85,13 @@ const isRequiredParamMissing = (params: YakParamProps[], values: YakExecutorPara
   )
 }
 
-export const runContextMenuAction = (options: RunContextMenuActionOptions) => {
-  emiter.emit('runContextMenuAction', options)
-}
-
 /**
  * 职责：接收 runContextMenuAction 事件 → 决定是否弹参数框 → 注册执行并打开结果页
  */
 export const ContextMenuExecutionHost: React.FC = React.memo(() => {
   const { t } = useI18nNamespaces(['manageRightClickPlugins'])
   const pendingRef = useRef<RunContextMenuActionOptions>()
+  const loadingRef = useRef<boolean>(false)
   const [paramsVisible, setParamsVisible] = useState(false)
   const [paramsModalValue, setParamsModalValue] = useState<ParamsModalValue>(emptyParamsModalValue)
 
@@ -178,6 +175,8 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
    * 两个选项独立，可只保存不执行、也可保存并执行
    */
   const onOkParamsModal = useMemoizedFn((save: boolean, exec: boolean, params: YakExecutorParam[]) => {
+    if (loadingRef.current) return
+    loadingRef.current = true
     const pending = pendingRef.current
     if (!pending) {
       setParamsVisible(false)
@@ -192,6 +191,8 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
       if (exec) launch(pending, params)
     } catch (error) {
       yakitNotify('error', t('ContextMenuExecutionHost.executeFailed', { error: `${error}` }))
+    } finally {
+      loadingRef.current = false
     }
     pendingRef.current = undefined
     setParamsVisible(false)

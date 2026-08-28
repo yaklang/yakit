@@ -42,7 +42,6 @@ import { GetPluginLanguage } from '@/pages/plugins/builtInData'
 import { setEditorContext, YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
-import { CloudDownloadIcon } from '@/assets/newIcon'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import {
   getStorageYakEditorShortcutKeyEvents,
@@ -83,7 +82,7 @@ import { SystemInfo } from '@/constants/hardware'
 import { fetchEditorFullContent } from './editorUtils'
 import { StringToUint8Array } from '@/utils/str'
 import { yakitNotify } from '@/utils/notification'
-import { runContextMenuAction } from '@/pages/manageRightClickPlugins/ContextMenuExecutionHost'
+import { runContextMenuAction } from '@/pages/manageRightClickPlugins/runContextMenuAction'
 import {
   ContextMenuExecutionType,
   type ContextMenuAction,
@@ -439,13 +438,21 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   /** 数据包内容版本（FNV-1a hash），插件执行回来后校验内容是否变化 */
   const packetRevision = (request: string | undefined, response: string | undefined) => {
-    const input = `request:${request === undefined ? 'missing' : request}\nresponse:${response === undefined ? 'missing' : response}`
     let hash = 2166136261
-    for (let index = 0; index < input.length; index++) {
-      hash ^= input.charCodeAt(index)
-      hash = Math.imul(hash, 16777619)
+    let length = 0
+    // 片段式更新，避免为哈希拼接 request/response 全量内容的大字符串
+    const update = (fragment: string) => {
+      length += fragment.length
+      for (let index = 0; index < fragment.length; index++) {
+        hash ^= fragment.charCodeAt(index)
+        hash = Math.imul(hash, 16777619)
+      }
     }
-    return `v1-${input.length}-${(hash >>> 0).toString(16)}`
+    update('request:')
+    update(request === undefined ? 'missing' : request)
+    update('\nresponse:')
+    update(response === undefined ? 'missing' : response)
+    return `v1-${length}-${(hash >>> 0).toString(16)}`
   }
 
   /** context-menu 类型插件在编辑器场景的触发：以当前编辑器内容(可含另一侧)为数据包执行，并支持回填 */

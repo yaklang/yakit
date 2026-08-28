@@ -3,7 +3,7 @@
     "editRightClickPlugins": "編輯右鍵外掛",
     "pluginExtensionSingle": "History 右鍵外掛（單選）",
     "pluginExtensionMultiple": "History 右鍵外掛（多選）",
-    "packetContextMenu": "資料包外掛擴展",
+    "packetContextMenu": "資料包右鍵外掛",
     "addedPluginsCount": "已新增外掛 {{count}} / {{UpperLimit}}",
     "clearConfirm": "確定清空目前已新增外掛嗎？",
     "noPluginAdded": "暫未新增外掛",
@@ -35,6 +35,12 @@
     "sourceCodeNotFound": "未找到外掛原始碼",
     "requiredField": "${label} 是必填欄位",
     "sourceTab": "原始碼"
+  },
+  "pluginEditor": {
+    "contextMenuSaveBeforeRun": "右鍵外掛需要儲存後，從對應的 History 或 HTTP 資料包場景觸發",
+    "contextMenuRunFromScene": "右鍵外掛需要從對應的 History 或 HTTP 資料包場景觸發",
+    "contextMenuSaveAndTrigger": "儲存外掛後，從對應的 History 或 HTTP 資料包右鍵選單觸發執行",
+    "contextMenuEnableAndTrigger": "儲存並在右鍵外掛管理中啟用後，從對應的 History 或 HTTP 資料包場景觸發執行"
   },
   "grpc": {
     "queryContextMenuActionsFailed": "查詢右鍵外掛失敗: {{error}}",

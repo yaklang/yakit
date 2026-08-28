@@ -1097,7 +1097,6 @@ export const apiDebugPlugin: (request: {
           break
         case 'mitm':
         case 'codec':
-        case 'context-menu':
           executeParams.ExecParams = delInvalidPluginExecuteParams(executeParams.ExecParams, pluginCustomParams)
           break
         case 'port-scan':

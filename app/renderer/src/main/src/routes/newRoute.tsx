@@ -113,8 +113,8 @@ import type {
   AIRepositoryProps,
   PluginOpPageInfoProps,
   CodecPageInfoProps,
-  manageRightClickPluginsPageInfoProps,
-  contextMenuResultPageInfoProps,
+  ManageRightClickPluginsPageInfoProps,
+  ContextMenuResultPageInfoProps,
 } from '@/store/pageInfo'
 import {
   CommunityDeprecatedFirstMenu,
@@ -822,10 +822,10 @@ export interface ComponentParams {
   pluginOpPageInfo?: PluginOpPageInfoProps
 
   /** 管理右键插件页面 */
-  manageRightClickPluginsPageInfo?: manageRightClickPluginsPageInfoProps
+  manageRightClickPluginsPageInfo?: ManageRightClickPluginsPageInfoProps
 
   /** 右键插件执行结果页面 */
-  contextMenuResultPageInfo?: contextMenuResultPageInfoProps
+  contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
   return function WithPage(props) {

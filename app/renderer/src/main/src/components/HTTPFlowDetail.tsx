@@ -473,6 +473,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         downstreamProxyStr={props.downstreamProxyStr}
                         downbodyParams={{ Id: flow.Id, IsRequest: true }}
                         contextMenuPacket={{
+                          httpFlowId: flow.Id,
                           peerValue: flow.ResponseString || undefined,
                           source: props.pageType || 'History',
                         }}
@@ -530,6 +531,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         downstreamProxyStr={props.downstreamProxyStr}
                         downbodyParams={{ Id: flow.Id, IsRequest: false }}
                         contextMenuPacket={{
+                          httpFlowId: flow.Id,
                           peerValue: flow.RequestString || undefined,
                           source: props.pageType || 'History',
                         }}
@@ -1944,6 +1946,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             url={flow.Url}
             downbodyParams={{ Id: flow.Id, IsRequest: true }}
             contextMenuPacket={{
+              httpFlowId: flow.Id,
               peerValue: flow.ResponseString || undefined,
               source: pageType || 'History',
             }}
@@ -2083,6 +2086,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             url={flow.Url}
             downbodyParams={{ Id: flow.Id, IsRequest: false }}
             contextMenuPacket={{
+              httpFlowId: flow.Id,
               peerValue: flow.RequestString || undefined,
               source: pageType || 'History',
             }}

@@ -38,7 +38,7 @@ import { isHTTPFlowFavorite } from './HTTPFlowTable.utils'
 import style from './HTTPFlowTable.module.scss'
 import { PLUGIN_PREFIX, PLUGIN_RIGHT_MAG } from '../yakitUI/YakitEditor/YakitEditor'
 import { YakitRoute } from '@/enums/yakitRoute'
-import { runContextMenuAction } from '@/pages/manageRightClickPlugins/ContextMenuExecutionHost'
+import { runContextMenuAction } from '@/pages/manageRightClickPlugins/runContextMenuAction'
 import { checkContextMenuVersion } from '@/pages/manageRightClickPlugins/utils'
 import { ContextMenuExecutionType, type ContextMenuHttpsState } from '@/pages/manageRightClickPlugins/types'
 
@@ -615,13 +615,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       const menuItemName = keyPath[0]
 
       const emitPluginEvent = (child: HistoryMenuData, isExec: boolean, scriptName: string) => {
-        // 与 feat 对齐的防御性闸门：空选/超 200 条不发执行
         if (!rows.length) {
           yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
-          return
-        }
-        if (rows.length > 200) {
-          yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: 200 }))
           return
         }
         // context-menu 类型走新流式执行接口，legacy-codec-* 保持原 codec 执行链路
@@ -691,12 +686,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             // }
             // // 当子为插件时
             // emitPluginEvent(child, true, getScriptName(child.key))
-            return
-          }
-
-          // 全选状态检查
-          if (isAllSelect) {
-            yakitNotify('warning', t('HTTPFlowTable.batchOperationNoSelectAll'))
             return
           }
 
@@ -941,10 +930,27 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
   const onMultipleClick = useMemoizedFn(async (key: string, keyPath: string[]) => {
     const batchContextMenu = getBatchContextMenu()
-
     const menuName = keyPath[keyPath.length - 1]
+
     if (menuName.startsWith('pluginExtension')) {
-      onPluginExtensionHandle({ key, keyPath, id: selectedRowKeys, rows: selectedRows, menu: batchContextMenu })
+      if (key.startsWith(PLUGIN_RIGHT_MAG)) {
+        onPluginExtensionHandle({ key, keyPath, id: [], rows: [], menu: batchContextMenu })
+        return
+      }
+      let sendIds: string[] = selectedRowKeys
+      let sendRows: HTTPFlow[] = selectedRows
+      if (isAllSelect) {
+        if (total > 200) {
+          yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: 200 }))
+          return
+        }
+        sendIds = data.map((item) => item.Id + '')
+        sendRows = data
+      } else if (sendIds.length > 200) {
+        yakitNotify('warning', t('HTTPFlowTable.maxSendData', { number: 200 }))
+        return
+      }
+      onPluginExtensionHandle({ key, keyPath, id: sendIds, rows: sendRows, menu: batchContextMenu })
       setSelectedRowKeys([])
       setSelectedRows([])
       return

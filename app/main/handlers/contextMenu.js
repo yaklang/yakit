@@ -28,8 +28,10 @@ module.exports = (win, getClient) => {
 
   ipcMain.handle('ExecuteContextMenuAction', (event, params, token) => {
     const { mapToken, eventToken } = handlerHelper.resolveRendererStreamToken(event, win, token)
-    if (executeStreams.has(mapToken)) {
-      throw new Error('context-menu execution token already exists')
+    const staleStream = executeStreams.get(mapToken)
+    if (staleStream) {
+      executeStreams.delete(mapToken)
+      staleStream.cancel?.()
     }
 
     const stream = getClient().ExecuteContextMenuAction(params)

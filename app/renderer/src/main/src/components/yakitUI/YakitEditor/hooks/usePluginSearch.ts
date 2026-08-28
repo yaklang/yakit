@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 import type { YakScript } from '@/pages/invoker/schema'

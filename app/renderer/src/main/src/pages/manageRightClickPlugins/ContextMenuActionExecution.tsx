@@ -48,8 +48,6 @@ const ExecutionStatus = {
   Waiting: 'Waiting',
   /** 引擎已开始执行 */
   Running: 'Running',
-  /** 用户点了停止，等待取消完成 */
-  Cancelling: 'Cancelling',
   /** 正常结束 */
   Completed: 'Completed',
   /** 用户取消 / 引擎取消 */
@@ -77,7 +75,7 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
     // #endregion
 
     // #region 执行状态与流
-    const [token] = useState(() => randomString(40))
+    const token = useRef<string>(randomString(40))
     const [runtimeID, setRuntimeID] = useState('')
     const [loading, setLoading] = useState(true)
     const [status, setStatus] = useState<string>(ExecutionStatus.Waiting)
@@ -91,7 +89,7 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
     const [streamInfo, streamActions] = useHoldGRPCStream({
       taskName: execution?.action.PluginName || t('ContextMenuActionExecution.pluginFallbackName'),
       apiKey: 'ExecuteContextMenuAction',
-      token,
+      token: token.current,
       waitTime: 200,
       isShowEnd: false,
       isShowError: false,
@@ -170,7 +168,7 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
           ActionID: execution.action.ActionID,
           Params: params ?? execution.params ?? [],
         },
-        token,
+        token.current,
       ).catch((error) => {
         setStatus(ExecutionStatus.Failed)
         setLoading(false)
@@ -178,12 +176,12 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
       })
     })
 
-    /** 停止执行 */
     const onStopExecute = useMemoizedFn((e) => {
       e.stopPropagation()
       cancelRequestedRef.current = true
-      cancelContextMenuAction(token)
-      setStatus(ExecutionStatus.Cancelling)
+      cancelContextMenuAction(token.current)
+      setStatus(ExecutionStatus.Cancelled)
+      setLoading(false)
     })
 
     /** 表单提交：必填表单值 + 抽屉选填值合并转 YakExecutorParam[] 后执行 */
@@ -312,8 +310,8 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
         return
       }
 
-      const eventChannel = `${token}-context-menu-event`
-      const errorChannel = `${token}-context-menu-error`
+      const eventChannel = `${token.current}-context-menu-event`
+      const errorChannel = `${token.current}-context-menu-error`
       const onEvent = (_event, data: ContextMenuActionEvent) => {
         if (data.RuntimeID) setRuntimeID(data.RuntimeID)
         switch (data.Status) {
@@ -365,10 +363,10 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
       return () => {
         ipcRenderer.removeListener(eventChannel, onEvent)
         ipcRenderer.removeListener(errorChannel, onError)
-        cancelContextMenuAction(token)
+        cancelContextMenuAction(token.current)
         removeContextMenuExecution(executionID)
       }
-    }, [executionID, token])
+    }, [executionID])
     // #endregion
 
     // #region 渲染物料：头部信息与操作按钮

@@ -821,8 +821,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 hint={isBanOperate.hint}
                 onClick={onPass}
               />
-              {/* 禁用状态隐藏调试功能 */}
-              {!isBanOperate.isBan && (
+              {/* 禁用状态隐藏调试功能；右键插件(context-menu)不支持调试页执行 */}
+              {!isBanOperate.isBan && plugin?.type !== 'context-menu' && (
                 <HubButton
                   width={wrapperWidth}
                   iconWidth={1100}

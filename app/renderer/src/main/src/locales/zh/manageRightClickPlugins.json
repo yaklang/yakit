@@ -3,7 +3,7 @@
     "editRightClickPlugins": "编辑右键插件",
     "pluginExtensionSingle": "history右键插件（单选）",
     "pluginExtensionMultiple": "history右键插件（多选）",
-    "packetContextMenu": "数据包插件扩展",
+    "packetContextMenu": "数据包右键插件",
     "addedPluginsCount": "已添加插件 {{count}} / {{UpperLimit}}",
     "clearConfirm": "确定清空当前已添加插件吗？",
     "noPluginAdded": "暂未添加插件",
@@ -35,6 +35,12 @@
     "sourceCodeNotFound": "未找到插件源码",
     "requiredField": "${label} 是必填字段",
     "sourceTab": "源码"
+  },
+  "pluginEditor": {
+    "contextMenuSaveBeforeRun": "右键插件需要保存后，从对应的 History 或 HTTP 数据包场景触发",
+    "contextMenuRunFromScene": "右键插件需要从对应的 History 或 HTTP 数据包场景触发",
+    "contextMenuSaveAndTrigger": "保存插件后，从对应的 History 或 HTTP 数据包右键菜单触发执行",
+    "contextMenuEnableAndTrigger": "保存并在右键插件管理中启用后，从对应的 History 或 HTTP 数据包场景触发执行"
   },
   "grpc": {
     "queryContextMenuActionsFailed": "查询右键插件失败: {{error}}",
