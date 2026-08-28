@@ -377,6 +377,61 @@ describe('ChatMultiSessionController start / send / history', () => {
     expect(ctrl.ensureSession('s-skip').store.getState().skipSubtaskTaskIDs).toEqual([])
   })
 
+  it('A28: cancel task send records task_id; event clears it', () => {
+    ctrl.handleStartSession(startParams('s-cancel'))
+    const cancelParams = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+      SyncJsonInput: JSON.stringify({ task_id: 'react-1' }),
+    }
+
+    ctrl.handleSendMessage({ token: 's-cancel', type: 'task', params: cancelParams as any })
+    expect(ctrl.ensureSession('s-cancel').store.getState().skipSubtaskTaskIDs).toEqual(['react-1'])
+
+    ctrl.handleSendMessage({ token: 's-cancel', type: 'task', params: cancelParams as any })
+    expect(ctrl.ensureSession('s-cancel').store.getState().skipSubtaskTaskIDs).toEqual(['react-1'])
+
+    ctrl.handleGrpcOutputEvent(
+      's-cancel',
+      makeGrpcJsonRes(
+        'structured',
+        {
+          message: 'ok',
+          reason: '',
+          subtask_id: 'react-1',
+          subtask_index: '0',
+          subtask_name: '',
+          success: true,
+        },
+        { NodeId: 'skip_subtask_in_plan' },
+      ),
+    )
+    expect(ctrl.ensureSession('s-cancel').store.getState().skipSubtaskTaskIDs).toEqual([])
+  })
+
+  it('A29: skip/cancel payload without id is not recorded', () => {
+    ctrl.handleStartSession(startParams('s-noop'))
+    ctrl.handleSendMessage({
+      token: 's-noop',
+      type: 'task',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+        SyncJsonInput: JSON.stringify({}),
+      } as any,
+    })
+    ctrl.handleSendMessage({
+      token: 's-noop',
+      type: 'task',
+      params: {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
+        SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行' }),
+      } as any,
+    })
+    expect(ctrl.ensureSession('s-noop').store.getState().skipSubtaskTaskIDs).toEqual([])
+  })
+
   it('A17: send without ready warns when active', () => {
     ctrl.setActiveShowSession('ghost')
     expect(() =>

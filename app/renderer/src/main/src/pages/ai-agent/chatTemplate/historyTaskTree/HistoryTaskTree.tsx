@@ -26,7 +26,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIAgentStore from '../../useContext/useStore'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
-import { useCurrentMeta, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import { useStore } from 'zustand'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { formatAIAgentSetting, onReStart } from '../../utils'
@@ -266,23 +266,18 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: boolean }> = React.memo(
   ({ taskId, isTask = true }) => {
     const { t } = useI18nNamespaces(['aiAgent'])
-    const syncIdOfStopSubTask = useRef<string>('')
     const store = useCurrentStore()
-    const syncIDUpdate = useStore(store, (state) => state.syncIDUpdate)
-
-    const meta = useCurrentMeta()
     const sessionId = useCurrentSessionId()
     const { onSend } = useAIAgentDispatcher()
     const onCancelTask = useMemoizedFn(() => {
       if (isTask) {
         if (!taskId) return
-        syncIdOfStopSubTask.current = randomString(8)
         const info: AIInputEvent = {
           IsSyncMessage: true,
           SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
           SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', subtask_id: taskId }),
 
-          SyncID: syncIdOfStopSubTask.current,
+          SyncID: randomString(8),
         }
         onSend({ token: sessionId, type: 'task', params: info })
       } else {
@@ -295,9 +290,7 @@ export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: bool
       }
     })
 
-    const skipLoading = useCreation(() => {
-      return !!meta.syncIDMap?.get(syncIdOfStopSubTask.current)
-    }, [syncIDUpdate])
+    const skipLoading = useStore(store, (state) => !!taskId && state.skipSubtaskTaskIDs.includes(taskId))
     return (
       <YakitPopconfirm
         title={t('AITree.cancelSubtaskConfirm')}

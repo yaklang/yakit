@@ -945,11 +945,17 @@ export class ChatMultiSessionController {
       // 记录跳过子任务操作
       if (
         params.IsSyncMessage &&
-        params.SyncType === AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN &&
+        (params.SyncType === AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN ||
+          params.SyncType === AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK) &&
         params.SyncJsonInput
       ) {
         try {
-          const subTaskID = JSON.parse(params.SyncJsonInput)?.subtask_id
+          let subTaskID = ''
+          if (params.SyncType === AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN) {
+            subTaskID = JSON.parse(params.SyncJsonInput)?.subtask_id
+          } else if (params.SyncType === AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK) {
+            subTaskID = JSON.parse(params.SyncJsonInput)?.task_id
+          }
           if (subTaskID) {
             store.setState((state) => {
               if (state.skipSubtaskTaskIDs.includes(subTaskID)) return
