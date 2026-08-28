@@ -10,7 +10,7 @@ import {
 } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
 import MonacoEditor, { monaco } from 'react-monaco-editor'
-// 编辑�?注册
+// 编辑器 注册
 // import "@/utils/monacoSpec/theme"
 import '@/utils/monacoSpec/fuzzHTTPMonacoSpec'
 import '@/utils/monacoSpec/yakEditor'
@@ -46,10 +46,10 @@ import { CloudDownloadIcon } from '@/assets/newIcon'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import {
   getStorageYakEditorShortcutKeyEvents,
+  isPageOrGlobalShortcut,
   isYakEditorDefaultShortcut,
   isYakEditorShortcut,
 } from '@/utils/globalShortcutKey/events/page/yakEditor'
-import { isPageOrGlobalShortcut } from '@/utils/globalShortcutKey/events/page/yakEditorPageShortcut'
 import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
 import useFocusContextStore from '@/utils/globalShortcutKey/shortcutKeyFocusHook/hooks/useStore'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
@@ -107,7 +107,7 @@ import {
 export { PLUGIN_PREFIX }
 export type { CodecTypeProps, contextMenuProps }
 
-/** 右键菜单浅拷贝：避免 cloneDeep(ReactNode) 的性能开销，同时防止原地改�?props */
+/** 右键菜单浅拷贝：避免 cloneDeep(ReactNode) 的性能开销，同时防止原地改写 props */
 const shallowCloneMenuItems = (items: EditorMenuItemType[]): EditorMenuItemType[] => {
   return items.map((item) => {
     if (!item || typeof item !== 'object') {
@@ -124,7 +124,7 @@ const shallowCloneMenuItems = (items: EditorMenuItemType[]): EditorMenuItemType[
   })
 }
 
-/** 高亮数组轻量指纹：只拼位置字段，避免 JSON.stringify 序列�?hoverVal 等大字段 */
+/** 高亮数组轻量指纹：只拼位置字段，避免 JSON.stringify 序列化 hoverVal 等大字段 */
 const highLightFingerprint = (list?: readonly any[]): string => {
   if (!list?.length) return ''
   let s = String(list.length)
@@ -218,7 +218,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   }
 
-  /** @name 记录右键菜单组信�?*/
+  /** @name 记录右键菜单组信息 */
   const { fontSize: nowFontsize, setFontSize: setNowFontsize, initFontSize } = useEditorFontSize()
   const DefaultMenuTopArr = useMemo(() => DefaultMenuTop(t, nowFontsize), [i18nRefresh, nowFontsize])
   const DefaultMenuBottomArr = useMemo(
@@ -229,20 +229,20 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     [i18nRefresh, hiddenDefaultContextMenuKeys],
   )
   const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTopArr, ...DefaultMenuBottomArr])
-  /** @name 记录右键菜单组内的快捷键对应菜单项的key�?*/
+  /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
   const keyBindingRef = useRef<KeyboardToFuncProps>({})
-  /** @name 记录右键菜单关系[菜单组key�?菜单组内菜单项key值数组] */
+  /** @name 记录右键菜单关系[菜单组key值-菜单组内菜单项key值数组] */
   const keyToOnRunRef = useRef<Record<string, string[]>>({})
 
   const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
-  /** @name 控制快捷操作栏的显示隐藏（全局共享�?*/
+  /** @name 控制快捷操作栏的显示隐藏（全局共享） */
   const showActionBar = useShowActionBar()
   const { setShowActionBar, getShowActionBar, initShowActionBar } = editorActionBarStore
   const { theme: themeGlobal } = useTheme()
 
   const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
 
-  // ===== 二进�?Fuzztag 折叠：翻译边�?=====
+  // ===== 二进制 Fuzztag 折叠：翻译边界 =====
   const {
     foldBinaryCapable,
     foldBinaryEnabled,
@@ -267,7 +267,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   }, [themeGlobal, propsTheme])
 
   useEffect(() => {
-    // 控制编辑器失�?    if (disabled) {
+    // 控制编辑器失焦
+    if (disabled) {
       const fakeInput = document.createElement('input')
       document.body.appendChild(fakeInput)
       fakeInput.focus()
@@ -279,7 +280,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     initFontSize()
   }, [])
 
-  // 仅在开启操作栏显隐菜单时从缓存恢复上次的显隐状�?  useEffect(() => {
+  // 仅在开启操作栏显隐菜单时从缓存恢复上次的显隐状态
+  useEffect(() => {
     if (isShowSelectRangeMenu) {
       initShowActionBar()
     }
@@ -316,14 +318,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     onOperationRecord('noWordWrap', noWordWrap)
   }, [noWordWrap])
 
-  // 自定义HTTP数据包变形处�?+ 插件扩展
+  // 自定义HTTP数据包变形处理 + 插件扩展
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(ref)
 
   const { customHTTPMutatePlugin, contextMenuPlugin } = usePluginSearch({ menuType, inViewport })
 
   /**
-   * 整理右键菜单的对应关�?   * 菜单组的key值对应的组内菜单项的key值数�?   */
+   * 整理右键菜单的对应关系
+   * 菜单组的key值对应的组内菜单项的key值数组
+   */
   const extraMenuListsObj = useMemo(() => extraMenuLists(t), [i18nRefresh])
   const baseMenuListsObj = useMemo(() => baseMenuLists(t), [i18nRefresh])
   useEffect(() => {
@@ -336,13 +340,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           return {
             key: item.key,
             label: item.key,
-            // 自定义HTTP数据包变形标�?            isCustom: true,
+            // 自定义HTTP数据包变形标记
+            isCustom: true,
           } as EditorMenuItemProps
         }),
       ])
-      // 自定义HTTP数据包变�?      ;(extraMenuListsObj['http'].menu[0] as EditorMenuItemProps).children = newHttpChildren
+      // 自定义HTTP数据包变形
+      ;(extraMenuListsObj['http'].menu[0] as EditorMenuItemProps).children = newHttpChildren
 
-      // 插件扩展（为保持key值唯一性，添加 plugin- �?      const newCustomContextMenu = contextMenuPlugin.map((item) => {
+      // 插件扩展（为保持key值唯一性，添加 plugin- ）
+      const newCustomContextMenu = contextMenuPlugin.map((item) => {
         const baseItem = {
           key: `${PLUGIN_PREFIX}${item.value}`,
           label: (
@@ -360,7 +367,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           params: item.params,
         } as EditorMenuItemProps
 
-        // 如果有参数，添加子菜�?        if (item?.params && item.params.length > 0) {
+        // 如果有参数，添加子菜单
+        if (item?.params && item.params.length > 0) {
           return {
             ...baseItem,
             children: [
@@ -413,7 +421,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const { run: menuItemHandle } = useDebounceFn(
     useMemoizedFn((key: string, keyPath: string[]) => {
       if (!editor) return
-      /** 是否执行过方�?onRightContextMenu) */
+      /** 是否执行过方法(onRightContextMenu) */
       let executeFunc = false
       const menuName = keyPath[keyPath.length - 1]
       const menuItemName = keyPath[0]
@@ -431,8 +439,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           try {
             // @ts-ignore
             allMenu[name].menu[0]?.children.map((item, index) => {
-              // 点击一级菜�?              if (menuItemName === 'customcontextmenu' && index === 0) {
-                // 执行第一个子�?—�?有三级则执行第二个子�?                // if (item.isGetPlugin) {
+              // 点击一级菜单
+              if (menuItemName === 'customcontextmenu' && index === 0) {
+                // 执行第一个子项 —— 有三级则执行第二个子项
+                // if (item.isGetPlugin) {
                 //   // 当子项为获取插件
                 //   data = 'isGetPlugin'
                 // } else {
@@ -479,13 +489,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           onRightContextMenu(menuItemName)
           break
         } else if (keyToOnRunRef.current[name].includes('http') && menuName === 'http') {
-          // 获取是否为自定义HTTP数据包变形标�?          let key: string = menuItemName
+          // 获取是否为自定义HTTP数据包变形标记
+          let key: string = menuItemName
           let data: boolean | undefined = undefined
           try {
             // @ts-ignore
             allMenu[name].menu[0]?.children.map((item, index) => {
-              // 点击一级菜�?              if (menuItemName === 'http' && index === 0) {
-                // 执行第一个子�?                // if (item.isCustom) {
+              // 点击一级菜单
+              if (menuItemName === 'http' && index === 0) {
+                // 执行第一个子项
+                // if (item.isCustom) {
                 //   data = true
                 // }
                 // key = item.key
@@ -624,10 +637,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
   })
 
-  /** yak后缀文件中，右键菜单增加'Yak 代码格式�?功能 */
+  /** yak后缀文件中，右键菜单增加'Yak 代码格式化'功能 */
   useEffect(() => {
     /**
-     * @description 使用下方的判断逻辑，将导致后续�?额外菜单变动)无法在右键菜单再渲染中生�?     */
+     * @description 使用下方的判断逻辑，将导致后续的(额外菜单变动)无法在右键菜单再渲染中生效
+     */
     // if (isInitRef.current) return
     rightContextMenu.current = [...DefaultMenuTopArr]
     keyBindingRef.current = {}
@@ -669,7 +683,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         rightContextMenu.current = rightContextMenu.current.concat([{ type: 'divider' }, obj])
       }
     }
-    // 缓存需要排序的自定义菜�?    let sortContextMenu: OtherMenuListProps[] = []
+    // 缓存需要排序的自定义菜单
+    let sortContextMenu: OtherMenuListProps[] = []
     for (let menus in contextMenu) {
       /* 需要排序项 */
       if (typeof contextMenu[menus].order === 'number') {
@@ -688,7 +703,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     // 底部默认菜单
     rightContextMenu.current = rightContextMenu.current.concat([...DefaultMenuBottomArr])
 
-    // 当存在order项则需要排�?    if (sortContextMenu.length > 0) {
+    // 当存在order项则需要排序
+    if (sortContextMenu.length > 0) {
       rightContextMenu.current = sortMenuFun(rightContextMenu.current, sortContextMenu)
     }
     rightContextMenu.current = contextMenuKeybindingHandle(t, keyBindingRef, '', rightContextMenu.current)
@@ -709,7 +725,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   /**
    * editor编辑器的额外渲染功能:
-   * 1、每行的换行符进行可视字符展�?   */
+   * 1、每行的换行符进行可视字符展示
+   */
   const pasteWarning = useThrottleFn(
     () => {
       failed(t('YakitEditor.pasteTooFast'))
@@ -717,7 +734,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     { wait: 500 },
   )
 
-  // ===== Yak 代码格式�?+ 静态分析（需�?decoration effect 之前声明�?=====
+  // ===== Yak 代码格式化 + 静态分析（需在 decoration effect 之前声明） =====
   const { yakCompileAndFormat, yakStaticAnalyze } = useYakFormat({ language, type })
 
   const rafIdRef = useRef<number | null>(null) // RAF ID
@@ -728,7 +745,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const originalContentTypeFun = useMemoizedFn(() => originalContentType)
   const fixContentTypeHoverMessageFun = useMemoizedFn(() => fixContentTypeHoverMessage)
   const privacyFun = useMemoizedFn(() => props.privacy)
-  // 存储当前的隐私遮挡范围信�?  const privacyMaskRangesRef = useRef<{ id: string; range: monaco.Range }[]>([])
+  // 存储当前的隐私遮挡范围信息
+  const privacyMaskRangesRef = useRef<{ id: string; range: monaco.Range }[]>([])
   // 跟踪 model 是否已被释放
   const isModelDisposedRef = useRef<boolean>(false)
 
@@ -789,7 +807,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       randomStr,
     )
     const generateDecorations = (): YakitIModelDecoration[] => {
-      // 检�?model 是否已被释放
+      // 检查 model 是否已被释放
       if (!model || isModelDisposedRef.current) return []
       try {
         return generateDecorationsFn({
@@ -824,12 +842,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
 
     const scheduleDecorations = () => {
-      // 取消之前排队�?rAF
+      // 取消之前排队的 rAF
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current)
       }
 
-      // 只保留最新一次触�?      rafIdRef.current = requestAnimationFrame(() => {
+      // 只保留最新一次触发
+      rafIdRef.current = requestAnimationFrame(() => {
         rafIdRef.current = null
         if (!model || model.isDisposed()) return
         try {
@@ -842,7 +861,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       scheduleDecorations()
     }
 
-    // �?versionId 判断内容是否变化，避免每�?getValue 全量字符串比�?    let lastVersionId = model.getVersionId()
+    // 用 versionId 判断内容是否变化，避免每次 getValue 全量字符串比较
+    let lastVersionId = model.getVersionId()
     const contentChangeDisposable = editor.onDidChangeModelContent(() => {
       const versionId = model.getVersionId()
       if (versionId === lastVersionId) {
@@ -853,7 +873,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     })
     scheduleDecorations()
 
-    // 监听光标位置变化，仅隐私模式需要按光标动态显�?隐藏打码
+    // 监听光标位置变化，仅隐私模式需要按光标动态显示/隐藏打码
     const cursorPositionDisposable = editor.onDidChangeCursorPosition(() => {
       if (props.type === 'http' && privacyFun()) {
         scheduleDecorations()
@@ -872,9 +892,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       }
     })
 
-    // Yak 静态分析：挂在同一 effect 内以�?cleanup dispose
+    // Yak 静态分析：挂在同一 effect 内以便 cleanup dispose
     yakStaticAnalyze.run(editor, model)
-    // �?Yak / SyntaxFlow 语言需要静态分析；其它类型（如 markdown/http）每次输入都触发 setModelMarkers([]) 属无谓开销
+    // 仅 Yak / SyntaxFlow 语言需要静态分析；其它类型（如 markdown/http）每次输入都触发 setModelMarkers([]) 属无谓开销
     const yakAnalyzeDisposable =
       language === YaklangMonacoSpec || language === SyntaxFlowMonacoSpec
         ? model.onDidChangeContent(() => {
@@ -882,7 +902,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           })
         : undefined
 
-    // 添加点击事件处理，用于临时解�?Host 值的打码
+    // 添加点击事件处理，用于临时解除 Host 值的打码
     let isHandlingPrivacyClick = false
     const handleHostPrivacyClick = (e: monaco.editor.IEditorMouseEvent) => {
       if (!e.event.leftButton || props.type !== 'http' || isHandlingPrivacyClick) {
@@ -897,9 +917,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       // 获取当前光标位置
       const currentCursorPosition = editor.getPosition()
 
-      // 使用存储的隐私遮挡范围来检测点�?      const clickedPrivacyRange = privacyMaskRangesRef.current.find((item) => {
+      // 使用存储的隐私遮挡范围来检测点击
+      const clickedPrivacyRange = privacyMaskRangesRef.current.find((item) => {
         const range = item.range
-        // 检查点击位置是否在遮挡范围�?        return (
+        // 检查点击位置是否在遮挡范围内
+        return (
           clickPosition.lineNumber === range.startLineNumber &&
           clickPosition.column >= range.startColumn &&
           clickPosition.column <= range.endColumn
@@ -917,16 +939,20 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             currentCursorPosition.column >= range.startColumn &&
             currentCursorPosition.column <= range.endColumn
           if (isCursorAlreadyInRange) {
-            return // 光标已在区域内，不处�?          }
+            return // 光标已在区域内，不处理
+          }
         }
 
         isHandlingPrivacyClick = true
-        // 将光标移动到隐私区域之后，触发临时解�?        // 光标位置变化会自动通过 onDidChangeCursorPosition 触发装饰器更�?        editor.setPosition({
+        // 将光标移动到隐私区域之后，触发临时解除
+        // 光标位置变化会自动通过 onDidChangeCursorPosition 触发装饰器更新
+        editor.setPosition({
           lineNumber: range.endLineNumber,
           column: range.endColumn,
         })
         editor.focus()
-        // 使用 setTimeout 重置标志，避免连续触�?        setTimeout(() => {
+        // 使用 setTimeout 重置标志，避免连续触发
+        setTimeout(() => {
           isHandlingPrivacyClick = false
         }, 100)
       }
@@ -934,8 +960,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     const mouseDownDisposable = editor.onMouseDown(handleHostPrivacyClick)
 
-    // 二进�?Fuzztag 折叠：点击小块打开 HEX 编辑弹窗
-    // 打开过程�?await decodeBinaryTag，无互斥时连点会叠多个弹�?    let isOpeningBinaryEditor = false
+    // 二进制 Fuzztag 折叠：点击小块打开 HEX 编辑弹窗
+    // 打开过程含 await decodeBinaryTag，无互斥时连点会叠多个弹窗
+    let isOpeningBinaryEditor = false
     const releaseBinaryEditorLock = () => {
       isOpeningBinaryEditor = false
       try {
@@ -971,7 +998,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         } catch (e) {
           initialData = new Uint8Array()
         }
-        // 解码期间若已解锁（例如编辑器销毁）则不再弹�?        if (!isOpeningBinaryEditor) {
+        // 解码期间若已解锁（例如编辑器销毁）则不再弹窗
+        if (!isOpeningBinaryEditor) {
           return
         }
         const handleSubmit = async (bytes: Uint8Array, result: BinaryFuzztagSubmitResult) => {
@@ -985,7 +1013,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             newEntries.forEach((value, key) => {
               binaryFoldEntriesRef.current.set(key, value)
             })
-            // 相同二进制标签会拥有相同 id；按点击命中的序号和 range 精确修改当前小块�?            binaryModifiedOrdinalsRef.current.add(hit.ordinal)
+            // 相同二进制标签会拥有相同 id；按点击命中的序号和 range 精确修改当前小块。
+            binaryModifiedOrdinalsRef.current.add(hit.ordinal)
             editor.executeEdits('binary-fuzz-fold', [
               {
                 range: hit.range,
@@ -998,7 +1027,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           }
           infoModal.destroy()
         }
-        // base64 / hex �?文本/HEX 可切�?的公共编辑器（默认文本）；unquote(Binary) 走字节级 HEX 编辑�?        const useTextHexEditor = entry.kind === 'base64' || entry.kind === 'hex'
+        // base64 / hex 走"文本/HEX 可切换"的公共编辑器（默认文本）；unquote(Binary) 走字节级 HEX 编辑器
+        const useTextHexEditor = entry.kind === 'base64' || entry.kind === 'hex'
         const binaryReadOnly = !!readOnly || !entry.editable
         const editorAction = binaryReadOnly ? 'View' : 'Edit'
         const editorTitle = useTextHexEditor
@@ -1037,7 +1067,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       if (!foldBinaryEnabled || !e.event.leftButton || isOpeningBinaryEditor) {
         return
       }
-      // 仅当点击命中小块本身（橙�?蓝色块）才触发；占位为零宽，行尾空白区域不应响应
+      // 仅当点击命中小块本身（橙色/蓝色块）才触发；占位为零宽，行尾空白区域不应响应
       const domTarget = (e.event.browserEvent?.target ?? null) as HTMLElement | null
       const chipEl =
         domTarget && typeof domTarget.closest === 'function' ? domTarget.closest('.binary-fuzz-chip') : null
@@ -1057,7 +1087,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const binaryFoldMouseDownDisposable = editor.onMouseDown(handleBinaryFoldClick)
 
     // file 是引擎资源引用，不参与二进制折叠。保留真实标签和路径，同时在
-    // 本地引擎模式支持 Ctrl+点击定位文件；远程路径不能交�?GUI 机器打开�?    const handleFileReferenceClick = (e: monaco.editor.IEditorMouseEvent) => {
+    // 本地引擎模式支持 Ctrl+点击定位文件；远程路径不能交给 GUI 机器打开。
+    const handleFileReferenceClick = (e: monaco.editor.IEditorMouseEvent) => {
       if (!e.event.leftButton || !e.event.ctrlKey || !e.target.position) {
         return
       }
@@ -1084,8 +1115,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
     const fileReferenceMouseDownDisposable = editor.onMouseDown(handleFileReferenceClick)
 
-    // 二进�?Fuzztag 折叠：拦�?copy/cut，确保复制到剪贴板的是真实内容而非占位
-    // 捕获阶段统一覆盖 Ctrl+C/X、monaco clipboard action、右键菜�?    const handleEditorClipboard = (ev: ClipboardEvent) => {
+    // 二进制 Fuzztag 折叠：拦截 copy/cut，确保复制到剪贴板的是真实内容而非占位
+    // 捕获阶段统一覆盖 Ctrl+C/X、monaco clipboard action、右键菜单
+    const handleEditorClipboard = (ev: ClipboardEvent) => {
       try {
         if (!foldBinaryEnabled) {
           return
@@ -1100,7 +1132,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
         const expanded = expandBinaryFuzztag(selected, binaryFoldEntriesRef.current)
         // 选区里有占位就一定接管复制：preventDefault 并写入还原后的真实内容，
-        // 绝不�?#YBIN_ 占位泄漏到剪贴板
+        // 绝不让 #YBIN_ 占位泄漏到剪贴板
         ev.clipboardData?.setData('text/plain', expanded)
         ev.preventDefault()
         if (ev.type === 'cut' && !readOnly) {
@@ -1111,7 +1143,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const editorDomNode = editor.getDomNode()
     editorDomNode?.addEventListener('copy', handleEditorClipboard, true)
     editorDomNode?.addEventListener('cut', handleEditorClipboard, true)
-    // 把本编辑器的"占位 id -> 标签信息"映射登记到全局注册�?�?model �?key)�?    // 供右键自定义复制/fetchCursorContent 等不经过 DOM copy 事件的路径也能还原占�?    registerBinaryFoldEntries(model, binaryFoldEntriesRef.current)
+    // 把本编辑器的"占位 id -> 标签信息"映射登记到全局注册表(以 model 为 key)，
+    // 供右键自定义复制/fetchCursorContent 等不经过 DOM copy 事件的路径也能还原占位
+    registerBinaryFoldEntries(model, binaryFoldEntriesRef.current)
 
     return () => {
       try {
@@ -1132,7 +1166,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         editorDomNode?.removeEventListener('cut', handleEditorClipboard, true)
         unregisterBinaryFoldEntries(model)
         yakStaticAnalyze.cancel()
-        // 先释�?model（含大文�?buffer），�?dispose editor�?        // editor.dispose() �?detach model 不释放其 buffer；model 须显�?dispose 才会�?modelService._models 移除并释放文本缓冲区�?        // 否则大内容（如数 MB 响应）的 TextModel 会被 modelService 强引用持久持有，关闭后内存无法回收�?        model.dispose()
+        // 先释放 model（含大文本 buffer），再 dispose editor。
+        // editor.dispose() 只 detach model 不释放其 buffer；model 须显式 dispose 才会从 modelService._models 移除并释放文本缓冲区。
+        // 否则大内容（如数 MB 响应）的 TextModel 会被 modelService 强引用持久持有，关闭后内存无法回收。
+        model.dispose()
         editor.dispose()
       } catch (e) {}
     }
@@ -1179,7 +1216,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     { wait: 300 },
   )
 
-  /** 右键菜单-重渲染换行符功能是否显示的开关文字内�?*/
+  /** 右键菜单-重渲染换行符功能是否显示的开关文字内容 */
   useEffect(() => {
     const flag = rightContextMenu.current.filter((item) => {
       return (item as EditorMenuItemProps)?.key === 'http-show-break'
@@ -1228,7 +1265,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const downPosY = useRef<number>()
   const upPosY = useRef<number>()
   const onScrollTop = useRef<number>()
-  // 编辑器信�?长宽�?
+  // 编辑器信息(长宽等)
   const editorInfo = useRef<any>()
   useEffect(() => {
     if (editor && isShowSelectRangeMenu) {
@@ -1274,7 +1311,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const onOpenSmartDecode = useMemoizedFn((rangeValue: string, anchorRect?: DOMRect) => {
     openSmartDecodeRef.current?.(rangeValue, editorInfo.current, anchorRect)
   })
-  // 编辑器菜�?
+  // 编辑器菜单
+
   useEffect(() => {
     // 此处一个页面可能存在多个monaco
     // 因此仅仅在monaco刚打开时获取最新的快捷键事件和对应按键
@@ -1318,7 +1356,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       minimap: noMiniMap ? { enabled: false } : undefined,
       lineNumbersMinChars: lineNumbersMinChars || 5,
       contextmenu: false,
-      // 保持 all：与换行�?decoration / binary chip 空格策略一致，避免改变既有视觉行为
+      // 保持 all：与换行符 decoration / binary chip 空格策略一致，避免改变既有视觉行为
       renderWhitespace: 'all' as const,
       bracketPairColorization: {
         enabled: true,
@@ -1349,12 +1387,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         [styles['yakit-editor-disabled']]: disabled,
       })}
     >
-      {/* 查看 monaco 的对应代�?colors 所需 token �?/}
+      {/* 查看 monaco 的对应代码 colors 所需 token 值*/}
       {/* <button onClick={inspectTokens}>查看 token</button> */}
       <ReactResizeDetector
         onResize={(width, height) => {
           if (!width || !height) return
-          /** 重绘编辑器尺�?*/
+          /** 重绘编辑器尺寸 */
           if (editor) editor.layout({ height, width })
           /** 记录当前编辑器外边框尺寸 */
           preWidthRef.current = width
@@ -1405,7 +1443,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                   openFind(editor, keyword)
                 }
               }
-              /** 编辑器关光标，设置坐�?的初始位�?*/
+              /** 编辑器关光标，设置坐标0的初始位置 */
               editor.setSelection({
                 startColumn: 0,
                 startLineNumber: 0,
@@ -1417,7 +1455,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 // 是否直接使用编辑器快捷键 不走自定义逻辑
                 const isUseDefaultShortcut = isYakEditorDefaultShortcut(e.browserEvent)
                 if (!isUseDefaultShortcut) {
-                  // 判断当前输入是否激�?编辑器内部快捷键
+                  // 判断当前输入是否激活 编辑器内部快捷键
                   const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
                   if (isActiveYakEditor) {
                     const keys = convertKeyEventToKeyCombination(e.browserEvent)
@@ -1430,11 +1468,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     e.browserEvent.stopImmediatePropagation()
                     return
                   }
-                  // 判断当前输入是否激�?页面级或全局快捷�?                  const event = isPageOrGlobalShortcut(e.browserEvent)
+                  // 判断当前输入是否激活 页面级或全局快捷键
+                  const event = isPageOrGlobalShortcut(e.browserEvent)
                   if (event) {
                     // 未接入时特殊处理removePage,接入monaco快捷键后移除此项
                     if (['removePage'].includes(event)) e.browserEvent.stopImmediatePropagation()
-                    // 由于目前 存在老版本键盘快捷键(line�?112) 暂时不做后续接入 等待第二版焦点与monaco绑定
+                    // 由于目前 存在老版本键盘快捷键(line：1112) 暂时不做后续接入 等待第二版焦点与monaco绑定
                     // e.browserEvent.stopImmediatePropagation()
                     return
                   }
