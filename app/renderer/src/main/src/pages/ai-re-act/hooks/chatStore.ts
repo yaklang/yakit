@@ -1,4 +1,4 @@
-import { AIChatQSDataTypeEnum, type CurrentExecTaskTree, type ChatStoreState } from './aiRender'
+import { AIChatQSDataTypeEnum, type ChatStoreState } from './aiRender'
 import { createStore } from 'zustand/vanilla'
 import { immer } from 'zustand/middleware/immer'
 import { enableMapSet } from 'immer'
@@ -53,6 +53,8 @@ export const createChatStore = (options?: CreateChatStoreOptions) => {
 
       currentReviewDetail: { token: '', renderNum: 0 },
       currentPlanReviewExtraUpdate: 0,
+
+      skipSubtaskTaskIDs: [],
 
       items: {},
       groups: {},

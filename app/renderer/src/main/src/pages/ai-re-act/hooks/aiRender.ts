@@ -586,6 +586,12 @@ export interface ChatStoreState {
    */
   currentPlanReviewExtraUpdate: number
 
+  /**
+   * 正在执行跳过子任务/取消任务的任务 ID 集合
+   * 如果存在则代表对应操作正在进行中（loading），收到完成事件后清除
+   */
+  skipSubtaskTaskIDs: string[]
+
   items: SessionRenderContent['items']
   groups: SessionRenderContent['groups']
   tasks: SessionRenderContent['tasks']

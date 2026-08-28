@@ -24,5 +24,6 @@ describe('grpcAIMessageHandlers', () => {
     for (const key of Object.keys(expected)) {
       expect(typeof grpcAIMessageHandlers[key]).toBe('function')
     }
+    expect(typeof grpcAIMessageHandlers.skip_subtask_in_plan).toBe('function')
   })
 })

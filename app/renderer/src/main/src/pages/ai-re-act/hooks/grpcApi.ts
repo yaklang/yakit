@@ -1177,6 +1177,16 @@ export declare namespace AIAgentGrpcApi {
     title: string
     summary_markdown: string
   }
+
+  /** 跳过计划子任务（skip_subtask_in_plan）请求的响应 */
+  export interface SkipSubtaskInPlan {
+    message: string
+    reason: string
+    subtask_id: string
+    subtask_index: string
+    subtask_name: string
+    success: boolean
+  }
 }
 
 // #region AI相关普通接口的请求和定义结构

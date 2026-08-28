@@ -498,6 +498,23 @@ const handleReactTaskCreated: AIMessageHandler = (requestInfo) => {
   })
 }
 
+const handleSkipSubtaskInPlan: AIMessageHandler = (requestInfo) => {
+  const { res, store } = requestInfo
+  if (res.Type !== 'structured' || res.NodeId !== 'skip_subtask_in_plan') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const info = JSON.parse(ipcContent) as AIAgentGrpcApi.SkipSubtaskInPlan
+
+  if (!info.subtask_id) {
+    requestInfo.pushLog({ level: 'error', message: `${res.NodeId}数据异常: ${ipcContent}` })
+    return
+  }
+  store.setState((state) => {
+    if (!state.skipSubtaskTaskIDs.includes(info.subtask_id)) return
+    state.skipSubtaskTaskIDs = state.skipSubtaskTaskIDs.filter((item) => item !== info.subtask_id)
+  })
+}
+
 export const aiOtherDataHandlers = {
   http_fuzz_request_change: handleHttpFuzzRequestChange,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
@@ -519,4 +536,5 @@ export const aiOtherDataHandlers = {
   plan: handlePlan,
   yaklang_code_change: handleYaklangCodeChange,
   react_task_created: handleReactTaskCreated,
+  skip_subtask_in_plan: handleSkipSubtaskInPlan,
 } as const
