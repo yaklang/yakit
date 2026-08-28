@@ -26,8 +26,9 @@ import {
   TerminalOutlined,
   TrashOutlined,
   XOutlined,
+  ArrowsOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
+
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { AddHotCodeTemplate, HotCodeTemplate, type HotPatchTempItem } from '../fuzzer/hotPatchShared'
@@ -905,7 +906,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                             {t('YakitButton.save')}
                           </YakitButton>
                           {fullScreenFirstNode ? (
-                            <OutlineArrowscollapseIcon
+                            <ArrowsOutlined
                               className={styles['expand-icon']}
                               onClick={() => setFullScreenFirstNode(false)}
                             />
@@ -1248,7 +1249,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                           {t('YakitButton.back')}
                         </YakitButton>
                         {fullScreenSecondNode ? (
-                          <OutlineArrowscollapseIcon
+                          <ArrowsOutlined
                             className={styles['expand-icon']}
                             onClick={() => setFullScreenSecondNode(false)}
                           />

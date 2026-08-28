@@ -42,8 +42,12 @@ import type { YaklangEngineMode } from '@/yakitGVDefine'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
-import { DocumentDuplicateOutlined, PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
+import {
+  DocumentDuplicateOutlined,
+  PencilAltOutlined,
+  TrashOutlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
 import classNames from 'classnames'
 import styles from './ProjectManage.module.scss'
@@ -536,7 +540,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 [styles['btn-focus-style']]: operateShow >= 0 && operateShow === +Id,
               })}
             >
-              <OutlineExportIcon className={styles['btn-style']} />
+              <FigmaIcon2017756Outlined className={styles['btn-style']} />
             </div>
           </DropdownMenu>
         )}
@@ -1176,7 +1180,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                       {
                         key: 'export',
                         label: t('YakitButton.export'),
-                        itemIcon: <OutlineExportIcon />,
+                        itemIcon: <FigmaIcon2017756Outlined />,
                         children: [
                           { key: 'encryption', label: t('ProjectManage.encryptedExport') },
                           { key: 'plaintext', label: t('ProjectManage.plaintextExport') },

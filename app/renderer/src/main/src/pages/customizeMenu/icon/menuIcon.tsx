@@ -866,24 +866,6 @@ export const MenuPayloadIcon = (props: Partial<CustomIconComponentProps>) => {
   return <Icon component={Payload} {...props} />
 }
 
-const YakRunner = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M1.59998 3.99999C1.59998 3.11634 2.31632 2.39999 3.19998 2.39999H12.8C13.6836 2.39999 14.4 3.11634 14.4 3.99999V12C14.4 12.8837 13.6836 13.6 12.8 13.6H3.19998C2.31632 13.6 1.59998 12.8837 1.59998 12V3.99999ZM4.23429 5.03431C4.54671 4.72189 5.05324 4.72189 5.36566 5.03431L7.76566 7.43431C8.07808 7.74673 8.07808 8.25326 7.76566 8.56568L5.36566 10.9657C5.05324 11.2781 4.54671 11.2781 4.23429 10.9657C3.92187 10.6533 3.92187 10.1467 4.23429 9.83431L6.0686 7.99999L4.23429 6.16568C3.92187 5.85326 3.92187 5.34673 4.23429 5.03431ZM8.79998 9.59999C8.35815 9.59999 7.99998 9.95817 7.99998 10.4C7.99998 10.8418 8.35815 11.2 8.79998 11.2H11.2C11.6418 11.2 12 10.8418 12 10.4C12 9.95817 11.6418 9.59999 11.2 9.59999H8.79998Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-/**
- * @description:YakRunner
- */
-export const MenuYakRunnerIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={YakRunner} {...props} />
-}
-
 const WebsocketFuzzer = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <mask

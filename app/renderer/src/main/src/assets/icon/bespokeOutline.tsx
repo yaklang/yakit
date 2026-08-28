@@ -6,24 +6,6 @@ interface IconProps extends CustomIconComponentProps {
   onClick: (e: React.MouseEvent) => void
   ref?: any
 }
-const OutlineArrowscollapse = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M15 5V9M15 9H19M15 9L20 4M9 5V9M9 9H5M9 9L4 4M15 19V15M15 15H19M15 15L20 20M9 19V15M9 15H5M9 15L4 20"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
-/**
- * @description  Icon/Outline/Outlinearrows-收起
- */
-export const OutlineArrowscollapseIcon = (props: Partial<IconProps>) => {
-  return <Icon component={OutlineArrowscollapse} {...props} />
-}
 
 const OutlineTime = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -42,25 +24,6 @@ const OutlineTime = () => (
  */
 export const OutlineTimeIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineTime} {...props} />
-}
-
-const OutlineExport = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M8 9H5C3.89543 9 3 9.89543 3 11V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V11C21 9.89543 20.1046 9 19 9H16M9 6L12 3M12 3L15 6M12 3V13"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
-/**
- * @description  Icon/Outline/Outline导出
- */
-export const OutlineExportIcon = (props: Partial<IconProps>) => {
-  return <Icon component={OutlineExport} {...props} />
 }
 
 const OutlinePayload = () => (
@@ -448,20 +411,6 @@ const Home = () => (
 export const HomeIcon = (props: Partial<IconProps>) => {
   return <Icon component={Home} {...props} />
 }
-
-const RedoDot = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M21 7V13M21 13H15M21 13L18 10.3C16.3511 8.82116 14.2149 8.00226 12 8C9.61305 8 7.32387 8.94821 5.63604 10.636C3.94821 12.3239 3 14.6131 3 17M13 17C13 17.5523 12.5523 18 12 18C11.4477 18 11 17.5523 11 17C11 16.4477 11.4477 16 12 16C12.5523 16 13 16.4477 13 17Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
-export const RedoDotIcon = (props: Partial<IconProps>) => <Icon component={RedoDot} {...props} />
 
 const OutlineThought = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">

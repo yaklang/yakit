@@ -21,9 +21,13 @@ import classNames from 'classnames'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { NotepadRemoteGV } from '@/enums/notepad'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { PlusOutlined, TrashOutlined, FigmaIcon6480193584Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  PlusOutlined,
+  TrashOutlined,
+  FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { Dropdown, Tooltip } from 'antd'
 import {
   NotepadExport,
@@ -225,7 +229,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitButton
               className={styles['icon-16']}
               type="text2"
-              icon={<OutlineExportIcon />}
+              icon={<FigmaIcon2017756Outlined />}
               size="small"
               onClick={() => onExport(getActionFilter())}
               disabled={!response.Total}
@@ -264,7 +268,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                       {
                         key: 'export',
                         label: t('YakitButton.export'),
-                        itemIcon: <OutlineExportIcon />,
+                        itemIcon: <FigmaIcon2017756Outlined />,
                       },
                       {
                         key: 'delete',

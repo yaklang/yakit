@@ -15,9 +15,13 @@ import {
 import { type ModifyNotepadPageInfoProps, type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
-import { DotsHorizontalOutlined, TrashOutlined, FigmaIcon13208172881Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  DotsHorizontalOutlined,
+  TrashOutlined,
+  FigmaIcon13208172881Outlined,
+  FigmaIcon2017756Outlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { cataloguePlugin } from '@/components/MilkdownEditor/utils/cataloguePlugin'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -467,7 +471,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                         </>
 
                         <Divider type='vertical' /> */}
-            <YakitButton type="outline2" icon={<OutlineExportIcon />} size="large" onClick={onExport}>
+            <YakitButton type="outline2" icon={<FigmaIcon2017756Outlined />} size="large" onClick={onExport}>
               {t('YakitButton.export')}
             </YakitButton>
             <YakitButton

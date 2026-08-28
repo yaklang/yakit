@@ -8,8 +8,8 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import type { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { ArrowsExpandOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
+import { ArrowsExpandOutlined, SearchOutlined, ArrowsOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+
 import type { IMonacoEditor } from '@/utils/editors'
 import type { InternalTextAreaProps, YakitInputProps } from '@/components/yakitUI/YakitInput/YakitInputType'
 import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
@@ -411,7 +411,7 @@ export const NewCodecEditorBody: React.FC<NewCodecEditorBodyProps> = (props) => 
             })}
             onClick={onOperate}
           >
-            {extend ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
+            {extend ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
           </div>
         </div>
       </div>

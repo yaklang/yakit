@@ -27,9 +27,9 @@ import {
   PlusOutlined,
   TrashOutlined,
   FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
@@ -993,7 +993,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                           <YakitButton
                             type="outline2"
-                            icon={<OutlineExportIcon />}
+                            icon={<FigmaIcon2017756Outlined />}
                             onClick={() =>
                               handleOpenExportHint({
                                 title: '导出规则',

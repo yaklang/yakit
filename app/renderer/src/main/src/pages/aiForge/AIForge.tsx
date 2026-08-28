@@ -17,9 +17,9 @@ import {
   SearchOutlined,
   TrashOutlined,
   FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
@@ -213,7 +213,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
             disabled={!selectedLength}
             type="outline2"
             size="large"
-            icon={<OutlineExportIcon />}
+            icon={<FigmaIcon2017756Outlined />}
             onClick={onBatchExport}
           >
             批量导出
@@ -341,7 +341,7 @@ const AIForgePageItem: React.FC<AIForgePageItemProps> = React.memo((props) => {
               onExport(data)
             }}
             type="text2"
-            icon={<OutlineExportIcon />}
+            icon={<FigmaIcon2017756Outlined />}
           />
           <div className={styles['diver-style']} />
           <YakitButton

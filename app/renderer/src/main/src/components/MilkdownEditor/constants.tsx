@@ -1,9 +1,13 @@
-import { LightBulbOutlined, List1Outlined, PaperClipOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  LightBulbOutlined,
+  List1Outlined,
+  PaperClipOutlined,
+  ListOrderedOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import {
   IconHeading1,
   IconHeading2,
   IconHeading3,
-  IconListOrdered,
   IconCheckSquare,
   IconCurlyBraces,
   IconQuote,
@@ -54,7 +58,7 @@ export const MilkdownMenu = {
   },
   orderedList: {
     key: 'orderedList',
-    icon: <IconListOrdered />,
+    icon: <ListOrderedOutlined />,
     labelKey: 'MilkdownEditor.menu.orderedList.label',
     descriptionKey: 'MilkdownEditor.menu.orderedList.description',
   },

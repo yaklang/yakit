@@ -100,8 +100,9 @@ import {
   CogOutlined,
   DotsVerticalOutlined,
   ChevronDownOutlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineExportIcon, OutlinePayloadIcon } from '@/assets/icon/bespokeOutline'
+import { OutlinePayloadIcon } from '@/assets/icon/bespokeOutline'
 import emiter from '@/utils/eventBus/eventBus'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import {
@@ -4376,7 +4377,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             }}
           >
             <Tooltip title={t('SecondNodeExtra.exportData')}>
-              <YakitButton type="outline2" icon={<OutlineExportIcon />} size={size} />
+              <YakitButton type="outline2" icon={<FigmaIcon2017756Outlined />} size={size} />
             </Tooltip>
           </YakitPopover>
         )}
@@ -4408,7 +4409,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             <YakitButton
               style={{ marginRight: 10 }}
               type="outline2"
-              icon={<OutlineExportIcon />}
+              icon={<FigmaIcon2017756Outlined />}
               size={size}
               onClick={() => {
                 emiter.emit(

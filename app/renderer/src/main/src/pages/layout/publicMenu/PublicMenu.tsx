@@ -1,3 +1,4 @@
+import { SortAscendingOutlined, SortDescendingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   type DatabaseFirstMenuProps,
@@ -13,7 +14,7 @@ import {
   getSecurityExpertNotepadMenu,
 } from '@/routes/newRoute'
 import { ExtraMenu, OrdinaryMenu } from './ExtraMenu'
-import { SortAscendingIcon, SortDescendingIcon } from '@/assets/newIcon'
+
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { MenuCodec } from './MenuCodec'
 import { MenuDNSLog } from './MenuDNSLog'
@@ -615,7 +616,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
           <ExtraMenu onMenuSelect={onClickExtraMenu} isSecurityExpert={isSecurityExpert} />
           {!isMemfit() && !isExpand && (
             <div className={styles['no-expand-wrapper']} onClick={(e) => onSetIsExpand(true)}>
-              <SortDescendingIcon />
+              <SortDescendingOutlined />
             </div>
           )}
         </div>
@@ -714,7 +715,7 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         {!isMemfit() && (
           <div className={styles['expand-wrapper']}>
             <div className={styles['expand-body']} onClick={(e) => onSetIsExpand(false)}>
-              <SortAscendingIcon />
+              <SortAscendingOutlined />
             </div>
           </div>
         )}

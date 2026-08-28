@@ -1,3 +1,4 @@
+import { MemfitLogoColorful } from '@yakit-libs/yakit-ui-icons/colorful'
 import React, { type FC, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type {
   AIChatWelcomeIntroTipsProps,
@@ -22,7 +23,7 @@ import {
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
-import { ColorsChatIcon, ColorsMemfitIcon, ColorsPreViewMDIcon } from '@/assets/icon/colors'
+import { ColorsChatIcon, ColorsPreViewMDIcon } from '@/assets/icon/colors'
 import {
   grpcGetAIReActRecommendedSkills,
   grpcUpdateAIReActRecommendedSkill,
@@ -97,7 +98,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           })}
         >
           <div className={styles['input-heard']}>
-            <ColorsMemfitIcon className={styles['memfit-icon']} />
+            <MemfitLogoColorful className={styles['memfit-icon']} />
             <div className={styles['title']}>Memfit AI Agent</div>
             <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
           </div>

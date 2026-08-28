@@ -1,3 +1,4 @@
+import { SortAscendingOutlined, SortDescendingOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   type HeardMenuProps,
@@ -17,8 +18,6 @@ import {
   ChevronUpIcon,
   CursorClickIcon,
   DotsHorizontalIcon,
-  SortAscendingIcon,
-  SortDescendingIcon,
   UserIcon,
 } from '@/assets/newIcon'
 import ReactResizeDetector from 'react-resize-detector'
@@ -811,7 +810,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
           )}
           {!isExpand && (
             <div className={style['heard-menu-sort']} onClick={() => onExpand(true)}>
-              {!isExpand && <SortDescendingIcon />}
+              {!isExpand && <SortDescendingOutlined color="currentColor" />}
             </div>
           )}
         </div>
@@ -821,7 +820,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
           <Tabs
             tabBarExtraContent={
               <div className={style['heard-menu-sort']} onClick={() => onExpand(false)}>
-                <SortAscendingIcon />
+                <SortAscendingOutlined color="currentColor" />
               </div>
             }
             onTabClick={onTabClick}

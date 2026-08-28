@@ -29,9 +29,9 @@ import {
   TrashOutlined,
   XOutlined,
   FigmaIcon5237120699Outlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { pluginTypeToName } from '@/pages/plugins/builtInData'
 import { PluginsGridCheckIcon } from '@/pages/plugins/icon'
 import { onPluginTagsToName } from '@/pages/plugins/baseTemplate'
@@ -1398,7 +1398,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         {
           key: 'export',
           label: t('YakitButton.export'),
-          itemIcon: <OutlineExportIcon />,
+          itemIcon: <FigmaIcon2017756Outlined />,
         },
       ]
     }
@@ -1406,7 +1406,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
       {
         key: 'export',
         label: t('YakitButton.export'),
-        itemIcon: <OutlineExportIcon />,
+        itemIcon: <FigmaIcon2017756Outlined />,
       },
       {
         key: 'del',

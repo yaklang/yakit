@@ -37,9 +37,9 @@ import {
   XOutlined,
   FigmaIcon6480193584Outlined,
   FigmaIcon13208172881Outlined,
+  ArrowsOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import {
@@ -157,7 +157,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
         setExpand && setExpand(!isExpand)
       }}
     >
-      {isExpand ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
+      {isExpand ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
     </div>
   )
 

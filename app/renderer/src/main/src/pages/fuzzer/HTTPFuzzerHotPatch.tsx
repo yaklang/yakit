@@ -20,8 +20,9 @@ import {
   ArrowsExpandOutlined,
   LightningBoltOutlined,
   FigmaIcon13208172881Outlined,
+  ArrowsOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
+
 import { LightningBoltSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
@@ -850,7 +851,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                 <YakitSwitch checked={hotPatchEnabled} onChange={onEnabledChange} />
               </div>
               {isFullScreen ? (
-                <OutlineArrowscollapseIcon className={styles['expand-icon']} onClick={() => setIsFullScreen(false)} />
+                <ArrowsOutlined className={styles['expand-icon']} onClick={() => setIsFullScreen(false)} />
               ) : (
                 <ArrowsExpandOutlined
                   className={classNames(styles['expand-icon'], styles['expand-icon-active'])}

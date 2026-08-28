@@ -32,9 +32,10 @@ import {
   UploadOutlined,
   XOutlined,
   FigmaIcon6480193584Outlined,
+  ArrowsOutlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineArrowscollapseIcon, OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { OutlineAddPayloadIcon, PropertyIcon, PropertyNoAddIcon } from './icon'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
@@ -1340,7 +1341,7 @@ export const NewPayloadLocalList: React.FC<NewPayloadLocalListProps> = (props) =
                 <Tooltip title={t('YakitButton.batchExport')}>
                   <YakitButton
                     type="text2"
-                    icon={<OutlineExportIcon />}
+                    icon={<FigmaIcon2017756Outlined />}
                     onClick={() => {
                       if (exportData.length === 0) {
                         warn(t('NewPayloadLocalList.pleaseSelectExportContent'))
@@ -2544,7 +2545,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'exportCsv',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineExportIcon />
+                  <FigmaIcon2017756Outlined />
                   <div className={styles['menu-name']}>{t('FileComponent.exportDictionary')}</div>
                 </div>
               ),
@@ -2596,7 +2597,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
               key: 'exportTxt',
               label: (
                 <div className={styles['extra-menu']}>
-                  <OutlineExportIcon />
+                  <FigmaIcon2017756Outlined />
                   <div className={styles['menu-name']}>{t('FileComponent.exportDictionary')}</div>
                 </div>
               ),
@@ -3042,7 +3043,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
         setExpand && setExpand(!isExpand)
       }}
     >
-      {isExpand ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
+      {isExpand ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
     </div>
   )
 
@@ -3302,7 +3303,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             {isNoSelect && (
               <YakitButton
                 type="outline2"
-                icon={<OutlineExportIcon />}
+                icon={<FigmaIcon2017756Outlined />}
                 onClick={() => {
                   setExportType('csv')
                   setExportVisible(true)
@@ -3415,7 +3416,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
             >
               <YakitButton
                 type="outline2"
-                icon={<OutlineExportIcon />}
+                icon={<FigmaIcon2017756Outlined />}
                 onClick={() => {
                   setExportType('file')
                   setExportVisible(true)
@@ -3603,7 +3604,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
         setExpand && setExpand(!isExpand)
       }}
     >
-      {isExpand ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
+      {isExpand ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
     </div>
   )
 

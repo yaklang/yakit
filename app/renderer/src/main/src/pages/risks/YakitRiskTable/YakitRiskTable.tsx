@@ -39,8 +39,9 @@ import {
   TerminalOutlined,
   TrashOutlined,
   UploadOutlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
+
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import cloneDeep from 'lodash/cloneDeep'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -1400,7 +1401,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                       <FuncBtn
                         maxWidth={1200}
                         type="outline2"
-                        icon={<OutlineExportIcon />}
+                        icon={<FigmaIcon2017756Outlined />}
                         name={' ' + t('YakitRiskTable.export_as')}
                         disabled={allTotal === 0}
                       />

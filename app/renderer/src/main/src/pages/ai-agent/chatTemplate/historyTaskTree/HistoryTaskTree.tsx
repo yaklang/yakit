@@ -17,9 +17,13 @@ import { AITree } from '../../aiTree/AITree'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { ChevronDownOutlined, Play2Outlined, FigmaIcon5237120699Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  ChevronDownOutlined,
+  FigmaIcon5237120699Outlined,
+  Play2Outlined,
+  RedoDotOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
-import { RedoDotIcon } from '@/assets/icon/bespokeOutline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { Tooltip } from 'antd'
@@ -322,7 +326,7 @@ export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: bool
         <Tooltip title="跳过当前任务" destroyTooltipOnHide={true}>
           <YakitButton
             size="small"
-            icon={<RedoDotIcon />}
+            icon={<RedoDotOutlined color="currentColor" />}
             type="text"
             loading={skipLoading}
             onClick={(e) => {

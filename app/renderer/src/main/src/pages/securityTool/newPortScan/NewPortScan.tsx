@@ -23,9 +23,9 @@ import {
   RefreshOutlined,
   TrashOutlined,
   FigmaIcon13208172881Outlined,
+  ArrowsOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
 import classNames from 'classnames'
 import { Checkbox, Divider, Form } from 'antd'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
@@ -245,7 +245,7 @@ const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props)
           )}
           <YakitButton
             type="text2"
-            icon={hidden ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
+            icon={hidden ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
             onClick={(e) => {
               e.stopPropagation()
               setHidden(!hidden)

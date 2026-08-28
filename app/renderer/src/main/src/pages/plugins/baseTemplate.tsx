@@ -32,8 +32,9 @@ import {
   SparklesOutlined,
   TagOutlined,
   TerminalOutlined,
+  ArrowsOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
+
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { Form, Tooltip } from 'antd'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -227,7 +228,7 @@ export const PluginDetails: <T>(props: PluginDetailsProps<T>) => any = memo((pro
               <div className={styles['divider-style']}></div>
               <YakitButton
                 type="text2"
-                icon={hidden ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
+                icon={hidden ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
                 onClick={() => setHidden(!hidden)}
               />
             </div>

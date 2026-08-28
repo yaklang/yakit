@@ -25,9 +25,9 @@ import {
   SearchOutlined,
   TrashOutlined,
   FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import styles from './NotepadManageLocal.module.scss'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -380,7 +380,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
             </YakitPopconfirm>
             <YakitButton
               type="outline2"
-              icon={<OutlineExportIcon />}
+              icon={<FigmaIcon2017756Outlined />}
               disabled={totalRef.current === 0}
               onClick={onBatchExport}
               loading={pageLoading}
@@ -504,7 +504,7 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
 
       <Divider type="vertical" style={{ margin: '0 8px' }} />
 
-      <YakitButton type="text2" icon={<OutlineExportIcon />} onClick={onExport} />
+      <YakitButton type="text2" icon={<FigmaIcon2017756Outlined />} onClick={onExport} />
 
       <Divider type="vertical" style={{ margin: '0 8px' }} />
       <YakitPopconfirm title={t('NotepadAction.confirmDelete')} onConfirm={() => onSingleRemove()}>

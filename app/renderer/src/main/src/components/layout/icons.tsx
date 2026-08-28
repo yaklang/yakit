@@ -82,20 +82,6 @@ const YaklangSvg = () => (
 export const YaklangSvgIcon = (props: Partial<CustomIconComponentProps>) => {
   return <Icon component={YaklangSvg} {...props} />
 }
-const YakitStoreGraySvg = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M10 2C7.79086 2 6 3.79086 6 6V7H5C4.49046 7 4.06239 7.38314 4.00612 7.88957L3.00612 16.8896C2.97471 17.1723 3.06518 17.455 3.25488 17.6669C3.44458 17.8789 3.71556 18 4 18H16C16.2844 18 16.5554 17.8789 16.7451 17.6669C16.9348 17.455 17.0253 17.1723 16.9939 16.8896L15.9939 7.88957C15.9376 7.38314 15.5096 7 15 7H14V6C14 3.79086 12.2091 2 10 2ZM12 7V6C12 4.89543 11.1046 4 10 4C8.89543 4 8 4.89543 8 6V7H12ZM6 10C6 9.44772 6.44772 9 7 9C7.55228 9 8 9.44772 8 10C8 10.5523 7.55228 11 7 11C6.44772 11 6 10.5523 6 10ZM13 9C12.4477 9 12 9.44772 12 10C12 10.5523 12.4477 11 13 11C13.5523 11 14 10.5523 14 10C14 9.44772 13.5523 9 13 9Z"
-      fill="#85899E"
-    />
-  </svg>
-)
-/** @name 插件商店灰底图标 */
-export const YakitStoreGraySvgIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={YakitStoreGraySvg} {...props} />
-}
 const YakitStoreThemeSvg = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -656,43 +642,6 @@ const RocketSvg = () => (
 /** @name 更新图标 */
 export const UpdateSvgIcon = (props: Partial<CustomIconComponentProps>) => {
   return <Icon component={UpdateSvg} {...props} />
-}
-const BellSvg = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M10 2C6.68632 2 4.00003 4.68629 4.00003 8V11.5858L3.29292 12.2929C3.00692 12.5789 2.92137 13.009 3.07615 13.3827C3.23093 13.7564 3.59557 14 4.00003 14H16C16.4045 14 16.7691 13.7564 16.9239 13.3827C17.0787 13.009 16.9931 12.5789 16.7071 12.2929L16 11.5858V8C16 4.68629 13.3137 2 10 2Z"
-      fill="var(--Colors-Use-Main-Primary)"
-    />
-    <path d="M10 18C8.34315 18 7 16.6569 7 15H13C13 16.6569 11.6569 18 10 18Z" fill="var(--Colors-Use-Main-Primary)" />
-  </svg>
-)
-/** @name 系统用户图标 */
-export const BellSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={BellSvg} {...props} />
-}
-const ChevronDownSvg = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12.6668 6L8.00016 10.6667L3.3335 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-/** @name V型向下图标 */
-export const ChevronDownSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={ChevronDownSvg} {...props} />
-}
-const ArrowRightSvg = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M14.1667 6.66667L17.5 10M17.5 10L14.1667 13.3333M17.5 10L2.5 10"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-/** @name 箭头向右图标 */
-export const ArrowRightSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={ArrowRightSvg} {...props} />
 }
 const CheckedSvg = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">

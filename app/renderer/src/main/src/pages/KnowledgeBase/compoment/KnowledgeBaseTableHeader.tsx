@@ -10,9 +10,10 @@ import {
   RefreshOutlined,
   TrashOutlined,
   FigmaIcon5237120699Outlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon, OutlineTimeIcon } from '@/assets/icon/bespokeOutline'
+import { OutlineTimeIcon } from '@/assets/icon/bespokeOutline'
 
 import styles from '../knowledgeBase.module.scss'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -228,7 +229,7 @@ const KnowledgeBaseTableHeader: FC<
             添加
           </YakitButton>
           <YakitButton
-            icon={<OutlineExportIcon />}
+            icon={<FigmaIcon2017756Outlined />}
             type="secondary2"
             onClick={async () => {
               knowledgeBaseItems.ID && (await onExportKnowledgeBase?.(knowledgeBaseItems.ID))

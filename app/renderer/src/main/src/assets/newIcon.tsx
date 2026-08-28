@@ -224,44 +224,6 @@ export const SaveIcon = (props: Partial<IconProps>) => {
   return <Icon component={Save} {...props} />
 }
 
-const SortDescending = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M3 4H16M3 8H12M3 12H12M17 8V20M17 20L13 16M17 20L21 16"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
-/**
- * @description: 排序 降序
- */
-export const SortDescendingIcon = (props: Partial<IconProps>) => {
-  return <Icon component={SortDescending} {...props} />
-}
-
-const SortAscending = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M3 4H16M3 8H12M3 12H9M13 12L17 8M17 8L21 12M17 8V20"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
-/**
- * @description: 排序 降序
- */
-export const SortAscendingIcon = (props: Partial<IconProps>) => {
-  return <Icon component={SortAscending} {...props} />
-}
-
 const DotsHorizontal = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -711,30 +673,6 @@ export const TerminalIcon = (props: Partial<IconProps>) => {
   return <Icon component={Terminal} {...props} />
 }
 
-const Cube = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M8.7999 13.6C8.7999 13.8773 8.94347 14.1348 9.17932 14.2805C9.41517 14.4263 9.70968 14.4395 9.95767 14.3155L13.1577 12.7155C13.4287 12.58 13.5999 12.303 13.5999 12V7.38886C13.5999 7.1116 13.4563 6.8541 13.2205 6.70834C12.9846 6.56257 12.6901 6.54932 12.4421 6.67332L9.24213 8.27332C8.9711 8.40883 8.7999 8.68584 8.7999 8.98886V13.6Z"
-      fill="currentColor"
-    />
-    <path
-      d="M12.1688 5.02112C12.4398 4.88561 12.611 4.6086 12.611 4.30558C12.611 4.00256 12.4398 3.72555 12.1688 3.59004L8.35767 1.68446C8.13245 1.57185 7.86735 1.57185 7.64213 1.68446L3.83099 3.59004C3.55996 3.72555 3.38876 4.00256 3.38876 4.30558C3.38876 4.6086 3.55996 4.88561 3.83099 5.02112L7.64213 6.92669C7.86735 7.0393 8.13245 7.0393 8.35767 6.92669L12.1688 5.02112Z"
-      fill="currentColor"
-    />
-    <path
-      d="M3.55767 6.67332C3.30968 6.54932 3.01517 6.56257 2.77932 6.70834C2.54346 6.8541 2.3999 7.1116 2.3999 7.38886V12C2.3999 12.303 2.5711 12.58 2.84213 12.7155L6.04213 14.3155C6.29012 14.4395 6.58463 14.4263 6.82049 14.2805C7.05634 14.1348 7.1999 13.8773 7.1999 13.6V8.98886C7.1999 8.68584 7.0287 8.40883 6.75767 8.27332L3.55767 6.67332Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-/**
- * @description: cube  默认
- */
-export const CubeIcon = (props: Partial<IconProps>) => {
-  return <Icon component={Cube} {...props} />
-}
-
 const ShieldExclamation = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -751,24 +689,6 @@ const ShieldExclamation = () => (
  */
 export const ShieldExclamationIcon = (props: Partial<IconProps>) => {
   return <Icon component={ShieldExclamation} {...props} />
-}
-
-const DocumentDownload = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M9.5999 3.2C7.83259 3.2 6.3999 4.63269 6.3999 6.4V25.6C6.3999 27.3673 7.83259 28.8 9.5999 28.8H22.3999C24.1672 28.8 25.5999 27.3673 25.5999 25.6V11.8627C25.5999 11.014 25.2628 10.2001 24.6626 9.6L19.1999 4.13726C18.5998 3.53714 17.7859 3.2 16.9372 3.2H9.5999ZM17.5999 12.8C17.5999 11.9163 16.8836 11.2 15.9999 11.2C15.1162 11.2 14.3999 11.9163 14.3999 12.8V18.5373L12.3313 16.4686C11.7064 15.8438 10.6934 15.8438 10.0685 16.4686C9.44369 17.0935 9.44369 18.1065 10.0685 18.7314L14.8685 23.5314C15.4934 24.1562 16.5064 24.1562 17.1313 23.5314L21.9313 18.7314C22.5561 18.1065 22.5561 17.0935 21.9313 16.4686C21.3064 15.8438 20.2934 15.8438 19.6685 16.4686L17.5999 18.5373V12.8Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-
-/**
- * @description: DocumentDownload 下载图标
- */
-export const DocumentDownloadIcon = (props: Partial<IconProps>) => {
-  return <Icon component={DocumentDownload} {...props} />
 }
 
 const CloseCircle = () => (
@@ -1204,58 +1124,6 @@ export const SolidCloudDownloadIcon = (props: Partial<IconProps>) => {
   return <Icon component={SolidCloudDownload} {...props} />
 }
 
-const SolidTrash = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M14.3998 3.19995C13.7938 3.19995 13.2397 3.54235 12.9687 4.08441L11.811 6.39995H6.3998C5.51615 6.39995 4.7998 7.1163 4.7998 7.99995C4.7998 8.88361 5.51615 9.59995 6.39981 9.59995L6.3998 25.6C6.3998 27.3673 7.83249 28.7999 9.59981 28.7999H22.3998C24.1671 28.7999 25.5998 27.3673 25.5998 25.6V9.59995C26.4835 9.59995 27.1998 8.88361 27.1998 7.99995C27.1998 7.1163 26.4835 6.39995 25.5998 6.39995H20.1887L19.0309 4.08441C18.7599 3.54235 18.2058 3.19995 17.5998 3.19995H14.3998ZM11.1998 12.8C11.1998 11.9163 11.9161 11.2 12.7998 11.2C13.6835 11.2 14.3998 11.9163 14.3998 12.8V22.4C14.3998 23.2836 13.6835 24 12.7998 24C11.9161 24 11.1998 23.2836 11.1998 22.4V12.8ZM19.1998 11.2C18.3161 11.2 17.5998 11.9163 17.5998 12.8V22.4C17.5998 23.2836 18.3161 24 19.1998 24C20.0835 24 20.7998 23.2836 20.7998 22.4V12.8C20.7998 11.9163 20.0835 11.2 19.1998 11.2Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-/**
- * @description:solid-trash 垃圾桶 实心
- */
-export const SolidTrashIcon = (props: Partial<IconProps>) => {
-  return <Icon component={SolidTrash} {...props} />
-}
-
-const Menu = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M4 6H20M4 12H20M4 18H20"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-/**
- * @description:menu 菜单
- */
-export const MenuIcon = (props: Partial<IconProps>) => {
-  return <Icon component={Menu} {...props} />
-}
-
-const Share = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M5.78925 8.89462C5.9241 8.62543 6 8.32158 6 8C6 7.67842 5.9241 7.37457 5.78925 7.10538M5.78925 8.89462C5.46089 9.55006 4.78299 10 4 10C2.89543 10 2 9.10457 2 8C2 6.89543 2.89543 6 4 6C4.78299 6 5.46089 6.44994 5.78925 7.10538M5.78925 8.89462L10.2108 11.1054M5.78925 7.10538L10.2108 4.89462M10.2108 4.89462C10.5391 5.55006 11.217 6 12 6C13.1046 6 14 5.10457 14 4C14 2.89543 13.1046 2 12 2C10.8954 2 10 2.89543 10 4C10 4.32158 10.0759 4.62543 10.2108 4.89462ZM10.2108 11.1054C10.0759 11.3746 10 11.6784 10 12C10 13.1046 10.8954 14 12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C11.217 10 10.5391 10.4499 10.2108 11.1054Z"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-/**
- * @description:  分享 share
- */
-export const ShareIcon = (props: Partial<IconProps>) => {
-  return <Icon component={Share} {...props} />
-}
-
 const Clock = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -1311,27 +1179,6 @@ const PlusSm = () => (
  */
 export const PlusSmIcon = (props: Partial<IconProps>) => {
   return <Icon component={PlusSm} {...props} />
-}
-
-const Wrap = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M12.5 3.43921V8.43921C12.5 9.54378 11.6046 10.4392 10.5 10.4392H4.5"
-      stroke="currentColor"
-      strokeLinecap="round"
-    />
-    <path
-      d="M5.62134 8.31789L3.64144 10.2978C3.56333 10.3759 3.56333 10.5025 3.64144 10.5806L5.62134 12.5605"
-      stroke="currentColor"
-      strokeLinecap="round"
-    />
-  </svg>
-)
-/**
- * @description:  wrap 换行
- */
-export const WrapIcon = (props: Partial<IconProps>) => {
-  return <Icon component={Wrap} {...props} />
 }
 
 const Exclamation = () => (
@@ -1412,21 +1259,6 @@ export const CloudUploadIcon = (props: Partial<IconProps>) => {
   return <Icon component={CloudUpload} {...props} />
 }
 
-const Rewind = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M8.44518 14.8321C8.75203 15.0367 9.14658 15.0557 9.47174 14.8817C9.79689 14.7077 9.99988 14.3688 9.99988 14L9.99988 11.2019L15.4452 14.8321C15.752 15.0367 16.1466 15.0557 16.4717 14.8817C16.7969 14.7077 16.9999 14.3688 16.9999 14V6.00005C16.9999 5.63125 16.7969 5.29239 16.4717 5.11837C16.1466 4.94435 15.752 4.96343 15.4452 5.168L9.99988 8.7982V6.00005C9.99988 5.63125 9.79689 5.29239 9.47174 5.11837C9.14658 4.94435 8.75203 4.96343 8.44518 5.168L2.44518 9.168C2.16698 9.35346 1.99988 9.66569 1.99988 10C1.99988 10.3344 2.16698 10.6466 2.44518 10.8321L8.44518 14.8321Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-/**
- * @description:  rewind 后退
- */
-export const RewindIcon = (props: Partial<IconProps>) => {
-  return <Icon component={Rewind} {...props} />
-}
-
 const CheckCircleOutline = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -1495,40 +1327,6 @@ const HollowLightningBolt = () => (
  */
 export const HollowLightningBoltIcon = (props: Partial<IconProps>) => {
   return <Icon component={HollowLightningBolt} {...props} />
-}
-
-const SolidChevronRight = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M5.83429 11.7657C5.52187 11.4533 5.52187 10.9467 5.83429 10.6343L8.4686 8L5.83429 5.36569C5.52187 5.05327 5.52187 4.54673 5.83429 4.23431C6.14671 3.9219 6.65324 3.9219 6.96566 4.23431L10.1657 7.43431C10.4781 7.74673 10.4781 8.25327 10.1657 8.56569L6.96566 11.7657C6.65324 12.0781 6.14671 12.0781 5.83429 11.7657Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-/**
- * @description:向右 right Solid
- */
-export const SolidChevronRightIcon = (props: Partial<IconProps>) => {
-  return <Icon component={SolidChevronRight} {...props} />
-}
-
-const SolidChevronDown = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M4.23431 5.83429C4.54673 5.52187 5.05327 5.52187 5.36569 5.83429L8 8.4686L10.6343 5.83429C10.9467 5.52187 11.4533 5.52187 11.7657 5.83429C12.0781 6.14671 12.0781 6.65324 11.7657 6.96566L8.56569 10.1657C8.25327 10.4781 7.74673 10.4781 7.43431 10.1657L4.23431 6.96566C3.9219 6.65324 3.9219 6.14671 4.23431 5.83429Z"
-      fill="currentColor"
-    />
-  </svg>
-)
-/**
- * @description:向下 down Solid
- */
-export const SolidChevronDownIcon = (props: Partial<IconProps>) => {
-  return <Icon component={SolidChevronDown} {...props} />
 }
 
 const Eye = () => (

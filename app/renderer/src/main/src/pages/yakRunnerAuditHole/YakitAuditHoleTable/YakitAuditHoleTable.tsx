@@ -26,9 +26,9 @@ import {
   UploadOutlined,
   BotOutlined,
   FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -1102,7 +1102,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     <FuncBtn
                       maxWidth={1200}
                       type="outline2"
-                      icon={<OutlineExportIcon />}
+                      icon={<FigmaIcon2017756Outlined />}
                       onClick={onExportSSARisk}
                       disabled={tableTotal === 0}
                       name={t('YakitButton.export')}

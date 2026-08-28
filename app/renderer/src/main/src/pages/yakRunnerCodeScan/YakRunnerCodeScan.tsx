@@ -46,8 +46,9 @@ import {
   CogOutlined,
   QuestionMarkCircleOutlined,
   TerminalOutlined,
+  ArrowsOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineArrowscollapseIcon } from '@/assets/icon/bespokeOutline'
+
 import { defYakitAutoCompleteRef, YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -1300,7 +1301,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
 
             <YakitButton
               type="text2"
-              icon={hidden ? <OutlineArrowscollapseIcon /> : <ArrowsExpandOutlined color="currentColor" />}
+              icon={hidden ? <ArrowsOutlined /> : <ArrowsExpandOutlined color="currentColor" />}
               onClick={(e) => {
                 e.stopPropagation()
                 setHidden(!hidden)

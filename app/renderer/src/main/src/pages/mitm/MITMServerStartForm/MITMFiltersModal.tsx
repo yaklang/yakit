@@ -20,9 +20,9 @@ import {
   SaveOutlined,
   TrashOutlined,
   FigmaIcon13208172881Outlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import emiter from '@/utils/eventBus/eventBus'
@@ -414,7 +414,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 <YakitButton
                   style={{ padding: '3px 8px' }}
                   type="text"
-                  icon={<OutlineExportIcon />}
+                  icon={<FigmaIcon2017756Outlined />}
                   onClick={onFilterExport}
                 />
               </Tooltip>

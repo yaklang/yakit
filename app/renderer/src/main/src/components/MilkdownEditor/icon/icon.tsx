@@ -183,29 +183,6 @@ export const IconHeading3 = (props: Partial<IconProps>) => {
   return <Icon component={heading3} {...props} />
 }
 
-const listOrdered = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M10 6H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10 12H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10 18H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M4 6H5V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M4 10H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path
-      d="M6 18H4C4 17 6 16 6 15C6 14 5 13.5 4 14"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-/**
- * @description  icon/list-ordered
- */
-export const IconListOrdered = (props: Partial<IconProps>) => {
-  return <Icon component={listOrdered} {...props} />
-}
-
 const checkSquare = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M9 11L12 14L22 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

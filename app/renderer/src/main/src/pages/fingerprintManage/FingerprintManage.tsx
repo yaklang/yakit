@@ -11,9 +11,9 @@ import {
   SearchOutlined,
   TrashOutlined,
   FigmaIcon6480193584Outlined,
+  FigmaIcon2017756Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineExportIcon } from '@/assets/icon/bespokeOutline'
 import { useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useVirtualList } from 'ahooks'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -1079,7 +1079,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
 
               <YakitButton
                 type="outline2"
-                icon={<OutlineExportIcon />}
+                icon={<FigmaIcon2017756Outlined />}
                 onClick={() => {
                   onExport(rowSelectionKeys.length === data.Data.length ? [] : rowSelectionKeys)
                 }}

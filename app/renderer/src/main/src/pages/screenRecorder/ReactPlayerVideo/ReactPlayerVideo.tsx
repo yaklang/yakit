@@ -1,5 +1,4 @@
-import { RewindIcon } from '@/assets/newIcon'
-import { FastForwardSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { FastForwardSolid, RewindSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import React, { useEffect, useRef, useState } from 'react'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -55,7 +54,7 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
         {error && <div className={styles['player-video-tip']}>{t('ReactPlayerVideo.fileNotPlayable')}</div>}
         <ControlBar autoHide={true} disableDefaultControls={false} className={styles['player-control-bar']}>
           <div className={isPre ? 'hint--top-right' : ''} aria-label={t('YakitButton.prev')}>
-            <RewindIcon
+            <RewindSolid
               className={classNames(styles['bar-icon'], {
                 [styles['not-allowed-icon']]: !isPre,
               })}
