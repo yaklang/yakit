@@ -134,7 +134,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
       autoOpenedRiskRef.current = true
       openTab({ key: AITabsEnum.Risk, type: AITabsEnum.Risk, label: getDefaultLabel(AITabsEnum.Risk) })
     }
-  }, [httpTabShow, riskTabShow])
+  }, [httpTabShow, riskTabShow, activeChat?.SessionID])
 
   const onSwitchAIAgentTab = useMemoizedFn((data?: string) => {
     if (!data) return
