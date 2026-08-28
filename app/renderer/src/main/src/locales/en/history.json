@@ -59,7 +59,7 @@
       "sendOnly": "Send Only",
       "sendToWSFuzzer": "Send to WS Fuzzer",
       "packetScan": "Packet Scan",
-      "pluginExtension": "Plugin Extension",
+      "pluginExtension": "Context Menu Plugin",
       "aiPlugin": "AI Plugin",
       "copyURL": "Copy URL",
       "downloadResponseBody": "Download Response Body",

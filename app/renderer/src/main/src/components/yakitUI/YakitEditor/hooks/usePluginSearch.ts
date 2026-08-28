@@ -2,12 +2,13 @@ import { useEffect } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 import type { YakScript } from '@/pages/invoker/schema'
-import { failed } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import { useStore } from '@/store/editorState'
 import { PluginSwitchToTag } from '@/pages/pluginEditor/defaultconstants'
 import type { YakitEditorExtraRightMenuType } from '../YakitEditorType'
 import type { CodecTypeProps, contextMenuProps } from '../constants'
+import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
+import { getSceneTabActions } from '@/pages/manageRightClickPlugins/utils'
 
 export interface UsePluginSearchParams {
   menuType: YakitEditorExtraRightMenuType[]
@@ -25,7 +26,7 @@ export interface UsePluginSearchResult {
 /**
  * Codec 插件搜索逻辑
  *
- * 自定义HTTP数据包变形处理 + 插件扩展
+ * 自定义HTTP数据包变形处理 + 右键插件
  */
 export const usePluginSearch = (params: UsePluginSearchParams): UsePluginSearchResult => {
   const { menuType, inViewport } = params
@@ -60,34 +61,22 @@ export const usePluginSearch = (params: UsePluginSearchParams): UsePluginSearchR
     )
   })
 
-  // 插件扩展
+  // 右键插件
   const searchCodecCustomContextMenuPlugin = useMemoizedFn(() => {
-    queryYakScriptList(
-      'codec',
-      (i: YakScript[], total) => {
-        if (!total || total === 0) {
-          return
-        }
-        setContextMenuPlugin(
-          i.map((script) => {
-            const isAiPlugin: boolean = script.Tags.includes('AI工具')
-            return {
-              key: script.ScriptName,
-              value: script.ScriptName,
-              isAiPlugin,
-              params: script.Params,
-            } as contextMenuProps
-          }),
-        )
-      },
-      undefined,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      [PluginSwitchToTag.PluginCodecContextMenuExecuteSwitch],
-    )
+    getSceneTabActions(ManageRightClickPluginsTabKey.PacketContextMenu).then(({ list }) => {
+      setContextMenuPlugin(
+        list.map((action) => {
+          return {
+            key: action.PluginName,
+            value: action.PluginName,
+            isAiPlugin: !!action.IsAIPlugin,
+            params: action.Params || [],
+            executionType: action.ExecutionType,
+            action,
+          } as contextMenuProps
+        }),
+      )
+    })
   })
 
   useEffect(() => {
@@ -105,9 +94,9 @@ export const usePluginSearch = (params: UsePluginSearchParams): UsePluginSearchR
   })
 
   useEffect(() => {
-    emiter.on('onRefPluginCodecMenu', onRefreshPluginCodecMenu)
+    emiter.on('refreshContextMenuActions', onRefreshPluginCodecMenu)
     return () => {
-      emiter.off('onRefPluginCodecMenu', onRefreshPluginCodecMenu)
+      emiter.off('refreshContextMenuActions', onRefreshPluginCodecMenu)
     }
   }, [])
 

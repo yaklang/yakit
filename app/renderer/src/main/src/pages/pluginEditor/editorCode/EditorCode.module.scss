@@ -78,12 +78,15 @@
     border-radius: 0px 4px 4px 0px;
     border-left: 1px solid var(--Colors-Use-Neutral-Border);
     background: var(--Colors-Use-Neutral-Bg);
-    .header {
+    .header-wraper {
       padding: 12px;
+      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    }
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+      margin-bottom: 2px;
 
       color: var(--Colors-Use-Neutral-Text-1-Title);
       font-size: 12px;

@@ -28,6 +28,7 @@ export enum I18nNamespaces {
   irifyHome = 'irifyHome',
   layout = 'layout',
   mitm = 'mitm',
+  manageRightClickPlugins = 'manageRightClickPlugins',
   notepad = 'notepad',
   payload = 'payload',
   plugin = 'plugin',

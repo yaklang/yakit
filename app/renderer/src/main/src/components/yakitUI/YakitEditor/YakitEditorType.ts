@@ -5,6 +5,23 @@ import type { EditorDetailInfoProps } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
 import type { Selection } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
 import { type Theme } from '@/hook/useTheme'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { ContextMenuHttpsState } from '@/pages/manageRightClickPlugins/types'
+
+/** 右键插件(context-menu)数据包编辑器上下文：感知另一侧内容与来源信息 */
+export interface ContextMenuPacketEditorConfig {
+  /** 当前编辑器角色，未传时按内容嗅探（状态行开头为 response） */
+  role?: 'request' | 'response'
+  /** 另一侧数据包内容 */
+  peerValue?: string
+  /** 另一侧数据包被插件修改时的回填回调 */
+  onPeerValueChange?: (value: string) => void
+  /** 执行来源标识（页面类型），默认 yakit-editor */
+  source?: string
+  /** HTTPS 状态，未传时为 unknown */
+  httpsState?: ContextMenuHttpsState
+  /** 关联流量 ID */
+  httpFlowId?: number
+}
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection
@@ -27,6 +44,9 @@ export interface YakitEditorProps {
 
   /** @name 自带的菜单组可选项(多选) */
   menuType?: YakitEditorExtraRightMenuType[]
+
+  /** @name 右键插件(context-menu)数据包上下文；未传时按内容嗅探 Request/Response 角色 */
+  contextMenuPacket?: ContextMenuPacketEditorConfig
 
   /** @name 编辑器内容(string类型) */
   value?: string

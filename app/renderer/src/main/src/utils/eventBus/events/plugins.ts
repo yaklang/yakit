@@ -1,3 +1,5 @@
+import type { RunContextMenuActionOptions } from '@/pages/manageRightClickPlugins/types'
+
 export type PluginsEventProps = {
   /** 修改私有域成功后发送的信号 */
   onSwitchPrivateDomain: string
@@ -5,8 +7,10 @@ export type PluginsEventProps = {
   onRefSinglePluginExecution?: string
   /** 从最近使用打开插件时恢复上次执行快照 */
   onRestorePluginLastExecute?: string
-  /** 刷新Codec相关菜单 */
-  onRefPluginCodecMenu?: string
+  refreshContextMenuActions?: string
+  refreshContextMenuPlugins?: string
+  /** 触发右键插件(context-menu 类型)流式执行 */
+  runContextMenuAction: RunContextMenuActionOptions
 
   // ---------- 插件列表相关通信 ----------
   /** 刷新插件商店列表(传 true 则同步刷新高级筛选条件) */

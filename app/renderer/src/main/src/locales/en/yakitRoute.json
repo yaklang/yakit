@@ -128,6 +128,8 @@
     "penetrationRecordDescription": "Records any content generated during the penetration testing process, making it easy to review and track.",
     "ai-memory": "Memory Base",
     "ai-tool": "Tool",
-    "ai-forge": "Forge"
+    "ai-forge": "Forge",
+    "manageRightClickPlugins": "Manage Right-Click Plugins",
+    "contextMenuResult": "Right-Click Plugin Result"
   }
 }

@@ -1,0 +1,53 @@
+{
+  "ManageRightClickPlugins": {
+    "editRightClickPlugins": "編輯右鍵外掛",
+    "pluginExtensionSingle": "History 右鍵外掛（單選）",
+    "pluginExtensionMultiple": "History 右鍵外掛（多選）",
+    "packetContextMenu": "資料包右鍵外掛",
+    "addedPluginsCount": "已新增外掛 {{count}} / {{UpperLimit}}",
+    "clearConfirm": "確定清空目前已新增外掛嗎？",
+    "noPluginAdded": "暫未新增外掛",
+    "addPluginHint": "可從右側拖曳或點擊新增外掛",
+    "rightClickPlugins": "右鍵外掛",
+    "rightHelp": "可拖曳或點擊「新增」將外掛放入中間列表",
+    "noAvailablePlugins": "暫無可用外掛",
+    "getPlugin": "獲取外掛",
+    "maxAddLimit": "最多新增 {{UpperLimit}} 個外掛",
+    "added": "已新增",
+    "searchPlaceholder": "搜尋外掛名稱、說明或 Hook",
+    "noMatchedPlugins": "沒有匹配的外掛"
+  },
+  "ContextMenuExecutionHost": {
+    "executeFailed": "右鍵外掛執行失敗: {{error}}",
+    "saveParamsFailed": "儲存右鍵外掛參數失敗: {{error}}",
+    "paramsModalTitle": "右鍵外掛參數"
+  },
+  "ContextMenuActionExecution": {
+    "pluginFallbackName": "右鍵外掛",
+    "executionExpiredEmpty": "執行上下文已失效，請重新從右鍵選單觸發。",
+    "refreshPluginData": "重新整理外掛資料",
+    "extraParams": "額外參數",
+    "applyChanges": "應用修改",
+    "packetModifyTitle": "外掛回傳了資料包修改",
+    "packetModifyDesc": "應用前會校驗資料包版本，避免覆寫觸發後產生的新編輯。",
+    "packetAppliedNotify": "資料包修改已提交到原編輯器",
+    "packetPageClosed": "原資料包頁面已關閉，無法回填",
+    "sourceCodeNotFound": "未找到外掛原始碼",
+    "requiredField": "${label} 是必填欄位",
+    "sourceTab": "原始碼"
+  },
+  "pluginEditor": {
+    "contextMenuSaveBeforeRun": "右鍵外掛需要儲存後，從對應的 History 或 HTTP 資料包場景觸發",
+    "contextMenuRunFromScene": "右鍵外掛需要從對應的 History 或 HTTP 資料包場景觸發",
+    "contextMenuSaveAndTrigger": "儲存外掛後，從對應的 History 或 HTTP 資料包右鍵選單觸發執行",
+    "contextMenuEnableAndTrigger": "儲存並在右鍵外掛管理中啟用後，從對應的 History 或 HTTP 資料包場景觸發執行"
+  },
+  "grpc": {
+    "queryContextMenuActionsFailed": "查詢右鍵外掛失敗: {{error}}",
+    "setContextMenuActionBindingFailed": "儲存右鍵外掛配置失敗: {{error}}",
+    "cancelContextMenuActionFailed": "取消右鍵外掛失敗: {{error}}"
+  },
+  "utils": {
+    "engineVersionTooLow": "引擎版本過低，請更新到高於 {{version}} 的版本"
+  }
+}

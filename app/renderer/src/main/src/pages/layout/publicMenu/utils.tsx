@@ -1,5 +1,6 @@
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import type { DatabaseMenuItemProps, PublicRouteMenuProps } from '@/routes/newRoute'
+import { isIndependentTabRoute } from '@/routes/newRoute'
 import { CodeGV } from '@/yakitGV'
 import type { RouteToPageProps } from './PublicMenu'
 import type { EnhancedPrivateRouteMenuProps } from '../HeardMenu/HeardMenuType'
@@ -233,11 +234,11 @@ export const publicConvertDatabase = (data: EnhancedPublicRouteMenuProps[]) => {
 
 /**
  * @name 将页面信息转换为唯一标识符
- * @description 插件菜单：${YakitRoute}|${插件名}
- * @description 非插件菜单：${YakitRoute}
+ * @description 插件菜单/右键插件结果：${YakitRoute}|${插件名}
+ * @description 其它菜单：${YakitRoute}
  */
 export const routeConvertKey = (route: YakitRoute, pluginName?: string) => {
-  if (route === YakitRoute.Plugin_OP) return `${route}${separator}${pluginName || ''}`
+  if (isIndependentTabRoute(route)) return `${route}${separator}${pluginName || ''}`
   else return route
 }
 

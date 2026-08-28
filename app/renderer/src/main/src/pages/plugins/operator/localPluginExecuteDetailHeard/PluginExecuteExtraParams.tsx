@@ -84,7 +84,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
     const onSaveSetting = useMemoizedFn(() => {
       switch (pluginType) {
         case 'yak':
-        case 'lua':
+        case 'context-menu':
           form.validateFields().then((formValue: CustomPluginExecuteFormValue) => {
             onSave({ customValue: formValue, fixedValue: { ...defPluginExecuteFormValue } })
           })
@@ -112,11 +112,11 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
       }
     })
 
-    /**yak/lua根据后端返的生成;mitm/port-scan/nuclei/codec前端固定;*/
+    /**yak/context-menu根据后端返的生成;mitm/port-scan/nuclei/codec前端固定*/
     const pluginParamsNodeByPluginType = (type: string) => {
       switch (type) {
         case 'yak':
-        case 'lua':
+        case 'context-menu':
           return (
             <Form size="small" labelWrap={true} labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} form={form}>
               <ExtraParamsNodeByType

@@ -1,0 +1,53 @@
+{
+  "ManageRightClickPlugins": {
+    "editRightClickPlugins": "Edit Right-Click Plugins",
+    "pluginExtensionSingle": "History Context Menu Plugin (Single)",
+    "pluginExtensionMultiple": "History Context Menu Plugin (Multiple)",
+    "packetContextMenu": "Packet Context Menu Plugin",
+    "addedPluginsCount": "Added {{count}} / {{UpperLimit}}",
+    "clearConfirm": "Clear all added plugins for the current tab?",
+    "noPluginAdded": "No plugins added",
+    "addPluginHint": "Drag from the right or click Add to include plugins",
+    "rightClickPlugins": "Right-Click Plugins",
+    "rightHelp": "Drag or click Add to place plugins into the middle list",
+    "noAvailablePlugins": "No available plugins",
+    "getPlugin": "Get Plugins",
+    "maxAddLimit": "You can add up to {{UpperLimit}} plugins",
+    "added": "Added",
+    "searchPlaceholder": "Search plugin name, description or hook",
+    "noMatchedPlugins": "No matching plugins"
+  },
+  "ContextMenuExecutionHost": {
+    "executeFailed": "Context menu plugin execution failed: {{error}}",
+    "saveParamsFailed": "Failed to save context menu plugin params: {{error}}",
+    "paramsModalTitle": "Context Menu Plugin Params"
+  },
+  "ContextMenuActionExecution": {
+    "pluginFallbackName": "Context Menu Plugin",
+    "executionExpiredEmpty": "Execution context expired. Please trigger again from the context menu.",
+    "refreshPluginData": "Refresh plugin data",
+    "extraParams": "Extra Params",
+    "applyChanges": "Apply Changes",
+    "packetModifyTitle": "Plugin returned packet modifications",
+    "packetModifyDesc": "Packet version is verified before applying, to avoid overwriting edits made after the trigger.",
+    "packetAppliedNotify": "Packet modifications have been submitted to the original editor",
+    "packetPageClosed": "The original packet page is closed; cannot apply changes",
+    "sourceCodeNotFound": "Plugin source not found",
+    "requiredField": "${label} is required",
+    "sourceTab": "Source"
+  },
+  "pluginEditor": {
+    "contextMenuSaveBeforeRun": "Right-click plugins must be saved first, then triggered from the corresponding History or HTTP packet scenario",
+    "contextMenuRunFromScene": "Right-click plugins must be triggered from the corresponding History or HTTP packet scenario",
+    "contextMenuSaveAndTrigger": "After saving the plugin, trigger it from the History or HTTP packet right-click menu",
+    "contextMenuEnableAndTrigger": "After saving and enabling the plugin in right-click plugin management, trigger it from the corresponding History or HTTP packet scenario"
+  },
+  "grpc": {
+    "queryContextMenuActionsFailed": "Failed to query context menu plugins: {{error}}",
+    "setContextMenuActionBindingFailed": "Failed to save context menu plugin binding: {{error}}",
+    "cancelContextMenuActionFailed": "Failed to cancel context menu plugin: {{error}}"
+  },
+  "utils": {
+    "engineVersionTooLow": "Engine version is too low, please update to a version above {{version}}"
+  }
+}

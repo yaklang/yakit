@@ -128,6 +128,8 @@
     "penetrationRecordDescription": "可記錄滲透過程中的任何內容，便於記錄檢視",
     "ai-memory": "記憶庫",
     "ai-tool": "工具庫",
-    "ai-forge": "技能庫"
+    "ai-forge": "技能庫",
+    "manageRightClickPlugins": "右鍵外掛設定",
+    "contextMenuResult": "右鍵外掛結果"
   }
 }

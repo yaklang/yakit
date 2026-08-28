@@ -212,7 +212,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
   // init
   useEffect(() => {
     if (plugin) {
-      if (['yak', 'mitm', 'lua'].includes(plugin.Type)) setParams(plugin.Params || [])
+      if (['yak', 'mitm'].includes(plugin.Type)) setParams(plugin.Params || [])
       // 非yak类型插件固定参数
       else setParams([])
       setNewCode(newCode || plugin.Content || '')
@@ -249,7 +249,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
   })
 
   const initFormValue = useMemoizedFn(() => {
-    if (!['yak', 'lua', 'mitm'].includes(pluginType)) {
+    if (!['yak', 'mitm'].includes(pluginType)) {
       onSettingDefault()
       return
     }
@@ -279,7 +279,6 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
   const pluginRequiredItem = (type: string) => {
     switch (type) {
       case 'yak':
-      case 'lua':
         return (
           <ExecuteEnterNodeByPluginParams
             paramsList={requiredParams}
@@ -327,7 +326,7 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
   const requestType = Form.useWatch('requestType', form)
   /** 是否隐藏默认选填参数 */
   const isHiddenDefaultParams = useMemo(() => {
-    if (['yak', 'lua'].includes(pluginType)) return true
+    if (['yak'].includes(pluginType)) return true
     if (requestType === 'input') return false
     return true
   }, [pluginType, requestType])
@@ -348,7 +347,6 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
   const pluginOptionalItem = (type: string) => {
     switch (type) {
       case 'yak':
-      case 'lua':
         return groupParams.length > 0 ? (
           <>
             <div className={styles['additional-params-divider']}>
@@ -449,7 +447,6 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
 
           switch (pluginType) {
             case 'yak':
-            case 'lua':
               requestParams.ExecParams = getYakExecutorParam({ ...value })
               break
             case 'codec':

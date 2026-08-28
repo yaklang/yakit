@@ -113,6 +113,8 @@ import type {
   AIRepositoryProps,
   PluginOpPageInfoProps,
   CodecPageInfoProps,
+  ManageRightClickPluginsPageInfoProps,
+  ContextMenuResultPageInfoProps,
 } from '@/store/pageInfo'
 import {
   CommunityDeprecatedFirstMenu,
@@ -301,6 +303,10 @@ const HTTPHistoryAnalysis = React.lazy(() =>
 )
 // HTTPFuzzerPage 仍被 extraYakitEditor / FuzzerSequence / Home 等 sync import，route lazy 无法 code-split
 import HTTPFuzzerPage from '@/pages/fuzzer/HTTPFuzzerPage'
+const ManageRightClickPlugins = React.lazy(() => import('@/pages/manageRightClickPlugins/ManageRightClickPlugins'))
+const ContextMenuActionExecution = React.lazy(
+  () => import('@/pages/manageRightClickPlugins/ContextMenuActionExecution'),
+)
 
 /**
  * @description 页面路由对应的页面信息
@@ -513,6 +519,8 @@ export const YakitRouteToPageInfo: Record<
   'ai-memory': { label: '记忆库', labelUi: 'YakitRoute.ai-memory' },
   'ai-tool': { label: '工具库', labelUi: 'YakitRoute.ai-tool' },
   'ai-forge': { label: '技能库', labelUi: 'YakitRoute.ai-forge' },
+  'manage-right-click-plugins': { label: '右键插件设置', labelUi: 'YakitRoute.manageRightClickPlugins' },
+  'context-menu-result': { label: '右键插件结果', labelUi: 'YakitRoute.contextMenuResult' },
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -571,6 +579,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
+  YakitRoute.ManageRightClickPlugins,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -629,6 +638,8 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.AI_Tool,
   YakitRoute.AI_Forge,
   YakitRoute.MCP_History,
+  YakitRoute.ManageRightClickPlugins,
+  YakitRoute.ContextMenuResult,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -639,7 +650,14 @@ export const NoScrollRoutes: YakitRoute[] = [
   YakitRoute.AI_Agent,
   YakitRoute.ShortcutKey,
   YakitRoute.YakRunner_ScanHistory,
+  YakitRoute.ManageRightClickPlugins,
 ]
+
+/** 每次打开新增一级 Tab、名称 {pluginName}-N 递增的页面路由（key 为 ${YakitRoute}|${插件名}） */
+export const INDEPENDENT_TAB_ROUTES: YakitRoute[] = [YakitRoute.Plugin_OP, YakitRoute.ContextMenuResult]
+
+export const isIndependentTabRoute = (route: YakitRoute | string) =>
+  INDEPENDENT_TAB_ROUTES.includes(route as YakitRoute)
 
 /** 通过版本获取一级tab固定展示tab  */
 export const getDefaultFixedTabs = (softMode: SoftMode) => {
@@ -802,6 +820,12 @@ export interface ComponentParams {
 
   /** 插件执行页（Plugin_OP）初始参数 */
   pluginOpPageInfo?: PluginOpPageInfoProps
+
+  /** 管理右键插件页面 */
+  manageRightClickPluginsPageInfo?: ManageRightClickPluginsPageInfoProps
+
+  /** 右键插件执行结果页面 */
+  contextMenuResultPageInfo?: ContextMenuResultPageInfoProps
 }
 function withRouteToPage(WrappedComponent) {
   return function WithPage(props) {
@@ -1078,6 +1102,18 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <AITool pageId={params?.id || ''} />
     case YakitRoute.AI_Forge:
       return <AIForge pageId={params?.id || ''} />
+    case YakitRoute.ManageRightClickPlugins:
+      return <ManageRightClickPlugins />
+    case YakitRoute.ContextMenuResult: {
+      const pageInfo = params?.contextMenuResultPageInfo
+      return pageInfo?.executionID ? (
+        <Suspense fallback={<PageLoading />}>
+          <ContextMenuActionExecution pageId={params?.id || ''} mode="tab" />
+        </Suspense>
+      ) : (
+        <div />
+      )
+    }
     default:
       return <div />
   }

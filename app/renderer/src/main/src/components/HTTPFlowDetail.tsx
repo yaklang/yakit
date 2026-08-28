@@ -472,6 +472,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         url={flow.Url}
                         downstreamProxyStr={props.downstreamProxyStr}
                         downbodyParams={{ Id: flow.Id, IsRequest: true }}
+                        contextMenuPacket={{
+                          httpFlowId: flow.Id,
+                          peerValue: flow.ResponseString || undefined,
+                          source: props.pageType || 'History',
+                        }}
                         onEditor={(editor) => {
                           setReqEditor(editor)
                         }}
@@ -525,6 +530,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         url={flow.Url}
                         downstreamProxyStr={props.downstreamProxyStr}
                         downbodyParams={{ Id: flow.Id, IsRequest: false }}
+                        contextMenuPacket={{
+                          httpFlowId: flow.Id,
+                          peerValue: flow.RequestString || undefined,
+                          source: props.pageType || 'History',
+                        }}
                         onEditor={(editor) => {
                           setResEditor(editor)
                         }}
@@ -1935,6 +1945,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
             url={flow.Url}
             downbodyParams={{ Id: flow.Id, IsRequest: true }}
+            contextMenuPacket={{
+              httpFlowId: flow.Id,
+              peerValue: flow.ResponseString || undefined,
+              source: pageType || 'History',
+            }}
             onClickOpenPacketNewWindowMenu={getPacketNewWindow}
             noPacketModifier={noPacketModifier}
             noOpenPacketNewWindow={noOpenPacketNewWindow}
@@ -2070,6 +2085,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
             url={flow.Url}
             downbodyParams={{ Id: flow.Id, IsRequest: false }}
+            contextMenuPacket={{
+              httpFlowId: flow.Id,
+              peerValue: flow.RequestString || undefined,
+              source: pageType || 'History',
+            }}
             onClickOpenPacketNewWindowMenu={getPacketNewWindow}
             noPacketModifier={noPacketModifier}
             noOpenPacketNewWindow={noOpenPacketNewWindow}

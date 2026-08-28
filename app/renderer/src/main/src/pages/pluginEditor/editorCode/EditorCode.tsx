@@ -55,6 +55,7 @@ import '../../plugins/plugins.scss'
 import styles from './EditorCode.module.scss'
 import { getJsonSchemaListResult } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import { delInvalidPluginExecuteParams } from '../utils/convert'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface EditorCodeRefProps {
   onSubmit: () => string
@@ -74,6 +75,7 @@ interface EditorCodeProps {
 export const EditorCode: React.FC<EditorCodeProps> = memo(
   forwardRef((props, ref) => {
     const { expand, onExpand, isEdit = false, type, name, code, handleParsingYaml } = props
+    const { t } = useI18nNamespaces(['manageRightClickPlugins'])
 
     const [visible, setVisible] = useState<boolean>(false)
     const handleExpand = useMemoizedFn((e) => {
@@ -105,8 +107,8 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
       return type
     })
     useUpdateEffect(() => {
-      // yak、lua、mitm、codec类型都可以自定义参数
-      if (['yak', 'lua', 'mitm', 'codec'].includes(getType())) {
+      // yak、mitm、codec、context-menu类型都可以自定义参数
+      if (['yak', 'mitm', 'codec', 'context-menu'].includes(getType())) {
         handleFetchParams(true)
       } else {
         setParams([])
@@ -162,7 +164,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
       [key: string]: any
     }>({})
 
-    // 设置非(yak|lua)类型的插件参数初始值
+    // 设置非(yak|mitm|codec|context-menu)类型的插件参数初始值
     const onSettingDefault = useMemoizedFn(() => {
       const defaultValue: CustomPluginExecuteFormValue = { ...defPluginExecuteFormValue, requestType: 'input' }
       form.setFieldsValue({ ...cloneDeep(defaultValue) })
@@ -174,7 +176,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
     }, [params])
     const initFormValue = useMemoizedFn(() => {
       // 其他类型只有默认参数
-      if (!['yak', 'lua', 'mitm', 'codec'].includes(type)) {
+      if (!['yak', 'mitm', 'codec', 'context-menu'].includes(type)) {
         onSettingDefault()
         return
       }
@@ -206,7 +208,6 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
     const pluginRequiredItem = useMemoizedFn((type: string) => {
       switch (type) {
         case 'yak':
-        case 'lua':
           return (
             <ExecuteEnterNodeByPluginParams
               paramsList={requiredParams}
@@ -243,6 +244,15 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             </>
           )
         }
+        case 'context-menu':
+          return params.length > 0 && requiredParams.length > 0 ? (
+            <ExecuteEnterNodeByPluginParams
+              paramsList={requiredParams}
+              pluginType={type}
+              isExecuting={isExecuting}
+              jsonSchemaListRef={jsonSchemaListRef}
+            />
+          ) : null
         case 'mitm':
           return (
             <>
@@ -269,7 +279,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
     const requestType = Form.useWatch('requestType', form)
     /** 是否隐藏默认选填参数 */
     const isHiddenDefaultParams = useMemo(() => {
-      if (['yak', 'lua'].includes(type)) return true
+      if (['yak'].includes(type)) return true
       if (requestType === 'input') return false
       return true
     }, [type, requestType])
@@ -290,7 +300,6 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
     const pluginOptionalItem = (type: string) => {
       switch (type) {
         case 'yak':
-        case 'lua':
           return isHiddenCustomParams ? null : (
             <>
               <div className={styles['additional-params-divider']}>
@@ -307,6 +316,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             </>
           )
         case 'codec':
+        case 'context-menu':
           return isHiddenCustomParams ? null : (
             <>
               <div className={styles['additional-params-divider']}>
@@ -399,6 +409,10 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
     })
 
     const onStartExecute = useMemoizedFn(() => {
+      if (type === 'context-menu') {
+        yakitNotify('info', t('pluginEditor.contextMenuSaveBeforeRun'))
+        return
+      }
       if (form) {
         form
           .validateFields()
@@ -428,7 +442,6 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
             switch (type) {
               case 'yak':
-              case 'lua':
                 requestParams.ExecParams = getYakExecutorParam({ ...value })
                 break
               case 'codec':
@@ -578,42 +591,50 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                     </div>
                   </>
                 ) : (
-                  <YakitEmpty style={{ marginTop: 60 }} description={'点击【执行】以开始'} />
+                  <YakitEmpty
+                    style={{ marginTop: 60 }}
+                    description={
+                      type === 'context-menu' ? t('pluginEditor.contextMenuSaveAndTrigger') : '点击【执行】以开始'
+                    }
+                  />
                 )}
               </div>
             </div>
 
             <div className={styles['editor-params']}>
-              <div className={styles['header']}>
-                参数预览
-                <div className={styles['header-extra']}>
-                  <YakitButton type="text" onClick={handleOpenScoreHint}>
-                    自动检测
-                  </YakitButton>
-                  <div
-                    className={styles['divider-style']}
-                    style={['yak', 'mitm', 'codec'].includes(type) ? { marginRight: 0 } : undefined}
-                  ></div>
-                  {['yak', 'mitm', 'codec'].includes(type) && (
-                    <>
-                      <YakitButton type="text" loading={fetchParamsLoading} onClick={() => handleFetchParams()}>
-                        获取参数
-                      </YakitButton>
-                      <div className={styles['divider-style']}></div>
-                    </>
-                  )}
-                  {isExecuting ? (
-                    <YakitButton danger onClick={onStopExecute}>
-                      停止
+              <div className={styles['header-wraper']}>
+                <div className={styles['header']}>
+                  参数预览
+                  <div className={styles['header-extra']}>
+                    <YakitButton type="text" onClick={handleOpenScoreHint}>
+                      自动检测
                     </YakitButton>
-                  ) : (
-                    <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
-                      执行
-                    </YakitButton>
-                  )}
+                    <div
+                      className={styles['divider-style']}
+                      style={['yak', 'mitm', 'codec', 'context-menu'].includes(type) ? { marginRight: 0 } : undefined}
+                    ></div>
+                    {['yak', 'mitm', 'codec', 'context-menu'].includes(type) && (
+                      <>
+                        <YakitButton type="text" loading={fetchParamsLoading} onClick={() => handleFetchParams()}>
+                          获取参数
+                        </YakitButton>
+                        {type !== 'context-menu' && <div className={styles['divider-style']}></div>}
+                      </>
+                    )}
+                    {type !== 'context-menu' &&
+                      (isExecuting ? (
+                        <YakitButton danger onClick={onStopExecute}>
+                          停止
+                        </YakitButton>
+                      ) : (
+                        <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
+                          执行
+                        </YakitButton>
+                      ))}
+                  </div>
                 </div>
+                {type === 'context-menu' && <YakitTag color="blue">保存后从场景右键菜单执行</YakitTag>}
               </div>
-
               <div className={styles['container']}>
                 <div className={styles['form-wrapper']}>
                   <Form

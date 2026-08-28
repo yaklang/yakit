@@ -92,6 +92,9 @@ export const MisstatementRiskDetails = <T extends API.RiskFeedBackData>(props: M
     const extraParams = {
       originValue: currentSelectShowType === 'request' ? requestString(info) : responseString(info),
       webFuzzerValue: currentSelectShowType === 'request' ? '' : requestString(info),
+      contextMenuPacket: {
+        peerValue: currentSelectShowType === 'request' ? responseString(info) : requestString(info),
+      },
     }
     return (
       <NewHTTPPacketEditor

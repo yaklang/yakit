@@ -13,7 +13,7 @@ export const useStore = create<StoreProps>((set, get) => ({
   // 自定义HTTP数据包变形处理
   customHTTPMutatePlugin: [],
   setCustomHTTPMutatePlugin: (customHTTPMutatePlugin) => set({ customHTTPMutatePlugin }),
-  // 插件扩展
+  // 右键插件
   contextMenuPlugin: [],
   setContextMenuPlugin: (contextMenuPlugin) => set({ contextMenuPlugin }),
 }))

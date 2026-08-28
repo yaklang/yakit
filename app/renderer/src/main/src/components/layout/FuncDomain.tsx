@@ -871,6 +871,7 @@ const GetUIOpSettingMenu = (t: (key: string) => string) => {
         // { key: "engineVar",label: "引擎环境变量" },
         { key: 'config-network', label: '全局配置' },
         { key: 'setShortcutKey', label: '快捷键设置' },
+        { key: 'manageRightClickPlugins', label: '右键插件管理' },
         { key: 'configMcp', label: 'Yak Mcp配置' },
       ],
     },
@@ -1066,6 +1067,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             params: 'global' as ShortcutKeyPageName,
           }),
         )
+        return
+      case 'manageRightClickPlugins':
+        emiter.emit('openPage', JSON.stringify({ route: YakitRoute.ManageRightClickPlugins }))
         return
       case 'renderLog':
         grpcOpenRenderLogFolder()

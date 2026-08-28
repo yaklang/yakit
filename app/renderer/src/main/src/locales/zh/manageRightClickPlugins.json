@@ -1,0 +1,53 @@
+{
+  "ManageRightClickPlugins": {
+    "editRightClickPlugins": "编辑右键插件",
+    "pluginExtensionSingle": "history右键插件（单选）",
+    "pluginExtensionMultiple": "history右键插件（多选）",
+    "packetContextMenu": "数据包右键插件",
+    "addedPluginsCount": "已添加插件 {{count}} / {{UpperLimit}}",
+    "clearConfirm": "确定清空当前已添加插件吗？",
+    "noPluginAdded": "暂未添加插件",
+    "addPluginHint": "可从右侧拖拽或点击添加插件",
+    "rightClickPlugins": "右键插件",
+    "rightHelp": "可拖拽或点击「添加」将插件放入中间列表",
+    "noAvailablePlugins": "暂无可用插件",
+    "getPlugin": "获取插件",
+    "maxAddLimit": "最多添加 {{UpperLimit}} 个插件",
+    "added": "已添加",
+    "searchPlaceholder": "搜索插件名称、说明或 Hook",
+    "noMatchedPlugins": "没有匹配的插件"
+  },
+  "ContextMenuExecutionHost": {
+    "executeFailed": "右键插件执行失败: {{error}}",
+    "saveParamsFailed": "保存右键插件参数失败: {{error}}",
+    "paramsModalTitle": "右键插件参数"
+  },
+  "ContextMenuActionExecution": {
+    "pluginFallbackName": "右键插件",
+    "executionExpiredEmpty": "执行上下文已失效，请重新从右键菜单触发。",
+    "refreshPluginData": "刷新插件数据",
+    "extraParams": "额外参数",
+    "applyChanges": "应用修改",
+    "packetModifyTitle": "插件返回了数据包修改",
+    "packetModifyDesc": "应用前会校验数据包版本，避免覆盖触发后产生的新编辑。",
+    "packetAppliedNotify": "数据包修改已提交到原编辑器",
+    "packetPageClosed": "原数据包页面已关闭，无法回填",
+    "sourceCodeNotFound": "未找到插件源码",
+    "requiredField": "${label} 是必填字段",
+    "sourceTab": "源码"
+  },
+  "pluginEditor": {
+    "contextMenuSaveBeforeRun": "右键插件需要保存后，从对应的 History 或 HTTP 数据包场景触发",
+    "contextMenuRunFromScene": "右键插件需要从对应的 History 或 HTTP 数据包场景触发",
+    "contextMenuSaveAndTrigger": "保存插件后，从对应的 History 或 HTTP 数据包右键菜单触发执行",
+    "contextMenuEnableAndTrigger": "保存并在右键插件管理中启用后，从对应的 History 或 HTTP 数据包场景触发执行"
+  },
+  "grpc": {
+    "queryContextMenuActionsFailed": "查询右键插件失败: {{error}}",
+    "setContextMenuActionBindingFailed": "保存右键插件配置失败: {{error}}",
+    "cancelContextMenuActionFailed": "取消右键插件失败: {{error}}"
+  },
+  "utils": {
+    "engineVersionTooLow": "引擎版本过低，请更新到高于 {{version}} 的版本"
+  }
+}

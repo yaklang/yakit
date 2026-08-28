@@ -348,6 +348,7 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
     'packet-hack': '数据包扫描',
     'port-scan': '端口扫描插件',
     codec: 'CODEC插件',
+    'context-menu': 'Yak 右键插件',
     nuclei: 'YAML POC',
   }
   const PluginTypeKeyArr: string[] = Object.keys(PluginType)

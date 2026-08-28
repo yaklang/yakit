@@ -2,6 +2,7 @@ import type React from 'react'
 import type { monaco } from 'react-monaco-editor'
 import { fontSizeOptions } from '@/store/editorFontSize'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
+import type { ContextMenuAction } from '@/pages/manageRightClickPlugins/types'
 import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { EditorMenuItemType } from '../EditorMenu'
 import type { YakitIMonacoEditor } from '../YakitEditorType'
@@ -22,6 +23,9 @@ export interface contextMenuProps {
   value: string
   isAiPlugin: boolean
   params: YakParamProps[]
+  /** 动作执行链路，context-menu 为新流式执行 */
+  executionType?: ContextMenuAction['ExecutionType']
+  action?: ContextMenuAction
 }
 
 interface IFindReplaceState {
@@ -41,8 +45,10 @@ interface IFindController extends monaco.editor.IStandaloneCodeEditor {
   }): void
 }
 
-/** 插件扩展前缀 */
+/** 右键插件前缀 */
 export const PLUGIN_PREFIX = 'pluginExtension_'
+/** 右键插件管理前缀 */
+export const PLUGIN_RIGHT_MAG = 'manageRightClickPlugins_'
 
 /** @name 字体key值对应字体大小 */
 export const keyToFontSize: Record<string, number> = {

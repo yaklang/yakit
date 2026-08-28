@@ -1090,7 +1090,6 @@ export const apiDebugPlugin: (request: {
       }
       switch (params.PluginType) {
         case 'yak':
-        case 'lua':
           executeParams = {
             ...executeParams,
             Input: '',

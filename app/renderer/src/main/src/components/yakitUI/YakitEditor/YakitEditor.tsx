@@ -42,7 +42,6 @@ import { GetPluginLanguage } from '@/pages/plugins/builtInData'
 import { setEditorContext, YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
 import { SyntaxFlowMonacoSpec } from '@/utils/monacoSpec/syntaxflowEditor'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
-import { CloudDownloadIcon } from '@/assets/newIcon'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import {
   getStorageYakEditorShortcutKeyEvents,
@@ -71,6 +70,7 @@ import {
   findFileFuzztagPathAtOffset,
   registerBinaryFoldEntries,
   unregisterBinaryFoldEntries,
+  rawBytesToPacketText,
 } from './binaryFuzztag'
 import type { BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
 const BinaryFuzztagHexModal = React.lazy(() =>
@@ -79,6 +79,15 @@ const BinaryFuzztagHexModal = React.lazy(() =>
 import { Base64HexFuzztagModal } from './Base64HexFuzztagModal'
 import { showYakitModal } from '../YakitModal/YakitModalConfirm'
 import { SystemInfo } from '@/constants/hardware'
+import { fetchEditorFullContent } from './editorUtils'
+import { StringToUint8Array } from '@/utils/str'
+import { yakitNotify } from '@/utils/notification'
+import { runContextMenuAction } from '@/pages/manageRightClickPlugins/runContextMenuAction'
+import {
+  ContextMenuExecutionType,
+  type ContextMenuAction,
+  type ContextMenuPacketActionResult,
+} from '@/pages/manageRightClickPlugins/types'
 
 // ===== 拆分模块导入 =====
 import {
@@ -88,6 +97,7 @@ import {
   DefaultMenuBottom,
   openFind,
   PLUGIN_PREFIX,
+  PLUGIN_RIGHT_MAG,
   type IFindController,
 } from './constants'
 import { useBinaryFold } from './hooks/useBinaryFold'
@@ -102,9 +112,14 @@ import {
   SmartDecodeFloatPanel,
   snapshotRect,
 } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
+import { OutlineCogIcon } from '@/assets/icon/outline'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
+import { checkContextMenuVersion } from '@/pages/manageRightClickPlugins/utils'
 
 // re-export 保持外部导入路径兼容
 export { PLUGIN_PREFIX }
+export { PLUGIN_RIGHT_MAG }
 export type { CodecTypeProps, contextMenuProps }
 
 /** 右键菜单浅拷贝：避免 cloneDeep(ReactNode) 的性能开销，同时防止原地改写 props */
@@ -154,6 +169,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     keepSearchName,
     editorDidMount,
     contextMenu = {},
+    contextMenuPacket,
     hiddenDefaultContextMenuKeys,
     onContextMenu,
     readOnly = false,
@@ -318,11 +334,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     onOperationRecord('noWordWrap', noWordWrap)
   }, [noWordWrap])
 
-  // 自定义HTTP数据包变形处理 + 插件扩展
+  // 自定义HTTP数据包变形处理 + 右键插件
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(ref)
 
-  const { customHTTPMutatePlugin, contextMenuPlugin } = usePluginSearch({ menuType, inViewport })
+  const { customHTTPMutatePlugin, contextMenuPlugin } = usePluginSearch({
+    menuType,
+    inViewport,
+  })
 
   /**
    * 整理右键菜单的对应关系
@@ -331,11 +350,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const extraMenuListsObj = useMemo(() => extraMenuLists(t), [i18nRefresh])
   const baseMenuListsObj = useMemo(() => baseMenuLists(t), [i18nRefresh])
   useEffect(() => {
-    // 往菜单组中注入codec插件
     try {
       const httpMenu = extraMenuListsObj['http'].menu[0] as EditorMenuItemProps
-      const newHttpChildren = menuReduce([
-        ...(httpMenu?.children || []),
+      // 过滤掉已被注入的动态项，保留默认HTTP项
+      const httpDefaultChildren = (httpMenu?.children || []).filter((child) => !(child as EditorMenuItemProps).isCustom)
+      const newHttpChildren = [
+        ...httpDefaultChildren,
         ...customHTTPMutatePlugin.map((item) => {
           return {
             key: item.key,
@@ -344,7 +364,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             isCustom: true,
           } as EditorMenuItemProps
         }),
-      ])
+      ]
       // 自定义HTTP数据包变形
       ;(extraMenuListsObj['http'].menu[0] as EditorMenuItemProps).children = newHttpChildren
 
@@ -365,6 +385,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           ),
           isAiPlugin: item.isAiPlugin,
           params: item.params,
+          executionType: item.executionType,
+          action: item.action,
         } as EditorMenuItemProps
 
         // 如果有参数，添加子菜单
@@ -385,21 +407,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         }
         return baseItem
       })
+      const manageContextMenuItem = {
+        key: PLUGIN_RIGHT_MAG + ManageRightClickPluginsTabKey.PacketContextMenu,
+        label: (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <OutlineCogIcon />
+            {t('YakitEditor.manageRightClickPlugins')}
+          </div>
+        ),
+      } as EditorMenuItemProps
+      newCustomContextMenu.push(manageContextMenuItem)
       ;(extraMenuListsObj['customcontextmenu'].menu[0] as EditorMenuItemProps).children =
-        newCustomContextMenu.length > 0
-          ? newCustomContextMenu
-          : [
-              {
-                key: 'Get*plug-in',
-                label: (
-                  <>
-                    <CloudDownloadIcon style={{ marginRight: 4 }} />
-                    {t('YakitEditor.getPlugin')}
-                  </>
-                ),
-                isGetPlugin: true,
-              } as EditorMenuItemProps,
-            ]
+        contextMenuPlugin.length > 0 ? newCustomContextMenu : [manageContextMenuItem]
     } catch (e) {
       failed(`get custom plugin failed: ${e}`)
     }
@@ -416,6 +435,85 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
     keyToOnRunRef.current = { ...keyToRun }
   }, [contextMenu, customHTTPMutatePlugin, contextMenuPlugin, extraMenuListsObj, baseMenuListsObj])
+
+  /** 数据包内容版本（FNV-1a hash），插件执行回来后校验内容是否变化 */
+  const packetRevision = (request: string | undefined, response: string | undefined) => {
+    let hash = 2166136261
+    let length = 0
+    // 片段式更新，避免为哈希拼接 request/response 全量内容的大字符串
+    const update = (fragment: string) => {
+      length += fragment.length
+      for (let index = 0; index < fragment.length; index++) {
+        hash ^= fragment.charCodeAt(index)
+        hash = Math.imul(hash, 16777619)
+      }
+    }
+    update('request:')
+    update(request === undefined ? 'missing' : request)
+    update('\nresponse:')
+    update(response === undefined ? 'missing' : response)
+    return `v1-${length}-${(hash >>> 0).toString(16)}`
+  }
+
+  /** context-menu 类型插件在编辑器场景的触发：以当前编辑器内容(可含另一侧)为数据包执行，并支持回填 */
+  const runEditorContextMenuAction = useMemoizedFn(
+    (editor: YakitIMonacoEditor, action: ContextMenuAction, isExec: boolean) => {
+      const currentValue = fetchEditorFullContent(editor)
+      // 角色三级判定：显式指定 > 内容嗅探（状态行开头为 response）
+      const role = contextMenuPacket?.role || (/^HTTP\/\d(?:\.\d)?\s/.test(currentValue) ? 'response' : 'request')
+      const request = role === 'request' ? currentValue : contextMenuPacket?.peerValue
+      const response = role === 'response' ? currentValue : contextMenuPacket?.peerValue
+      const revision = packetRevision(request, response)
+
+      const applyPacketResult = (result: ContextMenuPacketActionResult) => {
+        const currentContent = fetchEditorFullContent(editor)
+        const currentRevision = packetRevision(
+          role === 'request' ? currentContent : contextMenuPacket?.peerValue,
+          role === 'response' ? currentContent : contextMenuPacket?.peerValue,
+        )
+        if (result.PacketRevision !== revision || currentRevision !== revision) {
+          yakitNotify('warning', '数据包在插件执行期间已变化，未应用插件修改')
+          return false
+        }
+        const model = editor.getModel()
+        if (!model) return false
+        if (role === 'request' && result.ReplaceRequest) {
+          model.setValue(rawBytesToPacketText(result.Request))
+        }
+        if (role === 'response' && result.ReplaceResponse) {
+          model.setValue(rawBytesToPacketText(result.Response))
+        }
+        // 另一侧被插件修改时的回填
+        const replacePeer = role === 'request' ? result.ReplaceResponse : result.ReplaceRequest
+        const peerBytes = role === 'request' ? result.Response : result.Request
+        if (replacePeer) {
+          if (contextMenuPacket?.onPeerValueChange) {
+            contextMenuPacket.onPeerValueChange(rawBytesToPacketText(peerBytes))
+          } else {
+            yakitNotify('warning', '插件同时修改了另一侧数据包，但当前页面未提供回填入口')
+          }
+        }
+        return true
+      }
+
+      runContextMenuAction({
+        action,
+        configureParams: !isExec,
+        onPacketResult: readOnly ? undefined : applyPacketResult,
+        request: {
+          Source: contextMenuPacket?.source || 'http-packet-editor',
+          Trigger: 'context-menu',
+          HttpsState: contextMenuPacket?.httpsState || 'unknown',
+          HTTPFlowIDs: contextMenuPacket?.httpFlowId ? [contextMenuPacket.httpFlowId] : [],
+          Request: request === undefined ? undefined : StringToUint8Array(request),
+          Response: response === undefined ? undefined : StringToUint8Array(response),
+          HasRequest: request !== undefined,
+          HasResponse: response !== undefined,
+          PacketRevision: revision,
+        },
+      })
+    },
+  )
 
   /** 菜单功能点击处理事件 */
   const { run: menuItemHandle } = useDebounceFn(
@@ -436,32 +534,33 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           let data: boolean | string | undefined = undefined
           let params: YakParamProps[] | undefined
           let isExec: boolean | undefined = undefined
+          let contextMenuActionItem: { executionType?: string; action?: ContextMenuAction } | undefined
           try {
             // @ts-ignore
             allMenu[name].menu[0]?.children.map((item, index) => {
               // 点击一级菜单
               if (menuItemName === 'customcontextmenu' && index === 0) {
                 // 执行第一个子项 —— 有三级则执行第二个子项
-                // if (item.isGetPlugin) {
-                //   // 当子项为获取插件
-                //   data = 'isGetPlugin'
-                // } else {
-                //   // 当子为插件时
-                //   key = item.key.slice(PLUGIN_PREFIX.length)
-                //   if (item.isAiPlugin) {
-                //     data = true
-                //   }
-                //   params = item.params
-                //   isExec = true
+                // key = item.key.slice(PLUGIN_PREFIX.length)
+                // if (item.isAiPlugin) {
+                //   data = true
                 // }
+                // params = item.params
+                // isExec = true
                 return
               }
-
               // 点击二级菜单
               if (item.key === menuItemName) {
-                if (item.isGetPlugin) {
-                  // 当子项为获取插件
-                  data = 'isGetPlugin'
+                if (item.key.startsWith(PLUGIN_RIGHT_MAG)) {
+                  // 当子项为管理右键插件：跳转前校验引擎版本，版本不足则拦截并提示
+                  checkContextMenuVersion().then((versionValid) => {
+                    if (!versionValid) return
+                    const tab = item.key.split('_')[1]
+                    emiter.emit(
+                      'openPage',
+                      JSON.stringify({ route: YakitRoute.ManageRightClickPlugins, params: { tab } }),
+                    )
+                  })
                 } else {
                   // 当子为插件时
                   key = item.key.slice(PLUGIN_PREFIX.length)
@@ -470,6 +569,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                   }
                   params = item.params
                   isExec = true
+                  contextMenuActionItem = item
                 }
                 return
               }
@@ -480,10 +580,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const prefix = menuItemName.split('_')[0]
                 isExec = prefix !== 'updateCodecParams'
                 params = item.params
+                contextMenuActionItem = item
                 return
               }
             })
           } catch (error) {}
+          // context-menu 类型走新流式执行接口，legacy-codec-* 保持原 codec 执行链路
+          if (
+            contextMenuActionItem &&
+            contextMenuActionItem.executionType === ContextMenuExecutionType.ContextMenu &&
+            contextMenuActionItem.action
+          ) {
+            runEditorContextMenuAction(editor, contextMenuActionItem.action, isExec !== false)
+            executeFunc = true
+            onRightContextMenu(menuItemName)
+            break
+          }
           allMenu[name].onRun(editor, key, data, params, isExec)
           executeFunc = true
           onRightContextMenu(menuItemName)

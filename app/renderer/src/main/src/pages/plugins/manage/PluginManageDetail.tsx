@@ -471,7 +471,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         data.RiskDetail = codeAnalysis.RiskInfo.filter((item) => item.Level && item.CVE && item.TypeVerbose)
       }
       // 源码-获取参数信息
-      if (['yak', 'mitm', 'codec'].includes(data.Type) && codeAnalysis) {
+      if (['yak', 'mitm', 'codec', 'context-menu'].includes(data.Type) && codeAnalysis) {
         data.Params = codeAnalysis.CliParameter || []
         data.PluginEnvKey = codeAnalysis.PluginEnvKey || []
       }
@@ -821,8 +821,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 hint={isBanOperate.hint}
                 onClick={onPass}
               />
-              {/* 禁用状态隐藏调试功能 */}
-              {!isBanOperate.isBan && (
+              {/* 禁用状态隐藏调试功能；右键插件(context-menu)不支持调试页执行 */}
+              {!isBanOperate.isBan && plugin?.type !== 'context-menu' && (
                 <HubButton
                   width={wrapperWidth}
                   iconWidth={1100}

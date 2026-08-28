@@ -128,6 +128,8 @@
     "penetrationRecordDescription": "可记录渗透过程中的任何内容，便于记录查看",
     "ai-memory": "记忆库",
     "ai-tool": "工具库",
-    "ai-forge": "技能库"
+    "ai-forge": "技能库",
+    "manageRightClickPlugins": "右键插件设置",
+    "contextMenuResult": "右键插件结果"
   }
 }

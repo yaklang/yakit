@@ -1181,6 +1181,7 @@ const PluginLocalList: React.FC<PluginLocalListProps> = React.memo((props) => {
     const newParams = {
       // Tag: [],
       // Type: "yak,mitm,codec,packet-hack,port-scan,nuclei", //不传查所有
+      ExcludeTypes: ['context-menu'],
       Pagination: { Limit: 20, Order: 'desc', Page: 1, OrderBy: 'updated_at' },
       Keyword: keyword,
       SortByUsageCount: true,

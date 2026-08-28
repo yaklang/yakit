@@ -46,6 +46,7 @@ import { grpcFetchExpressionToResult } from '@/pages/pluginHub/utils/grpc'
 import { getJsonSchemaListResult, JsonFormWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 
 const PluginExecuteExtraParams = React.lazy(() => import('./PluginExecuteExtraParams'))
 
@@ -75,8 +76,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     onCacheExecuteConfig,
     onExecutionStop,
   } = props
+  const { t } = useI18nNamespaces(['manageRightClickPlugins'])
 
   const [form] = Form.useForm()
+  const isContextMenuPlugin = plugin.Type === 'context-menu'
   const requestType = Form.useWatch('requestType', form)
 
   /**是否显示更新按钮 */
@@ -116,7 +119,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     return ParamsToGroupByGroupName(paramsList)
   }, [plugin.Params])
   useEffect(() => {
-    if (['yak', 'lua', 'mitm', 'codec'].includes(plugin.Type)) {
+    if (['yak', 'mitm', 'codec'].includes(plugin.Type)) {
       initFormValue()
     } else {
       form.resetFields()
@@ -203,7 +206,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     // console.log('额外参数', initExtraFormValue)
     switch (plugin.Type) {
       case 'yak':
-      case 'lua':
       case 'codec':
       case 'mitm':
         setCustomExtraParamsValue({ ...initExtraFormValue, ...(initialExecuteConfig?.customExtraParamsValue || {}) })
@@ -233,11 +235,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   useEffect(() => {
     if (initialExecuteConfig) initFormValue(false)
   }, [initialExecuteConfig])
-  /**yak/lua 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
+  /**yak 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
   const pluginParamsNodeByPluginType = useMemoizedFn((type: string) => {
     switch (type) {
       case 'yak':
-      case 'lua':
         return (
           <ExecuteEnterNodeByPluginParams
             paramsList={requiredParams}
@@ -304,6 +305,10 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   })
   /**开始执行 */
   const onStartExecute = useMemoizedFn((value) => {
+    if (isContextMenuPlugin) {
+      failed(t('pluginEditor.contextMenuRunFromScene'))
+      return
+    }
     let yakExecutorParams: YakExecutorParam[] = []
     yakExecutorParams = getYakExecutorParam({ ...value, ...customExtraParamsValue })
     const result = getJsonSchemaListResult(jsonSchemaListRef.current)
@@ -385,7 +390,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     (v: { customValue: CustomPluginExecuteFormValue; fixedValue: PluginExecuteExtraFormValue }) => {
       switch (plugin.Type) {
         case 'yak':
-        case 'lua':
           setCustomExtraParamsValue({ ...v.customValue })
           break
         case 'codec':
@@ -427,7 +431,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
   const executeExtraParams: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue = useMemo(() => {
     switch (plugin.Type) {
       case 'yak':
-      case 'lua':
         return customExtraParamsValue
       case 'codec':
       case 'mitm':
@@ -478,7 +481,12 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                   )
                 ) : (
                   <>
-                    {!isExpand && <YakitButton onClick={onExecuteInTop}>执行</YakitButton>}
+                    {!isExpand &&
+                      (isContextMenuPlugin ? (
+                        <YakitButton disabled>从右键菜单执行</YakitButton>
+                      ) : (
+                        <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                      ))}
                     {extraNode}
                     {!hiddenUpdateBtn && isShowUpdate && (
                       <>
@@ -511,37 +519,41 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
           [styles['plugin-execute-form-wrapper-hidden']]: !isExpand,
         })}
       >
-        <Form
-          form={form}
-          onFinish={onStartExecute}
-          labelCol={{ span: 6 }}
-          wrapperCol={{ span: 12 }} //这样设置是为了让输入框居中
-          validateMessages={{
-            /* eslint-disable no-template-curly-in-string */
-            required: '${label} 是必填字段',
-          }}
-          labelWrap={true}
-        >
-          {pluginParamsNodeByPluginType(plugin.Type)}
-          <Form.Item colon={false} label={' '} style={{ marginBottom: 0 }}>
-            <div className={styles['plugin-execute-form-operate']}>
-              {isExecuting ? (
-                <YakitButton danger onClick={onStopExecute} size="large">
-                  停止
-                </YakitButton>
-              ) : (
-                <YakitButton className={styles['plugin-execute-form-operate-start']} htmlType="submit" size="large">
-                  开始执行
-                </YakitButton>
-              )}
-              {isShowExtraParamsButton && (
-                <YakitButton type="text" onClick={openExtraPropsDrawer} disabled={isExecuting} size="large">
-                  额外参数
-                </YakitButton>
-              )}
-            </div>
-          </Form.Item>
-        </Form>
+        {isContextMenuPlugin ? (
+          <YakitEmpty style={{ marginTop: 60 }} description={t('pluginEditor.contextMenuEnableAndTrigger')} />
+        ) : (
+          <Form
+            form={form}
+            onFinish={onStartExecute}
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 12 }} //这样设置是为了让输入框居中
+            validateMessages={{
+              /* eslint-disable no-template-curly-in-string */
+              required: '${label} 是必填字段',
+            }}
+            labelWrap={true}
+          >
+            {pluginParamsNodeByPluginType(plugin.Type)}
+            <Form.Item colon={false} label={' '} style={{ marginBottom: 0 }}>
+              <div className={styles['plugin-execute-form-operate']}>
+                {isExecuting ? (
+                  <YakitButton danger onClick={onStopExecute} size="large">
+                    停止
+                  </YakitButton>
+                ) : (
+                  <YakitButton className={styles['plugin-execute-form-operate-start']} htmlType="submit" size="large">
+                    开始执行
+                  </YakitButton>
+                )}
+                {isShowExtraParamsButton && (
+                  <YakitButton type="text" onClick={openExtraPropsDrawer} disabled={isExecuting} size="large">
+                    额外参数
+                  </YakitButton>
+                )}
+              </div>
+            </Form.Item>
+          </Form>
+        )}
       </div>
       {progressList.length > 1 && (
         <div className={styles['plugin-head-executing-progress']}>
