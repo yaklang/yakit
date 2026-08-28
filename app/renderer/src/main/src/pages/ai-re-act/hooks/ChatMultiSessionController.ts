@@ -19,12 +19,7 @@ import {
   AttachedResourceTypeEnum,
 } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import {
-  DefaultAgentChatStatus,
-  DefaultAgentLoadingTitle,
-  DefaultMemoryList,
-  DefaultTaskPlanEndGate,
-} from './defaultConstant'
+import { DefaultAgentChatStatus, DefaultMemoryList, DefaultTaskPlanEndGate } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleTaskPlanEnd, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
@@ -775,12 +770,14 @@ export class ChatMultiSessionController {
     if (userQuery) {
       store.getState().updateState({
         execute: true,
+        currentChatStatus: cloneDeep(DefaultAgentChatStatus),
         currentLoadingTitle: { casualTitle: '会话初始化中...', planTitle: '' },
       })
     } else {
       store.getState().updateState({
         execute: true,
         initLoading: true,
+        currentChatStatus: cloneDeep(DefaultAgentChatStatus),
         currentLoadingTitle: { casualTitle: '获取历史数据中...', planTitle: '' },
       })
       this.sessionRestoreLoading.add(sessionId)
@@ -1132,7 +1129,7 @@ export class ChatMultiSessionController {
 
   /** 会话建立成功后, 需要做的额外操作 */
   private handleSessionStartSuccess(sessionId: string) {
-    const { store, meta } = this.ensureSession(sessionId)
+    const { meta } = this.ensureSession(sessionId)
 
     // 获取任务规划历史任务树
     this.requestMessage(sessionId, {
@@ -1150,11 +1147,21 @@ export class ChatMultiSessionController {
       })
     }, 5000)
 
-    // 如果任务规划运行态有数据，则置空
-    store.getState().updateState({
-      currentChatStatus: cloneDeep(DefaultAgentChatStatus),
-      currentLoadingTitle: cloneDeep(DefaultAgentLoadingTitle),
+    // dequeue 是实时边沿事件，后端创建的任务可能在本次建连前已经出队。
+    // 建连后立即查询 queue_info，并短期轮询以恢复 current_task 与等待队列快照。
+    this.requestMessage(sessionId, {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
     })
+    if (!meta.queuePollingTimer) {
+      meta.queuePollingEmptyCount = 0
+      meta.queuePollingTimer = setInterval(() => {
+        this.requestMessage(sessionId, {
+          IsSyncMessage: true,
+          SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO,
+        })
+      }, 5000)
+    }
 
     // 拉取 timeline 历史（首批）+ 文件系统历史（全量），不阻塞建连主流程
     void this.loadTimelineHistory(sessionId)

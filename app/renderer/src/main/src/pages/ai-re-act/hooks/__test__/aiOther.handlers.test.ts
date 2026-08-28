@@ -141,3 +141,106 @@ describe('aiOther react_task_dequeue schedule fields', () => {
     })
   })
 })
+
+describe('aiOther queue_info current task snapshot', () => {
+  it('hydrates a backend-created running task into currentChatStatus', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          current_task: {
+            id: 'scheduled-task-1',
+            status: AITaskStatus.inProgress,
+            user_input: '每日巡检',
+            created_at: '2026-08-28T10:00:00Z',
+            focus_mode: 'deep',
+            is_recovery: false,
+            input_source: 'schedule',
+          },
+          is_processing: true,
+          queue_empty: true,
+          queue_name: 'react-main-queue',
+          tasks: [],
+          total_tasks: 0,
+        },
+        { NodeId: 'queue_info', IsSync: true },
+      ),
+    })
+
+    aiOtherDataHandlers.queue_info(req)
+
+    expect(req.store.getState().currentChatStatus).toEqual({
+      questionID: 'scheduled-task-1',
+      coordinatorId: '',
+      status: AITaskStatus.inProgress,
+    })
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('问题执行中...')
+    expect(req.store.getState().focusMode).toBe('deep')
+  })
+
+  it('does not let an older snapshot replace a different live running task', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          current_task: {
+            id: 'older-task',
+            status: AITaskStatus.inProgress,
+            user_input: '旧任务',
+            created_at: '2026-08-28T10:00:00Z',
+            focus_mode: '',
+            is_recovery: false,
+          },
+          is_processing: true,
+          queue_empty: true,
+          queue_name: 'react-main-queue',
+          tasks: [],
+          total_tasks: 0,
+        },
+        { NodeId: 'queue_info', IsSync: true },
+      ),
+    })
+    req.store.getState().updateCurrentChatStatus({
+      questionID: 'live-task',
+      coordinatorId: '',
+      status: AITaskStatus.inProgress,
+    })
+
+    aiOtherDataHandlers.queue_info(req)
+
+    expect(req.store.getState().currentChatStatus.questionID).toBe('live-task')
+  })
+
+  it('does not revive a task after a newer terminal event', () => {
+    const req = makeHandlerRequest({
+      res: makeGrpcJsonRes(
+        'structured',
+        {
+          current_task: {
+            id: 'finished-task',
+            status: AITaskStatus.inProgress,
+            user_input: '已完成任务',
+            created_at: '2026-08-28T10:00:00Z',
+            focus_mode: '',
+            is_recovery: false,
+          },
+          is_processing: true,
+          queue_empty: true,
+          queue_name: 'react-main-queue',
+          tasks: [],
+          total_tasks: 0,
+        },
+        { NodeId: 'queue_info', IsSync: true },
+      ),
+    })
+    req.store.getState().updateCurrentChatStatus({
+      questionID: 'finished-task',
+      coordinatorId: '',
+      status: AITaskStatus.success,
+    })
+
+    aiOtherDataHandlers.queue_info(req)
+
+    expect(req.store.getState().currentChatStatus.status).toBe(AITaskStatus.success)
+  })
+})
