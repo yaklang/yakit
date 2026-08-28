@@ -1231,12 +1231,11 @@ export const monacaLanguageType = (suffix?: string) => {
     case 'php':
     case '.php':
       return 'php'
+    // Monaco's registered id is 'cpp'; 'c' is unregistered and falls through to javascript (TS1109).
     case 'c':
     case '.c':
     case 'h':
     case '.h':
-      // Monaco's registered id is 'cpp'; 'c' is unregistered and falls through to javascript (TS1109).
-      return 'cpp'
     case 'cpp':
     case '.cpp':
     case 'cc':
