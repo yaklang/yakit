@@ -4,10 +4,10 @@ import { useControllableValue, useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 import classNames from 'classnames'
 import { YakitButton } from '../YakitButton/YakitButton'
-import { OutlineKeepLeftIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { OutlineXIcon } from '@/assets/icon/outline'
+import { FigmaIcon4936115787Solid, FigmaIcon4936115789Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakitDockablePaneProps } from './YakitDockablePaneType'
 import styles from './YakitDockablePane.module.scss'
-import { SolidFloatWindowIcon } from '@/assets/icon/solid'
 
 const OVERLAY_GAP = 8
 
@@ -138,19 +138,13 @@ export const YakitDockablePane: React.FC<YakitDockablePaneProps> = memo((props) 
           {disableDock && dockDisabledTip ? (
             <Tooltip title={dockDisabledTip}>
               <span className={styles['dockable-pane-header-action-wrap']}>
-                <YakitButton
-                  type="text2"
-                  disabled
-                  icon={<OutlineKeepLeftIcon style={{ transform: 'rotate(180deg)' }} />}
-                />
+                <YakitButton type="text2" disabled icon={<FigmaIcon4936115789Solid />} />
               </span>
             </Tooltip>
           ) : (
             <YakitButton
               type="text2"
-              icon={
-                overlay ? <OutlineKeepLeftIcon style={{ transform: 'rotate(180deg)' }} /> : <SolidFloatWindowIcon />
-              }
+              icon={overlay ? <FigmaIcon4936115789Solid /> : <FigmaIcon4936115787Solid />}
               onClick={handleToggleOverlay}
             />
           )}

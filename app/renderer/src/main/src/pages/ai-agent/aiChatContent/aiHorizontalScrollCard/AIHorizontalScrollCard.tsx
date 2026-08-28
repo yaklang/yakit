@@ -8,13 +8,11 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import {
   OutlineNewspaperIcon,
-  OutlineSettings2Icon,
   OutlineFlagIcon,
-  OutlineTimelineIcon,
   OutlineExportIcon,
   OutlineMessageCirclePlusIcon,
-  OutlineScrollTextIcon,
 } from '@/assets/icon/outline'
+import { TimelineOutlined, Settings2Outlined, ScrollTextOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { SolidChatalt2Icon } from '@/assets/icon/solid'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ExpandAndRetract } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
@@ -155,7 +153,7 @@ export const AIHorizontalScrollCard = memo(() => {
                 <YakitButton
                   hidden={!currentChatStatusQuestionID}
                   type="text2"
-                  icon={<OutlineScrollTextIcon />}
+                  icon={<ScrollTextOutlined />}
                   onClick={onDetails}
                 />
               </Tooltip>
@@ -171,7 +169,7 @@ export const AIHorizontalScrollCard = memo(() => {
                       itemIcon: <OutlineFlagIcon />,
                       disabled: !hasTaskTree,
                     },
-                    { key: 'timeline', label: t('AIAgentChatTemplate.timeline'), itemIcon: <OutlineTimelineIcon /> },
+                    { key: 'timeline', label: t('AIAgentChatTemplate.timeline'), itemIcon: <TimelineOutlined /> },
                     { key: 'export-log', label: t('AIChatContent.exportLog'), itemIcon: <OutlineExportIcon /> },
                     { key: 'view-log', label: t('AIChatContent.log'), itemIcon: <OutlineNewspaperIcon /> },
                   ],
@@ -188,7 +186,7 @@ export const AIHorizontalScrollCard = memo(() => {
                   <YakitButton
                     type="text2"
                     isActive={multiFuncVisible || dropdownVisible}
-                    icon={<OutlineSettings2Icon />}
+                    icon={<Settings2Outlined />}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </Tooltip>

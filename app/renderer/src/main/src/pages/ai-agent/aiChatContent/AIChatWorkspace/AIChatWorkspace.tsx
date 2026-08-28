@@ -20,13 +20,8 @@ import type { AIAgentTabPayload } from '../type'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import {
-  OutlineBugIcon,
-  OutlineFlowIcon,
-  OutlineListTodoIcon,
-  OutlineNewspaperIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+import { OutlineBugIcon, OutlineListTodoIcon, OutlineNewspaperIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { FigmaIcon348196674Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import styles from './AIChatWorkspace.module.scss'
 
@@ -35,7 +30,6 @@ interface AIChatWorkspaceProps {
   setFilePreviewData: (data?: FileNodeProps) => void
   onTabsChange?: (count: number) => void
 }
-
 interface WorkspaceTab {
   key: string
   type: AITabsEnumType
@@ -49,7 +43,7 @@ interface WorkspaceTab {
 const TabIcons: Record<AITabsEnumType, React.ReactNode> = {
   [AITabsEnum.File_Preview]: null,
   [AITabsEnum.Task_Detail]: <OutlineListTodoIcon />,
-  [AITabsEnum.HTTP]: <OutlineFlowIcon />,
+  [AITabsEnum.HTTP]: <FigmaIcon348196674Outlined />,
   [AITabsEnum.Risk]: <OutlineBugIcon />,
   [AITabsEnum.Operation_Log]: <OutlineNewspaperIcon />,
 }
