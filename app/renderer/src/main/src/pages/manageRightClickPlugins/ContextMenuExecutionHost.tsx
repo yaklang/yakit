@@ -176,12 +176,12 @@ export const ContextMenuExecutionHost: React.FC = React.memo(() => {
    */
   const onOkParamsModal = useMemoizedFn((save: boolean, exec: boolean, params: YakExecutorParam[]) => {
     if (loadingRef.current) return
-    loadingRef.current = true
     const pending = pendingRef.current
     if (!pending) {
       setParamsVisible(false)
       return
     }
+    loadingRef.current = true
     try {
       if (save) {
         setRemoteValue(getParamsCacheKey(pending), JSON.stringify(params)).catch((error) => {

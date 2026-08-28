@@ -2954,7 +2954,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       }
 
       if (!add) {
-        clearAllData()
+        clearDataByRoute(YakitRoute.HTTPFuzzer)
+        clearFuzzerSequence()
       }
 
       // 菜单在代码内的名字
