@@ -942,7 +942,7 @@ export class ChatMultiSessionController {
         store.getState().updateStateCount('syncIDUpdate')
       }
 
-      // 记录跳过子任务操作
+      // 记录跳过子任务/取消任务操作（写入 skipSubtaskTaskIDs 表示对应按钮进入 loading）
       if (
         params.IsSyncMessage &&
         (params.SyncType === AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN ||

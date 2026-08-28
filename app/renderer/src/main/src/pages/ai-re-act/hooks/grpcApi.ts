@@ -1178,7 +1178,7 @@ export declare namespace AIAgentGrpcApi {
     summary_markdown: string
   }
 
-  /** 自由对话子 agent 任务创建消息 */
+  /** 跳过计划子任务（skip_subtask_in_plan）请求的响应 */
   export interface SkipSubtaskInPlan {
     message: string
     reason: string
