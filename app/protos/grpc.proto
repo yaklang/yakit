@@ -758,6 +758,7 @@ service Yak {
   rpc CheckHahValidAiConfig(Empty) returns (GeneralResponse);
   rpc ListAiModel(ListAiModelRequest) returns (ListAiModelResponse);
   rpc AIConfigHealthCheck(AIConfigHealthCheckRequest) returns (AIConfigHealthCheckResponse);
+  rpc ProbeReasoningEffort(ProbeReasoningEffortRequest) returns (ProbeReasoningEffortResponse);
   rpc GetAIGlobalConfig(Empty) returns (AIGlobalConfig);
   rpc SetAIGlobalConfig(AIGlobalConfig) returns (Empty);
   rpc ListAIProviders(Empty) returns (ListAIProvidersResponse);
@@ -2325,8 +2326,8 @@ message AIExecutionStrategy {
   // Goal 模式下允许 finish 的最小迭代次数。<=0 时由服务端使用默认值。
   int64 GoalMinIterations = 3;
 
-  // Multi 模式下单次 dispatch 允许的子 Agent 数量（当前会话取值）。
-  // <=0 时由服务端使用默认值 3；超过 AbsoluteMaxSubAgents(20) 时由服务端钳制。
+  // Multi 模式下子 Agent 最大并发数（同时运行数量）。
+  // <=0 时由服务端使用默认值 5；超过 AbsoluteMaxSubAgentConcurrency(20) 时由服务端钳制。
   int64 MaxSubAgents = 4;
 }
 
@@ -9200,6 +9201,18 @@ message AIConfigHealthCheckResponse{
   bool Success = 9;
 }
 
+message ProbeReasoningEffortRequest{
+  ThirdPartyApplicationConfig Config = 1;
+  string Model = 2;
+}
+
+message ProbeReasoningEffortResponse{
+  bool XhighSupported = 1;
+  bool MaxSupported = 2;
+  string XhighErrorMessage = 3;
+  string MaxErrorMessage = 4;
+}
+
 message AIProvider {
   int64 Id = 1;
   ThirdPartyApplicationConfig Config = 2;
@@ -9244,6 +9257,12 @@ message AIModelConfig {
   string ModelName = 3;
   repeated KVPair ExtraParams = 4;
   bool   IsOnline = 5;
+  // 探测到的扩展思考强度（如 ["xhigh","max"]）；为空且 EffortProbed=true 表示探测过但不支持。
+  // 前端据此动态显示 xhigh/max 下拉选项，无需用户手动配置。
+  repeated string ProbedExtendedEfforts = 6;
+  // 是否已对 xhigh/max 做过探测。false=未探测（首次操作下拉框时触发）；
+  // true=已探测（ProbedExtendedEfforts 即最终结果，不再重复探测）。
+  bool EffortProbed = 7;
 }
 
 message AIGlobalConfig {
