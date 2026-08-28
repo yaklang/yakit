@@ -141,10 +141,6 @@ export const AIHorizontalScrollCard = memo(() => {
             <div className={styles['title']}>
               <SolidChatalt2Icon className={styles['chat-alt-icon']} />
               <div className={styles['chat-title']}>{activeChat?.Title || t('AIChatContent.newChatTitle')}</div>
-              {/* <Divider type="vertical" /> */}
-              {/* <YakitButton type="secondary2" icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
-                {t('AIChatContent.newChat')}
-              </YakitButton> */}
             </div>
             <div className={styles['extra']}>
               <AIContextToken />

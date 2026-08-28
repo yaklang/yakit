@@ -13,38 +13,9 @@
 }
 .ai-chat-welcome-wrapper {
   @extend %display-column-center;
-  // flex: 1 0 0;
   height: 100%;
   position: relative;
   background: linear-gradient(180deg, var(--Colors-Use-Main-Bg) 0.11%, var(--Colors-Use-Basic-Background) 50%);
-  // .drawer {
-  //   position: absolute;
-  //   z-index: 1;
-  //   :global {
-  //     .ant-drawer-header {
-  //       padding: 8px 12px 0;
-  //       background-color: var(--Colors-Use-Basic-Background);
-  //       border-bottom: none;
-  //     }
-  //     .ant-drawer-body {
-  //       padding: 0;
-  //     }
-  //   }
-  //   .drawer-title {
-  //     display: flex;
-  //     align-items: center;
-  //     justify-content: space-between;
-  //     color: var(--Colors-Use-Neutral-Text-1-Title);
-  //     font-size: 12px;
-  //     font-weight: 500;
-  //     line-height: 16px;
-  //   }
-
-  //   .split-view-line {
-  //     border-top: 1px solid var(--Colors-Use-Neutral-Border);
-  //     background-color: transparent;
-  //   }
-  // }
 
   .input-wrapper {
     position: relative;

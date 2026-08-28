@@ -1,18 +1,7 @@
 import type { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import type { ChatStoreState } from '@/pages/ai-re-act/hooks/aiRender'
 import type { UseFileTreeEvents } from '@/pages/ai-re-act/hooks/useFileTree'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import type { Dispatch, SetStateAction } from 'react'
-
-export enum TabKey {
-  FileTree = 'file-tree',
-  OperationLog = 'operation-log',
-}
-export interface AIFileSystemListProps {
-  execFileRecord: ChatStoreState['execFileRecord']
-  activeKey?: TabKey
-  setActiveKey?: (key: TabKey) => void
-}
 
 export interface FileTreeSystemListWrapperProps {
   path: HistoryItem[]

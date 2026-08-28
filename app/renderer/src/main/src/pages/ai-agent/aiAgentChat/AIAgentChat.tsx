@@ -55,7 +55,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
 
   // 插件并发构建流 hooks
-  const [streams, api] = useMultipleHoldGRPCStream()
+  const [, api] = useMultipleHoldGRPCStream()
 
   const [mode, setMode] = useState<AIAgentChatMode>('welcome')
 
@@ -480,8 +480,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         mode={mode}
         onTriageSubmit={handleStartTriageChat}
         onSetReAct={onSetReAct}
-        api={api}
-        streams={streams}
         aiChatWelcomeRef={aiChatWelcomeRef}
         aiReActChatRef={aiReActChatRef}
         onChat={onChat}

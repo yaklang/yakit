@@ -1,4 +1,4 @@
-import React, { type FC, forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import React, { type FC, forwardRef, memo, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type {
   AIChatWelcomeIntroTipsProps,
   AIChatWelcomeProps,
@@ -8,7 +8,7 @@ import type {
 } from './type'
 import styles from './AIChatWelcome.module.scss'
 import { AIChatTextarea } from '../template/template'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import type { AIChatTextareaRefProps, AIChatTextareaSubmit } from '../template/type'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -16,25 +16,11 @@ import {
   OutlileHistoryIcon,
   OutlineChatIcon,
   OutlineCheckIcon,
-  OutlineExportIcon,
-  OutlineImportIcon,
   OutlinePencilaltIcon,
-  OutlinePinIcon,
-  OutlinePinOffIcon,
-  OutlinePluscircleIcon,
   OutlineShieldexclamationIcon,
   OutlineWrenchIcon,
 } from '@/assets/icon/outline'
-import { Tooltip } from 'antd'
-import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { RemoteAIAgentGV } from '@/enums/aiAgent'
-import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import KnowledgeSidebarList, { type KnowledgeModalRef } from './KnowledgeSidebarList/KnowledgeSidebarList'
-import ForgeName, { type ForgeNameRef } from '../forgeName/ForgeName'
-import AIToolList, { handleAddAITool } from '../aiToolList/AIToolList'
-import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
-import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
 import classNames from 'classnames'
 import type { AIEnabledCapability, AIReActRecommendedSkill } from '@/pages/ai-re-act/hooks/grpcApi'
 import { ColorsChatIcon, ColorsMemfitIcon, ColorsPreViewMDIcon } from '@/assets/icon/colors'
@@ -49,16 +35,10 @@ import { getMainOperatorPageBodyContainerOrBody } from '@/utils/getMainOperatorP
 import { yakitNotify } from '@/utils/notification'
 import DoomFlameBackground from './DoomFlameBackground'
 
-enum AIChatWelcomeTabKeyEnum {
-  Knowledge = 'knowledge',
-  Skills = 'skills',
-  Tools = 'tools',
-}
-
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
-    const { t, i18nRefresh } = useI18nNamespaces(['aiAgent'])
-    const { onTriageSubmit, streams, api } = props
+    const { t } = useI18nNamespaces(['aiAgent'])
+    const { onTriageSubmit } = props
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
@@ -106,97 +86,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         enabledCapabilities: select,
       })
     })
-
-    const [isSelectForgeName, setIsSelectForgeName] = useState<boolean>(false)
-    const knowledgeSidebarListRef = useRef<KnowledgeModalRef>(null)
-    const forgeNameRef = useRef<ForgeNameRef>(null)
-    const { installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync } = useCheckKnowledgePlugin()
-
-    const items = useMemo(() => {
-      return [
-        {
-          label: t('AIChatWelcome.knowledgeBase'),
-          key: AIChatWelcomeTabKeyEnum.Knowledge,
-          children: <KnowledgeSidebarList ref={knowledgeSidebarListRef} api={api} streams={streams} />,
-          extra: [
-            <YakitButton
-              key="import"
-              onClick={() => {
-                knowledgeSidebarListRef.current?.openImport()
-              }}
-              type="text2"
-              icon={<OutlineImportIcon />}
-            />,
-            <YakitButton
-              key="add"
-              onClick={async () => {
-                try {
-                  const result = await ThirdPartyBinaryRunAsync()
-                  const targetInstallPlugins = reseultKnowledgePlugin(result)
-                  targetInstallPlugins
-                    ? InstallPluginModal({
-                        getContainer: '#main-operator-page-body-ai-agent',
-                        callback: () => {
-                          refreshPluginStatus()
-                        },
-                      })
-                    : knowledgeSidebarListRef.current?.openAdd()
-                } catch (error) {}
-              }}
-              type="text2"
-              icon={<OutlinePluscircleIcon />}
-            />,
-          ],
-        },
-        {
-          label: t('AIChatWelcome.skillBase'),
-          key: AIChatWelcomeTabKeyEnum.Skills,
-          children: <ForgeName ref={forgeNameRef} onSelectChange={setIsSelectForgeName} />,
-          extra: [
-            <YakitButton
-              key="batch-export"
-              onClick={() => {
-                forgeNameRef.current?.onBatchExport()
-              }}
-              type="text2"
-              icon={<OutlineExportIcon />}
-              disabled={!isSelectForgeName}
-            />,
-            <YakitButton
-              key="import"
-              onClick={() => {
-                forgeNameRef.current?.openImport()
-              }}
-              type="text2"
-              icon={<OutlineImportIcon />}
-            />,
-            <YakitButton
-              key="add"
-              onClick={() => {
-                forgeNameRef.current?.openAdd()
-              }}
-              type="text2"
-              icon={<OutlinePluscircleIcon />}
-            />,
-          ],
-        },
-        {
-          label: t('AIChatWelcome.toolBase'),
-          key: AIChatWelcomeTabKeyEnum.Tools,
-          children: <AIToolList />,
-          extra: [
-            <YakitButton
-              key="add"
-              onClick={() => {
-                handleAddAITool()
-              }}
-              type="text2"
-              icon={<OutlinePluscircleIcon />}
-            />,
-          ],
-        },
-      ]
-    }, [api, streams, installPlug, i18nRefresh, isSelectForgeName])
 
     const onSetInputValue = useMemoizedFn((v: string) => {
       aiChatTextareaRef.current?.setValue(v)

@@ -9,11 +9,9 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  // margin: 12px 0;
   position: relative;
   .virtuoso-item-list {
     position: relative;
-    // padding: 8px 12px;
 
     &::before {
       content: '';

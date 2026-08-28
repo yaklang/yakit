@@ -9,7 +9,6 @@ import {
   yakitDockablePaneSegmentedLabel,
 } from '@/components/yakitUI/YakitDockablePane/YakitDockablePane'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import type useMultipleHoldGRPCStream from '@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream'
 import { AIForgeForm, AIToolForm } from '../../aiTriageChatTemplate/AITriageChatTemplate'
 import type { AIForgeFormSubmitParamsProps } from '../../aiTriageChatTemplate/type'
 import type { AIForge } from '../../type/forge'
@@ -35,8 +34,6 @@ export interface AIAgentChatLayoutProps {
   mode: AIAgentChatMode
   onTriageSubmit: (data: HandleStartParams) => void
   onSetReAct: () => void
-  api: ReturnType<typeof useMultipleHoldGRPCStream>[1]
-  streams: ReturnType<typeof useMultipleHoldGRPCStream>[0]
   aiChatWelcomeRef: RefObject<AIChatContentRefProps>
   aiReActChatRef: RefObject<AIChatContentRefProps>
   onChat: () => void
@@ -54,8 +51,6 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
     mode,
     onTriageSubmit,
     onSetReAct,
-    api,
-    streams,
     aiChatWelcomeRef,
     aiReActChatRef,
     onChat,
@@ -125,13 +120,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
         <div className={styles['chat-content']}>
           {mode === 'welcome' ? (
             <React.Suspense fallback={<div>loading...</div>}>
-              <AIChatWelcome
-                onTriageSubmit={onTriageSubmit}
-                onSetReAct={onSetReAct}
-                api={api}
-                streams={streams}
-                ref={aiChatWelcomeRef}
-              />
+              <AIChatWelcome onTriageSubmit={onTriageSubmit} onSetReAct={onSetReAct} ref={aiChatWelcomeRef} />
             </React.Suspense>
           ) : (
             <AIChatContent ref={aiReActChatRef} onChat={onChat} />
