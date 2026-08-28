@@ -122,7 +122,7 @@ function RollingLoadListInner<T>(props: RollingLoadListProps<T>, ref: React.Forw
   })
   useDebounceEffect(
     () => {
-      if (!hasMore) return
+      if (!hasMore || loading) return
       if (!containerRef || !wrapperRef) return
       // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
       const containerHeight = containerRef.current?.clientHeight || 0
@@ -131,7 +131,7 @@ function RollingLoadListInner<T>(props: RollingLoadListProps<T>, ref: React.Forw
         loadMoreData()
       }
     },
-    [wrapperRef.current?.clientHeight, isRef, hasMore],
+    [wrapperRef.current?.clientHeight, isRef, hasMore, loading],
     { wait: 200 },
   )
   useEffect(() => {

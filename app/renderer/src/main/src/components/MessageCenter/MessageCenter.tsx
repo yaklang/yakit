@@ -29,6 +29,8 @@ import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import moment from 'moment'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 
+const MESSAGE_PAGE_LIMIT = 20
+
 export interface MessageItemProps {
   onClose: () => void
   data: API.MessageLogDetail
@@ -565,7 +567,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
     apiFetchQueryMessage(
       {
         page: 1,
-        limit: 20,
+        limit: MESSAGE_PAGE_LIMIT,
       },
       {
         ...newQueryData,
@@ -582,18 +584,11 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         }
 
         if (isAdd) {
-          let mergedLength = 0
-          setDataSorce((prev) => {
-            const newData = [...prev, ...(res.data || [])]
-            mergedLength = newData.length
-            return newData
-          })
-          setHasMore(res.pagemeta.total !== mergedLength)
+          setDataSorce((prev) => [...prev, ...(res.data || [])])
         } else {
-          const newData = res.data
-          setDataSorce(newData)
-          setHasMore(res.pagemeta.total !== newData.length)
+          setDataSorce(res.data)
         }
+        setHasMore((res.data || []).length >= MESSAGE_PAGE_LIMIT)
       })
       .catch((err) => {
         failed(err)
