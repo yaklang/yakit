@@ -44,6 +44,7 @@ import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
 import { AIModelSelect } from '../aiModelList/aiModelSelect/AIModelSelect'
 import AIReviewRuleSelect from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
 import { AIFocusMode } from '@/pages/ai-re-act/aiFocusMode/AIFocusMode'
+import { AIReasoningEffortSelect } from '@/pages/ai-re-act/aiReasoningEffortSelect/AIReasoningEffortSelect'
 import { isString } from 'lodash'
 import OpenFileDropdown, { type OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
@@ -114,6 +115,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 case AIInputInnerFeatureEnum.AIModelSelect:
                   node = { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } }
                   break
+                case AIInputInnerFeatureEnum.AIReasoningEffortSelect:
+                  node = { type: AIInputInnerFeatureEnum.AIReasoningEffortSelect }
+                  break
                 default:
                   break
               }
@@ -128,6 +132,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [
         { type: AIInputInnerFeatureEnum.AIReviewRuleSelect },
         { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } },
+        { type: AIInputInnerFeatureEnum.AIReasoningEffortSelect },
       ]
     }, [props.footerLeftTypes, isOpen])
 
@@ -312,6 +317,17 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   key={item.type}
                   {...item.props}
                   className={classNames(styles['model-self-adaptive'], item.props?.className)}
+                />
+              ),
+            )
+            break
+          case AIInputInnerFeatureEnum.AIReasoningEffortSelect:
+            node.push(
+              item.component || (
+                <AIReasoningEffortSelect
+                  key={item.type}
+                  {...item.props}
+                  className={classNames(styles['reasoning-effort-self-adaptive'], item.props?.className)}
                 />
               ),
             )

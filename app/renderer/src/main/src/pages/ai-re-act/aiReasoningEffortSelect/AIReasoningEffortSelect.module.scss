@@ -1,0 +1,10 @@
+@use '../aiReviewRuleSelect/AIReviewRuleSelect.module.scss';
+
+/* 下拉列表底部的探测进度行（不阻断选项点击），与模型表单 ReasoningEffortSelect 样式一致 */
+.dropdown-loading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}

@@ -30,7 +30,7 @@ import { AIModelTypeEnum, type AIModelTypeEnumType, AIModelTypeInterFileNameEnum
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
-import { cloneDeep, has, isNil } from 'lodash'
+import { cloneDeep, isNil } from 'lodash'
 import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIModelForm.module.scss'
@@ -45,6 +45,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { normalizeReasoningEffort } from './reasoningEffort'
 
 const defaultFormValues = {
   Type: '',
@@ -151,6 +152,10 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
     'Headers',
     'webhook_url',
     'api_key_id', //测试不需要传这个给后端
+    // 表单内部字段，不传给后端
+    'model_type',
+    '_ProbedExtendedEfforts',
+    '_EffortProbed',
   ])
 
   Object.entries(values).forEach(([key, value]) => {
@@ -181,24 +186,14 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     endpoint: config.Endpoint ?? '',
     enable_endpoint: config.EnableEndpoint ?? false,
     Headers: config.Headers ?? [],
-    EnableThinkingOpt: getEnableThinkingOpt(config),
     MaxTokens: config?.MaxTokens,
     Temperature: config?.Temperature,
     TopP: config?.TopP,
     TopK: config?.TopK,
     FrequencyPenalty: config?.FrequencyPenalty,
-    ReasoningEffort: config?.ReasoningEffort || 'no-set',
+    ReasoningEffort: normalizeReasoningEffort(config?.ReasoningEffort),
   } as AIThirdPartyApplicationConfig
 }
-export const getEnableThinkingOpt = (config: ThirdPartyApplicationConfig) => {
-  return has(config, 'EnableThinkingOpt') ? `${config.EnableThinkingOpt === true ? 'open' : 'close'}` : 'no-set'
-}
-
-export const parseEnableThinkingOptValue = (val: any): boolean | undefined => {
-  if (isNil(val) || val === 'no-set') return undefined
-  return val === 'open'
-}
-
 export const parseValidStringOption = (val: any): string | undefined => {
   if (isNil(val) || val === 'no-set') return undefined
   return val
@@ -238,9 +233,6 @@ export const formValueToAIConfigProvider = (res) => {
     // Disabled: false
   }
   // 1. 单独处理特殊规则字段
-  const enableThinkingOpt = parseEnableThinkingOptValue(res.EnableThinkingOpt)
-  if (enableThinkingOpt !== undefined) date.EnableThinkingOpt = enableThinkingOpt
-
   const reasoningEffort = parseValidStringOption(res.ReasoningEffort)
   if (reasoningEffort !== undefined) date.ReasoningEffort = reasoningEffort
 
@@ -256,6 +248,8 @@ export const formValueToAIConfigProvider = (res) => {
 }
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const { item, aiModelType, onSuccess, onClose } = props
+
+  const { t } = useI18nNamespaces(['aiAgent'])
 
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -285,6 +279,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         api_key_id: item.ProviderId,
         model: item.ModelName,
         ...buildAIConfigHealthCheckFormValues(item.Provider),
+        _ProbedExtendedEfforts: item.ProbedExtendedEfforts,
+        _EffortProbed: item.EffortProbed,
       }
     } else {
       value = { ...defaultFormValues }
@@ -330,6 +326,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         ModelName: res.model,
         ExtraParams: [],
         ...(item?.IsOnline ? { IsOnline: true } : {}),
+        ...(res._EffortProbed ? { EffortProbed: true, ProbedExtendedEfforts: res._ProbedExtendedEfforts ?? [] } : {}),
       }
       const setConfigOptions = {
         modelType: res.model_type,
@@ -479,7 +476,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         <>
           <div ref={footerRef} />
           <YakitButton size="large" type="outline2" onClick={onCheckAndSave} loading={testLoading}>
-            测试并添加
+            {t('AIModelList.testAndAddBtn')}
           </YakitButton>
           <YakitButton
             size="large"
@@ -488,7 +485,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             loading={loading}
             disabled={testLoading || !isShowSaveLoadingRef.current}
           >
-            确定添加
+            {t('AIModelList.confirmAddBtn')}
           </YakitButton>
         </>
       }

@@ -5,7 +5,8 @@
     "visionModels": "Vision Models",
     "callingMode": "Calling Mode",
     "aiModel": "AI model",
-    "focusMode": "Focus Mode"
+    "focusMode": "Focus Mode",
+    "reasoningEffort": "Thinking"
   },
   "AIAgentChat": {
     "templateDataError": "Template data error, please try again later",
@@ -79,6 +80,8 @@
     "lightweightModelsDesc": "Used for simple tasks and sessions",
     "visionModelsDesc": "Used for image recognition, knowledge base generation, and task execution",
     "addModel": "Add Model",
+    "testAndAddBtn": "Test and Add",
+    "confirmAddBtn": "Confirm",
     "addThirdPartyApp": "Add Third-Party Application",
     "addLocalModel": "Add Local Model",
     "clearConfirm": "Are you sure to clear all {{type}} model configurations?",
@@ -437,6 +440,9 @@
   },
   "AIFocusMode": {
     "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope"
+  },
+  "AIReasoningEffort": {
+    "tooltip": "off disables thinking; unset follows the model default; xhigh / max are extended tiers shown only after probe confirmation"
   },
   "HistoryChat": {
     "title": "History Chat",

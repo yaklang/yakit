@@ -21,6 +21,7 @@ import {
   isFreeEnd,
   isMemfitStart,
 } from '../utils'
+import { normalizeReasoningEffort } from '../aiModelForm/reasoningEffort'
 import styles from './AIModelSelect.module.scss'
 import classNames from 'classnames'
 import type { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
@@ -43,7 +44,7 @@ import {
   OutlinePencilaltIcon,
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
-import { cloneDeep, has, isEqual, isNil, omit } from 'lodash'
+import { cloneDeep, isEqual, isNil } from 'lodash'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -55,8 +56,6 @@ import { getCurrentPageTabRouteKey } from '@/utils/getMainOperatorPageBodyContai
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { createPortal } from 'react-dom'
-import { getEnableThinkingOpt, parseEnableThinkingOptValue } from '../aiModelForm/AIModelForm'
-import type { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {
@@ -607,9 +606,9 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
     /**
      * NOTE - 高度需要根据内容调整，目前是固定值
      * LINK #ai-model-edit-content
-     * 链接所在位置为对应内容得div
+     * 链接所在文件内位置 #ai-model-edit-content 处
      */
-    const rightContextHeight = 338
+    const rightContextHeight = 240
     // 判断右侧屏幕剩余空间是否满足：如果不满足，则在 dropdownRenderRectRef 的左方展示
     const spaceOnRight = window.innerWidth - right
     let toLeft = spaceOnRight < rightContextWidth ? left - rightContextWidth - 6 : right + 6
@@ -634,7 +633,6 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
     setEditStyle({
       transform: `translate(${toLeft}px, ${toTop}px)`,
       width: rightContextWidth,
-      // height: rightContextHeight,
     })
     getModelNameList(item, index)
   })
@@ -726,30 +724,6 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
       setModelNameData(modelNameItem)
     }
   }, [isRefreshModelNameList])
-  const onEditChangeProvider = useMemoizedFn((v: string, filed: keyof ThirdPartyApplicationConfig) => {
-    if (!item) return
-    let newItemProvider = cloneDeep(item.Provider)
-    switch (filed) {
-      case 'EnableThinkingOpt': {
-        const enableThinkingOpt = parseEnableThinkingOptValue(v)
-        if (enableThinkingOpt !== undefined) {
-          newItemProvider.EnableThinkingOpt = enableThinkingOpt
-        } else {
-          newItemProvider = omit(newItemProvider, ['EnableThinkingOpt'])
-        }
-        break
-      }
-      default:
-        break
-    }
-
-    onEdit?.({
-      ...item,
-      Provider: {
-        ...newItemProvider,
-      },
-    })
-  })
   const onEditChange = useMemoizedFn((v: string, filed: keyof AIModelConfig) => {
     if (!item) return
     const newItem: Pick<AIModelConfig, 'ModelName'> = {
@@ -768,10 +742,6 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
       ...newItem,
     })
   })
-  const enableThinkingOpt = useCreation(() => {
-    if (!item?.Provider) return 'no-set'
-    return getEnableThinkingOpt(item?.Provider)
-  }, [item?.Provider])
   const modelNameOptions = useCreation(() => {
     return modelNameData.list.map((modelName) => ({
       label: <ModelNameOptionLabel name={modelName} />,
@@ -790,14 +760,6 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
   return (
     //  ANCHOR[id=ai-model-edit-content] edit-content-wrapper
     <div className={styles['edit-content-wrapper']}>
-      <AIModelEditContentItem
-        filed="EnableThinkingOpt"
-        options={EnableThinkingOptions}
-        title="Enable Thinking"
-        value={enableThinkingOpt}
-        onChange={(v) => onEditChangeProvider(v, 'EnableThinkingOpt')}
-      />
-      <div className={styles['divider-style']} />
       <YakitSpin size="small" spinning={modelNameData.loading}>
         <AIModelEditContentItem
           filed="ModelName"
@@ -871,11 +833,6 @@ const AIModelEditContentItem: React.FC<AIModelEditContentItemProps> = React.memo
 export const getIconByAI = (value) => {
   return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus size="small" />
 }
-export const EnableThinkingOptions = [
-  { label: '不设置', value: 'no-set' },
-  { label: '开启', value: 'open' },
-  { label: '不开启', value: 'close' },
-]
 
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props
@@ -891,12 +848,8 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
     if (!aiService) return <></>
     return getIconByAI(aiService)
   }, [aiService])
-  const enableThinkingOpt = useCreation(() => {
-    return has(item, ['Provider', 'EnableThinkingOpt'])
-      ? item?.Provider?.EnableThinkingOpt
-        ? 'open'
-        : 'close'
-      : 'no-set'
+  const reasoningEffort = useCreation(() => {
+    return normalizeReasoningEffort(item?.Provider?.ReasoningEffort)
   }, [item])
   return (
     <div
@@ -915,7 +868,7 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
             {t('ProjectManage.server')}
           </YakitTag>
         ) : null}
-        {type === AIModelTypeEnum.TierIntelligent && enableThinkingOpt === 'open' && (
+        {type === AIModelTypeEnum.TierIntelligent && reasoningEffort !== 'no-set' && reasoningEffort !== 'off' && (
           <OutlineBrainIcon className={styles['brain-icon']} />
         )}
       </div>

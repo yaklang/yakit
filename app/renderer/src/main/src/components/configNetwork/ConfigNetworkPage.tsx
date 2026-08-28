@@ -153,8 +153,6 @@ export interface ThirdPartyApplicationConfig {
   FrequencyPenalty?: number
   /**为空，不传给后端 */
   ReasoningEffort?: string
-  /**为空，不传给后端 */
-  EnableThinkingOpt?: boolean
 }
 type TenumBuffer = Uint8Array
 

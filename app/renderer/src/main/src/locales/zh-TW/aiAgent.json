@@ -5,7 +5,8 @@
     "visionModels": "視覺模型",
     "callingMode": "呼叫模式",
     "aiModel": "AI模型",
-    "focusMode": "場景"
+    "focusMode": "場景",
+    "reasoningEffort": "思考"
   },
   "AIAgentChat": {
     "templateDataError": "準備使用的模板資料異常，請稍後再試",
@@ -79,6 +80,8 @@
     "lightweightModelsDesc": "用於執行簡單任務和會話",
     "visionModelsDesc": "用於識別圖片等,生成知識庫和任務執行都會用到",
     "addModel": "新增模型",
+    "testAndAddBtn": "測試並添加",
+    "confirmAddBtn": "確定添加",
     "addThirdPartyApp": "新增第三方應用",
     "addLocalModel": "新增本地模型",
     "clearConfirm": "是否確認清空所有{{type}}模型配置",
@@ -437,6 +440,9 @@
   },
   "AIFocusMode": {
     "focusModeTooltip": "複雜場景限定使用框架，限制AI思考範圍"
+  },
+  "AIReasoningEffort": {
+    "tooltip": "off 關閉思考；不設置則跟隨模型默認；xhigh / max 為擴展檔位，僅探測確認支援後展示"
   },
   "HistoryChat": {
     "title": "歷史會話",

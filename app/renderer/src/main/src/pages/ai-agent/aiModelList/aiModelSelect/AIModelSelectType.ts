@@ -9,7 +9,6 @@ export interface AIModelSelectProps {
   className?: string
   mountContainer?: AIOnlineModelListProps['mountContainer']
 }
-export type EnableThinkingOptType = 'no-set' | 'open' | 'close'
 export interface AIModelItemProps {
   type: AIModelTypeEnum
   item: AIModelConfig
@@ -31,8 +30,6 @@ export interface AIModelSelectListProps {
   /** 下拉框是否展开 */
   open?: boolean
 }
-
-export interface AIModelThinkingOptSelectProps {}
 
 export interface AIModelEditContentProps {
   item: AIModelConfig
