@@ -1050,7 +1050,10 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         TaskID: rowData.TaskID,
         Request: request,
       }
-      grpcMITMV2SubmitRequestData(value).then(onClearLargeRequestReplacements)
+      // grpcMITMV2SubmitRequestData 内部已 notify；此处吞掉 reject，避免 unhandled rejection
+      grpcMITMV2SubmitRequestData(value)
+        .then(onClearLargeRequestReplacements)
+        .catch(() => {})
     })
     const onSubmitResponseData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
       if (loading || rowData.Status === ManualHijackListStatus.WaitHijack) return

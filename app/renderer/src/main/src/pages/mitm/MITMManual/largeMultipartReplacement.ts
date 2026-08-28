@@ -145,8 +145,11 @@ export const parseLargeRequestReplacementMarkers = (packet: string): LargeReques
   let partFilename = ''
 
   lines.forEach((line, index) => {
-    if (boundary && line.startsWith(`--${boundary}`)) {
-      if (!line.startsWith(`--${boundary}--`)) partIndex++
+    // partIndex 会参与真实文件替换目标，不能用 startsWith：
+    // boundary 为短串（如 "b"）时，正文 "--bx..." 会被误判成新 part。
+    const normalized = line.endsWith('\r') ? line.slice(0, -1) : line
+    if (boundary && (normalized === `--${boundary}` || normalized === `--${boundary}--`)) {
+      if (normalized === `--${boundary}`) partIndex++
       partFilename = ''
       return
     }

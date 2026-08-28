@@ -118,6 +118,34 @@ describe('parseLargeRequestReplacementMarkers', () => {
     ].join('\n')
     expect(parseLargeRequestReplacementMarkers(packet)).toEqual([])
   })
+
+  it('does not treat body lines that only share a boundary prefix as a new part', () => {
+    const path = '/tmp/yakit/large-request-body-2026-id-parts/part-0-note.txt'
+    const tag = `{{file(${path})}}`
+    const packet = [
+      'POST /upload HTTP/1.1',
+      'Content-Type: multipart/form-data; boundary=b',
+      '',
+      '--b',
+      'Content-Disposition: form-data; name="note"; filename="note.txt"',
+      '',
+      tag,
+      '--bx-not-a-boundary',
+      '--b--',
+    ].join('\r\n')
+
+    expect(parseLargeRequestReplacementMarkers(packet)).toEqual([
+      {
+        kind: 'multipart',
+        partIndex: 0,
+        filename: 'note.txt',
+        resourcePath: path,
+        source: 'file',
+        lineNumber: 7,
+        lineLength: tag.length,
+      },
+    ])
+  })
 })
 
 describe('buildLargeRequestFileTagEdit', () => {

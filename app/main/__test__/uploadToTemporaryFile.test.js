@@ -77,4 +77,16 @@ describe('uploadLocalFileToEngine', () => {
     expect(result.Size).toBe(0)
     expect(chunks).toEqual([])
   })
+
+  it('times out and cancels when the engine never completes the upload', async () => {
+    const source = path.join(tempDir, 'hang.bin')
+    fs.writeFileSync(source, Buffer.from('hang'))
+    const { client, stream } = makeClient()
+    stream.end = () => {}
+
+    await expect(uploadLocalFileToEngine(() => client, source, 3, 20)).rejects.toThrow(
+      'UploadToTemporaryFile timed out waiting for engine response',
+    )
+    expect(stream.cancelled).toBe(true)
+  })
 })
