@@ -3,7 +3,12 @@ import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
 import { ReActChatEventEnum } from '../defaultConstant'
-import { OutlineDesktopcomputerIcon, OutlineMessageCirclePlusIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import {
+  OutlineDesktopcomputerIcon,
+  OutlineMessageCirclePlusIcon,
+  OutlineSearchIcon,
+  OutlineTrashIcon,
+} from '@/assets/icon/outline'
 import { DingtalkIcon, FeishuIcon } from '@/assets/commonProcessIcons'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -469,11 +474,10 @@ const HistoryChat = memo(
                   <YakitButton
                     disabled={clearLoading || (!isGlobalAIAgentHistory && visibleSessions.length === 0)}
                     colors="danger"
-                    type="outline1"
+                    type="text2"
                     loading={clearLoading}
-                  >
-                    {t('YakitButton.delete')}
-                  </YakitButton>
+                    icon={<OutlineTrashIcon />}
+                  />
                 </Tooltip>
               </YakitDropdownMenu>
               {!embedded && (

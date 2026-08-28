@@ -1,5 +1,6 @@
 import { memo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
+import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { OutlineSearchIcon } from '@/assets/icon/outline'
@@ -12,7 +13,7 @@ import { SessionSearchCommand } from './SessionSearchCommand/SessionSearchComman
 import styles from './ChatSessionPane.module.scss'
 
 const ChatSessionPane: React.FC = memo(() => {
-  const { t } = useI18nNamespaces(['aiAgent'])
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [searchOpen, setSearchOpen] = useState(false)
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
 
@@ -44,12 +45,14 @@ const ChatSessionPane: React.FC = memo(() => {
         hideInlineSearch
         className={styles['session-history-chat']}
         headerActionsExtra={
-          <YakitButton
-            type="text2"
-            isActive={searchOpen}
-            icon={<OutlineSearchIcon />}
-            onClick={() => setSearchOpen(true)}
-          />
+          <Tooltip title={t('YakitInput.search')} placement="topRight">
+            <YakitButton
+              type="text2"
+              isActive={searchOpen}
+              icon={<OutlineSearchIcon />}
+              onClick={() => setSearchOpen(true)}
+            />
+          </Tooltip>
         }
         renderExtra={(sessions) => (
           <YakitModal
