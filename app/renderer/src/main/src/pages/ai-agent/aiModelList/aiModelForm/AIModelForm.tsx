@@ -262,6 +262,8 @@ export const formValueToAIConfigProvider = (res) => {
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const { item, aiModelType, onSuccess, onClose } = props
 
+  const { t } = useI18nNamespaces(['aiAgent'])
+
   const [loading, setLoading] = useState<boolean>(false)
 
   const [testLoading, setTestLoading] = useState<boolean>(false)
@@ -487,7 +489,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         <>
           <div ref={footerRef} />
           <YakitButton size="large" type="outline2" onClick={onCheckAndSave} loading={testLoading}>
-            测试并添加
+            {t('AIModelList.testAndAddBtn')}
           </YakitButton>
           <YakitButton
             size="large"
@@ -496,7 +498,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             loading={loading}
             disabled={testLoading || !isShowSaveLoadingRef.current}
           >
-            确定添加
+            {t('AIModelList.confirmAddBtn')}
           </YakitButton>
         </>
       }

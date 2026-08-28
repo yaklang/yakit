@@ -44,12 +44,54 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
+import { YakitSolidLoading } from '../yakitUI/YakitSolidLoading/YakitSolidLoading'
 import type {
   GetThirdPartyAppConfigTemplateResponse,
   ThirdPartyAppConfigItemTemplate,
 } from './NewThirdPartyApplicationConfig'
 
 const { ipcRenderer } = window.require('electron')
+
+/**隐藏字段载体：仅用于注册 Form.Item 字段（如探测缓存），不渲染任何 UI */
+const HiddenFormField: React.FC<{ value?: unknown }> = () => null
+
+/**思考强度选择器：下拉列表底部展示探测进度（不阻断选项点击）；下拉收起且仍在探测时，控件右侧同行展示 loading */
+const ReasoningEffortSelect: React.FC<{
+  value?: string
+  onChange?: (v: string) => void
+  options: SelectOptionsProps[]
+  loading?: boolean
+  onDropdownVisibleChange?: (open: boolean) => void
+}> = ({ value, onChange, options, loading, onDropdownVisibleChange }) => {
+  const { t } = useI18nNamespaces(['configNetwork'])
+  const [open, setOpen] = useState<boolean>(false)
+  return (
+    <div className={styles['reasoning-effort-wrapper']}>
+      <YakitSelect
+        wrapperClassName={styles['reasoning-effort-select']}
+        value={value}
+        onChange={onChange}
+        options={options}
+        onDropdownVisibleChange={(nextOpen) => {
+          setOpen(nextOpen)
+          onDropdownVisibleChange?.(nextOpen)
+        }}
+        dropdownRender={(menu) => (
+          <div>
+            {menu}
+            {loading && (
+              <div className={styles['reasoning-effort-dropdown-loading']}>
+                <YakitSolidLoading size={14} inline />
+                {t('ConfigNetworkPage.reasoningEffortProbing')}
+              </div>
+            )}
+          </div>
+        )}
+      />
+      {loading && !open && <YakitSolidLoading size={14} inline className={styles['reasoning-effort-loading-icon']} />}
+    </div>
+  )
+}
 
 const defaultAIFormValues = {
   Type: '',
@@ -74,10 +116,12 @@ const aiModelTypeOptions: (t: TFunction) => SelectOptionsProps[] = (t) => {
     },
   ]
 }
-const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({
-  label: item.label,
-  value: item.value,
-}))
+const aiAPITypeOptions: (t: TFunction) => SelectOptionsProps[] = (t) => {
+  return AI_API_TYPE_OPTIONS(t).map((item) => ({
+    label: item.label,
+    value: item.value,
+  }))
+}
 const aiModelTypeItem: (t: TFunction) => ThirdPartyAppConfigItemTemplate = (t) => {
   return {
     Name: 'model_type',
@@ -102,7 +146,7 @@ const defaultAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate[
       DefaultValue: DEFAULT_AI_API_TYPE,
       Desc: '',
       Extra: `${JSON.stringify({
-        options: aiAPITypeOptions,
+        options: aiAPITypeOptions(t),
       })}`,
       Verbose: t('ConfigNetworkPage.APItype'),
     },
@@ -174,49 +218,49 @@ const buildDefaultAIFormItemsForType = (typeVal: string, t: TFunction) => {
   return items
 }
 
-const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
+const optionalAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate[] = (t) => [
   {
     DefaultValue: '',
-    Desc: '开启后使用完整 Endpoint 地址发送请求，替代 BaseURL 自动拼接路径的方式',
+    Desc: t('ConfigNetworkPage.enableEndpointDesc'),
     Extra: '',
     Name: 'enable_endpoint',
     Required: false,
     Type: 'bool',
-    Verbose: '启用Endpoint',
+    Verbose: t('ConfigNetworkPage.enableEndpointLabel'),
   },
   {
     DefaultValue: '',
-    Desc: 'API 地址前缀，系统会自动拼接接口路径（如 /v1/chat/completions）',
+    Desc: t('ConfigNetworkPage.baseUrlDesc'),
     Extra: '',
     Name: 'base_url',
     Required: false,
     Type: 'string',
     Verbose: 'BaseURL',
-    Placeholder: '如 api.openai.com 或 https://api.openai.com/v1',
+    Placeholder: t('ConfigNetworkPage.baseUrlPlaceholder'),
   },
   {
     DefaultValue: '',
-    Desc: '完整的请求地址，启用后将跳过路径拼接，直接使用该地址发送请求',
+    Desc: t('ConfigNetworkPage.endpointDesc'),
     Extra: '',
     Name: 'endpoint',
     Required: false,
     Type: 'string',
     Verbose: 'Endpoint',
-    Placeholder: '如 https://api.openai.com/v1/chat/completions',
+    Placeholder: t('ConfigNetworkPage.endpointPlaceholder'),
   },
   {
     DefaultValue: '',
-    Desc: 'HTTP/SOCKS5 代理地址',
+    Desc: t('ConfigNetworkPage.proxyDesc'),
     Extra: '',
     Name: 'proxy',
     Required: false,
     Type: 'string',
-    Verbose: '代理地址',
+    Verbose: t('ConfigNetworkPage.proxyLabel'),
   },
 ]
 
-const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolean) => {
-  const newData = cloneDeep(optionalAIFormItemsOfAI)
+const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolean, t: TFunction) => {
+  const newData = cloneDeep(optionalAIFormItemsOfAI(t))
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (!isRequired) {
     newData.unshift(data)
@@ -238,7 +282,7 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
   const { t } = useI18nNamespaces(['configNetwork'])
   const defaultItems = useMemo(() => buildDefaultAIFormItemsForType(typeVal, t), [typeVal])
   const optionalItems = useMemo(
-    () => buildOptionalAIFormItemsForType(typeVal, enableEndpoint),
+    () => buildOptionalAIFormItemsForType(typeVal, enableEndpoint, t),
     [typeVal, enableEndpoint],
   )
 
@@ -271,7 +315,7 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
       return renderCopyRow(item.Name, item.Verbose, display, String(raw ?? ''))
     }
     if (item.Name === 'api_type' && item.Type === 'list') {
-      const label = pickOptionLabel(aiAPITypeOptions, raw)
+      const label = pickOptionLabel(aiAPITypeOptions(t), raw)
       const display = label || formatReadonlyEmptyAsDash(raw)
       return renderCopyRow(item.Name, item.Verbose, display, String(raw ?? ''))
     }
@@ -292,7 +336,12 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
 
   return (
     <div className={classNames(styles['config-form'], styles['config-form-ai'], styles['ai-third-party-readonly'])}>
-      {renderCopyRow('Type', isMemfit() ? '厂商' : '类型', merged.Type, String(merged.Type ?? ''))}
+      {renderCopyRow(
+        'Type',
+        isMemfit() ? t('ConfigNetworkPage.typeLabelVendor') : t('ConfigNetworkPage.typeLabel'),
+        merged.Type,
+        String(merged.Type ?? ''),
+      )}
       {defaultItems.map((item) => renderFieldByTemplate(item))}
       <YakitCollapse
         defaultActiveKey={['1']}
@@ -302,8 +351,8 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
         <Collapse.Panel
           header={
             <div className={styles['panel-heard']}>
-              <span className={styles['title']}>高级配置</span>
-              <span className={styles['tip']}>可配置自定义 Endpoint / BaseURL 等</span>
+              <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
+              <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
             </div>
           }
           key="1"
@@ -395,8 +444,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     )
 
     const reasoningEffortOptions = useCreation(() => {
-      return buildReasoningEffortOptions(probedExtendedEfforts, reasoningEffortWatch)
-    }, [probedExtendedEfforts, reasoningEffortWatch])
+      return buildReasoningEffortOptions(t, probedExtendedEfforts, reasoningEffortWatch)
+    }, [probedExtendedEfforts, reasoningEffortWatch, i18nRefresh])
 
     /**懒探测：首次打开强度下拉框时探测模型是否支持 xhigh/max；失败不置已探测，下次打开可重试 */
     const ensureEffortProbed = useDebounceFn(
@@ -470,7 +519,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 ? [{ label: name, value: name }, ...modalNamelist]
                 : modalNamelist
             setModelNameAllOptions(newOptions)
-            yakitNotify('success', '获取成功')
+            yakitNotify('success', t('ConfigNetworkPage.fetchModelListSuccess'))
           })
           .catch((error) => {
             if (!execModelNameOption.current) return
@@ -489,8 +538,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     }, [typeVal, i18nRefresh])
 
     const newOptionalAIFormItemsOfAI = useCreation(() => {
-      return buildOptionalAIFormItemsForType(typeVal, enableEndpointWatch)
-    }, [enableEndpointWatch, typeVal])
+      return buildOptionalAIFormItemsForType(typeVal, enableEndpointWatch, t)
+    }, [enableEndpointWatch, typeVal, i18nRefresh])
 
     const allAIFormItemsOfAI = useCreation(() => {
       return [...newDefaultAIFormItemsOfAI, ...newOptionalAIFormItemsOfAI]
@@ -540,7 +589,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     })
     const renderSingleFormItem = (item: ThirdPartyAppConfigItemTemplate) => {
       const formProps = {
-        rules: [{ required: item.Required, message: `请填写${item.Verbose}` }],
+        rules: [{ required: item.Required, message: t('ConfigNetworkPage.fillFieldRequired', { name: item.Verbose }) }],
         label: item.Verbose,
         name: item.Name,
         tooltip: item.Desc
@@ -549,9 +598,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               title: item.Desc,
             }
           : null,
-        help:
-          item.Name === 'api_type' &&
-          '决定请求的接口路径：chat/completions 是主流兼容格式（/v1/chat/completions）， responses 是 OpenAI新一代格式（/v1/responses）',
+        help: item.Name === 'api_type' ? t('ConfigNetworkPage.apiTypePathHelp') : undefined,
       }
       switch (item.Type) {
         case 'string':
@@ -574,7 +621,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 {...formProps}
                 help={
                   <div style={{ height: 30 }}>
-                    如无法自动获取，请
+                    {t('ConfigNetworkPage.modelNameHelpPrefix')}
                     <YakitButton
                       type="text"
                       disabled={IsOnline}
@@ -584,9 +631,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                       }}
                       style={{ padding: 0, fontSize: 14 }}
                     >
-                      点击刷新
+                      {t('ConfigNetworkPage.modelNameRefreshBtn')}
                     </YakitButton>
-                    重新获取
+                    {t('ConfigNetworkPage.modelNameHelpSuffix')}
                   </div>
                 }
               >
@@ -714,8 +761,13 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
           className={classNames(styles['config-form'], styles['config-form-ai'])}
         >
           <Form.Item
-            label={isMemfit() ? '厂商' : '类型'}
-            rules={[{ required: true, message: `请${canAddType ? '填写' : '选择'}类型` }]}
+            label={isMemfit() ? t('ConfigNetworkPage.typeLabelVendor') : t('ConfigNetworkPage.typeLabel')}
+            rules={[
+              {
+                required: true,
+                message: t(canAddType ? 'ConfigNetworkPage.typeRequiredFill' : 'ConfigNetworkPage.typeRequiredSelect'),
+              },
+            ]}
             name={'Type'}
           >
             {canAddType ? (
@@ -753,8 +805,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             <YakitCollapse.YakitPanel
               header={
                 <div className={styles['panel-heard']}>
-                  <span className={styles['title']}>高级配置</span>
-                  <span className={styles['tip']}>可配置自定义 Endpoint / BaseURL 等</span>
+                  <span className={styles['title']}>{t('ConfigNetworkPage.advancedConfigTitle')}</span>
+                  <span className={styles['tip']}>{t('ConfigNetworkPage.advancedConfigTip')}</span>
                 </div>
               }
               key="1"
@@ -794,25 +846,26 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                     setVisibleHTTPHeader(true)
                   }}
                 >
-                  添加
+                  {t('ConfigNetworkPage.addHeaderBtn')}
                 </YakitButton>
               </Form.Item>
             </YakitCollapse.YakitPanel>
             <YakitCollapse.YakitPanel
               header={
                 <div className={styles['panel-heard']}>
-                  <span className={styles['title']}>模型配置</span>
-                  <span className={styles['tip']}>以下值可以为空，为空代表不设置</span>
+                  <span className={styles['title']}>{t('ConfigNetworkPage.modelConfigTitle')}</span>
+                  <span className={styles['tip']}>{t('ConfigNetworkPage.modelConfigTip')}</span>
                 </div>
               }
               key="2"
             >
+              {/* #region 思考 */}
               <Form.Item
                 label="Reasoning Effort"
                 name="ReasoningEffort"
-                help="off 关闭思考；不设置则跟随模型默认；xhigh / max 为扩展档位，仅探测确认支持后展示"
+                help={t('ConfigNetworkPage.reasoningEffortHelp')}
               >
-                <YakitSelect
+                <ReasoningEffortSelect
                   options={reasoningEffortOptions}
                   loading={effortProbing}
                   onDropdownVisibleChange={(open) => {
@@ -820,6 +873,14 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                   }}
                 />
               </Form.Item>
+              {/* 隐藏字段：注册探测缓存，使 validateFields 能取到这两个值（须在 Collapse 外常驻挂载） */}
+              <Form.Item name="_ProbedExtendedEfforts" noStyle>
+                <HiddenFormField />
+              </Form.Item>
+              <Form.Item name="_EffortProbed" noStyle>
+                <HiddenFormField />
+              </Form.Item>
+              {/* #endregion */}
               <Form.Item label="Max Tokens" name="MaxTokens">
                 <YakitInputNumber min={1} max={163840} />
               </Form.Item>

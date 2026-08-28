@@ -1,4 +1,5 @@
 import { isNil } from 'lodash'
+import { type TFunction } from '@/i18n/useI18nNamespaces'
 import type { SelectOptionsProps } from '@/demoComponents/itemSelect/ItemSelectType'
 import type { ProbeReasoningEffortResponse } from '../utils'
 
@@ -6,9 +7,9 @@ import type { ProbeReasoningEffortResponse } from '../utils'
 export const EXTENDED_EFFORTS = ['xhigh', 'max'] as const
 
 /**基础档位（始终展示）；no-set 为表单哨兵值，保存时转 undefined（跟随模型默认） */
-export const baseReasoningEffortOptions: SelectOptionsProps[] = [
-  { label: '不设置（跟随模型默认）', value: 'no-set' },
-  { label: 'off（关闭思考）', value: 'off' },
+export const baseReasoningEffortOptions: (t: TFunction) => SelectOptionsProps[] = (t) => [
+  { label: t('ConfigNetworkPage.effortNoSet'), value: 'no-set' },
+  { label: t('ConfigNetworkPage.effortOff'), value: 'off' },
   { label: 'low', value: 'low' },
   { label: 'medium', value: 'medium' },
   { label: 'high', value: 'high' },
@@ -23,8 +24,12 @@ export const normalizeReasoningEffort = (v?: string): string => {
 }
 
 /**基础档 + 已探测支持的扩展档；当前值为扩展档但尚未探测通过时也追加，避免下拉框显示空标签 */
-export const buildReasoningEffortOptions = (probed?: string[], currentValue?: string): SelectOptionsProps[] => {
-  const options = [...baseReasoningEffortOptions]
+export const buildReasoningEffortOptions = (
+  t: TFunction,
+  probed?: string[],
+  currentValue?: string,
+): SelectOptionsProps[] => {
+  const options = [...baseReasoningEffortOptions(t)]
   const values = new Set(options.map((o) => o.value))
   const normalized = normalizeReasoningEffort(currentValue)
   EXTENDED_EFFORTS.forEach((effort) => {

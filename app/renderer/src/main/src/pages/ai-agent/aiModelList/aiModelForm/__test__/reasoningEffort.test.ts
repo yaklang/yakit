@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { TFunction } from '@/i18n/useI18nNamespaces'
 import type { ProbeReasoningEffortResponse } from '../../utils'
 import {
   buildReasoningEffortOptions,
@@ -8,6 +9,8 @@ import {
 
 const resp = (item: Partial<ProbeReasoningEffortResponse>): ProbeReasoningEffortResponse =>
   item as ProbeReasoningEffortResponse
+
+const t = ((key: string) => key) as TFunction
 
 describe('normalizeReasoningEffort', () => {
   it('归一空值与跟随默认语义为 no-set', () => {
@@ -35,23 +38,29 @@ describe('normalizeReasoningEffort', () => {
 
 describe('buildReasoningEffortOptions', () => {
   it('未探测时仅展示基础档位', () => {
-    const options = buildReasoningEffortOptions()
+    const options = buildReasoningEffortOptions(t)
     expect(options.map((o) => o.value)).toEqual(['no-set', 'off', 'low', 'medium', 'high'])
   })
 
   it('探测通过后追加对应扩展档位', () => {
-    const options = buildReasoningEffortOptions(['xhigh'])
+    const options = buildReasoningEffortOptions(t, ['xhigh'])
     expect(options.map((o) => o.value)).toEqual(['no-set', 'off', 'low', 'medium', 'high', 'xhigh'])
   })
 
   it('当前值为扩展档但未探测通过时也保留该选项且不重复', () => {
-    const options = buildReasoningEffortOptions(['max'], 'max')
+    const options = buildReasoningEffortOptions(t, ['max'], 'max')
     expect(options.map((o) => o.value)).toEqual(['no-set', 'off', 'low', 'medium', 'high', 'max'])
   })
 
   it('当前值为旧档位时按归一化结果处理', () => {
-    const options = buildReasoningEffortOptions(undefined, 'middle')
+    const options = buildReasoningEffortOptions(t, undefined, 'middle')
     expect(options.map((o) => o.value)).toEqual(['no-set', 'off', 'low', 'medium', 'high'])
+  })
+
+  it('基础档位 label 经由 t 翻译', () => {
+    const options = buildReasoningEffortOptions(t)
+    expect(options[0].label).toBe('ConfigNetworkPage.effortNoSet')
+    expect(options[1].label).toBe('ConfigNetworkPage.effortOff')
   })
 })
 

@@ -79,6 +79,8 @@
     "lightweightModelsDesc": "Used for simple tasks and sessions",
     "visionModelsDesc": "Used for image recognition, knowledge base generation, and task execution",
     "addModel": "Add Model",
+    "testAndAddBtn": "Test and Add",
+    "confirmAddBtn": "Confirm",
     "addThirdPartyApp": "Add Third-Party Application",
     "addLocalModel": "Add Local Model",
     "clearConfirm": "Are you sure to clear all {{type}} model configurations?",

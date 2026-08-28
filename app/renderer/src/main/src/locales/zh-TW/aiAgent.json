@@ -79,6 +79,8 @@
     "lightweightModelsDesc": "用於執行簡單任務和會話",
     "visionModelsDesc": "用於識別圖片等,生成知識庫和任務執行都會用到",
     "addModel": "新增模型",
+    "testAndAddBtn": "測試並添加",
+    "confirmAddBtn": "確定添加",
     "addThirdPartyApp": "新增第三方應用",
     "addLocalModel": "新增本地模型",
     "clearConfirm": "是否確認清空所有{{type}}模型配置",

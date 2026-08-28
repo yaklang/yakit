@@ -864,3 +864,23 @@
     }
   }
 }
+
+.reasoning-effort-wrapper {
+  display: flex;
+  align-items: center;
+}
+.reasoning-effort-select {
+  flex: 1;
+  min-width: 0;
+}
+.reasoning-effort-dropdown-loading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.reasoning-effort-loading-icon {
+  margin-left: 5px;
+  flex-shrink: 0;
+}
