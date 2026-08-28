@@ -68,6 +68,13 @@ pr-ci-changed-files-list.txt
 *.tsbuildinfo
 .mimosa/
 docs/
+!docs/
+docs/*
+!docs/yakit-ui-icons-retained-local-icons.md
+!docs/icon-migration/
+docs/icon-migration/*
+!docs/icon-migration/evidence/
+!docs/icon-migration/evidence/**
 .omx/
 
 # Generated theme css
