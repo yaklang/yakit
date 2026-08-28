@@ -421,6 +421,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const [modelOptionLoading, setModelOptionLoading] = useState<boolean>(false)
     const [modelNameAllOptions, setModelNameAllOptions] = useState<SelectOptionsProps[]>([])
     const apiKeyWatch = Form.useWatch('api_key', form)
+    const modelNameWatch = Form.useWatch('model', form)
     const execModelNameOption = useRef<boolean>(false)
     const enableEndpointWatch = Form.useWatch('enable_endpoint', form)
     const reasoningEffortWatch = Form.useWatch('ReasoningEffort', form)
@@ -487,6 +488,20 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     /**model / Type 是探测键：用户改动任一项后仅标记待重新探测，探测数据保留、下拉回退基础档位，重探成功后以新结果覆盖 */
     const invalidateEffortProbe = useMemoizedFn(() => {
       setEffortProbeDirty(true)
+    })
+
+    /**模型名称变化后，模型配置面板整体恢复默认：Reasoning Effort 回到 no-set，采样参数清空，并丢弃旧模型的探测缓存 */
+    const resetModelConfigSettings = useMemoizedFn(() => {
+      form.setFieldsValue({
+        ReasoningEffort: 'no-set',
+        MaxTokens: undefined,
+        Temperature: undefined,
+        TopP: undefined,
+        TopK: undefined,
+        FrequencyPenalty: undefined,
+        _ProbedExtendedEfforts: undefined,
+        _EffortProbed: undefined,
+      })
     })
 
     // 获取类型
@@ -653,8 +668,10 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                   options={modelNameAllOptions}
                   groupSearchWithAll={true}
                   disabled={IsOnline}
-                  onChange={() => {
+                  onChange={(value) => {
                     invalidateEffortProbe()
+                    // store 先于本回调更新，modelNameWatch 仍是变更前的值：仅名称实际变化时才重置模型配置
+                    if (value !== modelNameWatch) resetModelConfigSettings()
                   }}
                   onFocus={() => {
                     execModelNameOption.current = true
@@ -894,7 +911,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                   }}
                 />
               </Form.Item>
-              {/* 隐藏字段：注册探测缓存，使 validateFields 能取到这两个值（须在 Collapse 外常驻挂载） */}
+              {/* 隐藏字段：注册探测缓存，使 validateFields 能取到这两个值 */}
               <Form.Item name="_ProbedExtendedEfforts" noStyle>
                 <HiddenFormField />
               </Form.Item>

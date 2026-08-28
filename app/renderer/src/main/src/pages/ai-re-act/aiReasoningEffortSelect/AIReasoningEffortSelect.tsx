@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import type { AIReasoningEffortSelectProps } from './type'
 import { OutlineBrainIcon, OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { YakitSolidLoading } from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
+import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { Tooltip } from 'antd'
@@ -57,13 +57,18 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
       if (effortProbing) return
       if (!currentModel?.Provider || !currentModel?.ModelName) return
       setEffortProbing(true)
+      const providerId = currentModel.ProviderId
+      const modelName = currentModel.ModelName
       grpcProbeReasoningEffort({
         Config: currentModel.Provider,
         Model: currentModel.ModelName,
       })
         .then((resp) => {
           const efforts = probedExtendedEffortsFromResponse(resp)
-          updateCurrentModel((m) => ({ ...m, EffortProbed: true, ProbedExtendedEfforts: efforts }))
+          updateCurrentModel((m) => {
+            if (m.ProviderId !== providerId || m.ModelName !== modelName) return m
+            return { ...m, EffortProbed: true, ProbedExtendedEfforts: efforts }
+          })
         })
         .catch(() => {})
         .finally(() => {
