@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import type {
   AIModelEditContentItemProps,
   AIModelEditContentProps,
@@ -832,11 +832,6 @@ const AIModelEditContentItem: React.FC<AIModelEditContentItemProps> = React.memo
 export const getIconByAI = (value) => {
   return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus size="small" />
 }
-export const EnableThinkingOptions = [
-  { label: '不设置', value: 'no-set' },
-  { label: '开启', value: 'open' },
-  { label: '不开启', value: 'close' },
-]
 
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props

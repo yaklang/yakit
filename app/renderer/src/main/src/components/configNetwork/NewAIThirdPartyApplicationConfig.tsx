@@ -44,7 +44,6 @@ import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
-import { EnableThinkingOptions } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
 import type {
   GetThirdPartyAppConfigTemplateResponse,
   ThirdPartyAppConfigItemTemplate,
@@ -808,8 +807,18 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               }
               key="2"
             >
-              <Form.Item label="Enable Thinking" name="EnableThinkingOpt">
-                <YakitSelect options={EnableThinkingOptions} />
+              <Form.Item
+                label="Reasoning Effort"
+                name="ReasoningEffort"
+                help="off 关闭思考；不设置则跟随模型默认；xhigh / max 为扩展档位，仅探测确认支持后展示"
+              >
+                <YakitSelect
+                  options={reasoningEffortOptions}
+                  loading={effortProbing}
+                  onDropdownVisibleChange={(open) => {
+                    if (open) ensureEffortProbed()
+                  }}
+                />
               </Form.Item>
               <Form.Item label="Max Tokens" name="MaxTokens">
                 <YakitInputNumber min={1} max={163840} />
@@ -825,19 +834,6 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               </Form.Item>
               <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
                 <YakitInputNumber min={0} max={2} step={0.1} />
-              </Form.Item>
-              <Form.Item
-                label="Reasoning Effort"
-                name="ReasoningEffort"
-                help="off 关闭思考；不设置则跟随模型默认；xhigh / max 为扩展档位，仅探测确认支持后展示"
-              >
-                <YakitSelect
-                  options={reasoningEffortOptions}
-                  loading={effortProbing}
-                  onDropdownVisibleChange={(open) => {
-                    if (open) ensureEffortProbed()
-                  }}
-                />
               </Form.Item>
             </YakitCollapse.YakitPanel>
           </YakitCollapse>
