@@ -2,6 +2,9 @@ import type { ExecResult } from '@/pages/invoker/schema'
 import type { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 
+/** codec 兼容插件类型：不支持配置结果展示方式，沿用旧 CODEC 行为 */
+export const LEGACY_CONTEXT_MENU_PLUGIN_TYPE = 'codec'
+
 export const ContextMenuScene = {
   HistorySingle: 'history-single',
   HistoryMulti: 'history-multi',
@@ -12,7 +15,7 @@ export type ContextMenuScene = (typeof ContextMenuScene)[keyof typeof ContextMen
 
 /** 执行结果展示方式 */
 export const ContextMenuResultMode = {
-  Auto: 'auto',
+  Auto: 'auto', // 默认新开tab展示
   Dialog: 'dialog',
   Drawer: 'drawer',
   Tab: 'tab',

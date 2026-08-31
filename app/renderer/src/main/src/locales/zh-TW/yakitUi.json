@@ -369,6 +369,8 @@
     "modifyToUploadPacketPostOnly": "修改為上傳資料包（僅POST引數）",
     "encodeResult": "編碼結果",
     "replaceContent": "替換內容",
+    "packetChangedDuringPluginExecution": "資料包在外掛執行期間已變化，未應用外掛修改",
+    "pluginModifiedPeerPacketNoFillEntry": "外掛同時修改了另一側資料包，但當前頁面未提供回填入口",
     "manualHostConfigTip": "如需手動指定目標地址或 Host 碰撞，請配置\"高階配置-真實Host\"",
     "HTTPPacketYakitEditor": {
       "copyCurlCommand": "複製 curl 命令",

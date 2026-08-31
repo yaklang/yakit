@@ -53,7 +53,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { MITMConsts } from '@/pages/mitm/MITMConsts'
 import type { HTTPHistorySourcePageType } from '../HTTPHistory'
 import { useHttpFlowStore } from '@/store/httpFlow'
-import { OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { OutlineClouddownloadIcon, OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
 import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
 import type { ParamsTProps, VirtualTableRefreshReason } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
@@ -62,6 +62,8 @@ import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
 import { getSceneTabActions } from '@/pages/manageRightClickPlugins/utils'
+import { parseContextMenuShortcut } from '@/pages/manageRightClickPlugins/shortcut'
+import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import { setClipboardText } from '@/utils/clipboard'
 import { RemoteHistoryGV } from '@/enums/history'
@@ -2267,8 +2269,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   // 右键插件(单选)
   const [codecSingleHistoryPlugin, setCodecSingleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
+  const [isGetSinglePlugin, setIsGetSinglePlugin] = useState<boolean>(false)
   const searchCodecSingleHistoryPlugin = useMemoizedFn(() => {
-    getSceneTabActions(ManageRightClickPluginsTabKey.PluginExtensionSingle).then(({ list }) => {
+    getSceneTabActions(ManageRightClickPluginsTabKey.PluginExtensionSingle).then(({ list, noData }) => {
+      setIsGetSinglePlugin(noData)
       setCodecSingleHistoryPlugin(
         list.map((action) => {
           return {
@@ -2278,6 +2282,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             isAiPlugin: !!action.IsAIPlugin,
             executionType: action.ExecutionType,
             action,
+            shortcut: action.Shortcut || '',
           }
         }),
       )
@@ -2286,9 +2291,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   // 右键插件(多选)
   const [codecMultipleHistoryPlugin, setCodecMultipleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
-  /** 多选 tab 是否已被用户自定义过（含清空） */
+  const [isGetMultiplePlugin, setIsGetMultiplePlugin] = useState<boolean>(false)
   const searchCodecMultipleHistoryPlugin = useMemoizedFn(() => {
-    getSceneTabActions(ManageRightClickPluginsTabKey.PluginExtensionMultiple).then(({ list }) => {
+    getSceneTabActions(ManageRightClickPluginsTabKey.PluginExtensionMultiple).then(({ list, noData }) => {
+      setIsGetMultiplePlugin(noData)
       setCodecMultipleHistoryPlugin(
         list.map((action) => {
           return {
@@ -2298,6 +2304,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             isAiPlugin: !!action.IsAIPlugin,
             executionType: action.ExecutionType,
             action,
+            shortcut: action.Shortcut || '',
           }
         }),
       )
@@ -2324,19 +2331,29 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const addIconLabel = useMemoizedFn((data: codecHistoryPluginProps[]) => {
     const items = data.map((item) => {
+      const shortcutKeys = parseContextMenuShortcut(item.shortcut || item.action?.Shortcut)
+      const keysContent = shortcutKeys.length > 0 ? convertKeyboardToUIKey(shortcutKeys) : null
+      const nameLabel = (
+        <>
+          {item.isAiPlugin && (
+            <>
+              <IconSolidAIIcon className={'ai-plugin-menu-icon-default'} />
+              <IconSolidAIWhiteIcon className={'ai-plugin-menu-icon-hover'} />
+            </>
+          )}
+          {item.key}
+        </>
+      )
       const baseItem = {
         ...item,
         key: `${PLUGIN_PREFIX}${item.key}`,
-        label: (
-          <>
-            {item.isAiPlugin && (
-              <>
-                <IconSolidAIIcon className={'ai-plugin-menu-icon-default'} />
-                <IconSolidAIWhiteIcon className={'ai-plugin-menu-icon-hover'} />
-              </>
-            )}
-            {item.key}
-          </>
+        label: keysContent ? (
+          <div className={style['editor-context-menu-keybind-wrapper']}>
+            <div className={style['content-style']}>{nameLabel}</div>
+            <div className={classNames(style['keybind-style'], 'keys-style')}>{keysContent}</div>
+          </div>
+        ) : (
+          nameLabel
         ),
       }
 
@@ -2366,10 +2383,25 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
   const getCodecHistoryPlugin = useMemoizedFn(() => {
     const isMultiple = selectedRowKeys.length > 1
+    const isGetPlugin = isMultiple ? isGetMultiplePlugin : isGetSinglePlugin
     const plugins = isMultiple ? codecMultipleHistoryPlugin : codecSingleHistoryPlugin
 
     if (plugins.length > 0) {
       return addIconLabel(plugins)
+    }
+
+    if (isGetPlugin) {
+      return [
+        {
+          key: 'Get*plug-in',
+          label: (
+            <>
+              <OutlineClouddownloadIcon style={{ marginRight: 4 }} />
+              {t('HTTPFlowTable.getPlugin')}
+            </>
+          ),
+        },
+      ]
     }
 
     return [getManageRightClickPluginsMenuItem()]
@@ -2501,6 +2533,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   useHTTPFlowTableShortcutKeys({
     inViewport,
     getSelected,
+    getSelectedRows: () => selectedRows,
+    getSelectedRowKeys: () => selectedRowKeys,
+    getIsAllSelect: () => isAllSelect,
+    getTotal: () => total,
+    onClearSelection: resetSelected,
+    singlePlugins: codecSingleHistoryPlugin,
+    multiplePlugins: codecMultipleHistoryPlugin,
+    pageType,
     downstreamProxyStr,
     fromMITM,
     t,
@@ -2700,6 +2740,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onShieldDomain,
     onBatch,
     onViewAttachmentDataRefresh,
+    onClearSelection: resetSelected,
   })
 
   useEffect(() => {

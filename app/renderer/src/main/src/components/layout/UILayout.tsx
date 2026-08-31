@@ -2048,13 +2048,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       <Suspense fallback={null}>
         <YakitGetOnlinePlugin
           visible={coedcPluginShow}
-          pluginType={['codec']}
+          pluginType={openFuzzerModalVarRef.current?.pluginType || ['codec']}
           setVisible={(v) => {
             setCoedcPluginShow(v)
           }}
           onFinish={() => {
             // 此处通知刷新各类基于codec插件菜单
             emiter.emit('refreshContextMenuActions')
+            emiter.emit('refreshContextMenuPlugins')
           }}
           getContainer={codecPluginContainerRef.current}
         />

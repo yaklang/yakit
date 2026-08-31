@@ -103,7 +103,11 @@ const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
 
 export const showYakitDrawer = (props: ShowDrawerProps) => {
   const div = document.createElement('div')
-  document.body.appendChild(div)
+  if (!!props.getContainer && props.getContainer instanceof HTMLElement) {
+    props.getContainer.appendChild(div)
+  } else {
+    document.body.appendChild(div)
+  }
 
   let setter: (r: boolean) => any = () => {}
   let yakitDrawerRootDiv

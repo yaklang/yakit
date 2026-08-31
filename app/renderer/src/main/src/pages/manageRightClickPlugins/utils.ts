@@ -43,15 +43,16 @@ export const fetchSceneActions = async (tabKey: string): Promise<ContextMenuActi
   return response.Actions
 }
 
-export const getSceneTabActions = async (tabKey: string): Promise<{ list: ContextMenuAction[] }> => {
+export const getSceneTabActions = async (tabKey: string): Promise<{ list: ContextMenuAction[]; noData: boolean }> => {
   const scene = getSceneByTabKey(tabKey)
-  if (!scene) return { list: [] }
+  if (!scene) return { list: [], noData: true }
   try {
-    const response = await grpcQueryContextMenuActions({ Scene: scene }, true)
+    const response = await grpcQueryContextMenuActions({ Scene: scene, IncludeDisabled: true }, true)
     return {
       list: response.Actions.filter((action) => action.Enabled),
+      noData: response.Actions.length === 0,
     }
   } catch {
-    return { list: [] }
+    return { list: [], noData: true }
   }
 }

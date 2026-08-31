@@ -25,6 +25,7 @@ export const registerShortcutFocusHandle = (page: string[]) => {
 export const unregisterShortcutFocusHandle = (page: string) => {
   if (currentFocus && currentFocus.includes(page)) currentFocus = currentFocus.filter((item) => item !== page)
 }
+export const getCurrentShortcutFocus = () => currentFocus
 
 /** 是否激活了快捷键设置页面 */
 let isActiveShortcutKeyPage = false
@@ -32,7 +33,7 @@ let isActiveShortcutKeyPage = false
 export const setIsActiveShortcutKeyPage = (flag: boolean) => {
   isActiveShortcutKeyPage = flag
 }
-const getIsActiveShortcutKeyPage = () => {
+export const getIsActiveShortcutKeyPage = () => {
   return isActiveShortcutKeyPage
 }
 

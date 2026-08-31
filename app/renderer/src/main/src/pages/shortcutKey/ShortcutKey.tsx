@@ -23,6 +23,10 @@ import { type GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { failed } from '@/utils/notification'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import {
+  findContextMenuPluginShortcutConflict,
+  refreshContextMenuShortcutCache,
+} from '@/pages/manageRightClickPlugins/shortcut'
 
 const getShortcutPageName = (page, t: TFunction) => {
   if (page === 'global') {
@@ -78,8 +82,10 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
 
   const editInfo = useRef<string>('')
   const [keyShow, setKeyShow] = useState(false)
-  const handleOpenKeyShow = useMemoizedFn((key: string) => {
+  const handleOpenKeyShow = useMemoizedFn(async (key: string) => {
     if (keyShow) return
+    // 录制比对依赖右键插件快捷键缓存：先刷新完成再打开弹窗，避免 grpc 未返回时用旧缓存漏报冲突
+    await refreshContextMenuShortcutCache()
     setIsActiveShortcutKeyPage(true)
     editInfo.current = key
     setKeyShow(true)
@@ -115,9 +121,10 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
         } else if (result[1] === YakitKeyBoard.Enter) {
           handleCallbackKeyShow(true)
         } else {
-          const info = isConflictToYakEditor(result[1].split('|') as YakitKeyBoard[])
+          const keys = result[1].split('|') as YakitKeyBoard[]
+          const info = isConflictToYakEditor(keys) || findContextMenuPluginShortcutConflict(keys, page)
           setWarnInfo(info)
-          setInputKeys(result[1].split('|') as YakitKeyBoard[])
+          setInputKeys(keys)
         }
       }
     }

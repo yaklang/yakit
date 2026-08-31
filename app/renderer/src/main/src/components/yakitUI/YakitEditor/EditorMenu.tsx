@@ -20,6 +20,8 @@ export interface EditorMenuItemProps {
   title?: string
   /** @description !!! 请最少使用其中一个(ctrl/alt/meta/shift)[不能重复使用] 搭配 字母或F1-12 使用快捷键功能 */
   keybindings?: string
+  /** 原始按键数组（右键插件 Shortcut 等，不走编辑器事件名映射） */
+  shortcutKeys?: string[]
   isCustom?: boolean
 }
 export interface EditorMenuItemDividerProps {

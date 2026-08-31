@@ -601,3 +601,31 @@ export function getFullRange(id: number, count = 10, minId = 1, maxId = null) {
   }
   return range
 }
+
+/** History 表格批量操作单次最大条数 */
+export const HTTP_FLOW_TABLE_BATCH_MAX_ROWS = 200
+
+export type ResolveHTTPFlowTableBatchSelectionResult =
+  | { ok: true; rows: HTTPFlow[]; ids: string[] }
+  | { ok: false; reason: 'max_exceeded' }
+
+export interface ResolveHTTPFlowTableBatchSelectionOptions {
+  selectedRowKeys: string[]
+  selectedRows: HTTPFlow[]
+  isAllSelect: boolean
+  total: number
+  maxRows?: number
+}
+
+/** 解析 History 表格多选/全选目标行，供批量右键、packetScan、插件快捷键等共用 */
+export const resolveHTTPFlowTableBatchSelection = (
+  options: ResolveHTTPFlowTableBatchSelectionOptions,
+): ResolveHTTPFlowTableBatchSelectionResult => {
+  const { selectedRowKeys, selectedRows, isAllSelect, total, maxRows = HTTP_FLOW_TABLE_BATCH_MAX_ROWS } = options
+  if (isAllSelect) {
+    if (total > maxRows) return { ok: false, reason: 'max_exceeded' }
+  } else if (selectedRowKeys.length > maxRows) {
+    return { ok: false, reason: 'max_exceeded' }
+  }
+  return { ok: true, rows: selectedRows, ids: selectedRowKeys }
+}

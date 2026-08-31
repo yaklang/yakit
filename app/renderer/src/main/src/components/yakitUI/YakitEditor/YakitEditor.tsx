@@ -87,6 +87,7 @@ import {
   ContextMenuExecutionType,
   type ContextMenuAction,
   type ContextMenuPacketActionResult,
+  type ContextMenuTrigger,
 } from '@/pages/manageRightClickPlugins/types'
 
 // ===== 拆分模块导入 =====
@@ -112,10 +113,11 @@ import {
   SmartDecodeFloatPanel,
   snapshotRect,
 } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
-import { OutlineCogIcon } from '@/assets/icon/outline'
+import { OutlineClouddownloadIcon, OutlineCogIcon } from '@/assets/icon/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
 import { checkContextMenuVersion } from '@/pages/manageRightClickPlugins/utils'
+import { parseContextMenuShortcut } from '@/pages/manageRightClickPlugins/shortcut'
 
 // re-export 保持外部导入路径兼容
 export { PLUGIN_PREFIX }
@@ -338,7 +340,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(ref)
 
-  const { customHTTPMutatePlugin, contextMenuPlugin } = usePluginSearch({
+  const { customHTTPMutatePlugin, contextMenuPlugin, isGetPlugin } = usePluginSearch({
     menuType,
     inViewport,
   })
@@ -368,8 +370,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       // 自定义HTTP数据包变形
       ;(extraMenuListsObj['http'].menu[0] as EditorMenuItemProps).children = newHttpChildren
 
-      // 插件扩展（为保持key值唯一性，添加 plugin- ）
+      // 右键插件（为保持key值唯一性，添加 plugin- ）
       const newCustomContextMenu = contextMenuPlugin.map((item) => {
+        const shortcutKeys = parseContextMenuShortcut(item.action?.Shortcut)
         const baseItem = {
           key: `${PLUGIN_PREFIX}${item.value}`,
           label: (
@@ -387,6 +390,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           params: item.params,
           executionType: item.executionType,
           action: item.action,
+          shortcutKeys: shortcutKeys.length > 0 ? shortcutKeys : undefined,
         } as EditorMenuItemProps
 
         // 如果有参数，添加子菜单
@@ -418,7 +422,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       } as EditorMenuItemProps
       newCustomContextMenu.push(manageContextMenuItem)
       ;(extraMenuListsObj['customcontextmenu'].menu[0] as EditorMenuItemProps).children =
-        contextMenuPlugin.length > 0 ? newCustomContextMenu : [manageContextMenuItem]
+        contextMenuPlugin.length > 0
+          ? newCustomContextMenu
+          : isGetPlugin
+            ? [
+                {
+                  key: 'Get*plug-in',
+                  label: (
+                    <>
+                      <OutlineClouddownloadIcon style={{ marginRight: 4 }} />
+                      {t('YakitEditor.getPlugin')}
+                    </>
+                  ),
+                  isGetPlugin: true,
+                } as EditorMenuItemProps,
+              ]
+            : [manageContextMenuItem]
     } catch (e) {
       failed(`get custom plugin failed: ${e}`)
     }
@@ -457,7 +476,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   /** context-menu 类型插件在编辑器场景的触发：以当前编辑器内容(可含另一侧)为数据包执行，并支持回填 */
   const runEditorContextMenuAction = useMemoizedFn(
-    (editor: YakitIMonacoEditor, action: ContextMenuAction, isExec: boolean) => {
+    (
+      editor: YakitIMonacoEditor,
+      action: ContextMenuAction,
+      isExec: boolean,
+      trigger: ContextMenuTrigger = 'context-menu',
+    ) => {
       const currentValue = fetchEditorFullContent(editor)
       // 角色三级判定：显式指定 > 内容嗅探（状态行开头为 response）
       const role = contextMenuPacket?.role || (/^HTTP\/\d(?:\.\d)?\s/.test(currentValue) ? 'response' : 'request')
@@ -472,7 +496,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           role === 'response' ? currentContent : contextMenuPacket?.peerValue,
         )
         if (result.PacketRevision !== revision || currentRevision !== revision) {
-          yakitNotify('warning', '数据包在插件执行期间已变化，未应用插件修改')
+          yakitNotify('warning', t('YakitEditor.packetChangedDuringPluginExecution'))
           return false
         }
         const model = editor.getModel()
@@ -490,7 +514,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           if (contextMenuPacket?.onPeerValueChange) {
             contextMenuPacket.onPeerValueChange(rawBytesToPacketText(peerBytes))
           } else {
-            yakitNotify('warning', '插件同时修改了另一侧数据包，但当前页面未提供回填入口')
+            yakitNotify('warning', t('YakitEditor.pluginModifiedPeerPacketNoFillEntry'))
           }
         }
         return true
@@ -502,7 +526,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         onPacketResult: readOnly ? undefined : applyPacketResult,
         request: {
           Source: contextMenuPacket?.source || 'http-packet-editor',
-          Trigger: 'context-menu',
+          Trigger: trigger,
           HttpsState: contextMenuPacket?.httpsState || 'unknown',
           HTTPFlowIDs: contextMenuPacket?.httpFlowId ? [contextMenuPacket.httpFlowId] : [],
           Request: request === undefined ? undefined : StringToUint8Array(request),
@@ -517,12 +541,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
 
   /** 菜单功能点击处理事件 */
   const { run: menuItemHandle } = useDebounceFn(
-    useMemoizedFn((key: string, keyPath: string[]) => {
+    useMemoizedFn((key: string, keyPath: string[], fromShortcut = false) => {
       if (!editor) return
       /** 是否执行过方法(onRightContextMenu) */
       let executeFunc = false
       const menuName = keyPath[keyPath.length - 1]
       const menuItemName = keyPath[0]
+      const trigger: ContextMenuTrigger = fromShortcut ? 'shortcut' : 'context-menu'
       for (let name in keyToOnRunRef.current) {
         const allMenu = { ...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu }
         if (
@@ -551,7 +576,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
               }
               // 点击二级菜单
               if (item.key === menuItemName) {
-                if (item.key.startsWith(PLUGIN_RIGHT_MAG)) {
+                if (item.isGetPlugin) {
+                  // 当子项为获取插件
+                  data = 'isGetPlugin'
+                } else if (item.key.startsWith(PLUGIN_RIGHT_MAG)) {
                   // 当子项为管理右键插件：跳转前校验引擎版本，版本不足则拦截并提示
                   checkContextMenuVersion().then((versionValid) => {
                     if (!versionValid) return
@@ -591,7 +619,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             contextMenuActionItem.executionType === ContextMenuExecutionType.ContextMenu &&
             contextMenuActionItem.action
           ) {
-            runEditorContextMenuAction(editor, contextMenuActionItem.action, isExec !== false)
+            runEditorContextMenuAction(editor, contextMenuActionItem.action, isExec !== false, trigger)
             executeFunc = true
             onRightContextMenu(menuItemName)
             break
@@ -1567,16 +1595,20 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 // 是否直接使用编辑器快捷键 不走自定义逻辑
                 const isUseDefaultShortcut = isYakEditorDefaultShortcut(e.browserEvent)
                 if (!isUseDefaultShortcut) {
-                  // 判断当前输入是否激活 编辑器内部快捷键
+                  const keys = convertKeyEventToKeyCombination(e.browserEvent)
+                  if (keys) {
+                    const sortKeys = sortKeysCombination(keys)
+                    const keyToMenu = keyBindingRef.current[sortKeys.join('-')]
+                    // 编辑器内置菜单快捷键 + 右键插件 Shortcut 均走 keyBindingRef
+                    if (keyToMenu) {
+                      menuItemHandle(keyToMenu[0], keyToMenu, true)
+                      e.browserEvent.stopImmediatePropagation()
+                      return
+                    }
+                  }
+                  // 判断当前输入是否激活 编辑器内部快捷键（已注册事件但未挂菜单时仍拦截）
                   const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
                   if (isActiveYakEditor) {
-                    const keys = convertKeyEventToKeyCombination(e.browserEvent)
-                    if (keys) {
-                      let sortKeys = sortKeysCombination(keys)
-                      const keyToMenu = keyBindingRef.current[sortKeys.join('-')]
-                      if (!keyToMenu) return
-                      menuItemHandle(keyToMenu[0], keyToMenu)
-                    }
                     e.browserEvent.stopImmediatePropagation()
                     return
                   }
