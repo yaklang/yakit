@@ -31,7 +31,11 @@ Yakit 是一个基于 Electron + React 的跨平台桌面应用，主要技术�
   ```bash
   brew install pkg-config pixman cairo pango
   ```
-- 如需从国内镜像安装 Electron，可先 `source ./electron.env` 设置镜像源。
+- 如需从国内镜像安装 Electron，可先在当前终端执行对应脚本设置镜像源：
+  - macOS: `source scripts/set-electron-mirror-macos.sh`
+  - Linux: `source scripts/set-electron-mirror-linux.sh`
+  - Windows PowerShell: `. .\scripts\set-electron-mirror.ps1`
+  - Windows CMD: `scripts\set-electron-mirror.cmd`
 
 ## 依赖安装
 
@@ -189,7 +193,7 @@ yarn cli pack -s mac -v yakit
 - **窗口白屏 / `ERR_CONNECTION_REFUSED`**：对应渲染端未就绪。注意端口监听 ≠ 加载完成，需按「启动步骤」用 `curl` 轮询确认两端返回有效 HTML 后再启动 Electron。
 - **启动 / 编译报错（模块找不到、API 报错、语法报错等）**：优先 `yarn check-deps` 排查依赖是否一致；结合上述盲区判断是否需要重装依赖。
 - **M1 芯片原生依赖编译失败**：执行 `brew install pkg-config pixman cairo pango`。
-- **Electron 下载慢 / 失败**：`source ./electron.env` 后重试。
+- **Electron 下载慢 / 失败**：在当前终端执行对应镜像脚本后重试（macOS `source scripts/set-electron-mirror-macos.sh` / Linux `source scripts/set-electron-mirror-linux.sh` / Windows PowerShell `. .\scripts\set-electron-mirror.ps1` / Windows CMD `scripts\set-electron-mirror.cmd`）。
 - **端口被占用**：确认没有残留的 vite / electron 进程，必要时 `lsof -i :3000` / `lsof -i :5173` 排查。
 
 ## 代码规范
