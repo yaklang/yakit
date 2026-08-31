@@ -365,8 +365,10 @@ program
   .addHelpText('after', `${YellowChalk.bold('Usage:')}${RootHelpExtraDoc}`)
 
 program.configureOutput({
-  writeErr: (str) => process.stdout.write(`${ErrorHeaderTitle}${str}`),
-  outputError: (str, write) => write(str.replace(/^error:/i, '')),
+  // writeErr 按块调用（beforeAll / 正文 / after）；报错只走 outputError，前缀放这里
+  outputError: (str, write) => {
+    write(`${ErrorHeaderTitle}${str.replace(/^error:/i, '')}`)
+  },
 })
 
 // 下面 install/add/remove 只为 yarn cli -h 列出子命令；真正执行已被文件前部拦截
