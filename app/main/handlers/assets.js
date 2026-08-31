@@ -134,6 +134,27 @@ module.exports = (win, getClient) => {
     return await asyncSetTagForRisk(params)
   })
 
+  /** 占位：待引擎 gRPC SetRiskEdit 联调 */
+  const asyncSetRiskEdit = (params) => {
+    return new Promise((resolve, reject) => {
+      const client = getClient()
+      if (typeof client.SetRiskEdit !== 'function') {
+        reject(new Error('SetRiskEdit 待引擎联调'))
+        return
+      }
+      client.SetRiskEdit(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('SetRiskEdit', async (e, params) => {
+    return await asyncSetRiskEdit(params)
+  })
+
   const asyncQueryRiskTags = (params) => {
     return new Promise((resolve, reject) => {
       getClient().QueryRiskTags(params, (err, data) => {

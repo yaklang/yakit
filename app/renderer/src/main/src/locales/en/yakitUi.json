@@ -286,6 +286,7 @@
     "doNotRemindAgain": "Do not remind again"
   },
   "YakitTag": {
+    "none": "none",
     "critical": "critical",
     "high": "high",
     "warning": "warning",

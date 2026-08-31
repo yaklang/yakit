@@ -63,4 +63,15 @@ export interface Risk {
 
   // 关联的请求/响应报文对列表
   PacketPairs?: PacketPair[]
+
+  /** CVSS 评分 0.0–10.0（前端/联调字段，protobuf 就绪后对齐） */
+  Cvss?: number
+  /** 验证人（已修复） */
+  Verifier?: string
+  /** 修复时间 unix 秒（已修复） */
+  RepairTime?: number
+  /** 修复建议（已修复） */
+  RepairSuggestion?: string
+  /** 处置说明（非已修复） */
+  DisposalNote?: string
 }
