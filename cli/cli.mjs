@@ -101,7 +101,7 @@ const installCliRuntime = async () => {
 
   fs.writeFileSync(
     path.join(cliDir, 'package.json'),
-    `${JSON.stringify({ name: 'yakit-cli', private: true, dependencies }, null, 2)}\n`
+    `${JSON.stringify({ name: 'yakit-cli', private: true, dependencies }, null, 2)}\n`,
   )
 
   console.log(`Start install CLI runtime (${pm} in cli/, skip Electron) ...`)
