@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { Popover, type PopoverProps } from 'antd'
 
 import classNames from 'classnames'
@@ -7,23 +7,35 @@ import styles from './yakitPopover.module.scss'
 export interface YakitPopoverProp extends PopoverProps {}
 
 export const YakitPopover: React.FC<YakitPopoverProp> = React.memo((props) => {
-  const { children, overlayClassName, placement, ...resePopover } = props
-
-  const direction = useMemo(() => {
-    if (!placement) return 'top'
-    if (['top', 'topLeft', 'topRight'].includes(placement)) return 'top'
-    if (['left', 'leftTop', 'leftBottom'].includes(placement)) return 'left'
-    if (['right', 'rightTop', 'rightBottom'].includes(placement)) return 'right'
-    if (['bottom', 'bottomLeft', 'bottomRight'].includes(placement)) return 'bottom'
-  }, [placement])
+  const {
+    children,
+    classNames: popoverClassNames,
+    overlayClassName,
+    overlayStyle,
+    styles: popoverStyles,
+    visible,
+    open,
+    onVisibleChange,
+    onOpenChange,
+    ...resePopover
+  } = props
 
   return (
     <Popover
       {...resePopover}
-      overlayClassName={classNames(styles['yakit-popover-wrapper'], styles[`yakit-popover-${direction}-wrapper`], {
-        [overlayClassName || '']: !!overlayClassName,
-      })}
-      placement={placement}
+      open={open ?? visible}
+      onOpenChange={(v) => {
+        onOpenChange?.(v)
+        onVisibleChange?.(v)
+      }}
+      classNames={{
+        ...popoverClassNames,
+        root: classNames(styles['yakit-popover-wrapper'], overlayClassName, popoverClassNames?.root),
+      }}
+      styles={{
+        ...popoverStyles,
+        root: { ...overlayStyle, ...popoverStyles?.root },
+      }}
     >
       {children}
     </Popover>

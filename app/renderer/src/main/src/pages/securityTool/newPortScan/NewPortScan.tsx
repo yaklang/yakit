@@ -50,7 +50,7 @@ import {
   apiPortScan,
   apiSimpleDetect,
 } from './utils'
-import type { CheckboxValueType } from 'antd/es/checkbox/Group'
+import type { CheckboxValueType } from '@/utils/antdCompat'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { yakitNotify } from '@/utils/notification'
 import { type CreateReportContentProps, onCreateReportModal } from '@/pages/portscan/CreateReport'
@@ -790,7 +790,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
 
       <YakitModal
         title={t('NewPortScanExecuteForm.saveFingerprintConfig')}
-        visible={saveTemplateVisible}
+        open={saveTemplateVisible}
         onCancel={() => setSaveTemplateVisible(false)}
         width={400}
         footer={null}

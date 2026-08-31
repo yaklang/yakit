@@ -63,6 +63,10 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
     subTitle,
     footerExtra,
     hiddenHeader = false,
+    visible,
+    open,
+    destroyOnClose,
+    destroyOnHidden,
     ...resetProps
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
@@ -96,6 +100,8 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
       )}
       closable={false}
       footer={null}
+      open={open ?? visible}
+      destroyOnHidden={destroyOnHidden ?? destroyOnClose}
       onCancel={onCancelX}
     >
       <div className={styles['yakit-modal-body']}>
@@ -124,7 +130,55 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
 
         {footer === null ? null : (
           <div style={footerStyle || undefined} className={styles['footer-body']}>
-            {footer ? (
+            {typeof footer === 'function' ? (
+              footer(
+                <>
+                  <div className={styles['footer-extra']}>{footerExtra || null}</div>
+                  <div className={styles['footer-btn-group']}>
+                    <YakitButton
+                      size={size === 'large' ? 'large' : 'middle'}
+                      type="outline2"
+                      onClick={onCancel}
+                      {...cancelButtonProps}
+                    >
+                      {cancelText || t('YakitButton.cancel')}
+                    </YakitButton>
+                    <YakitButton
+                      loading={confirmLoading}
+                      size={size === 'large' ? 'large' : 'middle'}
+                      type={okType}
+                      onClick={onOk}
+                      {...okButtonProps}
+                    >
+                      {okText || t('YakitButton.ok')}
+                    </YakitButton>
+                  </div>
+                </>,
+                {
+                  OkBtn: () => (
+                    <YakitButton
+                      loading={confirmLoading}
+                      size={size === 'large' ? 'large' : 'middle'}
+                      type={okType}
+                      onClick={onOk}
+                      {...okButtonProps}
+                    >
+                      {okText || t('YakitButton.ok')}
+                    </YakitButton>
+                  ),
+                  CancelBtn: () => (
+                    <YakitButton
+                      size={size === 'large' ? 'large' : 'middle'}
+                      type="outline2"
+                      onClick={onCancel}
+                      {...cancelButtonProps}
+                    >
+                      {cancelText || t('YakitButton.cancel')}
+                    </YakitButton>
+                  ),
+                },
+              )
+            ) : footer ? (
               footer
             ) : (
               <>

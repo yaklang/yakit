@@ -1,21 +1,28 @@
-/* 全局入口样式：antd + 应用基础 + 通用工具类
- * 该文件须在业务组件样式之前加载（antd 放最前，避免覆盖组件样式）
+/* 全局入口样式：应用基础 + 通用工具类
+ * 该文件须在业务组件样式之前加载；antd reset 在 index.tsx 中单独引入。
  */
 
-/* @import 'antd/dist/antd.css'; */
-
 html,
-body {
+body,
+#root {
   height: 100%;
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
 }
 
+.yakit-antd-app {
+  height: 100%;
+  width: 100%;
+}
+
 body {
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-    'Helvetica Neue', sans-serif;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+  font-variant: tabular-nums;
+  font-feature-settings: 'tnum';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

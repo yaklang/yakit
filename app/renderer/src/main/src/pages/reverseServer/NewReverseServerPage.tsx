@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useState, useEffect, useRef } from 'react'
-import { Form, Divider, PageHeader, Typography, Row, Col } from 'antd'
+import { Form, Divider, Typography, Row, Col } from 'antd'
+import { YakitPageHeader } from '../../components/YakitPageHeader'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { randomString } from '../../utils/randomUtil'
 import { failed, warn, info } from '../../utils/notification'
@@ -83,7 +84,7 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
   return (
     <div className="reverse-server-page-wrapper">
       {status === 'setting' && (
-        <PageHeader
+        <YakitPageHeader
           className="reverse-server-page-head"
           backIcon={false}
           title={t('NewReverseServerPage.reverseServer')}
@@ -97,7 +98,7 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
               startFacadeServer(setting.setting, setting.remoteIp)
             }}
           />
-        </PageHeader>
+        </YakitPageHeader>
       )}
       {status === 'start' && addrParams && (
         <StartReverseServer
@@ -435,7 +436,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
 
       <div className={`reverse-${codeExtra ? 'hidden-' : ''}wrapper`}>
         <div className="reverse-body">
-          <PageHeader
+          <YakitPageHeader
             className="reverse-server-pagehead"
             backIcon={false}
             title={t('NewReverseServerPage.reverseServer')}
@@ -492,7 +493,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                 </div>
               </Col>
             </Row>
-          </PageHeader>
+          </YakitPageHeader>
           <div className="reverse-server-data">
             <ReverseTable total={totalRef.current} data={data} clearData={clearData} />
           </div>

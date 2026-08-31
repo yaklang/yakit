@@ -121,14 +121,11 @@
 }
 
 .author-filter-popover {
-  padding-top: 0;
-
   :global {
     .ant-popover-arrow {
       display: none;
     }
-
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 8px 0;
     }
   }

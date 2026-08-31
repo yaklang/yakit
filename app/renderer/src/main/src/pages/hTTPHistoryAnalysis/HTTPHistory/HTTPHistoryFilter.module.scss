@@ -222,20 +222,16 @@
 
 .http-history-table-color-popover {
   width: 140px;
-  padding-top: 5px;
-
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 0;
     }
   }
 }
 
 .http-history-table-drop-down-popover {
-  padding-top: 5px;
-
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 4px;
     }
   }

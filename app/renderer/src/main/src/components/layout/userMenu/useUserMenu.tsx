@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Modal } from 'antd'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import ExclamationCircleOutlined from '@ant-design/icons/lib/icons/ExclamationCircleOutlined'
 import { lazy, Suspense } from 'react'
@@ -27,6 +26,7 @@ import {
 import { deriveIMControlBadge, type IMControlBadgeStatus, type IMControlBadgeView } from '@/pages/robotControl/status'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { UserMenusMap } from './constants'
+import { Modal } from 'antd'
 
 export interface UseUserMenuParams {
   isEngineLink: boolean

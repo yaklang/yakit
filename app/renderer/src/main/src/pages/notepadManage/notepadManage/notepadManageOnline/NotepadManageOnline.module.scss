@@ -1,9 +1,8 @@
 @use '../NotepadManage.module.scss';
 
 .collaborators-popover {
-  padding-top: 0;
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 8px;
     }
   }

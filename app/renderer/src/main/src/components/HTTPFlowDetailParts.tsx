@@ -88,8 +88,8 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
   return (
     <YakitPopover
       trigger="click"
-      overlayClassName={styles['codec-menu-popover']}
-      overlayStyle={{ paddingTop: 2 }}
+      classNames={{ root: styles['codec-menu-popover'] }}
+      styles={{ root: { paddingTop: 2 } }}
       placement="bottomLeft"
       content={
         <div className={styles['codec-menu-cont-wrapper']}>
@@ -114,8 +114,8 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
           ))}
         </div>
       }
-      visible={codeShow}
-      onVisibleChange={(visible) => setCodeShow(visible)}
+      open={codeShow}
+      onOpenChange={(visible) => setCodeShow(visible)}
     >
       <YakitButton size="small" type={codeKey !== '' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
         {t('CodingPopover.encoding')}

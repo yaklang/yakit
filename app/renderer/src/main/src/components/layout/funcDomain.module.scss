@@ -179,30 +179,18 @@
   }
 }
 .ui-op-dropdown {
-  top: 24px !important;
 }
 .ui-op-setting-dropdown {
   :global {
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
-      .ant-popover-inner-content {
-        padding: 6px 4px 8px 4px;
-        padding-bottom: 0;
-      }
+      padding: 0;
     }
   }
 }
 .ui-op-plus-dropdown {
   :global {
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
-      .ant-popover-inner-content {
-        padding: 0;
-      }
+      padding: 0;
     }
   }
 
@@ -266,6 +254,8 @@
         font-size: 12px;
         .switch-title {
           color: var(--Colors-Use-Neutral-Text-1-Title);
+          display: flex;
+          align-items: center;
         }
         .message-title {
         }
@@ -769,12 +759,15 @@
 }
 
 .more-versions-popover {
-  padding-top: 0px;
+  padding-top: 0;
+
   :global {
     .ant-popover-arrow {
       display: none;
     }
+
     .ant-popover-inner {
+      padding: 12px;
       border-radius: 4px;
     }
   }

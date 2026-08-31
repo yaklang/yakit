@@ -163,7 +163,7 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
   return (
     <div className={styles['block-wrapper']} ref={ref}>
       <YakitPopover
-        overlayClassName={styles['tooltip-popover']}
+        classNames={{ root: styles['tooltip-popover'] }}
         placement="bottomLeft"
         content={
           <div className={styles['tooltip-popover-content']}>
@@ -180,8 +180,8 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
             ))}
           </div>
         }
-        visible={visibleAdd}
-        onVisibleChange={setVisibleAdd}
+        open={visibleAdd}
+        onOpenChange={setVisibleAdd}
       >
         <div className={styles['tooltip-popover-btn']} onMouseDown={onAdd}>
           <OutlinePlusIcon />

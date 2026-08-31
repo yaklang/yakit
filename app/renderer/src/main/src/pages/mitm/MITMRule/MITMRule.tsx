@@ -1,4 +1,4 @@
-import { Divider, Form, Modal, Tooltip } from 'antd'
+import { Divider, Form, Tooltip, Modal } from 'antd'
 import React, { type ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import type {
   MITMContentReplacerRule,
@@ -1006,7 +1006,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             <div className={styles['heard-right-operation-disableTrafficGuard']} key={visible + ''}>
               <label>
                 {t('MITMRule.built_in_rules')}
-                <Tooltip destroyTooltipOnHide title={t('MITMRule.built_in_rules_tip')} placement="top">
+                <Tooltip destroyOnHidden title={t('MITMRule.built_in_rules_tip')} placement="top">
                   <OutlineQuestionmarkcircleIcon />
                 </Tooltip>
                 <YakitSwitch
@@ -1049,7 +1049,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               <Tooltip
                 title={t('MITMRule.official_website')}
                 placement="top"
-                overlayClassName={styles['question-tooltip']}
+                classNames={{ root: styles['question-tooltip'] }}
               >
                 <YakitButton
                   type="outline2"
@@ -1217,7 +1217,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 )}
                 <YakitPopover
                   placement={'bottom'}
-                  arrowPointAtCenter={true}
+                  arrow={{ pointAtCenter: true }}
                   content={
                     <YakitMenu
                       data={batchMenuData(excludeBatchMenuKey, t)}
@@ -1227,7 +1227,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     />
                   }
                   trigger="hover"
-                  overlayClassName={classNames(styles['popover-remove'])}
+                  classNames={{ root: classNames(styles['popover-remove']) }}
                 >
                   <YakitButton
                     type="outline2"
@@ -1281,12 +1281,12 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             placement="bottom"
             closable={false}
             onClose={() => onClose()}
-            visible={visible}
+            open={visible}
             getContainer={getContainer}
             mask={false}
-            style={{ height: visible ? heightDrawer : 0 }}
-            className={classNames(styles['mitm-rule-drawer'])}
-            contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
+            height={visible ? heightDrawer : 0}
+            rootClassName={classNames(styles['mitm-rule-drawer'])}
+            styles={{ wrapper: { boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' } }}
             title={title()}
             extra={extra()}
           >
@@ -1344,7 +1344,7 @@ const MITMRuleWhiteListModal: React.FC<MITMRuleWhiteListModalProps> = React.memo
   return (
     <YakitModal
       title={t('MITMRule.white_list_modal_title')}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       onOk={() => {
         onOk(currentWhiteList)

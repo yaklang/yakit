@@ -22,7 +22,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
  */
 export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
   const { theme } = useTheme()
-  const { title, titleClassName, ...restProps } = props
+  const { title, titleClassName, styles: callerStyles, imageStyle, ...restProps } = props
   const { t } = useI18nNamespaces(['yakitUi'])
 
   const emptyImageTarget = useMemo(() => {
@@ -41,16 +41,16 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
 
   return (
     <Empty
-      image={<img src={emptyImageTarget} alt="" />}
-      imageStyle={
-        props.imageStyle
-          ? props.imageStyle
-          : {
-              height: 200,
-              width: 200,
-              margin: '24px auto',
-            }
-      }
+      image={<img style={{ userSelect: 'none' }} draggable={false} src={emptyImageTarget} alt="" />}
+      styles={{
+        ...callerStyles,
+        image: callerStyles?.image ??
+          imageStyle ?? {
+            height: 200,
+            width: 200,
+            margin: '24px auto',
+          },
+      }}
       {...restProps}
       description={
         props.descriptionReactNode ? (

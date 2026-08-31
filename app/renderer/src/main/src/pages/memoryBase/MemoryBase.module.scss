@@ -356,19 +356,12 @@
 }
 
 .filter-popover {
-  padding-top: 4px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   max-height: 50vh;
   overflow: auto;
   :global {
-    .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
     .ant-popover-arrow {
       left: 6px;
     }

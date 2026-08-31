@@ -121,7 +121,6 @@ const PluginIsPrivateSelection: React.FC<PluginIsPrivateSelectionProps> = React.
     <>
       <div className={styles['plugin-isPrivate-select']}>
         <Radio
-          className="plugins-radio-wrapper"
           checked={isPrivate}
           onClick={(e) => {
             setIsPrivate(true)
@@ -130,7 +129,6 @@ const PluginIsPrivateSelection: React.FC<PluginIsPrivateSelectionProps> = React.
           私密(仅自己可见)
         </Radio>
         <Radio
-          className="plugins-radio-wrapper"
           checked={!isPrivate}
           onClick={(e) => {
             setIsPrivate(false)

@@ -363,7 +363,7 @@
             line-height: 14px;
           }
 
-          .ant-row.ant-form-item {
+          .ant-form-item .ant-form-item-row {
             gap: 2px;
             .ant-form-item-label {
               padding-bottom: 0;
@@ -494,12 +494,7 @@
   }
   :global {
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
-      .ant-popover-inner-content {
-        padding: 6px 4px 4px 4px;
-      }
+      padding: 6px 4px 4px 4px;
     }
   }
 }
@@ -514,15 +509,6 @@
   }
 }
 .rule-group-intersection-popover {
-  padding-top: 4px;
-  :global {
-    .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
-  }
   .rule-group-intersection {
     display: flex;
     flex-direction: column;
@@ -536,12 +522,8 @@
   }
 }
 .add-and-remove-group-popover {
-  padding-top: 4px;
   :global {
     .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
       padding: 0;
       padding-top: 14px;
     }

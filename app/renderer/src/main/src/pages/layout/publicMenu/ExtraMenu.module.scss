@@ -30,17 +30,15 @@
 .menu-popover {
   :global {
     .ant-popover-inner {
+      padding: 0;
       border: 1px solid var(--Colors-Use-Neutral-Border);
       box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
       border-radius: 4px;
-
-      .ant-popover-inner-content {
-        padding: 6px 4px 4px 4px;
-      }
     }
   }
 }
 
+/* antd 5 迁移：补回 v4 时期被误删的无箭头样式，适配 v5 的箭头选择器 */
 .menu-popover-no-arrow {
   :global {
     .ant-popover-content .ant-popover-arrow .ant-popover-arrow-content {

@@ -5,6 +5,27 @@
     .ant-drawer-body {
       padding: 0;
     }
+    .ant-form-small {
+      font-size: 12px;
+
+      .ant-form-item {
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+
+      .ant-form-item .ant-form-item-label > label,
+      .ant-form-item-label > label {
+        font-size: 12px;
+        line-height: 24px;
+        height: 24px;
+      }
+
+      .ant-form-item-with-help .ant-form-item-explain,
+      .ant-form-item-extra {
+        font-size: 12px;
+        line-height: 16px;
+      }
+    }
     .ant-collapse-item:first-child > .ant-collapse-header {
       border-top: 0;
       color: var(--Colors-Use-Neutral-Text-1-Title);

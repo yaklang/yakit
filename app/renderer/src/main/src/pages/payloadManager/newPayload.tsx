@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Divider, Progress, Tooltip } from 'antd'
+import { Divider, Progress, Tooltip, Upload } from 'antd'
 import {
   useCreation,
   useDebounceEffect,
@@ -61,7 +61,6 @@ import {
 } from '@/assets/icon/solid'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import Dragger from 'antd/lib/upload/Dragger'
 import { v4 as uuidv4 } from 'uuid'
 import { type DeletePayloadProps, NewPayloadTable, type Payload, type QueryPayloadParams } from './PayloadLocalTable'
 import type { PaginationSchema, QueryGeneralResponse } from '../invoker/schema'
@@ -507,7 +506,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
               <>
                 {['dragger', 'large-dragger'].includes(uploadType) && (
                   <div className={styles['upload-dragger-box']}>
-                    <Dragger
+                    <Upload.Dragger
                       className={styles['upload-dragger']}
                       // accept={FileType.join(",")}
                       multiple={true}
@@ -530,7 +529,7 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                           </div>
                         </div>
                       </div>
-                    </Dragger>
+                    </Upload.Dragger>
                   </div>
                 )}
                 {uploadType === 'editor' && (
@@ -2052,10 +2051,10 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                   dropdown={{
                     trigger: ['click'],
                     placement: 'bottomRight',
-                    onVisibleChange: (v) => {
+                    onOpenChange: (v) => {
                       setMenuOpen(v)
                     },
-                    visible: menuOpen,
+                    open: menuOpen,
                   }}
                 >
                   <div className={styles['extra-icon']}>
@@ -2824,10 +2823,10 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                     overlayClassName: styles['payload-list-menu'],
                     trigger: ['click'],
                     placement: 'bottomRight',
-                    onVisibleChange: (v) => {
+                    onOpenChange: (v) => {
                       setMenuOpen(v)
                     },
-                    visible: menuOpen,
+                    open: menuOpen,
                   }}
                 >
                   <div className={styles['extra-icon']}>
@@ -2842,7 +2841,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
       <YakitModal
         centered
         getContainer={document.getElementById('new-payload') || document.body}
-        visible={visible}
+        open={visible}
         title={null}
         footer={null}
         width={520}
@@ -3492,7 +3491,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
       <YakitModal
         centered
         getContainer={document.getElementById('new-payload') || document.body}
-        visible={visible}
+        open={visible}
         title={null}
         footer={null}
         width={520}
@@ -3948,7 +3947,7 @@ export const ExportByPayloadGrpc: React.FC<ExportByPayloadGrpcProps> = (props) =
     <YakitModal
       centered
       getContainer={document.getElementById('new-payload') || document.body}
-      visible={showModal}
+      open={showModal}
       title={null}
       footer={null}
       width={520}
@@ -4059,7 +4058,7 @@ export const UploadOrDownloadByPayloadGrpc: React.FC<UploadOrDownloadByPayloadGr
     <YakitModal
       centered
       getContainer={document.getElementById('new-payload') || document.body}
-      visible={showModal}
+      open={showModal}
       title={null}
       footer={null}
       width={520}
@@ -4411,7 +4410,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
       <YakitModal
         centered
         getContainer={document.getElementById('new-payload') || document.body}
-        visible={visible}
+        open={visible}
         title={null}
         footer={null}
         width={520}

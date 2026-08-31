@@ -35,7 +35,7 @@ import {
   OutlineTerminalIcon,
 } from '@/assets/icon/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
-import { Form, Tooltip } from 'antd'
+import { Form, Tooltip, type CheckboxChangeEvent } from 'antd'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { formatDate } from '@/utils/timeUtil'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
@@ -47,7 +47,6 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { PluginBaseParamProps, PluginSettingParamProps, YakRiskInfoProps } from './pluginsType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakEditor } from '@/utils/editors'
-import type { CheckboxChangeEvent } from 'antd/lib/checkbox'
 import { BuiltInTags, RiskLevelToTag } from './editDetails/builtInData'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { aduitStatusToName, pluginTypeToName } from './builtInData'
@@ -294,7 +293,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
               {pluginName || '-'}
             </div>
             <div className={styles['subtitle-wrapper']}>
-              <Tooltip title={help || 'No Description about it.'} overlayClassName="plugins-tooltip">
+              <Tooltip title={help || 'No Description about it.'} rootClassName="plugins-tooltip">
                 <OutlineQuestionmarkcircleIcon className={styles['help-icon']} />
               </Tooltip>
               {titleNode || null}
@@ -328,7 +327,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
               <>
                 <div style={{ marginRight: 8 }} className={styles['divider-style']}></div>
                 <YakitPopover
-                  overlayClassName={styles['contributes-popover']}
+                  classNames={{ root: styles['contributes-popover'] }}
                   placement="bottom"
                   content={
                     <div className={styles['contributes-list']}>
@@ -342,7 +341,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                       ))}
                     </div>
                   }
-                  onVisibleChange={setPrShow}
+                  onOpenChange={setPrShow}
                 >
                   <YakitButton type="text2" isActive={prShow}>
                     {`${contributes.length}位协作者`}
@@ -371,7 +370,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
               <div className={styles['divider-style']} />
               <div className={styles['copy-wrapper']}>
                 <span>来源:</span>
-                <Tooltip title={`复制插件 “${basePluginName}” 为 “${pluginName}”`} overlayClassName="plugins-tooltip">
+                <Tooltip title={`复制插件 “${basePluginName}” 为 “${pluginName}”`} rootClassName="plugins-tooltip">
                   <YakitTag style={{ marginRight: 0, cursor: 'pointer' }}>复制</YakitTag>
                 </Tooltip>
               </div>
@@ -608,14 +607,7 @@ export const PluginModifyInfo: React.FC<PluginModifyInfoProps> = memo(
           </div>
         </Form.Item>
 
-        <YakitModal
-          title="漏洞描述"
-          type="white"
-          closable={true}
-          footer={null}
-          visible={riskShow}
-          onCancel={onCancelRisk}
-        >
+        <YakitModal title="漏洞描述" type="white" closable={true} footer={null} open={riskShow} onCancel={onCancelRisk}>
           <div className={styles['risk-info-modal']}>
             {bugInfo.map((item) => {
               return (
@@ -931,12 +923,12 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         </div>
         <div className={'plugin-details-item-show'}>
           {extraNode()}
-          <Tooltip title={help || 'No Description about it.'} placement="topRight" overlayClassName="plugins-tooltip">
+          <Tooltip title={help || 'No Description about it.'} placement="topRight" rootClassName="plugins-tooltip">
             <OutlineQuestionmarkcircleIcon className={'plugin-details-item-show-icon-style'} />
           </Tooltip>
           <YakitPopover
             placement="topRight"
-            overlayClassName={'terminal-popover'}
+            classNames={{ root: 'terminal-popover' }}
             content={<YakEditor type={pluginType} value={content} readOnly={true} />}
           >
             <OutlineTerminalIcon className={'plugin-details-item-show-icon-style'} />

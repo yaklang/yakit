@@ -1792,7 +1792,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const m = showYakitDrawer({
           width: '80%',
           content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr, t, pageType),
-          bodyStyle: { paddingTop: 5 },
+          styles: { body: { paddingTop: 5 } },
         })
       },
     }),
@@ -3058,7 +3058,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {showColorSwatch && (
               <div className={style['http-history-table-color-swatch']}>
                 <YakitPopover
-                  overlayClassName={style['http-history-table-color-popover']}
+                  classNames={{ root: style['http-history-table-color-popover'] }}
                   content={
                     <ColorSearch
                       color={color}
@@ -3070,8 +3070,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                   }
                   trigger="click"
                   placement="bottomLeft"
-                  visible={isShowColor}
-                  onVisibleChange={(visible) => {
+                  open={isShowColor}
+                  onOpenChange={(visible) => {
                     if (!visible) setIsShowColor(false)
                   }}
                 >
@@ -3095,7 +3095,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                   </YakitButton>
                 )) || (
                   <YakitPopover
-                    overlayClassName={style['http-history-table-drop-down-popover']}
+                    classNames={{ root: style['http-history-table-drop-down-popover'] }}
                     content={
                       <YakitMenu
                         width={150}
@@ -3109,8 +3109,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                     trigger="click"
                     placement="bottomLeft"
-                    onVisibleChange={setBatchVisible}
-                    visible={batchVisible}
+                    onOpenChange={setBatchVisible}
+                    open={batchVisible}
                   >
                     <YakitButton type="outline2" disabled={selectedRowKeys.length === 0}>
                       {t('YakitButton.batchOperation')}

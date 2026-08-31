@@ -324,7 +324,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             ) : (
               <div className={styles['empty-body']}>
                 <YakitEmpty
-                  imageStyle={{ width: 160, height: 140 }}
+                  styles={{ image: { width: 160, height: 140 } }}
                   title="暂无待办任务"
                   description="当前任务暂未生成待办任务，请稍后查看"
                 />
@@ -823,10 +823,10 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             }
             trigger="click"
             placement="top"
-            destroyTooltipOnHide
-            visible={visible}
-            onVisibleChange={setVisible}
-            overlayClassName={styles['add-popover']}
+            destroyOnHidden
+            open={visible}
+            onOpenChange={setVisible}
+            classNames={{ root: styles['add-popover'] }}
           >
             <YakitButton type="text" className={styles['add-btn']}>
               添加

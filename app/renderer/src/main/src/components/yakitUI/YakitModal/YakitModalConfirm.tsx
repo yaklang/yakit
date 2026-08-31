@@ -1,5 +1,6 @@
 import type React from 'react'
 import { type ReactNode, useEffect, useState } from 'react'
+import { ConfigProvider, theme } from 'antd'
 import style from './YakitModalConfirm.module.scss'
 import { YakitButton } from '../YakitButton/YakitButton'
 import type { ShowModalProps } from '@/utils/showModal'
@@ -11,7 +12,20 @@ import { createRoot } from 'react-dom/client'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { ALL_I18N_NAMESPACES } from '@/i18n/namespaces'
 import i18n from '@/i18n/i18n'
+import { yakitAntdTheme } from '@/theme/antdTheme'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
+
+/** 独立 createRoot 必须自带主题，否则 cssVar 的 z-index 丢了会被页面里已打开的 Modal 挡住 */
+const yakitModalRootProviderProps = {
+  theme: yakitAntdTheme,
+  wave: { disabled: true } as const,
+  button: { autoInsertSpace: false },
+}
+/**
+ * antd 5 页面 Modal：zIndexPopupBase + CONTAINER_OFFSET(100)；嵌套再 +100。
+ * 命令式弹窗对齐 ConfirmDialog，用 CONTAINER_MAX_OFFSET(1000) 压过最多 10 层嵌套。
+ */
+const YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET = 1000
 
 export type ModalI18nNode = React.ReactNode | ((modalT: TFunction) => React.ReactNode) | string
 
@@ -69,7 +83,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
         yakitModalConfirmRootDiv = createRoot(div)
       }
       yakitModalConfirmRootDiv.render(
-        <>
+        <ConfigProvider {...yakitModalRootProviderProps}>
           <YakitBaseModal
             type="white"
             {...(targetConfig as YakitModalProp)}
@@ -86,7 +100,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
             }}
             title={null}
             // headerStyle={{paddingBottom: 0}}
-            bodyStyle={{ padding: 0 }}
+            styles={{ body: { padding: 0 } }}
           >
             <ErrorBoundary
               FallbackComponent={({ error, resetErrorBoundary }) => {
@@ -122,7 +136,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
               </div>
             </ErrorBoundary>
           </YakitBaseModal>
-        </>,
+        </ConfigProvider>,
       )
     })
   }
@@ -143,6 +157,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
 
 const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { token } = theme.useToken()
   const [visible, setVisible] = useState<boolean>(true)
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -160,7 +175,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           <YakitButton
             type="outline2"
             onClick={(e) => {
-              if (props.onCancel) props.onCancel(e)
+              if (props.onCancel) props.onCancel(e as React.MouseEvent<HTMLButtonElement>)
               setVisible(false)
             }}
             {...props.cancelButtonProps}
@@ -173,7 +188,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
                 setLoading(true)
               }
               if (props.onOk) {
-                props.onOk(e)
+                props.onOk(e as React.MouseEvent<HTMLButtonElement>)
               }
             }}
             loading={loading}
@@ -183,17 +198,16 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           </YakitButton>
         </div>
       }
-      visible={visible}
       closable={true}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       closeIcon={
         <div
           onClick={(e) => {
             e.stopPropagation()
             if (props.onCloseX) {
-              props.onCloseX(e)
+              props.onCloseX(e as unknown as React.MouseEvent<HTMLButtonElement>)
             } else {
-              props.onCancel?.(e)
+              props.onCancel?.(e as unknown as React.MouseEvent<HTMLButtonElement>)
             }
             setVisible(false)
           }}
@@ -203,6 +217,8 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
         </div>
       }
       {...props}
+      zIndex={props.zIndex ?? token.zIndexPopupBase + YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET}
+      open={visible}
       onCancel={(e) => {
         if (props.onCancel) props.onCancel(e)
         setVisible(false)
@@ -235,7 +251,7 @@ export const debugYakitModalAny = (y: any) => {
   })
 }
 
-interface ShowModalV2Props extends Omit<ShowModalProps, 'title' | 'content' | 'onOkText'> {
+interface ShowModalV2Props extends Omit<ShowModalProps, 'title' | 'content' | 'onOkText' | 'onCancelText'> {
   title?: ModalI18nNode
   content?: ModalI18nNode
   onOkText?: ModalI18nNode
@@ -259,9 +275,9 @@ export const showYakitModal = (props: ShowModalV2Props) => {
         yakitModalRootDiv = createRoot(div)
       }
       yakitModalRootDiv.render(
-        <>
+        <ConfigProvider {...yakitModalRootProviderProps}>
           <YakitBaseModal
-            bodyStyle={{ padding: 0 }}
+            styles={{ body: { padding: 0 } }}
             {...(targetConfig as YakitModalProp)}
             title={
               targetConfig.title !== undefined ? <ModalI18nRender node={targetConfig.title} /> : targetConfig.title
@@ -294,7 +310,7 @@ export const showYakitModal = (props: ShowModalV2Props) => {
               <ModalI18nRender node={targetConfig.content} />
             </ErrorBoundary>
           </YakitBaseModal>
-        </>,
+        </ConfigProvider>,
       )
     })
   }

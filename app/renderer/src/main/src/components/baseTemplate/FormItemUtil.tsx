@@ -1,8 +1,6 @@
 import type React from 'react'
 import { type ReactNode } from 'react'
-import { Col, Form, type FormItemProps, Input, type InputProps, Row, Upload, Select } from 'antd'
-import '@ant-design/compatible/assets/index.css'
-import type { DraggerProps } from 'antd/lib/upload'
+import { Col, Form, type FormItemProps, type DraggerProps, Input, type InputProps, Row, Upload, Select } from 'antd'
 import type { TextAreaProps } from 'antd/lib/input'
 
 import './FormItemUtil.css'

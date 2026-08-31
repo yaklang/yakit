@@ -75,7 +75,7 @@
     }
   }
 
-  :global {
+  &:global(.ant-tooltip) :global {
     .ant-tooltip-inner {
       padding: 0;
       display: block;
@@ -100,7 +100,7 @@
 }
 .chat-locate-popover {
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 12px;
     }
   }

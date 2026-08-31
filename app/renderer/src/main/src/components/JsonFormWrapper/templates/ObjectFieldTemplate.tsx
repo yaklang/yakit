@@ -16,9 +16,8 @@ import {
   getUiOptions,
   titleId,
 } from '@rjsf/utils'
-import Col from 'antd/lib/col'
-import Row from 'antd/lib/row'
-import { ConfigConsumer, type ConfigConsumerProps } from 'antd/lib/config-provider/context'
+import { useContext } from 'react'
+import { Col, ConfigProvider, Row } from 'antd'
 
 const DESCRIPTION_COL_STYLE = {
   paddingBottom: '8px',
@@ -107,92 +106,84 @@ export default function ObjectFieldTemplate<
     return defaultColSpan
   }
 
+  const { getPrefixCls } = useContext(ConfigProvider.ConfigContext)
+  const prefixCls = getPrefixCls('form')
+  const labelClsBasic = `${prefixCls}-item-label`
+  const labelColClassName = classNames(labelClsBasic, labelAlign === 'left' && `${labelClsBasic}-left`)
+
   return (
-    <ConfigConsumer>
-      {(configProps: ConfigConsumerProps) => {
-        const { getPrefixCls } = configProps
-        const prefixCls = getPrefixCls('form')
-        const labelClsBasic = `${prefixCls}-item-label`
-        const labelColClassName = classNames(
-          labelClsBasic,
-          labelAlign === 'left' && `${labelClsBasic}-left`,
-          // labelCol.className,
-        )
-
-        return (
-          <fieldset id={idSchema.$id}>
-            <Row gutter={rowGutter}>
-              {title && (
-                <Col className={labelColClassName} span={24}>
-                  <TitleFieldTemplate
-                    id={titleId<T>(idSchema)}
-                    title={title}
-                    required={required}
-                    schema={schema}
-                    uiSchema={uiSchema}
-                    registry={registry}
-                  />
+    <fieldset id={idSchema.$id}>
+      <Row gutter={rowGutter}>
+        {title && (
+          <Col className={labelColClassName} span={24}>
+            {/* eslint-disable-next-line react-hooks/static-components -- RJSF template from registry, not dynamically created */}
+            <TitleFieldTemplate
+              id={titleId<T>(idSchema)}
+              title={title}
+              required={required}
+              schema={schema}
+              uiSchema={uiSchema}
+              registry={registry}
+            />
+          </Col>
+        )}
+        {description && (
+          <Col span={24} style={DESCRIPTION_COL_STYLE}>
+            {/* eslint-disable-next-line react-hooks/static-components -- RJSF template from registry, not dynamically created */}
+            <DescriptionFieldTemplate
+              id={descriptionId<T>(idSchema)}
+              description={description}
+              schema={schema}
+              uiSchema={uiSchema}
+              registry={registry}
+            />
+          </Col>
+        )}
+        {uiSchema?.['ui:grid'] && Array.isArray(uiSchema['ui:grid'])
+          ? uiSchema['ui:grid'].map((ui_row) => {
+              return (
+                <Col span={24}>
+                  <Row gutter={rowGutter}>
+                    {Object.keys(ui_row).map((row_item) => {
+                      const element = properties.find((p) => p.name === row_item)
+                      if (element) {
+                        return (
+                          <Col key={element.name} span={ui_row[row_item]}>
+                            {element.content}
+                          </Col>
+                        )
+                      } else {
+                        return <></>
+                      }
+                    })}
+                  </Row>
                 </Col>
-              )}
-              {description && (
-                <Col span={24} style={DESCRIPTION_COL_STYLE}>
-                  <DescriptionFieldTemplate
-                    id={descriptionId<T>(idSchema)}
-                    description={description}
-                    schema={schema}
-                    uiSchema={uiSchema}
-                    registry={registry}
-                  />
+              )
+            })
+          : properties
+              .filter((e) => !e.hidden)
+              .map((element: ObjectFieldTemplatePropertyType) => (
+                <Col key={element.name} span={calculateColSpan(element)}>
+                  {element.content}
                 </Col>
-              )}
-              {uiSchema?.['ui:grid'] && Array.isArray(uiSchema['ui:grid'])
-                ? uiSchema['ui:grid'].map((ui_row) => {
-                    return (
-                      <Col span={24}>
-                        <Row gutter={rowGutter}>
-                          {Object.keys(ui_row).map((row_item) => {
-                            const element = properties.find((p) => p.name === row_item)
-                            if (element) {
-                              return (
-                                <Col key={element.name} span={ui_row[row_item]}>
-                                  {element.content}
-                                </Col>
-                              )
-                            } else {
-                              return <></>
-                            }
-                          })}
-                        </Row>
-                      </Col>
-                    )
-                  })
-                : properties
-                    .filter((e) => !e.hidden)
-                    .map((element: ObjectFieldTemplatePropertyType) => (
-                      <Col key={element.name} span={calculateColSpan(element)}>
-                        {element.content}
-                      </Col>
-                    ))}
-            </Row>
+              ))}
+      </Row>
 
-            {canExpand(schema, uiSchema, formData) && (
-              <Col span={24}>
-                <Row gutter={rowGutter} justify="end">
-                  <Col flex="192px">
-                    <AddButton
-                      className="object-property-expand"
-                      disabled={disabled || readonly}
-                      onClick={onAddClick(schema)}
-                      uiSchema={uiSchema}
-                      registry={registry}
-                    />
-                  </Col>
-                </Row>
-              </Col>
-            )}
-          </fieldset>
-        )
-      }}
-    </ConfigConsumer>
+      {canExpand(schema, uiSchema, formData) && (
+        <Col span={24}>
+          <Row gutter={rowGutter} justify="end">
+            <Col flex="192px">
+              <AddButton
+                className="object-property-expand"
+                disabled={disabled || readonly}
+                onClick={onAddClick(schema)}
+                uiSchema={uiSchema}
+                registry={registry}
+              />
+            </Col>
+          </Row>
+        </Col>
+      )}
+    </fieldset>
   )
 }

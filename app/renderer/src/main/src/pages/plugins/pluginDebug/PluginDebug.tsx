@@ -117,8 +117,8 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
         closable={false}
         keyboard={false}
         height={showHeight}
-        visible={visible}
-        className={classNames(styles['plugin-debug-drawer'])}
+        open={visible}
+        rootClassName={classNames(styles['plugin-debug-drawer'])}
         title={<div className={styles['header-title']}>插件调试</div>}
         extra={
           <div className={styles['header-extra-wrapper']}>
@@ -141,7 +141,7 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
         centered={true}
         maskClosable={false}
         closable={true}
-        visible={diffShow}
+        open={diffShow}
         okText="合并"
         onCancel={onCancelDiff}
         onOk={onOkDiff}

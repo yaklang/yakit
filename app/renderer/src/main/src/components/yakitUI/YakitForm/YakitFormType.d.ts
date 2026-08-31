@@ -1,6 +1,5 @@
 import { type YakitAutoCompleteProps } from './../YakitAutoComplete/YakitAutoCompleteType.d'
-import { type FormItemProps, type InputProps } from 'antd'
-import { type DraggerProps } from 'antd/lib/upload'
+import { type DraggerProps, type FormItemProps, type InputProps } from 'antd'
 import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 import { type InternalTextAreaProps } from '../YakitInput/YakitInputType'
 import { type ReactNode } from 'react'

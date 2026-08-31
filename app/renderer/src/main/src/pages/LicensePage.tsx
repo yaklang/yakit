@@ -1,7 +1,7 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import { failed, yakitNotify } from '@/utils/notification'
-import { Col, Divider, Form, Modal, Row, Spin } from 'antd'
+import { Col, Divider, Form, Row, Spin, Modal } from 'antd'
 import { InputItem } from '@/utils/inputUtil'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import './LicensePage.scss'
@@ -41,7 +41,11 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
   }, [])
 
   if (!licenseRequest) {
-    return <Spin className="license-spin-box" tip={t('LicensePage.loadingLicense')} />
+    return (
+      <Spin className="license-spin-box" tip={t('LicensePage.loadingLicense')}>
+        <div />
+      </Spin>
+    )
   }
 
   const UploadLicense = () => {

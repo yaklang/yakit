@@ -11,9 +11,10 @@ import {
 import { failed } from '../../utils/notification'
 import { formatTimestamp } from '../../utils/timeUtil'
 import { CopyableField } from '../../utils/inputUtil'
-import { showModal } from '../../utils/showModal'
 import { YakEditor } from '../../utils/editors'
 import { ReloadOutlined } from '@ant-design/icons'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 
 export interface PluginHistoryTableProp {
   trigger?: any
@@ -139,10 +140,11 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
             title: '操作',
             render: (r: ExecHistoryRecord) => (
               <Space>
-                <Button
+                <YakitButton
                   size={'small'}
+                  type="outline2"
                   onClick={() => {
-                    showModal({
+                    showYakitModal({
                       title: '插件源码',
                       content: (
                         <>
@@ -156,7 +158,7 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
                   }}
                 >
                   插件源码
-                </Button>
+                </YakitButton>
               </Space>
             ),
           },

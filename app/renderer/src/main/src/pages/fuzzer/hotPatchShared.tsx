@@ -324,9 +324,9 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
       <YakitPopover
         trigger="hover"
         placement="right"
-        overlayClassName={styles['hotCode-popover']}
+        classNames={{ root: styles['hotCode-popover'] }}
         content={dropdown && <YakitEditor type={'yak'} value={viewCurHotCode} readOnly={true} />}
-        onVisibleChange={(v) => {
+        onOpenChange={(v) => {
           if (v) {
             onClickHotCodeName(item)
           }
@@ -437,7 +437,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                 <YakitPopover
                   trigger="hover"
                   placement="right"
-                  overlayClassName={styles['hotCode-group-submenu']}
+                  classNames={{ root: styles['hotCode-group-submenu'] }}
                   content={
                     <div className={classNames(styles['hotCode-list'], styles['hotCode-group-submenu-list'])}>
                       {team.node.map((item) => renderHotCodeItem(item))}
@@ -472,12 +472,12 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
       {dropdown ? (
         <Dropdown
           overlayStyle={{ borderRadius: 4, width: 250, minWidth: 250 }}
-          visible={hotCodeTempVisible}
-          onVisibleChange={(v) => {
+          open={hotCodeTempVisible}
+          onOpenChange={(v) => {
             setHotCodeTempVisible(v)
           }}
           trigger={['click']}
-          overlay={overlayCont}
+          popupRender={() => overlayCont}
         >
           {triggerNode || <YakitButton type="text">{t('HotCodeTemplate.code_template')}</YakitButton>}
         </Dropdown>
@@ -559,13 +559,13 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       title={title || t('AddHotCodeTemplate.save_hot_reload_template')}
       width={400}
       onCancel={onCancel}
       okText={t('YakitButton.save')}
       onOk={onOk}
-      destroyOnClose
+      destroyOnHidden
       footer={null}
     >
       <div className={styles['hotCodeTemp-save']}>

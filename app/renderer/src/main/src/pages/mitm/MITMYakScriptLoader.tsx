@@ -422,9 +422,9 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                   label: (
                     <YakitPopover
                       placement="right"
-                      overlayClassName={style['terminal-popover']}
+                      classNames={{ root: style['terminal-popover'] }}
                       content={<YakEditor type={i.Type} value={i.Content} readOnly={true} />}
-                      onVisibleChange={(v) => {
+                      onOpenChange={(v) => {
                         if (v && !i.Content) {
                           getScriptInfo(i)
                         }
@@ -444,8 +444,8 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     <Tooltip
                       title={i.Help || 'No Description about it.'}
                       placement="right"
-                      overlayClassName={style['question-tooltip']}
-                      onVisibleChange={(v) => {
+                      classNames={{ root: style['question-tooltip'] }}
+                      onOpenChange={(v) => {
                         if (v && !i.Help) {
                           getScriptInfo(i)
                         }
@@ -504,7 +504,7 @@ export const StatusCardViewer = React.memo((p: { status: StatusCardProps[] }) =>
       {p.status.map((i) => {
         return (
           <Col span={6} style={{ marginBottom: 8 }}>
-            <Card hoverable={true} bordered={true} size={'small'}>
+            <Card hoverable={true} variant="outlined" size={'small'}>
               <Statistic title={i.Id} value={i.Data} />
             </Card>
           </Col>

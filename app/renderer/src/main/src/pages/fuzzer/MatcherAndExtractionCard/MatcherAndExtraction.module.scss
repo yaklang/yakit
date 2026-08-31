@@ -273,10 +273,9 @@
 }
 
 .color-select-popover {
-  padding-top: 4px;
   width: 136px;
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 0;
     }
     .ant-popover-arrow {
@@ -348,11 +347,6 @@
 }
 
 .edit-name-popover {
-  :global {
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
-  }
   .edit-name-popover-content {
     display: flex;
     flex-direction: column;

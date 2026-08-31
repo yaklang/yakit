@@ -264,7 +264,7 @@ export const MITMPipelineStatus: React.FC = React.memo(() => {
 
   return (
     <YakitPopover
-      overlayClassName={styles['pipeline-popover-overlay']}
+      classNames={{ root: styles['pipeline-popover-overlay'] }}
       content={content}
       trigger={['hover', 'click']}
       placement="bottomLeft"

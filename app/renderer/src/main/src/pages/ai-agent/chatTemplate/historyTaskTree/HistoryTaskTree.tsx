@@ -106,7 +106,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
             accordion
             bordered={false}
             activeKey={activeKey}
-            onChange={(k) => setActiveKey(k as string)}
+            onChange={(k) => setActiveKey(Array.isArray(k) ? k[0] : k)}
             style={{ marginBottom: 8, height: '100%' }}
           >
             {currentTaskItem.task_tree.length > 0 && (
@@ -253,11 +253,11 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
         e?.stopPropagation()
         setVisible(false)
       }}
-      visible={visible}
-      onVisibleChange={setVisible}
-      destroyTooltipOnHide={true}
+      open={visible}
+      onOpenChange={setVisible}
+      destroyOnHidden={true}
     >
-      <Tooltip title="从该节点开始继续任务" destroyTooltipOnHide={true}>
+      <Tooltip title="从该节点开始继续任务" destroyOnHidden={true}>
         <YakitButton
           type="text"
           onClick={(e) => {
@@ -317,7 +317,7 @@ export const AIHistorySkipTask: React.FC<{ taskId?: string | null; isTask?: bool
           e?.stopPropagation()
         }}
       >
-        <Tooltip title="跳过当前任务" destroyTooltipOnHide={true}>
+        <Tooltip title="跳过当前任务" destroyOnHidden={true}>
           <YakitButton
             size="small"
             icon={<RedoDotIcon />}

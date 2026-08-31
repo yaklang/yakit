@@ -1,6 +1,8 @@
 import { coordinate } from '../../pages/globalVariable'
 import { BaseMenu, type BaseMenuProps } from '../baseTemplate/BaseMenu'
+import { ConfigProvider } from 'antd'
 import { createRoot } from 'react-dom/client'
+import { yakitAntdTheme } from '@/theme/antdTheme'
 import './showByContext.css'
 
 const ContextMenuId = 'yakit-cursor-menu'
@@ -37,7 +39,9 @@ export const showByContextMenu = (props: BaseMenuProps, x?: number, y?: number) 
       if ((props.data || []).length > 0) {
         contextMenuRootDiv = createRoot(div)
         contextMenuRootDiv.render(
-          <BaseMenu className="right-context-menu" data={data || []} {...restMenu} onClick={onClick}></BaseMenu>,
+          <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+            <BaseMenu className="right-context-menu" data={data || []} {...restMenu} onClick={onClick}></BaseMenu>
+          </ConfigProvider>,
         )
       }
     })

@@ -5,9 +5,9 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { Space, Divider, message, Tag, Collapse } from 'antd'
+import { Space, Divider, Tag, Collapse } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { failed } from '@/utils/notification'
+import { failed, getMessageApi } from '@/utils/notification'
 import type {
   KnowledgeBaseQAProps,
   QAMessage,
@@ -22,7 +22,6 @@ import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
-const { Panel } = Collapse
 
 export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase, queryAllCollectionsDefault }) => {
   const { t } = useI18nNamespaces(['components', 'yakitUi'])
@@ -141,7 +140,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
   // 启动问答
   const handleAsk = useMemoizedFn(async () => {
     if ((!knowledgeBase && !queryAllCollections) || !inputValue.trim()) {
-      message.warning(
+      getMessageApi().warning(
         t('playground.KnowledgeBaseQA.enterQuestion') +
           (queryAllCollections ? '' : t('playground.KnowledgeBaseQA.selectKnowledgeBase')),
       )
@@ -312,22 +311,22 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
         <Divider orientation="left" style={{ fontSize: '12px', margin: '8px 0' }}>
           {t('playground.KnowledgeBaseQA.relatedKnowledge', { count: entries.length })}
         </Divider>
-        <Collapse ghost>
-          {entries.map((entry, index) => (
-            <Panel
-              key={entry.ID || index}
-              header={
-                <div className={styles['entry-header']}>
-                  <span className={styles['entry-title']}>{entry.KnowledgeTitle}</span>
-                  <Space size={4}>
-                    <Tag color="blue">{entry.KnowledgeType}</Tag>
-                    <Tag color="orange">
-                      {t('playground.KnowledgeBaseQA.importance')} {entry.ImportanceScore}
-                    </Tag>
-                  </Space>
-                </div>
-              }
-            >
+        <Collapse
+          ghost
+          items={entries.map((entry, index) => ({
+            key: entry.ID || index,
+            label: (
+              <div className={styles['entry-header']}>
+                <span className={styles['entry-title']}>{entry.KnowledgeTitle}</span>
+                <Space size={4}>
+                  <Tag color="blue">{entry.KnowledgeType}</Tag>
+                  <Tag color="orange">
+                    {t('playground.KnowledgeBaseQA.importance')} {entry.ImportanceScore}
+                  </Tag>
+                </Space>
+              </div>
+            ),
+            children: (
               <div className={styles['entry-content']}>
                 {entry.Summary && (
                   <div className={styles['entry-summary']}>
@@ -355,9 +354,9 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
                   </div>
                 )}
               </div>
-            </Panel>
-          ))}
-        </Collapse>
+            ),
+          }))}
+        />
       </div>
     )
   }

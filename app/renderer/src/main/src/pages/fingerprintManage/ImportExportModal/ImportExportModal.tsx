@@ -249,7 +249,7 @@ const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
         centered={true}
         keyboard={false}
         maskClosable={false}
-        visible={extra.hint}
+        open={extra.hint}
         title={extra.title}
         bodyStyle={{ padding: 0 }}
         onCancel={() => {

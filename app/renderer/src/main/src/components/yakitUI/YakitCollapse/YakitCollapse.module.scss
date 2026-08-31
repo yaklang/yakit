@@ -2,6 +2,8 @@
   padding: 0;
   font-size: 12px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
+  background: transparent;
+  border: none;
   & > :global(.ant-collapse-item) {
     :global {
       .ant-collapse-extra {

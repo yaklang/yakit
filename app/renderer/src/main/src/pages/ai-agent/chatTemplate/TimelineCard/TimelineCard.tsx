@@ -33,14 +33,14 @@ const TimelineRow = memo(({ item }: { item: AIAgentGrpcApi.TimelineItem }) => {
         <div className={styles['timeline-card-header-left']}>
           <div className={styles['timeline-card-header-hot']} />
           <span>{formatTime(item.timestamp)}</span>
-
           <YakitTag size="small" fullRadius color={status} className={styles['timeline-card-header-tag']}>
             <p className={styles['timeline-card-header-tag-text']}>{item.entry_type ?? item.type}</p>
           </YakitTag>
         </div>
 
         <YakitPopover
-          overlayClassName={styles['timeline-popover']}
+          classNames={{ root: styles['timeline-popover'] }}
+          styles={{ root: { paddingLeft: 4 } }}
           placement="right"
           content={<div className={styles['timeline-popover-content']}>{item.content}</div>}
         >

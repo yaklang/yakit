@@ -1,5 +1,5 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Alert, Divider, Form, Space } from 'antd'
+import { Divider, Form, Space } from 'antd'
 import { InputItem, SwitchItem } from './inputUtil'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from './kv'
@@ -58,11 +58,11 @@ export const StartExecYakCodeModal: React.FC<StartExecYakCodeModalProps> = (prop
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       type="white"
       width="60%"
       maskClosable={false}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       title={`${t('basic.StartExecYakCodeModal.executing')}${verbose}`}
       onCancel={onCancel}
       closable={true}

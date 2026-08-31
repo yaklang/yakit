@@ -5,6 +5,10 @@
     cursor: pointer;
     width: 16px;
     height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
 
     &:hover {
       color: var(--Colors-Use-Main-Primary);
@@ -29,17 +33,20 @@
       flex: 1;
       width: 100%;
       min-width: 0;
-    }
 
-    :global {
-      .ant-input-group,
-      .ant-input,
-      .ant-input-group-addon {
-        height: 32px;
-      }
+      :global {
+        .ant-input-group-wrapper {
+          height: auto;
+        }
 
-      .ant-input-group-addon {
-        padding: 0 8px;
+        .ant-input-group > .ant-input {
+          height: 32px;
+        }
+
+        .ant-input-group-addon {
+          padding: 0 8px;
+          vertical-align: middle;
+        }
       }
     }
 

@@ -99,6 +99,7 @@
       padding: 0 14px;
       text-align: center;
       height: 24px;
+      line-height: 16px;
 
       svg {
         color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -218,7 +219,7 @@
 }
 .popover-content {
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 6px;
     }
   }
@@ -322,13 +323,7 @@
 
   :global {
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
-
-      .ant-popover-inner-content {
-        padding: 6px 4px 8px 4px;
-      }
+      padding: 6px 4px 8px 4px;
     }
   }
 }
@@ -645,12 +640,7 @@
 .import-resource-menu-popover {
   :global {
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
-      .ant-popover-inner-content {
-        padding: 6px 4px 8px 4px;
-      }
+      padding: 6px 4px 8px 4px;
     }
   }
 }

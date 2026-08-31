@@ -1,5 +1,5 @@
 import { yakitNotify } from '@/utils/notification'
-import type { DataNode } from 'antd/lib/tree'
+import type { TreeDataNode as DataNode } from 'antd'
 import type { BruteExecuteExtraFormValue, StartBruteParams } from './NewBruteType'
 import type { PayloadGroupNodeProps } from '@/pages/payloadManager/newPayload'
 import cloneDeep from 'lodash/cloneDeep'

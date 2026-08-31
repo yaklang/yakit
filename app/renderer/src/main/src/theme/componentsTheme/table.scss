@@ -1,0 +1,25 @@
+// ========================== ant table yakit-start ==========================
+.ant-table {
+  background: var(--Colors-Use-Basic-Background);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.ant-table-thead > tr > th {
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  border-bottom-color: var(--Colors-Use-Neutral-Border);
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom-color: var(--Colors-Use-Neutral-Border);
+}
+
+.ant-table-tbody > tr.ant-table-row:hover > td {
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+
+.ant-table-placeholder .ant-table-cell {
+  background: var(--Colors-Use-Basic-Background);
+}
+
+// ========================== ant table yakit-end ==========================

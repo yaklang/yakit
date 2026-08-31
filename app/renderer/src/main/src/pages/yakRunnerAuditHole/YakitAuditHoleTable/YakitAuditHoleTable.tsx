@@ -439,8 +439,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             <Divider type="vertical" />
             <Tooltip
               title={t('YakitAuditHoleTable.misstatementFeedback')}
-              destroyTooltipOnHide={true}
-              overlayStyle={{ paddingBottom: 0 }}
+              destroyOnHidden={true}
+              styles={{ root: { paddingBottom: 0 } }}
               placement="top"
             >
               <OutlineUploadIcon
@@ -1209,12 +1209,12 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       />
       {/* 导出弹窗 */}
       <YakitModal
-        visible={exportModalVisible}
+        open={exportModalVisible}
         title={t('YakitAuditHoleTable.exportAuditRisk')}
         width={520}
         centered={true}
         maskClosable={false}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         bodyStyle={{ padding: 0 }}
         onCancel={onCancelExport}
         footerStyle={{ justifyContent: 'flex-end' }}
@@ -1259,12 +1259,12 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
       </YakitModal>
       {/* 导入弹窗 */}
       <YakitModal
-        visible={importModalVisible}
+        open={importModalVisible}
         title={t('YakitAuditHoleTable.importAuditRisk')}
         width={720}
         centered={true}
         maskClosable={false}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         bodyStyle={{ padding: 0 }}
         onCancel={onCancelImport}
         footerStyle={{ justifyContent: 'flex-end' }}
@@ -1803,7 +1803,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
           ref={textAreaRef}
           className={styles['textarea-body']}
           value={value}
-          bordered={false}
+          variant="borderless"
           autoSize={{ minRows: 1, maxRows: 3 }}
           placeholder={t('YakitAuditHoleTable.disposalPlaceholder')}
           spellCheck={false}

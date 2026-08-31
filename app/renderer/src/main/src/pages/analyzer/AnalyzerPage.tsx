@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { Col, PageHeader, Row } from 'antd'
+import { Col, Row } from 'antd'
+import { YakitPageHeader } from '../../components/YakitPageHeader'
 import { YakEditor } from '../../utils/editors'
 
 const { ipcRenderer } = window.require('electron')
@@ -33,7 +34,7 @@ export const AnalyzerPage: React.FC<AnalyzerPageProp> = (props) => {
 
   return (
     <div>
-      <PageHeader title={'HTTP 模糊测试分析器'} />
+      <YakitPageHeader title={'HTTP 模糊测试分析器'} />
       <Row gutter={8}>
         <Col span={12}>
           <div style={{ height: 500 }}>

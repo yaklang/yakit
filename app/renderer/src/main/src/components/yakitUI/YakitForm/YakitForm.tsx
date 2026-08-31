@@ -979,7 +979,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
             </label>
             <div className={styles['divider-line']}></div>
             <YakitPopover
-              overlayClassName={styles['form-item-setting-dropdown']}
+              classNames={{ root: styles['form-item-setting-dropdown'] }}
               style={{ width: i18n.language.startsWith('zh') ? 240 : 300 }}
               placement="bottomLeft"
               content={
@@ -1014,7 +1014,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                 </div>
               }
               trigger={'click'}
-              onVisibleChange={(visible) => {
+              onOpenChange={(visible) => {
                 if (visible) {
                   // ignore
                 } else {

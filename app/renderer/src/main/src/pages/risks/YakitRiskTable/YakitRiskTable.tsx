@@ -628,8 +628,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             <Divider type="vertical" />
             <Tooltip
               title={t('YakitRiskTable.retest')}
-              destroyTooltipOnHide={true}
-              overlayStyle={{ paddingBottom: 0 }}
+              destroyOnHidden={true}
+              styles={{ root: { paddingBottom: 0 } }}
               placement="top"
             >
               <YakitButton
@@ -644,8 +644,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             <Divider type="vertical" />
             <Tooltip
               title={t('YakitRiskTable.false_positive_feedback')}
-              destroyTooltipOnHide={true}
-              overlayStyle={{ paddingBottom: 0 }}
+              destroyOnHidden={true}
+              styles={{ root: { paddingBottom: 0 } }}
               placement="top"
             >
               <OutlineUploadIcon
@@ -1326,7 +1326,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                       <Tooltip
                         title={t('YakitRiskTable.expand_filter')}
                         placement="topLeft"
-                        overlayClassName="plugins-tooltip"
+                        rootClassName="plugins-tooltip"
                       >
                         <YakitButton
                           type="text2"
