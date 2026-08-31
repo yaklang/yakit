@@ -184,6 +184,32 @@ export const apiSetTagForRisk: (params: SetTagForRiskRequest) => Promise<SetTagF
   })
 }
 
+export interface SetRiskEditRequest {
+  Id: number
+  Hash: string
+  RiskType: string
+  Cvss: number
+  Severity: string
+  /** 处置状态，可空；多值与自定义用 | 拼接 */
+  Tags: string
+  Verifier?: string
+  RepairTime?: number
+  RepairSuggestion?: string
+  DisposalNote?: string
+}
+/** 统一更新风险编辑字段（占位：待引擎 gRPC SetRiskEdit 联调） */
+export const apiSetRiskEdit: (params: SetRiskEditRequest) => Promise<unknown> = (params) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('SetRiskEdit', params)
+      .then(resolve)
+      .catch((e) => {
+        yakitNotify('error', tOriginal('YakitNotification.settingFailed', { error: e + '' }))
+        reject(e)
+      })
+  })
+}
+
 export interface RiskFieldGroupResponse {
   RiskIPGroup: FieldGroup[]
   RiskLevelGroup: FieldName[]
