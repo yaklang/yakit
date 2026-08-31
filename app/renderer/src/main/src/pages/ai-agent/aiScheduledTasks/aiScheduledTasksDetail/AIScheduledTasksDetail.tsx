@@ -294,8 +294,10 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
             <OutlineTagIcon className={styles['detail-section-icon']} />
             <span>{t('AIScheduledTasks.taskName')}</span>
           </div>
-          <div className={classNames(styles['detail-name-card'])}>
-            <div className={styles['detail-name']}>{schedule.Name}</div>
+          <div className={styles['detail-name-card']}>
+            <div className={styles['detail-name']} title={schedule.Name}>
+              {schedule.Name}
+            </div>
             <YakitTag size="small" color={scheduleStatusColor[schedule.Status]} fullRadius>
               {t(`AIScheduledTasks.${schedule.Status}`)}
             </YakitTag>
