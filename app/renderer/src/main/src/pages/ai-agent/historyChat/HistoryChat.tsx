@@ -91,6 +91,8 @@ interface SessionDataPayload {
   updates?: Partial<AISession>
   sessionId?: string
   selectFirst?: boolean
+  /** 刷新后需要选中的会话 ID（优先级高于 selectFirst） */
+  selectSessionId?: string
 }
 
 /** 向对话框组件进行事件触发的通信 */
@@ -339,11 +341,16 @@ const HistoryChat = memo(
               await dispatcher.refreshSession?.(payload.sessionId)
             } else {
               handleResetSessions()
-              const total = await dispatcher.loadHistoryData?.(true)
-              if (payload?.selectFirst && total && total > 0) {
-                const sessions = dispatcher.getSessions?.() || []
-                setActiveChat?.(sessions[0])
-              }
+              await dispatcher.loadHistoryData?.(true)
+            }
+            {
+              const sessions = dispatcher.getSessions?.() || []
+              const nextActive = payload?.selectSessionId
+                ? sessions.find((item) => item.SessionID === payload.selectSessionId) || sessions[0]
+                : payload?.selectFirst && sessions.length > 0
+                  ? sessions[0]
+                  : undefined
+              if (nextActive) setActiveChat?.(nextActive)
             }
             break
           case 'loadNextPage':

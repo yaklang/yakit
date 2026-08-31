@@ -878,9 +878,16 @@ export declare namespace AIAgentGrpcApi {
     is_recovery: boolean
     status: AITaskStatusType
     user_input: string
+    user_input_uuid?: string
+    input_source?: string
+    schedule_uuid?: string
+    schedule_name?: string
+    scheduled_at?: string
+    schedule_trigger?: string
   }
   /** 问题队列信息 */
   export interface QuestionQueues {
+    current_task?: QuestionQueueItem
     is_processing: boolean
     queue_empty: boolean
     queue_name: string

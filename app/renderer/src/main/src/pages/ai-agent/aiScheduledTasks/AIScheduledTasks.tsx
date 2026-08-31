@@ -149,20 +149,7 @@ const formatScheduleRule = (item: AIReActSchedule, t: TFunction) => {
   return t('AIScheduledTasks.frequencyDailyAtTime', { time: startTime })
 }
 
-/**
- * 等待后端 ai_session 推送（立即运行的任务会话已创建/持久化），最多等 timeoutMs，
- * 推送或超时任一先到即结束。重复调用 clearTimeout / off / resolve 均幂等，无需去重标记。
- */
-const waitForAISessionPush = (timeoutMs: number) =>
-  new Promise<void>((resolve) => {
-    const finish = () => {
-      emiter.off('onServerPushAISession', finish)
-      window.clearTimeout(timer)
-      resolve()
-    }
-    const timer = window.setTimeout(finish, timeoutMs)
-    emiter.on('onServerPushAISession', finish)
-  })
+import { waitForAISessionPush } from './waitForAISessionPush'
 
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -283,11 +270,11 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   const onAdd = useMemoizedFn(() => openForm())
 
   // 立即运行定时任务：成功后等待后端 ai_session 推送（最多 2s），
-  // 收到推送立即跳转历史会话；超时（旧引擎/通知丢失）则兜底切换并刷新选中第一个会话（列表项与详情共用）
+  // 收到推送则跳转历史会话并选中对应 sessionId；超时（旧引擎/通知丢失）则兜底切换并刷新选中第一个会话。
   const runScheduleNow = useMemoizedFn((item: AIReActSchedule) => {
     return grpcRunAIReActScheduleNow({ UUID: item.UUID })
       .then(() => waitForAISessionPush(2000))
-      .then(() => {
+      .then((sessionId) => {
         yakitNotify('success', t('AIScheduledTasks.runStarted'))
         emiter.emit(
           'switchAIAgentTab',
@@ -304,7 +291,9 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
             'sessionData',
             JSON.stringify({
               type: 'refresh',
-              selectFirst: true,
+              sessionId,
+              selectFirst: !sessionId,
+              selectSessionId: sessionId,
             }),
           )
         }, 200)

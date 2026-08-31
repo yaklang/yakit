@@ -431,6 +431,23 @@ describe('ChatMultiSessionController start / send / history', () => {
     })
     expect(ctrl.ensureSession('s-noop').store.getState().skipSubtaskTaskIDs).toEqual([])
   })
+  it('A14b: requests the runtime queue snapshot after pong', async () => {
+    ctrl.handleStartSession(startParams('s-runtime-snapshot', 'page-1', ''))
+
+    ctrl.handleGrpcOutputEvent('s-runtime-snapshot', makeGrpcJsonRes('pong', {}))
+
+    await vi.waitFor(() => {
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+        'send-ai-re-act',
+        's-runtime-snapshot',
+        expect.objectContaining({
+          IsSyncMessage: true,
+          SyncType: 'queue_info',
+        }),
+      )
+    })
+    ctrl.handleSessionEnd('s-runtime-snapshot')
+  })
 
   it('A17: send without ready warns when active', () => {
     ctrl.setActiveShowSession('ghost')
