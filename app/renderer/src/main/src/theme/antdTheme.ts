@@ -1,29 +1,33 @@
 import type { ThemeConfig } from 'antd'
+import { getAllYakitColorVars } from '@/utils/yakitColorVars'
 
 /**
  * 用 Yakit CSS 变量驱动 antd 5 Token。
  * hashed: false 方便现有 scss 覆盖；cssVar: true 让下拉等 portal 也能吃到 html 上的 --ant-*。
  *
- * 注意：主渲染端（app/renderer/src/main）与 Link 端（app/renderer/engine-link-startup）
- * 各有一份本文件，内容需保持一致，主题调整时同步修改两处。
- * 两端为独立 package 暂未共享，后续可抽公共包。
+ * 主色 / 成功 / 警告 / 错误必须用颜色系统解析后的 hex：
+ * antd palette 算法解析不了 var()，会算成 #000000。
+ *
+ * 注意：主渲染端与 Link 端各有一份，主题调整时同步修改两处。
  */
+const colors = getAllYakitColorVars()
+
 export const yakitAntdTheme: ThemeConfig = {
   cssVar: { key: 'yakit' },
   hashed: false,
   token: {
-    colorPrimary: 'var(--Colors-Use-Main-Primary)',
+    colorPrimary: colors['--Colors-Use-Main-Primary'],
     colorPrimaryHover: 'var(--Colors-Use-Main-Hover)',
     colorPrimaryActive: 'var(--Colors-Use-Main-Pressed)',
     colorPrimaryBg: 'var(--Colors-Use-Main-Bg)',
-    colorSuccess: 'var(--Colors-Use-Success-Primary)',
+    colorSuccess: colors['--Colors-Use-Success-Primary'],
     colorSuccessBg: 'var(--Colors-Use-Success-Bg)',
     colorSuccessBorder: 'var(--Colors-Use-Success-Border)',
-    colorWarning: 'var(--Colors-Use-Warning-Primary)',
+    colorWarning: colors['--Colors-Use-Warning-Primary'],
     colorWarningBg: 'var(--Colors-Use-Warning-Bg)',
     colorWarningBorder: 'var(--Colors-Use-Warning-Border)',
-    colorError: 'var(--Colors-Use-Error-Primary)',
-    colorInfo: 'var(--Colors-Use-Blue-Primary)',
+    colorError: colors['--Colors-Use-Error-Primary'],
+    colorInfo: colors['--Colors-Use-Blue-Primary'],
     colorInfoBg: 'var(--Colors-Use-Blue-Bg)',
     colorInfoBorder: 'var(--Colors-Use-Blue-Border)',
     colorText: 'var(--Colors-Use-Neutral-Text-1-Title)',
@@ -94,6 +98,12 @@ export const yakitAntdTheme: ThemeConfig = {
       nodeSelectedColor: 'var(--Colors-Use-Main-On-Primary)',
       directoryNodeSelectedBg: 'var(--Colors-Use-Main-Primary)',
       directoryNodeSelectedColor: 'var(--Colors-Use-Main-On-Primary)',
+    },
+    Table: {
+      headerBg: 'var(--Colors-Use-Neutral-Bg-Hover)',
+      headerColor: 'var(--Colors-Use-Neutral-Text-1-Title)',
+      rowHoverBg: 'var(--Colors-Use-Neutral-Bg-Hover)',
+      borderColor: 'var(--Colors-Use-Neutral-Border)',
     },
   },
 }

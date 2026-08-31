@@ -115,6 +115,15 @@ if (window.location.search.includes('window=child') || window.location.search.in
 
 registerAppSyncHandlers()
 
+// antd 5 静态 Modal.confirm / info / error 不吃 React 树上的 ConfigProvider
+ConfigProvider.config({
+  holderRender: (node) => (
+    <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+      {node}
+    </ConfigProvider>
+  ),
+})
+
 ReactDOM.render(
   // <React.StrictMode>
   <DndProvider backend={HTML5Backend}>

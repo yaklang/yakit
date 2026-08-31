@@ -3,6 +3,11 @@
   height: 100%;
   display: flex;
   flex-flow: column;
+
+  > :global(div) > :global(.ant-spin) {
+    max-height: none;
+  }
+
   :global {
     .ant-spin-container {
       flex-grow: 1;

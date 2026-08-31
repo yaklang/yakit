@@ -30,6 +30,14 @@ const App = () => {
   return <AuxWindowApp />
 }
 
+ConfigProvider.config({
+  holderRender: (node) => (
+    <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+      {node}
+    </ConfigProvider>
+  ),
+})
+
 ReactDOM.render(
   <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
     <NotificationProvider>

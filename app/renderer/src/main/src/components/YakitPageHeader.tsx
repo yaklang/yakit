@@ -1,4 +1,6 @@
 import type React from 'react'
+import classNames from 'classnames'
+import styles from './YakitPageHeader.module.scss'
 
 export interface YakitPageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: React.ReactNode
@@ -14,17 +16,20 @@ export const YakitPageHeader: React.FC<YakitPageHeaderProps> = ({
   backIcon,
   children,
   style,
+  className,
   ...restProps
 }) => (
-  <div {...restProps} style={style}>
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0, flexWrap: 'wrap' }}>
-        {backIcon && typeof backIcon !== 'boolean' ? backIcon : null}
-        {title ? <span style={{ fontSize: 18, fontWeight: 600 }}>{title}</span> : null}
-        {subTitle ? <span style={{ color: 'var(--Colors-Use-Neutral-Text-3-Secondary)' }}>{subTitle}</span> : null}
+  <div {...restProps} className={classNames(styles['yakit-page-header'], className)} style={style}>
+    <div className={styles['yakit-page-header-heading']}>
+      <div className={styles['yakit-page-header-heading-left']}>
+        {backIcon && typeof backIcon !== 'boolean' ? (
+          <span className={styles['yakit-page-header-back']}>{backIcon}</span>
+        ) : null}
+        {title ? <span className={styles['yakit-page-header-title']}>{title}</span> : null}
+        {subTitle ? <span className={styles['yakit-page-header-sub-title']}>{subTitle}</span> : null}
       </div>
-      {extra ? <div>{extra}</div> : null}
+      {extra ? <div className={styles['yakit-page-header-extra']}>{extra}</div> : null}
     </div>
-    {children}
+    {children ? <div className={styles['yakit-page-header-content']}>{children}</div> : null}
   </div>
 )
