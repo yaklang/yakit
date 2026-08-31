@@ -81,6 +81,7 @@ const isTTY = () => Boolean(process.stdout.isTTY)
 
 export {
   repoRoot,
+  cliDir,
   MAIN_RENDER_DIR,
   LINK_RENDER_DIR,
   detectPackageManager,

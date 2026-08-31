@@ -15,7 +15,7 @@ node ./cli/cli.mjs <command>
 
 本仓库日常 / CI 仍以 `yarn cli` 为例，语义相同。
 
-`install` / `add` / `remove` 会调用当前包管理器。`install` 只用 Node 内置模块，**全新 clone 可直接** `yarn cli install` / `node ./cli/cli.mjs install`（不必先有 commander / inquirer）。`yarn cli install cli` 只装根目录 CLI 运行时（commander / execa / chalk / concurrently / inquirer），不装 Electron、不改 lockfile。其它命令需要这些包已在根 `node_modules`。
+`install` / `add` / `remove` 会调用当前包管理器。`install` 只用 Node 内置模块，**全新 clone 可直接** `yarn cli install` / `node ./cli/cli.mjs install`（不必先有 commander / inquirer）。`yarn cli install cli` 只把 CLI 运行时（commander / execa / chalk / concurrently / inquirer）装进 `cli/node_modules`，不装 Electron、不改根 lockfile。其它命令需要这些包已在 `cli/node_modules` 或根 `node_modules`。
 
 ## 命令一览
 

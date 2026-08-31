@@ -17,6 +17,7 @@ import {
   withLocalBin,
   isTTY,
   repoRoot,
+  cliDir,
   MAIN_RENDER_DIR,
   LINK_RENDER_DIR,
 } from './utils.mjs'
@@ -77,22 +78,34 @@ const pmMutateArgs = (pm, action, rest) => {
   return [action, ...mapped]
 }
 
-/** yarn cli build/start 在根目录需要的包（不含 Electron / electron-builder） */
+/** yarn cli build/start 需要的包（不含 Electron / electron-builder） */
 const CLI_RUNTIME_PACKAGES = ['chalk', 'commander', 'concurrently', 'execa', 'inquirer']
 
-/** 只把 CLI 运行时装进根 node_modules，不改 package.json / lockfile，也不跑 electron postinstall */
+/** 只把 CLI 运行时装进 cli/node_modules，不改根 package.json / lockfile，也不跑 electron postinstall */
 const installCliRuntime = async () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'))
-  const specs = CLI_RUNTIME_PACKAGES.map((name) => {
+  const dependencies = {}
+  for (const name of CLI_RUNTIME_PACKAGES) {
     const ver = pkg.devDependencies?.[name] || pkg.dependencies?.[name]
     if (!ver) {
       console.error(`Error: 根 package.json 未声明 ${name}`)
       process.exit(1)
     }
-    return `${name}@${ver}`
-  })
-  console.log(`Start install CLI runtime (npm --no-save, skip Electron) ...`)
-  await spawnPm('npm', ['install', '--no-save', '--no-package-lock', '--ignore-scripts', ...specs], repoRoot)
+    dependencies[name] = ver
+  }
+
+  const pm = detectPmOrExit()
+  let installArgs = ['install', '--ignore-scripts', '--no-package-lock']
+  if (pm === 'yarn') installArgs = ['install', '--ignore-scripts', '--no-lockfile']
+  else if (pm === 'pnpm') installArgs = ['install', '--ignore-scripts']
+
+  fs.writeFileSync(
+    path.join(cliDir, 'package.json'),
+    `${JSON.stringify({ name: 'yakit-cli', private: true, dependencies }, null, 2)}\n`
+  )
+
+  console.log(`Start install CLI runtime (${pm} in cli/, skip Electron) ...`)
+  await spawnPm(pm, installArgs, cliDir)
 }
 
 /** 安装依赖。无 target 时按 electron → link → main 依次 install；cli 只装 CLI 运行时 */
@@ -144,7 +157,7 @@ if (cliArgs[0] === 'install' || cliArgs[0] === 'add' || cliArgs[0] === 'remove')
     if (cliArgs[0] === 'install') {
       console.log(`Usage: yarn cli install [electron | main | link | cli]`)
       console.log('安装依赖（默认根目录 + 两个渲染端）。install 不依赖 commander，全新 clone 可直接执行。')
-      console.log('cli：只装根目录 CLI 运行时（commander / execa 等），不含 Electron。')
+      console.log('cli：只装 CLI 运行时到 cli/（commander / execa 等），不含 Electron。')
       console.log(InstallCMDExamplesDoc)
     } else if (cliArgs[0] === 'add') {
       console.log(`Usage: yarn cli add <electron | main | link> <pkg...> [-D|--dev]`)
@@ -170,7 +183,7 @@ if (cliArgs[0] === 'install' || cliArgs[0] === 'add' || cliArgs[0] === 'remove')
   }
 }
 
-// 以下命令需要根目录依赖；缺包时 importWithHint 会提示先跑 install
+// 以下命令需要 CLI 运行时依赖；缺包时 importWithHint 会提示先跑 install
 const { MainChalk, RedChalk, BlueChalk, YellowChalk, GreenChalk, CyanChalk } = await import('./chalk.mjs')
 
 const Command = await importWithHint('commander', (mod) => mod.Command)

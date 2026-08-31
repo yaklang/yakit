@@ -145,6 +145,8 @@ export const toEngineHandshakeName = (edition = __PLATFORM__) => {
       return 'irify'
     case 'memfit':
       return 'memfit'
+    case 'breachtrace':
+      return 'breachtrace'
     default:
       return 'yakit'
   }

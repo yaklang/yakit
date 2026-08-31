@@ -31,7 +31,7 @@ const InstallCMDExamplesDoc = `
   $ yarn cli install main
   $ yarn cli install link
 
-  # 只装根目录 CLI 运行时（不含 Electron，给只构建渲染端的 CI 用）
+  # 只装 CLI 运行时到 cli/（不含 Electron，给只构建渲染端的 CI 用）
   $ yarn cli install cli
 `
 
