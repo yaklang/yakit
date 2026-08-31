@@ -14,7 +14,12 @@ import type { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import emiter from '@/utils/eventBus/eventBus'
 import type { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MITMFilters'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { InformationCircleOutlined, RefreshOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  InformationCircleOutlined,
+  RefreshOutlined,
+  XOutlined,
+  ChevronDownOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { OutlineConfiguredIcon, OutlineUnConfiguredIcon } from '@/assets/icon/bespokeOutline'
 import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
@@ -49,7 +54,6 @@ import { grpcMITMV2RecoverManualHijack } from '../MITMManual/utils'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { ChevronDownIcon } from '@/assets/newIcon'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -915,7 +919,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     }}
                   >
                     批量操作
-                    <ChevronDownIcon />
+                    <ChevronDownOutlined size={16} />
                   </YakitButton>
                 </YakitPopover>
                 <YakitButton onClick={onSubmitAll}>全部放行</YakitButton>
@@ -946,7 +950,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             />
           )}
         </div>
-
         {/* 自动放行 */}
         <div style={{ display: autoForward === 'log' ? 'block' : 'none', width: '100%' }}>
           <MITMLogHeardExtra

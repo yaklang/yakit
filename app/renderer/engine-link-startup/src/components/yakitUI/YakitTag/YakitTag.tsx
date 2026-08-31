@@ -7,9 +7,8 @@ import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { CheckOutlined, LoadingOutlined } from '@ant-design/icons'
 import { setClipboardText } from '@/utils/clipboard'
-import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { DocumentDuplicateOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitNotify } from '@/utils/notification'
-import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /**
@@ -107,7 +106,7 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
       {(loading && <LoadingOutlined style={{ color: 'var(--Colors-Use-Main-Primary)' }} />) || (
         <>
           {(isShowSure && <CheckOutlined style={{ color: 'var(--Colors-Use-Success-Primary)' }} />) || (
-            <DocumentDuplicateSvgIcon style={{ color: iconColor || 'var(--Colors-Use-Main-Primary)' }} />
+            <DocumentDuplicateOutlined color={iconColor || 'var(--Colors-Use-Main-Primary)'} size={16} />
           )}
         </>
       )}

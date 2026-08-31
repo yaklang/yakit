@@ -2,12 +2,12 @@ import type React from 'react'
 import { Form } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd'
-import { TrashIcon } from '@/assets/newIcon'
 import { randomString } from '@/utils/randomUtil'
 import styles from '../knowledgeBase.module.scss'
 import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 interface RelationListProps {
   form: any
@@ -64,7 +64,11 @@ const PotentialQuestionsList: React.FC<RelationListProps> = ({ form, disabled })
                                   <YakitInput disabled={disabled} placeholder="请输入" />
                                 </Item>
                                 {!disabled && (
-                                  <TrashIcon className={styles['dnd-delete-icon']} onClick={() => remove(field.name)} />
+                                  <TrashOutlined
+                                    size={16}
+                                    className={styles['dnd-delete-icon']}
+                                    onClick={() => remove(field.name)}
+                                  />
                                 )}
                               </div>
                             )}

@@ -8,8 +8,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
 import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { ClockIcon } from '@/assets/newIcon'
-import { LandPlotOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { LandPlotOutlined, ClockOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
 import type { AIReActChatHeaderExternalRightIconProps, AIReActChatHeaderProps, AIReActSubAgentTaskProps } from './type'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -167,7 +166,7 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
             </div>
           }
         >
-          <YakitButton type="text2" icon={<ClockIcon />} title="" />
+          <YakitButton type="text2" icon={<ClockOutlined size={16} />} title="" />
         </Tooltip>
       )}
       {rightIcon.add}

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { ChevronDownIcon, ChevronUpIcon, SMViewGridAddIcon } from '@/assets/newIcon'
+import { ChevronUpIcon, SMViewGridAddIcon } from '@/assets/newIcon'
 import { PublicDefaultPluginIcon } from '@/routes/publicIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useMemoizedFn } from 'ahooks'
@@ -29,6 +29,8 @@ import { defaultFilter } from '@/pages/plugins/builtInData'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { grpcDownloadOnlinePlugin } from '@/pages/pluginHub/utils/grpc'
 import emiter from '@/utils/eventBus/eventBus'
+
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { ipcRenderer } = window.require('electron')
 const defaultSearch: PluginSearchParams = {
@@ -429,7 +431,9 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
               visible={listShow}
               onVisibleChange={onListVisibleChange}
             >
-              <div className={styles['body-style']}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
+              <div className={styles['body-style']}>
+                {listShow ? <ChevronUpIcon /> : <ChevronDownOutlined size={16} />}
+              </div>
             </YakitPopover>
           </div>
         </div>

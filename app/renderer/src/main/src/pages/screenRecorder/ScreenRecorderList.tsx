@@ -8,16 +8,8 @@ import { failed, yakitNotify } from '@/utils/notification'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import styles from './ScreenRecorder.module.scss'
-import {
-  ChevronDownIcon,
-  ClockIcon,
-  InformationCircleIcon,
-  PencilAltIcon,
-  PlayIcon,
-  RefreshIcon,
-  TrashIcon,
-} from '@/assets/newIcon'
-import { StopSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { RefreshIcon } from '@/assets/newIcon'
+import { StopSolid, PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { FramerateData, CoefficientPTSData, ScrecorderModal } from './ScrecorderModal'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -41,6 +33,14 @@ import { LoadingOutlined } from '@ant-design/icons'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+import {
+  ChevronDownOutlined,
+  ClockOutlined,
+  InformationCircleOutlined,
+  PencilAltOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
 export interface ScreenRecorderListProp {
   refreshTrigger?: boolean
@@ -340,7 +340,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
               </YakitButton>
             ) : (
               <YakitButton htmlType="submit" type="primary" size="large">
-                <PlayIcon style={{ height: 16 }} />
+                <PlaySolid size={16} style={{ height: 16 }} />
                 {t('ScrecorderModal.startRecording')}
               </YakitButton>
             )}
@@ -393,7 +393,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
               label={t('ScrecorderModal.framerate')}
               tooltip={{
                 title: t('ScrecorderModal.framerateTooltip'),
-                icon: <InformationCircleIcon style={{ cursor: 'auto' }} />,
+                icon: <InformationCircleOutlined size={16} style={{ cursor: 'auto' }} />,
               }}
               name="Framerate"
             >
@@ -432,7 +432,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
               </YakitButton>
             ) : (
               <YakitButton htmlType="submit" type="primary">
-                <PlayIcon style={{ height: 16 }} />
+                <PlaySolid size={16} style={{ height: 16 }} />
                 {t('ScrecorderModal.startRecording')}
               </YakitButton>
             )}
@@ -511,7 +511,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                     className={classNames(styles['button-batch-operate'])}
                   >
                     {t('YakitButton.batchOperation')}
-                    <ChevronDownIcon />
+                    <ChevronDownOutlined size={16} />
                   </YakitButton>
                 </YakitPopover>
               ) : (
@@ -723,10 +723,9 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
           src={item.Cover ? `data:image/png;base64,${item.Cover}` : noPictures}
         />
         <div className={styles['list-item-cover-hover']}>
-          <PlayIcon />
+          <PlaySolid size={16} />
         </div>
       </div>
-
       <div className={styles['list-item-info']}>
         <div className={classNames('content-ellipsis', styles['list-item-name'])} onClick={() => onPlayVideo()}>
           {item.VideoName || `${t('ScreenRecorderListItem.video')}-${item.Id}`}
@@ -734,7 +733,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
         <div className={styles['list-item-notes']}>{item.NoteInfo || 'No Description about it.'}</div>
         <div className={styles['list-item-extra']}>
           <div className={styles['list-item-duration']}>
-            <ClockIcon style={{ marginRight: 4 }} /> {item.Duration || '0s'}
+            <ClockOutlined size={16} style={{ marginRight: 4 }} /> {item.Duration || '0s'}
           </div>
           <Divider type="vertical" style={{ margin: '0 16px', top: 2 }} />
           <div className={styles['list-item-created-at']}>{formatTimestamp(item.CreatedAt)}</div>
@@ -763,9 +762,8 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
           </div>
         </div>
       </div>
-
       <div className={styles['list-item-operate']}>
-        <PencilAltIcon onClick={() => onEdit()} />
+        <PencilAltOutlined size={16} onClick={() => onEdit()} />
 
         {/* {isEnterpriseEdition() && (
                     <>
@@ -775,7 +773,12 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                 )} */}
         <Divider type="vertical" style={{ margin: '0 16px' }} />
         <YakitPopconfirm title={t('ScreenRecorderListItem.deletePopconfirm')} onConfirm={() => onRemove()}>
-          <YakitButton type="text" size={'small'} danger icon={<TrashIcon className={styles['icon-trash']} />} />
+          <YakitButton
+            type="text"
+            size={'small'}
+            danger
+            icon={<TrashOutlined size={16} className={styles['icon-trash']} />}
+          />
         </YakitPopconfirm>
       </div>
       <YakitModal

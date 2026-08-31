@@ -7,13 +7,13 @@ import { useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { randomString } from '@/utils/randomUtil'
 import { PropertyIcon } from '@/pages/payloadManager/icon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { CloudDownloadIcon } from '@/assets/newIcon'
 import { useState, useEffect, type FC, type Dispatch, type SetStateAction } from 'react'
 import type { KnowledgeBaseContentProps } from '@/pages/KnowledgeBase/TKnowledgeBase'
 import { mergeKnowledgeBaseList } from '@/pages/KnowledgeBase/utils'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
 import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { CloudDownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -256,7 +256,7 @@ const DragKnowledge: FC<{ setAddMode: Dispatch<SetStateAction<string[]>> }> = ({
       <YakitButton
         className={styles['download-btn']}
         type="outline1"
-        icon={<CloudDownloadIcon />}
+        icon={<CloudDownloadOutlined size={16} />}
         onClick={() => {
           try {
             handleDownloadAllOnlineRag()

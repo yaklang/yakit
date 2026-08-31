@@ -2,7 +2,7 @@ import type React from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ResizeBox } from '@/components/ResizeBox'
 import cveStyles from '@/pages/cve/CVETable.module.scss'
-import { ChevronLeftIcon, RefreshIcon, TrashIcon } from '@/assets/newIcon'
+import { ChevronLeftIcon, RefreshIcon } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import type { RequestYakURLResponse, YakURL, YakURLResource } from '@/pages/yakURLTree/data'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
@@ -22,6 +22,8 @@ import { type TreeNode, WebTree } from './ShellTree/WebTree'
 import path from 'path'
 import emiter from '@/utils/eventBus/eventBus'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
+
+import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 interface WebShellURLTreeAndTableProp {
   Id: string
@@ -158,7 +160,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
         { key: 'file-curd-open', label: '打开' },
         { key: 'file-curd-edit', label: '编辑' },
         { key: 'file-curd-copy', label: '复制文件名' },
-        { key: 'file-curd-delete', label: '删除', itemIcon: <TrashIcon /> },
+        { key: 'file-curd-delete', label: '删除', itemIcon: <TrashOutlined size={16} /> },
       ],
     },
   ]

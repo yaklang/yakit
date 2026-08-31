@@ -10,7 +10,6 @@ import { yakitNotify } from '@/utils/notification'
 import { Divider } from 'antd'
 import type { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { TrashIcon } from '@/assets/newIcon'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { onRemoveToolFC } from '@/utils/deleteTool'
@@ -389,7 +388,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
               }}
               placement="bottomRight"
             >
-              <YakitButton type="outline1" colors="danger" icon={<TrashIcon />}>
+              <YakitButton type="outline1" colors="danger" icon={<TrashOutlined size={16} />}>
                 {selectNum > 0 ? t('YakitButton.delete') : t('YakitButton.clear')}
               </YakitButton>
             </YakitPopconfirm>

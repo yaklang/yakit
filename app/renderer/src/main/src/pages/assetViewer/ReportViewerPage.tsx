@@ -4,9 +4,9 @@ import { flushSync } from 'react-dom'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { QuestionMarkCircleIcon, RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@/assets/newIcon'
 import { Pagination, Space, Tooltip } from 'antd'
-import { ClipboardListOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ClipboardListOutlined, TrashOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { genDefaultPagination, type QueryGeneralRequest, type QueryGeneralResponse } from '../invoker/schema'
 import { yakitNotify } from '@/utils/notification'
@@ -230,7 +230,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
       extra={
         <div className={styles['card-extra']}>
           <Tooltip title={t('ReportViewerPage.clickToInspect')} placement="bottom">
-            <YakitButton type="text" icon={<QuestionMarkCircleIcon />} size="small"></YakitButton>
+            <YakitButton type="text" icon={<QuestionMarkCircleOutlined size={16} />} size="small"></YakitButton>
           </Tooltip>
           <YakitButton
             type="text"

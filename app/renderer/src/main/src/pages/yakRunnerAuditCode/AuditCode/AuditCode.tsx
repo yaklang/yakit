@@ -129,7 +129,6 @@ import { RiskTree } from '../RunnerFileTree/RunnerFileTree'
 import { getNameByPath } from '@/pages/yakRunner/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import type { RJSFSchema } from '@rjsf/utils'
-import { TrashIcon } from '@/assets/newIcon'
 import { IRifyUpdateProjectManagerModal } from '@/pages/YakRunnerProjectManager/YakRunnerProjectManager'
 import type { SSAProgram } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
 import type { AuditCodePageInfoProps } from '@/store/pageInfo'
@@ -3014,7 +3013,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
           <YakitButton
             type="outline1"
             colors="danger"
-            icon={<TrashIcon />}
+            icon={<TrashOutlined size={16} />}
             onClick={() => {
               setDeleteParams({
                 titile:
@@ -3060,7 +3059,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
           {onClose && <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onClose} />}
         </div>
       </div>
-
       <div className={styles['table']}>
         <YakitVirtualList<SSAProjectResponse>
           className={styles['audit-virtual-list']}
@@ -3101,9 +3099,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
           }
         />
       </div>
-
       <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
-
       <AfreshAuditModal
         nameOrConfig={JSONStringConfig}
         setNameOrConfig={setJSONStringConfig}
@@ -3111,7 +3107,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         warrpId={warrpId || document.getElementById('audit-history-table')}
         type="compile"
       />
-
       <YakitHint
         visible={!!deleteParams}
         title={deleteParams?.titile}

@@ -32,16 +32,7 @@ import { WebFuzzerAiTestMenu } from './components/WebFuzzerAiTestMenu/WebFuzzerA
 import type { WebFuzzerAiTestTemplate } from '@/defaultConstants/webFuzzerAiTestTemplates'
 import styles from './HTTPFuzzerPage.module.scss'
 import { ShareImportExportData } from './components/ShareImportExportData'
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChromeSvgIcon,
-  ClockIcon,
-  SearchIcon,
-  ArrowsRetractIcon,
-  ArrowsExpandIcon,
-  QuestionMarkCircleIcon,
-} from '@/assets/newIcon'
+import { ChevronLeftIcon, ChevronRightIcon, ChromeSvgIcon, ArrowsRetractIcon, ArrowsExpandIcon } from '@/assets/newIcon'
 import classNames from 'classnames'
 import { type PaginationSchema, genDefaultPagination } from '../invoker/schema'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -101,6 +92,8 @@ import {
   DotsVerticalOutlined,
   ChevronDownOutlined,
   FigmaIcon2017756Outlined,
+  ClockOutlined,
+  QuestionMarkCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { OutlinePayloadIcon } from '@/assets/icon/bespokeOutline'
 import emiter from '@/utils/eventBus/eventBus'
@@ -3157,7 +3150,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         </div>
                       }
                     >
-                      <YakitButton type="text" icon={<ClockIcon />} style={{ padding: '4px 0px' }}>
+                      <YakitButton type="text" icon={<ClockOutlined size={16} />} style={{ padding: '4px 0px' }}>
                         {t('YakitButton.history')}
                       </YakitButton>
                     </YakitPopover>
@@ -3177,7 +3170,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }}
                   >
                     {t('HTTPFuzzerPage.bruteForceExample')}
-                    <QuestionMarkCircleIcon />
+                    <QuestionMarkCircleOutlined size={16} />
                   </div>
                   {loading && (
                     <div className={classNames(styles['spinning-text'], styles['display-flex'])}>
@@ -3233,7 +3226,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                 <div className={styles['fuzzer-heard-right']}>
                   {fuzzerTaskId && (
                     <Tooltip title={`TaskId: ${fuzzerTaskId}`}>
-                      <YakitButton type="text2" icon={<QuestionMarkCircleIcon />} />
+                      <YakitButton type="text2" icon={<QuestionMarkCircleOutlined size={16} />} />
                     </Tooltip>
                   )}
                   {getFuzzerRequestParams && typeof getFuzzerRequestParams === 'function' ? (
@@ -3924,7 +3917,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             {!showSearchIcon && searchNode}
             {showSearchIcon && (
               <YakitPopover content={searchNode}>
-                <YakitButton icon={<SearchIcon />} size={size} type="outline2" />
+                <YakitButton icon={<SearchOutlined size={16} />} size={size} type="outline2" />
               </YakitPopover>
             )}
             <Divider
@@ -4163,9 +4156,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             }
           />
         </YakitPopover>
-
         <Divider type="vertical" style={{ margin: 0, top: 1 }} />
-
         {isShowMatch && (
           <>
             {+(secondNodeSize?.width || 0) >= 610 ? (
@@ -4226,7 +4217,6 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             )}
           </>
         )}
-
         {/* {+(secondNodeSize?.width || 0) >= 610 ? (
                     <YakitButton
                         type='outline2'
@@ -4381,7 +4371,6 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             </Tooltip>
           </YakitPopover>
         )}
-
         <YakitModal
           title={t('SecondNodeExtra.extractFromResponsePacket')}
           onCancel={() => setResponseExtractorVisible(false)}

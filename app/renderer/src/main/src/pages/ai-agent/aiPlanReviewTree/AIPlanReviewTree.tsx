@@ -9,7 +9,7 @@ import type {
 } from './AIPlanReviewTreeType'
 import styles from './AIPlanReviewTree.module.scss'
 import { useControllableValue, useCreation, useDebounceFn, useMemoizedFn } from 'ahooks'
-import { ExpandIcon, RetractIcon } from './icon'
+import { ExpandIcon } from './icon'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { PlusSmOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
@@ -18,7 +18,7 @@ import type { GetAIToolListRequest, GetAIToolListResponse } from '../type/aiTool
 import { yakitNotify } from '@/utils/notification'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { AnnotationSolid, ToolSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { AnnotationSolid, ToolSolid, ChevronRightSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { grpcGetAIToolList } from '../aiToolList/utils'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -525,7 +525,7 @@ const AIPlanReviewTreeLine: React.FC<AIPlanReviewTreeLineProps> = React.memo((pr
         {expand ? (
           <ExpandIcon className={styles['chevron-down-icon']} />
         ) : (
-          <RetractIcon className={styles['chevron-right-icon']} />
+          <ChevronRightSolid color="#868C97" size={18} className={styles['chevron-right-icon']} />
         )}
       </div>
     </div>

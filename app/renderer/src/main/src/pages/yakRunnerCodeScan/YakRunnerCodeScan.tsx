@@ -47,6 +47,7 @@ import {
   QuestionMarkCircleOutlined,
   TerminalOutlined,
   ArrowsOutlined,
+  ChevronDownOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { defYakitAutoCompleteRef, YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
@@ -114,7 +115,7 @@ import type { YakParamProps } from '../plugins/pluginsType'
 import moment from 'moment'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
+import { ChevronUpIcon } from '@/assets/newIcon'
 import { FolderOpenSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { SSAProjectResponse } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
 import type { QuerySSAProgramRequest } from '../yakRunnerScanHistory/YakRunnerScanHistory'
@@ -654,7 +655,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                   规则组 <span className={styles['total-style']}>{groupList.length}</span>
                 </span>
                 {(groupTagShow && <ChevronUpIcon className={styles['chevron-down']} />) || (
-                  <ChevronDownIcon className={styles['chevron-down']} />
+                  <ChevronDownOutlined size={16} className={styles['chevron-down']} />
                 )}
               </div>
             </YakitPopover>

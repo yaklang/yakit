@@ -1,13 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Badge, Tooltip, Form, Divider } from 'antd'
-import {
-  RiskStateSvgIcon,
-  UISettingSvgIcon,
-  UnLoginSvgIcon,
-  UpdateSvgIcon,
-  VersionUpdateSvgIcon,
-  YakitWhiteSvgIcon,
-} from './icons'
+import { RiskStateSvgIcon, UISettingSvgIcon, VersionUpdateSvgIcon } from './icons'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
@@ -43,7 +36,6 @@ import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
 import { LocalGV } from '@/yakitGV'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
 import { showPcapPermission } from '@/utils/ConfigPcapPermission'
-import { TerminalIcon } from '@/assets/newIcon'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { NetWorkApi } from '@/services/fetch'
@@ -71,6 +63,8 @@ import {
   RefreshOutlined,
   SearchOutlined,
   Wrench1Outlined,
+  CloudDownloadOutlined,
+  TerminalOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
@@ -85,7 +79,7 @@ const YakitCodeScanRiskDetails = React.lazy(() =>
 const YakitRiskDetails = React.lazy(() =>
   import('@/pages/risks/YakitRiskTable/YakitRiskTable').then((m) => ({ default: m.YakitRiskDetails })),
 )
-import { GitHubSolid, PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { GitHubSolid, PlaySolid, UserCircleSolid, YakitSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakParamProps } from '@/pages/plugins/pluginsType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType, getYakExecutorParam } from '@/pages/plugins/editDetails/utils'
@@ -349,7 +343,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           <div className={styles['ui-op-btn-wrapper']} onClick={openConsoleNewWindow}>
             <div className={styles['op-btn-body']}>
               <Tooltip placement="bottom" title={t('FuncDomain.engineConsole')}>
-                <TerminalIcon className={classNames(styles['icon-style'], styles['size-style'])} />
+                <TerminalOutlined size={16} className={classNames(styles['icon-style'], styles['size-style'])} />
               </Tooltip>
             </div>
           </div>
@@ -461,14 +455,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 </>
               ) : (
                 <div className={styles['user-show']} onClick={() => setLoginShow(true)}>
-                  <UnLoginSvgIcon />
+                  <UserCircleSolid color="#CCD2DE" size={30} />
                 </div>
               )}
             </div>
           </>
         )}
       </div>
-
       <UserMenuModals
         loginShow={loginShow}
         onCancelLogin={() => setLoginShow(false)}
@@ -504,7 +497,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         setControlOtherModal={setControlOtherModal}
         runDynamicControlRemote={runDynamicControlRemote}
       />
-
       <CeRechargeModal
         visible={rechargeVisible}
         onClose={() => setRechargeVisible(false)}
@@ -1351,7 +1343,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
       <div className={styles['update-header-wrapper']}>
         <div className={styles['header-info']}>
           <div className={styles['update-icon']}>
-            <YakitWhiteSvgIcon />
+            <YakitSolid color="white" size={20} />
           </div>
           <div>
             <div className={styles['update-title']}>
@@ -1371,7 +1363,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
             '获取失败'
           ) : isUpdate ? (
             <div className={styles['update-btn']} onClick={() => onDownload(intranet ? 'intranetYakit' : 'yakit')}>
-              <UpdateSvgIcon style={{ marginRight: 4 }} />
+              <CloudDownloadOutlined color="var(--Colors-Use-Main-Primary)" size={16} style={{ marginRight: 4 }} />
               立即下载
             </div>
           ) : (
@@ -1389,7 +1381,6 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
           )}
         </div>
       </div>
-
       {!intranet && (
         <div className={styles['update-content-wrapper']}>
           <div
@@ -1536,7 +1527,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     }
                   }}
                 >
-                  <UpdateSvgIcon style={{ marginRight: 4 }} />
+                  <CloudDownloadOutlined color="var(--Colors-Use-Main-Primary)" size={16} style={{ marginRight: 4 }} />
                   立即更新
                 </div>
               )}
@@ -1582,7 +1573,6 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
           )}
         </div>
       </div>
-
       <div className={styles['update-content-wrapper']}>
         <div
           className={classNames({

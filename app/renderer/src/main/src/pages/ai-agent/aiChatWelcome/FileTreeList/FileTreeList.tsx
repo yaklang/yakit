@@ -4,7 +4,7 @@ import FileTreeSystemListWrapper from '../../components/aiFileSystemList/FileTre
 import FileTreeDrop from '../FileTreeDrop/FileTreeDrop'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useMemoizedFn } from 'ahooks'
-import { OutlineDocumentaddIcon, OutlineFolderaddIcon } from '@/assets/icon/outline'
+import { DocumentAddOutlined, FolderAddOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../../defaultConstant'
 import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
@@ -39,13 +39,13 @@ const FileTreeList: React.FC<FileTreeListProps> = ({ selected, setSelected }) =>
           <YakitButton
             type="text2"
             title={t('YakitButton.openFile')}
-            icon={<OutlineDocumentaddIcon />}
+            icon={<DocumentAddOutlined color="currentColor" />}
             onClick={() => onOpenFileFolder(false)}
           />
           <YakitButton
             type="text2"
             title={t('YakitButton.openFolder')}
-            icon={<OutlineFolderaddIcon />}
+            icon={<FolderAddOutlined color="currentColor" />}
             onClick={() => onOpenFileFolder(true)}
           />
         </div>

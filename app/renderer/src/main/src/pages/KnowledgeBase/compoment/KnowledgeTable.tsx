@@ -15,7 +15,6 @@ import type { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import { v4 as uuidv4 } from 'uuid'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { ArrowCircleRightSvgIcon, TrashIcon } from '@/assets/newIcon'
 import { Divider, Tooltip } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import { failed, success } from '@/utils/notification'
@@ -27,6 +26,8 @@ import {
   Play2Outlined,
   TerminalOutlined,
   XOutlined,
+  ArrowCircleRightOutlined,
+  TrashOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -37,9 +38,10 @@ import GraphChart from './GraphChart'
 import { GenerateKnowledge } from './GenerateKnowledge'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import classNames from 'classnames'
-import { YakitCloseSvgIcon } from '@/components/basics/icon'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
+
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -354,10 +356,11 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
               }}
               placement="top"
             >
-              <TrashIcon onClick={(e) => e.stopPropagation()} className={styles['delete']} />
+              <TrashOutlined size={16} onClick={(e) => e.stopPropagation()} className={styles['delete']} />
             </YakitPopconfirm>
             <Divider type="vertical" />
-            <ArrowCircleRightSvgIcon
+            <ArrowCircleRightOutlined
+              size={16}
               className={styles['icon']}
               onClick={(e) => {
                 e.stopPropagation()
@@ -681,7 +684,7 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
                   <YakitSpin spinning={QueryEntityDetailLoading}>
                     <div className={styles['header']}>
                       <div>实体信息</div>
-                      <YakitCloseSvgIcon onClick={() => setSelectedSubERMId('')} />
+                      <XSolid size="1em" onClick={() => setSelectedSubERMId('')} />
                     </div>
                     <div className={styles['content']}>
                       <div className={styles['inner-box']}>
@@ -707,7 +710,6 @@ const KnowledgeTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> =
         }
         {...ResizeBoxProps}
       />
-
       <KnowledgeDetailDrawer
         knowledgeDrawerDetail={knowledgeDrawerDetail}
         setKnowledgeDrawerDetail={setKnowledgeDrawerDetail}

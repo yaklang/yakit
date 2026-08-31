@@ -13,8 +13,8 @@ import { YakitTag } from '../YakitTag/YakitTag'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
-import { CheckOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
+import { CheckOutlined, ChevronDownOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ChevronUpIcon } from '@/assets/newIcon'
 import {
   type CacheDataHistoryProps,
   onGetRemoteValuesBase,
@@ -308,7 +308,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
           show ? (
             <ChevronUpIcon className={styles['yakit-select-icon']} />
           ) : (
-            <ChevronDownIcon className={styles['yakit-select-icon']} />
+            <ChevronDownOutlined className={styles['yakit-select-icon']} color="currentColor" size={16} />
           )
         }
         tagRender={(props) => {

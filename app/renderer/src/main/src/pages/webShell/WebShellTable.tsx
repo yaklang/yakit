@@ -6,14 +6,7 @@ import cveStyles from '@/pages/cve/CVETable.module.scss'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  ArrowCircleRightSvgIcon,
-  IconSolidCodeIcon,
-  RefreshIcon,
-  RemoveIcon,
-  SMViewGridAddIcon,
-  TrashIcon,
-} from '@/assets/newIcon'
+import { IconSolidCodeIcon, RefreshIcon, SMViewGridAddIcon } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { Button, Space, Tooltip } from 'antd'
 import type { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -37,6 +30,9 @@ import { WebShellDetailOpt } from './WebShellDetailOpt'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { shallow } from 'zustand/shallow'
 import { useMenuHeight } from '@/store/menuHeight'
+
+import { ArrowCircleRightOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export interface WebShellManagerProp {
   available: boolean
@@ -242,8 +238,8 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
             <div className={style['action-btn-group']}>
               <IconSolidCodeIcon className={style['icon-style']} onClick={() => {}} />
               <div className={style['divider-style']}></div>
-
-              <ArrowCircleRightSvgIcon
+              <ArrowCircleRightOutlined
+                size={16}
                 style={{ transform: 'rotate(-90deg)' }}
                 className={style['icon-style']}
                 onClick={(e) => {
@@ -372,7 +368,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
         { key: 'webshell-curd-edit', label: '编辑' },
         { key: 'webshell-curd-copy', label: '复制 URL' },
         { key: 'webshell-curd-share', label: '分享' },
-        { key: 'webshell-curd-delete', label: '删除', itemIcon: <TrashIcon /> },
+        { key: 'webshell-curd-delete', label: '删除', itemIcon: <TrashOutlined size={16} /> },
       ],
     },
     { type: 'divider' },
@@ -546,7 +542,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
           extra={
             <div className={cveStyles['heard-right-operation']}>
               <div onClick={onClose} className={cveStyles['icon-remove']}>
-                <RemoveIcon />
+                <XSolid size={12} />
               </div>
             </div>
           }

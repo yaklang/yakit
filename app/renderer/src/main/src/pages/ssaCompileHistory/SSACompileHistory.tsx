@@ -13,7 +13,6 @@ import {
   SearchOutlined,
   TrashOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { TrashIcon } from '@/assets/newIcon'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import type { SSAProgram } from '../yakRunnerScanHistory/YakRunnerScanHistory'
@@ -377,7 +376,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
           <YakitButton
             type="outline1"
             colors="danger"
-            icon={<TrashIcon />}
+            icon={<TrashOutlined size={16} />}
             onClick={() => {
               setDeleteParams({
                 title: selectedRowKeys.length === 0 ? '确认清空列表数据？' : '确认删除勾选数据？',
@@ -402,7 +401,6 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
           <YakitButton type="text2" icon={<RefreshOutlined color="currentColor" />} onClick={(e) => update(true)} />
         </div>
       </div>
-
       <div className={styles['table']}>
         <YakitVirtualList<SSAProgram>
           className={styles['audit-virtual-list']}
@@ -423,7 +421,6 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
           }}
         />
       </div>
-
       <YakitHint
         visible={!!deleteParams}
         title={deleteParams?.title}
@@ -431,7 +428,6 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
         onOk={() => deleteParams && onDelete(deleteParams.params)}
         onCancel={() => setDeleteParams(undefined)}
       />
-
       <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />
     </div>
   )

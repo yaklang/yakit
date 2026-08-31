@@ -11,7 +11,7 @@ import styles from './MITMServerStartForm.module.scss'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { yakitFailed } from '@/utils/notification'
-import { CogIcon, RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@/assets/newIcon'
 import { RuleExportAndImportButton } from '../MITMRule/MITMRule'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -19,7 +19,6 @@ import { type AdvancedConfigurationFromValue, buildMitmExtra } from '../MITMAdva
 import ReactResizeDetector from 'react-resize-detector'
 import { useWatch } from 'antd/es/form/Form'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { RemoveIcon } from '@/assets/newIcon'
 import type { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { CacheDropDownGV } from '@/yakitGV'
 import { type PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
@@ -28,7 +27,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import MITMContext, { MITMVersion } from '../Context/MITMContext'
 import { toMITMHacker } from '@/pages/hacker/httpHacker'
-import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { XOutlined, CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakitBaseSelectRef } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
@@ -36,6 +35,7 @@ import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUt
 import { useProxy } from '@/hook/useProxy'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import emiter from '@/utils/eventBus/eventBus'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 const MITMFormAdvancedConfiguration = React.lazy(() => import('./MITMFormAdvancedConfiguration'))
 const ChromeLauncherButton = React.lazy(() => import('../MITMChromeLauncher'))
 
@@ -242,7 +242,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             }}
             className="modal-remove-icon"
           >
-            <RemoveIcon />
+            <XSolid size={12} />
           </div>
         ),
         onOk: () => {
@@ -545,7 +545,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     {t('MITMServerForm.existingRules', { count: rules.length })}
                   </div>
                   <div className={styles['form-rule-icon']}>
-                    <CogIcon />
+                    <CogOutlined size={16} />
                   </div>
                 </div>
               </div>

@@ -23,7 +23,6 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import styles from './FuzzerSequence.module.scss'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { InformationCircleIcon } from '@/assets/newIcon'
 
 export type ConcurrencyAdvancedConfigValue = Pick<
   AdvancedConfigValueProps,
@@ -264,7 +263,7 @@ const AdvancedSetV2: React.FC<AdvancedSetV2Props> = memo((props) => {
                 <span className={styles['advanced-config-form-label']}>
                   {t('HttpQueryAdvancedConfig.disable_Advanced_set')}
                   <Tooltip title={t('HttpQueryAdvancedConfig.disable_Advanced_set_tip')}>
-                    <InformationCircleIcon className={styles['info-icon']} />
+                    <InformationCircleOutlined size={16} className={styles['info-icon']} />
                   </Tooltip>
                 </span>
               }

@@ -7,7 +7,6 @@ import { randomString } from '@/utils/randomUtil'
 import type { ExecResult } from '@/pages/invoker/schema'
 import { yakitFailed } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
-import { CloudDownloadIcon, SolidCloudDownloadIcon } from '@/assets/newIcon'
 import { ScreenRecorderList } from '@/pages/screenRecorder/ScreenRecorderList'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import styles from './ScreenRecorderPage.module.scss'
@@ -16,6 +15,9 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+import { CloudDownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CloudDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export interface ScreenRecorderPageProp {}
 
@@ -62,7 +64,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
           <div className={styles['not-installed-buttons']}>
             <YakitButton
               type="outline1"
-              icon={<CloudDownloadIcon />}
+              icon={<CloudDownloadOutlined size={16} />}
               onClick={() => {
                 setInstallVisible(true)
               }}
@@ -75,7 +77,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
       <YakitHint
         visible={installVisible}
         title={t('ScreenRecorderPage.installing')}
-        heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+        heardIcon={<CloudDownloadSolid size={32} style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
         onCancel={() => {
           setInstallVisible(false)
         }}

@@ -2,7 +2,6 @@ import React, { useState, useImperativeHandle, useRef, useEffect } from 'react'
 import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import { Form } from 'antd'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
-import { PlusIcon, TrashIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import styles from './HTTPRequestBuilder.module.scss'
 import type { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
@@ -13,6 +12,7 @@ import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { PlusOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { YakitPanel } = YakitCollapse
 
@@ -125,7 +125,8 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                     className={styles['variable-list-panel']}
                     extra={
                       <div className={styles['extra-wrapper']}>
-                        <TrashIcon
+                        <TrashOutlined
+                          size={16}
                           onClick={(e) => {
                             e.stopPropagation()
                             if (onDel) onDel(i)
@@ -148,7 +149,7 @@ export const VariableList: React.FC<VariableListProps> = React.forwardRef(
                       add({ Key: '', Value: '', Type: 'raw' })
                       onSetActiveKey([...(variableActiveKey || []), `${variableActiveKey?.length}`])
                     }}
-                    icon={<PlusIcon />}
+                    icon={<PlusOutlined size={16} />}
                     block
                   >
                     {t('YakitButton.add')}

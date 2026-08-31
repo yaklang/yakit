@@ -1,4 +1,3 @@
-import { InformationCircleIcon, PlayIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -11,6 +10,9 @@ import styles from './ScrecorderModal.module.scss'
 import { Screen_Recorder_Framerate, Screen_Recorder_CoefficientPTS } from './ScreenRecorderList'
 
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -132,7 +134,7 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
           help={t('ScrecorderModal.framerateHelp')}
           tooltip={{
             title: t('ScrecorderModal.framerateTooltip'),
-            icon: <InformationCircleIcon style={{ cursor: 'auto' }} />,
+            icon: <InformationCircleOutlined size={16} style={{ cursor: 'auto' }} />,
           }}
           name="Framerate"
         >
@@ -155,7 +157,7 @@ export const ScrecorderModal: React.FC<ScrecorderModalProp> = React.memo((props)
               {t('YakitButton.cancel')}
             </YakitButton>
             <YakitButton htmlType="submit" type="primary" size="large">
-              <PlayIcon style={{ height: 16 }} />
+              <PlaySolid size={16} style={{ height: 16 }} />
               {t('ScrecorderModal.startRecording')}
             </YakitButton>
           </div>

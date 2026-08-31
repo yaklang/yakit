@@ -10,7 +10,6 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Divider, Form, Modal } from 'antd'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { ExportIcon, PlusCircleIcon, RemoveIcon, TrashIcon } from '@/assets/newIcon'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -29,6 +28,9 @@ import {
   saveAdvancedConfig,
 } from '../MITMAdvancedConfig'
 import type { KVPair } from '@/models/kv'
+
+import { FigmaIcon2017756Outlined, PlusCircleOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const MITMAddTLS = React.lazy(() => import('./MITMAddTLS'))
 const MITMFiltersModal = React.lazy(() => import('./MITMFiltersModal'))
@@ -202,7 +204,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
               }}
               className="modal-remove-icon"
             >
-              <RemoveIcon />
+              <XSolid size={12} />
             </div>
           ),
           onOk: () => {
@@ -437,7 +439,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                   <div className={styles['sni-rules-header']}>
                     <YakitButton
                       type="text"
-                      icon={<PlusCircleIcon />}
+                      icon={<PlusCircleOutlined size={16} />}
                       style={{ paddingLeft: 0 }}
                       onClick={() => {
                         const snimapping = form.getFieldValue('SNIMapping') || []
@@ -489,7 +491,11 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                               style={{ width: '100%' }}
                             />
                           </Form.Item>
-                          <YakitButton type="text" icon={<TrashIcon />} onClick={() => remove(field.name)} />
+                          <YakitButton
+                            type="text"
+                            icon={<TrashOutlined size={16} />}
+                            onClick={() => remove(field.name)}
+                          />
                         </div>
                       </div>
                     ))}
@@ -515,7 +521,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             <div className={styles['drawer-TLS-item']}>
               <YakitButton
                 type="text"
-                icon={<PlusCircleIcon />}
+                icon={<PlusCircleOutlined size={16} />}
                 onClick={() => {
                   onClose(true)
                   // setCertificateFormVisible(true)
@@ -564,14 +570,19 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     {item.CerName}
                   </div>
                   <div className={styles['drawer-TLS-certs-item-operate']}>
-                    <TrashIcon
+                    <TrashOutlined
+                      size={16}
                       className={styles['trash-icon']}
                       onClick={() => {
                         setCerts(certs.filter((ele) => ele.CerName !== item.CerName))
                       }}
                     />
                     <Divider type="vertical" style={{ margin: '0 8px' }} />
-                    <ExportIcon className={styles['export-icon']} onClick={() => onExportCerts(item)} />
+                    <FigmaIcon2017756Outlined
+                      size={16}
+                      className={styles['export-icon']}
+                      onClick={() => onExportCerts(item)}
+                    />
                   </div>
                 </div>
               ))}

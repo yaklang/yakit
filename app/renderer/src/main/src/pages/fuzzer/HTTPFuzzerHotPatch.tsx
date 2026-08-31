@@ -3,7 +3,7 @@ import { Form, Space, Tooltip } from 'antd'
 import { AutoCard } from '../../components/AutoCard'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { useGetState, useMemoizedFn, useSize } from 'ahooks'
-import { InformationCircleIcon, RefreshIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@/assets/newIcon'
 import { ExclamationCircleOutlined, FullscreenOutlined } from '@ant-design/icons/lib'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -21,6 +21,7 @@ import {
   LightningBoltOutlined,
   FigmaIcon13208172881Outlined,
   ArrowsOutlined,
+  InformationCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { LightningBoltSolid } from '@yakit-libs/yakit-ui-icons/solid'
@@ -386,7 +387,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             <div className={styles['hotPatchCodeOpen']}>
               <span style={{ fontSize: 12 }}>{t('HTTPFuzzerHotPatch.sharedHotReloadCode')}</span>
               <Tooltip title={t('HTTPFuzzerHotPatch.webFuzzerHotReloadNotice')}>
-                <InformationCircleIcon className={styles['info-icon']} />
+                <InformationCircleOutlined size={16} className={styles['info-icon']} />
               </Tooltip>
               ：<YakitSwitch checked={hotPatchCodeOpen} onChange={setHotPatchCodeOpen}></YakitSwitch>
             </div>
@@ -801,7 +802,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                     <div className={styles['hotPatchCodeOpen']}>
                       <span>{t('HTTPFuzzerHotPatch.sharedHotReloadCode')}</span>
                       <Tooltip title={t('HTTPFuzzerHotPatch.webFuzzerHotReloadNotice')}>
-                        <InformationCircleIcon className={styles['info-icon']} />
+                        <InformationCircleOutlined size={16} className={styles['info-icon']} />
                       </Tooltip>
                       <YakitSwitch checked={sharedHotReloadCode} onChange={setSharedHotReloadCode}></YakitSwitch>
                     </div>
@@ -846,7 +847,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
               <div className={styles['hotPatch-sidebar-switch-wrap']}>
                 {t('YakitButton.enable')}
                 <Tooltip title={t('HTTPFuzzerHotPatch.webFuzzerHotReloadOpenTips')}>
-                  <InformationCircleIcon className={styles['info-icon']} />
+                  <InformationCircleOutlined size={16} className={styles['info-icon']} />
                 </Tooltip>
                 <YakitSwitch checked={hotPatchEnabled} onChange={onEnabledChange} />
               </div>

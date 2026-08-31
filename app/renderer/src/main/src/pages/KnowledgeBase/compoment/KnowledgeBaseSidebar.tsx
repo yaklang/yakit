@@ -8,6 +8,7 @@ import {
   RefreshOutlined,
   StethoscopeOutlined,
   FigmaIcon5237120699Outlined,
+  CloudDownloadOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -43,7 +44,6 @@ import { onOpenLocalFileByPath } from '@/pages/notepadManage/notepadManage/utils
 import type { CreateKnowledgeBaseData, TClearKnowledgeResponse } from '../TKnowledgeBase'
 
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { CloudDownloadIcon } from '@/assets/newIcon'
 import { installWithEvents } from './AllInstallPlugins'
 import { failed, success } from '@/utils/notification'
 import AIModelList from '@/pages/ai-agent/aiModelList/AIModelList'
@@ -878,7 +878,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                   <YakitButton
                     className={styles['knowledge-base-info-header-all-install']}
                     type="outline1"
-                    icon={<CloudDownloadIcon />}
+                    icon={<CloudDownloadOutlined size={16} />}
                     onClick={() => {
                       try {
                         runInstallAll()
@@ -917,7 +917,7 @@ const KnowledgeBaseSidebar: FC<TKnowledgeBaseSidebarProps> = ({
                       </div>
                       <div className={styles['last-box']}>
                         {!it.InstallPath && !eachProgress?.[it.installToken] ? (
-                          <YakitButton icon={<CloudDownloadIcon />} onClick={() => downloadSingle(it)}>
+                          <YakitButton icon={<CloudDownloadOutlined size={16} />} onClick={() => downloadSingle(it)}>
                             下载
                           </YakitButton>
                         ) : eachProgress?.[it.installToken] < 100 ? (

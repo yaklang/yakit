@@ -5,7 +5,6 @@ import { failed, success } from '@/utils/notification'
 import type { YakitSystem, DownloadingState } from '@/yakitGVDefine'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { Progress } from 'antd'
-import { YaklangInstallHintSvgIcon } from '../icons'
 import { QuestionModal } from './InstallEngine'
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
@@ -13,10 +12,11 @@ import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { safeFormatDownloadProcessState } from '../utils'
 import { grpcFetchLatestYakVersion } from '@/apiUtils/grpc'
 import { yakitEngine } from '@/services/electronBridge'
-
 import classNames from 'classnames'
+
 import styles from './DownloadYaklang.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 interface DownloadYaklangProps {
   yaklangSpecifyVersion: string
@@ -203,7 +203,7 @@ export const DownloadYaklang: React.FC<DownloadYaklangProps> = React.memo((props
 
               <div className={styles['hint-left-wrapper']}>
                 <div className={styles['hint-icon']}>
-                  <YaklangInstallHintSvgIcon />
+                  <ShieldExclamationSolid color="#FFB660" size={32} />
                 </div>
                 <div
                   className={styles['qs-icon']}

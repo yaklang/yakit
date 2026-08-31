@@ -1,5 +1,8 @@
-import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
-import { LogOutlined, FigmaIcon34227111185Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  LogOutlined,
+  FigmaIcon34227111185Outlined,
+  DocumentDuplicateOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 
 import { setClipboardText } from '@/utils/clipboard'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
@@ -58,7 +61,7 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
             size="small"
             type="text2"
             color="default"
-            icon={<DocumentDuplicateSvgIcon />}
+            icon={<DocumentDuplicateOutlined size={16} />}
             onClick={() => setClipboardText(copyStr)}
           />
         </Tooltip>

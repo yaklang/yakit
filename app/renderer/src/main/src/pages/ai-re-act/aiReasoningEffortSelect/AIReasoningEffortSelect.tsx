@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import type { AIReasoningEffortSelectProps } from './type'
-import { OutlineBrainIcon, OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { BrainOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
@@ -114,7 +114,7 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
           <YakitSolidLoading inline size={12} />
         </div>
       ) : (
-        <OutlineBrainIcon className={styles['icon-wrapper']} />
+        <BrainOutlined className={styles['icon-wrapper']} color="currentColor" />
       )}
       <span className={styles['select-option-text']}>{text}</span>
     </div>
@@ -128,10 +128,10 @@ export const AIReasoningEffortSelect: React.FC<AIReasoningEffortSelectProps> = R
           return (
             <div className={styles['drop-select-wrapper']}>
               <div className={styles['select-title']}>
-                <OutlineBrainIcon />
+                <BrainOutlined color="currentColor" />
                 {t('AiAgengt.reasoningEffort')}
                 <Tooltip title={t('AIReasoningEffort.tooltip')}>
-                  <OutlineQuestionmarkcircleIcon />
+                  <QuestionMarkCircleOutlined color="currentColor" />
                 </Tooltip>
               </div>
               {menu}

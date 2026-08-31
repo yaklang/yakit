@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import type { YakitDrawerProps } from './YakitDrawerType'
 import styles from './YakitDrawer.module.scss'
 import classNames from 'classnames'
-import { RemoveIcon } from '@/assets/newIcon'
 import type { ShowDrawerProps } from '@/utils/showModal'
 import { ErrorBoundary } from 'react-error-boundary'
 import { createRoot } from 'react-dom/client'
@@ -12,6 +11,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import i18n from '@/i18n/i18n'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
 /**
@@ -34,7 +34,7 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
       {...restProps}
       closeIcon={
         <div className={styles['yakit-drawer-icon']}>
-          {props.closeIcon || <RemoveIcon className={styles['yakit-drawer-remove-icon']} />}
+          {props.closeIcon || <XSolid size={12} className={styles['yakit-drawer-remove-icon']} />}
         </div>
       }
       className={classNames(

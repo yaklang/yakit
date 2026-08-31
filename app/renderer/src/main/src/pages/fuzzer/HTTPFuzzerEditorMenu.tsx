@@ -6,26 +6,22 @@ import styles from './HTTPFuzzerEditorMenu.module.scss'
 import { failed } from '@/utils/notification'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import ReactDraggable from 'react-draggable'
 import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  DocumentDuplicateSvgIcon,
-  DragSortIcon,
-  IconSolidCodeIcon,
-  IconSolidSparklesIcon,
-  IconSolidTagIcon,
-  IconOutlinePencilAltIcon,
-  TrashIcon,
-} from '@/assets/newIcon'
+  XOutlined,
+  ChevronDownOutlined,
+  DocumentDuplicateOutlined,
+  PencilAltOutlined,
+  TrashOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+import ReactDraggable from 'react-draggable'
+import { ChevronUpIcon, IconSolidCodeIcon, IconSolidSparklesIcon, IconSolidTagIcon } from '@/assets/newIcon'
 import { DragDropContext, Droppable, Draggable, type DraggingStyle } from '@hello-pangea/dnd'
 import { type AutoDecodeResult, execAutoDecode } from '@/utils/encodec'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { QueryFuzzerLabelResponseProps } from './StringFuzzer'
 import { setRemoteValue } from '@/utils/kv'
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
-import { TerminalSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { TerminalSolid, FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import { queryYakScriptList } from '../yakitStore/network'
 import type { YakScript } from '../invoker/schema'
 import { IconSolidAIIcon } from '@/assets/icon/colors'
@@ -325,7 +321,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             {segmentedType === 'insert-tag' ? (
               <ChevronUpIcon className={styles['up']} />
             ) : (
-              <ChevronDownIcon className={styles['down']} />
+              <ChevronDownOutlined size={16} className={styles['down']} />
             )}
           </div>
           <div className={styles['line']}></div>
@@ -349,7 +345,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             {segmentedType === 'aiplugin' ? (
               <ChevronUpIcon className={styles['up']} />
             ) : (
-              <ChevronDownIcon className={styles['down']} />
+              <ChevronDownOutlined size={16} className={styles['down']} />
             )}
           </div>
         </div>
@@ -435,7 +431,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                     overflow: 'hidden',
                                   }}
                                 >
-                                  <DragSortIcon className={styles['drag-sort-icon']} />
+                                  <FigmaIcon2281144183Solid size={12} className={styles['drag-sort-icon']} />
                                   {isSelect(item) ? (
                                     <YakitInput
                                       defaultValue={item.Description}
@@ -491,7 +487,9 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                     <>
                                       {!item.DefaultDescription.endsWith('-fixed') && (
                                         <>
-                                          <IconOutlinePencilAltIcon
+                                          <PencilAltOutlined
+                                            color="#85899E"
+                                            size={16}
                                             className={classNames(styles['form-outlined'])}
                                             onClick={(e) => {
                                               e.stopPropagation()
@@ -499,7 +497,8 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                                               setInputValue(item.Description)
                                             }}
                                           />
-                                          <TrashIcon
+                                          <TrashOutlined
+                                            size={16}
                                             className={classNames(styles['trash-icon'])}
                                             onClick={(e) => {
                                               e.stopPropagation()
@@ -800,7 +799,7 @@ export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
               setClipboardText(itemStr)
             }}
           >
-            <DocumentDuplicateSvgIcon className={styles['document-duplicate-svg-icon']} />
+            <DocumentDuplicateOutlined size={16} className={styles['document-duplicate-svg-icon']} />
           </div>
           {!isReadOnly && (
             <YakitButton
@@ -1106,7 +1105,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
               {segmentedType === 'encode' ? (
                 <ChevronUpIcon className={styles['up']} />
               ) : (
-                <ChevronDownIcon className={styles['down']} />
+                <ChevronDownOutlined size={16} className={styles['down']} />
               )}
             </div>
             <div className={styles['line']}></div>
@@ -1130,7 +1129,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
               {segmentedType === 'decodeLabel' ? (
                 <ChevronUpIcon className={styles['up']} />
               ) : (
-                <ChevronDownIcon className={styles['down']} />
+                <ChevronDownOutlined size={16} className={styles['down']} />
               )}
             </div>
             <div className={styles['line']}></div>

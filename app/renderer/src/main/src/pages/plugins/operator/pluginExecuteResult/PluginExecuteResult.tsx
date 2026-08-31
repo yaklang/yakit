@@ -56,8 +56,8 @@ import {
   LogOutlined,
   TableOutlined,
   TerminalOutlined,
+  DocumentDuplicateOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
 import { LocalList, LocalPluginLog, LocalText } from './LocalPluginLog'
 import { CodeScanResult } from '@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable'
 import { YakitAuditHoleTable } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable'
@@ -743,7 +743,7 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
             setClipboardText(colData)
           }}
         >
-          <DocumentDuplicateSvgIcon />
+          <DocumentDuplicateOutlined size={16} />
         </div>
       ),
     }))

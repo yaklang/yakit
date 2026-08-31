@@ -11,7 +11,7 @@ import type {
   ShowItemType,
 } from './BottomEditorDetailsType'
 import { HelpInfoList } from '../../yakRunner/CollapseList/CollapseList'
-import { CogOutlined, XOutlined, FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CogOutlined, XOutlined, FigmaIcon28011794Outlined, PlusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { SyntaxCheckList } from '../../yakRunner/BottomEditorDetails/SyntaxCheckList/SyntaxCheckList'
@@ -30,7 +30,6 @@ import {
 } from '../../yakRunner/BottomEditorDetails/TerminalBox/TerminalBox'
 import { type System, SystemInfo, handleFetchSystem } from '@/constants/hardware'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { OutlinePlusIcon } from '@/assets/newIcon'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import YakitXterm from '@/components/yakitUI/YakitXterm/YakitXterm'
@@ -279,7 +278,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
             <>
               <YakitButton
                 type="text2"
-                icon={<OutlinePlusIcon />}
+                icon={<PlusOutlined size={16} />}
                 onClick={() => {
                   debugTerminalHookEvent.startTerminal()
                 }}

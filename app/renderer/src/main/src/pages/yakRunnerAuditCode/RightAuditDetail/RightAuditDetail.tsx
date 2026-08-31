@@ -5,14 +5,19 @@ import styles from './RightAuditDetail.module.scss'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { StringToUint8Array } from '@/utils/str'
 import { loadAuditFromYakURLRaw } from '../utils'
-import { CollectionOutlined, XOutlined, ZoomInOutlined, ZoomOutOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  CollectionOutlined,
+  XOutlined,
+  ZoomInOutlined,
+  ZoomOutOutlined,
+  QuestionMarkCircleOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
 import { instance } from '@viz-js/viz'
 import { failed } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
-import { QuestionMarkCircleIcon } from '@/assets/newIcon'
 import { clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail } from './GraphInfoMap'
 import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
 import type { AuditEmiterYakUrlProps, OpenFileByPathProps } from '../YakRunnerAuditCodeType'
@@ -536,7 +541,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                   </div>
                 }
               >
-                <QuestionMarkCircleIcon />
+                <QuestionMarkCircleOutlined size={16} />
               </Tooltip>
             </div>
             <div className={styles['extra']}>

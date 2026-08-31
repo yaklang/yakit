@@ -5,10 +5,10 @@ import { yakitNotify } from '@/utils/notification'
 import { getReleaseEditionName } from './envfile'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { QuestionMarkCircleIcon } from '@/assets/newIcon'
 import { yakitHost, yakitSystem } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
+import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 export interface ConfigPcapPermissionFormProp {
@@ -72,7 +72,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
         help={
           <>
             <Tooltip title={t('ConfigPcapPermission.tooltip')}>
-              <YakitButton type={'text'} icon={<QuestionMarkCircleIcon />} />
+              <YakitButton type={'text'} icon={<QuestionMarkCircleOutlined size={16} />} />
             </Tooltip>
             {isWindows
               ? t('ConfigPcapPermission.windowsHint', { name: getReleaseEditionName() })

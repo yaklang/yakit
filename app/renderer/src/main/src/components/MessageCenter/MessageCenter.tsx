@@ -9,7 +9,6 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { Resizable } from 're-resizable'
 import YakitTabs from '../yakitUI/YakitTabs/YakitTabs'
 import { formatTimestampJudge } from '@/utils/timeUtil'
-import { RemoveIcon } from '@/assets/newIcon'
 import { useStore } from '@/store'
 import { AuthorImg } from '@/pages/plugins/funcTemplate'
 import { apiFetchMessageClear, apiFetchMessageRead, apiFetchQueryMessage, type MessageQueryDataProps } from './utils'
@@ -28,6 +27,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import moment from 'moment'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const MESSAGE_PAGE_LIMIT = 20
 
@@ -775,7 +775,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         <div className={styles['message-header']}>
           <div className={styles['title']}>{t('MessageCenter.title')}</div>
           <div className={styles['extra']}>
-            <YakitButton size="small" type="text2" icon={<RemoveIcon />} onClick={() => setVisible(false)} />
+            <YakitButton size="small" type="text2" icon={<XSolid size={12} />} onClick={() => setVisible(false)} />
           </div>
         </div>
         <YakitTabs

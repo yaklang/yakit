@@ -6,7 +6,7 @@ import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import { useDebounce, useMemoizedFn } from 'ahooks'
 import { Progress } from 'antd'
-import { YaklangInstallHintSvgIcon, MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon } from '../icons'
+import { MacUIOpCloseSvgIcon, WinUIOpCloseSvgIcon } from '../icons'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { WebsiteGV } from '@/enums/website'
@@ -18,6 +18,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 // hook 提取到独立文件，避免 layout 链路通过 DownloadYakit 间接拉入 react-draggable
 export { useDownloadYakit } from './useDownloadYakit'
 import { useDownloadYakit } from './useDownloadYakit'
+
+import { ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 interface DownloadYakitProps {
   system: YakitSystem
@@ -96,7 +98,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
 
               <div className={styles['hint-left-wrapper']}>
                 <div className={styles['hint-icon']}>
-                  <YaklangInstallHintSvgIcon />
+                  <ShieldExclamationSolid color="#FFB660" size={32} />
                 </div>
                 <div
                   className={styles['qs-icon']}

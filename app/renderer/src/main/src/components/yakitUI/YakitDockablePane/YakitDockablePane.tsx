@@ -4,7 +4,7 @@ import { useControllableValue, useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 import classNames from 'classnames'
 import { YakitButton } from '../YakitButton/YakitButton'
-import { OutlineXIcon } from '@/assets/icon/outline'
+import { XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { FigmaIcon4936115787Solid, FigmaIcon4936115789Solid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakitDockablePaneProps } from './YakitDockablePaneType'
 import styles from './YakitDockablePane.module.scss'
@@ -148,7 +148,7 @@ export const YakitDockablePane: React.FC<YakitDockablePaneProps> = memo((props) 
               onClick={handleToggleOverlay}
             />
           )}
-          <YakitButton type="text2" icon={<OutlineXIcon />} onClick={onClose} />
+          <YakitButton type="text2" icon={<XOutlined color="currentColor" />} onClick={onClose} />
         </div>
       </div>
       <div className={classNames(styles['dockable-pane-body'], bodyClassName)}>{children}</div>

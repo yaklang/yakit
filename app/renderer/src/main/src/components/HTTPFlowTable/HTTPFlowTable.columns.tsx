@@ -1,8 +1,13 @@
 import type React from 'react'
 import type { DebouncedFunc } from 'lodash'
 import classNames from 'classnames'
-import { ArrowCircleRightSvgIcon, ChromeFrameSvgIcon } from '@/assets/newIcon'
-import { SearchOutlined, SelectorOutlined, StarOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  SearchOutlined,
+  SelectorOutlined,
+  StarOutlined,
+  ArrowCircleRightOutlined,
+  ChromeOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid, StarSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import type { ColumnsTypeProps, FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -447,14 +452,16 @@ export const buildHTTPFlowTableColumnArr = (ctx: BuildHTTPFlowTableColumnsContex
               />
             )}
             <div className={style['divider-style']} />
-            <ChromeFrameSvgIcon
+            <ChromeOutlined
+              size={16}
               className={classNames(style['icon-hover'], {
                 [style['icon-style']]: !singleColorRow,
               })}
               onClick={(e) => actionHandlers.onOpenInBrowser(e, rowData)}
             />
             <div className={style['divider-style']}></div>
-            <ArrowCircleRightSvgIcon
+            <ArrowCircleRightOutlined
+              size={16}
               className={classNames(style['icon-hover'], {
                 [style['icon-style']]: !singleColorRow,
               })}

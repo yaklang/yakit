@@ -17,10 +17,9 @@ import numeral from 'numeral'
 import classNames from 'classnames'
 import { TooltipIcon } from '../Tooltip/Tooltip'
 import { useMemoizedFn } from 'ahooks'
-import { XCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
+import { XCircleSolid, CloudDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import React from 'react'
-import { SolidCloudDownloadIcon } from '@/assets/newIcon'
 import useDownloadUrlToLocalHooks, { type DownloadUrlToLocal } from '@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal'
 import { apiDownloadStorageType } from '@/pages/notepadManage/notepadStorageUtils'
 import { onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo } from '@/pages/notepadManage/notepadManage/utils'
@@ -501,7 +500,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
   })
   return (
     <YakitHint
-      heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+      heardIcon={<CloudDownloadSolid size={32} style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       okButtonProps={{ style: { display: 'none' } }}
       isDrag={true}
       mask={false}

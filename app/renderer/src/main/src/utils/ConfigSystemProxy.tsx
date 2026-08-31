@@ -7,7 +7,6 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { InformationCircleIcon, RemoveIcon } from '@/assets/newIcon'
 import classNames from 'classnames'
 import { getRemoteValue, setRemoteValue } from './kv'
 import { RemoteGV } from '@/yakitGV'
@@ -19,6 +18,9 @@ import { yakitHost } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { defHost, defPort } from '@/pages/mitm/mitmDefaults'
+
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 
@@ -96,7 +98,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
       <div className={styles['config-system-proxy']}>
         <div className={styles['config-system-proxy-heard']}>
           <div className={styles['config-system-proxy-title']}>{t('ConfigSystemProxy.configSystemProxy')}</div>
-          <RemoveIcon className={styles['close-icon']} onClick={() => onClose()} />
+          <XSolid size={12} className={styles['close-icon']} onClick={() => onClose()} />
         </div>
         <div
           className={classNames(styles['config-system-proxy-status-success'], {
@@ -112,7 +114,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
             help={t('ConfigSystemProxy.oneClickConfig')}
             tooltip={{
               title: t('ConfigSystemProxy.proxyHint'),
-              icon: <InformationCircleIcon />,
+              icon: <InformationCircleOutlined size={16} />,
             }}
           >
             <YakitInput
@@ -196,7 +198,7 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
       <div className={styles['config-system-proxy']}>
         <div className={styles['config-system-proxy-heard']}>
           <div className={styles['config-system-proxy-title']}>{t('ConfigSystemProxy.chromeStartPath')}</div>
-          <RemoveIcon className={styles['close-icon']} onClick={() => onClose()} />
+          <XSolid size={12} className={styles['close-icon']} onClick={() => onClose()} />
         </div>
         <div className={classNames(styles['config-system-proxy-status-success'])}>
           {t('ConfigSystemProxy.chromeStartPathHint')}

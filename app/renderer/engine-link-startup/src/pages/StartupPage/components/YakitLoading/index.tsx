@@ -2,8 +2,11 @@ import type React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { Checkbox, Divider, Form, Tooltip } from 'antd'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
-import { ArrowCircleRightOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineExitIcon } from '@/assets/bespokeIcons'
+import {
+  ArrowCircleRightOutlined,
+  FigmaIcon28011794Outlined,
+  QuestionMarkCircleOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { LoadingClickExtra, ModalIsTop, System, YakitStatusType, YaklangEngineMode } from '../../types'
@@ -691,7 +694,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             style={{ fontSize: i18n.language === 'en' ? 11 : 12 }}
             onClick={() => yakitApp.closeWindow()}
           >
-            <OutlineExitIcon className={styles['exit-icon']} />
+            <FigmaIcon28011794Outlined className={styles['exit-icon']} color="currentColor" size={16} />
             {t('YakitLoading.exit')}
           </span>
           {showAgreement ? (

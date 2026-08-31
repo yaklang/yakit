@@ -11,7 +11,6 @@ import { useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahoo
 import { NetWorkApi } from '@/services/fetch'
 import { yakitNotify } from '@/utils/notification'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { PencilAltIcon, QuestionMarkCircleIcon, TrashIcon } from '@/assets/newIcon'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import type { DefaultOptionType } from 'antd/es/select'
@@ -20,6 +19,7 @@ import { YakitTreeSelect } from '@/components/yakitUI/YakitTreeSelect/YakitTreeS
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import styles from './RoleAdminPage.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { PencilAltOutlined, QuestionMarkCircleOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 interface RoleListRequest {
   limit: number
   page: number
@@ -69,7 +69,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
             <span>{text}</span>
             {record.builtIn && (
               <Tooltip title={'内置角色，无法操作'}>
-                <QuestionMarkCircleIcon className={styles['icon-question']} />
+                <QuestionMarkCircleOutlined size={16} className={styles['icon-question']} />
               </Tooltip>
             )}
           </div>
@@ -99,7 +99,8 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
           <></>
         ) : (
           <Space>
-            <PencilAltIcon
+            <PencilAltOutlined
+              size={16}
               className={styles['edit-icon']}
               onClick={(e) => {
                 roleInfoRef.current = record
@@ -113,7 +114,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
               }}
               placement="right"
             >
-              <TrashIcon className={styles['del-icon']} />
+              <TrashOutlined size={16} className={styles['del-icon']} />
             </YakitPopconfirm>
           </Space>
         ),

@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePlusIcon } from '@/assets/newIcon'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import YakitTree from '@/components/yakitUI/YakitTree/YakitTree'
 import ReactResizeDetector from 'react-resize-detector'
@@ -16,6 +15,7 @@ import {
   PencilAltOutlined,
   RefreshOutlined,
   TrashOutlined,
+  PlusOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
@@ -525,7 +525,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
       extra={
         <div className={styles['card-extra']}>
           <YakitButton
-            icon={<OutlinePlusIcon />}
+            icon={<PlusOutlined size={16} />}
             type="text"
             onClick={() => {
               const m = showYakitModal({
@@ -641,7 +641,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                       </YakitPopconfirm>
                       {isShowAddBtn && (
                         <YakitButton
-                          icon={<OutlinePlusIcon className={styles['plus-icon']} />}
+                          icon={<PlusOutlined size={16} className={styles['plus-icon']} />}
                           type="text"
                           onClick={(e) => {
                             e.stopPropagation()

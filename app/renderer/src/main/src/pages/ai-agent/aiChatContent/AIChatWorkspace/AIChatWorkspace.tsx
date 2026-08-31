@@ -20,8 +20,13 @@ import type { AIAgentTabPayload } from '../type'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { OutlineBugIcon, OutlineListTodoIcon, OutlineNewspaperIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { FigmaIcon348196674Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import {
+  BugOutlined,
+  FigmaIcon348196674Outlined,
+  ListTodoOutlined,
+  NewspaperOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import styles from './AIChatWorkspace.module.scss'
 
@@ -42,10 +47,10 @@ interface WorkspaceTab {
 
 const TabIcons: Record<AITabsEnumType, React.ReactNode> = {
   [AITabsEnum.File_Preview]: null,
-  [AITabsEnum.Task_Detail]: <OutlineListTodoIcon />,
+  [AITabsEnum.Task_Detail]: <ListTodoOutlined color="currentColor" />,
   [AITabsEnum.HTTP]: <FigmaIcon348196674Outlined />,
-  [AITabsEnum.Risk]: <OutlineBugIcon />,
-  [AITabsEnum.Operation_Log]: <OutlineNewspaperIcon />,
+  [AITabsEnum.Risk]: <BugOutlined color="currentColor" />,
+  [AITabsEnum.Operation_Log]: <NewspaperOutlined color="currentColor" />,
 }
 
 const getFileIconByName = (name: string) => {
@@ -331,7 +336,7 @@ export const AIChatWorkspace: React.FC<AIChatWorkspaceProps> = React.memo((props
                   })}
                   onClick={(event) => onCloseTab(event, tab.key)}
                 >
-                  <OutlineXIcon />
+                  <XOutlined color="currentColor" />
                 </span>
               </div>
             </Tooltip>

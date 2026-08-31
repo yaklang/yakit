@@ -24,6 +24,9 @@ import {
   SelectorOutlined,
   StarOutlined,
   XOutlined,
+  ArrowCircleRightOutlined,
+  ChromeOutlined,
+  ColorSwatchOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import classNames from 'classnames'
 import { RemoteHistoryGV } from '@/enums/history'
@@ -71,7 +74,6 @@ import {
   shouldUseParamsIconText3,
 } from '@/components/TableVirtualResize/utils'
 import { yakitNotify } from '@/utils/notification'
-import { ArrowCircleRightSvgIcon, ChromeFrameSvgIcon, ColorSwatchIcon } from '@/assets/newIcon'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow, saveABSFileToOpen } from '@/utils/openWebsite'
@@ -1394,7 +1396,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 />
               )}
               <div className={styles['divider-style']} />
-              <ChromeFrameSvgIcon
+              <ChromeOutlined
+                size={16}
                 className={classNames(styles['icon-hover'], {
                   [styles['icon-style']]: !singleColorRow,
                 })}
@@ -1411,8 +1414,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 }}
               />
               <div className={styles['divider-style']}></div>
-
-              <ArrowCircleRightSvgIcon
+              <ArrowCircleRightOutlined
+                size={16}
                 className={classNames(styles['icon-hover'], {
                   [styles['icon-style']]: !singleColorRow,
                 })}
@@ -2802,7 +2805,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                       style={{ padding: 4 }}
                       onClick={() => setIsShowColor(true)}
                     >
-                      <ColorSwatchIcon />
+                      <ColorSwatchOutlined size={16} />
                     </YakitButton>
                   </YakitPopover>
                 </div>

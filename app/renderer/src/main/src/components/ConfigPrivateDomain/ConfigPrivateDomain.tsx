@@ -12,7 +12,6 @@ import type { API } from '@/services/swagger/resposeType'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitAutoComplete, defYakitAutoCompleteRef } from '../yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
-import { InformationCircleIcon } from '@/assets/newIcon'
 import { CacheDropDownGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
 import type { YakitAutoCompleteRefProps } from '../yakitUI/YakitAutoComplete/YakitAutoCompleteType'
@@ -22,6 +21,8 @@ import { JSONParseLog } from '@/utils/tool'
 import { yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+
+import { InformationCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 interface OnlineProfileProps {
   BaseUrl: string
@@ -301,7 +302,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
               <span className="form-label">
                 {t('ConfigPrivateDomain.setProxy')}
                 <Tooltip title={t('ConfigPrivateDomain.proxyHelp')} overlayStyle={{ width: 150 }}>
-                  <InformationCircleIcon className="info-icon" />
+                  <InformationCircleOutlined size={16} className="info-icon" />
                 </Tooltip>
               </span>
             }

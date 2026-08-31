@@ -31,7 +31,7 @@ import {
   type HTTPFlowExtractedDataTableRefProps,
   type QueryMITMRuleExtractedDataRequest,
 } from '@/components/HTTPFlowExtractedDataTable'
-import { ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon } from '@/assets/newIcon'
+import { ChevronUpIcon, ChromeSvgIcon } from '@/assets/newIcon'
 import { YakitEmpty } from './yakitUI/YakitEmpty/YakitEmpty'
 import classNames from 'classnames'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -43,7 +43,7 @@ import { CopyComponents, YakitTag } from './yakitUI/YakitTag/YakitTag'
 import { YakitDropdownMenu } from './yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { openABSFileLocated, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
 import emiter from '@/utils/eventBus/eventBus'
-import { CloseOutlined, Log2Outlined, OpenOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CloseOutlined, Log2Outlined, OpenOutlined, ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { RemoteGV } from '@/yakitGV'
 import type { QueryGeneralResponse } from '@/pages/invoker/schema'

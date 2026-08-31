@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { FolderOpenSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { PluginGroupList, type GroupListItem } from './PluginGroupList'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { PencilAltOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PencilAltOutlined, TrashOutlined, CloudDownloadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteGV } from '@/yakitGV'
 import {
@@ -17,7 +17,6 @@ import {
 } from '../../plugins/utils'
 import type { GroupCount } from '@/pages/invoker/schema'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { CloudDownloadIcon } from '@/assets/newIcon'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginOnline'
 import styles from './PluginOperationGroupList.module.scss'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
@@ -213,7 +212,11 @@ export const PluginOperationGroupList: React.FC<PluginOperationGroupListProps> =
                 style={{ marginTop: 80 }}
               />
               <div className={styles['plugin-local-buttons']}>
-                <YakitButton type="outline1" icon={<CloudDownloadIcon />} onClick={() => setVisibleOnline(true)}>
+                <YakitButton
+                  type="outline1"
+                  icon={<CloudDownloadOutlined size={16} />}
+                  onClick={() => setVisibleOnline(true)}
+                >
                   一键下载
                 </YakitButton>
               </div>

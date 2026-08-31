@@ -3,7 +3,7 @@ import { useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import HistoryChat from '../historyChat/HistoryChat'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -49,7 +49,7 @@ const ChatSessionPane: React.FC = memo(() => {
             <YakitButton
               type="text2"
               isActive={searchOpen}
-              icon={<OutlineSearchIcon />}
+              icon={<SearchOutlined color="currentColor" />}
               onClick={() => setSearchOpen(true)}
             />
           </Tooltip>

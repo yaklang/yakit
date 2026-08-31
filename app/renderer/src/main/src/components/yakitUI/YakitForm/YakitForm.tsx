@@ -14,14 +14,13 @@ import classNames from 'classnames'
 import { YakitInput } from '../YakitInput/YakitInput'
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
 import { failed, yakitNotify } from '@/utils/notification'
-import { UploadOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { UploadOutlined, QuestionMarkCircleOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitAutoComplete } from '../YakitAutoComplete/YakitAutoComplete'
 import { UISettingSvgIcon } from '@/components/layout/icons'
 import { YakitPopover } from '../YakitPopover/YakitPopover'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { YakitSpin } from '../YakitSpin/YakitSpin'
 import { YakitRadioButtons } from '../YakitRadioButtons/YakitRadioButtons'
-import { QuestionMarkCircleIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { handleOpenFileSystemDialog, type OpenDialogOptions } from '@/utils/fileSystemDialog'
 
@@ -990,7 +989,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
                     <div className={styles['text']}>
                       {t('YakitDraggerContent.reading_method')}
                       <Tooltip title={t('YakitDraggerContent.reading_method_tip')}>
-                        <QuestionMarkCircleIcon />
+                        <QuestionMarkCircleOutlined size={16} />
                       </Tooltip>
                       ：
                     </div>

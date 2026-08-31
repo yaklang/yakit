@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import lightTheme from '@/assets/light-theme.png'
 import darkTheme from '@/assets/dark-theme.png'
+import { FigmaIcon28011794Outlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { CheckCircleSolid } from '@yakit-libs/yakit-ui-icons/solid'
 import type { Theme } from '@/hooks/useTheme'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -10,7 +11,6 @@ import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { Tooltip } from 'antd'
 import { yakitApp, yakitShell } from '@/utils/electronBridge'
 import { useCountDown, useInViewport, useMemoizedFn } from 'ahooks'
-import { OutlineExitIcon } from '@/assets/bespokeIcons'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { isCommunityYakit } from '@/utils/envfile'
 import { type Lange, normalizeLang, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -394,7 +394,7 @@ export const SoftwareBasics: React.FC<SoftwareBasicsProps> = React.memo((props) 
           style={{ fontSize: i18n.language === 'en' ? 11 : 12 }}
           onClick={handleExit}
         >
-          <OutlineExitIcon className={styles['exit-icon']} />
+          <FigmaIcon28011794Outlined className={styles['exit-icon']} color="currentColor" size={16} />
           {t('SoftwareBasics.exit')}
         </span>
       </div>

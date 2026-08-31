@@ -45,11 +45,16 @@ import {
   PublicToolTCPPortLogIcon,
   PublicToolVulinboxIcon,
   PublicToolWebsocketFuzzerIcon,
-  PublicToolYakScriptIcon,
   PublicWebFuzzerIcon,
 } from '@/routes/publicIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { CheckSolid, ExclamationSolid, PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
+import {
+  CheckSolid,
+  ExclamationSolid,
+  PlaySolid,
+  TerminalSolid,
+  ShieldCheckSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { BlastingAnimationAemonstration } from '../fuzzer/HTTPFuzzerPage'
 import {
@@ -59,6 +64,7 @@ import {
   DatabaseOutlined,
   DesktopComputerOutlined,
   QuestionMarkCircleOutlined,
+  CloudDownloadOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 import { OutlineBugIcon } from '@/assets/icon/bespokeOutline'
 import { OutlineModScanPortDataIcon, OutlineTrashSecondIcon } from '@/assets/icon/bespokeOutline'
@@ -79,10 +85,8 @@ import { openABSFileLocated } from '@/utils/openWebsite'
 import { yakitNotify } from '@/utils/notification'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { ShieldCheckIcon as AllShieldCheckIcon } from '@/components/layout/globalStateIcon'
 import { useScreenRecorder } from '@/store/screenRecorder'
 import numeral from 'numeral'
-import { CloudDownloadIcon } from '@/assets/newIcon'
 import { getEnvTypeByProjects, type ProjectDescription } from '../softwareSettings/projectUtils'
 import type { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import type { FieldName, Fields } from '../risks/RiskTable'
@@ -164,7 +168,7 @@ const Home: React.FC<HomeProp> = (props) => {
     return [
       {
         label: t('YakitRoute.YakRunner'),
-        icon: <PublicToolYakScriptIcon />,
+        icon: <TerminalSolid color="var(--Colors-Use-Basic-Background)" size={18} />,
         iconStyle: { backgroundColor: '#8863f7', padding: 1 },
         desc: t('YakitRoute.yaklangProgramming'),
         rightIcon: <ArrowRightOutlined color="currentColor" />,
@@ -1660,7 +1664,7 @@ const Home: React.FC<HomeProp> = (props) => {
             </div>
             <YakitHint
               visible={pcapHintShow}
-              heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
+              heardIcon={pcapResult ? <ShieldCheckSolid color="#56C991" size={32} /> : undefined}
               title={pcapResult ? t('Home.netcardAccessGranted') : t('Home.netcardNoAccess')}
               width={600}
               content={
@@ -1861,7 +1865,7 @@ const Home: React.FC<HomeProp> = (props) => {
                   {localPluginTotal < 30 ? (
                     <YakitButton
                       type="text"
-                      icon={<CloudDownloadIcon className={styles['download-btn-icon']} />}
+                      icon={<CloudDownloadOutlined size={16} className={styles['download-btn-icon']} />}
                       onClick={() => setVisibleOnline(true)}
                       style={{ padding: 0 }}
                       className={styles['download-btn']}

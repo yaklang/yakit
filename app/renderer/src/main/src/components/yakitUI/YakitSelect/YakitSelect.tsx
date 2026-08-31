@@ -10,7 +10,7 @@ import styles from './YakitSelect.module.scss'
 import classNames from 'classnames'
 import type { BaseOptionType } from 'antd/lib/select'
 import { YakitTag } from '../YakitTag/YakitTag'
-import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
+import { ChevronUpIcon } from '@/assets/newIcon'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import {
   type CacheDataHistoryProps,
@@ -20,7 +20,7 @@ import {
 } from '../utils'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
-import { CheckOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { CheckOutlined, XOutlined, ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
@@ -291,7 +291,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
           showSuffixIcon ? (
             <ChevronUpIcon className={styles['yakit-select-icon']} />
           ) : (
-            <ChevronDownIcon className={styles['yakit-select-icon']} />
+            <ChevronDownOutlined size={16} className={styles['yakit-select-icon']} />
           )
         }
         tagRender={(props) => {

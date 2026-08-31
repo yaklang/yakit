@@ -10,7 +10,6 @@ import moment from 'moment'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { TrashIcon } from '@/assets/newIcon'
 import { NetWorkApi } from '@/services/fetch'
 import { yakitNotify } from '@/utils/notification'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -20,6 +19,7 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { OnlineUserItem } from '@/components/OnlineUserItem/OnlineUserItem'
 import styles from './TrustListPage.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 interface UserListRequest {
   keywords: string
   limit: number
@@ -331,7 +331,12 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
               placement="bottomRight"
               disabled={selectNum === 0}
             >
-              <YakitButton type="outline1" colors="danger" icon={<TrashIcon />} disabled={selectNum === 0}>
+              <YakitButton
+                type="outline1"
+                colors="danger"
+                icon={<TrashOutlined size={16} />}
+                disabled={selectNum === 0}
+              >
                 {t('YakitButton.batchRemove')}
               </YakitButton>
             </YakitPopconfirm>

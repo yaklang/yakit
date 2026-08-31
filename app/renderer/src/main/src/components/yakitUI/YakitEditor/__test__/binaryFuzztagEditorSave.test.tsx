@@ -56,8 +56,6 @@ vi.mock('../../YakitDropdownMenu/YakitDropdownMenu', () => ({
     </div>
   ),
 }))
-vi.mock('@/assets/newIcon', () => ({ DocumentDuplicateSvgIcon: () => null }))
-vi.mock('@/assets/icon/outline', () => ({ OutlineExportIcon: () => null }))
 vi.mock('@/utils/clipboard', () => ({ setClipboardText: vi.fn() }))
 vi.mock('@/utils/notification', () => ({ warn: vi.fn(), yakitNotify: vi.fn() }))
 vi.mock('@/utils/openWebsite', () => ({ saveABSFileToOpen: vi.fn() }))

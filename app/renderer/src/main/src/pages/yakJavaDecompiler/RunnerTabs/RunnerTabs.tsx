@@ -22,9 +22,9 @@ import {
   ChevronDoubleRightOutlined,
   XOutlined,
   FigmaIcon6480193584Outlined,
+  FigmaIcon22849134660Outlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
-import { OutlineSplitScreenIcon } from '@/assets/icon/bespokeOutline'
 import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
 import { YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
@@ -264,7 +264,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             placement: 'bottomRight',
           }}
         >
-          <OutlineSplitScreenIcon className={styles['extra-box-icon']} />
+          <FigmaIcon22849134660Outlined size={16} className={styles['extra-box-icon']} />
         </YakitDropdownMenu>
       )
     }

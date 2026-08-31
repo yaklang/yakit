@@ -5,8 +5,8 @@ import classNames from 'classnames'
 import { useVirtualList, useThrottleFn } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
 import { LoadingOutlined } from '@ant-design/icons'
-import { FilterIcon } from '@/assets/newIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { FilterOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 interface VirtualTableTitleProps {
   columns: VirtualColumns[]
@@ -43,7 +43,7 @@ const VirtualTableTitle: React.FC<VirtualTableTitleProps> = (props) => {
                 // visible={opensPopover[filterKey]}
               >
                 <div onClick={() => {}} className={classNames(styles['virtual-table-title-filter-icon'])}>
-                  <FilterIcon />
+                  <FilterOutlined size={16} />
                 </div>
               </YakitPopover>
             )}

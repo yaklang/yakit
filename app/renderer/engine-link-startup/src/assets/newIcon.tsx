@@ -6,21 +6,6 @@ export interface IconProps extends CustomIconComponentProps {
   onClick: (e: React.MouseEvent) => void
 }
 
-const ShieldExclamationSvg = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M16.0002 3.11084C12.6646 6.09624 8.27919 7.93266 3.46597 7.99796C3.29118 9.03919 3.2002 10.1089 3.2002 11.1998C3.2002 19.5595 8.54297 26.6714 16.0002 29.3072C23.4574 26.6714 28.8002 19.5595 28.8002 11.1998C28.8002 10.1088 28.7092 9.03919 28.5344 7.99796C23.7212 7.93265 19.3357 6.09624 16.0002 3.11084ZM17.6002 22.3997C17.6002 23.2834 16.8839 23.9997 16.0002 23.9997C15.1165 23.9997 14.4002 23.2834 14.4002 22.3997C14.4002 21.5161 15.1165 20.7997 16.0002 20.7997C16.8839 20.7997 17.6002 21.5161 17.6002 22.3997ZM17.6002 11.1997C17.6002 10.3161 16.8839 9.59971 16.0002 9.59971C15.1165 9.59971 14.4002 10.3161 14.4002 11.1997V15.9997C14.4002 16.8834 15.1165 17.5997 16.0002 17.5997C16.8839 17.5997 17.6002 16.8834 17.6002 15.9997V11.1997Z"
-      fill="#FFB660"
-    />
-  </svg>
-)
-/** @name 盾牌感叹号 */
-export const ShieldExclamationSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={ShieldExclamationSvg} {...props} />
-}
-
 const CloseCircle = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -91,21 +76,6 @@ const Resizer = () => (
  */
 export const ResizerIcon = (props: Partial<IconProps>) => {
   return <Icon component={Resizer} {...props} />
-}
-
-const YaklangInstallHintSvg = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M16.0002 3.11115C12.6646 6.09654 8.27919 7.93296 3.46597 7.99826C3.29118 9.0395 3.2002 10.1092 3.2002 11.2001C3.2002 19.5598 8.54297 26.6717 16.0002 29.3075C23.4574 26.6717 28.8002 19.5598 28.8002 11.2001C28.8002 10.1092 28.7092 9.0395 28.5344 7.99826C23.7212 7.93296 19.3357 6.09654 16.0002 3.11115ZM17.6002 22.4C17.6002 23.2837 16.8839 24 16.0002 24C15.1165 24 14.4002 23.2837 14.4002 22.4C14.4002 21.5164 15.1165 20.8 16.0002 20.8C16.8839 20.8 17.6002 21.5164 17.6002 22.4ZM17.6002 11.2C17.6002 10.3164 16.8839 9.60001 16.0002 9.60001C15.1165 9.60001 14.4002 10.3164 14.4002 11.2V16C14.4002 16.8837 15.1165 17.6 16.0002 17.6C16.8839 17.6 17.6002 16.8837 17.6002 16V11.2Z"
-      fill="#FFB660"
-    />
-  </svg>
-)
-/** @name 安装引擎提示图标 */
-export const YaklangInstallHintSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={YaklangInstallHintSvg} {...props} />
 }
 
 const MacUIOpCloseSvg = () => (
@@ -204,21 +174,6 @@ export const GooglePhotosLogoSvgIcon = (props: Partial<CustomIconComponentProps>
   return <Icon component={GooglePhotosLogoSvg} {...props} />
 }
 
-const DocumentDuplicateSvg = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M5.33335 4.66667V10C5.33335 10.7364 5.93031 11.3333 6.66669 11.3333H10.6667M5.33335 4.66667V3.33333C5.33335 2.59695 5.93031 2 6.66669 2H9.72388C9.90069 2 10.0703 2.07024 10.1953 2.19526L13.1381 5.13807C13.2631 5.2631 13.3334 5.43266 13.3334 5.60948V10C13.3334 10.7364 12.7364 11.3333 12 11.3333H10.6667M5.33335 4.66667H4.66669C3.56212 4.66667 2.66669 5.5621 2.66669 6.66667V12.6667C2.66669 13.403 3.26364 14 4.00002 14H8.66669C9.77126 14 10.6667 13.1046 10.6667 12V11.3333"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-/** @name 复制图标(document-duplicate) */
-export const DocumentDuplicateSvgIcon = (props: Partial<CustomIconComponentProps>) => {
-  return <Icon component={DocumentDuplicateSvg} {...props} />
-}
-
 const CheckedSvg = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M2.5 6.5L4.5 8.5L9.5 3.5" stroke="#56C991" strokeLinecap="round" strokeLinejoin="round" />
@@ -242,19 +197,6 @@ export const ChevronUpIcon = (props: Partial<IconProps>) => {
   return <Icon component={ChevronUp} {...props} />
 }
 
-const ChevronDown = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M12.6668 6L8.00016 10.6667L3.3335 6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-
-/**
- * @description: 方向性：向下
- */
-export const ChevronDownIcon = (props: Partial<IconProps>) => {
-  return <Icon component={ChevronDown} {...props} />
-}
-
 const Check = () => (
   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
@@ -271,19 +213,6 @@ const Check = () => (
  */
 export const CheckIcon = (props: Partial<IconProps>) => {
   return <Icon component={Check} {...props} />
-}
-
-const Remove = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
-    <path d="M3 9L9 3M3 3L9 9" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-)
-
-/**
- * @description: x 删除图标
- */
-export const RemoveIcon = (props: Partial<IconProps>) => {
-  return <Icon component={Remove} {...props} />
 }
 
 const ChevronLeft = () => (

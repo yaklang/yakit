@@ -6,12 +6,13 @@ import {
   MacUIOpRestoreSvgIcon,
   WinUIOpCloseSvgIcon,
   WinUIOpMaxSvgIcon,
-  WinUIOpMinSvgIcon,
   WinUIOpRestoreSvgIcon,
 } from '../layout/icons'
 import styles from './index.module.scss'
 import classNames from 'classnames'
 import { yakitChildWindow, yakitSystem } from '@/services/electronBridge'
+
+import { MinusOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 // 平台图标类型
 interface IconSet {
@@ -41,7 +42,7 @@ const TitleBar: FC = () => {
                 close: <MacUIOpCloseSvgIcon />,
               }
             : {
-                min: <WinUIOpMinSvgIcon />,
+                min: <MinusOutlined size={20} />,
                 max: <WinUIOpMaxSvgIcon />,
                 restore: <WinUIOpRestoreSvgIcon />,
                 close: <WinUIOpCloseSvgIcon />,

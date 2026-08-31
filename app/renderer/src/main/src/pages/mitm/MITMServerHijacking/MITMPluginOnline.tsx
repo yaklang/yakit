@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Progress } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { SolidCloudDownloadIcon } from '@/assets/newIcon'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { randomString } from '@/utils/randomUtil'
 import { getReleaseEditionName, isCommunityEdition } from '@/utils/envfile'
@@ -11,6 +10,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { failed, yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import style from '../MITMPage.module.scss'
+import { CloudDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -94,7 +94,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     <YakitHint
       visible={visible}
       title={t('MITMPluginLocalList.cloud_plugins_downloading', { edition: getReleaseEditionName() })}
-      heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+      heardIcon={<CloudDownloadSolid size={32} style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={() => {
         StopAllPlugin()
         setVisible(false)

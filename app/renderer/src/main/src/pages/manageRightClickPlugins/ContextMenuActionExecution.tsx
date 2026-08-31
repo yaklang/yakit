@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { Form, Tooltip } from 'antd'
-import { OutlinePencilaltIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import { PencilAltOutlined, RefreshOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -394,14 +394,14 @@ export const ContextMenuActionExecution: React.FC<{ pageId: string; mode: 'dialo
           <Tooltip title={t('ContextMenuActionExecution.refreshPluginData')}>
             <YakitButton
               type="text2"
-              icon={<OutlineRefreshIcon />}
+              icon={<RefreshOutlined color="currentColor" />}
               onClick={onRefreshPlugin}
               disabled={pluginLoading}
             />
           </Tooltip>
           <div className="divider-style" />
           <Tooltip title={t('YakitButton.edit')}>
-            <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={handleOpenEdit} />
+            <YakitButton type="text2" icon={<PencilAltOutlined color="currentColor" />} onClick={handleOpenEdit} />
           </Tooltip>
         </>
       ),

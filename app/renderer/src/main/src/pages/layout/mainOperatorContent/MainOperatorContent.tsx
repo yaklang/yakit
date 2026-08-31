@@ -58,7 +58,7 @@ import {
 import classNames from 'classnames'
 import _ from 'lodash'
 import { routeConvertKey } from '../publicMenu/utils'
-import { CheckIcon, RemoveIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
+import { CheckIcon, SolidDocumentTextIcon } from '@/assets/newIcon'
 import type { RouteToPageProps } from '../publicMenu/PublicMenu'
 import { type SubscribeCloseType, type YakitSecondaryConfirmProps, useSubscribeClose } from '@/store/tabSubscribe'
 import { YakitModalConfirm, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -678,6 +678,7 @@ const getSubPageTotal = (subPage) => {
 }
 
 import { setChildWindowHash } from '@/utils/childWindowHash'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 export { getChildWindowHash, setChildWindowHash } from '@/utils/childWindowHash'
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
   const { routeKeyToLabel } = props
@@ -4169,7 +4170,8 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
               >
                 <div className={styles['tab-menu-item-verbose-wrapper']}>
                   <span className="content-ellipsis">{item.verboseKey ? t(item.verboseKey) : item.verbose || ''}</span>
-                  <RemoveIcon
+                  <XSolid
+                    size={12}
                     className={styles['remove-icon']}
                     onClick={(e) => {
                       e.stopPropagation()
@@ -6455,7 +6457,8 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                   <span className="content-ellipsis">{subItem.verbose || ''}</span>
                 </div>
                 {!unShowRemove && (
-                  <RemoveIcon
+                  <XSolid
+                    size={12}
                     className={classNames(styles['remove-icon'], {
                       [styles['remove-show-icon']]: isActive,
                     })}
@@ -6843,7 +6846,8 @@ const DroppableClone: React.FC<DroppableCloneProps> = React.memo((props) => {
           <SolidDocumentTextIcon className={styles['document-text-icon']} />
           <span className="content-ellipsis">{item.verbose || ''}</span>
         </div>
-        <RemoveIcon
+        <XSolid
+          size={12}
           className={classNames(styles['remove-icon'], {
             [styles['remove-show-icon']]: isActive,
           })}

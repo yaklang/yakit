@@ -35,10 +35,10 @@ import GraphChart from './GraphChart'
 import { GenerateKnowledge } from './GenerateKnowledge'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import React from 'react'
-import { YakitCloseSvgIcon } from '@/components/basics/icon'
 import classNames from 'classnames'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
 import { HubButton } from '@/pages/pluginHub/hubExtraOperate/funcTemplate'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -653,7 +653,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
                   <YakitSpin spinning={QueryEntityDetailLoading}>
                     <div className={styles['header']}>
                       <div>实体信息</div>
-                      <YakitCloseSvgIcon onClick={() => setSelectedSubERMId('')} />
+                      <XSolid size="1em" onClick={() => setSelectedSubERMId('')} />
                     </div>
                     <div className={styles['content']}>
                       <div className={styles['inner-box']}>

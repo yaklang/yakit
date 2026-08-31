@@ -10,7 +10,7 @@ import { LabelNodeItem } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAn
 import { MatcherAndExtractionValueList } from '@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { TrashOutlined, PencilAltOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import type { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
 import { defaultMITMBaseFilter, defaultMITMAdvancedFilter } from '@/defaultConstants/mitm'
 import cloneDeep from 'lodash/cloneDeep'
@@ -20,7 +20,6 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import type { FilterType } from './MITMFiltersModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { PencilAltIcon } from '@/assets/newIcon'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
 
@@ -370,7 +369,8 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                           }
                         }}
                       >
-                        <PencilAltIcon
+                        <PencilAltOutlined
+                          size={16}
                           className={classNames({
                             [styles['icon-active']]: editNameVisible && currentIndex === index,
                           })}

@@ -90,7 +90,7 @@ import type {
 } from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
 import { InheritLineIcon, InheritArrowIcon } from './icon'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { ArrowsExpandIcon, ArrowsRetractIcon, QuestionMarkCircleIcon } from '@/assets/newIcon'
+import { ArrowsExpandIcon, ArrowsRetractIcon } from '@/assets/newIcon'
 import { WebFuzzerNewEditor } from '../WebFuzzerNewEditor/WebFuzzerNewEditor'
 import { shallow } from 'zustand/shallow'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
@@ -1914,7 +1914,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
               ) : (
                 <>
                   {t('FuzzerSequence.sequence_configuration')}
-                  <QuestionMarkCircleIcon />
+                  <QuestionMarkCircleOutlined size={16} />
                 </>
               )}
             </span>
@@ -2139,7 +2139,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
           )}
         </div>
       </div>
-
       <React.Suspense fallback={<>loading...</>}>
         <ResponseCard
           showAllResponse={showAllResponse}

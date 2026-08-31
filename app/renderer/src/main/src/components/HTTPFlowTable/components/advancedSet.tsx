@@ -4,7 +4,6 @@ import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import { DragSortIcon } from '@/assets/newIcon'
 import { BanOutlined, InformationCircleOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
@@ -16,6 +15,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { AdvancedSetProps, ColumnAllInfoItem } from '../HTTPFlowTable.constants'
 import style from '../HTTPFlowTable.module.scss'
+import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   const {
@@ -237,7 +237,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
                           >
-                            <DragSortIcon />
+                            <FigmaIcon2281144183Solid size={12} />
                             <div className={style['column-title']}>{item.title}</div>
                             <Tooltip title={item.isShow ? t('YakitButton.disable') : t('YakitButton.enable')}>
                               <BanOutlined

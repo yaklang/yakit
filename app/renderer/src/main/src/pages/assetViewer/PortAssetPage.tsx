@@ -7,7 +7,7 @@ import { formatTimestamp } from '../../utils/timeUtil'
 import { YakEditor } from '../../utils/editors'
 import { useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './PortAssetPage.module.scss'
-import { RefreshIcon, TrashIcon } from '@/assets/newIcon'
+import { RefreshIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
@@ -26,6 +26,8 @@ import { PortTable } from './PortTable/PortTable'
 import { defQueryPortsRequest } from './PortTable/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import type { PortTableRefProps } from './PortTable/PortTableType'
+
+import { TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -248,7 +250,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 }}
                 placement="bottomRight"
               >
-                <YakitButton type="outline1" colors="danger" icon={<TrashIcon />}>
+                <YakitButton type="outline1" colors="danger" icon={<TrashOutlined size={16} />}>
                   {selectNumber > 0 ? t('YakitButton.delete') : t('YakitButton.clear')}
                 </YakitButton>
               </YakitPopconfirm>

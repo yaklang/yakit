@@ -1,6 +1,5 @@
 import { type Dispatch, type SetStateAction, useEffect, useMemo, type FC } from 'react'
 import type { KnowledgeBaseTableProps } from './KnowledgeBaseTable'
-import { ChevronDownIcon, PlusIcon } from '@/assets/newIcon'
 import { LightningBoltIcon } from '../icon/sidebarIcon'
 
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -11,6 +10,8 @@ import {
   TrashOutlined,
   FigmaIcon5237120699Outlined,
   FigmaIcon2017756Outlined,
+  ChevronDownOutlined,
+  PlusOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import { OutlineTimeIcon } from '@/assets/icon/bespokeOutline'
@@ -199,7 +200,7 @@ const KnowledgeBaseTableHeader: FC<
             >
               <YakitButton icon={<OutlineTimeIcon />} type="text2">
                 历史
-                <ChevronDownIcon />
+                <ChevronDownOutlined size={16} />
               </YakitButton>
             </YakitPopover>
           ) : null}
@@ -209,7 +210,7 @@ const KnowledgeBaseTableHeader: FC<
           </div>
           <YakitButton
             disabled={!knowledgeBaseItems.streamstep || knowledgeBaseItems.streamstep !== 'success'}
-            icon={<PlusIcon />}
+            icon={<PlusOutlined size={16} />}
             type="secondary2"
             onClick={async () => {
               try {

@@ -12,11 +12,12 @@ import { failed, warn } from '../../../utils/notification'
 import style from './WebsiteTree.module.scss'
 import { useMemoizedFn } from 'ahooks'
 import { ExportExcel } from '../../../components/DataExport/DataExport'
-import { ChevronDownIcon } from '@/assets/newIcon'
 import './WebsiteTreeStyle.css'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+
+import { ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 export interface WebsiteTreeViewerProp {
   pageMode?: boolean
@@ -291,7 +292,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                           }}
                         >
                           批量操作
-                          <ChevronDownIcon style={{ color: '#85899E' }} />
+                          <ChevronDownOutlined size={16} style={{ color: '#85899E' }} />
                         </Button>
                       ) : (
                         <Popover
@@ -329,7 +330,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             }}
                           >
                             批量操作
-                            <ChevronDownIcon style={{ color: '#85899E' }} />
+                            <ChevronDownOutlined size={16} style={{ color: '#85899E' }} />
                           </Button>
                         </Popover>
                       )}

@@ -18,8 +18,13 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { CloudDownloadIcon, DragSortIcon } from '@/assets/newIcon'
-import { OutlineBanIcon, OutlinePhotographIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
+import {
+  BanOutlined,
+  PhotographOutlined,
+  RefreshOutlined,
+  XOutlined,
+  CloudDownloadOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { PrivateOutlineDefaultPluginIcon } from '@/routes/privateIcon'
 import { YakitGetOnlinePlugin } from '@/pages/mitm/MITMServerHijacking/MITMPluginLocalList'
 import emiter from '@/utils/eventBus/eventBus'
@@ -28,6 +33,7 @@ import { fetchSceneActions } from './utils'
 import { grpcSetContextMenuActionBinding } from './api'
 import type { ContextMenuAction } from './types'
 import styles from './ManageRightClickPlugins.module.scss'
+import { FigmaIcon2281144183Solid } from '@yakit-libs/yakit-ui-icons/solid'
 
 /** 拖拽排序：将 startIndex 项移动到 endIndex */
 const reorder = <T,>(list: T[], startIndex: number, endIndex: number) => {
@@ -364,7 +370,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
                     ))}
                     {selectedActions.length === 0 && (
                       <div className={styles['selected-empty']}>
-                        <OutlinePhotographIcon className={styles['selected-empty-icon']} />
+                        <PhotographOutlined className={styles['selected-empty-icon']} color="currentColor" />
                         <div>
                           <div
                             className={classNames(styles['selected-empty-text'], styles['selected-empty-text-bold'])}
@@ -392,7 +398,7 @@ const ManageRightClickPlugins: React.FC<ManageRightClickPluginsProps> = () => {
               {t('ManageRightClickPlugins.rightClickPlugins')}
               <YakitButton
                 type="text2"
-                icon={<OutlineRefreshIcon />}
+                icon={<RefreshOutlined color="currentColor" />}
                 onClick={(e) => emiter.emit('refreshContextMenuPlugins')}
                 style={{ marginLeft: 2 }}
               />
@@ -458,7 +464,8 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
           [styles['selected-item-dragging']]: isDragging,
         })}
       >
-        <DragSortIcon
+        <FigmaIcon2281144183Solid
+          size={12}
           className={classNames({
             [styles['drag-icon-active']]: isDragging,
           })}
@@ -477,7 +484,10 @@ const SelectedPluginItem: React.FC<SelectedPluginItemProps> = React.memo((props)
           type="text2"
           disabled={locked}
           icon={
-            <OutlineXIcon className={classNames(styles['remove-icon'], { [styles['remove-icon-disabled']]: locked })} />
+            <XOutlined
+              className={classNames(styles['remove-icon'], { [styles['remove-icon-disabled']]: locked })}
+              color="currentColor"
+            />
           }
           onClick={() => onRemove(plugin)}
         />
@@ -523,7 +533,7 @@ const AvailablePluginList: React.FC<AvailablePluginListProps> = React.memo((prop
               <YakitEmpty title={t('ManageRightClickPlugins.noAvailablePlugins')}>
                 <YakitButton
                   type="outline1"
-                  icon={<CloudDownloadIcon />}
+                  icon={<CloudDownloadOutlined size={16} />}
                   disabled={getPluginVisible}
                   onClick={() => setGetPluginVisible(true)}
                 >
@@ -637,7 +647,7 @@ const AvailablePluginItem: React.FC<AvailablePluginItemProps> = React.memo((prop
       )}
       {destinationDrag === DROP_AVAILABLE && isDragging && (
         <div className={styles['drag-ban']}>
-          <OutlineBanIcon />
+          <BanOutlined color="currentColor" />
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@ import React, { memo, useEffect, useState } from 'react'
 import type { RefObject } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import { OutlineFlagIcon, OutlineViewlistIcon } from '@/assets/icon/outline'
+import { FlagOutlined, ViewListOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import {
   YakitDockablePane,
@@ -144,7 +144,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
               {
                 label: (
                   <span className={yakitDockablePaneSegmentedLabel}>
-                    <OutlineFlagIcon />
+                    <FlagOutlined color="currentColor" />
                     {t('AIAgentChatTemplate.tasklist')}
                   </span>
                 ),
@@ -154,7 +154,7 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
               {
                 label: (
                   <span className={yakitDockablePaneSegmentedLabel}>
-                    <OutlineViewlistIcon />
+                    <ViewListOutlined color="currentColor" />
                     {t('AIAgentChatTemplate.timeline')}
                   </span>
                 ),

@@ -1,4 +1,4 @@
-import { ArrowDownOutlined, ArrowUpOutlined, SearchOutlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { ArrowDownOutlined, ArrowUpOutlined, SearchOutlined, FilterOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Divider } from 'antd'
@@ -8,7 +8,6 @@ import classNames from 'classnames'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useInViewport, useUpdateEffect } from 'ahooks'
-import { FilterIcon } from '@/assets/newIcon'
 import type { HTTPFuzzerPageTableQuery } from './HTTPFuzzerPageTable'
 
 interface ExtractedFilterProps {
@@ -155,7 +154,9 @@ const TableFilterAndSorter: React.FC<TableFilterAndSorterProps> = memo((props) =
             })}
             onClick={() => setShowRange(true)}
           >
-            <div className={style['icon']}>{isSearch ? <SearchOutlined color="currentColor" /> : <FilterIcon />}</div>
+            <div className={style['icon']}>
+              {isSearch ? <SearchOutlined color="currentColor" /> : <FilterOutlined size={16} />}
+            </div>
             <div className={style['content']}>{t(isSearch ? 'YakitInput.search' : 'YakitTable.filter')}</div>
           </div>
         </>

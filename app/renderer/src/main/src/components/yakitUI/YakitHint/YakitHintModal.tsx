@@ -4,13 +4,13 @@ import { useDebounce, useMemoizedFn } from 'ahooks'
 import Draggable from 'react-draggable'
 import type { DraggableEvent, DraggableData } from 'react-draggable'
 import type { HintModalProps, YakitHintModalProps } from './YakitHintType'
-import { ShieldExclamationSvgIcon } from '@/assets/newIcon'
 import { YakitButton } from '../YakitButton/YakitButton'
-
 import classNames from 'classnames'
+
 import styles from './YakitHint.module.scss'
 import { Resizable } from 're-resizable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { ShieldExclamationSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
   const {
@@ -53,7 +53,9 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
         children={
           <>
             <div className={styles['container-left-wrapper']}>
-              <div className={styles['left-hint-icon']}>{heardIcon ? heardIcon : <ShieldExclamationSvgIcon />}</div>
+              <div className={styles['left-hint-icon']}>
+                {heardIcon ? heardIcon : <ShieldExclamationSolid color="#FFB660" size={32} />}
+              </div>
               <div className={styles['left-hint-icon-extra']}>{extraIcon}</div>
             </div>
 

@@ -3,31 +3,8 @@ import { useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualLis
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import type { QueryGeneralRequest } from '../invoker/schema'
 import { failed, info, yakitFailed, warn, success } from '@/utils/notification'
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-  DotsVerticalSvgIcon,
-  ImportSvgIcon,
-  OutlinePlusIcon,
-  PlusBoldSvgIcon,
-  PlusIcon,
-  QuestionMarkCircleIcon,
-  ResizerIcon,
-  TrashIcon,
-} from '@/assets/newIcon'
-import {
-  DocumentAddSvgIcon,
-  DocumentDownloadSvgIcon,
-  DocumentTextSvgIcon,
-  FolderOpenSvgIcon,
-  ProjectDocumentTextSvgIcon,
-  ProjectExportSvgIcon,
-  ProjectFolderOpenSvgIcon,
-  ProjectImportSvgIcon,
-  ProjectViewGridSvgIcon,
-  TemporaryProjectSvgIcon,
-} from './icon'
+import { ChevronRightIcon, ChevronUpIcon, ImportSvgIcon, ResizerIcon } from '@/assets/newIcon'
+import { DocumentAddSvgIcon, DocumentDownloadSvgIcon, DocumentTextSvgIcon, FolderOpenSvgIcon } from './icon'
 import ReactResizeDetector from 'react-resize-detector'
 import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -47,6 +24,10 @@ import {
   PencilAltOutlined,
   TrashOutlined,
   FigmaIcon2017756Outlined,
+  ChevronDownOutlined,
+  DotsVerticalOutlined,
+  PlusOutlined,
+  QuestionMarkCircleOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
 
 import classNames from 'classnames'
@@ -89,6 +70,15 @@ import {
   type ProjectIOProgress,
 } from './projectUtils'
 
+import {
+  DocumentTextSolid,
+  FigmaIcon6500198204Solid,
+  FolderOpenSolid,
+  DocumentDownloadSolid,
+  ViewGridSolid,
+  ClockSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
+
 /** 表头描述数据对象 */
 interface HeaderProp<T> {
   key: string
@@ -108,16 +98,16 @@ interface FilterInfoProps {
 
 /** 项目名过滤项 */
 const typeFilter: FilterInfoProps[] = [
-  { key: 'all', label: '全部文件', itemIcon: <ProjectViewGridSvgIcon className={styles['all-icon']} /> },
+  { key: 'all', label: '全部文件', itemIcon: <ViewGridSolid size={16} className={styles['all-icon']} /> },
   {
     key: 'project',
     label: '项目',
-    itemIcon: <ProjectDocumentTextSvgIcon className={styles['project-icon']} />,
+    itemIcon: <DocumentTextSolid size={24} className={styles['project-icon']} />,
   },
   {
     key: 'file',
     label: '文件夹',
-    itemIcon: <ProjectFolderOpenSvgIcon className={styles['floder-icon']} />,
+    itemIcon: <FolderOpenSolid size={24} className={styles['floder-icon']} />,
   },
 ]
 
@@ -286,7 +276,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 {typeShow ? (
                   <ChevronUpIcon className={styles['icon-style']} />
                 ) : (
-                  <ChevronDownIcon className={styles['icon-style']} />
+                  <ChevronDownOutlined size={16} className={styles['icon-style']} />
                 )}
               </div>
             </DropdownMenu>
@@ -300,9 +290,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               data-project-name={data.ProjectName}
             >
               {!data.Type || data.Type === getEnvTypeByProjects() ? (
-                <ProjectDocumentTextSvgIcon className={styles['opt-project-icon']} />
+                <DocumentTextSolid size={24} className={styles['opt-project-icon']} />
               ) : (
-                <ProjectFolderOpenSvgIcon className={styles['opt-floder-icon']} />
+                <FolderOpenSolid size={24} className={styles['opt-floder-icon']} />
               )}
               <div className={styles['project-style']} title={data.ProjectName}>
                 {data.ProjectName}
@@ -445,7 +435,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 {timeShow ? (
                   <ChevronUpIcon className={styles['icon-style']} />
                 ) : (
-                  <ChevronDownIcon className={styles['icon-style']} />
+                  <ChevronDownOutlined size={16} className={styles['icon-style']} />
                 )}
               </div>
             </DropdownMenu>
@@ -492,12 +482,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 {
                   key: 'newProject',
                   label: t('ProjectManage.newSubproject'),
-                  itemIcon: <ProjectDocumentTextSvgIcon className={styles['project-icon']} />,
+                  itemIcon: <DocumentTextSolid size={24} className={styles['project-icon']} />,
                 },
                 {
                   key: 'newFolder',
                   label: t('ProjectManage.newSubfolder'),
-                  itemIcon: <ProjectFolderOpenSvgIcon className={styles['floder-icon']} />,
+                  itemIcon: <FolderOpenSolid size={24} className={styles['floder-icon']} />,
                 },
               ],
               className: styles['dropdown-menu-body'],
@@ -512,7 +502,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 [styles['btn-focus-style']]: operateShow >= 0 && operateShow === +Id,
               })}
             >
-              <OutlinePlusIcon className={styles['btn-style']} />
+              <PlusOutlined size={16} className={styles['btn-style']} />
             </div>
           </DropdownMenu>
         ) : (
@@ -544,7 +534,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             </div>
           </DropdownMenu>
         )}
-
         {info.ProjectName !== '[default]' && (info?.OnlineSubTaskID || '').length === 0 && (
           <>
             <div className={styles['divider-style']}>
@@ -555,7 +544,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             </div>
           </>
         )}
-
         {info.ProjectName !== '[default]' && (
           <>
             <div className={styles['divider-style']}>
@@ -1226,7 +1214,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                       [styles['icon-focus-body']]: headerShow,
                     })}
                   >
-                    <DotsVerticalSvgIcon />
+                    <DotsVerticalOutlined size={20} />
                   </div>
                 </DropdownMenu>
               </div>
@@ -1246,11 +1234,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           >
             <div className={styles['btn-body']}>
               <div className={styles['body-title']}>
-                <TemporaryProjectSvgIcon className={styles['temporary-project-icon']} />
+                <ClockSolid color="#35D8EE" size={20} className={styles['temporary-project-icon']} />
                 {t('ProjectManage.temporaryProject')}
               </div>
               <div className={styles['icon-style']}>
-                <PlusBoldSvgIcon />
+                <PlusOutlined size={20} />
               </div>
             </div>
           </div>
@@ -1265,7 +1253,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 {t('ProjectManage.newProject')}
               </div>
               <div className={styles['icon-style']}>
-                <PlusBoldSvgIcon />
+                <PlusOutlined size={20} />
               </div>
             </div>
           </div>
@@ -1280,7 +1268,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 {t('YakitButton.newFolder')}
               </div>
               <div className={styles['icon-style']}>
-                <PlusBoldSvgIcon />
+                <PlusOutlined size={20} />
               </div>
             </div>
           </div>
@@ -1503,7 +1491,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           </YakitSpin>
         </div>
       </div>
-
       <NewProjectAndFolder
         {...modalInfo}
         setVisible={(open: boolean) => setModalInfo({ visible: open })}
@@ -1511,13 +1498,11 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         setLoading={setModalLoading}
         onModalSubmit={onModalSubmit}
       />
-
       <TransferProject
         {...transferShow}
         onSuccess={onTransferProjectHint}
         setVisible={(open: boolean) => setTransferShow({ visible: open })}
       />
-
       <YakitHint
         visible={delShow}
         title={delId.Type === 'file' ? t('ProjectManage.deleteFolder') : t('ProjectManage.deleteProject')}
@@ -1541,7 +1526,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         onOk={() => delProjectFolder(false)}
         onCancel={() => delProjectFolder(true)}
       />
-
       <YakitHint
         visible={inquireIntoProjectVisible}
         title={t('ProjectManage.hint')}
@@ -1570,7 +1554,6 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           setInquireIntoProjectVisible(false)
         }}
       />
-
       <YakitHint
         visible={detectionTemporaryProjectVisible}
         title={t('ProjectManage.hint')}
@@ -2104,7 +2087,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                   dropdownClassName={styles['cascader-dropdown-body']}
                   open={dropShow}
                   onDropdownVisibleChange={(open: boolean) => setDropShow(open)}
-                  suffixIcon={<ChevronDownIcon style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />}
+                  suffixIcon={
+                    <ChevronDownOutlined size={16} style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
+                  }
                 />
               </Form.Item>
             )}
@@ -2157,7 +2142,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                   <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     {t('NewProjectAndFolder.mysqlAddress')}
                     <Tooltip title={t('NewProjectAndFolder.mysqlAddressTooltip')}>
-                      <QuestionMarkCircleIcon className={styles['icon-question']} />
+                      <QuestionMarkCircleOutlined size={16} className={styles['icon-question']} />
                     </Tooltip>{' '}
                     :
                   </div>
@@ -2212,7 +2197,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         size="small"
                       >
                         {t('YakitButton.add')}
-                        <PlusIcon />
+                        <PlusOutlined size={16} />
                       </YakitButton>
                     </span>
                   </div>
@@ -2333,7 +2318,9 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                     }
                   }}
                   dropdownClassName={styles['cascader-dropdown-body']}
-                  suffixIcon={<ChevronDownIcon style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />}
+                  suffixIcon={
+                    <ChevronDownOutlined size={16} style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />
+                  }
                 />
               </Form.Item>
             )}
@@ -2350,7 +2337,6 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
           </div>
         </Form.Item>
       </Form>
-
       <TransferProject
         usedBy="NewProjectAndFolder"
         {...transferShow}
@@ -2507,8 +2493,8 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
           <div className={styles['transfer-project-wrapper']}>
             <div className={styles['modal-left-wrapper']}>
               <div className={styles['modal-icon']}>
-                {isExport && <ProjectExportSvgIcon />}
-                {isImport && <ProjectImportSvgIcon />}
+                {isExport && <FigmaIcon6500198204Solid color="#FFB660" size={32} />}
+                {isImport && <DocumentDownloadSolid color="#FFB660" size={32} />}
               </div>
             </div>
 
@@ -2654,7 +2640,8 @@ const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef
                     className={styles['variable-list-panel']}
                     extra={
                       <div className={styles['extra-wrapper']}>
-                        <TrashIcon
+                        <TrashOutlined
+                          size={16}
                           onClick={(e) => {
                             e.stopPropagation()
                             if (onDel) onDel(i)
@@ -2677,7 +2664,7 @@ const VariableProjectList: React.FC<VariableProjectListProps> = React.forwardRef
                       add({ Key: '', Value: '', Type: 'raw' })
                       onSetActiveKey([...(variableActiveKey || []), `${variableActiveKey?.length}`])
                     }}
-                    icon={<PlusIcon />}
+                    icon={<PlusOutlined size={16} />}
                     block
                   >
                     {t('YakitButton.add')}

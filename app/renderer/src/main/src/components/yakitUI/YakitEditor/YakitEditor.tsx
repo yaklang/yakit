@@ -112,7 +112,7 @@ import {
   SmartDecodeFloatPanel,
   snapshotRect,
 } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
-import { OutlineCogIcon } from '@/assets/icon/outline'
+import { CogOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ManageRightClickPluginsTabKey } from '@/pages/manageRightClickPlugins/constants'
 import { checkContextMenuVersion } from '@/pages/manageRightClickPlugins/utils'
@@ -411,7 +411,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         key: PLUGIN_RIGHT_MAG + ManageRightClickPluginsTabKey.PacketContextMenu,
         label: (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <OutlineCogIcon />
+            <CogOutlined color="currentColor" />
             {t('YakitEditor.manageRightClickPlugins')}
           </div>
         ),

@@ -1,7 +1,7 @@
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import type { TooltipRenderProps } from 'react-joyride'
 import styles from './custom-joyride-tooltip.module.scss'
-import { YakitCloseSvgIcon } from '@/components/basics/icon'
+import { XSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 export const CustomJoyrideTooltip = (props: TooltipRenderProps) => {
   const { index, size, step, backProps, primaryProps, closeProps, tooltipProps } = props
@@ -14,14 +14,12 @@ export const CustomJoyrideTooltip = (props: TooltipRenderProps) => {
           <div className={styles.joyrideStepsHeaderTitle}>{step.title}</div>
           {/* 关闭按钮 */}
           <YakitButton type="text2" {...closeProps}>
-            <YakitCloseSvgIcon />
+            <XSolid size="1em" />
           </YakitButton>
         </div>
       </div>
-
       {/* Content */}
       <div className={styles.joyrideStepsContent}>{step.content}</div>
-
       {/* Footer */}
       <div className={styles.joyrideStepsFooter}>
         {/* 右下角：步骤 */}

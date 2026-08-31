@@ -12,8 +12,12 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { Divider, Form } from 'antd'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import { ArrowCircleRightOutlined, QuestionMarkCircleOutlined, XOutlined } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlineExitIcon } from '@/assets/bespokeIcons'
+import {
+  ArrowCircleRightOutlined,
+  FigmaIcon28011794Outlined,
+  QuestionMarkCircleOutlined,
+  XOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { EngineModeVerbose } from '../../utils'
 const Editor = React.lazy(() => import('@/components/Editor').then((m) => ({ default: m.Editor })))
@@ -311,7 +315,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
           </div>
           <div className={styles['footer-btn']}>
             <span className={styles['exit-btn']} onClick={() => yakitApp.closeWindow()}>
-              <OutlineExitIcon className={styles['exit-icon']} />
+              <FigmaIcon28011794Outlined className={styles['exit-icon']} color="currentColor" size={16} />
               {t('RemoteEngine.exit')}
             </span>
             <Divider type="vertical"></Divider>

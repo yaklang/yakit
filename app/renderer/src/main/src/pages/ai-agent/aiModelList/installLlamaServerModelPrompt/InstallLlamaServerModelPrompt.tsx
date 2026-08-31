@@ -18,9 +18,9 @@ import {
   grpcDownloadLocalModel,
   grpcInstallLlamaServer,
 } from '../utils'
-import { SolidCloudDownloadIcon } from '@/assets/newIcon'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { CloudDownloadSolid } from '@yakit-libs/yakit-ui-icons/solid'
 const { ipcRenderer } = window.require('electron')
 
 export const InstallLlamaServerModelPrompt: React.FC<InstallLlamaServerModelPromptProps> = React.memo((props) => {
@@ -118,7 +118,7 @@ export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo(
     <YakitHint
       visible={true}
       title={title}
-      heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+      heardIcon={<CloudDownloadSolid size={32} style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={onBack}
       okButtonProps={{ style: { display: 'none' } }}
       isDrag={true}

@@ -19,8 +19,7 @@ import type {
   StreamStatus,
 } from './types'
 import styles from './KnowledgeBaseList.module.scss'
-import { PlusIcon, TrashIcon } from '@/assets/newIcon'
-import { PencilAltOutlined, ChatAlt2Outlined } from '@yakit-libs/yakit-ui-icons/outline'
+import { PencilAltOutlined, ChatAlt2Outlined, PlusOutlined, TrashOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { PlaySolid } from '@yakit-libs/yakit-ui-icons/solid'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -238,7 +237,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
               style={{ width: 200 }}
               size="small"
             />
-            <YakitButton type="primary" size="small" icon={<PlusIcon />} onClick={handleOpenCreate}>
+            <YakitButton type="primary" size="small" icon={<PlusOutlined size={16} />} onClick={handleOpenCreate}>
               {t('playground.KnowledgeBaseList.addKnowledgeBase')}
             </YakitButton>
           </Space>
@@ -334,7 +333,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                               type="text2"
                               size="small"
                               colors="danger"
-                              icon={<TrashIcon />}
+                              icon={<TrashOutlined size={16} />}
                               onClick={(e) => e.stopPropagation()}
                             />
                           </YakitPopconfirm>
@@ -367,7 +366,6 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
           </div>
         )}
       </AutoCard>
-
       <YakitModal
         title={
           editingKb

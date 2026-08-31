@@ -6,8 +6,8 @@ import {
   ChevronDownOutlined,
   TrashOutlined,
   CloudDownloadOutlined,
+  PlusOutlined,
 } from '@yakit-libs/yakit-ui-icons/outline'
-import { OutlinePlusIcon } from '@/assets/newIcon'
 import { DownFilesModal } from '@/components/MilkdownEditor/CustomFile/CustomFile'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -377,7 +377,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
               {t('YakitButton.batchDownload')}
             </YakitButton>
             <Divider type="vertical" style={{ margin: 0 }} />
-            <YakitButton type="primary" icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
+            <YakitButton type="primary" icon={<PlusOutlined size={16} />} onClick={() => goAddNotepad()}>
               {t('YakitButton.new')}
             </YakitButton>
           </div>

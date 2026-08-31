@@ -13,19 +13,6 @@ import type {
   SystemRouteMenuDataItemProps,
 } from './CustomizeMenuType'
 import style from './CustomizeMenu.module.scss'
-import {
-  BanIcon,
-  RemoveIcon,
-  DragSortIcon,
-  PhotographIcon,
-  PlusIcon,
-  TrashIcon,
-  ArrowLeftIcon,
-  QuestionMarkCircleIcon,
-  TerminalIcon,
-  PencilAltIcon,
-  ShieldExclamationIcon,
-} from '@/assets/newIcon'
 import { SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon } from '@/assets/icon/colors'
 import classNames from 'classnames'
 import {
@@ -79,6 +66,23 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useTheme } from '@/hook/useTheme'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+import {
+  BanOutlined,
+  PlusOutlined,
+  TrashOutlined,
+  ArrowLeftOutlined,
+  QuestionMarkCircleOutlined,
+  TerminalOutlined,
+  PencilAltOutlined,
+} from '@yakit-libs/yakit-ui-icons/outline'
+
+import {
+  XSolid,
+  FigmaIcon2281144183Solid,
+  PhotographSolid,
+  ShieldExclamationSolid,
+} from '@yakit-libs/yakit-ui-icons/solid'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -504,7 +508,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             }}
             className="modal-remove-icon"
           >
-            <RemoveIcon />
+            <XSolid size={12} />
           </div>
         ),
         onOk: () => onSave(),
@@ -549,7 +553,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
       <div className={style['left']}>
         <div className={style['left-heard']}>
           <div className={style['display-flex']}>
-            <ArrowLeftIcon className={style['content-icon']} onClick={() => onTip()} />
+            <ArrowLeftOutlined size={16} className={style['content-icon']} onClick={() => onTip()} />
             <div className={style['left-title']}>
               {isCommunityEdition()
                 ? t('CustomizeMenu.editCommonPlugins')
@@ -562,7 +566,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             </div>
           </div>
           <div>
-            <PlusIcon className={style['content-icon']} onClick={() => onAddFirstMenu()} />
+            <PlusOutlined size={16} className={style['content-icon']} onClick={() => onAddFirstMenu()} />
           </div>
         </div>
         <div className={style['left-content']}>
@@ -626,7 +630,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
           <div className={style['subMenu-edit-modal-heard']}>
             <div className={style['subMenu-edit-modal-title']}>{t('CustomizeMenu.editMenuName')}</div>
             <div className={style['close-icon']} onClick={() => setVisibleSubMenu(false)}>
-              <RemoveIcon />
+              <XSolid size={12} />
             </div>
           </div>
           <div className={style['subMenu-edit-modal-body']}>
@@ -663,7 +667,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         bodyStyle={{ padding: 0 }}
       >
         <div className={style['confirm-modal']}>
-          <ShieldExclamationIcon className={style['confirm-icon']} />
+          <ShieldExclamationSolid size={32} className={style['confirm-icon']} />
           <div className={style['confirm-text']}>{t('CustomizeMenu.emptyMenuDetected')}</div>
           <div className={style['confirm-tip']}>
             {t('CustomizeMenu.emptyMenuWarning', { emptyMenuLength, tip: t(tip) })}
@@ -790,7 +794,8 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
       onClick={() => onSelect(menuItem)}
     >
       <div className={classNames(style['display-flex'], style['first-menu-item-left'])}>
-        <DragSortIcon
+        <FigmaIcon2281144183Solid
+          size={12}
           className={classNames(style['content-icon'], {
             [style['content-icon-active']]: isDragging,
           })}
@@ -800,7 +805,8 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
         </div>
       </div>
       <div className={style['first-sub-menu-number']}>{menuItem.children?.length || 0}</div>
-      <TrashIcon
+      <TrashOutlined
+        size={16}
         className={style['trash-icon']}
         onClick={(e) => {
           e.stopPropagation()
@@ -809,7 +815,7 @@ const FirstMenuItem: React.FC<FirstMenuItemProps> = React.memo((props) => {
       />
       {!destinationDrag && isDragging && (
         <div className={style['first-drag-state']}>
-          <BanIcon />
+          <BanOutlined size={16} />
         </div>
       )}
     </div>
@@ -839,7 +845,7 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                 placement="bottomRight"
               >
                 <div className={style['trash-style']}>
-                  <TrashIcon />
+                  <TrashOutlined size={16} />
                 </div>
               </YakitPopconfirm>
             }
@@ -853,7 +859,6 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
           {t('CustomizeMenu.SecondMenu.featureAdded')} {subMenuData.length}/{UpperLimit}
         </div>
       </div>
-
       <div className={style['second-menu-list']}>
         <Droppable droppableId="droppable2">
           {(provided, snapshot) => {
@@ -886,7 +891,7 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
                 ))}
                 {subMenuData.length === 0 && (
                   <div className={style['second-menu-no-data']}>
-                    <PhotographIcon className={style['second-menu-photograph-icon']} />
+                    <PhotographSolid size={24} className={style['second-menu-photograph-icon']} />
                     <div>
                       <div className={classNames(style['second-menu-text'], style['second-menu-text-bold'])}>
                         {t('CustomizeMenu.SecondMenu.noFeatureAdded')}
@@ -929,7 +934,8 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
           [style['menu-item-drag']]: isDragging,
         })}
       >
-        <DragSortIcon
+        <FigmaIcon2281144183Solid
+          size={12}
           className={classNames({
             [style['content-icon-active']]: isDragging,
           })}
@@ -941,7 +947,11 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
               {menuItem.labelUi ? t(menuItem.labelUi) : menuItem.label}
             </span>
             {menuItem.page === YakitRoute.Plugin_OP && (
-              <PencilAltIcon className={style['second-menu-edit-icon']} onClick={() => onEdit(menuItem)} />
+              <PencilAltOutlined
+                size={16}
+                className={style['second-menu-edit-icon']}
+                onClick={() => onEdit(menuItem)}
+              />
             )}
           </div>
           <div className={style['second-menu-describe']}>
@@ -951,7 +961,7 @@ const SecondMenuItem: React.FC<SecondMenuItemProps> = React.memo((props) => {
         <YakitButton
           size="small"
           type="text2"
-          icon={<RemoveIcon className={style['close-icon']} />}
+          icon={<XSolid size={12} className={style['close-icon']} />}
           onClick={() => onRemoveSecondMenu(menuItem)}
         />
       </div>
@@ -1118,7 +1128,7 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
           placement="topRight"
           overlayClassName={style['question-tooltip']}
         >
-          <QuestionMarkCircleIcon className={style['menu-question-icon']} />
+          <QuestionMarkCircleOutlined size={16} className={style['menu-question-icon']} />
         </Tooltip>
       </div>
       {(isDragDisabled && (
@@ -1143,7 +1153,7 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
       )}
       {destinationDrag === 'droppable3' && isDragging && (
         <div className={style['first-drag-state']}>
-          <BanIcon />
+          <BanOutlined size={16} />
         </div>
       )}
     </div>
@@ -1342,10 +1352,9 @@ const PluginLocalItem: React.FC<PluginLocalItemProps> = React.memo((props) => {
           {t('YakitButton.add')}
         </YakitButton>
       )}
-
       {destinationDrag === 'droppable4' && isDragging && (
         <div className={style['first-drag-state']}>
-          <BanIcon />
+          <BanOutlined size={16} />
         </div>
       )}
     </div>
@@ -1397,7 +1406,7 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
           }
         }}
       >
-        <QuestionMarkCircleIcon className={style['plugin-local-icon']} />
+        <QuestionMarkCircleOutlined size={16} className={style['plugin-local-icon']} />
       </Tooltip>
       <YakitPopover
         placement="topRight"
@@ -1409,7 +1418,7 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
           }
         }}
       >
-        <TerminalIcon className={style['plugin-local-icon']} />
+        <TerminalOutlined size={16} className={style['plugin-local-icon']} />
       </YakitPopover>
     </>
   )

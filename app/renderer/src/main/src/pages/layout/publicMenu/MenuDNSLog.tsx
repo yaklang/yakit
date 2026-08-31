@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { ArrowNarrowRightIcon, ChevronDownIcon, ChevronUpIcon, QuitIcon, RefreshIcon } from '@/assets/newIcon'
+import { ChevronUpIcon, QuitIcon, RefreshIcon } from '@/assets/newIcon'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { type DNSLogEvent, DNS_LOG_PAGE_UPDATE_TOKEN, type SendMenuDnslogProps } from '@/pages/dnslog/DNSLogPage'
@@ -19,6 +19,8 @@ import { LoadingOutlined } from '@ant-design/icons'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { getReleaseEditionName } from '@/utils/envfile'
+
+import { ArrowNarrowRightOutlined, ChevronDownOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -351,7 +353,6 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         refreshMode={'debounce'}
         refreshRate={50}
       />
-
       <div className={styles['dnslog-generate-host']}>
         <div className={domain ? styles['generated-wrapper'] : styles['generate-wrapper']}>
           <div className={styles['title-style']}>
@@ -379,7 +380,6 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
           </YakitButton>
         )}
       </div>
-
       <div className={styles['dnslog-arrow-right-wrapper']}>
         <div className={styles['dnslog-arrow-right-body']}>
           <div className={styles['title-style']}>
@@ -404,11 +404,10 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             )}
           </div>
           <div className={styles['icon-style']}>
-            <ArrowNarrowRightIcon />
+            <ArrowNarrowRightOutlined size={16} />
           </div>
         </div>
       </div>
-
       <div className={styles['dnslog-list-wrapper']}>
         <div className={styles['dnslog-list-body']}>
           {lastRecords.map((item, index) => {
@@ -438,7 +437,9 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
             visible={listShow}
             onVisibleChange={(visible) => setListShow(visible)}
           >
-            <div className={styles['body-style']}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
+            <div className={styles['body-style']}>
+              {listShow ? <ChevronUpIcon /> : <ChevronDownOutlined size={16} />}
+            </div>
           </YakitPopover>
         </div>
       </div>

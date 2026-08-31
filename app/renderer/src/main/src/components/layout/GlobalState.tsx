@@ -7,14 +7,7 @@ import { ExclamationIcon } from '@/assets/newIcon'
 import type { YakitSystem } from '@/yakitGVDefine'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
-import {
-  ErrorIcon,
-  HelpIcon,
-  ShieldCheckIcon as AllShieldCheckIcon,
-  SuccessIcon,
-  WarningIcon,
-  RocketIcon,
-} from './globalStateIcon'
+import { ErrorIcon, HelpIcon, SuccessIcon, WarningIcon, RocketIcon } from './globalStateIcon'
 import { showConfigSystemProxyForm, showConfigChromePathForm } from '@/utils/ConfigSystemProxy'
 import { ConfigGlobalReverse } from '@/utils/ConfigGlobalReverse'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
@@ -51,6 +44,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { ShieldCheckOutlined } from '@yakit-libs/yakit-ui-icons/outline'
 import { yakitApp, yakitHost, yakitPlugin, yakitReverse } from '@/services/electronBridge'
+
+import { ShieldCheckSolid } from '@yakit-libs/yakit-ui-icons/solid'
 
 /** 不同状态下展示的ICON */
 const ShowIcon: Record<string, ReactNode> = {
@@ -1380,7 +1375,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
       </YakitPopover>
       <YakitHint
         visible={pcapHintShow}
-        heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
+        heardIcon={pcapResult ? <ShieldCheckSolid color="#56C991" size={32} /> : undefined}
         title={pcapResult ? t('Home.netcardAccessGranted') : t('Home.netcardNoAccess')}
         width={600}
         content={
