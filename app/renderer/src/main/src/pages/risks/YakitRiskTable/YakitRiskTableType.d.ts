@@ -87,6 +87,12 @@ export interface YakitRiskSelectTagProps {
   onSave: (info: Risk) => void
 }
 
+export interface YakitRiskEditFormProps {
+  info: Risk
+  onClose?: () => void
+  onSave: (info: Risk) => void
+}
+
 export interface YakitCodeScanRiskDetailsProps {
   className?: string
   info: Risk
