@@ -286,6 +286,7 @@
     "doNotRemindAgain": "不再提醒"
   },
   "YakitTag": {
+    "none": "无",
     "critical": "严重",
     "high": "高危",
     "warning": "中危",
