@@ -156,19 +156,41 @@
     }
   }
   .select-ai-icon-wrapper {
-    background: var(--Colors-Use-Success-Bg-Hover);
+    background: var(--Colors-Use-Success-Primary);
+    svg {
+      color: var(--Colors-Use-Basic-Background);
+    }
   }
   .select-yolo-icon-wrapper {
-    background: var(--Colors-Use-Error-Bg-Hover);
+    background: var(--Colors-Use-Error-Primary);
+    svg {
+      color: var(--Colors-Use-Basic-Background);
+    }
   }
   .select-manual-icon-wrapper {
-    background: var(--Colors-Use-Purple-Bg-Hover);
+    background: var(--Colors-Use-Purple-Primary);
+    svg {
+      color: var(--Colors-Use-Basic-Background);
+    }
   }
 }
 
 @container ai-chat-textarea (max-width: 300px) {
   .select-option-text {
     display: none;
+  }
+}
+
+/* 已选场景有关闭按钮时不展示下拉箭头，并去掉箭头预留宽度 */
+.ai-chat-select-wrapper:has([data-select-clear]) {
+  :global {
+    .ant-select-arrow {
+      display: none;
+    }
+    .ant-select-single.ant-select-show-arrow .ant-select-selection-item,
+    .ant-select-single.ant-select-show-arrow .ant-select-selection-placeholder {
+      padding-right: 0;
+    }
   }
 }
 

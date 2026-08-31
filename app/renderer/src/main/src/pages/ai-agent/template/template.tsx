@@ -132,7 +132,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [
         { type: AIInputInnerFeatureEnum.AIReviewRuleSelect },
         { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } },
-        { type: AIInputInnerFeatureEnum.AIReasoningEffortSelect },
       ]
     }, [props.footerLeftTypes, isOpen])
 
@@ -402,6 +401,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
                 <AIRunModeSelect />
+                <AIReasoningEffortSelect />
 
                 <OpenFileDropdown cb={onSetFileMention} onSelectImage={onSelectImage}>
                   <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />

@@ -1,6 +1,18 @@
 .todoList-wrapper {
   height: 33px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  padding: 0 12px 0 4px;
+  overflow: visible;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
   .to-do-list {
-    margin: 2px 4px 0 4px;
+    width: 100%;
+    max-width: 784px;
+    margin: 2px 0 0;
   }
 }
