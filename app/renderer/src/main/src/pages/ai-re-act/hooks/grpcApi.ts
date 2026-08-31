@@ -1329,8 +1329,6 @@ export interface AIReActSchedule {
   LastSkipReason?: string
   LastStartedAt?: number
   LastFinishedAt?: number
-  /** 已运行次数（后端返回时展示） */
-  RunCount?: number
 }
 
 export interface CreateAIReActScheduleRequest {

@@ -21,14 +21,11 @@ const unixNumber = (value?: number | string) => Number(value || 0)
 
 const formatTime = (value?: number | string) => {
   const timestamp = unixNumber(value)
-  return timestamp > 0 ? moment.unix(timestamp).format('YYYY-MM-DD HH:mm') : '-'
+  return timestamp > 0 ? moment.unix(timestamp).format('YYYY-MM-DD HH:mm:ss') : '-'
 }
-
-const formatCompactTime = (value?: number | string) => {
-  const timestamp = unixNumber(value)
-  return timestamp > 0 ? moment.unix(timestamp).format('MM-DD HH:mm') : '-'
-}
-
+/**
+ * 兜底也是按每天一次的频率来处理，避免出现无法解析的情况
+ */
 export const frequencyToRRule = (frequency: FrequencyPreset, startAt: Moment, intervalMinutes = 5) => {
   switch (frequency) {
     case 'once':
@@ -48,6 +45,9 @@ export const frequencyToRRule = (frequency: FrequencyPreset, startAt: Moment, in
   }
 }
 
+/**
+ * 将 rrule 转换为频率类型，兜底按每天一次的频率来处理，避免出现无法解析的情况
+ */
 export const rruleToFrequency = (rrule: string): FrequencyPreset => {
   const normalized = rrule.toUpperCase()
   if (normalized.includes('COUNT=1')) return 'once'
@@ -113,7 +113,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
     return options
   }, [editing?.TargetMode, i18nRefresh])
 
-  // 预览请求防抖：表单值变化后 250ms 内不再重复请求
+  // 预览请求防抖：表单值变化后 500ms 内不再重复请求
   const fetchPreviewTimes = useDebounceFn(
     useMemoizedFn(() => {
       if (!frequency || !startAt) {
@@ -151,7 +151,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
       const schedule: AIReActSchedule = {
         UUID: editing?.UUID || '',
         Name: values.Name.trim(),
-        Status: editing?.Status === 'paused' ? 'paused' : 'active',
+        Status: editing?.Status ?? '',
         TargetMode: values.TargetMode,
         // 编辑 continue_session 任务时原样保留关联会话；切换为独立模式则清空
         TargetSessionID: values.TargetMode === 'continue_session' ? editing?.TargetSessionID || '' : '',
@@ -179,9 +179,9 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         MaxRuntimeSeconds: editing?.MaxRuntimeSeconds || 7200,
       }
       if (editing) {
-        await grpcUpdateAIReActSchedule({ Schedule: schedule }, true)
+        await grpcUpdateAIReActSchedule({ Schedule: schedule })
       } else {
-        await grpcCreateAIReActSchedule({ Schedule: schedule }, true)
+        await grpcCreateAIReActSchedule({ Schedule: schedule })
       }
       yakitNotify('success', t(editing ? 'AIScheduledTasks.updated' : 'AIScheduledTasks.created'))
       onSuccess()
@@ -224,8 +224,23 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
                 )}
               />
             </Form.Item>
-            <Form.Item name="StartAt" label={t('AIScheduledTasks.startAt')} rules={[{ required: true }]}>
-              <YakitDatePicker showTime showExtraFooter={true} format="YYYY-MM-DD HH:mm" allowClear={false} />
+            <Form.Item
+              name="StartAt"
+              label={t('AIScheduledTasks.startAt')}
+              rules={[
+                { required: true },
+                // 仅一次的任务错过首次运行时间后不会再触发，因此要求晚于当前时间；
+                {
+                  validator: (_, value) => {
+                    if (form.getFieldValue('Frequency') === 'once' && value && value.isBefore(moment())) {
+                      return Promise.reject(t('AIScheduledTasks.startAtMustBeFuture'))
+                    }
+                    return Promise.resolve()
+                  },
+                },
+              ]}
+            >
+              <YakitDatePicker showTime showExtraFooter={true} format="YYYY-MM-DD HH:mm:ss" allowClear={false} />
             </Form.Item>
           </div>
           {frequency === 'minutes' && (

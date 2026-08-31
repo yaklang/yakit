@@ -60,6 +60,17 @@ describe('handAIHistoryChatRemove 定时任务预检', () => {
     expect(mockedClearImage).toHaveBeenCalledTimes(1)
   })
 
+  it('预检查询失败（如旧引擎无该接口）时按取消处理，不弹确认也不删除', async () => {
+    mockedQuery.mockRejectedValue(new Error('rpc error: unknown method'))
+
+    await expect(handAIHistoryChatRemove(makeParams())).rejects.toBeInstanceOf(AISessionDeleteCancelledError)
+
+    expect(YakitModalConfirm).not.toHaveBeenCalled()
+    expect(mockedDeleteSessions).not.toHaveBeenCalled()
+    expect(mockedDeleteGrpc).not.toHaveBeenCalled()
+    expect(mockedClearImage).not.toHaveBeenCalled()
+  })
+
   it('预检查询按活跃 continue_session 模式过滤，并带上会话 ID 列表', async () => {
     await handAIHistoryChatRemove(makeParams())
 

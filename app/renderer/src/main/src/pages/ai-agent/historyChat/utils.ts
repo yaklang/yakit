@@ -30,21 +30,26 @@ export class AISessionDeleteCancelledError extends Error {}
 /**
  * 删除前预检：查询绑定这些会话的活跃 continue_session 定时任务，
  * 有绑定则弹确认（列出任务名），无绑定直接放行；
- * 返回 true 表示继续删除，false 表示用户取消。
+ * 返回 true 表示继续删除；false 表示用户取消或预检查询失败（如旧引擎未提供该接口），均阻断删除。
  * 定时任务：最多同时运行3个
  */
 const confirmScheduleImpact = async (sessionIds: string[]): Promise<boolean> => {
-  const response = await grpcQueryAIReActSchedules(
-    {
-      Pagination: { Page: 1, Limit: 3, OrderBy: 'created_at', Order: 'desc' },
-      Filter: {
-        Status: ['active'],
-        TargetModes: ['continue_session'],
-        ...(sessionIds.length > 0 ? { TargetSessionIDs: sessionIds } : {}),
+  let response
+  try {
+    response = await grpcQueryAIReActSchedules(
+      {
+        Pagination: { Page: 1, Limit: 3, OrderBy: 'created_at', Order: 'desc' },
+        Filter: {
+          Status: ['active'],
+          TargetModes: ['continue_session'],
+          ...(sessionIds.length > 0 ? { TargetSessionIDs: sessionIds } : {}),
+        },
       },
-    },
-    true,
-  )
+      true,
+    )
+  } catch {
+    return false
+  }
   const attachedSchedules = response.Data || []
   const attachedScheduleCount = Number(response.Total || attachedSchedules.length)
   if (attachedScheduleCount <= 0) return true

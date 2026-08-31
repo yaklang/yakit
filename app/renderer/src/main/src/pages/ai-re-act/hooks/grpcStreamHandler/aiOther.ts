@@ -13,6 +13,9 @@ import {
 } from '../persist/contentPersistHelper'
 import { ensureToolResultOnUI } from './aiToolResult'
 import type { AIAgentChatMetaData } from '@/pages/ai-agent/type/aiChat'
+import i18n from '@/i18n/i18n'
+
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
   const { res, store, rawData } = request
@@ -204,7 +207,7 @@ const handleReactTaskDequeue: AIMessageHandler = (requestInfo) => {
         coordinatorId: '',
         status: AITaskStatus.inProgress,
       },
-      currentLoadingTitle: { casualTitle: '问题执行中...', planTitle: '' },
+      currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.questionExecuting'), planTitle: '' },
       focusMode: data.focus_mode ? data.focus_mode : '',
     })
     // 重置当前任务树详情
@@ -327,17 +330,18 @@ const handleQueueInfo: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { tasks = [], total_tasks, current_task } = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueues
   const currentChat = store.getState().currentChatStatus
+  const focusMode = store.getState().focusMode
   if (current_task?.id) {
     const canHydrateCurrentTask = !currentChat.questionID || currentChat.questionID === current_task.id
     if (canHydrateCurrentTask) {
       store.getState().updateState({
         currentChatStatus: {
           questionID: current_task.id,
-          coordinatorId: '',
+          coordinatorId: currentChat.coordinatorId || '',
           status: currentChat.status || AITaskStatus.inProgress,
         },
-        currentLoadingTitle: { casualTitle: '问题执行中...', planTitle: '' },
-        focusMode: current_task.focus_mode || '',
+        currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.questionExecuting'), planTitle: '' },
+        focusMode: current_task.focus_mode || focusMode || '',
       })
     }
   }

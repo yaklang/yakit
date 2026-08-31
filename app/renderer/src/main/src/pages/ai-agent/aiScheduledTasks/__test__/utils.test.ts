@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { ipcRendererMock, resetIpcMocks } from '../../../ai-re-act/hooks/__test__/setupElectron'
 import { yakitNotify } from '@/utils/notification'
+import i18n from '@/i18n/i18n'
 import {
   grpcCreateAIReActSchedule,
   grpcDeleteAIReActSchedule,
@@ -11,6 +12,8 @@ import {
   grpcSetAIReActScheduleEnabled,
   grpcUpdateAIReActSchedule,
 } from '../utils'
+
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 vi.mock('@/utils/notification', () => ({
   yakitNotify: vi.fn(),
@@ -107,7 +110,8 @@ describe('AI 定时任务 grpc 封装：错误处理', () => {
 
     await expect(grpcRunAIReActScheduleNow({ UUID: 'u' })).rejects.toThrow(/queued or running/)
     expect(mockedNotify).toHaveBeenCalledTimes(1)
-    expect(mockedNotify).toHaveBeenCalledWith('warning', '该定时任务已经有一个正在执行或排队的任务，请稍后再试')
+    // 测试环境 i18n 资源不加载，t() 返回 key 本身；与实现使用同一翻译源断言
+    expect(mockedNotify).toHaveBeenCalledWith('warning', tAgent('AIScheduledTasks.runNowQueued'))
   })
 
   it('立即执行的其它错误仍走 error 通知', async () => {

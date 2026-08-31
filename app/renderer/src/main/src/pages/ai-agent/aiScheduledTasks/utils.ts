@@ -1,5 +1,6 @@
 import type { APIFunc } from '@/apiUtils/type'
 import { yakitNotify } from '@/utils/notification'
+import i18n from '@/i18n/i18n'
 import type {
   AIReActSchedule,
   CreateAIReActScheduleRequest,
@@ -14,6 +15,7 @@ import type {
   UpdateAIReActScheduleRequest,
 } from '../../ai-re-act/hooks/grpcApi'
 const { ipcRenderer } = window.require('electron')
+const t = i18n.getFixedT(null, 'aiAgent')
 
 /** 创建定时任务 */
 export const grpcCreateAIReActSchedule: APIFunc<CreateAIReActScheduleRequest, AIReActSchedule> = (
@@ -105,7 +107,7 @@ export const grpcRunAIReActScheduleNow: APIFunc<RunAIReActScheduleNowRequest, nu
         if (!hiddenError) {
           /**临时单独处理这个报错，友好提示 */
           if (`${err}`.includes('schedule already has a queued or running execution')) {
-            yakitNotify('warning', '该定时任务已经有一个正在执行或排队的任务，请稍后再试')
+            yakitNotify('warning', t('AIScheduledTasks.runNowQueued'))
           } else {
             yakitNotify('error', 'grpcRunAIReActScheduleNow 失败:' + err)
           }

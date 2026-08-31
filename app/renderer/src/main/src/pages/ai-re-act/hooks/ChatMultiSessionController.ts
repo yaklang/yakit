@@ -45,8 +45,10 @@ import {
 } from './persist/contentPersistHelper'
 import type { DeleteSessionsAISourceType } from '@/pages/ai-agent/historyChat/utils'
 import { clearThoughtDurationCache } from '@/pages/ai-agent/components/thoughtDuration/ThoughtDuration'
+import i18n from '@/i18n/i18n'
 
 const { ipcRenderer } = window.require('electron')
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 /** deleteSessions 入参：按 id / 按 source 列表 / 全库清删（deleteAll） */
 export type DeleteSessionsParams = {
@@ -783,14 +785,14 @@ export class ChatMultiSessionController {
       store.getState().updateState({
         execute: true,
         currentChatStatus: cloneDeep(DefaultAgentChatStatus),
-        currentLoadingTitle: { casualTitle: '会话初始化中...', planTitle: '' },
+        currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.sessionInitializing'), planTitle: '' },
       })
     } else {
       store.getState().updateState({
         execute: true,
         initLoading: true,
         currentChatStatus: cloneDeep(DefaultAgentChatStatus),
-        currentLoadingTitle: { casualTitle: '获取历史数据中...', planTitle: '' },
+        currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.loadingHistory'), planTitle: '' },
       })
       this.sessionRestoreLoading.add(sessionId)
     }
@@ -889,7 +891,9 @@ export class ChatMultiSessionController {
 
         if (isCasualIdle) {
           // 自由对话没有问题进行中时，才改变loading的title
-          store.getState().updateState({ currentLoadingTitle: { casualTitle: '等待AI回复...', planTitle: '' } })
+          store
+            .getState()
+            .updateState({ currentLoadingTitle: { casualTitle: tAgent('AIChatLoading.waitingReply'), planTitle: '' } })
 
           const chatID = uuidv4()
           const AttachedResourceInfos = params.AttachedResourceInfo || []
@@ -1164,7 +1168,7 @@ export class ChatMultiSessionController {
 
   /** 会话建立成功后, 需要做的额外操作 */
   private handleSessionStartSuccess(sessionId: string) {
-    const { meta } = this.ensureSession(sessionId)
+    const { store, meta } = this.ensureSession(sessionId)
 
     // 获取任务规划历史任务树
     this.requestMessage(sessionId, {
@@ -1301,7 +1305,7 @@ export class ChatMultiSessionController {
         if (meta.createChatQuestion) {
           this.requestMessage(sessionId, meta.createChatQuestion)
           meta.createChatQuestion = undefined
-          store.getState().updateCurrentLoadingTitle({ casualTitle: '等待AI回复...' })
+          store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.waitingReply') })
 
           void this.restoreSessionAfterPong(sessionId, false).finally(() => {
             this.handleSessionStartSuccess(sessionId)
@@ -1337,6 +1341,8 @@ export class ChatMultiSessionController {
         }
         if (store.getState().grpcLoadMoreLoading) {
           store.getState().updateState({ grpcLoadMoreLoading: false })
+          // 向上加载历史结束，清空 casualTitle，避免底部 loading 残留旧文案
+          store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
         }
         // recovery 批次结束：关闭旧会话 UI/逻辑 loading
         this.finishSessionRestoreLoading(sessionId)
@@ -1644,7 +1650,7 @@ export class ChatMultiSessionController {
       handleTaskPlanEnd({ ...data, sessionId }, true)
       store.getState().updateState({ execute: false })
       store.getState().updateCurrentChatStatus({ status: AITaskStatus.error })
-      store.getState().updateCurrentLoadingTitle({ casualTitle: '会话已关闭' })
+      store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosed') })
       this.readyChannels.delete(sessionId)
 
       onEnd = meta.onEnd
@@ -1692,7 +1698,7 @@ export class ChatMultiSessionController {
       const store = this.storePool.get(session)
       if (store) {
         store.getState().updateState({ execute: false })
-        store.getState().updateCurrentLoadingTitle({ casualTitle: '会话正在关闭...' })
+        store.getState().updateCurrentLoadingTitle({ casualTitle: tAgent('AIChatLoading.sessionClosing') })
       }
       if (meta) this.closeSessionTimers(meta)
     }

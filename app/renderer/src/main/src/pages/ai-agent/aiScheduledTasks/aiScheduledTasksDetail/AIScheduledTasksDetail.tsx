@@ -25,6 +25,7 @@ import {
 import type { AIReActSchedule } from '../../../ai-re-act/hooks/grpcApi'
 import { grpcGetAIReActSchedule, grpcDeleteAIReActSchedule, grpcSetAIReActScheduleEnabled } from '../utils'
 import { yakitNotify } from '@/utils/notification'
+import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIScheduledTasksDetail.module.scss'
 import classNames from 'classnames'
 import type { AIScheduledTasksDetailProps } from './type'
@@ -166,7 +167,27 @@ const AIScheduledTasksDetail: React.FC<AIScheduledTasksDetailProps> = React.memo
     onRunNow?.(schedule)
   })
 
-  const handleDelete = useMemoizedFn(async () => {
+  const handleDelete = useMemoizedFn(() => {
+    if (deleting) return
+    // 删除不可恢复，先弹二次确认
+    const m = YakitModalConfirm({
+      type: 'white',
+      width: 420,
+      bodyStyle: { padding: '0 24px' },
+      title: (modalT) => modalT('AIScheduledTasks.deleteScheduleConfirmTitle'),
+      content: (modalT) => modalT('AIScheduledTasks.deleteScheduleConfirmContent', { name: schedule.Name }),
+      onOkText: (modalT) => modalT('AIScheduledTasks.deleteScheduleConfirmOK'),
+      onCancelText: (modalT) => modalT('AIScheduledTasks.cancel'),
+      okButtonProps: { colors: 'danger', size: 'large' },
+      cancelButtonProps: { size: 'large' },
+      onOk: () => {
+        m.destroy()
+        void doDelete()
+      },
+    })
+  })
+
+  const doDelete = useMemoizedFn(async () => {
     if (deleting) return
     setDeleting(true)
     try {

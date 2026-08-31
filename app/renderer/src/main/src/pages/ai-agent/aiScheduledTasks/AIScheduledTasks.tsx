@@ -38,9 +38,10 @@ import { yakitNotify } from '@/utils/notification'
 import { type TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Tooltip } from 'antd'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
-import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import ScheduledTasksForm from './scheduledTasksForm/ScheduledTasksForm'
 import AIScheduledTasksDetail from './aiScheduledTasksDetail/AIScheduledTasksDetail'
+import { waitForAISessionPush } from './waitForAISessionPush'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { SwitchAIAgentTabEventEnum, AIAgentTabListEnum } from '../defaultConstant'
@@ -130,7 +131,7 @@ const formatScheduleRule = (item: AIReActSchedule, t: TFunction) => {
   }
   if (rrule.includes('BYDAY=MO,TU,WE,TH,FR')) return t('AIScheduledTasks.frequencyWeekdaysAtTime', { time: startTime })
   if (rrule.includes('FREQ=WEEKLY')) {
-    const matched = rrule.match(/(?:^|;)BYDAY=(\w+)/)
+    const matched = rrule.match(/(?:^|;)BYDAY=([A-Z,]+)/)
     const dayMap: Record<string, string> = {
       SU: t('AIScheduledTasks.sunday'),
       MO: t('AIScheduledTasks.monday'),
@@ -140,16 +141,18 @@ const formatScheduleRule = (item: AIReActSchedule, t: TFunction) => {
       FR: t('AIScheduledTasks.friday'),
       SA: t('AIScheduledTasks.saturday'),
     }
+    // BYDAY 可能包含多天（如 MO,WE），逐个翻译后拼接展示
+    const days = (matched?.[1] || '')
+      .split(',')
+      .filter(Boolean)
+      .map((day) => dayMap[day] || day)
     return t('AIScheduledTasks.everyWeekOnAtTime', {
-      day: matched ? dayMap[matched[1]] || matched[1] : '-',
+      day: days.length > 0 ? days.join('、') : '-',
       time: startTime,
     })
   }
-  if (rrule.includes('FREQ=DAILY')) return t('AIScheduledTasks.frequencyDailyAtTime', { time: startTime })
   return t('AIScheduledTasks.frequencyDailyAtTime', { time: startTime })
 }
-
-import { waitForAISessionPush } from './waitForAISessionPush'
 
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -479,12 +482,26 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
     onRunNow?.(item)
   })
   const onRemove = useMemoizedFn(() => {
-    grpcDeleteAIReActSchedule({ UUID: item.UUID }).then(() => {
-      onRefresh()
-      yakitNotify('success', t('YakitNotification.deleted'))
+    // 删除不可恢复，先弹二次确认
+    const m = YakitModalConfirm({
+      type: 'white',
+      width: 420,
+      bodyStyle: { padding: '0 24px' },
+      title: (modalT) => modalT('AIScheduledTasks.deleteScheduleConfirmTitle'),
+      content: (modalT) => modalT('AIScheduledTasks.deleteScheduleConfirmContent', { name: item.Name }),
+      onOkText: (modalT) => modalT('AIScheduledTasks.deleteScheduleConfirmOK'),
+      onCancelText: (modalT) => modalT('AIScheduledTasks.cancel'),
+      okButtonProps: { colors: 'danger', size: 'large' },
+      cancelButtonProps: { size: 'large' },
+      onOk: () => {
+        grpcDeleteAIReActSchedule({ UUID: item.UUID }).then(() => {
+          onRefresh()
+          yakitNotify('success', t('YakitNotification.deleted'))
+        })
+        m.destroy()
+      },
     })
   })
-  const statusIcon = item.Status === 'active' ? <OutlinePlayIcon /> : <OutlinePauseIcon />
   return (
     <div className={styles['ai-schedule-list-item-content']} onClick={() => onOpenDetail?.(item)}>
       <div className={styles['ai-schedule-list-item-heard']}>
@@ -537,7 +554,9 @@ const AIScheduledTasksListItem: React.FC<AIScheduledTasksListItemProps> = React.
           ) : (
             item.Status !== 'active' && (
               <>
-                <span className={styles['ai-schedule-list-item-footer-status-icon']}>{statusIcon}</span>
+                <span className={styles['ai-schedule-list-item-footer-status-icon']}>
+                  {item.Status === 'active' ? <OutlinePlayIcon /> : <OutlinePauseIcon />}
+                </span>
                 <span className={styles['ai-schedule-list-item-footer-status']}>
                   {t(`AIScheduledTasks.${item.Status}`)}
                 </span>

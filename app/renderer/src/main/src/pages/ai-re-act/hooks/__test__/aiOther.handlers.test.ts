@@ -4,6 +4,9 @@ import { DefaultMemoryList } from '../defaultConstant'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
 import { AIChatQSDataTypeEnum, type ChatTaskNodeGroup } from '../aiRender'
 import { AITaskStatus } from '../grpcApi'
+import i18n from '@/i18n/i18n'
+
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 vi.mock('../persist/contentPersistHelper', () => ({
   persistIndependentItem: vi.fn(),
@@ -210,7 +213,7 @@ describe('aiOther queue_info current task snapshot', () => {
       coordinatorId: '',
       status: AITaskStatus.inProgress,
     })
-    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe('问题执行中...')
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(tAgent('AIChatLoading.questionExecuting'))
     expect(req.store.getState().focusMode).toBe('deep')
   })
 

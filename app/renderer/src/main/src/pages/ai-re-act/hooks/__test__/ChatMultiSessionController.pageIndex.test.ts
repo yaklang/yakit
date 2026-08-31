@@ -224,7 +224,8 @@ describe('ChatMultiSessionController lifecycle', () => {
     store.getState().updateState({ execute: true })
     ctrl.handleSessionEnd('s-life')
     expect(store.getState().execute).toBe(false)
-    expect(store.getState().currentLoadingTitle.casualTitle).toBe('会话已关闭')
+    // i18n stub 的 t 直接返回 key 本身
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('AIChatLoading.sessionClosed')
     expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.error)
     expect(ctrl.isSessionReady('s-life')).toBe(false)
   })

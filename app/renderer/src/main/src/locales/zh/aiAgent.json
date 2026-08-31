@@ -197,6 +197,14 @@
     "collect": "收藏",
     "templateIdError": "该模板 ID('{{id}}') 异常, 无法编辑"
   },
+  "AIChatLoading": {
+    "sessionInitializing": "会话初始化中...",
+    "loadingHistory": "获取历史数据中...",
+    "waitingReply": "等待AI回复...",
+    "questionExecuting": "问题执行中...",
+    "sessionClosing": "会话正在关闭...",
+    "sessionClosed": "会话已关闭"
+  },
   "AIScheduledTasks": {
     "title": "定时任务",
     "all": "全部",
@@ -219,6 +227,11 @@
     "deleteChatConfirmTitle": "删除会话将影响定时任务",
     "deleteChatConfirmContent": "该会话被 {{count}} 个进行中的定时任务附着（{{names}} 等），删除后这些任务将无法继续执行。确定删除吗？",
     "deleteChatConfirmOK": "仍要删除",
+    "deleteScheduleConfirmTitle": "删除定时任务",
+    "deleteScheduleConfirmContent": "删除后“{{name}}”将立即停止且无法恢复，确定删除吗？",
+    "deleteScheduleConfirmOK": "仍要删除",
+    "runNowQueued": "该定时任务已经有一个正在执行或排队的任务，请稍后再试",
+    "startAtMustBeFuture": "仅一次的任务，首次运行时间需晚于当前时间",
     "maxConcurrentRuns": "定时任务：最多同时运行3个",
     "runCount": "已运行 {{count}} 次",
     "frequencyOnce": "仅一次",

@@ -197,6 +197,14 @@
     "collect": "收藏",
     "templateIdError": "該模板 ID('{{id}}') 異常, 無法編輯"
   },
+  "AIChatLoading": {
+    "sessionInitializing": "會話初始化中...",
+    "loadingHistory": "獲取歷史數據中...",
+    "waitingReply": "等待AI回覆...",
+    "questionExecuting": "問題執行中...",
+    "sessionClosing": "會話正在關閉...",
+    "sessionClosed": "會話已關閉"
+  },
   "AIScheduledTasks": {
     "title": "定時任務",
     "all": "全部",
@@ -219,6 +227,11 @@
     "deleteChatConfirmTitle": "刪除會話將影響定時任務",
     "deleteChatConfirmContent": "該會話被 {{count}} 個進行中的定時任務附著（{{names}} 等），刪除後這些任務將無法繼續執行。確定刪除嗎？",
     "deleteChatConfirmOK": "仍要刪除",
+    "deleteScheduleConfirmTitle": "刪除定時任務",
+    "deleteScheduleConfirmContent": "刪除後「{{name}}」將立即停止且無法恢復，確定刪除嗎？",
+    "deleteScheduleConfirmOK": "仍要刪除",
+    "runNowQueued": "該定時任務已經有一個正在執行或排隊的任務，請稍後再試",
+    "startAtMustBeFuture": "僅一次的任務，首次運行時間需晚於當前時間",
     "maxConcurrentRuns": "定時任務：最多同時運行3個",
     "runCount": "已運行 {{count}} 次",
     "frequencyOnce": "僅一次",

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { aiYakExecResultDataHandlers } from '../grpcStreamHandler/yakExecResult'
 import { makeGrpcJsonRes, makeHandlerRequest } from './fixtures'
-import { DefaultAgentLoadingTitle } from '../defaultConstant'
+import { getDefaultAgentLoadingTitle } from '../defaultConstant'
 import { AITaskStatus } from '../grpcApi'
 import { AIChatQSDataTypeEnum, type ChatTaskNodeGroup } from '../aiRender'
 
@@ -76,7 +76,7 @@ describe('yakExecResult handlers', () => {
       chatType: 'task',
     })
     aiYakExecResultDataHandlers.status(req)
-    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(DefaultAgentLoadingTitle.casualTitle)
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(getDefaultAgentLoadingTitle().casualTitle)
     expect(req.store.getState().currentLoadingTitle.planTitle).toBe('')
   })
 
@@ -110,7 +110,7 @@ describe('yakExecResult handlers', () => {
     aiYakExecResultDataHandlers.status(req)
     const node = req.rawData.contents.get(nodeId) as ChatTaskNodeGroup
     expect(node.data.loadingTitle).toBe('sub-working')
-    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(DefaultAgentLoadingTitle.casualTitle)
+    expect(req.store.getState().currentLoadingTitle.casualTitle).toBe(getDefaultAgentLoadingTitle().casualTitle)
   })
 
   it('D10: status uses default TASK_NODE_GROUP loadingTitle when value is empty', () => {
