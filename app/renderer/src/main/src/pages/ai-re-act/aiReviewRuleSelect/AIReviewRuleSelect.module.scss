@@ -156,22 +156,13 @@
     }
   }
   .select-ai-icon-wrapper {
-    background: var(--Colors-Use-Success-Primary);
-    svg {
-      color: var(--Colors-Use-Basic-Background);
-    }
+    background: var(--Colors-Use-Success-Bg-Hover);
   }
   .select-yolo-icon-wrapper {
-    background: var(--Colors-Use-Error-Primary);
-    svg {
-      color: var(--Colors-Use-Basic-Background);
-    }
+    background: var(--Colors-Use-Error-Bg-Hover);
   }
   .select-manual-icon-wrapper {
-    background: var(--Colors-Use-Purple-Primary);
-    svg {
-      color: var(--Colors-Use-Basic-Background);
-    }
+    background: var(--Colors-Use-Purple-Bg-Hover);
   }
 }
 
