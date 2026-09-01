@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { ConfigProvider, theme, type ModalProps } from 'antd'
+import { theme, type ModalProps } from 'antd'
 import style from './YakitModalConfirm.module.scss'
 import { YakitButton } from '../YakitButton/YakitButton'
 import { YakitModal, type YakitModalProp } from './YakitModal'
@@ -10,15 +10,9 @@ import { OutlineXIcon } from '@/assets/outline'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
-import { yakitAntdTheme } from '@/theme/antdTheme'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
-
-const yakitModalRootProviderProps = {
-  theme: yakitAntdTheme,
-  wave: { disabled: true } as const,
-  button: { autoInsertSpace: false },
-}
 /**
  * antd 5 页面 Modal：zIndexPopupBase + CONTAINER_OFFSET(100)；嵌套再 +100。
  * 命令式弹窗对齐 ConfirmDialog，用 CONTAINER_MAX_OFFSET(1000) 压过最多 10 层嵌套。
@@ -72,7 +66,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
         yakitModalConfirmRootDiv = createRoot(div)
       }
       yakitModalConfirmRootDiv.render(
-        <ConfigProvider {...yakitModalRootProviderProps}>
+        <YakitAntdProvider>
           <YakitBaseModal
             {...(targetConfig as YakitModalProp)}
             onVisibleSetter={(r) => {
@@ -88,7 +82,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
             }}
             title={null}
             // headerStyle={{paddingBottom: 0}}
-            styles={{ body: { padding: 0 } }}
+            bodyStyle={{ padding: 0 }}
           >
             <ErrorBoundary
               FallbackComponent={({ error, resetErrorBoundary }) => {
@@ -130,7 +124,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
               </div>
             </ErrorBoundary>
           </YakitBaseModal>
-        </ConfigProvider>,
+        </YakitAntdProvider>,
       )
     })
   }
@@ -261,9 +255,9 @@ export const showYakitModal = (props: ShowModalProps) => {
         yakitModalRootDiv = createRoot(div)
       }
       yakitModalRootDiv.render(
-        <ConfigProvider {...yakitModalRootProviderProps}>
+        <YakitAntdProvider>
           <YakitBaseModal
-            styles={{ body: { padding: 0 } }}
+            bodyStyle={{ padding: 0 }}
             {...(targetConfig as YakitModalProp)}
             onVisibleSetter={(r) => {
               setter = r
@@ -293,7 +287,7 @@ export const showYakitModal = (props: ShowModalProps) => {
               {targetConfig.content}
             </ErrorBoundary>
           </YakitBaseModal>
-        </ConfigProvider>,
+        </YakitAntdProvider>,
       )
     })
   }

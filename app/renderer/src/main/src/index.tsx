@@ -4,7 +4,7 @@ import 'antd/dist/reset.css'
 import './styles/index.css'
 import NewApp from './newApp/NewApp'
 import { ConfigProvider } from 'antd'
-import { yakitAntdTheme } from './theme/antdTheme'
+import { YakitAntdProvider } from './theme/antdTheme'
 import { NotificationProvider } from './utils/notification'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
@@ -117,23 +117,19 @@ registerAppSyncHandlers()
 
 // antd 5 静态 Modal.confirm / info / error 不吃 React 树上的 ConfigProvider
 ConfigProvider.config({
-  holderRender: (node) => (
-    <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
-      {node}
-    </ConfigProvider>
-  ),
+  holderRender: (node) => <YakitAntdProvider>{node}</YakitAntdProvider>,
 })
 
 ReactDOM.render(
   // <React.StrictMode>
   <DndProvider backend={HTML5Backend}>
-    <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+    <YakitAntdProvider>
       <NotificationProvider>
         <Suspense fallback={<div>loading...</div>}>
           <App />
         </Suspense>
       </NotificationProvider>
-    </ConfigProvider>
+    </YakitAntdProvider>
   </DndProvider>,
   // </React.StrictMode>,
   document.getElementById('root'),

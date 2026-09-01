@@ -310,6 +310,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
       style={wrapperStyle}
     >
       <Select
+        className={className}
         suffixIcon={
           props.mode === 'tags' || props.mode === 'multiple' ? (
             (props.suffixIcon ?? null)

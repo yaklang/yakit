@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { theme as antdTheme } from 'antd'
-import { yakitAntdTheme } from '@/theme/antdTheme'
+import { getYakitAntdTheme } from '@/theme/antdTheme'
 import { getAllYakitColorVars } from '@/utils/yakitColorVars'
 
-describe('yakitAntdTheme', () => {
+describe('getYakitAntdTheme', () => {
   it('seed colors come from the color system as hex so antd palette does not collapse to black', () => {
+    const yakitAntdTheme = getYakitAntdTheme()
     const colors = getAllYakitColorVars()
     const primary = yakitAntdTheme.token?.colorPrimary
     expect(primary).toBe(colors['--Colors-Use-Main-Primary'])
@@ -18,5 +19,12 @@ describe('yakitAntdTheme', () => {
     expect(derived.colorSuccess).not.toBe('#000000')
     expect(derived.colorWarning).not.toBe('#000000')
     expect(derived.colorError).not.toBe('#000000')
+  })
+
+  it('rebuilds seed hex for the requested theme instead of freezing module-load light', () => {
+    const light = getYakitAntdTheme('light')
+    const dark = getYakitAntdTheme('dark')
+    expect(light.token?.colorPrimary).toBe(getAllYakitColorVars('light')['--Colors-Use-Main-Primary'])
+    expect(dark.token?.colorPrimary).toBe(getAllYakitColorVars('dark')['--Colors-Use-Main-Primary'])
   })
 })

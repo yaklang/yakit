@@ -1,4 +1,4 @@
-import { ConfigProvider, Drawer } from 'antd'
+import { Drawer } from 'antd'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 import type { YakitDrawerProps } from './YakitDrawerType'
@@ -12,7 +12,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import i18n from '@/i18n/i18n'
-import { yakitAntdTheme } from '@/theme/antdTheme'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
 /**
@@ -113,7 +113,7 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
         yakitDrawerRootDiv = createRoot(div)
       }
       yakitDrawerRootDiv.render(
-        <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+        <YakitAntdProvider>
           <DndProvider backend={HTML5Backend}>
             <YakitBaseDrawer
               {...(targetConfig as YakitDrawerProps)}
@@ -138,7 +138,7 @@ export const showYakitDrawer = (props: ShowDrawerProps) => {
               </ErrorBoundary>
             </YakitBaseDrawer>
           </DndProvider>
-        </ConfigProvider>,
+        </YakitAntdProvider>,
       )
     })
   }

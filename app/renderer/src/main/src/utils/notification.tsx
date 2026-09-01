@@ -8,6 +8,7 @@ import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 const defaultNotificationConfig = {
   placement: 'bottomLeft' as const,
   bottom: 8,
+  stack: false,
 }
 
 let notificationApi: NotificationInstance | null = null

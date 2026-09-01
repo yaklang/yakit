@@ -6,7 +6,7 @@ import './styles/aux-base.scss'
 import '@/theme/scrollbar.scss'
 import '@/theme/componentsTheme/formItemHelp.css'
 import { ConfigProvider } from 'antd'
-import { yakitAntdTheme } from '@/theme/antdTheme'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 import { NotificationProvider } from '@/utils/notification'
 import AuxWindowApp from './AuxWindowApp'
 import { useTheme } from '@/hook/useTheme'
@@ -31,18 +31,14 @@ const App = () => {
 }
 
 ConfigProvider.config({
-  holderRender: (node) => (
-    <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
-      {node}
-    </ConfigProvider>
-  ),
+  holderRender: (node) => <YakitAntdProvider>{node}</YakitAntdProvider>,
 })
 
 ReactDOM.render(
-  <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+  <YakitAntdProvider>
     <NotificationProvider>
       <App />
     </NotificationProvider>
-  </ConfigProvider>,
+  </YakitAntdProvider>,
   document.getElementById('root'),
 )

@@ -1,8 +1,8 @@
-import { Card, ConfigProvider, Menu } from 'antd'
+import { Card, Menu } from 'antd'
 import './showByCursor.css'
 import type React from 'react'
 import { createRoot } from 'react-dom/client'
-import { yakitAntdTheme } from '@/theme/antdTheme'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 export interface ByCursorContainerProp {
   content: JSX.Element
 }
@@ -38,11 +38,11 @@ export const showByCursorContainer = (props: ByCursorContainerProp, x: number, y
         cursorContainerRootDiv = createRoot(div)
       }
       cursorContainerRootDiv.render(
-        <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+        <YakitAntdProvider>
           <Card styles={{ body: { padding: 0 } }} variant="outlined" hoverable={true}>
             {props.content}
           </Card>
-        </ConfigProvider>,
+        </YakitAntdProvider>,
       )
     })
   }
@@ -105,7 +105,7 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
         }
 
         cursorMenuRootDiv.render(
-          <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+          <YakitAntdProvider>
             <Menu
               className={'right-cursor-menu'}
               onClick={(item: { key: string }) => {
@@ -148,7 +148,7 @@ export const showByCursorMenu = (props: ByCursorMenuProp, x: number, y: number) 
                 }
               })}
             />
-          </ConfigProvider>,
+          </YakitAntdProvider>,
         )
       }
     })

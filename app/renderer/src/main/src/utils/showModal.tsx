@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
-import { type DrawerProps, type ModalProps, ConfigProvider, Modal } from 'antd'
+import { type DrawerProps, type ModalProps, Modal } from 'antd'
 import { ErrorBoundary } from 'react-error-boundary'
 import { createRoot } from 'react-dom/client'
 import emiter from './eventBus/eventBus'
@@ -8,7 +8,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import i18n from '@/i18n/i18n'
-import { yakitAntdTheme } from '@/theme/antdTheme'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 import { type ModalI18nNode, ModalI18nRender } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
@@ -64,7 +64,7 @@ export const showModal = (props: ShowModalProps) => {
       }
       const { title, content, ...restConfig } = targetConfig
       modalRootDiv.render(
-        <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+        <YakitAntdProvider>
           <BaseModal
             {...(restConfig as ModalProps)}
             title={title !== undefined ? <ModalI18nRender node={title} /> : title}
@@ -96,7 +96,7 @@ export const showModal = (props: ShowModalProps) => {
               <ModalI18nRender node={content} />
             </ErrorBoundary>
           </BaseModal>
-        </ConfigProvider>,
+        </YakitAntdProvider>,
       )
     })
   }
@@ -177,7 +177,7 @@ export const showDrawer = (props: ShowDrawerProps) => {
         drawerRootDiv = createRoot(div)
       }
       drawerRootDiv.render(
-        <ConfigProvider theme={yakitAntdTheme} wave={{ disabled: true }} button={{ autoInsertSpace: false }}>
+        <YakitAntdProvider>
           <DndProvider backend={HTML5Backend}>
             <BaseDrawer
               {...(targetConfig as BaseDrawerProp)}
@@ -195,7 +195,7 @@ export const showDrawer = (props: ShowDrawerProps) => {
               {targetConfig.content}
             </BaseDrawer>
           </DndProvider>
-        </ConfigProvider>,
+        </YakitAntdProvider>,
       )
     })
   }

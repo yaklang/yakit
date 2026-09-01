@@ -16,7 +16,7 @@ import classNames from 'classnames'
  */
 export const YakitSpin: React.FC<YakitSpinProps> = (props) => {
   const { children, tip, wrapperClassName, ...rest } = props
-  const nestedChildren = children ?? <div className={styles['yakit-spin-nest']} />
+  const nestedChildren = children ?? (tip != null ? <div className={styles['yakit-spin-nest']} /> : children)
   return (
     <Spin
       {...rest}

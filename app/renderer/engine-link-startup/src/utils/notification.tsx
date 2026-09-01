@@ -6,6 +6,7 @@ import type React from 'react'
 const defaultNotificationConfig = {
   placement: 'bottomRight' as const,
   bottom: 8,
+  stack: false,
 }
 
 let notificationApi: NotificationInstance | null = null

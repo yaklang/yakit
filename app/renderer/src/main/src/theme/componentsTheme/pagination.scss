@@ -58,21 +58,25 @@
     box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
   }
 
-  .ant-select-item-option-content:hover {
-    color: var(--Colors-Use-Main-Primary);
+  .ant-pagination-options-quick-jumper input:focus,
+  .ant-pagination-options-quick-jumper input:focus-within {
+    border-color: var(--Colors-Use-Main-Hover);
+    box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
   }
 
-  .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-    background-color: transparent;
+  .ant-pagination-options-quick-jumper input:hover {
+    border-color: var(--Colors-Use-Main-Hover);
   }
 
-  .ant-select-dropdown {
-    background-color: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+  .ant-pagination-total-text {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
+}
 
+/* size-changer 下拉 portal 挂 body，不能写在 .ant-pagination 内。背景由 dropdown.scss 兜底 */
+.ant-select-dropdown {
   .ant-select-item {
-    margin: 0 4px;
+    margin: 2px 4px;
     padding: 4px 8px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
     border-radius: 4px;
@@ -91,19 +95,5 @@
     &:hover {
       background: var(--Colors-Use-Neutral-Bg-Hover);
     }
-  }
-
-  .ant-pagination-options-quick-jumper input:focus,
-  .ant-pagination-options-quick-jumper input:focus-within {
-    border-color: var(--Colors-Use-Main-Hover);
-    box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
-  }
-
-  .ant-pagination-options-quick-jumper input:hover {
-    border-color: var(--Colors-Use-Main-Hover);
-  }
-
-  .ant-pagination-total-text {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
 }
