@@ -18,7 +18,6 @@ type DistributiveOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : nev
  * @param {YakitSizeType} size  默认middle
  * @param {string} wrapperClassName
  * @param {CSSProperties} wrapperStyle
- * @param {boolean} showExtraFooter 是否显示自定义底部操作栏；为 true 时会隐藏 antd 默认的【此刻】和【确定】按钮，并渲染 YakitButton 风格的“此刻/确定”按钮；也可通过 renderExtraFooter 传入自定义内容
  */
 export type YakitDatePickerProps = DistributiveOmit<
   DatePickerProps,
@@ -32,7 +31,6 @@ export type YakitDatePickerProps = DistributiveOmit<
   onChange?: (value: Moment | null, dateString: string | string[]) => void
   disabledDate?: MomentDisabledDate
   onSelect?: (value: Moment | null) => void
-  showExtraFooter?: boolean
 }
 
 /**

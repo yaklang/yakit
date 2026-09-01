@@ -4,13 +4,10 @@ import type { YakitDatePickerProps, YakitRangePickerProps } from './YakitDatePic
 import classNames from 'classnames'
 import styles from './YakitDatePicker.module.scss'
 import { OutlineClockIcon } from '@/assets/icon/outline'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import zhCN from 'antd/es/date-picker/locale/zh_CN'
 import zhTW from 'antd/es/date-picker/locale/zh_TW'
 import enUS from 'antd/es/date-picker/locale/en_US'
 import i18n from '@/i18n/i18n'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useControllableValue, useMemoizedFn } from 'ahooks'
 import dayjs, { type Dayjs } from 'dayjs'
 import moment, { type Moment } from 'moment'
 import 'moment/locale/zh-cn'
@@ -53,25 +50,6 @@ const toDayjsRange = (value?: [Moment | null, Moment | null] | null) => {
   return [toDayjs(value[0]) ?? null, toDayjs(value[1]) ?? null] as [Dayjs | null, Dayjs | null]
 }
 
-interface DatePickerExtraFooterProps {
-  onNow: () => void
-  onOk: () => void
-}
-
-const DatePickerExtraFooter: React.FC<DatePickerExtraFooterProps> = React.memo(({ onNow, onOk }) => {
-  const { t } = useI18nNamespaces(['yakitUi'])
-  return (
-    <div className={styles['yakit-date-picker-extra-footer']}>
-      <YakitButton type="text" onClick={onNow}>
-        {t('YakitDatePicker.now')}
-      </YakitButton>
-      <YakitButton type="primary" onClick={onOk}>
-        {t('YakitDatePicker.confirm')}
-      </YakitButton>
-    </div>
-  )
-})
-
 const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
   const {
     size,
@@ -84,53 +62,9 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
     defaultValue,
     onChange,
     disabledDate,
-    showExtraFooter,
-    renderExtraFooter,
     ...restProps
   } = props
   const lang = i18n.language
-  const [currentValue, setCurrentValue] = useControllableValue<Moment | null>(restProps, {
-    valuePropName: 'value',
-    defaultValue: defaultValue ?? null,
-    // useControllableValue 默认 trigger 为 onChange，但只会传 value；
-    // antd DatePicker 的 onChange 签名为 (value, dateString)。
-    // 这里禁用自动触发，改由 handleChange 手动调用 restProps.onChange(value, dateString)。
-    trigger: 'onInternalValueChange',
-  })
-  const [currentOpen, setCurrentOpen] = useControllableValue<boolean>(restProps, {
-    defaultValue: restProps.defaultOpen ?? false,
-    valuePropName: 'open',
-    trigger: 'onOpenChange',
-  })
-
-  // dateString 统一按秒精度格式化；秒列在 showTime 未开启 secondStep 时由 antd 隐藏，
-  // 显示层仍由调用方 format 决定，这里只保证提交的 moment 不丢秒
-  const formatDateString = useMemoizedFn((value: Moment) => value.format('YYYY-MM-DD HH:mm:ss'))
-
-  const handleChange = useMemoizedFn((value: Moment | null, dateString: string) => {
-    setCurrentValue(value)
-    onChange?.(value, dateString)
-  })
-
-  const handleSelect = useMemoizedFn((value: Dayjs | null) => {
-    // showTime 面板中点击时/分列只触发 onSelect 不触发 onChange（原生确定按钮已被隐藏），
-    // 这里补提交选中值，保证点“确定”后生效的是面板内最新选择的时间
-    if (showExtraFooter && value && !value.isSame(currentValue ? toDayjs(currentValue) : null)) {
-      const next = toMoment(value)
-      handleChange(next, formatDateString(next))
-    }
-    if (!!value) restProps.onSelect?.(toMoment(value))
-  })
-
-  const handleNow = useMemoizedFn(() => {
-    const now = moment()
-    handleChange(now, formatDateString(now))
-    setCurrentOpen(false)
-  })
-
-  const handleOk = useMemoizedFn(() => {
-    setCurrentOpen(false)
-  })
 
   useEffect(() => {
     moment.locale(getMomentLocale(lang))
@@ -151,16 +85,11 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
     >
       <DatePicker
         {...restProps}
-        value={toDayjs(currentValue) as DatePickerProps['value']}
-        open={currentOpen}
-        onChange={handleChange as unknown as DatePickerProps['onChange']}
-        onSelect={handleSelect}
-        onOpenChange={setCurrentOpen}
-        renderExtraFooter={
-          showExtraFooter
-            ? renderExtraFooter || (() => <DatePickerExtraFooter onNow={handleNow} onOk={handleOk} />)
-            : renderExtraFooter
-        }
+        value={toDayjs(value) as DatePickerProps['value']}
+        defaultValue={toDayjs(defaultValue) as DatePickerProps['defaultValue']}
+        onChange={(next, dateString) => {
+          onChange?.(toMoment(next), dateString)
+        }}
         disabledDate={
           disabledDate
             ? (current, info) => (current ? disabledDate(moment(current.valueOf()), info) : false)
@@ -176,12 +105,7 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
           ...pickerClassNames,
           popup: {
             ...pickerClassNames?.popup,
-            root: classNames(
-              styles['yakit-data-picker-dropdaown'],
-              { [styles['yakit-date-picker-hide-default-footer']]: showExtraFooter },
-              dropdownClassName,
-              pickerClassNames?.popup?.root,
-            ),
+            root: classNames(styles['yakit-data-picker-dropdaown'], dropdownClassName, pickerClassNames?.popup?.root),
           },
         }}
         className={classNames(

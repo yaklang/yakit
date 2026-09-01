@@ -207,24 +207,6 @@
     }
   }
 }
-.yakit-date-picker-hide-default-footer {
-  :global {
-    .ant-picker-today-btn,
-    .ant-picker-ranges,
-    .ant-picker-ok {
-      display: none;
-    }
-  }
-}
-
-.yakit-date-picker-extra-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-}
-
 .yakit-data-picker-dropdaown {
   :global {
     .ant-picker-panel {
@@ -275,8 +257,55 @@
       .ant-picker-cell-inner {
       background-color: var(--Colors-Use-Neutral-Bg-Hover);
     }
-    .ant-picker-today-btn {
+    // showTime 面板底部「此刻」按钮对齐 YakitButton(type=text)、「确定」按钮对齐 YakitButton(type=primary) 风格
+    .ant-picker-now-btn {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
       color: var(--Colors-Use-Main-Primary);
+      &:hover {
+        color: var(--Colors-Use-Main-Hover);
+      }
+      &:active {
+        color: var(--Colors-Use-Main-Pressed);
+      }
+      &.ant-picker-now-btn-disabled,
+      &.ant-picker-now-btn-disabled:hover {
+        color: var(--Colors-Use-Neutral-Disable);
+        cursor: not-allowed;
+      }
+    }
+    .ant-picker-ok .ant-btn-primary {
+      height: 24px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      box-shadow: none;
+      background: var(--Colors-Use-Main-Primary);
+      color: var(--Colors-Use-Main-On-Primary);
+      border-color: var(--Colors-Use-Main-Primary);
+      &:hover,
+      &:focus {
+        background: var(--Colors-Use-Main-Hover);
+        color: var(--Colors-Use-Main-On-Primary);
+        border-color: var(--Colors-Use-Main-Hover);
+      }
+      &:active {
+        background: var(--Colors-Use-Main-Pressed);
+        color: var(--Colors-Use-Main-On-Primary);
+        border-color: var(--Colors-Use-Main-Pressed);
+      }
+      &:disabled,
+      &:disabled:hover {
+        background: var(--Colors-Use-Main-Border);
+        color: var(--Colors-Use-Basic-Background);
+        border-color: var(--Colors-Use-Main-Border);
+      }
     }
     .ant-picker-time-panel-column
       > li.ant-picker-time-panel-cell.ant-picker-time-panel-cell-selected:not(.ant-picker-time-panel-cell-disabled)

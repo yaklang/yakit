@@ -270,7 +270,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
                 },
               ]}
             >
-              <YakitDatePicker showTime showExtraFooter={true} format="YYYY-MM-DD HH:mm:ss" allowClear={false} />
+              <YakitDatePicker showTime format="YYYY-MM-DD HH:mm:ss" allowClear={false} />
             </Form.Item>
           </div>
           {frequency === 'minutes' && (
