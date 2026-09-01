@@ -224,7 +224,7 @@
           display: flex;
           font-weight: 500;
           font-size: 12px;
-          color: var(--Colors-Use-Neutral-Text-1-Title) f;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
 
           .tabs-opt {
             width: 50%;
@@ -237,7 +237,7 @@
               .ant-badge {
                 font-weight: 500;
                 font-size: 12px;
-                color: var(--Colors-Use-Neutral-Text-1-Title) f;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
               }
             }
           }
@@ -663,7 +663,7 @@
         max-height: 32px;
         font-size: 12px;
         line-height: 16px;
-        color: var(--Colors-Use-Neutral-Text-1-Title) f;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
       }
       .content-time {
         margin-top: 2px;
