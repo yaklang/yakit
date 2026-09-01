@@ -115,9 +115,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 case AIInputInnerFeatureEnum.AIModelSelect:
                   node = { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } }
                   break
-                case AIInputInnerFeatureEnum.AIReasoningEffortSelect:
-                  node = { type: AIInputInnerFeatureEnum.AIReasoningEffortSelect }
-                  break
                 default:
                   break
               }
@@ -316,17 +313,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   key={item.type}
                   {...item.props}
                   className={classNames(styles['model-self-adaptive'], item.props?.className)}
-                />
-              ),
-            )
-            break
-          case AIInputInnerFeatureEnum.AIReasoningEffortSelect:
-            node.push(
-              item.component || (
-                <AIReasoningEffortSelect
-                  key={item.type}
-                  {...item.props}
-                  className={classNames(styles['reasoning-effort-self-adaptive'], item.props?.className)}
                 />
               ),
             )
