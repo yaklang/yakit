@@ -1211,7 +1211,18 @@ export class ChatMultiSessionController {
     if (!this.sessionRestoreLoading.has(sessionId)) return
     this.sessionRestoreLoading.delete(sessionId)
     const store = this.storePool.get(sessionId)
-    store?.getState().updateState({ initLoading: false })
+    if (!store) return
+    const { currentChatStatus, currentLoadingTitle } = store.getState()
+    store.getState().updateState({ initLoading: false })
+    // 恢复完成兜底：清掉建连时写入的「获取历史数据中...」占位文案，
+    // 否则 Footer（execute 恒为 true）会一直显示该 loading；
+    // 问题仍在执行（queue_info 已回填 questionExecuting）时不清，避免覆盖运行态文案
+    if (
+      currentLoadingTitle.casualTitle === tAgent('AIChatLoading.loadingHistory') &&
+      currentChatStatus.status !== AITaskStatus.inProgress
+    ) {
+      store.getState().updateCurrentLoadingTitle({ casualTitle: '' })
+    }
   }
 
   /**

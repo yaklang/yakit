@@ -6,6 +6,9 @@ import { ipcRendererMock, resetIpcMocks } from './setupElectron'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '../grpcApi'
 import { DefaultCurrentExecTaskTree } from '../defaultConstant'
 import { makeGrpcJsonRes } from './fixtures'
+import i18n from '@/i18n/i18n'
+
+const tAgent = i18n.getFixedT(null, 'aiAgent')
 
 vi.mock('@/utils/notification', () => ({ yakitNotify: vi.fn() }))
 vi.mock('@/pages/ai-agent/grpc', () => ({
@@ -224,8 +227,8 @@ describe('ChatMultiSessionController lifecycle', () => {
     store.getState().updateState({ execute: true })
     ctrl.handleSessionEnd('s-life')
     expect(store.getState().execute).toBe(false)
-    // i18n stub 的 t 直接返回 key 本身
-    expect(store.getState().currentLoadingTitle.casualTitle).toBe('AIChatLoading.sessionClosed')
+    // i18n 资源加载方式变化时 t 的返回值不定，与同一 tAgent 求值比较而非硬编码
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe(tAgent('AIChatLoading.sessionClosed'))
     expect(store.getState().currentChatStatus.status).toBe(AITaskStatus.error)
     expect(ctrl.isSessionReady('s-life')).toBe(false)
   })
@@ -329,6 +332,80 @@ describe('ChatMultiSessionController start / send / history', () => {
   it('A14: no UserQuery enters restore loading', () => {
     ctrl.handleStartSession(startParams('s-restore', 'page-1', ''))
     expect(ctrl.ensureSession('s-restore').store.getState().initLoading).toBe(true)
+  })
+
+  it('A14c: restore finish (grpcOffset=0) clears initLoading and loadingHistory casualTitle', async () => {
+    ctrl.handleStartSession(startParams('s-restore-clear', 'page-1', ''))
+    const { store } = ctrl.ensureSession('s-restore-clear')
+    expect(store.getState().initLoading).toBe(true)
+    // 建连时写入「获取历史数据中...」占位文案
+    expect(store.getState().currentLoadingTitle.casualTitle).not.toBe('')
+
+    ctrl.handleGrpcOutputEvent('s-restore-clear', makeGrpcJsonRes('pong', {}))
+    await vi.waitFor(() => {
+      expect(store.getState().initLoading).toBe(false)
+    })
+    // 恢复完成后兜底清空，否则 Footer 一直显示「获取历史数据中...」
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('')
+    ctrl.handleSessionEnd('s-restore-clear')
+  })
+
+  it('A14d: restore via recovery_history clears casualTitle; running-task title preserved', async () => {
+    const { grpcQueryAIEvent } = await import('@/pages/ai-agent/grpc')
+    // 有历史事件：grpcOffset>0，走 recovery_history 分支
+    ;(grpcQueryAIEvent as any).mockResolvedValue({ Events: [{ ID: 7 }], Total: 1 })
+
+    ctrl.handleStartSession(startParams('s-recovery', 'page-1', ''))
+    await vi.waitFor(() => {
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's-recovery', expect.anything())
+    })
+    ctrl.handleGrpcOutputEvent('s-recovery', makeGrpcJsonRes('pong', {}))
+    await vi.waitFor(() => {
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+        'send-ai-re-act',
+        's-recovery',
+        expect.objectContaining({ IsSyncMessage: true, SyncType: 'recovery_history' }),
+      )
+    })
+    ctrl.handleGrpcOutputEvent(
+      's-recovery',
+      makeGrpcJsonRes('structured', { next_start_id: 3, events: [] }, { NodeId: 'recovery_history' }),
+    )
+    const { store } = ctrl.ensureSession('s-recovery')
+    await vi.waitFor(() => {
+      expect(store.getState().initLoading).toBe(false)
+    })
+    expect(store.getState().currentLoadingTitle.casualTitle).toBe('')
+
+    // 问题仍在执行（queue_info 已回填运行态文案）时不清空，避免覆盖
+    ctrl.handleStartSession(startParams('s-recovery-run', 'page-2', ''))
+    await vi.waitFor(() => {
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith('start-ai-re-act', 's-recovery-run', expect.anything())
+    })
+    const runningStore = ctrl.ensureSession('s-recovery-run').store
+    runningStore.getState().updateState({
+      currentChatStatus: { questionID: 'q1', coordinatorId: '', status: AITaskStatus.inProgress },
+      currentLoadingTitle: { casualTitle: 'question-running', planTitle: '' },
+    })
+    ctrl.handleGrpcOutputEvent('s-recovery-run', makeGrpcJsonRes('pong', {}))
+    await vi.waitFor(() => {
+      expect(ipcRendererMock.invoke).toHaveBeenCalledWith(
+        'send-ai-re-act',
+        's-recovery-run',
+        expect.objectContaining({ IsSyncMessage: true, SyncType: 'recovery_history' }),
+      )
+    })
+    ctrl.handleGrpcOutputEvent(
+      's-recovery-run',
+      makeGrpcJsonRes('structured', { next_start_id: 5, events: [] }, { NodeId: 'recovery_history' }),
+    )
+    await vi.waitFor(() => {
+      expect(runningStore.getState().initLoading).toBe(false)
+    })
+    expect(runningStore.getState().currentLoadingTitle.casualTitle).toBe('question-running')
+    ;(grpcQueryAIEvent as any).mockResolvedValue({ Events: [] })
+    ctrl.handleSessionEnd('s-recovery')
+    ctrl.handleSessionEnd('s-recovery-run')
   })
 
   it('A23: onLinkStart after ensureSession; onLinkSuccess after pong', async () => {
