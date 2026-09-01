@@ -83,7 +83,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
       case AIAgentTabListEnum.Scheduled:
         content = (
           <React.Suspense fallback={<div>Loading...</div>}>
-            <AIScheduledTasks />
+            <AIScheduledTasks visible={show} />
           </React.Suspense>
         )
         break

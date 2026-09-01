@@ -164,6 +164,7 @@ const formatScheduleRule = (item: AIReActSchedule, t: TFunction) => {
 }
 
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {
+  const { visible } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const [queryType, setQueryType] = useState<ScheduleQueryType>('all')
@@ -187,6 +188,15 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
   useEffect(() => {
     if (inViewPort) getList()
   }, [inViewPort])
+
+  // 侧栏收起是 width:0 折叠而非 display:none，useInViewport 感知不到，需父级传入 visible；
+  // 首次挂载（undefined）不刷新，仅「不可见→可见」时回到第一页重新拉取
+  const prevVisibleRef = useRef<boolean>()
+  useEffect(() => {
+    const prev = prevVisibleRef.current
+    prevVisibleRef.current = visible
+    if (visible && prev === false) getList(1)
+  }, [visible])
   const getList = useMemoizedFn(async (page?: number) => {
     setLoading(true)
     const newQuery: QueryAIReActSchedulesRequest = {
@@ -300,7 +310,7 @@ const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => 
           JSON.stringify({
             type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
             params: {
-              active: AIAgentTabListEnum.History,
+              active: AIAgentTabListEnum.Session,
               show: true,
             },
           }),
