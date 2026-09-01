@@ -179,6 +179,9 @@
         padding-right: 0px;
       }
     }
+    .ant-select-single .ant-select-selector .ant-select-selection-wrap {
+      height: auto;
+    }
     .ant-select:not(.ant-select-customize-input) .ant-select-arrow {
       right: 8px;
     }

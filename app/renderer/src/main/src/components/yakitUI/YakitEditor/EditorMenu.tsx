@@ -1,9 +1,10 @@
 import React, { type ReactNode, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Menu, type MenuProps, Tooltip } from 'antd'
-import type { ItemType } from 'antd/lib/menu/hooks/useItems'
 import { ChevronRightIcon } from '@/assets/newIcon'
 import type { MenuDividerType } from 'rc-menu/lib/interface'
+
+type ItemType = NonNullable<MenuProps['items']>[number]
 
 import classNames from 'classnames'
 import styles from '@/components/yakitUI/YakitMenu/yakitMenu.module.scss'

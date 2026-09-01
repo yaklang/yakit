@@ -100,11 +100,11 @@ const PluginHasParamsDrawer = React.memo((props: PluginHasParamsDrawerProps) => 
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       closable={false}
       width={drawerWidth + 'vw'}
       placement={placementDrawer}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       title={
         <div className={styles['paramsDrawer-title']}>
           <div
@@ -152,7 +152,7 @@ const PluginHasParamsDrawer = React.memo((props: PluginHasParamsDrawerProps) => 
           </Space>
         </div>
       }
-      bodyStyle={{ paddingLeft: 0, paddingRight: 0, overflowX: 'clip' }}
+      styles={{ body: { paddingLeft: 0, paddingRight: 0, overflowX: 'clip' } }}
       style={{ position: 'absolute' }}
     >
       <Resizable
@@ -271,9 +271,9 @@ export const PluginHasParamsModal = React.memo((props: PluginHasParamsModalProps
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       width={'max(700px, 50%)'}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       onCancel={() => onCloseParamsModal(false)}
       title={scriptName}
       footerStyle={{ overflow: 'visible' }}

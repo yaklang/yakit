@@ -110,7 +110,7 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
       {/*    visiblePopover={visiblePopover}*/}
       {/*    setVisiblePopover={setVisiblePopover}*/}
       {/*/>*/}
-      <YakitPopover placement="topRight" overlayClassName={style['terminal-popover']} content={popoverContent}>
+      <YakitPopover placement="topRight" classNames={{ root: style['terminal-popover'] }} content={popoverContent}>
         <TerminalIcon className={style['plugin-local-icon']} />
       </YakitPopover>
     </div>
@@ -190,12 +190,12 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
       placement="bottom"
       closable={false}
       onClose={() => onClose()}
-      visible={visibleDrawer}
+      open={visibleDrawer}
       mask={false}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       style={{ height: visibleDrawer ? heightDrawer : 0 }}
-      className={classNames(mitmStyles['mitm-rule-drawer'])}
-      contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
+      rootClassName={classNames(mitmStyles['mitm-rule-drawer'])}
+      styles={{ wrapper: { boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' } }}
       title={<div className={mitmStyles['heard-title']}>{title}</div>}
       extra={
         <div className={mitmStyles['heard-right-operation']}>
@@ -211,7 +211,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
           <YakitButton type="primary" className={mitmStyles['button-save']} onClick={() => onSaveToDataBase()}>
             保存
           </YakitButton>
-          <Tooltip title="官方网站" placement="top" overlayClassName={mitmStyles['question-tooltip']}>
+          <Tooltip title="官方网站" placement="top" classNames={{ root: mitmStyles['question-tooltip'] }}>
             <YakitButton
               type="outline2"
               className={mitmStyles['button-question']}

@@ -17,7 +17,7 @@ export interface SelectUploadProps {
 }
 
 interface CascaderValueProps {
-  Id: string
+  Id: number | string
   DatabasePath: string
 }
 

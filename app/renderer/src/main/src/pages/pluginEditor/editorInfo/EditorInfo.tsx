@@ -120,9 +120,9 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
           {t('EditorInfo.basicInfo')}
           <Tooltip
             title={t('EditorInfo.collapseBasicInfo')}
-            overlayClassName="plugins-tooltip"
-            visible={visible}
-            onVisibleChange={(show) => setVisible(show)}
+            rootClassName="plugins-tooltip"
+            open={visible}
+            onOpenChange={(show) => setVisible(show)}
           >
             <div className={styles['expand-btn']} onClick={handleFold}>
               <OutlineCloseIcon />
@@ -709,13 +709,17 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
 
 /** @name 插件类型下拉框组件 */
 export const PluginTypeSelect: React.FC<YakitSelectProps> = memo((props) => {
-  const { dropdownClassName, wrapperClassName, ...rest } = props
+  const { wrapperClassName, ...rest } = props
 
   return (
     <YakitSelect
       {...rest}
       wrapperClassName={classNames(styles['plugin-type-select'], wrapperClassName)}
-      dropdownClassName={classNames(styles['plugin-type-select-dropdown'], dropdownClassName)}
+      classNames={{
+        popup: {
+          root: classNames(styles['plugin-type-select-dropdown'], props.classNames?.popup?.root),
+        },
+      }}
     >
       {DefaultTypeList.map((item, index) => {
         return (

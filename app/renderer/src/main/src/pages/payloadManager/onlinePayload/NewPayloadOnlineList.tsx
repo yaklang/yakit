@@ -284,10 +284,10 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                 dropdown={{
                   trigger: ['click'],
                   placement: 'bottomRight',
-                  onVisibleChange: (v) => {
+                  onOpenChange: (v) => {
                     setMenuOpen(v)
                   },
-                  visible: menuOpen,
+                  open: menuOpen,
                 }}
               >
                 <div className={styles['extra-icon']}>
@@ -630,10 +630,10 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                   overlayClassName: styles['payload-list-menu'],
                   trigger: ['click'],
                   placement: 'bottomRight',
-                  onVisibleChange: (v) => {
+                  onOpenChange: (v) => {
                     setMenuOpen(v)
                   },
-                  visible: menuOpen,
+                  open: menuOpen,
                 }}
               >
                 <div className={styles['extra-icon']}>
@@ -758,7 +758,7 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
         <>
           <YakitEmpty
             image={<img src={powerEmptyImage} alt="" />}
-            imageStyle={{ width: 220, height: 150, margin: 'auto' }}
+            styles={{ image: { width: 220, height: 150, margin: 'auto' } }}
             title="暂无查看权限"
             description="登录后即可查看"
           />

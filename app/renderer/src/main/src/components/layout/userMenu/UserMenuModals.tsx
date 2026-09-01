@@ -141,10 +141,10 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
       )}
 
       <YakitModal
-        visible={passwordShow}
+        open={passwordShow}
         closable={passwordClose}
         title={t('Main.setPassword')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         bodyStyle={{ padding: '10px 24px 24px 24px' }}
         width={520}
@@ -157,9 +157,9 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
       </YakitModal>
 
       <YakitModal
-        visible={uploadModalShow}
+        open={uploadModalShow}
         title={t('FuncDomain.uploadData')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         bodyStyle={{ padding: '10px 24px 24px 24px' }}
         width={520}
@@ -172,7 +172,7 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
       </YakitModal>
 
       <YakitModal
-        visible={robotControlModal}
+        open={robotControlModal}
         title={
           <div className={robotControlStyles['robot-modal-title']}>
             <OutlineDevicemobileIcon
@@ -185,7 +185,7 @@ export const UserMenuModals: React.FC<UserMenuModalsProps> = React.memo((props) 
         subTitle={t('RobotControl.subTitle')}
         type="white"
         size="large"
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         bodyStyle={{ padding: '8px 16px 16px' }}
         width={900}

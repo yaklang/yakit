@@ -615,7 +615,7 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
           <YakitModal
             getContainer={document.getElementById('repository-manage') || document.body}
             maskClosable={false}
-            visible={isAIModelAvailable}
+            open={isAIModelAvailable}
             title="知识库可用诊断"
             footer={
               <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
@@ -651,7 +651,7 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
             </div>
           </YakitModal>
         ) : null}
-        <YakitModal hiddenHeader footer={null} visible={joyrideStep.visible} centered>
+        <YakitModal hiddenHeader footer={null} open={joyrideStep.visible} centered>
           <YakitSpin spinning={spinning}>
             <GuideFooter
               step={joyrideStep.step}

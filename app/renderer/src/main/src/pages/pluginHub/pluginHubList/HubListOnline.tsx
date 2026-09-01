@@ -756,7 +756,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                 ) : (
                   <YakitEmpty
                     image={emptyImageTarget}
-                    imageStyle={{ margin: '0 auto 24px', width: 274, height: 180 }}
+                    styles={{ image: { margin: '0 auto 24px', width: 274, height: 180 } }}
                     title={t('YakitEmpty.searchEmpty')}
                     className={styles['hub-list-empty']}
                   />
@@ -788,7 +788,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                 <div className={styles['hub-detail-list-extra']}>
                   <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type="online" />
                   <div className={styles['divider-style']}></div>
-                  <Tooltip title="下载插件" overlayClassName="plugins-tooltip">
+                  <Tooltip title="下载插件">
                     <YakitButton
                       type="text2"
                       loading={batchDownloadLoading}

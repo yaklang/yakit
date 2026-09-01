@@ -1,17 +1,23 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
+import { theme, type ModalProps } from 'antd'
 import style from './YakitModalConfirm.module.scss'
 import { YakitButton } from '../YakitButton/YakitButton'
 import { YakitModal, type YakitModalProp } from './YakitModal'
 import { ExclamationCircleOutlined } from '@ant-design/icons'
 import { createRoot, type Root } from 'react-dom/client'
 import { OutlineXIcon } from '@/assets/outline'
-import type { ModalProps } from 'antd/lib/modal'
 import { ErrorBoundary } from 'react-error-boundary'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
+import { YakitAntdProvider } from '@/theme/antdTheme'
 
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
+/**
+ * antd 5 页面 Modal：zIndexPopupBase + CONTAINER_OFFSET(100)；嵌套再 +100。
+ * 命令式弹窗对齐 ConfirmDialog，用 CONTAINER_MAX_OFFSET(1000) 压过最多 10 层嵌套。
+ */
+const YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET = 1000
 
 interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
   onVisibleSetter?: (setter: (i: boolean) => any) => any
@@ -60,7 +66,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
         yakitModalConfirmRootDiv = createRoot(div)
       }
       yakitModalConfirmRootDiv.render(
-        <>
+        <YakitAntdProvider>
           <YakitBaseModal
             {...(targetConfig as YakitModalProp)}
             onVisibleSetter={(r) => {
@@ -118,7 +124,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
               </div>
             </ErrorBoundary>
           </YakitBaseModal>
-        </>,
+        </YakitAntdProvider>,
       )
     })
   }
@@ -139,6 +145,7 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
 
 const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
   const { t } = useI18nNamespaces(['yakitUi'])
+  const { token } = theme.useToken()
   const [visible, setVisible] = useState<boolean>(true)
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -156,7 +163,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           <YakitButton
             type="outline2"
             onClick={(e) => {
-              if (props.onCancel) props.onCancel(e)
+              if (props.onCancel) props.onCancel(e as React.MouseEvent<HTMLButtonElement>)
               setVisible(false)
             }}
             {...props.cancelButtonProps}
@@ -169,7 +176,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
                 setLoading(true)
               }
               if (props.onOk) {
-                props.onOk(e)
+                props.onOk(e as React.MouseEvent<HTMLButtonElement>)
               }
             }}
             loading={loading}
@@ -179,17 +186,16 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           </YakitButton>
         </div>
       }
-      visible={visible}
       closable={true}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       closeIcon={
         <div
           onClick={(e) => {
             e.stopPropagation()
             if (props.onCloseX) {
-              props.onCloseX(e)
+              props.onCloseX(e as unknown as React.MouseEvent<HTMLButtonElement>)
             } else {
-              props.onCancel?.(e)
+              props.onCancel?.(e as unknown as React.MouseEvent<HTMLButtonElement>)
             }
             setVisible(false)
           }}
@@ -199,6 +205,8 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
         </div>
       }
       {...props}
+      zIndex={props.zIndex ?? token.zIndexPopupBase + YAKIT_IMPERATIVE_MODAL_Z_INDEX_OFFSET}
+      open={visible}
       onCancel={(e) => {
         if (props.onCancel) props.onCancel(e)
         setVisible(false)
@@ -247,7 +255,7 @@ export const showYakitModal = (props: ShowModalProps) => {
         yakitModalRootDiv = createRoot(div)
       }
       yakitModalRootDiv.render(
-        <>
+        <YakitAntdProvider>
           <YakitBaseModal
             bodyStyle={{ padding: 0 }}
             {...(targetConfig as YakitModalProp)}
@@ -279,7 +287,7 @@ export const showYakitModal = (props: ShowModalProps) => {
               {targetConfig.content}
             </ErrorBoundary>
           </YakitBaseModal>
-        </>,
+        </YakitAntdProvider>,
       )
     })
   }

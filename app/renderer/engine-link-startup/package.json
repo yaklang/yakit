@@ -15,10 +15,11 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.6.1",
     "@xterm/addon-fit": "^0.10.0",
     "@yakit-libs/color": "1.4.1",
     "ahooks": "3.7.9",
-    "antd": "4.21.7",
+    "antd": "5.29.2",
     "buffer": "^6.0.3",
     "classnames": "^2.5.1",
     "i18next": "^26.3.6",

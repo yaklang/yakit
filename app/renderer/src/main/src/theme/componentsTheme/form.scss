@@ -1,22 +1,89 @@
 // ========================== ant form ==========================
+// antd 5 选择器是 `.ant-form-item .ant-form-item-label > label`，且 font-size 走 CSS 变量
+.ant-form-item .ant-form-item-label > label,
 .ant-form-item-label > label {
   color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+  line-height: 32px;
+  height: 32px;
 }
-.ant-form-item-with-help {
-  margin-bottom: 16px;
+
+.ant-form-item .ant-form-item-label > label::after,
+.ant-form-item-label > label::after {
+  margin: 0 8px 0 2px;
+}
+
+.ant-form-vertical .ant-form-item-label,
+.ant-form-item-vertical .ant-form-item-label {
+  padding: 0 0 8px;
+}
+
+.ant-form-vertical .ant-form-item-label > label,
+.ant-form-item-vertical .ant-form-item-label > label {
+  height: auto;
+  line-height: 22px;
+}
+
+.ant-form-vertical .ant-form-item-label > label::after,
+.ant-form-item-vertical .ant-form-item-label > label::after {
+  display: none;
+}
+
+.ant-form,
+.ant-form-item {
+  font-size: 14px;
+  line-height: 1.5715;
+}
+
+// antd 5 的 size="small" 只改高度，字号仍是 14px；Yakit 小号表单 label 为 12px
+.ant-form-small {
+  --ant-form-font-size: 12px;
+  --ant-form-label-font-size: 12px;
+  --ant-form-label-height: 24px;
+  font-size: 12px;
+
+  .ant-form-item {
+    --ant-form-font-size: 12px;
+    --ant-form-label-font-size: 12px;
+    font-size: 12px;
+  }
+
+  .ant-form-item .ant-form-item-label > label,
+  .ant-form-item-label > label {
+    font-size: 12px;
+    line-height: 24px;
+    height: 24px;
+  }
+
+  &.ant-form-vertical .ant-form-item-label > label,
+  .ant-form-item-vertical .ant-form-item-label > label {
+    height: auto;
+    line-height: 20px;
+  }
+}
+
+.ant-form-item-label > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+  color: var(--Colors-Use-Error-Primary);
+}
+
+.ant-form-item-label > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::after {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 .ant-form-item {
   margin-bottom: 16px;
 }
 .ant-form-item-control-input-content {
-  .ant-input-number {
+  .ant-input-number,
+  .ant-select,
+  .yakit-select,
+  .yakit-auto-complete-wrapper {
     width: 100%;
   }
 }
 
-.ant-form-item-label > label .ant-form-item-tooltip {
-  color: var(--Colors-Use-Neutral-Disable);
+.ant-form-item .ant-form-item-label > label .ant-form-item-tooltip {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
   svg {
     width: 16px;
     height: 16px;
@@ -29,11 +96,6 @@
 
 .ant-form-item-explain-error {
   color: var(--Colors-Use-Error-Primary);
-}
-
-.ant-form-item-extra {
-  font-size: 12px;
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
 // ----------------- textArea

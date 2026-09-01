@@ -1,0 +1,43 @@
+// ========================== ant datepicker yakit-start ==========================
+.ant-picker {
+  background-color: var(--Colors-Use-Neutral-Bg);
+  border-color: var(--Colors-Use-Neutral-Border);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.ant-picker-input > input {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.ant-picker-suffix,
+.ant-picker-separator,
+.ant-picker-clear {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.ant-picker-dropdown {
+  .ant-picker-panel-container {
+    background: var(--Colors-Use-Neutral-Bg);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+
+  .ant-picker-header {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    border-bottom-color: var(--Colors-Use-Neutral-Border);
+  }
+
+  .ant-picker-content th,
+  .ant-picker-cell {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+
+  .ant-picker-cell-in-view {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+
+  .ant-picker-now-btn,
+  .ant-picker-today-btn {
+    color: var(--Colors-Use-Main-Primary);
+  }
+}
+// ========================== ant datepicker yakit-end ==========================

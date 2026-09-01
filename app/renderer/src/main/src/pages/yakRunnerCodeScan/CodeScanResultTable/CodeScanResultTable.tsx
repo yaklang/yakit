@@ -488,9 +488,9 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
           <>
             <Tooltip
               title="在代码审计中打开"
-              destroyTooltipOnHide={true}
-              overlayStyle={{ paddingBottom: 0 }}
+              destroyOnHidden={true}
               placement="top"
+              styles={{ root: { paddingBottom: 0 } }}
             >
               <YakitButton
                 type="text2"

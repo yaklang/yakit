@@ -299,9 +299,9 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
         }}
       ></TableVirtualResize>
       <YakitModal
-        visible={roleFormShow}
+        open={roleFormShow}
         title={t('RoleAdminPage.createRole')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         width={600}
         footer={null}
@@ -539,9 +539,9 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
             maxTagPlaceholder={(omittedValues) =>
               selectedAll ? t('RoleOperationForm.all') : <>+ {omittedValues.length} ...</>
             }
-            dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+            popupRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
             open={open}
-            onDropdownVisibleChange={(visible) => setOpen(visible)}
+            onOpenChange={(visible) => setOpen(visible)}
             treeLoadedKeys={treeLoadedKeys}
             treeExpandedKeys={treeLoadedKeys}
             onTreeExpand={(expandedKeys) => {

@@ -34,8 +34,8 @@ const CodeScanExtraParamsDrawer: React.FC<CodeScanExtraParamsDrawerProps> = Reac
 
   return (
     <YakitDrawer
-      className={styles['code-scan-execute-extra-params-drawer']}
-      visible={visible}
+      rootClassName={styles['code-scan-execute-extra-params-drawer']}
+      open={visible}
       onClose={onClose}
       width="40%"
       title="额外参数"

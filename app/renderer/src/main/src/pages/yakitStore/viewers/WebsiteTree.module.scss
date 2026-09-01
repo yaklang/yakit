@@ -1,7 +1,7 @@
 .http-history-table-drop-down-popover {
   z-index: 990;
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 0;
     }
   }

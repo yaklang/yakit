@@ -1,6 +1,26 @@
 import { CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon } from '@/assets/newIcon'
-import { notification } from 'antd'
-import type { ArgsProps } from 'antd/lib/notification'
+import { App, notification as staticNotification } from 'antd'
+import type { ArgsProps, NotificationInstance } from 'antd/es/notification/interface'
+import type React from 'react'
+
+const defaultNotificationConfig = {
+  placement: 'bottomRight' as const,
+  bottom: 8,
+  stack: false,
+}
+
+let notificationApi: NotificationInstance | null = null
+
+// 静态实例不会消费 <App notification={config}>，需手动 config 确保回退路径的 bottom 与 placement 一致
+staticNotification.config({ placement: 'bottomRight', bottom: 8 })
+
+const getNotificationApi = (): NotificationInstance => notificationApi ?? staticNotification
+
+const NotificationBinder: React.FC = () => {
+  const { notification } = App.useApp()
+  notificationApi = notification
+  return null
+}
 
 type NotifyType = 'error' | 'success' | 'warning' | 'info'
 /**
@@ -32,11 +52,20 @@ export const yakitNotify = (notifyType: NotifyType, props: ArgsProps | string | 
     newProps.message = props
   }
 
-  notification[notifyType]({
+  getNotificationApi()[notifyType]({
     ...newProps,
     icon: getIcon(notifyType),
     placement: 'bottomRight',
     className: 'yakit-notification-' + notifyType,
-    bottom: 8,
   })
+}
+
+/** antd 5 静态 notification 无法消费 ConfigProvider 主题，需通过 App 注入实例 */
+export const NotificationProvider: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+  return (
+    <App className="yakit-antd-app" notification={defaultNotificationConfig} message={{ maxCount: 3 }}>
+      <NotificationBinder />
+      {children}
+    </App>
+  )
 }

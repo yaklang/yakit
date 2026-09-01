@@ -11,7 +11,6 @@ import type {
 import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import { apiCancelStartBrute, apiGetAvailableBruteTypes, apiStartBrute, convertStartBruteParams } from './utils'
 import YakitTree from '@/components/yakitUI/YakitTree/YakitTree'
-import type { DataNode } from 'antd/lib/tree'
 import styles from './NewBrute.module.scss'
 import {
   ExpandAndRetract,
@@ -23,7 +22,7 @@ import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecu
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon } from '@/assets/icon/outline'
 import classNames from 'classnames'
-import { Divider, Form } from 'antd'
+import { Divider, Form, type TreeDataNode as DataNode } from 'antd'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { randomString } from '@/utils/randomUtil'
 import cloneDeep from 'lodash/cloneDeep'

@@ -1,0 +1,249 @@
+// ========================== ant tag yakit-start ==========================
+@mixin yakit-tag-color($text, $bg, $border) {
+  color: $text;
+  background: $bg;
+  border-color: $border;
+
+  &,
+  a,
+  a:hover {
+    color: $text;
+  }
+
+  &.ant-tag-borderless {
+    border-color: transparent;
+  }
+}
+
+@mixin yakit-tag-inverse($text, $fill) {
+  color: $text;
+  background: $fill;
+  border-color: $fill;
+}
+
+.ant-tag {
+  --ant-tag-default-bg: var(--Colors-Use-Neutral-Bg-Hover);
+  --ant-tag-default-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  --ant-tag-borderless-bg: var(--Colors-Use-Neutral-Bg-Hover);
+  --ant-color-success: var(--Colors-Use-Success-Primary);
+  --ant-color-success-bg: var(--Colors-Use-Success-Bg-Hover);
+  --ant-color-success-border: var(--Colors-Use-Success-Border);
+  --ant-color-error: var(--Colors-Use-Error-Primary);
+  --ant-color-error-bg: var(--Colors-Use-Error-Bg-Hover);
+  --ant-color-error-border: var(--Colors-Use-Error-Border);
+  --ant-color-warning: var(--Colors-Use-Warning-Primary);
+  --ant-color-warning-bg: var(--Colors-Use-Warning-Bg-Hover);
+  --ant-color-warning-border: var(--Colors-Use-Warning-Border);
+  --ant-color-info: var(--Colors-Use-Blue-Primary);
+  --ant-color-info-bg: var(--Colors-Use-Blue-Bg);
+  --ant-color-info-border: var(--Colors-Use-Blue-Border);
+  --ant-color-text-light-solid: var(--Colors-Use-Main-On-Primary);
+
+  .ant-tag-close-icon {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+
+    &:hover {
+      color: var(--Colors-Use-Main-Primary);
+    }
+  }
+}
+
+/*
+ * antd 5 cssinjs 后注入会把 Tag 改回 inline-block，Yakit 的 inline-flex 失效后：
+ * 1. 图标和文字之间的 JSX 换行空格会变成可见间距
+ * 2. padding-inline 变成 7px，盖掉 Yakit 的 6px
+ * 3. 前缀图标间距变成 7px（antd 4 / Yakit 是 4px）
+ */
+html .ant-tag {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  padding-inline: 6px !important;
+}
+
+html .ant-tag > .anticon + span,
+html .ant-tag > span + .anticon,
+html .ant-tag > svg + span,
+html .ant-tag > span + svg {
+  margin-inline-start: 4px !important;
+  margin-left: 4px !important;
+}
+
+html .ant-tag .ant-tag-close-icon {
+  margin-inline-start: 4px !important;
+  margin-left: 4px !important;
+}
+
+.ant-tag.ant-tag-has-color {
+  color: var(--Colors-Use-Main-On-Primary);
+  border-color: transparent;
+
+  &,
+  a,
+  a:hover,
+  .anticon-close,
+  .anticon-close:hover,
+  .ant-tag-close-icon,
+  .ant-tag-close-icon:hover {
+    color: var(--Colors-Use-Main-On-Primary);
+  }
+}
+
+.ant-tag.ant-tag-checkable {
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  border-color: transparent;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+
+  &:not(.ant-tag-checkable-checked):hover {
+    color: var(--Colors-Use-Main-Primary);
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.ant-tag.ant-tag-checkable-checked {
+  background-color: var(--Colors-Use-Main-Primary);
+  color: var(--Colors-Use-Main-On-Primary);
+
+  &:hover {
+    background-color: var(--Colors-Use-Main-Hover);
+    color: var(--Colors-Use-Main-On-Primary);
+  }
+}
+
+.ant-tag.ant-tag-success {
+  @include yakit-tag-color(
+    var(--Colors-Use-Success-Primary),
+    var(--Colors-Use-Success-Bg-Hover),
+    var(--Colors-Use-Success-Border)
+  );
+}
+
+.ant-tag.ant-tag-error {
+  @include yakit-tag-color(
+    var(--Colors-Use-Error-Primary),
+    var(--Colors-Use-Error-Bg-Hover),
+    var(--Colors-Use-Error-Border)
+  );
+}
+
+.ant-tag.ant-tag-warning {
+  @include yakit-tag-color(
+    var(--Colors-Use-Warning-Primary),
+    var(--Colors-Use-Warning-Bg-Hover),
+    var(--Colors-Use-Warning-Border)
+  );
+}
+
+.ant-tag.ant-tag-processing {
+  @include yakit-tag-color(var(--Colors-Use-Blue-Primary), var(--Colors-Use-Blue-Bg), var(--Colors-Use-Blue-Border));
+}
+
+.ant-tag.ant-tag-red {
+  @include yakit-tag-color(
+    var(--Colors-Use-Error-Primary),
+    var(--Colors-Use-Error-Bg-Hover),
+    var(--Colors-Use-Error-Border)
+  );
+}
+
+.ant-tag.ant-tag-red-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Error-On-Primary), var(--Colors-Use-Error-Primary));
+}
+
+.ant-tag.ant-tag-volcano {
+  @include yakit-tag-color(
+    var(--Colors-Use-Orange-Primary),
+    var(--Colors-Use-Orange-Bg),
+    var(--Colors-Use-Orange-Border)
+  );
+}
+
+.ant-tag.ant-tag-volcano-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Orange-On-Primary), var(--Colors-Use-Orange-Primary));
+}
+
+.ant-tag.ant-tag-orange {
+  @include yakit-tag-color(
+    var(--Colors-Use-Orange-Primary),
+    var(--Colors-Use-Orange-Bg),
+    var(--Colors-Use-Orange-Border)
+  );
+}
+
+.ant-tag.ant-tag-orange-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Orange-On-Primary), var(--Colors-Use-Orange-Primary));
+}
+
+.ant-tag.ant-tag-gold,
+.ant-tag.ant-tag-yellow {
+  @include yakit-tag-color(
+    var(--Colors-Use-Warning-Primary),
+    var(--Colors-Use-Warning-Bg-Hover),
+    var(--Colors-Use-Warning-Border)
+  );
+}
+
+.ant-tag.ant-tag-gold-inverse,
+.ant-tag.ant-tag-yellow-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Warning-On-Primary), var(--Colors-Use-Warning-Primary));
+}
+
+.ant-tag.ant-tag-lime,
+.ant-tag.ant-tag-green {
+  @include yakit-tag-color(
+    var(--Colors-Use-Success-Primary),
+    var(--Colors-Use-Success-Bg-Hover),
+    var(--Colors-Use-Success-Border)
+  );
+}
+
+.ant-tag.ant-tag-lime-inverse,
+.ant-tag.ant-tag-green-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Success-On-Primary), var(--Colors-Use-Success-Primary));
+}
+
+.ant-tag.ant-tag-cyan {
+  @include yakit-tag-color(var(--Colors-Use-Cyan-Primary), var(--Colors-Use-Cyan-Bg), var(--Colors-Use-Cyan-Border));
+}
+
+.ant-tag.ant-tag-cyan-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Cyan-On-Primary), var(--Colors-Use-Cyan-Primary));
+}
+
+.ant-tag.ant-tag-blue,
+.ant-tag.ant-tag-geekblue {
+  @include yakit-tag-color(var(--Colors-Use-Blue-Primary), var(--Colors-Use-Blue-Bg), var(--Colors-Use-Blue-Border));
+}
+
+.ant-tag.ant-tag-blue-inverse,
+.ant-tag.ant-tag-geekblue-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Blue-On-Primary), var(--Colors-Use-Blue-Primary));
+}
+
+.ant-tag.ant-tag-purple {
+  @include yakit-tag-color(
+    var(--Colors-Use-Purple-Primary),
+    var(--Colors-Use-Purple-Bg-Hover),
+    var(--Colors-Use-Purple-Border)
+  );
+}
+
+.ant-tag.ant-tag-purple-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Purple-On-Primary), var(--Colors-Use-Purple-Primary));
+}
+
+.ant-tag.ant-tag-magenta,
+.ant-tag.ant-tag-pink {
+  @include yakit-tag-color(
+    var(--Colors-Use-Magenta-Primary),
+    var(--Colors-Use-Magenta-Bg),
+    var(--Colors-Use-Magenta-Border)
+  );
+}
+
+.ant-tag.ant-tag-magenta-inverse,
+.ant-tag.ant-tag-pink-inverse {
+  @include yakit-tag-inverse(var(--Colors-Use-Magenta-On-Primary), var(--Colors-Use-Magenta-Primary));
+}
+// ========================== ant tag yakit-end ==========================

@@ -350,7 +350,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
       {/* Install Modal */}
       <YakitModal
         title={t('playground.ThirdPartyBinaryManager.installModalTitle')}
-        visible={installVisible}
+        open={installVisible}
         onCancel={() => {
           if (!installLoading) {
             setInstallVisible(false)
@@ -441,7 +441,7 @@ export const ThirdPartyBinaryManager: React.FC<ThirdPartyBinaryManagerProps> = (
       {/* Start Modal */}
       <YakitModal
         title={t('playground.ThirdPartyBinaryManager.startModalTitle', { name: selectedBinary?.Name || '' })}
-        visible={startVisible}
+        open={startVisible}
         onCancel={() => {
           setStartVisible(false)
           startForm.resetFields()

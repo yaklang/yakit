@@ -66,7 +66,7 @@ export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<Text
         {...rest}
         ref={ref}
         className={classNames(styles['qs-input-textarea'], className)}
-        bordered={false}
+        variant="borderless"
         autoSize={true}
       />
     )

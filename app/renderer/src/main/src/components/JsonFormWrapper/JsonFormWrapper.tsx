@@ -171,13 +171,14 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
   const getTextWidget = useMemoizedFn((props: WidgetProps) => {
     const { id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema, uiSchema } =
       props
+    const { classNames: _, ...restOptions } = options // 忽略 classNames
     const uiStyle = uiSchema?.['ui:component_style'] || {}
     if (schema.type === 'number') {
       return (
         <YakitInputNumber
           style={{ width: '100%', ...uiStyle }}
           id={id}
-          {...options}
+          {...restOptions}
           autoFocus={autofocus}
           required={required}
           disabled={disabled || readonly}
@@ -203,7 +204,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
 
     return (
       <YakitInput
-        {...options}
+        {...restOptions}
         style={{ width: '100%', ...uiStyle }}
         type="text"
         autoFocus={autofocus}
@@ -211,7 +212,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         disabled={disabled || readonly}
         value={value}
         onChange={(event) => {
-          onChange(event.target.value === '' ? options.emptyValue : event.target.value)
+          onChange(event.target.value === '' ? restOptions.emptyValue : event.target.value)
         }}
         onBlur={(event) => {
           onBlur(id, event.target.value)
@@ -392,21 +393,23 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     const { id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema, uiSchema } =
       props
     const uiStyle = uiSchema?.['ui:component_style'] || {}
+    const { classNames: _, ...restOptions } = options // 忽略 classNames
     if (schema.multipleOf) {
-      options.step = schema.multipleOf
+      restOptions.step = schema.multipleOf
     }
 
     if (typeof schema.minimum !== 'undefined') {
-      options.min = schema.minimum
+      restOptions.min = schema.minimum
     }
 
     if (typeof schema.maximum !== 'undefined') {
-      options.max = schema.maximum
+      restOptions.max = schema.maximum
     }
+
     return (
       <YakitInputNumber
         id={id}
-        {...options}
+        {...restOptions}
         autoFocus={autofocus}
         required={required}
         disabled={disabled || readonly}

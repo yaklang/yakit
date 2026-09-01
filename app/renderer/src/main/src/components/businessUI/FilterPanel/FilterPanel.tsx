@@ -64,7 +64,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
       <div className={styles['filter-panel-container']}>
         <div className={styles['panel-header']}>
           <span className={styles['header-title']}>{t('YakitButton.advancedFilter')}</span>
-          <Tooltip title={t('YakitButton.collapseFilter')} placement="top" overlayClassName="plugins-tooltip">
+          <Tooltip title={t('YakitButton.collapseFilter')} placement="top" rootClassName="plugins-tooltip">
             <YakitButton
               type="text2"
               onClick={onClose}

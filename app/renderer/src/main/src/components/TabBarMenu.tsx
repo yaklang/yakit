@@ -14,11 +14,10 @@ export const TabBarMenu = (
 ) => {
   const tabBarMenu = (id: any) => {
     return (
-      <Menu onClick={({ key }) => callback(id, key)}>
-        {menuList.map((item) => {
-          return <Menu.Item key={item.key}>{item.title}</Menu.Item>
-        })}
-      </Menu>
+      <Menu
+        onClick={({ key }) => callback(id, key)}
+        items={menuList.map((item) => ({ key: item.key, label: item.title }))}
+      />
     )
   }
 
@@ -27,7 +26,7 @@ export const TabBarMenu = (
       {...props}
       children={(barNode: React.ReactElement) => {
         return (
-          <Dropdown overlay={tabBarMenu(barNode.key)} trigger={['contextMenu']}>
+          <Dropdown popupRender={() => tabBarMenu(barNode.key)} trigger={['contextMenu']}>
             {barNode}
           </Dropdown>
         )

@@ -92,7 +92,7 @@ const HistorySessionIcon: FC<{
     <Tooltip
       title={iconMeta.label}
       placement="top"
-      overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+      classNames={{ root: classNames(styles['history-item-extra-tooltip'], overlayClassName) }}
       getPopupContainer={getPopupContainer}
     >
       <div
@@ -373,7 +373,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
         <Tooltip
           title={t('HistoryChatList.editTitle')}
           placement="topRight"
-          overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+          classNames={{ root: classNames(styles['history-item-extra-tooltip'], overlayClassName) }}
           getPopupContainer={getPopupContainer}
         >
           <YakitButton
@@ -389,7 +389,7 @@ const HistoryChatListItem: FC<HistoryChatListItemProps> = memo((props) => {
           title={t('HistoryChatList.deleteConfirm')}
           placement="bottom"
           getPopupContainer={getPopupContainer}
-          overlayClassName={overlayClassName}
+          classNames={{ root: overlayClassName }}
           onConfirm={(e) => {
             e?.stopPropagation()
             handleDeleteChatItem(item)

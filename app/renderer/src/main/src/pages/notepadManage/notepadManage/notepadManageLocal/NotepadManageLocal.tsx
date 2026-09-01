@@ -190,8 +190,8 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                 },
               }}
               dropdown={{
-                visible: timeSortVisible,
-                onVisibleChange: setTimeSortVisible,
+                open: timeSortVisible,
+                onOpenChange: setTimeSortVisible,
               }}
             >
               <YakitButton type="text2">
@@ -397,7 +397,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
           ) : (
             <YakitEmpty
               image={emptyImageTarget}
-              imageStyle={{ margin: '96px auto 12px', height: 200 }}
+              styles={{ image: { margin: '96px auto 12px', height: 200 } }}
               title={t('YakitEmpty.searchEmpty')}
             />
           )

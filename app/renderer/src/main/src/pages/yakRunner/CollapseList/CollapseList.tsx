@@ -21,7 +21,6 @@ import { getModelContext } from '@/utils/monacoSpec/yakEditor'
 import { monaco } from 'react-monaco-editor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
-const { Panel } = Collapse
 
 export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | null = memo((props) => {
   const { type = 'sideBar', panelKey, onlyKey = '', list, titleRender, renderItem, collapseProps, isShowBottom } = props
@@ -47,23 +46,22 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
           return <OutlineChevronrightIcon className={classNames({ 'collapse-expand-arrow': !!isActive })} />
         }}
         {...collapseProps}
-      >
-        {list.map((item, index) => {
-          return (
-            <Panel header={titleRender(item)} key={item[onlyKey] || `${panelKey || 'collapse-list'}-${index}`}>
-              <div
-                className={classNames(styles['list-item-render'], {
-                  [styles['list-item-render-sideBar']]: type === 'sideBar',
-                })}
-              >
-                {type === 'output' && <div className={styles['render-tail']}></div>}
-                {renderItem(item)}
-              </div>
-            </Panel>
-          )
-        })}
-        {isShowBottom && <div className={styles['to-end']}>{t('YakitEmpty.end_of_list')}</div>}
-      </Collapse>
+        items={list.map((item, index) => ({
+          key: item[onlyKey] || `${panelKey || 'collapse-list'}-${index}`,
+          label: titleRender(item),
+          children: (
+            <div
+              className={classNames(styles['list-item-render'], {
+                [styles['list-item-render-sideBar']]: type === 'sideBar',
+              })}
+            >
+              {type === 'output' && <div className={styles['render-tail']}></div>}
+              {renderItem(item)}
+            </div>
+          ),
+        }))}
+      />
+      {isShowBottom && <div className={styles['to-end']}>{t('YakitEmpty.end_of_list')}</div>}
     </div>
   )
 })

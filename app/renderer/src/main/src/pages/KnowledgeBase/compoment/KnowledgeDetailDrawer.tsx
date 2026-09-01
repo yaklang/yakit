@@ -213,11 +213,11 @@ const KnowledgeDetailDrawer: FC<KnowledgeDetailDrawerProps> = ({
       placement="right"
       width="80%"
       onClose={onClose}
-      visible={knowledgeDrawerDetail.visible}
+      open={knowledgeDrawerDetail.visible}
       title={'知识详情'}
       maskClosable={true}
-      destroyOnClose={true}
-      className={classNames(styles['knowledge-detail-drawer'])}
+      destroyOnHidden={true}
+      rootClassName={classNames(styles['knowledge-detail-drawer'])}
     >
       <div className={styles['detail-drawer-content']}>
         <div className={styles['detail-left']}>

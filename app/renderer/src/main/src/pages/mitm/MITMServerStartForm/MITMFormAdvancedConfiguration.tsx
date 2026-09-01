@@ -224,8 +224,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
 
     return (
       <YakitDrawer
-        className={styles['advanced-configuration-drawer']}
-        visible={visible}
+        rootClassName={styles['advanced-configuration-drawer']}
+        open={visible}
         onClose={() => onClose()}
         width="max(700px, 40%)"
         title={
@@ -267,42 +267,44 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             />
           </Form.Item>
           <Form.Item label={t('MITMFormAdvancedConfiguration.hostsConfig')} name="etcHosts">
-            <div className={styles['etcHosts-btns']}>
-              <YakitButton
-                onClick={() => {
-                  inputHTTPFuzzerHostConfigItem(
-                    (obj) => {
-                      setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
-                    },
-                    // 批量添加
-                    (items) => {
-                      const newKeys = items.map(({ Key }) => Key)
-                      const newEtcHosts = [...etcHosts.filter(({ Key }) => !newKeys.includes(Key)), ...items]
-                      setEtcHosts(newEtcHosts)
-                    },
-                  )
-                }}
-              >
-                {t('MITMFormAdvancedConfiguration.addHostsMapping')}
-              </YakitButton>
-              {!!etcHosts.length && (
-                <YakitButton type="text" danger onClick={() => setEtcHosts([])}>
-                  {t('YakitButton.reset')}
-                </YakitButton>
-              )}
-            </div>
-            <div className={classNames({ [styles['etcHosts-config']]: !!etcHosts.length })}>
-              {etcHosts.map((i, n) => (
-                <YakitTag
-                  closable={true}
-                  onClose={() => {
-                    setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
+            <div>
+              <div className={styles['etcHosts-btns']}>
+                <YakitButton
+                  onClick={() => {
+                    inputHTTPFuzzerHostConfigItem(
+                      (obj) => {
+                        setEtcHosts([...etcHosts.filter((i) => i.Key !== obj.Key), obj])
+                      },
+                      // 批量添加
+                      (items) => {
+                        const newKeys = items.map(({ Key }) => Key)
+                        const newEtcHosts = [...etcHosts.filter(({ Key }) => !newKeys.includes(Key)), ...items]
+                        setEtcHosts(newEtcHosts)
+                      },
+                    )
                   }}
-                  key={`${i.Key}-${n}`}
                 >
-                  {`${i.Key} => ${i.Value}`}
-                </YakitTag>
-              ))}
+                  {t('MITMFormAdvancedConfiguration.addHostsMapping')}
+                </YakitButton>
+                {!!etcHosts.length && (
+                  <YakitButton type="text" danger onClick={() => setEtcHosts([])}>
+                    {t('YakitButton.reset')}
+                  </YakitButton>
+                )}
+              </div>
+              <div className={classNames({ [styles['etcHosts-config']]: !!etcHosts.length })}>
+                {etcHosts.map((i, n) => (
+                  <YakitTag
+                    closable={true}
+                    onClose={() => {
+                      setEtcHosts(etcHosts.filter((j) => j.Key !== i.Key))
+                    }}
+                    key={`${i.Key}-${n}`}
+                  >
+                    {`${i.Key} => ${i.Value}`}
+                  </YakitTag>
+                ))}
+              </div>
             </div>
           </Form.Item>
           <Form.Item
@@ -427,8 +429,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             label={t('MITMFormAdvancedConfiguration.pluginConcurrency')}
             name="PluginConcurrency"
             style={{ alignItems: 'center' }}
+            initialValue={20}
           >
-            <YakitInputNumber type="horizontal" min={1} defaultValue={20} />
+            <YakitInputNumber type="horizontal" min={1} />
           </Form.Item>
           <Form.Item label={t('AdvancedConfiguration.sni_config')} className={styles['sni-rules']}>
             <Form.List name="SNIMapping">

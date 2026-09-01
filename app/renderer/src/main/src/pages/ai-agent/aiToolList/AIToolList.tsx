@@ -337,7 +337,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
     <>
       <YakitPopover
         placement="right"
-        overlayClassName={styles['terminal-popover']}
+        classNames={{ root: styles['terminal-popover'] }}
         content={<YakitEditor type={'yak'} value={item.Content} readOnly={true} />}
       >
         <div className={styles['ai-tool-list-item-content']} onClick={onToolClick}>
@@ -374,8 +374,8 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                 dropdown={{
                   trigger: ['click', 'contextMenu'],
                   placement: 'bottomLeft',
-                  visible: visible,
-                  onVisibleChange: setVisible,
+                  open: visible,
+                  onOpenChange: setVisible,
                 }}
               >
                 <YakitButton isActive={visible} type="text2" size="small" icon={<OutlineDotsverticalIcon />} />

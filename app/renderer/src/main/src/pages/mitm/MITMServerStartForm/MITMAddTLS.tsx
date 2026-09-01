@@ -22,7 +22,7 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
   return (
     <YakitModal
       title={t('MITMAddTLS.add_client_tls')}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       closable={true}
       onOk={() => {

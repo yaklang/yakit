@@ -1,5 +1,5 @@
 import React, { type CSSProperties, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Alert, Form, Space, Tooltip, Typography, Modal } from 'antd'
+import { Alert, Form, Modal, Space, Tooltip, Typography } from 'antd'
 import { failed, info, yakitNotify } from '../../utils/notification'
 import { CheckOutlined, CloseOutlined, CloudUploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -351,7 +351,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         {chromeLauncherParamsVisible && (
           <YakitModal
             title={t('MITMChromeLauncher.browser_params_config')}
-            visible={chromeLauncherParamsVisible}
+            open={chromeLauncherParamsVisible}
             onCancel={() => setChromeLauncherParamsVisible(false)}
             closable={true}
             maskClosable={false}
@@ -500,7 +500,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
       {chromeVisible && (
         <YakitModal
           title={t('MITMChromeLauncher.confirm_start_no_config_chrome_params')}
-          visible={chromeVisible}
+          open={chromeVisible}
           onCancel={() => setChromeVisible(false)}
           closable={true}
           width="max(850px, 50%)"

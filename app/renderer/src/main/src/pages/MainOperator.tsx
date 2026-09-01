@@ -1,5 +1,5 @@
 import React, { type ReactNode, useEffect, useRef, useState } from 'react'
-import { Avatar, Layout, Upload } from 'antd'
+import { Avatar, Layout, Upload, Watermark } from 'antd'
 import CameraOutlined from '@ant-design/icons/lib/icons/CameraOutlined'
 import { failed, success, yakitFailed } from '../utils/notification'
 import {
@@ -42,7 +42,6 @@ import { type YakitRoute } from '@/enums/yakitRoute'
 import { YakChatCS } from '@/components/yakChat/chatCS'
 import { MainOperatorContent } from './layout/mainOperatorContent/MainOperatorContent'
 import type { MultipleNodeInfo } from './layout/mainOperatorContent/MainOperatorContentType'
-import { WaterMark } from '@ant-design/pro-layout'
 import emiter from '@/utils/eventBus/eventBus'
 import { httpDeleteOSSResource } from '@/apiUtils/http'
 import { setUpSyntaxFlowMonaco } from '@/utils/monacoSpec/syntaxflowEditor'
@@ -639,7 +638,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   /** ---------- IRify end ---------- */
   return (
     <>
-      <WaterMark
+      <Watermark
         content={waterMarkStr()}
         style={controlShow ? { display: 'none' } : { overflow: 'hidden', height: '100%' }}
       >
@@ -689,9 +688,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
           {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
           <YakitModal
-            visible={passwordShow}
+            open={passwordShow}
             title={t('Main.setPassword')}
-            destroyOnClose={true}
+            destroyOnHidden={true}
             maskClosable={false}
             bodyStyle={{ padding: '10px 24px 24px 24px' }}
             width={520}
@@ -721,7 +720,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             onCancel={() => handleShowRenderCrashCallback(false)}
           />
         </Layout>
-      </WaterMark>
+      </Watermark>
       {controlShow && <ControlOperation controlName={controlName} />}
       <YakitHintModal
         visible={false}

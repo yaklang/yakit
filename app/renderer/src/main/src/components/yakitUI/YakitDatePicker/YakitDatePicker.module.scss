@@ -25,7 +25,7 @@
     .ant-picker-range:hover,
     .ant-picker-focused {
       border-color: var(--Colors-Use-Main-Primary);
-      box-shadow: 0 0 0 2px rgb(242 139 68 / 20%);
+      box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
     }
     .ant-picker-range .ant-picker-active-bar {
       background-color: var(--Colors-Use-Main-Primary);
@@ -190,7 +190,7 @@
     .ant-picker:hover,
     .ant-picker-focused {
       border-color: var(--Colors-Use-Main-Primary);
-      box-shadow: 0 0 0 2px rgb(242 139 68 / 20%);
+      box-shadow: 0 0 0 2px var(--Colors-Use-Main-Focus);
     }
     .ant-picker .ant-picker-active-bar {
       background-color: var(--Colors-Use-Main-Primary);

@@ -259,7 +259,7 @@ export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
           <YakitPopover
             placement="right"
             content={<AIMCPToolDetailPopover item={record} />}
-            overlayStyle={{ maxWidth: 440 }}
+            styles={{ root: { maxWidth: 440 } }}
           >
             <div className={styles['tool-name']}>{text}</div>
           </YakitPopover>
@@ -278,7 +278,7 @@ export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
           const description = resolveToolDescription(record)
           if (!description) return '-'
           return (
-            <Tooltip title={description} overlayStyle={{ maxWidth: 480 }}>
+            <Tooltip title={description} styles={{ root: { maxWidth: 480 } }}>
               <div className={styles['tool-description-cell']}>{description}</div>
             </Tooltip>
           )
@@ -462,7 +462,7 @@ export const ConfigMcpModal: FC<ConfigMcpModalProps> = (props) => {
 
   return (
     <YakitModal
-      visible={true}
+      open={true}
       width={960}
       title={t('ConfigSystemMcp.modal_title')}
       footer={null}

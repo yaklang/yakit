@@ -36,7 +36,7 @@ import {
   type ResponderProvided,
   type DropResult,
 } from '@hello-pangea/dnd'
-import { Avatar, Input, Modal, Tooltip } from 'antd'
+import { Avatar, Input, Tooltip, Modal } from 'antd'
 import { useCreation, useDebounceEffect, useHover, useMemoizedFn, useThrottleFn } from 'ahooks'
 import { randomString } from '@/utils/randomUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -618,7 +618,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
         hiddenHeader={true}
         closable={false}
         footer={null}
-        visible={visibleSubMenu}
+        open={visibleSubMenu}
         onCancel={() => setVisibleSubMenu(false)}
         bodyStyle={{ padding: 0 }}
       >
@@ -657,7 +657,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
       <YakitModal
         hiddenHeader={true}
         footer={null}
-        visible={emptyMenuLength > 0}
+        open={emptyMenuLength > 0}
         onCancel={() => setEmptyMenuLength(0)}
         width={431}
         bodyStyle={{ padding: 0 }}
@@ -831,7 +831,7 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
         <div className={style['second-menu-heard-input']}>
           <Input
             placeholder={t('CustomizeMenu.SecondMenu.unnamedMenu1')}
-            bordered={false}
+            variant="borderless"
             suffix={
               <YakitPopconfirm
                 title={t('CustomizeMenu.SecondMenu.deleteMenuConfirm')}
@@ -1116,7 +1116,7 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
         <Tooltip
           title={item.describeUi ? t(item.describeUi) : item.describe || 'No Description about it.'}
           placement="topRight"
-          overlayClassName={style['question-tooltip']}
+          classNames={{ root: style['question-tooltip'] }}
         >
           <QuestionMarkCircleIcon className={style['menu-question-icon']} />
         </Tooltip>
@@ -1390,8 +1390,8 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
       <Tooltip
         title={plugin.Help || 'No Description about it.'}
         placement="topRight"
-        overlayClassName={style['question-tooltip']}
-        onVisibleChange={(v) => {
+        classNames={{ root: style['question-tooltip'] }}
+        onOpenChange={(v) => {
           if (v && !plugin.Help) {
             if (getScriptInfo) getScriptInfo(plugin)
           }
@@ -1401,9 +1401,9 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
       </Tooltip>
       <YakitPopover
         placement="topRight"
-        overlayClassName={style['terminal-popover']}
+        classNames={{ root: style['terminal-popover'] }}
         content={YakitEditor}
-        onVisibleChange={(v) => {
+        onOpenChange={(v) => {
           if (v && !plugin.Content) {
             if (getScriptInfo) getScriptInfo(plugin)
           }

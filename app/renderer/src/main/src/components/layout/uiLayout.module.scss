@@ -246,13 +246,10 @@
 
 .sampling-popover {
   width: 350px;
-  padding-top: 10px;
-  border-radius: 4px;
   overflow: hidden;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
 
   :global {
-    .ant-popover-inner-content {
+    .ant-popover-inner {
       padding: 0;
     }
   }

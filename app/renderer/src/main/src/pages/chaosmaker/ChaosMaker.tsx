@@ -1,6 +1,7 @@
 import type React from 'react'
 import { useState } from 'react'
-import { List, PageHeader, Tooltip } from 'antd'
+import { List, Tooltip } from 'antd'
+import { YakitPageHeader } from '../../components/YakitPageHeader'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AutoCard } from '@/components/AutoCard'
 import { ResizeBox } from '@/components/ResizeBox'
@@ -112,7 +113,7 @@ export const ChaosMakerPage: React.FC<ChaosMakerPageProp> = (props) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
-      <PageHeader
+      <YakitPageHeader
         style={{ width: '100%' }}
         title={'Breach & Attack Simulator Playbook'}
         subTitle={'入侵与攻击模拟剧本管理'}

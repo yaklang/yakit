@@ -2,7 +2,7 @@ import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { Collapse, Form } from 'antd'
+import { Form } from 'antd'
 import type { Dispatch, FC, SetStateAction } from 'react'
 import { getFileInfoList, ValidatorFilePath } from '../utils'
 import { randomString } from '@/utils/randomUtil'
@@ -66,7 +66,7 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
   return (
     <YakitModal
       title="添加"
-      visible={addModalData.visible}
+      open={addModalData.visible}
       onCancel={onCancel}
       onOk={onOk}
       className={styles['create-knowledge-from']}
@@ -122,7 +122,7 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
         </Form.Item>
 
         <YakitCollapse bordered={false} className={styles['create-knowledge-configuration']}>
-          <Collapse.Panel header="高级配置" key="1">
+          <YakitCollapse.YakitPanel header="高级配置" key="1">
             <Form.Item label="补充提示词：" name="prompt">
               <YakitInput placeholder="请输入补充提示词" />
             </Form.Item>
@@ -163,7 +163,7 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
                 ]}
               />
             </Form.Item>
-          </Collapse.Panel>
+          </YakitCollapse.YakitPanel>
         </YakitCollapse>
       </Form>
     </YakitModal>
