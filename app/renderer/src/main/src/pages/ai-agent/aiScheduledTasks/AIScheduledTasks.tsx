@@ -152,7 +152,15 @@ const formatScheduleRule = (item: AIReActSchedule, t: TFunction) => {
       time: startTime,
     })
   }
-  return t('AIScheduledTasks.frequencyDailyAtTime', { time: startTime })
+  if (rrule.includes('FREQ=DAILY')) {
+    const matched = rrule.match(/(?:^|;)INTERVAL=(\d+)/)
+    const interval = Math.max(1, Number(matched?.[1] || 1))
+    // INTERVAL>1 的「每 N 天」没有专门文案，与自定义规则一样回退展示原始规则
+    if (interval === 1) return t('AIScheduledTasks.frequencyDailyAtTime', { time: startTime })
+  }
+  // 解析不到预设（自定义规则，如 FREQ=MONTHLY）时回退展示原始规则，避免被误标为「每天」
+  const rawRule = (item.Schedule?.RRule || '').replace(/^RRULE:/i, '')
+  return rawRule || t('AIScheduledTasks.frequencyDailyAtTime', { time: startTime })
 }
 
 const AIScheduledTasks: React.FC<AIScheduledTasksProps> = React.memo((props) => {

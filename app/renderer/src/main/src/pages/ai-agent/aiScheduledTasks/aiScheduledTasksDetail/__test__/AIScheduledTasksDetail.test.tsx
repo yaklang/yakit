@@ -37,7 +37,6 @@ const makeSchedule = (overrides: Partial<AIReActSchedule> = {}): AIReActSchedule
 })
 
 const makeProps = (initialSchedule: AIReActSchedule) => ({
-  uuid: 'u-1',
   initialSchedule,
   onClose: vi.fn(),
   onDataChange: vi.fn(),
@@ -48,19 +47,17 @@ describe('AIScheduledTasksDetail 数据同步', () => {
     mockGetAIReActSchedule.mockReset()
   })
 
-  it('打开详情时按 UUID 拉取最新数据，仅修正自身显示，不回写列表（onDataChange 不被调）', async () => {
-    const latest = makeSchedule({ Name: 'latest-name' })
-    mockGetAIReActSchedule.mockResolvedValue(latest)
+  it('详情为纯 prop 视图：直接展示 initialSchedule，挂载不发起拉取与回写', () => {
     const onDataChange = vi.fn()
     render(<AIScheduledTasksDetail {...makeProps(makeSchedule())} onDataChange={onDataChange} />)
 
-    await waitFor(() => expect(screen.getByText('latest-name')).toBeInTheDocument())
+    expect(screen.getByText('old-name')).toBeInTheDocument()
+    expect(screen.getByText('old-prompt')).toBeInTheDocument()
+    expect(mockGetAIReActSchedule).not.toHaveBeenCalled()
     expect(onDataChange).not.toHaveBeenCalled()
   })
 
   it('编辑保存/行内启停后（initialSchedule 刷新）详情同步展示最新数据', async () => {
-    // 挂载时按 UUID 拉取无更新，保证数据变化只来自 prop 刷新
-    mockGetAIReActSchedule.mockResolvedValue(undefined)
     const { rerender } = render(<AIScheduledTasksDetail {...makeProps(makeSchedule())} />)
     expect(screen.getByText('old-name')).toBeInTheDocument()
 
@@ -79,7 +76,6 @@ describe('AIScheduledTasksDetail 数据同步', () => {
   })
 
   it('仅修改 Prompt 时同步刷新「原始请求」区块显隐', async () => {
-    mockGetAIReActSchedule.mockResolvedValue(undefined)
     const sameAsOriginal = makeSchedule({
       OriginalRequest: 'orig-text',
       Payload: { ...makeSchedule().Payload, Prompt: 'orig-text' },

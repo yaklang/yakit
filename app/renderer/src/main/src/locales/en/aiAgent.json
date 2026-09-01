@@ -264,6 +264,9 @@
     "promptPlaceholder": "Describe what the AI should do each time this task runs",
     "frequency": "Frequency",
     "intervalMinutes": "Interval in minutes",
+    "customRRule": "Custom rule",
+    "customRRuleInvalid": "Rule must start with RRULE:FREQ=, e.g. RRULE:FREQ=MONTHLY;INTERVAL=2",
+    "customRRuleExample": "RFC 5545 rule, e.g. RRULE:FREQ=MONTHLY;INTERVAL=2 means once every 2 months",
     "startAt": "First run",
     "targetMode": "Conversation mode",
     "continueSession": "Attach to an existing conversation (skip when busy)",
@@ -315,7 +318,8 @@
       "hourly": "Hourly",
       "daily": "Daily",
       "weekdays": "Weekdays",
-      "weekly": "Weekly"
+      "weekly": "Weekly",
+      "custom": "Custom"
     }
   },
   "KnowledgeSidebarList": {

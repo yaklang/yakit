@@ -19,6 +19,9 @@ import { yakitNotify } from '@/utils/notification'
 
 const unixNumber = (value?: number | string) => Number(value || 0)
 
+/** 粗校验 RRULE 前缀与 FREQ 字段；完整语法由引擎解析，预览区会即时反馈解析失败 */
+const RRULE_PATTERN = /^RRULE:FREQ=(SECONDLY|MINUTELY|HOURLY|DAILY|WEEKLY|MONTHLY|YEARLY)(;.*)?$/i
+
 const formatTime = (value?: number | string) => {
   const timestamp = unixNumber(value)
   return timestamp > 0 ? moment.unix(timestamp).format('YYYY-MM-DD HH:mm:ss') : '-'
@@ -26,7 +29,12 @@ const formatTime = (value?: number | string) => {
 /**
  * 兜底也是按每天一次的频率来处理，避免出现无法解析的情况
  */
-export const frequencyToRRule = (frequency: FrequencyPreset, startAt: Moment, intervalMinutes = 5) => {
+export const frequencyToRRule = (
+  frequency: FrequencyPreset,
+  startAt: Moment,
+  intervalMinutes = 5,
+  customRRule = '',
+) => {
   switch (frequency) {
     case 'once':
       return 'RRULE:FREQ=DAILY;COUNT=1'
@@ -40,13 +48,18 @@ export const frequencyToRRule = (frequency: FrequencyPreset, startAt: Moment, in
       const weekdays = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']
       return `RRULE:FREQ=WEEKLY;BYDAY=${weekdays[startAt.day()]}`
     }
-    default:
+    case 'daily':
       return 'RRULE:FREQ=DAILY;INTERVAL=1'
+    case 'custom':
+      return customRRule.trim() || ''
+    default:
+      return ''
   }
 }
 
 /**
- * 将 rrule 转换为频率类型，兜底按每天一次的频率来处理，避免出现无法解析的情况
+ * 将 rrule 转换为频率类型；解析不到任何预设时返回 custom，
+ * 由表单回填原始规则，避免编辑时把规则静默改写成预设
  */
 export const rruleToFrequency = (rrule: string): FrequencyPreset => {
   const normalized = rrule.toUpperCase()
@@ -55,7 +68,8 @@ export const rruleToFrequency = (rrule: string): FrequencyPreset => {
   if (normalized.includes('FREQ=HOURLY')) return 'hourly'
   if (normalized.includes('BYDAY=MO,TU,WE,TH,FR')) return 'weekdays'
   if (normalized.includes('FREQ=WEEKLY')) return 'weekly'
-  return 'daily'
+  if (normalized.includes('FREQ=DAILY')) return 'daily'
+  return 'custom'
 }
 
 export const rruleToIntervalMinutes = (rrule: string) => {
@@ -75,6 +89,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
 
   const frequency = Form.useWatch('Frequency', form)
   const intervalMinutes = Form.useWatch('IntervalMinutes', form)
+  const customRRule = Form.useWatch('CustomRRule', form)
   const startAt = Form.useWatch('StartAt', form)
 
   const getTimezone = useMemoizedFn(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC')
@@ -88,6 +103,8 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         IntervalMinutes: rruleToIntervalMinutes(editing.Schedule.RRule),
         StartAt: moment.unix(unixNumber(editing.Schedule.StartAt)),
         TargetMode: (editing.TargetMode as ScheduleFormValues['TargetMode']) || 'new_session_per_run',
+        // 规则解析不到预设（如 FREQ=MONTHLY）时回填原始规则，避免保存时被静默改写
+        CustomRRule: editing.Schedule.RRule,
       })
     } else {
       form.setFieldsValue({
@@ -97,6 +114,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         IntervalMinutes: 5,
         StartAt: moment().add(5, 'minutes').startOf('minute'),
         TargetMode: 'new_session_per_run',
+        CustomRRule: '',
       })
     }
   }, [])
@@ -120,10 +138,15 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         setPreviewTimes([])
         return
       }
+      const rrule = frequencyToRRule(frequency, startAt, intervalMinutes, customRRule)
+      if (!rrule) {
+        setPreviewTimes([])
+        return
+      }
       grpcPreviewAIReActScheduleTimes(
         {
           Schedule: {
-            RRule: frequencyToRRule(frequency, startAt, intervalMinutes),
+            RRule: rrule,
             Timezone: getTimezone(),
             StartAt: startAt.unix(),
           },
@@ -140,7 +163,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
 
   useEffect(() => {
     fetchPreviewTimes()
-  }, [frequency, intervalMinutes, startAt])
+  }, [frequency, intervalMinutes, customRRule, startAt])
 
   const saveSchedule = useMemoizedFn(async (values: ScheduleFormValues) => {
     setSaving(true)
@@ -171,7 +194,7 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
           FocusModeLoop: editing?.Payload.FocusModeLoop || '',
         },
         Schedule: {
-          RRule: frequencyToRRule(values.Frequency, values.StartAt, values.IntervalMinutes),
+          RRule: frequencyToRRule(values.Frequency, values.StartAt, values.IntervalMinutes, values.CustomRRule),
           Timezone: getTimezone(),
           StartAt: values.StartAt.unix(),
         },
@@ -216,12 +239,12 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
           <div className={styles['form-row']}>
             <Form.Item name="Frequency" label={t('AIScheduledTasks.frequency')} rules={[{ required: true }]}>
               <YakitSelect
-                options={(['once', 'minutes', 'hourly', 'daily', 'weekdays', 'weekly'] as FrequencyPreset[]).map(
-                  (value) => ({
-                    value,
-                    label: t(`AIScheduledTasks.frequencyOptions.${value}`),
-                  }),
-                )}
+                options={(
+                  ['once', 'minutes', 'hourly', 'daily', 'weekdays', 'weekly', 'custom'] as FrequencyPreset[]
+                ).map((value) => ({
+                  value,
+                  label: t(`AIScheduledTasks.frequencyOptions.${value}`),
+                }))}
               />
             </Form.Item>
             <Form.Item
@@ -250,6 +273,25 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
               rules={[{ required: true, type: 'number', min: 1, max: 10080 }]}
             >
               <YakitInputNumber min={1} max={10080} precision={0} style={{ width: '100%' }} />
+            </Form.Item>
+          )}
+          {frequency === 'custom' && (
+            <Form.Item
+              name="CustomRRule"
+              label={t('AIScheduledTasks.customRRule')}
+              rules={[
+                { required: true },
+                {
+                  validator: (_, value) => {
+                    const rule = (value || '').trim()
+                    if (!rule || RRULE_PATTERN.test(rule)) return Promise.resolve()
+                    return Promise.reject(t('AIScheduledTasks.customRRuleInvalid'))
+                  },
+                },
+              ]}
+              extra={t('AIScheduledTasks.customRRuleExample')}
+            >
+              <YakitInput maxLength={200} placeholder="RRULE:FREQ=MONTHLY;INTERVAL=2" />
             </Form.Item>
           )}
           <Form.Item name="TargetMode" label={t('AIScheduledTasks.targetMode')} rules={[{ required: true }]}>

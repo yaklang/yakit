@@ -264,6 +264,9 @@
     "promptPlaceholder": "描述每次觸發時 AI 需要完成的工作",
     "frequency": "週期",
     "intervalMinutes": "間隔分鐘數",
+    "customRRule": "自訂規則",
+    "customRRuleInvalid": "規則需以 RRULE:FREQ= 開頭，如 RRULE:FREQ=MONTHLY;INTERVAL=2",
+    "customRRuleExample": "支援 RFC 5545 規則，如 RRULE:FREQ=MONTHLY;INTERVAL=2 表示每 2 個月一次",
     "startAt": "首次運行",
     "targetMode": "會話方式",
     "continueSession": "附著已有會話（忙時跳過）",
@@ -315,7 +318,8 @@
       "hourly": "每小時",
       "daily": "每天",
       "weekdays": "每個工作日",
-      "weekly": "每週"
+      "weekly": "每週",
+      "custom": "自訂"
     }
   },
   "KnowledgeSidebarList": {

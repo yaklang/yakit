@@ -47,9 +47,31 @@ describe('rruleToFrequency', () => {
     })
   })
 
-  it('falls back to daily for unrecognized rules', () => {
-    expect(rruleToFrequency('')).toBe('daily')
-    expect(rruleToFrequency('RRULE:FREQ=MONTHLY;INTERVAL=2')).toBe('daily')
+  it('returns custom for unrecognized rules instead of silently mapping to daily', () => {
+    expect(rruleToFrequency('')).toBe('custom')
+    expect(rruleToFrequency('RRULE:FREQ=MONTHLY;INTERVAL=2')).toBe('custom')
+    expect(rruleToFrequency('RRULE:FREQ=YEARLY')).toBe('custom')
+  })
+})
+
+describe('frequencyToRRule custom', () => {
+  it('passes through the custom rule trimmed', () => {
+    expect(frequencyToRRule('custom', moment('2026-08-27 10:00'), 5, 'RRULE:FREQ=MONTHLY;INTERVAL=2')).toBe(
+      'RRULE:FREQ=MONTHLY;INTERVAL=2',
+    )
+    expect(frequencyToRRule('custom', moment('2026-08-27 10:00'), 5, '  RRULE:FREQ=DAILY  ')).toBe('RRULE:FREQ=DAILY')
+  })
+
+  it('returns empty string when the custom rule is blank', () => {
+    expect(frequencyToRRule('custom', moment('2026-08-27 10:00'), 5, '')).toBe('')
+    expect(frequencyToRRule('custom', moment('2026-08-27 10:00'), 5)).toBe('')
+  })
+
+  it('round-trips an engine-produced monthly rule through custom without rewriting it', () => {
+    const original = 'RRULE:FREQ=MONTHLY;INTERVAL=2;BYMONTHDAY=15'
+    const frequency = rruleToFrequency(original)
+    expect(frequency).toBe('custom')
+    expect(frequencyToRRule(frequency, moment('2026-08-27 10:00'), 5, original)).toBe(original)
   })
 })
 
