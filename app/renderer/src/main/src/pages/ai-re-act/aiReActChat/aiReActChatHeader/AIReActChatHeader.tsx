@@ -141,6 +141,8 @@ const AIReActChatHeaderExternalRightIcon: React.FC<AIReActChatHeaderExternalRigh
         return ['irify']
       case AISourceEnum.yakRunner:
         return ['yakRunner']
+      case AISourceEnum.browserExtension:
+        return ['browserExtension']
       case AISourceEnum.im:
         return ['im']
       case AISourceEnum.history:

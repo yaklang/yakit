@@ -46,7 +46,8 @@
     "i18n:check": "node scripts/locale-parity.js",
     "link-i18n:check": "cd app/renderer/engine-link-startup && yarn i18n:check",
     "ci:eslint": "cd app/renderer/src/main && yarn lint",
-    "ci:tsc": "cd app/renderer/src/main && yarn type-check",
+    "ci:renderer-boundary": "node scripts/check-renderer-boundaries.js",
+    "ci:tsc": "node scripts/check-renderer-boundaries.js && cd app/renderer/src/main && yarn type-check",
     "ci:media-size": "node scripts/check-media-size.js",
     "prepare": "husky"
   },
