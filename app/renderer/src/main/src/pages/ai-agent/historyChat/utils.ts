@@ -30,7 +30,8 @@ export class AISessionDeleteCancelledError extends Error {}
 /**
  * 删除前预检：查询绑定这些会话的活跃 continue_session 定时任务，
  * 有绑定则弹确认（列出任务名），无绑定直接放行；
- * 返回 true 表示继续删除；false 表示用户取消或预检查询失败（如旧引擎未提供该接口），均阻断删除。
+ * 返回 true 表示继续删除；false 仅表示用户取消。
+ * 预检查询失败（如旧引擎未提供该接口）时降级放行删除，报错不展示给用户。
  * 定时任务：最多同时运行3个
  */
 const confirmScheduleImpact = async (sessionIds: string[]): Promise<boolean> => {
@@ -48,7 +49,8 @@ const confirmScheduleImpact = async (sessionIds: string[]): Promise<boolean> => 
       true,
     )
   } catch {
-    return false
+    // 查询失败（如旧引擎无该接口）不阻断删除历史会话，降级放行
+    return true
   }
   const attachedSchedules = response.Data || []
   const attachedScheduleCount = Number(response.Total || attachedSchedules.length)
