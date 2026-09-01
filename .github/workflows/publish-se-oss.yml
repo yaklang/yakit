@@ -31,7 +31,7 @@ jobs:
                   node-version: 22.22.1
 
             - name: "Install Render Dependencies"
-              run: yarn install && yarn cli install main
+              run: yarn cli install cli && yarn cli install main
               working-directory: ./
 
             - name: "Build Render"
