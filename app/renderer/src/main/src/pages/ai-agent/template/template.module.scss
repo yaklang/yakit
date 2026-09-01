@@ -45,20 +45,26 @@ textarea.qs-input-textarea {
     :global {
       .ant-select {
         background: transparent;
+        border-radius: 6px;
       }
       .ant-select .ant-select-selector {
         background: transparent;
         border: none;
         box-shadow: none;
+        border-radius: 6px;
       }
       .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-        padding: 0 2px;
+        padding: 2px 6px;
       }
-      .ant-select-single:hover {
-        background-color: transparent;
+      .ant-select.ant-select-single:not(.ant-select-disabled):hover,
+      .ant-select.ant-select-open,
+      .ant-select.ant-select-focused:not(.ant-select-disabled) {
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
       }
-      .ant-select-focused:not(.ant-select-disabled).ant-select:not(.ant-select-customize-input) .ant-select-selector,
-      .ant-select:not(.ant-select-customize-input):not(.ant-select-disabled) .ant-select-selector:hover {
+      .ant-select.ant-select-single:not(.ant-select-disabled):hover .ant-select-selector,
+      .ant-select.ant-select-open .ant-select-selector,
+      .ant-select.ant-select-focused:not(.ant-select-disabled) .ant-select-selector {
+        background: transparent;
         border: none;
         box-shadow: none;
       }
