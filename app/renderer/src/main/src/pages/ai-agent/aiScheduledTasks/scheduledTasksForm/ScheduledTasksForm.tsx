@@ -201,13 +201,16 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
         MisfireGraceSeconds: editing?.MisfireGraceSeconds || 300,
         MaxRuntimeSeconds: editing?.MaxRuntimeSeconds || 7200,
       }
+      // hiddenError：失败提示统一走下方 catch 的 saveFailed 文案，避免与 grpc 封装层的通用报错重复弹出
       if (editing) {
-        await grpcUpdateAIReActSchedule({ Schedule: schedule })
+        await grpcUpdateAIReActSchedule({ Schedule: schedule }, true)
       } else {
-        await grpcCreateAIReActSchedule({ Schedule: schedule })
+        await grpcCreateAIReActSchedule({ Schedule: schedule }, true)
       }
       yakitNotify('success', t(editing ? 'AIScheduledTasks.updated' : 'AIScheduledTasks.created'))
       onSuccess()
+    } catch (error) {
+      yakitNotify('error', t('AIScheduledTasks.saveFailed', { error: String(error) }))
     } finally {
       setSaving(false)
     }
@@ -215,9 +218,13 @@ const ScheduledTasksForm: React.FC<ScheduledTasksFormProps> = React.memo((props)
 
   const submitForm = useMemoizedFn(async () => {
     if (saving) return
-    form.validateFields().then((values) => {
-      saveSchedule(values)
-    })
+    form
+      .validateFields()
+      .then((values) => {
+        saveSchedule(values)
+      })
+      // 校验失败已由表单行内错误展示，接住 rejection 避免 unhandled rejection
+      .catch(() => {})
   })
 
   return (
