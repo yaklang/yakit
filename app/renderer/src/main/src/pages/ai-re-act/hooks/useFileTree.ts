@@ -562,7 +562,7 @@ function useFileTree(params: UseFileTreeParams) {
         seen.add(key)
         return true
       })
-void onTriggerUpdateTreeData(unique).catch(() => {})
+      void onTriggerUpdateTreeData(unique).catch(() => {})
     } catch (error) {}
   })
   // #endregion
