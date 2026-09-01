@@ -1,13 +1,13 @@
 import React, { memo, useEffect, useState } from 'react'
 import type { RefObject } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import classNames from 'classnames'
 import { OutlineFlagIcon, OutlineViewlistIcon } from '@/assets/icon/outline'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import {
   YakitDockablePane,
   yakitDockablePaneSegmentedLabel,
 } from '@/components/yakitUI/YakitDockablePane/YakitDockablePane'
+import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import type { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { AIForgeForm, AIToolForm } from '../../aiTriageChatTemplate/AITriageChatTemplate'
 import type { AIForgeFormSubmitParamsProps } from '../../aiTriageChatTemplate/type'
@@ -28,7 +28,7 @@ import styles from './AIAgentChatLayout.module.scss'
 const AIChatWelcome = React.lazy(() => import('../../aiChatWelcome/AIChatWelcome'))
 
 const MULTI_FUNC_PANE_WIDTH = 320
-const MIN_CHAT_CONTENT_WIDTH = 480
+const MIN_CHAT_CONTENT_WIDTH = 400
 
 export interface AIAgentChatLayoutProps {
   mode: AIAgentChatMode
@@ -106,26 +106,35 @@ export const AIAgentChatLayout: React.FC<AIAgentChatLayoutProps> = memo((props) 
   return (
     <div className={styles['chat-wrapper']}>
       <div className={styles['chat-content-wrapper']}>
-        <div
-          className={classNames(styles['chat-workspace'], {
-            [styles['chat-workspace-hidden']]: !workspaceVisible,
-          })}
-        >
-          <AIChatWorkspace
-            filePreviewData={filePreviewData}
-            setFilePreviewData={setFilePreviewData}
-            onTabsChange={onTabsChange}
-          />
-        </div>
-        <div className={styles['chat-content']}>
-          {mode === 'welcome' ? (
-            <React.Suspense fallback={<div>loading...</div>}>
-              <AIChatWelcome onTriageSubmit={onTriageSubmit} onSetReAct={onSetReAct} ref={aiChatWelcomeRef} />
-            </React.Suspense>
-          ) : (
-            <AIChatContent ref={aiReActChatRef} onChat={onChat} />
-          )}
-        </div>
+        <YakitResizeBox
+          freeze={workspaceVisible}
+          firstRatio={workspaceVisible ? '70%' : '0px'}
+          firstMinSize={workspaceVisible ? 280 : 0}
+          secondRatio={workspaceVisible ? '30%' : '100%'}
+          secondMinSize={MIN_CHAT_CONTENT_WIDTH}
+          firstNodeStyle={workspaceVisible ? undefined : { display: 'none', padding: 0 }}
+          lineStyle={workspaceVisible ? undefined : { display: 'none' }}
+          firstNode={
+            <div className={styles['chat-workspace']}>
+              <AIChatWorkspace
+                filePreviewData={filePreviewData}
+                setFilePreviewData={setFilePreviewData}
+                onTabsChange={onTabsChange}
+              />
+            </div>
+          }
+          secondNode={
+            <div className={styles['chat-content']}>
+              {mode === 'welcome' ? (
+                <React.Suspense fallback={<div>loading...</div>}>
+                  <AIChatWelcome onTriageSubmit={onTriageSubmit} onSetReAct={onSetReAct} ref={aiChatWelcomeRef} />
+                </React.Suspense>
+              ) : (
+                <AIChatContent ref={aiReActChatRef} onChat={onChat} />
+              )}
+            </div>
+          }
+        />
       </div>
       <YakitDockablePane
         open={multiFuncVisible}

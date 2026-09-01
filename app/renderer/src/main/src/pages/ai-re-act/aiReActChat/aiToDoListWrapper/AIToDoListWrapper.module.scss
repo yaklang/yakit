@@ -5,7 +5,7 @@
   justify-content: center;
   align-items: flex-start;
   box-sizing: border-box;
-  padding: 0 12px 0 4px;
+  padding: 0 4px 0 4px;
   overflow: visible;
   position: relative;
   z-index: 10;
@@ -13,6 +13,6 @@
   .to-do-list {
     width: 100%;
     max-width: 784px;
-    margin: 2px 0 0;
+    margin: 8px 0 0;
   }
 }

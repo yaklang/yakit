@@ -42,7 +42,6 @@ textarea.qs-input-textarea {
     overflow: hidden;
     justify-content: space-between;
     padding: 6px 12px 8px 12px;
-    /* 底栏选择器去边框，与设计稿一致：图标 + 文案 + 箭头 */
     :global {
       .ant-select {
         background: transparent;
