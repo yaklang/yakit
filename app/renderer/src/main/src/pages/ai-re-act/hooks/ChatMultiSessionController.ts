@@ -968,6 +968,7 @@ export class ChatMultiSessionController {
 
       switch (type) {
         case 'casual':
+        case 'reAct':
           if (params.IsInteractiveMessage && params.InteractiveId) {
             const isExist = store.getState().currentReviewDetail.token === params.InteractiveId
             const review = rawData.contents.get(params.InteractiveId)

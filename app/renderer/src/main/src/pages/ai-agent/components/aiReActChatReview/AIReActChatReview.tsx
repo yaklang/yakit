@@ -37,6 +37,7 @@ import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 import { randomString } from '@/utils/randomUtil'
 import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
+import { toAIChatSendType } from '@/pages/ai-re-act/hooks/type'
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
   const { info, planReviewTreeKeywordsMap, isEmbedded, renderFooterExtra, expand, className, chatType, renderNum } =
@@ -512,7 +513,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       InteractiveId: (info.data as AIReviewType).id,
       InteractiveJSONInput: value,
     }
-    onSend({ token: sessionId, type: chatType, params, optionValue })
+    onSend({ token: sessionId, type: toAIChatSendType(chatType), params, optionValue })
   })
   const footerNode = useCreation(() => {
     const renderFooterRightExtra = () => {

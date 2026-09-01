@@ -1,9 +1,8 @@
-import { type AIChatQSData } from '../../../ai-re-act/hooks/aiRender'
+import { type AIChatQSData, type ChatListRenderType } from '../../../ai-re-act/hooks/aiRender'
 import { type AIAgentGrpcApi } from '../../../ai-re-act/hooks/grpcApi'
 import { type AIChatSendParams } from '@/pages/ai-re-act/hooks/type'
-
 export interface AIReActChatReviewProps {
-  chatType: AIChatSendParams['type']
+  chatType: ChatListRenderType
   info: AIChatQSData
   planReviewTreeKeywordsMap?: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
   isEmbedded?: boolean
